@@ -128,6 +128,24 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   worked example of the same shape, so a pointer costs nothing and duplicating the explanation is
   the drift the consolidation ruling exists to prevent. Not moved to `docker.md`, and not opened as
   a corpus-wide sweep, though the `${VAR:-default}` trap has now appeared in three unrelated tools.
+- **The permission rule for the helper path: hold, and gather evidence first.** Reversing the
+  earlier ruling on my own report that the evidence had weakened: several dispatches since have gone
+  through with no refusal, so the three blocks may have been content-shaped rather than mechanism-
+  shaped. *Reasoning:* a rule added against a misdiagnosed cause fixes nothing and quietly widens
+  permissions; record each refusal with the brief that triggered it and bring back a cause.
+- **Authoring the AI-infrastructure guide:** dispatch drafts to TWO families, then adjudicate and
+  write as sole writer. *Reasoning:* overruled my recommendation to author directly. Two independent
+  drafts are the strongest defence against a single blind spot on the largest unit attempted here,
+  and the cost is a round trip on work whose plan and facts are already settled.
+- **Untested Verify checks:** they ship, and each says plainly in the guide that it is reasoned
+  rather than demonstrated. *Reasoning:* CONTRIBUTING rule 3 is honesty over coverage, and this
+  corpus already states plainly where a tool has no native control; a reader who knows which checks
+  are proven can weigh them, while a uniform-looking guide hides the distinction from the only
+  person it matters to.
+- **Bands 2 and 3 ordering:** strictly by the severity already recorded on each row, H before M
+  before L, ties broken by effort so cheap high-severity work lands first. No re-audit first.
+  *Reasoning:* the rows carry the judgement of the audit that produced them, and re-auditing before
+  acting would defer every fix behind a fresh survey.
 
 ## Profile: predicting these rulings
 
@@ -187,3 +205,9 @@ Every pattern below cites a ruling recorded above in this file. A pattern whose 
 - 2026-09-13, queue order. I recommended taking the small band 1 row and interleaving the rest by
   severity. The ruling was to drain band 1 entirely first. See pattern 4; my defaults were the
   error, not the ruling.
+- 2026-09-13, authoring the AI-infrastructure guide. I recommended authoring directly rather than
+  dispatching drafts, on the grounds that I hold the verified facts and would re-verify a draft
+  anyway. The ruling was two independent drafts. That is the SECOND time a recommendation of mine
+  was overruled toward more rigour, after queue order the same day, which is pattern 4 holding
+  twice. The correction stands and is now evidenced rather than inferred: where the choice is
+  between a cheaper path and a more thorough one, predict the more thorough one.

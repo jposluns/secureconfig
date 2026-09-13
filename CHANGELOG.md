@@ -124,6 +124,13 @@ with the merged pull request is therefore an authoring obligation, not an enforc
   LangServe's deprecation and Mem0 shipping authentication on. Row 1.8 loses LocalAI to the new
   guide and records why, and row 1.43 opens for the published-backing-store pattern now seen in
   Dify, Mem0 and Onyx alike.
+- Four more rulings recorded, and a second correction to the decision profile (#59). The
+  permission-rule ruling is reversed on my own report that the evidence weakened; the
+  AI-infrastructure guide gets two independent drafts rather than direct authoring; untested Verify
+  checks ship marked as reasoned rather than demonstrated; and bands 2 and 3 stay ordered by the
+  severity already recorded on each row. The profile now records two occasions in one day where a
+  recommendation was overruled toward more rigour, so that pattern is evidenced rather than
+  inferred.
 
 ## 2026-09-12
 
