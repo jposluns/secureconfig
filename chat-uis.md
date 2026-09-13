@@ -87,8 +87,8 @@ ss -tlnp | grep -E '3001|3210|3000'                    # each UI on 127.0.0.1 on
 # address. An HTTP code means the port answered. A resolver failure, a local socket error, or a
 # timeout that did not come from the remote address is inconclusive, never a pass.
 probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "$probe_ip" in
-  *REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+case "${probe_ip:-}" in
+  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
   *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
        -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$probe_ip:3210/" ;;
 esac

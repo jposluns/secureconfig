@@ -58,8 +58,8 @@ ss -tlnp | grep -E '8188|7860|9090'                 # each service on 127.0.0.1 
 # timeout reaching YOUR address. An HTTP code means the port answered. A resolver failure, a local
 # socket error, or a timeout that did not come from the remote address is inconclusive.
 probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "$probe_ip" in
-  *REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+case "${probe_ip:-}" in
+  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
   *) for p in 8188 7860 9090; do                              # ComfyUI, SD WebUI, InvokeAI
        curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
          -w "port=$p http=%{http_code} exit=%{exitcode} err=%{errormsg}\n" "http://$probe_ip:$p/"

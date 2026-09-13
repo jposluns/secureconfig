@@ -101,8 +101,8 @@ curl -s -o /dev/null -w '%{http_code}\n' https://panel.example.com/
                                                                   # this panel is behind a proxy holding a real certificate, so
                                                                   # a check that skips verification proves nothing about it
 probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "$probe_ip" in
-  *REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+case "${probe_ip:-}" in
+  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
   *) docker -H "tcp://$probe_ip:2375" info ;;       # must fail: connection refused or filtered
 esac
 env -u DOCKER_HOST -u DOCKER_TLS_VERIFY -u DOCKER_CERT_PATH \
