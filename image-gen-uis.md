@@ -57,6 +57,8 @@ ss -tlnp | grep -E '8188|7860|9090'                 # each service on 127.0.0.1 
 # each must be unreachable from another host. Read err, not the number: it must name a refusal or
 # timeout reaching YOUR address. An HTTP code means the port answered. A resolver failure, a local
 # socket error, or a timeout that did not come from the remote address is inconclusive.
+unset probe_ip                                      # clears a pre-set declare -i or -l attribute, and any stale
+                                                    # value; copy this whole block, not just the command below
 probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
 case "${probe_ip:-}" in
   *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;

@@ -67,6 +67,13 @@ with the merged pull request is therefore an authoring obligation, not an enforc
   and under `set -u` a partial paste crashed in a way these steps call a refusal. `README.md`'s own
   checklist had the defect in its worst form, targeting `example.com`, which resolves and serves
   HTTPS, so its TLS check passed for every reader whatever state their deployment was in.
+- Placeholder guards now unset their variable before assigning it, and five guides classify a local
+  failure as inconclusive rather than a pass (#57). A pre-existing `declare -i` made the assignment
+  arithmetic and silently set `0`, so the probe ran against nothing; `declare -l` lowercased the
+  placeholder past the rejection pattern; and a stale exported value survived a paste that dropped
+  the assignment. Separately, OpenBSD netcat returns exit 1 with no output at all when socket
+  creation is denied, and BusyBox netcat rejects `-v` the same way, so "must fail to connect"
+  accepted a check that never reached the network.
 
 ### Changed
 

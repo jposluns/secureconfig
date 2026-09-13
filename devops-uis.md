@@ -100,10 +100,15 @@ curl -s -o /dev/null -w '%{http_code}\n' https://panel.example.com/
                                                                   # 401, 403, or a login redirect, never a dashboard. No -k:
                                                                   # this panel is behind a proxy holding a real certificate, so
                                                                   # a check that skips verification proves nothing about it
+# clears a pre-set declare -i or -l attribute, and any stale
+# value; copy this whole block, not just the command below
+unset probe_ip
 probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
 case "${probe_ip:-}" in
   *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
   *) docker -H "tcp://$probe_ip:2375" info ;;       # must fail: connection refused or filtered
+  # that is, refused or filtered BY THE REMOTE HOST. A local error or a docker client failure that
+  # never opened a connection is inconclusive, not a pass
 esac
 env -u DOCKER_HOST -u DOCKER_TLS_VERIFY -u DOCKER_CERT_PATH \
   curl -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem https://203.0.113.10:2376/_ping
