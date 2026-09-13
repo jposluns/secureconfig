@@ -80,11 +80,14 @@ None of the four documents instance-wide MFA enforcement. Where OIDC exists (Lib
 ## Verify
 
 ```bash
-ss -tlnp                                        # read the whole list: app ports on 127.0.0.1; 80/443 public only where Dify's own nginx is the TLS edge; nothing on 5003
-docker compose ps --format json                 # run in dify/docker: the plugin_daemon entry must
-                                                # carry no PublishedPort. A grep for "published"
-                                                # cannot say which service published it.
-nc -vz -w 3 203.0.113.10 5003                   # from an outside network: must fail to connect.
+ss -tlnp                                        # read the whole list: app ports on 127.0.0.1; 80/443
+                                                # public only where Dify's own nginx is the TLS edge.
+                                                # A container port published by DNAT need not appear
+                                                # here at all, so this list cannot clear 5003 by itself
+docker compose ps --format json                 # run in dify/docker: the plugin_daemon entry's
+                                                # Publishers array must be empty or absent. A grep for
+                                                # "published" cannot say which service published it
+nc -vz -w 3 203.0.113.10 5003                   # from an outside network, and the authority here:
                                                 # EXPOSE_PLUGIN_DEBUGGING_PORT can move it, so the ps output above is the authority on which port to probe
 curl -sI https://builder.example.com/                  # TLS; login page or redirect, not the editor
 curl -s -o /dev/null -w '%{http_code}\n' -X POST 'https://flowise.example.com/api/v1/prediction/REPLACE_WITH_CHATFLOW_ID'   # 401

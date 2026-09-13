@@ -49,7 +49,7 @@ sudo ufw enable
 
 SSH stays closed to the world here for the same reason rule 3 in [cloud-firewalls.md](cloud-firewalls.md) keeps it off the cloud firewall: `ufw allow OpenSSH` opens port 22 to every address on the internet. Restrict it to the range you administer from, or add no SSH rule at all and reach the host through brokered access or a tailnet ([tailscale.md](tailscale.md)).
 
-RHEL-family systems use firewalld (`firewall-cmd --permanent --add-service=https` and so on) with the same posture. Open only the ports the TLS-terminating layer needs; databases and app servers stay unreachable from outside per their guides. Docker-published ports bypass ufw entirely; see [docker.md](docker.md) before relying on the firewall.
+RHEL-family systems use firewalld (`firewall-cmd --permanent --add-service=https` and so on) with the same posture, and that includes SSH: `--add-service=ssh` opens port 22 to every address exactly as `ufw allow OpenSSH` does, so restrict it with a rich rule instead, `firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="REPLACE_WITH_ADMIN_RANGE" service name="ssh" accept'`. Open only the ports the TLS-terminating layer needs; databases and app servers stay unreachable from outside per their guides. Docker-published ports bypass ufw entirely; see [docker.md](docker.md) before relying on the firewall.
 
 ## 3. Brute-force protection and updates
 
@@ -72,7 +72,8 @@ Run the SSH test from a second terminal before closing your working session.
 
 - OpenSSH sshd_config manual: https://man.openbsd.org/sshd_config
 - ufw(8), for `default deny incoming`, `allow` and `status verbose`: https://manpages.ubuntu.com/manpages/noble/man8/ufw.8.html
-- firewall-cmd(1), for `--permanent --add-service`: https://firewalld.org/documentation/man-pages/firewall-cmd.html
+- firewall-cmd(1), for `--permanent --add-service` and `--add-rich-rule`: https://firewalld.org/documentation/man-pages/firewall-cmd.html
+- firewalld.richlanguage(5), for the `source address` / `service name` / `accept` rule form: https://firewalld.org/documentation/man-pages/firewalld.richlanguage.html
 - fail2ban: https://github.com/fail2ban/fail2ban
 - CrowdSec: https://www.crowdsec.net/
 - google-authenticator-libpam: https://github.com/google/google-authenticator-libpam
