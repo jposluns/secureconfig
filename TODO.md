@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.43**, **2.24**, **3.11**, **4.5**.
+Next ids: **1.44**, **2.24**, **3.11**, **4.5**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -69,11 +69,12 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.33 | `secrets.md`: no mention that terraform.tfstate, kubeconfigs with embedded client keys, and ~/.docker/config.json are plaintext credential files that belong in .gitignore and in scanner scope alongside .env and *.pem (L, XS) | `[enhance]` |
 | 1.35 | `gpu-clouds.md`: template-shipped desktop listeners (noVNC/VNC in ComfyUI and desktop images) are not mentioned; they are often password-less and land on the platform's public port mapping like any other listener (template defaults unverified offline) (L, S) | `[enhance]` |
 | 1.6 | `docker.md`: the DOCKER-USER iptables chain, the vendor-documented way to filter published ports when loopback publishing is not viable, never appears even though it is documented on the packet-filtering page the guide already cites (not re-opened offline); Qualify localhost publication with Docker’s pre-28.0.0  (H, S) [3 families] | `[enhance]` |
-| 1.8 | `model-servers.md`: LocalAI and text-generation-webui are absent; both are commonly deployed with `--listen`-style flags and have native key/auth options worth stating or honestly denying (unverified offline); Verify step filters ss output by expected ports (`grep -E`), violating the rule against filtering (H, S) [2 families] | `[enhance]` |
+| 1.8 | `model-servers.md`: text-generation-webui is absent, and is commonly deployed with `--listen`-style flags and has native key/auth options worth stating or honestly denying; the Verify step filters `ss` output by expected ports with `grep -E`, which the rule against filtering forbids. LocalAI was removed from this row on 2026-09-13: `DECISIONS.md` enumerates it among the six the new AI-infrastructure guide owns, and this guide carries only a one-sentence pointer. (H, S) [2 families] | `[enhance]` |
 | 1.9 | `vector-databases.md`: Explicitly restrict Qdrant cluster port 6335 to cluster peers and include it in Verify, whose port filter currently omits it; API keys and bearer tokens never protect internal cluster communication (vendor); Verify never probes the backend ports directly from outside, leaving published container por (H, S) [2 families] | `[enhance]` |
 | 1.39 | `tailscale.md`: the default tailnet ACL is permissive, and device identity is not user authorization. The guide should say what an ACL has to do before "reachable only by your tailnet" means what a reader hears. (H, S) | `[enhance]` |
 | 1.40 | `firebase-supabase.md`: per-overload RPC negative tests, and a worked pre-15 example of revoking a view from `public`, `anon` and `authenticated` together. (M, S) | `[enhance]` |
 | 1.41 | `agent-builders.md`: establish whether Flowise, Langflow and LibreChat ship vendor Compose files a reader would be overriding. If they do, the `!reset` caveat added in #45 is load-bearing for them rather than advisory. Premise unverified per vendor. (M, S) | `[enhance]` |
+| 1.43 | A guarded front door with the backing store published beside it, now seen in three unrelated tools: Dify's compose publishes the plugin daemon next to the app, Mem0's publishes PostgreSQL on 8432 beside an authenticated API, and Onyx's development compose publishes seven services past its login page. The `${VAR:-default}` shape is identical in each and moves the host port without closing the publication. The new AI-infrastructure guide carries the authoritative treatment per the 2026-09-13 ruling and `agent-builders.md` cross-references it; this row tracks whether the other Compose-deploying guides need the same pointer. (M, M) | `[enhance]` |
 
 ## Priority 3: Add missing content
 
@@ -92,7 +93,7 @@ marked, and those are the ones worth taking first.
 | 2.12 | Guide for self-hosted-ci-runners (GitHub Actions runner, GitLab Runner): a runner on a public repo executes fork-PR code on your host and registration tokens are credentials; corpus covers Jenkins but not the runner class AI-assisted projects actually attach to github.com/gitlab.com (unverified offline) (M, M) | `[gap]` |
 | 2.13 | Guide for transactional-email-posture (SPF/DKIM/DMARC, SMTP submission credentials, open relay): password-reset and invite mail is part of the auth path of most deployments and spoofable senders undermine it; the corpus contains no SMTP/DMARC content at all (M, M) | `[gap]` |
 | 2.14 | Guide for Vault deployment: The secret-store recommendation lacks a deployment guide covering TLS, sealing, audit logging, and retirement of the initial root token (vendor) (M, L) | `[gap]` |
-| 2.15 | Guide for Onyx (formerly Danswer): Enterprise RAG server with complex default exposure (M, L) | `[gap]` |
+| 2.15 | Guide for Onyx (formerly Danswer). The original row said "complex default exposure", which is not what the vendor documents. Authentication has been ON by default since v4.4.0, `AUTH_TYPE` is inert and slated for removal in v4.5, and email/password auth works with no configuration. The exposure is the compose file chosen: `docker-compose.prod.yml` publishes only nginx on 80 and 443 with every backing service on the Docker network, while `docker-compose.dev.yml` publishes seven, among them PostgreSQL, OpenSearch, Redis, MinIO and a code interpreter, none of which pass through nginx or its authentication. Premise corrected 2026-09-13 from source. (M, L) | `[gap]` |
 | 2.16 | Guide for Mem0: Agent memory store with a REST API often exposed without auth (M, M) | `[gap]` |
 | 2.17 | Guide for Text Embeddings Inference: HuggingFace embedding server with no native auth (M, S) | `[gap]` |
 | 2.18 | Guide for time-series-metrics-stores (InfluxDB, VictoriaMetrics, QuestDB): monitoring stores beyond the Prometheus note in admin-uis.md; VictoriaMetrics single-node and the QuestDB web console ship without authentication (defaults unverified offline) (L, M) | `[gap]` |
