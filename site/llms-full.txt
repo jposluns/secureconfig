@@ -7368,7 +7368,7 @@ curl -q -s -o /dev/null -w '%{http_code}\n' https://dify.example.com/v1/paramete
 
 # AI infrastructure services: SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0, and Onyx
 
-These services expose search, inference, embeddings, document access, or an agent's memory. Their authentication stories differ: SearxNG and LangServe require a fronting layer or application authentication, LocalAI has a key that is unset by default, and Mem0 and Onyx ship authentication on. The deployment command decides what the network sees. Mem0's Compose file and Onyx's development Compose publish backing services beside the authenticated application, where application login cannot protect them.
+These services expose search, inference, embeddings, document access, or an agent's memory. Their authentication stories differ: SearxNG and LangServe require a fronting layer or application authentication, LocalAI and Text Embeddings Inference each have a key that is unset by default, and Mem0 and Onyx ship authentication on. The deployment command decides what the network sees. Mem0's Compose file and Onyx's development Compose publish backing services beside the authenticated application, where application login cannot protect them.
 
 Keep the application and its backing services private, publish only an authenticated TLS ingress, and keep or enable native authentication wherever it exists.
 
@@ -7381,7 +7381,7 @@ Defaults below describe the vendor examples checked on 2026-09-13. A **host publ
 | SearxNG, direct | Application: `127.0.0.1:8888` | None | No container publication in this form | `server.bind_address` and `server.port` in `settings.yml` | [Front it](fronting-auth.md) |
 | SearxNG, documented Docker run | All host interfaces, `8888:8080` | None | No other mapping in the cited run | Replace with `127.0.0.1:8888:8080`, or publish nothing | [Front it](fronting-auth.md) |
 | LocalAI, documented Docker run | All host interfaces, `8080:8080` | Off: native key is unset | No additional publications established by the verified record | Replace with `127.0.0.1:8080:8080`, or publish nothing | Set `LOCALAI_API_KEY`; `LOCALAI_AUTH=true` enables multi-user OAuth with per-user keys |
-| Text Embeddings Inference, documented Docker run | All host interfaces, `8080:80` | No inbound authentication documented in the verified quick tour; native control unverified | No additional publications established by the verified record | Replace with `127.0.0.1:8080:80`, or publish nothing | Enforce authentication at the proxy |
+| Text Embeddings Inference, documented Docker run | All host interfaces, `8080:80` | Off: `--api-key` / `API_KEY` is unset, and the server then answers every request | Nothing else in the cited run; the metrics listener on `--prometheus-port`, default `9000`, is a second listener it does not publish | Replace with `127.0.0.1:8080:80`, or publish nothing | Set `--api-key` or `API_KEY`, and keep the metrics listener off the host |
 | LangServe, quickstart | Application: `localhost:8000` | None supplied; the application author provides authentication | No container publication in this form | `host=` in `uvicorn.run` | FastAPI dependencies, or [front it](fronting-auth.md) |
 | Mem0, server Compose | Application: `0.0.0.0:8000` inside the container; all host interfaces, `8888:8000` | On: bearer JWT, per-user `X-API-Key`, or legacy admin key | PostgreSQL `8432:5432`; dashboard `3000:3000`, both on all host interfaces | Remove PostgreSQL's publication; remove or loopback-scope API and dashboard mappings | Keep authentication enabled; do not set `AUTH_DISABLED=true` |
 | Onyx, production Compose | nginx host publications `80:80` and `443:443` | On: email/password | Backing services have no host publications | Keep backing services unpublished; configure the intended TLS ingress | Keep the built-in login; `AUTH_TYPE` is inert since v4.4.0 |
@@ -7457,7 +7457,11 @@ Use the vendor's multi-user setup instructions when choosing that mode. Keep aut
 
 The documented Docker run publishes host port 8080 to container port 80. Replace `8080:80` with `127.0.0.1:8080:80` behind a host proxy, or publish nothing behind a containerized proxy.
 
-Inbound authentication is not documented in the verified quick tour. Whether the deployed version has a native authentication flag is **unverified here**. Enforce authentication at the proxy; do not assume a token used to download a model authenticates incoming embedding requests.
+There is a native inbound control, and it is off until you set it. The CLI reference documents `--api-key`, with the environment variable `API_KEY`. With no key set the server responds to every request; with one set, a request must carry the key as a bearer token in the `Authorization` header. Set it, and front the service as well, because one static key is not a user model.
+
+Two defaults compound the exposure. `--hostname` defaults to `0.0.0.0`, so the process listens on every interface inside its namespace and the publication alone decides what reaches it. `--prometheus-port` defaults to `9000`, a second listener the quick tour does not mention and the `--api-key` check does not cover. The cited Docker run does not publish it; leave it that way rather than assuming the key protects it.
+
+Do not assume a token used to download a model authenticates incoming embedding requests.
 
 ### LangServe
 
@@ -7473,7 +7477,11 @@ A PostgreSQL password prompt does not fix this deployment boundary. The database
 
 ### Mem0
 
-Keep authentication on. Protected API endpoints accept a bearer JWT from the dashboard login flow or an `X-API-Key` header. Per-user keys have the `m0sk_` prefix; the legacy `ADMIN_API_KEY` is also supported. Do not leave `AUTH_DISABLED=true` in a deployed environment.
+Keep authentication on. Protected API endpoints accept a bearer JWT from the dashboard login flow or an `X-API-Key` header. Per-user keys have the `m0sk_` prefix; the legacy `ADMIN_API_KEY` is also supported. Do not leave `AUTH_DISABLED=true` in a deployed environment. The server logs a warning at startup when it is enabled, and another when `ADMIN_API_KEY` is shorter than 16 characters, and neither warning stops the start.
+
+`JWT_SECRET` is not optional. The documented `server/.env` sets it beside `OPENAI_API_KEY`, generated with `openssl rand -base64 48`, and the JWTs that carry a dashboard session are signed with it.
+
+Register the first admin before the deployment is reachable from anywhere but the host. `POST /auth/register` succeeds only while no user exists and returns `403` afterwards, so an instance published before that call hands admin to whoever finds it first. Bootstrap it on the host, either with `make bootstrap` from `server/`, which starts Compose, creates the admin, and issues the first API key, or through the setup wizard while the dashboard is still host-only. The `/` redirect, `/docs`, and `/openapi.json` stay open in every configuration, so reaching one of those proves nothing about the protected endpoints.
 
 The server Compose publishes three services:
 
@@ -7490,6 +7498,8 @@ The cited Compose command runs uvicorn with `--host 0.0.0.0 --port 8000 --reload
 ### Onyx
 
 Use `deployment/docker_compose/docker-compose.prod.yml` as the production deployment basis. In the verified file, only nginx publishes host ports; the backing services stay on the Docker network.
+
+The first user to sign up becomes an admin. Complete that sign-up while the deployment is still reachable only from the host, because until it happens the login page is an admin-enrolment form for whoever reaches it first.
 
 If the development file is running, remove the API publication and every backing publication listed in the table, except any deliberately retained loopback access. The six backing services account for seven host ports because MinIO publishes both its API and console. The API's 8080 publication is additional.
 
@@ -7511,23 +7521,24 @@ Machine clients need separate credentials, with the narrowest permissions the ap
 
 **Demonstration status:** the placeholder guards and the placeholder-scan discrimination were exercised locally. Checks 2 to 7 below are **reasoned rather than demonstrated** against deployments. No container runtime, live service, external network vantage, TLS exchange, or browser authentication flow was exercised while authoring. The maintainer's verified vendor record supplies the deployment facts.
 
-Use Bash for these blocks and curl 7.75.0 or newer for `exitcode` and `errormsg`. Copy each complete assignment-and-guard block. `unset` clears stale values and inherited variable attributes; the command remains inside the `case` arm so an unsubstituted value cannot launch a probe.
+Use Bash for these blocks and curl 7.75.0 or newer for `exitcode` and `errormsg`. Copy each complete block, including the enclosing parentheses. The values go on the `set --` line, so no named variable is exposed to attributes or values the reader's shell already holds, and every probe sits behind a guard that leaves the subshell rather than running on an unsubstituted value. Substitute inside the single quotes and leave them in place. They are what keeps a URL's `&` from backgrounding the line and a `$(...)` or a backtick in a pasted value from running: the shell evaluates that value before any guard in the block can see it.
 
 ### 1. Reject unfinished configuration and probe values
 
 Run this for each configuration or environment file you edited:
 
 ```bash
-unset infra_config
-infra_config=REPLACE_WITH_EDITED_CONFIG_FILE
-case "${infra_config:-}" in
-  *REPLACE_WITH_*|"") echo "substitute infra_config first; not checking" ;;
-  *) grep -nH -o 'REPLACE_WITH_[[:alnum:]_]*' -- "$infra_config"
-     printf 'grep_exit=%s\n' "$?" ;;
-esac
+(                              # a subshell, so your own script arguments are untouched
+  set -- 'REPLACE_WITH_EDITED_CONFIG_FILE'
+  case "${1-}" in
+    *REPLACE_WITH_*|"") echo "substitute the file name on the set -- line above; not checking" ;;
+    *) grep -nH -o 'REPLACE_WITH_[[:alnum:]_]*' -- "$1"
+       printf 'grep_exit=%s\n' "$?" ;;
+  esac
+)
 ```
 
-**Broken:** unresolved values print their filename, line number, and placeholder token, followed by `grep_exit=0`. Stop and replace them. An unchanged filename placeholder prints `substitute infra_config first; not checking`.
+**Broken:** unresolved values print their filename, line number, and placeholder token, followed by `grep_exit=0`. Stop and replace them. An unchanged filename placeholder prints `substitute the file name on the set -- line above; not checking`.
 
 **Fixed:** no placeholder matches print, followed by `grep_exit=1`. A file-read error is inconclusive, not a clean scan. This check prints only the matched placeholder tokens, rather than complete secret-bearing lines.
 
@@ -7558,15 +7569,15 @@ A Compose error, missing service, stopped application, or empty inventory is not
 **Reasoned, not demonstrated, including the cross-host vantage.** Probe every application or dashboard port found in check 2, using its actual host port. Include reachable LAN addresses and public IPv4/IPv6 addresses; bracket an IPv6 literal used in the HTTP URL. Exclude the intentionally public TLS ingress.
 
 ```bash
-unset infra_host infra_port
-infra_host=REPLACE_WITH_HOST_ADDRESS
-infra_port=REPLACE_WITH_PORT
-case "${infra_host:-}:${infra_port:-}" in
-  *REPLACE_WITH_*|:*|*:) echo "substitute infra_host and infra_port first; not probing" ;;
-  *) curl -q -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-       -w 'http=%{http_code} exit=%{exitcode} remote=%{remote_ip} time_connect=%{time_connect} err=%{errormsg}\n' \
-       "http://$infra_host:$infra_port/" ;;
-esac
+(                              # a subshell, so your own script arguments are untouched
+  set -- 'REPLACE_WITH_HOST_ADDRESS' 'REPLACE_WITH_PORT'
+  case "${1-}:${2-}" in
+    *REPLACE_WITH_*|:*|*:) echo "substitute the address and port on the set -- line above; not probing" ;;
+    *) curl -q -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+         -w 'http=%{http_code} exit=%{exitcode} remote=%{remote_ip} time_connect=%{time_connect} err=%{errormsg}\n' \
+         "http://$1:$2/" ;;
+  esac
+)
 ```
 
 **Broken:** any HTTP response, including `401`, proves the direct path exists. A completed TCP connection followed by an empty response, reset, or timeout also fails the private-network requirement.
@@ -7582,14 +7593,14 @@ A timeout alone is inconclusive. `http=000` can occur after a server accepts and
 For the unchanged vendor examples, Mem0 adds 8432 and 3000 beside API port 8888. Onyx development adds 5432, 9200, 9000, 6379, 9004, 9005, and 8000 beside API port 8080. Environment variables can move these ports; the running inventory is the authority.
 
 ```bash
-unset infra_host infra_port
-infra_host=REPLACE_WITH_HOST_ADDRESS
-infra_port=REPLACE_WITH_PORT
-case "${infra_host:-}:${infra_port:-}" in
-  *REPLACE_WITH_*|:*|*:) echo "substitute infra_host and infra_port first; not probing" ;;
-  *) nc -vz -w 5 "$infra_host" "$infra_port"
-     printf 'exit=%s\n' "$?" ;;
-esac
+(                              # a subshell, so your own script arguments are untouched
+  set -- 'REPLACE_WITH_HOST_ADDRESS' 'REPLACE_WITH_PORT'
+  case "${1-}:${2-}" in
+    *REPLACE_WITH_*|:*|*:) echo "substitute the address and port on the set -- line above; not probing" ;;
+    *) nc -vz -w 5 "$1" "$2"
+       printf 'exit=%s\n' "$?" ;;
+  esac
+)
 ```
 
 **Broken:** netcat reports a successful connection and `exit=0`. A database password prompt or a service that sends nothing after accepting does not change that result.
@@ -7604,25 +7615,30 @@ A timeout remains inconclusive without corroborating configuration and filtering
 
 Do not choose a health endpoint, documentation page, login page, or an invented path. A `404` or request-validation error cannot demonstrate authentication.
 
-Set `infra_method` to the actual method, such as `GET` or `POST`. Leave `infra_json` empty for a request without a body; otherwise use a harmless JSON test body.
+Set the second value on the `set --` line to the actual method, such as `GET` or `POST`. Leave the third value empty for a request without a body; otherwise put a harmless JSON test body there.
 
 ```bash
-unset infra_url infra_method infra_json infra_args
-infra_url=REPLACE_WITH_PROTECTED_URL
-infra_method=REPLACE_WITH_HTTP_METHOD
-infra_json='' # For a JSON request, set its harmless test body here.
-case "${infra_url:-}|${infra_method:-}|${infra_json:-}" in
-  *REPLACE_WITH_*|'|'*|*'||'*) echo "substitute the request values first; not probing" ;;
-  https://*)
-    infra_args=()
-    if [ -n "$infra_json" ]; then
-      infra_args=(-H 'Content-Type: application/json' --data-binary "$infra_json")
-    fi
-    curl -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-      -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-      -X "$infra_method" "${infra_args[@]}" "$infra_url" ;;
-  *) echo "use a https:// URL; not probing" ;;
-esac
+(                              # a subshell, so your own script arguments are untouched
+  set -- 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' ''
+  # $3 is the harmless JSON request body. Leave it empty for a request that needs none.
+  if [ -z "${1-}" ] || [ -z "${2-}" ]; then
+    echo "fill in the URL and method on the set -- line above; not probing"; exit
+  fi
+  case "$1$2" in
+    *REPLACE_WITH_*) echo "substitute the request values on the set -- line above; not probing"; exit ;;
+  esac
+  case "$1" in
+    https://*) ;;
+    *) echo "use a https:// URL; not probing"; exit ;;
+  esac
+  if [ -n "${3-}" ]; then
+    set -- -H 'Content-Type: application/json' --data-binary "$3" -X "$2" "$1"
+  else
+    set -- -X "$2" "$1"
+  fi
+  curl -q -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$@"
+)
 ```
 
 **Broken:** the anonymous request returns application data or performs the capability, typically with a `2xx` status.
@@ -7633,27 +7649,32 @@ A redirect alone is insufficient: inspect its destination. Do not follow it auto
 
 ### 6. Exercise the capability without native credentials
 
-**Reasoned, not demonstrated.** For LocalAI with a key, Mem0, Onyx, or LangServe with application authentication, run the same harmless protected request against the private upstream from a trusted location that can reach it. Do not publish a port to perform this check.
+**Reasoned, not demonstrated.** For LocalAI or Text Embeddings Inference with a key set, Mem0, Onyx, or LangServe with application authentication, run the same harmless protected request against the private upstream from a trusted location that can reach it. Do not publish a port to perform this check.
 
-For SearxNG, Text Embeddings Inference without an established native control, or LangServe relying entirely on its proxy, run this capability check through the authenticated HTTPS ingress. An intentionally unauthenticated private upstream cannot demonstrate native authentication.
+For SearxNG, for LangServe relying entirely on its proxy, or for any service you have deliberately left unauthenticated on the private side, run this capability check through the authenticated HTTPS ingress. An intentionally unauthenticated private upstream cannot demonstrate native authentication.
 
 ```bash
-unset infra_url infra_method infra_json infra_args
-infra_url=REPLACE_WITH_PROTECTED_URL
-infra_method=REPLACE_WITH_HTTP_METHOD
-infra_json='' # Use the same harmless request body as checks 5 and 7.
-case "${infra_url:-}|${infra_method:-}|${infra_json:-}" in
-  *REPLACE_WITH_*|'|'*|*'||'*) echo "substitute the request values first; not probing" ;;
-  http://*|https://*)
-    infra_args=()
-    if [ -n "$infra_json" ]; then
-      infra_args=(-H 'Content-Type: application/json' --data-binary "$infra_json")
-    fi
-    curl -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-      -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-      -X "$infra_method" "${infra_args[@]}" "$infra_url" ;;
-  *) echo "use an http:// or https:// URL; not probing" ;;
-esac
+(                              # a subshell, so your own script arguments are untouched
+  set -- 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' ''
+  # $3 is the same harmless JSON body as checks 5 and 7. Leave it empty for a request that needs none.
+  if [ -z "${1-}" ] || [ -z "${2-}" ]; then
+    echo "fill in the URL and method on the set -- line above; not probing"; exit
+  fi
+  case "$1$2" in
+    *REPLACE_WITH_*) echo "substitute the request values on the set -- line above; not probing"; exit ;;
+  esac
+  case "$1" in
+    http://*|https://*) ;;
+    *) echo "use an http:// or https:// URL; not probing"; exit ;;
+  esac
+  if [ -n "${3-}" ]; then
+    set -- -H 'Content-Type: application/json' --data-binary "$3" -X "$2" "$1"
+  else
+    set -- -X "$2" "$1"
+  fi
+  curl -q -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$@"
+)
 ```
 
 **Broken:** the unauthenticated caller receives protected data or successfully invokes the capability.
@@ -7671,23 +7692,27 @@ Mem0 and Onyx ship authentication on, but the verified record does not establish
 The header below is reader-supplied. For a configured bearer-token proxy it is `Authorization: Bearer` followed by the token. Mem0 accepts its native per-user key through `X-API-Key`, or a JWT through `Authorization: Bearer`. Other native credential transports are **unverified in the supplied record**. Where ingress and application require separate credentials, add both headers inside the guarded curl command using the deployed authentication design.
 
 ```bash
-unset infra_url infra_method infra_json infra_args infra_auth_header
-infra_url=REPLACE_WITH_PROTECTED_URL
-infra_method=REPLACE_WITH_HTTP_METHOD
-infra_json='' # Use the same harmless request body as the anonymous check.
-infra_auth_header='REPLACE_WITH_HEADER_NAME: REPLACE_WITH_CREDENTIAL'
-case "${infra_url:-}|${infra_method:-}|${infra_auth_header:-}|${infra_json:-}" in
-  *REPLACE_WITH_*|'|'*|*'||'*) echo "substitute the request values first; not probing" ;;
-  https://*)
-    infra_args=()
-    if [ -n "$infra_json" ]; then
-      infra_args=(-H 'Content-Type: application/json' --data-binary "$infra_json")
-    fi
-    curl -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-      -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-      -X "$infra_method" "${infra_args[@]}" -H "$infra_auth_header" "$infra_url" ;;
-  *) echo "use a https:// URL; not probing" ;;
-esac
+(                              # a subshell, so your own script arguments are untouched
+  set -- 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' '' 'REPLACE_WITH_HEADER_NAME: REPLACE_WITH_CREDENTIAL'
+  # $3 is the same harmless JSON body as the anonymous check. Leave it empty for a request that needs none.
+  if [ -z "${1-}" ] || [ -z "${2-}" ] || [ -z "${4-}" ]; then
+    echo "fill in the URL, method, and header on the set -- line above; not probing"; exit
+  fi
+  case "$1$2$4" in
+    *REPLACE_WITH_*) echo "substitute the request values on the set -- line above; not probing"; exit ;;
+  esac
+  case "$1" in
+    https://*) ;;
+    *) echo "use a https:// URL; not probing"; exit ;;
+  esac
+  if [ -n "${3-}" ]; then
+    set -- -H 'Content-Type: application/json' --data-binary "$3" -H "$4" -X "$2" "$1"
+  else
+    set -- -H "$4" -X "$2" "$1"
+  fi
+  curl -q -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$@"
+)
 ```
 
 **Broken:** both anonymous and credentialed requests return protected data, or the credentialed request cannot reach a working application after the restrictions were applied. Connection failures, `401`/`403`, `5xx`, or a login page in place of the expected result do not establish a working protected service.
@@ -7716,16 +7741,17 @@ If the deployment trusts identity headers from a proxy, also perform the forged-
 
 The service facts come from the maintainer's vendor-source verification record dated 2026-09-13. This authoring environment had no network; the pages were not reopened here. Docker and probe syntax also follow the cited sources already recorded in the repository's existing guides.
 
-**Citation pinning:** the Mem0 and Onyx Compose citations below are pinned to commits, and each commit was opened and confirmed to contain the fact it is cited for. The LangServe link is a repository root rather than a file, so it cannot be pinned the same way; it was read at commit `27e57afeda13007a7f4e007c5d1f5e8489963aa4`.
+**Citation pinning:** the LangServe, Mem0, and Onyx citations below are pinned to commits, and each commit was opened and confirmed to contain the fact it is cited for.
 
 - [SearxNG server settings](https://docs.searxng.org/admin/settings/settings_server.html): `server.bind_address`, `server.port`, and direct defaults.
 - [SearxNG Docker installation](https://docs.searxng.org/admin/installation-docker.html): documented `8888:8080` publication.
 - [LocalAI getting started](https://localai.io/docs/basics/getting_started/): port 8080, Docker publication, `LOCALAI_API_KEY`, and `LOCALAI_AUTH`.
 - [Text Embeddings Inference quick tour](https://huggingface.co/docs/text-embeddings-inference/en/quick_tour): container port 80 and host publication 8080.
-- [LangServe repository README](https://github.com/langchain-ai/langserve): quickstart bind, application authentication responsibility, deprecation, and successor. Read at commit `27e57afeda13007a7f4e007c5d1f5e8489963aa4`.
-- [Mem0 REST API](https://docs.mem0.ai/open-source/features/rest-api): authentication enabled by default, JWTs, `X-API-Key`, `m0sk_` keys, `ADMIN_API_KEY`, and `AUTH_DISABLED`.
+- [Text Embeddings Inference CLI arguments](https://huggingface.co/docs/text-embeddings-inference/en/cli_arguments): `--api-key` and `API_KEY`, the default-open behaviour without one, `--hostname` defaulting to `0.0.0.0`, and `--prometheus-port` defaulting to `9000`.
+- [LangServe README at commit `27e57af`](https://github.com/langchain-ai/langserve/blob/27e57afeda13007a7f4e007c5d1f5e8489963aa4/README.md): quickstart bind, application authentication responsibility, deprecation on 2024-11-18, and successor.
+- [Mem0 REST API](https://docs.mem0.ai/open-source/features/rest-api): authentication enabled by default, JWTs, `X-API-Key`, `m0sk_` keys, `ADMIN_API_KEY`, `AUTH_DISABLED` and its startup warning, `JWT_SECRET`, `make bootstrap`, the first-admin `POST /auth/register`, and the routes that stay open.
 - [Mem0 server Compose](https://github.com/mem0ai/mem0/blob/c7ee362aff94a369af70f13f2b4f853f6793ff4c/server/docker-compose.yaml): uvicorn command and API, PostgreSQL, and dashboard publications.
-- [Onyx basic authentication](https://docs.onyx.app/deployment/authentication/basic.md): email/password authentication and inert `AUTH_TYPE`.
+- [Onyx basic authentication](https://docs.onyx.app/deployment/authentication/basic.md): email/password authentication, the first user to sign up becoming an admin, and inert `AUTH_TYPE`.
 - [Onyx local Docker deployment](https://docs.onyx.app/deployment/local/docker.md): documented access at `localhost:3000`.
 - [Onyx production Compose](https://github.com/onyx-dot-app/onyx/blob/a0370f232ba4e4625131fae518b86e5530e98ec5/deployment/docker_compose/docker-compose.prod.yml): nginx-only host publications.
 - [Onyx development Compose](https://github.com/onyx-dot-app/onyx/blob/a0370f232ba4e4625131fae518b86e5530e98ec5/deployment/docker_compose/docker-compose.dev.yml): API and backing-service publications.

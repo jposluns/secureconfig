@@ -33,10 +33,28 @@ with the merged pull request is therefore an authoring obligation, not an enforc
   that were wrong at source: LangServe is deprecated, and Mem0 and Onyx both ship authentication on.
   What the six share is not a missing password but that the run form decides what the network sees,
   and it publishes more than the authentication covers. Two shapes are named: authentication absent
-  or unset, and a guarded front door with the backing store published beside it.
+  or unset, and a guarded front door with the backing store published beside it. Text Embeddings
+  Inference was reclassified during review: it does have a native control, `--api-key` with the
+  environment variable `API_KEY`, off by default, and a Prometheus listener on port 9000 that the
+  quick tour never mentions and the key does not cover. Mem0 and Onyx both hand administrator rights
+  to whoever registers first, so the bootstrap has to happen before the deployment is reachable from
+  anywhere but its own host.
 
 ### Fixed
 
+- A sixth way past the copy-paste guard, found while testing the fifth (#60). The five earlier
+  designs each constrained what happened after the guard ran; this one lands before it exists. The
+  placeholder sat unquoted at its substitution site, so a reader pasting a URL with a query string
+  had the ampersand background the `set --` itself, leaving the parameters empty while the rest of
+  the line ran as its own command, and a value containing `$(...)` or a backtick simply executed.
+  Every substitution site is now a single-quoted literal, which a guard cannot achieve because the
+  shell evaluates the value first. Demonstrated three ways in bash; the fix is verified against
+  bash, dash and BusyBox ash, with and without `set -u`, with the caller's own arguments intact.
+- The six guards in the new guide, which the corpus-wide sweep had missed (#60). The sweep keyed on
+  the variable name the other twelve files used, and this guide uses its own, so it shipped the form
+  a `readonly` variable in the reader's shell defeats. Three `curl` invocations went the same way,
+  sitting on indented continuation lines the sweep's line-anchored pattern never matched, and have
+  gained the `-q` the rest of the corpus carries.
 - Eight band-1 errors across eight guides (#45), closing `TODO.md` band 1 to empty. Each was a
   guide asserting something false or a Verify step that could not discriminate: a missing
   `--cacert` that made an Elasticsearch check die on TLS rather than answer; a Tailscale claim that
@@ -98,6 +116,14 @@ with the merged pull request is therefore an authoring obligation, not an enforc
   request rather than a later one. The ordering rule exists because `VERSION` read literally makes
   the number go backwards when an older pull request merges last, which #50 did against a `main`
   already at 1.0.51.
+- `CONTRIBUTING.md` rules 1, 5 and 6 (#60). Rule 1 gains a source-authority clause: for whether a
+  control exists at all, the vendor's reference or CLI page is the authority, and absence from a
+  quickstart is not evidence of absence. This repository had recorded Text Embeddings Inference as
+  having no documented inbound authentication on the strength of its quick tour. Rule 5 gains an
+  allowance for a check that cannot practically be run against the exposed state, which must then be
+  marked at the step as reasoned rather than demonstrated; an unmarked step still claims a
+  demonstration, so omitting the mark is itself a breach. Rule 6's prose had contradicted its own
+  example ever since the guard became positional, and now gives the real reason for that form.
 
 ### Records
 
