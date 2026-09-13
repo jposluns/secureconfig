@@ -28,16 +28,21 @@ aws ec2 describe-security-group-rules \
 # Google Cloud, once per project. Whole records, because a table projection drops the enforcement
 # state: an enforced world-open rule and the same rule with "disabled": true project identically.
 gcloud compute firewall-rules list --format=json
-# for each entry with "direction": "INGRESS" and "disabled": false, "sourceRanges" must not hold
-# 0.0.0.0/0 or ::/0 except where "allowed" is only tcp:80 and tcp:443 on the front layer
+# for each entry with "direction": "INGRESS", "disabled": false and an "allowed" list, work out what
+# its "sourceRanges" actually reach, by the same reasoning as the AWS command above: 0.0.0.0/0 and
+# ::/0 are the obvious cases, and so is any set of ranges that together cover the internet. An entry
+# with "denied" restricts rather than exposes.
 
 # Azure, once per network security group. JSON, not a table: the table formatter omits array-valued
 # columns, so a rule carrying sourceAddressPrefixes rather than sourceAddressPrefix would print an
-# empty cell in the exposed state and the safe state alike.
+# empty cell in the exposed state and the safe state alike. --include-default because the platform's
+# own rules are inbound rules too, and this step claims to enumerate every one.
 az network nsg rule list \
-  --resource-group REPLACE_WITH_RESOURCE_GROUP --nsg-name REPLACE_WITH_NSG_NAME --output json
-# for each rule with "direction": "Inbound" and "access": "Allow", neither "sourceAddressPrefix" nor
-# any entry in "sourceAddressPrefixes" may be "*", "Internet", "0.0.0.0/0" or "::/0" except on 80 and 443
+  --resource-group REPLACE_WITH_RESOURCE_GROUP --nsg-name REPLACE_WITH_NSG_NAME \
+  --include-default --output json
+# for each rule with "direction": "Inbound" and "access": "Allow", work out what its
+# "sourceAddressPrefix" and "sourceAddressPrefixes" actually reach: "*", "Internet", "0.0.0.0/0" and
+# "::/0" are the obvious cases, and so is any set of ranges that together cover the internet
 ```
 
 - From an address outside the range you administer from: `for p in 22 3306 5432 6379 27017; do nc -vz -w 3 203.0.113.10 "$p"; done   # every line must fail to connect`. Each port must report a refused or timed-out connection; a usage error from `nc` (some netcat variants take one port or a range per invocation) is not a passing result.
@@ -51,3 +56,4 @@ az network nsg rule list \
 - Azure CLI `az network nsg rule list`: https://learn.microsoft.com/en-us/cli/azure/network/nsg/rule
 - Azure network security group rule properties (`direction`, `access`, `sourceAddressPrefix`, `sourceAddressPrefixes`): https://learn.microsoft.com/en-us/rest/api/virtualnetwork/network-security-groups/get
 - AWS managed prefix lists (a rule source that is neither a CIDR nor a security group): https://docs.aws.amazon.com/vpc/latest/userguide/managed-prefix-lists.html
+- gcloud output formats, for the `json` format value used above: https://docs.cloud.google.com/sdk/gcloud/reference/topic/formats

@@ -4026,7 +4026,15 @@ sudo ufw enable
 
 SSH stays closed to the world here for the same reason rule 3 in [cloud-firewalls.md](cloud-firewalls.md) keeps it off the cloud firewall: `ufw allow OpenSSH` opens port 22 to every address on the internet. Restrict it to the range you administer from, or add no SSH rule at all and reach the host through brokered access or a tailnet ([tailscale.md](tailscale.md)).
 
-RHEL-family systems use firewalld (`firewall-cmd --permanent --add-service=https` and so on) with the same posture, and that includes SSH: `--add-service=ssh` opens port 22 to every address exactly as `ufw allow OpenSSH` does, so restrict it with a rich rule instead, `firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="REPLACE_WITH_ADMIN_RANGE" service name="ssh" accept'`. Open only the ports the TLS-terminating layer needs; databases and app servers stay unreachable from outside per their guides. Docker-published ports bypass ufw entirely; see [docker.md](docker.md) before relying on the firewall.
+RHEL-family systems use firewalld (`firewall-cmd --permanent --add-service=https` and so on) with the same posture, and that includes SSH: `--add-service=ssh` opens port 22 to every address exactly as `ufw allow OpenSSH` does. Open only the ports the TLS-terminating layer needs; databases and app servers stay unreachable from outside per their guides. Docker-published ports bypass ufw entirely; see [docker.md](docker.md) before relying on the firewall.
+
+```bash
+# firewalld, where an earlier run enabled the ssh service: a rich rule does not supersede it
+sudo firewall-cmd --permanent --remove-service=ssh
+sudo firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="REPLACE_WITH_ADMIN_RANGE" service name="ssh" accept'
+sudo firewall-cmd --reload      # --permanent writes the stored config only; nothing changes until this
+sudo firewall-cmd --list-all    # confirm: no ssh under services, and the rich rule present
+```
 
 ## 3. Brute-force protection and updates
 
@@ -4090,16 +4098,21 @@ aws ec2 describe-security-group-rules \
 # Google Cloud, once per project. Whole records, because a table projection drops the enforcement
 # state: an enforced world-open rule and the same rule with "disabled": true project identically.
 gcloud compute firewall-rules list --format=json
-# for each entry with "direction": "INGRESS" and "disabled": false, "sourceRanges" must not hold
-# 0.0.0.0/0 or ::/0 except where "allowed" is only tcp:80 and tcp:443 on the front layer
+# for each entry with "direction": "INGRESS", "disabled": false and an "allowed" list, work out what
+# its "sourceRanges" actually reach, by the same reasoning as the AWS command above: 0.0.0.0/0 and
+# ::/0 are the obvious cases, and so is any set of ranges that together cover the internet. An entry
+# with "denied" restricts rather than exposes.
 
 # Azure, once per network security group. JSON, not a table: the table formatter omits array-valued
 # columns, so a rule carrying sourceAddressPrefixes rather than sourceAddressPrefix would print an
-# empty cell in the exposed state and the safe state alike.
+# empty cell in the exposed state and the safe state alike. --include-default because the platform's
+# own rules are inbound rules too, and this step claims to enumerate every one.
 az network nsg rule list \
-  --resource-group REPLACE_WITH_RESOURCE_GROUP --nsg-name REPLACE_WITH_NSG_NAME --output json
-# for each rule with "direction": "Inbound" and "access": "Allow", neither "sourceAddressPrefix" nor
-# any entry in "sourceAddressPrefixes" may be "*", "Internet", "0.0.0.0/0" or "::/0" except on 80 and 443
+  --resource-group REPLACE_WITH_RESOURCE_GROUP --nsg-name REPLACE_WITH_NSG_NAME \
+  --include-default --output json
+# for each rule with "direction": "Inbound" and "access": "Allow", work out what its
+# "sourceAddressPrefix" and "sourceAddressPrefixes" actually reach: "*", "Internet", "0.0.0.0/0" and
+# "::/0" are the obvious cases, and so is any set of ranges that together cover the internet
 ```
 
 - From an address outside the range you administer from: `for p in 22 3306 5432 6379 27017; do nc -vz -w 3 203.0.113.10 "$p"; done   # every line must fail to connect`. Each port must report a refused or timed-out connection; a usage error from `nc` (some netcat variants take one port or a range per invocation) is not a passing result.
@@ -4113,6 +4126,7 @@ az network nsg rule list \
 - Azure CLI `az network nsg rule list`: https://learn.microsoft.com/en-us/cli/azure/network/nsg/rule
 - Azure network security group rule properties (`direction`, `access`, `sourceAddressPrefix`, `sourceAddressPrefixes`): https://learn.microsoft.com/en-us/rest/api/virtualnetwork/network-security-groups/get
 - AWS managed prefix lists (a rule source that is neither a CIDR nor a security group): https://docs.aws.amazon.com/vpc/latest/userguide/managed-prefix-lists.html
+- gcloud output formats, for the `json` format value used above: https://docs.cloud.google.com/sdk/gcloud/reference/topic/formats
 
 ======================================================================
 ==> paas.md
@@ -5106,7 +5120,7 @@ Open Elasticsearch instances produced some of the largest data leaks on record. 
 
 - A fresh install auto-configures security on first start: authentication is enabled, TLS is set up for HTTP and transport, and a password is generated for the `elastic` superuser. Keep all of it.
 - Never set `xpack.security.enabled: false`, and never expose a node where TLS (`xpack.security.http.ssl`) has been turned off. If a client cannot connect, fix the client's CA trust ([self-signed.md](self-signed.md)) or issue a real certificate ([free-certificates.md](free-certificates.md)); do not remove the lock.
-- Bind stays local unless deliberately widened (`network.host`); remote access goes through the same decision as any database: private network, VPN or tunnel, TLS everywhere.
+- `network.host` defaults to `_local_`, but leaving it alone does not make the node private: security auto-configuration writes `http.host: 0.0.0.0` into `elasticsearch.yml`, which overrides that default for HTTP. Read the effective setting rather than assuming the default, and let remote access go through the same decision as any database: private network, VPN or tunnel, TLS everywhere.
 - Create least-privilege users and API keys per application instead of shipping `elastic` credentials ([authentication.md](authentication.md)).
 
 ## OpenSearch
@@ -5142,6 +5156,7 @@ An unauthenticated `GET /` returning cluster JSON is the classic finding; so is 
 - OpenSearch demo security configuration: https://docs.opensearch.org/latest/security/configuration/demo-configuration/
 - Elasticsearch, automatic TLS setup for self-managed clusters (the generated `http_ca.crt` used to verify TLS from a client): https://www.elastic.co/docs/deploy-manage/security/self-auto-setup
 - ss(8), the `sport` filter expression used above: https://manpages.ubuntu.com/manpages/noble/en/man8/ss.8.html
+- Elasticsearch networking settings (`network.host` "Defaults to `_local_`"; security auto-configuration "will add `http.host: 0.0.0.0`"): https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/networking-settings
 
 ======================================================================
 ==> minio.md
@@ -7123,7 +7138,7 @@ ports:
   - "127.0.0.1:3080:3080"    # LibreChat (PORT defaults to 3080)
 ```
 
-Dify is different: its Compose file publishes nginx on `EXPOSE_NGINX_PORT=80` and `EXPOSE_NGINX_SSL_PORT=443` from `docker/.env`, plus the plugin daemon's `EXPOSE_PLUGIN_DEBUGGING_PORT=5003` (optional vector store profiles publish more). Do not hide a published port with the host firewall: Docker's NAT rules divert the traffic before it reaches the chains UFW uses, so a UFW deny on a published port does nothing ([docker.md](docker.md)). The plugin daemon's debugging port is only needed for remote plugin debugging, and no setting turns it off: the Compose file publishes `${EXPOSE_PLUGIN_DEBUGGING_PORT:-5003}` for `plugin_daemon` unconditionally, with no host address in the mapping, so it binds `0.0.0.0:5003`. `EXPOSE_PLUGIN_DEBUGGING_HOST=localhost` does not restrict that bind; it only tells the plugin client where to connect. Remove the publication with an override file (see below). Leave the backend services unpublished on the Compose network, and make Dify's nginx the only service with a public port: either as the TLS edge (section 2) or on loopback (`EXPOSE_NGINX_PORT=127.0.0.1:8080`) behind your own proxy. The Compose file publishes `EXPOSE_NGINX_SSL_PORT` as well, so give that the same host address, or leave `NGINX_HTTPS_ENABLED` off; restricting only the HTTP port leaves 443 published.
+Dify is different: its Compose file publishes nginx on `EXPOSE_NGINX_PORT=80` and `EXPOSE_NGINX_SSL_PORT=443` from `docker/.env`, plus the plugin daemon's `EXPOSE_PLUGIN_DEBUGGING_PORT=5003` (optional vector store profiles publish more). Do not hide a published port with the host firewall: Docker's NAT rules divert the traffic before it reaches the chains UFW uses, so a UFW deny on a published port does nothing ([docker.md](docker.md)). The plugin daemon's debugging port is only needed for remote plugin debugging, and no setting turns it off: the Compose file publishes `${EXPOSE_PLUGIN_DEBUGGING_PORT:-5003}` for `plugin_daemon` unconditionally, with no host address in the mapping, so it binds `0.0.0.0:5003`. `EXPOSE_PLUGIN_DEBUGGING_HOST=localhost` does not restrict that bind; it only tells the plugin client where to connect. Remove the publication with an override file (see below). Leave the backend services unpublished on the Compose network, and make Dify's nginx the only service with a public port: either as the TLS edge (section 2) or on loopback (`EXPOSE_NGINX_PORT=127.0.0.1:8080`) behind your own proxy. The Compose file publishes `EXPOSE_NGINX_SSL_PORT` as well, and unconditionally, so give that the same host address too. Turning `NGINX_HTTPS_ENABLED` off does not help: it stops nginx serving TLS, it does not remove Docker's publication, which is the same trap as the plugin daemon's port above.
 
 ```yaml
 # docker-compose.override.yaml, beside docker-compose.yaml; plain `docker compose up -d` picks it up
@@ -7194,8 +7209,11 @@ ss -tlnp                                        # read the whole list: app ports
                                                 # public only where Dify's own nginx is the TLS edge.
                                                 # A container port published by DNAT need not appear
                                                 # here at all, so this list cannot clear 5003 by itself
-docker compose ps --format json                 # run in dify/docker: the plugin_daemon entry's
-                                                # Publishers array must be empty or absent. A grep for
+docker compose ps --format json                 # run in dify/docker: the plugin_daemon entry must
+                                                # carry no Publishers entry with a nonzero
+                                                # PublishedPort. An entry can exist with
+                                                # PublishedPort 0 for a merely exposed container
+                                                # port, which is not a host publication. A grep for
                                                 # "published" cannot say which service published it
 nc -vz -w 3 203.0.113.10 5003                   # from an outside network, and the authority here:
                                                 # EXPOSE_PLUGIN_DEBUGGING_PORT can move it, so the ps output above is the authority on which port to probe
@@ -8038,6 +8056,7 @@ using ((select auth.jwt()->>'aal') = 'aal2');
 - With only the public key (no signed-in user), API reads and writes against protected tables/paths fail.
 - Signed in as user A, reading user B's rows fails.
 - Reads through every API-exposed view fail the same way as reads of the table behind it: request `/rest/v1/REPLACE_WITH_VIEW_NAME` with only the public key, then, signed in as user A, request user B's rows. A view that returns them is serving rows the table's policies withhold; check whether it runs with its owner's rights or whether a policy is simply too broad.
+- Every API-exposed function is checked the same way, because the view check cannot see it: call `/rest/v1/rpc/REPLACE_WITH_FUNCTION_NAME` with only the public key, and again signed in as user A for user B's rows. A `SECURITY DEFINER` function returns rows while the table and view checks both look clean, so this is the only step that catches it. Repeat for every overload.
 - Search the client bundle for `service_role` and private keys; the result must be empty.
 
 ## Sources (checked September 2026)

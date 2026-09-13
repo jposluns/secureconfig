@@ -60,6 +60,7 @@ using ((select auth.jwt()->>'aal') = 'aal2');
 - With only the public key (no signed-in user), API reads and writes against protected tables/paths fail.
 - Signed in as user A, reading user B's rows fails.
 - Reads through every API-exposed view fail the same way as reads of the table behind it: request `/rest/v1/REPLACE_WITH_VIEW_NAME` with only the public key, then, signed in as user A, request user B's rows. A view that returns them is serving rows the table's policies withhold; check whether it runs with its owner's rights or whether a policy is simply too broad.
+- Every API-exposed function is checked the same way, because the view check cannot see it: call `/rest/v1/rpc/REPLACE_WITH_FUNCTION_NAME` with only the public key, and again signed in as user A for user B's rows. A `SECURITY DEFINER` function returns rows while the table and view checks both look clean, so this is the only step that catches it. Repeat for every overload.
 - Search the client bundle for `service_role` and private keys; the result must be empty.
 
 ## Sources (checked September 2026)

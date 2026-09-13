@@ -6,7 +6,7 @@ Open Elasticsearch instances produced some of the largest data leaks on record. 
 
 - A fresh install auto-configures security on first start: authentication is enabled, TLS is set up for HTTP and transport, and a password is generated for the `elastic` superuser. Keep all of it.
 - Never set `xpack.security.enabled: false`, and never expose a node where TLS (`xpack.security.http.ssl`) has been turned off. If a client cannot connect, fix the client's CA trust ([self-signed.md](self-signed.md)) or issue a real certificate ([free-certificates.md](free-certificates.md)); do not remove the lock.
-- Bind stays local unless deliberately widened (`network.host`); remote access goes through the same decision as any database: private network, VPN or tunnel, TLS everywhere.
+- `network.host` defaults to `_local_`, but leaving it alone does not make the node private: security auto-configuration writes `http.host: 0.0.0.0` into `elasticsearch.yml`, which overrides that default for HTTP. Read the effective setting rather than assuming the default, and let remote access go through the same decision as any database: private network, VPN or tunnel, TLS everywhere.
 - Create least-privilege users and API keys per application instead of shipping `elastic` credentials ([authentication.md](authentication.md)).
 
 ## OpenSearch
@@ -42,3 +42,4 @@ An unauthenticated `GET /` returning cluster JSON is the classic finding; so is 
 - OpenSearch demo security configuration: https://docs.opensearch.org/latest/security/configuration/demo-configuration/
 - Elasticsearch, automatic TLS setup for self-managed clusters (the generated `http_ca.crt` used to verify TLS from a client): https://www.elastic.co/docs/deploy-manage/security/self-auto-setup
 - ss(8), the `sport` filter expression used above: https://manpages.ubuntu.com/manpages/noble/en/man8/ss.8.html
+- Elasticsearch networking settings (`network.host` "Defaults to `_local_`"; security auto-configuration "will add `http.host: 0.0.0.0`"): https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/networking-settings
