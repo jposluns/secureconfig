@@ -1,6 +1,6 @@
 # Firebase and Supabase: the rules are the security
 
-These platforms handle TLS for you; the exposure works differently. Client SDKs talk to the backend using keys that ship in your frontend code and are **public by design** (the Firebase API key, the Supabase `anon` key). The only server-side gate between the internet and your data is the rules layer: Firebase security rules, or Postgres row-level security (RLS) on Supabase. AI-generated apps repeatedly ship with that layer open because "it worked in testing".
+These platforms handle TLS for you; the exposure works differently. Client SDKs talk to the backend using keys that ship in your frontend code and are **public by design** (the Firebase API key, the Supabase `anon` key). The only server-side gate between the internet and your data is the rules layer: Firebase security rules, or Postgres row-level security (RLS) on Supabase. AI-generated apps repeatedly ship with that layer open because "it worked in testing". On Supabase the gate also depends on how exposed views and functions execute, not only on the table policies.
 
 ## Firebase
 
@@ -31,6 +31,19 @@ using ( auth.uid() = user_id );
 
 Write separate policies per operation (`select`, `insert`, `update`, `delete`); no policy means no access once RLS is on, which is the correct starting point.
 - The `service_role` key bypasses RLS; it is a server-only secret that must never reach the client bundle or the repository.
+- A view runs with **its owner's** privileges by default, so a view over an RLS-protected table serves that table's rows past every policy to anyone holding the `anon` key. Make every API-exposed view apply the caller's policies instead:
+
+```sql
+alter view public.REPLACE_WITH_VIEW_NAME set (security_invoker = true);
+```
+
+- A `SECURITY DEFINER` function likewise runs as its owner and can return rows RLS would hide. Keep such functions out of API-exposed schemas unless they enforce their own authorization, and revoke execution by default:
+
+```sql
+revoke execute on function public.REPLACE_WITH_FUNCTION_NAME from public, anon, authenticated;
+```
+
+Include the argument types where the function name is overloaded.
 - Supabase Auth supports MFA (TOTP on every plan). Enrolment alone changes nothing: enforce it in your policies by requiring the `aal2` assurance level, so a session that has not completed the second factor cannot read protected rows ([mfa.md](mfa.md) for the general rules):
 
 ```sql
@@ -44,6 +57,7 @@ using ((select auth.jwt()->>'aal') = 'aal2');
 
 - With only the public key (no signed-in user), API reads and writes against protected tables/paths fail.
 - Signed in as user A, reading user B's rows fails.
+- Reads through every API-exposed view fail the same way as reads of the table behind it: request `/rest/v1/REPLACE_WITH_VIEW_NAME` with only the public key, then, signed in as user A, request user B's rows. A view that returns them is running with its owner's rights, past RLS.
 - Search the client bundle for `service_role` and private keys; the result must be empty.
 
 ## Sources (checked September 2026)
@@ -51,3 +65,6 @@ using ((select auth.jwt()->>'aal') = 'aal2');
 - Firebase security rules: https://firebase.google.com/docs/rules
 - Supabase row level security: https://supabase.com/docs/guides/database/postgres/row-level-security
 - Supabase multi-factor authentication (aal1, aal2, enforcement policy): https://supabase.com/docs/guides/auth/auth-mfa
+- PostgreSQL `CREATE VIEW` (base relations checked against the view owner's permissions by default; the view owner's RLS policies applied by default; `security_invoker`): https://www.postgresql.org/docs/current/sql-createview.html
+- PostgreSQL `ALTER VIEW` (`SET ( security_invoker = ... )` on an existing view): https://www.postgresql.org/docs/current/sql-alterview.html
+- PostgreSQL `REVOKE`: https://www.postgresql.org/docs/current/sql-revoke.html
