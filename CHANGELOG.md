@@ -52,6 +52,13 @@ with the merged pull request is therefore an authoring obligation, not an enforc
   request number, correcting the stale value #46 shipped. #48 completed the pull-request references
   across every dated section and set `VERSION` to its own number, which is the authoring step row
   3.9 names.
+- Backlog judgement and a second `VERSION` gap (#52). Row 1.38 asked for a per-guide judgement of
+  46 filtered listener checks; all 46 were judged against the maintainer's ruling and none changed,
+  because none claims that anything else is unexposed, 45 carry a trailing expectation comment, and
+  the one without states its expectation in the prose below its block. Row 3.9 gained a second gap
+  found while merging out of numeric order: the scheme names the most recently merged pull request,
+  so when pull requests merge out of order the value goes backwards and no gate enforces
+  monotonicity.
 
 ## 2026-09-12
 

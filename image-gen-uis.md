@@ -54,9 +54,17 @@ strict_password_checking: true
 
 ```bash
 ss -tlnp | grep -E '8188|7860|9090'                 # each service on 127.0.0.1 only
-curl -s http://203.0.113.10:8188/                    # ComfyUI from another host: connection refused
-curl -s http://203.0.113.10:7860/                    # Stable Diffusion WebUI: connection refused
-curl -s http://203.0.113.10:9090/                    # InvokeAI: connection refused
+# each must be unreachable from another host. Read err, not the number: it must name a refusal or
+# timeout reaching YOUR address. An HTTP code means the port answered. A resolver failure, a local
+# socket error, or a timeout that did not come from the remote address is inconclusive.
+probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
+case "${probe_ip:-}" in
+  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+  *) for p in 8188 7860 9090; do                              # ComfyUI, SD WebUI, InvokeAI
+       curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+         -w "port=$p http=%{http_code} exit=%{exitcode} err=%{errormsg}\n" "http://$probe_ip:$p/"
+     done ;;
+esac
 curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:9090/api/v1/boards/
                                                        # from the host itself, InvokeAI multiuser mode: 401
                                                        # without a Bearer token, never the app itself
@@ -82,3 +90,4 @@ curl -sI https://imagegen.example.com/                # via the proxy: TLS, and 
 - InvokeAI YAML Config (host/port defaults): https://invoke.ai/configuration/invokeai-yaml/
 - InvokeAI Multi-User Administrator Guide: https://invoke.ai/features/multi-user-mode/admin-guide/
 - Fooocus repository README (`--listen`, `--share`, auth.json): https://github.com/lllyasviel/Fooocus
+- curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
