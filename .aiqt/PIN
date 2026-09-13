@@ -15,6 +15,11 @@
 #   tools/check_site.py               <- tools/check_site.py   (LOCAL PATCH, see below)
 #   tools/check_no_dashes.py          <- tools/check_no_dashes.py
 #   tools/check_newtab.py             <- tools/check_newtab.py
+#   .aiqt/core/rules/trust-continue-by-default.md
+#                                     <- .aiqt/core/rules/trust-continue-by-default.md
+#     The "Continue by default" rule, corpus-id cntdef. Byte-identical at the pinned commit and at
+#     upstream main as of 2026-09-13, so vendoring it needs no pin bump. CLAUDE.md and AGENTS.md
+#     point at it rather than paraphrasing it.
 #
 # LOCAL PATCHES to re-apply on upgrade:
 #   tools/_gen_common.py  is_external_url() reads the site host from the AIQT_SITE_HOST

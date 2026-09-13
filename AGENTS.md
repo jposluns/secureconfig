@@ -46,6 +46,22 @@ maintainer rather than resolving it silently in favour of progress, speed, or co
 5. **Propose an underlying fix.** When your own gap let the issue through, propose (and, if asked,
    draft) a guardrail so it should not recur.
 
+## Continue by default
+
+The pack's `cntdef` rule binds here. Its normative text is vendored verbatim at
+`.aiqt/core/rules/trust-continue-by-default.md`; read it there rather than relying on a summary.
+
+In short: the default at every point is to continue with the next queued item, and a wind-down
+happens only on a named, externally-observable trigger. Its neighbours, also from the pack, are
+`setcmp` (ending a turn is a completeness claim over the backlog and carries the enumeration
+burden), `trkasy` (a launched task stays observable, including work detached with a bare `&`),
+`bgcwai` (a wait is a resource), `recfst`, and `humovs`, the oversight threshold, which `cntdef`
+defers to and never narrows.
+
+The pack's hooks that would enforce this mechanically ship in `.aiqt/hooks/` but are inert here,
+because they need `.claude/settings.json` and an orchestration registry. That is backlog row 3.6,
+blocked upstream.
+
 ## What this repository is
 
 secureconfig publishes deployment-exposure guides: TLS, authentication, MFA, secret handling, and
