@@ -15,10 +15,14 @@ On AWS (security groups), Google Cloud (VPC firewall rules), and Azure (network 
 Enumerate every inbound rule whose source is the whole internet, and confirm that each one is 80 or 443 on the front layer, nothing else.
 
 ```bash
-# AWS, once per region. A world-open rule always carries 0.0.0.0/0 or ::/0, so this hides none of them.
+# AWS, once per region. A world-open rule always carries 0.0.0.0/0 or ::/0, so this hides none of
+# them. Direction is shown rather than filtered on, because JMESPath needs a backtick literal to
+# compare a boolean and a backtick inside a shell command is a command substitution waiting to happen.
 aws ec2 describe-security-group-rules \
-  --query 'SecurityGroupRules[?IsEgress==`false` && (CidrIpv4==`0.0.0.0/0` || CidrIpv6==`::/0`)].{Group:GroupId,Proto:IpProtocol,From:FromPort,To:ToPort,V4:CidrIpv4,V6:CidrIpv6}' \
+  --query "SecurityGroupRules[?CidrIpv4=='0.0.0.0/0' || CidrIpv6=='::/0'].{Group:GroupId,Egress:IsEgress,Proto:IpProtocol,From:FromPort,To:ToPort,V4:CidrIpv4,V6:CidrIpv6}" \
   --output table
+# every row whose Egress column reads False is inbound and open to the internet: it must be 80 or
+# 443 on the front layer. Rows reading True are outbound, a separate question.
 
 # Google Cloud, once per project. No filter, so no rule can be hidden by one.
 gcloud compute firewall-rules list --sort-by priority \
