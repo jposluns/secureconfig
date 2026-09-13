@@ -42,7 +42,6 @@ many.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 1.42 | Residual placeholder-guard gaps left by #50, all demonstrated by QA and none a regression against what preceded them. A STALE exported `probe_ip` defeats a partial paste, because `${probe_ip:-}` protects an absent variable and not a populated one, so copying from `case` to `esac` without the assignment probes the old target silently. Pre-existing shell attributes defeat the unedited block: `declare -i probe_ip` assigns `0` and `declare -l` lowercases the placeholder, and neither matches the rejection pattern. Netcat reports a denied local socket as exit 1 with no output, so "must fail to connect" still accepts an inconclusive local failure, and BusyBox netcat rejects `-v` outright. `deployment-lifecycle.md`'s port-by-port bullet still holds an unguarded inline `nc` loop: its two commands are offered as alternatives with prose between them, so moving them into one fenced block would change their meaning and needs a rewrite rather than a substitution. Decide whether the guides require copying the complete assignment-and-guard unit, isolate the snippet from shell attributes, and classify local errors and unsupported options as inconclusive in the comment. (M, M) | `[enhance]` |
 
 ## Priority 2: Deepen existing guides
 

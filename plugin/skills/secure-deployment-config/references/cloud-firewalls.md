@@ -50,6 +50,8 @@ az network nsg rule list \
 - From an address outside the range you administer from:
 
   ```bash
+  unset probe_ip                          # clears a pre-set declare -i or -l attribute, and any stale
+                                          # value; copy this whole block, not just the command below
   probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
   case "${probe_ip:-}" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
@@ -57,7 +59,7 @@ az network nsg rule list \
   esac
   ```
 
-  Each port must report a refused or timed-out connection; a usage error from `nc` (some netcat variants take one port or a range per invocation) is not a passing result.
+  Each port must report a refused or timed-out connection; a usage error from `nc` (some netcat variants take one port or a range per invocation) is not a passing result, and neither is exit 1 with no output at all, which is what a denied local socket looks like: in both cases nothing reached the network, so the check is inconclusive rather than passed.
 - An external scan of the public IP (for example with nmap, against your own infrastructure only) shows only the intended ports.
 
 ## Sources (checked September 2026)
