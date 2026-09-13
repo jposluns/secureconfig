@@ -43,6 +43,8 @@ NOT_A_GUIDE = {
     # dated Sources would be ceremony rather than the contract they are for every guide.
     "TODO.md",
     "DONE.md",
+    "DECISIONS.md",
+    "PENDING-DECISIONS.md",
 }
 
 # README.md is a guide for this gate's purposes: it carries a substantive
