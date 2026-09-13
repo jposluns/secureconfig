@@ -20,7 +20,9 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.39**, **2.24**, **3.9**, **4.5**.
+Next ids: **1.42**, **2.24**, **3.11**, **4.5**.
+
+Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
 ## Queueing
 
@@ -40,9 +42,9 @@ many.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 1.36 | Literal example addresses in runnable Verify probes fail silently: an unreplaced hostname fails visibly through DNS, but an unreplaced `203.0.113.10` times out and reads exactly like a blocked port, so a reader who skips the substitution sees a pass. `README.md` names it as a placeholder to replace, which is the mitigation and not a fix. 22 files. | corpus-wide, sensitive |
-| 1.37 | `mlflow.md` and `ray.md` treat a bare `--max-time` timeout as proof that a connection was blocked. `egress-metadata.md` now states in terms that it is not, so the corpus contradicts itself. | contradiction |
-| 1.38 | `ss ... \| grep <port>` matches a pid, a longer port number, and the `users:` column. Per the maintainer's 2026-09-13 decision recorded below, judge each of the 48 rather than sweeping: fix only the checks whose Verify claims nothing ELSE is exposed, and leave a filtered check that asks whether one service is bound to loopback, which is correct for what it claims. `elasticsearch.md`, `postgresql.md` and `tailscale.md` already use ss's own `sport = :N` filter. | per-guide judgement |
+| 1.36 | Literal example addresses in runnable Verify probes fail silently: an unreplaced hostname fails visibly through DNS, but an unreplaced `203.0.113.10` times out and reads exactly like a blocked port, so a reader who skips the substitution sees a pass. `README.md` names it as a placeholder to replace, which is the mitigation and not a fix. 22 files. (H, M) | `[enhance]` |
+| 1.37 | `mlflow.md` and `ray.md` treat a bare `--max-time` timeout as proof that a connection was blocked. `egress-metadata.md` now states in terms that it is not, so the corpus contradicts itself. (M, XS) | `[enhance]` |
+| 1.38 | `ss ... \| grep <port>` matches a pid, a longer port number, and the `users:` column. Per the 2026-09-13 decision in `DECISIONS.md`, judge each of the 48 rather than sweeping: fix only the checks whose Verify claims nothing ELSE is exposed, and leave a filtered check that asks whether one service is bound to loopback, which is correct for what it claims. `elasticsearch.md`, `postgresql.md` and `tailscale.md` already use ss's own `sport = :N` filter. (M, L) | `[enhance]` |
 
 ## Priority 2: Deepen existing guides
 
@@ -72,9 +74,9 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.6 | `docker.md`: the DOCKER-USER iptables chain, the vendor-documented way to filter published ports when loopback publishing is not viable, never appears even though it is documented on the packet-filtering page the guide already cites (not re-opened offline); Qualify localhost publication with Docker’s pre-28.0.0  (H, S) [3 families] | `[enhance]` |
 | 1.8 | `model-servers.md`: LocalAI and text-generation-webui are absent; both are commonly deployed with `--listen`-style flags and have native key/auth options worth stating or honestly denying (unverified offline); Verify step filters ss output by expected ports (`grep -E`), violating the rule against filtering (H, S) [2 families] | `[enhance]` |
 | 1.9 | `vector-databases.md`: Explicitly restrict Qdrant cluster port 6335 to cluster peers and include it in Verify, whose port filter currently omits it; API keys and bearer tokens never protect internal cluster communication (vendor); Verify never probes the backend ports directly from outside, leaving published container por (H, S) [2 families] | `[enhance]` |
-| 2.21 | `tailscale.md`: the default tailnet ACL is permissive, and device identity is not user authorization. The guide should say what an ACL has to do before "reachable only by your tailnet" means what a reader hears. | deferred from the band 1 plan |
-| 2.22 | `firebase-supabase.md`: per-overload RPC negative tests, and a worked pre-15 example of revoking a view from `public`, `anon` and `authenticated` together. | deferred from the band 1 plan |
-| 2.23 | `agent-builders.md`: establish whether Flowise, Langflow and LibreChat ship vendor Compose files a reader would be overriding. If they do, the `!reset` caveat added in #45 is load-bearing for them rather than advisory. Premise unverified per vendor. | raised by QA, premise unverified |
+| 1.39 | `tailscale.md`: the default tailnet ACL is permissive, and device identity is not user authorization. The guide should say what an ACL has to do before "reachable only by your tailnet" means what a reader hears. (H, S) | `[enhance]` |
+| 1.40 | `firebase-supabase.md`: per-overload RPC negative tests, and a worked pre-15 example of revoking a view from `public`, `anon` and `authenticated` together. (M, S) | `[enhance]` |
+| 1.41 | `agent-builders.md`: establish whether Flowise, Langflow and LibreChat ship vendor Compose files a reader would be overriding. If they do, the `!reset` caveat added in #45 is load-bearing for them rather than advisory. Premise unverified per vendor. (M, S) | `[enhance]` |
 
 ## Priority 3: Add missing content
 
@@ -104,34 +106,12 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 4.3 | `VERSION` names the most recently merged pull request, so a bookkeeping pull request has to carry its OWN number, which is knowable only after the pull request is opened. #46 set its predecessor's number and was stale on merge; #47 corrected it. Decide whether the scheme changes or whether `CONTRIBUTING.md` gains the authoring step "open the pull request, then write its number into `VERSION` and push". No gate can catch this: the suite is offline by policy and a pull request number is only knowable from outside. | process |
-| 4.4 | Gate the changelog's pull-request coverage. Comparing the `#N` references in `CHANGELOG.md` against the `(#N)` suffixes in `git log` needs no network, so it fits the offline rule, and it would have caught the eight-reference gap #48 closed without an audit. It would also catch a careless check: the gap was first measured with a pattern that matched a lone `(#N)` and silently missed `(#38, #41)`, which is the failure class this repository keeps finding. Note the interaction with 4.3: a pull request cannot reference its own number until it is opened, so the gate must either exempt the newest reference or run against the merge commit. | gate, offline |
+| 3.9 | `VERSION` names the most recently merged pull request, so a bookkeeping pull request has to carry its OWN number, which is knowable only after the pull request is opened. #46 set its predecessor's number and was stale on merge; #47 corrected it. Settled in `DECISIONS.md`: the scheme stays and `CONTRIBUTING.md` gains the authoring step. (L, XS) | `[enhance]` |
+| 3.10 | Gate the changelog's pull-request coverage. Comparing the `#N` references in `CHANGELOG.md` against the `(#N)` suffixes in `git log` needs no network, so it fits the offline rule, and it would have caught the eight-reference gap #48 closed without an audit. It would also catch a careless check: the gap was first measured with a pattern that matched a lone `(#N)` and silently missed `(#38, #41)`. Note the interaction with 3.9: a pull request cannot reference its own number until it is opened, so the gate must either exempt the newest reference or run against the merge commit. (M, S) | `[enhance]` |
 
-## Decisions on record
+## Decisions
 
-Taken by the maintainer on 2026-09-13, recorded so they are not re-litigated:
-
-- **`ss | grep <port>` in 48 guides:** fix only the checks whose Verify claims nothing ELSE is
-  exposed. A filtered check that asks "is this bound to loopback?" is correct for what it claims
-  and stays. Judge each of the 48 rather than sweeping.
-- **Order:** AIQT applies, errors first and to empty, then interleave by severity across the
-  remaining bands.
-- **The six AI-infra gaps** (LocalAI, LangServe, SearxNG, Mem0, text-embeddings-inference, Onyx):
-  one guide covering the pattern, with a per-tool table of default port, default authentication,
-  and the flag that changes it, rather than six guides.
-- **Audit cadence:** monthly, and whenever the backlog empties before that.
-- **Row 4.3, `VERSION`:** the scheme stays. `CONTRIBUTING.md` gains the authoring step instead:
-  open the pull request, write its number into `VERSION`, push, then merge. #48 did this and
-  needed no follow-up, which is the evidence the step is sufficient.
-- **Row 4.4, changelog coverage:** build it as a REQUIRED gate in `tools/run_all_checks.sh`, not
-  an advisory workflow. It must exempt the newest reference, or run against the merge commit,
-  because a pull request cannot reference its own number before it is opened.
-- **Queue order:** drain band 1 to empty before anything else, including the two corpus-wide rows.
-  1.37 first because it is small, then 1.36, then 1.38. Band 4 follows, then bands 2 and 3
-  interleaved by severity.
-- **Row 1.36, literal example addresses:** per-guide judgement, the same treatment as the `ss`
-  filters. Change only the probes whose pass depends on the reader having substituted the address;
-  leave illustrative uses alone.
+Maintainer rulings moved to `DECISIONS.md` on 2026-09-13, in preparation for the OPF operational-files migration (row 3.8). A row may cite a decision there; this file no longer carries them.
 
 ## Priority 5: Site and adopters
 
