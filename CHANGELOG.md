@@ -36,6 +36,10 @@ with the merged pull request is therefore an authoring obligation, not an enforc
 - The gate suite caught no semantic defect in any round, which is what the tri-family tier exists
   for. It did catch one defect in the original draft: SC2016 on a JMESPath backtick literal, which
   inside a shell command is a command substitution waiting to happen.
+- `mlflow.md` and `ray.md` stopped reading a bare `--max-time` timeout as proof that a connection
+  was blocked (#49), which `egress-metadata.md` had just said plainly it is not. Demonstrated with
+  curl 8.18.0: a blackholed address and a listener that accepts TCP then stalls both return
+  `http=000` and exit 28, so only `time_connect` separates a blocked port from a reachable one.
 
 ### Changed
 

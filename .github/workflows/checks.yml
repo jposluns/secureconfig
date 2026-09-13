@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # the changelog-coverage gate reads the merge history
       # The gate suite parses HTML with html.parser, whose rawtext edge behaviour has shifted
       # across Python releases, while `ubuntu-latest` floats its system Python. Pin it so a
       # runner image update cannot change what a gate computes.

@@ -266,6 +266,41 @@ else
   printf '%s\n' "$verify_safety" | sed 's/^/          /'
 fi
 
+echo "== every merged pull request is recorded in the changelog =="
+if changelog_prs=$(python3 tools/check_changelog_prs.py 2>&1); then
+  printf '%s\n' "$changelog_prs"
+  # A gate that exits 0 while printing findings would otherwise read as a pass.
+  if grep -q '^  FAIL  ' <<< "$changelog_prs"; then
+    bad "check_changelog_prs.py printed findings but exited 0"
+  fi
+elif grep -qE '^Traceback \(most recent call last\):|^[A-Za-z_.]+Error: ' <<< "$changelog_prs"; then
+  bad "check_changelog_prs.py crashed; the changelog coverage is unverified"
+  printf '%s\n' "$changelog_prs" | sed 's/^/          /'
+elif grep -q '^  FAIL  ' <<< "$changelog_prs"; then
+  printf '%s\n' "$changelog_prs"
+  fail=1
+else
+  bad "check_changelog_prs.py exited non-zero without reporting a gate result"
+  printf '%s\n' "$changelog_prs" | sed 's/^/          /'
+fi
+
+echo "== the changelog-coverage gate still catches what it claims =="
+if changelog_tests=$(python3 tools/test_changelog_prs.py 2>&1); then
+  printf '%s\n' "$changelog_tests"
+  if grep -q '^  FAIL  ' <<< "$changelog_tests"; then
+    bad "test_changelog_prs.py printed findings but exited 0"
+  fi
+elif grep -qE '^Traceback \(most recent call last\):|^[A-Za-z_.]+Error: ' <<< "$changelog_tests"; then
+  bad "test_changelog_prs.py crashed; the changelog-coverage gate is unverified"
+  printf '%s\n' "$changelog_tests" | sed 's/^/          /'
+elif grep -q '^  FAIL  ' <<< "$changelog_tests"; then
+  printf '%s\n' "$changelog_tests"
+  fail=1
+else
+  bad "test_changelog_prs.py exited non-zero without reporting a result"
+  printf '%s\n' "$changelog_tests" | sed 's/^/          /'
+fi
+
 echo "== prose conventions: Oxford -ize and house placeholders =="
 # A corpus-wide -ize conversion missed a word because its word list was incomplete, and the same word
 # was written into a new guide hours later. A placeholder outside the house set reached the corpus and
