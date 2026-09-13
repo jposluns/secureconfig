@@ -9,6 +9,14 @@ gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.7 | `firebase-supabase.md` never warned that a Supabase view or a `SECURITY DEFINER` function runs with its owner's rights and serves rows past RLS | Done, #45 |
+| 1.10 | `agent-builders.md` implied that disabling Dify's debugging feature unpublishes port 5003; the vendor Compose file publishes it unconditionally with no host address | Done, #45 |
+| 1.14 | `elasticsearch.md` Verify line 1 had no `--cacert`, so it died on TLS verification and could certify nothing | Done, #45 |
+| 1.15 | `tailscale.md` asserted tailnet-only reach without an `ss` bind check; `serve` does not change how the fronted app binds | Done, #45 |
+| 1.18 | `cloud-firewalls.md` Verify step 1 named no runnable command for any provider, and all three sources were documentation roots | Done, #45 |
+| 1.22 | `postgresql.md` could not tell a refused password from a refused connection, so an earlier `trust` record was invisible | Done, #45 |
+| 1.25 | `egress-metadata.md` declared curl exit 7 or 28 proof that egress policy blocked the host | Done, #45 |
+| 1.34 | `host.md` used `ufw allow OpenSSH`, which admits the whole internet, contradicting rule 3 of `cloud-firewalls.md` | Done, #45 |
 | 3.4 | Changelog close-out for #35 and #38 to #42, and re-pin `VERSION` from a stale 1.0.37 | Done, #43 |
 | 3.5 | Dispatch cross-family QA against a throwaway copy, and re-verify every finding against the current file before applying it | Done: adopted 2026-09-13, carried in the /flow skill's project mapping and its closing section |
 | 2.1 | Package the corpus as an Agent Plugin, bundled for offline adopters with a digest-verified updater | Done, #39 |
