@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.42**, **2.24**, **3.11**, **4.5**.
+Next ids: **1.43**, **2.24**, **3.11**, **4.5**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -42,8 +42,7 @@ many.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 1.36 | Literal example addresses in runnable Verify probes fail silently: an unreplaced hostname fails visibly through DNS, but an unreplaced `203.0.113.10` times out and reads exactly like a blocked port, so a reader who skips the substitution sees a pass. `README.md` names it as a placeholder to replace, which is the mitigation and not a fix. 22 files. (H, M) | `[enhance]` |
-| 1.37 | `mlflow.md` and `ray.md` treat a bare `--max-time` timeout as proof that a connection was blocked. `egress-metadata.md` now states in terms that it is not, so the corpus contradicts itself. (M, XS) | `[enhance]` |
+| 1.42 | Residual placeholder-guard gaps left by #50, all demonstrated by QA and none a regression against what preceded them. A STALE exported `probe_ip` defeats a partial paste, because `${probe_ip:-}` protects an absent variable and not a populated one, so copying from `case` to `esac` without the assignment probes the old target silently. Pre-existing shell attributes defeat the unedited block: `declare -i probe_ip` assigns `0` and `declare -l` lowercases the placeholder, and neither matches the rejection pattern. Netcat reports a denied local socket as exit 1 with no output, so "must fail to connect" still accepts an inconclusive local failure, and BusyBox netcat rejects `-v` outright. `deployment-lifecycle.md`'s port-by-port bullet still holds an unguarded inline `nc` loop: its two commands are offered as alternatives with prose between them, so moving them into one fenced block would change their meaning and needs a rewrite rather than a substitution. Decide whether the guides require copying the complete assignment-and-guard unit, isolate the snippet from shell attributes, and classify local errors and unsupported options as inconclusive in the comment. (M, M) | `[enhance]` |
 
 ## Priority 2: Deepen existing guides
 
