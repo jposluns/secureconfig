@@ -11,6 +11,16 @@ with the merged pull request is therefore an authoring obligation, not an enforc
 
 ## 2026-09-13
 
+### Added
+
+- A required gate on the changelog's own pull-request coverage (#53). It compares every `(#N)`
+  squash-merge suffix in the local history against the `#N` references here, so it reads the
+  repository and nothing else and keeps the suite offline. It found two unreferenced pull requests
+  on its first run against this branch. It exempts exactly one, the highest-numbered merged pull
+  request, because a pull request cannot reference its own number before it is opened; let a second
+  merge without its entry and the gate goes red. It fails on a shallow clone rather than skipping,
+  because with one commit it would find nothing missing and report a pass.
+
 ### Fixed
 
 - Eight band-1 errors across eight guides (#45), closing `TODO.md` band 1 to empty. Each was a
@@ -36,10 +46,31 @@ with the merged pull request is therefore an authoring obligation, not an enforc
 - The gate suite caught no semantic defect in any round, which is what the tri-family tier exists
   for. It did catch one defect in the original draft: SC2016 on a JMESPath backtick literal, which
   inside a shell command is a command substitution waiting to happen.
+- `mlflow.md` and `ray.md` stopped reading a bare `--max-time` timeout as proof that a connection
+  was blocked (#49), which `egress-metadata.md` had just said plainly it is not. Demonstrated with
+  curl 8.18.0: a blackholed address and a listener that accepts TCP then stalls both return
+  `http=000` and exit 28, so only `time_connect` separates a blocked port from a reachable one.
+- Verify probes that targeted a literal reserved example address now reject an unsubstituted value
+  locally (#50). Of 27 occurrences, 17 lines were probes whose pass signal is "nothing answered",
+  where an unreplaced address times out exactly like a blocked port; the rest are configuration,
+  certificate SANs, an ssh target and prose, where a wrong value fails visibly. Five QA rounds, and
+  rounds 1, 3 and 4 each found a defect in the fix rather than in the original row: the placeholder
+  alone traded one silent false pass for another, the guard warned and then ran the probe anyway,
+  and under `set -u` a partial paste crashed in a way these steps call a refusal. `README.md`'s own
+  checklist had the defect in its worst form, targeting `example.com`, which resolves and serves
+  HTTPS, so its TLS check passed for every reader whatever state their deployment was in.
 
 ### Changed
 
 - `VERSION` to 1.0.45.
+- Maintainer rulings moved out of `TODO.md` into `DECISIONS.md`, and `PENDING-DECISIONS.md` added
+  for questions awaiting a ruling during unattended operation (#51), in preparation for the OPF
+  operational-files migration. Each ruling records the reasoning behind it, and a profile
+  generalizes across them so fewer questions need asking; the profile is the orchestrator's
+  inference, is marked fallible, and records where it has already been wrong. That change also
+  corrected six rows whose ids used the priority band instead of the subject series, and restored
+  the TLS-bypass gate's scope after a consistency edit had wrongly excluded the records files
+  from it.
 
 ### Records
 
