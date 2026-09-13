@@ -189,7 +189,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 
 ## Verification checklist
 
-Run the applicable checks below and the Verify steps in every selected guide. Record each result as pass, fail, untested, or not applicable, with evidence or a reason; report a control as verified only for the checks that passed.
+Run the applicable checks below and the Verify steps in every selected guide. Substitute your own host for `example.com` in every command first. It is not a neutral stand-in: it resolves and it serves HTTPS, so check 3 succeeds against it for everybody, whatever state your own deployment is in. Record each result as pass, fail, untested, or not applicable, with evidence or a reason; report a control as verified only for the checks that passed.
 
 1. No plaintext listener on a public interface: `ss -tlnp` (Linux) shows nothing bound to `0.0.0.0` or a public address on a plain HTTP port, except a listener whose only job is to redirect to HTTPS.
 2. Where HTTP is offered, the redirect works: `curl -sI http://example.com/` returns `301` or `308` (the preferred permanent redirects), or `302`/`307` where a framework issues them, always with a `Location: https://...` header.
@@ -207,7 +207,7 @@ Sources for these checks are listed in [README.sources.md](README.sources.md), n
 
 ## Scope and currency
 
-The guides use placeholders that you must replace: `example.com` and `app.example.com` for names, `203.0.113.10` for an address in a configuration value, and `REPLACE_WITH_A_NAME` wherever leaving the placeholder in place would otherwise look like a passing check. Configuration syntax was checked against the vendor documentation cited in each guide as of September 2026; directives and dashboard menu locations change, so verify version-specific items against the current documentation for your installed version. Each guide lists its sources.
+The guides use placeholders that you must replace: `example.com` and `app.example.com` for names, `203.0.113.10` for an address in a configuration value, and `REPLACE_WITH_A_NAME` wherever leaving the placeholder in place would otherwise look like a passing check, in which case the check should also reject the unsubstituted value rather than trust it to fail. Configuration syntax was checked against the vendor documentation cited in each guide as of September 2026; directives and dashboard menu locations change, so verify version-specific items against the current documentation for your installed version. Each guide lists its sources.
 
 Scope: deployment exposure, including TLS, human and machine authentication, MFA, access restrictions, secrets, and inbound and outbound network access, from first deployment through teardown. General application security, including injection, deserialization, and business logic flaws, belongs to the OWASP resources linked throughout the guides. To propose a tool or guide, see [CONTRIBUTING.md](CONTRIBUTING.md).
 

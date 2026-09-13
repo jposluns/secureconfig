@@ -54,14 +54,17 @@ strict_password_checking: true
 
 ```bash
 ss -tlnp | grep -E '8188|7860|9090'                 # each service on 127.0.0.1 only
-# each must be unreachable from another host. Pass: exit 7 (refused) or 28 (timed out). exit 6 is
-# "could not resolve", which means the address is still the placeholder, not that the port is closed
-curl -s -o /dev/null --connect-timeout 5 -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-  http://REPLACE_WITH_YOUR_PUBLIC_IP:8188/                    # ComfyUI
-curl -s -o /dev/null --connect-timeout 5 -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-  http://REPLACE_WITH_YOUR_PUBLIC_IP:7860/                    # Stable Diffusion WebUI
-curl -s -o /dev/null --connect-timeout 5 -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-  http://REPLACE_WITH_YOUR_PUBLIC_IP:9090/                    # InvokeAI
+ip=REPLACE_WITH_YOUR_PUBLIC_IP
+case "$ip" in
+  REPLACE_WITH_*) echo "NOT SUBSTITUTED: put your own address in ip= above, or these prove nothing" ;;
+esac
+# each must be unreachable from another host. Read err, not the number: it must name a refusal or
+# timeout reaching YOUR address. An HTTP code means the port answered. A resolver failure, a local
+# socket error, or a timeout that did not come from the remote address is inconclusive.
+for p in 8188 7860 9090; do                                   # ComfyUI, SD WebUI, InvokeAI
+  curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
+    -w "port=$p http=%{http_code} exit=%{exitcode} err=%{errormsg}\n" "http://$ip:$p/"
+done
 curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:9090/api/v1/boards/
                                                        # from the host itself, InvokeAI multiuser mode: 401
                                                        # without a Bearer token, never the app itself

@@ -70,10 +70,15 @@ MFA: MCP has no login dialogue of its own. Under Option A, MFA is whatever the a
 ```bash
 ss -tlnp | grep 3000                                   # 127.0.0.1:3000 only, never 0.0.0.0 or ::
 # From another host: refused at the origin, or answered only by the fronting layer.
-curl -s -o /dev/null --connect-timeout 5 -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-  http://REPLACE_WITH_YOUR_PUBLIC_IP:3000/mcp
-# Pass: exit 7 (refused) or 28 (timed out). exit 6 is "could not resolve", which means the address
-# above is still the placeholder, not that the port is closed
+ip=REPLACE_WITH_YOUR_PUBLIC_IP
+case "$ip" in
+  REPLACE_WITH_*) echo "NOT SUBSTITUTED: put your own address in ip= above, or this proves nothing" ;;
+esac
+curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
+  -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$ip:3000/mcp"
+# read err, not the number: it must name a refusal or timeout reaching YOUR address. An HTTP code
+# means the port answered. A resolver failure, a local socket error, or a timeout that did not come
+# from the remote address is inconclusive, never a pass.
 
 # Unauthenticated initialize: 401 with a WWW-Authenticate header (Option A) or the proxy's 401 (Option B).
 curl -si -X POST https://mcp.example.com/mcp \
