@@ -47,7 +47,17 @@ az network nsg rule list \
 # "::/0" are the obvious cases, and so is any set of ranges that together cover the internet
 ```
 
-- From an address outside the range you administer from: `for p in 22 3306 5432 6379 27017; do nc -vz -w 3 REPLACE_WITH_YOUR_PUBLIC_IP "$p"; done   # every line must fail to connect`. Each port must report a refused or timed-out connection; a usage error from `nc` (some netcat variants take one port or a range per invocation) is not a passing result.
+- From an address outside the range you administer from:
+
+  ```bash
+  probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
+  case "${probe_ip:-}" in
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+    *) for p in 22 3306 5432 6379 27017; do nc -vz -w 3 "$probe_ip" "$p"; done ;;
+  esac
+  ```
+
+  Each port must report a refused or timed-out connection; a usage error from `nc` (some netcat variants take one port or a range per invocation) is not a passing result.
 - An external scan of the public IP (for example with nmap, against your own infrastructure only) shows only the intended ports.
 
 ## Sources (checked September 2026)
