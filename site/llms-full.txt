@@ -7479,7 +7479,7 @@ A PostgreSQL password prompt does not fix this deployment boundary. The database
 
 ### Mem0
 
-Keep authentication on. Protected API endpoints accept a bearer JWT from the dashboard login flow or an `X-API-Key` header. Per-user keys have the `m0sk_` prefix; the legacy `ADMIN_API_KEY` is also supported. Do not leave `AUTH_DISABLED=true` in a deployed environment. The server logs a warning at startup when it is enabled, and a different one when authentication is on and `ADMIN_API_KEY` is shorter than 16 characters. The two are alternatives on one `if`/`elif`, so enabling `AUTH_DISABLED` suppresses the short-key warning rather than adding to it, and neither stops the start.
+Keep authentication on. Protected API endpoints accept a bearer JWT from the dashboard login flow or an `X-API-Key` header. Per-user keys have the `m0sk_` prefix; the legacy `ADMIN_API_KEY` is also supported. Do not leave `AUTH_DISABLED=true` in a deployed environment. The server logs a warning at startup when it is enabled, and a different one when authentication is on and a NON-EMPTY `ADMIN_API_KEY` is shorter than 16 characters; an unset key takes a third branch of its own. The two are alternatives on one `if`/`elif`, so enabling `AUTH_DISABLED` suppresses the short-key warning rather than adding to it, and neither stops the start.
 
 `JWT_SECRET` is not optional, and the server enforces it: with authentication on and no secret set it raises at startup and refuses to run. The documented `server/.env` sets it beside `OPENAI_API_KEY`, generated with `openssl rand -base64 48`, and the JWTs that carry a dashboard session are signed with it. Note what that enforcement implies: the only way to start this server without a signing secret is to turn authentication off altogether.
 
@@ -7523,9 +7523,9 @@ Machine clients need separate credentials, with the narrowest permissions the ap
 
 ## Verify
 
-**Demonstration status:** the placeholder guards and the placeholder-scan discrimination were exercised locally. Checks 2 to 7 below are **reasoned rather than demonstrated** against deployments. No container runtime, live service, external network vantage, TLS exchange, or browser authentication flow was exercised while authoring. The maintainer's verified vendor record supplies the deployment facts.
+**Demonstration status:** the placeholder guards and the placeholder-scan discrimination were exercised locally, in `bash`, `dash` and BusyBox `ash`, with and without `set -u`. Checks 2 to 7 below are **reasoned rather than demonstrated** against deployments. The specific blocking capability is that the authoring environment has no container runtime, and with it no live service, no external network vantage, no TLS exchange and no browser authentication flow. Backlog row 2.24 tracks demonstrating those checks once a runtime is available: a reasoned check is a debt, not a destination. The maintainer's verified vendor record supplies the deployment facts, and each check below states the outcome it expects in both the exposed and the fixed state.
 
-Use Bash for these blocks and curl 7.75.0 or newer for `exitcode` and `errormsg`. Copy each complete block, including the enclosing parentheses. The values go on the `set --` line, so no named variable is exposed to attributes or values the reader's shell already holds, and every probe sits behind a guard that leaves the subshell rather than running on an unsubstituted value. Substitute inside the single quotes and leave them in place. They are what keeps a URL's `&` from backgrounding the line and a `$(...)` or a backtick in a pasted value from running: the shell evaluates that value before any guard in the block can see it. Keep the quotes even for an empty value, and paste every block whole: each one counts its own values and refuses to run if the `set --` line is missing or short, because a block pasted without it would otherwise read whatever arguments your own shell already held.
+Use Bash for these blocks and curl 7.75.0 or newer for `exitcode` and `errormsg`. Copy each complete block, including the enclosing parentheses. The values go on the `set --` line, so no named variable is exposed to attributes or values the reader's shell already holds, and every probe sits behind a guard that leaves the subshell rather than running on an unsubstituted value. Substitute inside the single quotes and leave them in place. They are what keeps a URL's `&` from backgrounding the line and a `$(...)` or a backtick in a pasted value from running: the shell evaluates that value before any guard in the block can see it. Keep the quotes even for an empty value, and paste every block whole. Each block opens with a fixed marker on its `set --` line and then counts its values, so a fragment pasted without that line, or with a value deleted, stops instead of running on whatever arguments your own shell already held. One case is beyond a pasted block's reach: a shell that already holds the marker and the right number of plausible values is indistinguishable from the block having set them, so paste whole blocks rather than relying on the check to catch every way of not doing so.
 
 ### 1. Reject unfinished configuration and probe values
 
@@ -7536,6 +7536,7 @@ Run this for each configuration or environment file you edited:
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_EDITED_CONFIG_FILE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not checking"; exit; }
   shift
+  [ $# -eq 1 ] || { echo "the set -- line needs exactly 1 value; not checking"; exit; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the file name on the set -- line above; not checking" ;;
     *) grep -nH -o 'REPLACE_WITH_[[:alnum:]_]*' -- "$1"
@@ -7552,7 +7553,7 @@ The address guards below likewise print `not probing` when required values are e
 
 ### 2. Inventory listeners, the merged Compose model, and running publications
 
-**Reasoned, not demonstrated.** Run on the deployment host. For Compose, use the exact project, file selection, overrides, environment, and profiles used to start the deployment. Add those same options to these commands where needed:
+**Reasoned, not demonstrated** (no container runtime in the authoring environment; row 2.24 tracks demonstrating it). Run on the deployment host. For Compose, use the exact project, file selection, overrides, environment, and profiles used to start the deployment. Add those same options to these commands where needed:
 
 ```bash
 ss -tlnp
@@ -7572,13 +7573,14 @@ A Compose error, missing service, stopped application, or empty inventory is not
 
 ### 3. Probe the application's direct ports from another host
 
-**Reasoned, not demonstrated, including the cross-host vantage.** Probe every application or dashboard port found in check 2, using its actual host port. Include reachable LAN addresses and public IPv4/IPv6 addresses; bracket an IPv6 literal used in the HTTP URL. Exclude the intentionally public TLS ingress.
+**Reasoned, not demonstrated, including the cross-host vantage** (no container runtime and no second host in the authoring environment; row 2.24 tracks demonstrating it). Probe every application or dashboard port found in check 2, using its actual host port. Include reachable LAN addresses and public IPv4/IPv6 addresses; bracket an IPv6 literal used in the HTTP URL. Exclude the intentionally public TLS ingress.
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HOST_ADDRESS' 'REPLACE_WITH_PORT'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
+  [ $# -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
   case "$1:$2" in
     *REPLACE_WITH_*|:*|*:) echo "substitute the address and port on the set -- line above; not probing" ;;
     *) curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
@@ -7596,7 +7598,7 @@ A timeout alone is inconclusive. `http=000` can occur after a server accepts and
 
 ### 4. Probe every backing port
 
-**Reasoned, not demonstrated.** From another host, run this for every private port found in check 2, including the application's ports from check 3.
+**Reasoned, not demonstrated** (no container runtime in the authoring environment; row 2.24 tracks demonstrating it). From another host, run this for every private port found in check 2, including the application's ports from check 3.
 
 For the unchanged vendor examples, Mem0 adds 8432 and 3000 beside API port 8888. Onyx development adds 5432, 9200, 9000, 6379, 9004, 9005, and 8000 beside API port 8080, and nginx contributes 80 and 3000 from the base file. Environment variables can move these ports; the running inventory is the authority.
 
@@ -7605,6 +7607,7 @@ For the unchanged vendor examples, Mem0 adds 8432 and 3000 beside API port 8888.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HOST_ADDRESS' 'REPLACE_WITH_PORT'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
+  [ $# -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
   case "$1:$2" in
     *REPLACE_WITH_*|:*|*:) echo "substitute the address and port on the set -- line above; not probing" ;;
     *) nc -vz -w 5 "$1" "$2"
@@ -7621,7 +7624,7 @@ A timeout remains inconclusive without corroborating configuration and filtering
 
 ### 5. Require authentication at the ingress
 
-**Reasoned, not demonstrated.** Select a harmless request to a real protected capability. Its path, method, request body, and exact response for each installed tool are **unverified here**. Obtain them from that version's documentation and use the same request in check 7.
+**Reasoned, not demonstrated** (no container runtime in the authoring environment; row 2.24 tracks demonstrating it). Select a harmless request to a real protected capability. Its path, method, request body, and exact response for each installed tool are **unverified here**. Obtain them from that version's documentation and use the same request in check 7.
 
 Do not choose a health endpoint, documentation page, login page, or an invented path. A `404` or request-validation error cannot demonstrate authentication.
 
@@ -7633,6 +7636,7 @@ Set the second value on the `set --` line to the actual method, such as `GET` or
   # $3 is the harmless JSON request body. Keep the empty quotes if the request needs none.
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
+  [ $# -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit; }
   if [ -z "$1" ] || [ -z "$2" ]; then
     echo "fill in the URL and method on the set -- line above; not probing"; exit
   fi
@@ -7661,7 +7665,7 @@ A redirect alone is insufficient: inspect its destination. Do not follow it auto
 
 ### 6. Exercise the capability without native credentials
 
-**Reasoned, not demonstrated.** For LocalAI or Text Embeddings Inference with a key set, Mem0, Onyx, or LangServe with application authentication, run the same harmless protected request against the private upstream from a trusted location that can reach it. Do not publish a port to perform this check.
+**Reasoned, not demonstrated** (no container runtime in the authoring environment; row 2.24 tracks demonstrating it). For LocalAI or Text Embeddings Inference with a key set, Mem0, Onyx, or LangServe with application authentication, run the same harmless protected request against the private upstream from a trusted location that can reach it. Do not publish a port to perform this check.
 
 For SearxNG, for LangServe relying entirely on its proxy, or for any service you have deliberately left unauthenticated on the private side, run this capability check through the authenticated HTTPS ingress. An intentionally unauthenticated private upstream cannot demonstrate native authentication.
 
@@ -7671,6 +7675,7 @@ For SearxNG, for LangServe relying entirely on its proxy, or for any service you
   # $3 is the same harmless JSON body as checks 5 and 7. Keep the empty quotes if none is needed.
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
+  [ $# -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit; }
   if [ -z "$1" ] || [ -z "$2" ]; then
     echo "fill in the URL and method on the set -- line above; not probing"; exit
   fi
@@ -7701,7 +7706,7 @@ Mem0 and Onyx ship authentication on, but the verified record does not establish
 
 ### 7. Prove the protected service still works
 
-**Reasoned, not demonstrated.** Repeat the capability request through the HTTPS ingress with valid credentials. Keep its method, path, and body the same as the anonymous test, allowing only the expected upstream-to-ingress URL change.
+**Reasoned, not demonstrated** (no container runtime in the authoring environment; row 2.24 tracks demonstrating it). Repeat the capability request through the HTTPS ingress with valid credentials. Keep its method, path, and body the same as the anonymous test, allowing only the expected upstream-to-ingress URL change.
 
 The header below is reader-supplied. For a configured bearer-token proxy it is `Authorization: Bearer` followed by the token. Mem0 accepts its native per-user key through `X-API-Key`, or a JWT through `Authorization: Bearer`. Other native credential transports are **unverified in the supplied record**. Where ingress and application require separate credentials, add both headers inside the guarded curl command using the deployed authentication design.
 
@@ -7711,6 +7716,7 @@ The header below is reader-supplied. For a configured bearer-token proxy it is `
   # $3 is the same harmless JSON body as the anonymous check. Keep the empty quotes if none is needed.
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
+  [ $# -eq 4 ] || { echo "the set -- line needs exactly 4 values; not probing"; exit; }
   if [ -z "$1" ] || [ -z "$2" ] || [ -z "$4" ]; then
     echo "fill in the URL, method, and header on the set -- line above; not probing"; exit
   fi

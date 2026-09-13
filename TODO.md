@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.45**, **2.24**, **3.12**, **4.5**.
+Next ids: **1.45**, **2.25**, **3.12**, **4.5**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -76,6 +76,7 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.41 | `agent-builders.md`: establish whether Flowise, Langflow and LibreChat ship vendor Compose files a reader would be overriding. If they do, the `!reset` caveat added in #45 is load-bearing for them rather than advisory. Premise unverified per vendor. (M, S) | `[enhance]` |
 | 1.43 | A guarded front door with the backing store published beside it, now seen in three unrelated tools: Dify's compose publishes the plugin daemon next to the app, Mem0's publishes PostgreSQL on 8432 beside an authenticated API, and Onyx's development compose publishes seven services past its login page. The `${VAR:-default}` shape is identical in each and moves the host port without closing the publication. The new AI-infrastructure guide carries the authoritative treatment per the 2026-09-13 ruling and `agent-builders.md` cross-references it; this row tracks whether the other Compose-deploying guides need the same pointer. (M, M) | `[enhance]` |
 | 1.44 | The remaining 22 guides carry an unquoted placeholder on the `set --` line of their guard. A pasted value containing `&`, `$(...)` or a backtick is evaluated by the shell before the guard runs, so the guard cannot constrain it; demonstrated in bash. Reader risk is low today because every one of those placeholders is an IP address, which carries no shell metacharacter, but the idiom must be uniform. `ai-infra-services.md` and `CONTRIBUTING.md` are already fixed (M, S) | `[gap]` |
+| 2.24 | Demonstrate `ai-infra-services.md` Verify checks 2 to 7 against real deployments. They ship marked reasoned rather than demonstrated, because the authoring environment has no container runtime and so no live service, external vantage, TLS exchange, or browser flow. CONTRIBUTING rule 5 requires the debt to be tracked, not merely disclosed. Stand up the six services from their cited Compose files and run each check against the exposed state as well as the fixed one (M, L) | `[gap]` |
 
 ## Priority 3: Add missing content
 
