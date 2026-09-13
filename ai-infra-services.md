@@ -195,7 +195,7 @@ infra_host=REPLACE_WITH_HOST_ADDRESS
 infra_port=REPLACE_WITH_PORT
 case "${infra_host:-}:${infra_port:-}" in
   *REPLACE_WITH_*|:*|*:) echo "substitute infra_host and infra_port first; not probing" ;;
-  *) curl -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+  *) curl -q -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
        -w 'http=%{http_code} exit=%{exitcode} remote=%{remote_ip} time_connect=%{time_connect} err=%{errormsg}\n' \
        "http://$infra_host:$infra_port/" ;;
 esac

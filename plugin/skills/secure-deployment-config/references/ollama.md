@@ -68,16 +68,16 @@ ss -tlnp | grep 11434                                  # 127.0.0.1 only
 # from another machine. Read err, not the number: it must name a refusal or timeout reaching YOUR
 # address. An HTTP code means the port answered. A resolver failure, a local socket error, or a
 # timeout that did not come from the remote address is inconclusive, never a pass.
-unset probe_ip                                         # clears a pre-set declare -i or -l attribute, and any stale
-                                                       # value; copy this whole block, not just the command below
-probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "${probe_ip:-}" in
-  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
-  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-       -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$probe_ip:11434/api/tags" ;;
-esac
-curl -s https://ollama.example.com/api/tags            # 401 without credentials
-curl -su admin https://ollama.example.com/api/tags     # model list with credentials
+(                                                      # a subshell, so your own script arguments are untouched
+  set -- REPLACE_WITH_YOUR_PUBLIC_IP
+  case "${1-}" in
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *) curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:11434/api/tags" ;;
+  esac
+)
+curl -q -s https://ollama.example.com/api/tags            # 401 without credentials
+curl -q -su admin https://ollama.example.com/api/tags     # model list with credentials
 ```
 
 ## Sources (checked September 2026)

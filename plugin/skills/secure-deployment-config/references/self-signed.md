@@ -64,7 +64,7 @@ sudo cp server.crt /etc/pki/ca-trust/source/anchors/app-internal.crt
 sudo update-ca-trust
 
 # Per-tool
-curl --cacert server.crt https://app.internal/
+curl -q --cacert server.crt https://app.internal/
 export REQUESTS_CA_BUNDLE=/path/to/server.crt      # Python requests
 export NODE_EXTRA_CA_CERTS=/path/to/server.crt     # Node.js
 ```

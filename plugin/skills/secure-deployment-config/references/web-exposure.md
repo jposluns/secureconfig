@@ -75,19 +75,19 @@ source too; do not ship one to a public origin for code not already meant to be 
 ## Verify
 
 ```bash
-curl -s -o /dev/null -w '%{http_code}\n' https://example.com/.env
-curl -s -o /dev/null -w '%{http_code}\n' https://example.com/.git/config
-curl -s -o /dev/null -w '%{http_code}\n' https://example.com/config.php.bak
-curl -s -o /dev/null -w '%{http_code}\n' https://example.com/db.sql
+curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/.env
+curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/.git/config
+curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/config.php.bak
+curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/db.sql
 # each line above must print 403 or 404, never the file's content
 
 printf 'probe' | sudo tee /var/www/html/.well-known/acme-challenge/probe >/dev/null
-curl -s https://example.com/.well-known/acme-challenge/probe
+curl -q -s https://example.com/.well-known/acme-challenge/probe
 sudo rm -f /var/www/html/.well-known/acme-challenge/probe
 # must return "probe", never 403: the exemption has to let a real challenge file through.
 # Requesting a token that does not exist proves nothing, because a correctly exempted
 # directory still answers 404 for a file that is not there
-curl -s -o /dev/null -w '%{http_code}\n' https://example.com/.well-known-backup/config
+curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/.well-known-backup/config
 # must be 403 or 404; a directory name that only starts with "well-known" must not
 # inherit that exemption
 

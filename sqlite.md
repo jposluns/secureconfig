@@ -33,7 +33,7 @@ LiteFS replicates a SQLite file across a cluster's nodes rather than to object s
 ## Verify
 
 ```bash
-curl -sI https://app.example.com/app.db      # 404, never 200
+curl -q -sI https://app.example.com/app.db      # 404, never 200
 git check-ignore -v app.db                    # prints a matching .gitignore rule
 stat -c '%a %U' /var/lib/myapp/app.db         # 600, owned by the app user, not world-readable
 grep -rn "REPLACE_WITH_ACTUAL_TOKEN_VALUE" build dist .next/static; echo "exit: $?"                             # search for the literal token value copied from the secret store, not the env-var name a bundler already inlined away; exit 1 is the goal

@@ -18,15 +18,15 @@ Open Elasticsearch instances produced some of the largest data leaks on record. 
 ## Verify
 
 ```bash
-curl -s --cacert /path/http_ca.crt https://search.example.com:9200/   # 401 without credentials
-curl -s --cacert /path/http_ca.crt https://search.example.com:9200/ -u elastic
+curl -q -s --cacert /path/http_ca.crt https://search.example.com:9200/   # 401 without credentials
+curl -q -s --cacert /path/http_ca.crt https://search.example.com:9200/ -u elastic
                                                     # prompts, then 200 with the right password. Verify the certificate
                                                     # against the CA your installer generated (Elasticsearch writes
                                                     # http_ca.crt on first start; the OpenSearch demo configuration
                                                     # installs its own) and never pass -k here: -k accepts a substituted
                                                     # certificate exactly as readily as yours, and this line sends
                                                     # credentials over whatever it accepted
-curl -s -o /dev/null --connect-timeout 5 --max-time 10 \
+curl -q -s -o /dev/null --connect-timeout 5 --max-time 10 \
   -w 'http=%{http_code} time_connect=%{time_connect}\n' http://search.example.com:9200/
                                                     # plaintext must NOT answer: expect a connection failure or a
                                                     # protocol error, never cluster JSON

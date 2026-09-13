@@ -57,20 +57,20 @@ ss -tlnp | grep -E '8188|7860|9090'                 # each service on 127.0.0.1 
 # each must be unreachable from another host. Read err, not the number: it must name a refusal or
 # timeout reaching YOUR address. An HTTP code means the port answered. A resolver failure, a local
 # socket error, or a timeout that did not come from the remote address is inconclusive.
-unset probe_ip                                      # clears a pre-set declare -i or -l attribute, and any stale
-                                                    # value; copy this whole block, not just the command below
-probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "${probe_ip:-}" in
-  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
-  *) for p in 8188 7860 9090; do                              # ComfyUI, SD WebUI, InvokeAI
-       curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-         -w "port=$p http=%{http_code} exit=%{exitcode} err=%{errormsg}\n" "http://$probe_ip:$p/"
-     done ;;
-esac
-curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:9090/api/v1/boards/
+(                                                   # a subshell, so your own script arguments are untouched
+  set -- REPLACE_WITH_YOUR_PUBLIC_IP
+  case "${1-}" in
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *) for p in 8188 7860 9090; do                              # ComfyUI, SD WebUI, InvokeAI
+         curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+           -w "port=$p http=%{http_code} exit=%{exitcode} err=%{errormsg}\n" "http://$1:$p/"
+       done ;;
+  esac
+)
+curl -q -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:9090/api/v1/boards/
                                                        # from the host itself, InvokeAI multiuser mode: 401
                                                        # without a Bearer token, never the app itself
-curl -sI https://imagegen.example.com/                # via the proxy: TLS, and a login prompt
+curl -q -sI https://imagegen.example.com/                # via the proxy: TLS, and a login prompt
                                                        # or 401 without credentials, before the UI loads
 ```
 

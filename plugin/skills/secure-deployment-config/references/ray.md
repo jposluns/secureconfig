@@ -63,7 +63,7 @@ Ray warns that this costs performance (large for small workloads, smaller for la
 ```bash
 ss -tlnp | grep 8265                                    # 127.0.0.1:8265 (or the tailnet IP), never 0.0.0.0 or *
 ss -tlnp | grep -E ':6379|:10001'                       # private interface only
-curl -sI -o /dev/null --connect-timeout 5 --max-time 10 \
+curl -q -sI -o /dev/null --connect-timeout 5 --max-time 10 \
   -w 'http=%{http_code} time_connect=%{time_connect}\n' \
   http://REPLACE_WITH_THE_SERVER_PUBLIC_IP:8265/
 # from another network. The pass is http=000 WITH time_connect at 0.000000: no connection completed.

@@ -205,8 +205,8 @@ touch it.
 kubectl get svc -A | grep -E 'NodePort|LoadBalancer'                 # only the Gateway's Service
 kubectl get gateway/eg -o jsonpath='{.status.addresses[0].value}'    # the public address; DNS points here
 kubectl get certificate -A                                           # Ready=True
-curl -sI http://app.example.com/                                     # 301 to https://app.example.com/
-curl -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/   # 401 where basic auth is set
+curl -q -sI http://app.example.com/                                     # 301 to https://app.example.com/
+curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/   # 401 where basic auth is set
 
 # The API server endpoint, taken WHOLE. Do not rebuild it with :6443. Managed providers
 # serve the API on 443, and a probe of 6443 times out against a cluster that is answering

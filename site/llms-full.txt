@@ -319,7 +319,7 @@ A CAA DNS record restricts which certificate authorities may issue for your doma
 
 ```bash
 sudo certbot certificates                       # what is issued and when it expires
-curl -sI https://example.com/                   # succeeds without -k
+curl -q -sI https://example.com/                   # succeeds without -k
 openssl s_client -connect example.com:443 -servername example.com \
   -verify_hostname example.com -verify_return_error </dev/null \
   | openssl x509 -noout -issuer -dates
@@ -408,7 +408,7 @@ sudo cp server.crt /etc/pki/ca-trust/source/anchors/app-internal.crt
 sudo update-ca-trust
 
 # Per-tool
-curl --cacert server.crt https://app.internal/
+curl -q --cacert server.crt https://app.internal/
 export REQUESTS_CA_BUNDLE=/path/to/server.crt      # Python requests
 export NODE_EXTRA_CA_CERTS=/path/to/server.crt     # Node.js
 ```
@@ -497,7 +497,7 @@ MFA: the emailed one-time PIN proves control of a mailbox only. For anything sen
 For APIs and machine clients, create a **service token** in the Zero Trust dashboard (Access service authentication section), add a **Service Auth** policy to the application, and send the token with each request:
 
 ```bash
-curl -H "CF-Access-Client-Id: REPLACE_WITH_CLIENT_ID" \
+curl -q -H "CF-Access-Client-Id: REPLACE_WITH_CLIENT_ID" \
      -H "CF-Access-Client-Secret: REPLACE_WITH_CLIENT_SECRET" \
      https://app.example.com/api
 ```
@@ -562,11 +562,11 @@ Serve for anything private (most things). Funnel or [cloudflare.md](cloudflare.m
 ```bash
 ss -tlnp 'sport = :3000'                          # ss's own filter, not a grep: the address column
                                                   # must read 127.0.0.1:3000, never 0.0.0.0:3000 or [::]:3000
-curl -s -o /dev/null --connect-timeout 5 --max-time 10 \
+curl -q -s -o /dev/null --connect-timeout 5 --max-time 10 \
   -w 'http=%{http_code} time_connect=%{time_connect}\n' http://10.0.0.5:3000/
 # the host's own LAN or VPC address. An HTTP status here means the app answers past the tailnet; time_connect at 0.000000 means nothing connected
 tailscale serve status
-curl -sI https://host.tailnet.ts.net/            # from a tailnet device: works
+curl -q -sI https://host.tailnet.ts.net/            # from a tailnet device: works
 # From a non-tailnet network: serve URL unreachable; funnel URL reachable, so its app login must gate it.
 ```
 
@@ -1274,8 +1274,8 @@ An app can additionally refuse a session whose ID token shows no second factor, 
 ## Verify
 
 ```bash
-curl -s https://accounts.google.com/.well-known/openid-configuration | jq -r '.issuer, .jwks_uri'
-curl -sI https://app.example.com/admin | head -1        # 302 to login or 401, never 200
+curl -q -s https://accounts.google.com/.well-known/openid-configuration | jq -r '.issuer, .jwks_uri'
+curl -q -sI https://app.example.com/admin | head -1        # 302 to login or 401, never 200
 ```
 
 Negative tests matter more than the happy path:
@@ -1387,16 +1387,16 @@ Vercel's protection guards a deployment from the public; it is not your applicat
 # origin direct. Read err, not the number: it must name a refusal or timeout reaching YOUR address.
 # An HTTP code means the origin answered. A resolver failure, a local socket error, or a timeout
 # that did not come from the remote address is inconclusive, never a pass.
-unset probe_ip                                          # clears a pre-set declare -i or -l attribute, and any stale
-                                                        # value; copy this whole block, not just the command below
-probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "${probe_ip:-}" in
-  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
-  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-       -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$probe_ip:3000/" ;;
-esac
-curl -sI https://app.example.com/                       # via proxy, no session: 302 to the IdP, or 401/403
-curl -s -H "x-amzn-oidc-identity: admin" \
+(                                                       # a subshell, so your own script arguments are untouched
+  set -- REPLACE_WITH_YOUR_PUBLIC_IP
+  case "${1-}" in
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *) curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/" ;;
+  esac
+)
+curl -q -sI https://app.example.com/                       # via proxy, no session: 302 to the IdP, or 401/403
+curl -q -s -H "x-amzn-oidc-identity: admin" \
      -H "X-MS-CLIENT-PRINCIPAL-NAME: admin" \
      -H "X-Goog-Authenticated-User-Email: admin@example.com" \
      https://app.example.com/whoami                      # still the login redirect; never "admin"
@@ -1640,18 +1640,18 @@ ss -tlnp | grep 3000                          # app on 127.0.0.1 only
 # both must be unreachable. Read err, not the number: it must name a refusal or timeout reaching
 # YOUR address. An HTTP code means the app answered. A resolver failure, a local socket error, or a
 # timeout that did not come from the remote address is inconclusive, never a pass.
-unset probe_ip                                # clears a pre-set declare -i or -l attribute, and any stale
-                                              # value; copy this whole block, not just the command below
-probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "${probe_ip:-}" in
-  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
-  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-       -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$probe_ip:3000/"
-     curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-       -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-       -H 'X-Auth-Request-User: admin' "http://$probe_ip:3000/" ;;   # forged header, straight at the app
-esac
-curl -sI https://app.example.com/             # no session: redirected to the sign-in page, or a 401
+(                                             # a subshell, so your own script arguments are untouched
+  set -- REPLACE_WITH_YOUR_PUBLIC_IP
+  case "${1-}" in
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *) curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/"
+       curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+         -H 'X-Auth-Request-User: admin' "http://$1:3000/" ;;   # forged header, straight at the app
+  esac
+)
+curl -q -sI https://app.example.com/             # no session: redirected to the sign-in page, or a 401
 ```
 
 After a real login through the proxy, confirm a session reaches the app and the app-side log shows the identity header the proxy set, not the forged one above. The forged header is never a bypass because the app is reachable only through the proxy; it is refused at the network level, not read and discarded.
@@ -1764,8 +1764,8 @@ status code is printed and you compare it; nothing here fails on its own.
 
 ```bash
 sudo apachectl configtest && sudo systemctl reload apache2   # httpd on RHEL
-curl -sI http://example.com/            # expect 301 with a https:// Location
-curl -s -o /dev/null -w '%{http_code}\n' https://example.com/
+curl -q -sI http://example.com/            # expect 301 with a https:// Location
+curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/
                                         # 200 before section 4, 401 after it. Once
                                         # authentication is on, a 200 here is the finding
 
@@ -1784,7 +1784,7 @@ ss -tlnp
 # SNI saying example.com, which selects YOUR vhost and answers 401, or makes mod_ssl reject the
 # mismatched pair with 421; both look like a pass and neither is the request an attacker sends.
 # --connect-to sets the name in the handshake AND the header, and still dials your address:
-curl -s -o /dev/null -w '%{http_code}\n' \
+curl -q -s -o /dev/null -w '%{http_code}\n' \
   --connect-to REPLACE_WITH_AN_UNCONFIGURED_NAME:443:example.com:443 \
   https://REPLACE_WITH_AN_UNCONFIGURED_NAME/REPLACE_WITH_A_PROTECTED_PATH
                                         # 401 is the pass. 200 means another vhost served the
@@ -1929,13 +1929,13 @@ that tolerance rather than removing the timeout.
 
 ```bash
 sudo nginx -t && sudo systemctl reload nginx
-curl -sI http://example.com/        # expect 301 with a https:// Location
-curl -sI https://example.com/       # expect 200 without -k
-curl -s  https://example.com/api    # expect 401/403 without credentials
+curl -q -sI http://example.com/        # expect 301 with a https:// Location
+curl -q -sI https://example.com/       # expect 200 without -k
+curl -q -s  https://example.com/api    # expect 401/403 without credentials
 head -c 9M  /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
-curl -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/under.bin https://example.com/
+curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/under.bin https://example.com/
                                     # positive control: under the limit, must NOT be 413
-curl -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/over.bin  https://example.com/
+curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/over.bin  https://example.com/
                                     # 413. The 9M control is the discriminating half: nginx's default
                                     # client_max_body_size is 1m, so 9M is refused until `10m` is set,
                                     # while 11M returns 413 either way. Neither status says WHICH layer
@@ -1943,7 +1943,7 @@ curl -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-b
                                     # attribute it to nginx, set `client_max_body_size 0` in an isolated
                                     # environment, which disables the check entirely; commenting the
                                     # directive out only restores the 1m default and still returns 413
-seq 1 40 | xargs -P 40 -I{} curl -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD https://example.com/ | sort | uniq -c
+seq 1 40 | xargs -P 40 -I{} curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD https://example.com/ | sort | uniq -c
                                     # Run them CONCURRENTLY: a sequential loop pays a
                                     # TLS handshake per request and can stay under 10r/s, so every
                                     # request is admitted and the check passes while no limit exists.
@@ -2054,8 +2054,8 @@ These are read-and-judge checks: the status code is printed and you compare it.
 
 ```bash
 sudo lighttpd -tt -f /etc/lighttpd/lighttpd.conf && sudo systemctl reload lighttpd
-curl -sI http://example.com/        # expect a redirect to https://
-curl -s -o /dev/null -w '%{http_code}\n' https://example.com/
+curl -q -sI http://example.com/        # expect a redirect to https://
+curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/
                                     # expect 401 without credentials once auth is on
 
 # Read every listener rather than filtering to the ports you expect. The checks above prove
@@ -2068,7 +2068,7 @@ ss -tlnp
 # carrying a host it does not name is served by the global configuration instead. That
 # conditional reads the Host HEADER, so setting the header is the right test here, unlike
 # Apache, which selects its virtual host by the SNI name when the connection is TLS:
-curl -s -o /dev/null -w '%{http_code}\n' -H 'Host: not-configured.example' \
+curl -q -s -o /dev/null -w '%{http_code}\n' -H 'Host: not-configured.example' \
   https://example.com/REPLACE_WITH_A_PROTECTED_PATH
                                     # 401 is the pass. 200 means the protected path is served
                                     # without authentication to anyone who sends another host
@@ -2183,14 +2183,14 @@ request_body {
 
 ```bash
 caddy validate --config /etc/caddy/Caddyfile
-curl -sI http://app.example.com/     # expect a redirect to https://
-curl -sI https://app.example.com/    # expect 401 without credentials once auth is on
-curl -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/admin     # 401 with the @admin matcher
-curl -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/admin/x   # 401 as well
+curl -q -sI http://app.example.com/     # expect a redirect to https://
+curl -q -sI https://app.example.com/    # expect 401 without credentials once auth is on
+curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/admin     # 401 with the @admin matcher
+curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/admin/x   # 401 as well
 head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
-curl -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/under.bin https://app.example.com/
+curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/under.bin https://app.example.com/
                                      # positive control: under the limit, must NOT be 413
-curl -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/over.bin  https://app.example.com/
+curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/over.bin  https://app.example.com/
                                      # 413. Supply credentials: an unauthenticated probe returns 401 and
                                      # tells you nothing about max_size. Caddy's default order puts
                                      # request_body ahead of basic_auth, but the limit is enforced when a
@@ -2313,12 +2313,12 @@ http-request deny deny_status 413 if { req.body_size gt 10485760 }
 
 ```bash
 sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
-curl -sI http://example.com/        # expect 301 with a https:// Location
-curl -sI https://example.com/       # expect 401 without credentials once auth is on
+curl -q -sI http://example.com/        # expect 301 with a https:// Location
+curl -q -sI https://example.com/       # expect 401 without credentials once auth is on
 head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
-curl -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/under.bin https://example.com/
+curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/under.bin https://example.com/
                                     # positive control: under the limit, must NOT be 413
-curl -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/over.bin  https://example.com/
+curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/over.bin  https://example.com/
                                     # 413. req.body_size reads the advertised Content-Length, which curl
                                     # sets here. A chunked upload advertises none and is not covered.
                                     # A backend limit returns the same code, so attributing the refusal
@@ -2453,18 +2453,18 @@ than the client, so set it explicitly if you want a per-client cap.
 ## 5. Verify
 
 ```bash
-curl -sI http://app.example.com/     # expect a redirect to https://
-curl -sI https://app.example.com/    # expect 401 without credentials once auth is on
+curl -q -sI http://app.example.com/     # expect a redirect to https://
+curl -q -sI https://app.example.com/    # expect 401 without credentials once auth is on
 head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
-curl -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/under.bin https://app.example.com/
+curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/under.bin https://app.example.com/
                                      # positive control: under the limit, must NOT be 413
-curl -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/over.bin  https://app.example.com/
+curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/over.bin  https://app.example.com/
                                      # 413. Credentials matter: app-auth is first in the middleware
                                      # chain, so an unauthenticated probe stops at 401 before any limit
                                      # sees the body. A backend with its own limit returns the same
                                      # code, so attributing the refusal needs an isolated environment
                                      # with app-body removed
-seq 1 40 | xargs -P 40 -I{} curl -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD https://app.example.com/ | sort | uniq -c
+seq 1 40 | xargs -P 40 -I{} curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD https://app.example.com/ | sort | uniq -c
                                      # A 429 appeared. That is all this shows. inflightreq also returns
                                      # 429, and an upstream under load can too, so this does not
                                      # establish that ratelimit fired. Attributing it needs an isolated
@@ -2584,9 +2584,9 @@ MFA: add TOTP with [otplib](https://github.com/yeojz/otplib) plus the [qrcode](h
 ## 5. Verify
 
 ```bash
-curl -sI http://example.com/         # expect 301 with a https:// Location
-curl -sI https://example.com/        # succeeds without -k; shows helmet's headers
-curl -s  https://example.com/api     # expect 401/403 without credentials
+curl -q -sI http://example.com/         # expect 301 with a https:// Location
+curl -q -sI https://example.com/        # succeeds without -k; shows helmet's headers
+curl -q -s  https://example.com/api     # expect 401/403 without credentials
 ss -tlnp | grep node                 # behind a proxy: bound to 127.0.0.1 only
 ```
 
@@ -2683,8 +2683,8 @@ export SSL_CERT_FILE=/path/ca.crt        # httpx and the ssl module
 ## 5. Verify
 
 ```bash
-curl -sI https://example.com/        # succeeds without -k
-curl -s  https://example.com/api     # expect 401/403 without credentials
+curl -q -sI https://example.com/        # succeeds without -k
+curl -q -s  https://example.com/api     # expect 401/403 without credentials
 ss -tlnp | grep -E 'gunicorn|uvicorn|python'   # behind a proxy: 127.0.0.1 only
 ```
 
@@ -2775,8 +2775,8 @@ Caddy obtains and renews the certificate automatically ([free-certificates.md](f
 ```bash
 docker compose ps                     # only the proxy shows 0.0.0.0 port bindings
 ss -tlnp                              # host view: nothing else on public interfaces
-curl -sI http://app.example.com/      # expect a redirect to https://
-curl -s  https://app.example.com/api  # expect 401/403 without credentials
+curl -q -sI http://app.example.com/      # expect a redirect to https://
+curl -q -s  https://app.example.com/api  # expect 401/403 without credentials
 ```
 
 Test from a second machine on a different network where possible; the UFW bypass means testing the firewall from the host itself proves nothing about published ports.
@@ -2997,8 +2997,8 @@ touch it.
 kubectl get svc -A | grep -E 'NodePort|LoadBalancer'                 # only the Gateway's Service
 kubectl get gateway/eg -o jsonpath='{.status.addresses[0].value}'    # the public address; DNS points here
 kubectl get certificate -A                                           # Ready=True
-curl -sI http://app.example.com/                                     # 301 to https://app.example.com/
-curl -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/   # 401 where basic auth is set
+curl -q -sI http://app.example.com/                                     # 301 to https://app.example.com/
+curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/   # 401 where basic auth is set
 
 # The API server endpoint, taken WHOLE. Do not rebuild it with :6443. Managed providers
 # serve the API on 443, and a probe of 6443 times out against a cluster that is answering
@@ -3181,13 +3181,13 @@ Both are development tooling, not a production server: the `vite preview` docs s
 ## Verify
 
 ```bash
-curl -si https://app.example.com/api/private | head -1   # 401 with no session cookie, on all three frameworks
+curl -q -si https://app.example.com/api/private | head -1   # 401 with no session cookie, on all three frameworks
 ls build dist .output 2>/dev/null                          # confirm which output directory your build actually produced
 grep -rlF "REPLACE_WITH_YOUR_ACTUAL_SECRET_VALUE" build dist .output; echo "exit: $?"
                                                             # search the built client output for the literal secret value with a
                                                             # fixed-string match; exit 1 is the goal, exit 2 means a listed
                                                             # directory did not exist, and grep's own errors are left visible
-curl -si https://app.example.com/ -H "Host: evil.example.com" | head -1   # a spoofed Host is not trusted
+curl -q -si https://app.example.com/ -H "Host: evil.example.com" | head -1   # a spoofed Host is not trusted
 ```
 
 A clean grep result here is evidence, not proof: it means the literal value did not match in the directories searched, not that the secret cannot be present in some other form. A bundler could split, encode, or otherwise transform it, so check the exit code and confirm the directory actually exists rather than reading silence alone as clean.
@@ -3500,8 +3500,8 @@ Deployment Protection controls who can open a deployment URL: Vercel Authenticat
 
 ```bash
 ss -tlnp | grep 3000                                    # self-hosted: 127.0.0.1 only
-curl -si https://app.example.com/api/admin | head -1    # 401 (or 302 to /login) with no cookie
-curl -si https://app.example.com/dashboard | head -1    # 302 to /login, not the page
+curl -q -si https://app.example.com/api/admin | head -1    # 401 (or 302 to /login) with no cookie
+curl -q -si https://app.example.com/dashboard | head -1    # 302 to /login, not the page
 grep -rl "${SESSION_SECRET:0:8}" .next/static           # no output: the browser bundle has no secret
 # Server Action: clear cookies in the browser, submit the form that calls it; it must refuse, not mutate.
 ```
@@ -3600,9 +3600,9 @@ client := &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{R
 ## 5. Verify
 
 ```bash
-curl -sI http://example.com/         # expect 301 with a https:// Location
-curl -sI https://example.com/        # succeeds without -k
-curl -sS -o /dev/null -w '%{http_code}\n' https://example.com/api   # 401 or 403 without credentials
+curl -q -sI http://example.com/         # expect 301 with a https:// Location
+curl -q -sI https://example.com/        # succeeds without -k
+curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/api   # 401 or 403 without credentials
 ss -tlnp | grep REPLACE_WITH_BINARY_NAME   # behind a proxy: 127.0.0.1 only
 ```
 
@@ -3697,9 +3697,9 @@ SSO: the `Microsoft.AspNetCore.Authentication.OpenIdConnect` package adds `.AddO
 ## 5. Verify
 
 ```bash
-curl -sI http://example.com/         # expect 307 or 308 with a https:// Location
-curl -sI https://example.com/        # succeeds without -k; shows Strict-Transport-Security
-curl -sS -o /dev/null -w '%{http_code}\n' https://example.com/api   # 401 or 403 without credentials
+curl -q -sI http://example.com/         # expect 307 or 308 with a https:// Location
+curl -q -sI https://example.com/        # succeeds without -k; shows Strict-Transport-Security
+curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/api   # 401 or 403 without credentials
 ss -tlnp | grep dotnet               # behind a proxy: 127.0.0.1 and ::1 only
 ```
 
@@ -3790,8 +3790,8 @@ The `issuer-uri` drives OpenID Connect discovery, and the `openid` scope is what
 ## 5. Verify
 
 ```bash
-curl -sI https://example.com/        # succeeds without -k; shows Strict-Transport-Security
-curl -sS -o /dev/null -w '%{http_code}\n' https://example.com/api   # 401, or 302 to the login page, without credentials
+curl -q -sI https://example.com/        # succeeds without -k; shows Strict-Transport-Security
+curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/api   # 401, or 302 to the login page, without credentials
 ss -tlnp | grep java                 # behind a proxy: 127.0.0.1 only
 grep -c "Using generated security password" app.log   # must be 0: otherwise the default user is still active
 ```
@@ -3878,9 +3878,9 @@ curl_setopt($ch, CURLOPT_CAINFO, '/etc/ssl/certs/internal-ca.pem'); // internal 
 
 ```bash
 ss -xlnp | grep php-fpm                                       # Unix socket; with TCP, ss -tlnp shows 127.0.0.1:9000 only
-curl -sI https://app.example.com/                             # succeeds without -k
-curl -sI https://app.example.com/login | grep -i set-cookie   # secure; httponly; samesite=lax
-curl -s -o /dev/null -w '%{http_code}\n' https://app.example.com/REPLACE_WITH_PROTECTED_PATH
+curl -q -sI https://app.example.com/                             # succeeds without -k
+curl -q -sI https://app.example.com/login | grep -i set-cookie   # secure; httponly; samesite=lax
+curl -q -s -o /dev/null -w '%{http_code}\n' https://app.example.com/REPLACE_WITH_PROTECTED_PATH
                                                               # 401, 403, or a redirect to /login with no session cookie.
                                                               # TLS and cookie flags say nothing about whether a route
                                                               # actually refuses an unauthenticated request
@@ -3972,9 +3972,9 @@ Never set `verify_mode = OpenSSL::SSL::VERIFY_NONE`. Ruby's default SSL context 
 
 ```bash
 ss -tlnp | grep -E 'puma|ruby'                                   # 127.0.0.1:3000 only
-curl -sI http://app.example.com/                                 # 301 to https:// (force_ssl)
-curl -sI https://app.example.com/ | grep -iE 'strict-transport|set-cookie'   # HSTS; secure; httponly; samesite=lax
-curl -s -o /dev/null -w '%{http_code}\n' https://app.example.com/dashboard    # 302 to login, or 401
+curl -q -sI http://app.example.com/                                 # 301 to https:// (force_ssl)
+curl -q -sI https://app.example.com/ | grep -iE 'strict-transport|set-cookie'   # HSTS; secure; httponly; samesite=lax
+curl -q -s -o /dev/null -w '%{http_code}\n' https://app.example.com/dashboard    # 302 to login, or 401
 git ls-files config/master.key                                   # prints nothing
 ```
 
@@ -4074,15 +4074,15 @@ sudo firewall-cmd --zone=REPLACE_WITH_PUBLIC_ZONE --list-all   # confirm: no ssh
 ```bash
 ss -tlnp                          # only intended listeners, on intended addresses
 sudo ufw status verbose           # default deny incoming; port 22 shows your admin range, never Anywhere
-unset probe_ip                    # clears a pre-set declare -i or -l attribute, and any stale
-                                  # value; copy this whole block, not just the command below
-probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "${probe_ip:-}" in
-  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
-  *) nc -vz -w 3 "$probe_ip" 22 ;;   # from an address outside the admin range: must fail to connect
-  # a refusal or a timeout from YOUR address is the pass. A local error, an unsupported option (BusyBox
-  # netcat rejects -v), or exit 1 with no output at all is inconclusive: nothing reached the network
-esac
+(                                 # a subshell, so your own script arguments are untouched
+  set -- REPLACE_WITH_YOUR_PUBLIC_IP
+  case "${1-}" in
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *) nc -vz -w 3 "$1" 22 ;;   # from an address outside the admin range: must fail to connect
+    # a refusal or a timeout from YOUR address is the pass. A local error, an unsupported option (BusyBox
+    # netcat rejects -v), or exit 1 with no output at all is inconclusive: nothing reached the network
+  esac
+)
 ssh -o PreferredAuthentications=password user@host   # expect: Permission denied
 ssh user@host                     # with PAM MFA: the key is accepted, then the code prompt appears before a shell
 ```
@@ -4156,13 +4156,13 @@ az network nsg rule list \
 - From an address outside the range you administer from:
 
   ```bash
-  unset probe_ip                          # clears a pre-set declare -i or -l attribute, and any stale
-                                          # value; copy this whole block, not just the command below
-  probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
-  case "${probe_ip:-}" in
-    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
-    *) for p in 22 3306 5432 6379 27017; do nc -vz -w 3 "$probe_ip" "$p"; done ;;
-  esac
+  (                                       # a subshell, so your own script arguments are untouched
+    set -- REPLACE_WITH_YOUR_PUBLIC_IP
+    case "${1-}" in
+      *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+      *) for p in 22 3306 5432 6379 27017; do nc -vz -w 3 "$1" "$p"; done ;;
+    esac
+  )
   ```
 
   Each port must report a refused or timed-out connection; a usage error from `nc` (some netcat variants take one port or a range per invocation) is not a passing result, and neither is exit 1 with no output at all, which is what a denied local socket looks like: in both cases nothing reached the network, so the check is inconclusive rather than passed.
@@ -4211,8 +4211,8 @@ A new Space is public by default: anyone can view the source and reach the runni
 ## 6. Verify
 
 ```bash
-curl -sI http://app.example.com/          # platform redirects to https
-curl -s  https://app.example.com/api/...  # 401/403 without credentials
+curl -q -sI http://app.example.com/          # platform redirects to https
+curl -q -s  https://app.example.com/api/...  # 401/403 without credentials
 # Repository scan per secrets.md comes back clean; client bundle contains no private keys.
 ```
 
@@ -4296,15 +4296,15 @@ from being attempted, they make the attempt fail.
 
 ```bash
 # AWS, no token supplied: with --http-tokens required this returns 401
-curl -s -o /dev/null -w '%{http_code}\n' http://169.254.169.254/latest/meta-data/
+curl -q -s -o /dev/null -w '%{http_code}\n' http://169.254.169.254/latest/meta-data/
 # GCP, no Metadata-Flavor header: must fail, must not return metadata
-curl -s -o /dev/null -w '%{http_code}\n' http://169.254.169.254/computeMetadata/v1/instance/
+curl -q -s -o /dev/null -w '%{http_code}\n' http://169.254.169.254/computeMetadata/v1/instance/
 # Azure, no Metadata: true header: must fail, must not return metadata
-curl -s -o /dev/null -w '%{http_code}\n' 'http://169.254.169.254/metadata/instance?api-version=2025-04-07'
+curl -q -s -o /dev/null -w '%{http_code}\n' 'http://169.254.169.254/metadata/instance?api-version=2025-04-07'
 # the three checks above test the header requirement, which is not the control this guide
 # recommends. Test the network block itself, WITH the header the service requires, from a
 # workload that has no legitimate reason to reach metadata:
-curl -s -o /dev/null --connect-timeout 5 --max-time 10 \
+curl -q -s -o /dev/null --connect-timeout 5 --max-time 10 \
   -w 'http=%{http_code} time_connect=%{time_connect}\n' -H 'Metadata-Flavor: Google' \
   http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token
 # a 200 here is a credential-issuing endpoint reachable from the workload, whatever the header
@@ -4313,12 +4313,12 @@ curl -s -o /dev/null --connect-timeout 5 --max-time 10 \
 # connection completed, and corroborate with the deny record the negative control below describes.
 # positive control: a host on the egress allow list, for example the AWS STS endpoint used for role
 # credentials, must succeed
-curl -s -o /dev/null -w '%{http_code}\n' --max-time 5 https://sts.amazonaws.com/
+curl -q -s -o /dev/null -w '%{http_code}\n' --max-time 5 https://sts.amazonaws.com/
 
 # negative control: a known-live host outside the egress allow list, judged by curl's exit status,
 # not by matching text in its output, since a successful connection also lacks the string
 # "Could not resolve host" and so would otherwise be misreported as blocked
-curl -s --connect-timeout 5 --max-time 10 -o /dev/null -w 'time_connect=%{time_connect}\n' https://example.com/
+curl -q -s --connect-timeout 5 --max-time 10 -o /dev/null -w 'time_connect=%{time_connect}\n' https://example.com/
 rc=$?
 if [ "$rc" -eq 0 ]; then
   echo "FAIL: connected to a host outside the allow list, egress is not enforced"
@@ -4394,10 +4394,10 @@ MFA: none of these platforms add a second factor to the workload itself. The acc
 
 ```bash
 ss -tlnp                                   # enumerate every listening port on the box
-curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8888/api/contents   # 403 without the token
-curl -sS -o /dev/null -w '%{http_code}\n' "https://REPLACE_WITH_POD_ID-REPLACE_WITH_PORT.proxy.runpod.net/REPLACE_WITH_PROTECTED_PATH"
+curl -q -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8888/api/contents   # 403 without the token
+curl -q -sS -o /dev/null -w '%{http_code}\n' "https://REPLACE_WITH_POD_ID-REPLACE_WITH_PORT.proxy.runpod.net/REPLACE_WITH_PROTECTED_PATH"
 # 401 without credentials, against an actual protected endpoint rather than "/" (RunPod's proxy hostname form; substitute the equivalent for your platform)
-curl -sS -o /dev/null -w '%{http_code}\n' -H "Authorization: Bearer REPLACE_WITH_TOKEN" "https://REPLACE_WITH_POD_ID-REPLACE_WITH_PORT.proxy.runpod.net/REPLACE_WITH_PROTECTED_PATH"
+curl -q -sS -o /dev/null -w '%{http_code}\n' -H "Authorization: Bearer REPLACE_WITH_TOKEN" "https://REPLACE_WITH_POD_ID-REPLACE_WITH_PORT.proxy.runpod.net/REPLACE_WITH_PROTECTED_PATH"
 # 200 with the correct credentials, so the pair shows the listener itself gates access, not only the proxy hostname's obscurity
 ```
 
@@ -4471,23 +4471,24 @@ When a person leaves, revoke access at every layer they touched, not only their 
 
 ```bash
 # From a second network, not the host itself:
-unset probe_ip                                         # clears a pre-set declare -i or -l attribute, and any stale
-                                                       # value; copy this whole block, not just the command below
-probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "${probe_ip:-}" in
-  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
-  *) nmap -Pn -p- "$probe_ip" ;;                        # only the intended ports answer
-  # and the scan actually ran: nmap reporting a host down, a permission error, or no output at all is
-  # inconclusive, not a clean result
-esac
-unset probe_ip6                                        # same, for the IPv6 probe
-probe_ip6=REPLACE_WITH_YOUR_PUBLIC_IPV6
-case "${probe_ip6:-}" in
-  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip6= first; not probing" ;;
-  *) nmap -Pn -6 -p- "$probe_ip6" ;;                      # same, over the public IPv6 address
-                                                          # same reading: a scan that did not run is not a clean scan
-esac
-curl -sI https://retired-preview.example.com/          # expect DNS failure or connection error
+(                                                      # a subshell, so your own script arguments are untouched
+  set -- REPLACE_WITH_YOUR_PUBLIC_IP
+  case "${1-}" in
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *) nmap -Pn -p- "$1" ;;                        # only the intended ports answer
+    # and the scan actually ran: nmap reporting a host down, a permission error, or no output at all is
+    # inconclusive, not a clean result
+  esac
+)
+(                                                      # a subshell, so your own script arguments are untouched
+  set -- REPLACE_WITH_YOUR_PUBLIC_IPV6
+  case "${1-}" in
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *) nmap -Pn -6 -p- "$1" ;;                      # same, over the public IPv6 address
+                                                    # same reading: a scan that did not run is not a clean scan
+  esac
+)
+curl -q -sI https://retired-preview.example.com/          # expect DNS failure or connection error
 dig +short retired-preview.example.com                 # expect no record, not a dangling CNAME
 openssl s_client -connect app.example.com:443 -servername app.example.com \
   -verify_hostname app.example.com -verify_return_error </dev/null \
@@ -5197,15 +5198,15 @@ Open Elasticsearch instances produced some of the largest data leaks on record. 
 ## Verify
 
 ```bash
-curl -s --cacert /path/http_ca.crt https://search.example.com:9200/   # 401 without credentials
-curl -s --cacert /path/http_ca.crt https://search.example.com:9200/ -u elastic
+curl -q -s --cacert /path/http_ca.crt https://search.example.com:9200/   # 401 without credentials
+curl -q -s --cacert /path/http_ca.crt https://search.example.com:9200/ -u elastic
                                                     # prompts, then 200 with the right password. Verify the certificate
                                                     # against the CA your installer generated (Elasticsearch writes
                                                     # http_ca.crt on first start; the OpenSearch demo configuration
                                                     # installs its own) and never pass -k here: -k accepts a substituted
                                                     # certificate exactly as readily as yours, and this line sends
                                                     # credentials over whatever it accepted
-curl -s -o /dev/null --connect-timeout 5 --max-time 10 \
+curl -q -s -o /dev/null --connect-timeout 5 --max-time 10 \
   -w 'http=%{http_code} time_connect=%{time_connect}\n' http://search.example.com:9200/
                                                     # plaintext must NOT answer: expect a connection failure or a
                                                     # protocol error, never cluster JSON
@@ -5261,9 +5262,9 @@ Loopback or private networks by default; public access only via the TLS endpoint
 
 ```bash
 ss -tlnp | grep 9000                                   # private unless deliberate
-curl -s -o /dev/null -w '%{http_code}\n' https://s3.example.com:9000/                     # service root: anonymous ListBuckets denied
-curl -s -o /dev/null -w '%{http_code}\n' https://s3.example.com:9000/REPLACE_WITH_BUCKET/ # per bucket: anonymous listing denied
-curl -s -o /dev/null -w '%{http_code}\n' https://s3.example.com:9000/REPLACE_WITH_BUCKET/REPLACE_WITH_PRIVATE_OBJECT
+curl -q -s -o /dev/null -w '%{http_code}\n' https://s3.example.com:9000/                     # service root: anonymous ListBuckets denied
+curl -q -s -o /dev/null -w '%{http_code}\n' https://s3.example.com:9000/REPLACE_WITH_BUCKET/ # per bucket: anonymous listing denied
+curl -q -s -o /dev/null -w '%{http_code}\n' https://s3.example.com:9000/REPLACE_WITH_BUCKET/REPLACE_WITH_PRIVATE_OBJECT
                                                        # a known private object: 403, never 200. Anonymous policies are set per
                                                        # bucket, so a denial at the service root does not prove any bucket is private
 mc alias set mys3 https://s3.example.com:9000 REPLACE_WITH_ACCESS_KEY REPLACE_WITH_SECRET_KEY   # app key works; root key stays unused by apps
@@ -5623,9 +5624,9 @@ Clients use `clickhouse-client --secure` on 9440, or HTTPS on 8443 with HTTP bas
 
 ```bash
 ss -tlnp | grep -E '8123|9000|8443|9440'          # only 8443 and 9440, on the intended address
-curl -s http://ch.example.com:8123/                # connection refused
-curl -s 'https://ch.example.com:8443/?query=SELECT%201'   # no credentials = default with empty password: authentication error
-curl -u app:REPLACE_WITH_LONG_RANDOM_VALUE 'https://ch.example.com:8443/?query=SELECT%201'   # 1
+curl -q -s http://ch.example.com:8123/                # connection refused
+curl -q -s 'https://ch.example.com:8443/?query=SELECT%201'   # no credentials = default with empty password: authentication error
+curl -q -u app:REPLACE_WITH_LONG_RANDOM_VALUE 'https://ch.example.com:8443/?query=SELECT%201'   # 1
 clickhouse-client --host ch.example.com --port 9440 --secure --user app --password
 ```
 
@@ -5723,7 +5724,7 @@ openssl s_client -connect neo4j.example.com:7687 -verify_hostname neo4j.example.
                                                                  # With client_auth=REQUIRE, add -cert and -key: without
                                                                  # them the server refuses the connection and
                                                                  # "Verification: OK" still prints.
-curl -sI http://neo4j.example.com:7474/                          # connection refused
+curl -q -sI http://neo4j.example.com:7474/                          # connection refused
 cypher-shell -a neo4j://neo4j.example.com:7687 -u app -p '...'   # unencrypted: refused with tls_level=REQUIRED
 cypher-shell -a neo4j+s://neo4j.example.com:7687 -u neo4j -p neo4j   # default credential: authentication failure
 cypher-shell -a neo4j+s://neo4j.example.com:7687 -u app -p 'REPLACE_WITH_LONG_RANDOM_VALUE'   # works
@@ -5901,10 +5902,10 @@ using ( (select auth.jwt()->>'sub') = owner_id );
 ## Verify
 
 ```bash
-curl -sI https://example-bucket.s3.amazonaws.com/model.safetensors        # 403, never 200
+curl -q -sI https://example-bucket.s3.amazonaws.com/model.safetensors        # 403, never 200
 URL="$(aws s3 presign s3://example-bucket/model.safetensors --expires-in 60)"   # signs a GET, so test with GET
-curl -sS -o /dev/null -w '%{http_code}\n' "$URL"              # 200 now
-sleep 61; curl -sS -o /dev/null -w '%{http_code}\n' "$URL"    # 403 once the minute has passed
+curl -q -sS -o /dev/null -w '%{http_code}\n' "$URL"              # 200 now
+sleep 61; curl -q -sS -o /dev/null -w '%{http_code}\n' "$URL"    # 403 once the minute has passed
 ```
 
 - An anonymous request to any object URL is denied (S3 returns `403`; GCS `401` or `403`; Azure `401`, or `409` when the account disallows anonymous access; Supabase private buckets return an error, not the file).
@@ -5996,7 +5997,7 @@ ss -tlnp | grep -E ':(4222|8222) '                                              
 nats pub orders.created hello --tlsca /etc/nats/certs/ca.pem --tlscert REPLACE_WITH_CLIENT_CERT_FILE --tlskey REPLACE_WITH_CLIENT_KEY_FILE --user order-svc --password REPLACE_WITH_LONG_RANDOM_PASSWORD   # allowed subject, valid credentials: succeeds
 nats pub other.subject hello --tlsca /etc/nats/certs/ca.pem --tlscert REPLACE_WITH_CLIENT_CERT_FILE --tlskey REPLACE_WITH_CLIENT_KEY_FILE --user order-svc --password REPLACE_WITH_LONG_RANDOM_PASSWORD     # subject outside the allow list: fails
 nats --context "" --server nats://REPLACE_WITH_NATS_HOST:4222 pub orders.created hello --tlsca /etc/nats/certs/ca.pem --tlscert REPLACE_WITH_CLIENT_CERT_FILE --tlskey REPLACE_WITH_CLIENT_KEY_FILE   # empty context, explicit server, no --user/--password: fails, and cannot inherit credentials from a saved context or NATS_URL/NATS_USER/NATS_PASSWORD
-curl -s http://monitor.example.com:8222/connz                                                                                                               # connection refused/timeout from outside
+curl -q -s http://monitor.example.com:8222/connz                                                                                                               # connection refused/timeout from outside
 ```
 
 ## Common mistakes
@@ -6055,13 +6056,13 @@ The credential that goes into a browser must be search-only and, ideally, scoped
 ## Verify
 
 ```bash
-curl -s -o /dev/null -w '%{http_code}\n' -X POST https://search.example.com/indexes/movies/search -H 'Content-Type: application/json' --data-raw '{"q":"ninja"}'                                             # Meilisearch, no key: 401
-curl -s -X POST https://search.example.com/indexes/movies/search -H "Authorization: Bearer REPLACE_WITH_SEARCH_KEY" -H 'Content-Type: application/json' --data-raw '{"q":"ninja"}'                          # search key: search works
-curl -s -o /dev/null -w '%{http_code}\n' -X POST https://search.example.com/indexes -H "Authorization: Bearer REPLACE_WITH_SEARCH_KEY" -H 'Content-Type: application/json' --data-raw '{"uid":"movies"}'     # search key attempting to create an index: 403
+curl -q -s -o /dev/null -w '%{http_code}\n' -X POST https://search.example.com/indexes/movies/search -H 'Content-Type: application/json' --data-raw '{"q":"ninja"}'                                             # Meilisearch, no key: 401
+curl -q -s -X POST https://search.example.com/indexes/movies/search -H "Authorization: Bearer REPLACE_WITH_SEARCH_KEY" -H 'Content-Type: application/json' --data-raw '{"q":"ninja"}'                          # search key: search works
+curl -q -s -o /dev/null -w '%{http_code}\n' -X POST https://search.example.com/indexes -H "Authorization: Bearer REPLACE_WITH_SEARCH_KEY" -H 'Content-Type: application/json' --data-raw '{"uid":"movies"}'     # search key attempting to create an index: 403
 
-curl -s -o /dev/null -w '%{http_code}\n' "https://search.example.com/collections/products/documents/search?q=stark&query_by=company_name"                                                                    # Typesense, no key: 401
-curl -s "https://search.example.com/collections/products/documents/search?q=stark&query_by=company_name" -H "X-TYPESENSE-API-KEY: REPLACE_WITH_SEARCH_ONLY_KEY"                                              # search-only key: search works
-curl -s -o /dev/null -w '%{http_code}\n' -X POST https://search.example.com/collections -H "X-TYPESENSE-API-KEY: REPLACE_WITH_SEARCH_ONLY_KEY" -H 'Content-Type: application/json' --data-raw '{"name":"products"}'  # search-only key attempting to create a collection: 403
+curl -q -s -o /dev/null -w '%{http_code}\n' "https://search.example.com/collections/products/documents/search?q=stark&query_by=company_name"                                                                    # Typesense, no key: 401
+curl -q -s "https://search.example.com/collections/products/documents/search?q=stark&query_by=company_name" -H "X-TYPESENSE-API-KEY: REPLACE_WITH_SEARCH_ONLY_KEY"                                              # search-only key: search works
+curl -q -s -o /dev/null -w '%{http_code}\n' -X POST https://search.example.com/collections -H "X-TYPESENSE-API-KEY: REPLACE_WITH_SEARCH_ONLY_KEY" -H 'Content-Type: application/json' --data-raw '{"name":"products"}'  # search-only key attempting to create a collection: 403
 ```
 
 Grep the client bundle and repository history for the admin/master/bootstrap key; it should never appear outside the server-side secret store.
@@ -6116,7 +6117,7 @@ LiteFS replicates a SQLite file across a cluster's nodes rather than to object s
 ## Verify
 
 ```bash
-curl -sI https://app.example.com/app.db      # 404, never 200
+curl -q -sI https://app.example.com/app.db      # 404, never 200
 git check-ignore -v app.db                    # prints a matching .gitignore rule
 stat -c '%a %U' /var/lib/myapp/app.db         # 600, owned by the app user, not world-readable
 grep -rn "REPLACE_WITH_ACTUAL_TOKEN_VALUE" build dist .next/static; echo "exit: $?"                             # search for the literal token value copied from the secret store, not the env-var name a bundler already inlined away; exit 1 is the goal
@@ -6192,7 +6193,7 @@ guidance also endorses delegating TLS termination to a load balancer or reverse 
 
 ```bash
 ss -tlnp | grep 8000                          # loopback or private address only, never 0.0.0.0
-curl -sI http://127.0.0.1:8000/health          # process is up
+curl -q -sI http://127.0.0.1:8000/health          # process is up
 surreal sql --endpoint http://127.0.0.1:8000 --namespace test --database test
 ```
 
@@ -6251,7 +6252,7 @@ Once TLS is on, connect via `https://`; the server no longer answers plain `http
 ## 4. Verify
 
 ```bash
-curl -s -o /dev/null -w '%{http_code}\n' --cacert /path/cert.pem https://jupyter.example.com:8888/
+curl -q -s -o /dev/null -w '%{http_code}\n' --cacert /path/cert.pem https://jupyter.example.com:8888/
                                        # answers over TLS AND the certificate verifies. Use --cacert against the
                                        # certificate from step 2, and request it by the name that certificate
                                        # carries. Never -k here: it accepts any certificate, so the check passes
@@ -6338,16 +6339,16 @@ ss -tlnp | grep 11434                                  # 127.0.0.1 only
 # from another machine. Read err, not the number: it must name a refusal or timeout reaching YOUR
 # address. An HTTP code means the port answered. A resolver failure, a local socket error, or a
 # timeout that did not come from the remote address is inconclusive, never a pass.
-unset probe_ip                                         # clears a pre-set declare -i or -l attribute, and any stale
-                                                       # value; copy this whole block, not just the command below
-probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "${probe_ip:-}" in
-  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
-  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-       -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$probe_ip:11434/api/tags" ;;
-esac
-curl -s https://ollama.example.com/api/tags            # 401 without credentials
-curl -su admin https://ollama.example.com/api/tags     # model list with credentials
+(                                                      # a subshell, so your own script arguments are untouched
+  set -- REPLACE_WITH_YOUR_PUBLIC_IP
+  case "${1-}" in
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *) curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:11434/api/tags" ;;
+  esac
+)
+curl -q -s https://ollama.example.com/api/tags            # 401 without credentials
+curl -q -su admin https://ollama.example.com/api/tags     # model list with credentials
 ```
 
 ## Sources (checked September 2026)
@@ -6392,7 +6393,7 @@ Publish it through [caddy.md](caddy.md)/[nginx.md](nginx.md) with a certificate 
 
 ```bash
 ss -tlnp | grep 3000                      # loopback only
-curl -sI https://chat.example.com/        # serves over TLS
+curl -q -sI https://chat.example.com/        # serves over TLS
 # In a private browser window: login page appears; with ENABLE_SIGNUP=false the
 # sign-up option is absent and an attempt to register is refused. With signup on,
 # registering a new account yields a pending/unapproved user, not access.
@@ -6426,7 +6427,7 @@ The master key is the root credential for the proxy; it belongs to the operator 
 Virtual keys need a PostgreSQL database: set `DATABASE_URL=postgresql://user:password@host:5432/dbname` in the environment (or `database_url` under `general_settings`) before `/key/generate` will work.
 
 ```bash
-curl https://llm.example.com/key/generate \
+curl -q https://llm.example.com/key/generate \
   -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -H "Content-Type: application/json" \
   -d '{"key_alias": "app-frontend"}'
@@ -6441,8 +6442,8 @@ Run the proxy on loopback (or a private container network) and publish it only t
 ## 4. Verify
 
 ```bash
-curl -sS -o /dev/null -w '%{http_code}\n' https://llm.example.com/v1/models   # 401 without a key
-curl -s https://llm.example.com/v1/models -H "Authorization: Bearer REPLACE_WITH_VIRTUAL_KEY"   # model list
+curl -q -sS -o /dev/null -w '%{http_code}\n' https://llm.example.com/v1/models   # 401 without a key
+curl -q -s https://llm.example.com/v1/models -H "Authorization: Bearer REPLACE_WITH_VIRTUAL_KEY"   # model list
 ss -tlnp | grep 4000                                            # loopback only
 ```
 
@@ -6520,9 +6521,9 @@ LM Studio's developer server is a desktop feature. The documentation addresses i
 
 ```bash
 ss -tlnp | grep -E ':(8080|8000|8001|8002|3000|9000|30000|1234) '   # loopback only
-curl -s https://models.example.com/v1/models            # 401 without a key
-curl -s https://models.example.com/v1/models -H "Authorization: Bearer REPLACE_WITH_API_KEY"   # succeeds
-curl -s -o /dev/null -w '%{http_code}\n' -X POST https://models.example.com/invocations -d '{}'
+curl -q -s https://models.example.com/v1/models            # 401 without a key
+curl -q -s https://models.example.com/v1/models -H "Authorization: Bearer REPLACE_WITH_API_KEY"   # succeeds
+curl -q -s -o /dev/null -w '%{http_code}\n' -X POST https://models.example.com/invocations -d '{}'
                                                         # vLLM: 404 or 403 from the PROXY. vLLM does not require the
                                                         # API key on this route, so a 200 here is an unauthenticated
                                                         # inference endpoint even though the check above passed
@@ -6596,7 +6597,7 @@ demo.launch(
 
 ```bash
 ss -tlnp | grep 7860                        # loopback unless deliberately exposed
-curl -sI https://gradio.example.com/        # succeeds over TLS
+curl -q -sI https://gradio.example.com/        # succeeds over TLS
 # In a private browser window: the login form appears before the app.
 ```
 
@@ -6682,7 +6683,7 @@ A password typed into a plain `st.text_input` and compared in the script is not 
 
 ```bash
 ss -tlnp | grep 8501                     # 127.0.0.1 when behind a proxy
-curl -sI https://app.example.com/        # succeeds over TLS
+curl -q -sI https://app.example.com/        # succeeds over TLS
 # In a private browser window: the IdP login (or proxy auth) appears before the app.
 ```
 
@@ -6731,8 +6732,8 @@ N8N_SSL_CERT=/path/to/fullchain.pem
 
 ```bash
 ss -tlnp | grep 5678                    # 127.0.0.1, not :: or 0.0.0.0
-curl -sI https://n8n.example.com/       # TLS
-curl -s -o /dev/null -w '%{http_code}\n' https://n8n.example.com/api/v1/workflows
+curl -q -sI https://n8n.example.com/       # TLS
+curl -q -s -o /dev/null -w '%{http_code}\n' https://n8n.example.com/api/v1/workflows
                                         # 401 without an `X-N8N-API-KEY` header. Use a request that returns a body,
                                         # not `-I`: a HEAD response carries none, so it cannot tell a login page
                                         # from the editor
@@ -6780,7 +6781,7 @@ Password attempts are rate-limited (2 per minute plus 12 per hour). Replace the 
 
 ```bash
 ss -tlnp | grep 8080                    # loopback only
-curl -sI https://code.example.com/      # TLS, login page, never the editor
+curl -q -sI https://code.example.com/      # TLS, login page, never the editor
 ```
 
 An unauthenticated editor in a private browser window means whoever finds the URL owns the host.
@@ -6882,10 +6883,10 @@ Pinecone, Qdrant Cloud, Weaviate Cloud, and Zilliz authenticate with API keys: t
 
 ```bash
 ss -tlnp | grep -E '6333|6334|8080|50051|19530|9091|8000|5432'   # 127.0.0.1 only
-curl -si https://qdrant.example.com/collections | head -1           # 401 or 403 without a key
-curl -s -H 'api-key: REPLACE_WITH_LONG_RANDOM_VALUE' https://qdrant.example.com/collections   # collection list
-curl -si https://weaviate.example.com/v1/schema | head -1           # 401 without a key
-curl -si https://chroma.example.com/ | head -1                      # 401 from the proxy, never a Chroma response
+curl -q -si https://qdrant.example.com/collections | head -1           # 401 or 403 without a key
+curl -q -s -H 'api-key: REPLACE_WITH_LONG_RANDOM_VALUE' https://qdrant.example.com/collections   # collection list
+curl -q -si https://weaviate.example.com/v1/schema | head -1           # 401 without a key
+curl -q -si https://chroma.example.com/ | head -1                      # 401 from the proxy, never a Chroma response
 ```
 
 For Milvus, a `MilvusClient(uri=...)` call with no `token` must fail once `authorizationEnabled` is on, and the same call with the application user's credentials must succeed.
@@ -6981,24 +6982,24 @@ ss -tlnp | grep 3000                                   # 127.0.0.1:3000 only, ne
 # read err, not the number: it must name a refusal or timeout reaching YOUR address. An HTTP code
 # means the port answered. A resolver failure, a local socket error, or a timeout that did not come
 # from the remote address is inconclusive, never a pass.
-unset probe_ip                                         # clears a pre-set declare -i or -l attribute, and any stale
-                                                       # value; copy this whole block, not just the command below
-probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "${probe_ip:-}" in
-  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
-  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-       -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$probe_ip:3000/mcp" ;;
-esac
+(                                                      # a subshell, so your own script arguments are untouched
+  set -- REPLACE_WITH_YOUR_PUBLIC_IP
+  case "${1-}" in
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *) curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/mcp" ;;
+  esac
+)
 
 # Unauthenticated initialize: 401 with a WWW-Authenticate header (Option A) or the proxy's 401 (Option B).
-curl -si -X POST https://mcp.example.com/mcp \
+curl -q -si -X POST https://mcp.example.com/mcp \
   -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"check","version":"1.0.0"}}}'
 # Option A only: the metadata the 401 points at exists and names your authorization server.
-curl -s https://mcp.example.com/.well-known/oauth-protected-resource   # JSON with "authorization_servers"
+curl -q -s https://mcp.example.com/.well-known/oauth-protected-resource   # JSON with "authorization_servers"
 
 # Wrong Origin, with a valid credential: 403.
-curl -si -X POST https://mcp.example.com/mcp -H 'Origin: https://attacker.example' \
+curl -q -si -X POST https://mcp.example.com/mcp -H 'Origin: https://attacker.example' \
   -H 'Authorization: Bearer REPLACE_WITH_LONG_RANDOM_VALUE' \
   -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -d '{}'
 ```
@@ -7093,7 +7094,7 @@ Ray warns that this costs performance (large for small workloads, smaller for la
 ```bash
 ss -tlnp | grep 8265                                    # 127.0.0.1:8265 (or the tailnet IP), never 0.0.0.0 or *
 ss -tlnp | grep -E ':6379|:10001'                       # private interface only
-curl -sI -o /dev/null --connect-timeout 5 --max-time 10 \
+curl -q -sI -o /dev/null --connect-timeout 5 --max-time 10 \
   -w 'http=%{http_code} time_connect=%{time_connect}\n' \
   http://REPLACE_WITH_THE_SERVER_PUBLIC_IP:8265/
 # from another network. The pass is http=000 WITH time_connect at 0.000000: no connection completed.
@@ -7166,7 +7167,7 @@ admin_password = REPLACE_WITH_LONG_RANDOM_VALUE
 `database_uri` defaults to a SQLite file `basic_auth.db` in the working directory; MLflow recommends a central database for multi-node deployments. The same file can name an `authorization_function` (`module:function`) for a custom scheme, but the shipped one is basic auth. To rotate the admin password on a running server:
 
 ```bash
-curl -u admin:password1234 -X PATCH https://mlflow.example.com/api/2.0/mlflow/users/update-password \
+curl -q -u admin:password1234 -X PATCH https://mlflow.example.com/api/2.0/mlflow/users/update-password \
      -H 'Content-Type: application/json' \
      -d '{"username":"admin","password":"REPLACE_WITH_LONG_RANDOM_VALUE"}'
 ```
@@ -7183,17 +7184,17 @@ With `--serve-artifacts` (the default) and `--artifacts-destination s3://bucket`
 
 ```bash
 ss -tlnp | grep 5000                                                   # 127.0.0.1 only
-curl -sI -o /dev/null --connect-timeout 5 --max-time 10 \
+curl -q -sI -o /dev/null --connect-timeout 5 --max-time 10 \
   -w 'http=%{http_code} time_connect=%{time_connect}\n' \
   http://REPLACE_WITH_THE_SERVER_PUBLIC_IP:5000/
 # from another machine. The pass is http=000 WITH time_connect at 0.000000: no connection completed.
 # A non-zero time_connect means the TCP handshake succeeded and the port is reachable, whatever came back
 # experiments/search is a POST endpoint, so each check posts a minimal body
-curl -sS -o /dev/null -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
+curl -q -sS -o /dev/null -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
   https://mlflow.example.com/api/2.0/mlflow/experiments/search                         # 401: no credentials
-curl -sS -o /dev/null -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
+curl -q -sS -o /dev/null -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
   -u admin https://mlflow.example.com/api/2.0/mlflow/experiments/search                # 200 with the new admin password
-curl -sS -o /dev/null -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
+curl -q -sS -o /dev/null -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
   -u admin:password1234 https://mlflow.example.com/api/2.0/mlflow/experiments/search   # must be 401: default password gone
 ```
 
@@ -7311,20 +7312,20 @@ docker compose ps --format json                 # run in dify/docker: no Publish
                                                 # Read the entries rather than the array's length:
                                                 # a merely exposed container port can appear too. A grep for
                                                 # "published" cannot say which service published it
-unset probe_ip                                  # clears a pre-set declare -i or -l attribute, and any stale
-                                                # value; copy this whole block, not just the command below
-probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "${probe_ip:-}" in
-  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
-  *) nc -vz -w 3 "$probe_ip" 5003 ;;                # from an outside network, and the authority here:
-esac
+(                                               # a subshell, so your own script arguments are untouched
+  set -- REPLACE_WITH_YOUR_PUBLIC_IP
+  case "${1-}" in
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *) nc -vz -w 3 "$1" 5003 ;;                # from an outside network, and the authority here:
+  esac
+)
                                                 # EXPOSE_PLUGIN_DEBUGGING_PORT can move it, so the ps output above is the authority on which port to probe
 # a refusal or timeout from YOUR address is the pass. A local error, an unsupported option (BusyBox
 # netcat rejects -v), or exit 1 with no output is inconclusive: nothing reached the network
-curl -sI https://builder.example.com/                  # TLS; login page or redirect, not the editor
-curl -s -o /dev/null -w '%{http_code}\n' -X POST 'https://flowise.example.com/api/v1/prediction/REPLACE_WITH_CHATFLOW_ID'   # 401
-curl -s -o /dev/null -w '%{http_code}\n' -X POST 'https://langflow.example.com/api/v1/run/REPLACE_WITH_FLOW_ID'            # 401
-curl -s -o /dev/null -w '%{http_code}\n' https://dify.example.com/v1/parameters                              # 401
+curl -q -sI https://builder.example.com/                  # TLS; login page or redirect, not the editor
+curl -q -s -o /dev/null -w '%{http_code}\n' -X POST 'https://flowise.example.com/api/v1/prediction/REPLACE_WITH_CHATFLOW_ID'   # 401
+curl -q -s -o /dev/null -w '%{http_code}\n' -X POST 'https://langflow.example.com/api/v1/run/REPLACE_WITH_FLOW_ID'            # 401
+curl -q -s -o /dev/null -w '%{http_code}\n' https://dify.example.com/v1/parameters                              # 401
 ```
 
 ## Common mistakes
@@ -7562,7 +7563,7 @@ infra_host=REPLACE_WITH_HOST_ADDRESS
 infra_port=REPLACE_WITH_PORT
 case "${infra_host:-}:${infra_port:-}" in
   *REPLACE_WITH_*|:*|*:) echo "substitute infra_host and infra_port first; not probing" ;;
-  *) curl -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+  *) curl -q -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
        -w 'http=%{http_code} exit=%{exitcode} remote=%{remote_ip} time_connect=%{time_connect} err=%{errormsg}\n' \
        "http://$infra_host:$infra_port/" ;;
 esac
@@ -7798,20 +7799,20 @@ ss -tlnp | grep -E '8188|7860|9090'                 # each service on 127.0.0.1 
 # each must be unreachable from another host. Read err, not the number: it must name a refusal or
 # timeout reaching YOUR address. An HTTP code means the port answered. A resolver failure, a local
 # socket error, or a timeout that did not come from the remote address is inconclusive.
-unset probe_ip                                      # clears a pre-set declare -i or -l attribute, and any stale
-                                                    # value; copy this whole block, not just the command below
-probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "${probe_ip:-}" in
-  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
-  *) for p in 8188 7860 9090; do                              # ComfyUI, SD WebUI, InvokeAI
-       curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-         -w "port=$p http=%{http_code} exit=%{exitcode} err=%{errormsg}\n" "http://$probe_ip:$p/"
-     done ;;
-esac
-curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:9090/api/v1/boards/
+(                                                   # a subshell, so your own script arguments are untouched
+  set -- REPLACE_WITH_YOUR_PUBLIC_IP
+  case "${1-}" in
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *) for p in 8188 7860 9090; do                              # ComfyUI, SD WebUI, InvokeAI
+         curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+           -w "port=$p http=%{http_code} exit=%{exitcode} err=%{errormsg}\n" "http://$1:$p/"
+       done ;;
+  esac
+)
+curl -q -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:9090/api/v1/boards/
                                                        # from the host itself, InvokeAI multiuser mode: 401
                                                        # without a Bearer token, never the app itself
-curl -sI https://imagegen.example.com/                # via the proxy: TLS, and a login prompt
+curl -q -sI https://imagegen.example.com/                # via the proxy: TLS, and a login prompt
                                                        # or 401 without credentials, before the UI loads
 ```
 
@@ -7927,16 +7928,16 @@ ss -tlnp | grep -E '3001|3210|3000'                    # each UI on 127.0.0.1 on
 # from another host. Read err, not the number: it must name a refusal or timeout reaching YOUR
 # address. An HTTP code means the port answered. A resolver failure, a local socket error, or a
 # timeout that did not come from the remote address is inconclusive, never a pass.
-unset probe_ip                                          # clears a pre-set declare -i or -l attribute, and any stale
-                                                        # value; copy this whole block, not just the command below
-probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "${probe_ip:-}" in
-  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
-  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-       -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$probe_ip:3210/" ;;
-esac
-curl -s https://chat.example.com/api/some-endpoint      # without a key/token: 401
-curl -sI https://chat.example.com/                      # via the proxy: TLS, login required
+(                                                       # a subshell, so your own script arguments are untouched
+  set -- REPLACE_WITH_YOUR_PUBLIC_IP
+  case "${1-}" in
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *) curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3210/" ;;
+  esac
+)
+curl -q -s https://chat.example.com/api/some-endpoint      # without a key/token: 401
+curl -q -sI https://chat.example.com/                      # via the proxy: TLS, login required
 # LobeChat SSO: attempt to register/sign in with a Google account that has never registered and is
 #   NOT listed in AUTH_ALLOWED_EMAILS; expect rejection at registration, before any account or session
 #   is created (AUTH_ALLOWED_EMAILS gates new registration; it does not revoke an already-registered
@@ -8028,12 +8029,12 @@ enabled component is attack surface, and run the process as a non-root user.
 
 ```bash
 ss -tlnp | grep -E ':(3000|6006|4317|4318) '                          # loopback or private only, never 0.0.0.0
-curl -sS -o /dev/null -w '%{http_code}\n' https://langfuse.example.com/   # dashboard: login page or 401, never the project view
+curl -q -sS -o /dev/null -w '%{http_code}\n' https://langfuse.example.com/   # dashboard: login page or 401, never the project view
                                                                         # /api/public/health returns health status by design and is
                                                                         # not an access-control check; it proves nothing here
-curl -sS -o /dev/null -w '%{http_code}\n' https://langfuse.example.com/api/public/projects
+curl -q -sS -o /dev/null -w '%{http_code}\n' https://langfuse.example.com/api/public/projects
                                                                         # 401 without -u public-key:secret-key
-curl -sS -o /dev/null -w '%{http_code}\n' https://otel-collector.internal:4318/v1/traces \
+curl -q -sS -o /dev/null -w '%{http_code}\n' https://otel-collector.internal:4318/v1/traces \
   -H 'Content-Type: application/json' -d '{"resourceSpans":[]}'
                                                                         # 401 or 403 without the configured auth header. The content
                                                                         # type matters: with curl's default form encoding the Collector
@@ -8135,15 +8136,15 @@ bind `--address=127.0.0.1` behind a proxy rather than relying on Basic Auth as t
 
 ```bash
 ss -tlnp | grep -E ':(4200|3000|8080|7233|8233|5555) '                 # loopback or private only, never 0.0.0.0
-curl -sS -o /dev/null -w '%{http_code}\n' -X POST http://prefect.internal:4200/api/flows/filter -d '{}'
+curl -q -sS -o /dev/null -w '%{http_code}\n' -X POST http://prefect.internal:4200/api/flows/filter -d '{}'
                                                                         # 401 without the auth string once configured. Do NOT probe
                                                                         # /api/health or /api/ready: Prefect exempts those two paths
                                                                         # on GET so container probes keep working, so they answer 200
                                                                         # whether or not authentication is configured
-curl -sS -o /dev/null -w '%{http_code}\n' -u '' http://dagster.internal:3000/
+curl -q -sS -o /dev/null -w '%{http_code}\n' -u '' http://dagster.internal:3000/
                                                                         # must be blocked at the proxy, not Dagster itself
-curl -sSI https://airflow.example.com/                                 # login redirect, never the DAG list
-curl -sS -o /dev/null -w '%{http_code}\n' http://flower.internal:5555/
+curl -q -sSI https://airflow.example.com/                                 # login redirect, never the DAG list
+curl -q -sS -o /dev/null -w '%{http_code}\n' http://flower.internal:5555/
                                                                         # 401 once --basic-auth or OAuth is set
 ```
 
@@ -8237,7 +8238,7 @@ Keep them on loopback or a private network and reach them through the tunnels ab
 
 ```bash
 ss -tlnp                                      # panels bound to 127.0.0.1 only
-curl -sI https://panel.example.com/           # 401/403 or a login redirect, never a dashboard
+curl -q -sI https://panel.example.com/           # 401/403 or a login redirect, never a dashboard
 ```
 
 Test each panel's URL from outside your network; a dashboard that renders without a login is a finding.
@@ -8351,27 +8352,28 @@ Without `--tlsverify` the daemon does not check client certificates. Firewall 23
 
 ```bash
 ss -tlnp | grep -E ':(9443|9000|8000|3000|81|3001|2375|2376) '   # 127.0.0.1 or absent, never 0.0.0.0
-curl -s -o /dev/null -w '%{http_code}\n' https://panel.example.com/
+curl -q -s -o /dev/null -w '%{http_code}\n' https://panel.example.com/
                                                                   # 401, 403, or a login redirect, never a dashboard. No -k:
                                                                   # this panel is behind a proxy holding a real certificate, so
                                                                   # a check that skips verification proves nothing about it
 # clears a pre-set declare -i or -l attribute, and any stale
 # value; copy this whole block, not just the command below
-unset probe_ip
-probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "${probe_ip:-}" in
-  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
-  *) docker -H "tcp://$probe_ip:2375" info ;;       # must fail: connection refused or filtered
-  # that is, refused or filtered BY THE REMOTE HOST. A local error or a docker client failure that
-  # never opened a connection is inconclusive, not a pass
-esac
+(                                                   # a subshell, so your own script arguments are untouched
+  set -- REPLACE_WITH_YOUR_PUBLIC_IP
+  case "${1-}" in
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *) docker -H "tcp://$1:2375" info ;;       # must fail: connection refused or filtered
+    # that is, refused or filtered BY THE REMOTE HOST. A local error or a docker client failure that
+    # never opened a connection is inconclusive, not a pass
+  esac
+)
 env -u DOCKER_HOST -u DOCKER_TLS_VERIFY -u DOCKER_CERT_PATH \
   curl -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem https://203.0.113.10:2376/_ping
                                                                   # must fail the handshake on the CLIENT certificate. Do not use
                                                                   # `docker ... info` here: without `--tlsverify` it fails for the
                                                                   # wrong reason, and `DOCKER_CERT_PATH` exported in the setup above
                                                                   # can silently supply the very certificate the check is meant to lack
-curl -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem --cert client-cert.pem --key client-key.pem \
+curl -q -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem --cert client-cert.pem --key client-key.pem \
   https://203.0.113.10:2376/_ping                                 # positive control: 200 with the right client certificate
 ```
 
@@ -8441,9 +8443,9 @@ Keep the origin list in configuration per environment rather than hardcoding loc
 ## Verify
 
 ```bash
-curl -s -o /dev/null -D - https://api.example.com/data -H "Origin: https://evil.example" | grep -i access-control
+curl -q -s -o /dev/null -D - https://api.example.com/data -H "Origin: https://evil.example" | grep -i access-control
 # expect: no Access-Control-Allow-Origin echoing the hostile origin
-curl -s -o /dev/null -D - https://api.example.com/data -H "Origin: https://app.example.com" | grep -i access-control
+curl -q -s -o /dev/null -D - https://api.example.com/data -H "Origin: https://app.example.com" | grep -i access-control
 # expect: your origin, and Allow-Credentials only if you use cookies
 ```
 
@@ -8486,7 +8488,7 @@ A CDN or shared proxy that keys its cache on the URL alone can serve one user's 
 ## Verify
 
 ```bash
-curl -sI https://example.com/ | grep -iE 'strict-transport|content-security|x-content-type|referrer-policy|permissions-policy|x-frame'
+curl -q -sI https://example.com/ | grep -iE 'strict-transport|content-security|x-content-type|referrer-policy|permissions-policy|x-frame'
 ```
 
 Then scan with https://securityheaders.com/ from outside. A CSP that enforces without console errors on every page of the app is the finish line.
@@ -8660,19 +8662,19 @@ source too; do not ship one to a public origin for code not already meant to be 
 ## Verify
 
 ```bash
-curl -s -o /dev/null -w '%{http_code}\n' https://example.com/.env
-curl -s -o /dev/null -w '%{http_code}\n' https://example.com/.git/config
-curl -s -o /dev/null -w '%{http_code}\n' https://example.com/config.php.bak
-curl -s -o /dev/null -w '%{http_code}\n' https://example.com/db.sql
+curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/.env
+curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/.git/config
+curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/config.php.bak
+curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/db.sql
 # each line above must print 403 or 404, never the file's content
 
 printf 'probe' | sudo tee /var/www/html/.well-known/acme-challenge/probe >/dev/null
-curl -s https://example.com/.well-known/acme-challenge/probe
+curl -q -s https://example.com/.well-known/acme-challenge/probe
 sudo rm -f /var/www/html/.well-known/acme-challenge/probe
 # must return "probe", never 403: the exemption has to let a real challenge file through.
 # Requesting a token that does not exist proves nothing, because a correctly exempted
 # directory still answers 404 for a file that is not there
-curl -s -o /dev/null -w '%{http_code}\n' https://example.com/.well-known-backup/config
+curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/.well-known-backup/config
 # must be 403 or 404; a directory name that only starts with "well-known" must not
 # inherit that exemption
 
@@ -8739,7 +8741,7 @@ Inference, upload, and job-submission endpoints are usually the ones behind thes
 
 ```bash
 # Handshake-time auth (a cookie or Origin gate at the proxy or app): rejected before the upgrade completes
-curl -i --http1.1 -H "Connection: Upgrade" -H "Upgrade: websocket" \
+curl -q -i --http1.1 -H "Connection: Upgrade" -H "Upgrade: websocket" \
   -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" -H "Sec-WebSocket-Version: 13" \
   https://app.example.com/ws                       # expect 401/403, not 101
 
@@ -8749,13 +8751,13 @@ curl -i --http1.1 -H "Connection: Upgrade" -H "Upgrade: websocket" \
 # the first message elapses, proving the server withholds data until the token lands.
 
 # Cross-origin handshake: rejected on Origin even with a valid cookie
-curl -i --http1.1 -H "Connection: Upgrade" -H "Upgrade: websocket" -H "Origin: https://evil.example" \
+curl -q -i --http1.1 -H "Connection: Upgrade" -H "Upgrade: websocket" -H "Origin: https://evil.example" \
   -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" -H "Sec-WebSocket-Version: 13" \
   -b "session=REPLACE_WITH_VALID_SESSION_COOKIE" https://app.example.com/ws   # expect 403
 
-curl -i https://app.example.com/events              # SSE without a session: 401/403, not text/event-stream
+curl -q -i https://app.example.com/events              # SSE without a session: 401/403, not text/event-stream
 
-curl -i -X POST https://app.example.com/webhooks/provider \
+curl -q -i -X POST https://app.example.com/webhooks/provider \
   -H "X-Hub-Signature-256: sha256=0000000000000000000000000000000000000000000000000000000000000000" \
   -d '{"test":true}'                                 # expect 401, wrong signature rejected
 ```
@@ -8826,7 +8828,7 @@ Front it the same as the other tools here rather than relying on anything Redash
 
 ```bash
 ss -tlnp | grep -E ':3000|:8088|:5000'   # Metabase / Superset / Redash bound to loopback only, ports vary by install
-curl -sI https://bi.example.com/         # 401/403 or a login redirect, never a dashboard
+curl -q -sI https://bi.example.com/         # 401/403 or a login redirect, never a dashboard
 ```
 
 Confirm from outside your network that each tool's URL never renders a dashboard without a login,
@@ -8906,8 +8908,8 @@ them the way [secrets.md](secrets.md) describes, not in the repository or the cl
 ## Verify
 
 ```bash
-curl -sI https://backend.example.com/_/           # PocketBase admin UI: login page, not a dashboard
-curl -sI https://backend.example.com/console       # Appwrite console: login page or 401, no open signup form
+curl -q -sI https://backend.example.com/_/           # PocketBase admin UI: login page, not a dashboard
+curl -q -sI https://backend.example.com/console       # Appwrite console: login page or 401, no open signup form
 ```
 
 After bootstrap, confirm the console no longer offers public signup (only invitation), that a

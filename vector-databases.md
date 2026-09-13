@@ -86,10 +86,10 @@ Pinecone, Qdrant Cloud, Weaviate Cloud, and Zilliz authenticate with API keys: t
 
 ```bash
 ss -tlnp | grep -E '6333|6334|8080|50051|19530|9091|8000|5432'   # 127.0.0.1 only
-curl -si https://qdrant.example.com/collections | head -1           # 401 or 403 without a key
-curl -s -H 'api-key: REPLACE_WITH_LONG_RANDOM_VALUE' https://qdrant.example.com/collections   # collection list
-curl -si https://weaviate.example.com/v1/schema | head -1           # 401 without a key
-curl -si https://chroma.example.com/ | head -1                      # 401 from the proxy, never a Chroma response
+curl -q -si https://qdrant.example.com/collections | head -1           # 401 or 403 without a key
+curl -q -s -H 'api-key: REPLACE_WITH_LONG_RANDOM_VALUE' https://qdrant.example.com/collections   # collection list
+curl -q -si https://weaviate.example.com/v1/schema | head -1           # 401 without a key
+curl -q -si https://chroma.example.com/ | head -1                      # 401 from the proxy, never a Chroma response
 ```
 
 For Milvus, a `MilvusClient(uri=...)` call with no `token` must fail once `authorizationEnabled` is on, and the same call with the application user's credentials must succeed.

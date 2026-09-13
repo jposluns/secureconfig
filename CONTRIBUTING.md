@@ -16,14 +16,14 @@ This repository covers deployment exposure: TLS, authentication, MFA, secret han
 6. **Angle-bracket placeholders in a shell block, which no gate reliably catches.** `<public-ip>`, `<service-user>` and `<user@host>` read as placeholders and run as redirections: `curl -s http://<public-ip>:11434/api/tags` is a read from a file called `public-ip` and a write to one called `:11434/api/tags`, and it fails in whatever way the surrounding command fails, quietly only because `-s` is quiet. Use a house placeholder instead: a reserved address such as `203.0.113.10`, or `REPLACE_WITH_A_NAME` for a value the reader supplies. Which of the two depends on what failing to substitute looks like. A reserved address is usually right in a configuration value or an illustration, though not always: an unreplaced SAN generates a valid certificate for the wrong address, so judge each case on whether leaving the placeholder produces a result the reader would read as success. It is wrong in a Verify probe whose pass is "nothing answered": an unreplaced `203.0.113.10` times out exactly like a blocked port, so the check passes for the wrong reason. Those take `REPLACE_WITH_A_NAME`, and the check must REJECT the unsubstituted value locally rather than rely on it failing to resolve. Resolution is not a guarantee: a wildcard resolver answers anything, an `http_proxy` in the environment makes the target's name irrelevant, and a local socket error produces the same exit code as a remote refusal. Guard it in the block, and put the command INSIDE the guard so it cannot run unsubstituted; a guard that only prints a warning and then runs the command anyway leaves the original false pass intact. Use a distinctive variable name, because a generic one may already be set in the reader's shell, and handle the empty case for a reader who pastes only part of the block:
 
    ```bash
-   unset probe_ip                          # clears a pre-set declare -i or -l attribute, and any stale
-                                           # value; copy this whole block, not just the command below
-   probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
-   case "${probe_ip:-}" in
-     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
-     *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-          -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$probe_ip:3000/" ;;
-   esac
+   (                                       # a subshell, so your own script arguments are untouched
+     set -- REPLACE_WITH_YOUR_PUBLIC_IP
+     case "${1-}" in
+       *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+       *) curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+            -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/" ;;
+     esac
+   )
    ```
 
    Never use `exit` for this: a reader pasting into an interactive shell would lose the session. Add `--noproxy '*'` to any probe described as direct, since an `http_proxy` in the environment otherwise produces the documented pass without the address mattering, and report `err=%{errormsg}` alongside `exit=%{exitcode}` (both added in curl 7.75.0) so the reader judges the error text rather than a bare number, which certifies nothing about the remote state. Some shapes do trip an existing check, by accident rather than design: shellcheck reports SC2217 or SC2261 for a few of them, and `check_prose_conventions.py` catches a bracketed host outside the house placeholder set. That is not coverage, and three shapes are recorded as passing in `tools/test_shell_blocks.py`. Treat it as a review obligation: five successive rules were written to catch it and all five were beaten by legal shell a guide could plausibly carry, the last by an ordinary `sed` substitution, so the gate that tried was removed rather than left producing false alarms. The docstring of `tools/check_shell_blocks.py` records what each attempt lost to.

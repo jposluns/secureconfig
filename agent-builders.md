@@ -89,20 +89,20 @@ docker compose ps --format json                 # run in dify/docker: no Publish
                                                 # Read the entries rather than the array's length:
                                                 # a merely exposed container port can appear too. A grep for
                                                 # "published" cannot say which service published it
-unset probe_ip                                  # clears a pre-set declare -i or -l attribute, and any stale
-                                                # value; copy this whole block, not just the command below
-probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "${probe_ip:-}" in
-  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
-  *) nc -vz -w 3 "$probe_ip" 5003 ;;                # from an outside network, and the authority here:
-esac
+(                                               # a subshell, so your own script arguments are untouched
+  set -- REPLACE_WITH_YOUR_PUBLIC_IP
+  case "${1-}" in
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *) nc -vz -w 3 "$1" 5003 ;;                # from an outside network, and the authority here:
+  esac
+)
                                                 # EXPOSE_PLUGIN_DEBUGGING_PORT can move it, so the ps output above is the authority on which port to probe
 # a refusal or timeout from YOUR address is the pass. A local error, an unsupported option (BusyBox
 # netcat rejects -v), or exit 1 with no output is inconclusive: nothing reached the network
-curl -sI https://builder.example.com/                  # TLS; login page or redirect, not the editor
-curl -s -o /dev/null -w '%{http_code}\n' -X POST 'https://flowise.example.com/api/v1/prediction/REPLACE_WITH_CHATFLOW_ID'   # 401
-curl -s -o /dev/null -w '%{http_code}\n' -X POST 'https://langflow.example.com/api/v1/run/REPLACE_WITH_FLOW_ID'            # 401
-curl -s -o /dev/null -w '%{http_code}\n' https://dify.example.com/v1/parameters                              # 401
+curl -q -sI https://builder.example.com/                  # TLS; login page or redirect, not the editor
+curl -q -s -o /dev/null -w '%{http_code}\n' -X POST 'https://flowise.example.com/api/v1/prediction/REPLACE_WITH_CHATFLOW_ID'   # 401
+curl -q -s -o /dev/null -w '%{http_code}\n' -X POST 'https://langflow.example.com/api/v1/run/REPLACE_WITH_FLOW_ID'            # 401
+curl -q -s -o /dev/null -w '%{http_code}\n' https://dify.example.com/v1/parameters                              # 401
 ```
 
 ## Common mistakes

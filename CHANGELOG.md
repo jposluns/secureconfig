@@ -44,7 +44,7 @@ with the merged pull request is therefore an authoring obligation, not an enforc
   while `cloud-firewalls.md` rule 3 says SSH is not public; a PostgreSQL Verify step that could not
   tell a refused password from a refused connection; a Dify paragraph that implied a setting could
   unpublish a port the vendor Compose file publishes unconditionally; a cloud-firewall Verify step
-  with no runnable command for any provider; curl exit 7 or 28 treated as proof of egress
+  with no runnable command for any provider; curl -q exit 7 or 28 treated as proof of egress
   enforcement; and a Supabase section that never warned that views and `SECURITY DEFINER`
   functions run with their owner's rights, past RLS.
 - Five QA rounds across three families produced the shipped text. Rounds 1 and 3 rejected, round 4

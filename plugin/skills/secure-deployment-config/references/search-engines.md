@@ -34,13 +34,13 @@ The credential that goes into a browser must be search-only and, ideally, scoped
 ## Verify
 
 ```bash
-curl -s -o /dev/null -w '%{http_code}\n' -X POST https://search.example.com/indexes/movies/search -H 'Content-Type: application/json' --data-raw '{"q":"ninja"}'                                             # Meilisearch, no key: 401
-curl -s -X POST https://search.example.com/indexes/movies/search -H "Authorization: Bearer REPLACE_WITH_SEARCH_KEY" -H 'Content-Type: application/json' --data-raw '{"q":"ninja"}'                          # search key: search works
-curl -s -o /dev/null -w '%{http_code}\n' -X POST https://search.example.com/indexes -H "Authorization: Bearer REPLACE_WITH_SEARCH_KEY" -H 'Content-Type: application/json' --data-raw '{"uid":"movies"}'     # search key attempting to create an index: 403
+curl -q -s -o /dev/null -w '%{http_code}\n' -X POST https://search.example.com/indexes/movies/search -H 'Content-Type: application/json' --data-raw '{"q":"ninja"}'                                             # Meilisearch, no key: 401
+curl -q -s -X POST https://search.example.com/indexes/movies/search -H "Authorization: Bearer REPLACE_WITH_SEARCH_KEY" -H 'Content-Type: application/json' --data-raw '{"q":"ninja"}'                          # search key: search works
+curl -q -s -o /dev/null -w '%{http_code}\n' -X POST https://search.example.com/indexes -H "Authorization: Bearer REPLACE_WITH_SEARCH_KEY" -H 'Content-Type: application/json' --data-raw '{"uid":"movies"}'     # search key attempting to create an index: 403
 
-curl -s -o /dev/null -w '%{http_code}\n' "https://search.example.com/collections/products/documents/search?q=stark&query_by=company_name"                                                                    # Typesense, no key: 401
-curl -s "https://search.example.com/collections/products/documents/search?q=stark&query_by=company_name" -H "X-TYPESENSE-API-KEY: REPLACE_WITH_SEARCH_ONLY_KEY"                                              # search-only key: search works
-curl -s -o /dev/null -w '%{http_code}\n' -X POST https://search.example.com/collections -H "X-TYPESENSE-API-KEY: REPLACE_WITH_SEARCH_ONLY_KEY" -H 'Content-Type: application/json' --data-raw '{"name":"products"}'  # search-only key attempting to create a collection: 403
+curl -q -s -o /dev/null -w '%{http_code}\n' "https://search.example.com/collections/products/documents/search?q=stark&query_by=company_name"                                                                    # Typesense, no key: 401
+curl -q -s "https://search.example.com/collections/products/documents/search?q=stark&query_by=company_name" -H "X-TYPESENSE-API-KEY: REPLACE_WITH_SEARCH_ONLY_KEY"                                              # search-only key: search works
+curl -q -s -o /dev/null -w '%{http_code}\n' -X POST https://search.example.com/collections -H "X-TYPESENSE-API-KEY: REPLACE_WITH_SEARCH_ONLY_KEY" -H 'Content-Type: application/json' --data-raw '{"name":"products"}'  # search-only key attempting to create a collection: 403
 ```
 
 Grep the client bundle and repository history for the admin/master/bootstrap key; it should never appear outside the server-side secret store.

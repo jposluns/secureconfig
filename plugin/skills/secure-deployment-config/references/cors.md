@@ -39,9 +39,9 @@ Keep the origin list in configuration per environment rather than hardcoding loc
 ## Verify
 
 ```bash
-curl -s -o /dev/null -D - https://api.example.com/data -H "Origin: https://evil.example" | grep -i access-control
+curl -q -s -o /dev/null -D - https://api.example.com/data -H "Origin: https://evil.example" | grep -i access-control
 # expect: no Access-Control-Allow-Origin echoing the hostile origin
-curl -s -o /dev/null -D - https://api.example.com/data -H "Origin: https://app.example.com" | grep -i access-control
+curl -q -s -o /dev/null -D - https://api.example.com/data -H "Origin: https://app.example.com" | grep -i access-control
 # expect: your origin, and Allow-Credentials only if you use cookies
 ```
 
