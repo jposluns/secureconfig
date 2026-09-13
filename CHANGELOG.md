@@ -9,6 +9,38 @@ can check `VERSION` against GitHub: the suite is deliberately offline so that no
 turn the build red, and a pull request number is only knowable from outside. Keeping `VERSION` in step
 with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-09-13
+
+### Fixed
+
+- Eight band-1 errors across eight guides (#45), closing `TODO.md` band 1 to empty. Each was a
+  guide asserting something false or a Verify step that could not discriminate: a missing
+  `--cacert` that made an Elasticsearch check die on TLS rather than answer; a Tailscale claim that
+  ignored how the fronted application binds; `ufw allow OpenSSH`, which admits the whole internet
+  while `cloud-firewalls.md` rule 3 says SSH is not public; a PostgreSQL Verify step that could not
+  tell a refused password from a refused connection; a Dify paragraph that implied a setting could
+  unpublish a port the vendor Compose file publishes unconditionally; a cloud-firewall Verify step
+  with no runnable command for any provider; curl exit 7 or 28 treated as proof of egress
+  enforcement; and a Supabase section that never warned that views and `SECURITY DEFINER`
+  functions run with their owner's rights, past RLS.
+- Five QA rounds across three families produced the shipped text. Rounds 1 and 3 rejected, round 4
+  accepted with changes, and round 5's single finding rested on a premise the guide did not state.
+  Every finding was checked at its vendor source before it was applied, and two were rejected on
+  evidence: a recollection that Dify's Compose file binds the plugin daemon to localhost, and a
+  report that injecting `curl -k` survives the gate suite. Neither held.
+- Three of the fixes had to be fixed again during review, all the same shape: removing a narrow
+  allowance and leaving the broad one. A ufw rule added beside the old `allow OpenSSH`; a firewalld
+  rich rule added beside an existing `--add-service=ssh`; and a Supabase view revoked from `anon`
+  and `authenticated` while `PUBLIC` still granted it. The last was demonstrated on a live
+  PostgreSQL: `has_table_privilege` stayed true and the view kept returning rows.
+- The gate suite caught no semantic defect in any round, which is what the tri-family tier exists
+  for. It did catch one defect in the original draft: SC2016 on a JMESPath backtick literal, which
+  inside a shell command is a command substitution waiting to happen.
+
+### Changed
+
+- `VERSION` to 1.0.45.
+
 ## 2026-09-12
 
 ### Added
