@@ -64,6 +64,26 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   the whole backlog down first, which is what produced `TODO.md`. *Reasoning:* a ruling on an
   unenumerated set is a guess, and writing it down exposed that eighteen ranked gaps had never
   been recorded at all.
+- **Adopting the pack's `cntdef` rule:** vendor the rule file itself and point at it, rather than
+  paraphrasing it into `CLAUDE.md`. The full normative body is carried verbatim. *Reasoning:* the
+  pack is the source of truth and this repository already vendors from it under a pin, so a
+  paraphrase in an auto-loaded instruction file was the wrong shape regardless of the classifier
+  that refused it. Verbatim upstream text is auditable against the pack and cannot drift.
+- **`VERSION` ordering (row 3.9):** `CONTRIBUTING.md`'s authoring step gains an ordering rule,
+  merge in numeric order, and where that is not possible the later pull request sets the value. No
+  monotonicity gate. *Reasoning:* the rule costs nothing to run and was already applied by hand
+  when #50 merged before #52 so the value ended forward; a gate would have blocked that merge
+  outright.
+- **LangServe (row 2.9) and Mem0 (row 2.16):** keep both, with their premises corrected. LangServe
+  is deprecated as of 2024-11-18 in favour of LangGraph Platform and the guide says so while still
+  covering it; Mem0 ships authentication ON by default, so its section is written around
+  `AUTH_DISABLED=true` rather than a missing default. *Reasoning:* a deployed instance does not
+  disappear when its project is deprecated, and a tool that is secure until someone disables it is
+  still an exposure this corpus covers, just a different one than the backlog row assumed.
+- **Verify vendor facts before planning, not after:** all three AI-infrastructure seeds ran without
+  network and marked every vendor fact unverified; opening the pages afterwards overturned two of
+  the six row premises. *Reasoning:* a plan built on an unverified premise costs more to unpick
+  than the verification costs to do first.
 
 ## Profile: predicting these rulings
 
