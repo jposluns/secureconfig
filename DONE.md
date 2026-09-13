@@ -9,6 +9,7 @@ gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 3.3 | Complete the `(#N)` pull-request references in `CHANGELOG.md`. The row's premise was wrong twice: it named PRs 4 and 5, which were already referenced, and the real gap was the eight records-maintenance pull requests, which is systematic rather than scattered | Done, #48 |
 | 1.7 | `firebase-supabase.md` never warned that a Supabase view or a `SECURITY DEFINER` function runs with its owner's rights and serves rows past RLS | Done, #45 |
 | 1.10 | `agent-builders.md` implied that disabling Dify's debugging feature unpublishes port 5003; the vendor Compose file publishes it unconditionally with no host address | Done, #45 |
 | 1.14 | `elasticsearch.md` Verify line 1 had no `--cacert`, so it died on TLS verification and could certify nothing | Done, #45 |
