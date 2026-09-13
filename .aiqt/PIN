@@ -24,12 +24,15 @@
 # LOCAL PATCHES to re-apply on upgrade:
 #   tools/_gen_common.py  is_external_url() reads the site host from the AIQT_SITE_HOST
 #     environment variable, defaulting to the upstream "aiqt.ai". This repo sets
-#     AIQT_SITE_HOST=secureconfig.ai in tools/run_all_checks.sh. Worth proposing upstream so the
-#     helper becomes site-agnostic and this patch can be dropped.
+#     AIQT_SITE_HOST=secureconfig.ai in tools/run_all_checks.sh. UPSTREAMED: guardrails accepted
+#     this on 2026-09-13 and is applying it as their own change, lowercasing the host in both files
+#     and adding an empty-string fallback so an empty AIQT_SITE_HOST cannot make every dotted host
+#     resolve internal. It is folded into their first digest-verifiable release, REL-1, which is the
+#     release row 3.7 waits on. Drop this patch when we re-pin to that tag.
 #   tools/check_site.py   SITE_HOSTS is derived from AIQT_SITE_HOST (default aiqt.ai) instead of the
 #     hardcoded {"aiqt.ai", "www.aiqt.ai"}, so absolute https://secureconfig.ai/... self-links in
-#     site/index.html are classified internal and resolved. Upstream hardcodes the host; worth proposing
-#     upstream alongside the _gen_common.py patch.
+#     site/index.html are classified internal and resolved. UPSTREAMED with the `_gen_common.py`
+#     patch above, same release. Drop both together at REL-1.
 #
 # Generated from the vendored files, do not hand-edit:
 #   .claude/settings.json  <- python3 tools/gen_aiqt_settings.py
