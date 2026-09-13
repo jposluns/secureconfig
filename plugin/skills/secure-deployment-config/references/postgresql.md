@@ -49,11 +49,17 @@ psql "host=db.example.com dbname=app user=app sslmode=verify-full sslrootcert=/p
 ```bash
 psql -h db.example.com -U app -c "SELECT version();" \
   "dbname=app sslmode=verify-full sslrootcert=/path/ca.crt"
+# negative control: the SAME host, database and role, with a deliberately wrong password
+psql "host=db.example.com dbname=app user=app password=REPLACE_WITH_A_DELIBERATELY_WRONG_PASSWORD sslmode=verify-full sslrootcert=/path/ca.crt" -c 'SELECT 1;'
+# must be REJECTED with: FATAL:  password authentication failed for user "app"
+# if it CONNECTS instead, an earlier pg_hba.conf record (a hostssl ... trust line, say) is letting it
+# in without a password: the first matching record wins and there is no fall-through, and neither a
+# successful TLS handshake nor pg_stat_ssl can see that
 sudo -u postgres psql -c "SELECT ssl, count(*) FROM pg_stat_ssl JOIN pg_stat_activity USING (pid) GROUP BY ssl;"
 ss -tlnp | grep 5432       # loopback only, unless remote access is deliberate
 ```
 
-A connection attempt without TLS from a remote host must fail once only `hostssl` lines cover remote addresses.
+A connection attempt without TLS from a remote host must fail once only `hostssl` lines cover remote addresses. The encryption checks prove encryption, not that a password was demanded, which is why the wrong-password attempt has to fail against the same host, database, and role the valid login used.
 
 ## Common mistakes
 

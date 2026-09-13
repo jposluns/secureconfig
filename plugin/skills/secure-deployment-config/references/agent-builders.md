@@ -13,7 +13,16 @@ ports:
   - "127.0.0.1:3080:3080"    # LibreChat (PORT defaults to 3080)
 ```
 
-Dify is different: its Compose file publishes nginx on `EXPOSE_NGINX_PORT=80` and `EXPOSE_NGINX_SSL_PORT=443` from `docker/.env`, plus the plugin daemon's `EXPOSE_PLUGIN_DEBUGGING_PORT=5003` (optional vector store profiles publish more). Do not hide a published port with the host firewall: Docker's NAT rules divert the traffic before it reaches the chains UFW uses, so a UFW deny on a published port does nothing ([docker.md](docker.md)). The plugin daemon's debugging port is only needed for remote plugin debugging, so leave it unpublished: do not enable the debugging feature, or remove that port mapping in a Compose override. Leave the backend services unpublished on the Compose network, and make Dify's nginx the only service with a public port: either as the TLS edge (section 2) or on loopback (`EXPOSE_NGINX_PORT=127.0.0.1:8080`) behind your own proxy.
+Dify is different: its Compose file publishes nginx on `EXPOSE_NGINX_PORT=80` and `EXPOSE_NGINX_SSL_PORT=443` from `docker/.env`, plus the plugin daemon's `EXPOSE_PLUGIN_DEBUGGING_PORT=5003` (optional vector store profiles publish more). Do not hide a published port with the host firewall: Docker's NAT rules divert the traffic before it reaches the chains UFW uses, so a UFW deny on a published port does nothing ([docker.md](docker.md)). The plugin daemon's debugging port is only needed for remote plugin debugging, and no setting turns it off: the Compose file publishes `${EXPOSE_PLUGIN_DEBUGGING_PORT:-5003}` for `plugin_daemon` unconditionally, with no host address in the mapping, so it binds `0.0.0.0:5003`. `EXPOSE_PLUGIN_DEBUGGING_HOST=localhost` does not restrict that bind; it only tells the plugin client where to connect. Remove the publication with an override file (see below). Leave the backend services unpublished on the Compose network, and make Dify's nginx the only service with a public port: either as the TLS edge (section 2) or on loopback (`EXPOSE_NGINX_PORT=127.0.0.1:8080`) behind your own proxy.
+
+```yaml
+# docker-compose.override.yaml, beside docker-compose.yaml; plain `docker compose up -d` picks it up
+services:
+  plugin_daemon:
+    ports: !reset []   # an ordinary ports list would merge with the base file's list, not replace it
+```
+
+Confirm the result against the merged model with `docker compose config`, which must show no published port for `plugin_daemon`.
 
 ## 2. TLS
 
@@ -71,7 +80,9 @@ None of the four documents instance-wide MFA enforcement. Where OIDC exists (Lib
 ## Verify
 
 ```bash
-ss -tlnp | grep -E ':(3000|7860|3080|80|443) '        # app ports on 127.0.0.1; 80/443 public only where Dify's own nginx is the TLS edge
+ss -tlnp                                        # read the whole list: app ports on 127.0.0.1; 80/443 public only where Dify's own nginx is the TLS edge; nothing on 5003
+docker compose config | grep -n published       # run in dify/docker: no published 5003 for plugin_daemon
+nc -vz -w 3 203.0.113.10 5003                   # from an outside network: must fail to connect
 curl -sI https://builder.example.com/                  # TLS; login page or redirect, not the editor
 curl -s -o /dev/null -w '%{http_code}\n' -X POST 'https://flowise.example.com/api/v1/prediction/REPLACE_WITH_CHATFLOW_ID'   # 401
 curl -s -o /dev/null -w '%{http_code}\n' -X POST 'https://langflow.example.com/api/v1/run/REPLACE_WITH_FLOW_ID'            # 401
@@ -108,3 +119,5 @@ curl -s -o /dev/null -w '%{http_code}\n' https://dify.example.com/v1/parameters 
 - LibreChat Docker install (port 3080, first account is admin): https://www.librechat.ai/docs/local/docker
 - LibreChat nginx and TLS: https://www.librechat.ai/docs/remote/nginx
 - LibreChat v0.7.7 changelog (two-factor authentication): https://www.librechat.ai/changelog/v0.7.7
+- Docker Compose merge rules (sequences merge rather than replace; the `!reset` tag): https://docs.docker.com/reference/compose-file/merge/
+- Dify `docker/docker-compose.yaml` (`plugin_daemon` publishes `${EXPOSE_PLUGIN_DEBUGGING_PORT:-5003}` with no host address): https://github.com/langgenius/dify/blob/main/docker/docker-compose.yaml

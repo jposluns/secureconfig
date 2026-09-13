@@ -535,7 +535,8 @@ Tailscale gives the same no-open-inbound-ports posture as [cloudflare.md](cloudf
 tailscale serve --bg localhost:3000
 ```
 
-- Reachable only by devices in your tailnet, so access is authenticated by device identity and your tailnet ACLs.
+- Traffic **through this proxy** is reachable only by devices in your tailnet, so that path is authenticated by device identity and your tailnet ACLs. `serve` does not change how the application binds, though: an application still listening on `0.0.0.0:3000` keeps answering its LAN or VPC address directly, past the tailnet.
+- Bind the fronted application to `127.0.0.1:3000` so the tailnet is the only way in.
 - HTTPS uses an automatically provisioned TLS certificate for the machine's tailnet name.
 - `--bg` keeps it running in the background; without it, the share stops with the session.
 
@@ -558,6 +559,8 @@ Serve for anything private (most things). Funnel or [cloudflare.md](cloudflare.m
 ## 4. Verify
 
 ```bash
+ss -tlnp | grep ':3000 '                          # the fronted app: 127.0.0.1:3000, never 0.0.0.0:3000
+curl -s -o /dev/null -m 5 http://10.0.0.5:3000/   # the host's own LAN or VPC address: must fail to connect
 tailscale serve status
 curl -sI https://host.tailnet.ts.net/            # from a tailnet device: works
 # From a non-tailnet network: serve URL unreachable; funnel URL reachable, so its app login must gate it.
@@ -4010,11 +4013,13 @@ PubkeyAuthentication yes
 # Debian/Ubuntu (ufw)
 sudo ufw default deny incoming
 sudo ufw default allow outgoing
-sudo ufw allow OpenSSH
+sudo ufw allow proto tcp from REPLACE_WITH_ADMIN_RANGE to any port 22
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 sudo ufw enable
 ```
+
+SSH stays closed to the world here for the same reason rule 3 in [cloud-firewalls.md](cloud-firewalls.md) keeps it off the cloud firewall: `ufw allow OpenSSH` opens port 22 to every address on the internet. Restrict it to the range you administer from, or add no SSH rule at all and reach the host through brokered access or a tailnet ([tailscale.md](tailscale.md)).
 
 RHEL-family systems use firewalld (`firewall-cmd --permanent --add-service=https` and so on) with the same posture. Open only the ports the TLS-terminating layer needs; databases and app servers stay unreachable from outside per their guides. Docker-published ports bypass ufw entirely; see [docker.md](docker.md) before relying on the firewall.
 
@@ -4027,7 +4032,8 @@ RHEL-family systems use firewalld (`firewall-cmd --permanent --add-service=https
 
 ```bash
 ss -tlnp                          # only intended listeners, on intended addresses
-sudo ufw status verbose           # default deny incoming, minimal allow list
+sudo ufw status verbose           # default deny incoming; port 22 shows your admin range, never Anywhere
+nc -vz -w 3 203.0.113.10 22       # from an address outside the admin range: must fail to connect
 ssh -o PreferredAuthentications=password user@host   # expect: Permission denied
 ssh user@host                     # with PAM MFA: the key is accepted, then the code prompt appears before a shell
 ```
@@ -4062,15 +4068,43 @@ On AWS (security groups), Google Cloud (VPC firewall rules), and Azure (network 
 
 ## Verify
 
-- Provider console or CLI: list rules allowing `0.0.0.0/0` and confirm that each one is 80/443 on the front layer, nothing else.
+Enumerate every inbound rule whose source is the whole internet, and confirm that each one is 80 or 443 on the front layer, nothing else.
+
+```bash
+# AWS, once per region. A world-open rule always carries 0.0.0.0/0 or ::/0, so this hides none of
+# them. Direction is shown rather than filtered on, because JMESPath needs a backtick literal to
+# compare a boolean and a backtick inside a shell command is a command substitution waiting to happen.
+aws ec2 describe-security-group-rules \
+  --query "SecurityGroupRules[?CidrIpv4=='0.0.0.0/0' || CidrIpv6=='::/0'].{Group:GroupId,Egress:IsEgress,Proto:IpProtocol,From:FromPort,To:ToPort,V4:CidrIpv4,V6:CidrIpv6}" \
+  --output table
+# every row whose Egress column reads False is inbound and open to the internet: it must be 80 or
+# 443 on the front layer. Rows reading True are outbound, a separate question.
+
+# Google Cloud, once per project. No filter, so no rule can be hidden by one.
+gcloud compute firewall-rules list --sort-by priority \
+  --format="table(name, network, direction, priority, sourceRanges.list():label=SRC_RANGES, allowed[].map().firewall_rule().list():label=ALLOW)"
+# every INGRESS row whose SRC_RANGES holds 0.0.0.0/0 or ::/0 must allow only tcp:80 and tcp:443
+
+# Azure, once per network security group. Lists every inbound allow, not only the open ones.
+az network nsg rule list \
+  --resource-group REPLACE_WITH_RESOURCE_GROUP --nsg-name REPLACE_WITH_NSG_NAME \
+  --query "[?direction=='Inbound' && access=='Allow'].{Name:name,Prio:priority,Proto:protocol,Src:sourceAddressPrefix,Ports:destinationPortRange}" \
+  --output table
+# a rule may instead carry sourceAddressPrefixes and destinationPortRanges (plural); re-run with
+# those names where Src or Ports comes back empty. No source may be '*', 'Internet', 0.0.0.0/0 or
+# ::/0 except on 80 and 443.
+```
+
 - From an outside network: `for p in 22 3306 5432 6379 27017; do nc -vz -w 3 203.0.113.10 "$p"; done   # every line must fail to connect`. Each port must report a refused or timed-out connection; a usage error from `nc` (some netcat variants take one port or a range per invocation) is not a passing result.
 - An external scan of the public IP (for example with nmap, against your own infrastructure only) shows only the intended ports.
 
 ## Sources (checked September 2026)
 
-- AWS VPC and security groups: https://docs.aws.amazon.com/vpc/
-- Google Cloud VPC firewall rules: https://docs.cloud.google.com/vpc/docs
-- Azure virtual network security: https://learn.microsoft.com/en-us/azure/virtual-network/
+- AWS CLI `describe-security-group-rules` (the `IsEgress`, `CidrIpv4`, `CidrIpv6`, `FromPort` and `ToPort` fields): https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-security-group-rules.html
+- AWS security group rules (`0.0.0.0/0` as every IPv4 address): https://docs.aws.amazon.com/vpc/latest/userguide/security-group-rules.html
+- Google Cloud VPC firewall rules, including the `gcloud compute firewall-rules list --format` projection used above: https://docs.cloud.google.com/firewall/docs/using-firewalls
+- Azure CLI `az network nsg rule list`: https://learn.microsoft.com/en-us/cli/azure/network/nsg/rule
+- Azure network security group rule properties (`direction`, `access`, `sourceAddressPrefix`, `sourceAddressPrefixes`): https://learn.microsoft.com/en-us/rest/api/virtualnetwork/network-security-groups/get
 
 ======================================================================
 ==> paas.md
@@ -4209,14 +4243,18 @@ curl -s -o /dev/null -w '%{http_code}\n' --max-time 5 https://sts.amazonaws.com/
 # negative control: a known-live host outside the egress allow list, judged by curl's exit status,
 # not by matching text in its output, since a successful connection also lacks the string
 # "Could not resolve host" and so would otherwise be misreported as blocked
-curl -s --max-time 5 -o /dev/null https://example.com/
+curl -s --connect-timeout 5 --max-time 10 -o /dev/null -w 'time_connect=%{time_connect}\n' https://example.com/
 rc=$?
 if [ "$rc" -eq 0 ]; then
   echo "FAIL: connected to a host outside the allow list, egress is not enforced"
 elif [ "$rc" -eq 6 ]; then
   echo "inconclusive: DNS resolution failed (curl exit 6), confirm this host still resolves before retrying"
 elif [ "$rc" -eq 7 ] || [ "$rc" -eq 28 ]; then
-  echo "pass: connection refused or timed out (curl exit $rc), the egress policy is blocking this host"
+  echo "no completed connection (curl exit $rc): inconclusive on its own. curl cannot say why it"
+  echo "failed, and --max-time can expire after the connection already succeeded, in which case the"
+  echo "time_connect printed above is non-zero. Treat this as blocked only when time_connect stayed"
+  echo "0.000000 AND the enforcement point recorded the deny: a VPC Flow Logs REJECT for this flow,"
+  echo "or the CNI's NetworkPolicy drop log or counter"
 else
   echo "unexpected curl exit code $rc, investigate before treating this as a pass"
 fi
@@ -4235,6 +4273,7 @@ aws ec2 describe-instances --instance-ids i-0123456789abcdef0 \
 - Azure Instance Metadata Service: https://learn.microsoft.com/en-us/azure/virtual-machines/instance-metadata-service
 - Kubernetes NetworkPolicy: https://kubernetes.io/docs/concepts/services-networking/network-policies/
 - Docker network create (`--internal`): https://docs.docker.com/reference/cli/docker/network/create/
+- curl manual (exit 7 "Failed to connect to host", exit 28 "Operation timeout", `--connect-timeout`, and the `time_connect` write-out variable): https://curl.se/docs/manpage.html
 
 ======================================================================
 ==> gpu-clouds.md
@@ -4429,11 +4468,17 @@ psql "host=db.example.com dbname=app user=app sslmode=verify-full sslrootcert=/p
 ```bash
 psql -h db.example.com -U app -c "SELECT version();" \
   "dbname=app sslmode=verify-full sslrootcert=/path/ca.crt"
+# negative control: the SAME host, database and role, with a deliberately wrong password
+psql "host=db.example.com dbname=app user=app password=REPLACE_WITH_A_DELIBERATELY_WRONG_PASSWORD sslmode=verify-full sslrootcert=/path/ca.crt" -c 'SELECT 1;'
+# must be REJECTED with: FATAL:  password authentication failed for user "app"
+# if it CONNECTS instead, an earlier pg_hba.conf record (a hostssl ... trust line, say) is letting it
+# in without a password: the first matching record wins and there is no fall-through, and neither a
+# successful TLS handshake nor pg_stat_ssl can see that
 sudo -u postgres psql -c "SELECT ssl, count(*) FROM pg_stat_ssl JOIN pg_stat_activity USING (pid) GROUP BY ssl;"
 ss -tlnp | grep 5432       # loopback only, unless remote access is deliberate
 ```
 
-A connection attempt without TLS from a remote host must fail once only `hostssl` lines cover remote addresses.
+A connection attempt without TLS from a remote host must fail once only `hostssl` lines cover remote addresses. The encryption checks prove encryption, not that a password was demanded, which is why the wrong-password attempt has to fail against the same host, database, and role the valid login used.
 
 ## Common mistakes
 
@@ -5061,7 +5106,7 @@ Open Elasticsearch instances produced some of the largest data leaks on record. 
 ## Verify
 
 ```bash
-curl -s https://search.example.com:9200/            # 401 without credentials
+curl -s --cacert /path/http_ca.crt https://search.example.com:9200/   # 401 without credentials
 curl -s --cacert /path/http_ca.crt https://search.example.com:9200/ -u elastic
                                                     # prompts, then 200 with the right password. Verify the certificate
                                                     # against the CA your installer generated (Elasticsearch writes
@@ -7063,7 +7108,16 @@ ports:
   - "127.0.0.1:3080:3080"    # LibreChat (PORT defaults to 3080)
 ```
 
-Dify is different: its Compose file publishes nginx on `EXPOSE_NGINX_PORT=80` and `EXPOSE_NGINX_SSL_PORT=443` from `docker/.env`, plus the plugin daemon's `EXPOSE_PLUGIN_DEBUGGING_PORT=5003` (optional vector store profiles publish more). Do not hide a published port with the host firewall: Docker's NAT rules divert the traffic before it reaches the chains UFW uses, so a UFW deny on a published port does nothing ([docker.md](docker.md)). The plugin daemon's debugging port is only needed for remote plugin debugging, so leave it unpublished: do not enable the debugging feature, or remove that port mapping in a Compose override. Leave the backend services unpublished on the Compose network, and make Dify's nginx the only service with a public port: either as the TLS edge (section 2) or on loopback (`EXPOSE_NGINX_PORT=127.0.0.1:8080`) behind your own proxy.
+Dify is different: its Compose file publishes nginx on `EXPOSE_NGINX_PORT=80` and `EXPOSE_NGINX_SSL_PORT=443` from `docker/.env`, plus the plugin daemon's `EXPOSE_PLUGIN_DEBUGGING_PORT=5003` (optional vector store profiles publish more). Do not hide a published port with the host firewall: Docker's NAT rules divert the traffic before it reaches the chains UFW uses, so a UFW deny on a published port does nothing ([docker.md](docker.md)). The plugin daemon's debugging port is only needed for remote plugin debugging, and no setting turns it off: the Compose file publishes `${EXPOSE_PLUGIN_DEBUGGING_PORT:-5003}` for `plugin_daemon` unconditionally, with no host address in the mapping, so it binds `0.0.0.0:5003`. `EXPOSE_PLUGIN_DEBUGGING_HOST=localhost` does not restrict that bind; it only tells the plugin client where to connect. Remove the publication with an override file (see below). Leave the backend services unpublished on the Compose network, and make Dify's nginx the only service with a public port: either as the TLS edge (section 2) or on loopback (`EXPOSE_NGINX_PORT=127.0.0.1:8080`) behind your own proxy.
+
+```yaml
+# docker-compose.override.yaml, beside docker-compose.yaml; plain `docker compose up -d` picks it up
+services:
+  plugin_daemon:
+    ports: !reset []   # an ordinary ports list would merge with the base file's list, not replace it
+```
+
+Confirm the result against the merged model with `docker compose config`, which must show no published port for `plugin_daemon`.
 
 ## 2. TLS
 
@@ -7121,7 +7175,9 @@ None of the four documents instance-wide MFA enforcement. Where OIDC exists (Lib
 ## Verify
 
 ```bash
-ss -tlnp | grep -E ':(3000|7860|3080|80|443) '        # app ports on 127.0.0.1; 80/443 public only where Dify's own nginx is the TLS edge
+ss -tlnp                                        # read the whole list: app ports on 127.0.0.1; 80/443 public only where Dify's own nginx is the TLS edge; nothing on 5003
+docker compose config | grep -n published       # run in dify/docker: no published 5003 for plugin_daemon
+nc -vz -w 3 203.0.113.10 5003                   # from an outside network: must fail to connect
 curl -sI https://builder.example.com/                  # TLS; login page or redirect, not the editor
 curl -s -o /dev/null -w '%{http_code}\n' -X POST 'https://flowise.example.com/api/v1/prediction/REPLACE_WITH_CHATFLOW_ID'   # 401
 curl -s -o /dev/null -w '%{http_code}\n' -X POST 'https://langflow.example.com/api/v1/run/REPLACE_WITH_FLOW_ID'            # 401
@@ -7158,6 +7214,8 @@ curl -s -o /dev/null -w '%{http_code}\n' https://dify.example.com/v1/parameters 
 - LibreChat Docker install (port 3080, first account is admin): https://www.librechat.ai/docs/local/docker
 - LibreChat nginx and TLS: https://www.librechat.ai/docs/remote/nginx
 - LibreChat v0.7.7 changelog (two-factor authentication): https://www.librechat.ai/changelog/v0.7.7
+- Docker Compose merge rules (sequences merge rather than replace; the `!reset` tag): https://docs.docker.com/reference/compose-file/merge/
+- Dify `docker/docker-compose.yaml` (`plugin_daemon` publishes `${EXPOSE_PLUGIN_DEBUGGING_PORT:-5003}` with no host address): https://github.com/langgenius/dify/blob/main/docker/docker-compose.yaml
 
 ======================================================================
 ==> image-gen-uis.md
@@ -7898,7 +7956,7 @@ For an authenticated route behind a shared cache, request the same URL as user A
 
 # Firebase and Supabase: the rules are the security
 
-These platforms handle TLS for you; the exposure works differently. Client SDKs talk to the backend using keys that ship in your frontend code and are **public by design** (the Firebase API key, the Supabase `anon` key). The only server-side gate between the internet and your data is the rules layer: Firebase security rules, or Postgres row-level security (RLS) on Supabase. AI-generated apps repeatedly ship with that layer open because "it worked in testing".
+These platforms handle TLS for you; the exposure works differently. Client SDKs talk to the backend using keys that ship in your frontend code and are **public by design** (the Firebase API key, the Supabase `anon` key). The only server-side gate between the internet and your data is the rules layer: Firebase security rules, or Postgres row-level security (RLS) on Supabase. AI-generated apps repeatedly ship with that layer open because "it worked in testing". On Supabase the gate also depends on how exposed views and functions execute, not only on the table policies.
 
 ## Firebase
 
@@ -7929,6 +7987,19 @@ using ( auth.uid() = user_id );
 
 Write separate policies per operation (`select`, `insert`, `update`, `delete`); no policy means no access once RLS is on, which is the correct starting point.
 - The `service_role` key bypasses RLS; it is a server-only secret that must never reach the client bundle or the repository.
+- A view runs with **its owner's** privileges by default, so a view over an RLS-protected table serves that table's rows past every policy to anyone holding the `anon` key. Make every API-exposed view apply the caller's policies instead:
+
+```sql
+alter view public.REPLACE_WITH_VIEW_NAME set (security_invoker = true);
+```
+
+- A `SECURITY DEFINER` function likewise runs as its owner and can return rows RLS would hide. Keep such functions out of API-exposed schemas unless they enforce their own authorization, and revoke execution by default:
+
+```sql
+revoke execute on function public.REPLACE_WITH_FUNCTION_NAME from public, anon, authenticated;
+```
+
+Include the argument types where the function name is overloaded.
 - Supabase Auth supports MFA (TOTP on every plan). Enrolment alone changes nothing: enforce it in your policies by requiring the `aal2` assurance level, so a session that has not completed the second factor cannot read protected rows ([mfa.md](mfa.md) for the general rules):
 
 ```sql
@@ -7942,6 +8013,7 @@ using ((select auth.jwt()->>'aal') = 'aal2');
 
 - With only the public key (no signed-in user), API reads and writes against protected tables/paths fail.
 - Signed in as user A, reading user B's rows fails.
+- Reads through every API-exposed view fail the same way as reads of the table behind it: request `/rest/v1/REPLACE_WITH_VIEW_NAME` with only the public key, then, signed in as user A, request user B's rows. A view that returns them is running with its owner's rights, past RLS.
 - Search the client bundle for `service_role` and private keys; the result must be empty.
 
 ## Sources (checked September 2026)
@@ -7949,6 +8021,9 @@ using ((select auth.jwt()->>'aal') = 'aal2');
 - Firebase security rules: https://firebase.google.com/docs/rules
 - Supabase row level security: https://supabase.com/docs/guides/database/postgres/row-level-security
 - Supabase multi-factor authentication (aal1, aal2, enforcement policy): https://supabase.com/docs/guides/auth/auth-mfa
+- PostgreSQL `CREATE VIEW` (base relations checked against the view owner's permissions by default; the view owner's RLS policies applied by default; `security_invoker`): https://www.postgresql.org/docs/current/sql-createview.html
+- PostgreSQL `ALTER VIEW` (`SET ( security_invoker = ... )` on an existing view): https://www.postgresql.org/docs/current/sql-alterview.html
+- PostgreSQL `REVOKE`: https://www.postgresql.org/docs/current/sql-revoke.html
 
 ======================================================================
 ==> web-exposure.md

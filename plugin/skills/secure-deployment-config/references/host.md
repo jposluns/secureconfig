@@ -40,11 +40,13 @@ PubkeyAuthentication yes
 # Debian/Ubuntu (ufw)
 sudo ufw default deny incoming
 sudo ufw default allow outgoing
-sudo ufw allow OpenSSH
+sudo ufw allow proto tcp from REPLACE_WITH_ADMIN_RANGE to any port 22
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 sudo ufw enable
 ```
+
+SSH stays closed to the world here for the same reason rule 3 in [cloud-firewalls.md](cloud-firewalls.md) keeps it off the cloud firewall: `ufw allow OpenSSH` opens port 22 to every address on the internet. Restrict it to the range you administer from, or add no SSH rule at all and reach the host through brokered access or a tailnet ([tailscale.md](tailscale.md)).
 
 RHEL-family systems use firewalld (`firewall-cmd --permanent --add-service=https` and so on) with the same posture. Open only the ports the TLS-terminating layer needs; databases and app servers stay unreachable from outside per their guides. Docker-published ports bypass ufw entirely; see [docker.md](docker.md) before relying on the firewall.
 
@@ -57,7 +59,8 @@ RHEL-family systems use firewalld (`firewall-cmd --permanent --add-service=https
 
 ```bash
 ss -tlnp                          # only intended listeners, on intended addresses
-sudo ufw status verbose           # default deny incoming, minimal allow list
+sudo ufw status verbose           # default deny incoming; port 22 shows your admin range, never Anywhere
+nc -vz -w 3 203.0.113.10 22       # from an address outside the admin range: must fail to connect
 ssh -o PreferredAuthentications=password user@host   # expect: Permission denied
 ssh user@host                     # with PAM MFA: the key is accepted, then the code prompt appears before a shell
 ```

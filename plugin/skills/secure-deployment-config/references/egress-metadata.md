@@ -86,14 +86,18 @@ curl -s -o /dev/null -w '%{http_code}\n' --max-time 5 https://sts.amazonaws.com/
 # negative control: a known-live host outside the egress allow list, judged by curl's exit status,
 # not by matching text in its output, since a successful connection also lacks the string
 # "Could not resolve host" and so would otherwise be misreported as blocked
-curl -s --max-time 5 -o /dev/null https://example.com/
+curl -s --connect-timeout 5 --max-time 10 -o /dev/null -w 'time_connect=%{time_connect}\n' https://example.com/
 rc=$?
 if [ "$rc" -eq 0 ]; then
   echo "FAIL: connected to a host outside the allow list, egress is not enforced"
 elif [ "$rc" -eq 6 ]; then
   echo "inconclusive: DNS resolution failed (curl exit 6), confirm this host still resolves before retrying"
 elif [ "$rc" -eq 7 ] || [ "$rc" -eq 28 ]; then
-  echo "pass: connection refused or timed out (curl exit $rc), the egress policy is blocking this host"
+  echo "no completed connection (curl exit $rc): inconclusive on its own. curl cannot say why it"
+  echo "failed, and --max-time can expire after the connection already succeeded, in which case the"
+  echo "time_connect printed above is non-zero. Treat this as blocked only when time_connect stayed"
+  echo "0.000000 AND the enforcement point recorded the deny: a VPC Flow Logs REJECT for this flow,"
+  echo "or the CNI's NetworkPolicy drop log or counter"
 else
   echo "unexpected curl exit code $rc, investigate before treating this as a pass"
 fi
@@ -112,3 +116,4 @@ aws ec2 describe-instances --instance-ids i-0123456789abcdef0 \
 - Azure Instance Metadata Service: https://learn.microsoft.com/en-us/azure/virtual-machines/instance-metadata-service
 - Kubernetes NetworkPolicy: https://kubernetes.io/docs/concepts/services-networking/network-policies/
 - Docker network create (`--internal`): https://docs.docker.com/reference/cli/docker/network/create/
+- curl manual (exit 7 "Failed to connect to host", exit 28 "Operation timeout", `--connect-timeout`, and the `time_connect` write-out variable): https://curl.se/docs/manpage.html

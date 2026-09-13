@@ -12,12 +12,40 @@ On AWS (security groups), Google Cloud (VPC firewall rules), and Azure (network 
 
 ## Verify
 
-- Provider console or CLI: list rules allowing `0.0.0.0/0` and confirm that each one is 80/443 on the front layer, nothing else.
+Enumerate every inbound rule whose source is the whole internet, and confirm that each one is 80 or 443 on the front layer, nothing else.
+
+```bash
+# AWS, once per region. A world-open rule always carries 0.0.0.0/0 or ::/0, so this hides none of
+# them. Direction is shown rather than filtered on, because JMESPath needs a backtick literal to
+# compare a boolean and a backtick inside a shell command is a command substitution waiting to happen.
+aws ec2 describe-security-group-rules \
+  --query "SecurityGroupRules[?CidrIpv4=='0.0.0.0/0' || CidrIpv6=='::/0'].{Group:GroupId,Egress:IsEgress,Proto:IpProtocol,From:FromPort,To:ToPort,V4:CidrIpv4,V6:CidrIpv6}" \
+  --output table
+# every row whose Egress column reads False is inbound and open to the internet: it must be 80 or
+# 443 on the front layer. Rows reading True are outbound, a separate question.
+
+# Google Cloud, once per project. No filter, so no rule can be hidden by one.
+gcloud compute firewall-rules list --sort-by priority \
+  --format="table(name, network, direction, priority, sourceRanges.list():label=SRC_RANGES, allowed[].map().firewall_rule().list():label=ALLOW)"
+# every INGRESS row whose SRC_RANGES holds 0.0.0.0/0 or ::/0 must allow only tcp:80 and tcp:443
+
+# Azure, once per network security group. Lists every inbound allow, not only the open ones.
+az network nsg rule list \
+  --resource-group REPLACE_WITH_RESOURCE_GROUP --nsg-name REPLACE_WITH_NSG_NAME \
+  --query "[?direction=='Inbound' && access=='Allow'].{Name:name,Prio:priority,Proto:protocol,Src:sourceAddressPrefix,Ports:destinationPortRange}" \
+  --output table
+# a rule may instead carry sourceAddressPrefixes and destinationPortRanges (plural); re-run with
+# those names where Src or Ports comes back empty. No source may be '*', 'Internet', 0.0.0.0/0 or
+# ::/0 except on 80 and 443.
+```
+
 - From an outside network: `for p in 22 3306 5432 6379 27017; do nc -vz -w 3 203.0.113.10 "$p"; done   # every line must fail to connect`. Each port must report a refused or timed-out connection; a usage error from `nc` (some netcat variants take one port or a range per invocation) is not a passing result.
 - An external scan of the public IP (for example with nmap, against your own infrastructure only) shows only the intended ports.
 
 ## Sources (checked September 2026)
 
-- AWS VPC and security groups: https://docs.aws.amazon.com/vpc/
-- Google Cloud VPC firewall rules: https://docs.cloud.google.com/vpc/docs
-- Azure virtual network security: https://learn.microsoft.com/en-us/azure/virtual-network/
+- AWS CLI `describe-security-group-rules` (the `IsEgress`, `CidrIpv4`, `CidrIpv6`, `FromPort` and `ToPort` fields): https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-security-group-rules.html
+- AWS security group rules (`0.0.0.0/0` as every IPv4 address): https://docs.aws.amazon.com/vpc/latest/userguide/security-group-rules.html
+- Google Cloud VPC firewall rules, including the `gcloud compute firewall-rules list --format` projection used above: https://docs.cloud.google.com/firewall/docs/using-firewalls
+- Azure CLI `az network nsg rule list`: https://learn.microsoft.com/en-us/cli/azure/network/nsg/rule
+- Azure network security group rule properties (`direction`, `access`, `sourceAddressPrefix`, `sourceAddressPrefixes`): https://learn.microsoft.com/en-us/rest/api/virtualnetwork/network-security-groups/get

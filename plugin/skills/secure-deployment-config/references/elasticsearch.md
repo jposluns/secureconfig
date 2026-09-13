@@ -18,7 +18,7 @@ Open Elasticsearch instances produced some of the largest data leaks on record. 
 ## Verify
 
 ```bash
-curl -s https://search.example.com:9200/            # 401 without credentials
+curl -s --cacert /path/http_ca.crt https://search.example.com:9200/   # 401 without credentials
 curl -s --cacert /path/http_ca.crt https://search.example.com:9200/ -u elastic
                                                     # prompts, then 200 with the right password. Verify the certificate
                                                     # against the CA your installer generated (Elasticsearch writes
