@@ -2,7 +2,7 @@
 name: secure-deployment-config
 description: Configure TLS, authentication, MFA, secrets and network exposure for a service you are deploying, or review one that is already running. Use when setting up or changing nginx, Apache, Caddy, HAProxy, Traefik, Docker, Kubernetes, PostgreSQL, MySQL, MongoDB, Redis, Elasticsearch, MinIO, Kafka, RabbitMQ, Ollama, vLLM, Jupyter, Gradio, Streamlit, n8n, Supabase, Firebase, a model server, a vector database, an MCP server, an agent builder, a chat or image UI, a dashboard, or any service that will listen on a port. Also use when asked to make something "production ready", to expose a local service, to add a login, to put a domain in front of an app, or to check whether a deployment is safe.
 license: CC0-1.0
-compatibility: Reference material only. No network access required; every guide is bundled. Commands in the guides are run by you against the user's own systems.
+compatibility: Every guide is bundled, so no network access is needed to use this skill. scripts/update-guides.sh needs network, and only when you choose to run it. Commands in the guides are run by you against the user's own systems.
 metadata:
   source: https://github.com/jposluns/secureconfig
   version: "1.0.38"
@@ -18,6 +18,12 @@ control, each line traced to the vendor page it came from.
 a stale default is a security defect, not a typo. Every guide's Sources section is dated; if a
 default matters to the decision you are making, check it against the linked vendor page rather
 than trusting the bundled copy.**
+
+The guides are bundled so this works with no network, which means they are frozen at the version
+in `plugin.json`. `scripts/update-guides.sh` refreshes them and re-pins that version when you have
+network. It verifies every fetched guide against the publisher's recorded digest and replaces the
+bundle only once all of them match, so a failed or interrupted update leaves the working bundle
+exactly as it was.
 
 ## Rules that apply to every deployment
 

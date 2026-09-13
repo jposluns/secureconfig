@@ -31,4 +31,9 @@ mkdir -p "$dest"
 for f in "${files[@]}"; do
   cp "$f" "$dest/$f"
 done
+
+# A digest per bundled file, so an adopter's updater can verify what it fetched before replacing
+# anything, and so a partial or corrupted download is a refusal rather than a silent downgrade.
+( cd "$dest" && sha256sum "${files[@]}" ) > "$dest/MANIFEST.sha256"
+
 echo "wrote $dest (${#files[@]} files)"
