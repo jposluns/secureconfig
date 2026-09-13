@@ -4,7 +4,7 @@ Each of these tools stores your provider API keys (OpenAI, Anthropic, and the re
 
 ## 1. Bind privately
 
-Publish the container on loopback and let a proxy or tunnel be the only public listener ([docker.md](docker.md)):
+Publish the container on loopback and let a proxy or tunnel be the only public listener ([docker.md](docker.md)). This belongs in the service's own Compose file. If you put it in an override file beside a vendor Compose file instead, it will not replace what that file publishes: an override `ports` list merges with the base list, so use the `!reset` form shown for Dify below.
 
 ```yaml
 ports:
