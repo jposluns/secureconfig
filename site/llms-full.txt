@@ -7536,7 +7536,7 @@ Run this for each configuration or environment file you edited:
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_EDITED_CONFIG_FILE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not checking"; exit; }
   shift
-  [ $# -eq 1 ] || { echo "the set -- line needs exactly 1 value; not checking"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not checking"; exit; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the file name on the set -- line above; not checking" ;;
     *) grep -nH -o 'REPLACE_WITH_[[:alnum:]_]*' -- "$1"
@@ -7580,7 +7580,7 @@ A Compose error, missing service, stopped application, or empty inventory is not
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HOST_ADDRESS' 'REPLACE_WITH_PORT'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
-  [ $# -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
   case "$1:$2" in
     *REPLACE_WITH_*|:*|*:) echo "substitute the address and port on the set -- line above; not probing" ;;
     *) curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
@@ -7607,7 +7607,7 @@ For the unchanged vendor examples, Mem0 adds 8432 and 3000 beside API port 8888.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HOST_ADDRESS' 'REPLACE_WITH_PORT'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
-  [ $# -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
   case "$1:$2" in
     *REPLACE_WITH_*|:*|*:) echo "substitute the address and port on the set -- line above; not probing" ;;
     *) nc -vz -w 5 "$1" "$2"
@@ -7636,7 +7636,7 @@ Set the second value on the `set --` line to the actual method, such as `GET` or
   # $3 is the harmless JSON request body. Keep the empty quotes if the request needs none.
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
-  [ $# -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit; }
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit; }
   if [ -z "$1" ] || [ -z "$2" ]; then
     echo "fill in the URL and method on the set -- line above; not probing"; exit
   fi
@@ -7675,7 +7675,7 @@ For SearxNG, for LangServe relying entirely on its proxy, or for any service you
   # $3 is the same harmless JSON body as checks 5 and 7. Keep the empty quotes if none is needed.
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
-  [ $# -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit; }
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit; }
   if [ -z "$1" ] || [ -z "$2" ]; then
     echo "fill in the URL and method on the set -- line above; not probing"; exit
   fi
@@ -7716,7 +7716,7 @@ The header below is reader-supplied. For a configured bearer-token proxy it is `
   # $3 is the same harmless JSON body as the anonymous check. Keep the empty quotes if none is needed.
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
-  [ $# -eq 4 ] || { echo "the set -- line needs exactly 4 values; not probing"; exit; }
+  [ "$#" -eq 4 ] || { echo "the set -- line needs exactly 4 values; not probing"; exit; }
   if [ -z "$1" ] || [ -z "$2" ] || [ -z "$4" ]; then
     echo "fill in the URL, method, and header on the set -- line above; not probing"; exit
   fi
