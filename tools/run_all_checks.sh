@@ -44,6 +44,26 @@ fi
 # An unchecked restore could leave a half-written bundle for every later gate to read.
 cp "$orig" site/llms-full.txt || { bad "could not restore site/llms-full.txt from $orig"; exit 1; }
 
+echo "== the plugin bundle is current =="
+# plugin/ is generated from the guides by scripts/build-plugin.sh, the same way
+# site/llms-full.txt is, and for the same reason: a bundle that has drifted from the guides ships
+# a reader stale configuration while the repository looks correct. The build is byte-deterministic
+# (a copy per file), so rebuilding and comparing is the whole check.
+plugin_tmp=$(mktemp -d)
+cp -a plugin/. "$plugin_tmp/"
+if bash scripts/build-plugin.sh >/dev/null 2>&1; then
+  if diff -rq "$plugin_tmp" plugin >/dev/null 2>&1; then
+    ok "plugin/ matches a fresh build"
+  else
+    bad "plugin/ is stale; run scripts/build-plugin.sh and commit the result"
+  fi
+else
+  bad "scripts/build-plugin.sh exited non-zero"
+fi
+rm -rf plugin
+cp -a "$plugin_tmp" plugin || { bad "could not restore plugin/ from $plugin_tmp"; exit 1; }
+rm -rf "$plugin_tmp"
+
 echo "== the generated-file record matches how they are generated =="
 # CLAUDE.md names .aiqt/gensrc.json as the record of which sources produce site/llms-full.txt.
 # Adding a guide touches five wiring surfaces and four of them were gated; this was the fifth,

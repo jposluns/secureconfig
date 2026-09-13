@@ -157,8 +157,17 @@ def main() -> int:
             # with no target name passed and the summary counted it as a generated file.
             findings.append(f"{MANIFEST}: an entry has no target file name")
             continue
-        if not (root / target).is_file():
-            findings.append(f"{MANIFEST}: target {target} is not a file in this repository")
+        # `kind` decides what the target has to BE. It sat unused in the manifest while the gate
+        # assumed a file, so a generated DIRECTORY could not be recorded at all: the plugin bundle
+        # is 86 files produced by one script, and recording it is exactly what this gate is for.
+        kind = entry.get("kind", "file")
+        if kind not in ("file", "directory"):
+            findings.append(f"{MANIFEST}: {target}: kind must be 'file' or 'directory', not "
+                            f"{kind!r}")
+            continue
+        exists = (root / target).is_dir() if kind == "directory" else (root / target).is_file()
+        if not exists:
+            findings.append(f"{MANIFEST}: target {target} is not a {kind} in this repository")
 
         command = entry.get("regenerate", "")
         try:

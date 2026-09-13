@@ -1,0 +1,44 @@
+# Strong authentication baseline
+
+TLS without authentication leaves a service open to the whole internet over an encrypted channel. These rules apply to every service in this repository's guides. `must` marks a requirement; `should` marks a recommendation.
+
+## Rules
+
+1. **Deny by default.** Every endpoint that is not deliberately public must require authentication, including APIs, health dashboards, admin panels, metrics, and message queues. Publish an explicit list of the paths that are public; everything else authenticates.
+2. **No default or shared credentials.** Change or disable every vendor default account before exposure. Each human gets an individual account; each service gets its own credential. Never ship credentials in code, containers, or documentation.
+3. **TLS first.** Credentials must only cross the network inside TLS. HTTP basic authentication and bearer tokens are acceptable only over HTTPS, because both send the secret with every request.
+4. **Hash passwords with a modern algorithm.** Store only argon2id or bcrypt hashes (per current OWASP guidance; scrypt and correctly parameterized PBKDF2 are also acceptable). Never store plaintext, and never use unsalted or fast hashes such as MD5 or SHA-256 for passwords.
+   - Node.js: `bcrypt` or `argon2` packages.
+   - Python: `argon2-cffi` or `bcrypt`.
+   - Shell (for htpasswd files): `htpasswd -B` (bcrypt).
+5. **Generate secrets randomly and keep them out of the repository.**
+   ```bash
+   openssl rand -base64 32
+   python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+   ```
+   Load secrets from environment variables or a secret manager. Add `.env` to `.gitignore` before the first commit, and scan the repository for leaked secrets (for example with gitleaks) before pushing. A secret that has reached a public repository, a chat, or a log is compromised: rotate it, since deleting the file does not unpublish it.
+6. **Prefer SSO/OIDC over local accounts** where the product supports it, and enable MFA wherever available. [Cloudflare Access](cloudflare.md) puts SSO or one-time-PIN login in front of any web app without changing the app. Where no native MFA exists, add it with an identity layer, an app-level TOTP library, or a hosted service, per [mfa.md](mfa.md).
+7. **Scope machine access.** API clients get their own tokens with the least privilege the task needs, not an admin password. Support and exercise rotation; set expiry where the platform allows it.
+8. **Harden sessions.** Set cookies `Secure`, `HttpOnly`, and `SameSite` (`Lax` or `Strict`), sign them with a strong random secret, and expire them. Invalidate sessions on password change.
+9. **Rate-limit authentication endpoints** and lock or delay after repeated failures. Log authentication successes and failures with source address and account, and keep the logs long enough to investigate an incident. fail2ban is a low-effort control for SSH and login panels on Linux hosts. Bound expensive endpoints too: inference, uploads, and job submission need request-size, concurrency, and timeout limits in addition to per-client rate limits, because an exposed AI endpoint left without them can burn GPU time and money even while correctly rejecting bad credentials, a failure mode known as denial of wallet. [realtime-webhooks.md](realtime-webhooks.md) covers the streaming and webhook transports these limits also apply to.
+10. **Least privilege everywhere.** Separate admin from daily-use accounts, and give database and OS service accounts only the rights the application uses.
+11. **Federated login is authentication, not authorization.** After Google, Microsoft, GitHub, or any provider returns an identity, check it against an allowlist (tenant, hosted domain from the verified token claim, organization or group membership, or explicit users) before granting access. Any Google account is not "staff", and Microsoft's multi-tenant `common` endpoint admits every Microsoft account unless the app validates the issuer and tenant. [oidc-integration.md](oidc-integration.md) has the checks; [identity-providers.md](identity-providers.md) has the providers.
+12. **OIDC and OAuth hygiene.** Authorization code flow with PKCE; exact-match redirect URIs; `state` and `nonce` verified; ID tokens validated for signature (keys from the provider's JWKS, algorithm pinned, never `none`), issuer, audience, and expiry; short-lived access tokens with refresh-token rotation; tokens never in URLs. Prefer a server-side session in an `HttpOnly` cookie to tokens in browser storage. Link accounts by issuer plus subject, never by email alone.
+13. **Enforce MFA where access is granted, not only where it is enrolled.** A user who enrolled a second factor but can still act with a password-only session is not protected. Require the factor in provider policy or in the app, and test it.
+14. **Protect the control plane.** MFA on the Git host, the cloud account, the DNS registrar, the deployment platform, the secret manager, and the identity provider's administrator account. A takeover there bypasses every control inside the app.
+15. **Authenticate every transport.** WebSockets, server-sent events, GraphQL, gRPC, webhooks (verify the sender's signature and reject replays), inference endpoints, and management APIs each need their own check. A login on the HTML pages protects none of them. Machine credentials follow [machine-auth.md](machine-auth.md).
+16. **Offboard promptly.** When a person leaves, revoke their provider membership, proxy sessions, application sessions, and personal tokens. Know your maximum time-to-revoke for each system where immediate revocation is not available, and treat that number as something to shrink, not a fact to accept. [deployment-lifecycle.md](deployment-lifecycle.md) has the lifecycle checks; [mfa.md](mfa.md) covers revoking the second factor along with the account.
+
+## Quick checks
+
+- Unauthenticated `curl` against a protected path returns `401`, `403`, or a login redirect, never data.
+- `git log -p | grep -iE 'password|secret|api[_-]?key'` over a new repository comes back empty (a scanner does this better; use one).
+- The user store contains no account named `admin`, `test`, or `demo` with a known or empty password.
+- Negative tests pass: a missing, expired, wrong-issuer, wrong-audience, or wrong-tenant token is rejected; user A cannot read user B's resources; the origin is unreachable except through its fronting layer.
+
+## Sources (checked September 2026)
+
+- OWASP Authentication Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html
+- OWASP Password Storage Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
+- OAuth 2.0 Security Best Current Practice (RFC 9700): https://www.rfc-editor.org/rfc/rfc9700.html
+- OpenID Connect Core 1.0: https://openid.net/specs/openid-connect-core-1_0.html
