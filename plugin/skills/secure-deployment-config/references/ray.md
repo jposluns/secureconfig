@@ -63,7 +63,11 @@ Ray warns that this costs performance (large for small workloads, smaller for la
 ```bash
 ss -tlnp | grep 8265                                    # 127.0.0.1:8265 (or the tailnet IP), never 0.0.0.0 or *
 ss -tlnp | grep -E ':6379|:10001'                       # private interface only
-curl -sI --max-time 5 http://203.0.113.10:8265/         # from another network: connection refused or timeout
+curl -sI -o /dev/null --connect-timeout 5 --max-time 10 \
+  -w 'http=%{http_code} time_connect=%{time_connect}\n' \
+  http://REPLACE_WITH_THE_SERVER_PUBLIC_IP:8265/
+# from another network. The pass is http=000 WITH time_connect at 0.000000: no connection completed.
+# A non-zero time_connect means the TCP handshake succeeded and the dashboard port is reachable
 # Through the SSH tunnel of step 1, from a machine without the token, with RAY_AUTH_MODE=token on the cluster:
 ray job submit --address http://127.0.0.1:8265 -- python -c "print(1)"   # must fail: Unauthorized
 ```
@@ -83,3 +87,4 @@ ray job submit --address http://127.0.0.1:8265 -- python -c "print(1)"   # must 
 - Configuring Ray (TLS environment variables, ports opened by nodes): https://docs.ray.io/en/latest/ray-core/configure.html
 - Configure Ray clusters to use token authentication (KubeRay `authOptions`, 401 without token): https://docs.ray.io/en/latest/cluster/kubernetes/user-guides/kuberay-auth.html
 - Docker, port publishing (loopback publishing): https://docs.docker.com/engine/network/port-publishing/
+- curl manual (`--connect-timeout` bounds the connection phase only; the `time_connect` write-out variable): https://curl.se/docs/manpage.html
