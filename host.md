@@ -72,7 +72,11 @@ sudo firewall-cmd --zone=REPLACE_WITH_PUBLIC_ZONE --list-all   # confirm: no ssh
 ```bash
 ss -tlnp                          # only intended listeners, on intended addresses
 sudo ufw status verbose           # default deny incoming; port 22 shows your admin range, never Anywhere
-nc -vz -w 3 203.0.113.10 22       # from an address outside the admin range: must fail to connect
+probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
+case "${probe_ip:-}" in
+  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+  *) nc -vz -w 3 "$probe_ip" 22 ;;   # from an address outside the admin range: must fail to connect
+esac
 ssh -o PreferredAuthentications=password user@host   # expect: Permission denied
 ssh user@host                     # with PAM MFA: the key is accepted, then the code prompt appears before a shell
 ```

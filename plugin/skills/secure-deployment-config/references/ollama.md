@@ -65,7 +65,15 @@ MFA: Ollama has no login of its own, so a second factor can only come from the f
 
 ```bash
 ss -tlnp | grep 11434                                  # 127.0.0.1 only
-curl -s http://203.0.113.10:11434/api/tags             # from another machine: connection refused
+# from another machine. Read err, not the number: it must name a refusal or timeout reaching YOUR
+# address. An HTTP code means the port answered. A resolver failure, a local socket error, or a
+# timeout that did not come from the remote address is inconclusive, never a pass.
+probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
+case "${probe_ip:-}" in
+  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+       -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$probe_ip:11434/api/tags" ;;
+esac
 curl -s https://ollama.example.com/api/tags            # 401 without credentials
 curl -su admin https://ollama.example.com/api/tags     # model list with credentials
 ```
@@ -74,3 +82,4 @@ curl -su admin https://ollama.example.com/api/tags     # model list with credent
 
 - Ollama FAQ (bind address, `OLLAMA_HOST`, proxy examples): https://docs.ollama.com/faq
 - Ollama repository: https://github.com/ollama/ollama
+- curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
