@@ -9,6 +9,8 @@ gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 3.4 | Changelog close-out for #35 and #38 to #42, and re-pin `VERSION` from a stale 1.0.37 | Done, #43 |
+| 3.5 | Dispatch cross-family QA against a throwaway copy, and re-verify every finding against the current file before applying it | Done: adopted 2026-09-13, carried in the /flow skill's project mapping and its closing section |
 | 2.1 | Package the corpus as an Agent Plugin, bundled for offline adopters with a digest-verified updater | Done, #39 |
 | 3.1 | Put the backlog in the repository rather than a private working store | Done, #38 |
 | 1.1 | Cite the tools whose syntax `cors.md` and `host.md` show | Done, #35 |
