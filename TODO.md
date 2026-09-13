@@ -44,7 +44,6 @@ many.
 | --- | --- | --- |
 | 1.36 | Literal example addresses in runnable Verify probes fail silently: an unreplaced hostname fails visibly through DNS, but an unreplaced `203.0.113.10` times out and reads exactly like a blocked port, so a reader who skips the substitution sees a pass. `README.md` names it as a placeholder to replace, which is the mitigation and not a fix. 22 files. (H, M) | `[enhance]` |
 | 1.37 | `mlflow.md` and `ray.md` treat a bare `--max-time` timeout as proof that a connection was blocked. `egress-metadata.md` now states in terms that it is not, so the corpus contradicts itself. (M, XS) | `[enhance]` |
-| 1.38 | `ss ... \| grep <port>` matches a pid, a longer port number, and the `users:` column. Per the 2026-09-13 decision in `DECISIONS.md`, judge each of the 48 rather than sweeping: fix only the checks whose Verify claims nothing ELSE is exposed, and leave a filtered check that asks whether one service is bound to loopback, which is correct for what it claims. `elasticsearch.md`, `postgresql.md` and `tailscale.md` already use ss's own `sport = :N` filter. (M, L) | `[enhance]` |
 
 ## Priority 2: Deepen existing guides
 

@@ -9,6 +9,7 @@ gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.38 | Judge each of the 46 `ss ... \| grep <port>` checks against the maintainer's ruling that a filter asking whether one service is bound to loopback is correct for what it claims | Done, no guide changed. All 46 judged: none claims that anything else is unexposed, 45 carry a trailing expectation comment, and the one without states its expectation in the prose below its block. Converting them anyway would be the corpus-wide sweep the ruling rejected. `elasticsearch.md`, `postgresql.md` and `tailscale.md` use ss's native `sport = :N` filter because rows 1.14, 1.22 and 1.15 changed those checks for other reasons, not because of this row |
 | 3.3 | Complete the `(#N)` pull-request references in `CHANGELOG.md`. The row's premise was wrong twice: it named PRs 4 and 5, which were already referenced, and the real gap was the eight records-maintenance pull requests, which is systematic rather than scattered | Done, #48 |
 | 1.7 | `firebase-supabase.md` never warned that a Supabase view or a `SECURITY DEFINER` function runs with its owner's rights and serves rows past RLS | Done, #45 |
 | 1.10 | `agent-builders.md` implied that disabling Dify's debugging feature unpublishes port 5003; the vendor Compose file publishes it unconditionally with no host address | Done, #45 |
