@@ -83,15 +83,15 @@ The documented quickstart itself runs `docker run ... -p 3000:3000 ... openhands
 
 ```bash
 ss -tlnp | grep -E '3001|3210|3000'                    # each UI on 127.0.0.1 only
-ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "$ip" in
-  REPLACE_WITH_*) echo "NOT SUBSTITUTED: put your own address in ip= above, or this proves nothing" ;;
-esac
-curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
-  -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$ip:3210/"
 # from another host. Read err, not the number: it must name a refusal or timeout reaching YOUR
 # address. An HTTP code means the port answered. A resolver failure, a local socket error, or a
 # timeout that did not come from the remote address is inconclusive, never a pass.
+probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
+case "$probe_ip" in
+  REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
+       -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$probe_ip:3210/" ;;
+esac
 curl -s https://chat.example.com/api/some-endpoint      # without a key/token: 401
 curl -sI https://chat.example.com/                      # via the proxy: TLS, login required
 # LobeChat SSO: attempt to register/sign in with a Google account that has never registered and is

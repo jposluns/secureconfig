@@ -198,12 +198,12 @@ Choose every route that applies; a deployment usually needs both service-specifi
 
 ## Verification checklist
 
-Run the applicable checks below and the Verify steps in every selected guide. Substitute your own host for `example.com` in every command first. It is not a neutral stand-in: it resolves and it serves HTTPS, so check 3 succeeds against it for everybody, whatever state your own deployment is in. Record each result as pass, fail, untested, or not applicable, with evidence or a reason; report a control as verified only for the checks that passed.
+Run the applicable checks below and the Verify steps in every selected guide. Replace `REPLACE_WITH_YOUR_HOST` in every command below with your own host before running anything. The placeholder is deliberate: an earlier version used `example.com`, which resolves and serves HTTPS, so check 3 succeeded for every reader whatever state their deployment was in. A name that does not resolve fails visibly instead. Record each result as pass, fail, untested, or not applicable, with evidence or a reason; report a control as verified only for the checks that passed.
 
 1. No plaintext listener on a public interface: `ss -tlnp` (Linux) shows nothing bound to `0.0.0.0` or a public address on a plain HTTP port, except a listener whose only job is to redirect to HTTPS.
-2. Where HTTP is offered, the redirect works: `curl -sI http://example.com/` returns `301` or `308` (the preferred permanent redirects), or `302`/`307` where a framework issues them, always with a `Location: https://...` header.
-3. TLS works: `curl -sI https://example.com/` succeeds without `-k`.
-4. Old protocols are refused: `openssl s_client -connect example.com:443 -tls1_1` fails to negotiate (TLS 1.2 is the minimum everywhere in these guides). Confirm the refusal came from the server and not from your own client: a local OpenSSL build, or a `MinProtocol` setting in its configuration, can refuse TLS 1.1 before any offer is sent, which looks identical. Check that your client can still offer TLS 1.1 at all, or use an external scanner that does.
+2. Where HTTP is offered, the redirect works: `curl -sI http://REPLACE_WITH_YOUR_HOST/` returns `301` or `308` (the preferred permanent redirects), or `302`/`307` where a framework issues them, always with a `Location: https://...` header.
+3. TLS works: `curl -sI https://REPLACE_WITH_YOUR_HOST/` succeeds without `-k`.
+4. Old protocols are refused: `openssl s_client -connect REPLACE_WITH_YOUR_HOST:443 -tls1_1` fails to negotiate (TLS 1.2 is the minimum everywhere in these guides). Confirm the refusal came from the server and not from your own client: a local OpenSSL build, or a `MinProtocol` setting in its configuration, can refuse TLS 1.1 before any offer is sent, which looks identical. Check that your client can still offer TLS 1.1 at all, or use an external scanner that does.
 5. Authentication is enforced: an unauthenticated request to any non-public path returns `401`, `403`, or a login redirect, never data. Test the API paths as well as the home page.
 6. No default credentials remain, and no secret (password, key, token, certificate private key) is committed to the repository. Scan before pushing, for example with gitleaks.
 7. Where ACME is used, renewal is automated: `sudo certbot renew --dry-run` passes AND something is actually scheduled to run it. The dry run proves the command works, not that it will ever be invoked, so check the scheduler too: `systemctl list-timers` shows an active certbot timer with a next run, or the packaged cron entry is present. Servers that manage renewal themselves (Caddy, Traefik) need no timer; confirm a completed renewal in their logs instead.
@@ -216,7 +216,7 @@ Sources for these checks are listed in [README.sources.md](README.sources.md), n
 
 ## Scope and currency
 
-The guides use placeholders that you must replace: `example.com` and `app.example.com` for names, `203.0.113.10` for an address in a configuration value, and `REPLACE_WITH_A_NAME` wherever leaving the placeholder in place would otherwise look like a passing check, in which case the check should also reject the unsubstituted value rather than trust it to fail. Configuration syntax was checked against the vendor documentation cited in each guide as of September 2026; directives and dashboard menu locations change, so verify version-specific items against the current documentation for your installed version. Each guide lists its sources.
+The guides use placeholders that you must replace. `example.com` and `app.example.com` stand in for a name, and `203.0.113.10` for an address, wherever the value is configuration or illustration and a wrong one fails visibly. Where leaving the placeholder in place would instead look like a passing check, the guides use a `REPLACE_WITH_A_NAME` form and the check itself rejects the unsubstituted value rather than trusting it to fail. The verification checklist above uses that second form for exactly that reason. Configuration syntax was checked against the vendor documentation cited in each guide as of September 2026; directives and dashboard menu locations change, so verify version-specific items against the current documentation for your installed version. Each guide lists its sources.
 
 Scope: deployment exposure, including TLS, human and machine authentication, MFA, access restrictions, secrets, and inbound and outbound network access, from first deployment through teardown. General application security, including injection, deserialization, and business logic flaws, belongs to the OWASP resources linked throughout the guides. To propose a tool or guide, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -1383,15 +1383,15 @@ Vercel's protection guards a deployment from the public; it is not your applicat
 ## Verify
 
 ```bash
-ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "$ip" in
-  REPLACE_WITH_*) echo "NOT SUBSTITUTED: put your own address in ip= above, or this proves nothing" ;;
-esac
-curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
-  -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$ip:3000/"
 # origin direct. Read err, not the number: it must name a refusal or timeout reaching YOUR address.
 # An HTTP code means the origin answered. A resolver failure, a local socket error, or a timeout
 # that did not come from the remote address is inconclusive, never a pass.
+probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
+case "$probe_ip" in
+  REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
+       -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$probe_ip:3000/" ;;
+esac
 curl -sI https://app.example.com/                       # via proxy, no session: 302 to the IdP, or 401/403
 curl -s -H "x-amzn-oidc-identity: admin" \
      -H "X-MS-CLIENT-PRINCIPAL-NAME: admin" \
@@ -1634,18 +1634,18 @@ oauth2-proxy's MFA is whatever its OIDC/OAuth provider enforces; Pomerium's is w
 
 ```bash
 ss -tlnp | grep 3000                          # app on 127.0.0.1 only
-ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "$ip" in
-  REPLACE_WITH_*) echo "NOT SUBSTITUTED: put your own address in ip= above, or these prove nothing" ;;
-esac
 # both must be unreachable. Read err, not the number: it must name a refusal or timeout reaching
 # YOUR address. An HTTP code means the app answered. A resolver failure, a local socket error, or a
 # timeout that did not come from the remote address is inconclusive, never a pass.
-curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
-  -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$ip:3000/"
-curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
-  -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-  -H 'X-Auth-Request-User: admin' "http://$ip:3000/"             # forged header, straight at the app
+probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
+case "$probe_ip" in
+  REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
+       -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$probe_ip:3000/"
+     curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
+       -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+       -H 'X-Auth-Request-User: admin' "http://$probe_ip:3000/" ;;   # forged header, straight at the app
+esac
 curl -sI https://app.example.com/             # no session: redirected to the sign-in page, or a 401
 ```
 
@@ -6295,15 +6295,15 @@ MFA: Ollama has no login of its own, so a second factor can only come from the f
 
 ```bash
 ss -tlnp | grep 11434                                  # 127.0.0.1 only
-ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "$ip" in
-  REPLACE_WITH_*) echo "NOT SUBSTITUTED: put your own address in ip= above, or this proves nothing" ;;
-esac
-curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
-  -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$ip:11434/api/tags"
 # from another machine. Read err, not the number: it must name a refusal or timeout reaching YOUR
 # address. An HTTP code means the port answered. A resolver failure, a local socket error, or a
 # timeout that did not come from the remote address is inconclusive, never a pass.
+probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
+case "$probe_ip" in
+  REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
+       -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$probe_ip:11434/api/tags" ;;
+esac
 curl -s https://ollama.example.com/api/tags            # 401 without credentials
 curl -su admin https://ollama.example.com/api/tags     # model list with credentials
 ```
@@ -6936,15 +6936,15 @@ MFA: MCP has no login dialogue of its own. Under Option A, MFA is whatever the a
 ```bash
 ss -tlnp | grep 3000                                   # 127.0.0.1:3000 only, never 0.0.0.0 or ::
 # From another host: refused at the origin, or answered only by the fronting layer.
-ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "$ip" in
-  REPLACE_WITH_*) echo "NOT SUBSTITUTED: put your own address in ip= above, or this proves nothing" ;;
-esac
-curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
-  -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$ip:3000/mcp"
 # read err, not the number: it must name a refusal or timeout reaching YOUR address. An HTTP code
 # means the port answered. A resolver failure, a local socket error, or a timeout that did not come
 # from the remote address is inconclusive, never a pass.
+probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
+case "$probe_ip" in
+  REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
+       -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$probe_ip:3000/mcp" ;;
+esac
 
 # Unauthenticated initialize: 401 with a WWW-Authenticate header (Option A) or the proxy's 401 (Option B).
 curl -si -X POST https://mcp.example.com/mcp \
@@ -7369,17 +7369,17 @@ strict_password_checking: true
 
 ```bash
 ss -tlnp | grep -E '8188|7860|9090'                 # each service on 127.0.0.1 only
-ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "$ip" in
-  REPLACE_WITH_*) echo "NOT SUBSTITUTED: put your own address in ip= above, or these prove nothing" ;;
-esac
 # each must be unreachable from another host. Read err, not the number: it must name a refusal or
 # timeout reaching YOUR address. An HTTP code means the port answered. A resolver failure, a local
 # socket error, or a timeout that did not come from the remote address is inconclusive.
-for p in 8188 7860 9090; do                                   # ComfyUI, SD WebUI, InvokeAI
-  curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
-    -w "port=$p http=%{http_code} exit=%{exitcode} err=%{errormsg}\n" "http://$ip:$p/"
-done
+probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
+case "$probe_ip" in
+  REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+  *) for p in 8188 7860 9090; do                              # ComfyUI, SD WebUI, InvokeAI
+       curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
+         -w "port=$p http=%{http_code} exit=%{exitcode} err=%{errormsg}\n" "http://$probe_ip:$p/"
+     done ;;
+esac
 curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:9090/api/v1/boards/
                                                        # from the host itself, InvokeAI multiuser mode: 401
                                                        # without a Bearer token, never the app itself
@@ -7496,15 +7496,15 @@ The documented quickstart itself runs `docker run ... -p 3000:3000 ... openhands
 
 ```bash
 ss -tlnp | grep -E '3001|3210|3000'                    # each UI on 127.0.0.1 only
-ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "$ip" in
-  REPLACE_WITH_*) echo "NOT SUBSTITUTED: put your own address in ip= above, or this proves nothing" ;;
-esac
-curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
-  -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$ip:3210/"
 # from another host. Read err, not the number: it must name a refusal or timeout reaching YOUR
 # address. An HTTP code means the port answered. A resolver failure, a local socket error, or a
 # timeout that did not come from the remote address is inconclusive, never a pass.
+probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
+case "$probe_ip" in
+  REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
+       -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$probe_ip:3210/" ;;
+esac
 curl -s https://chat.example.com/api/some-endpoint      # without a key/token: 401
 curl -sI https://chat.example.com/                      # via the proxy: TLS, login required
 # LobeChat SSO: attempt to register/sign in with a Google account that has never registered and is

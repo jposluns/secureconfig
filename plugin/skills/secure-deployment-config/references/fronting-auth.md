@@ -115,18 +115,18 @@ oauth2-proxy's MFA is whatever its OIDC/OAuth provider enforces; Pomerium's is w
 
 ```bash
 ss -tlnp | grep 3000                          # app on 127.0.0.1 only
-ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "$ip" in
-  REPLACE_WITH_*) echo "NOT SUBSTITUTED: put your own address in ip= above, or these prove nothing" ;;
-esac
 # both must be unreachable. Read err, not the number: it must name a refusal or timeout reaching
 # YOUR address. An HTTP code means the app answered. A resolver failure, a local socket error, or a
 # timeout that did not come from the remote address is inconclusive, never a pass.
-curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
-  -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$ip:3000/"
-curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
-  -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-  -H 'X-Auth-Request-User: admin' "http://$ip:3000/"             # forged header, straight at the app
+probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
+case "$probe_ip" in
+  REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
+       -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$probe_ip:3000/"
+     curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
+       -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+       -H 'X-Auth-Request-User: admin' "http://$probe_ip:3000/" ;;   # forged header, straight at the app
+esac
 curl -sI https://app.example.com/             # no session: redirected to the sign-in page, or a 401
 ```
 
