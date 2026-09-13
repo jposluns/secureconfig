@@ -8,7 +8,8 @@ Tailscale gives the same no-open-inbound-ports posture as [cloudflare.md](cloudf
 tailscale serve --bg localhost:3000
 ```
 
-- Reachable only by devices in your tailnet, so access is authenticated by device identity and your tailnet ACLs.
+- Traffic **through this proxy** is reachable only by devices in your tailnet, so that path is authenticated by device identity and your tailnet ACLs. `serve` does not change how the application binds, though: an application still listening on `0.0.0.0:3000` keeps answering its LAN or VPC address directly, past the tailnet.
+- Bind the fronted application to `127.0.0.1:3000` so the tailnet is the only way in.
 - HTTPS uses an automatically provisioned TLS certificate for the machine's tailnet name.
 - `--bg` keeps it running in the background; without it, the share stops with the session.
 
@@ -31,6 +32,11 @@ Serve for anything private (most things). Funnel or [cloudflare.md](cloudflare.m
 ## 4. Verify
 
 ```bash
+ss -tlnp 'sport = :3000'                          # ss's own filter, not a grep: the address column
+                                                  # must read 127.0.0.1:3000, never 0.0.0.0:3000 or [::]:3000
+curl -s -o /dev/null --connect-timeout 5 --max-time 10 \
+  -w 'http=%{http_code} time_connect=%{time_connect}\n' http://10.0.0.5:3000/
+# the host's own LAN or VPC address. An HTTP status here means the app answers past the tailnet; time_connect at 0.000000 means nothing connected
 tailscale serve status
 curl -sI https://host.tailnet.ts.net/            # from a tailnet device: works
 # From a non-tailnet network: serve URL unreachable; funnel URL reachable, so its app login must gate it.
@@ -40,3 +46,4 @@ curl -sI https://host.tailnet.ts.net/            # from a tailnet device: works
 
 - Tailscale serve: https://tailscale.com/kb/1242/tailscale-serve
 - Tailscale funnel: https://tailscale.com/kb/1223/funnel
+- ss(8), the `sport` filter expression used above: https://manpages.ubuntu.com/manpages/noble/en/man8/ss.8.html
