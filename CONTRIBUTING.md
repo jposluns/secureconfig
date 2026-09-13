@@ -26,6 +26,23 @@ This repository covers deployment exposure: TLS, authentication, MFA, secret han
 
    Never use `exit` for this: a reader pasting into an interactive shell would lose the session. Add `--noproxy '*'` to any probe described as direct, since an `http_proxy` in the environment otherwise produces the documented pass without the address mattering, and report `err=%{errormsg}` alongside `exit=%{exitcode}` (both added in curl 7.75.0) so the reader judges the error text rather than a bare number, which certifies nothing about the remote state. Some shapes do trip an existing check, by accident rather than design: shellcheck reports SC2217 or SC2261 for a few of them, and `check_prose_conventions.py` catches a bracketed host outside the house placeholder set. That is not coverage, and three shapes are recorded as passing in `tools/test_shell_blocks.py`. Treat it as a review obligation: five successive rules were written to catch it and all five were beaten by legal shell a guide could plausibly carry, the last by an ordinary `sed` substitution, so the gate that tried was removed rather than left producing false alarms. The docstring of `tools/check_shell_blocks.py` records what each attempt lost to.
 
+## Shipping a change
+
+`VERSION` names the most recently merged pull request, as `1.0.<number>`. That number is knowable
+only once the pull request exists, so the authoring step is: open the pull request, write its number
+into `VERSION`, push, then merge. A pull request that sets its predecessor's number is stale the
+moment it lands, which is what #46 did and #47 corrected.
+
+Merge in numeric order. Where that is not possible, the later pull request sets the value, because
+the rule read literally makes the number go backwards when an older one merges last: #50 merged
+after #51 and set `1.0.50` against a `main` already at `1.0.51`. No gate enforces this; the suite
+is offline by policy and a pull request number is only knowable from outside.
+
+Record the change in `CHANGELOG.md` in the same pull request, not in a later bookkeeping one. A
+required gate checks that every merged pull request is referenced, exempting only the newest, so a
+second unrecorded merge turns the build red. Eight pull requests had gone unrecorded before that
+gate existed.
+
 ## Licence
 
 Everything here is dedicated to the public domain under [CC0 1.0](LICENSE). Submitting a contribution means dedicating it under the same terms.
