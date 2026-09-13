@@ -13,11 +13,11 @@ Defaults below describe the vendor examples checked on 2026-09-13. A **host publ
 | SearxNG, direct | Application: `127.0.0.1:8888` | None | No container publication in this form | `server.bind_address` and `server.port` in `settings.yml` | [Front it](fronting-auth.md) |
 | SearxNG, documented Docker run | All host interfaces, `8888:8080` | None | No other mapping in the cited run | Replace with `127.0.0.1:8888:8080`, or publish nothing | [Front it](fronting-auth.md) |
 | LocalAI, documented Docker run | All host interfaces, `8080:8080` | Off: native key is unset | No additional publications established by the verified record | Replace with `127.0.0.1:8080:8080`, or publish nothing | Set `LOCALAI_API_KEY`; `LOCALAI_AUTH=true` enables multi-user OAuth with per-user keys |
-| Text Embeddings Inference, documented Docker run | All host interfaces, `8080:80` | Off: `--api-key` / `API_KEY` is unset, and the server then answers every request | Nothing else in the cited run; the metrics listener on `--prometheus-port`, default `9000`, is a second listener it does not publish | Replace with `127.0.0.1:8080:80`, or publish nothing | Set `--api-key` or `API_KEY`, and keep the metrics listener off the host |
+| Text Embeddings Inference, documented Docker run | All host interfaces, `8080:80` | Partial: `--api-key` / `API_KEY` is unset by default, and even when set it covers the inference routes only | On the same port, outside the key: `/`, `/health`, `/ping`, `/metrics`, `/docs`, `/api-doc/openapi.json`. Separately, a metrics listener on `--prometheus-port`, default `9000` | Replace with `127.0.0.1:8080:80`, or publish nothing | Set `--api-key` or `API_KEY`, and front the service, because the key alone leaves the routes above open |
 | LangServe, quickstart | Application: `localhost:8000` | None supplied; the application author provides authentication | No container publication in this form | `host=` in `uvicorn.run` | FastAPI dependencies, or [front it](fronting-auth.md) |
 | Mem0, server Compose | Application: `0.0.0.0:8000` inside the container; all host interfaces, `8888:8000` | On: bearer JWT, per-user `X-API-Key`, or legacy admin key | PostgreSQL `8432:5432`; dashboard `3000:3000`, both on all host interfaces | Remove PostgreSQL's publication; remove or loopback-scope API and dashboard mappings | Keep authentication enabled; do not set `AUTH_DISABLED=true` |
 | Onyx, production Compose | nginx host publications `80:80` and `443:443` | On: email/password | Backing services have no host publications | Keep backing services unpublished; configure the intended TLS ingress | Keep the built-in login; `AUTH_TYPE` is inert since v4.4.0 |
-| Onyx, development Compose | API host publication `8080:8080`, on all interfaces | On at the application | PostgreSQL `5432:5432`, OpenSearch `9200:9200`, inference `9000:9000`, Redis `6379:6379`, MinIO `9004:9000` and `9005:9001`, code interpreter `8000:8000`; all on every host interface | Use production Compose, or remove every unnecessary publication from the effective configuration | Application login does not protect these backing ports |
+| Onyx, development Compose | nginx `80:80` and `3000:80` from the base file, plus API `8080:8080` from the override; all on every host interface | On at the application | PostgreSQL `5432:5432`, OpenSearch `9200:9200`, inference `9000:9000`, Redis `6379:6379`, MinIO `9004:9000` and `9005:9001`, code interpreter `8000:8000` | Use production Compose, or remove every unnecessary publication from the effective configuration | Application authentication is on; it does not reach the backing ports |
 
 ## 1. Bind privately, including every container publication
 
@@ -91,7 +91,9 @@ The documented Docker run publishes host port 8080 to container port 80. Replace
 
 There is a native inbound control, and it is off until you set it. The CLI reference documents `--api-key`, with the environment variable `API_KEY`. With no key set the server responds to every request; with one set, a request must carry the key as a bearer token in the `Authorization` header. Set it, and front the service as well, because one static key is not a user model.
 
-Two defaults compound the exposure. `--hostname` defaults to `0.0.0.0`, so the process listens on every interface inside its namespace and the publication alone decides what reaches it. `--prometheus-port` defaults to `9000`, a second listener the quick tour does not mention and the `--api-key` check does not cover. The cited Docker run does not publish it; leave it that way rather than assuming the key protects it.
+The key does not cover the whole port. In the HTTP server the key middleware is applied to the inference routes alone, and the health routes `/`, `/health` and `/ping`, the Prometheus route `/metrics`, and the OpenAPI surface `/docs` and `/api-doc/openapi.json` are merged into the same application beside that layer rather than beneath it. They answer anonymously on the published port with a key set. Read `/metrics` yourself before deciding that is acceptable: it reports model identity and request volumes. Checked against v1.9.0; treat it as version-specific and re-read for your own version.
+
+Two defaults compound it. `--hostname` defaults to `0.0.0.0`, so the process listens on every interface inside its namespace and the publication alone decides what reaches it. `--prometheus-port` defaults to `9000`, a second listener the quick tour does not mention. Leaving that port unpublished does not remove `/metrics` from the application listener, so treat the two as separate exposures and close both.
 
 Do not assume a token used to download a model authenticates incoming embedding requests.
 
@@ -109,9 +111,9 @@ A PostgreSQL password prompt does not fix this deployment boundary. The database
 
 ### Mem0
 
-Keep authentication on. Protected API endpoints accept a bearer JWT from the dashboard login flow or an `X-API-Key` header. Per-user keys have the `m0sk_` prefix; the legacy `ADMIN_API_KEY` is also supported. Do not leave `AUTH_DISABLED=true` in a deployed environment. The server logs a warning at startup when it is enabled, and another when `ADMIN_API_KEY` is shorter than 16 characters, and neither warning stops the start.
+Keep authentication on. Protected API endpoints accept a bearer JWT from the dashboard login flow or an `X-API-Key` header. Per-user keys have the `m0sk_` prefix; the legacy `ADMIN_API_KEY` is also supported. Do not leave `AUTH_DISABLED=true` in a deployed environment. The server logs a warning at startup when it is enabled, and a different one when authentication is on and `ADMIN_API_KEY` is shorter than 16 characters. The two are alternatives on one `if`/`elif`, so enabling `AUTH_DISABLED` suppresses the short-key warning rather than adding to it, and neither stops the start.
 
-`JWT_SECRET` is not optional. The documented `server/.env` sets it beside `OPENAI_API_KEY`, generated with `openssl rand -base64 48`, and the JWTs that carry a dashboard session are signed with it.
+`JWT_SECRET` is not optional, and the server enforces it: with authentication on and no secret set it raises at startup and refuses to run. The documented `server/.env` sets it beside `OPENAI_API_KEY`, generated with `openssl rand -base64 48`, and the JWTs that carry a dashboard session are signed with it. Note what that enforcement implies: the only way to start this server without a signing secret is to turn authentication off altogether.
 
 Register the first admin before the deployment is reachable from anywhere but the host. `POST /auth/register` succeeds only while no user exists and returns `403` afterwards, so an instance published before that call hands admin to whoever finds it first. Bootstrap it on the host, either with `make bootstrap` from `server/`, which starts Compose, creates the admin, and issues the first API key, or through the setup wizard while the dashboard is still host-only. The `/` redirect, `/docs`, and `/openapi.json` stay open in every configuration, so reaching one of those proves nothing about the protected endpoints.
 
@@ -133,13 +135,15 @@ Use `deployment/docker_compose/docker-compose.prod.yml` as the production deploy
 
 The first user to sign up becomes an admin. Complete that sign-up while the deployment is still reachable only from the host, because until it happens the login page is an admin-enrolment form for whoever reaches it first.
 
-If the development file is running, remove the API publication and every backing publication listed in the table, except any deliberately retained loopback access. The six backing services account for seven host ports because MinIO publishes both its API and console. The API's 8080 publication is additional.
+`docker-compose.dev.yml` is an override, not a standalone file. Its own header gives the launch form as `docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --wait`, so the effective configuration is the base file plus the override, and the base file publishes nginx on `${HOST_PORT_80:-80}:80` and `${HOST_PORT:-3000}:80`. Enumerate the merged result, not the override alone: an inventory taken from the override misses two published ports.
+
+If the development file is running, remove the API publication and every backing publication listed in the table, except any deliberately retained loopback access. The six backing services account for seven host ports because MinIO publishes both its API and console. The API's 8080 publication is additional, and nginx's two come from the base file.
 
 The development mappings include expressions such as `${POSTGRES_HOST_PORT:-5432}:5432`. Setting `POSTGRES_HOST_PORT` changes the host port. Leaving it empty selects the default. Neither action removes the publication. The same trap appears in Dify's plugin-daemon mapping in [agent-builders.md](agent-builders.md).
 
 Email/password authentication is already enabled. `AUTH_TYPE` has had no effect since v4.4.0; the September 2026 documentation says removal is planned for v4.5. Do not set it expecting to change authentication.
 
-The Docker documentation also describes access at `localhost:3000`. That access URL does not establish the web process's listening address. Its bind is **unverified in the supplied record**; include any running web process in the inventory rather than treating that URL as proof of a private bind.
+The Docker documentation also describes access at `localhost:3000`. That is now established from the base Compose file rather than inferred: host 3000 maps to nginx's container port 80, and `web_server` carries no host publication of its own. So `localhost:3000` reaches nginx, not the web process directly, and the web process is not separately published.
 
 For backing-service controls, see [postgresql.md](postgresql.md), [redis.md](redis.md), [minio.md](minio.md), and the OpenSearch material in [elasticsearch.md](elasticsearch.md). Those controls complement removing unnecessary publications.
 
@@ -153,7 +157,7 @@ Machine clients need separate credentials, with the narrowest permissions the ap
 
 **Demonstration status:** the placeholder guards and the placeholder-scan discrimination were exercised locally. Checks 2 to 7 below are **reasoned rather than demonstrated** against deployments. No container runtime, live service, external network vantage, TLS exchange, or browser authentication flow was exercised while authoring. The maintainer's verified vendor record supplies the deployment facts.
 
-Use Bash for these blocks and curl 7.75.0 or newer for `exitcode` and `errormsg`. Copy each complete block, including the enclosing parentheses. The values go on the `set --` line, so no named variable is exposed to attributes or values the reader's shell already holds, and every probe sits behind a guard that leaves the subshell rather than running on an unsubstituted value. Substitute inside the single quotes and leave them in place. They are what keeps a URL's `&` from backgrounding the line and a `$(...)` or a backtick in a pasted value from running: the shell evaluates that value before any guard in the block can see it.
+Use Bash for these blocks and curl 7.75.0 or newer for `exitcode` and `errormsg`. Copy each complete block, including the enclosing parentheses. The values go on the `set --` line, so no named variable is exposed to attributes or values the reader's shell already holds, and every probe sits behind a guard that leaves the subshell rather than running on an unsubstituted value. Substitute inside the single quotes and leave them in place. They are what keeps a URL's `&` from backgrounding the line and a `$(...)` or a backtick in a pasted value from running: the shell evaluates that value before any guard in the block can see it. Keep the quotes even for an empty value, and paste every block whole: each one counts its own values and refuses to run if the `set --` line is missing or short, because a block pasted without it would otherwise read whatever arguments your own shell already held.
 
 ### 1. Reject unfinished configuration and probe values
 
@@ -161,8 +165,10 @@ Run this for each configuration or environment file you edited:
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
-  set -- 'REPLACE_WITH_EDITED_CONFIG_FILE'
-  case "${1-}" in
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_EDITED_CONFIG_FILE'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not checking"; exit; }
+  shift
+  case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the file name on the set -- line above; not checking" ;;
     *) grep -nH -o 'REPLACE_WITH_[[:alnum:]_]*' -- "$1"
        printf 'grep_exit=%s\n' "$?" ;;
@@ -202,10 +208,12 @@ A Compose error, missing service, stopped application, or empty inventory is not
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
-  set -- 'REPLACE_WITH_HOST_ADDRESS' 'REPLACE_WITH_PORT'
-  case "${1-}:${2-}" in
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HOST_ADDRESS' 'REPLACE_WITH_PORT'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  case "$1:$2" in
     *REPLACE_WITH_*|:*|*:) echo "substitute the address and port on the set -- line above; not probing" ;;
-    *) curl -q -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+    *) curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
          -w 'http=%{http_code} exit=%{exitcode} remote=%{remote_ip} time_connect=%{time_connect} err=%{errormsg}\n' \
          "http://$1:$2/" ;;
   esac
@@ -222,12 +230,14 @@ A timeout alone is inconclusive. `http=000` can occur after a server accepts and
 
 **Reasoned, not demonstrated.** From another host, run this for every private port found in check 2, including the application's ports from check 3.
 
-For the unchanged vendor examples, Mem0 adds 8432 and 3000 beside API port 8888. Onyx development adds 5432, 9200, 9000, 6379, 9004, 9005, and 8000 beside API port 8080. Environment variables can move these ports; the running inventory is the authority.
+For the unchanged vendor examples, Mem0 adds 8432 and 3000 beside API port 8888. Onyx development adds 5432, 9200, 9000, 6379, 9004, 9005, and 8000 beside API port 8080, and nginx contributes 80 and 3000 from the base file. Environment variables can move these ports; the running inventory is the authority.
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
-  set -- 'REPLACE_WITH_HOST_ADDRESS' 'REPLACE_WITH_PORT'
-  case "${1-}:${2-}" in
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HOST_ADDRESS' 'REPLACE_WITH_PORT'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  case "$1:$2" in
     *REPLACE_WITH_*|:*|*:) echo "substitute the address and port on the set -- line above; not probing" ;;
     *) nc -vz -w 5 "$1" "$2"
        printf 'exit=%s\n' "$?" ;;
@@ -247,28 +257,30 @@ A timeout remains inconclusive without corroborating configuration and filtering
 
 Do not choose a health endpoint, documentation page, login page, or an invented path. A `404` or request-validation error cannot demonstrate authentication.
 
-Set the second value on the `set --` line to the actual method, such as `GET` or `POST`. Leave the third value empty for a request without a body; otherwise put a harmless JSON test body there.
+Set the second value on the `set --` line to the actual method, such as `GET` or `POST`. Keep the third value's empty quotes for a request without a body; otherwise put a harmless JSON test body there.
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
-  set -- 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' ''
-  # $3 is the harmless JSON request body. Leave it empty for a request that needs none.
-  if [ -z "${1-}" ] || [ -z "${2-}" ]; then
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' ''
+  # $3 is the harmless JSON request body. Keep the empty quotes if the request needs none.
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  if [ -z "$1" ] || [ -z "$2" ]; then
     echo "fill in the URL and method on the set -- line above; not probing"; exit
   fi
-  case "$1$2" in
+  case "$1$2$3" in
     *REPLACE_WITH_*) echo "substitute the request values on the set -- line above; not probing"; exit ;;
   esac
   case "$1" in
     https://*) ;;
     *) echo "use a https:// URL; not probing"; exit ;;
   esac
-  if [ -n "${3-}" ]; then
+  if [ -n "$3" ]; then
     set -- -H 'Content-Type: application/json' --data-binary "$3" -X "$2" "$1"
   else
     set -- -X "$2" "$1"
   fi
-  curl -q -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$@"
 )
 ```
@@ -287,24 +299,26 @@ For SearxNG, for LangServe relying entirely on its proxy, or for any service you
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
-  set -- 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' ''
-  # $3 is the same harmless JSON body as checks 5 and 7. Leave it empty for a request that needs none.
-  if [ -z "${1-}" ] || [ -z "${2-}" ]; then
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' ''
+  # $3 is the same harmless JSON body as checks 5 and 7. Keep the empty quotes if none is needed.
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  if [ -z "$1" ] || [ -z "$2" ]; then
     echo "fill in the URL and method on the set -- line above; not probing"; exit
   fi
-  case "$1$2" in
+  case "$1$2$3" in
     *REPLACE_WITH_*) echo "substitute the request values on the set -- line above; not probing"; exit ;;
   esac
   case "$1" in
     http://*|https://*) ;;
     *) echo "use an http:// or https:// URL; not probing"; exit ;;
   esac
-  if [ -n "${3-}" ]; then
+  if [ -n "$3" ]; then
     set -- -H 'Content-Type: application/json' --data-binary "$3" -X "$2" "$1"
   else
     set -- -X "$2" "$1"
   fi
-  curl -q -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$@"
 )
 ```
@@ -325,24 +339,26 @@ The header below is reader-supplied. For a configured bearer-token proxy it is `
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
-  set -- 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' '' 'REPLACE_WITH_HEADER_NAME: REPLACE_WITH_CREDENTIAL'
-  # $3 is the same harmless JSON body as the anonymous check. Leave it empty for a request that needs none.
-  if [ -z "${1-}" ] || [ -z "${2-}" ] || [ -z "${4-}" ]; then
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' '' 'REPLACE_WITH_HEADER_NAME: REPLACE_WITH_CREDENTIAL'
+  # $3 is the same harmless JSON body as the anonymous check. Keep the empty quotes if none is needed.
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  if [ -z "$1" ] || [ -z "$2" ] || [ -z "$4" ]; then
     echo "fill in the URL, method, and header on the set -- line above; not probing"; exit
   fi
-  case "$1$2$4" in
+  case "$1$2$3$4" in
     *REPLACE_WITH_*) echo "substitute the request values on the set -- line above; not probing"; exit ;;
   esac
   case "$1" in
     https://*) ;;
     *) echo "use a https:// URL; not probing"; exit ;;
   esac
-  if [ -n "${3-}" ]; then
+  if [ -n "$3" ]; then
     set -- -H 'Content-Type: application/json' --data-binary "$3" -H "$4" -X "$2" "$1"
   else
     set -- -H "$4" -X "$2" "$1"
   fi
-  curl -q -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$@"
 )
 ```
@@ -380,13 +396,15 @@ The service facts come from the maintainer's vendor-source verification record d
 - [LocalAI getting started](https://localai.io/docs/basics/getting_started/): port 8080, Docker publication, `LOCALAI_API_KEY`, and `LOCALAI_AUTH`.
 - [Text Embeddings Inference quick tour](https://huggingface.co/docs/text-embeddings-inference/en/quick_tour): container port 80 and host publication 8080.
 - [Text Embeddings Inference CLI arguments](https://huggingface.co/docs/text-embeddings-inference/en/cli_arguments): `--api-key` and `API_KEY`, the default-open behaviour without one, `--hostname` defaulting to `0.0.0.0`, and `--prometheus-port` defaulting to `9000`.
+- [Text Embeddings Inference HTTP server at v1.9.0](https://github.com/huggingface/text-embeddings-inference/blob/v1.9.0/router/src/http/server.rs): the key middleware applied to the inference routes only, with the health, `/metrics` and OpenAPI routes merged beside it.
 - [LangServe README at commit `27e57af`](https://github.com/langchain-ai/langserve/blob/27e57afeda13007a7f4e007c5d1f5e8489963aa4/README.md): quickstart bind, application authentication responsibility, deprecation on 2024-11-18, and successor.
 - [Mem0 REST API](https://docs.mem0.ai/open-source/features/rest-api): authentication enabled by default, JWTs, `X-API-Key`, `m0sk_` keys, `ADMIN_API_KEY`, `AUTH_DISABLED` and its startup warning, `JWT_SECRET`, `make bootstrap`, the first-admin `POST /auth/register`, and the routes that stay open.
 - [Mem0 server Compose](https://github.com/mem0ai/mem0/blob/c7ee362aff94a369af70f13f2b4f853f6793ff4c/server/docker-compose.yaml): uvicorn command and API, PostgreSQL, and dashboard publications.
 - [Onyx basic authentication](https://docs.onyx.app/deployment/authentication/basic.md): email/password authentication, the first user to sign up becoming an admin, and inert `AUTH_TYPE`.
 - [Onyx local Docker deployment](https://docs.onyx.app/deployment/local/docker.md): documented access at `localhost:3000`.
 - [Onyx production Compose](https://github.com/onyx-dot-app/onyx/blob/a0370f232ba4e4625131fae518b86e5530e98ec5/deployment/docker_compose/docker-compose.prod.yml): nginx-only host publications.
-- [Onyx development Compose](https://github.com/onyx-dot-app/onyx/blob/a0370f232ba4e4625131fae518b86e5530e98ec5/deployment/docker_compose/docker-compose.dev.yml): API and backing-service publications.
+- [Onyx development Compose](https://github.com/onyx-dot-app/onyx/blob/a0370f232ba4e4625131fae518b86e5530e98ec5/deployment/docker_compose/docker-compose.dev.yml): API and backing-service publications, and its own header naming the two-file launch form.
+- [Onyx base Compose](https://github.com/onyx-dot-app/onyx/blob/a0370f232ba4e4625131fae518b86e5530e98ec5/deployment/docker_compose/docker-compose.yml): nginx publishing `${HOST_PORT_80:-80}:80` and `${HOST_PORT:-3000}:80`, and `web_server` carrying no host publication.
 - [Docker packet filtering and firewalls](https://docs.docker.com/engine/network/packet-filtering-firewalls/): published ports and firewall interaction.
 - [Compose networking](https://docs.docker.com/compose/how-tos/networking/): communication between services without host publication.
 - [Compose merge rules](https://docs.docker.com/reference/compose-file/merge/): merged port lists and `!reset`.

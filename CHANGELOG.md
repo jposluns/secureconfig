@@ -55,6 +55,26 @@ with the merged pull request is therefore an authoring obligation, not an enforc
   a `readonly` variable in the reader's shell defeats. Three `curl` invocations went the same way,
   sitting on indented continuation lines the sweep's line-anchored pattern never matched, and have
   gained the `-q` the rest of the corpus carries.
+- The guard's seventh bypass, found by round-2 review after the sixth was fixed in the same change
+  (#60). A block pasted without its `set --` line inherits whatever positional parameters the
+  reader's shell already held, and a stale pair from an earlier experiment satisfies every check the
+  guard makes, so the probe fires at the old target and its refusal is read as this target's
+  evidence. Counting the values does not close it, because a shell holding the expected number
+  passes the count; that was measured against the first fix, which is why the fix that shipped is a
+  sentinel the block sets and shifts away. The whole historical bypass set was re-run against the
+  sentinel rather than reasoned about: unsubstituted placeholder, stale-positional partial paste,
+  `readonly`, `declare -i`, an exported value, `IFS`, caller arguments present, and a placeholder
+  embedded in a longer value, across bash, dash and BusyBox ash under `set -u`. Two limits are now
+  stated rather than papered over: a shell whose `set` has been shadowed defeats every guard at
+  once, and a value containing an apostrophe cannot be carried inside the quotes.
+- The Onyx development-form port inventory, which was short by two published ports (#60).
+  `docker-compose.dev.yml` is an override, and its own header gives the launch form as
+  `docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --wait`, so the effective
+  configuration includes the base file, which publishes nginx on `${HOST_PORT_80:-80}:80` and
+  `${HOST_PORT:-3000}:80`. A reader probing exactly the ports this guide enumerated would have read
+  "Fixed" with two ports still published. The same file settles a question this guide had recorded
+  as unverified: host 3000 reaches nginx's container port 80, and `web_server` carries no host
+  publication of its own.
 - Eight band-1 errors across eight guides (#45), closing `TODO.md` band 1 to empty. Each was a
   guide asserting something false or a Verify step that could not discriminate: a missing
   `--cacert` that made an Elasticsearch check die on TLS rather than answer; a Tailscale claim that
@@ -124,6 +144,13 @@ with the merged pull request is therefore an authoring obligation, not an enforc
   marked at the step as reasoned rather than demonstrated; an unmarked step still claims a
   demonstration, so omitting the mark is itself a breach. Rule 6's prose had contradicted its own
   example ever since the guard became positional, and now gives the real reason for that form.
+- Rule 5's reasoned-check allowance, narrowed the same day it was added (#60). Two review families
+  independently reported that the first wording let an author mark anything reasoned. A reasoned
+  step must now name the specific prerequisite that was unavailable, give the concrete command,
+  state the expected exposed and fixed outcomes, and cite the vendor passage that distinguishes
+  them; every locally feasible part is still run; a container on ordinary hardware is not
+  impractical to stand up; and each reasoned mark opens a backlog row, because reasoned is a debt,
+  not a destination.
 
 ### Records
 

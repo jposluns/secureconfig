@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.45**, **2.24**, **3.11**, **4.5**.
+Next ids: **1.45**, **2.24**, **3.12**, **4.5**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -99,6 +99,7 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
+| 3.11 | Gate the two guard conventions that nothing enforces. Round-2 QA mutated both and the whole suite passed: a `curl` in a fenced block with no `-q`, and a guard that prints its warning then runs the probe after the `case`. Both are line-matchable, unlike the angle-bracket class rule 6 documents as un-gateable, and both are silent false-pass shapes. Wants a tripwire in the style of `check_verify_safety.py`, with its own recorded cases (H, S) | `[gap]` |
 
 ## Decisions
 
