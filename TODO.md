@@ -107,8 +107,6 @@ marked, and those are the ones worth taking first.
 | ID | Item | Tags |
 | --- | --- | --- |
 | 3.3 | Complete the `(#N)` pull-request references in `CHANGELOG.md`: PRs 3, 4, 5 and 7 are referenced nowhere, which means mapping historical bullets to the PR that shipped them (L, M) | `[changelog]` |
-| 3.4 | Changelog close-out for #35, #38, #39, #40 and re-pin `VERSION`, which is stale at 1.0.37 (M, S) | `[changelog]` |
-| 3.5 | Dispatch cross-family QA against a throwaway copy, AND re-verify every returned finding against the current file before applying it. The copy stops a reviewer reading a worktree that moves; it does nothing about a finding written against commit C being applied to C+2, where it may already be fixed, may land on moved lines, or may have had its premise removed by an unrelated change. Record the commit each review was dispatched against; discard a finding whose premise no longer holds rather than adapting it (H, XS) | `[process]` |
 
 ## Decisions on record
 
