@@ -11,7 +11,7 @@ metadata:
 # Secure deployment configuration
 
 Publicly reachable services built with AI assistance are routinely deployed on plain HTTP with no
-authentication. This skill carries 85 short guides that close that gap, one per service or
+authentication. This skill carries 86 short guides that close that gap, one per service or
 control, each line traced to the vendor page it came from.
 
 **A reader copies these configurations onto a system that faces the internet. An invented flag or
@@ -95,7 +95,7 @@ Two references answer questions rather than covering a tool:
 - `references/common-mistakes.md` is the recurring findings, each linked to its fix. Worth
   reading before a review.
 
-`references/README.md` carries the full index of all 85 guides by category, and the verification
+`references/README.md` carries the full index of all 86 guides by category, and the verification
 checklist to run at the end of a deployment.
 
 ## What this skill does not do

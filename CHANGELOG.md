@@ -28,6 +28,12 @@ with the merged pull request is therefore an authoring obligation, not an enforc
   it screens for whatever its provenance. Vendoring the upstream file is both permitted and the
   correct architecture. The file is byte-identical at this repository's pinned commit and at
   upstream main, so it needs no pin bump.
+- `ai-infra-services.md`, the 86th guide (#60). One guide covering SearxNG, LocalAI, Text Embeddings
+  Inference, LangServe, Mem0 and Onyx, closing six backlog rows. Three of those rows had premises
+  that were wrong at source: LangServe is deprecated, and Mem0 and Onyx both ship authentication on.
+  What the six share is not a missing password but that the run form decides what the network sees,
+  and it publishes more than the authentication covers. Two shapes are named: authentication absent
+  or unset, and a guarded front door with the backing store published beside it.
 
 ### Fixed
 

@@ -1,6 +1,6 @@
 # Model servers: llama.cpp, vLLM, TGI, SGLang, Triton, and LM Studio
 
-Self-hosted model servers follow the [ollama.md](ollama.md) pattern: exposing one means someone else's prompts run on your GPU. Most default to local use, but TGI and Triton bind to `0.0.0.0` out of the box, and Triton has no authentication at all. Keep every server on loopback or a private network, require an API key where the server supports one, and terminate TLS in front.
+Self-hosted model servers follow the [ollama.md](ollama.md) pattern: exposing one means someone else's prompts run on your GPU. Most default to local use, but TGI and Triton bind to `0.0.0.0` out of the box, and Triton has no authentication at all. Keep every server on loopback or a private network, require an API key where the server supports one, and terminate TLS in front. LocalAI is an OpenAI-compatible model server too, but its bind and authentication controls are documented in [ai-infra-services.md](ai-infra-services.md) rather than here, so the facts live in one place.
 
 ## llama.cpp (llama-server)
 
