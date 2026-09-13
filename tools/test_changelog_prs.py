@@ -92,12 +92,38 @@ case(
     False,
 )
 
-# A number in the middle of a subject is not a merge suffix.
+# A number in the middle of a subject is not a merge suffix. The revert shape is the
+# one with teeth: an unanchored pattern reads the quoted (#10) as a second merge, so it
+# demands an entry for a pull request that merged long ago and may sit far from newest.
 case(
     "a number mid-subject is not read as a merge",
     ["Mentions #99 in passing (#10)", "B (#11)"],
     "# Changelog\n\n- Added a thing (#10).\n",
     False,
+)
+case(
+    "a revert subject quoting an older merge does not re-open it",
+    ["A (#10)", 'Revert "A (#10)" (#25)', "C (#26)"],
+    "# Changelog\n\n- Added a thing (#10). Reverted (#25).\n",
+    False,
+)
+case(
+    "the revert case discriminates: drop #10's entry and it must fail",
+    ["A (#10)", 'Revert "A (#10)" (#25)', "C (#26)"],
+    "# Changelog\n\n- Reverted (#25).\n",
+    True,
+    "#10 merged but never referenced",
+)
+# The mutant this exists to kill: dropping the end anchor from MERGE_SUFFIX. `search`
+# returns the FIRST match, so an unanchored pattern reads the quoted (#10) and silently
+# never records the revert's own #25 as merged at all. The gate then cannot notice #25
+# is unreferenced, and reports a pass over a real gap.
+case(
+    "a revert's own number is the merge, not the number it quotes",
+    ["A (#10)", 'Revert "A (#10)" (#25)', "C (#26)"],
+    "# Changelog\n\n- Added a thing (#10). And later (#26).\n",
+    True,
+    "#25 merged but never referenced",
 )
 
 # Fail closed rather than pass vacuously.
