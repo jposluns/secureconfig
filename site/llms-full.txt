@@ -7553,7 +7553,7 @@ The address guards below likewise print `not probing` when required values are e
 
 ### 2. Inventory listeners, the merged Compose model, and running publications
 
-**Reasoned, not demonstrated** (no container runtime in the authoring environment; row 2.24 tracks demonstrating it). Run on the deployment host. For Compose, use the exact project, file selection, overrides, environment, and profiles used to start the deployment. Add those same options to these commands where needed:
+**Reasoned, not demonstrated** (no container runtime in the authoring environment; row 2.24 tracks demonstrating it). Run on the deployment host. For Compose, use the exact project, file selection, overrides, environment, and profiles used to start the deployment. Add those same options to these commands where needed. What makes an inventory readable rather than guesswork is documented: Compose ps reports the running publication fields, Compose merge rules govern how an override's port list combines with the base, and Compose networking establishes that services reach each other with no host publication at all; all three are in Sources:
 
 ```bash
 ss -tlnp
@@ -7573,7 +7573,7 @@ A Compose error, missing service, stopped application, or empty inventory is not
 
 ### 3. Probe the application's direct ports from another host
 
-**Reasoned, not demonstrated, including the cross-host vantage** (no container runtime and no second host in the authoring environment; row 2.24 tracks demonstrating it). Probe every application or dashboard port found in check 2, using its actual host port. Include reachable LAN addresses and public IPv4/IPv6 addresses; bracket an IPv6 literal used in the HTTP URL. Exclude the intentionally public TLS ingress.
+**Reasoned, not demonstrated, including the cross-host vantage** (no container runtime and no second host in the authoring environment; row 2.24 tracks demonstrating it). Probe every application or dashboard port found in check 2, using its actual host port. Include reachable LAN addresses and public IPv4/IPv6 addresses; bracket an IPv6 literal used in the HTTP URL. Exclude the intentionally public TLS ingress. The outcomes below rest on two sources: the curl manual for what its exit status, error text and timing actually report, and Docker's packet-filtering page for how a published port interacts with a host firewall, which is what makes a refusal meaningful rather than incidental.
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
@@ -7598,7 +7598,7 @@ A timeout alone is inconclusive. `http=000` can occur after a server accepts and
 
 ### 4. Probe every backing port
 
-**Reasoned, not demonstrated** (no container runtime in the authoring environment; row 2.24 tracks demonstrating it). From another host, run this for every private port found in check 2, including the application's ports from check 3.
+**Reasoned, not demonstrated** (no container runtime in the authoring environment; row 2.24 tracks demonstrating it). From another host, run this for every private port found in check 2, including the application's ports from check 3. The distinguishing authority here is the publication state itself, per Docker's packet-filtering page and Compose ps in Sources: a backing service with no host publication cannot answer from another host, so a refusal corroborated by check 2 means the boundary holds, while an answer means it does not.
 
 For the unchanged vendor examples, Mem0 adds 8432 and 3000 beside API port 8888. Onyx development adds 5432, 9200, 9000, 6379, 9004, 9005, and 8000 beside API port 8080, and nginx contributes 80 and 3000 from the base file. Environment variables can move these ports; the running inventory is the authority.
 
@@ -7624,7 +7624,7 @@ A timeout remains inconclusive without corroborating configuration and filtering
 
 ### 5. Require authentication at the ingress
 
-**Reasoned, not demonstrated** (no container runtime in the authoring environment; row 2.24 tracks demonstrating it). Select a harmless request to a real protected capability. Its path, method, request body, and exact response for each installed tool are **unverified here**. Obtain them from that version's documentation and use the same request in check 7.
+**Reasoned, not demonstrated** (no container runtime in the authoring environment; row 2.24 tracks demonstrating it). Select a harmless request to a real protected capability. Its path, method, request body, and exact response for each installed tool are **unverified here**. Obtain them from that version's documentation and use the same request in check 7. What separates the exposed outcome from the fixed one is documented per service in Sources: Text Embeddings Inference answers every request until `--api-key` is set, LocalAI's key is unset by default, and Mem0 and Onyx both ship authentication on, so an anonymous `2xx` from any of them is the exposed state and a `401` or `403` is the fixed one.
 
 Do not choose a health endpoint, documentation page, login page, or an invented path. A `404` or request-validation error cannot demonstrate authentication.
 
@@ -7665,7 +7665,7 @@ A redirect alone is insufficient: inspect its destination. Do not follow it auto
 
 ### 6. Exercise the capability without native credentials
 
-**Reasoned, not demonstrated** (no container runtime in the authoring environment; row 2.24 tracks demonstrating it). For LocalAI or Text Embeddings Inference with a key set, Mem0, Onyx, or LangServe with application authentication, run the same harmless protected request against the private upstream from a trusted location that can reach it. Do not publish a port to perform this check.
+**Reasoned, not demonstrated** (no container runtime in the authoring environment; row 2.24 tracks demonstrating it). For LocalAI or Text Embeddings Inference with a key set, Mem0, Onyx, or LangServe with application authentication, run the same harmless protected request against the private upstream from a trusted location that can reach it. Do not publish a port to perform this check. The same per-service passages in Sources supply the expected outcomes as in check 5, and one of them bounds this check rather than supporting it: the Text Embeddings Inference server source shows its key middleware covering the inference routes only, so an anonymous answer from `/metrics`, `/health` or `/docs` is not evidence that the key is unset.
 
 For SearxNG, for LangServe relying entirely on its proxy, or for any service you have deliberately left unauthenticated on the private side, run this capability check through the authenticated HTTPS ingress. An intentionally unauthenticated private upstream cannot demonstrate native authentication.
 
@@ -7706,7 +7706,7 @@ Mem0 and Onyx ship authentication on, but the verified record does not establish
 
 ### 7. Prove the protected service still works
 
-**Reasoned, not demonstrated** (no container runtime in the authoring environment; row 2.24 tracks demonstrating it). Repeat the capability request through the HTTPS ingress with valid credentials. Keep its method, path, and body the same as the anonymous test, allowing only the expected upstream-to-ingress URL change.
+**Reasoned, not demonstrated** (no container runtime in the authoring environment; row 2.24 tracks demonstrating it). Repeat the capability request through the HTTPS ingress with valid credentials. Keep its method, path, and body the same as the anonymous test, allowing only the expected upstream-to-ingress URL change. The credential shapes this check needs are documented in Sources: Mem0 accepts a JWT or an `X-API-Key`, Onyx uses its email and password session, LocalAI and Text Embeddings Inference take their configured key, and a guide that cannot show this check succeeding has not established that the restriction left a working service behind.
 
 The header below is reader-supplied. For a configured bearer-token proxy it is `Authorization: Bearer` followed by the token. Mem0 accepts its native per-user key through `X-API-Key`, or a JWT through `Authorization: Bearer`. Other native credential transports are **unverified in the supplied record**. Where ingress and application require separate credentials, add both headers inside the guarded curl command using the deployed authentication design.
 
