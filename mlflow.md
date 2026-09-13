@@ -58,7 +58,11 @@ With `--serve-artifacts` (the default) and `--artifacts-destination s3://bucket`
 
 ```bash
 ss -tlnp | grep 5000                                                   # 127.0.0.1 only
-curl -sI --max-time 5 http://203.0.113.10:5000/                        # from another machine: connection refused
+curl -sI -o /dev/null --connect-timeout 5 --max-time 10 \
+  -w 'http=%{http_code} time_connect=%{time_connect}\n' \
+  http://REPLACE_WITH_THE_SERVER_PUBLIC_IP:5000/
+# from another machine. The pass is http=000 WITH time_connect at 0.000000: no connection completed.
+# A non-zero time_connect means the TCP handshake succeeded and the port is reachable, whatever came back
 # experiments/search is a POST endpoint, so each check posts a minimal body
 curl -sS -o /dev/null -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
   https://mlflow.example.com/api/2.0/mlflow/experiments/search                         # 401: no credentials
@@ -85,3 +89,4 @@ An authenticated user without permission on a resource gets `403`; a missing or 
 - MLflow tracking server (default address, reverse proxy or VPN for TLS and auth, `MLFLOW_TRACKING_TOKEN`, `MLFLOW_TRACKING_INSECURE_TLS`, artifact proxying): https://mlflow.org/docs/latest/self-hosting/architecture/tracking-server
 - MLflow REST API, Search Experiments (`POST 2.0/mlflow/experiments/search`): https://mlflow.org/docs/latest/api_reference/rest-api.html
 - Docker, port publishing (loopback publishing): https://docs.docker.com/engine/network/port-publishing/
+- curl manual (`--connect-timeout` bounds the connection phase only; the `time_connect` write-out variable): https://curl.se/docs/manpage.html
