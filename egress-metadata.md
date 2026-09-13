@@ -75,10 +75,13 @@ curl -s -o /dev/null -w '%{http_code}\n' 'http://169.254.169.254/metadata/instan
 # the three checks above test the header requirement, which is not the control this guide
 # recommends. Test the network block itself, WITH the header the service requires, from a
 # workload that has no legitimate reason to reach metadata:
-curl -s -o /dev/null -m 5 -w '%{http_code}\n' -H 'Metadata-Flavor: Google' \
+curl -s -o /dev/null --connect-timeout 5 --max-time 10 \
+  -w 'http=%{http_code} time_connect=%{time_connect}\n' -H 'Metadata-Flavor: Google' \
   http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token
-# must time out or be refused by the egress policy. A 200 here is a credential-issuing
-# endpoint reachable from the workload, whatever the header checks above returned
+# a 200 here is a credential-issuing endpoint reachable from the workload, whatever the header
+# checks above returned. http=000 on its own is not proof of a block: an endpoint that accepts the
+# connection and then stalls produces it too. Read time_connect, which stays 0.000000 only when no
+# connection completed, and corroborate with the deny record the negative control below describes.
 # positive control: a host on the egress allow list, for example the AWS STS endpoint used for role
 # credentials, must succeed
 curl -s -o /dev/null -w '%{http_code}\n' --max-time 5 https://sts.amazonaws.com/
@@ -86,14 +89,18 @@ curl -s -o /dev/null -w '%{http_code}\n' --max-time 5 https://sts.amazonaws.com/
 # negative control: a known-live host outside the egress allow list, judged by curl's exit status,
 # not by matching text in its output, since a successful connection also lacks the string
 # "Could not resolve host" and so would otherwise be misreported as blocked
-curl -s --max-time 5 -o /dev/null https://example.com/
+curl -s --connect-timeout 5 --max-time 10 -o /dev/null -w 'time_connect=%{time_connect}\n' https://example.com/
 rc=$?
 if [ "$rc" -eq 0 ]; then
   echo "FAIL: connected to a host outside the allow list, egress is not enforced"
 elif [ "$rc" -eq 6 ]; then
   echo "inconclusive: DNS resolution failed (curl exit 6), confirm this host still resolves before retrying"
 elif [ "$rc" -eq 7 ] || [ "$rc" -eq 28 ]; then
-  echo "pass: connection refused or timed out (curl exit $rc), the egress policy is blocking this host"
+  echo "request failed or timed out (curl exit $rc): inconclusive on its own. curl cannot say why it"
+  echo "failed, and --max-time can expire after the connection already succeeded, in which case the"
+  echo "time_connect printed above is non-zero. Treat this as blocked only when time_connect stayed"
+  echo "0.000000 AND the enforcement point recorded the deny: a VPC Flow Logs REJECT for this flow,"
+  echo "or the CNI's NetworkPolicy drop log or counter"
 else
   echo "unexpected curl exit code $rc, investigate before treating this as a pass"
 fi
@@ -112,3 +119,4 @@ aws ec2 describe-instances --instance-ids i-0123456789abcdef0 \
 - Azure Instance Metadata Service: https://learn.microsoft.com/en-us/azure/virtual-machines/instance-metadata-service
 - Kubernetes NetworkPolicy: https://kubernetes.io/docs/concepts/services-networking/network-policies/
 - Docker network create (`--internal`): https://docs.docker.com/reference/cli/docker/network/create/
+- curl manual (exit 7 "Failed to connect to host", exit 28 "Operation timeout", `--connect-timeout`, and the `time_connect` write-out variable): https://curl.se/docs/manpage.html
