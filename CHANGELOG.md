@@ -86,6 +86,8 @@ with the merged pull request is therefore an authoring obligation, not an enforc
   found while merging out of numeric order: the scheme names the most recently merged pull request,
   so when pull requests merge out of order the value goes backwards and no gate enforces
   monotonicity.
+- Row 3.10 rotated to `DONE.md` (#54) now that the changelog-coverage gate it asked for is merged
+  and green on `main`.
 
 ## 2026-09-12
 
