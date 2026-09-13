@@ -13,6 +13,21 @@ with the merged pull request is therefore an authoring obligation, not an enforc
 
 ### Added
 
+- `TODO.md` and `DONE.md` at the repository root (#38, #41). The backlog lived only in a private
+  working store, so a question about it could not be answered without a summary, and writing it
+  down exposed that the September audit's eighteen ranked coverage gaps were never recorded: five
+  had shipped and thirteen are unrecoverable. A three-family audit replaced them, with codex and
+  claude reading all 85 guides and gemini 16, producing sixteen gap rows and thirty enhancement
+  rows, each naming what specifically to do. `DONE.md` records two terminal states, done and
+  dropped, because a declined item that simply disappears gets proposed again.
+- An Agent Plugin package (#39). `plugin.json` and one skill validated against the Agent Plugins
+  and Agent Skills specifications, with the 86 guides bundled as `references/` so an adopter with
+  no egress still has them, and `scripts/update-guides.sh` to refresh them and re-pin the version
+  when there is network. The updater verifies every fetched guide against a published digest and
+  replaces the bundle only once all of them match, so an interrupted run leaves the working bundle
+  intact. Recording the bundle exposed two defects in the generated-file record gate: `kind` sat
+  unused so a generated directory could not be recorded at all, and the build script did not
+  declare the script it calls.
 - `connection-poolers.md`, covering PgBouncer and pgpool-II (#30). A pooler becomes the thing
   clients connect to, so the database's own `hostssl` rules and TLS settings stop governing the
   client and start governing the pooler. Two PgBouncer defaults fail open: `client_tls_sslmode`
@@ -56,6 +71,10 @@ with the merged pull request is therefore an authoring obligation, not an enforc
 
 ### Changed
 
+- The backlog is banded and ordered by AIQT (#41, #42). Errors are band 1 and worked to empty
+  before anything else, because a reader acting on a wrong guide is worse off than a reader with
+  no guide; eight of the thirty rows against existing guides turned out to be errors rather than
+  gaps. Band ids are decoupled from bands, so the reordering changed no identities.
 - `site/_headers` pins the inline stylesheet by hash and drops `'unsafe-inline'` from
   `style-src`, with a gate that keeps the pin honest (#28). The gate refuses what it cannot
   model rather than modelling HTML: exactly one bare `<style>` and one bare `<script>`, every
@@ -74,6 +93,15 @@ with the merged pull request is therefore an authoring obligation, not an enforc
 
 ### Fixed
 
+- `cors.md` and `host.md` cite the tools whose syntax they show (#35). `cors.md` demonstrated
+  Express and FastAPI middleware while citing only MDN's protocol guide, and `host.md` showed five
+  `ufw` and `firewall-cmd` invocations and cited neither tool, so rule 1 could not be exercised on
+  either. A sweep for the same shape found ten more candidates, all false positives: this corpus's
+  convention is for a source line to name the settings it covers, and they do.
+- The DevProcess / OPF adoption is deferred and the reason recorded (#40). Its tooling ships in a
+  later release, so adopting by hand would mean maintaining a TOML store and rendering its views
+  by hand with no validator to catch drift between them, which is the defect class this repository
+  already runs three freshness gates against.
 - `chat-uis.md` no longer reproduces Chainlit's own login example (#31). The vendor's snippet
   compares a literal `"admin"` against a literal `"admin"`; the guide had swapped the literal
   for a house placeholder and kept both real defects underneath, a credential in application
