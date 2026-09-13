@@ -96,7 +96,7 @@ if [ "$rc" -eq 0 ]; then
 elif [ "$rc" -eq 6 ]; then
   echo "inconclusive: DNS resolution failed (curl exit 6), confirm this host still resolves before retrying"
 elif [ "$rc" -eq 7 ] || [ "$rc" -eq 28 ]; then
-  echo "no completed connection (curl exit $rc): inconclusive on its own. curl cannot say why it"
+  echo "request failed or timed out (curl exit $rc): inconclusive on its own. curl cannot say why it"
   echo "failed, and --max-time can expire after the connection already succeeded, in which case the"
   echo "time_connect printed above is non-zero. Treat this as blocked only when time_connect stayed"
   echo "0.000000 AND the enforcement point recorded the deny: a VPC Flow Logs REJECT for this flow,"

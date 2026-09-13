@@ -37,7 +37,7 @@ Write separate policies per operation (`select`, `insert`, `update`, `delete`); 
 alter view public.REPLACE_WITH_VIEW_NAME set (security_invoker = true);
 ```
 
-  On PostgreSQL 14 and earlier there is no `security_invoker`: revoke the view from `anon` and `authenticated`, or keep it in a schema the API does not expose.
+  On PostgreSQL 14 and earlier there is no `security_invoker`: revoke the view from `public` as well as from `anon` and `authenticated`, or keep it in a schema the API does not expose. Revoking the two API roles alone leaves access they inherit from `PUBLIC`, so confirm with `select has_table_privilege('anon', 'public.REPLACE_WITH_VIEW_NAME', 'select');`, which must return `f`.
 
 - A `SECURITY DEFINER` function likewise runs as its owner and can return rows RLS would hide. Keep such functions out of API-exposed schemas unless they enforce their own authorization, and revoke execution by default:
 

@@ -4029,11 +4029,14 @@ SSH stays closed to the world here for the same reason rule 3 in [cloud-firewall
 RHEL-family systems use firewalld (`firewall-cmd --permanent --add-service=https` and so on) with the same posture, and that includes SSH: `--add-service=ssh` opens port 22 to every address exactly as `ufw allow OpenSSH` does. Open only the ports the TLS-terminating layer needs; databases and app servers stay unreachable from outside per their guides. Docker-published ports bypass ufw entirely; see [docker.md](docker.md) before relying on the firewall.
 
 ```bash
-# firewalld, where an earlier run enabled the ssh service: a rich rule does not supersede it
-sudo firewall-cmd --permanent --remove-service=ssh
-sudo firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="REPLACE_WITH_ADMIN_RANGE" service name="ssh" accept'
-sudo firewall-cmd --reload      # --permanent writes the stored config only; nothing changes until this
-sudo firewall-cmd --list-all    # confirm: no ssh under services, and the rich rule present
+# firewalld, where an earlier run enabled the ssh service: a rich rule does not supersede it.
+# Every command below names the zone: without --zone they act on the default zone, which is not
+# necessarily the one holding the internet-facing interface.
+sudo firewall-cmd --get-active-zones            # find the zone your public interface is in
+sudo firewall-cmd --permanent --zone=REPLACE_WITH_PUBLIC_ZONE --remove-service=ssh
+sudo firewall-cmd --permanent --zone=REPLACE_WITH_PUBLIC_ZONE --add-rich-rule='rule family="ipv4" source address="REPLACE_WITH_ADMIN_RANGE" service name="ssh" accept'
+sudo firewall-cmd --reload                      # --permanent writes the stored config only; nothing changes until this
+sudo firewall-cmd --zone=REPLACE_WITH_PUBLIC_ZONE --list-all   # confirm: no ssh under services, and the rich rule present
 ```
 
 ## 3. Brute-force protection and updates
@@ -4082,7 +4085,7 @@ On AWS (security groups), Google Cloud (VPC firewall rules), and Azure (network 
 
 ## Verify
 
-Enumerate every inbound rule, then confirm that any whose source reaches the internet is 80 or 443 on the front layer, nothing else. These commands list rather than select, because no filter catches the exposure class.
+Enumerate every inbound rule, then, for each one whose source reaches the internet, confirm that the destination port is 80 or 443 on the front layer, nothing else. Rule 3's administrative SSH exception is the one other source that may be public, and it is a named address, never an open range. These commands list rather than select, because no filter catches the exposure class.
 
 ```bash
 # AWS, once per region. Every rule, not a selection: no filter catches the exposure class, because
@@ -4091,8 +4094,10 @@ Enumerate every inbound rule, then confirm that any whose source reaches the int
 aws ec2 describe-security-group-rules \
   --query "SecurityGroupRules[].{Group:GroupId,Egress:IsEgress,Proto:IpProtocol,From:FromPort,To:ToPort,V4:CidrIpv4,V6:CidrIpv6,Prefix:PrefixListId,SG:ReferencedGroupInfo.GroupId}" \
   --output table
-# read every row whose Egress column reads False. Its source must be 80 or 443 on the front layer,
-# a private CIDR, a security group, or a prefix list you have resolved and trust. Rows reading True
+# read every row whose Egress column reads False. Its source must be a private CIDR, a security
+# group, a prefix list you have resolved and trust, or, where the destination port is 80 or 443,
+# the internet. A public source on any other port is a finding, except the single administrative
+# address rule 3 allows on 22. Rows reading True
 # are outbound, a separate question.
 
 # Google Cloud, once per project. Whole records, because a table projection drops the enforcement
@@ -4275,7 +4280,7 @@ if [ "$rc" -eq 0 ]; then
 elif [ "$rc" -eq 6 ]; then
   echo "inconclusive: DNS resolution failed (curl exit 6), confirm this host still resolves before retrying"
 elif [ "$rc" -eq 7 ] || [ "$rc" -eq 28 ]; then
-  echo "no completed connection (curl exit $rc): inconclusive on its own. curl cannot say why it"
+  echo "request failed or timed out (curl exit $rc): inconclusive on its own. curl cannot say why it"
   echo "failed, and --max-time can expire after the connection already succeeded, in which case the"
   echo "time_connect printed above is non-zero. Treat this as blocked only when time_connect stayed"
   echo "0.000000 AND the enforcement point recorded the deny: a VPC Flow Logs REJECT for this flow,"
@@ -7209,11 +7214,10 @@ ss -tlnp                                        # read the whole list: app ports
                                                 # public only where Dify's own nginx is the TLS edge.
                                                 # A container port published by DNAT need not appear
                                                 # here at all, so this list cannot clear 5003 by itself
-docker compose ps --format json                 # run in dify/docker: the plugin_daemon entry must
-                                                # carry no Publishers entry with a nonzero
-                                                # PublishedPort. An entry can exist with
-                                                # PublishedPort 0 for a merely exposed container
-                                                # port, which is not a host publication. A grep for
+docker compose ps --format json                 # run in dify/docker: no Publishers entry on the
+                                                # plugin_daemon service may map it to a host port.
+                                                # Read the entries rather than the array's length:
+                                                # a merely exposed container port can appear too. A grep for
                                                 # "published" cannot say which service published it
 nc -vz -w 3 203.0.113.10 5003                   # from an outside network, and the authority here:
                                                 # EXPOSE_PLUGIN_DEBUGGING_PORT can move it, so the ps output above is the authority on which port to probe
@@ -8033,7 +8037,7 @@ Write separate policies per operation (`select`, `insert`, `update`, `delete`); 
 alter view public.REPLACE_WITH_VIEW_NAME set (security_invoker = true);
 ```
 
-  On PostgreSQL 14 and earlier there is no `security_invoker`: revoke the view from `anon` and `authenticated`, or keep it in a schema the API does not expose.
+  On PostgreSQL 14 and earlier there is no `security_invoker`: revoke the view from `public` as well as from `anon` and `authenticated`, or keep it in a schema the API does not expose. Revoking the two API roles alone leaves access they inherit from `PUBLIC`, so confirm with `select has_table_privilege('anon', 'public.REPLACE_WITH_VIEW_NAME', 'select');`, which must return `f`.
 
 - A `SECURITY DEFINER` function likewise runs as its owner and can return rows RLS would hide. Keep such functions out of API-exposed schemas unless they enforce their own authorization, and revoke execution by default:
 

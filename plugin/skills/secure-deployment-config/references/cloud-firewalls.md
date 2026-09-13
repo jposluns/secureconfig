@@ -12,7 +12,7 @@ On AWS (security groups), Google Cloud (VPC firewall rules), and Azure (network 
 
 ## Verify
 
-Enumerate every inbound rule, then confirm that any whose source reaches the internet is 80 or 443 on the front layer, nothing else. These commands list rather than select, because no filter catches the exposure class.
+Enumerate every inbound rule, then, for each one whose source reaches the internet, confirm that the destination port is 80 or 443 on the front layer, nothing else. Rule 3's administrative SSH exception is the one other source that may be public, and it is a named address, never an open range. These commands list rather than select, because no filter catches the exposure class.
 
 ```bash
 # AWS, once per region. Every rule, not a selection: no filter catches the exposure class, because
@@ -21,8 +21,10 @@ Enumerate every inbound rule, then confirm that any whose source reaches the int
 aws ec2 describe-security-group-rules \
   --query "SecurityGroupRules[].{Group:GroupId,Egress:IsEgress,Proto:IpProtocol,From:FromPort,To:ToPort,V4:CidrIpv4,V6:CidrIpv6,Prefix:PrefixListId,SG:ReferencedGroupInfo.GroupId}" \
   --output table
-# read every row whose Egress column reads False. Its source must be 80 or 443 on the front layer,
-# a private CIDR, a security group, or a prefix list you have resolved and trust. Rows reading True
+# read every row whose Egress column reads False. Its source must be a private CIDR, a security
+# group, a prefix list you have resolved and trust, or, where the destination port is 80 or 443,
+# the internet. A public source on any other port is a finding, except the single administrative
+# address rule 3 allows on 22. Rows reading True
 # are outbound, a separate question.
 
 # Google Cloud, once per project. Whole records, because a table projection drops the enforcement

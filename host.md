@@ -52,11 +52,14 @@ SSH stays closed to the world here for the same reason rule 3 in [cloud-firewall
 RHEL-family systems use firewalld (`firewall-cmd --permanent --add-service=https` and so on) with the same posture, and that includes SSH: `--add-service=ssh` opens port 22 to every address exactly as `ufw allow OpenSSH` does. Open only the ports the TLS-terminating layer needs; databases and app servers stay unreachable from outside per their guides. Docker-published ports bypass ufw entirely; see [docker.md](docker.md) before relying on the firewall.
 
 ```bash
-# firewalld, where an earlier run enabled the ssh service: a rich rule does not supersede it
-sudo firewall-cmd --permanent --remove-service=ssh
-sudo firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="REPLACE_WITH_ADMIN_RANGE" service name="ssh" accept'
-sudo firewall-cmd --reload      # --permanent writes the stored config only; nothing changes until this
-sudo firewall-cmd --list-all    # confirm: no ssh under services, and the rich rule present
+# firewalld, where an earlier run enabled the ssh service: a rich rule does not supersede it.
+# Every command below names the zone: without --zone they act on the default zone, which is not
+# necessarily the one holding the internet-facing interface.
+sudo firewall-cmd --get-active-zones            # find the zone your public interface is in
+sudo firewall-cmd --permanent --zone=REPLACE_WITH_PUBLIC_ZONE --remove-service=ssh
+sudo firewall-cmd --permanent --zone=REPLACE_WITH_PUBLIC_ZONE --add-rich-rule='rule family="ipv4" source address="REPLACE_WITH_ADMIN_RANGE" service name="ssh" accept'
+sudo firewall-cmd --reload                      # --permanent writes the stored config only; nothing changes until this
+sudo firewall-cmd --zone=REPLACE_WITH_PUBLIC_ZONE --list-all   # confirm: no ssh under services, and the rich rule present
 ```
 
 ## 3. Brute-force protection and updates

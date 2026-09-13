@@ -84,11 +84,10 @@ ss -tlnp                                        # read the whole list: app ports
                                                 # public only where Dify's own nginx is the TLS edge.
                                                 # A container port published by DNAT need not appear
                                                 # here at all, so this list cannot clear 5003 by itself
-docker compose ps --format json                 # run in dify/docker: the plugin_daemon entry must
-                                                # carry no Publishers entry with a nonzero
-                                                # PublishedPort. An entry can exist with
-                                                # PublishedPort 0 for a merely exposed container
-                                                # port, which is not a host publication. A grep for
+docker compose ps --format json                 # run in dify/docker: no Publishers entry on the
+                                                # plugin_daemon service may map it to a host port.
+                                                # Read the entries rather than the array's length:
+                                                # a merely exposed container port can appear too. A grep for
                                                 # "published" cannot say which service published it
 nc -vz -w 3 203.0.113.10 5003                   # from an outside network, and the authority here:
                                                 # EXPOSE_PLUGIN_DEBUGGING_PORT can move it, so the ps output above is the authority on which port to probe
