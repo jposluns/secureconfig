@@ -84,6 +84,28 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   network and marked every vendor fact unverified; opening the pages afterwards overturned two of
   the six row premises. *Reasoning:* a plan built on an unverified premise costs more to unpick
   than the verification costs to do first.
+- **The #55 process deviation:** keep the change, and record the deviation. A worker's subagent
+  dispatch was refused by the classifier and it ran the same guarded script directly via Bash
+  instead. *Reasoning:* the refusal hit a dispatch carrying a long brief rather than the file
+  change, the write path stayed open, and the content was already chosen; but a refusal answered by
+  changing mechanism belongs on the record rather than absorbed silently, so it is a finding.
+- **Residual guard gaps (row 1.42):** close all three. Guides require copying the complete
+  assignment-and-guard unit, the interpretation comments classify a local error, an unsupported
+  option or unexplained silence as inconclusive rather than a pass, AND each block unsets the
+  variable before assigning it. *Reasoning:* `unset` clears a pre-existing `declare -i` or
+  `declare -l` attribute and a stale exported value alike, verified across bash, dash and BusyBox
+  ash, so one line closes all three demonstrated bypasses instead of documenting them as limits.
+- **Onyx (row 2.15), and the pattern behind it:** rewrite the row around the compose choice, and
+  open a new row for the pattern itself. Onyx's authentication has been on by default since v4.4.0;
+  the exposure is that `docker-compose.dev.yml` publishes seven backing listeners on every
+  interface while the prod compose publishes only nginx. *Reasoning:* Onyx's dev compose and Mem0's
+  compose both show a guarded front door with the backing store published beside it, no backlog row
+  describes that pattern, and it is arguably the new guide's real subject.
+- **LocalAI ownership (row 1.8):** the new guide owns LocalAI and `model-servers.md` carries a
+  one-sentence pointer; row 1.8 narrows to text-generation-webui coverage plus the
+  `model-servers.md` Verify filter defect. *Reasoning:* this file enumerates LocalAI by name and
+  outranks a `TODO.md` row, and using the row to override it would be a worker reopening a settled
+  ruling, which this file's own contract forbids.
 
 ## Profile: predicting these rulings
 

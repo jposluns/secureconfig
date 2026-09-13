@@ -102,6 +102,13 @@ with the merged pull request is therefore an authoring obligation, not an enforc
   monotonicity.
 - Row 3.10 rotated to `DONE.md` (#54) now that the changelog-coverage gate it asked for is merged
   and green on `main`.
+- The maintainer's four rulings of 2026-09-13 recorded in `DECISIONS.md`, and the two `.aiqt` local
+  patches marked upstreamed in the PIN (#56). Guardrails accepted the `AIQT_SITE_HOST` change and is
+  applying it as their own rather than taking a cross-repo pull request; preparing the details
+  surfaced two problems in our own patches, an accidental lowercasing inconsistency between the two
+  and an empty-value case that would make every dotted host resolve internal, and both were adopted.
+  The patches drop when we re-pin to their first digest-verifiable release, which is the release row
+  3.7 waits on.
 
 ## 2026-09-12
 
