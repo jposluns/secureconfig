@@ -58,7 +58,8 @@ def script(body, preamble="", middle="", tail=""):
     return SCRIPT.format(body=body, preamble=preamble, middle=middle, tail=tail)
 
 
-def fixture(script_body, sources, extra_files=(), write_script=True, regenerate=REGENERATE):
+def fixture(script_body, sources, extra_files=(), write_script=True, regenerate=REGENERATE,
+            kind="file"):
     """Build a throwaway repository and run the real gate in it. Returns (exit, output)."""
     d = Path(tempfile.mkdtemp())
     try:
@@ -73,7 +74,7 @@ def fixture(script_body, sources, extra_files=(), write_script=True, regenerate=
         for f in ("README.md", "README.sources.md", "nginx.md", *extra_files):
             (d / f).write_text(f"content of {f}\n", encoding="utf-8")
         (d / ".aiqt" / "gensrc.json").write_text(json.dumps({"generated": [{
-            "kind": "file", "target": "site/llms-full.txt",
+            "kind": kind, "target": "site/llms-full.txt",
             "regenerate": regenerate, "sources": sources}]}),
             encoding="utf-8")
         r = subprocess.run([sys.executable, f"tools/{GATE.name}"], cwd=d,
@@ -88,7 +89,8 @@ LIST_FAILS = ("#!/usr/bin/env bash\nif [ \"${1:-}\" = \"--list-inputs\" ]; then\
               "  echo 'no list here' >&2\n  exit 3\nfi\n")
 
 # (description, script, sources, must_fail, extra files, expected substring, write_script)
-# An optional eighth field replaces the manifest's regenerate command.
+# An optional eighth field replaces the manifest's regenerate command, and an optional ninth
+# replaces the entry's `kind`.
 CASES = (
     # THE DRIFT THIS GATE EXISTS FOR.
     ("a source built in and not recorded",
@@ -127,6 +129,15 @@ CASES = (
     # A CORRECT REPOSITORY.
     ("a correct repository",
      script("  README.md"), BASE, False, (), None, True),
+
+    # `kind` DECIDES WHAT THE TARGET HAS TO BE. It was unused, and the gate assumed a file, so a
+    # generated directory could not be recorded at all.
+    ("a file target declared as a directory",
+     script("  README.md"), BASE, True, (), "is not a directory in this repository", True,
+     REGENERATE, "directory"),
+    ("a kind the gate does not know",
+     script("  README.md"), BASE, True, (), "kind must be 'file' or 'directory'", True,
+     REGENERATE, "folder"),
 
     # THE INPUTS THAT BEAT BOTH EARLIER IMPLEMENTATIONS. These pass now because bash runs
     # the script, not because anything here special-cases them.
@@ -204,7 +215,8 @@ def main() -> int:
     for case in CASES:
         desc, body, sources, must_fail, extra, expected, write = case[:7]
         regenerate = case[7] if len(case) > 7 else REGENERATE
-        rc, out = fixture(body, sources, extra, write, regenerate)
+        kind = case[8] if len(case) > 8 else "file"
+        rc, out = fixture(body, sources, extra, write, regenerate, kind)
         if bool(rc) != must_fail:
             want = "fail" if must_fail else "pass"
             failures.append(f"{desc}: expected the gate to {want}, it did not ({out})")
