@@ -86,8 +86,7 @@ from _walk import walk_files  # noqa: E402  fail-closed tree walk
 from _markdown import Fences  # noqa: E402  one shared definition of a fenced block
 
 SKIP_DIRS = {".git", "node_modules", "__pycache__", "site", "tools", "scripts", ".github", ".aiqt"}
-NOT_A_GUIDE = {"CONTRIBUTING.md", "CLAUDE.md", "AGENTS.md", "CHANGELOG.md", "README.sources.md",
-               "TODO.md", "DONE.md", "DECISIONS.md", "PENDING-DECISIONS.md"}
+NOT_A_GUIDE = {"CONTRIBUTING.md", "CLAUDE.md", "AGENTS.md", "CHANGELOG.md", "README.sources.md"}
 
 
 # A fenced block can sit inside a block quotation, where a reader copies from it exactly as

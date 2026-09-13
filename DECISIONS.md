@@ -50,6 +50,20 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   filters. Change only the probes whose pass depends on the reader having substituted the address;
   leave illustrative uses alone. *Reasoning:* same instinct as the `ss` ruling, applied a second
   time on the same day, which is what makes it a pattern rather than a one-off.
+- **Verification depth:** a fourth QA round, and more, is never an issue. Cost and elapsed time are
+  not accepted as reasons to stop verifying. *Reasoning:* a review round is cheap against a wrong
+  guide reaching a reader, and the rounds in this session each found real defects.
+- **Auto-merge:** merge on passing QA and green CI under the standing grant, rather than parking a
+  verified pull request. Given after eleven open pull requests accumulated behind a review bar I
+  had invented. *Reasoning:* once the evidence bar is met, waiting adds risk rather than removing
+  it, because the branch drifts from `main`.
+- **Unjustified work is refused, not negotiated:** on a proposed accessibility change the answer
+  was "explain why we would need this", and the proposal did not survive the explanation.
+  *Reasoning:* a plausible-sounding improvement with no reader harm behind it is scope, not value.
+- **Enumerate before ruling:** a question about coverage was answered with a requirement to write
+  the whole backlog down first, which is what produced `TODO.md`. *Reasoning:* a ruling on an
+  unenumerated set is a guess, and writing it down exposed that eighteen ranked gaps had never
+  been recorded at all.
 
 ## Profile: predicting these rulings
 
@@ -59,6 +73,8 @@ asked. A prediction here never substitutes for a ruling on anything irreversible
 Where a prediction has been wrong, the miss is recorded, because the misses are the useful part.
 
 ### Observed patterns
+
+Every pattern below cites a ruling recorded above in this file. A pattern whose evidence is not recorded here does not belong in this list: an unverifiable prediction about the maintainer is worse than no prediction, because it cannot be checked and it compounds.
 
 1. **Per-case judgement beats the blanket sweep.** Ruled twice, on the `ss | grep` filters and on
    literal example addresses. The reasoning both times: a check that is correct for what it
