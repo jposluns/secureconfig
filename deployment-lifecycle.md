@@ -6,7 +6,7 @@ This repository's per-service guides check TLS, binding, and authentication from
 
 A `curl` or `ss -tlnp` run on the host itself cannot see a firewall the host does not know about, or a platform-level bypass like Docker's iptables rules ([docker.md](docker.md)). Verify from a second network: a phone hotspot, a cloud shell, or a second VM.
 
-- Port-by-port: `for p in 22 80 443 3000 5432 6379 27017; do nc -vz -w 3 203.0.113.10 "$p"; done`, or a full sweep, `nmap -p- 203.0.113.10` (per the nmap reference, which documents `-p-` and `-p 1-65535` as equivalent port-range syntax; only scan hosts you own or are authorized to test).
+- Port-by-port: `for p in 22 80 443 3000 5432 6379 27017; do nc -vz -w 3 REPLACE_WITH_YOUR_PUBLIC_IP "$p"; done`, or a full sweep, `nmap -p- REPLACE_WITH_YOUR_PUBLIC_IP` (per the nmap reference, which documents `-p-` and `-p 1-65535` as equivalent port-range syntax; only scan hosts you own or are authorized to test).
 - Check every address the service actually has, not just the one you remember configuring: the public IPv4 address, the public IPv6 address if the host has one, and any platform-assigned URL alongside your custom domain (a PaaS default subdomain, per [paas.md](paas.md), often stays reachable even when the custom domain is fronted). A scan of one address that misses the others is not a clean result, it is an incomplete one.
 - Cross-reference what is already indexed about your IP with a passive internet-wide scanner such as Shodan or Censys; both build a continuously updated index of internet-connected hosts and services, so a stale exposure can show up there before you find it yourself ([cloud-firewalls.md](cloud-firewalls.md) covers the firewall rules this is checking).
 
@@ -47,7 +47,7 @@ When a person leaves, revoke access at every layer they touched, not only their 
 
 ```bash
 # From a second network, not the host itself:
-nmap -p- 203.0.113.10                                  # only the intended ports answer
+nmap -p- REPLACE_WITH_YOUR_PUBLIC_IP                   # only the intended ports answer
 nmap -6 -p- 2001:db8::10                               # same, over the public IPv6 address
 curl -sI https://retired-preview.example.com/          # expect DNS failure or connection error
 dig +short retired-preview.example.com                 # expect no record, not a dangling CNAME

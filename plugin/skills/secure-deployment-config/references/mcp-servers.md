@@ -70,7 +70,10 @@ MFA: MCP has no login dialogue of its own. Under Option A, MFA is whatever the a
 ```bash
 ss -tlnp | grep 3000                                   # 127.0.0.1:3000 only, never 0.0.0.0 or ::
 # From another host: refused at the origin, or answered only by the fronting layer.
-curl -s http://203.0.113.10:3000/mcp                   # connection refused
+curl -s -o /dev/null --connect-timeout 5 -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+  http://REPLACE_WITH_YOUR_PUBLIC_IP:3000/mcp
+# Pass: exit 7 (refused) or 28 (timed out). exit 6 is "could not resolve", which means the address
+# above is still the placeholder, not that the port is closed
 
 # Unauthenticated initialize: 401 with a WWW-Authenticate header (Option A) or the proxy's 401 (Option B).
 curl -si -X POST https://mcp.example.com/mcp \
@@ -104,3 +107,4 @@ A token issued for a different resource (wrong audience) must also fail with `40
 - nginx `if` and `return` directives: https://nginx.org/en/docs/http/ngx_http_rewrite_module.html
 - nginx embedded variables (`$http_name`): https://nginx.org/en/docs/http/ngx_http_core_module.html
 - nginx ngx_http_map_module (Origin allowlist map): https://nginx.org/en/docs/http/ngx_http_map_module.html
+- curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html

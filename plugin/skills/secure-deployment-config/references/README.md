@@ -207,7 +207,7 @@ Sources for these checks are listed in [README.sources.md](README.sources.md), n
 
 ## Scope and currency
 
-The guides use placeholders (`example.com`, `app.example.com`, `203.0.113.10`) that you must replace. Configuration syntax was checked against the vendor documentation cited in each guide as of September 2026; directives and dashboard menu locations change, so verify version-specific items against the current documentation for your installed version. Each guide lists its sources.
+The guides use placeholders that you must replace: `example.com` and `app.example.com` for names, `203.0.113.10` for an address in a configuration value, and `REPLACE_WITH_A_NAME` wherever leaving the placeholder in place would otherwise look like a passing check. Configuration syntax was checked against the vendor documentation cited in each guide as of September 2026; directives and dashboard menu locations change, so verify version-specific items against the current documentation for your installed version. Each guide lists its sources.
 
 Scope: deployment exposure, including TLS, human and machine authentication, MFA, access restrictions, secrets, and inbound and outbound network access, from first deployment through teardown. General application security, including injection, deserialization, and business logic flaws, belongs to the OWASP resources linked throughout the guides. To propose a tool or guide, see [CONTRIBUTING.md](CONTRIBUTING.md).
 

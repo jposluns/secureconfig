@@ -115,8 +115,13 @@ oauth2-proxy's MFA is whatever its OIDC/OAuth provider enforces; Pomerium's is w
 
 ```bash
 ss -tlnp | grep 3000                          # app on 127.0.0.1 only
-curl -sI http://203.0.113.10:3000/            # from another host: connection refused
-curl -sI -H 'X-Auth-Request-User: admin' http://203.0.113.10:3000/   # forged header, straight at the app: still connection refused
+# both must be unreachable. Pass: exit 7 (refused) or 28 (timed out). exit 6 is "could not resolve",
+# which means the address below is still the placeholder, not that the app is closed
+curl -s -o /dev/null --connect-timeout 5 -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+  http://REPLACE_WITH_YOUR_PUBLIC_IP:3000/                       # from another host
+curl -s -o /dev/null --connect-timeout 5 -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+  -H 'X-Auth-Request-User: admin' \
+  http://REPLACE_WITH_YOUR_PUBLIC_IP:3000/                       # forged header, straight at the app
 curl -sI https://app.example.com/             # no session: redirected to the sign-in page, or a 401
 ```
 
@@ -142,3 +147,4 @@ After a real login through the proxy, confirm a session reaches the app and the 
 - Authelia second-factor introduction: https://www.authelia.com/configuration/second-factor/introduction/
 - Pomerium identity provider settings: https://www.pomerium.com/docs/reference/identity-provider-settings
 - Pomerium documentation: https://www.pomerium.com/docs
+- curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html

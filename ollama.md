@@ -65,7 +65,10 @@ MFA: Ollama has no login of its own, so a second factor can only come from the f
 
 ```bash
 ss -tlnp | grep 11434                                  # 127.0.0.1 only
-curl -s http://203.0.113.10:11434/api/tags             # from another machine: connection refused
+curl -s -o /dev/null --connect-timeout 5 -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+  http://REPLACE_WITH_YOUR_PUBLIC_IP:11434/api/tags
+# from another machine. Pass: exit 7 (refused) or 28 (timed out). exit 6 is "could not resolve",
+# which means the address above is still the placeholder, not that the port is closed
 curl -s https://ollama.example.com/api/tags            # 401 without credentials
 curl -su admin https://ollama.example.com/api/tags     # model list with credentials
 ```
@@ -74,3 +77,4 @@ curl -su admin https://ollama.example.com/api/tags     # model list with credent
 
 - Ollama FAQ (bind address, `OLLAMA_HOST`, proxy examples): https://docs.ollama.com/faq
 - Ollama repository: https://github.com/ollama/ollama
+- curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html

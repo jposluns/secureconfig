@@ -47,7 +47,7 @@ az network nsg rule list \
 # "::/0" are the obvious cases, and so is any set of ranges that together cover the internet
 ```
 
-- From an address outside the range you administer from: `for p in 22 3306 5432 6379 27017; do nc -vz -w 3 203.0.113.10 "$p"; done   # every line must fail to connect`. Each port must report a refused or timed-out connection; a usage error from `nc` (some netcat variants take one port or a range per invocation) is not a passing result.
+- From an address outside the range you administer from: `for p in 22 3306 5432 6379 27017; do nc -vz -w 3 REPLACE_WITH_YOUR_PUBLIC_IP "$p"; done   # every line must fail to connect`. Each port must report a refused or timed-out connection; a usage error from `nc` (some netcat variants take one port or a range per invocation) is not a passing result.
 - An external scan of the public IP (for example with nmap, against your own infrastructure only) shows only the intended ports.
 
 ## Sources (checked September 2026)

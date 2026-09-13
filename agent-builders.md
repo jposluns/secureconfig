@@ -89,7 +89,7 @@ docker compose ps --format json                 # run in dify/docker: no Publish
                                                 # Read the entries rather than the array's length:
                                                 # a merely exposed container port can appear too. A grep for
                                                 # "published" cannot say which service published it
-nc -vz -w 3 203.0.113.10 5003                   # from an outside network, and the authority here:
+nc -vz -w 3 REPLACE_WITH_YOUR_PUBLIC_IP 5003    # from an outside network, and the authority here:
                                                 # EXPOSE_PLUGIN_DEBUGGING_PORT can move it, so the ps output above is the authority on which port to probe
 curl -sI https://builder.example.com/                  # TLS; login page or redirect, not the editor
 curl -s -o /dev/null -w '%{http_code}\n' -X POST 'https://flowise.example.com/api/v1/prediction/REPLACE_WITH_CHATFLOW_ID'   # 401

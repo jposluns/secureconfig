@@ -74,7 +74,10 @@ Vercel's protection guards a deployment from the public; it is not your applicat
 ## Verify
 
 ```bash
-curl -sI http://203.0.113.10:3000/                      # origin direct: timeout or connection refused
+curl -s -o /dev/null --connect-timeout 5 -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+  http://REPLACE_WITH_YOUR_PUBLIC_IP:3000/
+# origin direct. Pass: exit 7 (refused) or 28 (timed out). exit 6 is "could not resolve", which
+# means the address above is still the placeholder, not that the origin is closed
 curl -sI https://app.example.com/                       # via proxy, no session: 302 to the IdP, or 401/403
 curl -s -H "x-amzn-oidc-identity: admin" \
      -H "X-MS-CLIENT-PRINCIPAL-NAME: admin" \
@@ -109,3 +112,4 @@ After logging in, confirm that the app's own identity check reads the signed ass
 - ngrok agent CLI (`ngrok http` flags): https://ngrok.com/docs/gateway/agent/cli
 - Vercel Deployment Protection: https://vercel.com/docs/deployment-protection
 - Vercel Authentication: https://vercel.com/docs/deployment-protection/methods-to-protect-deployments/vercel-authentication
+- curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html

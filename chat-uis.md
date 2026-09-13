@@ -83,7 +83,10 @@ The documented quickstart itself runs `docker run ... -p 3000:3000 ... openhands
 
 ```bash
 ss -tlnp | grep -E '3001|3210|3000'                    # each UI on 127.0.0.1 only
-curl -s http://203.0.113.10:3210/                       # from another host: connection refused
+curl -s -o /dev/null --connect-timeout 5 -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+  http://REPLACE_WITH_YOUR_PUBLIC_IP:3210/
+# from another host. Pass: exit 7 (refused) or 28 (timed out). exit 6 is "could not resolve", which
+# means the address above is still the placeholder, not that the port is closed
 curl -s https://chat.example.com/api/some-endpoint      # without a key/token: 401
 curl -sI https://chat.example.com/                      # via the proxy: TLS, login required
 # LobeChat SSO: attempt to register/sign in with a Google account that has never registered and is
@@ -111,3 +114,4 @@ curl -sI https://chat.example.com/                      # via the proxy: TLS, lo
 - OWASP Password Storage Cheat Sheet, for Argon2id over bcrypt in anything new: https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
 - OpenHands FAQs (single-user design, no built-in auth, sandboxing, hardened deployment): https://docs.openhands.dev/overview/faqs
 - OpenHands local setup (default docker port mapping): https://docs.openhands.dev/openhands/usage/run-openhands/local-setup
+- curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
