@@ -83,7 +83,15 @@ The documented quickstart itself runs `docker run ... -p 3000:3000 ... openhands
 
 ```bash
 ss -tlnp | grep -E '3001|3210|3000'                    # each UI on 127.0.0.1 only
-curl -s http://203.0.113.10:3210/                       # from another host: connection refused
+# from another host. Read err, not the number: it must name a refusal or timeout reaching YOUR
+# address. An HTTP code means the port answered. A resolver failure, a local socket error, or a
+# timeout that did not come from the remote address is inconclusive, never a pass.
+probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
+case "${probe_ip:-}" in
+  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+       -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$probe_ip:3210/" ;;
+esac
 curl -s https://chat.example.com/api/some-endpoint      # without a key/token: 401
 curl -sI https://chat.example.com/                      # via the proxy: TLS, login required
 # LobeChat SSO: attempt to register/sign in with a Google account that has never registered and is
@@ -111,3 +119,4 @@ curl -sI https://chat.example.com/                      # via the proxy: TLS, lo
 - OWASP Password Storage Cheat Sheet, for Argon2id over bcrypt in anything new: https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
 - OpenHands FAQs (single-user design, no built-in auth, sandboxing, hardened deployment): https://docs.openhands.dev/overview/faqs
 - OpenHands local setup (default docker port mapping): https://docs.openhands.dev/openhands/usage/run-openhands/local-setup
+- curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
