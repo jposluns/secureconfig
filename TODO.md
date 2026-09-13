@@ -120,6 +120,18 @@ Taken by the maintainer on 2026-09-13, recorded so they are not re-litigated:
   one guide covering the pattern, with a per-tool table of default port, default authentication,
   and the flag that changes it, rather than six guides.
 - **Audit cadence:** monthly, and whenever the backlog empties before that.
+- **Row 4.3, `VERSION`:** the scheme stays. `CONTRIBUTING.md` gains the authoring step instead:
+  open the pull request, write its number into `VERSION`, push, then merge. #48 did this and
+  needed no follow-up, which is the evidence the step is sufficient.
+- **Row 4.4, changelog coverage:** build it as a REQUIRED gate in `tools/run_all_checks.sh`, not
+  an advisory workflow. It must exempt the newest reference, or run against the merge commit,
+  because a pull request cannot reference its own number before it is opened.
+- **Queue order:** drain band 1 to empty before anything else, including the two corpus-wide rows.
+  1.37 first because it is small, then 1.36, then 1.38. Band 4 follows, then bands 2 and 3
+  interleaved by severity.
+- **Row 1.36, literal example addresses:** per-guide judgement, the same treatment as the `ss`
+  filters. Change only the probes whose pass depends on the reader having substituted the address;
+  leave illustrative uses alone.
 
 ## Priority 5: Site and adopters
 
