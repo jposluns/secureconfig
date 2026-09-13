@@ -116,6 +116,14 @@ with the merged pull request is therefore an authoring obligation, not an enforc
   and an empty-value case that would make every dotted host resolve internal, and both were adopted.
   The patches drop when we re-pin to their first digest-verifiable release, which is the release row
   3.7 waits on.
+- Four more rulings recorded, and two backlog rows corrected against their sources (#58). Row 2.15
+  said Onyx has "complex default exposure"; the vendor documents authentication on by default since
+  v4.4.0, `AUTH_TYPE` inert, and the real exposure being which compose file is run, since the
+  production one publishes only nginx while the development one publishes seven services past the
+  login page. That is the third of six row premises this verification pass overturned, after
+  LangServe's deprecation and Mem0 shipping authentication on. Row 1.8 loses LocalAI to the new
+  guide and records why, and row 1.43 opens for the published-backing-store pattern now seen in
+  Dify, Mem0 and Onyx alike.
 
 ## 2026-09-12
 
