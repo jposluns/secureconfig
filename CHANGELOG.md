@@ -137,6 +137,9 @@ with the merged pull request is therefore an authoring obligation, not an enforc
   severity already recorded on each row. The profile now records two occasions in one day where a
   recommendation was overruled toward more rigour, so that pattern is evidenced rather than
   inferred.
+- Row 3.9 rotated to `DONE.md` (#61). Its work shipped in #55 and has been live on `main` since; only
+  the row was outstanding, and it was pulled out of a larger pending change at the maintainer's
+  request so the backlog stops showing it as open.
 
 ## 2026-09-12
 
