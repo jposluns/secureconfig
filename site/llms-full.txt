@@ -198,11 +198,11 @@ Choose every route that applies; a deployment usually needs both service-specifi
 
 ## Verification checklist
 
-Run the applicable checks below and the Verify steps in every selected guide. Replace `REPLACE_WITH_YOUR_HOST` in every command below with your own host before running anything. The placeholder is deliberate: an earlier version used `example.com`, which resolves and serves HTTPS, so check 3 succeeded for every reader whatever state their deployment was in. A name that does not resolve fails visibly instead. Record each result as pass, fail, untested, or not applicable, with evidence or a reason; report a control as verified only for the checks that passed.
+Run the applicable checks below and the Verify steps in every selected guide. Replace `REPLACE_WITH_YOUR_HOST` in every command below with your own host before running anything. The placeholder is deliberate: an earlier version used `example.com`, which resolves and serves HTTPS, so check 3 succeeded for every reader whatever state their deployment was in. The commands use `-sS` so that an unreplaced placeholder prints `curl: (6) Could not resolve host` rather than failing silently. That is a visible failure, not a guarantee: a resolver that answers every name, or a proxy in your environment, can still put a real destination behind the placeholder, so substitute it rather than relying on the error. Record each result as pass, fail, untested, or not applicable, with evidence or a reason; report a control as verified only for the checks that passed.
 
 1. No plaintext listener on a public interface: `ss -tlnp` (Linux) shows nothing bound to `0.0.0.0` or a public address on a plain HTTP port, except a listener whose only job is to redirect to HTTPS.
-2. Where HTTP is offered, the redirect works: `curl -sI http://REPLACE_WITH_YOUR_HOST/` returns `301` or `308` (the preferred permanent redirects), or `302`/`307` where a framework issues them, always with a `Location: https://...` header.
-3. TLS works: `curl -sI https://REPLACE_WITH_YOUR_HOST/` succeeds without `-k`.
+2. Where HTTP is offered, the redirect works: `curl -sS -o /dev/null -w '%{http_code}\n' http://REPLACE_WITH_YOUR_HOST/` returns `301` or `308` (the preferred permanent redirects), or `302`/`307` where a framework issues them, always with a `Location: https://...` header.
+3. TLS works: `curl -sS -o /dev/null -w '%{http_code}\n' https://REPLACE_WITH_YOUR_HOST/` succeeds without `-k`.
 4. Old protocols are refused: `openssl s_client -connect REPLACE_WITH_YOUR_HOST:443 -tls1_1` fails to negotiate (TLS 1.2 is the minimum everywhere in these guides). Confirm the refusal came from the server and not from your own client: a local OpenSSL build, or a `MinProtocol` setting in its configuration, can refuse TLS 1.1 before any offer is sent, which looks identical. Check that your client can still offer TLS 1.1 at all, or use an external scanner that does.
 5. Authentication is enforced: an unauthenticated request to any non-public path returns `401`, `403`, or a login redirect, never data. Test the API paths as well as the home page.
 6. No default credentials remain, and no secret (password, key, token, certificate private key) is committed to the repository. Scan before pushing, for example with gitleaks.
@@ -216,7 +216,7 @@ Sources for these checks are listed in [README.sources.md](README.sources.md), n
 
 ## Scope and currency
 
-The guides use placeholders that you must replace. `example.com` and `app.example.com` stand in for a name, and `203.0.113.10` for an address, wherever the value is configuration or illustration and a wrong one fails visibly. Where leaving the placeholder in place would instead look like a passing check, the guides use a `REPLACE_WITH_A_NAME` form and the check itself rejects the unsubstituted value rather than trusting it to fail. The verification checklist above uses that second form for exactly that reason. Configuration syntax was checked against the vendor documentation cited in each guide as of September 2026; directives and dashboard menu locations change, so verify version-specific items against the current documentation for your installed version. Each guide lists its sources.
+The guides use placeholders that you must replace. `example.com` and `app.example.com` stand in for a name, and `203.0.113.10` for an address, wherever the value is configuration or illustration. That is usually a wrong value that fails visibly, though not always: an unreplaced certificate SAN generates a perfectly valid certificate for the wrong address. Where leaving the placeholder in place would instead look like a passing check, the guides use a `REPLACE_WITH_A_NAME` form and the check itself rejects the unsubstituted value rather than trusting it to fail. The verification checklist above uses that second form for exactly that reason. Configuration syntax was checked against the vendor documentation cited in each guide as of September 2026; directives and dashboard menu locations change, so verify version-specific items against the current documentation for your installed version. Each guide lists its sources.
 
 Scope: deployment exposure, including TLS, human and machine authentication, MFA, access restrictions, secrets, and inbound and outbound network access, from first deployment through teardown. General application security, including injection, deserialization, and business logic flaws, belongs to the OWASP resources linked throughout the guides. To propose a tool or guide, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -1388,8 +1388,8 @@ Vercel's protection guards a deployment from the public; it is not your applicat
 # that did not come from the remote address is inconclusive, never a pass.
 probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
 case "$probe_ip" in
-  REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
-  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
+  *REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
        -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$probe_ip:3000/" ;;
 esac
 curl -sI https://app.example.com/                       # via proxy, no session: 302 to the IdP, or 401/403
@@ -1639,10 +1639,10 @@ ss -tlnp | grep 3000                          # app on 127.0.0.1 only
 # timeout that did not come from the remote address is inconclusive, never a pass.
 probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
 case "$probe_ip" in
-  REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
-  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
+  *REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
        -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$probe_ip:3000/"
-     curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
+     curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
        -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
        -H 'X-Auth-Request-User: admin' "http://$probe_ip:3000/" ;;   # forged header, straight at the app
 esac
@@ -4069,7 +4069,11 @@ sudo firewall-cmd --zone=REPLACE_WITH_PUBLIC_ZONE --list-all   # confirm: no ssh
 ```bash
 ss -tlnp                          # only intended listeners, on intended addresses
 sudo ufw status verbose           # default deny incoming; port 22 shows your admin range, never Anywhere
-nc -vz -w 3 REPLACE_WITH_YOUR_PUBLIC_IP 22 # from an address outside the admin range: must fail to connect
+probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
+case "$probe_ip" in
+  *REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+  *) nc -vz -w 3 "$probe_ip" 22 ;;   # from an address outside the admin range: must fail to connect
+esac
 ssh -o PreferredAuthentications=password user@host   # expect: Permission denied
 ssh user@host                     # with PAM MFA: the key is accepted, then the code prompt appears before a shell
 ```
@@ -4446,7 +4450,11 @@ When a person leaves, revoke access at every layer they touched, not only their 
 
 ```bash
 # From a second network, not the host itself:
-nmap -p- REPLACE_WITH_YOUR_PUBLIC_IP                   # only the intended ports answer
+probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
+case "$probe_ip" in
+  *REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+  *) nmap -p- "$probe_ip" ;;                        # only the intended ports answer
+esac
 nmap -6 -p- 2001:db8::10                               # same, over the public IPv6 address
 curl -sI https://retired-preview.example.com/          # expect DNS failure or connection error
 dig +short retired-preview.example.com                 # expect no record, not a dangling CNAME
@@ -6300,8 +6308,8 @@ ss -tlnp | grep 11434                                  # 127.0.0.1 only
 # timeout that did not come from the remote address is inconclusive, never a pass.
 probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
 case "$probe_ip" in
-  REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
-  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
+  *REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
        -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$probe_ip:11434/api/tags" ;;
 esac
 curl -s https://ollama.example.com/api/tags            # 401 without credentials
@@ -6941,8 +6949,8 @@ ss -tlnp | grep 3000                                   # 127.0.0.1:3000 only, ne
 # from the remote address is inconclusive, never a pass.
 probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
 case "$probe_ip" in
-  REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
-  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
+  *REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
        -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$probe_ip:3000/mcp" ;;
 esac
 
@@ -7267,7 +7275,11 @@ docker compose ps --format json                 # run in dify/docker: no Publish
                                                 # Read the entries rather than the array's length:
                                                 # a merely exposed container port can appear too. A grep for
                                                 # "published" cannot say which service published it
-nc -vz -w 3 REPLACE_WITH_YOUR_PUBLIC_IP 5003    # from an outside network, and the authority here:
+probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
+case "$probe_ip" in
+  *REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+  *) nc -vz -w 3 "$probe_ip" 5003 ;;                # from an outside network, and the authority here:
+esac
                                                 # EXPOSE_PLUGIN_DEBUGGING_PORT can move it, so the ps output above is the authority on which port to probe
 curl -sI https://builder.example.com/                  # TLS; login page or redirect, not the editor
 curl -s -o /dev/null -w '%{http_code}\n' -X POST 'https://flowise.example.com/api/v1/prediction/REPLACE_WITH_CHATFLOW_ID'   # 401
@@ -7374,9 +7386,9 @@ ss -tlnp | grep -E '8188|7860|9090'                 # each service on 127.0.0.1 
 # socket error, or a timeout that did not come from the remote address is inconclusive.
 probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
 case "$probe_ip" in
-  REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+  *REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
   *) for p in 8188 7860 9090; do                              # ComfyUI, SD WebUI, InvokeAI
-       curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
+       curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
          -w "port=$p http=%{http_code} exit=%{exitcode} err=%{errormsg}\n" "http://$probe_ip:$p/"
      done ;;
 esac
@@ -7501,8 +7513,8 @@ ss -tlnp | grep -E '3001|3210|3000'                    # each UI on 127.0.0.1 on
 # timeout that did not come from the remote address is inconclusive, never a pass.
 probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
 case "$probe_ip" in
-  REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
-  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
+  *REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
        -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$probe_ip:3210/" ;;
 esac
 curl -s https://chat.example.com/api/some-endpoint      # without a key/token: 401
@@ -7925,7 +7937,11 @@ curl -s -o /dev/null -w '%{http_code}\n' https://panel.example.com/
                                                                   # 401, 403, or a login redirect, never a dashboard. No -k:
                                                                   # this panel is behind a proxy holding a real certificate, so
                                                                   # a check that skips verification proves nothing about it
-docker -H tcp://REPLACE_WITH_YOUR_PUBLIC_IP:2375 info             # must fail: connection refused or filtered
+probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
+case "$probe_ip" in
+  *REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+  *) docker -H "tcp://$probe_ip:2375" info ;;       # must fail: connection refused or filtered
+esac
 env -u DOCKER_HOST -u DOCKER_TLS_VERIFY -u DOCKER_CERT_PATH \
   curl -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem https://203.0.113.10:2376/_ping
                                                                   # must fail the handshake on the CLIENT certificate. Do not use

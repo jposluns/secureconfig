@@ -47,7 +47,11 @@ When a person leaves, revoke access at every layer they touched, not only their 
 
 ```bash
 # From a second network, not the host itself:
-nmap -p- REPLACE_WITH_YOUR_PUBLIC_IP                   # only the intended ports answer
+probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
+case "$probe_ip" in
+  *REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+  *) nmap -p- "$probe_ip" ;;                        # only the intended ports answer
+esac
 nmap -6 -p- 2001:db8::10                               # same, over the public IPv6 address
 curl -sI https://retired-preview.example.com/          # expect DNS failure or connection error
 dig +short retired-preview.example.com                 # expect no record, not a dangling CNAME

@@ -59,9 +59,9 @@ ss -tlnp | grep -E '8188|7860|9090'                 # each service on 127.0.0.1 
 # socket error, or a timeout that did not come from the remote address is inconclusive.
 probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
 case "$probe_ip" in
-  REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
+  *REPLACE_WITH_*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
   *) for p in 8188 7860 9090; do                              # ComfyUI, SD WebUI, InvokeAI
-       curl -s -o /dev/null --noproxy '*' --connect-timeout 5 \
+       curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
          -w "port=$p http=%{http_code} exit=%{exitcode} err=%{errormsg}\n" "http://$probe_ip:$p/"
      done ;;
 esac
