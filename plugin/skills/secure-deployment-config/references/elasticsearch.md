@@ -6,7 +6,7 @@ Open Elasticsearch instances produced some of the largest data leaks on record. 
 
 - A fresh install auto-configures security on first start: authentication is enabled, TLS is set up for HTTP and transport, and a password is generated for the `elastic` superuser. Keep all of it.
 - Never set `xpack.security.enabled: false`, and never expose a node where TLS (`xpack.security.http.ssl`) has been turned off. If a client cannot connect, fix the client's CA trust ([self-signed.md](self-signed.md)) or issue a real certificate ([free-certificates.md](free-certificates.md)); do not remove the lock.
-- Bind stays local unless deliberately widened (`network.host`); remote access goes through the same decision as any database: private network, VPN or tunnel, TLS everywhere.
+- `network.host` defaults to `_local_`, but leaving it alone does not make the node private: security auto-configuration writes `http.host: 0.0.0.0` into `elasticsearch.yml`, which overrides that default for HTTP. Read the effective setting rather than assuming the default, and let remote access go through the same decision as any database: private network, VPN or tunnel, TLS everywhere.
 - Create least-privilege users and API keys per application instead of shipping `elastic` credentials ([authentication.md](authentication.md)).
 
 ## OpenSearch
@@ -18,7 +18,7 @@ Open Elasticsearch instances produced some of the largest data leaks on record. 
 ## Verify
 
 ```bash
-curl -s https://search.example.com:9200/            # 401 without credentials
+curl -s --cacert /path/http_ca.crt https://search.example.com:9200/   # 401 without credentials
 curl -s --cacert /path/http_ca.crt https://search.example.com:9200/ -u elastic
                                                     # prompts, then 200 with the right password. Verify the certificate
                                                     # against the CA your installer generated (Elasticsearch writes
@@ -26,10 +26,12 @@ curl -s --cacert /path/http_ca.crt https://search.example.com:9200/ -u elastic
                                                     # installs its own) and never pass -k here: -k accepts a substituted
                                                     # certificate exactly as readily as yours, and this line sends
                                                     # credentials over whatever it accepted
-curl -s -o /dev/null -w '%{http_code}\n' --max-time 5 http://search.example.com:9200/
+curl -s -o /dev/null --connect-timeout 5 --max-time 10 \
+  -w 'http=%{http_code} time_connect=%{time_connect}\n' http://search.example.com:9200/
                                                     # plaintext must NOT answer: expect a connection failure or a
                                                     # protocol error, never cluster JSON
-ss -tlnp | grep 9200                                # loopback/private only, unless deliberate
+ss -tlnp 'sport = :9200'                            # ss's own filter, not a grep, which also matches
+                                                    # a pid of 9200: loopback or private only, unless deliberate
 ```
 
 An unauthenticated `GET /` returning cluster JSON is the classic finding; so is `_cat/indices` listing your data to the world.
@@ -39,3 +41,5 @@ An unauthenticated `GET /` returning cluster JSON is the classic finding; so is 
 - Elasticsearch security configuration (current docs home for cluster security): https://www.elastic.co/docs/deploy-manage/security
 - OpenSearch demo security configuration: https://docs.opensearch.org/latest/security/configuration/demo-configuration/
 - Elasticsearch, automatic TLS setup for self-managed clusters (the generated `http_ca.crt` used to verify TLS from a client): https://www.elastic.co/docs/deploy-manage/security/self-auto-setup
+- ss(8), the `sport` filter expression used above: https://manpages.ubuntu.com/manpages/noble/en/man8/ss.8.html
+- Elasticsearch networking settings (`network.host` "Defaults to `_local_`"; security auto-configuration "will add `http.host: 0.0.0.0`"): https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/networking-settings

@@ -15,7 +15,7 @@ ssl_min_protocol_version = 'TLSv1.2'      # PostgreSQL 12 and later
 password_encryption = scram-sha-256       # default from PostgreSQL 14; set explicitly on older versions
 ```
 
-The `ssl*` and `password_encryption` settings apply on reload (`SELECT pg_reload_conf();` or `systemctl reload postgresql`); `listen_addresses` can only be set at server start, so a change to it needs `systemctl restart postgresql`, then `ss -tlnp | grep 5432` to confirm the bind.
+The `ssl*` and `password_encryption` settings apply on reload (`SELECT pg_reload_conf();` or `systemctl reload postgresql`); `listen_addresses` can only be set at server start, so a change to it needs `systemctl restart postgresql`, then `ss -tlnp 'sport = :5432'` to confirm the bind.
 
 ## 2. Require TLS per connection in pg_hba.conf
 
@@ -49,11 +49,17 @@ psql "host=db.example.com dbname=app user=app sslmode=verify-full sslrootcert=/p
 ```bash
 psql -h db.example.com -U app -c "SELECT version();" \
   "dbname=app sslmode=verify-full sslrootcert=/path/ca.crt"
+# negative control: the SAME host, database and role, with a deliberately wrong password
+psql "host=db.example.com dbname=app user=app password=REPLACE_WITH_A_DELIBERATELY_WRONG_PASSWORD sslmode=verify-full sslrootcert=/path/ca.crt" -c 'SELECT 1;'
+# must be REJECTED with: FATAL:  password authentication failed for user "app"
+# if it CONNECTS instead, an earlier pg_hba.conf record (a hostssl ... trust line, say) is letting it
+# in without a password: the first matching record wins and there is no fall-through, and neither a
+# successful TLS handshake nor pg_stat_ssl can see that
 sudo -u postgres psql -c "SELECT ssl, count(*) FROM pg_stat_ssl JOIN pg_stat_activity USING (pid) GROUP BY ssl;"
-ss -tlnp | grep 5432       # loopback only, unless remote access is deliberate
+ss -tlnp 'sport = :5432'   # ss's own filter, not a grep: loopback only, unless remote access is deliberate
 ```
 
-A connection attempt without TLS from a remote host must fail once only `hostssl` lines cover remote addresses.
+A connection attempt without TLS from a remote host must fail once only `hostssl` lines cover remote addresses. The encryption checks prove encryption, not that a password was demanded, which is why the wrong-password attempt has to fail against the same host, database, and role the valid login used.
 
 ## Common mistakes
 
@@ -67,3 +73,4 @@ A connection attempt without TLS from a remote host must fail once only `hostssl
 - pg_hba.conf: https://www.postgresql.org/docs/current/auth-pg-hba-conf.html
 - libpq SSL support (sslmode): https://www.postgresql.org/docs/current/libpq-ssl.html
 - Connections and authentication (`listen_addresses` "can only be set at server start"): https://www.postgresql.org/docs/current/runtime-config-connection.html
+- ss(8), the `sport` filter expression used above: https://manpages.ubuntu.com/manpages/noble/en/man8/ss.8.html
