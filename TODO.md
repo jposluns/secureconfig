@@ -59,6 +59,35 @@ SC 2.4.1 governs content "repeated on multiple web pages" and this is a single p
 listed sufficient technique "ARIA11: Using ARIA landmarks" is already satisfied by
 `<nav aria-label="Guides and page contents">` followed by `<main>`.
 
+### 8. Adopt the DevProcess / OPF operational-files standard
+
+Deferred by the maintainer on 2026-09-12 until the tooling ships. **`TODO.md` stays at the
+repository root meanwhile, and the adoption script will ingest it.** Do not move it into
+`.working/`, and do not hand-build a TOML store in the meantime.
+
+What the standard actually says, read from `.aiqt/core/opf/OPF-SPEC.md` and `OPF-QUICKSTART.md`
+rather than from a summary, so the next session does not re-derive it:
+
+- There is **no TODO.md to DONE.md migration**. Both are deterministic generated views rendered
+  from one store of versioned TOML records. An item is a `backlog_item` record; closing it is a
+  state transition on that record (`open` to `active` to `done`, or to `dropped` when declined),
+  plus one worklog entry. Nothing hand-edits a generated view.
+- Item numbers are permanent and never reused, including across supersession and reverted work,
+  which is the convention this file already follows.
+- A declined item is not deleted or moved elsewhere: it stays a record in the terminal `dropped`
+  state with its reason.
+- The store is always a git repository; an untracked store is a hard failure.
+- Default location is `.working/` in the product repository, with `CHANGELOG.md` and `VERSION`
+  staying at the product root. `VERSION` becomes generated from `version.toml`.
+- `opf init`, `doctor`, `render` and `migrate` ship in a later pack release. Until then adoption
+  is by hand and a conformance claim is self-asserted, which is the reason for the deferral: hand
+  maintaining a TOML store *and* hand rendering its views, with no `opf doctor` to catch drift
+  between them, is two hand-kept copies of one truth and exactly the defect class this
+  repository already runs three gates against.
+
+When the tooling lands: import this file and the private working store's historical closed items
+into one store, per file rather than absorbed silently, and keep the permanent numbering.
+
 ## Blocked upstream
 
 ### 5. Activate the AIQT hooks
