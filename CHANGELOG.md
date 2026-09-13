@@ -45,7 +45,9 @@ with the merged pull request is therefore an authoring obligation, not an enforc
 
 - Backlog rotation and version bookkeeping: #46 moved the eight closed band 1 rows into `DONE.md`
   and opened three new band 1 rows and three new band 2 rows; #47 pinned `VERSION` to its own pull
-  request number, correcting the stale value #46 shipped.
+  request number, correcting the stale value #46 shipped. #48 completed the pull-request references
+  across every dated section and set `VERSION` to its own number, which is the authoring step row
+  4.3 names.
 
 ## 2026-09-12
 
