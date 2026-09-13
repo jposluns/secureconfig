@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.39**, **2.24**, **3.9**, **4.3**.
+Next ids: **1.39**, **2.24**, **3.9**, **4.5**.
 
 ## Queueing
 
@@ -42,7 +42,7 @@ many.
 | --- | --- | --- |
 | 1.36 | Literal example addresses in runnable Verify probes fail silently: an unreplaced hostname fails visibly through DNS, but an unreplaced `203.0.113.10` times out and reads exactly like a blocked port, so a reader who skips the substitution sees a pass. `README.md` names it as a placeholder to replace, which is the mitigation and not a fix. 22 files. | corpus-wide, sensitive |
 | 1.37 | `mlflow.md` and `ray.md` treat a bare `--max-time` timeout as proof that a connection was blocked. `egress-metadata.md` now states in terms that it is not, so the corpus contradicts itself. | contradiction |
-| 1.38 | `ss ... \| grep <port>` matches a pid, a longer port number, and the `users:` column. `elasticsearch.md`, `postgresql.md` and `tailscale.md` now use ss's own `sport = :N` filter; roughly 47 other guides do not. | corpus-wide, sensitive |
+| 1.38 | `ss ... \| grep <port>` matches a pid, a longer port number, and the `users:` column. Per the maintainer's 2026-09-13 decision recorded below, judge each of the 48 rather than sweeping: fix only the checks whose Verify claims nothing ELSE is exposed, and leave a filtered check that asks whether one service is bound to loopback, which is correct for what it claims. `elasticsearch.md`, `postgresql.md` and `tailscale.md` already use ss's own `sport = :N` filter. | per-guide judgement |
 
 ## Priority 2: Deepen existing guides
 
@@ -104,7 +104,9 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 3.3 | Complete the `(#N)` pull-request references in `CHANGELOG.md`: PRs 3, 4, 5 and 7 are referenced nowhere, which means mapping historical bullets to the PR that shipped them (L, M) | `[changelog]` |
+| 3.3 | Done in this change: every pull request now carries a `(#N)` reference in `CHANGELOG.md`. The row's original premise was wrong on specifics and on shape: it named PRs 3, 4, 5 and 7, but 4 and 5 were already referenced, and the real gap was the eight records-maintenance pull requests (#3, #7, #11, #37, #43, #44, #46, #47), which is systematic rather than scattered. The changelog had always recorded every content change and omitted only its own upkeep. | done, rotate to DONE.md |
+| 4.3 | `VERSION` names the most recently merged pull request, so a bookkeeping pull request has to carry its OWN number, which is knowable only after the pull request is opened. #46 set its predecessor's number and was stale on merge; #47 corrected it. Decide whether the scheme changes or whether `CONTRIBUTING.md` gains the authoring step "open the pull request, then write its number into `VERSION` and push". No gate can catch this: the suite is offline by policy and a pull request number is only knowable from outside. | process |
+| 4.4 | Gate the changelog's pull-request coverage. Comparing the `#N` references in `CHANGELOG.md` against the `(#N)` suffixes in `git log` needs no network, so it fits the offline rule, and it would have caught the eight-reference gap #48 closed without an audit. It would also catch a careless check: the gap was first measured with a pattern that matched a lone `(#N)` and silently missed `(#38, #41)`, which is the failure class this repository keeps finding. Note the interaction with 4.3: a pull request cannot reference its own number until it is opened, so the gate must either exempt the newest reference or run against the merge commit. | gate, offline |
 
 ## Decisions on record
 

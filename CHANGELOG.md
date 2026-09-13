@@ -41,6 +41,12 @@ with the merged pull request is therefore an authoring obligation, not an enforc
 
 - `VERSION` to 1.0.45.
 
+### Records
+
+- Backlog rotation and version bookkeeping: #46 moved the eight closed band 1 rows into `DONE.md`
+  and opened three new band 1 rows and three new band 2 rows; #47 pinned `VERSION` to its own pull
+  request number, correcting the stale value #46 shipped.
+
 ## 2026-09-12
 
 ### Added
@@ -164,6 +170,11 @@ with the merged pull request is therefore an authoring obligation, not an enforc
   on either.
 - `kubernetes.md` and `memcached.md` gained Verify steps that discriminate (#26), and the
   changelog was brought up to date through #25.
+
+### Records
+
+- Changelog and version bookkeeping: #37 recorded #26 through #36 and set the version to match;
+  #43 did the same for #35 and #38 through #42; #44 rotated rows 3.4 and 3.5 into `DONE.md`.
 
 ## 2026-09-11
 
@@ -399,6 +410,11 @@ with the merged pull request is therefore an authoring obligation, not an enforc
   so a reader who chose the authenticated variant gets the same upstream settings as the other one.
   The RunPod port wording in `gpu-clouds.md` was corrected in the same change.
 
+### Records
+
+- Changelog and version bookkeeping: #7 recorded the front-door realignment; #11 set the project
+  version and completed the changelog for #9 and #10.
+
 ## 2026-09-10
 
 ### Added
@@ -507,3 +523,7 @@ with the merged pull request is therefore an authoring obligation, not an enforc
 - Issues and pull requests were both disabled on the repository and are now enabled. Pull requests
   being disabled is why the API rejected every attempt to open one, reporting it misleadingly as a
   personal-access-token permission error.
+
+### Records
+
+- #3 added this changelog and exempted it from the guide-coverage gate.
