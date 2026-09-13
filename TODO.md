@@ -1,112 +1,80 @@
 # TODO
 
-Forward-looking backlog for secureconfig. Item numbers are permanent and never reused. An item
-leaves this file only when it is done or explicitly declined, and in either case the CHANGELOG or
-a decision record says which.
+Forward-looking backlog for secureconfig. Closed items move to `DONE.md`; nothing is deleted.
 
 This file is not a guide. It carries no configuration and is excluded from the guide-shape and
 site-wiring gates for that reason; see `not_a_guide()` in `tools/run_all_checks.sh`.
 
-## Needs a decision
+## How items are numbered
 
-### 1. Coverage gaps: the ranked list no longer exists
+Every open item is one index row in the band below that fits it. **Ids are permanent and never
+reused**, including when an item is dropped, superseded, or its work reverted, and they are
+decoupled from the band so an item can move band without changing identity.
 
-A 2026-09-11 cross-family audit produced eighteen ranked coverage-gap proposals. Five of them
-are named in the working notes and all five have shipped:
+Series: **1.x** fix a defect, **2.x** add missing content, **3.x** tooling and process,
+**4.x** the site and adopter-facing surfaces.
 
-| Proposal | Shipped as |
-| --- | --- |
-| Exposure index mapping port to owning guide | #19 |
-| Proxy resource limits (request size, rate, concurrency, timeouts) | #20 |
-| Kubernetes control-plane exposure (API server, kubelet 10250, etcd 2379) | #23 |
-| Self-hosted identity providers (Keycloak, authentik) | #24 |
-| PostgreSQL connection poolers (PgBouncer, pgpool-II) | #30 |
+Each row carries `(severity, effort)`. Severity is what a reader loses: **H** a wrong or missing
+control on something commonly exposed, **M** a real gap with a workaround, **L** cosmetic or
+internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
+**XL** a project.
 
-**The other thirteen were never written down.** The notes reference "eighteen ranked proposals"
-and name only the top of the list, so the remainder is not recoverable from the record. Deciding
-whether to continue means first restoring the list, which is a fresh coverage audit rather than a
-lookup. That audit is the decision: run it, or stop adding guides and spend the effort on the 85
-that exist.
+Next ids: **1.6**, **2.3**, **3.3**, **4.2**.
 
-### 2. Package the corpus as an Agent Plugin
+## Queueing
 
-Whether to publish this corpus as a plugin per the Agent Plugins specification, so an assistant
-loads the rules when a task matches instead of being told to fetch `llms.txt`. Sketch: one skill,
-with the decision guide and the non-negotiables in `SKILL.md` and the guides as `references/`.
+Band 1 first, then 2, highest severity within each. Maintainer direction supersedes the order at
+any time. Items blocked on another project are not picked, they are waited on.
 
-The unresolved part is currency, not packaging. Guides carry a "Sources (checked <month year>)"
-date and a weekly sweep watches their citations; a packaged plugin freezes at install. Either the
-skill points at canonical URLs for anything time-sensitive, or the plugin needs a release cadence,
-and that is a maintenance commitment rather than a build step.
+## Priority 1: Fix defects
 
-### 3. Complete the `(#N)` pull-request references in `CHANGELOG.md`
+| ID | Item | Tags |
+| --- | --- | --- |
 
-The convention is applied inconsistently: pull requests 3, 4, 5 and 7 are referenced nowhere.
-Completing it means mapping each historical bullet to the pull request that shipped it, which is
-archaeology against the git history rather than a mechanical pass.
+## Priority 2: Add missing content
 
-## Ready to do
+| ID | Item | Tags |
+| --- | --- | --- |
+| 2.4 | Coverage audit in flight: three families are auditing all 85 guides for gaps and for enhancements; its findings land here as individual rows (H, M) | `[audit]` |
 
-### 4. Menu group labels are not headings
+## Priority 3: Tooling and process
 
-`site/index.html` uses `<p class="sidenav-h">` for the thirteen menu group labels, so heading
-navigation does not see them. WCAG 2.2 lists "H69: Providing heading elements at the beginning of
-each section of content" as a sufficient technique for bypassing repeated blocks, and this is the
-half of that technique the page is missing.
+| ID | Item | Tags |
+| --- | --- | --- |
+| 3.3 | Complete the `(#N)` pull-request references in `CHANGELOG.md`: PRs 3, 4, 5 and 7 are referenced nowhere, which means mapping historical bullets to the PR that shipped them (L, M) | `[changelog]` |
+| 3.4 | Changelog close-out for #35, #38, #39, #40 and re-pin `VERSION`, which is stale at 1.0.37 (M, S) | `[changelog]` |
+| 3.5 | Dispatch cross-family QA against a throwaway copy rather than the live worktree, so a snapshot is frozen without anyone waiting (M, XS) | `[process]` |
 
-A skip link was also proposed and is **not** needed, recorded here so it is not proposed again:
-SC 2.4.1 governs content "repeated on multiple web pages" and this is a single page, and the
-listed sufficient technique "ARIA11: Using ARIA landmarks" is already satisfied by
-`<nav aria-label="Guides and page contents">` followed by `<main>`.
+## Priority 4: Site and adopters
 
-### 8. Adopt the DevProcess / OPF operational-files standard
-
-Deferred by the maintainer on 2026-09-12 until the tooling ships. **`TODO.md` stays at the
-repository root meanwhile, and the adoption script will ingest it.** Do not move it into
-`.working/`, and do not hand-build a TOML store in the meantime.
-
-What the standard actually says, read from `.aiqt/core/opf/OPF-SPEC.md` and `OPF-QUICKSTART.md`
-rather than from a summary, so the next session does not re-derive it:
-
-- There is **no TODO.md to DONE.md migration**. Both are deterministic generated views rendered
-  from one store of versioned TOML records. An item is a `backlog_item` record; closing it is a
-  state transition on that record (`open` to `active` to `done`, or to `dropped` when declined),
-  plus one worklog entry. Nothing hand-edits a generated view.
-- Item numbers are permanent and never reused, including across supersession and reverted work,
-  which is the convention this file already follows.
-- A declined item is not deleted or moved elsewhere: it stays a record in the terminal `dropped`
-  state with its reason.
-- The store is always a git repository; an untracked store is a hard failure.
-- Default location is `.working/` in the product repository, with `CHANGELOG.md` and `VERSION`
-  staying at the product root. `VERSION` becomes generated from `version.toml`.
-- `opf init`, `doctor`, `render` and `migrate` ship in a later pack release. Until then adoption
-  is by hand and a conformance claim is self-asserted, which is the reason for the deferral: hand
-  maintaining a TOML store *and* hand rendering its views, with no `opf doctor` to catch drift
-  between them, is two hand-kept copies of one truth and exactly the defect class this
-  repository already runs three gates against.
-
-When the tooling lands: import this file and the private working store's historical closed items
-into one store, per file rather than absorbed silently, and keep the permanent numbering.
+| ID | Item | Tags |
+| --- | --- | --- |
+| 4.2 | `site/index.html` menu group labels are `<p class="sidenav-h">`, so heading navigation skips all thirteen; promote them to real headings (L, XS) | `[a11y]` |
 
 ## Blocked upstream
 
-### 5. Activate the AIQT hooks
+| ID | Item | Waiting on |
+| --- | --- | --- |
+| 3.6 | Activate the AIQT hooks: `.claude/settings.json` is classifier-gated and `tools/gen_aiqt_settings.py` merges rather than overwrites | the guardrails versioning work |
+| 3.7 | Re-pin `.aiqt/` to a tag: currently pinned to a `main` commit because the only tag predates the commits this repository depends on | guardrails publishing a tag |
+| 3.8 | Adopt the DevProcess / OPF operational-files standard. Deferred by the maintainer on 2026-09-12; `TODO.md` stays at the repository root and the adoption script will ingest it. See the note below | the OPF tooling release |
 
-`.claude/settings.json` is classifier-gated and hook activation was deferred pending the
-guardrails versioning work. `tools/gen_aiqt_settings.py` merges rather than overwrites, so it is
-safe to run once upstream confirms the intended adoption path.
+### On 3.8, so it is not re-derived
 
-### 6. Re-pin `.aiqt/` to a tag when guardrails publishes one
+Read from `.aiqt/core/opf/OPF-SPEC.md` and `OPF-QUICKSTART.md` rather than from a summary:
 
-Currently pinned to a `main` commit, because the only tag is far behind and predates the commits
-this repository depends on. Bump `.aiqt/PIN` and re-apply the recorded local patches on upgrade.
-
-## Process
-
-### 7. Dispatch cross-family QA against a throwaway copy
-
-Reviews are dispatched against a git worktree pinned to the branch under review. That stopped
-reviewers reading a checkout that switched underneath them, and it does not stop the orchestrator
-committing into the worktree while a review is reading it, which happened repeatedly on
-2026-09-12. Copy the worktree to a scratch directory per review and point the reviewer at the
-copy, so the snapshot is frozen without anyone having to wait.
+- There is **no TODO.md to DONE.md migration** under OPF. Both are deterministic generated views
+  rendered from one store of versioned TOML records. An item is a `backlog_item` record; closing
+  it is a state transition (`open` to `active` to `done`, or to `dropped` when declined) plus one
+  worklog entry. Nothing hand-edits a generated view. The two files in this repository today are
+  hand-kept and will be imported, not converted in place.
+- Ids are permanent and never reused, which is the convention this file already follows.
+- A declined item stays a record in the terminal `dropped` state with its reason, which is why
+  `DONE.md` carries dropped rows rather than deleting them.
+- Default store location is `.working/`, with `CHANGELOG.md` and `VERSION` staying at the product
+  root and `VERSION` becoming generated. The maintainer has directed that this file stay at the
+  root meanwhile; guardrails has captured that as an adoption-tooling requirement.
+- The tooling ships in a later pack release. Adopting by hand today would mean maintaining a TOML
+  store **and** rendering its views by hand with no `opf doctor` to catch drift between them,
+  which is two hand-kept copies of one truth and the defect class this repository already runs
+  three freshness gates against.
