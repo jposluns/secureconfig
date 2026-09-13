@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.36**, **2.21**, **3.9**, **4.3**.
+Next ids: **1.39**, **2.24**, **3.9**, **4.3**.
 
 ## Queueing
 
@@ -40,14 +40,9 @@ many.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 1.10 | `agent-builders.md`: Correct the implication that disabling Dify debugging removes publication: vendor Compose publishes 5003 unconditionally; provide a Compose port reset, inspect the merged configuration, and include 5003 in external verification; Verify step filters ss output by expected ports (`grep -E`), violating  (H, S) [2 families] | `[enhance]` |
-| 1.14 | `elasticsearch.md`: Verify line 1 (`curl -s https://...:9200/ # 401 without credentials`) carries no `--cacert`, so against the stock auto-generated certificate it dies on TLS verification instead of printing the 401, inviting exactly the `-k` the corpus forbids; give it the same `--cacert` as the credentialed line; Co (M, S) [2 families] | `[enhance]` |
-| 1.15 | `tailscale.md`: Verify has no `ss -tlnp` step, so `tailscale serve --bg localhost:3000` fronting an app bound to `0.0.0.0:3000` passes both Verify lines while the app answers its LAN/VPC directly; add the bind-check every comparable guide carries; "authenticated by membership and your tailnet ACLs" is asserted with (M, S) | `[enhance]` |
-| 1.18 | `cloud-firewalls.md`: Verify step 1 ("list rules allowing 0.0.0.0/0") has no runnable command for any provider and all three Sources are documentation roots that carry none of the guide's claims; add the aws/gcloud/az enumeration one-liners and page-level citations (M, S) | `[enhance]` |
-| 1.22 | `postgresql.md`: Add a wrong-password rejection check paired with a valid login against the same TCP host, database, and role; successful TLS and `pg_stat_ssl` checks cannot detect an earlier matching `hostssl` rule using `trust` (vendor) (M, S) | `[enhance]` |
-| 1.25 | `egress-metadata.md`: Stop declaring curl exit 7 or 28 proof of egress-policy enforcement: connection failure does not identify its cause, and `--max-time` can expire after connection; require connection-phase evidence and policy logs/counters, otherwise report inconclusive (vendor) (M, S) | `[enhance]` |
-| 1.34 | `host.md`: `ufw allow OpenSSH` admits the whole internet while cloud-firewalls.md rule 3 says SSH is not public; add the source-restricted form (`ufw allow from REPLACE_WITH_ADMIN_RANGE to any port 22`) or an explicit pointer to brokered access/tailnet (L, XS) | `[enhance]` |
-| 1.7 | `firebase-supabase.md`: the "rules are the security" section never warns that a view (owner-rights by default; PostgreSQL CREATE VIEW documents `security_invoker`) or a SECURITY DEFINER function in an exposed schema serves data past every RLS policy through the same public API; add both plus a Verify probe through a view;  (H, S) [2 families] | `[enhance]` |
+| 1.36 | Literal example addresses in runnable Verify probes fail silently: an unreplaced hostname fails visibly through DNS, but an unreplaced `203.0.113.10` times out and reads exactly like a blocked port, so a reader who skips the substitution sees a pass. `README.md` names it as a placeholder to replace, which is the mitigation and not a fix. 22 files. | corpus-wide, sensitive |
+| 1.37 | `mlflow.md` and `ray.md` treat a bare `--max-time` timeout as proof that a connection was blocked. `egress-metadata.md` now states in terms that it is not, so the corpus contradicts itself. | contradiction |
+| 1.38 | `ss ... \| grep <port>` matches a pid, a longer port number, and the `users:` column. `elasticsearch.md`, `postgresql.md` and `tailscale.md` now use ss's own `sport = :N` filter; roughly 47 other guides do not. | corpus-wide, sensitive |
 
 ## Priority 2: Deepen existing guides
 
@@ -77,6 +72,9 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.6 | `docker.md`: the DOCKER-USER iptables chain, the vendor-documented way to filter published ports when loopback publishing is not viable, never appears even though it is documented on the packet-filtering page the guide already cites (not re-opened offline); Qualify localhost publication with Docker’s pre-28.0.0  (H, S) [3 families] | `[enhance]` |
 | 1.8 | `model-servers.md`: LocalAI and text-generation-webui are absent; both are commonly deployed with `--listen`-style flags and have native key/auth options worth stating or honestly denying (unverified offline); Verify step filters ss output by expected ports (`grep -E`), violating the rule against filtering (H, S) [2 families] | `[enhance]` |
 | 1.9 | `vector-databases.md`: Explicitly restrict Qdrant cluster port 6335 to cluster peers and include it in Verify, whose port filter currently omits it; API keys and bearer tokens never protect internal cluster communication (vendor); Verify never probes the backend ports directly from outside, leaving published container por (H, S) [2 families] | `[enhance]` |
+| 2.21 | `tailscale.md`: the default tailnet ACL is permissive, and device identity is not user authorization. The guide should say what an ACL has to do before "reachable only by your tailnet" means what a reader hears. | deferred from the band 1 plan |
+| 2.22 | `firebase-supabase.md`: per-overload RPC negative tests, and a worked pre-15 example of revoking a view from `public`, `anon` and `authenticated` together. | deferred from the band 1 plan |
+| 2.23 | `agent-builders.md`: establish whether Flowise, Langflow and LibreChat ship vendor Compose files a reader would be overriding. If they do, the `!reset` caveat added in #45 is load-bearing for them rather than advisory. Premise unverified per vendor. | raised by QA, premise unverified |
 
 ## Priority 3: Add missing content
 
