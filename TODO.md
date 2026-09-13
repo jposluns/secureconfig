@@ -104,7 +104,6 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 3.9 | `VERSION` names the most recently merged pull request, so a bookkeeping pull request has to carry its OWN number, which is knowable only after the pull request is opened. #46 set its predecessor's number and was stale on merge; #47 corrected it. Settled in `DECISIONS.md`: the scheme stays and `CONTRIBUTING.md` gains the authoring step. A second gap found while merging #50 after #51: the scheme assumes pull requests merge in NUMERIC order. When they do not, the literal rule produces a version lower than the one already on `main`, so the value goes backwards, and no gate enforces monotonicity. Decide whether the authoring step gains an ordering rule, whether a monotonicity gate is added, or whether going backwards is accepted as harmless. | process |
 
 ## Decisions
 
