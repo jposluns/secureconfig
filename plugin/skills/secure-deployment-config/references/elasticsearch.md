@@ -26,10 +26,12 @@ curl -s --cacert /path/http_ca.crt https://search.example.com:9200/ -u elastic
                                                     # installs its own) and never pass -k here: -k accepts a substituted
                                                     # certificate exactly as readily as yours, and this line sends
                                                     # credentials over whatever it accepted
-curl -s -o /dev/null -w '%{http_code}\n' --max-time 5 http://search.example.com:9200/
+curl -s -o /dev/null --connect-timeout 5 --max-time 10 \
+  -w 'http=%{http_code} time_connect=%{time_connect}\n' http://search.example.com:9200/
                                                     # plaintext must NOT answer: expect a connection failure or a
                                                     # protocol error, never cluster JSON
-ss -tlnp | grep 9200                                # loopback/private only, unless deliberate
+ss -tlnp 'sport = :9200'                            # ss's own filter, not a grep, which also matches
+                                                    # a pid of 9200: loopback or private only, unless deliberate
 ```
 
 An unauthenticated `GET /` returning cluster JSON is the classic finding; so is `_cat/indices` listing your data to the world.
@@ -39,3 +41,4 @@ An unauthenticated `GET /` returning cluster JSON is the classic finding; so is 
 - Elasticsearch security configuration (current docs home for cluster security): https://www.elastic.co/docs/deploy-manage/security
 - OpenSearch demo security configuration: https://docs.opensearch.org/latest/security/configuration/demo-configuration/
 - Elasticsearch, automatic TLS setup for self-managed clusters (the generated `http_ca.crt` used to verify TLS from a client): https://www.elastic.co/docs/deploy-manage/security/self-auto-setup
+- ss(8), the `sport` filter expression used above: https://manpages.ubuntu.com/manpages/noble/en/man8/ss.8.html

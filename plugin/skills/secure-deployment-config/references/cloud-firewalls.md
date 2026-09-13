@@ -12,34 +12,35 @@ On AWS (security groups), Google Cloud (VPC firewall rules), and Azure (network 
 
 ## Verify
 
-Enumerate every inbound rule whose source is the whole internet, and confirm that each one is 80 or 443 on the front layer, nothing else.
+Enumerate every inbound rule, then confirm that any whose source reaches the internet is 80 or 443 on the front layer, nothing else. These commands list rather than select, because no filter catches the exposure class.
 
 ```bash
-# AWS, once per region. A world-open rule always carries 0.0.0.0/0 or ::/0, so this hides none of
-# them. Direction is shown rather than filtered on, because JMESPath needs a backtick literal to
-# compare a boolean and a backtick inside a shell command is a command substitution waiting to happen.
+# AWS, once per region. Every rule, not a selection: no filter catches the exposure class, because
+# 0.0.0.0/1 together with 128.0.0.0/1 admits every IPv4 address while matching neither literal, and
+# a source can be a prefix list or another security group instead of a CIDR.
 aws ec2 describe-security-group-rules \
-  --query "SecurityGroupRules[?CidrIpv4=='0.0.0.0/0' || CidrIpv6=='::/0'].{Group:GroupId,Egress:IsEgress,Proto:IpProtocol,From:FromPort,To:ToPort,V4:CidrIpv4,V6:CidrIpv6}" \
+  --query "SecurityGroupRules[].{Group:GroupId,Egress:IsEgress,Proto:IpProtocol,From:FromPort,To:ToPort,V4:CidrIpv4,V6:CidrIpv6,Prefix:PrefixListId,SG:ReferencedGroupInfo.GroupId}" \
   --output table
-# every row whose Egress column reads False is inbound and open to the internet: it must be 80 or
-# 443 on the front layer. Rows reading True are outbound, a separate question.
+# read every row whose Egress column reads False. Its source must be 80 or 443 on the front layer,
+# a private CIDR, a security group, or a prefix list you have resolved and trust. Rows reading True
+# are outbound, a separate question.
 
-# Google Cloud, once per project. No filter, so no rule can be hidden by one.
-gcloud compute firewall-rules list --sort-by priority \
-  --format="table(name, network, direction, priority, sourceRanges.list():label=SRC_RANGES, allowed[].map().firewall_rule().list():label=ALLOW)"
-# every INGRESS row whose SRC_RANGES holds 0.0.0.0/0 or ::/0 must allow only tcp:80 and tcp:443
+# Google Cloud, once per project. Whole records, because a table projection drops the enforcement
+# state: an enforced world-open rule and the same rule with "disabled": true project identically.
+gcloud compute firewall-rules list --format=json
+# for each entry with "direction": "INGRESS" and "disabled": false, "sourceRanges" must not hold
+# 0.0.0.0/0 or ::/0 except where "allowed" is only tcp:80 and tcp:443 on the front layer
 
-# Azure, once per network security group. Lists every inbound allow, not only the open ones.
+# Azure, once per network security group. JSON, not a table: the table formatter omits array-valued
+# columns, so a rule carrying sourceAddressPrefixes rather than sourceAddressPrefix would print an
+# empty cell in the exposed state and the safe state alike.
 az network nsg rule list \
-  --resource-group REPLACE_WITH_RESOURCE_GROUP --nsg-name REPLACE_WITH_NSG_NAME \
-  --query "[?direction=='Inbound' && access=='Allow'].{Name:name,Prio:priority,Proto:protocol,Src:sourceAddressPrefix,Ports:destinationPortRange}" \
-  --output table
-# a rule may instead carry sourceAddressPrefixes and destinationPortRanges (plural); re-run with
-# those names where Src or Ports comes back empty. No source may be '*', 'Internet', 0.0.0.0/0 or
-# ::/0 except on 80 and 443.
+  --resource-group REPLACE_WITH_RESOURCE_GROUP --nsg-name REPLACE_WITH_NSG_NAME --output json
+# for each rule with "direction": "Inbound" and "access": "Allow", neither "sourceAddressPrefix" nor
+# any entry in "sourceAddressPrefixes" may be "*", "Internet", "0.0.0.0/0" or "::/0" except on 80 and 443
 ```
 
-- From an outside network: `for p in 22 3306 5432 6379 27017; do nc -vz -w 3 203.0.113.10 "$p"; done   # every line must fail to connect`. Each port must report a refused or timed-out connection; a usage error from `nc` (some netcat variants take one port or a range per invocation) is not a passing result.
+- From an address outside the range you administer from: `for p in 22 3306 5432 6379 27017; do nc -vz -w 3 203.0.113.10 "$p"; done   # every line must fail to connect`. Each port must report a refused or timed-out connection; a usage error from `nc` (some netcat variants take one port or a range per invocation) is not a passing result.
 - An external scan of the public IP (for example with nmap, against your own infrastructure only) shows only the intended ports.
 
 ## Sources (checked September 2026)
@@ -49,3 +50,4 @@ az network nsg rule list \
 - Google Cloud VPC firewall rules, including the `gcloud compute firewall-rules list --format` projection used above: https://docs.cloud.google.com/firewall/docs/using-firewalls
 - Azure CLI `az network nsg rule list`: https://learn.microsoft.com/en-us/cli/azure/network/nsg/rule
 - Azure network security group rule properties (`direction`, `access`, `sourceAddressPrefix`, `sourceAddressPrefixes`): https://learn.microsoft.com/en-us/rest/api/virtualnetwork/network-security-groups/get
+- AWS managed prefix lists (a rule source that is neither a CIDR nor a security group): https://docs.aws.amazon.com/vpc/latest/userguide/managed-prefix-lists.html

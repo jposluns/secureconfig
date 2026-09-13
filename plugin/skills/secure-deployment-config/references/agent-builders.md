@@ -13,7 +13,7 @@ ports:
   - "127.0.0.1:3080:3080"    # LibreChat (PORT defaults to 3080)
 ```
 
-Dify is different: its Compose file publishes nginx on `EXPOSE_NGINX_PORT=80` and `EXPOSE_NGINX_SSL_PORT=443` from `docker/.env`, plus the plugin daemon's `EXPOSE_PLUGIN_DEBUGGING_PORT=5003` (optional vector store profiles publish more). Do not hide a published port with the host firewall: Docker's NAT rules divert the traffic before it reaches the chains UFW uses, so a UFW deny on a published port does nothing ([docker.md](docker.md)). The plugin daemon's debugging port is only needed for remote plugin debugging, and no setting turns it off: the Compose file publishes `${EXPOSE_PLUGIN_DEBUGGING_PORT:-5003}` for `plugin_daemon` unconditionally, with no host address in the mapping, so it binds `0.0.0.0:5003`. `EXPOSE_PLUGIN_DEBUGGING_HOST=localhost` does not restrict that bind; it only tells the plugin client where to connect. Remove the publication with an override file (see below). Leave the backend services unpublished on the Compose network, and make Dify's nginx the only service with a public port: either as the TLS edge (section 2) or on loopback (`EXPOSE_NGINX_PORT=127.0.0.1:8080`) behind your own proxy.
+Dify is different: its Compose file publishes nginx on `EXPOSE_NGINX_PORT=80` and `EXPOSE_NGINX_SSL_PORT=443` from `docker/.env`, plus the plugin daemon's `EXPOSE_PLUGIN_DEBUGGING_PORT=5003` (optional vector store profiles publish more). Do not hide a published port with the host firewall: Docker's NAT rules divert the traffic before it reaches the chains UFW uses, so a UFW deny on a published port does nothing ([docker.md](docker.md)). The plugin daemon's debugging port is only needed for remote plugin debugging, and no setting turns it off: the Compose file publishes `${EXPOSE_PLUGIN_DEBUGGING_PORT:-5003}` for `plugin_daemon` unconditionally, with no host address in the mapping, so it binds `0.0.0.0:5003`. `EXPOSE_PLUGIN_DEBUGGING_HOST=localhost` does not restrict that bind; it only tells the plugin client where to connect. Remove the publication with an override file (see below). Leave the backend services unpublished on the Compose network, and make Dify's nginx the only service with a public port: either as the TLS edge (section 2) or on loopback (`EXPOSE_NGINX_PORT=127.0.0.1:8080`) behind your own proxy. The Compose file publishes `EXPOSE_NGINX_SSL_PORT` as well, so give that the same host address, or leave `NGINX_HTTPS_ENABLED` off; restricting only the HTTP port leaves 443 published.
 
 ```yaml
 # docker-compose.override.yaml, beside docker-compose.yaml; plain `docker compose up -d` picks it up
@@ -81,8 +81,11 @@ None of the four documents instance-wide MFA enforcement. Where OIDC exists (Lib
 
 ```bash
 ss -tlnp                                        # read the whole list: app ports on 127.0.0.1; 80/443 public only where Dify's own nginx is the TLS edge; nothing on 5003
-docker compose config | grep -n published       # run in dify/docker: no published 5003 for plugin_daemon
-nc -vz -w 3 203.0.113.10 5003                   # from an outside network: must fail to connect
+docker compose ps --format json                 # run in dify/docker: the plugin_daemon entry must
+                                                # carry no PublishedPort. A grep for "published"
+                                                # cannot say which service published it.
+nc -vz -w 3 203.0.113.10 5003                   # from an outside network: must fail to connect.
+                                                # EXPOSE_PLUGIN_DEBUGGING_PORT can move it, so the ps output above is the authority on which port to probe
 curl -sI https://builder.example.com/                  # TLS; login page or redirect, not the editor
 curl -s -o /dev/null -w '%{http_code}\n' -X POST 'https://flowise.example.com/api/v1/prediction/REPLACE_WITH_CHATFLOW_ID'   # 401
 curl -s -o /dev/null -w '%{http_code}\n' -X POST 'https://langflow.example.com/api/v1/run/REPLACE_WITH_FLOW_ID'            # 401
@@ -121,3 +124,4 @@ curl -s -o /dev/null -w '%{http_code}\n' https://dify.example.com/v1/parameters 
 - LibreChat v0.7.7 changelog (two-factor authentication): https://www.librechat.ai/changelog/v0.7.7
 - Docker Compose merge rules (sequences merge rather than replace; the `!reset` tag): https://docs.docker.com/reference/compose-file/merge/
 - Dify `docker/docker-compose.yaml` (`plugin_daemon` publishes `${EXPOSE_PLUGIN_DEBUGGING_PORT:-5003}` with no host address): https://github.com/langgenius/dify/blob/main/docker/docker-compose.yaml
+- `docker compose ps` output fields (`Service`, `Publishers`, `PublishedPort`): https://docs.docker.com/reference/cli/docker/compose/ps/

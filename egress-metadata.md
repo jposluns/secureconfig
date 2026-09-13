@@ -75,10 +75,13 @@ curl -s -o /dev/null -w '%{http_code}\n' 'http://169.254.169.254/metadata/instan
 # the three checks above test the header requirement, which is not the control this guide
 # recommends. Test the network block itself, WITH the header the service requires, from a
 # workload that has no legitimate reason to reach metadata:
-curl -s -o /dev/null -m 5 -w '%{http_code}\n' -H 'Metadata-Flavor: Google' \
+curl -s -o /dev/null --connect-timeout 5 --max-time 10 \
+  -w 'http=%{http_code} time_connect=%{time_connect}\n' -H 'Metadata-Flavor: Google' \
   http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token
-# must time out or be refused by the egress policy. A 200 here is a credential-issuing
-# endpoint reachable from the workload, whatever the header checks above returned
+# a 200 here is a credential-issuing endpoint reachable from the workload, whatever the header
+# checks above returned. http=000 on its own is not proof of a block: an endpoint that accepts the
+# connection and then stalls produces it too. Read time_connect, which stays 0.000000 only when no
+# connection completed, and corroborate with the deny record the negative control below describes.
 # positive control: a host on the egress allow list, for example the AWS STS endpoint used for role
 # credentials, must succeed
 curl -s -o /dev/null -w '%{http_code}\n' --max-time 5 https://sts.amazonaws.com/

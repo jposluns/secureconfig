@@ -559,8 +559,11 @@ Serve for anything private (most things). Funnel or [cloudflare.md](cloudflare.m
 ## 4. Verify
 
 ```bash
-ss -tlnp | grep ':3000 '                          # the fronted app: 127.0.0.1:3000, never 0.0.0.0:3000
-curl -s -o /dev/null -m 5 http://10.0.0.5:3000/   # the host's own LAN or VPC address: must fail to connect
+ss -tlnp 'sport = :3000'                          # ss's own filter, not a grep: the address column
+                                                  # must read 127.0.0.1:3000, never 0.0.0.0:3000 or [::]:3000
+curl -s -o /dev/null --connect-timeout 5 --max-time 10 \
+  -w 'http=%{http_code} time_connect=%{time_connect}\n' http://10.0.0.5:3000/
+# the host's own LAN or VPC address. An HTTP status here means the app answers past the tailnet; time_connect at 0.000000 means nothing connected
 tailscale serve status
 curl -sI https://host.tailnet.ts.net/            # from a tailnet device: works
 # From a non-tailnet network: serve URL unreachable; funnel URL reachable, so its app login must gate it.
@@ -570,6 +573,7 @@ curl -sI https://host.tailnet.ts.net/            # from a tailnet device: works
 
 - Tailscale serve: https://tailscale.com/kb/1242/tailscale-serve
 - Tailscale funnel: https://tailscale.com/kb/1223/funnel
+- ss(8), the `sport` filter expression used above: https://manpages.ubuntu.com/manpages/noble/en/man8/ss.8.html
 
 ======================================================================
 ==> tunnels.md
@@ -4013,6 +4017,7 @@ PubkeyAuthentication yes
 # Debian/Ubuntu (ufw)
 sudo ufw default deny incoming
 sudo ufw default allow outgoing
+sudo ufw delete allow OpenSSH                # only if an earlier run of this guide added it: a new rule does not replace an old one
 sudo ufw allow proto tcp from REPLACE_WITH_ADMIN_RANGE to any port 22
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
@@ -4068,34 +4073,35 @@ On AWS (security groups), Google Cloud (VPC firewall rules), and Azure (network 
 
 ## Verify
 
-Enumerate every inbound rule whose source is the whole internet, and confirm that each one is 80 or 443 on the front layer, nothing else.
+Enumerate every inbound rule, then confirm that any whose source reaches the internet is 80 or 443 on the front layer, nothing else. These commands list rather than select, because no filter catches the exposure class.
 
 ```bash
-# AWS, once per region. A world-open rule always carries 0.0.0.0/0 or ::/0, so this hides none of
-# them. Direction is shown rather than filtered on, because JMESPath needs a backtick literal to
-# compare a boolean and a backtick inside a shell command is a command substitution waiting to happen.
+# AWS, once per region. Every rule, not a selection: no filter catches the exposure class, because
+# 0.0.0.0/1 together with 128.0.0.0/1 admits every IPv4 address while matching neither literal, and
+# a source can be a prefix list or another security group instead of a CIDR.
 aws ec2 describe-security-group-rules \
-  --query "SecurityGroupRules[?CidrIpv4=='0.0.0.0/0' || CidrIpv6=='::/0'].{Group:GroupId,Egress:IsEgress,Proto:IpProtocol,From:FromPort,To:ToPort,V4:CidrIpv4,V6:CidrIpv6}" \
+  --query "SecurityGroupRules[].{Group:GroupId,Egress:IsEgress,Proto:IpProtocol,From:FromPort,To:ToPort,V4:CidrIpv4,V6:CidrIpv6,Prefix:PrefixListId,SG:ReferencedGroupInfo.GroupId}" \
   --output table
-# every row whose Egress column reads False is inbound and open to the internet: it must be 80 or
-# 443 on the front layer. Rows reading True are outbound, a separate question.
+# read every row whose Egress column reads False. Its source must be 80 or 443 on the front layer,
+# a private CIDR, a security group, or a prefix list you have resolved and trust. Rows reading True
+# are outbound, a separate question.
 
-# Google Cloud, once per project. No filter, so no rule can be hidden by one.
-gcloud compute firewall-rules list --sort-by priority \
-  --format="table(name, network, direction, priority, sourceRanges.list():label=SRC_RANGES, allowed[].map().firewall_rule().list():label=ALLOW)"
-# every INGRESS row whose SRC_RANGES holds 0.0.0.0/0 or ::/0 must allow only tcp:80 and tcp:443
+# Google Cloud, once per project. Whole records, because a table projection drops the enforcement
+# state: an enforced world-open rule and the same rule with "disabled": true project identically.
+gcloud compute firewall-rules list --format=json
+# for each entry with "direction": "INGRESS" and "disabled": false, "sourceRanges" must not hold
+# 0.0.0.0/0 or ::/0 except where "allowed" is only tcp:80 and tcp:443 on the front layer
 
-# Azure, once per network security group. Lists every inbound allow, not only the open ones.
+# Azure, once per network security group. JSON, not a table: the table formatter omits array-valued
+# columns, so a rule carrying sourceAddressPrefixes rather than sourceAddressPrefix would print an
+# empty cell in the exposed state and the safe state alike.
 az network nsg rule list \
-  --resource-group REPLACE_WITH_RESOURCE_GROUP --nsg-name REPLACE_WITH_NSG_NAME \
-  --query "[?direction=='Inbound' && access=='Allow'].{Name:name,Prio:priority,Proto:protocol,Src:sourceAddressPrefix,Ports:destinationPortRange}" \
-  --output table
-# a rule may instead carry sourceAddressPrefixes and destinationPortRanges (plural); re-run with
-# those names where Src or Ports comes back empty. No source may be '*', 'Internet', 0.0.0.0/0 or
-# ::/0 except on 80 and 443.
+  --resource-group REPLACE_WITH_RESOURCE_GROUP --nsg-name REPLACE_WITH_NSG_NAME --output json
+# for each rule with "direction": "Inbound" and "access": "Allow", neither "sourceAddressPrefix" nor
+# any entry in "sourceAddressPrefixes" may be "*", "Internet", "0.0.0.0/0" or "::/0" except on 80 and 443
 ```
 
-- From an outside network: `for p in 22 3306 5432 6379 27017; do nc -vz -w 3 203.0.113.10 "$p"; done   # every line must fail to connect`. Each port must report a refused or timed-out connection; a usage error from `nc` (some netcat variants take one port or a range per invocation) is not a passing result.
+- From an address outside the range you administer from: `for p in 22 3306 5432 6379 27017; do nc -vz -w 3 203.0.113.10 "$p"; done   # every line must fail to connect`. Each port must report a refused or timed-out connection; a usage error from `nc` (some netcat variants take one port or a range per invocation) is not a passing result.
 - An external scan of the public IP (for example with nmap, against your own infrastructure only) shows only the intended ports.
 
 ## Sources (checked September 2026)
@@ -4105,6 +4111,7 @@ az network nsg rule list \
 - Google Cloud VPC firewall rules, including the `gcloud compute firewall-rules list --format` projection used above: https://docs.cloud.google.com/firewall/docs/using-firewalls
 - Azure CLI `az network nsg rule list`: https://learn.microsoft.com/en-us/cli/azure/network/nsg/rule
 - Azure network security group rule properties (`direction`, `access`, `sourceAddressPrefix`, `sourceAddressPrefixes`): https://learn.microsoft.com/en-us/rest/api/virtualnetwork/network-security-groups/get
+- AWS managed prefix lists (a rule source that is neither a CIDR nor a security group): https://docs.aws.amazon.com/vpc/latest/userguide/managed-prefix-lists.html
 
 ======================================================================
 ==> paas.md
@@ -4232,10 +4239,13 @@ curl -s -o /dev/null -w '%{http_code}\n' 'http://169.254.169.254/metadata/instan
 # the three checks above test the header requirement, which is not the control this guide
 # recommends. Test the network block itself, WITH the header the service requires, from a
 # workload that has no legitimate reason to reach metadata:
-curl -s -o /dev/null -m 5 -w '%{http_code}\n' -H 'Metadata-Flavor: Google' \
+curl -s -o /dev/null --connect-timeout 5 --max-time 10 \
+  -w 'http=%{http_code} time_connect=%{time_connect}\n' -H 'Metadata-Flavor: Google' \
   http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token
-# must time out or be refused by the egress policy. A 200 here is a credential-issuing
-# endpoint reachable from the workload, whatever the header checks above returned
+# a 200 here is a credential-issuing endpoint reachable from the workload, whatever the header
+# checks above returned. http=000 on its own is not proof of a block: an endpoint that accepts the
+# connection and then stalls produces it too. Read time_connect, which stays 0.000000 only when no
+# connection completed, and corroborate with the deny record the negative control below describes.
 # positive control: a host on the egress allow list, for example the AWS STS endpoint used for role
 # credentials, must succeed
 curl -s -o /dev/null -w '%{http_code}\n' --max-time 5 https://sts.amazonaws.com/
@@ -4434,7 +4444,7 @@ ssl_min_protocol_version = 'TLSv1.2'      # PostgreSQL 12 and later
 password_encryption = scram-sha-256       # default from PostgreSQL 14; set explicitly on older versions
 ```
 
-The `ssl*` and `password_encryption` settings apply on reload (`SELECT pg_reload_conf();` or `systemctl reload postgresql`); `listen_addresses` can only be set at server start, so a change to it needs `systemctl restart postgresql`, then `ss -tlnp | grep 5432` to confirm the bind.
+The `ssl*` and `password_encryption` settings apply on reload (`SELECT pg_reload_conf();` or `systemctl reload postgresql`); `listen_addresses` can only be set at server start, so a change to it needs `systemctl restart postgresql`, then `ss -tlnp 'sport = :5432'` to confirm the bind.
 
 ## 2. Require TLS per connection in pg_hba.conf
 
@@ -4475,7 +4485,7 @@ psql "host=db.example.com dbname=app user=app password=REPLACE_WITH_A_DELIBERATE
 # in without a password: the first matching record wins and there is no fall-through, and neither a
 # successful TLS handshake nor pg_stat_ssl can see that
 sudo -u postgres psql -c "SELECT ssl, count(*) FROM pg_stat_ssl JOIN pg_stat_activity USING (pid) GROUP BY ssl;"
-ss -tlnp | grep 5432       # loopback only, unless remote access is deliberate
+ss -tlnp 'sport = :5432'   # ss's own filter, not a grep: loopback only, unless remote access is deliberate
 ```
 
 A connection attempt without TLS from a remote host must fail once only `hostssl` lines cover remote addresses. The encryption checks prove encryption, not that a password was demanded, which is why the wrong-password attempt has to fail against the same host, database, and role the valid login used.
@@ -4492,6 +4502,7 @@ A connection attempt without TLS from a remote host must fail once only `hostssl
 - pg_hba.conf: https://www.postgresql.org/docs/current/auth-pg-hba-conf.html
 - libpq SSL support (sslmode): https://www.postgresql.org/docs/current/libpq-ssl.html
 - Connections and authentication (`listen_addresses` "can only be set at server start"): https://www.postgresql.org/docs/current/runtime-config-connection.html
+- ss(8), the `sport` filter expression used above: https://manpages.ubuntu.com/manpages/noble/en/man8/ss.8.html
 
 ======================================================================
 ==> connection-poolers.md
@@ -5114,10 +5125,12 @@ curl -s --cacert /path/http_ca.crt https://search.example.com:9200/ -u elastic
                                                     # installs its own) and never pass -k here: -k accepts a substituted
                                                     # certificate exactly as readily as yours, and this line sends
                                                     # credentials over whatever it accepted
-curl -s -o /dev/null -w '%{http_code}\n' --max-time 5 http://search.example.com:9200/
+curl -s -o /dev/null --connect-timeout 5 --max-time 10 \
+  -w 'http=%{http_code} time_connect=%{time_connect}\n' http://search.example.com:9200/
                                                     # plaintext must NOT answer: expect a connection failure or a
                                                     # protocol error, never cluster JSON
-ss -tlnp | grep 9200                                # loopback/private only, unless deliberate
+ss -tlnp 'sport = :9200'                            # ss's own filter, not a grep, which also matches
+                                                    # a pid of 9200: loopback or private only, unless deliberate
 ```
 
 An unauthenticated `GET /` returning cluster JSON is the classic finding; so is `_cat/indices` listing your data to the world.
@@ -5127,6 +5140,7 @@ An unauthenticated `GET /` returning cluster JSON is the classic finding; so is 
 - Elasticsearch security configuration (current docs home for cluster security): https://www.elastic.co/docs/deploy-manage/security
 - OpenSearch demo security configuration: https://docs.opensearch.org/latest/security/configuration/demo-configuration/
 - Elasticsearch, automatic TLS setup for self-managed clusters (the generated `http_ca.crt` used to verify TLS from a client): https://www.elastic.co/docs/deploy-manage/security/self-auto-setup
+- ss(8), the `sport` filter expression used above: https://manpages.ubuntu.com/manpages/noble/en/man8/ss.8.html
 
 ======================================================================
 ==> minio.md
@@ -7108,7 +7122,7 @@ ports:
   - "127.0.0.1:3080:3080"    # LibreChat (PORT defaults to 3080)
 ```
 
-Dify is different: its Compose file publishes nginx on `EXPOSE_NGINX_PORT=80` and `EXPOSE_NGINX_SSL_PORT=443` from `docker/.env`, plus the plugin daemon's `EXPOSE_PLUGIN_DEBUGGING_PORT=5003` (optional vector store profiles publish more). Do not hide a published port with the host firewall: Docker's NAT rules divert the traffic before it reaches the chains UFW uses, so a UFW deny on a published port does nothing ([docker.md](docker.md)). The plugin daemon's debugging port is only needed for remote plugin debugging, and no setting turns it off: the Compose file publishes `${EXPOSE_PLUGIN_DEBUGGING_PORT:-5003}` for `plugin_daemon` unconditionally, with no host address in the mapping, so it binds `0.0.0.0:5003`. `EXPOSE_PLUGIN_DEBUGGING_HOST=localhost` does not restrict that bind; it only tells the plugin client where to connect. Remove the publication with an override file (see below). Leave the backend services unpublished on the Compose network, and make Dify's nginx the only service with a public port: either as the TLS edge (section 2) or on loopback (`EXPOSE_NGINX_PORT=127.0.0.1:8080`) behind your own proxy.
+Dify is different: its Compose file publishes nginx on `EXPOSE_NGINX_PORT=80` and `EXPOSE_NGINX_SSL_PORT=443` from `docker/.env`, plus the plugin daemon's `EXPOSE_PLUGIN_DEBUGGING_PORT=5003` (optional vector store profiles publish more). Do not hide a published port with the host firewall: Docker's NAT rules divert the traffic before it reaches the chains UFW uses, so a UFW deny on a published port does nothing ([docker.md](docker.md)). The plugin daemon's debugging port is only needed for remote plugin debugging, and no setting turns it off: the Compose file publishes `${EXPOSE_PLUGIN_DEBUGGING_PORT:-5003}` for `plugin_daemon` unconditionally, with no host address in the mapping, so it binds `0.0.0.0:5003`. `EXPOSE_PLUGIN_DEBUGGING_HOST=localhost` does not restrict that bind; it only tells the plugin client where to connect. Remove the publication with an override file (see below). Leave the backend services unpublished on the Compose network, and make Dify's nginx the only service with a public port: either as the TLS edge (section 2) or on loopback (`EXPOSE_NGINX_PORT=127.0.0.1:8080`) behind your own proxy. The Compose file publishes `EXPOSE_NGINX_SSL_PORT` as well, so give that the same host address, or leave `NGINX_HTTPS_ENABLED` off; restricting only the HTTP port leaves 443 published.
 
 ```yaml
 # docker-compose.override.yaml, beside docker-compose.yaml; plain `docker compose up -d` picks it up
@@ -7176,8 +7190,11 @@ None of the four documents instance-wide MFA enforcement. Where OIDC exists (Lib
 
 ```bash
 ss -tlnp                                        # read the whole list: app ports on 127.0.0.1; 80/443 public only where Dify's own nginx is the TLS edge; nothing on 5003
-docker compose config | grep -n published       # run in dify/docker: no published 5003 for plugin_daemon
-nc -vz -w 3 203.0.113.10 5003                   # from an outside network: must fail to connect
+docker compose ps --format json                 # run in dify/docker: the plugin_daemon entry must
+                                                # carry no PublishedPort. A grep for "published"
+                                                # cannot say which service published it.
+nc -vz -w 3 203.0.113.10 5003                   # from an outside network: must fail to connect.
+                                                # EXPOSE_PLUGIN_DEBUGGING_PORT can move it, so the ps output above is the authority on which port to probe
 curl -sI https://builder.example.com/                  # TLS; login page or redirect, not the editor
 curl -s -o /dev/null -w '%{http_code}\n' -X POST 'https://flowise.example.com/api/v1/prediction/REPLACE_WITH_CHATFLOW_ID'   # 401
 curl -s -o /dev/null -w '%{http_code}\n' -X POST 'https://langflow.example.com/api/v1/run/REPLACE_WITH_FLOW_ID'            # 401
@@ -7216,6 +7233,7 @@ curl -s -o /dev/null -w '%{http_code}\n' https://dify.example.com/v1/parameters 
 - LibreChat v0.7.7 changelog (two-factor authentication): https://www.librechat.ai/changelog/v0.7.7
 - Docker Compose merge rules (sequences merge rather than replace; the `!reset` tag): https://docs.docker.com/reference/compose-file/merge/
 - Dify `docker/docker-compose.yaml` (`plugin_daemon` publishes `${EXPOSE_PLUGIN_DEBUGGING_PORT:-5003}` with no host address): https://github.com/langgenius/dify/blob/main/docker/docker-compose.yaml
+- `docker compose ps` output fields (`Service`, `Publishers`, `PublishedPort`): https://docs.docker.com/reference/cli/docker/compose/ps/
 
 ======================================================================
 ==> image-gen-uis.md
@@ -7987,11 +8005,13 @@ using ( auth.uid() = user_id );
 
 Write separate policies per operation (`select`, `insert`, `update`, `delete`); no policy means no access once RLS is on, which is the correct starting point.
 - The `service_role` key bypasses RLS; it is a server-only secret that must never reach the client bundle or the repository.
-- A view runs with **its owner's** privileges by default, so a view over an RLS-protected table serves that table's rows past every policy to anyone holding the `anon` key. Make every API-exposed view apply the caller's policies instead:
+- A view runs with **its owner's** privileges by default, and applies the owner's row-level security policies rather than the caller's. On Supabase a view is typically created by the `postgres` user, so a view over an RLS-protected table serves that table's rows to anyone holding the `anon` key. On PostgreSQL 15 and later, make every API-exposed view apply the caller's policies instead:
 
 ```sql
 alter view public.REPLACE_WITH_VIEW_NAME set (security_invoker = true);
 ```
+
+  On PostgreSQL 14 and earlier there is no `security_invoker`: revoke the view from `anon` and `authenticated`, or keep it in a schema the API does not expose.
 
 - A `SECURITY DEFINER` function likewise runs as its owner and can return rows RLS would hide. Keep such functions out of API-exposed schemas unless they enforce their own authorization, and revoke execution by default:
 
@@ -8013,7 +8033,7 @@ using ((select auth.jwt()->>'aal') = 'aal2');
 
 - With only the public key (no signed-in user), API reads and writes against protected tables/paths fail.
 - Signed in as user A, reading user B's rows fails.
-- Reads through every API-exposed view fail the same way as reads of the table behind it: request `/rest/v1/REPLACE_WITH_VIEW_NAME` with only the public key, then, signed in as user A, request user B's rows. A view that returns them is running with its owner's rights, past RLS.
+- Reads through every API-exposed view fail the same way as reads of the table behind it: request `/rest/v1/REPLACE_WITH_VIEW_NAME` with only the public key, then, signed in as user A, request user B's rows. A view that returns them is serving rows the table's policies withhold; check whether it runs with its owner's rights or whether a policy is simply too broad.
 - Search the client bundle for `service_role` and private keys; the result must be empty.
 
 ## Sources (checked September 2026)
@@ -8024,6 +8044,8 @@ using ((select auth.jwt()->>'aal') = 'aal2');
 - PostgreSQL `CREATE VIEW` (base relations checked against the view owner's permissions by default; the view owner's RLS policies applied by default; `security_invoker`): https://www.postgresql.org/docs/current/sql-createview.html
 - PostgreSQL `ALTER VIEW` (`SET ( security_invoker = ... )` on an existing view): https://www.postgresql.org/docs/current/sql-alterview.html
 - PostgreSQL `REVOKE`: https://www.postgresql.org/docs/current/sql-revoke.html
+- Supabase RLS and views (`security_invoker = true` on PostgreSQL 15 and above; revoke or unexpose on older versions; views are typically created by the `postgres` user): https://supabase.com/docs/guides/database/postgres/row-level-security
+- PostgreSQL 15 release notes (view accesses "were always treated as being done by the view's owner. That's still the default."): https://www.postgresql.org/docs/release/15.0/
 
 ======================================================================
 ==> web-exposure.md

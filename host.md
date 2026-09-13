@@ -40,6 +40,7 @@ PubkeyAuthentication yes
 # Debian/Ubuntu (ufw)
 sudo ufw default deny incoming
 sudo ufw default allow outgoing
+sudo ufw delete allow OpenSSH                # only if an earlier run of this guide added it: a new rule does not replace an old one
 sudo ufw allow proto tcp from REPLACE_WITH_ADMIN_RANGE to any port 22
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
