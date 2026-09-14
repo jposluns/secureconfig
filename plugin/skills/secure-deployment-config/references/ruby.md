@@ -52,7 +52,7 @@ require "sidekiq/web"
 mount Sidekiq::Web => "/sidekiq"
 ```
 
-Anyone who reaches `/sidekiq` can read every job's arguments, which routinely carry tokens, email addresses, and record IDs, and can retry, kill, or clear queues. Gate the mount. With Devise, wrap it in an `authenticate` constraint so only a signed-in admin reaches it:
+Anyone who reaches `/sidekiq` can read the arguments of the jobs it lists, which routinely carry tokens, email addresses, and record IDs, and can retry, kill, or clear queues. Gate the mount; these route snippets go inside your `Rails.application.routes.draw` block. With Devise, wrap it in an `authenticate` constraint so only a signed-in admin reaches it:
 
 ```ruby
 authenticate :user, ->(u) { u.admin? } do
@@ -96,7 +96,11 @@ ss -tlnp | grep -E 'puma|ruby'                                   # 127.0.0.1:300
 curl -q -sI http://app.example.com/                                 # 301 to https:// (force_ssl)
 curl -q -sI https://app.example.com/ | grep -iE 'strict-transport|set-cookie'   # HSTS; secure; httponly; samesite=lax
 curl -q -s -o /dev/null -w '%{http_code}\n' https://app.example.com/dashboard    # 302 to login, or 401
-curl -q -s -o /dev/null -w '%{http_code}\n' https://app.example.com/sidekiq      # if you run Sidekiq Web: 401 (Basic Auth) or 302 to login, never 200 with the dashboard
+curl -q -sI https://app.example.com/sidekiq
+# if you run Sidekiq Web, read the headers, not just the code: Basic Auth answers 401 with a
+# WWW-Authenticate: Basic header; the Devise constraint answers 302 with a Location pointing at your
+# login path (a bare 404 is inconclusive, it also means nothing is mounted there). A 200 that returns
+# the Sidekiq dashboard is the exposure. Then confirm an authorized request does reach it
 git ls-files config/master.key                                   # prints nothing
 ```
 
