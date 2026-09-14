@@ -14,6 +14,7 @@ with the merged pull request is therefore an authoring obligation, not an enforc
 ### Added
 
 - The Phoenix administrator bootstrap in `llm-observability.md` (#62). Enabling Phoenix authentication as the guide previously advised left the default `admin@localhost` / `admin` login live; the guide now sets `PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD` (read only on the startup that first creates the account, and silently inert afterward), changes the password at the UI before the instance is reachable and proves the default is dead, adds an unauthenticated read (`/v1/projects`) Verify probe in the hardened guard idiom and a manual default-credential check, governs the OTLP write path through the listener inventory rather than a curl probe, and records that Phoenix has no native MFA but federates to an OAuth2/OIDC provider. Closes backlog row 1.11.
+- Qdrant's internal cluster port 6335 in `vector-databases.md` (#63). An API key does not protect 6335 (the vendor states internal channels are never protected by a key), and the guide had listed 6335 in its port table but omitted it from the Verify grep. The guide now annotates 6335 as distributed-mode-only, states that a key and `read_only_api_key` do not cover it, restricts it at the network layer with `cluster.p2p.enable_tls`, replaces the forbidden `ss` grep with a whole-table inventory, and probes 6333/6334/6335 from outside the peer allowlist with exit/err discrimination. The probes are marked reasoned (no distributed cluster in the authoring environment), tracked by row 1.46. Closes row 1.9.
 
 ## 2026-09-13
 
