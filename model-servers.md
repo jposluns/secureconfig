@@ -53,6 +53,19 @@ tritonserver --model-repository=/models --http-address=127.0.0.1 --grpc-address=
 
 LM Studio's developer server is a desktop feature. The documentation addresses it at `http://localhost:1234` throughout (the port is a field in Developers Page > Server Settings), and "By default, LM Studio does not require authentication for API requests." The "Serve on Local Network" switch (or `lms server start --bind 0.0.0.0`) rebinds it to every interface; LM Studio's own note reads: "Any bind other than 127.0.0.1 exposes the server beyond localhost; we recommend enabling authentication." Leave that switch off. If another machine must reach it, first enable "Require Authentication" (LM Studio 0.4.0 or newer) and create a token under "Manage Tokens"; clients then send `Authorization: Bearer <token>`. The server settings list no TLS option, so anything beyond the local machine goes through a tailnet ([tailscale.md](tailscale.md)) or an authenticated TLS proxy, never a port-forward.
 
+## text-generation-webui
+
+One process, two surfaces: the Gradio UI (default `127.0.0.1:7860`) and, when started with `--api`, an OpenAI-compatible API (default `127.0.0.1:5000`, endpoints under `/v1`). Both default to loopback, and both start with no authentication.
+
+`--listen` rebinds to `0.0.0.0`, and it widens both surfaces at once: opening the UI to your LAN also opens the API port whenever `--api` is set. `--listen-port` moves the UI port, `--api-port` moves the API port, and `--listen-host` picks a specific bind address instead of `0.0.0.0`; like the wider binding itself it takes effect only with `--listen`, and on its own it does nothing. Never start an internet-adjacent instance with `--share`: it publishes the UI through a public `*.gradio.live` tunnel, reachable by anyone who has the URL. `--public-api` does the same for the API through a Cloudflare tunnel. Treat both flags as publishing, not as remote access.
+
+Auth is per surface, and neither control covers the other:
+
+- UI: `--gradio-auth user:password` (or `--gradio-auth-path FILE` with `user:password` lines) turns on a Gradio login form. It does nothing for the API.
+- API: `--api-key KEY` requires `Authorization: Bearer KEY` on the `/v1` endpoints. `--admin-key` guards the admin endpoints (model load and unload) and falls back to the `--api-key` value when unset; an admin key alone does not protect the ordinary `/v1` routes. Without `--api-key`, the API answers anyone who can reach the port, even when the UI has a Gradio login in front of it.
+
+`--api --nowebui` runs the API alone, the right shape for a server where the UI has no business existing. `--ssl-keyfile` and `--ssl-certfile` give both surfaces TLS, but the better pattern is the usual one: keep both ports on loopback and front them with a reverse proxy that terminates TLS and enforces auth (`--subpath` exists for serving the UI under a proxy path). Without TLS, the Gradio login submits credentials in the clear.
+
 ## The pattern, whatever the server
 
 1. Bind to `127.0.0.1` (or a private container network); confirm with `ss -tlnp`.
@@ -70,6 +83,22 @@ curl -q -s -o /dev/null -w '%{http_code}\n' -X POST https://models.example.com/i
                                                         # vLLM: 404 or 403 from the PROXY. vLLM does not require the
                                                         # API key on this route, so a 200 here is an unauthenticated
                                                         # inference endpoint even though the check above passed
+```
+
+For text-generation-webui, ask the API edge for the model list without a key (reasoned, not yet demonstrated against a running instance; the block prints the `exitcode` and `errormsg` write-out variables, which need curl 7.75.0 or newer). A `401` means the key is enforced; a connection error means nothing is exposed there; a `200` with a model list means the API is open to anyone. A rejection page from your proxy proves only the proxy; it says nothing about `--api-key`.
+
+```bash
+(                              # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute the host on the set -- line above; not probing" ;;
+    *) curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1/v1/models" ;;
+  esac
+)
 ```
 
 ## Sources (checked September 2026)
@@ -90,3 +119,8 @@ curl -q -s -o /dev/null -w '%{http_code}\n' -X POST https://models.example.com/i
 - LM Studio server settings: https://lmstudio.ai/docs/developer/core/server/settings
 - LM Studio authentication: https://lmstudio.ai/docs/developer/core/authentication
 - LM Studio OpenAI compatibility (localhost:1234 examples): https://lmstudio.ai/docs/developer/openai-compat
+- text-generation-webui README, command-line flags: https://github.com/oobabooga/text-generation-webui#command-line-flags
+- text-generation-webui, OpenAI-compatible API documentation: https://github.com/oobabooga/text-generation-webui/blob/main/docs/12%20-%20OpenAI%20API.md
+- text-generation-webui, flag definitions and defaults (modules/shared.py): https://github.com/oobabooga/text-generation-webui/blob/main/modules/shared.py
+- text-generation-webui, API bind and key checks (modules/api/script.py): https://github.com/oobabooga/text-generation-webui/blob/main/modules/api/script.py
+- curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
