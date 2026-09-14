@@ -10,6 +10,7 @@ turn the build red, and a pull request number is only knowable from outside. Kee
 with the merged pull request is therefore an authoring obligation, not an enforced one.
 
 ## 2026-09-14
+- Warned against quick-sharing files with python -m http.server in python.md (#75, row 1.31): it binds every interface by default and serves the current directory (source, .env, keys, dumps), follows symlinks, and is not for production; the guide shows the loopback-bound alternative.
 - Added MySQL's X Plugin listener to mysql.md (#74, row 1.21): MySQL 8.4 enables the X Plugin by default on port 33060 with mysqlx_bind_address defaulting to every interface, independent of the classic bind_address; the guide now sets mysqlx_bind_address (or mysqlx = OFF) and checks 33060.
 - Covered Sidekiq Web UI authentication in ruby.md (#73, row 1.20): the usual mount exposes job arguments and queue controls to anyone who reaches /sidekiq; added the Devise authenticate constraint and the Rack::Auth::Basic pattern, plus a Verify probe of the path.
 - Covered directory listing in web-exposure.md (#72, row 1.19): Debian and Ubuntu ship apache2.conf with Options Indexes on /var/www, so a directory without an index.html is served as a browsable listing that defeats the name-based deny rules; added an Options -Indexes block, a Verify probe against a directory URL, and the mod_autoindex and nginx autoindex sources.
