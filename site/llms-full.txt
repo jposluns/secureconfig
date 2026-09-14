@@ -253,8 +253,9 @@ it. Nothing here is product-specific; every example is a pattern, not a flag.
   `0.0.0.0` or `[::]` for this app is reachable from every network the host is on unless a firewall
   blocks it. From an outside network, connect to each port over IPv4 and IPv6: a port that should
   be private must be refused or filtered, and a port that is deliberately public must answer only
-  over TLS and enforce whatever authentication that surface requires. Confirm the backend cannot be
-  reached directly by IP, skipping the fronting layer.
+  over TLS and enforce whatever authentication that surface requires, the one exception being a
+  plain HTTP port whose only response is a redirect to HTTPS. Confirm the backend cannot be reached
+  directly by IP, skipping the fronting layer.
 
 ## 2. Secondary and hidden listeners
 
