@@ -48,6 +48,14 @@ nft add rule inet filter forward iifname "wg0" ip saddr 192.168.88.0/24 ip daddr
 
 By default WireGuard "tries to be as silent as possible when not being used," so the only inbound port a firewall needs to open is the single WireGuard UDP `ListenPort`; everything else on the host stays closed per [host.md](host.md).
 
+## ssh -R (remote forwarding)
+
+`ssh -R 8080:localhost:3000 user@server` is the quickest ad-hoc self-hosted tunnel: it asks the server to forward connections to its own port 8080 back through your SSH session to your `localhost:3000`. Whether that published port is a private convenience or an open door is decided on the server by `GatewayPorts` in `sshd_config`, not by the client.
+
+With the default `GatewayPorts no`, the server binds the forwarded port to loopback, so only the server itself reaches it and nothing is exposed to the network. `GatewayPorts yes` binds it to every interface, and `clientspecified` lets the `ssh -R` client choose the bind address (`ssh -R '*:8080:localhost:3000' ...`). Either one publishes your local app on the server's public address, and the tunnel adds no authentication of its own: if `localhost:3000` has no login, anyone who reaches `server:8080` now has it.
+
+Keep `GatewayPorts no` unless you deliberately mean to publish, and when you do, treat the forwarded port as internet-facing: put authentication and TLS in front of it with a reverse proxy on the server ([caddy.md](caddy.md), [nginx.md](nginx.md)), never rely on the port being unguessable. For a persistent tunnel, run the `ssh -R` under `autossh` so it reconnects, and give the login its own key on a restricted account.
+
 ## Verify
 
 ```bash
@@ -56,6 +64,9 @@ frpc -c frpc-wrongtoken.toml   # expect an authentication failure, no proxy regi
 
 ss -ulnp | grep 51820          # WireGuard: only the one UDP port listening
 sudo ufw status verbose        # no other inbound rule added for the tunneled service
+
+# ssh -R: on the SERVER, a forwarded port binds 127.0.0.1 (or [::1]) with GatewayPorts no, never 0.0.0.0
+ss -tlnp | grep -E ':8080 '    # only a loopback address unless you deliberately published it
 
 # positive control: from the peer, a destination inside its intended subnet must succeed, proving
 # the tunnel and routing both work
@@ -73,6 +84,8 @@ sudo nft list ruleset | grep -A1 'saddr 192.168.88.0/24'   # packets and bytes b
 ## Sources (checked September 2026)
 
 - frp documentation (setup, server reference): https://gofrp.org/en/docs/
+- OpenSSH `sshd_config` (`GatewayPorts` default `no`, `yes` binds all interfaces, `clientspecified`): https://man.openbsd.org/sshd_config#GatewayPorts
+- OpenSSH `ssh` (`-R [bind_address:]port:host:hostport` remote forwarding): https://man.openbsd.org/ssh#R
 - frp server configuration reference (`bindPort`, `auth.token`, `transport.tls.force`): https://gofrp.org/en/docs/reference/server-configures/
 - frp authentication (`auth.token`, `auth.method = "oidc"`): https://gofrp.org/en/docs/features/common/authentication/
 - WireGuard quickstart (`wg genkey`, `wg pubkey`, `wg set`, silent-protocol behavior): https://www.wireguard.com/quickstart/
