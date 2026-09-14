@@ -2414,7 +2414,7 @@ services:
       - traefik.http.services.app.loadbalancer.server.port=3000
 ```
 
-Labelling this container `traefik.enable=true` opts it in; it does not keep any other container private. With `exposedByDefault: false` set in section 1, Traefik ignores every container that lacks that label. Without it, discovery is daemon-wide, not scoped to this Compose project, so a database, cache, admin UI, or queue on the same host also becomes a routing candidate, and any that serves HTTP on a port Traefik can reach then answers on the same `:443` listener to anyone who sends the matching `Host` header. The label opts a container in; it never opts others out, so keep it on each application you mean to publish.
+Labelling this container `traefik.enable=true` opts it in; it does not keep any other container private. With `exposedByDefault: false` set in section 1, Traefik ignores every container that lacks that label. Without it, discovery is daemon-wide, not scoped to this Compose project, so a database, cache, admin UI, or queue on the same host also gets a router matched by its `Host` header on the same `:443` listener. Whether that router reaches a usable HTTP service depends on the container's ports, but the router is built regardless, which is the exposure you did not ask for. The label opts a container in; it never opts others out, so keep it on each application you mean to publish.
 
 Do not also publish the app's port with `ports:`; only Traefik publishes 80 and 443. See [docker.md](docker.md).
 
