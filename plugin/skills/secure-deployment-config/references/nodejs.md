@@ -101,8 +101,10 @@ ss -tlnp | grep node                 # behind a proxy: bound to 127.0.0.1 only
 # trust proxy: add a temporary route that echoes req.ip, then remove it after this check
 #   app.get('/whoami', (req, res) => res.send(req.ip))
 curl -q -s -H 'X-Forwarded-For: 203.0.113.9' https://example.com/whoami
-                                     # must return your real client IP, never 203.0.113.9; echoing the
-                                     # forged value means the proxy passes client X-Forwarded-* through
+                                     # req.ip must be your real client IP, never 203.0.113.9: echoing the
+                                     # forged value means `trust proxy` is too broad and trusts a
+                                     # client-set header. This checks req.ip scoping only, not that the
+                                     # proxy strips headers, and does not cover X-Forwarded-Host or -Proto
 ```
 
 ## Sources (checked September 2026)
