@@ -4076,7 +4076,7 @@ ss -tlnp | grep -E 'puma|ruby'                                   # 127.0.0.1:300
 curl -q -sI http://app.example.com/                                 # 301 to https:// (force_ssl)
 curl -q -sI https://app.example.com/ | grep -iE 'strict-transport|set-cookie'   # HSTS; secure; httponly; samesite=lax
 curl -q -s -o /dev/null -w '%{http_code}\n' https://app.example.com/dashboard    # 302 to login, or 401
-curl -q -sI https://app.example.com/sidekiq
+curl -q -sS -i https://app.example.com/sidekiq
 # if you run Sidekiq Web, read the headers, not just the code: Basic Auth answers 401 with a
 # WWW-Authenticate: Basic header; the Devise constraint answers 302 with a Location pointing at your
 # login path (a bare 404 is inconclusive, it also means nothing is mounted there). A 200 that returns
