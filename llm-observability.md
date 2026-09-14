@@ -117,12 +117,11 @@ is rejected with `401` or `403`. Anything else (a `404`, a redirect to a login p
 error) is inconclusive and does not prove authentication is on; fall back to the credential check above and to
 the listener inventory. Substitute a bracketed literal for an IPv6 host in the URL, for example `[::1]:6006`.
 
-The OTLP trace-ingestion path is not probed with `curl` here. Phoenix's `/v1/traces` rejects a hand-written
-JSON body on its content type before it checks authentication, so a `curl` rejection would say nothing about
-whether an anonymous span is accepted. That is the same trap this guide names for the OpenTelemetry Collector above,
-and hand-writing a valid protobuf OTLP payload in a one-line probe is not practical. Its exposure is governed
-instead by the listener inventory (the `ss` table must show the OTLP port bound to loopback or a private
-address) and by keeping the write path behind the authenticated ingress.
+The OTLP trace-ingestion path is not probed with `curl` here, because a valid OTLP payload is protobuf and
+hand-writing one in a one-line probe is not practical. Phoenix authenticates the `/v1` router, traces included,
+so the write path's exposure tracks the read API's: govern it with the listener inventory (the `ss` table must
+show the OTLP port bound to loopback or a private address) and by keeping the write path behind the
+authenticated ingress.
 
 A dashboard that renders traces, prompts, or provider keys without a login is a finding; so is an OTLP port
 that accepts spans with no credential at all.

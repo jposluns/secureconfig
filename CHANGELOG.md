@@ -13,7 +13,7 @@ with the merged pull request is therefore an authoring obligation, not an enforc
 
 ### Added
 
-- The Phoenix administrator bootstrap in `llm-observability.md` (#62). Enabling Phoenix authentication as the guide previously advised left the default `admin@localhost` / `admin` login live; the guide now sets `PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD` (read only on the startup that first creates the account, and silently inert afterward), changes the password at the UI before the instance is reachable and proves the default is dead, adds unauthenticated read (`/v1/projects`) and OTLP-write (`/v1/traces`) Verify probes in the hardened guard idiom, and records that Phoenix has no native MFA but federates to an OAuth2/OIDC provider. Closes backlog row 1.11.
+- The Phoenix administrator bootstrap in `llm-observability.md` (#62). Enabling Phoenix authentication as the guide previously advised left the default `admin@localhost` / `admin` login live; the guide now sets `PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD` (read only on the startup that first creates the account, and silently inert afterward), changes the password at the UI before the instance is reachable and proves the default is dead, adds an unauthenticated read (`/v1/projects`) Verify probe in the hardened guard idiom and a manual default-credential check, governs the OTLP write path through the listener inventory rather than a curl probe, and records that Phoenix has no native MFA but federates to an OAuth2/OIDC provider. Closes backlog row 1.11.
 
 ## 2026-09-13
 
