@@ -30,8 +30,16 @@ Binding ports below 1024 needs root or `CAP_NET_BIND_SERVICE`; running the app a
 ## 2. Behind a proxy: tell Express about it
 
 ```js
-app.set('trust proxy', 1);   // makes req.secure and secure cookies work behind 1 proxy hop
+// The app binds to 127.0.0.1 behind a same-host reverse proxy (see caddy.md / nginx.md),
+// so trust only loopback addresses. Never use a blanket `true`.
+app.set('trust proxy', 'loopback');
+
+// Remote proxy instead? Trust its exact address or subnet:
+// app.set('trust proxy', '10.0.0.5');       // single proxy IP
+// app.set('trust proxy', '10.0.0.0/24');    // proxy subnet
 ```
+
+`trust proxy` controls how Express derives `req.ip`, `req.ips`, `req.hostname`/`req.host` (from `X-Forwarded-Host`), and `req.protocol`/`req.secure` (from `X-Forwarded-Proto`), so a forged header can fake the client IP (defeating rate limits and logging), the hostname, or the HTTPS status. Never set it to `true`: that trusts the leftmost `X-Forwarded-For` entry, which the client controls, so clients can forge all of these values unless the last trusted proxy strips or overwrites them. A hop count such as `1` is safe only if every path to the app crosses exactly that many proxies; if a shorter path exists, a client sitting fewer hops away can forge the same headers. Whichever value you use, configure the proxy itself to overwrite inbound `X-Forwarded-*` headers rather than pass them through.
 
 Security headers, including Strict-Transport-Security, via helmet:
 
@@ -90,6 +98,13 @@ curl -q -sI http://example.com/         # expect 301 with a https:// Location
 curl -q -sI https://example.com/        # succeeds without -k; shows helmet's headers
 curl -q -s  https://example.com/api     # expect 401/403 without credentials
 ss -tlnp | grep node                 # behind a proxy: bound to 127.0.0.1 only
+# trust proxy: add a temporary route that echoes req.ip, then remove it after this check
+#   app.get('/whoami', (req, res) => res.send(req.ip))
+curl -q -s -H 'X-Forwarded-For: 203.0.113.9' https://example.com/whoami
+                                     # req.ip must be your real client IP, never 203.0.113.9: echoing the
+                                     # forged value means `trust proxy` is too broad and trusts a
+                                     # client-set header. This checks req.ip scoping only, not that the
+                                     # proxy strips headers, and does not cover X-Forwarded-Host or -Proto
 ```
 
 ## Sources (checked September 2026)
