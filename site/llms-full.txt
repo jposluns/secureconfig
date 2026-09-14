@@ -8695,10 +8695,10 @@ The admin UI is on port `81`; the proxy itself is on `80`/`443`. Port `81` is ne
 
 ## GitLab CE
 
-- First run auto-generates the root password into `/etc/gitlab/initial_root_password` (read it with `docker exec -it gitlab grep 'Password:' /etc/gitlab/initial_root_password`); GitLab deletes the file in the first container restart after 24 hours. Sign in and change it before anyone else can reach the instance, or preset it with `gitlab_rails['initial_root_password']` in `gitlab.rb` or `GITLAB_OMNIBUS_CONFIG` (there is no `GITLAB_ROOT_PASSWORD` variable in standard deployments).
-- `signup_enabled` defaults to `true`, so any visitor can register. New instances hold registrants pending approval (`require_admin_approval_after_user_signup` is on by default), but for a private forge clear "Allow new user accounts" under Admin > Settings > General (`signup_enabled = false`) rather than relying on approval discipline.
+- First run auto-generates the root password into `/etc/gitlab/initial_root_password` (read it with `docker exec -it gitlab grep 'Password:' /etc/gitlab/initial_root_password`); GitLab deletes the file in the first container restart after 24 hours. Change it immediately on first sign-in, since until you do the generated password is the only thing guarding the root account; or preset it with `gitlab_rails['initial_root_password']` in `gitlab.rb` or `GITLAB_OMNIBUS_CONFIG`.
+- `signup_enabled` defaults to `true`, so any visitor can register. New instances hold registrants pending approval (`require_admin_approval_after_user_signup` is on by default), but for a private forge clear "Allow new user accounts" under Admin > Settings > General > New user account restrictions (`signup_enabled = false`) rather than relying on approval discipline.
 - `default_project_visibility` and `default_group_visibility` both default to `private`; keep them there. "Internal" means visible to every signed-in non-external user, so on an instance that allows sign-up, internal is not private.
-- GitLab can enforce two-factor authentication for every user from Admin > Settings; turn it on so local accounts are not password-only.
+- GitLab can enforce two-factor authentication for every user (all tiers) from Admin > Settings > General > Sign-in restrictions; turn it on so local accounts are not password-only.
 
 ## Uptime Kuma
 
@@ -8774,7 +8774,9 @@ curl -q -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem --cert client-cert.
 
 # GitLab CE: initial root password file check (needs Docker access; the container is named gitlab)
 # absence does not prove the password was rotated; presence means rotate root now
-if docker exec gitlab test -f /etc/gitlab/initial_root_password; then
+if ! docker exec gitlab true 2>/dev/null; then
+  echo 'cannot reach a container named gitlab: fix the name or start it, this is not a result'
+elif docker exec gitlab test -f /etc/gitlab/initial_root_password; then
   echo 'initial_root_password present: rotate root and remove it'
 else
   echo 'initial_root_password absent'
@@ -8798,6 +8800,7 @@ From outside the network, every panel URL is unreachable or shows a login; a pag
 - GitLab CE initial root password (Docker install): https://docs.gitlab.com/install/docker/installation/
 - GitLab CE sign-up restrictions: https://docs.gitlab.com/administration/settings/sign_up_restrictions/
 - GitLab CE default visibility and access controls: https://docs.gitlab.com/administration/settings/visibility_and_access_controls/
+- GitLab CE enforce two-factor authentication for all users: https://docs.gitlab.com/security/two_factor_authentication/
 - Uptime Kuma README and reverse proxy wiki: https://github.com/louislam/uptime-kuma and https://github.com/louislam/uptime-kuma/wiki/Reverse-Proxy
 - Docker: protect the daemon socket https://docs.docker.com/engine/security/protect-access/ and remote access https://docs.docker.com/engine/daemon/remote-access/
 - Dozzle authentication (DOZZLE_AUTH_PROVIDER, users.yml, actions and shell): https://dozzle.dev/guide/authentication
