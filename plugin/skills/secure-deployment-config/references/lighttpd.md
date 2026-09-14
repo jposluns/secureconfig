@@ -71,8 +71,8 @@ These are read-and-judge checks: the status code is printed and you compare it.
 
 ```bash
 sudo lighttpd -tt -f /etc/lighttpd/lighttpd.conf && sudo systemctl reload lighttpd
-curl -sI http://example.com/        # expect a redirect to https://
-curl -s -o /dev/null -w '%{http_code}\n' https://example.com/
+curl -q -sI http://example.com/        # expect a redirect to https://
+curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/
                                     # expect 401 without credentials once auth is on
 
 # Read every listener rather than filtering to the ports you expect. The checks above prove
@@ -85,7 +85,7 @@ ss -tlnp
 # carrying a host it does not name is served by the global configuration instead. That
 # conditional reads the Host HEADER, so setting the header is the right test here, unlike
 # Apache, which selects its virtual host by the SNI name when the connection is TLS:
-curl -s -o /dev/null -w '%{http_code}\n' -H 'Host: not-configured.example' \
+curl -q -s -o /dev/null -w '%{http_code}\n' -H 'Host: not-configured.example' \
   https://example.com/REPLACE_WITH_A_PROTECTED_PATH
                                     # 401 is the pass. 200 means the protected path is served
                                     # without authentication to anyone who sends another host

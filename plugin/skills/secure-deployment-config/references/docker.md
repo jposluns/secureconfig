@@ -72,8 +72,8 @@ Caddy obtains and renews the certificate automatically ([free-certificates.md](f
 ```bash
 docker compose ps                     # only the proxy shows 0.0.0.0 port bindings
 ss -tlnp                              # host view: nothing else on public interfaces
-curl -sI http://app.example.com/      # expect a redirect to https://
-curl -s  https://app.example.com/api  # expect 401/403 without credentials
+curl -q -sI http://app.example.com/      # expect a redirect to https://
+curl -q -s  https://app.example.com/api  # expect 401/403 without credentials
 ```
 
 Test from a second machine on a different network where possible; the UFW bypass means testing the firewall from the host itself proves nothing about published ports.

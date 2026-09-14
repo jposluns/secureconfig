@@ -87,12 +87,12 @@ http-request deny deny_status 413 if { req.body_size gt 10485760 }
 
 ```bash
 sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
-curl -sI http://example.com/        # expect 301 with a https:// Location
-curl -sI https://example.com/       # expect 401 without credentials once auth is on
+curl -q -sI http://example.com/        # expect 301 with a https:// Location
+curl -q -sI https://example.com/       # expect 401 without credentials once auth is on
 head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
-curl -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/under.bin https://example.com/
+curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/under.bin https://example.com/
                                     # positive control: under the limit, must NOT be 413
-curl -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/over.bin  https://example.com/
+curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/over.bin  https://example.com/
                                     # 413. req.body_size reads the advertised Content-Length, which curl
                                     # sets here. A chunked upload advertises none and is not covered.
                                     # A backend limit returns the same code, so attributing the refusal

@@ -62,9 +62,9 @@ Never set `verify_mode = OpenSSL::SSL::VERIFY_NONE`. Ruby's default SSL context 
 
 ```bash
 ss -tlnp | grep -E 'puma|ruby'                                   # 127.0.0.1:3000 only
-curl -sI http://app.example.com/                                 # 301 to https:// (force_ssl)
-curl -sI https://app.example.com/ | grep -iE 'strict-transport|set-cookie'   # HSTS; secure; httponly; samesite=lax
-curl -s -o /dev/null -w '%{http_code}\n' https://app.example.com/dashboard    # 302 to login, or 401
+curl -q -sI http://app.example.com/                                 # 301 to https:// (force_ssl)
+curl -q -sI https://app.example.com/ | grep -iE 'strict-transport|set-cookie'   # HSTS; secure; httponly; samesite=lax
+curl -q -s -o /dev/null -w '%{http_code}\n' https://app.example.com/dashboard    # 302 to login, or 401
 git ls-files config/master.key                                   # prints nothing
 ```
 

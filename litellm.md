@@ -17,7 +17,7 @@ The master key is the root credential for the proxy; it belongs to the operator 
 Virtual keys need a PostgreSQL database: set `DATABASE_URL=postgresql://user:password@host:5432/dbname` in the environment (or `database_url` under `general_settings`) before `/key/generate` will work.
 
 ```bash
-curl https://llm.example.com/key/generate \
+curl -q https://llm.example.com/key/generate \
   -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
   -H "Content-Type: application/json" \
   -d '{"key_alias": "app-frontend"}'
@@ -32,8 +32,8 @@ Run the proxy on loopback (or a private container network) and publish it only t
 ## 4. Verify
 
 ```bash
-curl -sS -o /dev/null -w '%{http_code}\n' https://llm.example.com/v1/models   # 401 without a key
-curl -s https://llm.example.com/v1/models -H "Authorization: Bearer REPLACE_WITH_VIRTUAL_KEY"   # model list
+curl -q -sS -o /dev/null -w '%{http_code}\n' https://llm.example.com/v1/models   # 401 without a key
+curl -q -s https://llm.example.com/v1/models -H "Authorization: Bearer REPLACE_WITH_VIRTUAL_KEY"   # model list
 ss -tlnp | grep 4000                                            # loopback only
 ```
 

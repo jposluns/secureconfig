@@ -36,7 +36,7 @@ Once TLS is on, connect via `https://`; the server no longer answers plain `http
 ## 4. Verify
 
 ```bash
-curl -s -o /dev/null -w '%{http_code}\n' --cacert /path/cert.pem https://jupyter.example.com:8888/
+curl -q -s -o /dev/null -w '%{http_code}\n' --cacert /path/cert.pem https://jupyter.example.com:8888/
                                        # answers over TLS AND the certificate verifies. Use --cacert against the
                                        # certificate from step 2, and request it by the name that certificate
                                        # carries. Never -k here: it accepts any certificate, so the check passes

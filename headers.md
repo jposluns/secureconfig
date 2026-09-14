@@ -27,7 +27,7 @@ A CDN or shared proxy that keys its cache on the URL alone can serve one user's 
 ## Verify
 
 ```bash
-curl -sI https://example.com/ | grep -iE 'strict-transport|content-security|x-content-type|referrer-policy|permissions-policy|x-frame'
+curl -q -sI https://example.com/ | grep -iE 'strict-transport|content-security|x-content-type|referrer-policy|permissions-policy|x-frame'
 ```
 
 Then scan with https://securityheaders.com/ from outside. A CSP that enforces without console errors on every page of the app is the finish line.

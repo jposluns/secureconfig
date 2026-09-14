@@ -146,6 +146,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [mlflow.md](mlflow.md) | MLflow tracking server: no auth by default; basic-auth app, TLS in front |
 | [llm-observability.md](llm-observability.md) | Langfuse, Phoenix, Helicone, OpenTelemetry Collector: they hold prompts and keys |
 | [agent-builders.md](agent-builders.md) | Dify, Flowise, Langflow, LibreChat: admin setup, API keys, fronting TLS |
+| [ai-infra-services.md](ai-infra-services.md) | SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0, Onyx: what the run form publishes, and the store published beside the front door |
 | [workflow-orchestrators.md](workflow-orchestrators.md) | Prefect, Dagster, Airflow, Temporal, Flower: keep off the public internet and require auth |
 
 ### App UIs and dev tools

@@ -105,18 +105,18 @@ than the client, so set it explicitly if you want a per-client cap.
 ## 5. Verify
 
 ```bash
-curl -sI http://app.example.com/     # expect a redirect to https://
-curl -sI https://app.example.com/    # expect 401 without credentials once auth is on
+curl -q -sI http://app.example.com/     # expect a redirect to https://
+curl -q -sI https://app.example.com/    # expect 401 without credentials once auth is on
 head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
-curl -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/under.bin https://app.example.com/
+curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/under.bin https://app.example.com/
                                      # positive control: under the limit, must NOT be 413
-curl -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/over.bin  https://app.example.com/
+curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/over.bin  https://app.example.com/
                                      # 413. Credentials matter: app-auth is first in the middleware
                                      # chain, so an unauthenticated probe stops at 401 before any limit
                                      # sees the body. A backend with its own limit returns the same
                                      # code, so attributing the refusal needs an isolated environment
                                      # with app-body removed
-seq 1 40 | xargs -P 40 -I{} curl -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD https://app.example.com/ | sort | uniq -c
+seq 1 40 | xargs -P 40 -I{} curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD https://app.example.com/ | sort | uniq -c
                                      # A 429 appeared. That is all this shows. inflightreq also returns
                                      # 429, and an upstream under load can too, so this does not
                                      # establish that ratelimit fired. Attributing it needs an isolated

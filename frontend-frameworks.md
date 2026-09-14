@@ -43,13 +43,13 @@ Both are development tooling, not a production server: the `vite preview` docs s
 ## Verify
 
 ```bash
-curl -si https://app.example.com/api/private | head -1   # 401 with no session cookie, on all three frameworks
+curl -q -si https://app.example.com/api/private | head -1   # 401 with no session cookie, on all three frameworks
 ls build dist .output 2>/dev/null                          # confirm which output directory your build actually produced
 grep -rlF "REPLACE_WITH_YOUR_ACTUAL_SECRET_VALUE" build dist .output; echo "exit: $?"
                                                             # search the built client output for the literal secret value with a
                                                             # fixed-string match; exit 1 is the goal, exit 2 means a listed
                                                             # directory did not exist, and grep's own errors are left visible
-curl -si https://app.example.com/ -H "Host: evil.example.com" | head -1   # a spoofed Host is not trusted
+curl -q -si https://app.example.com/ -H "Host: evil.example.com" | head -1   # a spoofed Host is not trusted
 ```
 
 A clean grep result here is evidence, not proof: it means the literal value did not match in the directories searched, not that the secret cannot be present in some other form. A bundler could split, encode, or otherwise transform it, so check the exit code and confirm the directory actually exists rather than reading silence alone as clean.
