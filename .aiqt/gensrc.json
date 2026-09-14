@@ -6,6 +6,7 @@
       "sources": [
         "scripts/build-llms-full.sh",
         "README.md",
+        "controls-reference.md",
         "free-certificates.md",
         "self-signed.md",
         "cloudflare.md",
@@ -117,6 +118,7 @@
         "common-mistakes.md",
         "connection-poolers.md",
         "container-hardening.md",
+        "controls-reference.md",
         "cors.md",
         "deployment-lifecycle.md",
         "devops-uis.md",

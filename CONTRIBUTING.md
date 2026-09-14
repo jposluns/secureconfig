@@ -1,6 +1,6 @@
 # Contributing
 
-Suggestions and guides are welcome. Open a GitHub issue describing the tool or control, or send a pull request; reaching Jeff any other way also works.
+Suggestions and guides are welcome. Open a GitHub issue describing the tool or control, or send a pull request; reaching Jeff any other way also works. To request a guide for a specific application that has no guide yet, add a file to the [requests/](requests/README.md) directory per its template, one application per pull request.
 
 ## Scope
 

@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.52**, **2.25**, **3.12**, **4.6**.
+Next ids: **1.52**, **2.25**, **3.12**, **4.7**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -101,6 +101,7 @@ Maintainer rulings moved to `DECISIONS.md` on 2026-09-13, in preparation for the
 | ID | Item | Tags |
 | --- | --- | --- |
 | 4.2 | `site/index.html` menu group labels are `<p class="sidenav-h">`, so heading navigation skips all thirteen; promote them to real headings (L, XS) | `[a11y]` |
+| 4.6 | `tools/run_all_checks.sh`: the local-link gate scans only root `./*.md`, so links inside subdirectory Markdown are unverified; `requests/*.md` (added in #82) is the first sanctioned non-root Markdown and its links are unchecked. Extend the link gate to resolve targets in `requests/*.md` relative to each file's own directory. Found by claude QA on #82 (L, S) | `[enhance]` |
 
 ## Blocked upstream
 
