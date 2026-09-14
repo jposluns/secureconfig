@@ -157,7 +157,7 @@ Machine clients need separate credentials, with the narrowest permissions the ap
 
 **Demonstration status:** the placeholder guards and the placeholder-scan discrimination were exercised locally, in `bash`, `dash` and BusyBox `ash`, with and without `set -u`. Checks 2 to 7 below are **reasoned rather than demonstrated** against deployments. The specific blocking capability is that the authoring environment has no container runtime, and with it no live service, no external network vantage, no TLS exchange and no browser authentication flow. Backlog row 2.24 tracks demonstrating those checks once a runtime is available: a reasoned check is a debt, not a destination. The maintainer's verified vendor record supplies the deployment facts, and each check below states the outcome it expects in both the exposed and the fixed state.
 
-Use Bash for these blocks and curl 7.75.0 or newer for `exitcode` and `errormsg`. Copy each complete block, including the enclosing parentheses. The values go on the `set --` line, so no named variable is exposed to attributes or values the reader's shell already holds, and every probe sits behind a guard that leaves the subshell rather than running on an unsubstituted value. Substitute inside the single quotes and leave them in place. They are what keeps a URL's `&` from backgrounding the line and a `$(...)` or a backtick in a pasted value from running: the shell evaluates that value before any guard in the block can see it. Keep the quotes even for an empty value, and paste every block whole. Each block opens with a fixed marker on its `set --` line and then counts its values, so a fragment pasted without that line, or with a value deleted, stops instead of running on whatever arguments your own shell already held. One case is beyond a pasted block's reach: a shell that already holds the marker and the right number of plausible values is indistinguishable from the block having set them, so paste whole blocks rather than relying on the check to catch every way of not doing so.
+Use Bash for these blocks and curl 7.75.0 or newer for `exitcode` and `errormsg`. Copy each complete block, including the enclosing parentheses. The values go on the `set --` line, so no named variable is exposed to attributes or values the reader's shell already holds, and every probe sits behind a guard that leaves the subshell rather than running on an unsubstituted value. Substitute inside the single quotes and leave them in place. They are what keeps a URL's `&` from backgrounding the line and a `$(...)` or a backtick in a pasted value from running: the shell evaluates that value before any guard in the block can see it. Keep the quotes even for an empty value, and paste every block whole. Each block opens with a fixed marker on its `set --` line, and the guard lines below check that marker and count the values, so a fragment that keeps those lines but drops or shortens the `set --` line stops instead of running on whatever arguments your own shell already held. A fragment pasted from below the guard lines is not guarded at all, which is why the instruction is to paste whole blocks. One case is beyond a pasted block's reach: a shell that already holds the marker and the right number of plausible values is indistinguishable from the block having set them, so paste whole blocks rather than relying on the check to catch every way of not doing so.
 
 ### 1. Reject unfinished configuration and probe values
 
@@ -230,7 +230,7 @@ A timeout alone is inconclusive. `http=000` can occur after a server accepts and
 
 ### 4. Probe every backing port
 
-**Reasoned, not demonstrated** (no container runtime in the authoring environment; row 2.24 tracks demonstrating it). From another host, run this for every private port found in check 2, including the application's ports from check 3. The distinguishing authority here is the publication state itself, per Docker's packet-filtering page and Compose ps in Sources: a backing service with no host publication cannot answer from another host, so a refusal corroborated by check 2 means the boundary holds, while an answer means it does not.
+**Reasoned, not demonstrated** (no container runtime in the authoring environment; row 2.24 tracks demonstrating it). From another host, run this for every private port found in check 2, including the application's ports from check 3. The distinguishing authority here is the publication state, read together with the firewall configuration, per Docker's packet-filtering page and Compose ps in Sources: under Docker's default firewall integration a backing service with no host publication is not reachable from another host, so a refusal corroborated by check 2 means the boundary holds. That page also states the limit of the guarantee: with Docker's firewalling disabled and no replacement rules, every container port becomes accessible, published or not, so an unpublished port is evidence of the boundary only while that integration is in place. An answer from any of these ports means the boundary does not hold.
 
 For the unchanged vendor examples, Mem0 adds 8432 and 3000 beside API port 8888. Onyx development adds 5432, 9200, 9000, 6379, 9004, 9005, and 8000 beside API port 8080, and nginx contributes 80 and 3000 from the base file. Environment variables can move these ports; the running inventory is the authority.
 
@@ -240,11 +240,12 @@ For the unchanged vendor examples, Mem0 adds 8432 and 3000 beside API port 8888.
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
+  [ -n "$1" ] && [ -n "$2" ] || { echo "substitute the address and port on the set -- line above; not probing"; exit; }
   case "$1:$2" in
-    *REPLACE_WITH_*|:*|*:) echo "substitute the address and port on the set -- line above; not probing" ;;
-    *) nc -vz -w 5 "$1" "$2"
-       printf 'exit=%s\n' "$?" ;;
+    *REPLACE_WITH_*) echo "substitute the address and port on the set -- line above; not probing"; exit ;;
   esac
+  nc -vz -w 5 "$1" "$2"
+  printf 'exit=%s\n' "$?"
 )
 ```
 
@@ -406,6 +407,7 @@ The service facts come from the maintainer's vendor-source verification record d
 - [LangServe README at commit `27e57af`](https://github.com/langchain-ai/langserve/blob/27e57afeda13007a7f4e007c5d1f5e8489963aa4/README.md): quickstart bind, application authentication responsibility, deprecation on 2024-11-18, and successor.
 - [Mem0 REST API](https://docs.mem0.ai/open-source/features/rest-api): authentication enabled by default, JWTs, `X-API-Key`, `m0sk_` keys, `ADMIN_API_KEY`, `AUTH_DISABLED` and its startup warning, `JWT_SECRET`, `make bootstrap`, the first-admin `POST /auth/register`, and the routes that stay open.
 - [Mem0 server Compose](https://github.com/mem0ai/mem0/blob/c7ee362aff94a369af70f13f2b4f853f6793ff4c/server/docker-compose.yaml): uvicorn command and API, PostgreSQL, and dashboard publications.
+- [Mem0 server `main.py`](https://github.com/mem0ai/mem0/blob/c7ee362aff94a369af70f13f2b4f853f6793ff4c/server/main.py): the startup `raise RuntimeError` when authentication is on and `JWT_SECRET` is unset, and the `if`/`elif` warning branches for `AUTH_DISABLED` and a short `ADMIN_API_KEY`. The REST API page describes the request-time responses; this file is the startup behaviour.
 - [Onyx basic authentication](https://docs.onyx.app/deployment/authentication/basic.md): email/password authentication, the first user to sign up becoming an admin, and inert `AUTH_TYPE`.
 - [Onyx local Docker deployment](https://docs.onyx.app/deployment/local/docker.md): documented access at `localhost:3000`.
 - [Onyx production Compose](https://github.com/onyx-dot-app/onyx/blob/a0370f232ba4e4625131fae518b86e5530e98ec5/deployment/docker_compose/docker-compose.prod.yml): nginx-only host publications.
