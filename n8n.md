@@ -31,9 +31,9 @@ N8N_SSL_CERT=/path/to/fullchain.pem
 
 ## 4. Webhook authentication
 
-- Set the Webhook node **Authentication** to **Basic auth**, **Header auth**, or **JWT auth** for every private webhook, and attach the matching Webhook credential. Never leave it on **None**.
+- A Webhook node left on **None** answers anyone who reaches its URL. For a webhook whose caller you control, set the node **Authentication** to **Basic auth**, **Header auth**, or **JWT auth** and attach the matching Webhook credential.
 - Webhook authentication is configured per node and is separate from the instance login and the public API key (`X-N8N-API-KEY`). Hardening the editor or `/api/v1` does nothing for webhook endpoints, so audit every Webhook node individually.
-- Where a third party must call the webhook and cannot send your credential, validate the provider's request signature (for example an HMAC header) in the first node after the Webhook trigger, and reject a missing or wrong signature before any further processing.
+- Where a third party must call the webhook and cannot present your credential, **None** is unavoidable at the node, so the workflow itself must authenticate the request: validate the provider's signature (for example an HMAC header) in the first node after the Webhook trigger and reject a missing or wrong signature before any further processing. A **None** webhook with no such check is open.
 
 ## 5. Verify
 
@@ -46,11 +46,15 @@ curl -q -s -o /dev/null -w '%{http_code}\n' https://n8n.example.com/api/v1/workf
                                         # from the editor
 # webhook auth: the api/v1 check above does NOT prove a webhook is protected. Test a known production
 # webhook with the method the node expects (POST shown); n8n shows the production URL in the node panel,
-# default path /webhook/<path>. Pick a workflow safe to trigger if the auth is misconfigured.
-curl -q -s -o /dev/null -w '%{http_code}\n' -X POST "https://n8n.example.com/webhook/<path>"
-                                        # expect 401 or 403 with no credential; 200 means the webhook is open.
-                                        # A 404 means the workflow is inactive or the method does not match, not
-                                        # that it is protected. Use the production URL, never /webhook-test/<path>
+# with the default prefix /webhook/ (test uses /webhook-test/). Pick a workflow safe to trigger if the
+# auth is misconfigured, and substitute your real path for REPLACE_WITH_WEBHOOK_PATH.
+curl -q -g -s -o /dev/null -w '%{http_code}\n' -X POST https://n8n.example.com/webhook/REPLACE_WITH_WEBHOOK_PATH
+                                        # node-level auth (Basic, Header, JWT): expect 401 or 403 with no
+                                        # credential; 200 means the webhook is open; 404 means the workflow is
+                                        # inactive or the method does not match, not that it is protected. A
+                                        # webhook that instead validates a signature in the workflow sets its own
+                                        # response, so confirm there that an unsigned request runs no action.
+                                        # Use the production prefix, never /webhook-test/
 ```
 
 ## Sources (checked September 2026)
