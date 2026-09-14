@@ -95,7 +95,7 @@ endpoint can read a `404` as a rejection: in a fresh browser session with no sav
 to log in as `admin@localhost` with the password `admin`. **Exposed:** it logs in. **Fixed:** it is rejected,
 and your replacement admin password works in a second fresh session. Then, from a network position that
 legitimately reaches Phoenix (a connection failure proves nothing about authentication), probe the read API
-anonymously:
+anonymously (the probe prints the `exitcode` and `errormsg` write-out variables, which need curl 7.75.0 or newer):
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
@@ -145,3 +145,4 @@ that accepts spans with no credential at all.
 - OpenTelemetry, Collector security best practices (bind addresses, TLS, authenticator extensions, minimal
   components, non-root): https://opentelemetry.io/docs/security/config-best-practices/
 - OpenTelemetry Collector Contrib, `basicauthextension` (htpasswd, `client_auth`, `auth.authenticator` wiring): https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/extension/basicauthextension
+- curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
