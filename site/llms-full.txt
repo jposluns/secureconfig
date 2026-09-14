@@ -8693,6 +8693,13 @@ The admin UI is on port `81`; the proxy itself is on `80`/`443`. Port `81` is ne
 - In `[service]`, `DISABLE_REGISTRATION = true` (default `false`) and, for a private forge, `REQUIRE_SIGNIN_VIEW = true` (default `false`).
 - Users enrol TOTP or a WebAuthn key under Settings > Security; `TWO_FACTOR_AUTH = enforced` in `[security]` (Gitea 1.24 and later) requires it. With MFA on, Git over HTTP uses an access token instead of the password, and tokens bypass MFA, so scope them and revoke unused ones ([machine-auth.md](machine-auth.md)).
 
+## GitLab CE
+
+- First run auto-generates the root password into `/etc/gitlab/initial_root_password` (read it with `docker exec -it gitlab grep 'Password:' /etc/gitlab/initial_root_password`); GitLab deletes the file in the first container restart after 24 hours. Change it immediately on first sign-in, since until you do the generated password is the only thing guarding the root account; or preset it with `gitlab_rails['initial_root_password']` in `gitlab.rb` or `GITLAB_OMNIBUS_CONFIG`.
+- `signup_enabled` defaults to `true`, so any visitor can register. New instances hold registrants pending approval (`require_admin_approval_after_user_signup` is on by default), but for a private forge clear "Allow new user accounts" under Admin > Settings > General > New user account restrictions (`signup_enabled = false`) rather than relying on approval discipline.
+- `default_project_visibility` and `default_group_visibility` both default to `private`; keep them there. "Internal" means visible to every signed-in non-external user, so on an instance that allows sign-up, internal is not private.
+- GitLab can enforce two-factor authentication for every user (all tiers) from Admin > Settings > General > Sign-in restrictions; turn it on so local accounts are not password-only.
+
 ## Uptime Kuma
 
 Listens on `3001` and is WebSocket-based, so a reverse proxy in front needs the `Upgrade` and `Connection` headers. Open it right after the first start and finish the account setup before anyone else can; then enable the 2FA the project lists as a feature for that account. Status pages can be public; the dashboard is not.
@@ -8764,6 +8771,18 @@ env -u DOCKER_HOST -u DOCKER_TLS_VERIFY -u DOCKER_CERT_PATH \
                                                                   # can silently supply the very certificate the check is meant to lack
 curl -q -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem --cert client-cert.pem --key client-key.pem \
   https://203.0.113.10:2376/_ping                                 # positive control: 200 with the right client certificate
+
+# GitLab CE: initial root password file check (needs Docker access; the container is named gitlab)
+# absence does not prove the password was rotated; presence means rotate root now
+if state=$(docker exec gitlab sh -c 'test -f /etc/gitlab/initial_root_password && echo PRESENT || echo ABSENT' 2>/dev/null); then
+  case "$state" in
+    PRESENT) echo 'initial_root_password present: rotate root and remove it' ;;
+    ABSENT)  echo 'initial_root_password absent' ;;
+    *)       echo 'the check did not run (unexpected reply from the gitlab container): not a result' ;;
+  esac
+else
+  echo 'the check did not run (docker exec failed for the gitlab container): fix the container, this is not a result'
+fi
 ```
 
 From outside the network, every panel URL is unreachable or shows a login; a page that renders host, container, or repository data without one is a finding.
@@ -8780,6 +8799,10 @@ From outside the network, every panel URL is unreachable or shows a login; a pag
 - Kubernetes Dashboard (deprecation, port-forward, token login): https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/ ; 2.x arguments: https://github.com/kubernetes-retired/dashboard/blob/v2.7.0/docs/common/dashboard-arguments.md
 - Jenkins security: https://www.jenkins.io/doc/book/security/managing-security/ , https://www.jenkins.io/doc/book/security/access-control/ , https://www.jenkins.io/doc/book/security/csrf-protection/
 - Gitea config cheat sheet and MFA: https://docs.gitea.com/administration/config-cheat-sheet and https://docs.gitea.com/usage/user-setting/multi-factor-authentication/
+- GitLab CE initial root password (Docker install): https://docs.gitlab.com/install/docker/installation/
+- GitLab CE sign-up restrictions: https://docs.gitlab.com/administration/settings/sign_up_restrictions/
+- GitLab CE default visibility and access controls: https://docs.gitlab.com/administration/settings/visibility_and_access_controls/
+- GitLab CE enforce two-factor authentication for all users: https://docs.gitlab.com/security/two_factor_authentication/
 - Uptime Kuma README and reverse proxy wiki: https://github.com/louislam/uptime-kuma and https://github.com/louislam/uptime-kuma/wiki/Reverse-Proxy
 - Docker: protect the daemon socket https://docs.docker.com/engine/security/protect-access/ and remote access https://docs.docker.com/engine/daemon/remote-access/
 - Dozzle authentication (DOZZLE_AUTH_PROVIDER, users.yml, actions and shell): https://dozzle.dev/guide/authentication
