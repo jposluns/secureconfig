@@ -50,7 +50,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [self-signed.md](self-signed.md) | OpenSSL and mkcert certificates when a public CA is not an option, plus distributing trust to clients |
 | [cloudflare.md](cloudflare.md) | Cloudflare Tunnel and Zero Trust Access: authenticated external access with no open inbound ports |
 | [tailscale.md](tailscale.md) | Tailscale serve (tailnet-only) and funnel (public) with automatic TLS |
-| [tunnels.md](tunnels.md) | frp and WireGuard, self-hosted tunnels when there is no public IP |
+| [tunnels.md](tunnels.md) | frp, WireGuard, and ssh -R, self-hosted tunnels when there is no public IP |
 
 ### Identity, authentication, and secrets
 

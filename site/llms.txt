@@ -16,7 +16,7 @@
 - [self-signed](https://raw.githubusercontent.com/jposluns/secureconfig/main/self-signed.md): OpenSSL and mkcert certificates, distributing trust to clients
 - [cloudflare](https://raw.githubusercontent.com/jposluns/secureconfig/main/cloudflare.md): Cloudflare Tunnel and Zero Trust Access, no open inbound ports
 - [tailscale](https://raw.githubusercontent.com/jposluns/secureconfig/main/tailscale.md): tailscale serve (tailnet-only) and funnel (public), automatic TLS
-- [tunnels](https://raw.githubusercontent.com/jposluns/secureconfig/main/tunnels.md): frp and WireGuard, self-hosted tunnels when there is no public IP
+- [tunnels](https://raw.githubusercontent.com/jposluns/secureconfig/main/tunnels.md): frp, WireGuard, and ssh -R, self-hosted tunnels when there is no public IP
 
 ## Identity, authentication, and secrets
 

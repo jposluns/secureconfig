@@ -59,7 +59,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [self-signed.md](self-signed.md) | OpenSSL and mkcert certificates when a public CA is not an option, plus distributing trust to clients |
 | [cloudflare.md](cloudflare.md) | Cloudflare Tunnel and Zero Trust Access: authenticated external access with no open inbound ports |
 | [tailscale.md](tailscale.md) | Tailscale serve (tailnet-only) and funnel (public) with automatic TLS |
-| [tunnels.md](tunnels.md) | frp and WireGuard, self-hosted tunnels when there is no public IP |
+| [tunnels.md](tunnels.md) | frp, WireGuard, and ssh -R, self-hosted tunnels when there is no public IP |
 
 ### Identity, authentication, and secrets
 
@@ -580,9 +580,9 @@ curl -q -sI https://host.tailnet.ts.net/            # from a tailnet device: wor
 ==> tunnels.md
 ======================================================================
 
-# Self-hosted tunnels: frp and WireGuard
+# Self-hosted tunnels: frp, WireGuard, and ssh -R
 
-Both expose a private host to the internet without a public IP, the same job [cloudflare.md](cloudflare.md) and [tailscale.md](tailscale.md) do, but with no vendor edge: you run and secure both ends yourself, on a host still hardened per [host.md](host.md). frp with a weak or absent token lets anyone bind proxies through your server; WireGuard has no login at all, only key pairs and the traffic scoping you configure.
+All three expose a private host to the internet without a public IP, the same job [cloudflare.md](cloudflare.md) and [tailscale.md](tailscale.md) do, but with no vendor edge: you run and secure both ends yourself, on a host still hardened per [host.md](host.md). frp with a weak or absent token lets anyone bind proxies through your server; WireGuard has no login at all, only key pairs and the traffic scoping you configure; and `ssh -R` forwards a local port through your own SSH login, kept on the server's loopback by default but reachable by anyone if `GatewayPorts` is widened.
 
 ## frp
 
@@ -634,9 +634,9 @@ By default WireGuard "tries to be as silent as possible when not being used," so
 
 `ssh -R 8080:localhost:3000 user@server` is the quickest ad-hoc self-hosted tunnel: it asks the server to forward connections to its own port 8080 back through your SSH session to your `localhost:3000`. Whether that published port is a private convenience or an open door is decided on the server by `GatewayPorts` in `sshd_config`, not by the client.
 
-With the default `GatewayPorts no`, the server binds the forwarded port to loopback, so only the server itself reaches it and nothing is exposed to the network. `GatewayPorts yes` binds it to every interface, and `clientspecified` lets the `ssh -R` client choose the bind address (`ssh -R '*:8080:localhost:3000' ...`). Either one publishes your local app on the server's public address, and the tunnel adds no authentication of its own: if `localhost:3000` has no login, anyone who reaches `server:8080` now has it.
+With the default `GatewayPorts no`, the server binds the forwarded port to loopback, so only the server itself reaches it and nothing is exposed to the network; a client that asks for a public bind, as in `ssh -R '*:8080:localhost:3000' ...`, is quietly overridden back to loopback. `GatewayPorts yes` forces a wildcard bind on every interface regardless of what the client requests. `clientspecified` instead honours the bind address in the request, so under it that same `ssh -R '*:8080:localhost:3000' ...` opens all interfaces while `ssh -R '127.0.0.1:8080:localhost:3000' ...` stays on loopback. SSH authenticates the tunnel session itself, but adds nothing for callers reaching the forwarded port: once that port is on a public interface, if `localhost:3000` has no login of its own, anyone who reaches `server:8080` has it.
 
-Keep `GatewayPorts no` unless you deliberately mean to publish, and when you do, treat the forwarded port as internet-facing: put authentication and TLS in front of it with a reverse proxy on the server ([caddy.md](caddy.md), [nginx.md](nginx.md)), never rely on the port being unguessable. For a persistent tunnel, run the `ssh -R` under `autossh` so it reconnects, and give the login its own key on a restricted account.
+To publish such an app, do not widen `GatewayPorts`. Leave it `no` so the forward stays on the server's loopback, and run a reverse proxy on the server that reads `localhost:8080` and exposes only an authenticated TLS listener ([caddy.md](caddy.md), [nginx.md](nginx.md)); the forwarded port itself never faces the network. Setting `GatewayPorts yes` would put port 8080 straight onto the public interface, in front of that proxy rather than behind it. For a persistent tunnel, run the `ssh -R` under `autossh` so it reconnects, and give the login its own key on a restricted account.
 
 ## Verify
 
@@ -646,9 +646,6 @@ frpc -c frpc-wrongtoken.toml   # expect an authentication failure, no proxy regi
 
 ss -ulnp | grep 51820          # WireGuard: only the one UDP port listening
 sudo ufw status verbose        # no other inbound rule added for the tunneled service
-
-# ssh -R: on the SERVER, a forwarded port binds 127.0.0.1 (or [::1]) with GatewayPorts no, never 0.0.0.0
-ss -tlnp | grep -E ':8080 '    # only a loopback address unless you deliberately published it
 
 # positive control: from the peer, a destination inside its intended subnet must succeed, proving
 # the tunnel and routing both work
@@ -661,6 +658,9 @@ ping -c1 192.168.1.50          # expect 100 percent packet loss
 
 # confirm the drop is the firewall rule acting, not a routing gap: its counter must be nonzero
 sudo nft list ruleset | grep -A1 'saddr 192.168.88.0/24'   # packets and bytes both greater than 0
+
+# ssh -R: on the SERVER, a forwarded port binds 127.0.0.1 (or [::1]) with GatewayPorts no, never 0.0.0.0
+ss -tlnp | grep -E ':8080 '    # only a loopback address unless you deliberately published it
 ```
 
 ## Sources (checked September 2026)
