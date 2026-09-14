@@ -31,9 +31,9 @@ tls:
 
 Environment equivalents: `QDRANT__SERVICE__API_KEY` and `QDRANT__SERVICE__READ_ONLY_API_KEY`. Clients send the key in the `api-key` header (or `Authorization: Bearer`); the two are interchangeable for the client REST and gRPC API. Qdrant's own docs say that enabling the key without TLS is insecure; terminate TLS either in Qdrant as above or at a proxy in front.
 
-An API key protects the client API. It does not protect the internal cluster port, 6335. The security page states, exactly: "Internal communication channels are *never* protected by an API key nor bearer tokens. Internal gRPC uses port 6335 by default if running in distributed mode. You must ensure that this port is not publicly reachable and can only be used for node communication." This is not a gap a key can close. `read_only_api_key` does not cover 6335 either, and confirming that 6333 returns 401 without a key tells you nothing about 6335: in distributed mode 6335 answers a peer with no credential at all, so a reader who sets a key, sees 6333 return 401, and concludes the deployment is authenticated is wrong about 6335.
+An API key protects the client API. It does not protect the internal cluster port, 6335. The security page states, exactly: "Internal communication channels are *never* protected by an API key nor bearer tokens. Internal gRPC uses port 6335 by default if running in distributed mode. You must ensure that this port is not publicly reachable and can only be used for node communication." This is not a gap a key can close. `read_only_api_key` does not cover 6335 either, and confirming that 6333 returns 401 without a key tells you nothing about 6335: in distributed mode 6335 answers a peer with no API key or bearer token (peer TLS, when enabled, authenticates the channel by certificate, but a key never applies to it), so a reader who sets a key, sees 6333 return 401, and concludes the deployment is authenticated is wrong about 6335.
 
-Restrict 6335 to your cluster peers at the network layer, with a host firewall, a cloud security group, or by simply not publishing the container port to any address a non-peer can reach. Allow inbound 6335 only from your other peers' addresses and deny every other source, including other machines on the same private network. On a single host you do not run 6335 at all. In a cluster you cannot bind it to `127.0.0.1`, because peers on other hosts must reach it, so bind it to the private cluster interface and firewall it to peers. TLS on the peer channel does not remove this requirement; turn it on as well, but it authenticates and encrypts the channel rather than making an exposed port safe to reach:
+Restrict 6335 to your cluster peers at the network layer, with a host firewall, a cloud security group, or by simply not publishing the container port to any address a non-peer can reach. Allow inbound 6335 only from your other peers' addresses and deny every other source, including other machines on the same private network. A node not running in cluster mode does not open 6335 at all; note that a single initial node started WITH cluster mode enabled does open the internal listener, so "single host" is not by itself a guarantee that 6335 is absent, which is why V1 and the 6335 probe still apply. In a cluster you cannot bind it to `127.0.0.1`, because peers on other hosts must reach it, so bind it to the private cluster interface and firewall it to peers. TLS on the peer channel does not remove this requirement; turn it on as well, but it authenticates and encrypts the channel rather than making an exposed port safe to reach:
 
 ```yaml
 cluster:
@@ -41,7 +41,7 @@ cluster:
     enable_tls: true
 ```
 
-`cluster.p2p.enable_tls` is separate from `service.enable_tls`: the first secures peer-to-peer traffic, the second the client API. Set both in distributed mode, apply the configuration on every peer, and restart the peers one at a time. To rotate the client API key without downtime, set the new key as `service.alt_api_key` on each peer and restart one at a time; `alt_api_key` is an additional accepted client key and, like `api_key`, has no effect on the internal channel. The peer-channel and rotation settings can be version-dependent, so confirm them against the security page for the Qdrant version you run.
+`cluster.p2p.enable_tls` is separate from `service.enable_tls`: the first secures peer-to-peer traffic, the second the client API. Set both in distributed mode, apply the configuration on every peer, and restart the peers one at a time. To rotate the client API key without downtime, set the new key as `service.alt_api_key` on each peer and restart one at a time; `alt_api_key` (available as of Qdrant v1.17.0) is an additional accepted client key and, like `api_key`, has no effect on the internal channel. The peer-channel and rotation settings can be version-dependent, so confirm them against the security page for the Qdrant version you run.
 
 ## 3. Weaviate: disable anonymous access, then authorize
 
@@ -122,7 +122,7 @@ Then probe each Qdrant backend port from a host **outside** the peer allowlist, 
 )
 ```
 
-Read the `exit=`/`err=` fields, not the exit code alone. `exit=7` (connection refused) from a non-peer is the wanted result for 6335. A `exit=28` at about 5 seconds (the connect timeout) is inconclusive, never a pass: corroborate with the inventory and firewall logs. A `exit=28` at about 20 seconds (the max-time) means the TCP connection succeeded and then stalled: the port is reachable, a fail for a backend port from a non-peer. An `http=` code or any bytes-exchanged exit (`52`, `56`, `1`, `35`, `60`) also means the connection succeeded: reachable, a fail. A key check or TLS rejection after connect does not un-expose the port. Plaintext `http://` is deliberate here, because the question is only whether the TCP connection succeeded; a plaintext probe that connects to a TLS peer port still surfaces as a bytes-exchanged exit, so reachability is still detected.
+Read the `err=` text, not the exit code alone. The wanted result from a non-peer is `exit=7` whose `err` reads "Connection refused". Read the message, because a local failure (name resolution, no route, or a sandbox that forbids the socket) also reports `exit=7` with a different `err`, and that is inconclusive, not a refusal. A `exit=28` at about 5 seconds (the connect timeout) is likewise inconclusive, never a pass: corroborate with the inventory and firewall logs. A `exit=28` at about 20 seconds (the max-time) means the TCP connection succeeded and then stalled: the port is reachable, a fail for a backend port from a non-peer. An `http=` code, or a post-connect exit such as `52` (empty reply), `56` (recv failure), or `35`/`60` (TLS on a plaintext probe), also means the connection succeeded: reachable, a fail. A key check or TLS rejection after connect does not un-expose the port. Plaintext `http://` is deliberate here, because the question is only whether the TCP connection succeeded; a plaintext probe that connects to a TLS peer port still surfaces as one of those post-connect exits, so reachability is still detected.
 
 For 6335 specifically, in distributed mode, require two results: from a non-peer, `exit=7` or a 5-second `exit=28` corroborated by firewall evidence; from an allowed peer, a completed connection (any exit that is not `7` and not a 5-second `28`). The pair separates "restricted to peers, cluster works" from both "exposed to everyone" and "blocked for everyone". 6335 absent from the inventory is consistent with single-node but does not prove it can never appear, so probe it anyway.
 
@@ -149,6 +149,13 @@ Keep the existing client-API key check, hardened, against the frontend hostname 
 ```
 
 **Exposed:** without-key returns `http=200` (no key, or a proxy that does not enforce it), or a backend port is reachable from a non-peer. **Fixed:** without-key returns `401`/`403` and with-key returns `200`, and 6335 is refused from a non-peer while a peer connects.
+
+For Weaviate and Chroma, the fronted client checks still apply:
+
+```bash
+curl -q -si https://weaviate.example.com/v1/schema | head -1   # 401 without a key
+curl -q -si https://chroma.example.com/ | head -1              # 401 from the proxy, never a Chroma response
+```
 
 For Milvus, a `MilvusClient(uri=...)` call with no `token` must fail once `authorizationEnabled` is on, and the same call with the application user's credentials must succeed.
 
