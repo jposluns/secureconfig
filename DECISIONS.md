@@ -1,6 +1,6 @@
 # DECISIONS
 
-Every project Jeff Posluns maintains carries a DECISIONS.md; the convention is standardized across all of them, not local to this repository. The file gives an AI assistant a working model of how the maintainer decides, and it gives each settled question a single recorded answer so it is never asked again. Read it before proposing anything a past entry already covers.
+Every project Jeff Posluns maintains carries a DECISIONS.md, some public and others in private working directories; the convention is standardized across all of them, not local to this repository. The file gives an AI assistant a working model of how the maintainer decides, and it gives each settled question a single recorded answer so it is never asked again. Read it before proposing anything a past entry already covers.
 
 Maintainer rulings, recorded so they are not re-litigated. A decision here is settled: it is not
 reopened by a later review finding or by a worker's recommendation, only by the maintainer.
