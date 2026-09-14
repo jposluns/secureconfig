@@ -33,6 +33,10 @@ challenge path is served before the dotfile deny is reached (`allow`/`deny`: `ng
 <FilesMatch "(^\.|\.sql$|\.dump$|\.bak$)">
     Require all denied
 </FilesMatch>
+
+<Directory /var/www/>
+    Options -Indexes
+</Directory>
 ```
 
 `<FilesMatch>` matches the request's basename, not its full path, so it alone does not catch
@@ -45,6 +49,8 @@ rules out that literal substring, so it would still allow a directory that merel
 segment to be `well-known` exactly, ending at a slash or the path's end, so only the real ACME
 challenge directory is exempt. Keep the `<FilesMatch>` rule as a backstop for `.sql`, `.dump`, and
 `.bak` basenames and for top-level dotfiles like `/.env`.
+
+One default undoes much of this. Debian and Ubuntu ship `apache2.conf` with `Options Indexes FollowSymLinks` on `<Directory /var/www/>`, so `mod_autoindex` serves any directory below the document root that has no `index.html` as a browsable listing. A directory of `.sql` dumps or backups whose names you assumed were unguessable is then one request away from being enumerated, and the deny rules above never see those requests because they match names, not the listing. Turn it off with `Options -Indexes`, shown above. nginx (`autoindex` is `off` by default) and Caddy (`file_server` lists only with `browse`) do not need this; Apache on these distributions does.
 
 ## Caddy
 
@@ -80,6 +86,9 @@ curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/.git/config
 curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/config.php.bak
 curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/db.sql
 # each line above must print 403 or 404, never the file's content
+curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/uploads/
+# a directory below the document root that has no index.html (an uploads or backups dir): with
+# Options -Indexes this is 403 (or 404), never a 200 that returns an autoindex page listing its files
 
 printf 'probe' | sudo tee /var/www/html/.well-known/acme-challenge/probe >/dev/null
 curl -q -s https://example.com/.well-known/acme-challenge/probe
@@ -110,6 +119,8 @@ Any backup path known to have existed on the server should also 404 at the deplo
 - nginx access module (`allow`, `deny`): https://nginx.org/en/docs/http/ngx_http_access_module.html
 - Apache mod_authz_core (`Require all denied`): https://httpd.apache.org/docs/2.4/mod/mod_authz_core.html
 - Apache core module (`<FilesMatch>`, `<DirectoryMatch>`): https://httpd.apache.org/docs/2.4/mod/core.html#filesmatch, https://httpd.apache.org/docs/2.4/mod/core.html#directorymatch
+- Apache mod_autoindex (`Options Indexes` generates a directory listing; `Options -Indexes` disables it): https://httpd.apache.org/docs/2.4/mod/mod_autoindex.html
+- nginx autoindex module (`autoindex` is `off` by default): https://nginx.org/en/docs/http/ngx_http_autoindex_module.html
 - Caddy `respond` directive: https://caddyserver.com/docs/caddyfile/directives/respond
 - Caddy matchers: https://caddyserver.com/docs/caddyfile/matchers
 - Next.js environment variables (`NEXT_PUBLIC_`): https://nextjs.org/docs/pages/guides/environment-variables
