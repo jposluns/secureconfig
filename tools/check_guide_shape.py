@@ -45,6 +45,9 @@ NOT_A_GUIDE = {
     "DONE.md",
     "DECISIONS.md",
     "PENDING-DECISIONS.md",
+    # A generic cross-service reference for applications with no guide. It has no
+    # per-service Verify or dated Sources, so guide shape would be ceremony.
+    "controls-reference.md",
 }
 
 # README.md is a guide for this gate's purposes: it carries a substantive
