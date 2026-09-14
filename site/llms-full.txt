@@ -8911,6 +8911,10 @@ challenge path is served before the dotfile deny is reached (`allow`/`deny`: `ng
 <FilesMatch "(^\.|\.sql$|\.dump$|\.bak$)">
     Require all denied
 </FilesMatch>
+
+<Directory /var/www/>
+    Options -Indexes
+</Directory>
 ```
 
 `<FilesMatch>` matches the request's basename, not its full path, so it alone does not catch
@@ -8923,6 +8927,8 @@ rules out that literal substring, so it would still allow a directory that merel
 segment to be `well-known` exactly, ending at a slash or the path's end, so only the real ACME
 challenge directory is exempt. Keep the `<FilesMatch>` rule as a backstop for `.sql`, `.dump`, and
 `.bak` basenames and for top-level dotfiles like `/.env`.
+
+One default weakens this. Debian and Ubuntu ship `apache2.conf` with `Options Indexes FollowSymLinks` on `<Directory /var/www/>`, so when a directory below the document root has no `DirectoryIndex` file (`dir.conf` lists `index.html`, `index.php`, and several others), `mod_autoindex` returns a browsable listing of its contents. The deny rules above still hold, and the listing even omits the files they forbid, because `mod_autoindex` hides an entry whose subrequest returns 403 unless `IndexOptions ShowForbidden` is set. The exposure is everything else in the directory: a backup or export the deny rules do not match by name, an `archive.tar.gz`, a `customers.csv`, or a datestamped dump, is listed for anyone who requests the directory, and the listing itself confirms the directory and reveals filenames you were relying on nobody guessing. Turn listing off with `Options -Indexes`, shown above; write it in the relative `-` form so it removes only `Indexes` and keeps the inherited `FollowSymLinks`, and never mix `+`/`-` options with bare ones in a single `Options` line, which Apache 2.4 rejects at startup. nginx (`autoindex` is `off` by default) and Caddy (`file_server` lists only with `browse`) do not need this; Apache on these distributions does.
 
 ## Caddy
 
@@ -8958,6 +8964,9 @@ curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/.git/config
 curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/config.php.bak
 curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/db.sql
 # each line above must print 403 or 404, never the file's content
+curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/uploads/
+# a directory below the document root with no DirectoryIndex file (an uploads or backups dir): with
+# Options -Indexes this is 403 (or 404), never a 200 that returns an autoindex page listing its files
 
 printf 'probe' | sudo tee /var/www/html/.well-known/acme-challenge/probe >/dev/null
 curl -q -s https://example.com/.well-known/acme-challenge/probe
@@ -8988,6 +8997,9 @@ Any backup path known to have existed on the server should also 404 at the deplo
 - nginx access module (`allow`, `deny`): https://nginx.org/en/docs/http/ngx_http_access_module.html
 - Apache mod_authz_core (`Require all denied`): https://httpd.apache.org/docs/2.4/mod/mod_authz_core.html
 - Apache core module (`<FilesMatch>`, `<DirectoryMatch>`): https://httpd.apache.org/docs/2.4/mod/core.html#filesmatch, https://httpd.apache.org/docs/2.4/mod/core.html#directorymatch
+- Apache core `Options` (the `Indexes` option triggers a listing when there is no `DirectoryIndex`; the `-Indexes` relative form and the +/- merge rules): https://httpd.apache.org/docs/2.4/mod/core.html#options
+- Apache mod_autoindex (the generated listing, and `ShowForbidden`, which by default hides entries a subrequest forbids): https://httpd.apache.org/docs/2.4/mod/mod_autoindex.html
+- nginx autoindex module (`autoindex` is `off` by default): https://nginx.org/en/docs/http/ngx_http_autoindex_module.html
 - Caddy `respond` directive: https://caddyserver.com/docs/caddyfile/directives/respond
 - Caddy matchers: https://caddyserver.com/docs/caddyfile/matchers
 - Next.js environment variables (`NEXT_PUBLIC_`): https://nextjs.org/docs/pages/guides/environment-variables
