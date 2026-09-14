@@ -10,6 +10,7 @@ turn the build red, and a pull request number is only knowable from outside. Kee
 with the merged pull request is therefore an authoring obligation, not an enforced one.
 
 ## 2026-09-14
+- Covered ssh -R remote forwarding in tunnels.md (#77, row 1.30): the server's sshd_config GatewayPorts governs the forwarded port's bind (default no keeps it on loopback and overrides a client's public-bind request; yes forces a wildcard bind; clientspecified honours the client's requested address), and SSH authenticates the tunnel session but not callers to the forwarded port, so a widened GatewayPorts in front of an app with no login of its own publishes it unauthenticated.
 - Covered Caddy's admin API in caddy.md (#76, row 1.27): it listens on localhost:2019 with no auth and can replace the whole config or stop the server, so it must never be published; the guide adds the permissioned-unix-socket pattern for shared hosts and a Verify check for the 2019 listener.
 - Warned against quick-sharing files with python -m http.server in python.md (#75, row 1.31): it binds every interface by default and serves the current directory (source, .env, keys, dumps), follows symlinks, and is not for production; the guide shows the loopback-bound alternative.
 - Added MySQL's X Plugin listener to mysql.md (#74, row 1.21): MySQL 8.4 enables the X Plugin by default on port 33060 with mysqlx_bind_address defaulting to every interface, independent of the classic bind_address; the guide now sets mysqlx_bind_address (or mysqlx = OFF) and checks 33060.
