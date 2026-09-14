@@ -10,6 +10,7 @@ turn the build red, and a pull request number is only knowable from outside. Kee
 with the merged pull request is therefore an authoring obligation, not an enforced one.
 
 ## 2026-09-14
+- Added a text-generation-webui section to model-servers.md (#69, row 1.8): its two independently keyed surfaces (Gradio UI and the OpenAI-compatible API), the --listen-widens-both trap, the --share/--public-api tunnels, per-surface auth, the validate_host_header 400, and a reasoned /v1/models probe (demonstration tracked by row 1.50). Flags verified at source.
 - Added the curl 7.75.0 version note to the Verify probes in llm-observability.md and vector-databases.md (#68, rows 1.48/1.49); both print the exitcode and errormsg write-out variables that curl added in 7.75.0.
 - Prepended `-q` to two Verify probes (#66) in `fronting-auth.md` and `image-gen-uis.md` so the reader's `~/.curlrc` cannot silently alter them; surfaced by the row 3.11 guard-conventions gate work.
 - Rotated row 1.12 into `DONE.md` (#65) after #64 merged, and opened three follow-up rows: 1.47 (live exposed/fixed reproduction of the Traefik canary probes) and 1.48/1.49 (the curl 7.75.0 note that `llm-observability.md` and `vector-databases.md` still lack for their `exitcode`/`errormsg` write-out variables, found while applying #64).
