@@ -100,7 +100,7 @@ one of them is the application's.
 | 11434 | Ollama | [ollama.md](ollama.md) |
 | 15672 | RabbitMQ management UI | [rabbitmq.md](rabbitmq.md) |
 | 19530 | Milvus gRPC | [vector-databases.md](vector-databases.md) |
-| 25672 | RabbitMQ inter-node and CLI Erlang distribution (the AMQP port plus 20000); the Erlang cookie is its only credential and grants full control of the node | [rabbitmq.md](rabbitmq.md) |
+| 25672 | RabbitMQ inter-node and CLI Erlang distribution (default, the AMQP port plus 20000); by default the Erlang cookie is its only credential and grants full control of the node | [rabbitmq.md](rabbitmq.md) |
 | 27017 | MongoDB | [mongodb.md](mongodb.md), [cloud-firewalls.md](cloud-firewalls.md) |
 | 30000 | SGLang | [model-servers.md](model-servers.md) |
 | 50051 | Weaviate gRPC | [vector-databases.md](vector-databases.md) |
