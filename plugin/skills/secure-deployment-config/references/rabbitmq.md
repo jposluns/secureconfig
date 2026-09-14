@@ -37,10 +37,18 @@ Certificates per [self-signed.md](self-signed.md) (internal CA fits brokers well
 
 The management plugin's web UI is an admin panel: keep it off public interfaces and reach it per [admin-uis.md](admin-uis.md) (SSH forward, tailnet, or Access), with its own TLS when remote.
 
-## 4. Verify
+## 4. epmd and the Erlang distribution port
+
+Two more listeners exist that the AMQP and management ports do not reveal, and they are the most dangerous to expose: epmd (default `4369`, the Erlang Port Mapper Daemon, which maps Erlang node names to ports) and the inter-node Erlang distribution port (default `25672`, the AMQP port plus 20000; `RABBITMQ_DIST_PORT` or a configured port range can move it). The distribution port carries the clustering and CLI-tool protocol.
+
+By default the only credential on the distribution port is the Erlang cookie: a shared secret in the server's `/var/lib/rabbitmq/.erlang.cookie`, with a copy in each CLI user's `$HOME/.erlang.cookie`, owner-only at mode `600` or similar. Passing it on the command line (`--erlang-cookie`) or through `-setcookie` is the least secure way to set it. Any peer that reaches the distribution port and authenticates with the matching cookie is treated as a cluster node or CLI tool with full control of the broker; `rabbitmqctl` works exactly this way, so cookie plus reachability is `rabbitmqctl` for anyone. A default, weak, or leaked cookie on a published distribution port is a remote compromise of the node, not merely a message-queue exposure. Inter-node (distribution) TLS can additionally require a trusted peer certificate; where it is not configured, the cookie is the only barrier.
+
+RabbitMQ's own guidance is to expose these ports only to the hosts and subnets that run other cluster nodes or CLI tools, and not to the public internet. Tutorial `docker-compose.yml` files routinely publish them (`ports: - 25672:25672` and `- 4369:4369`); do not. Bind them to the cluster's private network, firewall them to peer addresses, give the cookie a long random value kept out of the image and the compose file, and if you moved either port, filter for your configured values in the check below.
+
+## 5. Verify
 
 ```bash
-ss -tlnp | grep -E '5671|5672|15672'      # 5672 gone once listeners.tcp = none; UI private
+ss -tlnp | grep -E ':(5671|5672|15672|4369|25672) '   # 5672 gone once listeners.tcp = none; UI, epmd 4369 and distribution 25672 all private to the cluster network
 
 # Positive: a client holding a certificate connects.
 # client.pem and client.key are a CLIENT certificate and key issued by the CA in
@@ -91,3 +99,5 @@ echo "negative run exit $?"
 
 - RabbitMQ TLS: https://www.rabbitmq.com/docs/ssl
 - RabbitMQ access control (guest restrictions, user commands, recommendation): https://www.rabbitmq.com/docs/access-control
+- RabbitMQ networking (epmd on 4369, inter-node distribution on 25672 = node port + 20000, restrict these ports to cluster hosts): https://www.rabbitmq.com/docs/networking
+- RabbitMQ CLI tools and the Erlang cookie (shared secret in `.erlang.cookie` or `RABBITMQ_ERLANG_COOKIE`, full control of the node): https://www.rabbitmq.com/docs/cli
