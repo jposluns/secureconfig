@@ -77,7 +77,18 @@ export REQUESTS_CA_BUNDLE=/path/ca.crt   # requests
 export SSL_CERT_FILE=/path/ca.crt        # httpx and the ssl module
 ```
 
-## 5. Verify
+## 5. Do not quick-share files with `http.server`
+
+`python -m http.server` is a common quick-share suggestion, and it is the wrong one on any reachable host. By default it binds every interface, and it serves the current directory: source, `.env`, private keys, and database dumps are all downloadable by anyone who can reach the port. It also follows symbolic links, so a link in that directory hands out files from outside it, and the Python docs mark the module as not suitable for production. If you have no alternative, bind loopback and serve a directory that holds only what you mean to share:
+
+```bash
+cd /path/to/a/directory/with/nothing/private || exit
+python -m http.server -b 127.0.0.1 8000
+```
+
+Reach it through an SSH tunnel, including one that runs over your tailnet, never a public bind.
+
+## 6. Verify
 
 ```bash
 curl -q -sI https://example.com/        # succeeds without -k
@@ -87,6 +98,7 @@ ss -tlnp | grep -E 'gunicorn|uvicorn|python'   # behind a proxy: 127.0.0.1 only
 
 ## Sources (checked September 2026)
 
+- Python `http.server` (binds all interfaces by default, serves the current directory, follows symlinks, not for production): https://docs.python.org/3/library/http.server.html
 - Gunicorn documentation (settings reference: bind, certfile, keyfile, ca_certs): https://gunicorn.org/reference/settings/
 - Uvicorn settings reference: https://github.com/Kludex/uvicorn/blob/main/docs/settings.md
 - Django deployment checklist: https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
