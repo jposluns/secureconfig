@@ -105,7 +105,7 @@ sudo ss -tulnp                       # read every row; any 6333/6334/6335 on a w
                                      # published ports; the host table alone does not show -p 6335:6335.
 ```
 
-Then probe each Qdrant backend port from a host **outside** the peer allowlist, against the node's real address, running the block three times with `6333`, `6334`, then `6335` on the `set --` line. **These probes are reasoned, not demonstrated** (no distributed Qdrant cluster in the authoring environment; backlog row 1.46 tracks demonstrating the exposed and fixed states against a live cluster). Bracket an IPv6 literal, for example `'[2001:db8::1]'`; `-g` keeps curl from globbing the brackets:
+Then probe each Qdrant backend port from a host **outside** the peer allowlist, against the node's real address, running the block three times with `6333`, `6334`, then `6335` on the `set --` line. **These probes are reasoned, not demonstrated** (no distributed Qdrant cluster in the authoring environment; backlog row 1.46 tracks demonstrating the exposed and fixed states against a live cluster). Bracket an IPv6 literal, for example `'[2001:db8::1]'`; `-g` keeps curl from globbing the brackets. The block prints the `exitcode` and `errormsg` write-out variables, which need curl 7.75.0 or newer:
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
@@ -170,3 +170,4 @@ For Milvus, a `MilvusClient(uri=...)` call with no `token` must fail once `autho
 - Milvus TLS (`tls.*` paths, `common.security.tlsMode`, RESTful port note): https://milvus.io/docs/tls.md ; standalone install (ports 19530 and 9091): https://milvus.io/docs/install_standalone-docker.md
 - Chroma migration notes (v1.0.0 removal of built-in authentication; 2024 auth overhaul variables): https://docs.trychroma.com/docs/overview/migration ; client-server mode (`chroma run --path`, port 8000): https://docs.trychroma.com/docs/run-chroma/client-server
 - pgvector (`CREATE EXTENSION vector`, PostgreSQL 13 and later): https://github.com/pgvector/pgvector
+- curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
