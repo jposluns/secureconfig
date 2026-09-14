@@ -10,6 +10,7 @@ turn the build red, and a pull request number is only knowable from outside. Kee
 with the merged pull request is therefore an authoring obligation, not an enforced one.
 
 ## 2026-09-14
+- Rotated row 1.12 into `DONE.md` (#65) after #64 merged, and opened three follow-up rows: 1.47 (live exposed/fixed reproduction of the Traefik canary probes) and 1.48/1.49 (the curl 7.75.0 note that `llm-observability.md` and `vector-databases.md` still lack for their `exitcode`/`errormsg` write-out variables, found while applying #64).
 - Disabled Traefik's Docker-provider default exposure (`traefik.md`, #64): added the `providers.docker` block with `exposedByDefault: false`, the read-only socket mount with its root-equivalence note, the opt-in/opt-out and daemon-wide-discovery prose, an unlabelled-canary front-door probe with an app baseline, a widened whole-table `ss` check, and the Swarm-scope note. Closes backlog row 1.12.
 
 ### Added
