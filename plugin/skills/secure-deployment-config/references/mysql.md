@@ -77,6 +77,8 @@ ss -tlnp | grep -E ':(3306|33060) '   # classic protocol 3306 and the X Protocol
 - MySQL X Plugin options (`mysqlx_bind_address` default `*`, `mysqlx_port` 33060, `mysqlx` enable state; a separate variable from `bind_address` with its own default): https://dev.mysql.com/doc/refman/8.4/en/x-plugin-options-system-variables.html
 - MySQL multifactor authentication: https://dev.mysql.com/doc/refman/8.0/en/multifactor-authentication.html
 - MariaDB TLS documentation: https://mariadb.com/docs/server/security/encryption/data-in-transit-encryption/secure-connections-overview
+- MariaDB protocol differences from MySQL (the MySQL X protocol is not supported, so no X Plugin or port 33060): https://mariadb.com/docs/server/reference/clientserver-protocol/mariadb-protocol-differences-with-mysql
+- MariaDB startup on an invalid option (an unknown config variable such as `mysqlx_bind_address` stops startup): https://mariadb.com/docs/server/server-management/starting-and-stopping-mariadb/what-to-do-if-mariadb-doesnt-start
 - WebAuthn pluggable authentication (MySQL 8.4): https://dev.mysql.com/doc/refman/8.4/en/webauthn-pluggable-authentication.html
 - FIDO pluggable authentication (MySQL 8.0, deprecated as of 8.0.35): https://dev.mysql.com/doc/refman/8.0/en/fido-pluggable-authentication.html
 - What is new in MySQL 8.4 (`authentication_fido` plugins removed): https://dev.mysql.com/doc/refman/8.4/en/mysql-nutshell.html
