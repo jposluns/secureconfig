@@ -47,23 +47,24 @@ When a person leaves, revoke access at every layer they touched, not only their 
 
 ```bash
 # From a second network, not the host itself:
-unset probe_ip                                         # clears a pre-set declare -i or -l attribute, and any stale
-                                                       # value; copy this whole block, not just the command below
-probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "${probe_ip:-}" in
-  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
-  *) nmap -Pn -p- "$probe_ip" ;;                        # only the intended ports answer
-  # and the scan actually ran: nmap reporting a host down, a permission error, or no output at all is
-  # inconclusive, not a clean result
-esac
-unset probe_ip6                                        # same, for the IPv6 probe
-probe_ip6=REPLACE_WITH_YOUR_PUBLIC_IPV6
-case "${probe_ip6:-}" in
-  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip6= first; not probing" ;;
-  *) nmap -Pn -6 -p- "$probe_ip6" ;;                      # same, over the public IPv6 address
-                                                          # same reading: a scan that did not run is not a clean scan
-esac
-curl -sI https://retired-preview.example.com/          # expect DNS failure or connection error
+(                                                      # a subshell, so your own script arguments are untouched
+  set -- REPLACE_WITH_YOUR_PUBLIC_IP
+  case "${1-}" in
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *) nmap -Pn -p- "$1" ;;                        # only the intended ports answer
+    # and the scan actually ran: nmap reporting a host down, a permission error, or no output at all is
+    # inconclusive, not a clean result
+  esac
+)
+(                                                      # a subshell, so your own script arguments are untouched
+  set -- REPLACE_WITH_YOUR_PUBLIC_IPV6
+  case "${1-}" in
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *) nmap -Pn -6 -p- "$1" ;;                      # same, over the public IPv6 address
+                                                    # same reading: a scan that did not run is not a clean scan
+  esac
+)
+curl -q -sI https://retired-preview.example.com/          # expect DNS failure or connection error
 dig +short retired-preview.example.com                 # expect no record, not a dangling CNAME
 openssl s_client -connect app.example.com:443 -servername app.example.com \
   -verify_hostname app.example.com -verify_return_error </dev/null \

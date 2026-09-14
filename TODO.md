@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.44**, **2.24**, **3.11**, **4.5**.
+Next ids: **1.45**, **2.25**, **3.12**, **4.5**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -75,6 +75,8 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.40 | `firebase-supabase.md`: per-overload RPC negative tests, and a worked pre-15 example of revoking a view from `public`, `anon` and `authenticated` together. (M, S) | `[enhance]` |
 | 1.41 | `agent-builders.md`: establish whether Flowise, Langflow and LibreChat ship vendor Compose files a reader would be overriding. If they do, the `!reset` caveat added in #45 is load-bearing for them rather than advisory. Premise unverified per vendor. (M, S) | `[enhance]` |
 | 1.43 | A guarded front door with the backing store published beside it, now seen in three unrelated tools: Dify's compose publishes the plugin daemon next to the app, Mem0's publishes PostgreSQL on 8432 beside an authenticated API, and Onyx's development compose publishes seven services past its login page. The `${VAR:-default}` shape is identical in each and moves the host port without closing the publication. The new AI-infrastructure guide carries the authoritative treatment per the 2026-09-13 ruling and `agent-builders.md` cross-references it; this row tracks whether the other Compose-deploying guides need the same pointer. (M, M) | `[enhance]` |
+| 1.44 | Eleven source guides (twenty-two files with their generated plugin mirrors) still carry the pre-hardening guard: an unquoted placeholder on the `set --` line, and no sentinel or arity check. The unquoted site lets a pasted value containing `&`, `$(...)` or a backtick run before the guard sees it; the missing sentinel lets a partial paste run on the reader's own positionals; and there is no `-g` on the probe. Reader risk is low today because every placeholder is an IP address with no shell metacharacter, but the idiom must be uniform. The files: agent-builders, chat-uis, cloud-firewalls, cloud-identity-proxies, deployment-lifecycle, devops-uis, fronting-auth, host, image-gen-uis, mcp-servers, ollama. `ai-infra-services.md` and `CONTRIBUTING.md` carry the full idiom already (M, M) | `[gap]` |
+| 2.24 | Demonstrate `ai-infra-services.md` Verify checks 2 to 7 against real deployments. They ship marked reasoned rather than demonstrated, because the authoring environment has no container runtime and so no live service, external vantage, TLS exchange, or browser flow. CONTRIBUTING rule 5 requires the debt to be tracked, not merely disclosed. Stand up the six services from their cited Compose files and run each check against the exposed state as well as the fixed one (M, L) | `[gap]` |
 
 ## Priority 3: Add missing content
 
@@ -86,16 +88,10 @@ marked, and those are the ones worth taking first.
 | 2.5 | Guide for headless-cms-instant-api (Strapi, Directus, Hasura, PostgREST): commonly AI-deployed app backends with no guide: Hasura serves its whole GraphQL surface when no admin secret is set, Strapi's first `/admin` visitor registers the admin, PostgREST exposure hangs entirely on the anonymous role (defaults unverified offline) (H, L) [2 families] | `[gap]` |
 | 2.6 | Guide for headless-browser-services (Selenium Grid, Playwright server, browserless, Chrome CDP :9222): agent and scraping stacks run these; Selenium Grid listens on all interfaces with no auth and an exposed CDP port hands over cookies and code execution (defaults unverified offline); no guide and no exposure-index rows (H, M) [2 families] | `[gap]` |
 | 2.7 | Guide for supabase-self-hosted: firebase-supabase.md covers only the hosted rules layer; the self-hosted Docker stack ships demo JWT secret, demo anon/service_role keys, and a default dashboard basic-auth pair, so an unedited `docker compose up` publishes full database access (defaults from vendor .env.example; page not opened offline, so verify while authoring) (H, M) | `[gap]` |
-| 2.8 | Guide for SearxNG: AI search tool often deployed without auth by default (H, S) | `[gap]` |
-| 2.9 | Guide for LangServe: Exposes LangChain runnables as REST APIs, often without auth by default (H, M) | `[gap]` |
-| 2.10 | Guide for LocalAI: Drop-in OpenAI replacement API often exposed without auth (H, M) | `[gap]` |
 | 2.11 | Guide for gitops-controllers (Argo CD, Flux): cluster-admin-equivalent surface kubernetes.md never touches: Argo CD's initial admin password Secret and its quickstart-exposed UI/API decide who can deploy anything into the cluster (unverified offline) (M, M) | `[gap]` |
 | 2.12 | Guide for self-hosted-ci-runners (GitHub Actions runner, GitLab Runner): a runner on a public repo executes fork-PR code on your host and registration tokens are credentials; corpus covers Jenkins but not the runner class AI-assisted projects actually attach to github.com/gitlab.com (unverified offline) (M, M) | `[gap]` |
 | 2.13 | Guide for transactional-email-posture (SPF/DKIM/DMARC, SMTP submission credentials, open relay): password-reset and invite mail is part of the auth path of most deployments and spoofable senders undermine it; the corpus contains no SMTP/DMARC content at all (M, M) | `[gap]` |
 | 2.14 | Guide for Vault deployment: The secret-store recommendation lacks a deployment guide covering TLS, sealing, audit logging, and retirement of the initial root token (vendor) (M, L) | `[gap]` |
-| 2.15 | Guide for Onyx (formerly Danswer). The original row said "complex default exposure", which is not what the vendor documents. Authentication has been ON by default since v4.4.0, `AUTH_TYPE` is inert and slated for removal in v4.5, and email/password auth works with no configuration. The exposure is the compose file chosen: `docker-compose.prod.yml` publishes only nginx on 80 and 443 with every backing service on the Docker network, while `docker-compose.dev.yml` publishes seven, among them PostgreSQL, OpenSearch, Redis, MinIO and a code interpreter, none of which pass through nginx or its authentication. Premise corrected 2026-09-13 from source. (M, L) | `[gap]` |
-| 2.16 | Guide for Mem0: Agent memory store with a REST API often exposed without auth (M, M) | `[gap]` |
-| 2.17 | Guide for Text Embeddings Inference: HuggingFace embedding server with no native auth (M, S) | `[gap]` |
 | 2.18 | Guide for time-series-metrics-stores (InfluxDB, VictoriaMetrics, QuestDB): monitoring stores beyond the Prometheus note in admin-uis.md; VictoriaMetrics single-node and the QuestDB web console ship without authentication (defaults unverified offline) (L, M) | `[gap]` |
 | 2.19 | Guide for self-hosted-error-trackers (Sentry, GlitchTip): hold stack traces, environment values, and user PII for every wired app; same never-public class as llm-observability.md but uncovered (L, M) | `[gap]` |
 | 2.20 | Guide for realtime-voice-infra (LiveKit self-hosted, coturn): voice-agent deployments are increasingly common and add API-key, WebRTC, and TURN relay surfaces none of the existing guides map (L, M) | `[gap]` |
@@ -104,6 +100,7 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
+| 3.11 | Gate the two guard conventions that nothing enforces. Round-2 QA mutated both and the whole suite passed: a `curl` in a fenced block with no `-q`, and a guard that prints its warning then runs the probe after the `case`. Both are line-matchable, unlike the angle-bracket class rule 6 documents as un-gateable, and both are silent false-pass shapes. Wants a tripwire in the style of `check_verify_safety.py`, with its own recorded cases (H, S) | `[gap]` |
 
 ## Decisions
 

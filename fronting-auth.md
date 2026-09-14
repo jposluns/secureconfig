@@ -118,18 +118,18 @@ ss -tlnp | grep 3000                          # app on 127.0.0.1 only
 # both must be unreachable. Read err, not the number: it must name a refusal or timeout reaching
 # YOUR address. An HTTP code means the app answered. A resolver failure, a local socket error, or a
 # timeout that did not come from the remote address is inconclusive, never a pass.
-unset probe_ip                                # clears a pre-set declare -i or -l attribute, and any stale
-                                              # value; copy this whole block, not just the command below
-probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "${probe_ip:-}" in
-  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
-  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-       -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$probe_ip:3000/"
-     curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-       -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-       -H 'X-Auth-Request-User: admin' "http://$probe_ip:3000/" ;;   # forged header, straight at the app
-esac
-curl -sI https://app.example.com/             # no session: redirected to the sign-in page, or a 401
+(                                             # a subshell, so your own script arguments are untouched
+  set -- REPLACE_WITH_YOUR_PUBLIC_IP
+  case "${1-}" in
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *) curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/"
+       curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+         -H 'X-Auth-Request-User: admin' "http://$1:3000/" ;;   # forged header, straight at the app
+  esac
+)
+curl -q -sI https://app.example.com/             # no session: redirected to the sign-in page, or a 401
 ```
 
 After a real login through the proxy, confirm a session reaches the app and the app-side log shows the identity header the proxy set, not the forged one above. The forged header is never a bypass because the app is reachable only through the proxy; it is refused at the network level, not read and discarded.

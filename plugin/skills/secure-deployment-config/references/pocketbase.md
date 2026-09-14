@@ -55,8 +55,8 @@ them the way [secrets.md](secrets.md) describes, not in the repository or the cl
 ## Verify
 
 ```bash
-curl -sI https://backend.example.com/_/           # PocketBase admin UI: login page, not a dashboard
-curl -sI https://backend.example.com/console       # Appwrite console: login page or 401, no open signup form
+curl -q -sI https://backend.example.com/_/           # PocketBase admin UI: login page, not a dashboard
+curl -q -sI https://backend.example.com/console       # Appwrite console: login page or 401, no open signup form
 ```
 
 After bootstrap, confirm the console no longer offers public signup (only invitation), that a

@@ -49,7 +49,7 @@ Keep them on loopback or a private network and reach them through the tunnels ab
 
 ```bash
 ss -tlnp                                      # panels bound to 127.0.0.1 only
-curl -sI https://panel.example.com/           # 401/403 or a login redirect, never a dashboard
+curl -q -sI https://panel.example.com/           # 401/403 or a login redirect, never a dashboard
 ```
 
 Test each panel's URL from outside your network; a dashboard that renders without a login is a finding.

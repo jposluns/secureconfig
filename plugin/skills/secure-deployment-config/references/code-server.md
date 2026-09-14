@@ -29,7 +29,7 @@ Password attempts are rate-limited (2 per minute plus 12 per hour). Replace the 
 
 ```bash
 ss -tlnp | grep 8080                    # loopback only
-curl -sI https://code.example.com/      # TLS, login page, never the editor
+curl -q -sI https://code.example.com/      # TLS, login page, never the editor
 ```
 
 An unauthenticated editor in a private browser window means whoever finds the URL owns the host.

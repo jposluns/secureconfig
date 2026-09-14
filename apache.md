@@ -80,8 +80,8 @@ status code is printed and you compare it; nothing here fails on its own.
 
 ```bash
 sudo apachectl configtest && sudo systemctl reload apache2   # httpd on RHEL
-curl -sI http://example.com/            # expect 301 with a https:// Location
-curl -s -o /dev/null -w '%{http_code}\n' https://example.com/
+curl -q -sI http://example.com/            # expect 301 with a https:// Location
+curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/
                                         # 200 before section 4, 401 after it. Once
                                         # authentication is on, a 200 here is the finding
 
@@ -100,7 +100,7 @@ ss -tlnp
 # SNI saying example.com, which selects YOUR vhost and answers 401, or makes mod_ssl reject the
 # mismatched pair with 421; both look like a pass and neither is the request an attacker sends.
 # --connect-to sets the name in the handshake AND the header, and still dials your address:
-curl -s -o /dev/null -w '%{http_code}\n' \
+curl -q -s -o /dev/null -w '%{http_code}\n' \
   --connect-to REPLACE_WITH_AN_UNCONFIGURED_NAME:443:example.com:443 \
   https://REPLACE_WITH_AN_UNCONFIGURED_NAME/REPLACE_WITH_A_PROTECTED_PATH
                                         # 401 is the pass. 200 means another vhost served the

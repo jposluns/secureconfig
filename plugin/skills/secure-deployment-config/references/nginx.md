@@ -106,13 +106,13 @@ that tolerance rather than removing the timeout.
 
 ```bash
 sudo nginx -t && sudo systemctl reload nginx
-curl -sI http://example.com/        # expect 301 with a https:// Location
-curl -sI https://example.com/       # expect 200 without -k
-curl -s  https://example.com/api    # expect 401/403 without credentials
+curl -q -sI http://example.com/        # expect 301 with a https:// Location
+curl -q -sI https://example.com/       # expect 200 without -k
+curl -q -s  https://example.com/api    # expect 401/403 without credentials
 head -c 9M  /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
-curl -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/under.bin https://example.com/
+curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/under.bin https://example.com/
                                     # positive control: under the limit, must NOT be 413
-curl -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/over.bin  https://example.com/
+curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/over.bin  https://example.com/
                                     # 413. The 9M control is the discriminating half: nginx's default
                                     # client_max_body_size is 1m, so 9M is refused until `10m` is set,
                                     # while 11M returns 413 either way. Neither status says WHICH layer
@@ -120,7 +120,7 @@ curl -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-b
                                     # attribute it to nginx, set `client_max_body_size 0` in an isolated
                                     # environment, which disables the check entirely; commenting the
                                     # directive out only restores the 1m default and still returns 413
-seq 1 40 | xargs -P 40 -I{} curl -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD https://example.com/ | sort | uniq -c
+seq 1 40 | xargs -P 40 -I{} curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD https://example.com/ | sort | uniq -c
                                     # Run them CONCURRENTLY: a sequential loop pays a
                                     # TLS handshake per request and can stay under 10r/s, so every
                                     # request is admitted and the check passes while no limit exists.

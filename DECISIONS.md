@@ -13,6 +13,23 @@ Each ruling records the maintainer's reasoning as well as the ruling, and the pr
 generalizes across them, so that fewer questions need asking. The profile is the orchestrator's
 inference and is fallible; it never substitutes for a ruling on anything irreversible or outward.
 
+## 2026-09-14
+
+- **Ship the 86th guide (`ai-infra-services.md`, #60) with Verify checks 2 to 7 marked reasoned,
+  tracked by backlog row 2.24.** The rule 5 this pull request tightened says a service that runs in a
+  container on ordinary hardware is not impractical to stand up, and two QA families called the mark's
+  stated prerequisite, "no container runtime in the authoring environment", a fig leaf; on the rule's
+  plain reading they are right, because the missing runtime is a property of the authoring host, not
+  of the services. Ship anyway: the guide's factual content is verified at source and survived five QA
+  rounds, what is unproven is only the checks' discrimination against live deployments, and the
+  Demonstration-status paragraph states that shortfall plainly with row 2.24 carrying the debt.
+  *Reasoning:* a factually-sound guide whose single gap is disclosed and tracked serves a reader
+  better than withholding it, and better than amending the rule to pass the work, which was the
+  rejected option and would weaken a control the same change had just tightened. *Profile:* the
+  maintainer ships a disclosed-and-tracked shortfall rather than holding for perfection, of a piece
+  with the standing "honesty over coverage" and "a reader with a flagged guide beats no guide"
+  rulings; and will not weaken a control to clear a blocker, even one the assistant itself proposed.
+
 ## 2026-09-13
 
 - **`ss | grep <port>` in 48 guides:** fix only the checks whose Verify claims nothing ELSE is

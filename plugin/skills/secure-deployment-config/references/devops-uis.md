@@ -96,27 +96,28 @@ Without `--tlsverify` the daemon does not check client certificates. Firewall 23
 
 ```bash
 ss -tlnp | grep -E ':(9443|9000|8000|3000|81|3001|2375|2376) '   # 127.0.0.1 or absent, never 0.0.0.0
-curl -s -o /dev/null -w '%{http_code}\n' https://panel.example.com/
+curl -q -s -o /dev/null -w '%{http_code}\n' https://panel.example.com/
                                                                   # 401, 403, or a login redirect, never a dashboard. No -k:
                                                                   # this panel is behind a proxy holding a real certificate, so
                                                                   # a check that skips verification proves nothing about it
 # clears a pre-set declare -i or -l attribute, and any stale
 # value; copy this whole block, not just the command below
-unset probe_ip
-probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "${probe_ip:-}" in
-  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
-  *) docker -H "tcp://$probe_ip:2375" info ;;       # must fail: connection refused or filtered
-  # that is, refused or filtered BY THE REMOTE HOST. A local error or a docker client failure that
-  # never opened a connection is inconclusive, not a pass
-esac
+(                                                   # a subshell, so your own script arguments are untouched
+  set -- REPLACE_WITH_YOUR_PUBLIC_IP
+  case "${1-}" in
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *) docker -H "tcp://$1:2375" info ;;       # must fail: connection refused or filtered
+    # that is, refused or filtered BY THE REMOTE HOST. A local error or a docker client failure that
+    # never opened a connection is inconclusive, not a pass
+  esac
+)
 env -u DOCKER_HOST -u DOCKER_TLS_VERIFY -u DOCKER_CERT_PATH \
   curl -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem https://203.0.113.10:2376/_ping
                                                                   # must fail the handshake on the CLIENT certificate. Do not use
                                                                   # `docker ... info` here: without `--tlsverify` it fails for the
                                                                   # wrong reason, and `DOCKER_CERT_PATH` exported in the setup above
                                                                   # can silently supply the very certificate the check is meant to lack
-curl -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem --cert client-cert.pem --key client-key.pem \
+curl -q -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem --cert client-cert.pem --key client-key.pem \
   https://203.0.113.10:2376/_ping                                 # positive control: 200 with the right client certificate
 ```
 

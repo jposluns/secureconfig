@@ -58,12 +58,12 @@ enabled component is attack surface, and run the process as a non-root user.
 
 ```bash
 ss -tlnp | grep -E ':(3000|6006|4317|4318) '                          # loopback or private only, never 0.0.0.0
-curl -sS -o /dev/null -w '%{http_code}\n' https://langfuse.example.com/   # dashboard: login page or 401, never the project view
+curl -q -sS -o /dev/null -w '%{http_code}\n' https://langfuse.example.com/   # dashboard: login page or 401, never the project view
                                                                         # /api/public/health returns health status by design and is
                                                                         # not an access-control check; it proves nothing here
-curl -sS -o /dev/null -w '%{http_code}\n' https://langfuse.example.com/api/public/projects
+curl -q -sS -o /dev/null -w '%{http_code}\n' https://langfuse.example.com/api/public/projects
                                                                         # 401 without -u public-key:secret-key
-curl -sS -o /dev/null -w '%{http_code}\n' https://otel-collector.internal:4318/v1/traces \
+curl -q -sS -o /dev/null -w '%{http_code}\n' https://otel-collector.internal:4318/v1/traces \
   -H 'Content-Type: application/json' -d '{"resourceSpans":[]}'
                                                                         # 401 or 403 without the configured auth header. The content
                                                                         # type matters: with curl's default form encoding the Collector

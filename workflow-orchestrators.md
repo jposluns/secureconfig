@@ -66,15 +66,15 @@ bind `--address=127.0.0.1` behind a proxy rather than relying on Basic Auth as t
 
 ```bash
 ss -tlnp | grep -E ':(4200|3000|8080|7233|8233|5555) '                 # loopback or private only, never 0.0.0.0
-curl -sS -o /dev/null -w '%{http_code}\n' -X POST http://prefect.internal:4200/api/flows/filter -d '{}'
+curl -q -sS -o /dev/null -w '%{http_code}\n' -X POST http://prefect.internal:4200/api/flows/filter -d '{}'
                                                                         # 401 without the auth string once configured. Do NOT probe
                                                                         # /api/health or /api/ready: Prefect exempts those two paths
                                                                         # on GET so container probes keep working, so they answer 200
                                                                         # whether or not authentication is configured
-curl -sS -o /dev/null -w '%{http_code}\n' -u '' http://dagster.internal:3000/
+curl -q -sS -o /dev/null -w '%{http_code}\n' -u '' http://dagster.internal:3000/
                                                                         # must be blocked at the proxy, not Dagster itself
-curl -sSI https://airflow.example.com/                                 # login redirect, never the DAG list
-curl -sS -o /dev/null -w '%{http_code}\n' http://flower.internal:5555/
+curl -q -sSI https://airflow.example.com/                                 # login redirect, never the DAG list
+curl -q -sS -o /dev/null -w '%{http_code}\n' http://flower.internal:5555/
                                                                         # 401 once --basic-auth or OAuth is set
 ```
 

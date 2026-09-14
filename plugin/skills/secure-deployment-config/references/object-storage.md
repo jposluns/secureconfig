@@ -56,10 +56,10 @@ using ( (select auth.jwt()->>'sub') = owner_id );
 ## Verify
 
 ```bash
-curl -sI https://example-bucket.s3.amazonaws.com/model.safetensors        # 403, never 200
+curl -q -sI https://example-bucket.s3.amazonaws.com/model.safetensors        # 403, never 200
 URL="$(aws s3 presign s3://example-bucket/model.safetensors --expires-in 60)"   # signs a GET, so test with GET
-curl -sS -o /dev/null -w '%{http_code}\n' "$URL"              # 200 now
-sleep 61; curl -sS -o /dev/null -w '%{http_code}\n' "$URL"    # 403 once the minute has passed
+curl -q -sS -o /dev/null -w '%{http_code}\n' "$URL"              # 200 now
+sleep 61; curl -q -sS -o /dev/null -w '%{http_code}\n' "$URL"    # 403 once the minute has passed
 ```
 
 - An anonymous request to any object URL is denied (S3 returns `403`; GCS `401` or `403`; Azure `401`, or `409` when the account disallows anonymous access; Supabase private buckets return an error, not the file).

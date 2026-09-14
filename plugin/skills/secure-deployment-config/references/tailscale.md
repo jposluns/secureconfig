@@ -34,11 +34,11 @@ Serve for anything private (most things). Funnel or [cloudflare.md](cloudflare.m
 ```bash
 ss -tlnp 'sport = :3000'                          # ss's own filter, not a grep: the address column
                                                   # must read 127.0.0.1:3000, never 0.0.0.0:3000 or [::]:3000
-curl -s -o /dev/null --connect-timeout 5 --max-time 10 \
+curl -q -s -o /dev/null --connect-timeout 5 --max-time 10 \
   -w 'http=%{http_code} time_connect=%{time_connect}\n' http://10.0.0.5:3000/
 # the host's own LAN or VPC address. An HTTP status here means the app answers past the tailnet; time_connect at 0.000000 means nothing connected
 tailscale serve status
-curl -sI https://host.tailnet.ts.net/            # from a tailnet device: works
+curl -q -sI https://host.tailnet.ts.net/            # from a tailnet device: works
 # From a non-tailnet network: serve URL unreachable; funnel URL reachable, so its app login must gate it.
 ```
 

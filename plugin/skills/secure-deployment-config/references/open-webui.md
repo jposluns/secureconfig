@@ -30,7 +30,7 @@ Publish it through [caddy.md](caddy.md)/[nginx.md](nginx.md) with a certificate 
 
 ```bash
 ss -tlnp | grep 3000                      # loopback only
-curl -sI https://chat.example.com/        # serves over TLS
+curl -q -sI https://chat.example.com/        # serves over TLS
 # In a private browser window: login page appears; with ENABLE_SIGNUP=false the
 # sign-up option is absent and an attempt to register is refused. With signup on,
 # registering a new account yields a pending/unapproved user, not access.
