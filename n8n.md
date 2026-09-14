@@ -33,8 +33,8 @@ N8N_SSL_CERT=/path/to/fullchain.pem
 
 ```bash
 ss -tlnp | grep 5678                    # 127.0.0.1, not :: or 0.0.0.0
-curl -sI https://n8n.example.com/       # TLS
-curl -s -o /dev/null -w '%{http_code}\n' https://n8n.example.com/api/v1/workflows
+curl -q -sI https://n8n.example.com/       # TLS
+curl -q -s -o /dev/null -w '%{http_code}\n' https://n8n.example.com/api/v1/workflows
                                         # 401 without an `X-N8N-API-KEY` header. Use a request that returns a body,
                                         # not `-I`: a HEAD response carries none, so it cannot tell a login page
                                         # from the editor

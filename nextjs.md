@@ -134,8 +134,8 @@ Deployment Protection controls who can open a deployment URL: Vercel Authenticat
 
 ```bash
 ss -tlnp | grep 3000                                    # self-hosted: 127.0.0.1 only
-curl -si https://app.example.com/api/admin | head -1    # 401 (or 302 to /login) with no cookie
-curl -si https://app.example.com/dashboard | head -1    # 302 to /login, not the page
+curl -q -si https://app.example.com/api/admin | head -1    # 401 (or 302 to /login) with no cookie
+curl -q -si https://app.example.com/dashboard | head -1    # 302 to /login, not the page
 grep -rl "${SESSION_SECRET:0:8}" .next/static           # no output: the browser bundle has no secret
 # Server Action: clear cookies in the browser, submit the form that calls it; it must refuse, not mutate.
 ```

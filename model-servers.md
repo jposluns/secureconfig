@@ -1,6 +1,6 @@
 # Model servers: llama.cpp, vLLM, TGI, SGLang, Triton, and LM Studio
 
-Self-hosted model servers follow the [ollama.md](ollama.md) pattern: exposing one means someone else's prompts run on your GPU. Most default to local use, but TGI and Triton bind to `0.0.0.0` out of the box, and Triton has no authentication at all. Keep every server on loopback or a private network, require an API key where the server supports one, and terminate TLS in front.
+Self-hosted model servers follow the [ollama.md](ollama.md) pattern: exposing one means someone else's prompts run on your GPU. Most default to local use, but TGI and Triton bind to `0.0.0.0` out of the box, and Triton has no authentication at all. Keep every server on loopback or a private network, require an API key where the server supports one, and terminate TLS in front. LocalAI is an OpenAI-compatible model server too, but its bind and authentication controls are documented in [ai-infra-services.md](ai-infra-services.md) rather than here, so the facts live in one place.
 
 ## llama.cpp (llama-server)
 
@@ -64,9 +64,9 @@ LM Studio's developer server is a desktop feature. The documentation addresses i
 
 ```bash
 ss -tlnp | grep -E ':(8080|8000|8001|8002|3000|9000|30000|1234) '   # loopback only
-curl -s https://models.example.com/v1/models            # 401 without a key
-curl -s https://models.example.com/v1/models -H "Authorization: Bearer REPLACE_WITH_API_KEY"   # succeeds
-curl -s -o /dev/null -w '%{http_code}\n' -X POST https://models.example.com/invocations -d '{}'
+curl -q -s https://models.example.com/v1/models            # 401 without a key
+curl -q -s https://models.example.com/v1/models -H "Authorization: Bearer REPLACE_WITH_API_KEY"   # succeeds
+curl -q -s -o /dev/null -w '%{http_code}\n' -X POST https://models.example.com/invocations -d '{}'
                                                         # vLLM: 404 or 403 from the PROXY. vLLM does not require the
                                                         # API key on this route, so a 200 here is an unauthenticated
                                                         # inference endpoint even though the check above passed

@@ -32,7 +32,7 @@ Inference, upload, and job-submission endpoints are usually the ones behind thes
 
 ```bash
 # Handshake-time auth (a cookie or Origin gate at the proxy or app): rejected before the upgrade completes
-curl -i --http1.1 -H "Connection: Upgrade" -H "Upgrade: websocket" \
+curl -q -i --http1.1 -H "Connection: Upgrade" -H "Upgrade: websocket" \
   -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" -H "Sec-WebSocket-Version: 13" \
   https://app.example.com/ws                       # expect 401/403, not 101
 
@@ -42,13 +42,13 @@ curl -i --http1.1 -H "Connection: Upgrade" -H "Upgrade: websocket" \
 # the first message elapses, proving the server withholds data until the token lands.
 
 # Cross-origin handshake: rejected on Origin even with a valid cookie
-curl -i --http1.1 -H "Connection: Upgrade" -H "Upgrade: websocket" -H "Origin: https://evil.example" \
+curl -q -i --http1.1 -H "Connection: Upgrade" -H "Upgrade: websocket" -H "Origin: https://evil.example" \
   -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" -H "Sec-WebSocket-Version: 13" \
   -b "session=REPLACE_WITH_VALID_SESSION_COOKIE" https://app.example.com/ws   # expect 403
 
-curl -i https://app.example.com/events              # SSE without a session: 401/403, not text/event-stream
+curl -q -i https://app.example.com/events              # SSE without a session: 401/403, not text/event-stream
 
-curl -i -X POST https://app.example.com/webhooks/provider \
+curl -q -i -X POST https://app.example.com/webhooks/provider \
   -H "X-Hub-Signature-256: sha256=0000000000000000000000000000000000000000000000000000000000000000" \
   -d '{"test":true}'                                 # expect 401, wrong signature rejected
 ```

@@ -43,7 +43,7 @@ demo.launch(
 
 ```bash
 ss -tlnp | grep 7860                        # loopback unless deliberately exposed
-curl -sI https://gradio.example.com/        # succeeds over TLS
+curl -q -sI https://gradio.example.com/        # succeeds over TLS
 # In a private browser window: the login form appears before the app.
 ```
 

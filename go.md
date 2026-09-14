@@ -71,9 +71,9 @@ client := &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{R
 ## 5. Verify
 
 ```bash
-curl -sI http://example.com/         # expect 301 with a https:// Location
-curl -sI https://example.com/        # succeeds without -k
-curl -sS -o /dev/null -w '%{http_code}\n' https://example.com/api   # 401 or 403 without credentials
+curl -q -sI http://example.com/         # expect 301 with a https:// Location
+curl -q -sI https://example.com/        # succeeds without -k
+curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/api   # 401 or 403 without credentials
 ss -tlnp | grep REPLACE_WITH_BINARY_NAME   # behind a proxy: 127.0.0.1 only
 ```
 

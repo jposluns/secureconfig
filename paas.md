@@ -27,8 +27,8 @@ A new Space is public by default: anyone can view the source and reach the runni
 ## 6. Verify
 
 ```bash
-curl -sI http://app.example.com/          # platform redirects to https
-curl -s  https://app.example.com/api/...  # 401/403 without credentials
+curl -q -sI http://app.example.com/          # platform redirects to https
+curl -q -s  https://app.example.com/api/...  # 401/403 without credentials
 # Repository scan per secrets.md comes back clean; client bundle contains no private keys.
 ```
 

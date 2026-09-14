@@ -77,16 +77,16 @@ Vercel's protection guards a deployment from the public; it is not your applicat
 # origin direct. Read err, not the number: it must name a refusal or timeout reaching YOUR address.
 # An HTTP code means the origin answered. A resolver failure, a local socket error, or a timeout
 # that did not come from the remote address is inconclusive, never a pass.
-unset probe_ip                                          # clears a pre-set declare -i or -l attribute, and any stale
-                                                        # value; copy this whole block, not just the command below
-probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "${probe_ip:-}" in
-  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
-  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-       -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$probe_ip:3000/" ;;
-esac
-curl -sI https://app.example.com/                       # via proxy, no session: 302 to the IdP, or 401/403
-curl -s -H "x-amzn-oidc-identity: admin" \
+(                                                       # a subshell, so your own script arguments are untouched
+  set -- REPLACE_WITH_YOUR_PUBLIC_IP
+  case "${1-}" in
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *) curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/" ;;
+  esac
+)
+curl -q -sI https://app.example.com/                       # via proxy, no session: 302 to the IdP, or 401/403
+curl -q -s -H "x-amzn-oidc-identity: admin" \
      -H "X-MS-CLIENT-PRINCIPAL-NAME: admin" \
      -H "X-Goog-Authenticated-User-Email: admin@example.com" \
      https://app.example.com/whoami                      # still the login redirect; never "admin"

@@ -67,15 +67,15 @@ from being attempted, they make the attempt fail.
 
 ```bash
 # AWS, no token supplied: with --http-tokens required this returns 401
-curl -s -o /dev/null -w '%{http_code}\n' http://169.254.169.254/latest/meta-data/
+curl -q -s -o /dev/null -w '%{http_code}\n' http://169.254.169.254/latest/meta-data/
 # GCP, no Metadata-Flavor header: must fail, must not return metadata
-curl -s -o /dev/null -w '%{http_code}\n' http://169.254.169.254/computeMetadata/v1/instance/
+curl -q -s -o /dev/null -w '%{http_code}\n' http://169.254.169.254/computeMetadata/v1/instance/
 # Azure, no Metadata: true header: must fail, must not return metadata
-curl -s -o /dev/null -w '%{http_code}\n' 'http://169.254.169.254/metadata/instance?api-version=2025-04-07'
+curl -q -s -o /dev/null -w '%{http_code}\n' 'http://169.254.169.254/metadata/instance?api-version=2025-04-07'
 # the three checks above test the header requirement, which is not the control this guide
 # recommends. Test the network block itself, WITH the header the service requires, from a
 # workload that has no legitimate reason to reach metadata:
-curl -s -o /dev/null --connect-timeout 5 --max-time 10 \
+curl -q -s -o /dev/null --connect-timeout 5 --max-time 10 \
   -w 'http=%{http_code} time_connect=%{time_connect}\n' -H 'Metadata-Flavor: Google' \
   http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token
 # a 200 here is a credential-issuing endpoint reachable from the workload, whatever the header
@@ -84,12 +84,12 @@ curl -s -o /dev/null --connect-timeout 5 --max-time 10 \
 # connection completed, and corroborate with the deny record the negative control below describes.
 # positive control: a host on the egress allow list, for example the AWS STS endpoint used for role
 # credentials, must succeed
-curl -s -o /dev/null -w '%{http_code}\n' --max-time 5 https://sts.amazonaws.com/
+curl -q -s -o /dev/null -w '%{http_code}\n' --max-time 5 https://sts.amazonaws.com/
 
 # negative control: a known-live host outside the egress allow list, judged by curl's exit status,
 # not by matching text in its output, since a successful connection also lacks the string
 # "Could not resolve host" and so would otherwise be misreported as blocked
-curl -s --connect-timeout 5 --max-time 10 -o /dev/null -w 'time_connect=%{time_connect}\n' https://example.com/
+curl -q -s --connect-timeout 5 --max-time 10 -o /dev/null -w 'time_connect=%{time_connect}\n' https://example.com/
 rc=$?
 if [ "$rc" -eq 0 ]; then
   echo "FAIL: connected to a host outside the allow list, egress is not enforced"

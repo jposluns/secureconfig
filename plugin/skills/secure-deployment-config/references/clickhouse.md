@@ -62,9 +62,9 @@ Clients use `clickhouse-client --secure` on 9440, or HTTPS on 8443 with HTTP bas
 
 ```bash
 ss -tlnp | grep -E '8123|9000|8443|9440'          # only 8443 and 9440, on the intended address
-curl -s http://ch.example.com:8123/                # connection refused
-curl -s 'https://ch.example.com:8443/?query=SELECT%201'   # no credentials = default with empty password: authentication error
-curl -u app:REPLACE_WITH_LONG_RANDOM_VALUE 'https://ch.example.com:8443/?query=SELECT%201'   # 1
+curl -q -s http://ch.example.com:8123/                # connection refused
+curl -q -s 'https://ch.example.com:8443/?query=SELECT%201'   # no credentials = default with empty password: authentication error
+curl -q -u app:REPLACE_WITH_LONG_RANDOM_VALUE 'https://ch.example.com:8443/?query=SELECT%201'   # 1
 clickhouse-client --host ch.example.com --port 9440 --secure --user app --password
 ```
 

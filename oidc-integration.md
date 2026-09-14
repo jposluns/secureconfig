@@ -76,8 +76,8 @@ An app can additionally refuse a session whose ID token shows no second factor, 
 ## Verify
 
 ```bash
-curl -s https://accounts.google.com/.well-known/openid-configuration | jq -r '.issuer, .jwks_uri'
-curl -sI https://app.example.com/admin | head -1        # 302 to login or 401, never 200
+curl -q -s https://accounts.google.com/.well-known/openid-configuration | jq -r '.issuer, .jwks_uri'
+curl -q -sI https://app.example.com/admin | head -1        # 302 to login or 401, never 200
 ```
 
 Negative tests matter more than the happy path:

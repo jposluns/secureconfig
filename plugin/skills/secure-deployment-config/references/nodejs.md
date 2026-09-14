@@ -86,9 +86,9 @@ MFA: add TOTP with [otplib](https://github.com/yeojz/otplib) plus the [qrcode](h
 ## 5. Verify
 
 ```bash
-curl -sI http://example.com/         # expect 301 with a https:// Location
-curl -sI https://example.com/        # succeeds without -k; shows helmet's headers
-curl -s  https://example.com/api     # expect 401/403 without credentials
+curl -q -sI http://example.com/         # expect 301 with a https:// Location
+curl -q -sI https://example.com/        # succeeds without -k; shows helmet's headers
+curl -q -s  https://example.com/api     # expect 401/403 without credentials
 ss -tlnp | grep node                 # behind a proxy: bound to 127.0.0.1 only
 ```
 

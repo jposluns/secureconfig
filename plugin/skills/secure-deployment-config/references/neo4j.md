@@ -70,7 +70,7 @@ openssl s_client -connect neo4j.example.com:7687 -verify_hostname neo4j.example.
                                                                  # With client_auth=REQUIRE, add -cert and -key: without
                                                                  # them the server refuses the connection and
                                                                  # "Verification: OK" still prints.
-curl -sI http://neo4j.example.com:7474/                          # connection refused
+curl -q -sI http://neo4j.example.com:7474/                          # connection refused
 cypher-shell -a neo4j://neo4j.example.com:7687 -u app -p '...'   # unencrypted: refused with tls_level=REQUIRED
 cypher-shell -a neo4j+s://neo4j.example.com:7687 -u neo4j -p neo4j   # default credential: authentication failure
 cypher-shell -a neo4j+s://neo4j.example.com:7687 -u app -p 'REPLACE_WITH_LONG_RANDOM_VALUE'   # works

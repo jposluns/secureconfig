@@ -64,7 +64,7 @@ ss -tlnp | grep -E ':(4222|8222) '                                              
 nats pub orders.created hello --tlsca /etc/nats/certs/ca.pem --tlscert REPLACE_WITH_CLIENT_CERT_FILE --tlskey REPLACE_WITH_CLIENT_KEY_FILE --user order-svc --password REPLACE_WITH_LONG_RANDOM_PASSWORD   # allowed subject, valid credentials: succeeds
 nats pub other.subject hello --tlsca /etc/nats/certs/ca.pem --tlscert REPLACE_WITH_CLIENT_CERT_FILE --tlskey REPLACE_WITH_CLIENT_KEY_FILE --user order-svc --password REPLACE_WITH_LONG_RANDOM_PASSWORD     # subject outside the allow list: fails
 nats --context "" --server nats://REPLACE_WITH_NATS_HOST:4222 pub orders.created hello --tlsca /etc/nats/certs/ca.pem --tlscert REPLACE_WITH_CLIENT_CERT_FILE --tlskey REPLACE_WITH_CLIENT_KEY_FILE   # empty context, explicit server, no --user/--password: fails, and cannot inherit credentials from a saved context or NATS_URL/NATS_USER/NATS_PASSWORD
-curl -s http://monitor.example.com:8222/connz                                                                                                               # connection refused/timeout from outside
+curl -q -s http://monitor.example.com:8222/connz                                                                                                               # connection refused/timeout from outside
 ```
 
 ## Common mistakes

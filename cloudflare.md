@@ -58,7 +58,7 @@ MFA: the emailed one-time PIN proves control of a mailbox only. For anything sen
 For APIs and machine clients, create a **service token** in the Zero Trust dashboard (Access service authentication section), add a **Service Auth** policy to the application, and send the token with each request:
 
 ```bash
-curl -H "CF-Access-Client-Id: REPLACE_WITH_CLIENT_ID" \
+curl -q -H "CF-Access-Client-Id: REPLACE_WITH_CLIENT_ID" \
      -H "CF-Access-Client-Secret: REPLACE_WITH_CLIENT_SECRET" \
      https://app.example.com/api
 ```

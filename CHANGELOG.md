@@ -28,9 +28,53 @@ with the merged pull request is therefore an authoring obligation, not an enforc
   it screens for whatever its provenance. Vendoring the upstream file is both permitted and the
   correct architecture. The file is byte-identical at this repository's pinned commit and at
   upstream main, so it needs no pin bump.
+- `ai-infra-services.md`, the 86th guide (#60). One guide covering SearxNG, LocalAI, Text Embeddings
+  Inference, LangServe, Mem0 and Onyx, closing six backlog rows. Three of those rows had premises
+  that were wrong at source: LangServe is deprecated, and Mem0 and Onyx both ship authentication on.
+  What the six share is not a missing password but that the run form decides what the network sees,
+  and it publishes more than the authentication covers. Two shapes are named: authentication absent
+  or unset, and a guarded front door with the backing store published beside it. Text Embeddings
+  Inference was reclassified during review: it does have a native control, `--api-key` with the
+  environment variable `API_KEY`, off by default, and a Prometheus listener on port 9000 that the
+  quick tour never mentions and the key does not cover. Mem0 and Onyx both hand administrator rights
+  to whoever registers first, so the bootstrap has to happen before the deployment is reachable from
+  anywhere but its own host.
 
 ### Fixed
 
+- A sixth way past the copy-paste guard, found while testing the fifth (#60). The five earlier
+  designs each constrained what happened after the guard ran; this one lands before it exists. The
+  placeholder sat unquoted at its substitution site, so a reader pasting a URL with a query string
+  had the ampersand background the `set --` itself, leaving the parameters empty while the rest of
+  the line ran as its own command, and a value containing `$(...)` or a backtick simply executed.
+  Every substitution site is now a single-quoted literal, which a guard cannot achieve because the
+  shell evaluates the value first. Demonstrated three ways in bash; the fix is verified against
+  bash, dash and BusyBox ash, with and without `set -u`, with the caller's own arguments intact.
+- The six guards in the new guide, which the corpus-wide sweep had missed (#60). The sweep keyed on
+  the variable name the other twelve files used, and this guide uses its own, so it shipped the form
+  a `readonly` variable in the reader's shell defeats. Three `curl` invocations went the same way,
+  sitting on indented continuation lines the sweep's line-anchored pattern never matched, and have
+  gained the `-q` the rest of the corpus carries.
+- The guard's seventh bypass, found by round-2 review after the sixth was fixed in the same change
+  (#60). A block pasted without its `set --` line inherits whatever positional parameters the
+  reader's shell already held, and a stale pair from an earlier experiment satisfies every check the
+  guard makes, so the probe fires at the old target and its refusal is read as this target's
+  evidence. Counting the values does not close it, because a shell holding the expected number
+  passes the count; that was measured against the first fix, which is why the fix that shipped is a
+  sentinel the block sets and shifts away. The whole historical bypass set was re-run against the
+  sentinel rather than reasoned about: unsubstituted placeholder, stale-positional partial paste,
+  `readonly`, `declare -i`, an exported value, `IFS`, caller arguments present, and a placeholder
+  embedded in a longer value, across bash, dash and BusyBox ash under `set -u`. Two limits are now
+  stated rather than papered over: a shell whose `set` has been shadowed defeats every guard at
+  once, and a value containing an apostrophe cannot be carried inside the quotes.
+- The Onyx development-form port inventory, which was short by two published ports (#60).
+  `docker-compose.dev.yml` is an override, and its own header gives the launch form as
+  `docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --wait`, so the effective
+  configuration includes the base file, which publishes nginx on `${HOST_PORT_80:-80}:80` and
+  `${HOST_PORT:-3000}:80`. A reader probing exactly the ports this guide enumerated would have read
+  "Fixed" with two ports still published. The same file settles a question this guide had recorded
+  as unverified: host 3000 reaches nginx's container port 80, and `web_server` carries no host
+  publication of its own.
 - Eight band-1 errors across eight guides (#45), closing `TODO.md` band 1 to empty. Each was a
   guide asserting something false or a Verify step that could not discriminate: a missing
   `--cacert` that made an Elasticsearch check die on TLS rather than answer; a Tailscale claim that
@@ -38,7 +82,7 @@ with the merged pull request is therefore an authoring obligation, not an enforc
   while `cloud-firewalls.md` rule 3 says SSH is not public; a PostgreSQL Verify step that could not
   tell a refused password from a refused connection; a Dify paragraph that implied a setting could
   unpublish a port the vendor Compose file publishes unconditionally; a cloud-firewall Verify step
-  with no runnable command for any provider; curl exit 7 or 28 treated as proof of egress
+  with no runnable command for any provider; curl -q exit 7 or 28 treated as proof of egress
   enforcement; and a Supabase section that never warned that views and `SECURITY DEFINER`
   functions run with their owner's rights, past RLS.
 - Five QA rounds across three families produced the shipped text. Rounds 1 and 3 rejected, round 4
@@ -92,6 +136,21 @@ with the merged pull request is therefore an authoring obligation, not an enforc
   request rather than a later one. The ordering rule exists because `VERSION` read literally makes
   the number go backwards when an older pull request merges last, which #50 did against a `main`
   already at 1.0.51.
+- `CONTRIBUTING.md` rules 1, 5 and 6 (#60). Rule 1 gains a source-authority clause: for whether a
+  control exists at all, the vendor's reference or CLI page is the authority, and absence from a
+  quickstart is not evidence of absence. This repository had recorded Text Embeddings Inference as
+  having no documented inbound authentication on the strength of its quick tour. Rule 5 gains an
+  allowance for a check that cannot practically be run against the exposed state, which must then be
+  marked at the step as reasoned rather than demonstrated; an unmarked step still claims a
+  demonstration, so omitting the mark is itself a breach. Rule 6's prose had contradicted its own
+  example ever since the guard became positional, and now gives the real reason for that form.
+- Rule 5's reasoned-check allowance, narrowed the same day it was added (#60). Two review families
+  independently reported that the first wording let an author mark anything reasoned. A reasoned
+  step must now name the specific prerequisite that was unavailable, give the concrete command,
+  state the expected exposed and fixed outcomes, and cite the vendor passage that distinguishes
+  them; every locally feasible part is still run; a container on ordinary hardware is not
+  impractical to stand up; and each reasoned mark opens a backlog row, because reasoned is a debt,
+  not a destination.
 
 ### Records
 

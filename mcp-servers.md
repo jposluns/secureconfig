@@ -73,24 +73,24 @@ ss -tlnp | grep 3000                                   # 127.0.0.1:3000 only, ne
 # read err, not the number: it must name a refusal or timeout reaching YOUR address. An HTTP code
 # means the port answered. A resolver failure, a local socket error, or a timeout that did not come
 # from the remote address is inconclusive, never a pass.
-unset probe_ip                                         # clears a pre-set declare -i or -l attribute, and any stale
-                                                       # value; copy this whole block, not just the command below
-probe_ip=REPLACE_WITH_YOUR_PUBLIC_IP
-case "${probe_ip:-}" in
-  *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address into probe_ip= first; not probing" ;;
-  *) curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-       -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$probe_ip:3000/mcp" ;;
-esac
+(                                                      # a subshell, so your own script arguments are untouched
+  set -- REPLACE_WITH_YOUR_PUBLIC_IP
+  case "${1-}" in
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *) curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/mcp" ;;
+  esac
+)
 
 # Unauthenticated initialize: 401 with a WWW-Authenticate header (Option A) or the proxy's 401 (Option B).
-curl -si -X POST https://mcp.example.com/mcp \
+curl -q -si -X POST https://mcp.example.com/mcp \
   -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"check","version":"1.0.0"}}}'
 # Option A only: the metadata the 401 points at exists and names your authorization server.
-curl -s https://mcp.example.com/.well-known/oauth-protected-resource   # JSON with "authorization_servers"
+curl -q -s https://mcp.example.com/.well-known/oauth-protected-resource   # JSON with "authorization_servers"
 
 # Wrong Origin, with a valid credential: 403.
-curl -si -X POST https://mcp.example.com/mcp -H 'Origin: https://attacker.example' \
+curl -q -si -X POST https://mcp.example.com/mcp -H 'Origin: https://attacker.example' \
   -H 'Authorization: Bearer REPLACE_WITH_LONG_RANDOM_VALUE' \
   -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -d '{}'
 ```
