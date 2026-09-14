@@ -9,6 +9,7 @@ gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.9 | `vector-databases.md`: restrict Qdrant cluster port 6335 and probe backend ports from outside | Done, #63. A key never protects 6335 (vendor); the guide now annotates it distributed-mode-only, restricts it at the network layer, replaces the forbidden `ss` grep with a whole-table inventory, and probes 6333/6334/6335 from outside with exit/err discrimination. Probes reasoned, tracked by row 1.46. Facts on the cited security page |
 | 1.11 | `llm-observability.md`: Phoenix administrator bootstrap before exposure | Done, #62. The guide's prior auth-on remediation left the default `admin@localhost` / `admin` login live; now sets `PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD` (first-startup-only), changes and proves the password before exposure, probes the unauthenticated read endpoint, and notes OAuth2/OIDC for MFA. Facts verified at source 2026-09-13 |
 | 2.8 | Guide for SearxNG | Done, #60, in `ai-infra-services.md` |
 | 2.9 | Guide for LangServe | Done, #60, in `ai-infra-services.md`. Premise corrected: LangServe was deprecated on 2024-11-18 in favour of LangGraph Platform, which the guide states while still covering it, because a deployed instance does not disappear when its project is |
