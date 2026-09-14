@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.47**, **2.25**, **3.12**, **4.5**.
+Next ids: **1.50**, **2.25**, **3.12**, **4.5**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -49,7 +49,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 1.12 | `traefik.md`: Add Docker-provider configuration with `providers.docker.exposedByDefault=false` and verify unintended containers have no routes; the default is true, so labelling the intended application does not exclude other containers (vendor) (H, S) | `[enhance]` |
 | 1.13 | `devops-uis.md`: GitLab CE, the most-deployed self-hosted forge and a recurring RCE target, is absent; add a section covering the initial root password file, sign-up restriction, and instance visibility defaults (defaults unverified offline); Explain that Node-RED `adminAuth` protects the editor/admin API; protect p (M, S) [2 families] | `[enhance]` |
 | 1.16 | `minio.md`: the web console listener (`--console-address`, conventionally 9001) is never named and Verify greps only 9000, so an internet-exposed console passes every check; name the flag and port, probe it, and add the exposure-index row (M, XS) | `[enhance]` |
 | 1.17 | `rabbitmq.md`: epmd 4369 and Erlang distribution 25672 are absent although the shared Erlang cookie is their only credential and grants remote command execution when published, which tutorial compose files commonly do (vendor clustering docs not opened offline); add the ports, the cookie rule, and exposure-index r (M, S) | `[enhance]` |
@@ -77,6 +76,9 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 2.24 | Demonstrate `ai-infra-services.md` Verify checks 2 to 7 against real deployments. They ship marked reasoned rather than demonstrated, because the authoring environment has no container runtime and so no live service, external vantage, TLS exchange, or browser flow. CONTRIBUTING rule 5 requires the debt to be tracked, not merely disclosed. Stand up the six services from their cited Compose files and run each check against the exposed state as well as the fixed one (M, L) | `[gap]` |
 | 1.45 | `llm-observability.md`: demonstrate the Phoenix Verify checks against a live instance in both the exposed and fixed states. They ship marked reasoned (#62) because the authoring environment has no Phoenix instance; the unauthenticated-read probe and the manual default-credential check need a running Phoenix to demonstrate. `PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD` first-startup semantics and the `/v1/traces` content-type rejection also want confirming against a live version (M, M) | `[gap]` |
 | 1.46 | `vector-databases.md`: demonstrate the Qdrant 6335 reachability probes and the client-API key check against a live distributed cluster in both the exposed and fixed states. They ship marked reasoned (#63) because the authoring environment has no distributed Qdrant; stand up two peers with 6335 published, then firewalled to peers, and confirm the non-peer refusal, the peer connection, and the without-key 401 / with-key 200 (M, M) | `[gap]` |
+| 1.47 | `traefik.md`: demonstrate the exposedByDefault Verify probes against a live Docker and Traefik v3 deployment in the exposed and fixed states. They ship marked reasoned (#64) because the authoring environment has no container runtime; stand up Traefik with the section-1 config and an unlabelled `traefik/whoami` canary on its network, then confirm the canary returns 200 with its own `Hostname:` body at `exposedByDefault: true` and 404 at false, confirm the app baseline returns 401 unauthenticated (router plus auth present), and confirm curl 7.75.0 or newer on the target for `%{exitcode}`/`%{errormsg}` (M, M) | `[gap]` |
+| 1.48 | `llm-observability.md`: the Verify probes print the `%{exitcode}` and `%{errormsg}` curl write-out variables, added in curl 7.75.0, but the guide carries no curl-version note, which `CONTRIBUTING` requires for version-dependent syntax; add the note and the curl-manual source. Found applying #64, which fixed the same gap in `traefik.md` (L, XS) | `[enhance]` |
+| 1.49 | `vector-databases.md`: same missing curl 7.75.0 note for the `%{exitcode}` and `%{errormsg}` write-out variables used by its reachability probes; add the note and the curl-manual source. Found applying #64 (L, XS) | `[enhance]` |
 
 ## Priority 3: Add missing content
 
