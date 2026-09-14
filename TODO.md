@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.51**, **2.25**, **3.12**, **4.5**.
+Next ids: **1.52**, **2.25**, **3.12**, **4.5**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -55,7 +55,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.26 | `gradio.md`: Add deployment file-access controls: narrowly scope `allowed_paths` and static directories, exclude secrets with `blocked_paths`, and explain that cached files are shared across app users; include a harmless file-access isolation check (vendor) (M, S) | `[enhance]` |
 | 1.28 | `ollama.md`: Verify step filters ss output by expected port (`grep 11434`), violating the rule against filtering (M, XS) | `[enhance]` |
 | 1.29 | `memcached.md`: Verify step filters ss output by expected port (`grep 11211`), violating the rule against filtering (M, XS) | `[enhance]` |
-| 1.30 | `tunnels.md`: `ssh -R` is the most common ad-hoc self-hosted tunnel and is absent: a remote forward on a server with `GatewayPorts` widened publishes the app unauthenticated, and the guide's own scope statement ("self-hosted tunnels") promises this case (L, S) | `[enhance]` |
 | 1.32 | `admin-uis.md`: Adminer, the single-file database panel scanners probe constantly at /adminer.php, is missing from the panel list; one paragraph with the never-public rule and its lack of its own account store (L, XS) | `[enhance]` |
 | 1.33 | `secrets.md`: no mention that terraform.tfstate, kubeconfigs with embedded client keys, and ~/.docker/config.json are plaintext credential files that belong in .gitignore and in scanner scope alongside .env and *.pem (L, XS) | `[enhance]` |
 | 1.35 | `gpu-clouds.md`: template-shipped desktop listeners (noVNC/VNC in ComfyUI and desktop images) are not mentioned; they are often password-less and land on the platform's public port mapping like any other listener (template defaults unverified offline) (L, S) | `[enhance]` |
@@ -70,6 +69,7 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.46 | `vector-databases.md`: demonstrate the Qdrant 6335 reachability probes and the client-API key check against a live distributed cluster in both the exposed and fixed states. They ship marked reasoned (#63) because the authoring environment has no distributed Qdrant; stand up two peers with 6335 published, then firewalled to peers, and confirm the non-peer refusal, the peer connection, and the without-key 401 / with-key 200 (M, M) | `[gap]` |
 | 1.47 | `traefik.md`: demonstrate the exposedByDefault Verify probes against a live Docker and Traefik v3 deployment in the exposed and fixed states. They ship marked reasoned (#64) because the authoring environment has no container runtime; stand up Traefik with the section-1 config and an unlabelled `traefik/whoami` canary on its network, then confirm the canary returns 200 with its own `Hostname:` body at `exposedByDefault: true` and 404 at false, confirm the app baseline returns 401 unauthenticated (router plus auth present), and confirm curl 7.75.0 or newer on the target for `%{exitcode}`/`%{errormsg}` (M, M) | `[gap]` |
 | 1.50 | `model-servers.md`: demonstrate the text-generation-webui `/v1/models` probe against a live instance in both the exposed and protected states. It ships marked reasoned (#69) because the authoring environment has no container runtime; stand up text-generation-webui with `--api`, confirm `/v1/models` returns `200` with no key and `401` once `--api-key` is set, and confirm the `validate_host_header` `400` when a non-localhost `Host` is forwarded without `--listen` (M, M) | `[gap]` |
+| 1.51 | `tunnels.md`: the frp OIDC line (section 1) says `auth.method = "oidc"` authenticates "both sides against an OIDC provider's Client Credentials Grant", but the documented flow is one-directional: frpc obtains a token through the Client Credentials Grant and frps validates it, which authenticates frpc to frps, not both sides. Reword to "authenticating frpc to frps using tokens obtained through an OIDC provider's Client Credentials Grant". Found by codex during #77 QA (L, XS) | `[enhance]` |
 ## Priority 3: Add missing content
 
 Gaps from the same audit, one row per missing guide. A gap raised by more than one family is
