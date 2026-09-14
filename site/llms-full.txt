@@ -2759,7 +2759,7 @@ cd /path/to/a/directory/with/nothing/private || exit
 python -m http.server -b 127.0.0.1 8000
 ```
 
-Reach it through an SSH tunnel or a tailnet, never a public bind.
+Reach it through an SSH tunnel, including one that runs over your tailnet, never a public bind.
 
 ## 6. Verify
 
