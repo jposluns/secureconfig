@@ -6589,9 +6589,11 @@ One process, two surfaces: the Gradio UI (default `127.0.0.1:7860`) and, when st
 Auth is per surface, and neither control covers the other:
 
 - UI: `--gradio-auth user:password` (or `--gradio-auth-path FILE` with `user:password` lines) turns on a Gradio login form. It does nothing for the API.
-- API: `--api-key KEY` requires `Authorization: Bearer KEY` on the `/v1` endpoints. `--admin-key` guards the admin endpoints (model load and unload) and falls back to the `--api-key` value when unset; an admin key alone does not protect the ordinary `/v1` routes. Without `--api-key`, the API answers anyone who can reach the port, even when the UI has a Gradio login in front of it.
+- API: `--api-key KEY` requires `Authorization: Bearer KEY` on the OpenAI-compatible routes such as `/v1/models` and `/v1/chat/completions`; the Anthropic-compatible `/v1/messages` route reads the same key from an `x-api-key` header instead. `--admin-key` guards the admin endpoints (model load and unload) and falls back to the `--api-key` value when unset; an admin key alone does not protect the ordinary routes. Without `--api-key`, the API answers anyone who can reach the port, even when the UI has a Gradio login in front of it.
 
 `--api --nowebui` runs the API alone, the right shape for a server where the UI has no business existing. `--ssl-keyfile` and `--ssl-certfile` give both surfaces TLS, but the better pattern is the usual one: keep both ports on loopback and front them with a reverse proxy that terminates TLS and enforces auth (`--subpath` exists for serving the UI under a proxy path). Without TLS, the Gradio login submits credentials in the clear.
+
+One proxy detail is specific to this API: unless `--listen` (or `--public-api`) is set, it rejects any request whose `Host` header is not `localhost` or `127.0.0.1` with a `400`, so a reverse proxy in front of a loopback API must send `Host: localhost` upstream rather than forwarding the public hostname.
 
 ## The pattern, whatever the server
 
@@ -6612,7 +6614,7 @@ curl -q -s -o /dev/null -w '%{http_code}\n' -X POST https://models.example.com/i
                                                         # inference endpoint even though the check above passed
 ```
 
-For text-generation-webui, ask the API edge for the model list without a key (reasoned, not yet demonstrated against a running instance; the block prints the `exitcode` and `errormsg` write-out variables, which need curl 7.75.0 or newer). A `401` means the key is enforced; a connection error means nothing is exposed there; a `200` with a model list means the API is open to anyone. A rejection page from your proxy proves only the proxy; it says nothing about `--api-key`.
+For text-generation-webui, ask the API edge for the model list without a key. This step is reasoned, not demonstrated: the authoring environment has no container runtime to stand up a live instance, so the expected `401` is derived from the bearer-token check in `modules/api/script.py` (cited in Sources), not observed, and backlog row 1.50 tracks demonstrating the exposed and protected states. The block prints the `exitcode` and `errormsg` write-out variables, which need curl 7.75.0 or newer. A `200` with a model list means the API is open to anyone; a `401` means the key is enforced. A transfer error is inconclusive: a TLS failure (`exit=35` or `exit=60`) in particular means something did answer, since the API serves plain HTTP unless `--ssl-keyfile`/`--ssl-certfile` are set, so read the `exit` and `err` fields, fix any DNS, TLS, or client cause, and confirm the API listener's own address and port directly from the intended vantage. A `400` carrying `Invalid host header` is the API rejecting the forwarded `Host` (see the reverse-proxy note above), not an authentication result, and a rejection page from your proxy proves only the proxy.
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
