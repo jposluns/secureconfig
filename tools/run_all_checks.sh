@@ -266,6 +266,48 @@ else
   printf '%s\n' "$verify_safety" | sed 's/^/          /'
 fi
 
+echo "== the two guard conventions: curl -q leading, glob URL carries -g, probes inside their placeholder guard =="
+st_out="$(python3 -I -B tools/check_guard_conventions.py --self-test 2>&1)"
+st_status=$?
+printf '%s\n' "$st_out"
+case "$st_out" in
+  *"GATE guard-conventions-selftest: PASS"*)
+    if [ "$st_status" -ne 0 ]; then
+      bad "guard-conventions self-test printed PASS but exited $st_status"
+    fi
+    ;;
+  *"GATE guard-conventions-selftest: FAIL"*)
+    fail=1
+    ;;
+  *)
+    bad "guard-conventions self-test crashed or exited without a gate result (exit $st_status)"
+    ;;
+esac
+
+gc_out="$(python3 -I -B tools/check_guard_conventions.py --no-c2 --min-curls 175 . 2>&1)"
+gc_status=$?
+printf '%s\n' "$gc_out"
+case "$gc_out" in
+  *"GATE guard-conventions: PASS"*)
+    if [ "$gc_status" -ne 0 ]; then
+      bad "guard-conventions printed PASS but exited $gc_status"
+    fi
+    case "$gc_out" in
+      *": [C1-"*|*": [C2-"*)
+        bad "guard-conventions printed findings alongside a PASS result" ;;
+    esac
+    ;;
+  *"GATE guard-conventions: FAIL"*)
+    fail=1
+    if [ "$gc_status" -eq 0 ]; then
+      bad "guard-conventions reported FAIL but exited 0"
+    fi
+    ;;
+  *)
+    bad "guard-conventions crashed or exited without a gate result (exit $gc_status)"
+    ;;
+esac
+
 echo "== every merged pull request is recorded in the changelog =="
 if changelog_prs=$(python3 tools/check_changelog_prs.py 2>&1); then
   printf '%s\n' "$changelog_prs"
