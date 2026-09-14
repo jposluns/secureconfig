@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.45**, **2.25**, **3.12**, **4.5**.
+Next ids: **1.46**, **2.25**, **3.12**, **4.5**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -49,7 +49,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 1.11 | `llm-observability.md`: Add Phoenix administrator bootstrap before exposure: authentication creates `admin@localhost` with password `admin`; configure `PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD` before first startup or change the existing password, then verify default credentials fail (vendor) (H, S) | `[enhance]` |
 | 1.12 | `traefik.md`: Add Docker-provider configuration with `providers.docker.exposedByDefault=false` and verify unintended containers have no routes; the default is true, so labelling the intended application does not exclude other containers (vendor) (H, S) | `[enhance]` |
 | 1.13 | `devops-uis.md`: GitLab CE, the most-deployed self-hosted forge and a recurring RCE target, is absent; add a section covering the initial root password file, sign-up restriction, and instance visibility defaults (defaults unverified offline); Explain that Node-RED `adminAuth` protects the editor/admin API; protect p (M, S) [2 families] | `[enhance]` |
 | 1.16 | `minio.md`: the web console listener (`--console-address`, conventionally 9001) is never named and Verify greps only 9000, so an internet-exposed console passes every check; name the flag and port, probe it, and add the exposure-index row (M, XS) | `[enhance]` |
@@ -77,6 +76,7 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.43 | A guarded front door with the backing store published beside it, now seen in three unrelated tools: Dify's compose publishes the plugin daemon next to the app, Mem0's publishes PostgreSQL on 8432 beside an authenticated API, and Onyx's development compose publishes seven services past its login page. The `${VAR:-default}` shape is identical in each and moves the host port without closing the publication. The new AI-infrastructure guide carries the authoritative treatment per the 2026-09-13 ruling and `agent-builders.md` cross-references it; this row tracks whether the other Compose-deploying guides need the same pointer. (M, M) | `[enhance]` |
 | 1.44 | Eleven source guides (twenty-two files with their generated plugin mirrors) still carry the pre-hardening guard: an unquoted placeholder on the `set --` line, and no sentinel or arity check. The unquoted site lets a pasted value containing `&`, `$(...)` or a backtick run before the guard sees it; the missing sentinel lets a partial paste run on the reader's own positionals; and there is no `-g` on the probe. Reader risk is low today because every placeholder is an IP address with no shell metacharacter, but the idiom must be uniform. The files: agent-builders, chat-uis, cloud-firewalls, cloud-identity-proxies, deployment-lifecycle, devops-uis, fronting-auth, host, image-gen-uis, mcp-servers, ollama. `ai-infra-services.md` and `CONTRIBUTING.md` carry the full idiom already (M, M) | `[gap]` |
 | 2.24 | Demonstrate `ai-infra-services.md` Verify checks 2 to 7 against real deployments. They ship marked reasoned rather than demonstrated, because the authoring environment has no container runtime and so no live service, external vantage, TLS exchange, or browser flow. CONTRIBUTING rule 5 requires the debt to be tracked, not merely disclosed. Stand up the six services from their cited Compose files and run each check against the exposed state as well as the fixed one (M, L) | `[gap]` |
+| 1.45 | `llm-observability.md`: demonstrate the Phoenix Verify checks against a live instance in both the exposed and fixed states. They ship marked reasoned (#62) because the authoring environment has no Phoenix instance; the unauthenticated-read probe and the manual default-credential check need a running Phoenix to demonstrate. `PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD` first-startup semantics and the `/v1/traces` content-type rejection also want confirming against a live version (M, M) | `[gap]` |
 
 ## Priority 3: Add missing content
 

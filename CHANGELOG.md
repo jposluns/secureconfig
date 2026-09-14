@@ -9,6 +9,12 @@ can check `VERSION` against GitHub: the suite is deliberately offline so that no
 turn the build red, and a pull request number is only knowable from outside. Keeping `VERSION` in step
 with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-09-14
+
+### Added
+
+- The Phoenix administrator bootstrap in `llm-observability.md` (#62). Enabling Phoenix authentication as the guide previously advised left the default `admin@localhost` / `admin` login live; the guide now sets `PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD` (read only on the startup that first creates the account, and silently inert afterward), changes the password at the UI before the instance is reachable and proves the default is dead, adds an unauthenticated read (`/v1/projects`) Verify probe in the hardened guard idiom and a manual default-credential check, governs the OTLP write path through the listener inventory rather than a curl probe, and records that Phoenix has no native MFA but federates to an OAuth2/OIDC provider. Closes backlog row 1.11.
+
 ## 2026-09-13
 
 ### Added
