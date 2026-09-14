@@ -1,5 +1,7 @@
 # DECISIONS
 
+Every project Jeff Posluns maintains carries a DECISIONS.md, some public and others in private working directories; the convention is standardized across all of them, not local to this repository. The file gives an AI assistant a working model of how the maintainer decides, and it gives each settled question a single recorded answer so it is never asked again. Read it before proposing anything a past entry already covers.
+
 Maintainer rulings, recorded so they are not re-litigated. A decision here is settled: it is not
 reopened by a later review finding or by a worker's recommendation, only by the maintainer.
 
@@ -13,7 +15,7 @@ Each ruling records the maintainer's reasoning as well as the ruling, and the pr
 generalizes across them, so that fewer questions need asking. The profile is the orchestrator's
 inference and is fallible; it never substitutes for a ruling on anything irreversible or outward.
 
-## 2026-09-14
+## Rulings
 
 - **Ship the 86th guide (`ai-infra-services.md`, #60) with Verify checks 2 to 7 marked reasoned,
   tracked by backlog row 2.24.** The rule 5 this pull request tightened says a service that runs in a
@@ -29,8 +31,6 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   maintainer ships a disclosed-and-tracked shortfall rather than holding for perfection, of a piece
   with the standing "honesty over coverage" and "a reader with a flagged guide beats no guide"
   rulings; and will not weaken a control to clear a blocker, even one the assistant itself proposed.
-
-## 2026-09-13
 
 - **`ss | grep <port>` in 48 guides:** fix only the checks whose Verify claims nothing ELSE is
   exposed. A filtered check that asks "is this bound to loopback?" is correct for what it claims
@@ -219,10 +219,10 @@ Every pattern below cites a ruling recorded above in this file. A pattern whose 
 
 ### Where this profile has been wrong
 
-- 2026-09-13, queue order. I recommended taking the small band 1 row and interleaving the rest by
+- Queue order. I recommended taking the small band 1 row and interleaving the rest by
   severity. The ruling was to drain band 1 entirely first. See pattern 4; my defaults were the
   error, not the ruling.
-- 2026-09-13, authoring the AI-infrastructure guide. I recommended authoring directly rather than
+- Authoring the AI-infrastructure guide. I recommended authoring directly rather than
   dispatching drafts, on the grounds that I hold the verified facts and would re-verify a draft
   anyway. The ruling was two independent drafts. That is the SECOND time a recommendation of mine
   was overruled toward more rigour, after queue order the same day, which is pattern 4 holding
