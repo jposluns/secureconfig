@@ -9,6 +9,7 @@
      enforces. Listing a guide here as well would hand a reader the same file twice. -->
 
 - [README](https://raw.githubusercontent.com/jposluns/secureconfig/main/README.md): baseline rules for AI assistants, decision guide, index, verification checklist
+- [controls-reference](https://raw.githubusercontent.com/jposluns/secureconfig/main/controls-reference.md): generic control patterns to assess an application that has no guide of its own
 
 ## Certificates and tunnels
 

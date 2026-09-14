@@ -15,15 +15,17 @@ fail=0
 ok()  { printf '  ok    %s\n' "$1"; }
 bad() { printf '  FAIL  %s\n' "$1"; fail=1; }
 
-# Root-level Markdown that documents the repository or governs the assistants working in it,
-# rather than a service, and so is deliberately absent from llms-full.txt and llms.txt.
-# README.sources.md is here too: it holds the citations for the README verification checklist,
-# kept out of the README so the front page stays readable. Consequence worth knowing: it is
-# therefore NOT carried in llms-full.txt, so an assistant reading only that file sees the
-# checklist without its sources.
+# Root-level Markdown that is not a single service's guide, so the guide-shape and guide-index
+# requirements do not apply to it. Most of these document the repository or govern the assistants
+# working in it, and are deliberately absent from llms-full.txt and llms.txt. The exception is
+# controls-reference.md: the cross-service reference an assistant needs when a service has no guide.
+# It has no per-service Verify or dated Sources, so it is not a guide for shape and index purposes,
+# but it IS carried in scripts/build-llms-full.sh and site/llms.txt so an assistant actually
+# receives it. README.sources.md holds the citations for the README verification checklist, kept out
+# of the README so the front page stays readable, and is therefore NOT carried in llms-full.txt.
 not_a_guide() {
   case "$1" in
-    CONTRIBUTING.md|CLAUDE.md|AGENTS.md|CHANGELOG.md|README.sources.md|TODO.md|DONE.md|DECISIONS.md|PENDING-DECISIONS.md) return 0 ;;
+    CONTRIBUTING.md|CLAUDE.md|AGENTS.md|CHANGELOG.md|README.sources.md|TODO.md|DONE.md|DECISIONS.md|PENDING-DECISIONS.md|controls-reference.md) return 0 ;;
     *) return 1 ;;
   esac
 }
