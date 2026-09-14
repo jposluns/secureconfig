@@ -2549,7 +2549,7 @@ With the authentication from section 3 in place, this unauthenticated probe retu
 - Enabling the Traefik dashboard (`api.insecure=true` or an unprotected `api@internal` router) on a public entry point; keep it off or behind the auth middleware.
 - Forgetting to persist `acme.json`, which re-issues certificates on every restart and hits CA rate limits.
 - Single `$` in Compose basicauth labels, which breaks the hash silently.
-- Enabling the Docker provider but leaving `exposedByDefault` at its default of `true`, which publishes every discovered container rather than only the labelled one.
+- Enabling the Docker provider but leaving `exposedByDefault` at its default of `true`, which exposes every eligible container it discovers to routing, not only the labelled one; a working HTTP route also needs a reachable HTTP backend on the detected port.
 - Assuming this page covers Docker Swarm. It covers standalone Docker; Swarm is a separate provider (`providers.swarm` in Traefik v3) with its own `exposedByDefault`, which also defaults to `true`. Consult the Swarm provider reference for your version before relying on this page under Swarm.
 
 ## Sources (checked September 2026)
