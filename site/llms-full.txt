@@ -601,7 +601,7 @@ serverPort = 7000
 auth.token = "REPLACE_WITH_LONG_RANDOM_VALUE"
 ```
 
-frp also supports `auth.method = "oidc"`, authenticating both sides against an OIDC provider's Client Credentials Grant instead of a shared token, useful for centralizing frp auth behind an identity provider.
+frp also supports `auth.method = "oidc"`: frpc obtains a token from an OIDC provider through the Client Credentials Grant and frps validates it by issuer and audience, authenticating frpc to frps instead of using a shared token, useful for centralizing frp auth behind an identity provider.
 
 From frp v0.50.0, `transport.tls.enable` defaults to `true`, so the connection between `frpc` and `frps` is encrypted out of the box; the gap is verification, not encryption. `frpc` still does not verify `frps`'s certificate by default, so it will encrypt to whatever server answers on `serverAddr`, genuine or not. Set `transport.tls.certFile`/`transport.tls.keyFile` on the server and `transport.tls.trustedCaFile` on every client so `frpc` verifies the server's certificate against a trusted CA, and set `transport.tls.force = true` on the server so it refuses any client that did not negotiate TLS at all.
 
