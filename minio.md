@@ -26,17 +26,18 @@ Certificates per [free-certificates.md](free-certificates.md) or [self-signed.md
 
 ## 3. Exposure posture
 
-Loopback or private networks by default; public access only via the TLS endpoints above or behind a proxy/tunnel ([nginx.md](nginx.md), [cloudflare.md](cloudflare.md)). Keep the console off the public internet and give human logins MFA at the fronting layer ([mfa.md](mfa.md)). Buckets are private unless a policy says otherwise; audit anonymous/public bucket policies before exposing anything.
+Loopback or private networks by default; public access only via the TLS endpoints above or behind a proxy/tunnel ([nginx.md](nginx.md), [cloudflare.md](cloudflare.md)). The web console is a second listener, configured independently of the S3 API: MinIO serves its embedded console on the address set by `--console-address` (env `MINIO_CONSOLE_ADDRESS`), and left unset it picks a free port at startup and prints the console URL in its log. A console address with no host, whether the default or an explicit `:9001`, binds every interface even when the S3 API is bound to loopback, so the console can be reachable while the API is not. Bind it explicitly with `--console-address 127.0.0.1:9001` (or a private address), keep it off the public internet, and give human logins MFA at the fronting layer ([mfa.md](mfa.md)). Buckets are private unless a policy says otherwise; audit anonymous/public bucket policies before exposing anything.
 
 ## 4. Verify
 
 ```bash
-ss -tlnp | grep 9000                                   # private unless deliberate
+ss -tlnp | grep -E ':(9000|9001) '                     # S3 API 9000 and the console (--console-address, ~9001); private unless deliberate
 curl -q -s -o /dev/null -w '%{http_code}\n' https://s3.example.com:9000/                     # service root: anonymous ListBuckets denied
 curl -q -s -o /dev/null -w '%{http_code}\n' https://s3.example.com:9000/REPLACE_WITH_BUCKET/ # per bucket: anonymous listing denied
 curl -q -s -o /dev/null -w '%{http_code}\n' https://s3.example.com:9000/REPLACE_WITH_BUCKET/REPLACE_WITH_PRIVATE_OBJECT
                                                        # a known private object: 403, never 200. Anonymous policies are set per
                                                        # bucket, so a denial at the service root does not prove any bucket is private
+curl -q -s -o /dev/null -w '%{http_code}\n' https://s3.example.com:9001/                     # the console on 9001: a 200 from outside means the console is publicly reachable
 mc alias set mys3 https://s3.example.com:9000 REPLACE_WITH_ACCESS_KEY REPLACE_WITH_SECRET_KEY   # app key works; root key stays unused by apps
 ```
 
@@ -46,3 +47,5 @@ mc alias set mys3 https://s3.example.com:9000 REPLACE_WITH_ACCESS_KEY REPLACE_WI
 - MinIO: https://www.min.io/
 - MinIO community repository (archived 2026-04-25, successor editions): https://github.com/minio/minio
 - MinIO `mc anonymous set` (anonymous policies are set per bucket and permit actions without authentication): https://docs.min.io/aistor/reference/cli/mc-anonymous/mc-anonymous-set/
+- MinIO/AIStor console listener (`--console-address` / `MINIO_CONSOLE_ADDRESS`: a static port for the embedded console UI, or a dynamic one logged at startup when omitted): https://docs.min.io/aistor/reference/aistor-server/
+- MinIO console listener in the server source (`--console-address` and its `MINIO_CONSOLE_ADDRESS` env var; `cmd/common-main.go` binds all interfaces when the host is omitted): https://github.com/minio/minio/blob/master/cmd/server-main.go
