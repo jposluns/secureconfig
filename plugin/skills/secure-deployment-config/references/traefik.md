@@ -32,7 +32,7 @@ providers:
 
 `acme.json` must persist across restarts (volume-mount it) and be mode `600`. The TLS-ALPN challenge above needs port 443 reachable from the internet; use `httpChallenge` (port 80) or a `dnsChallenge` (wildcards, no inbound ports) where that fits better.
 
-The `providers.docker` block turns on container discovery, and `exposedByDefault: false` is the security-relevant half. Its default is `true`, so a `providers.docker` block without that line routes every container the daemon can see, not only the one you labelled. The provider reads labels over the Docker socket, so mount it into the Traefik service:
+The `providers.docker` block turns on container discovery, and `exposedByDefault: false` is the security-relevant half. Its default is `true`, so a `providers.docker` block without that line builds a router for every eligible container it discovers, not only the one you labelled. The provider reads labels over the Docker socket, so mount it into the Traefik service:
 
 ```yaml
 services:
@@ -66,7 +66,7 @@ services:
       - traefik.http.services.app.loadbalancer.server.port=3000
 ```
 
-Labelling this container `traefik.enable=true` opts it in; it does not keep any other container private. With `exposedByDefault: false` set in section 1, Traefik ignores every container that lacks that label. Without it, discovery is daemon-wide, not scoped to this Compose project, so a database, cache, admin UI, or queue on the same host also gets a router, answering on the same `:443` listener to anyone who sends the matching `Host` header. The label opts a container in; it never opts others out, so keep it on each application you mean to publish.
+Labelling this container `traefik.enable=true` opts it in; it does not keep any other container private. With `exposedByDefault: false` set in section 1, Traefik ignores every container that lacks that label. Without it, discovery is daemon-wide, not scoped to this Compose project, so a database, cache, admin UI, or queue on the same host also becomes a routing candidate, and any that speaks HTTP answers on the same `:443` listener to anyone who sends the matching `Host` header. The label opts a container in; it never opts others out, so keep it on each application you mean to publish.
 
 Do not also publish the app's port with `ports:`; only Traefik publishes 80 and 443. See [docker.md](docker.md).
 
@@ -149,7 +149,7 @@ sudo ss -tlnp                        # read the whole listener table, do not gre
 
 Check the Traefik log for ACME errors on first start; issuance failures otherwise surface as a self-signed "TRAEFIK DEFAULT CERT" in the browser.
 
-`docker compose ps` and `ss` catch a container that bypasses Traefik with its own `ports:`, but neither can see a container Traefik routes without your asking: a routed container has no host port publication of its own. To confirm `exposedByDefault: false` actually excludes unlabelled containers, launch an unlabelled canary on Traefik's network and probe the front door. Do this on a disposable copy of the deployment; never make a container deliberately routable on the production host.
+`docker compose ps` and `ss` help find a container that bypasses Traefik with its own `ports:`, though neither is exhaustive: `docker compose ps` lists only this Compose project, and a port published through NAT alone, with Docker's userland proxy disabled, opens no host listening socket for `ss` to show. Neither, in any case, sees a container Traefik routes without your asking: a routed container has no host port publication of its own. To confirm `exposedByDefault: false` actually excludes unlabelled containers, launch an unlabelled canary on Traefik's network and probe the front door. Do this on a disposable copy of the deployment; never make a container deliberately routable on the production host.
 
 ```yaml
 services:
@@ -157,7 +157,7 @@ services:
     image: traefik/whoami   # one HTTP port, echoes its own hostname; no traefik.* labels, no ports:
 ```
 
-`traefik/whoami` listens on a single HTTP port, so Traefik's single-port detection can build a service for it and a routed reply is unmistakable (the body carries a `Hostname:` line). Read the router rule Traefik generated for the canary; its `Host(...)` value is the canary's normalized name, and you pass that value as the `Host:` header below. Probe plain HTTP against the `:443` listener: the auto-generated router never requested TLS, so it answers plain HTTP even there.
+`traefik/whoami` listens on a single HTTP port, so Traefik's single-port detection can build a service for it and a routed reply is unmistakable (the body carries a `Hostname:` line). Read the router rule Traefik generated for the canary; its `Host(...)` value is the canary's normalized name, and you pass that value as the `Host:` header below. Probe plain HTTP against the `:443` listener: the auto-generated router never requested TLS, so it answers plain HTTP even there. Run these probe blocks with Bash and curl 7.75.0 or newer, which added the `exitcode` and `errormsg` write-out variables they print.
 
 ```bash
 (                              # a subshell, so your own shell arguments are untouched
@@ -175,7 +175,7 @@ services:
 )
 ```
 
-With `exposedByDefault: false` the canary returns `http=404` from Traefik's unmatched-route handler: it was ignored, and that is the pass. Calibrate first on the exposed fixture (temporarily `exposedByDefault: true`), where the canary must return `http=200` with the whoami `Hostname:` body; that proves the probe reaches Traefik. Without that positive calibration a `404` is not trustworthy, because it equally means the canary never joined Traefik's network. On production, run the probe only after applying the fix; a canary that answers `200` there is a live exposure to remove, not a passing test.
+With `exposedByDefault: false` the canary returns `http=404` from Traefik's unmatched-route handler: it was ignored, and that is the pass. Calibrate first on the exposed fixture (temporarily `exposedByDefault: true`), where the canary must return `http=200` with a `Hostname:` body naming the canary itself, not some other service; that proves the probe reaches Traefik through the canary's own router. Without that positive calibration a `404` is not trustworthy: it can equally mean Traefik never discovered the canary or built no matching route. A canary Traefik did discover but cannot reach on its network answers `502` or `504`, not `404`. On production, run the probe only after applying the fix; a canary that answers `200` there is a live exposure to remove, not a passing test.
 
 A `404` for the canary also appears when the whole Docker provider is off, which breaks all routing. Confirm the provider still works by probing the app itself, published only over HTTPS:
 
@@ -194,7 +194,7 @@ A `404` for the canary also appears when the whole Docker provider is off, which
 )
 ```
 
-The app must return its known `http=200`; do not accept just any `200`. The fix is confirmed when, in the same run, the app answers `200` and the canary answers `404`: routing works and the unlabelled container is excluded. No `-k` here, the app needs a real certificate.
+With the authentication from section 3 in place, this unauthenticated probe returns `http=401` from Traefik: the app's router and its auth middleware both exist, so the provider is routing. (Add `-u admin:REPLACE_WITH_PASSWORD` to the curl line to see the app's own authenticated response instead.) The fix is confirmed when, in the same run, the app answers `401` (or your known authenticated `200`) and the canary answers `404`: routing works and the unlabelled container is excluded. A `404` or a connection failure for the app instead means the provider is not routing it. No `-k` here; the app needs a real certificate.
 
 ## Common mistakes
 
@@ -208,6 +208,8 @@ The app must return its known `http=200`; do not accept just any `200`. The fix 
 
 - Traefik documentation: https://doc.traefik.io/traefik/ (HTTPS/ACME, routers, and basicAuth middleware sections)
 - Docker provider (`exposedByDefault`, socket endpoint): https://doc.traefik.io/traefik/reference/install-configuration/providers/docker/
+- Swarm provider (`providers.swarm.exposedByDefault`): https://doc.traefik.io/traefik/reference/install-configuration/providers/swarm/
+- curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
 - Buffering middleware (`maxRequestBodyBytes`, `memRequestBodyBytes`): https://doc.traefik.io/traefik/middlewares/http/buffering/
 - InFlightReq middleware (`amount`): https://doc.traefik.io/traefik/middlewares/http/inflightreq/
 - RateLimit middleware (`average`, `burst`, `period`): https://doc.traefik.io/traefik/middlewares/http/ratelimit/
