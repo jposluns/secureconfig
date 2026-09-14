@@ -46,6 +46,7 @@ one of them is the application's.
 | 4200 | Prefect server | [workflow-orchestrators.md](workflow-orchestrators.md) |
 | 4222 | NATS client connections | [nats.md](nats.md) |
 | 4317, 4318 | OTLP gRPC and OTLP HTTP receivers | [llm-observability.md](llm-observability.md) |
+| 4369 | epmd, the Erlang Port Mapper Daemon, which maps Erlang node names to distribution ports (RabbitMQ and other Erlang or Elixir clustered services) | [rabbitmq.md](rabbitmq.md) |
 | 5000 | Redash, MLflow tracking server, or a .NET Kestrel default | [bi-dashboards.md](bi-dashboards.md), [mlflow.md](mlflow.md), [dotnet.md](dotnet.md) |
 | 5003 | Dify's plugin daemon debugging port, published by the supplied Compose configuration unless you remove or restrict that mapping | [agent-builders.md](agent-builders.md) |
 | 5432 | PostgreSQL, and pgvector on the same port | [postgresql.md](postgresql.md), [vector-databases.md](vector-databases.md), [cloud-firewalls.md](cloud-firewalls.md) |
@@ -99,6 +100,7 @@ one of them is the application's.
 | 11434 | Ollama | [ollama.md](ollama.md) |
 | 15672 | RabbitMQ management UI | [rabbitmq.md](rabbitmq.md) |
 | 19530 | Milvus gRPC | [vector-databases.md](vector-databases.md) |
+| 25672 | RabbitMQ inter-node and CLI Erlang distribution (the AMQP port plus 20000); the Erlang cookie is its only credential and grants full control of the node | [rabbitmq.md](rabbitmq.md) |
 | 27017 | MongoDB | [mongodb.md](mongodb.md), [cloud-firewalls.md](cloud-firewalls.md) |
 | 30000 | SGLang | [model-servers.md](model-servers.md) |
 | 50051 | Weaviate gRPC | [vector-databases.md](vector-databases.md) |
