@@ -95,11 +95,18 @@ On a host where untrusted workloads share the machine, loopback is not enough, b
 ```caddy
 {
     email admin@example.com
-    admin unix//run/caddy-admin.sock
+    admin unix//run/caddy/admin.sock
 }
 ```
 
-`caddy reload`, and so the `sudo systemctl reload caddy` from section 1, works through this API by reading the admin address from the Caddyfile, so the socket keeps reload working. You can instead disable the endpoint with `admin off`, but then that reload fails and every config change needs a full `systemctl restart caddy`.
+The packaged service runs as the `caddy` user, which cannot create a socket under root-owned `/run`, so give it a runtime directory with `sudo systemctl edit caddy`:
+
+```ini
+[Service]
+RuntimeDirectory=caddy
+```
+
+systemd then creates `/run/caddy` owned by `caddy`. `caddy reload`, and so `sudo systemctl reload caddy`, applies config through this API by reading the admin address from the Caddyfile, so once the socket is up it keeps reload working; the one switch from the default TCP endpoint to the socket needs `sudo caddy reload --config /etc/caddy/Caddyfile --address localhost:2019` (the endpoint still running) or a restart. Disabling the endpoint with `admin off` turns off API reload, so config changes then need a full `systemctl restart caddy`.
 
 ## 6. Verify
 
@@ -127,7 +134,7 @@ ss -tlnp | grep 3000                 # the app itself: 127.0.0.1 only, never 0.0
 ss -tlnp | grep -E ':2019 '          # the admin API on TCP: only 127.0.0.1:2019 or [::1]:2019, never a
                                      # public address. An empty result is not a pass on its own: it also
                                      # means you moved it to a unix socket or set admin off, so confirm which
-ls -l /run/caddy-admin.sock          # if you bound it to a unix socket: it exists and is owner-restricted
+ls -l /run/caddy/admin.sock          # if you bound it to a unix socket: it exists and is owner-restricted
                                      # (a stream socket, so it does not show in ss -tlnp; use ss -xlp to list it)
 ```
 
