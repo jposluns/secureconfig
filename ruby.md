@@ -44,6 +44,37 @@ end
 - Secrets live in `config/credentials.yml.enc`, edited with `bin/rails credentials:edit`; the decryption key is `config/master.key` (Rails adds it to `.gitignore`) or `ENV["RAILS_MASTER_KEY"]`, which takes precedence. Set `config.require_master_key = true` so a deployment without the key refuses to boot instead of running half-configured.
 - MFA: Rails has no built-in second factor. Add TOTP in the app or front it with an identity layer; options in [mfa.md](mfa.md). OIDC login follows [oidc-integration.md](oidc-integration.md).
 
+Sidekiq's Web UI is a common blind spot. Mounted the usual way it has no authentication of its own:
+
+```ruby
+# config/routes.rb -- unsafe as written
+require "sidekiq/web"
+mount Sidekiq::Web => "/sidekiq"
+```
+
+Anyone who reaches `/sidekiq` can read every job's arguments, which routinely carry tokens, email addresses, and record IDs, and can retry, kill, or clear queues. Gate the mount. With Devise, wrap it in an `authenticate` constraint so only a signed-in admin reaches it:
+
+```ruby
+authenticate :user, ->(u) { u.admin? } do
+  mount Sidekiq::Web => "/sidekiq"
+end
+```
+
+Without Devise, put HTTP Basic Auth in front of the Rack app, a separate credential kept out of source and compared in constant time (the SHA256 digests give `secure_compare` equal-length inputs, and `&` avoids a short-circuit that would leak which half matched):
+
+```ruby
+# config/initializers/sidekiq.rb
+require "sidekiq/web"
+Sidekiq::Web.use(Rack::Auth::Basic) do |user, password|
+  ActiveSupport::SecurityUtils.secure_compare(
+    ::Digest::SHA256.hexdigest(user), ::Digest::SHA256.hexdigest(ENV.fetch("SIDEKIQ_USER"))) &
+    ActiveSupport::SecurityUtils.secure_compare(
+      ::Digest::SHA256.hexdigest(password), ::Digest::SHA256.hexdigest(ENV.fetch("SIDEKIQ_PASSWORD")))
+end
+```
+
+Never mount it bare, and keep it off the public internet even behind auth.
+
 ## 4. Client-side TLS discipline
 
 ```ruby
@@ -65,6 +96,7 @@ ss -tlnp | grep -E 'puma|ruby'                                   # 127.0.0.1:300
 curl -q -sI http://app.example.com/                                 # 301 to https:// (force_ssl)
 curl -q -sI https://app.example.com/ | grep -iE 'strict-transport|set-cookie'   # HSTS; secure; httponly; samesite=lax
 curl -q -s -o /dev/null -w '%{http_code}\n' https://app.example.com/dashboard    # 302 to login, or 401
+curl -q -s -o /dev/null -w '%{http_code}\n' https://app.example.com/sidekiq      # if you run Sidekiq Web: 401 (Basic Auth) or 302 to login, never 200 with the dashboard
 git ls-files config/master.key                                   # prints nothing
 ```
 
@@ -82,6 +114,7 @@ git ls-files config/master.key                                   # prints nothin
 - `ActionController::RateLimiting`: https://api.rubyonrails.org/classes/ActionController/RateLimiting/ClassMethods.html
 - `bin/rails credentials:help` text (`master.key`, `RAILS_MASTER_KEY`): https://github.com/rails/rails/blob/main/railties/lib/rails/commands/credentials/USAGE
 - Rack::Attack README: https://github.com/rack/rack-attack
+- Sidekiq Web UI security (the mount, the Devise `authenticate` constraint, and `Rack::Auth::Basic`): https://github.com/sidekiq/sidekiq/wiki/Monitoring
 - Net::HTTP source (`verify_mode`, `ca_file`, `VERIFY_PEER` default): https://github.com/ruby/net-http/blob/master/lib/net/http.rb
 - Ruby OpenSSL `SSLContext` defaults (`DEFAULT_CERT_STORE.set_default_paths`, `VERIFY_PEER`): https://github.com/ruby/openssl/blob/master/lib/openssl/ssl.rb
 - OpenSSL environment variables (`SSL_CERT_FILE`, `SSL_CERT_DIR`): https://docs.openssl.org/master/man7/openssl-env/
