@@ -15,6 +15,7 @@ To use your own certificate ([free-certificates.md](free-certificates.md) or [se
 ```ini
 [mysqld]
 bind_address = 127.0.0.1          # widen deliberately
+mysqlx_bind_address = 127.0.0.1   # MySQL only: the X Protocol (33060) is a SEPARATE listener bind_address does not cover; omit on MariaDB
 require_secure_transport = ON
 tls_version = TLSv1.2,TLSv1.3
 ssl_ca   = /etc/mysql/certs/ca.pem
@@ -23,6 +24,8 @@ ssl_key  = /etc/mysql/certs/server-key.pem
 ```
 
 `require_secure_transport` rejects any TCP connection that is not TLS (Unix-socket connections remain allowed). Recent MariaDB versions support the same option; verify availability for your release.
+
+MySQL 8.4 enables the X Plugin by default, and it is a second listener with its own port (`mysqlx_port`, default `33060`) and its own bind address (`mysqlx_bind_address`, default `*`, every interface). The `bind_address` above governs only the classic protocol on 3306, so a server you carefully bound to loopback still answers the X Protocol on every interface until you set `mysqlx_bind_address` as well, shown above. If you do not use the X Protocol (the X DevAPI / document-store interface), turn the plugin off instead with `mysqlx = OFF`. Both `mysqlx_bind_address` and `mysqlx` are read only at startup, so restart the server after setting them. This applies to MySQL only: MariaDB does not implement the X Protocol, has no listener on 33060, and rejects `mysqlx_bind_address` as an unknown option that stops it from starting, so omit that line on MariaDB.
 
 ## 2. Per-account requirements
 
@@ -58,7 +61,7 @@ SELECT user, host, ssl_type FROM mysql.user;      -- REQUIRE settings per accoun
 ```
 
 ```bash
-ss -tlnp | grep 3306        # loopback only, unless remote access is deliberate
+ss -tlnp | grep -E ':(3306|33060) '   # classic protocol 3306 and the X Protocol 33060: both loopback, unless remote access is deliberate
 ```
 
 ## Common mistakes
@@ -66,12 +69,16 @@ ss -tlnp | grep 3306        # loopback only, unless remote access is deliberate
 - Creating `'app'@'%'` with a weak password to fix a connection error, then never tightening the host mask.
 - `require_secure_transport = ON` skipped because "the network is internal"; internal networks are where lateral movement happens.
 - Shipping the client with `--ssl-mode=DISABLED` to silence certificate errors instead of installing the CA ([self-signed.md](self-signed.md)).
+- Binding `bind_address` to loopback but leaving `mysqlx_bind_address` at its default `*`, so MySQL 8.4 still answers the X Protocol on 33060 on every interface. Set `mysqlx_bind_address` too, or `mysqlx = OFF` if you do not use it.
 
 ## Sources (checked September 2026)
 
 - MySQL encrypted connections: https://dev.mysql.com/doc/refman/8.0/en/using-encrypted-connections.html
+- MySQL X Plugin options (`mysqlx_bind_address` default `*`, `mysqlx_port` 33060, `mysqlx` enable state; a separate variable from `bind_address` with its own default): https://dev.mysql.com/doc/refman/8.4/en/x-plugin-options-system-variables.html
 - MySQL multifactor authentication: https://dev.mysql.com/doc/refman/8.0/en/multifactor-authentication.html
 - MariaDB TLS documentation: https://mariadb.com/docs/server/security/encryption/data-in-transit-encryption/secure-connections-overview
+- MariaDB protocol differences from MySQL (the MySQL X protocol is not supported, so no X Plugin or port 33060): https://mariadb.com/docs/server/reference/clientserver-protocol/mariadb-protocol-differences-with-mysql
+- MariaDB startup on an invalid option (an unknown config variable such as `mysqlx_bind_address` stops startup): https://mariadb.com/docs/server/server-management/starting-and-stopping-mariadb/what-to-do-if-mariadb-doesnt-start
 - WebAuthn pluggable authentication (MySQL 8.4): https://dev.mysql.com/doc/refman/8.4/en/webauthn-pluggable-authentication.html
 - FIDO pluggable authentication (MySQL 8.0, deprecated as of 8.0.35): https://dev.mysql.com/doc/refman/8.0/en/fido-pluggable-authentication.html
 - What is new in MySQL 8.4 (`authentication_fido` plugins removed): https://dev.mysql.com/doc/refman/8.4/en/mysql-nutshell.html
