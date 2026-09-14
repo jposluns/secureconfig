@@ -2179,7 +2179,29 @@ request_body {
 }
 ```
 
-## 5. Verify
+## 5. The admin API
+
+Caddy runs a local admin API, by default on `localhost:2019`, that requires no credentials: anything that can reach it replaces the whole configuration with `POST /load`, edits it path by path under `/config/`, or stops the server with `POST /stop`. Its Host and Origin header checks block a browser on another site, but they are not process isolation, so the endpoint's safety rests on the loopback bind. Never publish it: do not reverse-proxy a route to `:2019`, and never move it to a public address.
+
+On a host where untrusted workloads share the machine, loopback is not enough, because any local process can reach `127.0.0.1:2019`. Bind the endpoint to a permissioned Unix socket instead, in the same global options block from section 1 (a Caddyfile has only one), so only processes that can open the socket file reconfigure Caddy:
+
+```caddy
+{
+    email admin@example.com
+    admin unix//run/caddy/admin.sock
+}
+```
+
+The packaged service runs as the `caddy` user, which cannot create a socket under root-owned `/run`, so give it a runtime directory with `sudo systemctl edit caddy`:
+
+```ini
+[Service]
+RuntimeDirectory=caddy
+```
+
+systemd creates `/run/caddy` owned by `caddy` when the service starts, so the switch from the default TCP endpoint to the socket needs `sudo systemctl restart caddy`, not a reload: the restart makes the runtime directory and binds the socket in one step. After that, `caddy reload`, and so `sudo systemctl reload caddy`, applies config through this API by reading the admin address from the Caddyfile, so the socket keeps reload working. Disabling the endpoint with `admin off` turns off API reload, so under systemd a config change then needs `systemctl restart caddy` (a manual `caddy run` process can instead reload with `SIGUSR1`).
+
+## 6. Verify
 
 ```bash
 caddy validate --config /etc/caddy/Caddyfile
@@ -2202,6 +2224,11 @@ rm -f /tmp/under.bin /tmp/over.bin
 ss -tlnp | grep 3000                 # the app itself: 127.0.0.1 only, never 0.0.0.0. Every check above
                                      # passes while the app also answers directly on port 3000, which
                                      # bypasses Caddy's TLS and its authentication
+ss -tlnp | grep -E ':2019 '          # the admin API on TCP: only 127.0.0.1:2019 or [::1]:2019, never a
+                                     # public address. An empty result is not a pass on its own: it also
+                                     # means you moved it to a unix socket or set admin off, so confirm which
+ls -l /run/caddy/admin.sock          # if you bound it to a unix socket: it exists and is owner-restricted
+                                     # (a stream socket, so it does not show in ss -tlnp; use ss -xlp to list it)
 ```
 
 ## Common mistakes
@@ -2213,6 +2240,8 @@ ss -tlnp | grep 3000                 # the app itself: 127.0.0.1 only, never 0.0
 ## Sources (checked September 2026)
 
 - Automatic HTTPS: https://caddyserver.com/docs/automatic-https
+- Caddy admin API (default `localhost:2019`, `POST /load` and `/config/` replace or edit the whole config, requires no credentials with only Host/Origin header checks, the permissioned-unix-socket warning for untrusted-workload hosts): https://caddyserver.com/docs/api
+- Caddy `admin` global option (`admin off`, an address, or `admin unix//...`): https://caddyserver.com/docs/caddyfile/options
 - `request_body` directive (`max_size`): https://caddyserver.com/docs/caddyfile/directives/request_body
 - Caddyfile directive list, which carries no `rate_limit` entry: https://caddyserver.com/docs/caddyfile/directives
 - caddy-ratelimit, the community module that adds rate limiting: https://github.com/mholt/caddy-ratelimit
