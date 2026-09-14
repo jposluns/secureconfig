@@ -8045,11 +8045,26 @@ identity provider per [mfa.md](mfa.md); Langfuse's own login has none.
 Authentication is disabled by default, "as you may be just trying Phoenix for the very first time or have
 Phoenix deployed in a VPC" in the vendor's own words: anyone who reaches the UI has full read and write
 access with no login at all. Set `PHOENIX_ENABLE_AUTH=True` and `PHOENIX_SECRET` (a long random value used to
-sign session tokens) to turn it on. Enabling auth on a running instance stops trace collection and blocks all
-API access until API keys exist, so provision keys before or immediately after the flip, not after. Once auth
-is on, a system key (admin-created, acts for the whole instance) or a user key authenticates every request
-via `PHOENIX_API_KEY` sent as an `Authorization: Bearer` header; collectors and SDKs need one to keep sending
-traces. Phoenix has no native MFA; add an identity-aware proxy in front per [mfa.md](mfa.md).
+sign session tokens) to turn it on.
+
+Turning auth on is not enough. Phoenix creates an administrator account `admin@localhost` with the password
+`admin`, so the flip alone leaves a reachable instance with a known admin login. `PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD`
+sets that password, but only on the startup that first creates the account: set it on a brand-new deployment,
+before the first start. On any instance that has started before, the variable is inert, and setting it and
+restarting changes nothing and reports no error, so never read "I set it and restarted" as proof the password
+changed. The vendor does not say which startup creates the account, so if the instance has ever run, treat the
+account as existing: log in at the UI as `admin@localhost`, which prompts for a new password, then run the
+default-credential check in Verify to prove `admin` is dead. Until that change lands, `admin`/`admin` is a live
+admin login, so keep the instance off any untrusted network in the window between the flip and the change.
+Once the account exists the variable only holds an admin password in plaintext for no effect; remove it from
+your environment files.
+
+Enabling auth on a running instance stops trace collection and blocks all API access until API keys exist, so
+mint a key immediately after the flip: a system key (admin-created, acts for the whole instance) or a user key
+authenticates API requests via `PHOENIX_API_KEY` sent as an `Authorization: Bearer` header, and collectors and
+SDKs need one to keep sending traces. Phoenix has no native MFA, but it can federate to an OAuth2/OIDC identity
+provider (its documentation works through Google, AWS Cognito, and Microsoft Entra ID); enforce MFA there, or
+add an identity-aware proxy in front per [mfa.md](mfa.md).
 
 ## Helicone (self-hosted)
 
@@ -8094,6 +8109,50 @@ curl -q -sS -o /dev/null -w '%{http_code}\n' https://otel-collector.internal:431
                                                                         # rejection would prove nothing
 ```
 
+For Phoenix specifically, prove the default admin credential is dead and that neither the read API nor the
+OTLP write endpoint answers an anonymous request. The credential check is manual, because the vendor documents
+only the UI login flow and a scripted guess against the wrong endpoint can read a `404` as a rejection: in a
+fresh browser session with no saved Phoenix cookies, try once to log in as `admin@localhost` with the password
+`admin`. **Exposed:** it logs in. **Fixed:** it is rejected, and your replacement admin password works in a
+second fresh session. Then, from a network position that legitimately reaches Phoenix (a connection failure
+proves nothing about authentication), probe the read and write endpoints anonymously:
+
+```bash
+(                              # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PHOENIX_HOST'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute the host on the set -- line above; not probing" ;;
+    *) curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+         -w '\n[unauth-read] http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+         "https://$1/v1/projects" ;;
+  esac
+)
+```
+
+```bash
+(                              # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_OTLP_HTTP_HOST_AND_PORT'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute the OTLP host on the set -- line above; not probing" ;;
+    *) curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+         -H 'Content-Type: application/json' -d '{"resourceSpans":[]}' \
+         -w '\n[unauth-write] http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+         "https://$1/v1/traces" ;;
+  esac
+)
+```
+
+**Exposed:** `/v1/projects` returns project data, or `/v1/traces` accepts the span, with no credential.
+**Fixed:** both reject the anonymous request, normally `401` or `403`; a `2xx` from either is a finding. If
+your senders use OTLP gRPC only, the write probe does not exercise that listener, and the `ss` table above is
+what covers its binding. Substitute a bracketed literal for an IPv6 host in the URL, for example `[::1]:6006`.
+
 A dashboard that renders traces, prompts, or provider keys without a login is a finding; so is an OTLP port
 that accepts spans with no credential at all.
 
@@ -8101,6 +8160,7 @@ that accepts spans with no credential at all.
 
 - Leaving Phoenix's or Helicone's auth off "because it's just internal" on a host with a public IP.
 - Enabling `PHOENIX_ENABLE_AUTH` without creating an API key first, which locks out collectors mid-flight.
+- Leaving Phoenix's default `admin@localhost` / `admin` in place after turning auth on, or trusting `PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD` to have changed it on an instance whose admin account already existed, where the variable is silently inert.
 - Publishing the OTLP gRPC/HTTP ports (4317/4318) to `0.0.0.0` because a docker-compose example did.
 - Assuming an ingestion key protects the UI, or a UI login protects the ingestion endpoint; they are
   separate credentials in Langfuse and Phoenix alike.
@@ -8110,7 +8170,7 @@ that accepts spans with no credential at all.
 - Langfuse, authentication and SSO (signup default, `AUTH_DISABLE_SIGNUP`, `AUTH_DISABLE_USERNAME_PASSWORD`,
   SSO providers, `AUTH_SESSION_MAX_AGE`, `NEXTAUTH_URL`): https://langfuse.com/self-hosting/security/authentication-and-sso
 - Langfuse, public API authentication (Basic Auth with project public/secret key): https://langfuse.com/docs/api-and-data-platform/features/public-api
-- Arize Phoenix, authentication (`PHOENIX_ENABLE_AUTH`, `PHOENIX_SECRET`, system and user API keys, `PHOENIX_API_KEY`): https://arize.com/docs/phoenix/self-hosting/features/authentication
+- Arize Phoenix, authentication (`PHOENIX_ENABLE_AUTH`, `PHOENIX_SECRET`, system and user API keys, `PHOENIX_API_KEY`, the default `admin@localhost` / `admin` account, `PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD` read only at first-account creation, `/v1/` REST permissions, OAuth2/OIDC identity providers, and the absence of native MFA; read 2026-09-13): https://arize.com/docs/phoenix/self-hosting/features/authentication
 - Helicone, self-hosted deployment (default `test@helicone.ai` / `password` login): https://docs.helicone.ai/getting-started/self-host/manual
 - OpenTelemetry, Collector security best practices (bind addresses, TLS, authenticator extensions, minimal
   components, non-root): https://opentelemetry.io/docs/security/config-best-practices/
