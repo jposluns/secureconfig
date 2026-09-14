@@ -124,7 +124,7 @@ ss -tlnp | grep 3000                          # app on 127.0.0.1 only
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
     *) curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
          -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/"
-       curl -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+       curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
          -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
          -H 'X-Auth-Request-User: admin' "http://$1:3000/" ;;   # forged header, straight at the app
   esac
