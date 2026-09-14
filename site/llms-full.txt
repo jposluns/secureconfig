@@ -2199,7 +2199,7 @@ The packaged service runs as the `caddy` user, which cannot create a socket unde
 RuntimeDirectory=caddy
 ```
 
-systemd then creates `/run/caddy` owned by `caddy`. `caddy reload`, and so `sudo systemctl reload caddy`, applies config through this API by reading the admin address from the Caddyfile, so once the socket is up it keeps reload working; the one switch from the default TCP endpoint to the socket needs `sudo caddy reload --config /etc/caddy/Caddyfile --address localhost:2019` (the endpoint still running) or a restart. Disabling the endpoint with `admin off` turns off API reload, so config changes then need a full `systemctl restart caddy`.
+systemd creates `/run/caddy` owned by `caddy` when the service starts, so the switch from the default TCP endpoint to the socket needs `sudo systemctl restart caddy`, not a reload: the restart makes the runtime directory and binds the socket in one step. After that, `caddy reload`, and so `sudo systemctl reload caddy`, applies config through this API by reading the admin address from the Caddyfile, so the socket keeps reload working. Disabling the endpoint with `admin off` turns off API reload, so under systemd a config change then needs `systemctl restart caddy` (a manual `caddy run` process can instead reload with `SIGUSR1`).
 
 ## 6. Verify
 
