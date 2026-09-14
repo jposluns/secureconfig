@@ -29,8 +29,9 @@ Turning auth on is not enough. Phoenix creates an administrator account `admin@l
 sets that password, but only on the startup that first creates the account: set it on a brand-new deployment,
 before the first start. On any instance that has started before, the variable is inert, and setting it and
 restarting changes nothing and reports no error, so never read "I set it and restarted" as proof the password
-changed. The vendor does not say which startup creates the account, so if the instance has ever run, treat the
-account as existing: log in at the UI as `admin@localhost`, which prompts for a new password, then run the
+changed. It is read only on the first startup that creates the admin account; unless you are setting it on a
+brand-new deployment's very first start, treat the account as already existing: log in at the UI as
+`admin@localhost`, which prompts for a new password, then run the
 default-credential check in Verify to prove `admin` is dead. Until that change lands, `admin`/`admin` is a live
 admin login, so keep the instance off any untrusted network in the window between the flip and the change.
 Once the account exists the variable only holds an admin password in plaintext for no effect; remove it from
@@ -86,13 +87,15 @@ curl -q -sS -o /dev/null -w '%{http_code}\n' https://otel-collector.internal:431
                                                                         # rejection would prove nothing
 ```
 
-For Phoenix specifically, prove the default admin credential is dead and that neither the read API nor the
-OTLP write endpoint answers an anonymous request. The credential check is manual, because the vendor documents
-only the UI login flow and a scripted guess against the wrong endpoint can read a `404` as a rejection: in a
-fresh browser session with no saved Phoenix cookies, try once to log in as `admin@localhost` with the password
-`admin`. **Exposed:** it logs in. **Fixed:** it is rejected, and your replacement admin password works in a
-second fresh session. Then, from a network position that legitimately reaches Phoenix (a connection failure
-proves nothing about authentication), probe the read and write endpoints anonymously:
+For Phoenix specifically, prove the default admin credential is dead and that the read API does not answer an
+anonymous request. **These checks are reasoned, not demonstrated** (no Phoenix instance in the authoring
+environment; backlog row 1.45 tracks running them against a live instance in both states). The credential
+check is manual, because the vendor documents only the UI login flow and a scripted guess against the wrong
+endpoint can read a `404` as a rejection: in a fresh browser session with no saved Phoenix cookies, try once
+to log in as `admin@localhost` with the password `admin`. **Exposed:** it logs in. **Fixed:** it is rejected,
+and your replacement admin password works in a second fresh session. Then, from a network position that
+legitimately reaches Phoenix (a connection failure proves nothing about authentication), probe the read API
+anonymously:
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
@@ -109,26 +112,17 @@ proves nothing about authentication), probe the read and write endpoints anonymo
 )
 ```
 
-```bash
-(                              # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_OTLP_HTTP_HOST_AND_PORT'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
-  case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the OTLP host on the set -- line above; not probing" ;;
-    *) curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-         -H 'Content-Type: application/json' -d '{"resourceSpans":[]}' \
-         -w '\n[unauth-write] http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-         "https://$1/v1/traces" ;;
-  esac
-)
-```
+**Exposed:** `/v1/projects` returns project data with no credential (a `2xx`). **Fixed:** the anonymous request
+is rejected with `401` or `403`. Anything else (a `404`, a redirect to a login page, a `415`, or a transport
+error) is inconclusive and does not prove authentication is on; fall back to the credential check above and to
+the listener inventory. Substitute a bracketed literal for an IPv6 host in the URL, for example `[::1]:6006`.
 
-**Exposed:** `/v1/projects` returns project data, or `/v1/traces` accepts the span, with no credential.
-**Fixed:** both reject the anonymous request, normally `401` or `403`; a `2xx` from either is a finding. If
-your senders use OTLP gRPC only, the write probe does not exercise that listener, and the `ss` table above is
-what covers its binding. Substitute a bracketed literal for an IPv6 host in the URL, for example `[::1]:6006`.
+The OTLP trace-ingestion path is not probed with `curl` here. Phoenix's `/v1/traces` rejects a hand-written
+JSON body on its content type before it checks authentication, so a `curl` rejection would say nothing about
+whether an anonymous span is accepted. That is the same trap this guide names for the OpenTelemetry Collector above,
+and hand-writing a valid protobuf OTLP payload in a one-line probe is not practical. Its exposure is governed
+instead by the listener inventory (the `ss` table must show the OTLP port bound to loopback or a private
+address) and by keeping the write path behind the authenticated ingress.
 
 A dashboard that renders traces, prompts, or provider keys without a login is a finding; so is an OTLP port
 that accepts spans with no credential at all.
