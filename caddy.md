@@ -86,7 +86,21 @@ request_body {
 }
 ```
 
-## 5. Verify
+## 5. The admin API
+
+Caddy runs a local admin API, by default on `localhost:2019`, with no authentication of its own: anything that can reach it replaces the whole configuration with `POST /load`, edits it path by path under `/config/`, or stops the server with `POST /stop`. It relies entirely on being bound to loopback, so never publish it: do not reverse-proxy a route to `:2019`, and never move it to a public address.
+
+On a host where untrusted workloads share the machine, loopback is not enough, because any local process can reach `127.0.0.1:2019`. Bind the endpoint to a permissioned Unix socket instead, so only processes that can open the socket file reconfigure Caddy:
+
+```caddy
+{
+    admin unix//run/caddy-admin.sock
+}
+```
+
+If you never use the API, turn it off with `admin off`.
+
+## 6. Verify
 
 ```bash
 caddy validate --config /etc/caddy/Caddyfile
@@ -109,6 +123,7 @@ rm -f /tmp/under.bin /tmp/over.bin
 ss -tlnp | grep 3000                 # the app itself: 127.0.0.1 only, never 0.0.0.0. Every check above
                                      # passes while the app also answers directly on port 3000, which
                                      # bypasses Caddy's TLS and its authentication
+ss -tlnp | grep 2019                 # the admin API: 127.0.0.1:2019 (or a unix socket), never a public address
 ```
 
 ## Common mistakes
@@ -120,6 +135,8 @@ ss -tlnp | grep 3000                 # the app itself: 127.0.0.1 only, never 0.0
 ## Sources (checked September 2026)
 
 - Automatic HTTPS: https://caddyserver.com/docs/automatic-https
+- Caddy admin API (default `localhost:2019`, `POST /load` and `/config/` replace or edit the whole config, no built-in auth, the permissioned-unix-socket warning for untrusted-workload hosts): https://caddyserver.com/docs/api
+- Caddy `admin` global option (`admin off`, an address, or `admin unix//...`): https://caddyserver.com/docs/caddyfile/options
 - `request_body` directive (`max_size`): https://caddyserver.com/docs/caddyfile/directives/request_body
 - Caddyfile directive list, which carries no `rate_limit` entry: https://caddyserver.com/docs/caddyfile/directives
 - caddy-ratelimit, the community module that adds rate limiting: https://github.com/mholt/caddy-ratelimit
