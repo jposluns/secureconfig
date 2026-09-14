@@ -77,6 +77,7 @@ one of them is the application's.
 | 8883 | MQTT over TLS | [mosquitto.md](mosquitto.md) |
 | 8888 | Jupyter, including RunPod deployments. The Vast.ai Jupyter launch mode uses 8080 instead | [jupyter.md](jupyter.md), [gpu-clouds.md](gpu-clouds.md) |
 | 9000 | ClickHouse native TCP (plaintext), MinIO's S3 API, PHP-FPM, TGI's Prometheus listener, or Portainer's legacy HTTP port; Keycloak's management port serving `/health` and `/metrics`, or authentik's HTTP port | [clickhouse.md](clickhouse.md), [minio.md](minio.md), [php.md](php.md), [model-servers.md](model-servers.md), [devops-uis.md](devops-uis.md), [self-hosted-idp.md](self-hosted-idp.md) |
+| 9001 | MinIO's web console (the `--console-address` / `MINIO_CONSOLE_ADDRESS` port, conventionally 9001) | [minio.md](minio.md) |
 | 9004, 9005, 9009, 9010 | ClickHouse MySQL compatibility, PostgreSQL compatibility, and interserver replica traffic over HTTP and HTTPS | [clickhouse.md](clickhouse.md) |
 | 9090 | InvokeAI. Prometheus also defaults here, though its guide does not state the number | [image-gen-uis.md](image-gen-uis.md), [admin-uis.md](admin-uis.md) |
 | 9091 | Milvus WebUI, or Authelia | [vector-databases.md](vector-databases.md), [fronting-auth.md](fronting-auth.md) |

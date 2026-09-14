@@ -26,15 +26,16 @@ Certificates per [free-certificates.md](free-certificates.md) or [self-signed.md
 
 ## 3. Exposure posture
 
-Loopback or private networks by default; public access only via the TLS endpoints above or behind a proxy/tunnel ([nginx.md](nginx.md), [cloudflare.md](cloudflare.md)). Keep the console off the public internet and give human logins MFA at the fronting layer ([mfa.md](mfa.md)). Buckets are private unless a policy says otherwise; audit anonymous/public bucket policies before exposing anything.
+Loopback or private networks by default; public access only via the TLS endpoints above or behind a proxy/tunnel ([nginx.md](nginx.md), [cloudflare.md](cloudflare.md)). The web console is a second listener: MinIO serves its embedded console on the port set by `--console-address` (env `MINIO_CONSOLE_ADDRESS`), conventionally `:9001`, and left unset MinIO assigns it one at startup and prints the console URL in its log. The console binds the same interfaces as the S3 API, so exposing the API exposes the console too. Pin `--console-address :9001` so the port is known and can be filtered, keep the console off the public internet, and give human logins MFA at the fronting layer ([mfa.md](mfa.md)). Buckets are private unless a policy says otherwise; audit anonymous/public bucket policies before exposing anything.
 
 ## 4. Verify
 
 ```bash
-ss -tlnp | grep 9000                                   # private unless deliberate
+ss -tlnp | grep -E ':(9000|9001) '                     # S3 API 9000 and the console (--console-address, ~9001); private unless deliberate
 curl -q -s -o /dev/null -w '%{http_code}\n' https://s3.example.com:9000/                     # service root: anonymous ListBuckets denied
 curl -q -s -o /dev/null -w '%{http_code}\n' https://s3.example.com:9000/REPLACE_WITH_BUCKET/ # per bucket: anonymous listing denied
 curl -q -s -o /dev/null -w '%{http_code}\n' https://s3.example.com:9000/REPLACE_WITH_BUCKET/REPLACE_WITH_PRIVATE_OBJECT
+curl -q -s -o /dev/null -w '%{http_code}\n' https://s3.example.com:9001/                     # the console on 9001: a 200 from outside means the console is publicly reachable
                                                        # a known private object: 403, never 200. Anonymous policies are set per
                                                        # bucket, so a denial at the service root does not prove any bucket is private
 mc alias set mys3 https://s3.example.com:9000 REPLACE_WITH_ACCESS_KEY REPLACE_WITH_SECRET_KEY   # app key works; root key stays unused by apps
