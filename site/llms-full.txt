@@ -5348,7 +5348,7 @@ mc alias set mys3 https://s3.example.com:9000 REPLACE_WITH_ACCESS_KEY REPLACE_WI
 - MinIO community repository (archived 2026-04-25, successor editions): https://github.com/minio/minio
 - MinIO `mc anonymous set` (anonymous policies are set per bucket and permit actions without authentication): https://docs.min.io/aistor/reference/cli/mc-anonymous/mc-anonymous-set/
 - MinIO/AIStor console listener (`--console-address` / `MINIO_CONSOLE_ADDRESS`: a static port for the embedded console UI, or a dynamic one logged at startup when omitted): https://docs.min.io/aistor/reference/aistor-server/
-- MinIO console bind (an omitted host binds all interfaces regardless of the S3 API bind): https://github.com/minio/minio/blob/master/cmd/common-main.go
+- MinIO console listener in the server source (`--console-address` and its `MINIO_CONSOLE_ADDRESS` env var; `cmd/common-main.go` binds all interfaces when the host is omitted): https://github.com/minio/minio/blob/master/cmd/server-main.go
 
 ======================================================================
 ==> rabbitmq.md
