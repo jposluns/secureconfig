@@ -8774,13 +8774,12 @@ curl -q -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem --cert client-cert.
 
 # GitLab CE: initial root password file check (needs Docker access; the container is named gitlab)
 # absence does not prove the password was rotated; presence means rotate root now
-if ! docker exec gitlab true 2>/dev/null; then
-  echo 'cannot reach a container named gitlab: fix the name or start it, this is not a result'
-elif docker exec gitlab test -f /etc/gitlab/initial_root_password; then
-  echo 'initial_root_password present: rotate root and remove it'
-else
-  echo 'initial_root_password absent'
-fi
+state=$(docker exec gitlab sh -c 'test -f /etc/gitlab/initial_root_password && echo PRESENT || echo ABSENT' 2>/dev/null)
+case "$state" in
+  PRESENT) echo 'initial_root_password present: rotate root and remove it' ;;
+  ABSENT)  echo 'initial_root_password absent' ;;
+  *)       echo 'the check did not run (no reply from a container named gitlab): fix the container, this is not a result' ;;
+esac
 ```
 
 From outside the network, every panel URL is unreachable or shows a login; a page that renders host, container, or repository data without one is a finding.
