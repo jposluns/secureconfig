@@ -68,7 +68,9 @@ KNOWN REMAINING BYPASSES (recorded so a pass is never mistaken for a
 guarantee)
   - curl reached through a name this gate does not resolve: a variable
     (C=curl; "$C" ...), an alias, a shell function, a wrapper script, eval,
-    a printf-built command line, xargs -I{} templates, backtick command
+    exec curl, a process substitution (bash <(curl ...) / >(curl ...), whose
+    inner curl the lexer keeps as one word rather than a command), a
+    printf-built command line, xargs -I{} templates, backtick command
     substitution (only $(...) is lifted), find -exec, parallel, coproc.
   - curl running somewhere else: inside a quoted string handed to bash -c /
     ssh host '...' / eval; container argv (docker run curlimages/curl ... is
@@ -182,6 +184,12 @@ PATTERN_TOKEN_RE = re.compile(
     r"[*?\[\]|A-Za-z0-9_.-]*REPLACE_WITH_[*?\[\]|A-Za-z0-9_.-]*$")
 _NA = re.escape(NOARG_SHORTS)
 CLUSTER_G_RE = re.compile(r"-[%s]*g[%s]*$" % (_NA, _NA))
+# A transfer URL argument STARTS with a scheme, so "://" is at the front of the
+# token, not merely somewhere inside it. That distinguishes the real URL curl
+# would glob from an option value that only contains a URL: a -d JSON body
+# ({"u":"https://.../{x}"}) or an -H header (Link: <https://.../[1]>) carries
+# both "://" and a bracket but is transmitted verbatim, never globbed.
+_URL_START_RE = re.compile(r"[A-Za-z][A-Za-z0-9+.-]*://")
 CLUSTER_Q_RE = re.compile(r"-[%s]*q[%s]*$" % (_NA, _NA))
 ASSIGNMENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*\+?=")
 DURATION_RE = re.compile(r"^\d[\d.]*[smhd]?$")
@@ -440,7 +448,7 @@ def _url_needs_globoff(a):
     this gate being a tripwire, not a proof.
     """
     for t in a:
-        if "://" in t and ("[" in t or "{" in t):
+        if _URL_START_RE.match(t) and ("[" in t or "{" in t):
             return True
     return False
 
@@ -753,6 +761,12 @@ SELF_TEST_CASES = [
      "```bash\ncurl -qg https://example.com/\n```\n", [], ()),
     ("mixed-cluster-not-credited",
      "```bash\ncurl -qog \"https://example.com/[1-3]\"\n```\n", ["C1-MISSING-G"], ()),
+    ("c1-still-enforced-under-no-c2",
+     "```bash\ncurl https://example.com/\n```\n", ["C1-MISSING-Q"], ("--no-c2",)),
+    ("url-in-data-body-not-globbed",
+     "```bash\ncurl -q --data '{\"u\":\"https://e.com/{x}\"}' https://e.com/\n```\n", [], ()),
+    ("url-in-header-value-not-globbed",
+     "```bash\ncurl -q -H 'Link: <https://e.com/[1]>' https://e.com/\n```\n", [], ()),
     ("comment-curl-ignored",
      "```bash\n# curl without -q in prose\ncurl -q -g https://e.com/\n```\n",
      [], ()),
