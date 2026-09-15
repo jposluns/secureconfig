@@ -184,12 +184,17 @@ PATTERN_TOKEN_RE = re.compile(
     r"[*?\[\]|A-Za-z0-9_.-]*REPLACE_WITH_[*?\[\]|A-Za-z0-9_.-]*$")
 _NA = re.escape(NOARG_SHORTS)
 CLUSTER_G_RE = re.compile(r"-[%s]*g[%s]*$" % (_NA, _NA))
-# A transfer URL argument STARTS with a scheme, so "://" is at the front of the
-# token, not merely somewhere inside it. That distinguishes the real URL curl
-# would glob from an option value that only contains a URL: a -d JSON body
-# ({"u":"https://.../{x}"}) or an -H header (Link: <https://.../[1]>) carries
-# both "://" and a bracket but is transmitted verbatim, never globbed.
-_URL_START_RE = re.compile(r"[A-Za-z][A-Za-z0-9+.-]*://")
+# Options whose VALUE is request payload, not a URL curl globs: a -d/--json body
+# or an -H/-F header can carry a "://" and a bracket (a JSON body holding a URL,
+# a Link: header) yet is transmitted verbatim. The URL operand and a --url value
+# are NOT in this set, so a real glob URL (--url .../[1-3], {http,https}://...)
+# is still inspected. Only the spaced form (-H VALUE) and the attached long form
+# (--data=VALUE) are skipped; the rarer attached short form is disclosed.
+_VALUE_OPTS_NONURL = frozenset((
+    "-d", "--data", "--data-raw", "--data-ascii", "--data-binary",
+    "--data-urlencode", "--json", "-H", "--header", "--proxy-header",
+    "-F", "--form", "--form-string",
+))
 CLUSTER_Q_RE = re.compile(r"-[%s]*q[%s]*$" % (_NA, _NA))
 ASSIGNMENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*\+?=")
 DURATION_RE = re.compile(r"^\d[\d.]*[smhd]?$")
@@ -439,17 +444,32 @@ def _cmd_is(word, names):
 
 
 def _url_needs_globoff(a):
-    """A curl argument that is a URL (it carries a scheme, so contains "://")
-    and holds a literal [ or { that curl would glob (an IPv6 literal, a brace
-    range). The -w format string like \'%{http_code}\' carries { but no
-    "://", so it is not a URL and does not count -- that keeps the check from
-    firing on the corpus\'s ubiquitous -w format strings. A schemeless glob
-    URL (no "://") is not detected; that boundary is disclosed, consistent with
-    this gate being a tripwire, not a proof.
+    """A curl URL argument that holds a literal [ or { curl would glob (a brace
+    range, a globbed scheme). A token counts when it carries a scheme (contains
+    "://") EXCEPT when it is the value of a data/header/form option, which is
+    payload curl transmits verbatim and never globs: a -d JSON body or an -H
+    Link: header can carry a "://" and a bracket without being a URL. The URL
+    operand and a --url/--url= value are still inspected. The -w format string
+    like \'%{http_code}\' carries { but no "://", so it never counts.
+
+    This is a tripwire, and it over-includes rather than misses: a real URL that
+    also holds an IPv6 host (http://[::1]/) or a shell expansion (https://${H}/x)
+    is still flagged, because -g there is harmless house style, not a defect.
+    A schemeless glob URL (no "://"), and an attached short data option
+    (-d{...}), are the disclosed boundaries.
     """
-    for t in a:
-        if _URL_START_RE.match(t) and ("[" in t or "{" in t):
+    i = 0
+    while i < len(a):
+        t = a[i]
+        if t in _VALUE_OPTS_NONURL:
+            i += 2
+            continue
+        if any(t.startswith(o + "=") for o in _VALUE_OPTS_NONURL if o.startswith("--")):
+            i += 1
+            continue
+        if "://" in t and ("[" in t or "{" in t):
             return True
+        i += 1
     return False
 
 
@@ -767,6 +787,14 @@ SELF_TEST_CASES = [
      "```bash\ncurl -q --data '{\"u\":\"https://e.com/{x}\"}' https://e.com/\n```\n", [], ()),
     ("url-in-header-value-not-globbed",
      "```bash\ncurl -q -H 'Link: <https://e.com/[1]>' https://e.com/\n```\n", [], ()),
+    ("url-flag-value-glob-still-caught",
+     "```bash\ncurl -q --url 'https://e.com/[1-3]'\n```\n", ["C1-MISSING-G"], ()),
+    ("url-flag-attached-glob-still-caught",
+     "```bash\ncurl -q --url=https://e.com/{a,b}\n```\n", ["C1-MISSING-G"], ()),
+    ("globbed-scheme-still-caught",
+     "```bash\ncurl -q {http,https}://e.com/\n```\n", ["C1-MISSING-G"], ()),
+    ("data-value-that-is-a-url-not-globbed",
+     "```bash\ncurl -q --data 'https://e.com/[1]' https://e.com/\n```\n", [], ()),
     ("comment-curl-ignored",
      "```bash\n# curl without -q in prose\ncurl -q -g https://e.com/\n```\n",
      [], ()),
