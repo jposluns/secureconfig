@@ -4,12 +4,13 @@ Database and monitoring panels are the most-scanned targets on the internet, and
 
 ## mongo-express
 
-The web login is off by default: `ME_CONFIG_BASICAUTH_ENABLED` defaults to `false`, so mongo-express answers with no authentication until you enable it, and setting a username and password alone does not turn it on (older 0.x releases instead shipped an unsafe `admin`:`pass` default). Enable basic auth, set your own credentials, and keep it private:
+The web login is off by default, and setting a username and password alone does not turn it on. Which variable enables it changed within mongo-express 1.x: 1.0.x reads `ME_CONFIG_BASICAUTH`, while 1.1.0 and later read `ME_CONFIG_BASICAUTH_ENABLED` (the current README documents the latter and marks the former deprecated), so set both. Set your own credentials as well, or mongo-express falls back to the widely-scanned `admin`:`pass`. Keep it private:
 
 ```
-ME_CONFIG_BASICAUTH_ENABLED=true              # default false; without this the web UI has no login
-ME_CONFIG_BASICAUTH_USERNAME=<your-admin>
-ME_CONFIG_BASICAUTH_PASSWORD=<long random value>
+ME_CONFIG_BASICAUTH=true                       # enables the login on mongo-express 1.0.x
+ME_CONFIG_BASICAUTH_ENABLED=true               # the renamed flag on 1.1.0 and later; set both to cover either
+ME_CONFIG_BASICAUTH_USERNAME=<your-admin>      # otherwise defaults to admin
+ME_CONFIG_BASICAUTH_PASSWORD=<long random value>   # otherwise defaults to pass
 ```
 
 These control only the web login; MongoDB credentials go in `ME_CONFIG_MONGODB_URL` ([mongodb.md](mongodb.md) hardens the database itself).
