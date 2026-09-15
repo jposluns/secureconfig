@@ -33,7 +33,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 - Human login or SSO: [identity-providers.md](identity-providers.md) to choose one and [self-hosted-idp.md](self-hosted-idp.md) if you run it yourself, [oidc-integration.md](oidc-integration.md) for app integration; [cloud-identity-proxies.md](cloud-identity-proxies.md) or [fronting-auth.md](fronting-auth.md) for login in front; [mfa.md](mfa.md) for the second factor, with an explicit access policy.
 - Service-to-service or agent access: [machine-auth.md](machine-auth.md), [secrets.md](secrets.md).
 - AI or agent deployment: the matching model-server, MCP, agent-builder, vector-database, UI, or observability guide, plus [gpu-clouds.md](gpu-clouds.md) where applicable and [egress-metadata.md](egress-metadata.md) for outbound and metadata.
-- Containers and clusters: [docker.md](docker.md), [container-hardening.md](container-hardening.md), [kubernetes.md](kubernetes.md), then the host, cloud, PaaS, or GPU guide.
+- Containers and clusters: [docker.md](docker.md), [container-hardening.md](container-hardening.md), [kubernetes.md](kubernetes.md), [gitops-controllers.md](gitops-controllers.md), then the host, cloud, PaaS, or GPU guide.
 - Databases, caches, queues, and model servers: keep them off public interfaces entirely where possible; the per-tool guides cover TLS and authentication for the cases where network exposure is unavoidable.
 - Databases, storage, and messaging: the service guide, plus [object-storage.md](object-storage.md), [firebase-supabase.md](firebase-supabase.md), [pocketbase.md](pocketbase.md), or [headless-cms-instant-api.md](headless-cms-instant-api.md) where access depends on storage or data rules.
 - A pooler, proxy, or bouncer in front of a database: [connection-poolers.md](connection-poolers.md). Adding one moves the client-facing TLS and host rules off the database server and onto the pooler, which has its own defaults.
@@ -97,6 +97,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 |---|---|
 | [docker.md](docker.md) | Docker and Compose: safe port publishing, the UFW bypass problem, TLS termination |
 | [kubernetes.md](kubernetes.md) | Gateway API with a maintained controller, cert-manager TLS, entry-point authentication; ingress-nginx is retired |
+| [gitops-controllers.md](gitops-controllers.md) | Argo CD and Flux: cluster-admin blast radius, the initial admin secret, RBAC, and the Flux webhook receiver |
 | [container-hardening.md](container-hardening.md) | Non-root, dropped capabilities, read-only root, network segmentation |
 
 ### Hosts and cloud platforms
