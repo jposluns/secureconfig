@@ -178,6 +178,7 @@
         "ruby.md",
         "scripts/build-llms-full.sh",
         "scripts/build-plugin.sh",
+        "VERSION",
         "search-engines.md",
         "secrets.md",
         "self-hosted-idp.md",
