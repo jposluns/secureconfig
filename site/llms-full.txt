@@ -3758,8 +3758,10 @@ For GitHub, an ephemeral or JIT runner is gone from `gh api /orgs/REPLACE_WITH_O
 after a harmless job, while a persistent runner still idling is the exposed state; deregistration is not
 proof the machine was destroyed. For GitLab, `privileged = true`, a `docker.sock`
 volume, or `services_privileged = true` present is the finding; but the one-job limits are the reverse,
-since a worker with neither `capacity_per_instance` nor `max_use_count` set persists and reuses across
-jobs by default, so their absence is the finding and you confirm they are present and set to `1`.
+for an Instance or Docker Autoscaler executor a worker with neither `capacity_per_instance` nor
+`max_use_count` set reuses across jobs by default, so their absence is the finding and you confirm both
+are present and set to `1`; a plain Docker or Kubernetes executor gives a fresh container or pod per job
+but does not itself destroy the host or its storage, so check that executor's own disposal instead.
 `gitlab-runner verify` only confirms that configured runners can
 authenticate, nothing about isolation. Read the job-token allowlist and the runner's project scope in
 the API, and confirm a release runner's `access_level` reads `ref_protected`. These checks discriminate on the
