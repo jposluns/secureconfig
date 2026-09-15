@@ -9226,11 +9226,12 @@ using ((select auth.jwt()->>'aal') = 'aal2');
 - Signed in as user A, reading user B's rows fails.
 - Reads through every API-exposed view fail the same way as reads of the table behind it: request `/rest/v1/REPLACE_WITH_VIEW_NAME` with only the public key, then, signed in as user A, request user B's rows. A view that returns them is serving rows the table's policies withhold; check whether it runs with its owner's rights or whether a policy is simply too broad.
 - Every API-exposed function is checked the same way, because the view check cannot see it: call `/rest/v1/rpc/REPLACE_WITH_FUNCTION_NAME` with only the public key, and again signed in as user A for user B's rows. A `SECURITY DEFINER` function returns rows while the table and view checks both look clean, so this is the only step that catches it. Repeat for every overload.
-- Search the client bundle for `service_role` and private keys; the result must be empty.
+- Search the client bundle for a leaked secret key. The word `service_role` only catches a reference; the key itself is either a legacy JWT (`eyJ...`) or a new secret key (`sb_secret_...`), neither of which contains that word, so search for all three plus any private key, for example `grep -rE 'service_role|eyJ|sb_secret_' dist/`. The result must be empty; a hit is a key to rotate, not just to delete from the tree.
 
 ## Sources (checked September 2026)
 
 - Firebase security rules: https://firebase.google.com/docs/rules
+- Supabase API keys (legacy `service_role` is a JWT starting `eyJ`; new `sb_publishable_` and `sb_secret_` keys are short strings): https://supabase.com/docs/guides/api/api-keys
 - Supabase row level security: https://supabase.com/docs/guides/database/postgres/row-level-security
 - Supabase multi-factor authentication (aal1, aal2, enforcement policy): https://supabase.com/docs/guides/auth/auth-mfa
 - PostgreSQL `CREATE VIEW` (base relations checked against the view owner's permissions by default; the view owner's RLS policies applied by default; `security_invoker`): https://www.postgresql.org/docs/current/sql-createview.html
