@@ -82,6 +82,7 @@
 - [minio](https://raw.githubusercontent.com/jposluns/secureconfig/main/minio.md): MinIO: root credentials, certs directory TLS, scoped access keys
 - [object-storage](https://raw.githubusercontent.com/jposluns/secureconfig/main/object-storage.md): S3, R2, GCS, Azure Blob, Supabase Storage: private by default, scoped credentials, signed URLs
 - [firebase-supabase](https://raw.githubusercontent.com/jposluns/secureconfig/main/firebase-supabase.md): security rules and row-level security
+- [supabase-self-hosted](https://raw.githubusercontent.com/jposluns/secureconfig/main/supabase-self-hosted.md): the self-hosted Docker stack ships demo keys and a default dashboard password; an unedited compose up publishes the database
 - [pocketbase](https://raw.githubusercontent.com/jposluns/secureconfig/main/pocketbase.md): PocketBase and Appwrite: the rules are the security; lock the admin console
 - [headless-cms-instant-api](https://raw.githubusercontent.com/jposluns/secureconfig/main/headless-cms-instant-api.md): Strapi, Directus, Hasura, and PostgREST: one control gates the whole datastore
 - [rabbitmq](https://raw.githubusercontent.com/jposluns/secureconfig/main/rabbitmq.md): RabbitMQ: users and permissions, TLS listener, guest account
