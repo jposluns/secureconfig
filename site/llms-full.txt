@@ -8972,6 +8972,10 @@ The same file carries TLS (`tls_server_config` with `cert_file` and `key_file`; 
 
 Neither belongs on a public vhost. Serve them only behind the proxy-level TLS and authentication of your web server guide, restrict by source IP where the proxy supports it, and keep them updated; both are perennial exploit targets. pgAdmin in server mode has its own login; treat its accounts per [authentication.md](authentication.md).
 
+## Adminer
+
+Adminer is database management in a single PHP file, and a filename like `adminer.php` or `adminer-<version>.php` is not an access control; renaming it or hiding the directory does not satisfy the never-public rule, since scanners enumerate those paths. It has no built-in account store of its own: by default the login form takes the database server's own address, username, and password, so an internet-reachable Adminer is a public interface for logging in to your database from the Adminer host. Because Adminer connects to the database server-side, that exposes the database to internet login attempts even when the database itself is not reachable from the internet, and older versions carry their own exploit history. The rule at the top of this guide applies without exception: keep it off a public vhost, reach it privately or behind the proxy's TLS, authentication, and MFA, restrict by source IP where you can, keep it updated, and delete the file (and any other copy) from the docroot when you are not using it.
+
 ## RedisInsight and similar tools
 
 Keep them on loopback or a private network and reach them through the tunnels above. When in doubt, apply the generic pattern: loopback bind, TLS proxy, proxy or SSO authentication, MFA.
@@ -8991,6 +8995,7 @@ Test each panel's URL from outside your network; a dashboard that renders withou
 - Grafana configuration and HTTPS: https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/ and https://grafana.com/docs/grafana/latest/setup-grafana/set-up-https/
 - Prometheus basic auth and TLS guides: https://prometheus.io/docs/guides/basic-auth/ and https://prometheus.io/docs/guides/tls-encryption/
 - phpMyAdmin documentation: https://www.phpmyadmin.net/docs/ and pgAdmin documentation: https://www.pgadmin.org/docs/
+- Adminer, database management in a single PHP file (login uses the database server's own credentials): https://www.adminer.org/
 
 ======================================================================
 ==> devops-uis.md
