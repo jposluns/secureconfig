@@ -6844,7 +6844,7 @@ Each app gets its own virtual key, which can be revoked or budgeted independentl
 
 ## 3. Bind privately and add TLS in front
 
-Run the proxy on loopback (or a private container network) and publish it only through a TLS layer: [caddy.md](caddy.md)/[nginx.md](nginx.md) with a certificate from [free-certificates.md](free-certificates.md), or [cloudflare.md](cloudflare.md)/[tailscale.md](tailscale.md) for no-open-port setups. Bearer keys over plain HTTP are compromised on first use. For human access to the LiteLLM admin UI, add MFA at the fronting layer ([mfa.md](mfa.md)).
+Run the proxy on loopback (or a private container network) and publish it only through a TLS layer: [caddy.md](caddy.md)/[nginx.md](nginx.md) with a certificate from [free-certificates.md](free-certificates.md), or [cloudflare.md](cloudflare.md)/[tailscale.md](tailscale.md) for no-open-port setups. The proxy's `--host` defaults to `0.0.0.0`, so bind it explicitly: `litellm --host 127.0.0.1 --port 4000 --config config.yaml`. The Verify check below confirms it is on loopback. Bearer keys over plain HTTP are compromised on first use. For human access to the LiteLLM admin UI, add MFA at the fronting layer ([mfa.md](mfa.md)).
 
 ## 4. Verify
 
@@ -6857,6 +6857,7 @@ ss -tlnp | grep 4000                                            # loopback only
 ## Sources (checked September 2026)
 
 - LiteLLM proxy virtual keys (master_key, /key/generate, header name): https://docs.litellm.ai/docs/proxy/virtual_keys
+- LiteLLM proxy CLI (`--host` default `0.0.0.0`, `--port` default `4000`): https://docs.litellm.ai/docs/proxy/cli
 
 ======================================================================
 ==> model-servers.md
