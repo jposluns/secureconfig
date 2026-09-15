@@ -36,6 +36,9 @@ import sys
 
 NOT_A_GUIDE = {
     "CONTRIBUTING.md",
+    # The security policy: a reporting-and-scope document, not a per-service guide, so a Verify
+    # section and dated Sources would be ceremony.
+    "SECURITY.md",
     "CLAUDE.md",
     "AGENTS.md",
     "CHANGELOG.md",
