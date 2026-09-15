@@ -63,7 +63,7 @@ ss -tlnp | grep 5000                                                   # 127.0.0
 # route, or a filtered-port connect timeout). A non-zero time_connect, or any http code, means the
 # handshake completed and the port answered. A name-resolution or local socket error is inconclusive.
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_SERVER_PUBLIC_IP'
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_SERVER_PUBLIC_IP'   # replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
