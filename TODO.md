@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.72**, **2.25**, **3.16**, **4.12**.
+Next ids: **1.73**, **2.25**, **3.16**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -51,7 +51,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | --- | --- | --- |
 | 1.26 | `gradio.md`: Add deployment file-access controls: narrowly scope `allowed_paths` and static directories, exclude secrets with `blocked_paths`, and explain that cached files are shared across app users; include a harmless file-access isolation check (vendor) (M, S) | `[enhance]` |
 | 1.35 | `gpu-clouds.md`: template-shipped desktop listeners (noVNC/VNC in ComfyUI and desktop images) are not mentioned; they are often password-less and land on the platform's public port mapping like any other listener (template defaults unverified offline) (L, S) | `[enhance]` |
-| 1.6 | `docker.md`: the DOCKER-USER iptables chain, the vendor-documented way to filter published ports when loopback publishing is not viable, never appears even though it is documented on the packet-filtering page the guide already cites (not re-opened offline); Qualify localhost publication with Docker’s pre-28.0.0  (H, S) [3 families] | `[enhance]` |
 | 1.39 | `tailscale.md`: the default tailnet ACL is permissive, and device identity is not user authorization. The guide should say what an ACL has to do before "reachable only by your tailnet" means what a reader hears. (H, S) | `[enhance]` |
 | 1.40 | `firebase-supabase.md`: per-overload RPC negative tests, and a worked pre-15 example of revoking a view from `public`, `anon` and `authenticated` together. (M, S) | `[enhance]` |
 | 1.41 | `agent-builders.md`: establish whether Flowise, Langflow and LibreChat ship vendor Compose files a reader would be overriding. If they do, the `!reset` caveat added in #45 is load-bearing for them rather than advisory. Premise unverified per vendor. (M, S) | `[enhance]` |
@@ -62,6 +61,7 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.47 | `traefik.md`: demonstrate the exposedByDefault Verify probes against a live Docker and Traefik v3 deployment in the exposed and fixed states. They ship marked reasoned (#64) because the authoring environment has no container runtime; stand up Traefik with the section-1 config and an unlabelled `traefik/whoami` canary on its network, then confirm the canary returns 200 with its own `Hostname:` body at `exposedByDefault: true` and 404 at false, confirm the app baseline returns 401 unauthenticated (router plus auth present), and confirm curl 7.75.0 or newer on the target for `%{exitcode}`/`%{errormsg}` (M, M) | `[gap]` |
 | 1.50 | `model-servers.md`: demonstrate the text-generation-webui `/v1/models` probe against a live instance in both the exposed and protected states. It ships marked reasoned (#69) because the authoring environment has no container runtime; stand up text-generation-webui with `--api`, confirm `/v1/models` returns `200` with no key and `401` once `--api-key` is set, and confirm the `validate_host_header` `400` when a non-localhost `Host` is forwarded without `--listen` (M, M) | `[gap]` |
 | 1.71 | Demonstrate the cross-user isolation Verify steps added in #109 against live deployments: a multi-tenant pgvector table (`vector-databases.md`, confirm tenant B's role sees only B's rows and an RLS-bypassing role sees tenant A's rows) and a multi-user RAG or chat (`chat-uis.md`, confirm user B does not retrieve user A's documents), in both the exposed and fixed states. They ship marked reasoned because the authoring environment has neither (M, M) | `[gap]` |
+| 1.72 | Demonstrate the `docker.md` DOCKER-USER restriction and the Docker 28.0 publishing behavior live (added #116): with a routable-interface publish and the `--ctstate NEW ! -s <subnet>` rule loaded, confirm the port connects from inside the subnet and times out from outside while a container keeps its outbound access; and confirm that a loopback-mapped port is reachable from a neighbour host on a pre-28.0 engine and not on 28.0 or later. Ships with an inline reasoned check because the authoring environment has no container runtime (M, M) | `[gap]` |
 ## Priority 3: Add missing content
 
 Gaps from the same audit, one row per missing guide. A gap raised by more than one family is
