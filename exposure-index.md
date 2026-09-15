@@ -77,6 +77,8 @@ one of them is the application's.
 | 8088 | Apache Superset | [bi-dashboards.md](bi-dashboards.md) |
 | 8093 | The GitLab Runner interactive session server, its documented example listen address, which exists only when `[session_server]` is configured | [self-hosted-ci-runners.md](self-hosted-ci-runners.md) |
 | 8123 | ClickHouse HTTP, plaintext | [clickhouse.md](clickhouse.md) |
+| 8200 | HashiCorp Vault API, and its UI at `/ui` on the same listener when `ui = true`; TLS is assumed by default, and `sys/health` and `sys/seal-status` answer unauthenticated | [vault.md](vault.md) |
+| 8201 | HashiCorp Vault cluster port, for server-to-server request forwarding and Raft over mutually authenticated TLS; a peer surface, never a client endpoint | [vault.md](vault.md) |
 | 8188 | ComfyUI | [image-gen-uis.md](image-gen-uis.md) |
 | 8222 | NATS monitoring endpoints | [nats.md](nats.md) |
 | 8233 | Temporal Web UI as started by `temporal server start-dev`, which is the context this corpus documents | [workflow-orchestrators.md](workflow-orchestrators.md) |
