@@ -39,6 +39,16 @@ the FAB auth manager instead: install the FAB provider, then set `[core] auth_ma
 authentication backends for the FAB API, not the auth manager. Point FAB at LDAP, OAuth, or another real identity backend,
 and put MFA at that identity provider ([mfa.md](mfa.md), [identity-providers.md](identity-providers.md)).
 
+The official `docker-compose.yaml` takes the right first step and the wrong second one: it selects the FAB
+auth manager, then seeds it with a known admin, `_AIRFLOW_WWW_USER_USERNAME` and `_AIRFLOW_WWW_USER_PASSWORD`
+both defaulting to `airflow`, and signs API tokens with a fixed `AIRFLOW__API_AUTH__JWT_SECRET` of
+`airflow_jwt_secret`. Its header calls it local-development only, but it is the most-copied way to stand
+Airflow up, so a reader who runs it unchanged has a public `airflow`/`airflow` login and a token-signing
+secret published in the vendor's file, which lets anyone mint an API token the server accepts. Set your own
+values for all three before the container is reachable (generate the JWT secret with `openssl rand -hex 32`),
+keep them out of the repository ([secrets.md](secrets.md)), and publish port 8080, which the compose binds on
+every interface, only behind your fronting layer.
+
 ## Temporal (self-hosted)
 
 With no authorizer configured, the server runs the default `noopAuthorizer`, which the documentation says
@@ -102,6 +112,7 @@ path.
 - Apache Airflow FAB provider, API authentication (`[fab] auth_backends`, independent of the auth manager): https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/api-authentication.html
 - Prefect server source (health and ready paths exempted from the auth string on GET): https://github.com/PrefectHQ/prefect/blob/main/src/prefect/server/api/server.py
 - Apache Airflow, quickstart (default port 8080): https://airflow.apache.org/docs/apache-airflow/stable/start.html
+- Apache Airflow, running Airflow in Docker (the `docker-compose.yaml` default `airflow`/`airflow` web user via `_AIRFLOW_WWW_USER_*`, `AIRFLOW__API_AUTH__JWT_SECRET` default `airflow_jwt_secret`, FAB auth manager, port 8080 published on all interfaces, "for local development. Do not use it in a production deployment"; checked 2026-09-14): https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html
 - Apache Airflow, security model ("doesn't support unauthenticated users", "not designed to be exposed... to
   untrusted users on the public internet"): https://airflow.apache.org/docs/apache-airflow/stable/security/security_model.html
 - Apache Airflow, Simple auth manager (default, dev/test only, `simple_auth_manager_users`, generated
