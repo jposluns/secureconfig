@@ -6976,7 +6976,8 @@ For text-generation-webui, ask the API edge for the model list without a key. Th
 
 - llama.cpp server README (defaults, --api-key, SSL flags): https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md
 - vLLM documentation: https://docs.vllm.ai/
-- vLLM server host default (`FrontendArgs.host` defaults to `None`; the launcher binds `(args.host or "", port)`, i.e. all interfaces, and logs `0.0.0.0`; checked 2026-09-14): https://github.com/vllm-project/vllm/blob/main/vllm/entrypoints/launchers/cli_args.py
+- vLLM server host default (`FrontendArgs.host` defaults to `None`; checked 2026-09-14): https://github.com/vllm-project/vllm/blob/main/vllm/entrypoints/launchers/cli_args.py
+- vLLM server socket bind (the launcher builds `(args.host or "", port)`, so an unset host binds every IPv4 interface, and renders the empty host as `0.0.0.0` in the startup log; checked 2026-09-14): https://github.com/vllm-project/vllm/blob/main/vllm/entrypoints/launchers/launcher.py
 - vLLM security, API key authentication limitations (protected prefixes, unprotected `/invocations` and profiler routes): https://docs.vllm.ai/en/latest/usage/security/
 - TGI launcher arguments (--hostname, --port, --api-key, --prometheus-port): https://huggingface.co/docs/text-generation-inference/reference/launcher
 - TGI router source (what --api-key enforces): https://github.com/huggingface/text-generation-inference/blob/main/router/src/server.rs
