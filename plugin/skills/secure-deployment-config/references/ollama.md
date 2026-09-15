@@ -1,6 +1,6 @@
 # Ollama: it has no built-in authentication or TLS
 
-Ollama's API binds to `127.0.0.1:11434` by default. Setting `OLLAMA_HOST=0.0.0.0` exposes the full API (model execution, pull, delete) to the network with **no authentication and no TLS**; the self-hosted server provides neither (per the Ollama FAQ as of September 2026; verify against current docs before relying on this). Thousands of Ollama instances exposed this way are indexed by internet scanners.
+Ollama's API binds to `127.0.0.1:11434` by default. Setting `OLLAMA_HOST=0.0.0.0` exposes the full API (model execution, pull, delete) to the network with **no authentication and no TLS**; the self-hosted server provides neither (per the Ollama FAQ as of September 2026; verify against current docs before relying on this). Thousands of Ollama instances exposed this way are indexed by internet scanners. That loopback default belongs to the standalone binary: the official `ollama/ollama` Docker image sets `ENV OLLAMA_HOST=0.0.0.0:11434`, so inside a container Ollama already listens on every interface, and a bare `-p 11434:11434` republishes it to every host interface without your ever setting the variable. In Docker the control is the published address, not `OLLAMA_HOST` (the container must listen broadly for a proxy to reach it): publish to loopback only with `-p 127.0.0.1:11434:11434` and reach it through the proxy below, or leave the port unpublished and put the proxy on the same Docker network.
 
 Rules:
 
@@ -84,4 +84,5 @@ curl -q -su admin https://ollama.example.com/api/tags     # model list with cred
 
 - Ollama FAQ (bind address, `OLLAMA_HOST`, proxy examples): https://docs.ollama.com/faq
 - Ollama repository: https://github.com/ollama/ollama
+- Ollama Docker image (`ENV OLLAMA_HOST=0.0.0.0:11434` in the official Dockerfile; checked 2026-09-14): https://github.com/ollama/ollama/blob/main/Dockerfile
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
