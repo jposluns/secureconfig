@@ -105,6 +105,8 @@ curl -q -sI https://chat.example.com/                      # via the proxy: TLS,
 #   user's existing session)
 ```
 
+For a multi-user chat or RAG deployment (AnythingLLM workspaces, or a shared assistant over shared documents), verify isolation at the data layer, not only at login. As user B, ask a question whose answer lives only in user A's documents or past conversations, and confirm B gets nothing of A's. A retrieval step that searches every user's embeddings hands one user's documents to another even though each logged in separately; the fix is a per-user or per-workspace filter on retrieval, and the tenant row-level-security check in [vector-databases.md](vector-databases.md) is the store-side half of it.
+
 ## Common mistakes
 
 - Leaving Chainlit unauthenticated because "it's just for testing"; public by default means public the moment it is reachable.

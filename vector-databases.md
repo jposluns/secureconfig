@@ -159,6 +159,8 @@ curl -q -si https://chroma.example.com/ | head -1              # 401 from the pr
 
 For Milvus, a `MilvusClient(uri=...)` call with no `token` must fail once `authorizationEnabled` is on, and the same call with the application user's credentials must succeed.
 
+None of the checks above tests isolation between tenants. Where one embeddings table serves several users or tenants under the row-level security above, prove the boundary as well as the ports: connect as the role for tenant B, run the similarity search tenant A would run, and confirm only tenant B's rows come back. Run the same query as a role that bypasses that policy (a superuser, or the table owner) and confirm it returns both tenants' rows, so the difference is the policy filtering and not an empty table. A query that returns another tenant's vectors is a live cross-user leak, whatever the network posture.
+
 ## Sources (checked September 2026)
 
 - Qdrant security (API key, read-only key, `api-key` header, TLS keys, ports, default insecurity): https://qdrant.tech/documentation/security/
