@@ -41,6 +41,15 @@ curl -fsS --max-time 30 -o "$work/MANIFEST.sha256" \
 count=0
 while read -r _digest name; do
   [ -n "$name" ] || continue
+  # A manifest entry names a file to write under "$work"; reject anything that is not a bare
+  # guide file name, so "../x" or an absolute path cannot escape the temporary directory even
+  # if its recorded digest matches. Any bad entry refuses the whole update, leaving the bundle
+  # untouched.
+  case "$name" in
+    *[!A-Za-z0-9._-]* | *..* | .*)
+      echo "the manifest lists an unexpected file name ($name); refusing to update" >&2
+      exit 1 ;;
+  esac
   curl -fsS --max-time 60 -o "$work/$name" "$RAW/$name"
   count=$((count + 1))
 done < "$work/MANIFEST.sha256"
