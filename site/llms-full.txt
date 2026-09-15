@@ -1098,8 +1098,10 @@ clients actually use rather than a wildcard, keep `8201` reachable only by the o
 put a default-deny firewall around both. `api_addr` and `cluster_addr` only advertise where peers and
 redirects should point; they do not restrict what the listener binds, so set the `address` explicitly.
 Expose the API to anything wider than a trusted network only behind the corpus's fronting controls
-([fronting-auth.md](fronting-auth.md), [nginx.md](nginx.md), [caddy.md](caddy.md)), and add MFA on the
-UI ([mfa.md](mfa.md)); the cluster port must keep Vault's own end-to-end TLS regardless of any proxy.
+([fronting-auth.md](fronting-auth.md), [nginx.md](nginx.md), [caddy.md](caddy.md)), and enforce
+Vault's Login MFA on the
+human auth methods, not only at a UI proxy, since the token method cannot use it ([mfa.md](mfa.md));
+the cluster port must keep Vault's own end-to-end TLS regardless of any proxy.
 Other listeners exist only if you configure them (a KMIP listener on Enterprise, a Vault Agent or Proxy
 listener), and an external storage backend is an outbound connection to a separate service with its own
 listeners, so add each to your own network-surface inventory.
@@ -1178,8 +1180,10 @@ through an auth method over long-lived tokens, and give tokens bounded TTLs so a
 Do not try to "block all `sys/`": some system paths answer without authentication by design, both the
 `sys/seal-status` and `sys/health` monitors need and the `sys/init` and `sys/leader` bootstrap paths,
 and policy cannot close a bootstrap path, so keep an uninitialized or unsealed Vault off untrusted
-networks (whoever reaches `sys/init` first can initialize it and take the root token). The rest are
-policy-gated, so the control there is correct policies, not blanket denial.
+networks (whoever reaches `sys/init` first can initialize it and take the root token). Other
+authenticated system
+operations are policy-gated, while recovery paths such as `sys/unseal` carry their own authorization, so
+the control is correct policies plus network isolation, not blanket denial.
 
 ## 8. Protect storage, memory, and backups
 
@@ -1198,13 +1202,13 @@ compensating control), and disable core dumps for the service (`LimitCORE=0` in 
 
 Every probe below is reasoned, not demonstrated: the authoring environment has no Vault instance to run
 them against, so the outcomes are derived from the cited vendor pages rather than observed; backlog row
-2.30 tracks demonstrating them. A transport failure or a TLS error is inconclusive, never the fixed
-state.
+2.30 tracks demonstrating them; the `-w` fields need curl 7.75.0 or newer. For the on-host probes a
+transport failure or a TLS error is inconclusive, never the fixed state.
 
 ```bash
 sudo ss -tlnp                          # read the whole table: 8200 on the intended private address and
                                        # 8201 only between nodes, nothing unexpected beside them
-vault status -format=json              # initialized true, sealed false; exit code 2 is sealed OR a standby
+vault status -format=json              # initialized true, sealed false; exit code 2 means sealed (a standby is 0)
 curl -q -g -s -o /dev/null -w 'http=%{http_code}\n' --cacert /etc/vault.d/tls/ca.pem \
   https://vault-1.internal:8200/v1/sys/health   # 200 active, 429 standby, 501 uninitialized, 503 sealed
 vault audit list -detailed             # a non-empty list; an empty one means requests are served unlogged
@@ -1234,10 +1238,11 @@ probe cannot run unsubstituted and time out as if the port were closed:
 )
 ```
 
-The fixed state is that no TCP connection forms: `time_connect` stays `0.000000` and `err` names a
-connection-level failure (a refusal, no route, or a filtered-port timeout). Any HTTP answer, on either
-port, is the exposure, since `sys/seal-status` replies unauthenticated when reached; a name-resolution
-or local-socket error is inconclusive.
+For this probe the discriminator is whether the TCP connection forms, not the HTTP reply: the fixed
+state is `time_connect` at `0.000000` with `err` naming a refusal, no route, or a filtered-port timeout,
+and any non-zero `time_connect`, even when the TLS handshake then fails against an internal CA, means
+the port is reachable and is the finding. Run the same check against `8201` and every externally
+reachable address. A name-resolution or local-socket error is inconclusive.
 
 ## Sources (checked September 2026)
 
