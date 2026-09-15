@@ -32,6 +32,15 @@ for f in "${files[@]}"; do
   cp "$f" "$dest/$f"
 done
 
+# Keep the plugin manifest's version in lockstep with the repository VERSION (1.0.<pull request
+# number>), so an adopter's updater can tell a refreshed bundle from an earlier one and never has to
+# read stale configuration behind a version that says it is current. The whole-corpus staleness gate
+# re-runs this build and diffs its output, so a plugin.json whose version has drifted from VERSION is
+# caught as a stale bundle; there is no separate version gate to keep in step.
+version=$(cat VERSION)
+tmp=$(mktemp)
+sed "s/\(\"version\": \)\"[^\"]*\"/\1\"$version\"/" plugin/plugin.json > "$tmp" && mv "$tmp" plugin/plugin.json
+
 # A digest per bundled file, so an adopter's updater can verify what it fetched before replacing
 # anything, and so a partial or corrupted download is a refusal rather than a silent downgrade.
 ( cd "$dest" && sha256sum "${files[@]}" ) > "$dest/MANIFEST.sha256"
