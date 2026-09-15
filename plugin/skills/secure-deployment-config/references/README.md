@@ -149,6 +149,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [agent-builders.md](agent-builders.md) | Dify, Flowise, Langflow, LibreChat: admin setup, API keys, fronting TLS |
 | [ai-infra-services.md](ai-infra-services.md) | SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0, Onyx: what the run form publishes, and the store published beside the front door |
 | [workflow-orchestrators.md](workflow-orchestrators.md) | Prefect, Dagster, Airflow, Temporal, Flower: keep off the public internet and require auth |
+| [headless-browser-services.md](headless-browser-services.md) | Chrome DevTools Protocol, Selenium Grid, browserless, Playwright: an exposed browser port is remote code execution |
 
 ### App UIs and dev tools
 
