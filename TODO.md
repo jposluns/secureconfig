@@ -49,7 +49,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 1.24 | `n8n.md`: Add authentication for private Webhook nodes using their Basic, Header, or JWT options, and verify known production webhook URLs reject unauthenticated requests; the existing workflows-API check does not establish webhook protection (vendor) (M, S) | `[enhance]` |
 | 1.26 | `gradio.md`: Add deployment file-access controls: narrowly scope `allowed_paths` and static directories, exclude secrets with `blocked_paths`, and explain that cached files are shared across app users; include a harmless file-access isolation check (vendor) (M, S) | `[enhance]` |
 | 1.28 | `ollama.md`: Verify step filters ss output by expected port (`grep 11434`), violating the rule against filtering (M, XS) | `[enhance]` |
 | 1.29 | `memcached.md`: Verify step filters ss output by expected port (`grep 11211`), violating the rule against filtering (M, XS) | `[enhance]` |
