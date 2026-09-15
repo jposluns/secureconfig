@@ -268,6 +268,12 @@
     <button class="copy-btn" type="button" data-copy="ai-stack-text" hidden>Copy</button>
   </div>
 
+  <h3>Audit for exposed business rules</h3>
+  <div class="copywrap">
+    <pre id="biz-rules-text">Audit this project for confidential business rules exposed to the public, using the secret-handling guidance at https://github.com/jposluns/secureconfig (see https://secureconfig.ai), specifically secrets.md and web-exposure.md. A confidential pricing formula, allocation rule, or customer-specific process is protected because it is confidential, not because it is code, so treat it like a secret. Search these three exposure paths: the public repository and its git history, anything that ships to the browser (a NEXT_PUBLIC_ or VITE_ value, logic in client-shipped code, or a source map), and any prompt sent to a public LLM or an API outside your data agreement. Report each exposure as a table with its location and what it reveals, giving the exposure type rather than copying the confidential rule itself into the report. Propose the fix per secrets.md and web-exposure.md: move the rule into server-side code the client only calls, and keep it out of the client bundle and out of public LLM prompts. For anything already published, note that removal is hygiene, not containment, since it does not unpublish what was already public. Wait for my approval before changing anything, then apply the fixes and run the README verification checklist. Keep the review within deployment exposure.</pre>
+    <button class="copy-btn" type="button" data-copy="biz-rules-text" hidden>Copy</button>
+  </div>
+
   <h3>Add single sign-on and MFA</h3>
   <div class="copywrap">
     <pre id="sso-text">Add single sign-on to this project using the guides at https://github.com/jposluns/secureconfig (see https://secureconfig.ai). Read identity-providers.md to choose between Google, Microsoft Entra, GitHub, or a hosted customer-identity provider that fits this project's users and budget, then wire it per oidc-integration.md: authorization code with PKCE, exact redirect URIs, token validation, and an allowlist check of the tenant, domain, or group so that a successful login is never treated as authorization. Enforce MFA at the provider, prefer passkeys for administrators, and run the README verification checklist before reporting completion.</pre>
