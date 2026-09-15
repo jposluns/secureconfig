@@ -41,13 +41,16 @@ and put MFA at that identity provider ([mfa.md](mfa.md), [identity-providers.md]
 
 The official `docker-compose.yaml` takes the right first step and the wrong second one: it selects the FAB
 auth manager, then seeds it with a known admin, `_AIRFLOW_WWW_USER_USERNAME` and `_AIRFLOW_WWW_USER_PASSWORD`
-both defaulting to `airflow`, and signs API tokens with a fixed `AIRFLOW__API_AUTH__JWT_SECRET` of
-`airflow_jwt_secret`. Its header calls it local-development only, but it is the most-copied way to stand
-Airflow up, so a reader who runs it unchanged has a public `airflow`/`airflow` login and a token-signing
-secret published in the vendor's file, which lets anyone mint an API token the server accepts. Set your own
-values for all three before the container is reachable (generate the JWT secret with `openssl rand -hex 32`),
-keep them out of the repository ([secrets.md](secrets.md)), and publish port 8080, which the compose binds on
-every interface, only behind your fronting layer.
+both defaulting to `airflow`, and gives the API a fallback signing secret, `AIRFLOW__API_AUTH__JWT_SECRET`
+defaulting to `airflow_jwt_secret`, used whenever that variable is unset. Its header marks it
+local-development only, but it is the quickstart the docs give for a local run, so a reader who brings it up
+unchanged gets an `airflow`/`airflow` admin login exposed wherever port 8080 is reachable, and a
+token-signing secret published in the vendor's file, which lets anyone forge an API token and impersonate an
+existing user. Set the admin username and password before the first start creates the account (changing them
+afterward does not reset the account already created, so update or delete that account instead), set your own
+`AIRFLOW__API_AUTH__JWT_SECRET` (`openssl rand -hex 32`) and give it to every component that signs or
+validates tokens, keep both out of the repository ([secrets.md](secrets.md)), and publish 8080 to loopback
+for the proxy (`127.0.0.1:8080:8080`) rather than to every interface, behind your fronting layer.
 
 ## Temporal (self-hosted)
 
