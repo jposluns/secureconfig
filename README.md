@@ -35,7 +35,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 - AI or agent deployment: the matching model-server, MCP, agent-builder, vector-database, UI, or observability guide, plus [gpu-clouds.md](gpu-clouds.md) where applicable and [egress-metadata.md](egress-metadata.md) for outbound and metadata.
 - Containers and clusters: [docker.md](docker.md), [container-hardening.md](container-hardening.md), [kubernetes.md](kubernetes.md), then the host, cloud, PaaS, or GPU guide.
 - Databases, caches, queues, and model servers: keep them off public interfaces entirely where possible; the per-tool guides cover TLS and authentication for the cases where network exposure is unavoidable.
-- Databases, storage, and messaging: the service guide, plus [object-storage.md](object-storage.md), [firebase-supabase.md](firebase-supabase.md), or [pocketbase.md](pocketbase.md) where access depends on storage or data rules.
+- Databases, storage, and messaging: the service guide, plus [object-storage.md](object-storage.md), [firebase-supabase.md](firebase-supabase.md), [pocketbase.md](pocketbase.md), or [headless-cms-instant-api.md](headless-cms-instant-api.md) where access depends on storage or data rules.
 - A pooler, proxy, or bouncer in front of a database: [connection-poolers.md](connection-poolers.md). Adding one moves the client-facing TLS and host rules off the database server and onto the pooler, which has its own defaults.
 - Web application exposure: [web-exposure.md](web-exposure.md), [headers.md](headers.md), [cors.md](cors.md), [realtime-webhooks.md](realtime-webhooks.md).
 - First deployment, preview, or teardown: [deployment-lifecycle.md](deployment-lifecycle.md), then [common-mistakes.md](common-mistakes.md).
@@ -128,6 +128,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [object-storage.md](object-storage.md) | S3, R2, GCS, Azure Blob, Supabase Storage: private by default, scoped credentials, signed URLs |
 | [firebase-supabase.md](firebase-supabase.md) | Firebase rules and Supabase RLS: the rules are the security |
 | [pocketbase.md](pocketbase.md) | PocketBase and Appwrite: the rules are the security; lock the admin console |
+| [headless-cms-instant-api.md](headless-cms-instant-api.md) | Strapi, Directus, Hasura, and PostgREST: one control gates the whole datastore |
 | [rabbitmq.md](rabbitmq.md) | RabbitMQ: users and permissions, TLS listener, guest account |
 | [mosquitto.md](mosquitto.md) | Mosquitto (MQTT): per-device credentials, TLS listener, mutual TLS |
 | [kafka.md](kafka.md) | Apache Kafka: SASL_SSL listeners, SCRAM credentials, ACLs |
