@@ -163,7 +163,7 @@ readme_cats = re.findall(r"^### (.+?)[ \t]*$", section, re.M)
 html = open("site/index.html", encoding="utf-8").read()
 html = re.sub(r"<!--.*?-->", "", html, flags=re.S)
 excluded = {"On this page", "Reference"}
-site_cats = [c for c in re.findall(r'<p class="sidenav-h">([^<]*)</p>', html) if c not in excluded]
+site_cats = [c for c in re.findall(r'<h2 class="sidenav-h">([^<]*)</h2>', html) if c not in excluded]
 
 llms = open("site/llms.txt", encoding="utf-8").read()
 llms = re.sub(r"<!--.*?-->", "", llms, flags=re.S)
