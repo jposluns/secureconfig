@@ -9496,9 +9496,14 @@ Each probe below is reasoned, not demonstrated: the authoring environment has no
 none was stood up in its exposed and fixed states. Each names its expected exposed and fixed result so
 it discriminates against a live instance; backlog row 2.27 tracks demonstrating them, including forging
 a token with the demo `JWT_SECRET`, which is the check that proves the secret itself was rotated rather
-than just the shipped keys swapped. Run each from an external vantage and read the `err` field: a
-transport failure is inconclusive unless it is a connection refusal from that vantage, and the write-out
-fields need curl 7.75.0 or newer.
+than just the shipped keys swapped. There are two layers to check. First, from an external host none of these ports should answer at all: a
+connection refused or a timeout during the connect is the hardened state, and any HTTP or database
+response means the port is published and is itself the finding, whatever the credentials do next. The
+credential checks below apply to a port you can still reach, because you have not isolated it yet or are
+testing from an allowed internal vantage, and show whether the demo credentials were replaced. If you
+front the gateway with a reverse proxy for HTTPS, aim the HTTP checks at that proxy rather than the raw
+`8000`. Read the `err` field, since a transport failure is only conclusive when it is a connection
+refusal from that vantage, and the write-out fields need curl 7.75.0 or newer.
 
 ```bash
 # On the host: these published listeners should be bound to loopback or an internal interface.
@@ -9524,13 +9529,13 @@ stack that enforces verification answers `401`.
 )
 ```
 
-Two more checks confirm the other surfaces, each the finding when it succeeds and refused only once the
-port is private. The Studio dashboard is exposed if the gateway answers a request carrying the default
-basic-auth `supabase:this_password_is_insecure_and_should_be_updated` (a `-u` argument against
-`http://REPLACE_WITH_YOUR_HOST:8000/`) with `http=200` rather than `401`. The database is exposed if
-`psql` connects to the Supavisor pooler on `5432` or `6543` with the demo `POSTGRES_PASSWORD`, as user
-`postgres.POOLER_TENANT_ID` and database `postgres`; once the password is regenerated that connection
-fails authentication rather than refusing at the TCP level.
+For a port you can still reach, two more checks show whether the shipped credentials were replaced. The
+Studio dashboard still accepts the default basic-auth if the gateway answers a request carrying
+`supabase:this_password_is_insecure_and_should_be_updated` (a `-u` argument against the gateway on
+`8000`, or your proxy) with `http=200` rather than `401`. The database still accepts the demo password
+if `psql` connects to the Supavisor pooler on `5432` or `6543` with the demo `POSTGRES_PASSWORD`, as
+user `postgres.your-tenant-id` (the demo `POOLER_TENANT_ID`) and database `postgres`; once the password
+is regenerated that connection fails authentication.
 
 ## Sources (checked September 2026)
 
