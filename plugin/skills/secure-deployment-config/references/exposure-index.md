@@ -37,7 +37,7 @@ one of them is the application's.
 | 2375 | Docker API, plaintext and unauthenticated | [devops-uis.md](devops-uis.md) |
 | 2376 | Docker API over TLS. The port is a convention, not proof of client-certificate authentication: `--tls` and `--tlsverify` are different settings | [devops-uis.md](devops-uis.md), [docker.md](docker.md) |
 | 2379, 2380 | etcd client and peer ports on a Kubernetes control-plane node. Every Secret in the cluster is here, unencrypted unless encryption at rest is configured | [kubernetes.md](kubernetes.md) |
-| 3000 | The most crowded port here: 23 guides in this corpus mention it, and the most likely owners are Metabase, Dagster, Gitea, Dokploy, Next.js, SvelteKit's Node adapter (which defaults to `0.0.0.0`), Rails, Flowise, OpenHands, Langfuse, TGI, and the backend behind most proxy examples. Open WebUI's 3000 is a **published host port** mapping to container 8080; and PostgREST, which binds all IPv4 interfaces here by default | [nextjs.md](nextjs.md), [frontend-frameworks.md](frontend-frameworks.md), [ruby.md](ruby.md), [bi-dashboards.md](bi-dashboards.md), [workflow-orchestrators.md](workflow-orchestrators.md), [devops-uis.md](devops-uis.md), [open-webui.md](open-webui.md), [llm-observability.md](llm-observability.md), [model-servers.md](model-servers.md), [agent-builders.md](agent-builders.md), [chat-uis.md](chat-uis.md), [mcp-servers.md](mcp-servers.md), [fronting-auth.md](fronting-auth.md), [headless-cms-instant-api.md](headless-cms-instant-api.md) |
+| 3000 | The most crowded port here: 23 guides in this corpus mention it, and the most likely owners are Metabase, Dagster, Gitea, Dokploy, Next.js, SvelteKit's Node adapter (which defaults to `0.0.0.0`), Rails, Flowise, OpenHands, Langfuse, TGI, and the backend behind most proxy examples. Open WebUI's 3000 is a **published host port** mapping to container 8080; and PostgREST, which binds all IPv4 interfaces here by default; and browserless, which is unauthenticated when its TOKEN is unset | [nextjs.md](nextjs.md), [frontend-frameworks.md](frontend-frameworks.md), [ruby.md](ruby.md), [bi-dashboards.md](bi-dashboards.md), [workflow-orchestrators.md](workflow-orchestrators.md), [devops-uis.md](devops-uis.md), [open-webui.md](open-webui.md), [llm-observability.md](llm-observability.md), [model-servers.md](model-servers.md), [agent-builders.md](agent-builders.md), [chat-uis.md](chat-uis.md), [mcp-servers.md](mcp-servers.md), [fronting-auth.md](fronting-auth.md), [headless-cms-instant-api.md](headless-cms-instant-api.md), [headless-browser-services.md](headless-browser-services.md) |
 | 3001 | AnythingLLM, or Uptime Kuma | [chat-uis.md](chat-uis.md), [devops-uis.md](devops-uis.md) |
 | 3080 | LibreChat | [agent-builders.md](agent-builders.md) |
 | 3210 | LobeChat | [chat-uis.md](chat-uis.md) |
@@ -48,12 +48,15 @@ one of them is the application's.
 | 4222 | NATS client connections | [nats.md](nats.md) |
 | 4317, 4318 | OTLP gRPC and OTLP HTTP receivers | [llm-observability.md](llm-observability.md) |
 | 4369 | epmd, the Erlang Port Mapper Daemon, which maps Erlang node names to distribution ports (RabbitMQ and other Erlang or Elixir clustered services) | [rabbitmq.md](rabbitmq.md) |
+| 4442, 4443 | Selenium Grid event bus in distributed mode, which Nodes use to register and which the Router's basic auth does not cover | [headless-browser-services.md](headless-browser-services.md) |
+| 4444 | Selenium Grid Router, Hub, or Standalone, plus the Grid web UI on the same port, with no authentication by default | [headless-browser-services.md](headless-browser-services.md) |
 | 5000 | Redash, MLflow tracking server, or a .NET Kestrel default | [bi-dashboards.md](bi-dashboards.md), [mlflow.md](mlflow.md), [dotnet.md](dotnet.md) |
 | 5003 | Dify's plugin daemon debugging port, published by the supplied Compose configuration unless you remove or restrict that mapping | [agent-builders.md](agent-builders.md) |
 | 5432 | PostgreSQL, and pgvector on the same port | [postgresql.md](postgresql.md), [vector-databases.md](vector-databases.md), [cloud-firewalls.md](cloud-firewalls.md) |
-| 5555 | Flower, the Celery monitor | [workflow-orchestrators.md](workflow-orchestrators.md) |
+| 5555 | Flower, the Celery monitor, or a Selenium Grid Node | [workflow-orchestrators.md](workflow-orchestrators.md), [headless-browser-services.md](headless-browser-services.md) |
 | 5671, 5672 | AMQP over TLS, and AMQP plaintext | [rabbitmq.md](rabbitmq.md) |
 | 5678 | n8n | [n8n.md](n8n.md) |
+| 5900, 7900 | VNC and noVNC in the Selenium Docker browser images, started by default with the vendor example password `secret` | [headless-browser-services.md](headless-browser-services.md) |
 | 6001, 6002 | Coolify real-time updates and terminal | [devops-uis.md](devops-uis.md) |
 | 6006 | Arize Phoenix | [llm-observability.md](llm-observability.md) |
 | 6333, 6334, 6335 | Qdrant REST, gRPC, and internal cluster gRPC | [vector-databases.md](vector-databases.md) |
@@ -80,6 +83,7 @@ one of them is the application's.
 | 8501 | Streamlit | [streamlit.md](streamlit.md) |
 | 8883 | MQTT over TLS | [mosquitto.md](mosquitto.md) |
 | 8888 | Jupyter, including RunPod deployments. The Vast.ai Jupyter launch mode uses 8080 instead | [jupyter.md](jupyter.md), [gpu-clouds.md](gpu-clouds.md) |
+| 9222 | Chrome or Chromium DevTools Protocol remote debugging, an endpoint with no authentication whose reachability is full browser takeover | [headless-browser-services.md](headless-browser-services.md) |
 | 9000 | ClickHouse native TCP (plaintext), MinIO's S3 API, PHP-FPM, TGI's Prometheus listener, or Portainer's legacy HTTP port; Keycloak's management port serving `/health` and `/metrics`, or authentik's HTTP port | [clickhouse.md](clickhouse.md), [minio.md](minio.md), [php.md](php.md), [model-servers.md](model-servers.md), [devops-uis.md](devops-uis.md), [self-hosted-idp.md](self-hosted-idp.md) |
 | 9001 | MinIO's web console (the `--console-address` / `MINIO_CONSOLE_ADDRESS` port, conventionally 9001) | [minio.md](minio.md) |
 | 9004, 9005, 9009, 9010 | ClickHouse MySQL compatibility, PostgreSQL compatibility, and interserver replica traffic over HTTP and HTTPS | [clickhouse.md](clickhouse.md) |
