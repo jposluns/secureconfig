@@ -110,8 +110,11 @@ curl -q -s -o /dev/null -w '%{http_code}\n' https://panel.example.com/
 # clears a pre-set declare -i or -l attribute, and any stale
 # value; copy this whole block, not just the command below
 (                                                   # a subshell, so your own script arguments are untouched
-  set -- REPLACE_WITH_YOUR_PUBLIC_IP
-  case "${1-}" in
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  case "$1" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
     *) docker -H "tcp://$1:2375" info ;;       # must fail: connection refused or filtered
     # that is, refused or filtered BY THE REMOTE HOST. A local error or a docker client failure that
