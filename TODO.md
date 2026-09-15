@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.68**, **2.25**, **3.14**, **4.10**.
+Next ids: **1.68**, **2.25**, **3.15**, **4.10**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -88,7 +88,7 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 3.11 | Gate the two guard conventions that nothing enforces. Round-2 QA mutated both and the whole suite passed: a `curl` in a fenced block with no `-q`, and a guard that prints its warning then runs the probe after the `case`. Both are line-matchable, unlike the angle-bracket class rule 6 documents as un-gateable, and both are silent false-pass shapes. Wants a tripwire in the style of `check_verify_safety.py`, with its own recorded cases (H, S) | `[gap]` |
+| 3.14 | Convention 2, the general guard grammar: gate a probe that escapes its guard for the shapes the sentinel-scoped C2 rule cannot reach without false positives (if/elif and `-z` sentinel guards, flag-variable guards, renamed sentinels). The corpus idiom is guard-then-early-exit, the probe correctly after `esac`, which is lexically indistinguishable from a warn-only guard, so any lexical rule cries wolf; `check_guard_conventions.py --strict-guards` is the manual-audit tool. Deferred from 3.11, whose gate registered `--no-c2` because the corpus uses the exit-then-probe variant the sentinel rule over-flags (M, S) | `[gap]` |
 | 3.12 | `tools/check_csp_hashes.py` pins only `site/index.html` (hard-coded `PAGE`); `site/404.html` (added in #102) is not covered, so its inline-style hash in `site/_headers` is not gate-verified. The gate models exactly one `<style>` and one `<script>` per page, but 404.html has a style and no script, so covering it needs the gate generalized to iterate pages and pin whatever blocks each page has. Found adding 404.html (M, S) | `[enhance]` |
 
 ## Decisions
