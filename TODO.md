@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.70**, **2.25**, **3.15**, **4.10**.
+Next ids: **1.72**, **2.25**, **3.15**, **4.10**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -65,6 +65,7 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.46 | `vector-databases.md`: demonstrate the Qdrant 6335 reachability probes and the client-API key check against a live distributed cluster in both the exposed and fixed states. They ship marked reasoned (#63) because the authoring environment has no distributed Qdrant; stand up two peers with 6335 published, then firewalled to peers, and confirm the non-peer refusal, the peer connection, and the without-key 401 / with-key 200 (M, M) | `[gap]` |
 | 1.47 | `traefik.md`: demonstrate the exposedByDefault Verify probes against a live Docker and Traefik v3 deployment in the exposed and fixed states. They ship marked reasoned (#64) because the authoring environment has no container runtime; stand up Traefik with the section-1 config and an unlabelled `traefik/whoami` canary on its network, then confirm the canary returns 200 with its own `Hostname:` body at `exposedByDefault: true` and 404 at false, confirm the app baseline returns 401 unauthenticated (router plus auth present), and confirm curl 7.75.0 or newer on the target for `%{exitcode}`/`%{errormsg}` (M, M) | `[gap]` |
 | 1.50 | `model-servers.md`: demonstrate the text-generation-webui `/v1/models` probe against a live instance in both the exposed and protected states. It ships marked reasoned (#69) because the authoring environment has no container runtime; stand up text-generation-webui with `--api`, confirm `/v1/models` returns `200` with no key and `401` once `--api-key` is set, and confirm the `validate_host_header` `400` when a non-localhost `Host` is forwarded without `--listen` (M, M) | `[gap]` |
+| 1.71 | Demonstrate the cross-user isolation Verify steps added in #109 against live deployments: a multi-tenant pgvector table (`vector-databases.md`, confirm tenant B's role sees only B's rows and an RLS-bypassing role sees tenant A's rows) and a multi-user RAG or chat (`chat-uis.md`, confirm user B does not retrieve user A's documents), in both the exposed and fixed states. They ship marked reasoned because the authoring environment has neither (M, M) | `[gap]` |
 ## Priority 3: Add missing content
 
 Gaps from the same audit, one row per missing guide. A gap raised by more than one family is
