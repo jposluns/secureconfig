@@ -25,7 +25,7 @@ bad() { printf '  FAIL  %s\n' "$1"; fail=1; }
 # of the README so the front page stays readable, and is therefore NOT carried in llms-full.txt.
 not_a_guide() {
   case "$1" in
-    CONTRIBUTING.md|CLAUDE.md|AGENTS.md|CHANGELOG.md|README.sources.md|TODO.md|DONE.md|DECISIONS.md|PENDING-DECISIONS.md|controls-reference.md) return 0 ;;
+    CONTRIBUTING.md|SECURITY.md|CLAUDE.md|AGENTS.md|CHANGELOG.md|README.sources.md|TODO.md|DONE.md|DECISIONS.md|PENDING-DECISIONS.md|controls-reference.md) return 0 ;;
     *) return 1 ;;
   esac
 }
