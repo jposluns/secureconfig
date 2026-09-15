@@ -16,6 +16,8 @@ DEFAULT_USER_ROLE=pending    # the default; new accounts wait for admin approval
 
 With signup left on, keep `DEFAULT_USER_ROLE=pending` so a stranger who registers gets no access until approved. An admin account can also be created at startup by setting `WEBUI_ADMIN_EMAIL` together with `WEBUI_ADMIN_PASSWORD` (supply the password via the environment, not a compose file in git; see [secrets.md](secrets.md)).
 
+The first account created becomes the administrator, whatever `DEFAULT_USER_ROLE` is set to; that role governs only the accounts that follow. Claim the admin account yourself while the instance is still bound to loopback, before anyone else can reach it, or preset it with `WEBUI_ADMIN_EMAIL` and `WEBUI_ADMIN_PASSWORD`. On an exposed instance with signup on, whoever registers first is the administrator.
+
 For SSO, the reference documents OAuth/OIDC settings plus `ENABLE_PASSWORD_AUTH=false` to turn off password login once SSO works; enforcing MFA then happens at the identity provider ([mfa.md](mfa.md)).
 
 ## 2. Bind privately and add TLS in front
@@ -39,4 +41,5 @@ curl -q -sI https://chat.example.com/        # serves over TLS
 ## Sources (checked September 2026)
 
 - Open WebUI environment configuration reference: https://docs.openwebui.com/reference/env-configuration
+- Open WebUI FAQ (the first account created becomes the administrator): https://docs.openwebui.com/faq
 - Open WebUI repository: https://github.com/open-webui/open-webui
