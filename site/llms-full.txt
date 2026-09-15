@@ -7404,6 +7404,8 @@ common:
 
 Clients then connect with `secure=True` and the server certificate path. TLS and authentication are independent in Milvus; enable both.
 
+Milvus's standalone `docker-compose.yml` publishes more than Milvus itself: it maps its bundled MinIO object store to the host on `9000` (S3 API) and `9001` (console) on every interface, beside the Milvus ports above, while etcd stays on the internal network. Give those two ports the same treatment as Milvus's own: loopback-map or firewall them off the public mapping, and change MinIO's default login, since authenticating Milvus does nothing for a MinIO published next to it ([minio.md](minio.md)).
+
 ## 5. Chroma: no native authentication since 1.0
 
 Chroma's migration notes for v1.0.0 state that "Chroma no longer provides built-in authentication implementations". A self-hosted `chroma run --path /db_path` server (port 8000) therefore accepts every request, and the older `CHROMA_SERVER_AUTHN_PROVIDER` / `CHROMA_SERVER_AUTHN_CREDENTIALS` variables from the 2024 auth overhaul no longer do anything; do not paste them from old tutorials and assume protection. Keep Chroma on loopback and expose it only through an authenticated TLS proxy (bearer-token or basic-auth block per [nginx.md](nginx.md) / [caddy.md](caddy.md)), a Cloudflare Tunnel with Access ([cloudflare.md](cloudflare.md)), or a tailnet ([tailscale.md](tailscale.md)).
