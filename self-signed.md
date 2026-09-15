@@ -12,6 +12,7 @@ RSA, single command (OpenSSL 1.1.1 or later for `-addext`):
 openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -nodes \
   -keyout server.key -out server.crt \
   -subj "/CN=app.internal" \
+  -addext "basicConstraints=critical,CA:FALSE" \
   -addext "subjectAltName=DNS:app.internal,DNS:localhost,IP:127.0.0.1,IP:203.0.113.10"
 ```
 
@@ -21,12 +22,14 @@ ECDSA (smaller and faster; generate the key first, then the certificate):
 openssl ecparam -name prime256v1 -genkey -noout -out server.key
 openssl req -x509 -key server.key -sha256 -days 365 -out server.crt \
   -subj "/CN=app.internal" \
+  -addext "basicConstraints=critical,CA:FALSE" \
   -addext "subjectAltName=DNS:app.internal,IP:203.0.113.10"
 ```
 
 Rules that make the certificate actually work:
 
 - The `subjectAltName` list must contain every DNS name and IP address clients will use to reach the service. Modern clients validate SAN entries and ignore the CN.
+- `basicConstraints=critical,CA:FALSE` marks the certificate a leaf, not a CA. It matters because section 4 installs the certificate into client trust stores: a leaf that OpenSSL marked `CA:TRUE` (some default configurations do) would then be a trusted signer for any name, using the unencrypted key that `-nodes` leaves on the server.
 - `-nodes` leaves the key unencrypted so services can start unattended; protect it with file permissions instead.
 - Track the `-days` expiry. Nothing renews a self-signed certificate for you; put the date in your calendar or monitoring.
 
