@@ -63,11 +63,21 @@ Ray warns that this costs performance (large for small workloads, smaller for la
 ```bash
 ss -tlnp | grep 8265                                    # 127.0.0.1:8265 (or the tailnet IP), never 0.0.0.0 or *
 ss -tlnp | grep -E ':6379|:10001'                       # private interface only
-curl -q -sI -o /dev/null --connect-timeout 5 --max-time 10 \
-  -w 'http=%{http_code} time_connect=%{time_connect}\n' \
-  http://REPLACE_WITH_THE_SERVER_PUBLIC_IP:8265/
-# from another network. The pass is http=000 WITH time_connect at 0.000000: no connection completed.
-# A non-zero time_connect means the TCP handshake succeeded and the dashboard port is reachable
+# from another network, checking the dashboard port is unreachable from outside. The pass is that no TCP
+# connection formed: time_connect stays 0.000000 and err names a connection-level failure (refused, no
+# route, or a filtered-port connect timeout). A non-zero time_connect, or any http code, means the
+# handshake completed and the port answered. A name-resolution or local socket error is inconclusive.
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_SERVER_PUBLIC_IP'   # replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute the server's public address on the set -- line above; not probing" ;;
+    *) curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
+         -w 'http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:8265/" ;;
+  esac
+)
 # Through the SSH tunnel of step 1, from a machine without the token, with RAY_AUTH_MODE=token on the cluster:
 ray job submit --address http://127.0.0.1:8265 -- python -c "print(1)"   # must fail: Unauthorized
 ```
@@ -87,4 +97,4 @@ ray job submit --address http://127.0.0.1:8265 -- python -c "print(1)"   # must 
 - Configuring Ray (TLS environment variables, ports opened by nodes): https://docs.ray.io/en/latest/ray-core/configure.html
 - Configure Ray clusters to use token authentication (KubeRay `authOptions`, 401 without token): https://docs.ray.io/en/latest/cluster/kubernetes/user-guides/kuberay-auth.html
 - Docker, port publishing (loopback publishing): https://docs.docker.com/engine/network/port-publishing/
-- curl manual (`--connect-timeout` bounds the connection phase only; the `time_connect` write-out variable): https://curl.se/docs/manpage.html
+- curl manual (`--connect-timeout` bounds the connection phase only; the `time_connect`, `exitcode`, and `errormsg` write-out variables, the last two added in curl 7.75.0): https://curl.se/docs/manpage.html
