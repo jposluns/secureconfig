@@ -48,8 +48,11 @@ When a person leaves, revoke access at every layer they touched, not only their 
 ```bash
 # From a second network, not the host itself:
 (                                                      # a subshell, so your own script arguments are untouched
-  set -- REPLACE_WITH_YOUR_PUBLIC_IP
-  case "${1-}" in
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  case "$1" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
     *) nmap -Pn -p- "$1" ;;                        # only the intended ports answer
     # and the scan actually ran: nmap reporting a host down, a permission error, or no output at all is
@@ -57,8 +60,11 @@ When a person leaves, revoke access at every layer they touched, not only their 
   esac
 )
 (                                                      # a subshell, so your own script arguments are untouched
-  set -- REPLACE_WITH_YOUR_PUBLIC_IPV6
-  case "${1-}" in
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IPV6'   # replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  case "$1" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
     *) nmap -Pn -6 -p- "$1" ;;                      # same, over the public IPv6 address
                                                     # same reading: a scan that did not run is not a clean scan
