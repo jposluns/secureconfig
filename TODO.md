@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.72**, **2.25**, **3.15**, **4.12**.
+Next ids: **1.72**, **2.25**, **3.16**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -89,7 +89,7 @@ marked, and those are the ones worth taking first.
 | ID | Item | Tags |
 | --- | --- | --- |
 | 3.14 | Convention 2, the general guard grammar: gate a probe that escapes its guard for the shapes the sentinel-scoped C2 rule cannot reach without false positives (if/elif and `-z` sentinel guards, flag-variable guards, renamed sentinels). The corpus idiom is guard-then-early-exit, the probe correctly after `esac`, which is lexically indistinguishable from a warn-only guard, so any lexical rule cries wolf; `check_guard_conventions.py --strict-guards` is the manual-audit tool. Deferred from 3.11, whose gate registered `--no-c2` because the corpus uses the exit-then-probe variant the sentinel rule over-flags (M, S) | `[gap]` |
-| 3.12 | `tools/check_csp_hashes.py` pins only `site/index.html` (hard-coded `PAGE`); `site/404.html` (added in #102) is not covered, so its inline-style hash in `site/_headers` is not gate-verified. The gate models exactly one `<style>` and one `<script>` per page, but 404.html has a style and no script, so covering it needs the gate generalized to iterate pages and pin whatever blocks each page has. Found adding 404.html (M, S) | `[enhance]` |
+| 3.15 | `tools/check_csp_hashes.py`: police stale/orphan pins. The multi-page gate (#112) verifies every listed page's block is pinned but does not reject a hash left in a `script-src` or `style-src` after its block was deleted, so `site/_headers` can accumulate dead allowlist entries. This is not a fail-open (an orphan cannot make a real block go unhashed while green), so it was deferred from #112; add pin-set exactness over the directives the gate selects, deciding how to treat a legitimately shared pin and a pin a browser ignores. Test N17 in #112 documents the deferral and flips red when this lands. Deferred from 3.12 (L, S) | `[enhance]` |
 
 ## Decisions
 
