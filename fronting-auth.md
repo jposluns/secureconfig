@@ -78,6 +78,14 @@ location /internal/authelia/authz {
 
 # in the protected location block:
 auth_request /internal/authelia/authz;
+auth_request_set $user   $upstream_http_remote_user;
+auth_request_set $groups $upstream_http_remote_groups;
+auth_request_set $name   $upstream_http_remote_name;
+auth_request_set $email  $upstream_http_remote_email;
+proxy_set_header Remote-User   $user;
+proxy_set_header Remote-Groups $groups;
+proxy_set_header Remote-Name   $name;
+proxy_set_header Remote-Email  $email;
 auth_request_set $redirection_url $upstream_http_location;
 error_page 401 =302 $redirection_url;
 ```
@@ -85,7 +93,7 @@ error_page 401 =302 $redirection_url;
 nginx needs a way to resolve the `authelia` hostname at request time since `proxy_pass` here targets
 a variable rather than a static address, so the `resolver` line above (or a matching `upstream`
 block) is required; Authelia's nginx integration assumes a Docker DNS resolver is available for
-this, per Authelia's nginx integration guide.
+this, per Authelia's nginx integration guide. The `auth_request_set`/`proxy_set_header Remote-*` pairs set the app's identity headers from Authelia's response and, because nginx forwards client request headers to the upstream by default, overwrite any `Remote-User` a caller tried to send directly; without them, and without the network isolation from section 1, a client that reached the app could assert `Remote-User: admin` itself. The Traefik and Caddy examples below carry the same identity headers through `authResponseHeaders` and `copy_headers`.
 
 Traefik and Caddy call `/api/authz/forward-auth` instead:
 
