@@ -127,6 +127,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [minio.md](minio.md) | MinIO: root credentials, certs directory TLS, scoped access keys |
 | [object-storage.md](object-storage.md) | S3, R2, GCS, Azure Blob, Supabase Storage: private by default, scoped credentials, signed URLs |
 | [firebase-supabase.md](firebase-supabase.md) | Firebase rules and Supabase RLS: the rules are the security |
+| [supabase-self-hosted.md](supabase-self-hosted.md) | The self-hosted Docker stack: replace the demo keys and dashboard password, keep the published ports private |
 | [pocketbase.md](pocketbase.md) | PocketBase and Appwrite: the rules are the security; lock the admin console |
 | [headless-cms-instant-api.md](headless-cms-instant-api.md) | Strapi, Directus, Hasura, and PostgREST: one control gates the whole datastore |
 | [rabbitmq.md](rabbitmq.md) | RabbitMQ: users and permissions, TLS listener, guest account |
