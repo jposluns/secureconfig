@@ -5666,7 +5666,7 @@ RabbitMQ's default `guest`/`guest` account can only connect from localhost, whic
 ```bash
 sudo rabbitmqctl add_user 'app' 'REPLACE_WITH_LONG_RANDOM_PASSWORD'
 sudo rabbitmqctl set_permissions -p '/' 'app' '.*' '.*' '.*'   # configure, write, read; narrow per app
-sudo rabbitmqctl add_user 'ops' '...'
+sudo rabbitmqctl add_user 'ops' 'REPLACE_WITH_A_DIFFERENT_LONG_RANDOM_PASSWORD'
 sudo rabbitmqctl set_user_tags 'ops' administrator
 sudo rabbitmqctl delete_user 'guest'
 ```
