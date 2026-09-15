@@ -17,6 +17,24 @@ separately from the UI session: a project's public key (username) and secret key
 Basic Auth, issued from Project Settings, and unrelated to a user's login credentials. Put MFA at the
 identity provider per [mfa.md](mfa.md); Langfuse's own login has none.
 
+Those controls all sit on the sign-in flow, and the self-hosting `docker-compose.yml` sits under them: it
+ships example secrets marked `# CHANGEME`, and `NEXTAUTH_SECRET` protects the session token, which NextAuth
+encrypts and authenticates, so the shipped `mysecret` lets anyone mint a session for any existing account,
+administrators included, without the login flow and the SSO or MFA that only guard it. Disabling signup and
+enforcing SSO do not help, because they gate account creation and sign-in, not a forged cookie. Two related
+secrets ship the same way: `SALT` (`mysalt`) salts the stored API-key hashes, so a known salt speeds offline
+cracking of keys lifted from the database; and `ENCRYPTION_KEY`, shipped as 64 hex zeros, encrypts the LLM
+provider keys and integration credentials Langfuse stores, so anyone holding that key and a copy of the data
+reads them in clear. Generate a fresh random value for each before the first start (`openssl rand -base64 32`
+for `NEXTAUTH_SECRET` and `SALT`, `openssl rand -hex 32` for `ENCRYPTION_KEY`) and keep them out of the
+repository ([secrets.md](secrets.md)); changing `ENCRYPTION_KEY` later needs a planned re-encryption, and if
+the shipped key was ever live, treat the stored provider credentials as exposed and rotate them. The same
+compose bundles a MinIO with the well-known `minio`/`miniosecret` login and publishes its S3 API on host port
+`9090` on every interface by default, as it does langfuse-web on `3000`, while the bundled Postgres,
+ClickHouse, and Redis default to loopback; change that login, update the matching `LANGFUSE_S3_*` access keys
+Langfuse uses to reach MinIO, and keep every published port off untrusted networks ([minio.md](minio.md),
+[object-storage.md](object-storage.md)).
+
 ## Arize Phoenix (self-hosted)
 
 Authentication is disabled by default, "as you may be just trying Phoenix for the very first time or have
@@ -140,6 +158,8 @@ that accepts spans with no credential at all.
 - Langfuse, authentication and SSO (signup default, `AUTH_DISABLE_SIGNUP`, `AUTH_DISABLE_USERNAME_PASSWORD`,
   SSO providers, `AUTH_SESSION_MAX_AGE`, `NEXTAUTH_URL`): https://langfuse.com/self-hosting/security/authentication-and-sso
 - Langfuse, public API authentication (Basic Auth with project public/secret key): https://langfuse.com/docs/api-and-data-platform/features/public-api
+- Langfuse, self-hosting configuration (`NEXTAUTH_SECRET`, `SALT`, `ENCRYPTION_KEY` and their generation, the bundled MinIO/Postgres/ClickHouse/Redis; checked 2026-09-14): https://langfuse.com/self-hosting/configuration
+- Langfuse, self-hosting docker-compose.yml (the `# CHANGEME` example secrets `mysecret`/`mysalt`/all-zero `ENCRYPTION_KEY`, MinIO `minio`/`miniosecret` on host `9090`, langfuse-web on `3000`; checked 2026-09-14): https://github.com/langfuse/langfuse/blob/main/docker-compose.yml
 - Arize Phoenix, authentication (`PHOENIX_ENABLE_AUTH`, `PHOENIX_SECRET`, system and user API keys, `PHOENIX_API_KEY`, the default `admin@localhost` / `admin` account, `PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD` read only at first-account creation, `/v1/` REST permissions, OAuth2/OIDC identity providers, and the absence of native MFA; read 2026-09-13): https://arize.com/docs/phoenix/self-hosting/features/authentication
 - Helicone, self-hosted deployment (default `test@helicone.ai` / `password` login): https://docs.helicone.ai/getting-started/self-host/manual
 - OpenTelemetry, Collector security best practices (bind addresses, TLS, authenticator extensions, minimal
