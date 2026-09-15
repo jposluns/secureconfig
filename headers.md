@@ -28,7 +28,7 @@ A CDN or shared proxy that keys its cache on the URL alone can serve one user's 
 
 `private` stops a shared cache from holding a response, but it still lets the user's own browser store it: MDN defines `private` as a response the browser's local cache may keep. So the Back button can redisplay an authenticated page after logout, and a chat transcript can sit in the history of a shared machine. Set `Cache-Control: no-store` on any response that carries authenticated content or sets a session cookie; MDN defines `no-store` as "any caches of any kind (private or shared) should not store this response", which covers the browser too.
 
-On logout, clear what the browser already holds. `Cache-Control: no-cache` does not cover this, because a history navigation such as the Back button restores a back/forward-cache snapshot without revalidating. Send the `Clear-Site-Data` header on the logout-confirmation response instead: its `cache` directive clears the browser cache including the back/forward cache, and `cookies` drops the session. MDN's own logout example is `Clear-Site-Data: "cache", "cookies", "storage", "executionContexts", "prefetchCache", "prerenderCache"`.
+On logout, clear what the browser already holds. `Cache-Control: no-cache` does not cover this, because a history navigation such as the Back button can restore a back/forward-cache snapshot without revalidating. Send the `Clear-Site-Data` header on the logout-confirmation response instead: its `cache` directive clears the browser cache and, depending on the browser, the back/forward cache as well, and `cookies` clears the client-side session cookie (invalidate the server-side session separately, as part of logout). MDN's own logout example is `Clear-Site-Data: "cache", "cookies", "storage", "executionContexts", "prefetchCache", "prerenderCache"`.
 
 ## Verify
 
@@ -40,12 +40,12 @@ Then scan with https://securityheaders.com/ from outside. A CSP that enforces wi
 
 For an authenticated route behind a shared cache, request the same URL as user A, then as user B, then anonymously, after warming the cache; each response must reflect only its own caller, never the one before it.
 
-In a real browser, log in, open an authenticated page, then log out and press the Back button: the authenticated page must not reappear from history. The browser should re-request it and land on the login screen, which is the observable proof that `no-store` and the logout `Clear-Site-Data` took effect.
+In a real browser, log in, open an authenticated page, then log out and press the Back button: the authenticated page must not reappear from history. The browser should re-request it and land on the login screen. That confirms the logout outcome, not which header produced it, so also inspect the authenticated and logout responses for the intended `no-store` and `Clear-Site-Data` headers. Because the back/forward-cache clearing is browser-dependent, run the check in each browser you support.
 
 ## Sources (checked September 2026)
 
 - MDN HTTP headers reference: https://developer.mozilla.org/en-US/docs/Web/HTTP
 - MDN Cache-Control (`no-store` forbids any cache including the browser; `private` still permits the browser's local cache): https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control
-- MDN Clear-Site-Data (the `cache` directive clears the browser and back/forward cache; the logout example): https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Clear-Site-Data
+- MDN Clear-Site-Data (the `cache` directive clears the browser cache and, depending on the browser, the back/forward cache; the logout example): https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Clear-Site-Data
 - MDN back/forward cache (a history navigation restores a snapshot without revalidating): https://developer.mozilla.org/en-US/docs/Glossary/bfcache
 - Security header scanner: https://securityheaders.com/
