@@ -91,6 +91,7 @@
         "realtime-webhooks.md",
         "bi-dashboards.md",
         "pocketbase.md",
+        "headless-browser-services.md",
         "headless-cms-instant-api.md",
         "exposure-index.md",
         "common-mistakes.md"
@@ -170,6 +171,7 @@
         "paas.md",
         "php.md",
         "pocketbase.md",
+        "headless-browser-services.md",
         "headless-cms-instant-api.md",
         "postgresql.md",
         "python.md",
