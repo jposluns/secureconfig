@@ -15,13 +15,15 @@ PermitRootLogin no
 PubkeyAuthentication yes
 ```
 
-sshd uses the *first* value it reads for each option, and it includes `/etc/ssh/sshd_config.d/*.conf` at the very top of the main file. Cloud images ship a `50-cloud-init.conf` in that directory that sets `PasswordAuthentication yes`, so the same option placed later, in the main file or a higher-numbered drop-in, is silently overridden and password login stays on. A `00-` file is read before it.
+sshd uses the *first* value it reads for each option, and current Debian, Ubuntu, and RHEL-family systems ship a main `sshd_config` that includes `/etc/ssh/sshd_config.d/*.conf` near the top, before its own settings (the `Include` keyword is a distribution default, added in OpenSSH 8.2). Cloud images commonly carry a `50-cloud-init.conf` there, written by cloud-init when password login is requested, that sets `PasswordAuthentication yes`; read before a later main-file line or a higher-numbered drop-in, it wins and password login stays on. Name the hardening file `00-hardening.conf` so it is read first, and confirm with `sshd -T` (below) that the value took effect, in case an upgraded main file lacks the include or an earlier drop-in already set it.
 
 ```bash
 sudo sshd -t && sudo systemctl reload ssh    # sshd on RHEL-family systems
 sudo sshd -T | grep -iE 'passwordauthentication|permitrootlogin|kbdinteractiveauthentication'
-                                             # the EFFECTIVE values after every include; confirm they
-                                             # match what you set, not a cloud-init drop-in read earlier
+                                             # the EFFECTIVE global values after every include; confirm
+                                             # they match what you set, not a drop-in read earlier. If you
+                                             # use Match blocks, also check a connection with
+                                             # `sudo sshd -T -C user=admin,addr=203.0.113.10`, since Match can override these
 ```
 
 Add a second factor for SSH per [mfa.md](mfa.md): TOTP via [google-authenticator-libpam](https://github.com/google/google-authenticator-libpam) or push approval via Duo's `pam_duo`.
