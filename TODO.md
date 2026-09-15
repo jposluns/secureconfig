@@ -50,8 +50,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | ID | Item | Tags |
 | --- | --- | --- |
 | 1.26 | `gradio.md`: Add deployment file-access controls: narrowly scope `allowed_paths` and static directories, exclude secrets with `blocked_paths`, and explain that cached files are shared across app users; include a harmless file-access isolation check (vendor) (M, S) | `[enhance]` |
-| 1.28 | `ollama.md`: Verify step filters ss output by expected port (`grep 11434`), violating the rule against filtering (M, XS) | `[enhance]` |
-| 1.29 | `memcached.md`: Verify step filters ss output by expected port (`grep 11211`), violating the rule against filtering (M, XS) | `[enhance]` |
 | 1.32 | `admin-uis.md`: Adminer, the single-file database panel scanners probe constantly at /adminer.php, is missing from the panel list; one paragraph with the never-public rule and its lack of its own account store (L, XS) | `[enhance]` |
 | 1.33 | `secrets.md`: no mention that terraform.tfstate, kubeconfigs with embedded client keys, and ~/.docker/config.json are plaintext credential files that belong in .gitignore and in scanner scope alongside .env and *.pem (L, XS) | `[enhance]` |
 | 1.35 | `gpu-clouds.md`: template-shipped desktop listeners (noVNC/VNC in ComfyUI and desktop images) are not mentioned; they are often password-less and land on the platform's public port mapping like any other listener (template defaults unverified offline) (L, S) | `[enhance]` |

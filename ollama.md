@@ -64,7 +64,7 @@ MFA: Ollama has no login of its own, so a second factor can only come from the f
 ## Verify
 
 ```bash
-ss -tlnp | grep 11434                                  # 127.0.0.1 only
+ss -tlnp                                               # read every listener: 11434 on 127.0.0.1 only (or absent, behind an unpublished Docker port), nothing unexpected
 # from another machine. Read err, not the number: it must name a refusal or timeout reaching YOUR
 # address. An HTTP code means the port answered. A resolver failure, a local socket error, or a
 # timeout that did not come from the remote address is inconclusive, never a pass.
