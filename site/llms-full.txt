@@ -9073,7 +9073,7 @@ curl -q -s -o /dev/null -w '%{http_code}\n' https://panel.example.com/
   esac
 )
 env -u DOCKER_HOST -u DOCKER_TLS_VERIFY -u DOCKER_CERT_PATH \
-  curl -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem https://203.0.113.10:2376/_ping
+  curl -q -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem https://203.0.113.10:2376/_ping
                                                                   # must fail the handshake on the CLIENT certificate. Do not use
                                                                   # `docker ... info` here: without `--tlsverify` it fails for the
                                                                   # wrong reason, and `DOCKER_CERT_PATH` exported in the setup above
