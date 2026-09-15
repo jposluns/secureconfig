@@ -51,8 +51,11 @@ az network nsg rule list \
 
   ```bash
   (                                       # a subshell, so your own script arguments are untouched
-    set -- REPLACE_WITH_YOUR_PUBLIC_IP
-    case "${1-}" in
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+    case "$1" in
       *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
       *) for p in 22 3306 5432 6379 27017; do nc -vz -w 3 "$1" "$p"; done ;;
     esac
