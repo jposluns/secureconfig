@@ -57,6 +57,7 @@
 - [docker](https://raw.githubusercontent.com/jposluns/secureconfig/main/docker.md): safe port publishing, the UFW bypass problem
 - [kubernetes](https://raw.githubusercontent.com/jposluns/secureconfig/main/kubernetes.md): Gateway API, cert-manager, entry-point auth; ingress-nginx retired
 - [gitops-controllers](https://raw.githubusercontent.com/jposluns/secureconfig/main/gitops-controllers.md): Argo CD and Flux: cluster-admin-equivalent deployment engines; the initial admin secret, RBAC, and the Flux webhook receiver
+- [self-hosted-ci-runners](https://raw.githubusercontent.com/jposluns/secureconfig/main/self-hosted-ci-runners.md): GitHub Actions runner and GitLab Runner: untrusted code is RCE; ephemeral one-job workers, no privileged executor, tokens are credentials
 - [container-hardening](https://raw.githubusercontent.com/jposluns/secureconfig/main/container-hardening.md): non-root, dropped capabilities, read-only root, network segmentation
 
 ## Hosts and cloud platforms
