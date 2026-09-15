@@ -58,11 +58,21 @@ With `--serve-artifacts` (the default) and `--artifacts-destination s3://bucket`
 
 ```bash
 ss -tlnp | grep 5000                                                   # 127.0.0.1 only
-curl -q -sI -o /dev/null --connect-timeout 5 --max-time 10 \
-  -w 'http=%{http_code} time_connect=%{time_connect}\n' \
-  http://REPLACE_WITH_THE_SERVER_PUBLIC_IP:5000/
-# from another machine. The pass is http=000 WITH time_connect at 0.000000: no connection completed.
-# A non-zero time_connect means the TCP handshake succeeded and the port is reachable, whatever came back
+# from another machine, checking the port is unreachable from outside. The pass is that no TCP
+# connection formed: time_connect stays 0.000000 and err names a connection-level failure (refused, no
+# route, or a filtered-port connect timeout). A non-zero time_connect, or any http code, means the
+# handshake completed and the port answered. A name-resolution or local socket error is inconclusive.
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_SERVER_PUBLIC_IP'   # replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute the server's public address on the set -- line above; not probing" ;;
+    *) curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
+         -w 'http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:5000/" ;;
+  esac
+)
 # experiments/search is a POST endpoint, so each check posts a minimal body
 curl -q -sS -o /dev/null -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
   https://mlflow.example.com/api/2.0/mlflow/experiments/search                         # 401: no credentials
@@ -89,4 +99,4 @@ An authenticated user without permission on a resource gets `403`; a missing or 
 - MLflow tracking server (default address, reverse proxy or VPN for TLS and auth, `MLFLOW_TRACKING_TOKEN`, `MLFLOW_TRACKING_INSECURE_TLS`, artifact proxying): https://mlflow.org/docs/latest/self-hosting/architecture/tracking-server
 - MLflow REST API, Search Experiments (`POST 2.0/mlflow/experiments/search`): https://mlflow.org/docs/latest/api_reference/rest-api.html
 - Docker, port publishing (loopback publishing): https://docs.docker.com/engine/network/port-publishing/
-- curl manual (`--connect-timeout` bounds the connection phase only; the `time_connect` write-out variable): https://curl.se/docs/manpage.html
+- curl manual (`--connect-timeout` bounds the connection phase only; the `time_connect`, `exitcode`, and `errormsg` write-out variables, the last two added in curl 7.75.0): https://curl.se/docs/manpage.html
