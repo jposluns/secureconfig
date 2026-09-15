@@ -4,9 +4,10 @@ Database and monitoring panels are the most-scanned targets on the internet, and
 
 ## mongo-express
 
-Ships with basic auth `admin`:`pass` by default; its own README calls this unsafe. Set your own credentials and keep it private:
+The web login is off by default: `ME_CONFIG_BASICAUTH_ENABLED` defaults to `false`, so mongo-express answers with no authentication until you enable it, and setting a username and password alone does not turn it on (older 0.x releases instead shipped an unsafe `admin`:`pass` default). Enable basic auth, set your own credentials, and keep it private:
 
 ```
+ME_CONFIG_BASICAUTH_ENABLED=true              # default false; without this the web UI has no login
 ME_CONFIG_BASICAUTH_USERNAME=<your-admin>
 ME_CONFIG_BASICAUTH_PASSWORD=<long random value>
 ```
