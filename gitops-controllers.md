@@ -52,8 +52,9 @@ an admin-level ClusterRole, so driving Argo CD is deployment power over every cl
 scope who can act through project roles, move applications into restricted `AppProject`s, and tighten
 the permissive built-in `default` project itself rather than only moving applications out of it, since
 it still governs any new application placed there. Argo CD's Redis cache and repo-server can also hold
-generated manifests, which matter when a config-management plugin injects secrets into them; keep
-those components isolated with the network controls below. Treat Argo CD access as cluster-admin
+generated manifests, which matter when a config-management plugin injects secrets into them; restrict
+access to them with enforced NetworkPolicies, the same isolation Flux's artifacts need. Treat Argo
+CD access as cluster-admin
 access.
 
 ## Flux
@@ -77,15 +78,18 @@ route in front of it. When you do, the receiver type is what authenticates the r
 presence of a `secretRef`: a `generic` receiver validates nothing, `generic-hmac` and the GitHub,
 Bitbucket and Nexus types verify an HMAC signature against the referenced secret, `gitlab` compares
 the `X-Gitlab-Token` header against it, and `generic-oidc` validates a bearer token against configured
-OIDC providers rather than a secret. Choose a validating type, terminate TLS at the ingress, and
+OIDC providers rather than a secret, so constrain it with an audience and token validations, since a
+public issuer can otherwise mint valid tokens for unrelated callers. Choose a validating type,
+terminate TLS at the ingress, and
 confine what a webhook can trigger with cross-namespace reference policies.
 
 The third surface is Kubernetes RBAC. Only the kustomize-controller and helm-controller are bound to
 `cluster-admin`, because they apply resources, though every controller holds meaningful permissions
 including Secret access. Restrict tenant reconciliation to scoped ServiceAccounts: Flux offers
 `--no-cross-namespace-refs` to stop a tenant referencing another namespace's sources,
-`--default-service-account` to make reconciliations run as a named account rather than the
-controller's, and related lockdown settings; enable the ones your tenancy needs, and protect the
+`--default-service-account` to fall back to a named account when a reconciliation omits its own
+`spec.serviceAccountName` (it does not override an explicit one), and related lockdown settings;
+enable the ones your tenancy needs, and protect the
 platform git sources that feed the privileged controllers.
 
 ## Verify
