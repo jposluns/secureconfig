@@ -4385,7 +4385,7 @@ Every guide in this repository secures a service; this one secures the machine u
 
 Add your public key to `~/.ssh/authorized_keys` and confirm that key login works **before** disabling passwords. Keep the current session open while testing changes.
 
-`/etc/ssh/sshd_config` (or a file in `/etc/ssh/sshd_config.d/`):
+Put this in a drop-in that sorts first, `/etc/ssh/sshd_config.d/00-hardening.conf`, not only in the main `/etc/ssh/sshd_config`:
 
 ```
 PasswordAuthentication no
@@ -4394,8 +4394,13 @@ PermitRootLogin no
 PubkeyAuthentication yes
 ```
 
+sshd uses the *first* value it reads for each option, and it includes `/etc/ssh/sshd_config.d/*.conf` at the very top of the main file. Cloud images ship a `50-cloud-init.conf` in that directory that sets `PasswordAuthentication yes`, so the same option placed later, in the main file or a higher-numbered drop-in, is silently overridden and password login stays on. A `00-` file is read before it.
+
 ```bash
 sudo sshd -t && sudo systemctl reload ssh    # sshd on RHEL-family systems
+sudo sshd -T | grep -iE 'passwordauthentication|permitrootlogin|kbdinteractiveauthentication'
+                                             # the EFFECTIVE values after every include; confirm they
+                                             # match what you set, not a cloud-init drop-in read earlier
 ```
 
 Add a second factor for SSH per [mfa.md](mfa.md): TOTP via [google-authenticator-libpam](https://github.com/google/google-authenticator-libpam) or push approval via Duo's `pam_duo`.
