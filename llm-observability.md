@@ -17,17 +17,22 @@ separately from the UI session: a project's public key (username) and secret key
 Basic Auth, issued from Project Settings, and unrelated to a user's login credentials. Put MFA at the
 identity provider per [mfa.md](mfa.md); Langfuse's own login has none.
 
-Those controls all sit above the session cookie, and the self-hosting `docker-compose.yml` undercuts them:
-it ships example secrets marked `# CHANGEME`, and `NEXTAUTH_SECRET` signs the session, so the shipped
-`mysecret` lets anyone forge a valid admin session and bypass signup, SSO, and MFA alike. Two more matter as
-much: `SALT` (`mysalt`) hashes the API keys, and `ENCRYPTION_KEY` (shipped all-zero) encrypts the LLM
-provider keys and integration credentials Langfuse stores, so a known value exposes them. Generate a fresh
-random value for each before the first start (`openssl rand -base64 32` for `NEXTAUTH_SECRET` and `SALT`,
-`openssl rand -hex 32` for `ENCRYPTION_KEY`) and keep them out of the repository ([secrets.md](secrets.md));
-rotating `ENCRYPTION_KEY` later cannot recover data already written under the old one. The same compose
-bundles a MinIO object store with the well-known `minio`/`miniosecret` login and publishes its S3 API on host
-port `9090` on every interface, alongside langfuse-web on `3000`; change that credential and keep both ports,
-and the bundled Postgres, ClickHouse, and Redis, off any untrusted network ([minio.md](minio.md),
+Those controls all sit on the sign-in flow, and the self-hosting `docker-compose.yml` sits under them: it
+ships example secrets marked `# CHANGEME`, and `NEXTAUTH_SECRET` protects the session token, which NextAuth
+encrypts and authenticates, so the shipped `mysecret` lets anyone mint a session for any existing account,
+administrators included, without the login flow and the SSO or MFA that only guard it. Disabling signup and
+enforcing SSO do not help, because they gate account creation and sign-in, not a forged cookie. Two related
+secrets ship the same way: `SALT` (`mysalt`) salts the stored API-key hashes, so a known salt speeds offline
+cracking of keys lifted from the database; and `ENCRYPTION_KEY`, shipped as 64 hex zeros, encrypts the LLM
+provider keys and integration credentials Langfuse stores, so anyone holding that key and a copy of the data
+reads them in clear. Generate a fresh random value for each before the first start (`openssl rand -base64 32`
+for `NEXTAUTH_SECRET` and `SALT`, `openssl rand -hex 32` for `ENCRYPTION_KEY`) and keep them out of the
+repository ([secrets.md](secrets.md)); changing `ENCRYPTION_KEY` later needs a planned re-encryption, and if
+the shipped key was ever live, treat the stored provider credentials as exposed and rotate them. The same
+compose bundles a MinIO with the well-known `minio`/`miniosecret` login and publishes its S3 API on host port
+`9090` on every interface by default, as it does langfuse-web on `3000`, while the bundled Postgres,
+ClickHouse, and Redis default to loopback; change that login, update the matching `LANGFUSE_S3_*` access keys
+Langfuse uses to reach MinIO, and keep every published port off untrusted networks ([minio.md](minio.md),
 [object-storage.md](object-storage.md)).
 
 ## Arize Phoenix (self-hosted)
