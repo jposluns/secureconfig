@@ -9345,6 +9345,14 @@ alter view public.REPLACE_WITH_VIEW_NAME set (security_invoker = true);
 
   On PostgreSQL 14 and earlier there is no `security_invoker`: revoke the view from `public` as well as from `anon` and `authenticated`, or keep it in a schema the API does not expose. Revoking the two API roles alone leaves access they inherit from `PUBLIC`, so confirm with `select has_table_privilege('anon', 'public.REPLACE_WITH_VIEW_NAME', 'select');`, which must return `f`.
 
+```sql
+-- PostgreSQL 14 or earlier: revoke an API-exposed view from all three, then confirm both API roles lost SELECT.
+-- Run the REVOKE as the view's owner; a check still returning t means another grant or role provides access.
+revoke select on table public.REPLACE_WITH_VIEW_NAME from public, anon, authenticated;
+select has_table_privilege('anon', 'public.REPLACE_WITH_VIEW_NAME', 'select'),
+       has_table_privilege('authenticated', 'public.REPLACE_WITH_VIEW_NAME', 'select');   -- both must be f
+```
+
 - A `SECURITY DEFINER` function likewise runs as its owner and can return rows RLS would hide. Keep such functions out of API-exposed schemas unless they enforce their own authorization, and revoke execution by default:
 
 ```sql
