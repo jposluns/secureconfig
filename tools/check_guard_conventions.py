@@ -105,6 +105,16 @@ guarantee)
   - sudo/env with argument-taking options (sudo -u user curl ...) is not
     resolved to curl; `function curl { ...; }`-style definitions are treated
     as a command named `function` (not checked, not flagged).
+  - the glob-URL check knows a few payload options (-d/--data*/--json/-H/
+    --header/-F/--form*) whose value is not a URL and skips them, but it does
+    NOT model full curl argument ownership. So a value-taking option can shadow
+    one of them: `curl -A --data https://h/[1-3]` makes `--data` the user-agent
+    value, and this gate then skips the following glob URL (a false negative);
+    and an attached short data option (-d'{"u":"https://h/{x}"}') is not
+    recognized as a payload value, so a URL inside it over-includes (flagged;
+    resolve with -g or a waiver). A real URL that also holds an IPv6 host
+    (http://[::1]/) or a shell expansion (https://${H}/x) is flagged the same
+    way, by design: -g there is harmless, not a defect.
   - convention 2: only the case/REPLACE_WITH_ idiom is gated. Renaming the
     sentinel, if [ -z ... ]-style guards, flag-variable guards, or removing
     the wrapping subshell are not caught by the default gate; the
