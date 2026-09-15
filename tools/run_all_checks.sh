@@ -513,6 +513,55 @@ done < <(grep -oE '(href|src)="[^"]*"' site/index.html \
          | grep -vE '^(https?:|mailto:|#|data:)' \
          | sort -u)
 
+# Non-root sanctioned Markdown (requests/*.md): resolve each target relative to the file's OWN
+# directory, so a same-directory link like ](TEMPLATE.md) and a parent link like ](../foo.md) both
+# check the right path. The root loop above resolves relative to the repo root and would mis-resolve
+# these. requests/*.md (added in #82) is the first sanctioned non-root Markdown.
+for f in requests/*.md; do
+  [ -e "$f" ] || continue
+  dir=$(dirname "$f")
+  while IFS= read -r target; do
+    [ -n "$target" ] || continue
+    path=${target%%#*}
+    [ -n "$path" ] || continue
+    case "$path" in
+      /*)
+        # A leading slash would resolve against requests/ (dir/$path collapses the double slash),
+        # silently passing against the wrong file. requests/ links are repo-relative by convention.
+        bad "absolute link target in $f: $target (use a repo-relative path)"
+        links=0
+        continue
+        ;;
+    esac
+    if [ ! -e "$dir/$path" ]; then
+      bad "broken link target in $f: $target"
+      links=0
+      continue
+    fi
+    case "$target" in
+      *"#"*)
+        anchor=${target#*#}
+        if [ -n "$anchor" ] && [ "${path##*.}" = "md" ]; then
+          if ! heading_slugs "$dir/$path" | grep -qx -- "$anchor"; then
+            bad "missing anchor #$anchor in $dir/$path"
+            links=0
+          fi
+        fi
+        ;;
+    esac
+  done < <(grep -hoE '\]\([^)]+\)' "$f" \
+           | sed 's/^](//; s/)$//' \
+           | grep -vE '^(https?:|mailto:|#)' \
+           | sort -u)
+  while IFS= read -r anchor; do
+    [ -n "$anchor" ] || continue
+    if ! heading_slugs "$f" | grep -qx -- "$anchor"; then
+      bad "missing anchor #$anchor in $f"
+      links=0
+    fi
+  done < <(grep -oE '\]\(#[^)]+\)' "$f" | sed 's/^](#//; s/)$//' | sort -u)
+done
+
 [ "$links" = 1 ] && ok "every local link target and heading anchor resolves"
 
 echo "== site copy buttons =="
