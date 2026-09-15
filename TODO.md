@@ -89,7 +89,6 @@ Maintainer rulings moved to `DECISIONS.md` on 2026-09-13, in preparation for the
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 4.2 | `site/index.html` menu group labels are `<p class="sidenav-h">`, so heading navigation skips all thirteen; promote them to real headings (L, XS) | `[a11y]` |
 
 ## Blocked upstream
 
