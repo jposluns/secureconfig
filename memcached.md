@@ -37,7 +37,7 @@ MFA: there is no login for a person, so no second factor applies; human access t
 ## Verify
 
 ```bash
-ss -tlnup | grep 11211                                    # 127.0.0.1 or the private address; no UDP line
+ss -tlnup                                              # read every listener: 11211 on 127.0.0.1 or the private address only, no UDP socket on 11211, nothing unexpected
 printf 'stats\r\nquit\r\n' | nc 127.0.0.1 11211           # only for the loopback, no-auth, no-TLS
                                                           # configuration in step 1. On the recommended
                                                           # deployment this FAILS three times over:
