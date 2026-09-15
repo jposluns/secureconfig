@@ -40,12 +40,12 @@ Then scan with https://securityheaders.com/ from outside. A CSP that enforces wi
 
 For an authenticated route behind a shared cache, request the same URL as user A, then as user B, then anonymously, after warming the cache; each response must reflect only its own caller, never the one before it.
 
-In a real browser, log in, open an authenticated page, then log out and press the Back button: the authenticated page must not reappear from history. The browser should re-request it and land on the login screen, which is the observable proof that `no-store` and the logout `Clear-Site-Data` took effect.
+In a real browser, log in, open an authenticated page, then log out and press the Back button: the authenticated page must not reappear from history. The browser should re-request it and land on the login screen. That confirms the logout outcome, not which header produced it, so also inspect the authenticated and logout responses for the intended `no-store` and `Clear-Site-Data` headers. Because the back/forward-cache clearing is browser-dependent, run the check in each browser you support.
 
 ## Sources (checked September 2026)
 
 - MDN HTTP headers reference: https://developer.mozilla.org/en-US/docs/Web/HTTP
 - MDN Cache-Control (`no-store` forbids any cache including the browser; `private` still permits the browser's local cache): https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control
-- MDN Clear-Site-Data (the `cache` directive clears the browser and back/forward cache; the logout example): https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Clear-Site-Data
+- MDN Clear-Site-Data (the `cache` directive clears the browser cache and, depending on the browser, the back/forward cache; the logout example): https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Clear-Site-Data
 - MDN back/forward cache (a history navigation restores a snapshot without revalidating): https://developer.mozilla.org/en-US/docs/Glossary/bfcache
 - Security header scanner: https://securityheaders.com/
