@@ -9790,9 +9790,12 @@ Register the first administrator before the instance is reachable by anyone else
 default admin password: the first visitor to the admin panel completes a form and becomes the first
 administrator, so an admin panel left open to the internet before you register can be claimed by
 whoever reaches it first. The server's documented default host is `localhost`, but the project
-template Strapi generates sets `HOST` to `env('HOST', '0.0.0.0')`, so a container started from it
-binds every interface; bring the instance up on loopback for the bootstrap step (set `HOST` to
-`127.0.0.1`) or reach it through a tunnel, and only then expose it.
+template Strapi generates sets `HOST` to `env('HOST', '0.0.0.0')`, so it listens on
+every interface. Keep the admin panel off the public network until you have registered: on a bare
+host set `HOST` to `127.0.0.1` for the bootstrap step; in a container leave the app bound inside the
+container and publish its port only to the host loopback (`127.0.0.1:1337:1337`) or firewall it,
+because setting the container's own `HOST` to `127.0.0.1` makes the published port unreachable. Only
+then expose it.
 
 The data API itself is closed by default. Strapi's documentation states that "all content types are
 private by default and need to be either made public or queries need to be authenticated with the
@@ -9807,9 +9810,9 @@ rather than assuming its state; a registered end user takes the Authenticated ro
 no content grants until one is added.
 
 Set unique, randomized values for the application secrets Strapi reads from the environment; the
-server configuration documents `APP_KEYS` (the session signing keys), and the admin-panel and
-API-token configuration add `ADMIN_JWT_SECRET`, `JWT_SECRET`, `API_TOKEN_SALT` and
-`TRANSFER_TOKEN_SALT`. A copied example `.env` lets anyone holding the same values forge sessions or
+server configuration documents `APP_KEYS` (the session signing keys), the admin-panel
+configuration adds `ADMIN_JWT_SECRET`, `API_TOKEN_SALT` and `TRANSFER_TOKEN_SALT`, and the Users and
+Permissions plugin configuration adds `JWT_SECRET`. A copied example `.env` lets anyone holding the same values forge sessions or
 tokens; store them as [secrets.md](secrets.md) describes, never in the repository or a client bundle.
 Strapi terminates no TLS of its own, so front it per [nginx.md](nginx.md) or [caddy.md](caddy.md) and
 [fronting-auth.md](fronting-auth.md).
@@ -9839,8 +9842,9 @@ default port is `8055`. Directus serves no TLS itself, so terminate it in front 
 Set `HASURA_GRAPHQL_ADMIN_SECRET`. With no admin secret configured, the GraphQL API (and the console,
 where it is enabled) is reachable by anyone with full administrative rights: the vendor's own guidance
 is to set the secret so "your GraphQL endpoint and the Hasura Console are not publicly accessible",
-and the secret grants "full admin rights", so it is a bearer credential that must never reach a
-browser or a client application ([secrets.md](secrets.md)). The engine binds to every interface by
+and the secret grants "full admin rights", so it is a bearer credential that must never be
+embedded or distributed in an end-user application, a public bundle, or browser code delivered to
+untrusted users ([secrets.md](secrets.md)). The engine binds to every interface by
 default (`HASURA_GRAPHQL_SERVER_HOST` defaults to `*`, on port 8080); set it to `127.0.0.1` for a
 host-local deployment or keep the published port off the public interface. Hasura terminates no TLS
 of its own, so front it per [nginx.md](nginx.md) or [caddy.md](caddy.md).
@@ -9875,12 +9879,12 @@ authenticator and authenticated roles the same way (function `EXECUTE` defaults 
 `SECURITY DEFINER` functions and owner-privileged views can widen access beyond the table grants). Set
 `db-schemas` to a schema built for the API rather than leaving it at its default of `public`. Note
 that PostgREST serves an OpenAPI description at the root path whose contents follow the requesting
-role's privileges, so a broad anonymous role also broadens what an unauthenticated caller can
-enumerate. Set `jwt-secret` (`PGRST_JWT_SECRET`) to a cryptographically random value of at least 32
+role's privileges by default, so a broad anonymous role also broadens what an unauthenticated caller
+can enumerate. Set `jwt-secret` (`PGRST_JWT_SECRET`) to a cryptographically random value of at least 32
 characters; if a token is sent while it is unset, the request fails with `PGRST300` (HTTP 500). The
 server binds to every IPv4 interface by default (`server-host` defaults to `!4`, on port 3000), so set
 `server-host` to `127.0.0.1` for a host-local deployment or keep the port off the public interface;
-the optional admin server (`admin-server-port`) binds to that same host, so account for it too.
+the optional admin server (`admin-server-port`) defaults to that same host (an `admin-server-host` can override it), so account for it too.
 PostgREST terminates no TLS itself; front it per [nginx.md](nginx.md) or [caddy.md](caddy.md).
 
 ## Verify
@@ -9898,28 +9902,32 @@ state. Substitute your own host for the `example.com` placeholder.
 # Strapi: point this at a content type you have opened; exposed returns the canary, the default 403s.
 curl -q -g -s --noproxy '*' -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
   'https://cms.example.com/api/secureconfig-probes'
-# Directus: point this at a collection whose Public policy you granted; exposed returns the canary.
+# Directus: point this at a collection whose Public policy you granted; exposed returns the canary,
+# the default answers 403 FORBIDDEN.
 curl -q -g -s --noproxy '*' -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-  'https://cms.example.com/items/secureconfig_probe?fields=marker&limit=1'
+  'https://cms.example.com/items/secureconfig_probe?filter[marker][_eq]=secureconfig-canary&fields=marker'
 # Hasura data API: no admin secret returns data; fixed returns an admin-secret-required error IN THE BODY.
 curl -q -g -s --noproxy '*' -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
   -H 'Content-Type: application/json' \
-  -d '{"query":"query { secureconfig_probe(limit: 1) { marker } }"}' \
+  -d '{"query":"query { secureconfig_probe(where: {marker: {_eq: \"secureconfig-canary\"}}) { marker } }"}' \
   'https://graphql.example.com/v1/graphql'
-# Hasura console: with the secret set it must not serve the console unauthenticated.
+# Hasura console: the recommended posture disables it, so this should return a JSON not-found; a 200
+# HTML page means the console is still served (login-gated if the secret is set, open if not).
 curl -q -g -s --noproxy '*' -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
   'https://graphql.example.com/console'
 # PostgREST: no Authorization header; exposed returns the canary, fixed answers PGRST302 (401).
 curl -q -g -s --noproxy '*' -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-  'https://api.example.com/secureconfig_probe?select=marker&limit=1'
+  'https://api.example.com/secureconfig_probe?select=marker&marker=eq.secureconfig-canary'
 ```
 
 The Strapi and Directus probes only tell you about the one collection you point them at, since both
 deny by default; run them against the collections you actually opened, and read the full grant list
 in the tool (the Directus access policies, the Strapi role permission matrix) rather than trusting a
-single canary. Read the body, not the bare status: Hasura's GraphQL API answers HTTP 200 even for an
-authorization error, so the fixed state is the admin-secret-required message in the JSON, not a 401
-(this status behaviour is observed rather than vendor-documented; confirm it against your version).
+single canary. Read the body, not the bare status: Hasura's GraphQL API answers HTTP 200 even for an authorization
+error by default (Hasura documents this and the `HASURA_GRAPHQL_PRESERVE_401_ERRORS` flag that
+returns 401 for authentication failures instead), so the fixed state is the admin-secret-required
+message in the JSON. A served console page is not itself the exposure; the data-API probe above is
+what shows whether admin operations are gated.
 For PostgREST, repeat the data probe with `-H 'Authorization: Bearer not-a-real-jwt'` and expect
 `PGRST301`, which confirms a bad token is rejected rather than treated as anonymous. When anonymous
 access is deliberate, an HTTP check cannot tell an intended grant from an over-broad one, so read the
@@ -9936,6 +9944,8 @@ over IPv4 and IPv6.
 - Strapi REST API (content types private by default): https://docs.strapi.io/cms/api/rest
 - Strapi quick start (first administrator): https://docs.strapi.io/cms/quick-start
 - Strapi server configuration (HOST, PORT, APP_KEYS): https://docs.strapi.io/cms/configurations/server
+- Strapi admin-panel configuration (ADMIN_JWT_SECRET, API_TOKEN_SALT, TRANSFER_TOKEN_SALT): https://docs.strapi.io/cms/configurations/admin-panel
+- Strapi plugins configuration (Users and Permissions JWT_SECRET): https://docs.strapi.io/cms/configurations/plugins
 - Strapi middlewares (public static file serving via koa-static): https://docs.strapi.io/cms/configurations/middlewares
 - Strapi Media Library (upload providers): https://docs.strapi.io/cms/features/media-library
 - Directus configuration, first admin user (ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_TOKEN; PORT default 8055): https://directus.com/docs/configuration/general
@@ -10022,6 +10032,7 @@ one of them is the application's.
 | 8001, 8002 | Triton gRPC and Triton Prometheus metrics | [model-servers.md](model-servers.md) |
 | 8055 | Directus HTTP API and admin app | [headless-cms-instant-api.md](headless-cms-instant-api.md) |
 | 8080 | llama.cpp, Weaviate HTTP, Airflow, code-server, Open WebUI's container port, Dify's nginx when mapped to `127.0.0.1:8080`, Spring Boot, Go, and the Vast.ai Jupyter deployment; Keycloak's HTTP port, which exists only when `--http-enabled=true`; and Hasura GraphQL Engine v2, which binds every interface by default | [model-servers.md](model-servers.md), [vector-databases.md](vector-databases.md), [workflow-orchestrators.md](workflow-orchestrators.md), [code-server.md](code-server.md), [open-webui.md](open-webui.md), [agent-builders.md](agent-builders.md), [java.md](java.md), [go.md](go.md), [gpu-clouds.md](gpu-clouds.md), [self-hosted-idp.md](self-hosted-idp.md), [headless-cms-instant-api.md](headless-cms-instant-api.md) |
+| 8081 | Hasura's bundled data-connector agent, published beside the engine by the vendor quickstart Compose | [headless-cms-instant-api.md](headless-cms-instant-api.md) |
 | 8088 | Apache Superset | [bi-dashboards.md](bi-dashboards.md) |
 | 8123 | ClickHouse HTTP, plaintext | [clickhouse.md](clickhouse.md) |
 | 8188 | ComfyUI | [image-gen-uis.md](image-gen-uis.md) |

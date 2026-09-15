@@ -69,6 +69,7 @@ one of them is the application's.
 | 8001, 8002 | Triton gRPC and Triton Prometheus metrics | [model-servers.md](model-servers.md) |
 | 8055 | Directus HTTP API and admin app | [headless-cms-instant-api.md](headless-cms-instant-api.md) |
 | 8080 | llama.cpp, Weaviate HTTP, Airflow, code-server, Open WebUI's container port, Dify's nginx when mapped to `127.0.0.1:8080`, Spring Boot, Go, and the Vast.ai Jupyter deployment; Keycloak's HTTP port, which exists only when `--http-enabled=true`; and Hasura GraphQL Engine v2, which binds every interface by default | [model-servers.md](model-servers.md), [vector-databases.md](vector-databases.md), [workflow-orchestrators.md](workflow-orchestrators.md), [code-server.md](code-server.md), [open-webui.md](open-webui.md), [agent-builders.md](agent-builders.md), [java.md](java.md), [go.md](go.md), [gpu-clouds.md](gpu-clouds.md), [self-hosted-idp.md](self-hosted-idp.md), [headless-cms-instant-api.md](headless-cms-instant-api.md) |
+| 8081 | Hasura's bundled data-connector agent, published beside the engine by the vendor quickstart Compose | [headless-cms-instant-api.md](headless-cms-instant-api.md) |
 | 8088 | Apache Superset | [bi-dashboards.md](bi-dashboards.md) |
 | 8123 | ClickHouse HTTP, plaintext | [clickhouse.md](clickhouse.md) |
 | 8188 | ComfyUI | [image-gen-uis.md](image-gen-uis.md) |
