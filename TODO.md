@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.73**, **2.25**, **3.16**, **4.12**.
+Next ids: **1.74**, **2.25**, **3.16**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -49,7 +49,7 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 1.43 | A guarded front door with the backing store published beside it, now seen in three unrelated tools: Dify's compose publishes the plugin daemon next to the app, Mem0's publishes PostgreSQL on 8432 beside an authenticated API, and Onyx's development compose publishes seven services past its login page. The `${VAR:-default}` shape is identical in each and moves the host port without closing the publication. The new AI-infrastructure guide carries the authoritative treatment per the 2026-09-13 ruling and `agent-builders.md` cross-references it; this row tracks whether the other Compose-deploying guides need the same pointer. (M, M) | `[enhance]` |
+| 1.73 | Per-vendor check, deferred from the #122 row 1.43 sweep: do the vendor Compose files for Milvus (bundled MinIO/etcd), Airflow (Postgres/Redis), and Temporal (Postgres/Elasticsearch) publish a backing store on the host beside the authenticated app? Where one does, add a one-line "keep the datastore off the public mapping, per ai-infra-services.md" note to `vector-databases.md` or `workflow-orchestrators.md`. The 1.43 sweep confirmed those guides cover their front doors with bind-privately guidance but did not verify each bundled datastore's publication (L, S) | `[enhance]` |
 | 2.24 | Demonstrate `ai-infra-services.md` Verify checks 2 to 7 against real deployments. They ship marked reasoned rather than demonstrated, because the authoring environment has no container runtime and so no live service, external vantage, TLS exchange, or browser flow. CONTRIBUTING rule 5 requires the debt to be tracked, not merely disclosed. Stand up the six services from their cited Compose files and run each check against the exposed state as well as the fixed one (M, L) | `[gap]` |
 | 1.45 | `llm-observability.md`: demonstrate the Phoenix Verify checks against a live instance in both the exposed and fixed states. They ship marked reasoned (#62) because the authoring environment has no Phoenix instance; the unauthenticated-read probe and the manual default-credential check need a running Phoenix to demonstrate. `PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD` first-startup semantics and the `/v1/traces` content-type rejection also want confirming against a live version (M, M) | `[gap]` |
 | 1.46 | `vector-databases.md`: demonstrate the Qdrant 6335 reachability probes and the client-API key check against a live distributed cluster in both the exposed and fixed states. They ship marked reasoned (#63) because the authoring environment has no distributed Qdrant; stand up two peers with 6335 published, then firewalled to peers, and confirm the non-peer refusal, the peer connection, and the without-key 401 / with-key 200 (M, M) | `[gap]` |
