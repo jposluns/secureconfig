@@ -8,7 +8,7 @@ files=(
   README.md
   controls-reference.md
   free-certificates.md self-signed.md cloudflare.md tailscale.md tunnels.md
-  authentication.md mfa.md secrets.md
+  authentication.md mfa.md secrets.md vault.md
   identity-providers.md self-hosted-idp.md oidc-integration.md cloud-identity-proxies.md machine-auth.md fronting-auth.md
   apache.md nginx.md lighttpd.md caddy.md haproxy.md traefik.md
   nodejs.md python.md docker.md kubernetes.md gitops-controllers.md self-hosted-ci-runners.md frontend-frameworks.md container-hardening.md
