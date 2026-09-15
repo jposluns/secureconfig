@@ -7169,10 +7169,11 @@ curl -q -s -o /dev/null -w '%{http_code}\n' https://n8n.example.com/api/v1/workf
 # webhook with the method the node expects (POST shown); n8n shows the production URL in the node panel,
 # with the default prefix /webhook/ (test uses /webhook-test/). Pick a workflow safe to trigger if the
 # auth is misconfigured, and substitute your real path for REPLACE_WITH_WEBHOOK_PATH.
-curl -q -g -s -o /dev/null -w '%{http_code}\n' -X POST https://n8n.example.com/webhook/REPLACE_WITH_WEBHOOK_PATH
+curl -q -g -s -o /dev/null -w '%{http_code}\n' -X POST "https://n8n.example.com/webhook/REPLACE_WITH_WEBHOOK_PATH"
                                         # node-level auth (Basic, Header, JWT): expect 401 or 403 with no
                                         # credential; 200 means the webhook is open; 404 means the workflow is
-                                        # inactive or the method does not match, not that it is protected. A
+                                        # inactive, the method does not match, or the path is wrong, not that it
+                                        # is protected. A
                                         # webhook that instead validates a signature in the workflow sets its own
                                         # response, so confirm there that an unsigned request runs no action.
                                         # Use the production prefix, never /webhook-test/
