@@ -4,7 +4,7 @@ Suggestions and guides are welcome. Open a GitHub issue describing the tool or c
 
 ## Scope
 
-This repository covers deployment exposure: TLS, authentication, MFA, secret handling, and network exposure for services that AI-assisted projects commonly run. General application security (injection, deserialization, business logic) is out of scope; the guides point to OWASP resources for that.
+This repository covers deployment exposure: TLS, authentication, MFA, secret handling, and network exposure for services that AI-assisted projects commonly run. General application security (injection, deserialization, business logic) is out of scope; the guides point to OWASP resources for that, and the [OWASP Top 10 for LLM Applications](https://genai.owasp.org/llm-top-10/) covers LLM-specific application risks such as prompt injection.
 
 ## What a guide needs
 
