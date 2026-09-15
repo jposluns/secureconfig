@@ -30,6 +30,7 @@
 - [mfa](https://raw.githubusercontent.com/jposluns/secureconfig/main/mfa.md): MFA options: identity layers with QR-code TOTP enrolment, app libraries, SSH modules, Duo
 - [machine-auth](https://raw.githubusercontent.com/jposluns/secureconfig/main/machine-auth.md): machine identity: API keys, client credentials, mutual TLS, workload identity federation, secret managers
 - [secrets](https://raw.githubusercontent.com/jposluns/secureconfig/main/secrets.md): keeping keys out of repositories, scanning, rotation after a leak
+- [vault](https://raw.githubusercontent.com/jposluns/secureconfig/main/vault.md): HashiCorp Vault: seal custody, listener TLS, audit devices, root-token retirement
 
 ## Web servers and proxies
 
