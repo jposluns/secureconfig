@@ -9914,8 +9914,8 @@ inventory is exposure; the `-i` prints the headers, so a `401` with `WWW-Authent
 Router auth is on but the port is still reachable, which is not the fixed state), `http://$1:5555/status`
 for a Node, `http://$1:3000/pressure` for browserless (exposed returns a `200` with the load JSON of
 CPU, memory, sessions and queue depth; with a `TOKEN` set the same request is rejected, so confirm the
-status against your image, repeat with a deliberately wrong token, and confirm a correct token returns
-the JSON), and the Playwright server on the port you configured (`launchServer` uses an ephemeral port
+status against your image, repeat with a deliberately wrong token, and confirm a correct token, passed in the query
+string as `?token=` followed by your token, returns the JSON), and the Playwright server on the port you configured (`launchServer` uses an ephemeral port
 unless you set one; `run-server` takes `--port`), where any HTTP answer means the port is reachable and
 is already the finding. The distinguishing behaviour for each is in the cited vendor pages.
 
