@@ -75,6 +75,7 @@ one of them is the application's.
 | 8080 | llama.cpp, Weaviate HTTP, Airflow, code-server, Open WebUI's container port, Dify's nginx when mapped to `127.0.0.1:8080`, Spring Boot, Go, and the Vast.ai Jupyter deployment; Keycloak's HTTP port, which exists only when `--http-enabled=true`; and Hasura GraphQL Engine v2, which binds every interface by default; and Argo CD's argocd-server pod listener, fronted by its Service on 80 and 443 | [model-servers.md](model-servers.md), [vector-databases.md](vector-databases.md), [workflow-orchestrators.md](workflow-orchestrators.md), [code-server.md](code-server.md), [open-webui.md](open-webui.md), [agent-builders.md](agent-builders.md), [java.md](java.md), [go.md](go.md), [gpu-clouds.md](gpu-clouds.md), [self-hosted-idp.md](self-hosted-idp.md), [headless-cms-instant-api.md](headless-cms-instant-api.md), [gitops-controllers.md](gitops-controllers.md) |
 | 8081 | Hasura's bundled data-connector agent, published beside the engine by the vendor quickstart Compose | [headless-cms-instant-api.md](headless-cms-instant-api.md) |
 | 8088 | Apache Superset | [bi-dashboards.md](bi-dashboards.md) |
+| 8093 | The GitLab Runner interactive session server, its documented example listen address, which exists only when `[session_server]` is configured | [self-hosted-ci-runners.md](self-hosted-ci-runners.md) |
 | 8123 | ClickHouse HTTP, plaintext | [clickhouse.md](clickhouse.md) |
 | 8188 | ComfyUI | [image-gen-uis.md](image-gen-uis.md) |
 | 8222 | NATS monitoring endpoints | [nats.md](nats.md) |
@@ -89,6 +90,7 @@ one of them is the application's.
 | 9001 | MinIO's web console (the `--console-address` / `MINIO_CONSOLE_ADDRESS` port, conventionally 9001) | [minio.md](minio.md) |
 | 9004, 9005, 9009, 9010 | ClickHouse MySQL compatibility, PostgreSQL compatibility, and interserver replica traffic over HTTP and HTTPS | [clickhouse.md](clickhouse.md) |
 | 9090 | InvokeAI. Prometheus also defaults here, though its guide does not state the number | [image-gen-uis.md](image-gen-uis.md), [admin-uis.md](admin-uis.md) |
+| 9252 | The GitLab Runner Prometheus metrics endpoint, served with no built-in authorization, which exists only when a metrics `listen_address` is configured | [self-hosted-ci-runners.md](self-hosted-ci-runners.md) |
 | 9091 | Milvus WebUI, or Authelia | [vector-databases.md](vector-databases.md), [fronting-auth.md](fronting-auth.md) |
 | 9092, 9093 | Kafka plaintext and SASL_SSL listeners. Which port carries which is configured, not fixed | [kafka.md](kafka.md) |
 | 9200 | Elasticsearch and OpenSearch HTTP | [elasticsearch.md](elasticsearch.md) |
