@@ -90,7 +90,6 @@ Maintainer rulings moved to `DECISIONS.md` on 2026-09-13, in preparation for the
 | ID | Item | Tags |
 | --- | --- | --- |
 | 4.2 | `site/index.html` menu group labels are `<p class="sidenav-h">`, so heading navigation skips all thirteen; promote them to real headings (L, XS) | `[a11y]` |
-| 4.6 | `tools/run_all_checks.sh`: the local-link gate scans only root `./*.md`, so links inside subdirectory Markdown are unverified; `requests/*.md` (added in #82) is the first sanctioned non-root Markdown and its links are unchecked. Extend the link gate to resolve targets in `requests/*.md` relative to each file's own directory. Found by claude QA on #82 (L, S) | `[enhance]` |
 
 ## Blocked upstream
 
