@@ -52,7 +52,7 @@ one of them is the application's.
 | 4444 | Selenium Grid Router, Hub, or Standalone, plus the Grid web UI on the same port, with no authentication by default | [headless-browser-services.md](headless-browser-services.md) |
 | 5000 | Redash, MLflow tracking server, or a .NET Kestrel default | [bi-dashboards.md](bi-dashboards.md), [mlflow.md](mlflow.md), [dotnet.md](dotnet.md) |
 | 5003 | Dify's plugin daemon debugging port, published by the supplied Compose configuration unless you remove or restrict that mapping | [agent-builders.md](agent-builders.md) |
-| 5432 | PostgreSQL, and pgvector on the same port | [postgresql.md](postgresql.md), [vector-databases.md](vector-databases.md), [cloud-firewalls.md](cloud-firewalls.md) |
+| 5432 | PostgreSQL, and pgvector on the same port; the Supabase self-hosted Supavisor pooler also publishes it | [postgresql.md](postgresql.md), [vector-databases.md](vector-databases.md), [cloud-firewalls.md](cloud-firewalls.md), [supabase-self-hosted.md](supabase-self-hosted.md) |
 | 5555 | Flower, the Celery monitor, or a Selenium Grid Node | [workflow-orchestrators.md](workflow-orchestrators.md), [headless-browser-services.md](headless-browser-services.md) |
 | 5671, 5672 | AMQP over TLS, and AMQP plaintext | [rabbitmq.md](rabbitmq.md) |
 | 5678 | n8n | [n8n.md](n8n.md) |
@@ -64,11 +64,12 @@ one of them is the application's.
 | 6379 | Redis, Valkey, or the Ray head node | [redis.md](redis.md), [ray.md](ray.md), [cloud-firewalls.md](cloud-firewalls.md) |
 | 6432 | PgBouncer, whose client-side TLS is disabled by default | [connection-poolers.md](connection-poolers.md), [postgresql.md](postgresql.md) |
 | 6443 | The Kubernetes API server on a self-managed cluster. Managed providers usually serve it on 443 instead, so its absence here proves nothing | [kubernetes.md](kubernetes.md) |
+| 6543 | The Supabase self-hosted Supavisor transaction pooler, a direct database connection published beside 5432 | [supabase-self-hosted.md](supabase-self-hosted.md) |
 | 7000 | frp server | [tunnels.md](tunnels.md) |
 | 7233 | Temporal frontend gRPC | [workflow-orchestrators.md](workflow-orchestrators.md) |
 | 7473, 7474, 7687 | Neo4j HTTPS, HTTP, and Bolt | [neo4j.md](neo4j.md) |
 | 7860 | Gradio, Stable Diffusion WebUI, or Langflow | [gradio.md](gradio.md), [image-gen-uis.md](image-gen-uis.md), [agent-builders.md](agent-builders.md) |
-| 8000 | SurrealDB, Chroma, Triton HTTP, Coolify, Vaultwarden outside Docker, or Portainer's Edge agent tunnel | [surrealdb.md](surrealdb.md), [vector-databases.md](vector-databases.md), [model-servers.md](model-servers.md), [devops-uis.md](devops-uis.md) |
+| 8000 | SurrealDB, Chroma, Triton HTTP, Coolify, Vaultwarden outside Docker, or Portainer's Edge agent tunnel, or the Supabase self-hosted API gateway (Kong), which fronts the whole stack | [surrealdb.md](surrealdb.md), [vector-databases.md](vector-databases.md), [model-servers.md](model-servers.md), [devops-uis.md](devops-uis.md), [supabase-self-hosted.md](supabase-self-hosted.md) |
 | 8001, 8002 | Triton gRPC and Triton Prometheus metrics | [model-servers.md](model-servers.md) |
 | 8055 | Directus HTTP API and admin app | [headless-cms-instant-api.md](headless-cms-instant-api.md) |
 | 8080 | llama.cpp, Weaviate HTTP, Airflow, code-server, Open WebUI's container port, Dify's nginx when mapped to `127.0.0.1:8080`, Spring Boot, Go, and the Vast.ai Jupyter deployment; Keycloak's HTTP port, which exists only when `--http-enabled=true`; and Hasura GraphQL Engine v2, which binds every interface by default | [model-servers.md](model-servers.md), [vector-databases.md](vector-databases.md), [workflow-orchestrators.md](workflow-orchestrators.md), [code-server.md](code-server.md), [open-webui.md](open-webui.md), [agent-builders.md](agent-builders.md), [java.md](java.md), [go.md](go.md), [gpu-clouds.md](gpu-clouds.md), [self-hosted-idp.md](self-hosted-idp.md), [headless-cms-instant-api.md](headless-cms-instant-api.md) |
