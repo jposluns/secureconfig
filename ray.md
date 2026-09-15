@@ -63,11 +63,17 @@ Ray warns that this costs performance (large for small workloads, smaller for la
 ```bash
 ss -tlnp | grep 8265                                    # 127.0.0.1:8265 (or the tailnet IP), never 0.0.0.0 or *
 ss -tlnp | grep -E ':6379|:10001'                       # private interface only
-curl -q -sI -o /dev/null --connect-timeout 5 --max-time 10 \
-  -w 'http=%{http_code} time_connect=%{time_connect}\n' \
-  http://REPLACE_WITH_THE_SERVER_PUBLIC_IP:8265/
-# from another network. The pass is http=000 WITH time_connect at 0.000000: no connection completed.
-# A non-zero time_connect means the TCP handshake succeeded and the dashboard port is reachable
+# from another network. Read err, not the number: it must name a refusal or timeout reaching YOUR
+# address. An HTTP code means the dashboard port answered; a resolver failure or a local socket error
+# is inconclusive, never a pass.
+(                                                       # a subshell, so your own script arguments are untouched
+  set -- REPLACE_WITH_THE_SERVER_PUBLIC_IP
+  case "${1-}" in
+    *REPLACE_WITH_*|"") echo "substitute the server's public address on the set -- line above; not probing" ;;
+    *) curl -q -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
+         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:8265/" ;;
+  esac
+)
 # Through the SSH tunnel of step 1, from a machine without the token, with RAY_AUTH_MODE=token on the cluster:
 ray job submit --address http://127.0.0.1:8265 -- python -c "print(1)"   # must fail: Unauthorized
 ```
@@ -87,4 +93,4 @@ ray job submit --address http://127.0.0.1:8265 -- python -c "print(1)"   # must 
 - Configuring Ray (TLS environment variables, ports opened by nodes): https://docs.ray.io/en/latest/ray-core/configure.html
 - Configure Ray clusters to use token authentication (KubeRay `authOptions`, 401 without token): https://docs.ray.io/en/latest/cluster/kubernetes/user-guides/kuberay-auth.html
 - Docker, port publishing (loopback publishing): https://docs.docker.com/engine/network/port-publishing/
-- curl manual (`--connect-timeout` bounds the connection phase only; the `time_connect` write-out variable): https://curl.se/docs/manpage.html
+- curl manual (`--connect-timeout` bounds the connection phase only; the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
