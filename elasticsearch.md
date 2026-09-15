@@ -13,6 +13,7 @@ Open Elasticsearch instances produced some of the largest data leaks on record. 
 
 - The security plugin provides authentication and TLS; never run with it disabled, including in Docker examples.
 - Recent versions require an initial admin password at install (the `OPENSEARCH_INITIAL_ADMIN_PASSWORD` environment variable for the demo configuration; verify the exact mechanism for your version). Make it long and random.
+- The demo configuration also seeds `internal_users.yml` with seven built-in accounts (`admin`, `anomalyadmin`, `kibanaserver`, `kibanaro`, `logstash`, `readall`, `snapshotrestore`), meant for evaluation only. `OPENSEARCH_INITIAL_ADMIN_PASSWORD` sets the `admin` password and nothing else, so the other six keep the credentials shipped in the demo file. Replace `internal_users.yml` with your own users, or remove the demo accounts, before any real deployment, and confirm each demo login is refused.
 - The demo configuration installs demo TLS certificates for evaluation; replace them with your own before any real deployment.
 
 ## Verify
@@ -40,6 +41,7 @@ An unauthenticated `GET /` returning cluster JSON is the classic finding; so is 
 
 - Elasticsearch security configuration (current docs home for cluster security): https://www.elastic.co/docs/deploy-manage/security
 - OpenSearch demo security configuration: https://docs.opensearch.org/latest/security/configuration/demo-configuration/
+- OpenSearch security, `internal_users.yml` demo accounts (the seven shipped users admin/anomalyadmin/kibanaserver/kibanaro/logstash/readall/snapshotrestore; checked 2026-09-14): https://github.com/opensearch-project/security/blob/main/config/internal_users.yml
 - Elasticsearch, automatic TLS setup for self-managed clusters (the generated `http_ca.crt` used to verify TLS from a client): https://www.elastic.co/docs/deploy-manage/security/self-auto-setup
 - ss(8), the `sport` filter expression used above: https://manpages.ubuntu.com/manpages/noble/en/man8/ss.8.html
 - Elasticsearch networking settings (`network.host` "Defaults to `_local_`"; security auto-configuration "will add `http.host: 0.0.0.0`"): https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/networking-settings
