@@ -105,6 +105,8 @@ curl -q -sI https://chat.example.com/                      # via the proxy: TLS,
 #   user's existing session)
 ```
 
+For a multi-user chat or RAG deployment (AnythingLLM workspaces, or a shared assistant over shared documents), verify isolation at the data layer, not only at login. First, as user A, ask a question whose answer lives only in user A's documents or past conversations and confirm A's own document supplies the answer, the positive control that retrieval works at all; then ask the same question as user B and confirm B gets nothing of A's. A retrieval step that searches every user's embeddings without enforcing per-document access hands one user's content into another's session even though each logged in separately; scope retrieval to the requesting user's own documents or workspace, and where the store is pgvector the tenant row-level-security check in [vector-databases.md](vector-databases.md) is the store-side half. A retrieval filter alone does not isolate conversation history, memory, or a shared cache; check each of those the same way. This isolation check is reasoned, not demonstrated: the authoring environment has no live multi-user RAG deployment; backlog row 1.71 tracks demonstrating it in the exposed and fixed states.
+
 ## Common mistakes
 
 - Leaving Chainlit unauthenticated because "it's just for testing"; public by default means public the moment it is reachable.
