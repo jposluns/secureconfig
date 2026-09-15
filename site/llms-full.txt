@@ -6219,7 +6219,7 @@ MFA: there is no login for a person, so no second factor applies; human access t
 ## Verify
 
 ```bash
-ss -tlnup | grep 11211                                    # 127.0.0.1 or the private address; no UDP line
+ss -tlnup                                              # read every listener: 11211 on 127.0.0.1 or the private address only, no UDP socket on 11211, nothing unexpected
 printf 'stats\r\nquit\r\n' | nc 127.0.0.1 11211           # only for the loopback, no-auth, no-TLS
                                                           # configuration in step 1. On the recommended
                                                           # deployment this FAILS three times over:
@@ -6763,7 +6763,7 @@ MFA: Ollama has no login of its own, so a second factor can only come from the f
 ## Verify
 
 ```bash
-ss -tlnp | grep 11434                                  # 127.0.0.1 only
+ss -tlnp                                               # read every listener: 11434 on 127.0.0.1 only (or absent, behind an unpublished Docker port), nothing unexpected
 # from another machine. Read err, not the number: it must name a refusal or timeout reaching YOUR
 # address. An HTTP code means the port answered. A resolver failure, a local socket error, or a
 # timeout that did not come from the remote address is inconclusive, never a pass.
