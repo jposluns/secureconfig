@@ -4825,6 +4825,7 @@ Every port `ss` shows listening should be either closed (not exposed at the plat
 
 - Assuming a rented box has a default-deny firewall like a major cloud's security group; most rented-GPU platforms do not.
 - Treating a template's HTTPS proxy URL as proof the underlying service is authenticated; the proxy secures transport, not access.
+- Overlooking a template's remote desktop: a ComfyUI or Linux-desktop image may include a noVNC web interface served on a port like 6080, backed by a VNC server on a port such as 5900 or 5901, either of which may default to a weak or empty password and be published like any other listener. Check both listeners and their public mappings for missing or weak authentication: the browser page's HTTPS does not protect a separately reachable VNC connection, so a direct VNC mapping needs its own strong password and an encrypted tunnel, or should be kept off the public mapping. Test a direct VNC mapping with a VNC client, since the browser access controls and the HTTP status checks above may not cover it.
 - Leaving a Modal Web Function without `requires_proxy_auth=True` because Endpoints and Servers are private by default and it is easy to assume Web Functions are too.
 - Reusing a rented box's platform login (RunPod/Vast.ai/Lambda/Modal account) as if it were the same thing as the workload's own authentication; they are separate controls.
 
