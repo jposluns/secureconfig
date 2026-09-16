@@ -300,6 +300,8 @@ CASES = (
      {"404.html": P404_SHARED}, HEADERS.replace(" " + STYLE_404_PIN, "", 1), False, None),
     ("a bogus unused hash appended to style-src, an orphan pin the gate now rejects",
      None, HEADERS.replace(STYLE_404_PIN, STYLE_404_PIN + " " + ORPHAN, 1), True, "orphan"),
+    ("a used pin also spelled in the base64url alphabet is the same pin, not an orphan",
+     None, HEADERS.replace(STYLE_404_PIN, STYLE_404_PIN + " " + STYLE_404_PIN.replace("+", "-").replace("/", "_"), 1), False, None),
     ("the CSP moved under a / rule only",
      None, HEADERS.replace("/*", "/", 1), True, "not the /* rule"),
     ("a second CSP under a /guides/* rule, which governs the 404 page on those paths",

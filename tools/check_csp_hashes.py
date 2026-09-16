@@ -157,13 +157,17 @@ def pin_tokens(text):
 
 
 def normalize_pin(token):
-    """A source expression with only its algorithm name lower-cased.
+    """A source expression with its algorithm name lower-cased and its digest folded from the
+    base64url alphabet to standard base64.
 
-    CSP3 matches the algorithm ASCII-case-insensitively, so `'SHA256-...'` is the same pin. The
-    base64 after it is case-SENSITIVE, which is why this cannot simply lower the token.
+    CSP3 matches the algorithm ASCII-case-insensitively, so `'SHA256-...'` is the same pin; the base64
+    after it is case-SENSITIVE, which is why this cannot simply lower the token. CSP3 also accepts the
+    base64url alphabet, treating `-`/`_` as `+`/`/`, so those are folded to the standard alphabet here.
+    Standard base64 never contains `-`/`_`, so this is a no-op on a canonically-spelled pin; it lets a
+    base64url spelling compare equal to its standard spelling in both block matching and orphan detection.
     """
     head, sep, tail = token.partition("-")
-    return head.lower() + sep + tail if sep else token
+    return head.lower() + sep + tail.replace("-", "+").replace("_", "/") if sep else token
 
 
 def is_hash_pin(token):
