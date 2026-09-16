@@ -27,9 +27,12 @@ one of them is the application's.
 | Port | May be | Documented in |
 | --- | --- | --- |
 | 22 | SSH, which should not be publicly reachable | [cloud-firewalls.md](cloud-firewalls.md), [host.md](host.md) |
+| 25 | SMTP relay or MX; the exposure to index is an open relay, not the port itself | [transactional-email-posture.md](transactional-email-posture.md) |
 | 53 | Cluster DNS, in the Kubernetes NetworkPolicy egress rules, over both UDP and TCP | [container-hardening.md](container-hardening.md) |
 | 80, 443 | Usually the TLS proxy, but also native HTTPS listeners in the language guides, and Vaultwarden's container port 80 | [nginx.md](nginx.md), [caddy.md](caddy.md), [haproxy.md](haproxy.md), [traefik.md](traefik.md), [apache.md](apache.md), [lighttpd.md](lighttpd.md), [go.md](go.md), [dotnet.md](dotnet.md), [devops-uis.md](devops-uis.md) |
 | 81 | Nginx Proxy Manager admin UI (the proxy itself is on 80 and 443) | [devops-uis.md](devops-uis.md) |
+| 465 | SMTP submission over implicit TLS; transport is encrypted from the first byte, authorization is still separate | [transactional-email-posture.md](transactional-email-posture.md) |
+| 587 | SMTP submission with STARTTLS; opportunistic TLS can be stripped, exposing the credential | [transactional-email-posture.md](transactional-email-posture.md) |
 | 1234 | LM Studio local server | [model-servers.md](model-servers.md) |
 | 1337 | Strapi HTTP server and admin panel; the first visitor to the admin panel becomes the administrator while no account exists yet | [headless-cms-instant-api.md](headless-cms-instant-api.md) |
 | 1880 | Node-RED editor and admin API, which have no authentication by default | [devops-uis.md](devops-uis.md) |
