@@ -72,7 +72,6 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 2.20 | Guide for realtime-voice-infra (LiveKit self-hosted, coturn): voice-agent deployments are increasingly common and add API-key, WebRTC, and TURN relay surfaces none of the existing guides map (L, M) | `[gap]` |
 
 ## Priority 4: Tooling and process
 
