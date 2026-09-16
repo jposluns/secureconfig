@@ -18,7 +18,7 @@ files=(
   rabbitmq.md mosquitto.md
   kafka.md clickhouse.md neo4j.md memcached.md object-storage.md nats.md search-engines.md sqlite.md surrealdb.md time-series-metrics-stores.md
   jupyter.md ollama.md open-webui.md litellm.md model-servers.md
-  gradio.md streamlit.md n8n.md code-server.md
+  gradio.md streamlit.md n8n.md code-server.md self-hosted-error-trackers.md
   vector-databases.md mcp-servers.md ray.md mlflow.md agent-builders.md ai-infra-services.md
   image-gen-uis.md chat-uis.md llm-observability.md workflow-orchestrators.md
   admin-uis.md devops-uis.md cors.md headers.md firebase-supabase.md supabase-self-hosted.md web-exposure.md realtime-webhooks.md transactional-email-posture.md bi-dashboards.md pocketbase.md headless-browser-services.md headless-cms-instant-api.md exposure-index.md common-mistakes.md

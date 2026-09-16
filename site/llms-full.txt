@@ -177,6 +177,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [jupyter.md](jupyter.md) | Jupyter Server, Lab, and Notebook: hashed password and TLS |
 | [n8n.md](n8n.md) | n8n: listen address, native TLS, owner setup, MFA enforcement |
 | [code-server.md](code-server.md) | code-server: SSH forwarding first, password auth, TLS |
+| [self-hosted-error-trackers.md](self-hosted-error-trackers.md) | Sentry and GlitchTip: registration defaults, event-data leakage, reverse-proxy TLS |
 
 ### Dashboards and admin consoles
 
@@ -7918,6 +7919,127 @@ An unauthenticated editor in a private browser window means whoever finds the UR
 - code-server repository: https://github.com/coder/code-server
 
 ======================================================================
+==> self-hosted-error-trackers.md
+======================================================================
+
+# Self-hosted error trackers: Sentry and GlitchTip
+
+An error tracker exists to collect what your application would otherwise hide: stack traces, the source lines around each frame, request bodies and headers, environment variables, release and server names, and whatever user context the SDK attaches. That makes an exposed tracker one of the richest leaks in a deployment, because it aggregates secrets, tokens, and personal data that were never meant to leave the app, and it does so in a searchable UI. The two common self-hosted choices behave differently at their most important default, so the guide takes them one at a time. [fronting-auth.md](fronting-auth.md) is the reverse-proxy pattern both rely on for TLS, [secrets.md](secrets.md) covers the signing keys, and [mfa.md](mfa.md) is the account layer. Values below are illustrative; replace them.
+
+One thing both share: the DSN a client uses to send events is a public, client-side key by design, not a secret. It authorizes event submission and nothing else, so finding one in shipped JavaScript is expected and is not the exposure this guide is about. The exposure is the tracker's own web and API, and the data they hold.
+
+## Sentry
+
+The `getsentry/self-hosted` Docker Compose distribution fronts the web and API with a bundled nginx. Its published port comes from `SENTRY_BIND` in `.env`, which ships as `SENTRY_BIND=9000` (a bare port), so nginx binds `0.0.0.0:9000` and the instance answers on every interface. Bind it to loopback and let your own proxy terminate TLS in front:
+
+```ini
+# .env
+SENTRY_BIND=127.0.0.1:9000
+```
+
+Everything else in the Compose file (the web and relay processes, PostgreSQL, Redis, Kafka, and the ClickHouse and Snuba services) is an internal service that the distribution does not publish; leave it that way, because those backing stores hold the same event data with no authentication of their own.
+
+Registration is off by default: `auth.allow-registration` defaults to `False`, so an exposed instance does not by itself let a stranger create an account. Do not turn it on for an internet-facing tracker, and create the first administrator with the superuser flag set explicitly (a plain `createuser` prompts for superuser and defaults to no):
+
+```bash
+docker compose run --rm web createuser --superuser
+```
+
+Set the rest in `sentry/config.yml`, and generate the signing key rather than copying one:
+
+```yaml
+system.url-prefix: "https://sentry.example.com"
+auth.allow-registration: false
+# system.secret-key: generate once with `sentry config generate-secret-key`, keep it out of version control
+```
+
+Because your proxy terminates TLS, Sentry has to be told it is behind HTTPS, or its session and CSRF cookies are never marked secure. The bundled `sentry/sentry.conf.example.py` ships the relevant settings commented out; enable them in `sentry/sentry.conf.py`:
+
+```python
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+```
+
+One catch is specific to the bundled stack: its own nginx sets `proxy_set_header X-Forwarded-Proto $scheme`, which overwrites whatever an outer proxy sent, so if you add a TLS proxy in front of nginx on `9000` it forwards `http` and Sentry still sees plaintext. Either terminate TLS at the bundled nginx itself, or propagate the real scheme through it, and verify the scheme Sentry actually receives rather than assuming the header setting alone took effect.
+
+Enforce member MFA and data scrubbing at the organization level (an authenticated API call, or the same fields in the org settings UI): `require2FA`, `dataScrubber`, `dataScrubberDefaults`, and `scrubIPAddresses`. Scrubbing matters precisely because the tracker ingests request data, so redacting passwords, tokens, and IPs at intake reduces what a later exposure leaks.
+
+The file setting is authoritative for this option: `auth.allow-registration` is a prioritize-disk option, so the value in `config.yml` wins over any value stored in the database, not the other way around. Unverified until checked in your deployment: any SSO path that provisions accounts around registration, the full list of auxiliary listeners your compose revision publishes, and the effective scrubbing rules.
+
+## GlitchTip
+
+GlitchTip is a single Django application, and its Compose distribution publishes it on port `8000`. Its default is the opposite of Sentry's on the setting that matters most: `ENABLE_USER_REGISTRATION` defaults to `True`, which means an exposed instance offers open self-signup to anyone who reaches it. Close it, and remember the value's own nuance:
+
+```ini
+# When True (the default), anyone may self-register; when False, self-signup is disabled
+# after the first user exists. Set it False once your accounts are provisioned.
+ENABLE_USER_REGISTRATION=False
+```
+
+Bind the app to loopback or a private interface and terminate TLS at a reverse proxy, since GlitchTip serves no TLS of its own. Give it a unique `SECRET_KEY` (Django's session and CSRF signing key) and keep it out of version control. GlitchTip has supported two-factor authentication since v1.8; enable it and require it for your users. PostgreSQL and the optional Valkey or Redis are internal services; do not publish them.
+
+Unverified until checked: the exact host bind in your Compose sample, whether MFA is enforced rather than merely available in your version, and whether any single-sign-on you add carries its own registration path around `ENABLE_USER_REGISTRATION`.
+
+## Shared exposures
+
+- **The event data itself.** Both tools store stack traces with source context, request payloads, and user identifiers. An exposed backing store is reachable with the credentials the compose ships and expects on its internal network, so publishing it is a direct disclosure of every event it holds; an exposed web or API discloses to the degree an attacker can authenticate to it, which is why the registration default and the intake scrubbing both matter. Scrub at intake and keep the stores private.
+- **Open registration.** GlitchTip ships it on; Sentry ships it off. What a self-registered stranger then reaches differs by tool: Sentry's single-organization mode adds new sign-ups to the default organization, while a GlitchTip account is separate from organization membership, so confirm your own membership and project permissions rather than assuming either extreme. Confirm the live setting rather than trusting the default.
+- **The public DSN misread as a secret.** Rotating a DSN does not protect the tracker; authenticating its web and API does. Do not treat a leaked DSN as the incident.
+- **Plaintext.** Neither serves TLS natively, so an instance reachable without a terminating proxy sends session cookies and the event UI in the clear.
+
+## Verify
+
+Every probe below is reasoned, not demonstrated: the authoring environment has no container runtime, so the outcomes are derived from the cited vendor sources rather than observed, and backlog row 2.33 tracks demonstrating them against live instances in the exposed and fixed states. A redirect to a login page, a 404, or a TLS error is inconclusive, never the fixed state.
+
+```bash
+sudo ss -tlnp    # the tracker's own port only, on a private address: 9000 for Sentry, 8000 for
+                 # GlitchTip; and no PostgreSQL, Redis, Kafka, or ClickHouse port published beside it
+```
+
+```bash
+# Registration discriminator against the plaintext listener. Substitute the URL inside the single
+# quotes on the set -- line and paste the whole block so the guard runs; read the body, since an
+# open form and a closed one can both return 200.
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_REGISTER_URL'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute a full URL on the set -- line above; not probing"; exit 2 ;;
+    http://*|https://*) : ;;
+    *) echo "expected an http:// or https:// URL; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
+)
+```
+
+Point that block at Sentry's `http://tracker.example.com:9000/`: because the bundled config sets `SENTRY_SINGLE_ORGANIZATION`, `/auth/register/` redirects to the organization login, so follow the redirect (add `-L`) to the served login page, where an instance with registration on presents a create-account path and a closed one (the default) does not. For GlitchTip's `http://tracker.example.com:8000/`, an instance with `ENABLE_USER_REGISTRATION=True` accepts a new account through its signup, and one set `False` refuses after the first user exists; confirm by attempting a throwaway registration in an operator-controlled test, never against a shared instance. For each backing store, run the same guarded block against its port from off-host: those ports speak their own protocols, not HTTP, so read the connection outcome in the `exit` and `err` fields (a refused connection is the closed, fixed state; an accepted one is reachable) rather than any HTTP status. The `ss` inventory shows what Docker has published on the host, but a container port can be reachable through Docker's forwarding without a matching host socket, so the off-host probe is what proves it closed. Distinguish the public HTTPS proxy from the direct backend ports, and confirm plain HTTP to the web redirects to that proxy rather than serving the app. A reachable login page alone proves only that the port is open, not that registration or the backing stores are closed.
+
+## Common mistakes
+
+- Publishing Sentry with the shipped `SENTRY_BIND=9000`, which binds every interface, instead of a loopback address behind a proxy.
+- Leaving GlitchTip's `ENABLE_USER_REGISTRATION` at its default `True` on an internet-facing instance, so anyone can self-register.
+- Treating a leaked client DSN as the exposure while the tracker's own web and API stay unauthenticated.
+- Publishing a backing service (PostgreSQL, Redis, Kafka, ClickHouse) beside the tracker, which holds the same event data with no auth of its own.
+- Skipping data scrubbing, so secrets and personal data captured in events sit in the tracker in the clear.
+
+## Sources (checked September 2026)
+
+- Sentry self-hosted Docker Compose (`SENTRY_BIND`, the bundled nginx publication): https://github.com/getsentry/self-hosted/blob/26.8.0/docker-compose.yml
+- Sentry self-hosted `.env` (`SENTRY_BIND=9000` default): https://github.com/getsentry/self-hosted/blob/26.8.0/.env
+- Sentry `auth.allow-registration` default `False`: https://github.com/getsentry/sentry/blob/26.8.0/src/sentry/options/defaults.py
+- Sentry `createuser` (explicit `--superuser`): https://github.com/getsentry/sentry/blob/26.8.0/src/sentry/runner/commands/createuser.py
+- Sentry organization update API (`require2FA`, data scrubbing fields): https://docs.sentry.io/api/organizations/update-an-organization/
+- Sentry bundled configuration (`SENTRY_SINGLE_ORGANIZATION`, the commented-out `SECURE_PROXY_SSL_HEADER`, `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`): https://github.com/getsentry/self-hosted/blob/26.8.0/sentry/sentry.conf.example.py
+- Sentry DSN explainer (a DSN is public and allows only event submission, not read access): https://docs.sentry.io/concepts/key-terms/dsn-explainer/
+- GlitchTip installation (port `8000`, `ENABLE_USER_REGISTRATION` default and behavior): https://glitchtip.com/documentation/install
+- GlitchTip two-factor authentication (available since v1.8): https://glitchtip.com/blog/2021-09-17-glitchtip-1-8/
+
+======================================================================
 ==> vector-databases.md
 ======================================================================
 
@@ -11080,7 +11202,7 @@ one of them is the application's.
 | 7233 | Temporal frontend gRPC | [workflow-orchestrators.md](workflow-orchestrators.md) |
 | 7473, 7474, 7687 | Neo4j HTTPS, HTTP, and Bolt | [neo4j.md](neo4j.md) |
 | 7860 | Gradio, Stable Diffusion WebUI, or Langflow | [gradio.md](gradio.md), [image-gen-uis.md](image-gen-uis.md), [agent-builders.md](agent-builders.md) |
-| 8000 | SurrealDB, Chroma, Triton HTTP, Coolify, Vaultwarden outside Docker, or Portainer's Edge agent tunnel, or the Supabase self-hosted API gateway (Kong), which fronts the whole stack | [surrealdb.md](surrealdb.md), [vector-databases.md](vector-databases.md), [model-servers.md](model-servers.md), [devops-uis.md](devops-uis.md), [supabase-self-hosted.md](supabase-self-hosted.md) |
+| 8000 | SurrealDB, Chroma, Triton HTTP, Coolify, Vaultwarden outside Docker, Portainer's Edge agent tunnel, the Supabase self-hosted API gateway (Kong) which fronts the whole stack, or GlitchTip's web, API, and open self-signup | [surrealdb.md](surrealdb.md), [vector-databases.md](vector-databases.md), [model-servers.md](model-servers.md), [devops-uis.md](devops-uis.md), [supabase-self-hosted.md](supabase-self-hosted.md), [self-hosted-error-trackers.md](self-hosted-error-trackers.md) |
 | 8001, 8002 | Triton gRPC and Triton Prometheus metrics | [model-servers.md](model-servers.md) |
 | 8055 | Directus HTTP API and admin app | [headless-cms-instant-api.md](headless-cms-instant-api.md) |
 | 8080 | llama.cpp, Weaviate HTTP, Airflow, code-server, Open WebUI's container port, Dify's nginx when mapped to `127.0.0.1:8080`, Spring Boot, Go, and the Vast.ai Jupyter deployment; Keycloak's HTTP port, which exists only when `--http-enabled=true`; and Hasura GraphQL Engine v2, which binds every interface by default; and Argo CD's argocd-server pod listener, fronted by its Service on 80 and 443 | [model-servers.md](model-servers.md), [vector-databases.md](vector-databases.md), [workflow-orchestrators.md](workflow-orchestrators.md), [code-server.md](code-server.md), [open-webui.md](open-webui.md), [agent-builders.md](agent-builders.md), [java.md](java.md), [go.md](go.md), [gpu-clouds.md](gpu-clouds.md), [self-hosted-idp.md](self-hosted-idp.md), [headless-cms-instant-api.md](headless-cms-instant-api.md), [gitops-controllers.md](gitops-controllers.md) |
@@ -11105,7 +11227,7 @@ one of them is the application's.
 | 8812 | QuestDB PostgreSQL wire protocol, shipping the default credential `admin` / `quest` | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
 | 8888 | Jupyter, including RunPod deployments. The Vast.ai Jupyter launch mode uses 8080 instead | [jupyter.md](jupyter.md), [gpu-clouds.md](gpu-clouds.md) |
 | 9222 | Chrome or Chromium DevTools Protocol remote debugging, an endpoint with no authentication whose reachability is full browser takeover | [headless-browser-services.md](headless-browser-services.md) |
-| 9000 | ClickHouse native TCP (plaintext), MinIO's S3 API, PHP-FPM, TGI's Prometheus listener, or Portainer's legacy HTTP port; Keycloak's management port serving `/health` and `/metrics`, authentik's HTTP port, or QuestDB's web console, REST, and SQL endpoints, whose Basic-auth keys are unset by default | [clickhouse.md](clickhouse.md), [minio.md](minio.md), [php.md](php.md), [model-servers.md](model-servers.md), [devops-uis.md](devops-uis.md), [self-hosted-idp.md](self-hosted-idp.md), [time-series-metrics-stores.md](time-series-metrics-stores.md) |
+| 9000 | ClickHouse native TCP (plaintext), MinIO's S3 API, PHP-FPM, TGI's Prometheus listener, or Portainer's legacy HTTP port; Keycloak's management port serving `/health` and `/metrics`, authentik's HTTP port, QuestDB's web console, REST, and SQL endpoints whose Basic-auth keys are unset by default, or the Sentry self-hosted web and API, published here by the bundled nginx | [clickhouse.md](clickhouse.md), [minio.md](minio.md), [php.md](php.md), [model-servers.md](model-servers.md), [devops-uis.md](devops-uis.md), [self-hosted-idp.md](self-hosted-idp.md), [time-series-metrics-stores.md](time-series-metrics-stores.md), [self-hosted-error-trackers.md](self-hosted-error-trackers.md) |
 | 9009 | QuestDB InfluxDB line protocol (TCP), which accepts unauthenticated writes unless `line.tcp.auth.db.path` is set; also ClickHouse interserver replica traffic over HTTP | [time-series-metrics-stores.md](time-series-metrics-stores.md), [clickhouse.md](clickhouse.md) |
 | 9001 | MinIO's web console (the `--console-address` / `MINIO_CONSOLE_ADDRESS` port, conventionally 9001) | [minio.md](minio.md) |
 | 9003 | QuestDB minimal HTTP health and metrics server, which follows the HTTP authentication policy you set (unauthenticated when `http.user` is unset) | [time-series-metrics-stores.md](time-series-metrics-stores.md) |

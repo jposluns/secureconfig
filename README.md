@@ -168,6 +168,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [jupyter.md](jupyter.md) | Jupyter Server, Lab, and Notebook: hashed password and TLS |
 | [n8n.md](n8n.md) | n8n: listen address, native TLS, owner setup, MFA enforcement |
 | [code-server.md](code-server.md) | code-server: SSH forwarding first, password auth, TLS |
+| [self-hosted-error-trackers.md](self-hosted-error-trackers.md) | Sentry and GlitchTip: registration defaults, event-data leakage, reverse-proxy TLS |
 
 ### Dashboards and admin consoles
 
