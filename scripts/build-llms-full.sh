@@ -16,7 +16,7 @@ files=(
   host.md cloud-firewalls.md paas.md egress-metadata.md gpu-clouds.md deployment-lifecycle.md
   postgresql.md connection-poolers.md mysql.md mongodb.md redis.md elasticsearch.md minio.md
   rabbitmq.md mosquitto.md
-  kafka.md clickhouse.md neo4j.md memcached.md object-storage.md nats.md search-engines.md sqlite.md surrealdb.md
+  kafka.md clickhouse.md neo4j.md memcached.md object-storage.md nats.md search-engines.md sqlite.md surrealdb.md time-series-metrics-stores.md
   jupyter.md ollama.md open-webui.md litellm.md model-servers.md
   gradio.md streamlit.md n8n.md code-server.md
   vector-databases.md mcp-servers.md ray.md mlflow.md agent-builders.md ai-infra-services.md

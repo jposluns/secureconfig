@@ -77,6 +77,7 @@
 - [redis](https://raw.githubusercontent.com/jposluns/secureconfig/main/redis.md): Redis: TLS listener, ACLs, requirepass, bind and protected mode
 - [sqlite](https://raw.githubusercontent.com/jposluns/secureconfig/main/sqlite.md): SQLite in deployment, the file is the exposure; Turso tokens; Litestream
 - [surrealdb](https://raw.githubusercontent.com/jposluns/secureconfig/main/surrealdb.md): SurrealDB, root credentials, bind address, access levels, TLS
+- [time-series-metrics-stores](https://raw.githubusercontent.com/jposluns/secureconfig/main/time-series-metrics-stores.md): InfluxDB, VictoriaMetrics, and QuestDB auth defaults and fronting
 - [elasticsearch](https://raw.githubusercontent.com/jposluns/secureconfig/main/elasticsearch.md): Elasticsearch and OpenSearch
 - [clickhouse](https://raw.githubusercontent.com/jposluns/secureconfig/main/clickhouse.md): user passwords, secure ports, network restrictions
 - [neo4j](https://raw.githubusercontent.com/jposluns/secureconfig/main/neo4j.md): initial password, Bolt and HTTPS TLS, auth stays on

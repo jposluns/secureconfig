@@ -122,6 +122,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [redis.md](redis.md) | Redis: TLS listener, ACLs, requirepass, bind and protected mode |
 | [sqlite.md](sqlite.md) | SQLite in deployment, the file is the exposure; Turso tokens; Litestream |
 | [surrealdb.md](surrealdb.md) | SurrealDB, root credentials, bind address, access levels, TLS |
+| [time-series-metrics-stores.md](time-series-metrics-stores.md) | InfluxDB, VictoriaMetrics, and QuestDB: default-off auth, default credentials, and fronting |
 | [elasticsearch.md](elasticsearch.md) | Elasticsearch and OpenSearch: keep the built-in security on |
 | [clickhouse.md](clickhouse.md) | ClickHouse: user passwords, secure ports, network restrictions |
 | [neo4j.md](neo4j.md) | Neo4j: initial password, Bolt and HTTPS TLS, auth stays on |
