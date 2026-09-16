@@ -7219,17 +7219,17 @@ sudo ss -ulnp    # RPC 8400, 8401; 9000, 9003, 8812, 9009, each only on its inte
 
 ```bash
 # Per-target discriminator against the default plaintext listener: an exposed store returns the named
-# body or a 200, a fixed one behind auth returns 401. Substitute a full http:// URL on the set -- line
-# and paste the whole block so the guard runs; the body is kept because one target discriminates on it.
+# body or a 200, a fixed one behind auth returns 401. Substitute a full URL on the set -- line
+# and paste the whole block so the guard runs; use `http://` for the exposed check and the hardened `https://` entrypoint for the re-run, and the body is kept because one target discriminates on it.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_URL'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute a full http:// URL on the set -- line above; not probing"; exit 2 ;;
-    http://*) : ;;
-    *) echo "probe the plaintext exposed listener over http://; not probing"; exit 2 ;;
+    *REPLACE_WITH_*|"") echo "substitute a full URL on the set -- line above; not probing"; exit 2 ;;
+    http://*|https://*) : ;;
+    *) echo "expected an http:// or https:// URL; not probing"; exit 2 ;;
   esac
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
