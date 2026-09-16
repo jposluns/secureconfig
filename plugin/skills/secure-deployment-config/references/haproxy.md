@@ -99,7 +99,7 @@ curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --dat
                                     # needs an isolated environment with the http-request deny line
                                     # removed
 rm -f /tmp/under.bin /tmp/over.bin
-ss -tlnp   # read every listener; the backend itself: 127.0.0.1 only, never 0.0.0.0. All the checks
+ss -tlnp   # read every listener; 3000: the backend itself: 127.0.0.1 only, never 0.0.0.0. All the checks
                                     # above pass while the backend also answers directly on port 3000,
                                     # which bypasses HAProxy's TLS and its authentication
 ```

@@ -202,10 +202,10 @@ The `local ... peer` line above has the same shape and the same requirement. `pe
 ## 7. Verify
 
 ```bash
-ss -tlnp   # read every listener, do not grep to the port you expect
+ss -tlnp   # read every listener; 6432/9999/9898
 ```
 
-Read that as an inventory rather than a pass. Every address printed is one the pooler answers on, so an entry showing `0.0.0.0:9898` or `[::]:9898` is section 1 not applied, whatever `listen_addresses` says.
+Read that as an inventory rather than a pass. The pooler's own ports (`6432`, `9999`, `9898`) must each be on `127.0.0.1` or a private address; an entry showing `0.0.0.0:9898` or `[::]:9898` is section 1 not applied, whatever `listen_addresses` says, and any listener you cannot account for is its own finding.
 
 The client hop takes three commands, not one. A single failing connection proves nothing, because a wrong password fails the same way as a refused plaintext connection; and a passing pair proves less than it looks, because a `trust` method in the HBA file lets any password through. Put the real password in `~/.pgpass` at mode `600` rather than the environment, which PostgreSQL says is "not recommended for security reasons" because some systems expose a process's environment to other users.
 

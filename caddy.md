@@ -128,11 +128,11 @@ curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --dat
                                      # same code, so attributing the refusal needs an isolated
                                      # environment with request_body removed
 rm -f /tmp/under.bin /tmp/over.bin
-ss -tlnp   # read every listener; the app itself: 127.0.0.1 only, never 0.0.0.0. Every check above
+ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.0.0.0. Every check above
                                      # passes while the app also answers directly on port 3000, which
                                      # bypasses Caddy's TLS and its authentication
 ss -tlnp   # read every listener; the admin API on TCP: only 127.0.0.1:2019 or [::1]:2019, never a
-                                     # public address. An empty result is not a pass on its own: it also
+                                     # public address. A missing 2019 line is not a pass on its own: it also
                                      # means you moved it to a unix socket or set admin off, so confirm which
 ls -l /run/caddy/admin.sock          # if you bound it to a unix socket: it exists and is owner-restricted
                                      # (a stream socket, so it does not show in ss -tlnp; use ss -xlp to list it)

@@ -65,7 +65,7 @@ curl_setopt($ch, CURLOPT_CAINFO, '/etc/ssl/certs/internal-ca.pem'); // internal 
 ## Verify
 
 ```bash
-ss -xlnp   # read every listener; Unix socket; with TCP, ss -tlnp shows 127.0.0.1:9000 only
+ss -xlnp   # read every listener; php-fpm: Unix socket; with TCP, ss -tlnp shows 127.0.0.1:9000 only
 curl -q -sI https://app.example.com/                             # succeeds without -k
 curl -q -sI https://app.example.com/login | grep -i set-cookie   # secure; httponly; samesite=lax
 curl -q -s -o /dev/null -w '%{http_code}\n' https://app.example.com/REPLACE_WITH_PROTECTED_PATH

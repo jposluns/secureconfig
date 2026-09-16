@@ -78,7 +78,7 @@ SSO: the `Microsoft.AspNetCore.Authentication.OpenIdConnect` package adds `.AddO
 curl -q -sI http://example.com/         # expect 307 or 308 with a https:// Location
 curl -q -sI https://example.com/        # succeeds without -k; shows Strict-Transport-Security
 curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/api   # 401 or 403 without credentials
-ss -tlnp   # read every listener; behind a proxy: 127.0.0.1 and ::1 only
+ss -tlnp   # read every listener; dotnet: behind a proxy: 127.0.0.1 and ::1 only
 ```
 
 ## Sources (checked September 2026)

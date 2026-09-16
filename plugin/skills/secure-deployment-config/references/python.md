@@ -93,7 +93,7 @@ Reach it through an SSH tunnel, including one that runs over your tailnet, never
 ```bash
 curl -q -sI https://example.com/        # succeeds without -k
 curl -q -s  https://example.com/api     # expect 401/403 without credentials
-ss -tlnp   # read every listener; behind a proxy: 127.0.0.1 only
+ss -tlnp   # read every listener; gunicorn/uvicorn/python: behind a proxy: 127.0.0.1 only
 ```
 
 ## Sources (checked September 2026)

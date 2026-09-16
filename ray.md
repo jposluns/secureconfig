@@ -62,7 +62,7 @@ Ray warns that this costs performance (large for small workloads, smaller for la
 
 ```bash
 ss -tlnp   # read every listener; 127.0.0.1:8265 (or the tailnet IP), never 0.0.0.0 or *
-ss -tlnp   # read every listener; private interface only
+ss -tlnp   # read every listener; 6379/10001: private interface only
 # from another network, checking the dashboard port is unreachable from outside. The pass is that no TCP
 # connection formed: time_connect stays 0.000000 and err names a connection-level failure (refused, no
 # route, or a filtered-port connect timeout). A non-zero time_connect, or any http code, means the

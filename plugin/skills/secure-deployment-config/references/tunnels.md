@@ -62,7 +62,7 @@ To publish such an app, do not widen `GatewayPorts`. Leave it `no` so the forwar
 # frp: a client with the wrong token is rejected, not connected
 frpc -c frpc-wrongtoken.toml   # expect an authentication failure, no proxy registered
 
-ss -ulnp   # read every listener; WireGuard: only the one UDP port listening
+ss -ulnp   # read every listener; 51820: WireGuard: only the one UDP port listening
 sudo ufw status verbose        # no other inbound rule added for the tunneled service
 
 # positive control: from the peer, a destination inside its intended subnet must succeed, proving
@@ -78,7 +78,7 @@ ping -c1 192.168.1.50          # expect 100 percent packet loss
 sudo nft list ruleset | grep -A1 'saddr 192.168.88.0/24'   # packets and bytes both greater than 0
 
 # ssh -R: on the SERVER, a forwarded port binds 127.0.0.1 (or [::1]) with GatewayPorts no, never 0.0.0.0
-ss -tlnp   # read every listener; only a loopback address unless you deliberately published it
+ss -tlnp   # read every listener; 8080: only a loopback address unless you deliberately published it
 ```
 
 ## Sources (checked September 2026)

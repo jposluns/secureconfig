@@ -151,7 +151,7 @@ probe() { curl -q --noproxy '*' -sS "$@"; }
 #    embedded outpost's session store and WebSocket connections. It moved tasks to
 #    Postgres in 2025.8 and the rest in 2025.10, which "no longer uses Redis at all", so
 #    whether this port matters depends on your version. Check it rather than assume.
-ss -tlnp   # read every listener; 127.0.0.1 or an RFC 1918 address only
+ss -tlnp   # read every listener; 6379/7800/8080/8443/9000/9443/9300/57800: 127.0.0.1 or an RFC 1918 address only
 # ss on the HOST does not see a container's own namespace, and a published Docker port
 # bypasses the host firewall besides, so cross-check what Compose actually published:
 docker compose ps --format 'table {{.Service}}\t{{.Ports}}'

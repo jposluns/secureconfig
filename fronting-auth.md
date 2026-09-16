@@ -122,7 +122,7 @@ oauth2-proxy's MFA is whatever its OIDC/OAuth provider enforces; Pomerium's is w
 ## Verify
 
 ```bash
-ss -tlnp   # read every listener; app on 127.0.0.1 only
+ss -tlnp   # read every listener; 3000: app on 127.0.0.1 only
 # both must be unreachable. Read err, not the number: it must name a refusal or timeout reaching
 # YOUR address. An HTTP code means the app answered. A resolver failure, a local socket error, or a
 # timeout that did not come from the remote address is inconclusive, never a pass.

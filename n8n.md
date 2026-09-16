@@ -38,7 +38,7 @@ N8N_SSL_CERT=/path/to/fullchain.pem
 ## 5. Verify
 
 ```bash
-ss -tlnp   # read every listener; 127.0.0.1, not :: or 0.0.0.0
+ss -tlnp   # read every listener; 5678: 127.0.0.1, not :: or 0.0.0.0
 curl -q -sI https://n8n.example.com/       # TLS
 curl -q -s -o /dev/null -w '%{http_code}\n' https://n8n.example.com/api/v1/workflows
                                         # 401 without an `X-N8N-API-KEY` header. Use a request that returns a body,

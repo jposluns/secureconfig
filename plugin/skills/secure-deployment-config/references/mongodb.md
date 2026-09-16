@@ -63,7 +63,7 @@ Driver connection strings take the same `tls=true` and CA options. Do not ship `
 ## 4. Verify
 
 ```bash
-ss -tlnp   # read every listener; loopback only, unless remote access is deliberate
+ss -tlnp   # read every listener; 27017: loopback only, unless remote access is deliberate
 mongosh --host db.example.com               # without credentials/TLS: refused once hardened
 mongosh "mongodb://db.example.com/?tls=true" --tlsCAFile ca.crt   # connects, then requires auth
 ```

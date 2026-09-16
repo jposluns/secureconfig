@@ -97,7 +97,7 @@ MFA: add TOTP with [otplib](https://github.com/yeojz/otplib) plus the [qrcode](h
 curl -q -sI http://example.com/         # expect 301 with a https:// Location
 curl -q -sI https://example.com/        # succeeds without -k; shows helmet's headers
 curl -q -s  https://example.com/api     # expect 401/403 without credentials
-ss -tlnp   # read every listener; behind a proxy: bound to 127.0.0.1 only
+ss -tlnp   # read every listener; node: behind a proxy: bound to 127.0.0.1 only
 # trust proxy: add a temporary route that echoes req.ip, then remove it after this check
 #   app.get('/whoami', (req, res) => res.send(req.ip))
 curl -q -s -H 'X-Forwarded-For: 203.0.113.9' https://example.com/whoami

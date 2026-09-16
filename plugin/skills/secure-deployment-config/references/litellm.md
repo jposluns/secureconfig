@@ -34,7 +34,7 @@ Run the proxy on loopback (or a private container network) and publish it only t
 ```bash
 curl -q -sS -o /dev/null -w '%{http_code}\n' https://llm.example.com/v1/models   # 401 without a key
 curl -q -s https://llm.example.com/v1/models -H "Authorization: Bearer REPLACE_WITH_VIRTUAL_KEY"   # model list
-ss -tlnp   # read every listener; loopback only
+ss -tlnp   # read every listener; 4000: loopback only
 ```
 
 ## Sources (checked September 2026)
