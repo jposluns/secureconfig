@@ -1952,10 +1952,10 @@ Many self-hosted apps (internal tools, dashboards, webhook receivers) ship with 
 
 ## 1. The pattern
 
-1. **Bind the app to loopback**, `127.0.0.1`, never `0.0.0.0` or `::`. If the app also answers directly, the login page in front of it is decorative.
+1. **Bind the app to loopback**, `127.0.0.1`, never `0.0.0.0` or `::`. Bind the auth service so only the fronting proxy reaches it too: loopback when it shares the host, or a private container network with no published port when it does not (oauth2-proxy's `--http-address` defaults to `127.0.0.1:4180`; Authelia's `server.address` defaults to all interfaces, `tcp://:9091`, so restrict it), never a public interface. If the app also answers directly, the login page in front of it is decorative.
 2. **A proxy authenticates first**: oauth2-proxy, Authelia, or Pomerium checks the session before the request reaches the app; an unauthenticated request never gets there.
-3. **The proxy passes identity in a header** (`X-Auth-Request-User`, `Remote-User`, and similar); the app reads the header instead of running its own login.
-4. **The app must reject a client-supplied identity header.** Network isolation, only the proxy can reach the app, is the baseline; without it, anyone who reaches the app's port can set `X-Auth-Request-User: admin` directly. The managed-cloud version of this same bypass risk is in [cloud-identity-proxies.md](cloud-identity-proxies.md).
+3. **The proxy passes identity in a header and the app reads that header** instead of running its own login. The header must be one the proxy sets on every request from its own verified response, so the proxy overwrites any value a client sent: nginx `X-User`/`X-Email` in the example below, oauth2-proxy's `X-Auth-Request-User` carried through Traefik, Authelia's `Remote-User`. The app must never read a header the proxy does not set, because nginx and Traefik forward the client's other headers unchanged.
+4. **The app must trust only the exact header the proxy sets, and reject any other.** Network isolation, only the proxy can reach the app, stops a direct client from setting the header; but a client can also send a header *through* the proxy, and the proxy overwrites only the one header it sets while forwarding the rest, so the app must read that one header and no other. The managed-cloud version of this same bypass risk is in [cloud-identity-proxies.md](cloud-identity-proxies.md).
 
 ## 2. oauth2-proxy: auth in front of an OIDC/OAuth2 provider
 
@@ -1992,7 +1992,7 @@ location @oauth2_signin {
 }
 ```
 
-Traefik uses a `forwardAuth` middleware at oauth2-proxy's `/oauth2/auth`, with `--upstream=static://202` and `--reverse-proxy=true` set on oauth2-proxy:
+Traefik uses a `forwardAuth` middleware at oauth2-proxy's `/oauth2/auth`, with `--upstream=static://202`, `--reverse-proxy=true`, and `--set-xauthrequest` (so oauth2-proxy sets `X-Auth-Request-User`/`X-Auth-Request-Email` on its `/oauth2/auth` response) set on oauth2-proxy. `authResponseHeaders` must list every identity header the app trusts, because Traefik copies only those from the auth response onto the request (replacing any the client sent) and forwards the client's other headers untouched:
 
 ```yaml
 http:
@@ -2001,8 +2001,10 @@ http:
       forwardAuth:
         address: "http://oauth2-proxy:4180/oauth2/auth"
         trustForwardHeader: true
-        authResponseHeaders: [X-Auth-Request-Access-Token, Authorization]
+        authResponseHeaders: [X-Auth-Request-User, X-Auth-Request-Email, X-Auth-Request-Access-Token, Authorization]
 ```
+
+Attach the middleware to every router that serves the protected app: Traefik applies a middleware only where a router references it, so add `middlewares: [oauth-auth]` on the router in the file provider, or the label `traefik.http.routers.<app>.middlewares=oauth-auth@file`. A middleware that is defined but never referenced protects nothing.
 
 ## 3. Authelia: a portal that does the second factor
 
@@ -2070,8 +2072,8 @@ oauth2-proxy's MFA is whatever its OIDC/OAuth provider enforces; Pomerium's is w
 ## Verify
 
 ```bash
-ss -tlnp   # read every listener; 3000: app on 127.0.0.1 only
-# both must be unreachable. Read err, not the number: it must name a refusal or timeout reaching
+ss -tlnp   # read every listener; app 3000, oauth2-proxy 4180, Authelia 9091 reachable only by the proxy (loopback, or a private container network), never a public interface
+# each must be unreachable from another host. Read err, not the number: it must name a refusal or timeout reaching
 # YOUR address. An HTTP code means the app answered. A resolver failure, a local socket error, or a
 # timeout that did not come from the remote address is inconclusive, never a pass.
 (                                             # a subshell, so your own script arguments are untouched
@@ -2081,17 +2083,19 @@ ss -tlnp   # read every listener; 3000: app on 127.0.0.1 only
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
   case "$1" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
-    *) curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/"
+    *) for p in 3000 4180 9091; do   # app, oauth2-proxy, Authelia: each must be unreachable from another host
+         curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+           -w "port=$p http=%{http_code} exit=%{exitcode} err=%{errormsg}\n" "http://$1:$p/"
+       done
        curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
          -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-         -H 'X-Auth-Request-User: admin' "http://$1:3000/" ;;   # forged header, straight at the app
+         -H 'X-User: admin' "http://$1:3000/" ;;   # forged header the nginx app trusts, straight at the app
   esac
 )
-curl -q -sI https://app.example.com/             # no session: redirected to the sign-in page, or a 401
+curl -q -sI https://app.example.com/             # no session: a 401, or a 302 whose Location is the sign-in page (/oauth2/sign_in or the portal); any other 302 is not a pass
 ```
 
-After a real login through the proxy, confirm a session reaches the app and the app-side log shows the identity header the proxy set, not the forged one above. The forged header is never a bypass because the app is reachable only through the proxy; it is refused at the network level, not read and discarded.
+After a real login through the proxy, confirm a session reaches the app and the app-side log shows the identity header the proxy set, not the forged one above. The direct forged header on the probe above is refused at the network level, because the app is reachable only through the proxy. A header sent *through* the proxy is the separate risk: it is defeated only because the proxy overwrites the exact header the app trusts (nginx `X-User`/`X-Email`, the Traefik `authResponseHeaders`, Authelia's `Remote-*`) with its verified value. Confirm that overwrite: with a valid session, replay a request through the proxy that adds the trusted header (`-H 'X-User: admin'` for the nginx example, `-H 'X-Auth-Request-User: admin'` for the Traefik example, `-H 'Remote-User: admin'` for Authelia) and check the app-side log still shows your real identity, not `admin`. If it shows `admin`, the proxy is not overwriting that header and any authenticated user can impersonate anyone.
 
 ## Common mistakes
 
@@ -2105,6 +2109,7 @@ After a real login through the proxy, confirm a session reaches the app and the 
 - oauth2-proxy configuration overview (flags, cookie-secret length): https://oauth2-proxy.github.io/oauth2-proxy/configuration/overview
 - oauth2-proxy nginx integration: https://oauth2-proxy.github.io/oauth2-proxy/configuration/integrations/nginx/
 - oauth2-proxy Traefik integration: https://oauth2-proxy.github.io/oauth2-proxy/configuration/integrations/traefik/
+- Traefik forwardAuth middleware (authResponseHeaders replaces only the listed headers; others pass through): https://doc.traefik.io/traefik/reference/routing-configuration/http/middlewares/forwardauth/
 - Authelia proxy integration introduction: https://www.authelia.com/integration/proxies/introduction/
 - Authelia proxy support matrix (Apache and IIS unsupported): https://www.authelia.com/integration/proxies/support/
 - Authelia nginx integration: https://www.authelia.com/integration/proxies/nginx/
