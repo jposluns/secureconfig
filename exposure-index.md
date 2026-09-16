@@ -79,7 +79,7 @@ one of them is the application's.
 | 8081 | Hasura's bundled data-connector agent, published beside the engine by the vendor quickstart Compose | [headless-cms-instant-api.md](headless-cms-instant-api.md) |
 | 8086 | InfluxDB HTTP API, UI, and write endpoint (2.x and 1.x); 1.x ships with `auth-enabled = false`, and an un-set-up 2.x instance can be seized through `/api/v2/setup` | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
 | 8088 | Apache Superset | [bi-dashboards.md](bi-dashboards.md) |
-| 8428 | VictoriaMetrics single-node HTTP API, UI, and ingest, with no built-in request authentication | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
+| 8428 | VictoriaMetrics single-node HTTP API, UI, and ingest, with `-httpAuth.username`/`-httpAuth.password` Basic auth disabled by default | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
 | 8093 | The GitLab Runner interactive session server, its documented example listen address, which exists only when `[session_server]` is configured | [self-hosted-ci-runners.md](self-hosted-ci-runners.md) |
 | 8123 | ClickHouse HTTP, plaintext | [clickhouse.md](clickhouse.md) |
 | 8200 | HashiCorp Vault API, and its UI at `/ui` on the same listener when `ui = true`; TLS is assumed by default, and `sys/health` and `sys/seal-status` answer unauthenticated | [vault.md](vault.md) |
@@ -89,8 +89,8 @@ one of them is the application's.
 | 8233 | Temporal Web UI as started by `temporal server start-dev`, which is the context this corpus documents | [workflow-orchestrators.md](workflow-orchestrators.md) |
 | 8265 | Ray dashboard | [ray.md](ray.md) |
 | 8443 | ClickHouse HTTPS, the Kubernetes Dashboard forwarding example, and the configured HTTPS listeners in the Gradio, Python, Java and Ruby guides; Keycloak's HTTPS port | [clickhouse.md](clickhouse.md), [devops-uis.md](devops-uis.md), [gradio.md](gradio.md), [python.md](python.md), [java.md](java.md), [ruby.md](ruby.md), [self-hosted-idp.md](self-hosted-idp.md) |
-| 8480 | VictoriaMetrics cluster `vminsert` HTTP ingestion, no built-in authentication | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
-| 8481 | VictoriaMetrics cluster `vmselect` HTTP query and UI, no built-in authentication | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
+| 8480 | VictoriaMetrics cluster `vminsert` HTTP ingestion, Basic auth disabled by default | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
+| 8481 | VictoriaMetrics cluster `vmselect` HTTP query and UI, Basic auth disabled by default | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
 | 8482 | VictoriaMetrics cluster `vmstorage` HTTP maintenance and metrics (native RPC on 8400 and 8401) | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
 | 8501 | Streamlit | [streamlit.md](streamlit.md) |
 | 8883 | MQTT over TLS | [mosquitto.md](mosquitto.md) |
@@ -98,9 +98,10 @@ one of them is the application's.
 | 8888 | Jupyter, including RunPod deployments. The Vast.ai Jupyter launch mode uses 8080 instead | [jupyter.md](jupyter.md), [gpu-clouds.md](gpu-clouds.md) |
 | 9222 | Chrome or Chromium DevTools Protocol remote debugging, an endpoint with no authentication whose reachability is full browser takeover | [headless-browser-services.md](headless-browser-services.md) |
 | 9000 | ClickHouse native TCP (plaintext), MinIO's S3 API, PHP-FPM, TGI's Prometheus listener, or Portainer's legacy HTTP port; Keycloak's management port serving `/health` and `/metrics`, authentik's HTTP port, or QuestDB's web console, REST, and SQL endpoints, whose Basic-auth keys are unset by default | [clickhouse.md](clickhouse.md), [minio.md](minio.md), [php.md](php.md), [model-servers.md](model-servers.md), [devops-uis.md](devops-uis.md), [self-hosted-idp.md](self-hosted-idp.md), [time-series-metrics-stores.md](time-series-metrics-stores.md) |
-| 9009 | QuestDB InfluxDB line protocol (TCP), which accepts unauthenticated writes unless `line.tcp.auth.db.path` is set | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
+| 9009 | QuestDB InfluxDB line protocol (TCP), which accepts unauthenticated writes unless `line.tcp.auth.db.path` is set; also ClickHouse interserver replica traffic over HTTP | [time-series-metrics-stores.md](time-series-metrics-stores.md), [clickhouse.md](clickhouse.md) |
 | 9001 | MinIO's web console (the `--console-address` / `MINIO_CONSOLE_ADDRESS` port, conventionally 9001) | [minio.md](minio.md) |
-| 9004, 9005, 9009, 9010 | ClickHouse MySQL compatibility, PostgreSQL compatibility, and interserver replica traffic over HTTP and HTTPS | [clickhouse.md](clickhouse.md) |
+| 9003 | QuestDB minimal HTTP health and metrics server, which follows the HTTP authentication policy you set (unauthenticated when `http.user` is unset) | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
+| 9004, 9005, 9010 | ClickHouse MySQL compatibility, PostgreSQL compatibility, and interserver replica traffic over HTTPS (the HTTP interserver port 9009 is listed above) | [clickhouse.md](clickhouse.md) |
 | 9090 | InvokeAI. Prometheus also defaults here, though its guide does not state the number | [image-gen-uis.md](image-gen-uis.md), [admin-uis.md](admin-uis.md) |
 | 9252 | The GitLab Runner Prometheus metrics endpoint, served with no built-in authorization, which exists only when a metrics `listen_address` is configured | [self-hosted-ci-runners.md](self-hosted-ci-runners.md) |
 | 9091 | Milvus WebUI, or Authelia | [vector-databases.md](vector-databases.md), [fronting-auth.md](fronting-auth.md) |
