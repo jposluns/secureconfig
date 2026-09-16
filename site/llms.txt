@@ -130,6 +130,7 @@
 - [cors](https://raw.githubusercontent.com/jposluns/secureconfig/main/cors.md): allow your origins, not everyone's
 - [headers](https://raw.githubusercontent.com/jposluns/secureconfig/main/headers.md): HSTS, CSP, and companions
 - [realtime-webhooks](https://raw.githubusercontent.com/jposluns/secureconfig/main/realtime-webhooks.md): WebSocket, SSE, and webhook authentication
+- [transactional-email-posture](https://raw.githubusercontent.com/jposluns/secureconfig/main/transactional-email-posture.md): SPF, DKIM, DMARC, and SMTP submission posture
 
 ## Exposure and deployment operations
 

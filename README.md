@@ -183,6 +183,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [cors.md](cors.md) | CORS: exact origins, never * with credentials |
 | [headers.md](headers.md) | Security headers: HSTS, CSP, and companions for your app |
 | [realtime-webhooks.md](realtime-webhooks.md) | WebSocket, SSE, and webhook authentication |
+| [transactional-email-posture.md](transactional-email-posture.md) | SPF, DKIM, DMARC, SMTP submission, and open-relay posture for the mail a deployment sends |
 
 ### Exposure and deployment operations
 
