@@ -310,6 +310,48 @@ case "$gc_out" in
     ;;
 esac
 
+echo "== ss listener probes are unfiltered (no ss | grep) =="
+ss_st_out="$(python3 -I -B tools/check_unfiltered_ss.py --self-test 2>&1)"
+ss_st_status=$?
+printf '%s\n' "$ss_st_out"
+case "$ss_st_out" in
+  *"GATE unfiltered-ss-selftest: PASS"*)
+    if [ "$ss_st_status" -ne 0 ]; then
+      bad "unfiltered-ss self-test printed PASS but exited $ss_st_status"
+    fi
+    ;;
+  *"GATE unfiltered-ss-selftest: FAIL"*)
+    fail=1
+    ;;
+  *)
+    bad "unfiltered-ss self-test crashed or exited without a gate result (exit $ss_st_status)"
+    ;;
+esac
+
+ss_out="$(python3 -I -B tools/check_unfiltered_ss.py . 2>&1)"
+ss_status=$?
+printf '%s\n' "$ss_out"
+case "$ss_out" in
+  *"GATE unfiltered-ss: PASS"*)
+    if [ "$ss_status" -ne 0 ]; then
+      bad "unfiltered-ss printed PASS but exited $ss_status"
+    fi
+    case "$ss_out" in
+      *": [SS-GREP-FILTER]"*)
+        bad "unfiltered-ss printed findings alongside a PASS result" ;;
+    esac
+    ;;
+  *"GATE unfiltered-ss: FAIL"*)
+    fail=1
+    if [ "$ss_status" -eq 0 ]; then
+      bad "unfiltered-ss reported FAIL but exited 0"
+    fi
+    ;;
+  *)
+    bad "unfiltered-ss crashed or exited without a gate result (exit $ss_status)"
+    ;;
+esac
+
 echo "== every merged pull request is recorded in the changelog =="
 if changelog_prs=$(python3 tools/check_changelog_prs.py 2>&1); then
   printf '%s\n' "$changelog_prs"
