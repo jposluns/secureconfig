@@ -16,8 +16,10 @@ server {
 
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_prefer_server_ciphers off;
+    server_tokens off;            # do not emit the nginx version in headers or error pages
 
-    # Send HSTS only once HTTPS is confirmed working
+    # Send HSTS only once HTTPS is confirmed working. `includeSubDomains` commits EVERY subdomain to HTTPS
+    # for the whole max-age; drop it until each subdomain serves HTTPS, and start with a short max-age.
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 
     location / {
@@ -29,7 +31,7 @@ server {
 }
 ```
 
-For explicit cipher lists, generate them with the [Mozilla SSL Configuration Generator](https://ssl-config.mozilla.org/) instead of copying from old tutorials; the protocol floor above is the part that must not be omitted.
+For explicit cipher lists, generate them with the [Mozilla SSL Configuration Generator](https://ssl-config.mozilla.org/) instead of copying from old tutorials; the protocol floor above is the part that must not be omitted. nginx defaults `ssl_session_tickets on`, and un-rotated ticket keys weaken forward secrecy: either set `ssl_session_tickets off`, or on nginx 1.23.2+ give it a shared `ssl_session_cache` so it rotates the ticket keys automatically.
 
 ## 2. Redirect HTTP to HTTPS
 
@@ -42,6 +44,8 @@ server {
 }
 ```
 
+`$host` echoes the client's `Host` header, so if this `:80` block is the `default_server` (explicit, or implicit as the first block for that address and port), a request with `Host: attacker.example.net` is redirected off-site. Give the `default_server` a `return 444;` (or a redirect to the literal canonical host) rather than reflecting `$host`.
+
 ## 3. Require authentication
 
 Application-level login is preferable ([authentication.md](authentication.md)). To gate a site or path at the proxy, use basic authentication over TLS:
@@ -52,10 +56,15 @@ sudo htpasswd -B -c /etc/nginx/.htpasswd admin
 ```
 
 ```nginx
+    # this is section 1's `location /`, now also carrying the auth directives - do not paste a second
+    # `location /`; the proxy_set_header lines must stay, or the app loses Host / the forwarded headers
     location / {
         auth_basic           "Restricted";
         auth_basic_user_file /etc/nginx/.htpasswd;
         proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 ```
 
@@ -102,16 +111,22 @@ of a response. A stream that keeps sending stays alive indefinitely under a 60s 
 stalls for 61s is cut. Choose it from the longest acceptable silence, and note that raising it lengthens
 that tolerance rather than removing the timeout.
 
+Mind the client address these headers carry. At a direct internet edge the block above appends the peer to `X-Forwarded-For` with `$proxy_add_x_forwarded_for`, so the app must read the LAST entry (the one nginx added), never the client-controlled first one. And if nginx sits behind a CDN or another proxy (for example fronting the site with Cloudflare Access, above), `$binary_remote_addr` is the CDN's edge IP, not the client's, so all callers arriving via the same edge IP share one `limit_req`/`limit_conn` bucket: the limits blur across clients or throttle real users, and a client-supplied `X-Forwarded-For` reaches the app, to be trusted if the app reads its first entry. Recover the real client address with `set_real_ip_from <cdn-ranges>` and `real_ip_header CF-Connecting-IP` (or `X-Forwarded-For`) from `ngx_http_realip_module`, so the limit key and the logged address are the client rather than the edge.
+
 ## 5. Verify
 
 ```bash
 sudo nginx -t && sudo systemctl reload nginx
 curl -q -sI http://example.com/        # expect 301 with a https:// Location
-curl -q -sI https://example.com/       # expect 200 without -k
-curl -q -s  https://example.com/api    # expect 401/403 without credentials
+curl -q -sI --max-time 10 https://example.com/       # TLS must verify with NO -k (a cert error means TLS is misconfigured); status is 200 if / is open, or 401 if you applied section 3's auth to it
+curl -q -s -o /dev/null -w '%{http_code}\n' --max-time 10 https://example.com/                        # if section 3's auth is applied: an uncredentialed request must be 401/403, never 200
+curl -q -s -o /dev/null -w '%{http_code}\n' --max-time 10 -u admin:REPLACE_WITH_PASSWORD https://example.com/   # with credentials: your app's response, never 401
+curl -q -s -o /dev/null -w 'http=%{http_code} err=%{errormsg}\n' --max-time 10 --tlsv1.1 --tls-max 1.1 https://example.com/   # protocol floor: offering only TLS 1.1 MUST be rejected. The pass is specifically a `protocol_version` alert (the server refuses the version); a generic handshake failure (for example no shared cipher) or a local "could not load"/policy error is inconclusive, not proof. This shows the 1.1 boundary; the same TLSv1.2+ floor also refuses 1.0, which you confirm separately with `--tlsv1.0 --tls-max 1.0`
 head -c 9M  /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
-curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/under.bin https://example.com/
-                                    # positive control: under the limit, must NOT be 413
+curl -q -s -o /dev/null -w '%{http_code}\n' --max-time 20 -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/under.bin https://example.com/
+                                    # positive control: must be your app's normal response to this POST
+                                    # (for example 200/204/405), never 413. A 401 means the credentials, not
+                                    # the size limit, were exercised, and a 000 means transport failed: either voids the control
 curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/over.bin  https://example.com/
                                     # 413. The 9M control is the discriminating half: nginx's default
                                     # client_max_body_size is 1m, so 9M is refused until `10m` is set,
@@ -140,8 +155,8 @@ ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.
 ## Common mistakes
 
 - The app still listens on `0.0.0.0:3000` next to the proxy, so the proxy's TLS and auth are bypassed. Bind the app to `127.0.0.1` and confirm with `ss -tlnp`.
-- `add_header` in a `location` block silently drops headers inherited from `server`; keep HSTS at the `server` level with `always`.
-- A default `server` block that still serves plain HTTP for unmatched hosts; give the catch-all server the same redirect.
+- `add_header` in a `location` block silently drops ALL headers inherited from `server`. That is inheritance, which `always` does not change (`always` changes which response codes the header is added to, not inheritance). Keep HSTS at the `server` level, and if a `location` needs its own `add_header`, re-declare HSTS inside it too.
+- A default `server` block that still serves plain HTTP for unmatched hosts; give the catch-all `default_server` a `return 444;` (or a redirect to the literal canonical host), not the `$host`-reflecting redirect above.
 - `auth_basic` on `/` but a later `location` (for example `/static`) that re-opens access; `auth_basic off` should be a deliberate exception, not an accident.
 
 ## Sources (checked September 2026)
@@ -152,4 +167,5 @@ ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.
 - Connection limiting (`limit_conn_zone`, `limit_conn`): https://nginx.org/en/docs/http/ngx_http_limit_conn_module.html
 - Proxy module (`proxy_read_timeout`, and `proxy_send_timeout` and `proxy_connect_timeout` if you add them): https://nginx.org/en/docs/http/ngx_http_proxy_module.html
 - ngx_http_auth_basic_module: https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html
+- Real IP module (`set_real_ip_from`, `real_ip_header`) for nginx behind a CDN or proxy: https://nginx.org/en/docs/http/ngx_http_realip_module.html
 - Mozilla SSL Configuration Generator: https://ssl-config.mozilla.org/
