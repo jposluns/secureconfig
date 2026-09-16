@@ -2583,11 +2583,12 @@ Caddy 2 obtains, installs, and renews publicly trusted certificates automaticall
 
 ```caddyfile
 {
-    email admin@example.com        # ACME account contact for expiry notices
+    email admin@example.com        # ACME account contact (Let's Encrypt no longer emails expiry notices; monitor renewal yourself)
 }
 
 app.example.com {
     reverse_proxy 127.0.0.1:3000
+    header Strict-Transport-Security "max-age=31536000; includeSubDomains"   # Caddy sets no HSTS on its own; add once every subdomain serves HTTPS (includeSubDomains/preload are hard to undo)
 }
 ```
 
@@ -2597,7 +2598,7 @@ Requirements: the DNS record points at this host, and ports 80 and 443 are reach
 sudo systemctl reload caddy
 ```
 
-That is the whole TLS setup. Certificates come from Let's Encrypt or ZeroSSL and renew automatically.
+That is the whole certificate setup: certificates come from Let's Encrypt or ZeroSSL and renew automatically. Two things automatic HTTPS does not do on its own: it does not send HSTS (the `header Strict-Transport-Security` line above adds it, so a browser stays on HTTPS after the first visit rather than being downgradable before the redirect), and it does not trust client-supplied `X-Forwarded-*` headers (Caddy ignores them by default to prevent spoofing; if Caddy runs behind a CDN or another proxy, set `trusted_proxies` so it honours them).
 
 ## 2. Internal hosts without a public domain
 
@@ -2640,7 +2641,7 @@ To protect only part of a site, wrap the directive in a matcher:
 
 Path matches are exact, and `/admin/*` alone does not match `/admin` itself, so list both forms; multiple paths in one matcher are OR'ed.
 
-`basic_auth` is single-factor. For human-facing sites, add MFA with the `forward_auth` directive (Caddy 2.5.1 and later) pointed at an [Authelia](https://www.authelia.com/) portal, or front the site with Cloudflare Access; options in [mfa.md](mfa.md).
+`basic_auth` is single-factor. For human-facing sites, add MFA with the `forward_auth` directive (Caddy 2.5 and later) pointed at an [Authelia](https://www.authelia.com/) portal, or front the site with Cloudflare Access. Fronting with Cloudflare Access only helps if the origin is locked down: Caddy still answers on 443, so a client that discovers the origin IP connects directly and bypasses Access unless you close direct ingress (a tunnel, or Authenticated Origin Pulls plus a Cloudflare-IP firewall) and validate the Access JWT at the origin, per [cloudflare.md](cloudflare.md). Options in [mfa.md](mfa.md).
 
 ## 4. Bound the expensive endpoints
 
@@ -2670,7 +2671,7 @@ On a host where untrusted workloads share the machine, loopback is not enough, b
 ```caddy
 {
     email admin@example.com
-    admin unix//run/caddy/admin.sock
+    admin unix//run/caddy/admin.sock   # defaults to mode 0200 (owner-only); append |0600 to set the mode explicitly
 }
 ```
 
@@ -2681,7 +2682,7 @@ The packaged service runs as the `caddy` user, which cannot create a socket unde
 RuntimeDirectory=caddy
 ```
 
-systemd creates `/run/caddy` owned by `caddy` when the service starts, so the switch from the default TCP endpoint to the socket needs `sudo systemctl restart caddy`, not a reload: the restart makes the runtime directory and binds the socket in one step. After that, `caddy reload`, and so `sudo systemctl reload caddy`, applies config through this API by reading the admin address from the Caddyfile, so the socket keeps reload working. Disabling the endpoint with `admin off` turns off API reload, so under systemd a config change then needs `systemctl restart caddy` (a manual `caddy run` process can instead reload with `SIGUSR1`).
+systemd creates `/run/caddy` owned by `caddy` when the service starts, so the switch from the default TCP endpoint to the socket needs `sudo systemctl restart caddy`, not a reload: the restart makes the runtime directory and binds the socket in one step. After that, `caddy reload`, and so `sudo systemctl reload caddy`, applies config through this API by reading the admin address from the Caddyfile, so the socket keeps reload working. Disabling the endpoint with `admin off` turns off API reload, so under systemd a config change then needs `systemctl restart caddy` (a manual `caddy run` process started without `--resume` can instead reload the startup config file with `SIGUSR1`; a change made through the admin API, or a `caddy reload` with a different file or adapter, disables signal reloads, so check the logs to confirm the reload took).
 
 ## 6. Verify
 
@@ -2689,8 +2690,9 @@ systemd creates `/run/caddy` owned by `caddy` when the service starts, so the sw
 caddy validate --config /etc/caddy/Caddyfile
 curl -q -sI http://app.example.com/     # expect a redirect to https://
 curl -q -sI https://app.example.com/    # expect 401 without credentials once auth is on
-curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/admin     # 401 with the @admin matcher
+curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/admin     # with the @admin matcher variant: 401
 curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/admin/x   # 401 as well
+curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/          # to prove the matcher SCOPES auth to /admin (not the whole site), a non-/admin path must NOT return 401: it reaches the app (a 200, or the app's own redirect or 404). A 401 here means auth is applied site-wide, not scoped to /admin
 head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
 curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/under.bin https://app.example.com/
                                      # positive control: under the limit, must NOT be 413
@@ -2717,6 +2719,7 @@ ls -l /run/caddy/admin.sock          # if you bound it to a unix socket: it exis
 
 - The app also listens on a public interface, bypassing Caddy; bind it to `127.0.0.1`.
 - Blocking port 80 at the firewall: Caddy needs it for the HTTP-01 challenge and for the automatic redirect.
+- Enabling on-demand TLS without an `ask` endpoint or a host allowlist: this guide does not use it, but an unrestricted `on_demand` lets anyone point a hostname at the server to mint certificates and exhaust resources.
 - Putting the literal password in the Caddyfile; `basic_auth` takes the bcrypt hash, not the password.
 
 ## Sources (checked September 2026)
@@ -2729,6 +2732,12 @@ ls -l /run/caddy/admin.sock          # if you bound it to a unix socket: it exis
 - caddy-ratelimit, the community module that adds rate limiting: https://github.com/mholt/caddy-ratelimit
 - basic_auth directive: https://caddyserver.com/docs/caddyfile/directives/basic_auth
 - tls directive: https://caddyserver.com/docs/caddyfile/directives/tls
+- reverse_proxy directive (X-Forwarded-* ignored from untrusted sources by default; `trusted_proxies`): https://caddyserver.com/docs/caddyfile/directives/reverse_proxy
+- Caddy conventions (unix socket default mode 0200, `|<mode>` suffix): https://caddyserver.com/docs/conventions
+- header directive (HSTS): https://caddyserver.com/docs/caddyfile/directives/header
+- forward_auth directive: https://caddyserver.com/docs/caddyfile/directives/forward_auth
+- Caddy command-line signals (SIGUSR1 reload conditions): https://caddyserver.com/docs/command-line#signals
+- Let's Encrypt ending expiration-notification emails (2025): https://letsencrypt.org/2025/01/22/ending-expiration-emails/
 - Request matchers (path, wildcards, multiple paths): https://caddyserver.com/docs/caddyfile/matchers
 
 ======================================================================
