@@ -997,7 +997,7 @@ Each generates and verifies RFC 6238 codes and pairs with a QR library so users 
 
 - [google-authenticator-libpam](https://github.com/google/google-authenticator-libpam): PAM module adding per-user TOTP to SSH and console logins, with QR enrolment in the terminal (`libpam-google-authenticator` package on Debian/Ubuntu).
 - Duo Unix (`pam_duo`) adds push-approval MFA to SSH: https://duo.com/docs/duounix
-- Make the PAM factor mandatory, or it is not enforced: set `AuthenticationMethods publickey,keyboard-interactive` in sshd so a key-based login still runs the PAM challenge, drop `nullok` once rollout is done so an un-enrolled user is denied rather than waved through, and set Duo's `failmode=secure` (its default `safe` grants access when Duo is unreachable) with a separately controlled emergency path.
+- Make the PAM factor mandatory, or it is not enforced: with `UsePAM yes` and `KbdInteractiveAuthentication yes`, set `AuthenticationMethods publickey,keyboard-interactive:pam` in sshd (the `:pam` device pins the second step to the PAM stack, since a bare `keyboard-interactive` can route to another backend, and requiring the public key first means a key-based login still runs it), drop `nullok` once rollout is done so an un-enrolled user is denied rather than waved through, and set Duo's `failmode=secure` (its default `safe` grants access when Duo is unreachable) with a separately controlled emergency path.
 
 ## Hosted MFA
 
@@ -1013,11 +1013,11 @@ WebAuthn passkeys and FIDO2 hardware keys (YubiKey and similar) resist phishing 
 
 ## Where direct MFA is not viable
 
-Unattended machine connections (service-to-service database and model-server APIs) have no interactive second-factor dialogue, though some databases do offer native MFA for an interactive human login (MySQL 8 supports up to three factors, including WebAuthn). For the unattended connections the pattern is: mutual TLS client certificates as the possession factor for the service itself, and MFA on every human path that reaches the host (SSH, bastions, admin panels). The database guides in this repository apply this pattern.
+Unattended machine connections (service-to-service database and model-server APIs) have no interactive second-factor dialogue, though some databases do offer native MFA for an interactive human login (MySQL 8 supports up to three factors; its server-side WebAuthn plugin requires Enterprise Edition). For the unattended connections the pattern is: mutual TLS client certificates as the possession factor for the service itself, and MFA on every human path that reaches the host (SSH, bastions, admin panels). The database guides in this repository apply this pattern.
 
 ## Verify
 
-- A login with only the password fails once a second factor is enrolled AND enforcement is on (provider policy, Supabase `aal2`, or the app's own check, per rule 6). If a password-only session still succeeds, the factor is enrolled but not enforced, and the user is not protected.
+- With only the password, attempt an MFA-protected operation, not just a login: once the factor is enrolled AND enforcement is on (provider policy, Supabase `aal2`, or the app's own check, per rule 6) the operation is refused, and completing the second factor then allows it. Some layers still open a password-only (`aal1`) session and enforce at the operation, so a session opening is not itself a failure; a protected operation that succeeds without a second factor is, and the user is not protected.
 - Recovery codes are single-use, and their hashes rather than their values are stored.
 - Repeated wrong codes hit a rate limit or lockout.
 - Submitting the same valid TOTP code a second time within its time step is refused.
