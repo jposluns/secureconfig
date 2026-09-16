@@ -31,7 +31,7 @@ Loopback or private networks by default; public access only via the TLS endpoint
 ## 4. Verify
 
 ```bash
-ss -tlnp | grep -E ':(9000|9001) '                     # S3 API 9000 and the console (--console-address, ~9001); private unless deliberate
+ss -tlnp   # read every listener; S3 API 9000 and the console (--console-address, ~9001); private unless deliberate
 curl -q -s -o /dev/null -w '%{http_code}\n' https://s3.example.com:9000/                     # service root: anonymous ListBuckets denied
 curl -q -s -o /dev/null -w '%{http_code}\n' https://s3.example.com:9000/REPLACE_WITH_BUCKET/ # per bucket: anonymous listing denied
 curl -q -s -o /dev/null -w '%{http_code}\n' https://s3.example.com:9000/REPLACE_WITH_BUCKET/REPLACE_WITH_PRIVATE_OBJECT

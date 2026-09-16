@@ -51,7 +51,7 @@ guidance also endorses delegating TLS termination to a load balancer or reverse 
 ## Verify
 
 ```bash
-ss -tlnp | grep 8000                          # loopback or private address only, never 0.0.0.0
+ss -tlnp   # read every listener; 8000: loopback or private address only, never 0.0.0.0
 curl -q -sI http://127.0.0.1:8000/health          # process is up
 surreal sql --endpoint http://127.0.0.1:8000 --namespace test --database test
 ```

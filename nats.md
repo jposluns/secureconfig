@@ -60,7 +60,7 @@ The HTTP monitoring endpoint is off unless configured (`http_port: 8222` in the 
 The `nats` CLI reads a saved context and environment variables (`NATS_URL`, `NATS_USER`, `NATS_PASSWORD`, and similar) before falling back to any default, so a credential-free test has to neutralize both or it can silently inherit credentials from whatever context happens to be active.
 
 ```bash
-ss -tlnp | grep -E ':(4222|8222) '                                                                                                                          # 4222 as intended, 8222 loopback/private only
+ss -tlnp   # read every listener; 4222 as intended, 8222 loopback/private only
 nats pub orders.created hello --tlsca /etc/nats/certs/ca.pem --tlscert REPLACE_WITH_CLIENT_CERT_FILE --tlskey REPLACE_WITH_CLIENT_KEY_FILE --user order-svc --password REPLACE_WITH_LONG_RANDOM_PASSWORD   # allowed subject, valid credentials: succeeds
 nats pub other.subject hello --tlsca /etc/nats/certs/ca.pem --tlscert REPLACE_WITH_CLIENT_CERT_FILE --tlskey REPLACE_WITH_CLIENT_KEY_FILE --user order-svc --password REPLACE_WITH_LONG_RANDOM_PASSWORD     # subject outside the allow list: fails
 nats --context "" --server nats://REPLACE_WITH_NATS_HOST:4222 pub orders.created hello --tlsca /etc/nats/certs/ca.pem --tlscert REPLACE_WITH_CLIENT_CERT_FILE --tlskey REPLACE_WITH_CLIENT_KEY_FILE   # empty context, explicit server, no --user/--password: fails, and cannot inherit credentials from a saved context or NATS_URL/NATS_USER/NATS_PASSWORD

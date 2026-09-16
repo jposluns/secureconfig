@@ -55,7 +55,7 @@ MFA: native login has no second factor. Enterprise Edition can delegate authenti
 Clients and drivers connect with `neo4j+s://`, which verifies the certificate; `neo4j+ssc://` accepts a self-signed certificate without verification and belongs in development only.
 
 ```bash
-ss -tlnp | grep -E '7474|7473|7687'                             # 7473 and 7687 only, on the intended address
+ss -tlnp   # read every listener; 7474: 7473 and 7687 only, on the intended address
 openssl s_client -connect neo4j.example.com:7687 -verify_hostname neo4j.example.com \
   -verify_return_error -CAfile ca.pem </dev/null                 # prints Verification: OK. Point -CAfile
                                                                  # at the CA that signed the server

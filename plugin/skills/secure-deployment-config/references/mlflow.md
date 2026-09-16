@@ -57,7 +57,7 @@ With `--serve-artifacts` (the default) and `--artifacts-destination s3://bucket`
 ## Verify
 
 ```bash
-ss -tlnp | grep 5000                                                   # 127.0.0.1 only
+ss -tlnp   # read every listener; 5000: 127.0.0.1 only
 # from another machine, checking the port is unreachable from outside. The pass is that no TCP
 # connection formed: time_connect stays 0.000000 and err names a connection-level failure (refused, no
 # route, or a filtered-port connect timeout). A non-zero time_connect, or any http code, means the
