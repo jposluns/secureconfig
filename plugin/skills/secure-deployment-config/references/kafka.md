@@ -86,7 +86,7 @@ Redpanda implements the Kafka wire protocol, so the client-side and protocol-lev
 ## Verify
 
 ```bash
-ss -tlnp | grep -E '9092|9093'                                # 9093 only, or 9092 on 127.0.0.1
+ss -tlnp   # read every listener; 9093 only, or 9092 on 127.0.0.1
 openssl s_client -connect kafka.example.com:9093 -verify_hostname kafka.example.com \
   -verify_return_error -CAfile ca.pem </dev/null              # prints Verification: OK. Point -CAfile at
                                                               # the CA that signed the broker certificate;

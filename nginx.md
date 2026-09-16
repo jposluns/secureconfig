@@ -130,7 +130,7 @@ seq 1 40 | xargs -P 40 -I{} curl -q -s -o /dev/null -w '%{http_code}\n' -u admin
                                     # isolated environment with both limiters disabled as a baseline,
                                     # then each enabled alone, with the arrival rate actually measured
 rm -f /tmp/under.bin /tmp/over.bin
-ss -tlnp | grep 3000                # the app itself: 127.0.0.1 only, never 0.0.0.0. All the checks
+ss -tlnp   # read every listener; the app itself: 127.0.0.1 only, never 0.0.0.0. All the checks
                                     # above pass while the app also answers directly on port 3000,
                                     # which bypasses this proxy's TLS and its authentication. That
                                     # bypass is the first common mistake below, and the first item in

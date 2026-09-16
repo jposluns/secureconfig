@@ -82,7 +82,7 @@ The documented quickstart itself runs `docker run ... -p 3000:3000 ... openhands
 ## Verify
 
 ```bash
-ss -tlnp | grep -E '3001|3210|3000'                    # each UI on 127.0.0.1 only
+ss -tlnp   # read every listener; each UI on 127.0.0.1 only
 # from another host. Read err, not the number: it must name a refusal or timeout reaching YOUR
 # address. An HTTP code means the port answered. A resolver failure, a local socket error, or a
 # timeout that did not come from the remote address is inconclusive, never a pass.

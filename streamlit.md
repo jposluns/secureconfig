@@ -71,7 +71,7 @@ A password typed into a plain `st.text_input` and compared in the script is not 
 ## 4. Verify
 
 ```bash
-ss -tlnp | grep 8501                     # 127.0.0.1 when behind a proxy
+ss -tlnp   # read every listener; 127.0.0.1 when behind a proxy
 curl -q -sI https://app.example.com/        # succeeds over TLS
 # In a private browser window: the IdP login (or proxy auth) appears before the app.
 ```

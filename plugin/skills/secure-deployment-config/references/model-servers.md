@@ -78,7 +78,7 @@ One proxy detail is specific to this API: unless `--listen` (or `--public-api`) 
 ## Verify
 
 ```bash
-ss -tlnp | grep -E ':(8080|8000|8001|8002|3000|9000|30000|1234) '   # loopback only
+ss -tlnp   # read every listener; loopback only
 curl -q -s https://models.example.com/v1/models            # 401 without a key
 curl -q -s https://models.example.com/v1/models -H "Authorization: Bearer REPLACE_WITH_API_KEY"   # succeeds
 curl -q -s -o /dev/null -w '%{http_code}\n' -X POST https://models.example.com/invocations -d '{}'

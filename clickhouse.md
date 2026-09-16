@@ -61,7 +61,7 @@ Get a certificate ([free-certificates.md](free-certificates.md) or [self-signed.
 Clients use `clickhouse-client --secure` on 9440, or HTTPS on 8443 with HTTP basic auth or the `X-ClickHouse-User` and `X-ClickHouse-Key` headers; the documentation discourages `user` and `password` URL parameters because proxies log them.
 
 ```bash
-ss -tlnp | grep -E '8123|9000|8443|9440'          # only 8443 and 9440, on the intended address
+ss -tlnp   # read every listener; only 8443 and 9440, on the intended address
 curl -q -s http://ch.example.com:8123/                # connection refused
 curl -q -s 'https://ch.example.com:8443/?query=SELECT%201'   # no credentials = default with empty password: authentication error
 curl -q -u app:REPLACE_WITH_LONG_RANDOM_VALUE 'https://ch.example.com:8443/?query=SELECT%201'   # 1

@@ -202,7 +202,7 @@ The `local ... peer` line above has the same shape and the same requirement. `pe
 ## 7. Verify
 
 ```bash
-ss -tlnp | grep -E '6432|9999|9898'
+ss -tlnp   # read every listener, do not grep to the port you expect
 ```
 
 Read that as an inventory rather than a pass. Every address printed is one the pooler answers on, so an entry showing `0.0.0.0:9898` or `[::]:9898` is section 1 not applied, whatever `listen_addresses` says.

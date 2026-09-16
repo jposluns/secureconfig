@@ -68,7 +68,7 @@ MFA: MCP has no login dialogue of its own. Under Option A, MFA is whatever the a
 ## Verify
 
 ```bash
-ss -tlnp | grep 3000                                   # 127.0.0.1:3000 only, never 0.0.0.0 or ::
+ss -tlnp   # read every listener; 127.0.0.1:3000 only, never 0.0.0.0 or ::
 # From another host: refused at the origin, or answered only by the fronting layer.
 # read err, not the number: it must name a refusal or timeout reaching YOUR address. An HTTP code
 # means the port answered. A resolver failure, a local socket error, or a timeout that did not come

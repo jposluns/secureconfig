@@ -37,7 +37,7 @@ Port 8883 is the conventional MQTT-over-TLS port. Certificates per [self-signed.
 ```bash
 mosquitto_sub -h mq.example.com -p 8883 --cafile ca.pem -t 'test' -u device-01 -P '...'   # works
 mosquitto_sub -h mq.example.com -p 8883 --cafile ca.pem -t 'test'                          # refused (no credentials)
-ss -tlnp | grep -E '1883|8883'                                                             # no public 1883
+ss -tlnp   # read every listener; no public 1883
 ```
 
 ## Sources (checked September 2026)

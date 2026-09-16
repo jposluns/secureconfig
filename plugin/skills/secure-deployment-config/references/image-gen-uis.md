@@ -53,7 +53,7 @@ strict_password_checking: true
 ## Verify
 
 ```bash
-ss -tlnp | grep -E '8188|7860|9090'                 # each service on 127.0.0.1 only
+ss -tlnp   # read every listener; each service on 127.0.0.1 only
 # each must be unreachable from another host. Read err, not the number: it must name a refusal or
 # timeout reaching YOUR address. An HTTP code means the port answered. A resolver failure, a local
 # socket error, or a timeout that did not come from the remote address is inconclusive.

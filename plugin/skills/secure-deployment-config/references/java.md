@@ -75,7 +75,7 @@ The `issuer-uri` drives OpenID Connect discovery, and the `openid` scope is what
 ```bash
 curl -q -sI https://example.com/        # succeeds without -k; shows Strict-Transport-Security
 curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/api   # 401, or 302 to the login page, without credentials
-ss -tlnp | grep java                 # behind a proxy: 127.0.0.1 only
+ss -tlnp   # read every listener; behind a proxy: 127.0.0.1 only
 grep -c "Using generated security password" app.log   # must be 0: otherwise the default user is still active
 ```
 

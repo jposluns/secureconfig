@@ -102,7 +102,7 @@ Without `--tlsverify` the daemon does not check client certificates. Firewall 23
 ## Verify
 
 ```bash
-ss -tlnp | grep -E ':(9443|9000|8000|3000|81|3001|2375|2376) '   # 127.0.0.1 or absent, never 0.0.0.0
+ss -tlnp   # read every listener; 127.0.0.1 or absent, never 0.0.0.0
 curl -q -s -o /dev/null -w '%{http_code}\n' https://panel.example.com/
                                                                   # 401, 403, or a login redirect, never a dashboard. No -k:
                                                                   # this panel is behind a proxy holding a real certificate, so

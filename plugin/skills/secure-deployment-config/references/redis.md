@@ -61,7 +61,7 @@ redis-cli --tls --cacert /etc/redis/tls/ca.crt -h redis.example.com -p 6379
 ## 5. Verify
 
 ```bash
-ss -tlnp | grep 6379                          # loopback only, unless remote access is deliberate
+ss -tlnp   # read every listener; loopback only, unless remote access is deliberate
 redis-cli -h redis.example.com ping           # plaintext attempt: fails once port 0 is set
 redis-cli --tls --cacert ca.crt -h redis.example.com ping   # NOAUTH error until AUTH succeeds
 ```

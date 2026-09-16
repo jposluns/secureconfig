@@ -78,7 +78,7 @@ bind `--address=127.0.0.1` behind a proxy rather than relying on Basic Auth as t
 ## Verify
 
 ```bash
-ss -tlnp | grep -E ':(4200|3000|8080|7233|8233|5555) '                 # loopback or private only, never 0.0.0.0
+ss -tlnp   # read every listener; loopback or private only, never 0.0.0.0
 curl -q -sS -o /dev/null -w '%{http_code}\n' -X POST http://prefect.internal:4200/api/flows/filter -d '{}'
                                                                         # 401 without the auth string once configured. Do NOT probe
                                                                         # /api/health or /api/ready: Prefect exempts those two paths

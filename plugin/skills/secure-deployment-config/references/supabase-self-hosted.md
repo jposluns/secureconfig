@@ -91,7 +91,7 @@ refusal from that vantage, and the write-out fields need curl 7.75.0 or newer.
 ```bash
 # On the host: these published listeners should be bound to loopback or an internal interface.
 # Docker publishes through NAT, so also test each port from an external host over IPv4 and IPv6.
-ss -tlnp | grep -E ':(8000|5432|6543) '   # loopback or internal only
+ss -tlnp   # read every listener; loopback or internal only
 ```
 
 The gateway serves plain HTTP on `8000`. The block below calls an Edge Functions route without any

@@ -111,7 +111,7 @@ curl 7.75.0 or newer, and an IPv6 literal needs brackets in the URL.
 ```bash
 # On the host: these listeners should be bound to loopback or an internal interface, not a wildcard.
 # Add the distributed Grid ports (5553, 5556, 5557, 5559) and your Playwright port if you run them.
-ss -tlnp | grep -E ':(9222|4442|4443|4444|5555|3000|5900|7900) '   # loopback or internal only
+ss -tlnp   # read every listener; loopback or internal only
 ```
 
 For the DevTools, Grid, browserless and Playwright ports, guard the address in the block below so it

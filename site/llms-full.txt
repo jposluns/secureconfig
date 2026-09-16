@@ -850,7 +850,7 @@ To publish such an app, do not widen `GatewayPorts`. Leave it `no` so the forwar
 # frp: a client with the wrong token is rejected, not connected
 frpc -c frpc-wrongtoken.toml   # expect an authentication failure, no proxy registered
 
-ss -ulnp | grep 51820          # WireGuard: only the one UDP port listening
+ss -ulnp   # read every listener; WireGuard: only the one UDP port listening
 sudo ufw status verbose        # no other inbound rule added for the tunneled service
 
 # positive control: from the peer, a destination inside its intended subnet must succeed, proving
@@ -866,7 +866,7 @@ ping -c1 192.168.1.50          # expect 100 percent packet loss
 sudo nft list ruleset | grep -A1 'saddr 192.168.88.0/24'   # packets and bytes both greater than 0
 
 # ssh -R: on the SERVER, a forwarded port binds 127.0.0.1 (or [::1]) with GatewayPorts no, never 0.0.0.0
-ss -tlnp | grep -E ':8080 '    # only a loopback address unless you deliberately published it
+ss -tlnp   # read every listener; only a loopback address unless you deliberately published it
 ```
 
 ## Sources (checked September 2026)
@@ -1500,7 +1500,7 @@ probe() { curl -q --noproxy '*' -sS "$@"; }
 #    embedded outpost's session store and WebSocket connections. It moved tasks to
 #    Postgres in 2025.8 and the rest in 2025.10, which "no longer uses Redis at all", so
 #    whether this port matters depends on your version. Check it rather than assume.
-ss -tlnp | grep -E ':(6379|7800|8080|8443|9000|9443|9300|57800)\b'    # 127.0.0.1 or an RFC 1918 address only
+ss -tlnp   # read every listener; 127.0.0.1 or an RFC 1918 address only
 # ss on the HOST does not see a container's own namespace, and a published Docker port
 # bypasses the host firewall besides, so cross-check what Compose actually published:
 docker compose ps --format 'table {{.Service}}\t{{.Ports}}'
@@ -2063,7 +2063,7 @@ oauth2-proxy's MFA is whatever its OIDC/OAuth provider enforces; Pomerium's is w
 ## Verify
 
 ```bash
-ss -tlnp | grep 3000                          # app on 127.0.0.1 only
+ss -tlnp   # read every listener; app on 127.0.0.1 only
 # both must be unreachable. Read err, not the number: it must name a refusal or timeout reaching
 # YOUR address. An HTTP code means the app answered. A resolver failure, a local socket error, or a
 # timeout that did not come from the remote address is inconclusive, never a pass.
@@ -2383,7 +2383,7 @@ seq 1 40 | xargs -P 40 -I{} curl -q -s -o /dev/null -w '%{http_code}\n' -u admin
                                     # isolated environment with both limiters disabled as a baseline,
                                     # then each enabled alone, with the arrival rate actually measured
 rm -f /tmp/under.bin /tmp/over.bin
-ss -tlnp | grep 3000                # the app itself: 127.0.0.1 only, never 0.0.0.0. All the checks
+ss -tlnp   # read every listener; the app itself: 127.0.0.1 only, never 0.0.0.0. All the checks
                                     # above pass while the app also answers directly on port 3000,
                                     # which bypasses this proxy's TLS and its authentication. That
                                     # bypass is the first common mistake below, and the first item in
@@ -2651,10 +2651,10 @@ curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --dat
                                      # same code, so attributing the refusal needs an isolated
                                      # environment with request_body removed
 rm -f /tmp/under.bin /tmp/over.bin
-ss -tlnp | grep 3000                 # the app itself: 127.0.0.1 only, never 0.0.0.0. Every check above
+ss -tlnp   # read every listener; the app itself: 127.0.0.1 only, never 0.0.0.0. Every check above
                                      # passes while the app also answers directly on port 3000, which
                                      # bypasses Caddy's TLS and its authentication
-ss -tlnp | grep -E ':2019 '          # the admin API on TCP: only 127.0.0.1:2019 or [::1]:2019, never a
+ss -tlnp   # read every listener; the admin API on TCP: only 127.0.0.1:2019 or [::1]:2019, never a
                                      # public address. An empty result is not a pass on its own: it also
                                      # means you moved it to a unix socket or set admin off, so confirm which
 ls -l /run/caddy/admin.sock          # if you bound it to a unix socket: it exists and is owner-restricted
@@ -2784,7 +2784,7 @@ curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --dat
                                     # needs an isolated environment with the http-request deny line
                                     # removed
 rm -f /tmp/under.bin /tmp/over.bin
-ss -tlnp | grep 3000                # the backend itself: 127.0.0.1 only, never 0.0.0.0. All the checks
+ss -tlnp   # read every listener; the backend itself: 127.0.0.1 only, never 0.0.0.0. All the checks
                                     # above pass while the backend also answers directly on port 3000,
                                     # which bypasses HAProxy's TLS and its authentication
 ```
@@ -3124,7 +3124,7 @@ MFA: add TOTP with [otplib](https://github.com/yeojz/otplib) plus the [qrcode](h
 curl -q -sI http://example.com/         # expect 301 with a https:// Location
 curl -q -sI https://example.com/        # succeeds without -k; shows helmet's headers
 curl -q -s  https://example.com/api     # expect 401/403 without credentials
-ss -tlnp | grep node                 # behind a proxy: bound to 127.0.0.1 only
+ss -tlnp   # read every listener; behind a proxy: bound to 127.0.0.1 only
 # trust proxy: add a temporary route that echoes req.ip, then remove it after this check
 #   app.get('/whoami', (req, res) => res.send(req.ip))
 curl -q -s -H 'X-Forwarded-For: 203.0.113.9' https://example.com/whoami
@@ -3240,7 +3240,7 @@ Reach it through an SSH tunnel, including one that runs over your tailnet, never
 ```bash
 curl -q -sI https://example.com/        # succeeds without -k
 curl -q -s  https://example.com/api     # expect 401/403 without credentials
-ss -tlnp | grep -E 'gunicorn|uvicorn|python'   # behind a proxy: 127.0.0.1 only
+ss -tlnp   # read every listener; behind a proxy: 127.0.0.1 only
 ```
 
 ## Sources (checked September 2026)
@@ -4346,7 +4346,7 @@ Deployment Protection controls who can open a deployment URL: Vercel Authenticat
 ## Verify
 
 ```bash
-ss -tlnp | grep 3000                                    # self-hosted: 127.0.0.1 only
+ss -tlnp   # read every listener; self-hosted: 127.0.0.1 only
 curl -q -si https://app.example.com/api/admin | head -1    # 401 (or 302 to /login) with no cookie
 curl -q -si https://app.example.com/dashboard | head -1    # 302 to /login, not the page
 grep -rl "${SESSION_SECRET:0:8}" .next/static           # no output: the browser bundle has no secret
@@ -4450,7 +4450,7 @@ client := &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{R
 curl -q -sI http://example.com/         # expect 301 with a https:// Location
 curl -q -sI https://example.com/        # succeeds without -k
 curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/api   # 401 or 403 without credentials
-ss -tlnp | grep REPLACE_WITH_BINARY_NAME   # behind a proxy: 127.0.0.1 only
+ss -tlnp   # read every listener; behind a proxy: 127.0.0.1 only
 ```
 
 ## Sources (checked September 2026)
@@ -4547,7 +4547,7 @@ SSO: the `Microsoft.AspNetCore.Authentication.OpenIdConnect` package adds `.AddO
 curl -q -sI http://example.com/         # expect 307 or 308 with a https:// Location
 curl -q -sI https://example.com/        # succeeds without -k; shows Strict-Transport-Security
 curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/api   # 401 or 403 without credentials
-ss -tlnp | grep dotnet               # behind a proxy: 127.0.0.1 and ::1 only
+ss -tlnp   # read every listener; behind a proxy: 127.0.0.1 and ::1 only
 ```
 
 ## Sources (checked September 2026)
@@ -4639,7 +4639,7 @@ The `issuer-uri` drives OpenID Connect discovery, and the `openid` scope is what
 ```bash
 curl -q -sI https://example.com/        # succeeds without -k; shows Strict-Transport-Security
 curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/api   # 401, or 302 to the login page, without credentials
-ss -tlnp | grep java                 # behind a proxy: 127.0.0.1 only
+ss -tlnp   # read every listener; behind a proxy: 127.0.0.1 only
 grep -c "Using generated security password" app.log   # must be 0: otherwise the default user is still active
 ```
 
@@ -4724,7 +4724,7 @@ curl_setopt($ch, CURLOPT_CAINFO, '/etc/ssl/certs/internal-ca.pem'); // internal 
 ## Verify
 
 ```bash
-ss -xlnp | grep php-fpm                                       # Unix socket; with TCP, ss -tlnp shows 127.0.0.1:9000 only
+ss -xlnp   # read every listener; Unix socket; with TCP, ss -tlnp shows 127.0.0.1:9000 only
 curl -q -sI https://app.example.com/                             # succeeds without -k
 curl -q -sI https://app.example.com/login | grep -i set-cookie   # secure; httponly; samesite=lax
 curl -q -s -o /dev/null -w '%{http_code}\n' https://app.example.com/REPLACE_WITH_PROTECTED_PATH
@@ -4849,7 +4849,7 @@ Never set `verify_mode = OpenSSL::SSL::VERIFY_NONE`. Ruby's default SSL context 
 ## Verify
 
 ```bash
-ss -tlnp | grep -E 'puma|ruby'                                   # 127.0.0.1:3000 only
+ss -tlnp   # read every listener; 127.0.0.1:3000 only
 curl -q -sI http://app.example.com/                                 # 301 to https:// (force_ssl)
 curl -q -sI https://app.example.com/ | grep -iE 'strict-transport|set-cookie'   # HSTS; secure; httponly; samesite=lax
 curl -q -s -o /dev/null -w '%{http_code}\n' https://app.example.com/dashboard    # 302 to login, or 401
@@ -5697,7 +5697,7 @@ The `local ... peer` line above has the same shape and the same requirement. `pe
 ## 7. Verify
 
 ```bash
-ss -tlnp | grep -E '6432|9999|9898'
+ss -tlnp   # read every listener, do not grep to the port you expect
 ```
 
 Read that as an inventory rather than a pass. Every address printed is one the pooler answers on, so an entry showing `0.0.0.0:9898` or `[::]:9898` is section 1 not applied, whatever `listen_addresses` says.
@@ -5884,7 +5884,7 @@ SELECT user, host, ssl_type FROM mysql.user;      -- REQUIRE settings per accoun
 ```
 
 ```bash
-ss -tlnp | grep -E ':(3306|33060) '   # classic protocol 3306 and the X Protocol 33060: both loopback, unless remote access is deliberate
+ss -tlnp   # read every listener; classic protocol 3306 and the X Protocol 33060: both loopback, unless remote access is deliberate
 ```
 
 ## Common mistakes
@@ -5975,7 +5975,7 @@ Driver connection strings take the same `tls=true` and CA options. Do not ship `
 ## 4. Verify
 
 ```bash
-ss -tlnp | grep 27017                       # loopback only, unless remote access is deliberate
+ss -tlnp   # read every listener; loopback only, unless remote access is deliberate
 mongosh --host db.example.com               # without credentials/TLS: refused once hardened
 mongosh "mongodb://db.example.com/?tls=true" --tlsCAFile ca.crt   # connects, then requires auth
 ```
@@ -6062,7 +6062,7 @@ redis-cli --tls --cacert /etc/redis/tls/ca.crt -h redis.example.com -p 6379
 ## 5. Verify
 
 ```bash
-ss -tlnp | grep 6379                          # loopback only, unless remote access is deliberate
+ss -tlnp   # read every listener; loopback only, unless remote access is deliberate
 redis-cli -h redis.example.com ping           # plaintext attempt: fails once port 0 is set
 redis-cli --tls --cacert ca.crt -h redis.example.com ping   # NOAUTH error until AUTH succeeds
 ```
@@ -6175,7 +6175,7 @@ Loopback or private networks by default; public access only via the TLS endpoint
 ## 4. Verify
 
 ```bash
-ss -tlnp | grep -E ':(9000|9001) '                     # S3 API 9000 and the console (--console-address, ~9001); private unless deliberate
+ss -tlnp   # read every listener; S3 API 9000 and the console (--console-address, ~9001); private unless deliberate
 curl -q -s -o /dev/null -w '%{http_code}\n' https://s3.example.com:9000/                     # service root: anonymous ListBuckets denied
 curl -q -s -o /dev/null -w '%{http_code}\n' https://s3.example.com:9000/REPLACE_WITH_BUCKET/ # per bucket: anonymous listing denied
 curl -q -s -o /dev/null -w '%{http_code}\n' https://s3.example.com:9000/REPLACE_WITH_BUCKET/REPLACE_WITH_PRIVATE_OBJECT
@@ -6248,7 +6248,7 @@ RabbitMQ's own guidance is to expose these ports only to the hosts and subnets t
 ## 5. Verify
 
 ```bash
-ss -tlnp | grep -E ':(5671|5672|15672|4369|25672) '   # 5672 gone once listeners.tcp = none; UI, epmd 4369 and distribution 25672 all private to the cluster network
+ss -tlnp   # read every listener; 5672 gone once listeners.tcp = none; UI, epmd 4369 and distribution 25672 all private to the cluster network
 
 # Positive: a client holding a certificate connects.
 # client.pem and client.key are a CLIENT certificate and key issued by the CA in
@@ -6345,7 +6345,7 @@ Port 8883 is the conventional MQTT-over-TLS port. Certificates per [self-signed.
 ```bash
 mosquitto_sub -h mq.example.com -p 8883 --cafile ca.pem -t 'test' -u device-01 -P '...'   # works
 mosquitto_sub -h mq.example.com -p 8883 --cafile ca.pem -t 'test'                          # refused (no credentials)
-ss -tlnp | grep -E '1883|8883'                                                             # no public 1883
+ss -tlnp   # read every listener; no public 1883
 ```
 
 ## Sources (checked September 2026)
@@ -6444,7 +6444,7 @@ Redpanda implements the Kafka wire protocol, so the client-side and protocol-lev
 ## Verify
 
 ```bash
-ss -tlnp | grep -E '9092|9093'                                # 9093 only, or 9092 on 127.0.0.1
+ss -tlnp   # read every listener; 9093 only, or 9092 on 127.0.0.1
 openssl s_client -connect kafka.example.com:9093 -verify_hostname kafka.example.com \
   -verify_return_error -CAfile ca.pem </dev/null              # prints Verification: OK. Point -CAfile at
                                                               # the CA that signed the broker certificate;
@@ -6550,7 +6550,7 @@ Get a certificate ([free-certificates.md](free-certificates.md) or [self-signed.
 Clients use `clickhouse-client --secure` on 9440, or HTTPS on 8443 with HTTP basic auth or the `X-ClickHouse-User` and `X-ClickHouse-Key` headers; the documentation discourages `user` and `password` URL parameters because proxies log them.
 
 ```bash
-ss -tlnp | grep -E '8123|9000|8443|9440'          # only 8443 and 9440, on the intended address
+ss -tlnp   # read every listener; only 8443 and 9440, on the intended address
 curl -q -s http://ch.example.com:8123/                # connection refused
 curl -q -s 'https://ch.example.com:8443/?query=SELECT%201'   # no credentials = default with empty password: authentication error
 curl -q -u app:REPLACE_WITH_LONG_RANDOM_VALUE 'https://ch.example.com:8443/?query=SELECT%201'   # 1
@@ -6636,7 +6636,7 @@ MFA: native login has no second factor. Enterprise Edition can delegate authenti
 Clients and drivers connect with `neo4j+s://`, which verifies the certificate; `neo4j+ssc://` accepts a self-signed certificate without verification and belongs in development only.
 
 ```bash
-ss -tlnp | grep -E '7474|7473|7687'                             # 7473 and 7687 only, on the intended address
+ss -tlnp   # read every listener; 7473 and 7687 only, on the intended address
 openssl s_client -connect neo4j.example.com:7687 -verify_hostname neo4j.example.com \
   -verify_return_error -CAfile ca.pem </dev/null                 # prints Verification: OK. Point -CAfile
                                                                  # at the CA that signed the server
@@ -6920,7 +6920,7 @@ The HTTP monitoring endpoint is off unless configured (`http_port: 8222` in the 
 The `nats` CLI reads a saved context and environment variables (`NATS_URL`, `NATS_USER`, `NATS_PASSWORD`, and similar) before falling back to any default, so a credential-free test has to neutralize both or it can silently inherit credentials from whatever context happens to be active.
 
 ```bash
-ss -tlnp | grep -E ':(4222|8222) '                                                                                                                          # 4222 as intended, 8222 loopback/private only
+ss -tlnp   # read every listener; 4222 as intended, 8222 loopback/private only
 nats pub orders.created hello --tlsca /etc/nats/certs/ca.pem --tlscert REPLACE_WITH_CLIENT_CERT_FILE --tlskey REPLACE_WITH_CLIENT_KEY_FILE --user order-svc --password REPLACE_WITH_LONG_RANDOM_PASSWORD   # allowed subject, valid credentials: succeeds
 nats pub other.subject hello --tlsca /etc/nats/certs/ca.pem --tlscert REPLACE_WITH_CLIENT_CERT_FILE --tlskey REPLACE_WITH_CLIENT_KEY_FILE --user order-svc --password REPLACE_WITH_LONG_RANDOM_PASSWORD     # subject outside the allow list: fails
 nats --context "" --server nats://REPLACE_WITH_NATS_HOST:4222 pub orders.created hello --tlsca /etc/nats/certs/ca.pem --tlscert REPLACE_WITH_CLIENT_CERT_FILE --tlskey REPLACE_WITH_CLIENT_KEY_FILE   # empty context, explicit server, no --user/--password: fails, and cannot inherit credentials from a saved context or NATS_URL/NATS_USER/NATS_PASSWORD
@@ -7119,7 +7119,7 @@ guidance also endorses delegating TLS termination to a load balancer or reverse 
 ## Verify
 
 ```bash
-ss -tlnp | grep 8000                          # loopback or private address only, never 0.0.0.0
+ss -tlnp   # read every listener; loopback or private address only, never 0.0.0.0
 curl -q -sI http://127.0.0.1:8000/health          # process is up
 surreal sql --endpoint http://127.0.0.1:8000 --namespace test --database test
 ```
@@ -7309,7 +7309,7 @@ curl -q -s -o /dev/null -w '%{http_code}\n' --cacert /path/cert.pem https://jupy
                                        # carries. Never -k here: it accepts any certificate, so the check passes
                                        # against a substituted one and proves nothing about your TLS
 # In a private browser window: the server asks for the password before showing any notebook.
-ss -tlnp | grep 8888                   # bound to 127.0.0.1 unless deliberately exposed
+ss -tlnp   # read every listener; bound to 127.0.0.1 unless deliberately exposed
 ```
 
 ## Sources (checked September 2026)
@@ -7449,7 +7449,7 @@ Publish it through [caddy.md](caddy.md)/[nginx.md](nginx.md) with a certificate 
 ## 3. Verify
 
 ```bash
-ss -tlnp | grep 3000                      # loopback only
+ss -tlnp   # read every listener; loopback only
 curl -q -sI https://chat.example.com/        # serves over TLS
 # In a private browser window: login page appears; with ENABLE_SIGNUP=false the
 # sign-up option is absent and an attempt to register is refused. With signup on,
@@ -7502,7 +7502,7 @@ Run the proxy on loopback (or a private container network) and publish it only t
 ```bash
 curl -q -sS -o /dev/null -w '%{http_code}\n' https://llm.example.com/v1/models   # 401 without a key
 curl -q -s https://llm.example.com/v1/models -H "Authorization: Bearer REPLACE_WITH_VIRTUAL_KEY"   # model list
-ss -tlnp | grep 4000                                            # loopback only
+ss -tlnp   # read every listener; loopback only
 ```
 
 ## Sources (checked September 2026)
@@ -7594,7 +7594,7 @@ One proxy detail is specific to this API: unless `--listen` (or `--public-api`) 
 ## Verify
 
 ```bash
-ss -tlnp | grep -E ':(8080|8000|8001|8002|3000|9000|30000|1234) '   # loopback only
+ss -tlnp   # read every listener; loopback only
 curl -q -s https://models.example.com/v1/models            # 401 without a key
 curl -q -s https://models.example.com/v1/models -H "Authorization: Bearer REPLACE_WITH_API_KEY"   # succeeds
 curl -q -s -o /dev/null -w '%{http_code}\n' -X POST https://models.example.com/invocations -d '{}'
@@ -7701,7 +7701,7 @@ demo.launch(
 ## 5. Verify
 
 ```bash
-ss -tlnp | grep 7860                        # loopback unless deliberately exposed
+ss -tlnp   # read every listener; loopback unless deliberately exposed
 curl -q -sI https://gradio.example.com/        # succeeds over TLS
 # In a private browser window: the login form appears before the app.
 ```
@@ -7790,7 +7790,7 @@ A password typed into a plain `st.text_input` and compared in the script is not 
 ## 4. Verify
 
 ```bash
-ss -tlnp | grep 8501                     # 127.0.0.1 when behind a proxy
+ss -tlnp   # read every listener; 127.0.0.1 when behind a proxy
 curl -q -sI https://app.example.com/        # succeeds over TLS
 # In a private browser window: the IdP login (or proxy auth) appears before the app.
 ```
@@ -7845,7 +7845,7 @@ N8N_SSL_CERT=/path/to/fullchain.pem
 ## 5. Verify
 
 ```bash
-ss -tlnp | grep 5678                    # 127.0.0.1, not :: or 0.0.0.0
+ss -tlnp   # read every listener; 127.0.0.1, not :: or 0.0.0.0
 curl -q -sI https://n8n.example.com/       # TLS
 curl -q -s -o /dev/null -w '%{http_code}\n' https://n8n.example.com/api/v1/workflows
                                         # 401 without an `X-N8N-API-KEY` header. Use a request that returns a body,
@@ -7908,7 +7908,7 @@ Password attempts are rate-limited (2 per minute plus 12 per hour). Replace the 
 ## 3. Verify
 
 ```bash
-ss -tlnp | grep 8080                    # loopback only
+ss -tlnp   # read every listener; loopback only
 curl -q -sI https://code.example.com/      # TLS, login page, never the editor
 ```
 
@@ -8297,7 +8297,7 @@ MFA: MCP has no login dialogue of its own. Under Option A, MFA is whatever the a
 ## Verify
 
 ```bash
-ss -tlnp | grep 3000                                   # 127.0.0.1:3000 only, never 0.0.0.0 or ::
+ss -tlnp   # read every listener; 127.0.0.1:3000 only, never 0.0.0.0 or ::
 # From another host: refused at the origin, or answered only by the fronting layer.
 # read err, not the number: it must name a refusal or timeout reaching YOUR address. An HTTP code
 # means the port answered. A resolver failure, a local socket error, or a timeout that did not come
@@ -8415,8 +8415,8 @@ Ray warns that this costs performance (large for small workloads, smaller for la
 ## Verify
 
 ```bash
-ss -tlnp | grep 8265                                    # 127.0.0.1:8265 (or the tailnet IP), never 0.0.0.0 or *
-ss -tlnp | grep -E ':6379|:10001'                       # private interface only
+ss -tlnp   # read every listener; 127.0.0.1:8265 (or the tailnet IP), never 0.0.0.0 or *
+ss -tlnp   # read every listener; private interface only
 # from another network, checking the dashboard port is unreachable from outside. The pass is that no TCP
 # connection formed: time_connect stays 0.000000 and err names a connection-level failure (refused, no
 # route, or a filtered-port connect timeout). A non-zero time_connect, or any http code, means the
@@ -8516,7 +8516,7 @@ With `--serve-artifacts` (the default) and `--artifacts-destination s3://bucket`
 ## Verify
 
 ```bash
-ss -tlnp | grep 5000                                                   # 127.0.0.1 only
+ss -tlnp   # read every listener; 127.0.0.1 only
 # from another machine, checking the port is unreachable from outside. The pass is that no TCP
 # connection formed: time_connect stays 0.000000 and err names a connection-level failure (refused, no
 # route, or a filtered-port connect timeout). A non-zero time_connect, or any http code, means the
@@ -9379,7 +9379,7 @@ strict_password_checking: true
 ## Verify
 
 ```bash
-ss -tlnp | grep -E '8188|7860|9090'                 # each service on 127.0.0.1 only
+ss -tlnp   # read every listener; each service on 127.0.0.1 only
 # each must be unreachable from another host. Read err, not the number: it must name a refusal or
 # timeout reaching YOUR address. An HTTP code means the port answered. A resolver failure, a local
 # socket error, or a timeout that did not come from the remote address is inconclusive.
@@ -9511,7 +9511,7 @@ The documented quickstart itself runs `docker run ... -p 3000:3000 ... openhands
 ## Verify
 
 ```bash
-ss -tlnp | grep -E '3001|3210|3000'                    # each UI on 127.0.0.1 only
+ss -tlnp   # read every listener; each UI on 127.0.0.1 only
 # from another host. Read err, not the number: it must name a refusal or timeout reaching YOUR
 # address. An HTTP code means the port answered. A resolver failure, a local socket error, or a
 # timeout that did not come from the remote address is inconclusive, never a pass.
@@ -9654,7 +9654,7 @@ enabled component is attack surface, and run the process as a non-root user.
 ## Verify
 
 ```bash
-ss -tlnp | grep -E ':(3000|6006|4317|4318) '                          # loopback or private only, never 0.0.0.0
+ss -tlnp   # read every listener; loopback or private only, never 0.0.0.0
 curl -q -sS -o /dev/null -w '%{http_code}\n' https://langfuse.example.com/   # dashboard: login page or 401, never the project view
                                                                         # /api/public/health returns health status by design and is
                                                                         # not an access-control check; it proves nothing here
@@ -9814,7 +9814,7 @@ bind `--address=127.0.0.1` behind a proxy rather than relying on Basic Auth as t
 ## Verify
 
 ```bash
-ss -tlnp | grep -E ':(4200|3000|8080|7233|8233|5555) '                 # loopback or private only, never 0.0.0.0
+ss -tlnp   # read every listener; loopback or private only, never 0.0.0.0
 curl -q -sS -o /dev/null -w '%{http_code}\n' -X POST http://prefect.internal:4200/api/flows/filter -d '{}'
                                                                         # 401 without the auth string once configured. Do NOT probe
                                                                         # /api/health or /api/ready: Prefect exempts those two paths
@@ -10045,7 +10045,7 @@ Without `--tlsverify` the daemon does not check client certificates. Firewall 23
 ## Verify
 
 ```bash
-ss -tlnp | grep -E ':(9443|9000|8000|3000|81|3001|2375|2376) '   # 127.0.0.1 or absent, never 0.0.0.0
+ss -tlnp   # read every listener; 127.0.0.1 or absent, never 0.0.0.0
 curl -q -s -o /dev/null -w '%{http_code}\n' https://panel.example.com/
                                                                   # 401, 403, or a login redirect, never a dashboard. No -k:
                                                                   # this panel is behind a proxy holding a real certificate, so
@@ -10410,7 +10410,7 @@ refusal from that vantage, and the write-out fields need curl 7.75.0 or newer.
 ```bash
 # On the host: these published listeners should be bound to loopback or an internal interface.
 # Docker publishes through NAT, so also test each port from an external host over IPv4 and IPv6.
-ss -tlnp | grep -E ':(8000|5432|6543) '   # loopback or internal only
+ss -tlnp   # read every listener; loopback or internal only
 ```
 
 The gateway serves plain HTTP on `8000`. The block below calls an Edge Functions route without any
@@ -10852,7 +10852,7 @@ Front it the same as the other tools here rather than relying on anything Redash
 ## Verify
 
 ```bash
-ss -tlnp | grep -E ':3000|:8088|:5000'   # Metabase / Superset / Redash bound to loopback only, ports vary by install
+ss -tlnp   # read every listener; Metabase / Superset / Redash bound to loopback only, ports vary by install
 curl -q -sI https://bi.example.com/         # 401/403 or a login redirect, never a dashboard
 ```
 
@@ -11068,7 +11068,7 @@ curl 7.75.0 or newer, and an IPv6 literal needs brackets in the URL.
 ```bash
 # On the host: these listeners should be bound to loopback or an internal interface, not a wildcard.
 # Add the distributed Grid ports (5553, 5556, 5557, 5559) and your Playwright port if you run them.
-ss -tlnp | grep -E ':(9222|4442|4443|4444|5555|3000|5900|7900) '   # loopback or internal only
+ss -tlnp   # read every listener; loopback or internal only
 ```
 
 For the DevTools, Grid, browserless and Playwright ports, guard the address in the block below so it
