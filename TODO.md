@@ -78,7 +78,6 @@ marked, and those are the ones worth taking first.
 | ID | Item | Tags |
 | --- | --- | --- |
 | 3.14 | Convention 2, the general guard grammar: gate a probe that escapes its guard for the shapes the sentinel-scoped C2 rule cannot reach without false positives (if/elif and `-z` sentinel guards, flag-variable guards, renamed sentinels). The corpus idiom is guard-then-early-exit, the probe correctly after `esac`, which is lexically indistinguishable from a warn-only guard, so any lexical rule cries wolf; `check_guard_conventions.py --strict-guards` is the manual-audit tool. Deferred from 3.11, whose gate registered `--no-c2` because the corpus uses the exit-then-probe variant the sentinel rule over-flags (M, S) | `[gap]` |
-| 3.15 | `tools/check_csp_hashes.py`: police stale/orphan pins. The multi-page gate (#112) verifies every listed page's block is pinned but does not reject a hash left in a `script-src` or `style-src` after its block was deleted, so `site/_headers` can accumulate dead allowlist entries. This is not a fail-open (an orphan cannot make a real block go unhashed while green), so it was deferred from #112; add pin-set exactness over the directives the gate selects, deciding how to treat a legitimately shared pin and a pin a browser ignores. Test N17 in #112 documents the deferral and flips red when this lands. Deferred from 3.12 (L, S) | `[enhance]` |
 
 ## Decisions
 
