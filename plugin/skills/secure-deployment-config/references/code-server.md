@@ -28,7 +28,7 @@ Password attempts are rate-limited (2 per minute plus 12 per hour). Replace the 
 ## 3. Verify
 
 ```bash
-ss -tlnp | grep 8080                    # loopback only
+ss -tlnp   # read every listener; 8080: loopback only
 curl -q -sI https://code.example.com/      # TLS, login page, never the editor
 ```
 

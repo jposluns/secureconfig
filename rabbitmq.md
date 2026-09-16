@@ -48,7 +48,7 @@ RabbitMQ's own guidance is to expose these ports only to the hosts and subnets t
 ## 5. Verify
 
 ```bash
-ss -tlnp | grep -E ':(5671|5672|15672|4369|25672) '   # 5672 gone once listeners.tcp = none; UI, epmd 4369 and distribution 25672 all private to the cluster network
+ss -tlnp   # read every listener; 5671/15672: 5672 gone once listeners.tcp = none; UI, epmd 4369 and distribution 25672 all private to the cluster network
 
 # Positive: a client holding a certificate connects.
 # client.pem and client.key are a CLIENT certificate and key issued by the CA in

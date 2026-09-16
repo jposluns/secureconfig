@@ -61,7 +61,7 @@ SELECT user, host, ssl_type FROM mysql.user;      -- REQUIRE settings per accoun
 ```
 
 ```bash
-ss -tlnp | grep -E ':(3306|33060) '   # classic protocol 3306 and the X Protocol 33060: both loopback, unless remote access is deliberate
+ss -tlnp   # read every listener; classic protocol 3306 and the X Protocol 33060: both loopback, unless remote access is deliberate
 ```
 
 ## Common mistakes

@@ -42,7 +42,7 @@ curl -q -s -o /dev/null -w '%{http_code}\n' --cacert /path/cert.pem https://jupy
                                        # carries. Never -k here: it accepts any certificate, so the check passes
                                        # against a substituted one and proves nothing about your TLS
 # In a private browser window: the server asks for the password before showing any notebook.
-ss -tlnp | grep 8888                   # bound to 127.0.0.1 unless deliberately exposed
+ss -tlnp   # read every listener; 8888: bound to 127.0.0.1 unless deliberately exposed
 ```
 
 ## Sources (checked September 2026)

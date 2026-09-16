@@ -91,7 +91,7 @@ enabled component is attack surface, and run the process as a non-root user.
 ## Verify
 
 ```bash
-ss -tlnp | grep -E ':(3000|6006|4317|4318) '                          # loopback or private only, never 0.0.0.0
+ss -tlnp   # read every listener; 3000/6006/4317/4318: loopback or private only, never 0.0.0.0
 curl -q -sS -o /dev/null -w '%{http_code}\n' https://langfuse.example.com/   # dashboard: login page or 401, never the project view
                                                                         # /api/public/health returns health status by design and is
                                                                         # not an access-control check; it proves nothing here

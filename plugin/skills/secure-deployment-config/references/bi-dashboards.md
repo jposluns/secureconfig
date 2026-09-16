@@ -45,7 +45,7 @@ Front it the same as the other tools here rather than relying on anything Redash
 ## Verify
 
 ```bash
-ss -tlnp | grep -E ':3000|:8088|:5000'   # Metabase / Superset / Redash bound to loopback only, ports vary by install
+ss -tlnp   # read every listener; 3000/8088/5000: Metabase / Superset / Redash bound to loopback only, ports vary by install
 curl -q -sI https://bi.example.com/         # 401/403 or a login redirect, never a dashboard
 ```
 

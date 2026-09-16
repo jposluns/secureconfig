@@ -50,7 +50,7 @@ demo.launch(
 ## 5. Verify
 
 ```bash
-ss -tlnp | grep 7860                        # loopback unless deliberately exposed
+ss -tlnp   # read every listener; 7860: loopback unless deliberately exposed
 curl -q -sI https://gradio.example.com/        # succeeds over TLS
 # In a private browser window: the login form appears before the app.
 ```
