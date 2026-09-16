@@ -59,9 +59,9 @@ carrying only unrelated headers is fine).
 
 WHAT IT STILL DOES NOT COVER, stated rather than left to be found: a document embedded with `srcdoc`
 inherits a page's CSP, and nothing here looks inside one; and a directory SYMLINKED under `site/` is not descended
-into, so pages reached only through one are not scanned; and a STALE pin (a hash left in a directive
-after its block was deleted) is not detected, because an orphan pin cannot make a real block go
-unhashed while green, so it is not a fail-open but a policy-minimization concern with its own scope.
+into, so pages reached only through one are not scanned. A STALE pin (a hash left in a gate-selected directive
+after its block was edited or deleted) IS now rejected as an orphan (row 3.15); it is not a fail-open,
+but dead allowlist entries otherwise accumulate in site/_headers.
 
 WHAT IT HASHES: each file's bytes, decoded, with CRLF and lone CR normalized to LF, because HTML's
 input-stream preprocessing normalizes CR and CRLF to LF before tokenizing, so a DOM never contains a
@@ -164,6 +164,13 @@ def normalize_pin(token):
     """
     head, sep, tail = token.partition("-")
     return head.lower() + sep + tail if sep else token
+
+
+def is_hash_pin(token):
+    """True for a CSP hash source expression (`'sha256-...'`, sha384, sha512; algorithm matched
+    case-insensitively). Non-hash tokens ('self', 'none', 'unsafe-inline', a directive name, a URL)
+    are not policed as orphans."""
+    return token.lower().startswith(("'sha256-", "'sha384-", "'sha512-"))
 
 
 def normalized(data: bytes) -> str:
@@ -368,6 +375,7 @@ def main() -> int:
 
     findings, verified = [], 0
     used = {}
+    used_pins = {}
     for tag, names in KINDS:
         # Resolve each kind's directive once, whether or not any listed page carries that kind: a CSP
         # that fails to constrain a kind at all should never be blessed by this gate.
@@ -392,8 +400,10 @@ def main() -> int:
                 if chosen is None:
                     continue
                 present = {normalize_pin(token) for token in directives[chosen]}
-                if pin_tokens(body) & present:
+                matched = pin_tokens(body) & present
+                if matched:
                     verified += 1
+                    used_pins.setdefault(chosen, set()).update(matched)
                 else:
                     findings.append(f"{chosen} lacks the hash of the inline <{tag}> in {path} "
                                     f"(sha256-{sha256_b64(body)})")
@@ -403,6 +413,17 @@ def main() -> int:
                 f"element's text, never an attribute, so it needs the rule moved into the stylesheet, "
                 f"or a style-src-attr directive carrying 'unsafe-hashes' and the attribute's own "
                 f"hash, which this gate does not check")
+
+    # Orphan pins (row 3.15): a hash left in a gate-selected directive that no listed block uses.
+    # Not a fail-open (an orphan cannot make a real block go unhashed), but a stale pin is dead
+    # weight in site/_headers after its block is edited or removed, so reject it. Only the chosen
+    # directive per kind is policed, matching the model above; a shared pin used by several pages is
+    # in the used set and is not an orphan.
+    for chosen in sorted({c for c in used.values() if c is not None}):
+        present_hashes = {normalize_pin(t) for t in directives[chosen] if is_hash_pin(t)}
+        for orphan in sorted(present_hashes - used_pins.get(chosen, set())):
+            findings.append(f"{chosen} pins {orphan}, an orphan hash no inline <style>/<script> on "
+                            f"any listed page uses; remove the stale pin")
 
     declared_total = sum(n for _, shape in PAGES for n in shape.values())
     if not findings and verified != declared_total:
