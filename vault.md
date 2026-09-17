@@ -81,7 +81,8 @@ unreadable.
 
 A new cluster has no audit device, so requests are served with no durable record; server logs are not
 a substitute. Enable one (`vault audit enable file file_path=/var/log/vault/audit.log`), and add a
-second, independent one (`vault audit enable syslog`), because auditing is fail-closed: when Vault
+second, independent one (`vault audit enable syslog` shipping to a SEPARATE host or failure domain: a local
+syslog agent that writes the same disk is not independent), because auditing is fail-closed: when Vault
 cannot write to at least one enabled device it "refuses to service the corresponding API request", so a
 full disk on your only device is an outage. Monitor the disk and rotate the file by reopening it rather
 than truncating it. Vault writes a keyed HMAC-SHA256 of most string values by default, so a
@@ -135,8 +136,16 @@ them against, so the outcomes are derived from the cited vendor pages rather tha
 transport failure or a TLS error is inconclusive, never the fixed state.
 
 ```bash
-sudo ss -tlnp                          # read the whole table: 8200 on the intended private address and
-                                       # 8201 only between nodes, nothing unexpected beside them
+sudo ss -tlnp                          # read the whole table: confirm 8200 is bound to the intended private
+                                       # address and 8201 to the cluster address, nothing unexpected. ss shows the
+                                       # BIND, not the firewall; "only between nodes" is a FIREWALL property, so
+                                       # confirm it with the firewall rules and by probing 8201 from a permitted node
+                                       # (should connect) and a forbidden host (should not); a single external probe
+                                       # only shows it is unreachable from THAT source
+export VAULT_ADDR=https://vault-1.internal:8200 VAULT_CACERT=/etc/vault.d/tls/ca.pem   # point the CLI at THIS
+                                       # server over TLS (it defaults to https://127.0.0.1:8200, and an inherited
+                                       # VAULT_ADDR could target another Vault); keep VAULT_SKIP_VERIFY unset so the
+                                       # certificate is actually verified
 vault status -format=json              # initialized true, sealed false; exit code 2 means sealed (a standby is 0)
 curl -q -g -s -o /dev/null -w 'http=%{http_code}\n' --cacert /etc/vault.d/tls/ca.pem \
   https://vault-1.internal:8200/v1/sys/health   # 200 active, 429 standby, 501 uninitialized, 503 sealed
@@ -146,8 +155,9 @@ vault token lookup                     # run once after a scoped-admin login (su
                                        # which must return Vault's permission-denied or invalid-token error
 ```
 
-Confirm the audit device actually records by correlating a non-root `vault token lookup` with an entry
-in the log by request id; do not use `sys/health` for that, since it is on the audit exemption list. The
+Confirm the audit device actually records by correlating a non-root `vault token lookup -format=json` (the
+default table output omits the request ID) with an entry in the log, matching its `request_id` to the log
+entry's `request.id`; do not use `sys/health` for that, since it is on the audit exemption list. The
 revocation check proves that one token is dead, not that no root token exists, so do not keep a live
 root credential for testing. The last probe is the reverse of the ones above: run it from a machine
 outside your trusted network, where the fixed state is that nothing answers. Guard the address so the
@@ -171,7 +181,10 @@ For this probe the discriminator is whether the TCP connection forms, not the HT
 state is `time_connect` at `0.000000` with `err` naming a refusal, no route, or a filtered-port timeout,
 and any non-zero `time_connect`, even when the TLS handshake then fails against an internal CA, means
 the port is reachable and is the finding. Run the same check against `8201` and every externally
-reachable address. A name-resolution or local-socket error is inconclusive.
+reachable address. A name-resolution or local-socket error is inconclusive. This proves only that the
+ADDRESS you tested is unreachable, not that Vault is: a mistyped or misrouted address also yields
+`time_connect=0`, so confirm `$1` is the real external address (or public NAT) of the listener the on-host
+`ss` showed bound to `8200`, so a typo does not read as isolation.
 
 ## Sources (checked September 2026)
 
@@ -184,3 +197,4 @@ reachable address. A name-resolution or local-socket error is inconclusive.
 - Vault production hardening (root token, swap, core dumps): https://developer.hashicorp.com/vault/docs/concepts/production-hardening
 - Vault sys/health status codes: https://developer.hashicorp.com/vault/api-docs/system/health
 - Vault policies and tokens: https://developer.hashicorp.com/vault/docs/concepts/policies
+- Vault Login MFA (enforced on auth-method logins; the token auth method cannot use it): https://developer.hashicorp.com/vault/docs/auth/login-mfa
