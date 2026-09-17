@@ -6946,19 +6946,19 @@ aws s3api get-public-access-block --bucket example-bucket     # all four true
 aws s3api get-bucket-policy-status --bucket example-bucket    # "IsPublic": false
 ```
 
-IAM Access Analyzer for S3 lists every bucket in the account whose ACL, bucket policy, or access point policy grants public or cross-account access.
+IAM Access Analyzer for S3 lists buckets whose ACL, bucket policy, or access point policy grants public or cross-account access, but only in a Region that has an account-level external-access analyzer, its findings update asynchronously, and archived findings drop out of the active view; create an analyzer in every Region that holds buckets, review archived as well as active findings, and confirm the Block Public Access settings directly rather than treating an empty list as proof.
 
 ## 2. Cloudflare R2
 
 - Buckets are never publicly accessible by default; public access is an explicit step, either a custom domain you control or a Cloudflare-managed `r2.dev` subdomain, which is rate-limited and for development only. Under the bucket's settings, keep the Public Development URL disabled and attach no custom domain unless the bucket is meant to be public.
-- Create R2 API tokens with the least permission: `Object Read only` or `Object Read & Write` scoped to specific buckets for applications; the `Admin` levels can create and delete buckets and belong to operators only. The secret access key is shown once, so store it in a secret manager ([secrets.md](secrets.md)).
+- Create R2 API tokens with the least permission: `Object Read only` or `Object Read & Write` scoped to specific buckets for applications; `Admin Read & Write` can create and delete buckets and change their configuration (operators only), while `Admin Read only` can inspect buckets and read objects but not create or delete buckets. The secret access key is shown once, so store it in a secret manager ([secrets.md](secrets.md)).
 - R2 supports S3 presigned URLs, generated with your R2 token and SigV4, valid from 1 second to 7 days (604800 seconds); keep uploads and downloads on these rather than on a public bucket.
 
 ## 3. Google Cloud Storage
 
 - Enable uniform bucket-level access so ACLs are disabled and only IAM grants access; after 90 consecutive days it cannot be turned off, which is the point.
 - Enforce public access prevention on the bucket, or at project, folder, or organization level with the `storage.publicAccessPrevention` constraint; attempts to grant `allUsers` or `allAuthenticatedUsers` then fail with `412 Precondition Failed`, and anonymous requests to data get `401` or `403`. A bucket shows `enforced` or `inherited`.
-- Signed URLs (V4) expire after at most 604800 seconds (7 days); `gcloud storage sign-url --duration=1h` allows up to 12 hours with the caller's credentials or 7 days with a service-account private key. Public access prevention does not apply to signed URLs, so keep their durations short.
+- Signed URLs (V4) expire after at most 604800 seconds (7 days); `gcloud storage sign-url --duration=1h` signs with a service account (via `--impersonate-service-account`, or a service-account key you activate, not ordinary `gcloud auth login` user credentials), allowing up to 12 hours with system-managed signing or 7 days with a `--private-key-file`. Public access prevention does not apply to signed URLs, so keep their durations short.
 
 ```bash
 gcloud storage buckets update gs://example-bucket --uniform-bucket-level-access --public-access-prevention   # boolean flags; describe then reads back enforced
@@ -6988,14 +6988,19 @@ using ( (select auth.jwt()->>'sub') = owner_id );
 ## Verify
 
 ```bash
-curl -q -sI https://example-bucket.s3.amazonaws.com/model.safetensors        # 403, never 200
-URL="$(aws s3 presign s3://example-bucket/model.safetensors --expires-in 60)"   # signs a GET, so test with GET
-curl -q -sS -o /dev/null -w '%{http_code}\n' "$URL"              # 200 now
-sleep 61; curl -q -sS -o /dev/null -w '%{http_code}\n' "$URL"    # 403 once the minute has passed
+# First prove the object exists and is readable WITH authorization, so a later anonymous denial is about access,
+# not a missing object (S3 also returns 403 for an object you cannot list). presign signs a GET, so test with GET:
+URL="$(aws s3 presign s3://example-bucket/model.safetensors --expires-in 60)"
+curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "$URL"              # 200 now (authorized)
+# Then the SAME object's unsigned URL must be denied to an anonymous caller, with client proxies disabled so a
+# proxy cannot answer for S3. One object is not the whole bucket, so repeat for other keys and prefixes:
+curl -q -sSI --noproxy '*' https://example-bucket.s3.amazonaws.com/model.safetensors   # 403, never 200
+# And the signed URL stops working once it expires:
+sleep 61; curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "$URL"    # 403 after the minute; a DNS/TLS/proxy error is inconclusive
 ```
 
-- An anonymous request to any object URL is denied (S3 returns `403`; GCS `401` or `403`; Azure `401`, or `409` when the account disallows anonymous access; Supabase private buckets return an error, not the file).
-- The provider's public-access view is empty: IAM Access Analyzer for S3 shows no public buckets, `gcloud storage buckets describe` shows public access prevention `enforced`, the Azure Resource Graph query for `allowBlobPublicAccess` shows `false` on every account, and R2 buckets show no Public Development URL or custom domain.
+- An anonymous request to any object URL is denied (S3 returns `403`; GCS `401` or `403`; Azure `401` for modern clients, or `409` for legacy clients predating the bearer challenge, when the account disallows anonymous access; Supabase private buckets return an error, not the file).
+- The provider's public-access view is empty: IAM Access Analyzer for S3 (with an analyzer in every bucket Region) shows no active or archived public findings, `gcloud storage buckets describe` shows public access prevention `enforced`, or `inherited` with a `storage.publicAccessPrevention` org policy that enforces it (`inherited` alone is not a pass), the Azure Resource Graph query for `allowBlobPublicAccess` shows `false` on every account, and R2 buckets show no Public Development URL or custom domain.
 - Application credentials are scoped to one bucket or prefix, and no root, account-key, or service-role credential appears in client code or the repository.
 
 ## Common mistakes
