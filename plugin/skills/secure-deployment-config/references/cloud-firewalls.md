@@ -6,7 +6,7 @@ On AWS (security groups), Google Cloud (VPC firewall rules), and Azure (network 
 
 1. **Public means 80/443 on the TLS layer, nothing else.** Only the load balancer, reverse proxy, or tunnel endpoint accepts traffic from `0.0.0.0/0`, and only on 80 (redirect) and 443.
 2. **Databases and internal services accept traffic from private sources only**: the application's security group, subnet, or VPC, never the internet. The per-database guides' TLS and auth still apply on top; the firewall is a layer, not the control.
-3. **SSH is not public.** Restrict port 22 to your addresses, or remove the public rule and use brokered access. AWS SSM Session Manager is agentless and needs no inbound rule at all; GCP Identity-Aware Proxy still needs an ingress allow for TCP 22 from the IAP range `35.235.240.0/20`; Azure Bastion needs the target VM to allow inbound from the `AzureBastionSubnet`; or use a tailnet ([tailscale.md](tailscale.md)). Those broker sources are scoped ranges, not the internet. Then harden the host per [host.md](host.md).
+3. **SSH is not public.** Restrict port 22 to your addresses, or remove the public rule and use brokered access. AWS SSM Session Manager needs no inbound rule at all (its SSM Agent dials out to the SSM service); GCP Identity-Aware Proxy still needs an ingress allow for TCP 22 from the IAP range `35.235.240.0/20`; Azure Bastion needs the target VM to allow inbound from the `AzureBastionSubnet`; or use a tailnet ([tailscale.md](tailscale.md)). Those broker sources are scoped ranges, not the internet. Then harden the host per [host.md](host.md).
 4. **Default deny, explicit allow.** Start from no inbound rules and add the minimum; review rules whenever a service is retired. Reference security-group IDs rather than IP ranges where the provider supports it, so app-to-database access survives IP changes without widening.
 5. **Both layers matter on VMs running Docker**: the cloud firewall and the host's rules, remembering that published container ports bypass host UFW ([docker.md](docker.md)).
 
@@ -34,10 +34,12 @@ gcloud compute firewall-rules list --format=json
 # its "sourceRanges" actually reach, by the same reasoning as the AWS command above: 0.0.0.0/0 and
 # ::/0 are the obvious cases, and so is any set of ranges that together cover the internet. An entry
 # with "denied" restricts rather than exposes.
-# firewall-rules list returns ONLY classic VPC rules; GCP evaluates firewall policies first and this misses them:
-gcloud compute firewall-policies list                 # hierarchical, at org/folder level
-gcloud compute network-firewall-policies list         # global (a regional variant also exists)
-# then run `... rules list` on each policy. An allow rule with an internet source in any policy exposes the port even when the VPC list above is clean.
+# firewall-rules list returns ONLY classic VPC rules; GCP also enforces firewall policies, which this misses:
+gcloud compute firewall-policies list --organization=REPLACE_WITH_ORG_ID   # or --folder=...; hierarchical policies
+gcloud compute network-firewall-policies list                              # global and regional network policies in this project
+# inspect each policy's rules with its `describe` subcommand (--format=json). Hierarchical policies are evaluated
+# before VPC rules and network policies after them by default, so read the effective order and the matching rule:
+# a policy allow with an internet source can expose the port even when the VPC list above is clean, unless an earlier rule denies it.
 
 # Azure, once per network security group. JSON, not a table: the table formatter omits array-valued
 # columns, so a rule carrying sourceAddressPrefixes rather than sourceAddressPrefix would print an
@@ -71,7 +73,7 @@ az network nsg rule list \
   ```
 
   Each port must report a refused or timed-out connection; a usage error from `nc` (some netcat variants take one port or a range per invocation) is not a passing result, and neither is exit 1 with no output at all, which is what a denied local socket looks like: in both cases nothing reached the network, so the check is inconclusive rather than passed.
-- The `nc` list above is a non-exhaustive spot-check (it omits RDP 3389 and application ports such as 8080 or 9200), and a refused or timed-out port only means nothing answered from here, not that the cloud firewall denies it (an allowed port with no listener refuses too). The authoritative reachability test is a full-range external scan of every public IPv4 and IPv6 address (for example with nmap, against your own infrastructure only) from a disallowed source, showing only the intended ports; then confirm an allowed source still reaches them.
+- The `nc` list above is a non-exhaustive spot-check (it omits RDP 3389 and application ports such as 8080 or 9200), and a refused or timed-out port only means nothing answered from here, not that the cloud firewall denies it (an allowed port with no listener refuses too). The strongest reachability test is a full-range external scan of every public IPv4 and IPv6 address (for example with nmap, against your own infrastructure only) from a disallowed source: distinguish open, closed, and filtered, since a closed or refused port is not proof the firewall denies it (a port with no listener also reads closed). For each restricted service, confirm it is reachable from its allowed source and unreachable from a disallowed one, and correlate that with the effective firewall rules before crediting the block to the cloud firewall.
 
 ## Sources (checked September 2026)
 
