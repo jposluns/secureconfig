@@ -8,13 +8,13 @@ Authorization code flow with PKCE from a server-side (confidential) client. RFC 
 
 1. Register the exact callback URL at the provider (scheme, host, path, trailing slash). Prefix or wildcard matching is what makes redirect-based code theft work.
 2. Send a random `state` bound to the browser session and a random `nonce` on every authorization request, plus `code_challenge` with `code_challenge_method=S256`. Scopes: `openid email profile`.
-3. Exchange the code at the token endpoint from the server, with the client secret. Never from the browser.
-4. Validate the ID token before trusting any claim (OpenID Connect Core section 3.1.3.7): the signature against the key set at the provider's `jwks_uri`, using an algorithm you pinned (Core says RS256 unless you registered another; the discovery document lists the provider's `id_token_signing_alg_values_supported`) rather than whatever the token header names; `iss` exactly equals the issuer you configured; `aud` contains your client ID; `exp` is in the future; `nonce` equals the one you sent.
-5. Start a server-side session and give the browser only a session cookie marked `Secure`, `HttpOnly`, and `SameSite` per [authentication.md](authentication.md). Do not put ID or access tokens in `localStorage` or a script-readable cookie; nothing in the browser needs them.
+3. Exchange the code at the token endpoint from the server, with the client secret and the `code_verifier` that produced the `code_challenge`. Never from the browser.
+4. Validate the ID token before trusting any claim (OpenID Connect Core section 3.1.3.7): the signature against the key set at the provider's `jwks_uri`, using an algorithm you pinned (Core says RS256 unless you registered another; the discovery document lists the provider's `id_token_signing_alg_values_supported`) rather than whatever the token header names; `iss` exactly equals the issuer you configured; `aud` contains your client ID and lists no audience you do not trust (per OIDC Core, reject a token carrying an untrusted additional audience, and where `aud` has more than one value confirm any `azp` present equals your client ID); `exp` is in the future; `nonce` equals the one you sent.
+5. Start a server-side session and give the browser only a session cookie marked `Secure`, `HttpOnly`, and `SameSite` per [authentication.md](authentication.md). Do not put ID or access tokens in `localStorage` or a script-readable cookie; nothing in the browser needs them. Keep authorization codes and tokens out of server logs, traces, and analytics, set `Referrer-Policy: no-referrer` on the callback, and redirect to a clean URL so the code does not linger in browser history or a `Referer` header. This login recipe requests no `offline_access`, so no refresh token is issued; if you request one, store it as a server-side secret, send it only to the token endpoint, and revoke it on offboarding.
 6. Link the identity to a local account by the pair (issuer, `sub`). OpenID Connect Core section 5.7 says `email`, `phone_number`, and `preferred_username` are not guaranteed unique and may change; Google and Microsoft document the same for their `email` claims. Matching by email alone lets a re-used or unverified address take over an account.
 7. Logout: destroy the server-side session and expire the cookie; where the discovery document lists an `end_session_endpoint`, also redirect there with `id_token_hint` and a registered `post_logout_redirect_uri` (Entra: `/oauth2/v2.0/logout`).
 
-The discovery document at `<issuer>/.well-known/openid-configuration` supplies the endpoints and `jwks_uri`; its `issuer` value must be identical to the prefix you fetched it from. Every library in section 4 reads it for you.
+The discovery document at `<issuer>/.well-known/openid-configuration` supplies the endpoints and `jwks_uri`; for tenant-specific discovery its `issuer` value must be identical to the prefix you fetched it from (Entra's tenant-independent `common`/`organizations` metadata instead returns a templated issuer, handled below). Every library in section 4 reads it for you.
 
 ## 2. Login is not authorization
 
@@ -32,8 +32,8 @@ The default for an identity that passes none of these is to reject and log it, n
 The client secret is a secret: environment variable or secret manager, never a repository or an image ([secrets.md](secrets.md)). Substitute the callback path your library expects for `https://app.example.com/auth/callback`.
 
 - **Google**: Google Cloud console **Clients** page (`https://console.developers.google.com/auth/clients`); create an OAuth client and add the redirect URI. The match is exact, including scheme, case, and trailing slash. Discovery: `https://accounts.google.com/.well-known/openid-configuration`; `iss` is `https://accounts.google.com` or `accounts.google.com`.
-- **Microsoft Entra**: Microsoft Entra admin center, **Entra ID > App registrations > New registration**; under **Supported account types** choose **Single tenant only** unless you are building for other organizations. Then **Authentication > Add a platform > Web** and add the redirect URI. Record the Application (client) ID and create a client secret. Discovery: `https://login.microsoftonline.com/<tenant>/v2.0/.well-known/openid-configuration` with `<tenant>` your directory (tenant) ID; `common` or `organizations` only together with the `tid` check above.
-- **GitHub**: profile picture **> Settings > Developer settings > OAuth apps > New OAuth App**; set the Authorization callback URL. Authorize at `https://github.com/login/oauth/authorize` with `client_id`, `redirect_uri`, `scope=read:user read:org`, `state`, and PKCE (`code_challenge` with `code_challenge_method=S256`; GitHub does not accept `plain`); exchange at `https://github.com/login/oauth/access_token` with `client_id`, `client_secret`, `code`, the `code_verifier` that produced the challenge, and the same `redirect_uri`. Always send `redirect_uri`; when it is absent GitHub uses the first registered callback. Apps that had a single callback URL before August 3, 2026 keep wildcard matching for it, which accepts any subdirectory path on the same host; disable wildcard matching in the app settings so the callback must match exactly.
+- **Microsoft Entra**: Microsoft Entra admin center, **Entra ID > App registrations > New registration**; under **Supported account types** choose **Single tenant only** unless you are building for other organizations. Then **Authentication > Add a platform > Web** and add the redirect URI. Record the Application (client) ID and create a client secret. Discovery: `https://login.microsoftonline.com/<tenant>/v2.0/.well-known/openid-configuration` with `<tenant>` your directory (tenant) ID; prefer this tenant-specific form for a single-tenant app. `common` and `organizations` return a templated issuer `https://login.microsoftonline.com/{tenantid}/v2.0`, so validate by substituting the token's `tid` into the template, confirming `tid` is a GUID and the result equals `iss` exactly, restricting the signing key by its published `issuer` scope, and enforcing your tenant allowlist; never relax issuer validation to make `common` work.
+- **GitHub**: profile picture **> Settings > Developer settings > OAuth apps > New OAuth App**; set the Authorization callback URL. Authorize at `https://github.com/login/oauth/authorize` with `client_id`, `redirect_uri`, `scope=read:user read:org`, `state`, and PKCE (`code_challenge` with `code_challenge_method=S256`; GitHub does not accept `plain`); exchange at `https://github.com/login/oauth/access_token` with `client_id`, `client_secret`, `code`, the `code_verifier` that produced the challenge, and the same `redirect_uri`. Always send `redirect_uri`; when it is absent GitHub uses the first registered callback. Apps that had a single callback URL before August 3, 2026 keep wildcard matching for it, which accepts any subdomain or subdirectory of the registered host; disable wildcard matching in the app settings so the callback must match exactly.
 - **Okta**: Admin Console, **Applications and Resources > Applications > Create App Integration**, sign-in method **OIDC - OpenID Connect**, type **Web Application**; set the sign-in and sign-out redirect URIs and the assignment (Okta's guide allows everyone in the org; narrow it to a group). Client ID and secret are on the **General** tab under Client Credentials. Discovery: `https://<org>.okta.com/.well-known/openid-configuration` for the org authorization server, `https://<org>.okta.com/oauth2/<authorizationServerId>/.well-known/openid-configuration` for a custom one; `iss` equals that prefix.
 
 ## 4. Libraries
@@ -46,16 +46,17 @@ Use a maintained library; do not hand-parse JWTs. The snippets are from each lib
   let code_verifier = client.randomPKCECodeVerifier()
   let code_challenge = await client.calculatePKCECodeChallenge(code_verifier)
   let state = client.randomState()
-  let redirectTo = client.buildAuthorizationUrl(config, { redirect_uri, scope, code_challenge, code_challenge_method: 'S256', state })
-  // callback:
-  let tokens = await client.authorizationCodeGrant(config, currentUrl, { pkceCodeVerifier: code_verifier, expectedState: state })
+  let nonce = client.randomNonce()
+  let redirectTo = client.buildAuthorizationUrl(config, { redirect_uri, scope, code_challenge, code_challenge_method: 'S256', state, nonce })
+  // callback (store code_verifier, state, and nonce in the initiating browser's server-side session, not local variables):
+  let tokens = await client.authorizationCodeGrant(config, currentUrl, { pkceCodeVerifier: code_verifier, expectedState: state, expectedNonce: nonce })
   ```
-- **Node, [Auth.js](https://authjs.dev/)** (`npm install next-auth@beta` for Next.js; SvelteKit and Express integrations exist): providers `next-auth/providers/google`, `github`, `okta`, and `microsoft-entra-id`, configured through `AUTH_<PROVIDER>_ID`, `AUTH_<PROVIDER>_SECRET`, and for Okta and Entra `AUTH_<PROVIDER>_ISSUER`; callbacks land on `/api/auth/callback/<provider>`. Sessions are an encrypted JWT, or a database session ID, in an `HttpOnly` cookie. With the JWT strategy, sign-out destroys the cookie but the token itself stays valid until `exp` unless your server keeps a blocklist (Auth.js documents this limitation); use database sessions where immediate invalidation matters. Set `AUTH_MICROSOFT_ENTRA_ID_ISSUER` to your tenant's `/v2.0` issuer: the documented default is `common`. Put the section 2 check in the `signIn` callback.
+- **Node, [Auth.js](https://authjs.dev/)** (`npm install next-auth@beta` for Next.js; SvelteKit and Express integrations exist): providers `next-auth/providers/google`, `github`, `okta`, and `microsoft-entra-id`, configured through `AUTH_<PROVIDER>_ID`, `AUTH_<PROVIDER>_SECRET`, and for Okta and Entra `AUTH_<PROVIDER>_ISSUER`; callbacks land on `/api/auth/callback/<provider>`. Sessions are an encrypted JWT, or a database session ID, in an `HttpOnly` cookie. With the JWT strategy, sign-out destroys the cookie but the token itself stays valid until `exp` unless your server keeps a blocklist (Auth.js documents this limitation); use database sessions, or the blocklist just mentioned, so logout invalidates a copied cookie rather than leaving it valid until `exp` ([authentication.md](authentication.md) requires logout to invalidate the session server-side). Set `AUTH_MICROSOFT_ENTRA_ID_ISSUER` to your tenant's `/v2.0` issuer: the documented default is `common`. Put the section 2 check in the `signIn` callback.
 - **Python, [Authlib](https://docs.authlib.org/)** (`pip install Authlib`; Flask, Django, Starlette, FastAPI):
   ```python
   oauth.register('google', client_id='YOUR_CLIENT_ID', client_secret='YOUR_CLIENT_SECRET',
       server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-      client_kwargs={'scope': 'openid profile email'})
+      client_kwargs={'scope': 'openid profile email', 'code_challenge_method': 'S256'})
   # login:    return oauth.google.authorize_redirect(redirect_uri)
   # callback: token = oauth.google.authorize_access_token(); claims = token['userinfo']
   ```
@@ -77,7 +78,7 @@ An app can additionally refuse a session whose ID token shows no second factor, 
 
 ```bash
 curl -q -s https://accounts.google.com/.well-known/openid-configuration | jq -r '.issuer, .jwks_uri'
-curl -q -sI https://app.example.com/admin | head -1        # 302 to login or 401, never 200
+curl -q -sI https://app.example.com/admin        # unauthenticated: 401, or a 302 whose Location is the provider/login (not an unrelated app route), never 200
 ```
 
 Negative tests matter more than the happy path:
@@ -85,13 +86,15 @@ Negative tests matter more than the happy path:
 - Sign in with a valid account outside the allowlist (a personal Gmail, another Entra tenant, a GitHub user outside the org, an Okta user outside the group): the provider authenticates, your app refuses and logs the identity.
 - Edit `redirect_uri` in the authorization URL (add a path segment or change the host): the provider shows an error and never redirects.
 - Change `state` on the callback URL: your app rejects the callback.
-- Replay a captured ID token after `exp`, or one issued to a different client ID at the same provider: your callback rejects it.
-- Log out, then reload a protected page: it redirects to login. With database sessions the old session cookie no longer works; with JWT sessions it works until `exp`, so use database sessions or a revocation check where immediate invalidation matters.
+- Feed your section-2 validator (not the callback, which receives a code and never an ID token) a captured ID token that is expired, carries a wrong `aud`/`azp`, or has a broken signature: it must reject each. Test expiry and audience with separate fixtures.
+- Log out, then reload a protected page: it redirects to login. With database sessions the old session cookie no longer works; with JWT sessions it works until `exp`, so use database sessions or a revocation check; a copied pre-logout cookie must stop authorizing requests after logout, per [authentication.md](authentication.md).
 
 ## Sources (checked September 2026)
 
 - RFC 9700, OAuth 2.0 Security Best Current Practice: https://www.rfc-editor.org/info/rfc9700/
 - OpenID Connect Core 1.0 (ID token validation 3.1.3.7, claim stability 5.7): https://openid.net/specs/openid-connect-core-1_0.html ; Discovery 1.0: https://openid.net/specs/openid-connect-discovery-1_0.html ; RP-Initiated Logout 1.0: https://openid.net/specs/openid-connect-rpinitiated-1_0.html
+- RFC 7636 (PKCE; the `code_verifier` is required at the token endpoint when a `code_challenge` was sent): https://www.rfc-editor.org/rfc/rfc7636.html
+- Microsoft Entra token issuer validation (the `common`/`organizations` templated issuer and the signing-key issuer scope): https://learn.microsoft.com/en-us/entra/identity-platform/access-tokens#validate-the-issuer
 - Google OpenID Connect (discovery URL, `hd`, `sub` versus `email`, token validation): https://developers.google.com/identity/openid-connect/openid-connect
 - Google Workspace: deploy 2-Step Verification: https://knowledge.workspace.google.com/admin/security/deploy-2-step-verification
 - Microsoft identity platform: register an application: https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app ; OpenID Connect (discovery, `{tenant}` values, redirect URI, sign-out): https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc
