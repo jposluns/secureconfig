@@ -1,10 +1,10 @@
 # Free publicly trusted certificates (ACME)
 
-Publicly trusted certificates are free through ACME certificate authorities such as Let's Encrypt and ZeroSSL. Browsers and libraries accept them without any client-side configuration, which makes them the correct choice for every service with a public DNS name. Use [self-signed.md](self-signed.md) only when no public domain exists, or [cloudflare.md](cloudflare.md) when the host cannot accept inbound connections.
+Publicly trusted certificates are free through ACME certificate authorities such as Let's Encrypt and ZeroSSL. Browsers and libraries accept them without any client-side configuration, which makes them the correct choice for every service with a public DNS name. Use [self-signed.md](self-signed.md) only when no public domain exists; a host that cannot accept inbound connections can still get a publicly trusted certificate through the DNS-01 challenge (below), or serve behind [cloudflare.md](cloudflare.md).
 
 ## Prerequisites
 
-- A DNS record (`A` or `AAAA`, or `CNAME`) for the hostname, pointing at the server.
+- A public DNS record (`A`/`AAAA` or `CNAME`) pointing at the server, for the HTTP-01 and TLS-ALPN-01 challenges; the DNS-01 challenge instead needs only control of the challenge `TXT` record and can certify a host with no public address record or inbound port.
 - For the HTTP-01 challenge: inbound port 80 reachable from the internet.
 - For the TLS-ALPN-01 challenge (used by Caddy and Traefik): inbound port 443.
 - For the DNS-01 challenge (required for wildcard certificates): API access to the DNS provider.
@@ -34,14 +34,14 @@ sudo certbot --apache -d example.com -d www.example.com
 Issue only the certificate when you configure the server yourself, or when no web server is running yet:
 
 ```bash
-# Standalone: certbot binds port 80 itself; stop anything using it first
+# Standalone: certbot binds port 80 itself; stop anything using it first (and for a host whose web server will own :80, switch this certificate to --webroot or the server plugin, or add pre/post hooks that free the port, so unattended renewal can still bind)
 sudo certbot certonly --standalone -d example.com
 
 # Webroot: the existing web server keeps running and serves the challenge files
 sudo certbot certonly --webroot -w /var/www/html -d example.com
 ```
 
-Wildcard certificates require the DNS-01 challenge through a DNS plugin (for example `python3-certbot-dns-cloudflare`), with provider API credentials in a root-owned file:
+Wildcard certificates require the DNS-01 challenge through a DNS plugin (for example `python3-certbot-dns-cloudflare`), with provider API credentials scoped to least privilege (a Cloudflare API token with `Zone:DNS:Edit` on only the required zones, never the account-wide Global API Key) in a file readable only by root (`chmod 600` the file in a `700` directory; Certbot warns when other users can read it):
 
 ```bash
 sudo certbot certonly --dns-cloudflare \
@@ -61,11 +61,11 @@ Certificates land in stable paths that server configuration should reference dir
 Let's Encrypt certificates are valid for 90 days at the time of writing, so renewal must be automated. Package and snap installs of certbot register a systemd timer or cron job that runs `certbot renew` for you. Confirm that it works and reload the server after each renewal:
 
 ```bash
-sudo certbot renew --dry-run
-sudo certbot renew --deploy-hook "systemctl reload nginx"
+sudo systemctl list-timers | grep -i certbot       # the renewal timer must be active
+sudo certbot renew --dry-run --run-deploy-hooks    # test renewal and the reload hook together
 ```
 
-Set the deploy hook once with `certonly`/`renew`, or drop a script into `/etc/letsencrypt/renewal-hooks/deploy/`. A certificate that issues once and then expires in production is the most common ACME failure; the dry run belongs in your deployment checklist.
+Install the reload hook durably: pass `--deploy-hook "systemctl reload nginx"` on the initial `certonly`/`run` (Certbot saves it to the renewal config only when a certificate is actually obtained or renewed), drop an executable script into `/etc/letsencrypt/renewal-hooks/deploy/` (it runs after every successful renewal), or add it later with `certbot reconfigure` (Certbot 2.3.0 and later). A bare `certbot renew --deploy-hook ...` does nothing when no renewal is due, so it never persists the hook. A certificate that issues once and then expires in production is the most common ACME failure, so monitor the served certificate's expiry and alert on renewal failure rather than relying on CA reminder emails; the dry run belongs in your deployment checklist.
 
 Lifetimes are getting shorter. Per Let's Encrypt as of September 2026: 6-day short-lived certificates are available now to every subscriber; the default `classic` profile moves to 64-day certificates on 2027-02-10 and to 45-day certificates on 2028-02-16; and industry rules cap publicly trusted certificates at 47 days from 2029-03-15. Any renewal step that involves a person will fail at those lifetimes, so the automation above is the only viable path. Let's Encrypt also switched off its OCSP service on 2025-08-06 and publishes revocation only through CRLs, so do not add OCSP stapling directives for Let's Encrypt certificates.
 
@@ -88,9 +88,10 @@ A CAA DNS record restricts which certificate authorities may issue for your doma
 
 ```bash
 sudo certbot certificates                       # what is issued and when it expires
-curl -q -sI https://example.com/                   # succeeds without -k
-openssl s_client -connect example.com:443 -servername example.com \
-  -verify_hostname example.com -verify_return_error </dev/null \
+host=REPLACE_WITH_YOUR_HOSTNAME                    # your deployment's public hostname, not example.com (which serves a live page and would pass spuriously)
+curl -q -sI "https://$host/"                        # succeeds without -k
+openssl s_client -connect "$host:443" -servername "$host" \
+  -verify_hostname "$host" -verify_return_error </dev/null \
   | openssl x509 -noout -issuer -dates
 ```
 
