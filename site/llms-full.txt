@@ -3352,7 +3352,7 @@ curl -q -sSI --noproxy '*' https://example.com/        # public HTTPS endpoint: 
 # pair cannot tell whether the app or the proxy enforced it: confirm the layer by probing the app directly or in its logs.
 curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' 'https://example.com/REPLACE_WITH_PROTECTED_PATH'        # no credentials: expect 401/403
 curl -q -g -sS --noproxy '*' -H @cred.txt -o /dev/null -w '%{http_code}\n' 'https://example.com/REPLACE_WITH_PROTECTED_PATH'   # valid credential from a file (cred.txt holds a full header line, e.g. "Authorization: Bearer ..."): expect 2xx
-ss -tlnp   # every listener: loopback for a same-host reverse proxy, or the platform's required address and $PORT on managed ingress (section 1)
+ss -tlnp   # every listener: loopback for a same-host reverse proxy, or the platform's required address and port from section 1 on managed ingress
 ```
 
 ## Sources (checked September 2026)
