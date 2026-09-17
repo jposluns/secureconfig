@@ -6068,7 +6068,7 @@ db.createUser({
 })
 ```
 
-Create a separate least-privilege user per application (for example `readWrite` on its own database), per [authentication.md](authentication.md). Modern MongoDB authenticates with SCRAM-SHA-256 by default.
+Creating that first user ends the localhost exception but does not authenticate the current shell, so authenticate as the administrator before creating anything else: `db.getSiblingDB("admin").auth("admin", passwordPrompt())`. Then create a separate least-privilege user per application (for example `readWrite` on its own database), per [authentication.md](authentication.md). Modern MongoDB authenticates with SCRAM-SHA-256 by default.
 
 MFA: the wire protocol has no TOTP dialogue in Community edition; x.509 client-certificate authentication adds a possession factor held by the connecting machine for direct connections, stronger than a password alone but not MFA for a person, and human paths to the host (SSH, admin UIs) go behind MFA per [mfa.md](mfa.md).
 
@@ -6078,7 +6078,8 @@ Get a certificate ([free-certificates.md](free-certificates.md) or [self-signed.
 
 ```bash
 cat server.crt server.key > /etc/ssl/mongodb/server.pem
-chmod 600 /etc/ssl/mongodb/server.pem
+chown mongodb:mongodb /etc/ssl/mongodb/server.pem   # the mongod service user must own it
+chmod 600 /etc/ssl/mongodb/server.pem               # mongodb-owned 600 is readable by mongod and no one else; if mongod cannot read it, fix ownership, do NOT chmod 644 (that exposes the private key)
 ```
 
 ```yaml
@@ -6101,17 +6102,19 @@ mongosh "mongodb://admin@db.example.com:27017/?authSource=admin&tls=true" \
   --tlsCAFile /path/ca.crt
 ```
 
-Driver connection strings take the same `tls=true` and CA options. Do not ship `tlsAllowInvalidCertificates`; install the CA instead ([self-signed.md](self-signed.md)).
+Enable TLS in your driver and point it at the CA. Many drivers accept `tls=true` and `tlsCAFile` in the connection string, but `tlsCAFile` is not supported by every driver, so some need their own driver-specific TLS/CA option; keep certificate and hostname validation on. Do not ship `tlsAllowInvalidCertificates`; install the CA instead ([self-signed.md](self-signed.md)).
 
 ## 4. Verify
 
 ```bash
 ss -tlnp   # read every listener; 27017: loopback only, unless remote access is deliberate
-mongosh --host db.example.com               # without credentials/TLS: refused once hardened
-mongosh "mongodb://db.example.com/?tls=true" --tlsCAFile ca.crt   # connects, then requires auth
+# substitute your real host for db.example.com below; probing the unchanged placeholder proves nothing
+mongosh --host db.example.com --eval 'db.runCommand({ping:1})'                                                       # plaintext: with requireTLS it must NOT connect. The signal that matters is a SUCCESSFUL plaintext connect (TLS not enforced); a bare refusal also happens when the host is unreachable, so a refusal alone is not proof
+mongosh "mongodb://db.example.com/?tls=true" --tlsCAFile ca.crt --eval 'db.adminCommand({listDatabases:1})'          # TLS reachable but UNauthenticated: must fail with an authorization error
+mongosh "mongodb://admin@db.example.com/?authSource=admin&tls=true" --tlsCAFile ca.crt --eval 'db.adminCommand({listDatabases:1})'   # positive control: authenticated over TLS must SUCCEED and list databases
 ```
 
-From an unauthenticated session, `show dbs` must fail with an authorization error.
+The unauthenticated `listDatabases` must fail with a MongoDB authorization error while the authenticated one succeeds and lists databases; a timeout, a closed shell, or empty output is not that authorization error and does not count as a pass.
 
 ## Common mistakes
 
