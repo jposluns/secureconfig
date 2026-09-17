@@ -7878,22 +7878,24 @@ ss -tlnp   # read every listener; 4000: loopback only
 
 # Model servers: llama.cpp, vLLM, TGI, SGLang, Triton, and LM Studio
 
-Self-hosted model servers follow the [ollama.md](ollama.md) pattern: exposing one means someone else's prompts run on your GPU. Most default to local use, but vLLM, TGI, and Triton bind to `0.0.0.0` out of the box, and Triton has no authentication at all. Keep every server on loopback or a private network, require an API key where the server supports one, and terminate TLS in front. LocalAI is an OpenAI-compatible model server too, but its bind and authentication controls are documented in [ai-infra-services.md](ai-infra-services.md) rather than here, so the facts live in one place.
+Self-hosted model servers follow the [ollama.md](ollama.md) pattern: exposing one means someone else's prompts run on your GPU. Most default to local use, but vLLM, TGI, and Triton bind to `0.0.0.0` out of the box, and Triton enables no authentication by default (its native controls, gRPC mutual TLS and shared-secret restricted APIs, do not replace the gateway). Keep every server on loopback or a private network, require an API key where the server supports one, and terminate TLS in front. LocalAI is an OpenAI-compatible model server too, but its bind and authentication controls are documented in [ai-infra-services.md](ai-infra-services.md) rather than here, so the facts live in one place.
 
 ## llama.cpp (llama-server)
 
 `llama-server` listens on `127.0.0.1:8080` by default; keep that bind. Require a key:
 
 ```bash
-llama-server -m model.gguf --api-key "$LLAMA_API_KEY"
+llama-server -m model.gguf --api-key "${LLAMA_API_KEY:?set a non-empty API key}"
 # --api-key accepts a comma-separated list for multiple keys
 ```
+
+Use a real generated key ([authentication.md](authentication.md)): the `${LLAMA_API_KEY:?...}` above stops the launch on an unset or empty value, but llama.cpp still discards a comma-only value or CSV fields that decode to empty (a literal `""`) and then starts unauthenticated, so confirm the key is enforced by probing the llama.cpp backend DIRECTLY on its own host and port from the trusted network (not through the proxy, which returns its own 401/200 regardless): a no-key request must be refused there and a keyed request accepted.
 
 Native TLS exists when the binary is built with OpenSSL (`-DLLAMA_OPENSSL=ON`): `--ssl-key-file` and `--ssl-cert-file` take PEM files ([self-signed.md](self-signed.md) or [free-certificates.md](free-certificates.md)). A reverse proxy per [nginx.md](nginx.md)/[caddy.md](caddy.md) is the alternative when your build lacks SSL support.
 
 ## vLLM (OpenAI-compatible server)
 
-vLLM's server supports requiring an API key; check `vllm serve --help` on your installed version for the current option name (the docs at https://docs.vllm.ai/ document it; this guide avoids pinning the flag because vLLM's CLI moves quickly). The key does not cover the whole server. vLLM's own security page states that it authenticates only the `/v1`, `/v2`, and `/inference` path prefixes, and lists `/invocations`, the SageMaker-compatible route, as requiring no key while reaching the same inference capability as the protected `/v1` routes; the profiler routes `/start_profile` and `/stop_profile` are likewise unauthenticated, and a plugin route outside those prefixes is unauthenticated unless the plugin enforces its own check. vLLM says plainly not to rely on the key alone. Allowlist only the routes your application needs at the proxy and refuse everything else there, `/invocations` included, rather than assuming the key covers the surface. vLLM binds every interface by default: `vllm serve` leaves `--host` unset, which listens on `0.0.0.0` (the startup log shows `http://0.0.0.0:8000`), so pass `--host 127.0.0.1` to keep it on loopback. vLLM does not terminate TLS for you in typical deployments, so front it with a TLS proxy or tunnel and keep the server itself on loopback or a private network.
+vLLM's server supports requiring an API key; check `vllm serve --help` on your installed version for the current option name (the docs at https://docs.vllm.ai/ document it; this guide avoids pinning the flag because vLLM's CLI moves quickly). The key does not cover the whole server. vLLM's own security page states that it authenticates only the `/v1`, `/v2`, and `/inference` path prefixes, and lists `/invocations`, the SageMaker-compatible route, as requiring no key while reaching the same inference capability as the protected `/v1` routes; the profiler routes `/start_profile` and `/stop_profile` are likewise unauthenticated, and a plugin route outside those prefixes is unauthenticated unless the plugin enforces its own check. vLLM says plainly not to rely on the key alone. Allowlist only the routes your application needs at the proxy and refuse everything else there, `/invocations` included, rather than assuming the key covers the surface. vLLM binds every interface by default: `vllm serve` leaves `--host` unset, which listens on `0.0.0.0` (the startup log shows `http://0.0.0.0:8000`), so pass `--host 127.0.0.1` to keep it on loopback. vLLM can terminate TLS natively (`--ssl-keyfile`, `--ssl-certfile`, and `--ssl-ca-certs`, passed through to uvicorn), but fronting it with a TLS proxy or tunnel is the recommended pattern; either way keep the server itself on loopback or a private network.
 
 ## Hugging Face Text Generation Inference (TGI)
 
@@ -7905,27 +7907,29 @@ Lifecycle note, as of September 2026: the TGI repository is in maintenance mode 
 text-generation-launcher --model-id REPLACE_WITH_MODEL_ID --hostname 127.0.0.1 --port 3000
 ```
 
-The launcher reference lists `--api-key` (env `API_KEY`) without describing it. The router source shows what it does: when set, every inference request must carry a matching `Authorization: Bearer <key>` header or receives 401, while the health, info, and metrics routes stay unauthenticated. Treat it as a second layer and enforce the bearer check at the proxy too (pattern in [ollama.md](ollama.md)). The launcher has no TLS option, so front TGI per [nginx.md](nginx.md)/[caddy.md](caddy.md). The Prometheus listener (`--prometheus-port`, default 9000) is unauthenticated as well; keep it private.
+The launcher reference lists `--api-key` (env `API_KEY`) without describing it. The router source shows what it does: when set, requests to the standard inference `base_routes` must carry a matching `Authorization: Bearer <key>` header or receive 401, while the health, info, and metrics routes stay unauthenticated. Builds that enable the KServe (`/v2/...`) endpoints register them outside that key middleware, `/v1/models` sits outside it too, and the Vertex feature route configured through `AIP_PREDICT_ROUTE` is registered after the auth layer as well, so those paths are unauthenticated; allowlist the routes you use and enforce the bearer check at the proxy. Treat it as a second layer and enforce the bearer check at the proxy too (pattern in [ollama.md](ollama.md)). The launcher has no TLS option, so front TGI per [nginx.md](nginx.md)/[caddy.md](caddy.md). The Prometheus listener (`--prometheus-port`, default 9000) is unauthenticated as well; keep it private.
 
 ## SGLang
 
 `python -m sglang.launch_server` listens on `127.0.0.1:30000` by default (`--host`, `--port`); keep that bind. `--api-key` sets the key the OpenAI-compatible endpoints require, and `--admin-api-key` separately protects administrative endpoints (weight updates, cache flush, `/server_info`), which then require `Authorization: Bearer <admin key>`:
 
 ```bash
-python -m sglang.launch_server --model-path REPLACE_WITH_MODEL_PATH --api-key "$SGLANG_API_KEY" --admin-api-key "$SGLANG_ADMIN_KEY"
+python -m sglang.launch_server --model-path REPLACE_WITH_MODEL_PATH --api-key "${SGLANG_API_KEY:?set a non-empty API key}" --admin-api-key "${SGLANG_ADMIN_KEY:?set a non-empty admin key}"
 ```
+
+Use a real non-empty API key: SGLang serves ordinary requests whenever `--api-key` is empty, even when `--admin-api-key` is set, so an empty value leaves the OpenAI-compatible endpoints open.
 
 Native TLS exists: `--ssl-keyfile` and `--ssl-certfile` take PEM files ([self-signed.md](self-signed.md) or [free-certificates.md](free-certificates.md)), `--ssl-ca-certs` names a CA bundle, and `--enable-ssl-refresh` hot-reloads renewed certificates. A reverse proxy remains the simpler choice when you already run one.
 
 ## NVIDIA Triton Inference Server
 
-`tritonserver` starts three listeners on `0.0.0.0`: HTTP on 8000, gRPC on 8001, and Prometheus metrics on 8002. It has no built-in authentication. NVIDIA's secure deployment guidance is that Triton is a microservice that is "not exposed directly to an untrusted network": a dedicated gateway or proxy (NGINX, Envoy, Istio, Kong are the examples given) handles authorization, access control, and encryption, and Triton "handles only trusted, validated requests". Bind each listener privately and disable the protocols you do not use:
+`tritonserver` starts three listeners on `0.0.0.0`: HTTP on 8000, gRPC on 8001, and Prometheus metrics on 8002. No authentication is enabled by default: its optional gRPC mutual TLS and restricted-API shared secrets can cover inference as well as model control, but do not replace the gateway. NVIDIA's secure deployment guidance is that Triton is a microservice that is "not exposed directly to an untrusted network": a dedicated gateway or proxy (NGINX, Envoy, Istio, Kong are the examples given) handles authorization, access control, and encryption, and Triton "handles only trusted, validated requests". Bind each listener privately and disable the protocols you do not use:
 
 ```bash
 tritonserver --model-repository=/models --http-address=127.0.0.1 --grpc-address=127.0.0.1 --metrics-address=127.0.0.1
 ```
 
-`--allow-http` and `--allow-grpc` default to true; NVIDIA recommends setting either to false when not required, and `--allow-metrics` switches off the metrics listener. For gRPC, `--grpc-use-ssl` with `--grpc-server-cert` and `--grpc-server-key` enables a TLS channel, and `--grpc-use-ssl-mutual` requires client certificates. HTTP has no TLS option; the proxy provides it. `--http-restricted-api` and `--grpc-restricted-protocol` fence the model-control APIs behind a shared-secret header, a useful second layer but not a substitute for the gateway.
+`--allow-http` and `--allow-grpc` default to true; NVIDIA recommends setting either to false when not required, and `--allow-metrics` switches off the metrics listener. For gRPC, `--grpc-use-ssl` with `--grpc-server-cert` and `--grpc-server-key` enables a TLS channel, and `--grpc-use-ssl-mutual` requires client certificates. HTTP has no TLS option; the proxy provides it. `--http-restricted-api` and `--grpc-restricted-protocol` fence the model-control APIs behind a shared-secret header, a useful second layer but not a substitute for the gateway. Builds with cloud endpoints add conditional listeners beyond these three: `AIP_MODE=PREDICTION` enables a Vertex AI endpoint (its port is `AIP_HTTP_PORT`, otherwise 8080), and a SageMaker endpoint may also be present, so disable the ones you do not use or add them to the bind inventory and the checks below.
 
 ## LM Studio (local server)
 
@@ -7940,7 +7944,7 @@ One process, two surfaces: the Gradio UI (default `127.0.0.1:7860`) and, when st
 Auth is per surface, and neither control covers the other:
 
 - UI: `--gradio-auth user:password` (or `--gradio-auth-path FILE` with `user:password` lines) turns on a Gradio login form. It does nothing for the API.
-- API: `--api-key KEY` requires `Authorization: Bearer KEY` on the OpenAI-compatible routes such as `/v1/models` and `/v1/chat/completions`; the Anthropic-compatible `/v1/messages` route reads the same key from an `x-api-key` header instead. `--admin-key` guards the admin endpoints (model load and unload) and falls back to the `--api-key` value when unset; an admin key alone does not protect the ordinary routes. Without `--api-key`, the API answers anyone who can reach the port, even when the UI has a Gradio login in front of it.
+- API: `--api-key KEY` requires `Authorization: Bearer KEY` on the OpenAI-compatible routes such as `/v1/models` and `/v1/chat/completions`; the Anthropic-compatible `/v1/messages` route reads the same key from an `x-api-key` header instead. `--admin-key` guards the admin endpoints (model load and unload) and falls back to the `--api-key` value when unset; an admin key alone does not protect the ordinary routes. Without `--api-key`, the API answers anyone who can reach the port, even when the UI has a Gradio login in front of it. Starting the API logs the configured `--api-key` (and any distinct `--admin-key`) to stdout and the service log verbatim, so protect that output and rotate the key after any disclosure.
 
 `--api --nowebui` runs the API alone, the right shape for a server where the UI has no business existing. `--ssl-keyfile` and `--ssl-certfile` give both surfaces TLS, but the better pattern is the usual one: keep both ports on loopback and front them with a reverse proxy that terminates TLS and enforces auth (`--subpath` exists for serving the UI under a proxy path). Without TLS, the Gradio login submits credentials in the clear.
 
@@ -7956,13 +7960,25 @@ One proxy detail is specific to this API: unless `--listen` (or `--public-api`) 
 ## Verify
 
 ```bash
-ss -tlnp   # read every listener; 8080/8000/8001/8002/3000/9000/30000/1234: loopback only
-curl -q -s https://models.example.com/v1/models            # 401 without a key
-curl -q -s https://models.example.com/v1/models -H "Authorization: Bearer REPLACE_WITH_API_KEY"   # succeeds
-curl -q -s -o /dev/null -w '%{http_code}\n' -X POST https://models.example.com/invocations -d '{}'
-                                                        # vLLM: 404 or 403 from the PROXY. vLLM does not require the
-                                                        # API key on this route, so a 200 here is an unauthenticated
-                                                        # inference endpoint even though the check above passed
+ss -tlnp   # every listener; 8080/8000/8001/8002/3000/9000/30000/5000/7860/1234. ss shows only a
+           # namespace-local BIND, not a host firewall, a cloud security group, or Docker -p NAT
+           # publication. From another host, probe EACH backend listener's own host and port (adapt the
+           # subshell below, which shows the technique for one endpoint) and confirm each is refused
+curl -q -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' https://models.example.com/v1/models   # PROXY-policy test: 401 without a key. TGI leaves /v1/models outside its native key middleware, so a 200 is not proof the backend enforces the key
+curl -q -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' https://models.example.com/v1/models -H "Authorization: Bearer REPLACE_WITH_API_KEY"   # positive control: 200 with a model list, printed
+curl -q -sS --noproxy '*' -D - -o invocations-body.txt -w 'http=%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"model":"REPLACE_WITH_A_REAL_SERVED_MODEL","messages":[{"role":"user","content":"ping"}]}' https://models.example.com/invocations
+                                                        # vLLM /invocations needs JSON (a bare -d '{}' sends form
+                                                        # content-type and fails the schema) and a REAL served model.
+                                                        # Read the printed headers and saved body, not the status alone: an
+                                                        # exposed vLLM given an unknown model also returns 404, so
+                                                        # http=404 is AMBIGUOUS with the proxy's own denial. A
+                                                        # vLLM-originated reply (200, or a JSON error body) means the
+                                                        # route is reachable without the key; a 403/404 only proves
+                                                        # denial if the PROXY rejected BEFORE forwarding (its route config
+                                                        # or correlated upstream/backend logs) - a proxy that intercepts an
+                                                        # upstream error (nginx proxy_intercept_errors) serves its own page
+                                                        # while the no-key request reached vLLM, which is reachability, not
+                                                        # denial. Treat anything ambiguous as inconclusive
 ```
 
 For text-generation-webui, ask the API edge for the model list without a key. This step is reasoned, not demonstrated: the authoring environment has no container runtime to stand up a live instance, so the expected `401` is derived from the bearer-token check in `modules/api/script.py` (cited in Sources), not observed, and backlog row 1.50 tracks demonstrating the exposed and protected states. The block prints the `exitcode` and `errormsg` write-out variables, which need curl 7.75.0 or newer. A `200` with a model list means the API is open to anyone; a `401` means the key is enforced. A transfer error is inconclusive: a TLS failure (`exit=35` or `exit=60`) in particular means something did answer, since the API serves plain HTTP unless `--ssl-keyfile`/`--ssl-certfile` are set, so read the `exit` and `err` fields, fix any DNS, TLS, or client cause, and confirm the API listener's own address and port directly from the intended vantage. A `400` carrying `Invalid host header` is the API rejecting the forwarded `Host` (see the reverse-proxy note above), not an authentication result, and a rejection page from your proxy proves only the proxy.
