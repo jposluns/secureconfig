@@ -5214,7 +5214,7 @@ Each platform provides environment/secret configuration. Set secrets there; neve
 
 ## 4. Databases attached to PaaS apps
 
-Managed databases from these platforms come with TLS endpoints, but check what the specific endpoint supports: require certificate and hostname verification (`sslmode=verify-full`) per the database guides ([postgresql.md](postgresql.md), [mysql.md](mysql.md)) where the endpoint allows it, and note that some managed internal endpoints offer encryption but not `verify-full` (Render documents this for its internal connections), so do not treat an encryption-only connection as identity-verified. Keep the credentials in the platform's secret store, and restrict the network too: many managed databases are reachable from any IP by default (Render's Postgres is), so prefer private connectivity and disable or source-restrict external access with the provider's database network controls, not TLS alone. Databases you run yourself elsewhere follow their own guides plus [cloud-firewalls.md](cloud-firewalls.md).
+Managed databases from these platforms come with TLS endpoints, but check what the specific endpoint supports: require certificate and hostname verification with the client's own setting (`sslmode=verify-full` for PostgreSQL, `--ssl-mode=VERIFY_IDENTITY` for MySQL) per the database guides ([postgresql.md](postgresql.md), [mysql.md](mysql.md)) where the endpoint allows it, and note that some managed internal endpoints support encryption but not `verify-full` (Render's internal PostgreSQL connections, where TLS is optional, do not support `verify-ca`/`verify-full`); there, set `sslmode=require` to force encryption and prevent a plaintext fallback, and do not treat that encryption-only connection as identity-verified. Keep the credentials in the platform's secret store, and restrict the network too: many managed databases are reachable from any IP by default (Render's Postgres is), so prefer private connectivity and disable or source-restrict external access with the provider's database network controls, not TLS alone. Databases you run yourself elsewhere follow their own guides plus [cloud-firewalls.md](cloud-firewalls.md).
 
 ## 5. Hugging Face Spaces
 
@@ -5225,7 +5225,7 @@ A new Space's default visibility depends on the creation path and any organizati
 ```bash
 # 1. Edge redirects HTTP->HTTPS. Spot-check on / only: it does not prove HTTPS on every route/method, nor that
 #    the app's proxy-awareness (section 3) is set for secure cookies. --noproxy so a client proxy cannot answer.
-curl -q -g -sI --noproxy '*' -w 'http=%{http_code}\n' http://app.example.com/          # expect a 301/302 to an https:// Location
+curl -q -g -sI --noproxy '*' -w 'http=%{http_code}\n' http://app.example.com/          # expect an HTTP redirect (301/302/307/308; Vercel uses 308) with an https:// Location
 # 2. Your APP's own auth must reject an unauthenticated request, NOT the platform deployment-protection gate,
 #    which also returns 401 (its SSO challenge). Disable deployment protection (or use a Protection Bypass token)
 #    so only application auth is in play:
