@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.75**, **2.34**, **3.16**, **4.12**.
+Next ids: **1.76**, **2.34**, **3.16**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -65,6 +65,7 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.50 | `model-servers.md`: demonstrate the text-generation-webui `/v1/models` probe against a live instance in both the exposed and protected states. It ships marked reasoned (#69) because the authoring environment has no container runtime; stand up text-generation-webui with `--api`, confirm `/v1/models` returns `200` with no key and `401` once `--api-key` is set, and confirm the `validate_host_header` `400` when a non-localhost `Host` is forwarded without `--listen` (M, M) | `[gap]` |
 | 1.71 | Demonstrate the cross-user isolation Verify steps added in #109 against live deployments: a multi-tenant pgvector table (`vector-databases.md`, confirm tenant B's role sees only B's rows and an RLS-bypassing role sees tenant A's rows) and a multi-user RAG or chat (`chat-uis.md`, confirm user B does not retrieve user A's documents), in both the exposed and fixed states. They ship marked reasoned because the authoring environment has neither (M, M) | `[gap]` |
 | 1.72 | Demonstrate the `docker.md` DOCKER-USER restriction and the Docker 28.0 publishing behavior live (added #116): with a routable-interface publish and the `--ctstate NEW ! -s <subnet>` rule loaded, confirm the port connects from inside the subnet and times out from outside while a container keeps its outbound access; and confirm that a loopback-mapped port is reachable from a neighbour host on a pre-28.0 engine and not on 28.0 or later. Ships with an inline reasoned check because the authoring environment has no container runtime (M, M) | `[gap]` |
+| 1.75 | `mcp-servers.md`: demonstrate the Option A wrong-audience Verify check against a live MCP authorization server in both the exposed and fixed states. It ships marked reasoned (#174) because the authoring environment has no authorization server with a second registered resource; register a second resource, obtain an otherwise valid unexpired token issued only for it, and confirm the MCP server accepts it with audience validation absent and returns HTTP 401 with validation enforced; record the server's protocol version and the results (M, M) | `[gap]` |
 ## Priority 3: Add missing content
 
 Gaps from the same audit, one row per missing guide. A gap raised by more than one family is
