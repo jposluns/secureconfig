@@ -6,7 +6,7 @@ This repository's per-service guides check TLS, binding, and authentication from
 
 A `curl` or `ss -tlnp` run on the host itself cannot see a firewall the host does not know about, or a platform-level bypass like Docker's iptables rules ([docker.md](docker.md)). Verify from a second network: a phone hotspot, a cloud shell, or a second VM.
 
-- Port-by-port: `for p in 22 80 443 3000 5432 6379 27017; do nc -vz -w 3 REPLACE_WITH_YOUR_PUBLIC_IP "$p"; done`, or a full sweep, `nmap -Pn -p- REPLACE_WITH_YOUR_PUBLIC_IP` (per the nmap reference, which documents `-p-` and `-p 1-65535` as equivalent port-range syntax; only scan hosts you own or are authorized to test).
+- Port-by-port: `for p in 22 80 443 3000 5432 6379 27017; do nc -vz -w 3 REPLACE_WITH_YOUR_PUBLIC_IP "$p"; done`, or a full sweep, `nmap -Pn -p- REPLACE_WITH_YOUR_PUBLIC_IP` (per the nmap reference, which documents `-p-` and `-p 1-65535` as equivalent port-range syntax; this sweeps TCP only, so inventory and separately probe any UDP service with `nmap -sU` on its ports; only scan hosts you own or are authorized to test).
 - Check every address the service actually has, not just the one you remember configuring: the public IPv4 address, the public IPv6 address if the host has one, and any platform-assigned URL alongside your custom domain (a PaaS default subdomain, per [paas.md](paas.md), often stays reachable even when the custom domain is fronted). A scan of one address that misses the others is not a clean result, it is an incomplete one.
 - Cross-reference what is already indexed about your IP with a passive internet-wide scanner such as Shodan or Censys; both build a continuously updated index of internet-connected hosts and services, so a stale exposure can show up there before you find it yourself ([cloud-firewalls.md](cloud-firewalls.md) covers the firewall rules this is checking).
 
@@ -23,11 +23,11 @@ The common failure this order prevents: an unclaimed setup wizard is a race to b
 
 ## 3. Previews and clones get production posture
 
-A preview deployment or a database clone is not lower stakes just because it is temporary. Vercel's Deployment Protection illustrates the gap: Standard Protection, available on every plan, gates preview and generated deployment URLs but leaves the production domain open by default; the All Deployments scope closes that gap too, and Vercel's September 9, 2026 change made pairing it with Vercel Authentication free on every plan rather than Pro and Enterprise only ([paas.md](paas.md); per Vercel's Deployment Protection changelog, at the time of writing; the configuration reference page itself still listed All Deployments as Pro and Enterprise only when checked, so confirm current availability in your own dashboard). Where the platform's own gate does not cover a hostname, front it the same way as production, for example a Cloudflare Access policy scoped to that preview hostname. Either way, treat a clone's data the same as the original: rotate any credential a clone inherited if the clone is less trusted than the source.
+A preview deployment or a database clone is not lower stakes just because it is temporary. Vercel's Deployment Protection illustrates the gap: Standard Protection, available on every plan, gates preview and generated deployment URLs but leaves the production domain open by default; the All Deployments scope closes that gap too, and Vercel's September 9, 2026 change made pairing it with Vercel Authentication free on every plan rather than Pro and Enterprise only ([paas.md](paas.md); per Vercel's Deployment Protection changelog of 9 September 2026 and its current Deployment Protection reference, which states that Vercel Authentication for All Deployments does not require a paid add-on). Where the platform's own gate does not cover a hostname, front it the same way as production, for example a Cloudflare Access policy scoped to that preview hostname. Either way, treat a clone's data the same as the original: rotate any credential a clone inherited if the clone is less trusted than the source.
 
 ## 4. Teardown: DNS before the app, then revoke the rest
 
-Retiring a deployment in the wrong order leaves a dangling DNS record pointing at a resource someone else can now claim (a subdomain takeover). Delete the DNS record (the `CNAME` or `A`/`AAAA`) before you delete or release the underlying app, load balancer, or IP. Then revoke what pointed at it: access policies (Cloudflare Access or equivalent), API tokens and service credentials scoped to that deployment ([machine-auth.md](machine-auth.md)), and database users created only for it.
+Retiring a deployment in the wrong order leaves a dangling DNS record pointing at a resource someone else can now claim (a subdomain takeover). Delete the DNS record (the `CNAME` or `A`/`AAAA`) before you delete or release the underlying app, load balancer, or IP, and keep that resource reserved until the record's old TTL has drained and its removal is confirmed at the authoritative nameservers: deleting a record does not flush answers already cached by resolvers, so releasing a reclaimable IP or hostname immediately can still send cached clients to whoever claims it next. Then revoke what pointed at it: access policies (Cloudflare Access or equivalent), API tokens and service credentials scoped to that deployment ([machine-auth.md](machine-auth.md)), and database users created only for it.
 
 ## 5. Re-verify after anything changes
 
@@ -54,7 +54,7 @@ When a person leaves, revoke access at every layer they touched, not only their 
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
   case "$1" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
-    *) nmap -Pn -p- "$1" ;;                        # only the intended ports answer
+    *) nmap -Pn -p- "$1" ;;                        # TCP only: only the intended ports answer here; probe any UDP service separately (nmap -sU)
     # and the scan actually ran: nmap reporting a host down, a permission error, or no output at all is
     # inconclusive, not a clean result
   esac
@@ -66,12 +66,12 @@ When a person leaves, revoke access at every layer they touched, not only their 
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
   case "$1" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
-    *) nmap -Pn -6 -p- "$1" ;;                      # same, over the public IPv6 address
+    *) nmap -Pn -6 -p- "$1" ;;                      # same, over the public IPv6 address (TCP only)
                                                     # same reading: a scan that did not run is not a clean scan
   esac
 )
-curl -q -sI https://retired-preview.example.com/          # expect DNS failure or connection error
-dig +short retired-preview.example.com                 # expect no record, not a dangling CNAME
+curl -q -sI https://retired-preview.example.com/          # a connection/DNS/TLS failure here is NOT proof the record is gone (a dangling record to a released target fails the same way); the dig check below is authoritative
+for t in A AAAA CNAME; do echo "$t:"; dig +short retired-preview.example.com "$t"; done   # empty for A, AAAA and CNAME = gone; any answer is a still-resolving (dangling) record. +short hides status: confirm an authoritative NXDOMAIN/NODATA and treat SERVFAIL/timeout as inconclusive
 openssl s_client -connect app.example.com:443 -servername app.example.com \
   -verify_hostname app.example.com -verify_return_error </dev/null \
   | openssl x509 -noout -enddate                        # run from outside on a schedule
@@ -82,6 +82,7 @@ openssl s_client -connect app.example.com:443 -servername app.example.com \
 - nmap reference guide (port scanning syntax, and `-Pn`): https://nmap.org/book/man-briefoptions.html
 - Shodan: https://www.shodan.io/
 - Censys: https://censys.com/
-- Vercel Deployment Protection (Standard Protection versus All Deployments scope): https://vercel.com/docs/deployment-protection
+- Vercel Deployment Protection (Standard Protection versus All Deployments scope; Vercel Authentication for All Deployments does not require a paid add-on): https://vercel.com/docs/deployment-protection
+- Vercel changelog, protect production deployments for free on every plan (9 September 2026): https://vercel.com/changelog/protect-production-deployments-for-free-on-every-plan
 - Cloudflare Access policies: https://developers.cloudflare.com/cloudflare-one/access-controls/policies/
 - nmap host discovery (`-Pn` "skips the host discovery stage altogether"): https://nmap.org/book/man-host-discovery.html
