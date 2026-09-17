@@ -2,7 +2,7 @@
 
 The cluster equivalents of this repository's rules: nothing reaches a workload except through the TLS-terminating entry point (a Gateway API `Gateway`), and no Service becomes public through a casual `type: LoadBalancer` or `NodePort`; the entry point's own Service is the only exception.
 
-**If you run ingress-nginx today, migrate.** Earlier versions of this guide built on ingress-nginx. The Kubernetes project retired it in March 2026: per the Kubernetes Steering and Security Response Committees, "there will be no more releases for bug fixes, security patches, or any updates of any kind after the project is retired", and "choosing to remain with Ingress NGINX after its retirement leaves you and your users vulnerable to attack" (as of September 2026; statement linked in Sources). Detect it with cluster-admin permissions: `kubectl get pods --all-namespaces --selector app.kubernetes.io/name=ingress-nginx`. Any pod returned means migration is required; the `nginx.ingress.kubernetes.io/*` annotations die with the controller. Kubernetes documents Gateway API as "the successor to the Ingress API" and links a migration guide from its Gateway API page. The rest of this guide is the Gateway API form of the old rules.
+**If you run ingress-nginx today, migrate.** Earlier versions of this guide built on ingress-nginx. The Kubernetes project retired it in March 2026: per the Kubernetes Steering and Security Response Committees, "there will be no more releases for bug fixes, security patches, or any updates of any kind after the project is retired", and "choosing to remain with Ingress NGINX after its retirement leaves you and your users vulnerable to attack" (as of September 2026; statement linked in Sources). Detect it with cluster-admin permissions: `kubectl get pods --all-namespaces --selector app.kubernetes.io/name=ingress-nginx`. Any pod returned means migration is required; the `nginx.ingress.kubernetes.io/*` annotations die with the controller. Kubernetes recommends Gateway API over Ingress (whose API is now frozen) and links a migration guide from its Gateway API page. The rest of this guide is the Gateway API form of the old rules.
 
 ## 1. Gateway API with a maintained implementation
 
@@ -205,8 +205,15 @@ touch it.
 kubectl get svc -A | grep -E 'NodePort|LoadBalancer'                 # only the Gateway's Service
 kubectl get gateway/eg -o jsonpath='{.status.addresses[0].value}'    # the public address; DNS points here
 kubectl get certificate -A                                           # Ready=True
-curl -q -sI http://app.example.com/                                     # 301 to https://app.example.com/
-curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/   # 401 where basic auth is set
+# App checks, run directly with client proxies disabled (the unset below only affects LATER commands).
+curl -q --noproxy '*' -sI http://app.example.com/                       # 301 with Location: https://app.example.com/
+curl -q --noproxy '*' -sS -o /dev/null -w 'http=%{http_code}\n' https://app.example.com/
+                                                                        # no credentials: 401 where basic auth is set
+# Positive control: a valid basic-auth credential (from a mode-0600 ~/.netrc-style file, never argv) reaches the
+# app, and the SecurityPolicy is Accepted for the intended route (an application's own login 401 is not this control).
+curl -q --noproxy '*' -sS --netrc-file "$HOME/.secureconfig-app.netrc" \
+  -o /dev/null -w 'http=%{http_code}\n' https://app.example.com/        # expect 2xx with a valid credential
+kubectl get securitypolicy app-basic-auth -o jsonpath='{.status.conditions[?(@.type=="Accepted")].status}'   # True
 
 # The API server endpoint, taken WHOLE. Do not rebuild it with :6443. Managed providers
 # serve the API on 443, and a probe of 6443 times out against a cluster that is answering
@@ -324,6 +331,7 @@ allowed ranges out of the provider's own configuration rather than inferring the
 - Authelia: proxy integration (the proxy calls the authorization endpoint): https://www.authelia.com/integration/proxies/introduction/ ; Envoy Gateway `SecurityPolicy` example: https://www.authelia.com/integration/kubernetes/envoy/gateway/
 - kubectl JSONPath filter syntax: https://kubernetes.io/docs/reference/kubectl/jsonpath/
 - curl exit codes, used to read the API server probe (6 could not resolve, 7 failed to connect, 28 timed out, 60 peer certificate not trusted): https://curl.se/libcurl/c/libcurl-errors.html
+- curl manual (`--noproxy '*'` disables proxies; `--netrc-file` reads credentials from a file): https://curl.se/docs/manpage.html
 - Nmap host discovery (`-Pn`): https://nmap.org/book/man-host-discovery.html ; port specification (`-p`): https://nmap.org/book/man-port-specification.html ; IPv6 scanning (`-6`): https://nmap.org/book/man-misc-options.html
 - Kubernetes ports and protocols (6443 API server, 2379 and 2380 etcd, 10250 kubelet, 10259 scheduler, 10257 controller manager): https://kubernetes.io/docs/reference/networking/ports-and-protocols/
 - Kubernetes kubelet authentication and authorization (unrejected requests treated as anonymous, `--anonymous-auth`, `--authorization-mode=Webhook`): https://kubernetes.io/docs/reference/access-authn-authz/kubelet-authn-authz/
