@@ -2192,7 +2192,7 @@ After a real login through the proxy, confirm a session reaches the app and the 
 
 # Apache HTTP Server: TLS and authentication
 
-Applies to Apache 2.4. Get a certificate first: [free-certificates.md](free-certificates.md) for a public host (note that `certbot --apache` performs steps 1 to 3 of this guide for you), or [self-signed.md](self-signed.md) for internal use.
+Applies to Apache 2.4. Get a certificate first: [free-certificates.md](free-certificates.md) for a public host (note that `certbot --apache` obtains and installs the certificate and, at the time of writing, enables the HTTP-to-HTTPS redirect by default (`--redirect` requests it explicitly), but review its generated TLS config against steps 1 to 3 and add HSTS yourself, since certbot's `--hsts` is off by default), or [self-signed.md](self-signed.md) for internal use.
 
 ## 1. Enable the modules
 
@@ -2218,10 +2218,14 @@ sudo dnf install mod_ssl httpd-tools
 
     # TLS 1.2 minimum. The TLSv1.3 keyword needs Apache 2.4.36+ with OpenSSL 1.1.1+;
     # on older builds use: SSLProtocol all -SSLv3 -TLSv1 -TLSv1.1
+    # A per-vhost SSLProtocol takes effect independently only on Apache 2.4.42+ (with OpenSSL
+    # 1.1.1+ and client SNI); on older builds the base or first-listed :443 vhost sets the floor,
+    # so set the same SSLProtocol in the global/base config as well.
     SSLProtocol -all +TLSv1.2 +TLSv1.3
 
-    # Send HSTS only once HTTPS is confirmed working
-    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    # Send HSTS only once HTTPS is confirmed working. Add `includeSubDomains` ONLY after every
+    # subdomain also serves valid HTTPS: it forces them all onto HTTPS and blocks any HTTP-only one.
+    Header always set Strict-Transport-Security "max-age=31536000"
 </VirtualHost>
 ```
 
@@ -2243,19 +2247,20 @@ Keep port 80 serving only this redirect (and ACME HTTP-01 challenges if certbot 
 Application-level login is preferable ([authentication.md](authentication.md)). To gate a whole site or path at the server, use basic authentication over TLS with bcrypt-hashed entries:
 
 ```bash
-sudo htpasswd -B -C 12 -c /etc/apache2/.htpasswd admin     # -C 12 sets bcrypt cost (bare -B is 5, below the OWASP minimum of 10); -c only for the first user
+sudo htpasswd -B -C 12 -c /etc/apache2/.htpasswd admin     # Debian/Ubuntu path; on RHEL/Fedora use /etc/httpd/conf/.htpasswd. -C 12 sets bcrypt cost (bare -B is 5, below the OWASP minimum of 10); -c only for the first user
 ```
 
 ```apache
 <Location "/">
     AuthType Basic
     AuthName "Restricted"
+    # Debian/Ubuntu path; on RHEL/Fedora use /etc/httpd/conf/.htpasswd (match the htpasswd -c path above)
     AuthUserFile /etc/apache2/.htpasswd
     Require valid-user
 </Location>
 ```
 
-For machine-to-machine links, mutual TLS is stronger than passwords:
+For machine-to-machine links, mutual TLS is stronger than passwords. Put it in a SEPARATE `:443` vhost dedicated to machine clients, not the human-facing one: vhost-level `SSLVerifyClient require` makes every client present a trusted certificate, so a browser user with no client certificate is rejected during the TLS handshake before basic auth can apply. `SSLCACertificateFile` belongs at server or vhost level, not inside `<Location>`:
 
 ```apache
 SSLCACertificateFile /etc/ssl/certs/internal-ca.crt
@@ -2272,8 +2277,8 @@ status code is printed and you compare it; nothing here fails on its own.
 
 ```bash
 sudo apachectl configtest && sudo systemctl reload apache2   # httpd on RHEL
-curl -q -sI http://example.com/            # expect 301 with a https:// Location
-curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/
+curl -q -sSI --noproxy '*' http://example.com/            # expect 301 with a https:// Location
+curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' https://example.com/
                                         # 200 before section 4, 401 after it. Once
                                         # authentication is on, a 200 here is the finding
 
@@ -2291,8 +2296,8 @@ ss -tlnp
 # would be used on a non-SSL connection". So setting only the header tests nothing. It leaves
 # SNI saying example.com, which selects YOUR vhost and answers 401, or makes mod_ssl reject the
 # mismatched pair with 421; both look like a pass and neither is the request an attacker sends.
-# --connect-to sets the name in the handshake AND the header, and still dials your address:
-curl -q -s -o /dev/null -w '%{http_code}\n' \
+# The URL hostname supplies SNI and the Host header; --connect-to changes only the connection destination (your address):
+curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' \
   --connect-to REPLACE_WITH_AN_UNCONFIGURED_NAME:443:example.com:443 \
   https://REPLACE_WITH_AN_UNCONFIGURED_NAME/REPLACE_WITH_A_PROTECTED_PATH
                                         # 401 is the pass. 200 means another vhost served the
