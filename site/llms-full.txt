@@ -7642,26 +7642,39 @@ For SSO, the reference documents OAuth/OIDC settings plus `ENABLE_PASSWORD_AUTH=
 ## 2. Bind privately and add TLS in front
 
 ```bash
-docker run -d -p 127.0.0.1:3000:8080 ghcr.io/open-webui/open-webui:main
+docker run -d -p 127.0.0.1:3000:8080 \
+  -v open-webui:/app/backend/data \
+  ghcr.io/open-webui/open-webui:main
 ```
 
-Publish it through [caddy.md](caddy.md)/[nginx.md](nginx.md) with a certificate from [free-certificates.md](free-certificates.md), or through a tunnel with login in front ([cloudflare.md](cloudflare.md), [tailscale.md](tailscale.md)). Never expose port 8080 directly: login forms over plain HTTP send passwords in cleartext.
+The `-v open-webui:/app/backend/data` volume holds the accounts and the persisted config; the vendor requires it. Reuse the same volume whenever you replace the container (an upgrade starts a fresh one), or the database resets and, by the first-account rule above, the next account to register becomes the administrator. When you do start on an empty database, keep the public proxy route disabled until your admin account exists and signup is confirmed off.
+
+Publish it through [caddy.md](caddy.md)/[nginx.md](nginx.md) with a certificate from [free-certificates.md](free-certificates.md), through a [Cloudflare Tunnel with Access](cloudflare.md) in front, or over a [tailnet with Tailscale Serve](tailscale.md) (restricted by tailnet policy). Tailscale Funnel is public and adds no login of its own, so keep Open WebUI's own authentication on behind it. Never expose port 8080 directly: login forms over plain HTTP send passwords in cleartext.
 
 ## 3. Verify
 
 ```bash
-ss -tlnp   # read every listener; 3000: loopback only
-curl -q -sI https://chat.example.com/        # serves over TLS
-# In a private browser window: login page appears; with ENABLE_SIGNUP=false the
-# sign-up option is absent and an attempt to register is refused. With signup on,
-# registering a new account yields a pending/unapproved user, not access.
+ss -tlnp   # read every listener; the published mapping should be 127.0.0.1:3000 only, never 0.0.0.0 or ::.
+           # ss shows host listeners, not Docker's NAT: use Docker Engine 28.0+ for loopback publishing
+           # (older engines let a same-L2 host reach a localhost-published port), confirm the mapping is
+           # 127.0.0.1:3000->8080/tcp, and from another LAN/VPC host confirm nothing answers on port 3000.
+curl -q -g -sSI --noproxy '*' --connect-timeout 5 --max-time 20 \
+  -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' 'https://chat.example.com/'
+                                     # serves over TLS without -k; --noproxy so a client proxy cannot answer
+# Signup state, programmatically: Open WebUI serves its feature flags at /api/config.
+curl -q -g -sS --noproxy '*' 'https://chat.example.com/api/config'
+                                     # JSON feature flags; confirm signup is disabled there (features.enable_signup: false)
+# In a private browser window, AFTER your admin account exists: the sign-up option is absent AND an actual
+# registration attempt is REFUSED (a missing button alone is not proof). With signup on, registering a new
+# account yields a pending/unapproved user, not access.
 ```
 
 ## Sources (checked September 2026)
 
 - Open WebUI environment configuration reference: https://docs.openwebui.com/reference/env-configuration
 - Open WebUI FAQ (the first account created becomes the administrator): https://docs.openwebui.com/faq
-- Open WebUI repository: https://github.com/open-webui/open-webui
+- Open WebUI repository (the Docker Quick Start `-v open-webui:/app/backend/data` data volume): https://github.com/open-webui/open-webui
+- Docker port publishing (localhost publishing; releases older than 28.0.0 let a same-L2 host reach a localhost-published port): https://docs.docker.com/engine/network/port-publishing/
 
 ======================================================================
 ==> litellm.md
