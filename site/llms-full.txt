@@ -4426,7 +4426,7 @@ kubectl run probe-forbidden --rm -it --restart=Never --image=busybox:1.36 --labe
 
 # Next.js: authentication that actually gates Route Handlers, Server Actions, and data
 
-A Next.js app has many entry points: pages, layouts, Route Handlers (`app/**/route.ts`), and every exported Server Action, which the Next.js docs describe as reachable by a direct POST whether or not your UI calls it. A check that lives only in a layout or in `proxy.ts` (the file Next.js 16 renamed from `middleware.ts`) leaves the other entry points open. Next.js supplies cookies and sessions as primitives, not a login system; the login is yours or a library's.
+A Next.js app has many entry points: pages, layouts, Route Handlers (`app/**/route.ts`), and every exported Server Action, which the Next.js docs describe as reachable by a direct POST whether or not your UI calls it. A check that lives only in a layout or in `proxy.ts` (the file Next.js 16 renamed from `middleware.ts`) leaves open the entry points it does not cover (a layout guards no Route Handler or Server Action; a `proxy.ts` matcher guards only the paths it matches), and authorization still belongs next to the data. Next.js supplies cookies and sessions as primitives, not a login system; the login is yours or a library's.
 
 ## 1. Bind privately; TLS comes from the platform or the proxy
 
@@ -4472,7 +4472,7 @@ export async function deleteRecord(formData: FormData) {
 }
 ```
 
-Also check ownership of the specific resource inside the DAL (authorization, not only authentication), and return only the fields the client needs.
+Also check ownership of the specific resource inside the DAL (authorization, not only authentication), and return only the fields the client needs. The snippets above are fragments: `session.role` must come from your trusted user store (not from the cookie alone for sensitive checks), and each handler still returns its real success response, so wire in your own imports and data calls.
 
 ## 3. Sessions: signed payload, hardened cookie
 
@@ -4487,9 +4487,9 @@ import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 const key = new TextEncoder().encode(process.env.SESSION_SECRET)
 
-export async function createSession(userId: string) {
+export async function createSession(userId: string, role: string) {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-  const session = await new SignJWT({ userId, expiresAt })
+  const session = await new SignJWT({ userId, role, expiresAt })
     .setProtectedHeader({ alg: 'HS256' }).setIssuedAt().setExpirationTime('7d').sign(key)
   ;(await cookies()).set('session', session, { httpOnly: true, secure: true, expires: expiresAt, sameSite: 'lax', path: '/' })
 }
@@ -4499,7 +4499,7 @@ export async function createSession(userId: string) {
 
 ## 4. Keep secrets out of the client bundle
 
-- `NEXT_PUBLIC_*` variables are inlined into the JavaScript sent to the browser at `next build`; every other variable is server-only. A secret with that prefix is published to every visitor ([secrets.md](secrets.md)). Only the DAL should read `process.env`; `.env*` files stay in `.gitignore`.
+- `NEXT_PUBLIC_*` variables are inlined into the JavaScript sent to the browser at `next build`; every other variable is server-only BY DEFAULT, but a variable placed in `next.config.js`'s `env` key is also inlined into the client bundle regardless of prefix, so never put a secret there. A secret with a `NEXT_PUBLIC_` prefix is published to every visitor ([secrets.md](secrets.md)). Only the DAL should read `process.env`; `.env*` files stay in `.gitignore`.
 - More than one self-hosted instance: set `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` (base64, 16, 24, or 32 decoded bytes) at build so all instances share the Server Action closure key. The docs say not to rely on that encryption to hide secrets.
 - Server Actions abort when `Origin` does not match `Host` (or `X-Forwarded-Host`). Behind a proxy whose host differs from the public domain, list the public origins in `experimental.serverActions.allowedOrigins` in `next.config.js`.
 
@@ -4530,7 +4530,7 @@ export const GET = auth(async function GET(req) {
 })
 ```
 
-`export { auth as proxy }` in `proxy.ts` is the optimistic layer, and Auth.js says not to rely on it exclusively. MFA is not part of this configuration; enforce it at the identity provider ([mfa.md](mfa.md)).
+`export { auth as proxy }` in `proxy.ts` is the optimistic layer, but with an empty `providers` and no `callbacks.authorized` it authorizes every request by default, so add an `authorized` callback (or a redirecting wrapper) if you use it to gate; Auth.js says not to rely on it exclusively regardless. MFA is not part of this configuration; enforce it at the identity provider ([mfa.md](mfa.md)).
 
 **Better Auth** (https://better-auth.com/docs/introduction): `BETTER_AUTH_SECRET` (32+ characters, `openssl rand -base64 32`) and `BETTER_AUTH_URL`; the placeholder default secret throws in production.
 
@@ -4541,7 +4541,7 @@ import { nextCookies } from "better-auth/next-js"
 import { twoFactor } from "better-auth/plugins"
 export const auth = betterAuth({
   baseURL: "https://app.example.com",             // set explicitly; the docs advise against request inference
-  trustedOrigins: ["https://app.example.com"],    // cross-origin requests from unlisted origins are rejected
+  trustedOrigins: ["https://app.example.com"],    // scoped origin/CSRF + callbackURL validation; the general check skips GET/HEAD/OPTIONS (some endpoints still validate callbackURL on GET); NOT an app-route gate, so keep authn+authz per route
   emailAndPassword: { enabled: true },            // default false
   plugins: [twoFactor(), nextCookies()],          // nextCookies lets Server Actions set the session cookie
 })
@@ -4550,25 +4550,57 @@ import { toNextJsHandler } from "better-auth/next-js"
 export const { GET, POST } = toNextJsHandler(auth)
 ```
 
-Server-side check: `await auth.api.getSession({ headers: await headers() })` in Route Handlers, Server Actions, and Server Components. `getSessionCookie(request)` in `proxy.ts` only proves a cookie exists; Better Auth says to check in each page and route. `twoFactor()` adds TOTP (default), emailed or SMS OTP, and backup codes, with `twoFactorClient()` from `better-auth/client/plugins` on the client; run the schema migration the plugin page documents before enabling it.
+Server-side check: assign and REJECT - `const session = await auth.api.getSession({ headers: await headers() })`, then reject before authorizing. The rejection differs by surface: a Route Handler returns `new Response(null, { status: 401 })`; a Server Component redirects or throws; a Server Action redirects, throws, or returns a serializable error, since a `Response` is not a valid Server Component render result or Server Action return value. Do this in Route Handlers, Server Actions, and Server Components; calling `getSession` and discarding its result gates nothing. `getSessionCookie(request)` in `proxy.ts` only proves a cookie exists; Better Auth says to check in each page and route. `twoFactor()` makes TOTP (default), emailed or SMS OTP, and backup codes AVAILABLE, not enrolled or enforced: users must enroll, emailed or SMS OTP additionally needs `otpOptions.sendOTP`, and requiring 2FA for an operation is a separate check. Add `twoFactorClient()` from `better-auth/client/plugins` on the client and run the schema migration the plugin page documents before enabling it.
 
 ## 6. Vercel: Deployment Protection is not user authentication
 
-Deployment Protection controls who can open a deployment URL: Vercel Authentication admits Vercel users with access to the project; Passport, Password Protection, and Trusted IPs are Enterprise or paid add-on options. Standard Protection covers previews and generated URLs but not production domains; selecting the All Deployments scope for Vercel Authentication extends it to production, and Vercel's changelog of 9 September 2026 makes that free on every plan including Hobby, where protecting production previously required the USD 150 per month Advanced Deployment Protection add-on (at the time of writing). Availability is not activation: the production domain stays public until All Deployments is configured. It gates your team's previews; your users are not Vercel users, so production still needs section 2 ([paas.md](paas.md)).
+Deployment Protection controls who can open a deployment URL: Vercel Authentication admits Vercel users with access to the project; Passport, Password Protection, and Trusted IPs are Enterprise or paid add-on options. Standard Protection covers previews and generated URLs but not production domains; selecting the All Deployments scope for Vercel Authentication extends it to production, and Vercel's changelog of 9 September 2026 makes that free on every plan including Hobby, where protecting production previously required a paid Advanced Deployment Protection add-on (at the time of writing). Availability is not activation: the production domain stays public until All Deployments is configured. It gates your team's previews; your users are not Vercel users, so production still needs section 2 ([paas.md](paas.md)).
 
 ## Verify
 
 ```bash
-ss -tlnp   # read every listener; 3000: self-hosted: 127.0.0.1 only
-curl -q -si https://app.example.com/api/admin | head -1    # 401 (or 302 to /login) with no cookie
-curl -q -si https://app.example.com/dashboard | head -1    # 302 to /login, not the page
-grep -rl "${SESSION_SECRET:0:8}" .next/static           # no output: the browser bundle has no secret
-# Server Action: clear cookies in the browser, submit the form that calls it; it must refuse, not mutate.
+ss -tlnp   # read every listener; 3000 on 127.0.0.1 only when self-hosted. ss shows the BIND, not the
+           # firewall or the platform ingress, so confirm external reachability separately
+# Protected routes WITHOUT a cookie. This guide's verifySession() redirects to /login, so an unauthenticated
+# Route Handler or page returns a 3xx to /login (or 401/403 if you chose the "return 401" variant); a
+# streamed redirect can instead be a 200 whose body is a client-side redirect shell, not the protected content, so read the BODY, not the status
+# alone. --noproxy so no client proxy answers. Save each body and confirm it carries NO protected payload:
+curl -q -sS --noproxy '*' -o admin-nocookie.txt -w 'http=%{http_code} loc=%{redirect_url}\n' https://app.example.com/api/admin   # 3xx to /login, or 401/403; admin-nocookie.txt must hold no admin data
+curl -q -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redirect_url}\n' https://app.example.com/dashboard    # 3xx with loc=/login, or a 200 redirect shell; dash-nocookie.txt must NOT contain dashboard content (a streamed redirect saves a shell, not the login page)
+# POSITIVE controls, so a denial above is the auth check firing and not a route broken for everyone. Set
+# VALID_COOKIE to a real, freshly issued cookie VALUE and COOKIE_NAME to its name - this guide's example uses
+# `session`, Better Auth uses `better-auth.session_token` (or `__Secure-better-auth.session_token` with
+# secure cookies). Test the admin route with an admin AND a non-admin cookie (authorization, not only
+# authentication), and confirm each success body is the real protected content, not a login page:
+if [ -z "${VALID_COOKIE:-}" ] || [ -z "${COOKIE_NAME:-}" ]; then
+  echo "inconclusive: set COOKIE_NAME and VALID_COOKIE first"
+else
+  curl -q -sS --noproxy '*' -o dash-auth.txt  -w 'http=%{http_code}\n' -b "$COOKIE_NAME=$VALID_COOKIE" https://app.example.com/dashboard   # expect 200; dash-auth.txt is the dashboard, not /login
+  curl -q -sS --noproxy '*' -o admin-auth.txt -w 'http=%{http_code}\n' -b "$COOKIE_NAME=$VALID_COOKIE" https://app.example.com/api/admin    # admin cookie: 200; a non-admin cookie here must be 403 or a /login redirect
+fi
+# Secret scan of the client bundle: search the FULL secret (not a prefix), require the build to exist, and
+# read grep's exit status separately (run inline under set -e, a clean grep's exit 1 would abort the block):
+if [ -z "${SESSION_SECRET:-}" ] || [ ! -d .next/static ]; then
+  echo "inconclusive: set SESSION_SECRET and run next build first"
+else
+  if grep -rIF -- "$SESSION_SECRET" .next/static; then rc=0; else rc=$?; fi
+  case "$rc" in
+    0) echo "FINDING: the secret is in the browser bundle" ;;
+    1) echo "clean: secret not found in the bundle" ;;
+    *) echo "error: grep exited $rc, result inconclusive" ;;
+  esac
+fi
+# a clean grep is evidence not proof (a bundler can split or encode a value); scan for your other secrets too.
+# Server Action authorization: create a FRESH disposable record before EACH attempt (an authorized mutation
+# changes the precondition - after a delete, a replay would 'not find' the record and look refused when it
+# was merely gone). 1) authorized: run it and confirm the store changed (positive control). 2) recreate the
+# record, replay the SAME request with no cookie, then as an unauthorized user - each must be refused by an
+# authorization error (not not-found) with NO change to the store (check the store directly, not the UI).
 ```
 
 ## Common mistakes
 
-- Checking the session in `app/layout.tsx` or `proxy.ts` only; a Server Action or `route.ts` behind it is still open.
+- Checking the session in `app/layout.tsx` or `proxy.ts` only; a Server Action or `route.ts` outside its matcher coverage is still open.
 - A Proxy `matcher` that excludes `/api`, with nothing in the Route Handlers themselves.
 - Naming a secret `NEXT_PUBLIC_*`, or treating Vercel Authentication as production login.
 
