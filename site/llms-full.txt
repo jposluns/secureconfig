@@ -2243,7 +2243,7 @@ Keep port 80 serving only this redirect (and ACME HTTP-01 challenges if certbot 
 Application-level login is preferable ([authentication.md](authentication.md)). To gate a whole site or path at the server, use basic authentication over TLS with bcrypt-hashed entries:
 
 ```bash
-sudo htpasswd -B -c /etc/apache2/.htpasswd admin     # -c only for the first user
+sudo htpasswd -B -C 12 -c /etc/apache2/.htpasswd admin     # -C 12 sets bcrypt cost (bare -B is 5, below the OWASP minimum of 10); -c only for the first user
 ```
 
 ```apache
@@ -2383,7 +2383,7 @@ Application-level login is preferable ([authentication.md](authentication.md)). 
 
 ```bash
 sudo apt install apache2-utils          # provides htpasswd
-sudo htpasswd -B -c /etc/nginx/.htpasswd admin
+sudo htpasswd -B -C 12 -c /etc/nginx/.htpasswd admin   # -C 12 sets bcrypt cost; bare -B is 5, below the OWASP minimum of 10
 ```
 
 ```nginx
@@ -10045,7 +10045,7 @@ No authentication at all by default. Give it a web configuration file and start 
 
 ```yaml
 basic_auth_users:
-  admin: $2b$12$REPLACE_WITH_BCRYPT_HASH    # htpasswd -nB admin, hash part
+  admin: $2b$12$REPLACE_WITH_BCRYPT_HASH    # htpasswd -nB -C 12 admin, hash part (bare -B is bcrypt cost 5, below OWASP 10)
 ```
 
 The same file carries TLS (`tls_server_config` with `cert_file` and `key_file`; see the Prometheus TLS guide below). Validate with `promtool check web-config web.yml`. Exporters and Alertmanager need the same treatment.
@@ -10170,7 +10170,7 @@ Without `--tlsverify` the daemon does not check client certificates. Firewall 23
 ## Docker Registry (`registry:2`)
 
 - The reference registry image ships with no authentication at all: anyone who reaches the port can push and pull every image, and TLS must be configured before any authentication scheme works, since credentials would otherwise cross the wire in clear text.
-- Restrict access with htpasswd basic authentication, a token server, or a registry distribution that has its own authentication built in. If using the registry's own native htpasswd auth provider (set directly in the registry's `config.yml`), credentials must be bcrypt-hashed (`htpasswd -B`); the registry rejects any other hash format. If instead a reverse proxy sits in front and does its own basic authentication from its own htpasswd file, that proxy's own hashing rules apply, not the registry's.
+- Restrict access with htpasswd basic authentication, a token server, or a registry distribution that has its own authentication built in. If using the registry's own native htpasswd auth provider (set directly in the registry's `config.yml`), credentials must be bcrypt-hashed at a strong cost (`htpasswd -B -C 12`; bare -B is cost 5, below the OWASP minimum of 10); the registry rejects any non-bcrypt hash format. If instead a reverse proxy sits in front and does its own basic authentication from its own htpasswd file, that proxy's own hashing rules apply, not the registry's.
 - Bind it to loopback or a private interface and reach it through SSH port forwarding, a tailnet, or Access, with MFA at the fronting layer.
 
 ## Filebrowser

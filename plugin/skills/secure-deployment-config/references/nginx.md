@@ -52,7 +52,7 @@ Application-level login is preferable ([authentication.md](authentication.md)). 
 
 ```bash
 sudo apt install apache2-utils          # provides htpasswd
-sudo htpasswd -B -c /etc/nginx/.htpasswd admin
+sudo htpasswd -B -C 12 -c /etc/nginx/.htpasswd admin   # -C 12 sets bcrypt cost; bare -B is 5, below the OWASP minimum of 10
 ```
 
 ```nginx

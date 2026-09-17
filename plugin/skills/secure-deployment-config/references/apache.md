@@ -51,7 +51,7 @@ Keep port 80 serving only this redirect (and ACME HTTP-01 challenges if certbot 
 Application-level login is preferable ([authentication.md](authentication.md)). To gate a whole site or path at the server, use basic authentication over TLS with bcrypt-hashed entries:
 
 ```bash
-sudo htpasswd -B -c /etc/apache2/.htpasswd admin     # -c only for the first user
+sudo htpasswd -B -C 12 -c /etc/apache2/.htpasswd admin     # -C 12 sets bcrypt cost (bare -B is 5, below the OWASP minimum of 10); -c only for the first user
 ```
 
 ```apache
