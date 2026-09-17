@@ -39,7 +39,7 @@ ollama.example.com {
         admin $2a$14$REPLACE_WITH_HASH_FROM_caddy_hash-password
     }
     reverse_proxy 127.0.0.1:11434 {
-        header_up Host localhost:11434   # Ollama rejects other Host values on loopback with 403
+        header_up Host localhost:11434   # else Ollama rejects the public hostname on a loopback bind with 403
     }
 }
 ```
@@ -57,7 +57,7 @@ Clients then call `https://ollama.example.com` with the basic-auth credentials. 
 
 Generate the token per [authentication.md](authentication.md) and keep it out of the repository. This `if` comparison is a convenience for token-only clients: it is not a constant-time check and the token sits in the proxy config, so where you can prefer Option A's `auth_basic` or the Cloudflare Access service token below.
 
-Rate-limit and cap the proxied endpoint before you publish it. Add an nginx `limit_req` zone plus a `limit_req` in the authenticated `location` (mechanism in [nginx.md](nginx.md)), and bound concurrency and request time. Per [authentication.md](authentication.md) rule 9, an exposed inference endpoint left unthrottled is a denial-of-wallet risk even while it correctly rejects bad credentials; stock Caddy has no rate limiting, so put those limits in a fronting layer (or use the Cloudflare Access option below).
+Rate-limit and cap the proxied endpoint before you publish it. Add an nginx `limit_req` zone plus a `limit_req` in the authenticated `location` (mechanism in [nginx.md](nginx.md)), and bound concurrency and request time. Per [authentication.md](authentication.md) rule 9, an exposed inference endpoint left unthrottled is a denial-of-wallet risk even while it correctly rejects bad credentials; stock Caddy has no rate limiting, so put those limits in a fronting layer. Cloudflare Access (Option B) authenticates requests but does not rate-limit or cap them, so apply these limits there too (for example Cloudflare WAF rate-limiting rules).
 
 ## Option B: Cloudflare Tunnel with Access
 
@@ -83,9 +83,9 @@ ss -tlnp                                               # read every listener: 11
          -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:11434/api/tags" ;;
   esac
 )
-curl -q -sS -o /dev/null -w 'http=%{http_code}\n' https://ollama.example.com/api/tags                 # no credentials: expect 401 from the proxy (Ollama itself never returns 401, so a 401 proves the proxy's auth is attached)
+curl -q -sS -o /dev/null -w 'http=%{http_code}\n' https://ollama.example.com/api/tags                 # no credentials: expect 401 from the Basic-auth proxy (Ollama's /api/tags does not authenticate callers, so a 401 here comes from the proxy)
 curl -q -sS -o /dev/null -w 'http=%{http_code}\n' -u admin:WRONG https://ollama.example.com/api/tags  # wrong credentials: expect 401, never 200
-curl -q -sS -u admin https://ollama.example.com/api/tags                                              # correct credentials: expect 200 and the model-list JSON
+curl -q -sS -u admin -w '\nhttp=%{http_code}\n' https://ollama.example.com/api/tags                   # correct credentials: expect http=200 and the model-list JSON
 ```
 
 ## Sources (checked September 2026)
