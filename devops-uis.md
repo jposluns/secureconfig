@@ -85,7 +85,7 @@ Without `--tlsverify` the daemon does not check client certificates. Firewall 23
 ## Docker Registry (`registry:2`)
 
 - The reference registry image ships with no authentication at all: anyone who reaches the port can push and pull every image, and TLS must be configured before any authentication scheme works, since credentials would otherwise cross the wire in clear text.
-- Restrict access with htpasswd basic authentication, a token server, or a registry distribution that has its own authentication built in. If using the registry's own native htpasswd auth provider (set directly in the registry's `config.yml`), credentials must be bcrypt-hashed (`htpasswd -B`); the registry rejects any other hash format. If instead a reverse proxy sits in front and does its own basic authentication from its own htpasswd file, that proxy's own hashing rules apply, not the registry's.
+- Restrict access with htpasswd basic authentication, a token server, or a registry distribution that has its own authentication built in. If using the registry's own native htpasswd auth provider (set directly in the registry's `config.yml`), credentials must be bcrypt-hashed at a strong cost (`htpasswd -B -C 12`; bare -B is cost 5, below the OWASP minimum of 10); the registry rejects any non-bcrypt hash format. If instead a reverse proxy sits in front and does its own basic authentication from its own htpasswd file, that proxy's own hashing rules apply, not the registry's.
 - Bind it to loopback or a private interface and reach it through SSH port forwarding, a tailnet, or Access, with MFA at the fronting layer.
 
 ## Filebrowser
