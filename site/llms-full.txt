@@ -3442,12 +3442,12 @@ Caddy obtains and renews the certificate automatically ([free-certificates.md](f
 
 ```bash
 docker compose ps                     # project-scoped: only the proxy shows a published (0.0.0.0 or a host IP) binding; review every container on the host, IPv6 included
-ss -tulnp                             # host sockets (TCP and UDP); a DNAT-published port with the userland proxy off shows NO socket here, so the external probe below is authoritative
+ss -tulnp                             # host sockets (TCP and UDP); socket visibility varies by Docker version and config, so a socket listing alone does not prove reachability
 curl -q -sI http://app.example.com/      # expect a redirect to https://
 curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' https://app.example.com/api  # unauthenticated: expect 401 or 403, never 200 (then confirm an authorized request succeeds)
 ```
 
-Test from a second machine on a different network where possible; the UFW bypass means testing the firewall from the host itself proves nothing about published ports.
+Test from a second machine on a different network where possible; the UFW bypass means testing the firewall from the host itself proves nothing about published ports. The `curl` checks above exercise the proxy's redirect and auth, not the backend, so also probe each restricted host address and published port directly (for example port 3000) from an allowed and a disallowed source, IPv4 and IPv6 separately: a loopback-bound or firewalled backend must show unreachable while the proxy stays reachable.
 
 ## Sources (checked September 2026)
 
