@@ -35,7 +35,7 @@ Get a certificate ([free-certificates.md](free-certificates.md) or [self-signed.
 
 ```bash
 cat server.crt server.key > /etc/ssl/mongodb/server.pem
-chown mongodb:mongodb /etc/ssl/mongodb/server.pem   # the mongod service user must own it
+chown mongodb:mongodb /etc/ssl/mongodb/server.pem   # the account mongod runs as: mongodb on Debian/Ubuntu packages, mongod on RPM packages (use mongod:mongod there)
 chmod 600 /etc/ssl/mongodb/server.pem               # mongodb-owned 600 is readable by mongod and no one else; if mongod cannot read it, fix ownership, do NOT chmod 644 (that exposes the private key)
 ```
 
@@ -85,3 +85,6 @@ The unauthenticated `listDatabases` must fail with a MongoDB authorization error
 - Configure TLS/SSL for mongod: https://www.mongodb.com/docs/manual/tutorial/configure-ssl/
 - Enable access control: https://www.mongodb.com/docs/manual/tutorial/enable-authentication/
 - Configuration file options (`net.tls.CAFile`, `net.tls.allowConnectionsWithoutCertificates`): https://www.mongodb.com/docs/manual/reference/configuration-options/
+- MongoDB `db.auth()` / `db.getSiblingDB()` (authenticate the current shell after the localhost exception ends): https://www.mongodb.com/docs/manual/reference/method/db.auth/
+- MongoDB `ping` and `listDatabases` commands used by the Verify probes (`listDatabases` requires privileges; `ping` needs no auth): https://www.mongodb.com/docs/manual/reference/command/listdatabases/
+- MongoDB connection-string TLS options (`tls`, `tlsCAFile`; `tlsCAFile` is not supported by all drivers): https://www.mongodb.com/docs/manual/reference/connection-string-options/
