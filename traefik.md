@@ -72,11 +72,11 @@ Do not also publish the app's port with `ports:`; only Traefik publishes 80 and 
 
 ## 3. Require authentication
 
-Application-level login is preferable ([authentication.md](authentication.md)). At the proxy, attach a basicAuth middleware with bcrypt entries from `htpasswd -nB admin`:
+Application-level login is preferable ([authentication.md](authentication.md)). At the proxy, attach a basicAuth middleware with bcrypt entries from `htpasswd -nB -C 12 admin` (a bare `-nB` defaults to cost 5, below the OWASP minimum of 10 that [authentication.md](authentication.md) sets):
 
 ```yaml
     labels:
-      - traefik.http.middlewares.app-auth.basicauth.users=admin:$$2y$$05$$REPLACE_WITH_HASH
+      - traefik.http.middlewares.app-auth.basicauth.users=admin:$$2y$$12$$REPLACE_WITH_HASH
       - traefik.http.routers.app.middlewares=app-auth
 ```
 
@@ -88,10 +88,10 @@ http:
     app-auth:
       basicAuth:
         users:
-          - "admin:$2y$05$REPLACE_WITH_HASH"
+          - "admin:$2y$12$REPLACE_WITH_HASH"
 ```
 
-basicAuth is single-factor. For human-facing sites, add MFA with the `forwardAuth` middleware pointed at [Authelia](https://www.authelia.com/) or [oauth2-proxy](https://github.com/oauth2-proxy/oauth2-proxy), or front the site with Cloudflare Access; options in [mfa.md](mfa.md).
+Load that dynamic file with `providers.file.directory` (or `providers.file.filename`) in the static config, and when a Docker-labelled router references a file-defined middleware, qualify it as `app-auth@file`. basicAuth is single-factor. For human-facing sites, add MFA with the `forwardAuth` middleware pointed at [Authelia](https://www.authelia.com/) or [oauth2-proxy](https://github.com/oauth2-proxy/oauth2-proxy), or front the site with Cloudflare Access; options in [mfa.md](mfa.md).
 
 ## 4. Bound the expensive endpoints
 
@@ -108,10 +108,10 @@ Three middlewares, attached to the router alongside the auth middleware from sec
       - traefik.http.middlewares.app-rate.ratelimit.average=10
       - traefik.http.middlewares.app-rate.ratelimit.burst=20
       # replace the section 3 middlewares= line with this one
-      - traefik.http.routers.app.middlewares=app-auth,app-rate,app-inflight,app-body
+      - traefik.http.routers.app.middlewares=app-rate,app-inflight,app-auth,app-body
 ```
 
-Order matters here. `buffering` reads the request into memory or disk before forwarding it, so it must
+Order matters here. `app-rate` and `app-inflight` come before `app-auth` so they bound failed-login attempts: basicAuth short-circuits with a 401 before any middleware listed after it runs, so a limiter placed after auth never counts a rejected attempt. `buffering` reads the request into memory or disk before forwarding it, so it must
 come after the admission controls; placed first, an accepted upload consumes the buffer before
 `ratelimit` or `inflightreq` has considered it. `maxRequestBodyBytes` sets the largest body accepted;
 `memRequestBodyBytes`, which defaults to 1048576, is the separate threshold at which buffering moves
@@ -128,11 +128,11 @@ head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
 curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/under.bin https://app.example.com/
                                      # positive control: under the limit, must NOT be 413
 curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/over.bin  https://app.example.com/
-                                     # 413. Credentials matter: app-auth is first in the middleware
-                                     # chain, so an unauthenticated probe stops at 401 before any limit
-                                     # sees the body. A backend with its own limit returns the same
-                                     # code, so attributing the refusal needs an isolated environment
-                                     # with app-body removed
+                                     # 413. Credentials matter: app-body runs after app-auth, so an
+                                     # unauthenticated probe is counted by app-rate/app-inflight but stops
+                                     # at 401 before app-body buffers it. A backend with its own limit
+                                     # returns the same code, so attributing the refusal needs an isolated
+                                     # environment with app-body removed
 seq 1 40 | xargs -P 40 -I{} curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD https://app.example.com/ | sort | uniq -c
                                      # A 429 appeared. That is all this shows. inflightreq also returns
                                      # 429, and an upstream under load can too, so this does not
@@ -149,7 +149,7 @@ sudo ss -tlnp                        # read the whole listener table, do not gre
 
 Check the Traefik log for ACME errors on first start; issuance failures otherwise surface as a self-signed "TRAEFIK DEFAULT CERT" in the browser.
 
-`docker compose ps` and `ss` help find a container that bypasses Traefik with its own `ports:`, though neither is exhaustive: `docker compose ps` lists only this Compose project, and a port published through NAT alone, with Docker's userland proxy disabled, opens no host listening socket for `ss` to show. Neither, in any case, sees a container Traefik routes without your asking: a routed container has no host port publication of its own. To confirm `exposedByDefault: false` actually excludes unlabelled containers, launch an unlabelled canary on Traefik's network and probe the front door. Do this on a disposable copy of the deployment; never make a container deliberately routable on the production host.
+`docker compose ps` and `ss` help find a container that bypasses Traefik with its own `ports:`, though neither is exhaustive: `docker compose ps` lists only this Compose project, and a port published through NAT alone, with Docker's userland proxy disabled, opens no host listening socket for `ss` to show. Neither, in any case, sees a container Traefik routes without your asking: a routed container has no host port publication of its own. To confirm `exposedByDefault: false` actually excludes unlabelled containers, launch an unlabelled canary on Traefik's network and probe the front door. Do this on a disposable copy of the deployment; never make a container deliberately routable on the production host. These canary steps are reasoned from Traefik's documented routing behavior and the exposed-versus-fixed outcomes it predicts; they have not been demonstrated against a live Docker/Traefik deployment here.
 
 ```yaml
 services:
@@ -194,7 +194,7 @@ A `404` for the canary also appears when the whole Docker provider is off, which
 )
 ```
 
-With the authentication from section 3 in place, this unauthenticated probe returns `http=401` from Traefik: the app's router and its auth middleware both exist, so the provider is routing. (Add `-u admin:REPLACE_WITH_PASSWORD` to the curl line to see the app's own authenticated response instead.) The fix is confirmed when, in the same run, the app answers `401` (or your known authenticated `200`) and the canary answers `404`: routing works and the unlabelled container is excluded. A `404` or a connection failure for the app instead means the provider is not routing it. No `-k` here; the app needs a real certificate.
+With the authentication from section 3 in place, this unauthenticated probe returns `http=401`: a response, rather than a connection failure or a `404`, means the provider is routing this app. The `401` may come from Traefik's basicAuth or from the app's own login, so it confirms routing, not specifically that the proxy middleware is attached; confirm that separately from the router's `middlewares` in the dashboard or config. (Add `-u admin:REPLACE_WITH_PASSWORD` to the curl line to see the app's own authenticated response instead.) The fix is confirmed when, in the same run, the app answers `401` (or your known authenticated `200`) and the canary answers `404`: routing works and the unlabelled container is excluded. A `404` or a connection failure for the app instead means the provider is not routing it. No `-k` here; the app needs a real certificate.
 
 ## Common mistakes
 
