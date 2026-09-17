@@ -65,7 +65,7 @@ ss -tlnp   # read every listener; classic protocol 3306 and the X Protocol 33060
 
 # positive control: an identity-verified TLS connection to the hostname clients use must SUCCEED
 mysql --host db.example.com --user app -p --ssl-mode=VERIFY_IDENTITY --ssl-ca=/path/ca.pem -e 'SELECT 1;'
-# negative control: a cleartext TCP attempt must be REJECTED for its transport (ERROR 3159 with require_secure_transport ON), not merely time out or fail on the password
+# negative control: this cleartext attempt must be REJECTED, not time out or wait at a password prompt. The app account's REQUIRE SSL rejects it first with ERROR 1045; require_secure_transport=ON (confirmed above) independently refuses cleartext for any account with ERROR 3159. Either refusal is the pass
 mysql --host db.example.com --user app -p --ssl-mode=DISABLED -e 'SELECT 1;'
 ```
 
@@ -88,3 +88,4 @@ mysql --host db.example.com --user app -p --ssl-mode=DISABLED -e 'SELECT 1;'
 - WebAuthn pluggable authentication (MySQL 8.4): https://dev.mysql.com/doc/refman/8.4/en/webauthn-pluggable-authentication.html
 - FIDO pluggable authentication (MySQL 8.0, deprecated as of 8.0.35): https://dev.mysql.com/doc/refman/8.0/en/fido-pluggable-authentication.html
 - What is new in MySQL 8.4 (`authentication_fido` plugins removed): https://dev.mysql.com/doc/refman/8.4/en/mysql-nutshell.html
+- MariaDB systemd socket activation (systemd owns the listening sockets, so their addresses are set in the socket unit rather than by `bind_address`): https://mariadb.com/docs/server/server-management/starting-and-stopping-mariadb/systemd/configuring
