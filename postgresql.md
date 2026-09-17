@@ -59,6 +59,8 @@ psql "host=db.example.com dbname=app user=app password=REPLACE_WITH_A_DELIBERATE
 sudo -u postgres psql -c "SELECT ssl, count(*) FROM pg_stat_ssl JOIN pg_stat_activity USING (pid) GROUP BY ssl;"
 # the app role must carry a SCRAM verifier, not a legacy md5 one (the wrong-password test alone cannot tell them apart)
 sudo -u postgres psql -c "SELECT rolname, rolpassword LIKE 'SCRAM-SHA-256%' AS scram FROM pg_authid WHERE rolname='app';"
+# storage is not the method: prove the login actually negotiates SCRAM, not a cleartext password over TLS from a `password` HBA line (libpq 16 and later)
+psql "host=db.example.com dbname=app user=app sslmode=verify-full sslrootcert=/path/ca.crt gssencmode=disable require_auth=scram-sha-256" -c 'SELECT 1;'
 # force plaintext from a remote client: pg_hba.conf must REFUSE it (a "no pg_hba.conf entry ... no encryption" error), not merely time out or fail on the password
 psql "host=db.example.com dbname=app user=app sslmode=disable gssencmode=disable connect_timeout=5" -c 'SELECT 1;'
 ss -tlnp 'sport = :5432'   # ss's own filter, not a grep: loopback only, unless remote access is deliberate
