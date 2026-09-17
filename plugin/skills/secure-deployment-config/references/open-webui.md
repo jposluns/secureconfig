@@ -54,4 +54,5 @@ curl -q -g -sS --noproxy '*' 'https://chat.example.com/api/config'
 
 - Open WebUI environment configuration reference: https://docs.openwebui.com/reference/env-configuration
 - Open WebUI FAQ (the first account created becomes the administrator): https://docs.openwebui.com/faq
-- Open WebUI repository: https://github.com/open-webui/open-webui
+- Open WebUI repository (the Docker Quick Start `-v open-webui:/app/backend/data` data volume): https://github.com/open-webui/open-webui
+- Docker port publishing (localhost publishing; releases older than 28.0.0 let a same-L2 host reach a localhost-published port): https://docs.docker.com/engine/network/port-publishing/
