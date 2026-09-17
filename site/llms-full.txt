@@ -10091,20 +10091,24 @@ Keep them on loopback or a private network and reach them through the tunnels ab
 ## Verify
 
 ```bash
-# On the host: every panel listener must be loopback only. Under Docker a published port shows as
-# docker-proxy on 0.0.0.0 (still exposed) and a NAT-only publish may not appear here, so treat the
-# external probe below as authoritative, not this list.
-ss -tlnp                                      # panels on 127.0.0.1 (or a private address) only
+# On the host: each panel listener should be loopback (127.0.0.1) or a deliberately chosen private address.
+# Docker may publish to loopback OR install a NAT rule with no host listener, so also inspect the actual
+# published addresses and ports (docker ps and the port mappings) and probe any public backend mapping too:
+# a protected frontend does not prove a separately published backend port is closed.
+ss -tlnp                                      # panel listeners: loopback or a private address only
 
-# From OUTSIDE your network, with client proxies disabled so a proxy cannot answer for the panel:
-# 1) unauthenticated GET to the root: want the panel's OWN 401/403, never a 200 that serves the app
-curl -q -sS --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' https://panel.example.com/
-# 2) if it redirects, read the target: a pass ONLY if Location is the panel's own login/challenge
-#    (e.g. /login); any other 3xx, or a 200 serving the app, is a finding
-curl -q -sSI --noproxy '*' https://panel.example.com/
-# 3) SPA panels (Grafana, RedisInsight, a phpMyAdmin/Adminer login shell) return 200 for BOTH the login
-#    page and the dashboard, so also request a known protected route and require rejection (no data):
-curl -q -sS --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' https://panel.example.com/REPLACE_WITH_PROTECTED_PATH
+# From OUTSIDE your network, with client proxies disabled so a proxy cannot answer for the panel. Read the
+# BODY, not just the status: a login page and a dashboard can both be 200.
+curl -q -g -sS --noproxy '*' -i https://panel.example.com/
+#   PASS: a denial from whatever protects this panel - the panel's own 401/403, the reverse proxy's, or a
+#   Cloudflare Access challenge - or a redirect into that layer's login (which may be an external identity
+#   provider). FINDING: a 200 that renders the dashboard or app content. An arbitrary redirect is inconclusive.
+# SPA panels (Grafana, RedisInsight, a phpMyAdmin/Adminer login shell) return 200 for BOTH the login page and
+# the dashboard, so also request a route you know returns real data when authorized, and require it be denied
+# without credentials:
+curl -q -g -sS --noproxy '*' -i https://panel.example.com/REPLACE_WITH_PROTECTED_PATH
+#   Confirm that route returns data WITH valid auth first (a positive control); a 404, a server error, or an
+#   unsubstituted placeholder is inconclusive, not a pass.
 ```
 
 Run these from a second network against each panel's real hostname; a 200 that renders a dashboard, or any content past the login, without credentials is a finding, while a proxy, DNS, or TLS error is inconclusive, not a pass.
