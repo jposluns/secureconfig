@@ -766,8 +766,8 @@ tailscale serve --bg localhost:3000
 
 - Traffic **through this proxy** is reachable only by devices in your tailnet, so that path is authenticated by device identity and your tailnet ACLs. `serve` does not change how the application binds, though: an application still listening on `0.0.0.0:3000` keeps answering its LAN or VPC address directly, past the tailnet.
 - That reach is only as tight as your tailnet policy. A new tailnet's default policy lets every device in the tailnet (`action` accept, `src` `*`, `dst` `*:*`), plus anyone you have shared the node with, connect to this service. Restrict it by removing the default allow-all rule and granting only the intended users, groups, or tags to this host and the port `serve` listens on (a grant is preferred; ACLs remain supported); adding a narrower rule alongside allow-all does not revoke it, because Tailscale rules are additive accepts.
-- Tailnet reach is network access, not application authorization: an admin panel behind `serve` must still authenticate and authorize its own users, through its own login or by deliberately consuming the identity headers `serve` forwards. Trusting those headers is safe only where you trust every process on the Serve host: the loopback bind above stops other machines, but any local process can still reach `127.0.0.1:3000` and forge them (Tailscale notes that binding to localhost limits tampering to other services on the Serve device, it does not eliminate it). Requests from tagged devices carry no user identity, so give those another method or reject them.
-- Bind the fronted application to `127.0.0.1:3000` so the tailnet is the only way in.
+- Tailnet reach is network access, not application authorization: an admin panel behind `serve` must still authenticate and authorize its own users, through its own login or by deliberately consuming the identity headers `serve` forwards. Trusting those headers is safe only where you trust every process on the Serve host: binding the app to loopback (next bullet) stops other machines, but any local process can still reach `127.0.0.1:3000` and forge them (Tailscale notes that binding to localhost limits tampering to other services on the Serve device, it does not eliminate it). Requests from tagged devices carry no user identity, so give those another method or reject them.
+- Bind the fronted application to `127.0.0.1:3000` so no other machine can reach it directly; local processes on the host still can, per the identity-header caveat above.
 - HTTPS uses an automatically provisioned TLS certificate for the machine's tailnet name.
 - `--bg` keeps it running in the background; without it, the share stops with the session.
 
@@ -797,16 +797,18 @@ ss -tlnp 'sport = :3000'                          # ss's own filter, not a grep:
 From another machine on the same LAN or VPC (run this from OUTSIDE the host), confirm the app does not answer its direct address:
 
 ```bash
-set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_HOST_LAN_OR_VPC_IP'   # replace inside the quotes, keeping them
-[ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
-shift
-[ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
-case "$1" in
-  *REPLACE_WITH_*|"") echo "substitute the host's LAN or VPC address on the set -- line above; not probing" ;;
-  *) curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
-       -w 'http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/" ;;
-esac
-# A reply (http=200/301/...) means the app still answers past the tailnet on 0.0.0.0; a refused or timed-out connection (err set, http=000) means it is loopback-bound.
+(                                       # a subshell, so your own shell keeps its positional parameters and the guard's exit does not close it
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_HOST_LAN_OR_VPC_IP'   # replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute the host's LAN or VPC address on the set -- line above; not probing" ;;
+    *) curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
+         -w 'http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/" ;;
+  esac
+)
+# Any HTTP reply (including 4xx/5xx) proves the app is reachable past the tailnet at that address. A failed request does not by itself prove a loopback bind (a firewall, a wrong address, or a stalled response fails the same way), so read `err`/`exitcode` and rely on the `ss` line above for the actual bind address.
 ```
 
 Then confirm the tailnet path works and that the section-1 restriction actually holds:
