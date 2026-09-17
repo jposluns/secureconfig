@@ -2192,7 +2192,7 @@ After a real login through the proxy, confirm a session reaches the app and the 
 
 # Apache HTTP Server: TLS and authentication
 
-Applies to Apache 2.4. Get a certificate first: [free-certificates.md](free-certificates.md) for a public host (note that `certbot --apache` obtains and installs the certificate and can add the step-3 redirect if you accept its prompt or pass `--redirect`, but review its generated TLS config against steps 1 to 3 and add HSTS yourself, since certbot's `--hsts` is off by default), or [self-signed.md](self-signed.md) for internal use.
+Applies to Apache 2.4. Get a certificate first: [free-certificates.md](free-certificates.md) for a public host (note that `certbot --apache` obtains and installs the certificate and, at the time of writing, enables the HTTP-to-HTTPS redirect by default (`--redirect` requests it explicitly), but review its generated TLS config against steps 1 to 3 and add HSTS yourself, since certbot's `--hsts` is off by default), or [self-signed.md](self-signed.md) for internal use.
 
 ## 1. Enable the modules
 
@@ -2296,7 +2296,7 @@ ss -tlnp
 # would be used on a non-SSL connection". So setting only the header tests nothing. It leaves
 # SNI saying example.com, which selects YOUR vhost and answers 401, or makes mod_ssl reject the
 # mismatched pair with 421; both look like a pass and neither is the request an attacker sends.
-# --connect-to sets the name in the handshake AND the header, and still dials your address:
+# The URL hostname supplies SNI and the Host header; --connect-to changes only the connection destination (your address):
 curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' \
   --connect-to REPLACE_WITH_AN_UNCONFIGURED_NAME:443:example.com:443 \
   https://REPLACE_WITH_AN_UNCONFIGURED_NAME/REPLACE_WITH_A_PROTECTED_PATH
