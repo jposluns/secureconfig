@@ -10836,7 +10836,9 @@ location ~ /\. {
 
 Once nginx picks the `^~` location as the longest matching prefix, it skips regex locations entirely, so the
 challenge path is served before the dotfile deny is reached (`allow`/`deny`: `ngx_http_access_module`;
-`location` order and `^~`: `ngx_http_core_module`).
+`location` order and `^~`: `ngx_http_core_module`). This denies dot-prefixed paths only; a non-dotfile
+export like `dump.sql` or `backup.tar.gz` is not matched here, so keep those out of the web root (below)
+or add an explicit `location ~* \.(sql|dump|bak|tar\.gz)$ { deny all; }`.
 
 ## Apache
 
@@ -10861,8 +10863,9 @@ and similar) as a substring of the filesystem path, because Apache's regex is no
 pattern itself anchors it (per the core module documentation). A bare `(?!well-known)` lookahead only
 rules out that literal substring, so it would still allow a directory that merely starts with
 "well-known", such as `/.well-known-backup/config`; the `(?:/|$)` boundary requires the exempted
-segment to be `well-known` exactly, ending at a slash or the path's end, so only the real ACME
-challenge directory is exempt. Keep the `<FilesMatch>` rule as a backstop for `.sql`, `.dump`, and
+segment to be `well-known` exactly, ending at a slash or the path's end, so only a genuine `.well-known/`
+path is exempt: the whole directory (acme-challenge, and anything else legitimately under it such as
+`security.txt`), while a lookalike segment like `.well-known-backup` is not. Keep the `<FilesMatch>` rule as a backstop for `.sql`, `.dump`, and
 `.bak` basenames and for top-level dotfiles like `/.env`.
 
 One default weakens this. Debian and Ubuntu ship `apache2.conf` with `Options Indexes FollowSymLinks` on `<Directory /var/www/>`, so when a directory below the document root has no `DirectoryIndex` file (`dir.conf` lists `index.html`, `index.php`, and several others), `mod_autoindex` returns a browsable listing of its contents. The deny rules above still hold, and the listing even omits the files they forbid, because `mod_autoindex` hides an entry whose subrequest returns 403 unless `IndexOptions ShowForbidden` is set. The exposure is everything else in the directory: a backup or export the deny rules do not match by name, an `archive.tar.gz`, a `customers.csv`, or a datestamped dump, is listed for anyone who requests the directory, and the listing itself confirms the directory and reveals filenames you were relying on nobody guessing. Turn listing off with `Options -Indexes`, shown above; write it in the relative `-` form so it removes only `Indexes` and keeps the inherited `FollowSymLinks`, and never mix `+`/`-` options with bare ones in a single `Options` line, which Apache 2.4 rejects at startup. nginx (`autoindex` is `off` by default) and Caddy (`file_server` lists only with `browse`) do not need this; Apache on these distributions does.
@@ -10875,8 +10878,11 @@ respond /.env 404
 respond /.env.* 404
 ```
 
-If a broader matcher replaces this list, carve out `/.well-known/*` first: legitimate things live there
-(ACME challenges, `security.txt`), and Caddy already serves its own ACME challenges outside the file server.
+This list is not exhaustive: it matches only the paths named, so other dotfiles and nested sensitive
+directories are not covered; keep such files out of the served directory (below) and extend the list for any
+other sensitive paths you serve. If a broader matcher replaces this list, carve out `/.well-known/*` first:
+legitimate things live there (ACME challenges, `security.txt`), and Caddy already serves its own ACME
+challenges outside the file server.
 
 ## Keep dumps and backups out of the served directory
 
@@ -10890,30 +10896,64 @@ deprecated as of this writing, but the convention persists in older projects). A
 into frontend code under one of these prefixes ships to every visitor's browser, not just your server. Only
 genuinely public values belong behind these prefixes; call the provider from a backend route and keep the
 key server-side. See [secrets.md](secrets.md) and [paas.md](paas.md) for the platform version of this. A
-production source map (`.map` files, or an inline `//# sourceMappingURL` comment) reconstructs original
-source too; do not ship one to a public origin for code not already meant to be public.
+production source map recovers the original source: it may be a separate `.map` file, an inline `data:` URI
+in a `//# sourceMappingURL` comment, or a `.map` that comment points to, and removing the comment does not
+unpublish a `.map` you already deployed. Do not ship a source map, or leave one served, for code not already
+meant to be public.
 
 ## Verify
 
 ```bash
-curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/.env
-curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/.git/config
-curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/config.php.bak
-curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/db.sql
-# each line above must print 403 or 404, never the file's content
-curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/uploads/
-# a directory below the document root with no DirectoryIndex file (an uploads or backups dir): with
-# Options -Indexes this is 403 (or 404), never a 200 that returns an autoindex page listing its files
+# Plant a real file at a denied dotfile path so a 403/404 proves the RULE fired, not that the file is
+# absent (Caddy's `respond ... 404` is 404 BY DESIGN, and /.env may simply not exist). Set DOCROOT to THIS
+# host's real document root (nginx `root` / Apache DocumentRoot); the check is INCONCLUSIVE unless the plant
+# lands. mktemp creates the probe exclusively so it never clobbers a real file, and only that file is
+# removed. --noproxy so no client proxy answers; the body is shown so leaked content is visible:
+DOCROOT=/var/www/html
+if probe=$(sudo mktemp "$DOCROOT/.env.probeXXXXXX" 2>/dev/null); then
+  # mktemp makes it root-only (0600); chmod so the web-server worker can READ it, or its 403 is a FILE
+  # PERMISSION denial (not the deny rule) and the check would false-pass with no rule configured:
+  if printf 'PLANTED-SECRET' | sudo tee "$probe" >/dev/null && sudo chmod 0644 "$probe"; then
+    for p in "/${probe##*/}" /.git/config /config.php.bak /db.sql; do
+      curl -q -sS --noproxy '*' -w "  <= %{http_code} $p\n" "https://example.com$p"
+    done
+    # every line must be 403 or 404 and must NOT print PLANTED-SECRET. The .env.probe* line is the POSITIVE
+    # CONTROL (a world-readable real file under the deny rules), so its 403/404 is the rule, not permissions
+    # or absence; a bare 404 on the others could be absence, so plant one at each to be sure
+  else
+    echo "inconclusive: could not prepare the probe file"
+  fi
+  sudo rm -f "$probe"
+else
+  echo "inconclusive: could not create a probe under $DOCROOT; point it at the writable document root"
+fi
+# uploads/backups directory: an existing, non-empty, index-less dir must NOT return a 200 autoindex under
+# Options -Indexes. Plant a throwaway file so a listing would actually reveal something; inconclusive if the
+# directory does not exist:
+if u=$(sudo mktemp "$DOCROOT/uploads/listcheckXXXXXX" 2>/dev/null); then
+  curl -q -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' https://example.com/uploads/   # 403/404, never a 200 listing
+  sudo rm -f "$u"
+else
+  echo "inconclusive: $DOCROOT/uploads does not exist or is not writable"
+fi
 
-printf 'probe' | sudo tee /var/www/html/.well-known/acme-challenge/probe >/dev/null
-curl -q -s https://example.com/.well-known/acme-challenge/probe
-sudo rm -f /var/www/html/.well-known/acme-challenge/probe
-# must return "probe", never 403: the exemption has to let a real challenge file through.
-# Requesting a token that does not exist proves nothing, because a correctly exempted
-# directory still answers 404 for a file that is not there
-curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/.well-known-backup/config
-# must be 403 or 404; a directory name that only starts with "well-known" must not
-# inherit that exemption
+acme="$DOCROOT/.well-known/acme-challenge"
+if sudo test -d "$acme" && tok=$(sudo mktemp "$acme/probeXXXXXX" 2>/dev/null); then
+  if printf 'probe' | sudo tee "$tok" >/dev/null && sudo chmod 0644 "$tok"; then   # readable, or a 403 is a permission denial not the exemption
+    name=${tok##*/}
+    curl -q -sS --noproxy '*' "https://example.com/.well-known/acme-challenge/$name"   # must return "probe", never 403: the exemption lets a real challenge file through (HTTPS webroot access)
+    curl -q -sS --noproxy '*' "http://example.com/.well-known/acme-challenge/$name"    # ACME HTTP-01 runs over HTTP:80, so fetch the SAME token over http to confirm that route
+  else
+    echo "inconclusive: could not prepare the challenge file"
+  fi
+  sudo rm -f "$tok"
+else
+  echo "inconclusive: $acme does not exist"
+fi
+curl -q -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' https://example.com/.well-known-backup/config
+# must be 403 or 404: a directory that only starts with "well-known" must not inherit the exemption. A bare
+# 404 is inconclusive here (nothing is there); create a real .well-known-backup/config to be certain a
+# served 200 would be the finding, then remove it
 
 for d in .next/static build dist; do
   [ -d "$d" ] || { echo "$d: absent, nothing scanned"; continue; }
