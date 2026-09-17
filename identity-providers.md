@@ -26,9 +26,9 @@ A login proves who the person is. **It does not decide whether they may use your
 | Provider | Free tier and MFA facts (September 2026) | Notes |
 |---|---|---|
 | Microsoft Entra External ID | Core features free for the first 50,000 monthly active users (MAU). SMS MFA and machine-to-machine (client credentials) authentication are billed per transaction as add-ons. | Keep the external (customer) tenant separate from the workforce tenant. |
-| Google Identity Platform / Firebase Authentication | Email, password, and social sign-in are free in base Firebase Authentication. Upgrading to Authentication with Identity Platform gives 50,000 MAU and 50 SAML/OIDC MAU at no cost and unlocks TOTP MFA; SMS is billed per message. | Rules and RLS still decide data access: [firebase-supabase.md](firebase-supabase.md). |
-| Auth0 (Okta) | Free plan: 25,000 MAU, passkeys, and unlimited social connections. **No MFA factors on Free**; Pro, Enterprise, and Adaptive MFA start at the paid plans. B2C Essentials is $35 per month for 500 MAU. | Passkeys on Free give a phishing-resistant single factor, which is not the same as MFA. |
-| Amazon Cognito | Lite and Essentials tiers: 10,000 MAU free for direct sign-in and 50 MAU free for SAML/OIDC federation. Essentials is $0.015 per MAU beyond that and includes passkeys; Lite does not. SMS goes through SNS and is billed separately. | Pairs with Application Load Balancer authentication ([cloud-identity-proxies.md](cloud-identity-proxies.md)). |
+| Google Identity Platform / Firebase Authentication | Email, password, and social sign-in are free in base Firebase Authentication. Upgrading to Authentication with Identity Platform unlocks TOTP MFA and, on the pay-as-you-go Blaze plan, a free tier of 50,000 MAU (50 SAML/OIDC MAU); the no-billing Spark plan is capped much lower, at 3,000 daily active users (2 for SAML/OIDC), so confirm which plan applies before relying on the MAU figure. SMS is billed per message. | Rules and RLS still decide data access: [firebase-supabase.md](firebase-supabase.md). |
+| Auth0 (Okta) | Free plan: 25,000 MAU, passkeys, and unlimited social connections. **No MFA factors on Free**; MFA factors start with the paid Essentials plan, and Adaptive MFA requires an Enterprise plan plus its add-on. B2C Essentials is $35 per month for 500 MAU. | Free includes passkeys, which with verified user verification are themselves phishing-resistant multifactor; what Free lacks is Auth0's separately licensed MFA policy (enforced factors and step-up), and enabling passkeys does not disable password sign-in. |
+| Amazon Cognito | Lite and Essentials tiers: 10,000 MAU free for direct sign-in and 50 MAU free for SAML/OIDC federation (Lite pools created on or before 10:00 a.m. Pacific Time on 22 November 2024, and qualifying new Lite pools in those existing accounts, keep a grandfathered 50,000 MAU free tier). Essentials is $0.015 per MAU beyond that and includes passkeys; Lite does not. SMS goes through SNS and is billed separately. | Pairs with Application Load Balancer authentication ([cloud-identity-proxies.md](cloud-identity-proxies.md)). |
 | Clerk | Hobby plan: 50,000 monthly retained users (a user who returns at least 24 hours after signing up; not the same unit as MAU). **MFA is Pro and above** at $25 per month, or $20 billed annually. | "Free plan" does not mean MFA. |
 | WorkOS AuthKit | User management free for the first 1,000,000 MAU. Enterprise SSO and Directory Sync are separate products at $125 per connection per month for the first 15 connections each. | Good app login; the per-connection fees are for selling to enterprises. |
 | Supabase Auth | Free plan: 50,000 MAU with TOTP MFA included. Phone MFA is a paid add-on at $75 per month for the first project. | Enrolment is not enforcement: require the `aal2` level in your policies ([firebase-supabase.md](firebase-supabase.md)). |
@@ -45,7 +45,7 @@ Keycloak, authentik, Zitadel, Ory, and Authelia ([mfa.md](mfa.md)) give you OIDC
 
 ## 6. MFA products
 
-- **Duo**: the Duo Free edition covers up to 10 users with MFA and the Duo Mobile app. Its Authentication Proxy speaks RADIUS and LDAP, which retrofits MFA onto VPNs and services with RADIUS support.
+- **Duo**: the Duo Free edition covers up to 10 users with MFA and the Duo Mobile app. Its Authentication Proxy speaks RADIUS and LDAP, which retrofits MFA onto VPNs and services with RADIUS support; for mandatory MFA set `failmode=secure`, since the default `safe` admits a primary-authenticated user when Duo is unreachable, and keep a separately controlled emergency path.
 - **Provider-native authenticators**: Microsoft Authenticator (Entra), Okta Verify (Okta), Google prompts (Google). Any RFC 6238 authenticator app works where a provider offers TOTP.
 - **Hardware keys and passkeys**: YubiKey and other FIDO2 keys, and platform passkeys, are the phishing-resistant factor. Most of the providers above document passkey or WebAuthn support; check the tier before relying on it, and require it for administrators ([mfa.md](mfa.md)).
 
@@ -55,9 +55,9 @@ Zscaler Private Access, HashiCorp Boundary, Ping Identity, OneLogin, and Okta as
 
 ## Verify
 
-- With only the password (or only a social login) an administrator cannot reach an admin function once MFA is required at the provider; test with a fresh session.
-- A valid account from outside your allowlist (a personal Gmail, a different tenant, a non-member GitHub user) is rejected after login, not admitted.
-- The provider's audit log shows the sign-in; your application log shows the identity it received.
+- With only the password (or only a social login) an administrator cannot reach an admin function once MFA is required at the provider; test with a fresh session, and confirm the same admin function DOES succeed once MFA is completed, so the denial is MFA enforcement and not an unrelated failure.
+- A valid account from outside your allowlist (a personal Gmail, a different tenant, a non-member GitHub user) is rejected after login, not admitted, while an allowed account does reach the app, so the rejection is the allowlist and not a broken login path.
+- Correlate each test against the provider's sign-in log (in Microsoft Entra this is Sign-in logs, not Audit logs, which record configuration changes) and your application's authorization decision: confirm the required factor or assurance level was met and that the outside account was denied. A log entry alone shows only that a sign-in happened, not that MFA or the allowlist was enforced.
 
 ## Sources (checked September 2026)
 
@@ -76,3 +76,7 @@ Zscaler Private Access, HashiCorp Boundary, Ping Identity, OneLogin, and Okta as
 - GitHub OAuth apps: https://docs.github.com/en/apps/oauth-apps
 - AWS IAM Identity Center: https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html ; its OIDC service (AWS CLI and native clients): https://docs.aws.amazon.com/singlesignon/latest/OIDCAPIReference/Welcome.html
 - Application Load Balancer user authentication (OIDC-compliant IdP or Cognito user pool): https://docs.aws.amazon.com/elasticloadbalancing/latest/application/listener-authenticate-users.html
+- Firebase Authentication limits (Spark-plan daily-active-user caps, distinct from the Blaze MAU free tier): https://firebase.google.com/docs/auth
+- Duo Authentication Proxy reference (`failmode` default `safe`): https://duo.com/docs/authproxy-reference
+- Auth0 Adaptive MFA (requires an Enterprise plan plus the add-on): https://auth0.com/docs/secure/multi-factor-authentication/adaptive-mfa
+- Microsoft Entra sign-in logs (sign-ins live in Sign-in logs; Audit logs record configuration changes): https://learn.microsoft.com/en-us/entra/identity/monitoring-health/concept-sign-ins
