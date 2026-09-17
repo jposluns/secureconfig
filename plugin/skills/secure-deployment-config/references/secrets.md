@@ -9,7 +9,7 @@ Leaked API keys and credentials in public repositories are the most common secur
 3. **Generate secrets randomly** (`openssl rand -base64 32`; `python3 -c "import secrets; print(secrets.token_urlsafe(32))"`), 1 per service and environment, never shared between staging and production.
 4. **Scan before every push.** [gitleaks](https://github.com/gitleaks/gitleaks) or [trufflehog](https://github.com/trufflesecurity/trufflehog) as a pre-commit hook and in CI:
    ```bash
-   gitleaks git .          # scans the repository history (git/dir need gitleaks 8.19+; older builds use: gitleaks detect)
+   gitleaks git .          # scans the repository history (git/dir need gitleaks 8.19+; older builds use "gitleaks detect" for history and "gitleaks detect --no-git" for the working tree)
    gitleaks dir .          # scans the working tree
    ```
 5. **Secrets never enter a command line.** A process's arguments are readable through `/proc/<pid>/cmdline`, which is what `ps` prints; on a default Linux that means every other user on the host, for as long as the process runs, and the command is then written to your shell history. A `hidepid` proc mount or a separate PID namespace narrows who can see it, neither is the default, and neither covers the history. Prefer a flag that reads from stdin (`htpasswd -i`, `docker login --password-stdin`, `gh auth login --with-token`), a file the tool reads itself (`~/.pgpass`, `curl --netrc`; create it with `umask 077` and keep it mode `0600`, since it stores the secret in plaintext and PostgreSQL ignores a `~/.pgpass` that group or others can read), or an environment variable where the tool offers nothing better. Where a value has to be typed, `read -rs` keeps it off the screen, and what `read` consumes is input rather than a command, so no shell records it. One caveat: shell tracing (`set -x`) echoes the expanded command line, so a script that expands a secret into a pipeline (including the `printf`-into-`--password-stdin` pattern below) must turn tracing off around it, because reading from stdin protects the argument list but not the trace.
@@ -60,6 +60,6 @@ On every push, gitleaks must exit 0 with no findings (the `&& echo clean` then p
 - gh auth login, for `--with-token`: https://cli.github.com/manual/gh_auth_login
 - htpasswd, for `-i` and what Apache says about `-b`: https://httpd.apache.org/docs/2.4/programs/htpasswd.html
 - OWASP GenAI, LLM07:2025 System Prompt Leakage (a system prompt is not a secret and should not hold credentials or a role and permission map): https://genai.owasp.org/llmrisk/llm072025-system-prompt-leakage/
-- PostgreSQL password file, that `~/.pgpass` must be mode `0600` or PostgreSQL ignores it: https://www.postgresql.org/docs/current/libpq-pgpass.html
+- PostgreSQL password file, that `~/.pgpass` must disallow all group and world access (`0600` is the documented example) or PostgreSQL ignores it: https://www.postgresql.org/docs/current/libpq-pgpass.html
 - curl `.netrc`, that the file should not be readable by anyone besides the user: https://everything.curl.dev/usingcurl/netrc.html
 - Next.js environment variables, that `.env.local`, `.env.production`, and other `.env.*` files are loaded (so they hold secrets and belong in `.gitignore`): https://nextjs.org/docs/app/guides/environment-variables
