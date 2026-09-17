@@ -7,7 +7,7 @@ A model server, chat UI, or proxy is the thing most likely to face untrusted inp
 - **Run as non-root.** `USER <user>[:<group>]` in the Dockerfile sets the default user for later `RUN` instructions and for `ENTRYPOINT`/`CMD` at runtime (per the Dockerfile reference); a user with no primary group runs with the `root` group, so set both. Compose's `user:` overrides that per service; unset in both places, the container runs as root (per the Compose file reference).
 - **Read-only root filesystem.** `read_only: true` on a Compose service creates it with a read-only root filesystem; mount a small `tmpfs` for any path the process must write to.
 - **Drop capabilities.** `cap_drop: [ALL]` removes every Linux capability; add back only the specific one a service needs with `cap_add`.
-- **No privilege escalation.** `security_opt: [no-new-privileges:true]` (the Compose reference treats `no-new-privileges`, `no-new-privileges=true`, and `no-new-privileges:true` as equivalent) stops a `setuid` binary from gaining more privilege than the process already has.
+- **No privilege escalation.** `security_opt: [no-new-privileges:true]` stops a `setuid` binary from gaining more privilege than the process already has (this maps to Docker's engine-level `--security-opt no-new-privileges`; the spellings `no-new-privileges`, `no-new-privileges=true`, and `no-new-privileges:true` are equivalent).
 - **Never mount the Docker socket into a container.** `/var/run/docker.sock` is root-equivalent access to the host; a container holding it can start a privileged sibling and escape.
 
 ```yaml
@@ -32,6 +32,7 @@ spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: 10001
+        runAsGroup: 10001
         readOnlyRootFilesystem: true
         allowPrivilegeEscalation: false
         capabilities:
@@ -40,14 +41,14 @@ spec:
           type: RuntimeDefault
 ```
 
-`runAsNonRoot: true` refuses to start the container if its effective user is root; pin `runAsUser` too. `seccompProfile.type: RuntimeDefault` applies the runtime's default syscall filter instead of running unconfined.
+`runAsNonRoot: true` refuses to start the container if its effective user is root; pin `runAsUser` and `runAsGroup` too, since an unset primary group defaults to GID 0 (the runtime default). `seccompProfile.type: RuntimeDefault` applies the runtime's default syscall filter instead of running unconfined.
 
 Enforce this with Pod Security Admission's `restricted` level, set as the namespace label
 `pod-security.kubernetes.io/enforce: restricted` (per the Pod Security Standards documentation); the label
 applies to that namespace only, not the whole cluster. `restricted` requires, among its controls: no
 privileged containers, no host namespaces or host ports, non-root execution, all capabilities dropped, and a
 seccomp profile that is not `Unconfined`. A Pod violating any of these is rejected at admission, not merely
-flagged. The `readOnlyRootFilesystem: true` setting above is a separate, per-container recommendation this
+flagged, for Pods created after the label is set; adding the label to a namespace that already runs violating Pods does not evict them (it only warns), so recreate those workloads. The `readOnlyRootFilesystem: true` setting above is a separate, per-container recommendation this
 guide makes; it is good practice, but it is not one of the controls `restricted` itself requires.
 
 ## Network segmentation
@@ -88,21 +89,27 @@ spec:
 A connection needs both sides to allow it: the egress policy on the source pod and the ingress policy on
 the destination pod (per the Kubernetes NetworkPolicy documentation). With all three policies applied, an
 `app` pod can resolve names through the cluster's DNS and reach the `db` pod on port 5432; the `db` pod
-accepts connections only from pods labeled `role: app` on port 5432; every other path is refused. Databases
+accepts connections only from pods labeled `role: app` on port 5432; every other path the namespace's own policies govern is refused. (NetworkPolicy handling of `hostNetwork` pods and of traffic on a pod's own node is implementation-dependent, and the DNS rule above allows port 53 to every pod in `kube-system`, not only CoreDNS, so narrow the DNS peer selector to your resolver where you can.) Databases
 still need their own TLS and auth on top ([postgresql.md](postgresql.md), [mysql.md](mysql.md),
 [mongodb.md](mongodb.md), [redis.md](redis.md)); a NetworkPolicy is a layer, not a substitute.
 
 ## Verify
 
 ```bash
-docker exec app id                                  # uid is not 0
-docker exec app sh -c 'touch /app/probe && echo WRITABLE || echo refused'
-                                                    # read-only fs: prints "refused". Probe a directory the container
-                                                    # user owns, not `/`: a non-root user cannot write `/` on a writable
-                                                    # filesystem either, so `touch /x` refuses for the wrong reason and
-                                                    # passes even after `read_only` is removed. A tmpfs you mounted for
-                                                    # scratch stays writable by design; do not probe that path
-kubectl get pod app -o jsonpath='{.spec.containers[0].securityContext}'
+docker compose exec app id                          # uid is not 0 (run from the Compose project; a bare `docker exec` needs the real container name, not the `app` service name)
+docker compose exec app sh -c 'touch /app/probe && echo WRITABLE || echo blocked'
+                                                    # with read_only: true this prints "blocked" (EROFS). But `touch` also
+                                                    # fails on a MISSING or non-writable /app (ENOENT/EACCES), which prints
+                                                    # "blocked" on a WRITABLE fs too, and this line exits 0 either way (read the
+                                                    # printed word, it is not an exit-status test), so prove the discrimination:
+                                                    # set read_only: false and recreate (docker compose up -d --force-recreate
+                                                    # app), run the same line, confirm it prints WRITABLE (the path exists and
+                                                    # the user owns it), then restore read_only, recreate again, and confirm
+                                                    # "blocked". Probe a path the container user owns, not `/` (a non-root
+                                                    # user cannot write `/` on a writable fs either) and not a tmpfs you
+                                                    # mounted (writable by design)
+kubectl get pod app -o jsonpath='{.spec.containers[0].securityContext}'   # the DECLARED context, not runtime proof; also inspect the running process:
+kubectl exec app -- sh -c 'id; grep -E "NoNewPrivs|Seccomp|CapEff|CapBnd" /proc/1/status'   # expect uid!=0, NoNewPrivs:1, Seccomp:2 (a filter is active, not 0=unconfined), and CapEff+CapBnd 0000000000000000 (drop:[ALL] clears the effective AND bounding sets; CapEff alone is not enough). Assumes the container's own PID namespace; with shareProcessNamespace PID 1 is the pause container, so pick the app PID
 
 # resolve the db Service's ClusterIP once and probe that same IP from both pods below; the
 # role: other pod has no DNS egress under the policies above, so a probe by hostname would fail on
@@ -113,12 +120,13 @@ DBIP=$(kubectl get svc db -o jsonpath='{.spec.clusterIP}')
 # a probe pod needs its own admission-compliant securityContext under the restricted PSA level, and a
 # real TCP connect to the db's actual port (a Postgres port does not speak HTTP, so wget cannot test it)
 # Quote the address into the JSON: unquoted, `10.96.0.5` is a bare token and the array is not valid
-# JSON, so kubectl rejects the override and neither probe below runs. The override's container name
-# must also match the pod name, because kubectl run names the container after the pod and a strategic
-# merge keys containers by name, so a mismatched name adds a second container instead of replacing
-# the command. Build the override per pod:
+# JSON, so kubectl rejects the override and neither probe below runs. Keep the override's container name
+# matching the pod name: kubectl run's `--overrides` use a JSON merge patch (the default
+# `--override-type=merge`), which replaces the whole `containers` array with the one in your override.
+# kubectl assigns the container name (the pod name) BEFORE applying the override and the override's name
+# then survives, so keep them matching to avoid confusion. Build the override per pod:
 probe_override() {
-  printf '%s' '{"spec":{"securityContext":{"runAsNonRoot":true,"runAsUser":10001,"seccompProfile":{"type":"RuntimeDefault"}},"containers":[{"name":"'"$1"'","image":"busybox:1.36","securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}},"command":["nc","-z","-w","3","'"$DBIP"'","5432"]}]}}'
+  printf '%s' '{"spec":{"securityContext":{"runAsNonRoot":true,"runAsUser":10001,"runAsGroup":10001,"seccompProfile":{"type":"RuntimeDefault"}},"containers":[{"name":"'"$1"'","image":"busybox:1.36","securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}},"command":["nc","-z","-w","3","'"$DBIP"'","5432"]}]}}'
 }
 
 kubectl run probe-permitted --rm -it --restart=Never --image=busybox:1.36 --labels=role=app \
@@ -132,13 +140,21 @@ kubectl run probe-permitted --rm -it --restart=Never --image=busybox:1.36 --labe
 kubectl run probe-forbidden --rm -it --restart=Never --image=busybox:1.36 --labels=role=other \
   --overrides="$(probe_override probe-forbidden)" -- true
                                                      # from a pod without that label, same IP: must time out or be refused
-                                                     # at TCP, not fail on DNS
+                                                     # at TCP, not fail on DNS. Read this as an END-TO-END denial: role=other
+                                                     # cannot reach the db, but the refusal could be its own default-deny
+                                                     # egress OR the db's ingress (either alone would refuse it), so it
+                                                     # proves the combined segmentation, not either layer in isolation.
+                                                     # Isolating which layer blocks (e.g. that the db ingress admits ONLY
+                                                     # role=app) needs more elaborate per-layer probes, each with its own
+                                                     # positive control, and is CNI-dependent, so validate the whole policy
+                                                     # set on your CNI rather than reasoning rule by rule
 ```
 
 ## Sources (checked September 2026)
 
 - Docker Dockerfile reference (`USER`): https://docs.docker.com/reference/dockerfile/
 - Docker Compose file reference (`user`, `read_only`, `cap_add`, `cap_drop`, `security_opt`): https://docs.docker.com/reference/compose-file/
+- Docker run security options (`--security-opt no-new-privileges` and its engine behaviour): https://docs.docker.com/reference/cli/docker/container/run/
 - Kubernetes: Configure a security context for a Pod or Container: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
 - Kubernetes: Pod Security Standards (`restricted` level, Pod Security Admission labels): https://kubernetes.io/docs/concepts/security/pod-security-standards/
 - Kubernetes: Network Policies: https://kubernetes.io/docs/concepts/services-networking/network-policies/
