@@ -3708,11 +3708,12 @@ kubectl get certificate -A                                           # Ready=Tru
 curl -q --noproxy '*' -sI http://app.example.com/                       # 301 with Location: https://app.example.com/
 curl -q --noproxy '*' -sS -o /dev/null -w 'http=%{http_code}\n' https://app.example.com/
                                                                         # no credentials: 401 where basic auth is set
-# Positive control: a valid basic-auth credential (from a mode-0600 ~/.netrc-style file, never argv) reaches the
-# app, and the SecurityPolicy is Accepted for the intended route (an application's own login 401 is not this control).
-curl -q --noproxy '*' -sS --netrc-file "$HOME/.secureconfig-app.netrc" \
-  -o /dev/null -w 'http=%{http_code}\n' https://app.example.com/        # expect 2xx with a valid credential
-kubectl get securitypolicy app-basic-auth -o jsonpath='{.status.conditions[?(@.type=="Accepted")].status}'   # True
+# Positive control: confirm the SecurityPolicy attached, and that a valid basic-auth credential (from a
+# mode-0600 ~/.netrc-style file, never argv) is ACCEPTED by the gateway - it reaches the app rather than
+# drawing the gateway's basic-auth 401. The app's own login may then answer, so the test is that you NO
+# LONGER get the gateway's 401 with `WWW-Authenticate: Basic`, not that `/` returns 2xx.
+kubectl get securitypolicy app-basic-auth -o yaml   # an Accepted "True" condition under .status.ancestors (PolicyStatus)
+curl -q --noproxy '*' -sS --netrc-file "$HOME/.secureconfig-app.netrc" -D - -o /dev/null https://app.example.com/
 
 # The API server endpoint, taken WHOLE. Do not rebuild it with :6443. Managed providers
 # serve the API on 443, and a probe of 6443 times out against a cluster that is answering
@@ -3822,7 +3823,7 @@ allowed ranges out of the provider's own configuration rather than inferring the
 
 ## Sources (checked September 2026)
 
-- Ingress NGINX: Statement from the Kubernetes Steering and Security Response Committees (retirement, detection command): https://kubernetes.io/blog/2026/01/29/ingress-nginx-statement/ ; Kubernetes docs, Gateway API (successor to Ingress, migration guide): https://kubernetes.io/docs/concepts/services-networking/gateway/
+- Ingress NGINX: Statement from the Kubernetes Steering and Security Response Committees (retirement, detection command): https://kubernetes.io/blog/2026/01/29/ingress-nginx-statement/ ; Kubernetes docs, Gateway API (migration guide from Ingress): https://kubernetes.io/docs/concepts/services-networking/gateway/ ; Kubernetes docs, Ingress (the project recommends Gateway; the Ingress API is frozen): https://kubernetes.io/docs/concepts/services-networking/ingress/
 - Gateway API getting started (CRD install): https://gateway-api.sigs.k8s.io/guides/getting-started/introduction/ ; TLS: https://gateway-api.sigs.k8s.io/guides/user-guides/tls/ ; HTTP routing: https://gateway-api.sigs.k8s.io/guides/user-guides/http-routing/ ; redirects: https://gateway-api.sigs.k8s.io/guides/user-guides/http-redirect-rewrite/
 - Envoy Gateway: https://gateway.envoyproxy.io/ ; Helm install: https://gateway.envoyproxy.io/docs/install/install-helm/ ; quickstart and its manifest (GatewayClass `controllerName`): https://gateway.envoyproxy.io/docs/tasks/quickstart/ , https://github.com/envoyproxy/gateway/releases/download/v1.9.1/quickstart.yaml
 - Envoy Gateway tasks, secure gateways (TLS listener): https://gateway.envoyproxy.io/docs/tasks/security/secure-gateways/ ; basic auth: https://gateway.envoyproxy.io/docs/tasks/security/basic-auth/ ; OIDC: https://gateway.envoyproxy.io/docs/tasks/security/oidc/ ; external authorization (`extAuth`): https://gateway.envoyproxy.io/docs/tasks/security/ext-auth/ ; HTTP redirect: https://gateway.envoyproxy.io/docs/tasks/traffic/http-redirect/
