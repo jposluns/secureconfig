@@ -10099,14 +10099,14 @@ ss -tlnp                                      # panel listeners: loopback or a p
 
 # From OUTSIDE your network, with client proxies disabled so a proxy cannot answer for the panel. Read the
 # BODY, not just the status: a login page and a dashboard can both be 200.
-curl -q -g -sS --noproxy '*' -i https://panel.example.com/
+curl -q -g -sS --noproxy '*' -i 'https://panel.example.com/'
 #   PASS: a denial from whatever protects this panel - the panel's own 401/403, the reverse proxy's, or a
 #   Cloudflare Access challenge - or a redirect into that layer's login (which may be an external identity
 #   provider). FINDING: a 200 that renders the dashboard or app content. An arbitrary redirect is inconclusive.
 # SPA panels (Grafana, RedisInsight, a phpMyAdmin/Adminer login shell) return 200 for BOTH the login page and
 # the dashboard, so also request a route you know returns real data when authorized, and require it be denied
 # without credentials:
-curl -q -g -sS --noproxy '*' -i https://panel.example.com/REPLACE_WITH_PROTECTED_PATH
+curl -q -g -sS --noproxy '*' -i 'https://panel.example.com/REPLACE_WITH_PROTECTED_PATH'   # keep the quotes; substitute inside them
 #   Confirm that route returns data WITH valid auth first (a positive control); a 404, a server error, or an
 #   unsubstituted placeholder is inconclusive, not a pass.
 ```
