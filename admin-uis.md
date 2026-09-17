@@ -4,11 +4,11 @@ Database and monitoring panels are the most-scanned targets on the internet, and
 
 ## mongo-express
 
-The web login is off by default, and setting a username and password alone does not turn it on. Which variable enables it changed within mongo-express 1.x: 1.0.x reads `ME_CONFIG_BASICAUTH`, while 1.1.0 and later read `ME_CONFIG_BASICAUTH_ENABLED` (the current README documents the latter and marks the former deprecated), so set both. Set your own credentials as well, or mongo-express falls back to the widely-scanned `admin`:`pass`. Keep it private:
+The web login is off by default on recent releases, and the enabling variable has changed across mongo-express versions: current releases read `ME_CONFIG_BASICAUTH_ENABLED` (the README marks the older `ME_CONFIG_BASICAUTH` deprecated but still honors it as a fallback), while some 1.0.x builds instead key the login off a non-empty `ME_CONFIG_BASICAUTH_USERNAME`. Rather than track the exact version boundary, set both flags, set your own non-empty credentials, and VERIFY that an unauthenticated request is rejected, because mongo-express can otherwise fall back to the widely-scanned `admin`:`pass`. Keep it private:
 
 ```
-ME_CONFIG_BASICAUTH=true                       # enables the login on mongo-express 1.0.x
-ME_CONFIG_BASICAUTH_ENABLED=true               # the renamed flag on 1.1.0 and later; set both to cover either
+ME_CONFIG_BASICAUTH=true                       # older, now-deprecated enable flag, still honored as a fallback
+ME_CONFIG_BASICAUTH_ENABLED=true               # the current enable flag; set both, then verify the login actually appears
 ME_CONFIG_BASICAUTH_USERNAME=<your-admin>      # otherwise defaults to admin
 ME_CONFIG_BASICAUTH_PASSWORD=<long random value>   # otherwise defaults to pass
 ```
@@ -23,14 +23,16 @@ These control only the web login; MongoDB credentials go in `ME_CONFIG_MONGODB_U
 
 ```ini
 [server]
-protocol = https
+protocol  = https
+# bind loopback (Grafana's default http_addr is empty = all interfaces); reach it via a tunnel or proxy
+http_addr = 127.0.0.1
 cert_file = /etc/grafana/grafana.crt
 cert_key  = /etc/grafana/grafana.key
 ```
 
 ## Prometheus
 
-No authentication at all by default. Give it a web configuration file and start with `--web.config.file=web.yml`:
+No authentication at all by default, and it listens on `0.0.0.0:9090` by default. Give it a web configuration file and bind it to loopback, starting with `--web.listen-address=127.0.0.1:9090 --web.config.file=web.yml`:
 
 ```yaml
 basic_auth_users:
@@ -54,11 +56,27 @@ Keep them on loopback or a private network and reach them through the tunnels ab
 ## Verify
 
 ```bash
-ss -tlnp                                      # panels bound to 127.0.0.1 only
-curl -q -sI https://panel.example.com/           # 401/403 or a login redirect, never a dashboard
+# On the host: each panel listener should be loopback (127.0.0.1) or a deliberately chosen private address.
+# Docker may publish to loopback OR install a NAT rule with no host listener, so also inspect the actual
+# published addresses and ports (docker ps and the port mappings) and probe any public backend mapping too:
+# a protected frontend does not prove a separately published backend port is closed.
+ss -tlnp                                      # panel listeners: loopback or a private address only
+
+# From OUTSIDE your network, with client proxies disabled so a proxy cannot answer for the panel. Read the
+# BODY, not just the status: a login page and a dashboard can both be 200.
+curl -q -g -sS --noproxy '*' -i 'https://panel.example.com/'
+#   PASS: a denial from whatever protects this panel - the panel's own 401/403, the reverse proxy's, or a
+#   Cloudflare Access challenge - or a redirect into that layer's login (which may be an external identity
+#   provider). FINDING: a 200 that renders the dashboard or app content. An arbitrary redirect is inconclusive.
+# SPA panels (Grafana, RedisInsight, a phpMyAdmin/Adminer login shell) return 200 for BOTH the login page and
+# the dashboard, so also request a route you know returns real data when authorized, and require it be denied
+# without credentials:
+curl -q -g -sS --noproxy '*' -i 'https://panel.example.com/REPLACE_WITH_PROTECTED_PATH'   # keep the quotes; substitute inside them
+#   Confirm that route returns data WITH valid auth first (a positive control); a 404, a server error, or an
+#   unsubstituted placeholder is inconclusive, not a pass.
 ```
 
-Test each panel's URL from outside your network; a dashboard that renders without a login is a finding.
+Run these from a second network against each panel's real hostname; a 200 that renders a dashboard, or any content past the login, without credentials is a finding, while a proxy, DNS, or TLS error is inconclusive, not a pass.
 
 ## Sources (checked September 2026)
 
