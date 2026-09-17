@@ -8442,6 +8442,8 @@ None of the checks above tests isolation between tenants. Where one embeddings t
 
 An MCP server gives a model tools, and every tool it exposes runs with the credentials the server holds. The 2025-11-25 specification defines two transports. Over **stdio** the client launches the server as a subprocess and talks over stdin and stdout: there is no network listener, but the process runs as the launching user with every credential in its environment, so a malicious or careless server is a local compromise, not a network one. Over **Streamable HTTP** the server is a web service with a single endpoint accepting POST and GET, and every rule in [authentication.md](authentication.md) applies to it. The older HTTP with SSE transport (protocol version 2024-11-05) is deprecated; Streamable HTTP replaces it. The spec makes authorization OPTIONAL at the protocol level; this repository does not, so an HTTP MCP server reachable beyond loopback authenticates every request, either natively or through a fronting layer.
 
+**Spec revision.** This guide is written against MCP **2025-11-25** (a Final revision). The current revision is **2026-07-28**, and every security control below carries over to it unchanged: Origin validation, loopback binding, and the OAuth 2.1 / RFC 9728 / PKCE / RFC 8707 / audience-validation / no-token-passthrough rules are all the same. What 2026-07-28 changes is the transport shape: it removes protocol-level sessions and the `MCP-Session-Id` header, removes the standalone GET stream, and replaces the `initialize`-handshake version negotiation with a per-request `_meta` protocol-version field, an `MCP-Protocol-Version` header, and a mandatory `server/discover` RPC. If you deploy against 2026-07-28, treat the `MCP-Session-Id` note in section 4 and the `initialize` probe in Verify as the legacy shape and follow the [current specification](https://modelcontextprotocol.io/specification/2026-07-28/) for those mechanics; the hardening in this guide still applies, though 2026-07-28 may add authorization requirements of its own beyond this guide's scope.
+
 ## 1. Prefer stdio, and keep HTTP on loopback
 
 - For a single-user tool on a workstation, use the stdio transport. The spec's own guidance for local servers is to "use the `stdio` transport to limit access to just the MCP client" and, if HTTP is used anyway, to require an authorization token or use a Unix domain socket with restricted access.
@@ -8526,19 +8528,33 @@ ss -tlnp   # read every listener; 127.0.0.1:3000 only, never 0.0.0.0 or ::
 )
 
 # Unauthenticated initialize: 401 with a WWW-Authenticate header (Option A) or the proxy's 401 (Option B).
-curl -q -si -X POST https://mcp.example.com/mcp \
+# --noproxy '*' so a client HTTPS_PROXY cannot answer with its own 401/407 in place of the target.
+curl -q -g -si --noproxy '*' -X POST https://mcp.example.com/mcp \
   -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"check","version":"1.0.0"}}}'
-# Option A only: the metadata the 401 points at exists and names your authorization server.
-curl -q -s https://mcp.example.com/.well-known/oauth-protected-resource   # JSON with "authorization_servers"
+# Option A only: FOLLOW the resource_metadata URL from that 401's WWW-Authenticate header (a deployment may
+# advertise a path-specific document; fall back to /.well-known/oauth-protected-resource/mcp, then the root
+# below) and confirm it names your authorization server; do not assume the root path is the advertised one.
+curl -q -g -s --noproxy '*' https://mcp.example.com/.well-known/oauth-protected-resource   # JSON with "authorization_servers"
 
-# Wrong Origin, with a valid credential: 403.
-curl -q -si -X POST https://mcp.example.com/mcp -H 'Origin: https://attacker.example' \
-  -H 'Authorization: Bearer REPLACE_WITH_LONG_RANDOM_VALUE' \
-  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -d '{}'
+# Origin control (DNS rebinding): a wrong Origin must be rejected even WITH a valid credential. Run a
+# positive control first (ALLOWED Origin + a real initialize body: expect a 2xx MCP result), then the SAME
+# request with only the Origin changed to a disallowed value (expect 403), so the 403 is attributable to the
+# Origin check and not to an unrelated auth or scope failure. Keep the credential in a mode-0600 header file
+# (secrets.md), never on the command line: REPLACE_WITH_AUTH_HEADER_FILE holds a line like
+# "Authorization: Bearer <token>".
+init='{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"check","version":"1.0.0"}}}'
+curl -q -g -si --noproxy '*' -X POST https://mcp.example.com/mcp -H 'Origin: https://mcp.example.com' \
+  -H @REPLACE_WITH_AUTH_HEADER_FILE \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -d "$init"
+                                     # allowed Origin + valid credential: expect a 2xx MCP result
+curl -q -g -si --noproxy '*' -X POST https://mcp.example.com/mcp -H 'Origin: https://attacker.example' \
+  -H @REPLACE_WITH_AUTH_HEADER_FILE \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -d "$init"
+                                     # only the Origin changed to a disallowed value: expect 403
 ```
 
-A token issued for a different resource (wrong audience) must also fail with `401`; test it under Option A.
+A token issued for a different resource (wrong audience) must also fail with `401` under Option A: repeat the initialize POST above with `-H @` a header file holding an otherwise valid, unexpired token whose `aud` names a DIFFERENT resource (a forged or expired token would fail for the wrong reason), and require `401`. This step is reasoned, not demonstrated in the authoring environment: it needs a second resource registered at your authorization server, which is not available here. Fixed: `401`, the audience is rejected; exposed: any `2xx`, meaning the server accepted a token minted for another audience, which the spec's audience-validation MUST forbids. Backlog row 1.75 tracks demonstrating it in the exposed and fixed states.
 
 ## Common mistakes
 
@@ -8557,6 +8573,7 @@ A token issued for a different resource (wrong audience) must also fail with `40
 - nginx `if` and `return` directives: https://nginx.org/en/docs/http/ngx_http_rewrite_module.html
 - nginx embedded variables (`$http_name`): https://nginx.org/en/docs/http/ngx_http_core_module.html
 - nginx ngx_http_map_module (Origin allowlist map): https://nginx.org/en/docs/http/ngx_http_map_module.html
+- MCP specification versioning (2026-07-28 is the current revision; 2025-11-25 is a Final, handshake-based revision): https://modelcontextprotocol.io/specification/versioning
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
 
 ======================================================================
