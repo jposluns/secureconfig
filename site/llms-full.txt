@@ -854,11 +854,13 @@ serverPort = 7000
 auth.token = "REPLACE_WITH_LONG_RANDOM_VALUE"
 ```
 
-frp also supports `auth.method = "oidc"`: frpc obtains a token from an OIDC provider through the Client Credentials Grant and frps validates it by issuer and audience, authenticating frpc to frps instead of using a shared token, useful for centralizing frp auth behind an identity provider.
+frp also supports `auth.method = "oidc"`: frpc obtains a token from an OIDC provider through the Client Credentials Grant and frps validates it by issuer and audience, authenticating frpc to frps instead of using a shared token, useful for centralizing frp auth behind an identity provider. Audience validation is conditional, though: frps skips it when `auth.oidc.audience` is left empty (it sets the token verifier's `SkipClientIDCheck` in that case), so set a nonempty `auth.oidc.audience` and the intended `auth.oidc.issuer` explicitly rather than assuming that selecting `auth.method = "oidc"` binds the token to your server.
+
+Both the shared token and OIDC authenticate `frpc` to `frps`; neither authenticates the callers who reach a service you publish through the tunnel. A registered proxy binds on `proxyBindAddr`, which defaults to the server's `bindAddr` of `0.0.0.0`, so once the proxy is up anyone who can reach that listener reaches the service behind it, exactly as if the app faced a public port directly. Give the published service its own authentication, or keep the proxy on loopback and front it with an authenticated TLS proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)); a strong `auth.token` protects the tunnel, not the service.
 
 From frp v0.50.0, `transport.tls.enable` defaults to `true`, so the connection between `frpc` and `frps` is encrypted out of the box; the gap is verification, not encryption. `frpc` still does not verify `frps`'s certificate by default, so it will encrypt to whatever server answers on `serverAddr`, genuine or not. Set `transport.tls.certFile`/`transport.tls.keyFile` on the server and `transport.tls.trustedCaFile` on every client so `frpc` verifies the server's certificate against a trusted CA, and set `transport.tls.force = true` on the server so it refuses any client that did not negotiate TLS at all.
 
-The `auth` block is schema-optional, and the frp documentation does not state what a server does when it is left out entirely. Treat an unconfigured token as an open door rather than assuming a safe default: always set `auth.token` (or OIDC) before exposing `bindPort` to the internet, and never rely on frp for anything without one.
+The `auth` block is schema-optional, and omitting it does not fail closed: frp defaults to the token method with an empty token, and `frps` derives its auth key from that empty string, so a client presenting an empty token authenticates. An unconfigured token is an open door, not a safe default: always set a long random `auth.token` (or OIDC) before exposing `bindPort` to the internet, and never rely on frp for anything without one.
 
 ## WireGuard
 
@@ -881,6 +883,8 @@ wg set wg0 listen-port 51820 private-key /path/to/private-key peer "REPLACE_WITH
 nft add rule inet filter forward iifname "wg0" ip saddr 192.168.88.0/24 ip daddr != 192.168.88.0/24 counter drop
 ```
 
+That rule assumes a base chain hooked to `forward` already exists in table `inet filter` (create one with `nft add chain inet filter forward '{ type filter hook forward priority 0; }'` if you manage nftables directly; an unreferenced regular chain of that name is attached to no hook and receives no traffic). It then governs only traffic the server routes between interfaces: it takes effect only with `net.ipv4.ip_forward` enabled, and because `nft add rule` appends, an earlier `accept` in the same chain short-circuits it, so place it ahead of any such accept. It does not restrict what a peer reaches on the server host itself (a service bound to the `wg0` address or to `0.0.0.0` is reached through the `input` hook and needs its own rule), and as written it matches IPv4 only; add an `ip6 saddr`/`ip6 daddr` counterpart if the peer carries an IPv6 `AllowedIPs`.
+
 By default WireGuard "tries to be as silent as possible when not being used," so the only inbound port a firewall needs to open is the single WireGuard UDP `ListenPort`; everything else on the host stays closed per [host.md](host.md).
 
 ## ssh -R (remote forwarding)
@@ -894,23 +898,53 @@ To publish such an app, do not widen `GatewayPorts`. Leave it `no` so the forwar
 ## Verify
 
 ```bash
-# frp: a client with the wrong token is rejected, not connected
-frpc -c frpc-wrongtoken.toml   # expect an authentication failure, no proxy registered
+# frp positive control: with the correct auth.token, frpc logs 'login to server success' (proving
+# reachability and a valid token). frpc then stays in the FOREGROUND; stop it with Ctrl-C before the
+# next command. This exercises token auth only; auth.token has no effect under auth.method = "oidc".
+frpc -c frpc.toml              # expect a 'login to server success, get run id ...' log line
+# negative control: the same config with ONLY the token changed must fail LOGIN for an authentication
+# reason. The exact text is version-dependent, so key on the token/auth reason and the ABSENCE of a
+# 'login to server success', not a literal string; a config-load, DNS, TLS, or connection error does NOT count
+sed 's/^auth\.token[[:space:]]*=.*/auth.token = "WRONG_VALUE"/' frpc.toml > frpc-wrongtoken.toml
+frpc -c frpc-wrongtoken.toml   # expect a token-auth failure (e.g. 'token in login doesn't match token from configuration'), no run id
+# open-door check: a server whose auth.token is absent or empty accepts an empty token, so confirm your
+# frps also REJECTS an empty-token client; a successful login here means your server has no token set
+sed 's/^auth\.token[[:space:]]*=.*/auth.token = ""/' frpc.toml > frpc-emptytoken.toml
+frpc -c frpc-emptytoken.toml   # expect the same login failure
 
-ss -ulnp   # read every listener; 51820: WireGuard: only the one UDP port listening
-sudo ufw status verbose        # no other inbound rule added for the tunneled service
+sudo wg show wg0          # needs privilege; shows the listen-port (51820) + per-peer state, and a recent 'latest handshake' is the liveness signal. wg show reports CONFIGURATION, so also confirm the interface is running:
+ip link show wg0          # expect the UP flag in the <...> flags; a WireGuard interface usually shows operational 'state UNKNOWN', which is fine. wg show reporting a port while the interface is administratively down is why this check exists
+ss -ulnp                  # read every UDP listener to spot any OTHER, unexpected service; do not rely on it to confirm WireGuard (the in-kernel socket has no owning process to show under -p, and a real host also lists resolved/mDNS)
+# ufw must be active with a default-deny (or default-reject) incoming policy, or this proves nothing
+# ('inactive' or a default-allow policy would pass it while the port is open):
+sudo ufw status verbose
+# confirm nothing admits UNAUTHORIZED external traffic to the tunneled service beyond the intended
+# tunnel/proxy path, for BOTH IPv4 and IPv6; ufw shows only its own iptables/ip6tables view, so read
+# native nftables rules (the forward rule above) separately with 'nft list ruleset':
+sudo ufw show raw
 
-# positive control: from the peer, a destination inside its intended subnet must succeed, proving
-# the tunnel and routing both work
+# positive control: from the peer, ping a host reachable ONLY through the tunnel (another peer, or a
+# server-side address in 192.168.88.0/24 that the peer cannot reach on its own LAN), so a success proves
+# WireGuard traversal and server routing rather than a local route
 ping -c1 192.168.88.10
 
 # forbidden destination: from the peer, a host the server would otherwise forward to (its own LAN,
 # reachable through the tunnel if not for this rule) but outside 192.168.88.0/24, so a failure here
 # is attributable to the firewall rule rather than to an address that was never routed or never live
-ping -c1 192.168.1.50          # expect 100 percent packet loss
+ping -c1 192.168.1.50          # expect 100 percent packet loss (attribution comes from the counter increase below, not this loss on its own)
 
-# confirm the drop is the firewall rule acting, not a routing gap: its counter must be nonzero
-sudo nft list ruleset | grep -A1 'saddr 192.168.88.0/24'   # packets and bytes both greater than 0
+# confirm the drop is THIS rule acting, not a routing gap or a stale count. The counter lives on the
+# SERVER; the traffic comes from the PEER, so this spans two hosts. It is a confirmation aid, not a
+# rigorous proof: the counter increments on EVERY matching packet, so run it on an otherwise-idle peer.
+# 1) On the SERVER, read the rule's packet counter. The chain header must say 'type filter hook forward'
+#    (an unreferenced regular chain gets no traffic) and the grep pins the full match AND the drop verdict
+#    so a same-match accept rule is not read instead:
+sudo nft list chain inet filter forward | grep -E 'type filter hook forward|iifname "wg0" ip saddr 192.168.88.0/24 ip daddr != 192.168.88.0/24 counter .* drop'
+# 2) FROM THE PEER, send the forbidden ping (its own AllowedIPs must include 192.168.1.50, or the packet
+#    never leaves for the server to drop):
+ping -c1 192.168.1.50
+# 3) On the SERVER, read the counter again: the packet count must have INCREASED by that ping:
+sudo nft list chain inet filter forward | grep -E 'iifname "wg0" ip saddr 192.168.88.0/24 ip daddr != 192.168.88.0/24 counter .* drop'
 
 # ssh -R: on the SERVER, a forwarded port binds 127.0.0.1 (or [::1]) with GatewayPorts no, never 0.0.0.0
 ss -tlnp   # read every listener; 8080: only a loopback address unless you deliberately published it
@@ -925,6 +959,8 @@ ss -tlnp   # read every listener; 8080: only a loopback address unless you delib
 - frp authentication (`auth.token`, `auth.method = "oidc"`): https://gofrp.org/en/docs/features/common/authentication/
 - WireGuard quickstart (`wg genkey`, `wg pubkey`, `wg set`, silent-protocol behavior): https://www.wireguard.com/quickstart/
 - WireGuard Cryptokey Routing (`AllowedIPs` on send and receive): https://www.wireguard.com/
+- frp TLS (`transport.tls.enable` default from v0.50.0, `transport.tls.force`, cert/key/CA roles): https://gofrp.org/en/docs/features/common/network/network-tls/
+- nftables manual (forward/input hooks, verdicts, and rule counters): https://netfilter.org/projects/nftables/manpage.html
 
 ======================================================================
 ==> authentication.md
