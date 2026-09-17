@@ -20,10 +20,15 @@ https.createServer(options, app).listen(443);
 
 // Port 80 exists only to redirect. Redirect to a FIXED canonical host; never reflect
 // req.headers.host, which the client controls (a forged Host, or a cache in front of :80,
-// would turn this into an open redirect).
-const CANONICAL_HOST = process.env.PUBLIC_HOST;   // e.g. 'app.example.com'
+// would turn this into an open redirect). Set PUBLIC_HOST to your canonical hostname (no
+// scheme or path); the app refuses to start without it rather than emit https://undefined/.
+const CANONICAL_HOST = process.env.PUBLIC_HOST;
+if (!CANONICAL_HOST) throw new Error('PUBLIC_HOST must be set to the canonical hostname');
 require('node:http').createServer((req, res) => {
-  res.writeHead(301, { Location: `https://${CANONICAL_HOST}${req.url}` });
+  // req.url is the raw request target; only an origin-form path is safe to append, so fall
+  // back to '/' for absolute-form or asterisk-form (OPTIONS *) targets.
+  const path = req.url.startsWith('/') ? req.url : '/';
+  res.writeHead(301, { Location: `https://${CANONICAL_HOST}${path}` });
   res.end();
 }).listen(80);
 ```
@@ -97,24 +102,25 @@ MFA: add TOTP with [otplib](https://github.com/yeojz/otplib) plus the [qrcode](h
 ## 5. Verify
 
 ```bash
-curl -q -sI --noproxy '*' http://example.com/    # expect 301 with an https:// Location
-curl -q -sI --noproxy '*' https://example.com/   # succeeds without -k; shows helmet's headers
+curl -q -g -sI --noproxy '*' http://example.com/    # expect 301 with an https:// Location
+curl -q -g -sI --noproxy '*' https://example.com/   # succeeds without -k; shows helmet's headers
 
 # Auth: probe a REAL protected route (not a placeholder like /api, which often 404s), show the
 # status, and disable client proxies so a denial is attributable. A denial from ANY layer (the app,
 # or a proxy/Access in front) is the pass; the positive control proves auth actually gates rather
 # than the route being broken for everyone.
-curl -q -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' 'https://example.com/REPLACE_WITH_PROTECTED_PATH'
+curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' 'https://example.com/REPLACE_WITH_PROTECTED_PATH'
                                      # expect 401 or 403 with no credentials
-curl -q -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' \
+curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' \
   -b REPLACE_WITH_SESSION_COOKIE_FILE 'https://example.com/REPLACE_WITH_PROTECTED_PATH'
-                                     # expect 200 with a valid session (cookie read from a file, not argv)
+                                     # expect 200 with a valid session (cookie read from a file, not argv;
+                                     # for a bearer-token route use -H @REPLACE_WITH_AUTH_HEADER_FILE instead of -b)
 
 ss -tlnp   # read every listener; a same-host proxy layout binds 127.0.0.1 only, on managed
            # ingress the platform's required address and port from section 1
 # trust proxy: add a temporary route that echoes req.ip, then remove it after this check
 #   app.get('/whoami', (req, res) => res.send(req.ip))
-curl -q -sS --noproxy '*' -H 'X-Forwarded-For: 203.0.113.9' https://example.com/whoami
+curl -q -g -sS --noproxy '*' -H 'X-Forwarded-For: 203.0.113.9' https://example.com/whoami
                                      # req.ip must be your real client IP, never 203.0.113.9: echoing the
                                      # forged value means `trust proxy` is too broad and trusts a
                                      # client-set header. This checks req.ip scoping only, not that the
