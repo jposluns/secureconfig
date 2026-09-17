@@ -155,8 +155,16 @@ Keep the existing client-API key check, hardened, against the frontend hostname 
 For Weaviate and Chroma, the fronted client checks still apply:
 
 ```bash
-curl -q -si https://weaviate.example.com/v1/schema | head -1   # 401 without a key
-curl -q -si https://chroma.example.com/ | head -1              # 401 from the proxy, never a Chroma response
+# --noproxy '*' so a forward proxy's CONNECT "200 Connection established" cannot masquerade as the
+# service status; -w prints the real code and exit, and -g keeps curl from globbing a substitution.
+curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code} exit=%{exitcode}\n' https://weaviate.example.com/v1/schema
+                                     # without a key: expect http=401 (Weaviate) or the fronting proxy's 401/403
+curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code} exit=%{exitcode}\n' https://chroma.example.com/
+                                     # Chroma has no native auth: expect the proxy's 401/403, never a Chroma http=200
+# Positive control: the authorized request must succeed, or the two checks above only prove nothing answered.
+curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code} exit=%{exitcode}\n' \
+  -H @REPLACE_WITH_AUTH_HEADER_FILE https://weaviate.example.com/v1/schema
+                                     # with a valid key (Authorization header read from a file): expect http=200
 ```
 
 For Milvus, a `MilvusClient(uri=...)` call with no `token` must fail once `authorizationEnabled` is on, and the same call with the application user's credentials must succeed.
