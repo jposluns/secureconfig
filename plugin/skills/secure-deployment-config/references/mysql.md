@@ -10,7 +10,7 @@ MySQL 8 generates a CA and server certificate in the data directory at initializ
 SHOW GLOBAL VARIABLES LIKE '%ssl%';
 ```
 
-To use your own certificate ([free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md)) and to refuse all cleartext connections, set in `/etc/mysql/mysql.conf.d/mysqld.cnf` (or the equivalent for your packaging):
+The auto-generated server certificate does not carry your deployment hostname, so the identity-verifying client below (`--ssl-mode=VERIFY_IDENTITY`) rejects it; install a certificate that covers the hostname clients connect to. To use your own certificate ([free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md)) and to refuse all cleartext connections, set in `/etc/mysql/mysql.conf.d/mysqld.cnf` (or the equivalent for your packaging):
 
 ```ini
 [mysqld]
@@ -25,7 +25,7 @@ ssl_key  = /etc/mysql/certs/server-key.pem
 
 `require_secure_transport` rejects any TCP connection that is not TLS (Unix-socket connections remain allowed). Recent MariaDB versions support the same option; verify availability for your release.
 
-MySQL 8.4 enables the X Plugin by default, and it is a second listener with its own port (`mysqlx_port`, default `33060`) and its own bind address (`mysqlx_bind_address`, default `*`, every interface). The `bind_address` above governs only the classic protocol on 3306, so a server you carefully bound to loopback still answers the X Protocol on every interface until you set `mysqlx_bind_address` as well, shown above. If you do not use the X Protocol (the X DevAPI / document-store interface), turn the plugin off instead with `mysqlx = OFF`. Both `mysqlx_bind_address` and `mysqlx` are read only at startup, so restart the server after setting them. This applies to MySQL only: MariaDB does not implement the X Protocol, has no listener on 33060, and rejects `mysqlx_bind_address` as an unknown option that stops it from starting, so omit that line on MariaDB.
+MySQL 8.0 and 8.4 enable the X Plugin by default, and it is a second listener with its own port (`mysqlx_port`, default `33060`) and its own bind address (`mysqlx_bind_address`, default `*`, every interface). The `bind_address` above governs only the classic protocol on 3306, so a server you carefully bound to loopback still answers the X Protocol on every interface until you set `mysqlx_bind_address` as well, shown above. If you do not use the X Protocol (the X DevAPI / document-store interface), turn the plugin off instead with `mysqlx = OFF`. Both `mysqlx_bind_address` and `mysqlx` are read only at startup, so restart the server after setting them. This applies to MySQL only: MariaDB does not implement the X Protocol, has no listener on 33060, and rejects `mysqlx_bind_address` as an unknown option that stops it from starting, so omit that line on MariaDB.
 
 ## 2. Per-account requirements
 
@@ -57,11 +57,16 @@ mysql --host db.example.com --user app -p \
 ```sql
 SHOW GLOBAL VARIABLES LIKE 'require_secure_transport';
 SELECT user, host, ssl_type FROM mysql.user;      -- REQUIRE settings per account
-\s                                                 -- in the client: the SSL line shows the cipher
+\s                                                 -- in the client: the SSL line shows THIS session's cipher only, not server-wide enforcement or identity
 ```
 
 ```bash
 ss -tlnp   # read every listener; classic protocol 3306 and the X Protocol 33060: both loopback, unless remote access is deliberate
+
+# positive control: an identity-verified TLS connection to the hostname clients use must SUCCEED
+mysql --host db.example.com --user app -p --ssl-mode=VERIFY_IDENTITY --ssl-ca=/path/ca.pem -e 'SELECT 1;'
+# negative control: this cleartext attempt must be REJECTED, not time out or wait at a password prompt. The app account's REQUIRE SSL rejects it first with ERROR 1045; require_secure_transport=ON (confirmed above) independently refuses cleartext for any account with ERROR 3159. Either refusal is the pass
+mysql --host db.example.com --user app -p --ssl-mode=DISABLED -e 'SELECT 1;'
 ```
 
 ## Common mistakes
@@ -69,7 +74,8 @@ ss -tlnp   # read every listener; classic protocol 3306 and the X Protocol 33060
 - Creating `'app'@'%'` with a weak password to fix a connection error, then never tightening the host mask.
 - `require_secure_transport = ON` skipped because "the network is internal"; internal networks are where lateral movement happens.
 - Shipping the client with `--ssl-mode=DISABLED` to silence certificate errors instead of installing the CA ([self-signed.md](self-signed.md)).
-- Binding `bind_address` to loopback but leaving `mysqlx_bind_address` at its default `*`, so MySQL 8.4 still answers the X Protocol on 33060 on every interface. Set `mysqlx_bind_address` too, or `mysqlx = OFF` if you do not use it.
+- Binding `bind_address` to loopback but leaving `mysqlx_bind_address` at its default `*`, so MySQL still answers the X Protocol on 33060 on every interface (the X Plugin is enabled by default on 8.0 as well as 8.4). Set `mysqlx_bind_address` too, or `mysqlx = OFF` if you do not use it.
+- On a MariaDB install that uses systemd socket activation, the TCP listener is defined by the `mariadb.socket` unit rather than by `bind_address`, so setting `bind_address` alone may not restrict it; set the socket to loopback (or disable socket activation) and confirm the effective listeners with the `ss` check above.
 
 ## Sources (checked September 2026)
 
@@ -82,3 +88,4 @@ ss -tlnp   # read every listener; classic protocol 3306 and the X Protocol 33060
 - WebAuthn pluggable authentication (MySQL 8.4): https://dev.mysql.com/doc/refman/8.4/en/webauthn-pluggable-authentication.html
 - FIDO pluggable authentication (MySQL 8.0, deprecated as of 8.0.35): https://dev.mysql.com/doc/refman/8.0/en/fido-pluggable-authentication.html
 - What is new in MySQL 8.4 (`authentication_fido` plugins removed): https://dev.mysql.com/doc/refman/8.4/en/mysql-nutshell.html
+- MariaDB systemd socket activation (systemd owns the listening sockets, so their addresses are set in the socket unit rather than by `bind_address`): https://mariadb.com/docs/server/server-management/starting-and-stopping-mariadb/systemd/configuring
