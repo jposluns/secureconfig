@@ -15,7 +15,7 @@ PermitRootLogin no
 PubkeyAuthentication yes
 ```
 
-sshd uses the *first* value it reads for each option, and current Debian, Ubuntu, and RHEL-family systems ship a main `sshd_config` that includes `/etc/ssh/sshd_config.d/*.conf` near the top, before its own settings (the `Include` directive has existed since OpenSSH 7.3; shipping this drop-in include in the stock config became standard around OpenSSH 8.2 / Ubuntu 20.04). Cloud images commonly carry a `50-cloud-init.conf` there, written by cloud-init when password login is requested, that sets `PasswordAuthentication yes`; read before a later main-file line or a higher-numbered drop-in, it wins and password login stays on. Name the hardening file `00-hardening.conf` so it is read first, and confirm with `sshd -T` (below) that the value took effect, in case an upgraded main file lacks the include or an earlier drop-in already set it.
+sshd uses the *first* value it reads for each option, and current Debian, Ubuntu, and RHEL-family systems ship a main `sshd_config` that includes `/etc/ssh/sshd_config.d/*.conf` near the top, before its own settings (`sshd_config` gained the `Include` keyword in OpenSSH 8.2, and distributions began shipping this drop-in include in the stock config around then, from Ubuntu 20.04). Cloud images commonly carry a `50-cloud-init.conf` there, written by cloud-init when password login is requested, that sets `PasswordAuthentication yes`; read before a later main-file line or a higher-numbered drop-in, it wins and password login stays on. Name the hardening file `00-hardening.conf` so it is read first, and confirm with `sshd -T` (below) that the value took effect, in case an upgraded main file lacks the include or an earlier drop-in already set it.
 
 ```bash
 sudo sshd -t && sudo systemctl reload ssh    # sshd on RHEL-family systems
@@ -54,7 +54,7 @@ sudo ufw allow 443/tcp
 sudo ufw enable
 ```
 
-SSH stays closed to the world here for the same reason rule 3 in [cloud-firewalls.md](cloud-firewalls.md) keeps it off the cloud firewall: `ufw allow OpenSSH` opens port 22 to every address on the internet. Restrict it to the range you administer from. An agentless broker (AWS SSM Session Manager) or a tailnet ([tailscale.md](tailscale.md)) needs no inbound SSH rule at all; GCP IAP and Azure Bastion instead connect to port 22 and need an allow for their documented source range (IAP `35.235.240.0/20`, the Azure `AzureBastionSubnet`) in both firewall layers, per [cloud-firewalls.md](cloud-firewalls.md).
+SSH stays closed to the world here for the same reason rule 3 in [cloud-firewalls.md](cloud-firewalls.md) keeps it off the cloud firewall: `ufw allow OpenSSH` opens port 22 to every address on the internet. Restrict it to the range you administer from. AWS SSM Session Manager (its agent dials out to the SSM service) or a tailnet ([tailscale.md](tailscale.md)) needs no inbound SSH rule at all; GCP IAP and Azure Bastion instead connect to port 22 and need an allow for their documented source range (IAP `35.235.240.0/20`, the Azure `AzureBastionSubnet`) in both firewall layers, per [cloud-firewalls.md](cloud-firewalls.md).
 
 RHEL-family systems use firewalld (`firewall-cmd --permanent --add-service=https` and so on) with the same posture, and that includes SSH: `--add-service=ssh` opens port 22 to every address exactly as `ufw allow OpenSSH` does. Open only the ports the TLS-terminating layer needs; databases and app servers stay unreachable from outside per their guides. Docker-published ports bypass ufw entirely; see [docker.md](docker.md) before relying on the firewall.
 
@@ -66,7 +66,7 @@ sudo firewall-cmd --get-active-zones            # find the zone your public inte
 sudo firewall-cmd --permanent --zone=REPLACE_WITH_PUBLIC_ZONE --remove-service=ssh
 sudo firewall-cmd --permanent --zone=REPLACE_WITH_PUBLIC_ZONE --add-rich-rule='rule family="ipv4" source address="REPLACE_WITH_ADMIN_RANGE" service name="ssh" accept'   # confirm your current address is inside REPLACE_WITH_ADMIN_RANGE first
 sudo firewall-cmd --reload                      # --permanent writes the stored config only; nothing changes until this
-sudo firewall-cmd --zone=REPLACE_WITH_PUBLIC_ZONE --list-all   # confirm: no ssh under services, no bare 22/tcp under ports, no broad source rule, the zone target is not ACCEPT, and the admin rich rule is present
+sudo firewall-cmd --zone=REPLACE_WITH_PUBLIC_ZONE --list-all   # confirm nothing reaches 22 from an unauthorized source: no `ssh` (or other 22/tcp) service, no `22/tcp` or a port range covering 22, no protocol-wide or broad-source rule, the zone target is not ACCEPT, only the admin rich rule matches; check other applicable zones too
 ```
 
 ## 3. Brute-force protection and updates
@@ -78,7 +78,7 @@ sudo firewall-cmd --zone=REPLACE_WITH_PUBLIC_ZONE --list-all   # confirm: no ssh
 
 ```bash
 sudo ss -tulnp                    # TCP and UDP listeners (IPv4 and IPv6): only intended ones, on intended addresses
-sudo ufw status verbose           # default deny incoming; every rule that can reach 22 (a port-22 rule OR a broader "from <range> to any" allow) is scoped to your admin range, never Anywhere
+sudo ufw status verbose           # default deny incoming; then `sudo ufw show raw` (status verbose omits rules loaded from /etc/ufw): every allowance that can reach 22 (a port-22 rule OR a broader "from <range> to any" allow) is scoped to your admin range, never Anywhere
 (                                 # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
