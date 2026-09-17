@@ -15,7 +15,7 @@ Never pass `--dashboard-host 0.0.0.0` (or `::`) on a machine with a public inter
 Reach the dashboard and the Jobs API through a channel that already authenticates you:
 
 ```bash
-ssh -L 8265:127.0.0.1:8265 user@203.0.113.10          # then open http://127.0.0.1:8265
+ssh -o ExitOnForwardFailure=yes -L 127.0.0.1:8265:127.0.0.1:8265 user@203.0.113.10   # bind the LOCAL end to loopback explicitly (a bare -L 8265: follows your ssh GatewayPorts); then open http://127.0.0.1:8265
 ray job submit --address http://127.0.0.1:8265 -- python script.py
 ray dashboard cluster.yaml                             # cluster launcher: sets up the same SSH forwarding
 kubectl port-forward svc/"$HEAD_SERVICE" 8265:8265    # KubeRay: the RayCluster head service
@@ -41,7 +41,7 @@ RAY_AUTH_MODE=token ray start --head
 
 Every node and every client needs the same token. Ray reads it from `RAY_AUTH_TOKEN`, then from the file named by `RAY_AUTH_TOKEN_PATH`, then from `~/.ray/auth_token`; the docs recommend the file paths over the environment variable so other code that reads the environment cannot see it. Copy the file to each node before `ray start`, keep its permissions tight, and never commit it: tokens do not expire and are stored in plaintext ([secrets.md](secrets.md)). The token travels as an HTTP header, so over plain HTTP it is visible to the network; only send it inside the SSH tunnel, tailnet, or TLS proxy from step 1.
 
-On Kubernetes, KubeRay v1.6.0 and later enable this through the `authOptions` field of a `RayCluster`; the operator creates a Secret with a random token and sets `RAY_AUTH_MODE` and `RAY_AUTH_TOKEN` on every Ray container. Clients read it with `kubectl get secrets <name> --template={{.data.auth_token}} | base64 -d`. Without the token, `ray job submit` fails with `401 Unauthorized`.
+On Kubernetes, KubeRay v1.6.0 and later enable this through the `authOptions` field of a `RayCluster`; the operator creates a Secret with a random token and sets `RAY_AUTH_MODE` and `RAY_AUTH_TOKEN` on every Ray container. Clients read it with `kubectl get secrets 'REPLACE_WITH_SECRET_NAME' --template='{{.data.auth_token}}' | base64 -d` (quote the name, or the shell reads the unquoted `<name>` as input redirection, and quote the template so its braces are not globbed). Without the token, `ray job submit` fails with `401 Unauthorized`.
 
 MFA: Ray has no user accounts, so a second factor can only come from the path to the cluster: the SSH login, the tailnet, or an identity-aware proxy in front of the dashboard ([mfa.md](mfa.md)).
 
@@ -63,10 +63,12 @@ Ray warns that this costs performance (large for small workloads, smaller for la
 ```bash
 ss -tlnp   # read every listener; 127.0.0.1:8265 (or the tailnet IP), never 0.0.0.0 or *
 ss -tlnp   # read every listener; 6379/10001: private interface only
-# from another network, checking the dashboard port is unreachable from outside. The pass is that no TCP
-# connection formed: time_connect stays 0.000000 and err names a connection-level failure (refused, no
-# route, or a filtered-port connect timeout). A non-zero time_connect, or any http code, means the
-# handshake completed and the port answered. A name-resolution or local socket error is inconclusive.
+# from another network, checking each externally facing Ray port (8265 dashboard, 6379 head, 10001 Client;
+# the last two are unauthenticated code-execution endpoints) is unreachable from outside. The pass is that
+# no TCP connection formed: time_connect stays 0.000000 and err names a connection-level failure (refused,
+# no route, or a filtered-port connect timeout). A non-zero time_connect (even if the port then speaks gRPC
+# not HTTP, so http is 000) means the handshake completed and the port answered, which is the finding. A
+# name-resolution or local socket error is inconclusive.
 (                                       # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_SERVER_PUBLIC_IP'   # replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
@@ -75,11 +77,24 @@ ss -tlnp   # read every listener; 6379/10001: private interface only
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the server's public address on the set -- line above; not probing" ;;
     *) curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
-         -w 'http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:8265/" ;;
+         -w 'port=8265 http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:8265/" || true
+       curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
+         -w 'port=6379 http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:6379/" || true
+       curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
+         -w 'port=10001 http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:10001/" || true ;;
   esac
 )
-# Through the SSH tunnel of step 1, from a machine without the token, with RAY_AUTH_MODE=token on the cluster:
-ray job submit --address http://127.0.0.1:8265 -- python -c "print(1)"   # must fail: Unauthorized
+# Through the SSH tunnel of step 1, with RAY_AUTH_MODE=token on the cluster.
+# POSITIVE control first: WITH the token the submit succeeds, proving the endpoint is live and reachable:
+RAY_AUTH_MODE=token RAY_AUTH_TOKEN="$(cat ~/.ray/auth_token)" ray job submit --address http://127.0.0.1:8265 -- python -c "print(1)"   # succeeds (RAY_AUTH_MODE=token on the CLIENT makes it send the token header)
+# NEGATIVE: from a client with NO token available (no RAY_AUTH_TOKEN or RAY_AUTH_TOKEN_PATH set and no
+# ~/.ray/auth_token file), the same submit must be refused for AUTHENTICATION (HTTP 401); a connection
+# error (tunnel down, wrong address) is INCONCLUSIVE, not a pass:
+ray job submit --address http://127.0.0.1:8265 -- python -c "print(1)"   # must fail with an auth rejection, e.g. "Unauthorized: Missing authentication token" (key on the auth reason, not a literal string)
+# gRPC TLS (only if you set RAY_USE_TLS=1 in step 4): the socket checks above do not prove the gRPC layer is
+# encrypted. Confirm it the way Ray's docs show, running `ray health-check` once with the correct
+# RAY_TLS_CA_CERT (succeeds) and once with a MISMATCHED CA or server name (Ray demonstrates a
+# certificate-name mismatch), which must fail verification; a local configuration error is inconclusive.
 ```
 
 ## Common mistakes
