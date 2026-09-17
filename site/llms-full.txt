@@ -11134,7 +11134,7 @@ ss -tlnp   # every application AND proxy listener; Metabase/Superset/Redash defa
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
-  [ -n "$1" ] && [ -n "$2" ] || { echo "substitute both URLs on the set -- line above; not probing"; exit; }
+  if [ -z "$1" ] || [ -z "$2" ]; then echo "substitute both URLs on the set -- line above; not probing"; exit; fi
   case "$1$2" in
     *REPLACE_WITH_*|*example.com*) echo "substitute your own URLs on the set -- line above; not probing"; exit ;;
   esac
