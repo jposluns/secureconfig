@@ -14,12 +14,12 @@ match /users/{userId}/{document=**} {
 }
 ```
 
-- New projects start in locked mode; keep production locked-by-default and open specific paths deliberately. Test with the Rules Playground and emulator before deploying.
+- Do not assume a new instance denies access: creating a Firestore database offers a **test mode** that lets anyone read and overwrite your data (for about 30 days) alongside locked production mode, and Storage and the Realtime Database have their own starting rules. Inspect the deployed rules for every Firestore database, bucket, and RTDB instance; keep production locked-by-default, open specific paths deliberately, and test with the Rules Playground and emulator before deploying.
 - Server-side credentials (service accounts for the Admin SDK) bypass rules entirely; they stay on servers only, handled per [secrets.md](secrets.md).
 
 ## Supabase
 
-- Enable RLS on **every** table exposed through the API, then write policies; a table without RLS is readable and writable with the public `anon` key:
+- Enable RLS on **every** table exposed through the API, then write policies; an API-exposed table without RLS is readable and writable by the public `anon` key through the grants Supabase gives that role by default (grants and RLS are separate checks, so review both):
 
 ```sql
 alter table profiles enable row level security;
@@ -37,14 +37,15 @@ Write separate policies per operation (`select`, `insert`, `update`, `delete`); 
 alter view public.REPLACE_WITH_VIEW_NAME set (security_invoker = true);
 ```
 
-  On PostgreSQL 14 and earlier there is no `security_invoker`: revoke the view from `public` as well as from `anon` and `authenticated`, or keep it in a schema the API does not expose. Revoking the two API roles alone leaves access they inherit from `PUBLIC`, so confirm with `select has_table_privilege('anon', 'public.REPLACE_WITH_VIEW_NAME', 'select');`, which must return `f`.
+  On PostgreSQL 14 and earlier there is no `security_invoker`: revoke ALL privileges on the view from `public` as well as from `anon` and `authenticated` (a simple view is automatically updatable, so revoking only `select` can leave `insert`/`update`/`delete` that write through the owner and bypass the table's RLS), or keep it in a schema the API does not expose. Revoking the two API roles alone leaves access they inherit from `PUBLIC`, so confirm with `select has_table_privilege('anon', 'public.REPLACE_WITH_VIEW_NAME', 'select, insert, update, delete');`, which must return `f`.
 
 ```sql
--- PostgreSQL 14 or earlier: revoke an API-exposed view from all three, then confirm both API roles lost SELECT.
+-- PostgreSQL 14 or earlier: revoke ALL privileges on an API-exposed view from all three, then confirm both API roles lost every one.
 -- Run the REVOKE as the view's owner; a check still returning t means another grant or role provides access.
-revoke select on table public.REPLACE_WITH_VIEW_NAME from public, anon, authenticated;
-select has_table_privilege('anon', 'public.REPLACE_WITH_VIEW_NAME', 'select'),
-       has_table_privilege('authenticated', 'public.REPLACE_WITH_VIEW_NAME', 'select');   -- both must be f
+-- A simple view is automatically updatable, so revoking only SELECT can leave INSERT/UPDATE/DELETE that write through the owner.
+revoke all privileges on table public.REPLACE_WITH_VIEW_NAME from public, anon, authenticated;
+select has_table_privilege('anon', 'public.REPLACE_WITH_VIEW_NAME', 'select, insert, update, delete'),
+       has_table_privilege('authenticated', 'public.REPLACE_WITH_VIEW_NAME', 'select, insert, update, delete');   -- both must be f
 ```
 
 - A `SECURITY DEFINER` function likewise runs as its owner and can return rows RLS would hide. Keep such functions out of API-exposed schemas unless they enforce their own authorization, and revoke execution by default:
@@ -65,11 +66,11 @@ using ((select auth.jwt()->>'aal') = 'aal2');
 
 ## Verify
 
-- With only the public key (no signed-in user), API reads and writes against protected tables/paths fail.
-- Signed in as user A, reading user B's rows fails.
+- Seed a known row owned by user A and one owned by user B first, so an empty result is not mistaken for enforcement. With only the public key (no signed-in user), reads and writes against protected tables/paths are refused or return no rows and change nothing, while an authorized owner request on the same path DOES succeed (so a failure is the policy, not a broken request or wrong endpoint).
+- Signed in as user A, reading and writing user B's rows is refused, while A's own rows read and write normally.
 - Reads through every API-exposed view fail the same way as reads of the table behind it: request `/rest/v1/REPLACE_WITH_VIEW_NAME` with only the public key, then, signed in as user A, request user B's rows. A view that returns them is serving rows the table's policies withhold; check whether it runs with its owner's rights or whether a policy is simply too broad.
 - Every API-exposed function is checked the same way, because the view check cannot see it: call `/rest/v1/rpc/REPLACE_WITH_FUNCTION_NAME` with only the public key, and again signed in as user A for user B's rows. A `SECURITY DEFINER` function returns rows while the table and view checks both look clean, so this is the only step that catches it. Repeat for every overload.
-- Search the client bundle for a leaked secret: `grep -rE 'service_role|eyJ|sb_secret_' dist/`, plus any private key. Interpret the hits rather than expecting none, because the public `anon` key is itself a JWT that legitimately ships in the frontend. A `service_role` reference, an `sb_secret_` key, or a private key is a secret that should not be there: remove it and rotate it, not just delete it from the tree. An `eyJ` hit is a JWT, so decode its payload and read the `role` claim, where `anon` is the expected public key and `service_role` is a leak to rotate.
+- Search the client bundle for a leaked secret: `grep -rlIE 'service_role|eyJ|sb_secret_' dist/` lists only the files to inspect, so a full key never lands in a shared terminal or CI log. Open each flagged file privately and interpret the match rather than expecting none, because the public `anon` key is itself a JWT that legitimately ships in the frontend. A `service_role` reference, an `sb_secret_` key, or a private key is a secret that should not be there: remove it and rotate it, not just delete it from the tree. An `eyJ` value is a JWT, so decode its payload and read the `role` claim, where `anon` is the expected public key and `service_role` is a leak to rotate.
 
 ## Sources (checked September 2026)
 
