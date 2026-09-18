@@ -12860,7 +12860,7 @@ out of it or serve them from access-controlled storage. Unless public registrati
 Advanced Settings > Enable sign-ups, which controls `POST /api/auth/local/register`; its initial value requires
 confirmation against your Strapi release rather than assuming a default. If registration is intentional, review
 the configured Default role and its permissions rather than assuming a registered user has only the access you
-intended; a registered end user takes the Authenticated role, which has no content grants until one is added.
+intended; new end users receive the configured Default role, so review that role's actual permissions before enabling registration.
 
 Strapi also pre-generates Full access and Read-only Content API tokens. Review them under Settings > API
 Tokens, delete unused ones, and give any you keep a finite lifetime; a Read-only token still permits `find` and
@@ -13060,10 +13060,14 @@ which confirms a bad token is rejected rather than treated as anonymous; a missi
 `PGRST302` or `PGRST303`.
 
 A malformed token discriminates nothing about the real credentials, so also test the ones this deployment
-actually uses. Repeat the paired request with a removed Strapi Content API token, a replaced Directus
-`ADMIN_TOKEN`, a copied Hasura admin secret, or an otherwise valid canary JWT signed with a retired signing key
-placed in `CMS_NEGATIVE_HEADER`, keeping the valid control, origin, path and body unchanged; each must be
-refused. For administrator passwords, use a fresh browser session at the same login origin: the
+actually uses. Repeat the paired request using the old credential after retirement: a deleted Strapi Content API token, a
+Directus static token replaced or cleared on the existing user through the Data Studio or Users API, a Hasura
+admin secret removed from the running configuration, or an otherwise valid, unexpired canary JWT signed with a
+key the verifier no longer accepts. Changing Directus's bootstrap `ADMIN_TOKEN` environment variable alone is
+not a rotation procedure for an existing user's token. Load the old credential into `CMS_NEGATIVE_HEADER`,
+keeping the valid control, origin, path and body unchanged, and require an application authentication failure
+attributable to the retired credential; a permission denial, proxy rejection or unrelated error does not
+establish revocation. For administrator passwords, use a fresh browser session at the same login origin: the
 operator-controlled password must authenticate while the old or copied one fails credential validation, and a
 missing OTP, account lockout or proxy denial does not establish that the old password was rejected. There is no
 universal default Strapi administrator password or pre-generated token value; confirm the actual bootstrap
@@ -13140,6 +13144,15 @@ Version boundary at the time of writing: Strapi 5 documentation; current Directu
 - Directus file access (asset permissions and storage bypass): https://directus.com/docs/guides/files/access
 - Hasura disable GraphQL introspection (self-hosted Enterprise control): https://hasura.io/docs/2.0/security/disable-graphql-introspection/
 - Hasura Community Edition 2.48.0 release notes (`HASURA_GRAPHQL_PRESERVE_401_ERRORS`): https://hasura.io/changelog/community-edition/v2.48.0
+- Strapi 5 GraphQL plugin (endpoint, shadowCRUD, apolloServer, landingPage): https://docs.strapi.io/cms/plugins/graphql
+- Apollo Server 4-5 introspection default: https://www.apollographql.com/docs/apollo-server/api/apollo-server#introspection
+- Strapi 5 administrator MFA options (vendor statement, September 2026): https://strapi.io/blog/strapi-admin-panel-mfa-2fa
+- Directus quickstart (12.0.2 Compose and browser onboarding): https://directus.com/docs/getting-started/create-a-project
+- Directus registration (disabled by default; empty 204 response): https://directus.com/docs/guides/auth/creating-users
+- Directus static tokens (scope, persistence and management): https://directus.com/docs/guides/auth/tokens-cookies
+- Directus error codes (authentication versus permission failures): https://directus.com/docs/guides/connect/errors
+- Hasura v2 Docker quickstart (selects the stable Compose manifest): https://hasura.io/docs/2.0/getting-started/docker-simple/
+- Hasura stable quickstart Compose (2.46.0 when checked): https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/docker-compose/docker-compose.yaml
 
 ======================================================================
 ==> exposure-index.md
