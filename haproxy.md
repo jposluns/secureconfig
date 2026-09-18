@@ -125,18 +125,17 @@ sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
   shift
   [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
   case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the host; not probing'; exit 2 ;; esac
-  host=$1
   IFS= read -r -s -p 'admin password: ' pw < /dev/tty; echo
   [ -n "$pw" ] || { echo 'supply the admin password; not probing'; exit 2; }
   esc=$pw; esc=${esc//\\/\\\\}; esc=${esc//\"/\\\"}   # escape \ and " so curl --config parsing keeps the exact password
   base=(-sS --noproxy '*' --connect-timeout 5 --max-time 30)
   # 1) HTTP must redirect to HTTPS.
-  curl -q -g "${base[@]}" -D - -o /dev/null -w 'redirect http=%{http_code}\n' "http://$host/"   # expect 301 + https Location
+  curl -q -g "${base[@]}" -D - -o /dev/null -w 'redirect http=%{http_code}\n' "http://$1/"   # expect 301 + https Location
   # 2) Auth triple against ONE protected resource. No creds and wrong creds must be 401; valid creds the app's
   #    expected success. The password reaches curl through stdin config (curl --config -), never argv.
-  curl -q -g "${base[@]}" -o /dev/null -w 'no-creds http=%{http_code}\n' "https://$host/"
-  printf 'user = "admin:%s"\n' 'definitely-wrong' | curl -q -g "${base[@]}" --config - -o /dev/null -w 'bad-creds http=%{http_code}\n' "https://$host/"
-  printf 'user = "admin:%s"\n' "$esc"             | curl -q -g "${base[@]}" --config - -o /dev/null -w 'valid http=%{http_code}\n' "https://$host/"
+  curl -q -g "${base[@]}" -o /dev/null -w 'no-creds http=%{http_code}\n' "https://$1/"
+  printf 'user = "admin:%s"\n' 'definitely-wrong' | curl -q -g "${base[@]}" --config - -o /dev/null -w 'bad-creds http=%{http_code}\n' "https://$1/"
+  printf 'user = "admin:%s"\n' "$esc"             | curl -q -g "${base[@]}" --config - -o /dev/null -w 'valid http=%{http_code}\n' "https://$1/"
   # 3) Body-size guard, BOTH cases with valid creds so a 401 cannot masquerade as the result. Payloads live in
   #    a private temp dir removed on exit.
   tmp=$(mktemp -d) || { echo 'no tempdir; not probing'; exit 2; }
@@ -145,7 +144,7 @@ sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
   head -c 11M /dev/zero > "$tmp/over.bin" || { echo 'payload write failed'; exit 2; }
   for f in under over; do
     printf 'user = "admin:%s"\n' "$esc" | curl -q -g "${base[@]}" --config - --data-binary @"$tmp/$f.bin" \
-      -o /dev/null -w "$f http=%{http_code}\n" "https://$host/"
+      -o /dev/null -w "$f http=%{http_code}\n" "https://$1/"
   done
   # under: the app's success, not 413; over: 413. req.body_size reads the advertised Content-Length, which curl
   # sets here; a chunked upload advertises none and is not covered. A backend can return 413 too, so to
@@ -172,17 +171,27 @@ rejected at TLS, a trusted one admitted with `--cert`/`--key`, server verificati
   shift
   [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
   case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the host; not probing'; exit 2 ;; esac
-  host=$1
   base=(-sS --noproxy '*' --connect-timeout 5 --max-time 15)
-  # Stats listener: no credentials must be refused; valid credentials return the statistics.
-  curl -q -g "${base[@]}" -o /dev/null -w 'stats no-creds=%{http_code}\n' "https://$host:8404/stats"
+  # Stats listener (run on the HAProxy machine; --resolve keeps the certificate hostname while connecting to
+  # the loopback bind): no credentials must be refused; valid credentials return the statistics.
+  curl -q -g "${base[@]}" --resolve "$1:8404:127.0.0.1" -o /dev/null -w 'stats no-creds=%{http_code}\n' "https://$1:8404/stats"
   IFS= read -r -s -p 'stats admin password: ' sp < /dev/tty; echo
   sp=${sp//\\/\\\\}; sp=${sp//\"/\\\"}
-  printf 'user = "admin:%s"\n' "$sp" | curl -q -g "${base[@]}" --config - -o /dev/null -w 'stats auth=%{http_code}\n' "https://$host:8404/stats"
-  # mTLS, only if `bind ... verify required`: no cert and an untrusted cert rejected at TLS, a trusted one admitted.
-  curl -q -g "${base[@]}" -o /dev/null -w 'mtls no-cert=%{http_code} exit=%{exitcode}\n' "https://$host/"
-  curl -q -g "${base[@]}" --cert REPLACE_WITH_CLIENT_CRT --key REPLACE_WITH_CLIENT_KEY \
-    -o /dev/null -w 'mtls with-cert=%{http_code} exit=%{exitcode}\n' "https://$host/"
+  printf 'user = "admin:%s"\n' "$sp" | curl -q -g "${base[@]}" --resolve "$1:8404:127.0.0.1" --config - -o /dev/null -w 'stats auth=%{http_code}\n' "https://$1:8404/stats"
+  # mTLS, only if `bind ... verify required`: no cert and an untrusted cert must be rejected at TLS; a trusted
+  # cert must be admitted (it may still return 401 if Basic auth is also configured). The path guards keep a
+  # local file error from standing in for a server rejection.
+  curl -q -g "${base[@]}" -o /dev/null -w 'mtls no-cert=%{http_code} exit=%{exitcode}\n' "https://$1/"
+  for pair in 'REPLACE_WITH_UNTRUSTED_CRT:REPLACE_WITH_UNTRUSTED_KEY:untrusted' 'REPLACE_WITH_TRUSTED_CRT:REPLACE_WITH_TRUSTED_KEY:trusted'; do
+    crt=${pair%%:*}; rest=${pair#*:}; key=${rest%%:*}; label=${rest##*:}
+    case "$crt$key" in *REPLACE_WITH_*) echo "substitute the $label cert and key; not probing"; continue ;; esac
+    if [ -r "$crt" ] && [ -r "$key" ]; then
+      curl -q -g "${base[@]}" --cert "$crt" --key "$key" \
+        -o /dev/null -w "mtls $label=%{http_code} exit=%{exitcode}\n" "https://$1/"
+    else
+      echo "$label cert or key not readable; not probing"
+    fi
+  done
 )
 # Runtime socket: root-owned mode-600 Unix socket, and an unauthorized local identity must be denied.
 ls -l /run/haproxy/admin.sock                                       # expect srw------- root root
