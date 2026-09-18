@@ -79,16 +79,19 @@ ss -tlnp   # expect 8443 and 9440, plus only the private listeners you deliberat
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in *REPLACE_WITH_*|"") echo "substitute the host on the set -- line above; not probing"; exit 2 ;; esac
   host=$1
+  set +e   # inspect each probe's outcome from its write-out below, not via an inherited set -e
   # Private CA or self-signed: keep verification ON and point curl at the CA. Never -k. For a public CA,
   # remove the two --cacert arguments from the array below.
   common=(-sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert /etc/clickhouse-server/certs/ca.crt)
   fmt='\nhttp=%{http_code} exit=%{exitcode} remote=%{remote_ip} err=%{errormsg}\n'
-  # 1) Disabled plaintext HTTP 8123 on the SAME origin: expect a transport failure. ANY HTTP status here
-  #    (including 401 or 403) is a FAILURE - the plaintext port is still answering.
-  if curl -q -g "${common[@]}" -o /dev/null -w "$fmt" "http://$host:8123/?query=SELECT%201"; then
-    echo 'FAIL: plaintext HTTP 8123 answered'
+  # 1) Disabled plaintext HTTP 8123 on the SAME origin. Read the HTTP status independently of curl's exit:
+  #    ANY received status (even if a later transfer error follows, e.g. curl exit 18) proves the port answered.
+  code=$(curl -q -g "${common[@]}" -o /dev/null -w '%{http_code}' "http://$host:8123/?query=SELECT%201"); rc=$?
+  printf 'plaintext http=%s exit=%s\n' "$code" "$rc"
+  if [ "$code" != 000 ]; then
+    echo 'FAIL: plaintext HTTP 8123 answered (any status here means the plaintext port is still serving)'
   else
-    echo 'plaintext probe: inspect the reported transport error; this alone does not prove the port is disabled'
+    echo "plaintext probe: transport error (curl exit $rc); this alone does not prove the port is disabled"
   fi
   # 2) HTTPS origin as `app`, a matched triple against the SAME origin. Read the password once with no echo
   #    and pass both credential headers on stdin, so the secret never enters argv or history.
