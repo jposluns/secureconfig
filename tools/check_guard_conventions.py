@@ -222,10 +222,12 @@ FD_RE = re.compile(r"^\d+$")
 # covered by rule 5's tracing obligation: a credential reached through a shell
 # variable or command substitution in a VALUE (curl "$URL", --json "$BODY") -- so
 # the sweep, not this rule, is what fixed object-storage's presigned "$URL"; a curl
-# invoked through a variable/alias/eval; an opaque secret in --cookie/-b or
-# --netrc(-file); and a body whose credential key is unicode-escaped or whose match
-# falls in a non-secret value. Flagging every "$VAR" positional would false-positive
-# on a guide's own guarded "$1" URL, so that case is documented rather than flagged.
+# invoked through a variable/alias/eval; a secret in a --form/-F field or -F's @/<
+# content reference, an opaque --cookie/-b cookie, or --netrc(-file); and a body
+# whose credential key is unicode-escaped. A body match landing in a non-secret
+# value is instead a possible false POSITIVE, waivable per case. Flagging every
+# "$VAR" positional would false-positive on a guide's own guarded "$1" URL, so that
+# case is documented rather than flagged.
 CREDENTIAL_HEADER_RE = re.compile(
     r"^(?:authorization|proxy-authorization|cookie|"
     r"x-api-key|api-key|apikey|x-auth-token|private-token|x-goog-api-key|"
@@ -241,13 +243,12 @@ BODY_SECRET_RE = re.compile(
 URL_USERINFO_RE = re.compile(r"^[a-z][a-z0-9+.-]*://[^/?#@\s]*:[^/?#@\s]+@", re.I)
 SIGNED_URL_RE = re.compile(
     r"[?&](?:x-amz-signature|x-goog-signature|signature|sig)=", re.I)
+SCHEMELESS_USERINFO_RE = re.compile(r"^[^/?#@\s]+:[^/?#@\s]+@")
 _CRED_USER_OPTS = frozenset(("-u", "-U", "--user", "--proxy-user"))
 _CRED_HEADER_OPTS = frozenset(("-H", "--header", "--proxy-header"))
 _CRED_BODY_OPTS = frozenset((
     "-d", "--data", "--data-ascii", "--data-binary",
     "--data-urlencode", "--json", "--data-raw"))
-# value carries a form or cookie field that may name a secret
-_CRED_FORM_OPTS = frozenset(("-F", "--form", "--form-string", "-b", "--cookie"))
 # value is a URL whose userinfo or signature query may carry a credential
 _CRED_URLVAL_OPTS = frozenset(("--url", "-x", "--proxy", "-e", "--referer"))
 _CRED_SHORT = {"-u": "user", "-U": "user", "-H": "header", "-d": "body"}
@@ -259,6 +260,7 @@ _SKIP_VALUE_OPTS = frozenset((
     "--resolve", "--cacert", "--capath", "--cert", "--key",
     "--range", "-r", "--retry", "--limit-rate", "-m", "--interface",
     "--dns-servers", "-K", "--config", "-c", "--cookie-jar",
+    "-b", "--cookie", "-F", "--form", "--form-string",
 ))
 
 MESSAGES = {
@@ -610,18 +612,12 @@ def _credential_codes(a):
                 if not fromfile and BODY_SECRET_RE.search(val):
                     codes.append("C3-BODY-ARGV")
             continue
-        if name in _CRED_FORM_OPTS:
-            val, i = _cred_value(a, i, eq, tail)
-            if val is None:
-                codes.append("C3-NO-VALUE")
-            elif not val.startswith("@") and BODY_SECRET_RE.search(val):
-                codes.append("C3-BODY-ARGV")
-            continue
         if name in _CRED_URLVAL_OPTS:
             val, i = _cred_value(a, i, eq, tail)
             if val is None:
                 codes.append("C3-NO-VALUE")
-            elif URL_USERINFO_RE.match(val) or SIGNED_URL_RE.search(val):
+            elif (URL_USERINFO_RE.match(val) or SCHEMELESS_USERINFO_RE.match(val)
+                  or SIGNED_URL_RE.search(val)):
                 codes.append("C3-URL-ARGV")
             continue
         if len(t) > 2 and not t.startswith("--") and t[:2] in _CRED_SHORT:
@@ -636,12 +632,10 @@ def _credential_codes(a):
                     codes.append("C3-BODY-ARGV")
             i += 1
             continue
-        if len(t) > 2 and not t.startswith("--") and t[:2] in ("-x", "-e", "-b"):
+        if len(t) > 2 and not t.startswith("--") and t[:2] in ("-x", "-e"):
             val = t[2:]
-            if t[:2] == "-b":
-                if BODY_SECRET_RE.search(val):
-                    codes.append("C3-BODY-ARGV")
-            elif URL_USERINFO_RE.match(val) or SIGNED_URL_RE.search(val):
+            if (URL_USERINFO_RE.match(val) or SCHEMELESS_USERINFO_RE.match(val)
+                    or SIGNED_URL_RE.search(val)):
                 codes.append("C3-URL-ARGV")
             i += 1
             continue
@@ -1215,9 +1209,13 @@ SELF_TEST_CASES += [
     ("c3-proxy-userinfo-flagged",
      "```bash\ncurl -q --proxy 'https://u:pw@proxy/' https://h/\n```\n",
      ["C3-URL-ARGV"], ()),
-    ("c3-form-password-flagged",
-     "```bash\ncurl -q --form 'password=hunter2' https://h/\n```\n",
-     ["C3-BODY-ARGV"], ()),
+    ("c3-form-and-cookie-are-documented-limits",
+     "```bash\ncurl -q --form 'password=hunter2' https://h/\n"
+     "curl -q --form 'password=@-' https://h/\n"
+     "curl -q --cookie 'session=opaque' https://h/\n```\n", [], ()),
+    ("c3-proxy-schemeless-userinfo-flagged",
+     "```bash\ncurl -q --proxy 'admin:secret@proxy:8080' https://h/\n```\n",
+     ["C3-URL-ARGV"], ()),
     ("c3-empty-user-url-flagged",
      "```bash\ncurl -q https://:secret@h/\n```\n", ["C3-URL-ARGV"], ()),
     ("c3-oidc-accesstoken-flagged-identity-not",
