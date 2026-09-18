@@ -144,6 +144,7 @@ ss -tlnp   # read every listener; app 3000, oauth2-proxy 4180, Authelia 9091 rea
          -H 'X-User: admin' "http://$1:3000/" ;;   # forged header the nginx app trusts, straight at the app
   esac
 )
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sI https://app.example.com/             # no session: a 401, or a 302 whose Location is the sign-in page (/oauth2/sign_in or the portal); any other 302 is not a pass
 ```
 

@@ -160,9 +160,11 @@ ss -tlnp   # TCP listeners in THIS network namespace only (4200/3000/8080/7233/8
 # returns a JSON flow list; an anonymous list, even an empty one, is the finding. Feed the auth string on stdin.
 # Do NOT use /api/health or /api/ready as the authentication discriminator. Current server source exempts
 # those GET paths; this behavior is version-dependent and was not present in 3.1.8.
+# guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
   -w '\nprefect-anon http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
   -H 'Content-Type: application/json' -X POST --data-binary '{}' http://prefect.internal:4200/api/flows/filter
+# guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
 python3 -c 'import base64,getpass; print("header = \"Authorization: Basic " + base64.b64encode(getpass.getpass("Prefect username:password: ").encode()).decode() + "\"")' \
   | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --config - \
       -w '\nprefect-auth http=%{http_code} exit=%{exitcode}\n' \
@@ -173,6 +175,7 @@ python3 -c 'import base64,getpass; print("header = \"Authorization: Basic " + ba
 # PythonError, top-level GraphQL errors, and transport failures are inconclusive.
 # Test the proxy separately: send this identical query anonymously and authenticated to the SAME proxy URL.
 # Test origin reachability independently; proxy authentication does not authenticate the OSS origin.
+# guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
   -w '\ndagster-anon http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
   -H 'Content-Type: application/json' -X POST \
@@ -182,10 +185,12 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
 # on stdin; FAB 3.9.0 returns 201 Created with a nonempty access_token when airflow/airflow works. Compare with a valid account on
 # the same route, and test an API read with no token then a token at the proxy and the origin. On Airflow 2 use
 # its /api/v1/ endpoint and its own auth mechanism instead.
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 printf '{"username":"%s","password":"%s"}' 'airflow' 'airflow' \
   | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
       -w '\nairflow-token http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
       -H 'Content-Type: application/json' --data-binary @- https://airflow.example.com/auth/token
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
   -w '\nairflow-pools-anon http=%{http_code} exit=%{exitcode}\n' https://airflow.example.com/api/v2/pools
 
@@ -199,8 +204,10 @@ temporal workflow list --address temporal.internal:7233 --namespace default --li
 # the login flow, not 401, so inspect the redirect without following it and confirm access with a
 # valid session. An anonymous worker list from /api/workers is the finding; an API-disabled response does not
 # prove the dashboard is protected.
+# guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
   -w '\nflower-ui http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' http://flower.internal:5555/
+# guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
   -w '\nflower-api http=%{http_code} exit=%{exitcode}\n' http://flower.internal:5555/api/workers
 
@@ -213,11 +220,13 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
 # HTTP 200 with a workflow list. A health endpoint is NOT the discriminator. Replace the hostname and
 # namespace in BOTH calls; use a reachable allowed vantage and trusted TLS, configure the private CA if
 # necessary, never -k. TLS/DNS errors, redirects, 404s, and 5xx are inconclusive.
+# guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
   -w '\nargo-anon http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
   https://argo.internal:2746/api/v1/workflows/argo
 # Enter a Kubernetes bearer token (client mode) or an Argo session token (SSO mode) with list permission in
 # this namespace. The token goes to curl on stdin, never argv.
+# guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
 python3 -c 'import getpass; t=getpass.getpass("Argo bearer token (without Bearer prefix): "); assert t and all(33 <= ord(c) <= 126 for c in t), "invalid token"; print("Authorization: Bearer " + t)' \
   | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
       --header @- -w '\nargo-auth http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \

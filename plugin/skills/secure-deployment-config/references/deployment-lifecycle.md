@@ -70,8 +70,11 @@ When a person leaves, revoke access at every layer they touched, not only their 
                                                     # same reading: a scan that did not run is not a clean scan
   esac
 )
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sI https://retired-preview.example.com/          # a connection/DNS/TLS failure here is NOT proof the record is gone (a dangling record to a released target fails the same way); use the dig check below, and confirm at the authoritative nameservers, to establish removal
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 for t in A AAAA CNAME; do echo "$t:"; dig +short retired-preview.example.com "$t"; done   # checks your configured resolver only, so it is not authoritative: any A/AAAA/CNAME answer means that resolver still returns a mapping (investigate before release; an answer alone does not prove the target is dangling), and empty output is inconclusive. Confirm removal against each authoritative nameserver directly (dig @AUTH_NS name TYPE +norecurse), requiring NXDOMAIN or NOERROR/NODATA with no CNAME; treat SERVFAIL/referral/timeout as inconclusive
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 openssl s_client -connect app.example.com:443 -servername app.example.com \
   -verify_hostname app.example.com -verify_return_error </dev/null \
   | openssl x509 -noout -enddate                        # run from outside on a schedule

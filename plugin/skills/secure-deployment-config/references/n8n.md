@@ -52,6 +52,7 @@ ss -tlnp   # a listener inventory in THIS namespace, not a firewall/NAT check: n
            # private container network), with the Postgres and task-runner ports NOT published. Loopback
            # can be 127.0.0.1 and/or ::1; also probe the real public IPv4/IPv6 path from another host.
 # TLS reachability (proves TLS, not authentication):
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
   -w 'tls=%{http_code} exit=%{exitcode} err=%{errormsg}\n' https://n8n.example.com/
 # Public API auth, matched pair against the same URL: without the key n8n returns 401, with a valid key

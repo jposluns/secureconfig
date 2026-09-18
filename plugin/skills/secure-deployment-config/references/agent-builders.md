@@ -140,6 +140,7 @@ docker compose ps --format json                 # run in dify/docker: no Publish
 # an unauthenticated editor visit must land on a login route, and https://dify.example.com/install must
 # show "already set up" or redirect to login, NEVER an open create-admin form (an open form means the
 # first visitor owns the instance). The curl below is only a transport-reachability note:
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max-time 15 \
   -o /dev/null -w 'builder final=%{http_code} url=%{url_effective} exit=%{exitcode}\n' https://builder.example.com/
 #

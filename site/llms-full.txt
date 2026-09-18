@@ -1938,7 +1938,9 @@ Vercel's protection guards a deployment from the public; it is not your applicat
          -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/" ;;
   esac
 )
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sI https://app.example.com/                       # via proxy, no session: 302 to the IdP, or 401/403
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -s -H "x-amzn-oidc-identity: admin" \
      -H "X-MS-CLIENT-PRINCIPAL-NAME: admin" \
      -H "X-Goog-Authenticated-User-Email: admin@example.com" \
@@ -2216,6 +2218,7 @@ ss -tlnp   # read every listener; app 3000, oauth2-proxy 4180, Authelia 9091 rea
          -H 'X-User: admin' "http://$1:3000/" ;;   # forged header the nginx app trusts, straight at the app
   esac
 )
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sI https://app.example.com/             # no session: a 401, or a 302 whose Location is the sign-in page (/oauth2/sign_in or the portal); any other 302 is not a pass
 ```
 
@@ -2513,8 +2516,11 @@ Mind the client address these headers carry. At a direct internet edge the block
 
 ```bash
 sudo nginx -t && sudo systemctl reload nginx
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sI http://example.com/        # expect 301 with a https:// Location
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sI --max-time 10 https://example.com/       # TLS must verify with NO -k (a cert error means TLS is misconfigured); status is 200 if / is open, or 401 if you applied section 3's auth to it
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -s -o /dev/null -w '%{http_code}\n' --max-time 10 https://example.com/                        # if section 3's auth is applied: an uncredentialed request must be 401/403, never 200
 (
   # The admin password reaches curl through a config file on stdin (curl
@@ -2812,10 +2818,15 @@ systemd creates `/run/caddy` owned by `caddy` when the service starts, so the sw
 
 ```bash
 caddy validate --config /etc/caddy/Caddyfile
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sI http://app.example.com/     # expect a redirect to https://
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sI https://app.example.com/    # expect 401 without credentials once auth is on
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/admin     # with the @admin matcher variant: 401
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/admin/x   # 401 as well
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/          # to prove the matcher SCOPES auth to /admin (not the whole site), a non-/admin path must NOT return 401: it reaches the app (a 200, or the app's own redirect or 404). A 401 here means auth is applied site-wide, not scoped to /admin
 head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
 (
@@ -3224,7 +3235,9 @@ than the client, so set it explicitly if you want a per-client cap.
 ## 5. Verify
 
 ```bash
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sI http://app.example.com/     # expect a redirect to https://
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sI https://app.example.com/    # expect 401 without credentials once auth is on
 head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
 (
@@ -5579,7 +5592,9 @@ sudo ufw status verbose           # default deny incoming; then `sudo ufw show r
     # output at all is inconclusive: nothing reached the network
   esac
 )
+# guard-conventions: allow probe of an illustrative user@host; no reader-substituted placeholder in this probe's argv
 ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no user@host   # keys-only: expect an immediate "Permission denied (publickey)" with NO password prompt; a password prompt means password auth is still on
+# guard-conventions: allow probe of an illustrative user@host; no reader-substituted placeholder in this probe's argv
 ssh user@host                     # with PAM MFA: the key is accepted, then a code is required before a shell. Also confirm a wrong or omitted code is REJECTED, that unenrolled users are denied (drop `nullok`), and that Duo fails closed (`failmode=secure`), per mfa.md; otherwise the factor is optional, not mandatory
 ```
 
@@ -6102,8 +6117,11 @@ When a person leaves, revoke access at every layer they touched, not only their 
                                                     # same reading: a scan that did not run is not a clean scan
   esac
 )
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sI https://retired-preview.example.com/          # a connection/DNS/TLS failure here is NOT proof the record is gone (a dangling record to a released target fails the same way); use the dig check below, and confirm at the authoritative nameservers, to establish removal
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 for t in A AAAA CNAME; do echo "$t:"; dig +short retired-preview.example.com "$t"; done   # checks your configured resolver only, so it is not authoritative: any A/AAAA/CNAME answer means that resolver still returns a mapping (investigate before release; an answer alone does not prove the target is dangling), and empty output is inconclusive. Confirm removal against each authoritative nameserver directly (dig @AUTH_NS name TYPE +norecurse), requiring NXDOMAIN or NOERROR/NODATA with no CNAME; treat SERVFAIL/referral/timeout as inconclusive
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 openssl s_client -connect app.example.com:443 -servername app.example.com \
   -verify_hostname app.example.com -verify_return_error </dev/null \
   | openssl x509 -noout -enddate                        # run from outside on a schedule
@@ -7084,6 +7102,7 @@ sudo stat -c '%a %U' /var/lib/rabbitmq/.erlang.cookie   # expect 600 (or 400), o
 # which is what makes this an easy mistake to make and a hard one to see. A certificate
 # carrying both serverAuth and clientAuth does satisfy it, which RabbitMQ documents
 # while still recommending separate certificates for the two purposes.
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 sleep 10 | openssl s_client -connect mq.example.com:5671 -CAfile ca.pem \
   -cert client.pem -key client.key \
   -verify_hostname mq.example.com -verify_return_error
@@ -7091,6 +7110,7 @@ echo "positive run exit $?"
 
 # Negative, and this half is what discriminates: drop -cert and -key, and the broker must
 # refuse the connection, because ssl_options.fail_if_no_peer_cert = true requires one.
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 sleep 10 | openssl s_client -connect mq.example.com:5671 -CAfile ca.pem \
   -verify_hostname mq.example.com -verify_return_error
 echo "negative run exit $?"
@@ -8689,6 +8709,7 @@ Once TLS is on, connect via `https://`; the server no longer answers plain `http
 # the normal trust store (drop --cacert); for a private CA pass that CA's bundle; for a self-signed
 # certificate pass the cert from step 2. Request the host by the name the certificate carries. Never -k
 # (it accepts any certificate, so the check would pass against a substituted one and prove nothing).
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
   -w 'tls=%{http_code} exit=%{exitcode} err=%{errormsg}\n' --cacert /path/cert.pem https://jupyter.example.com:8888/
 # 2) Auth: an https GET of / does not prove the API is protected (a fronting proxy can guard the UI while
@@ -8819,9 +8840,11 @@ ss -tlnp                                               # read every listener: 11
          -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:11434/api/tags" ;;
   esac
 )
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sS -o /dev/null -w 'http=%{http_code}\n' https://ollama.example.com/api/tags                 # no credentials: expect 401 from the Basic-auth proxy (Ollama's /api/tags does not authenticate callers, so a 401 here comes from the proxy)
 # guard-conventions: allow deliberate wrong-password negative control; admin:WRONG is a dummy, not a live credential
 curl -q -sS -o /dev/null -w 'http=%{http_code}\n' -u admin:WRONG https://ollama.example.com/api/tags  # wrong credentials: expect 401, never 200
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sS -u admin -w '\nhttp=%{http_code}\n' https://ollama.example.com/api/tags                   # correct credentials: expect http=200 and the model-list JSON
 ```
 
@@ -9084,7 +9107,12 @@ ss -tlnp   # every listener; 8080/8000/8001/8002/3000/9000/30000/5000/7860/1234.
   curl -q -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' https://models.example.com/v1/models   # PROXY-policy test: 401 without a key. TGI leaves /v1/models outside its native key middleware, so a 200 is not proof the backend enforces the key
   printf 'Authorization: Bearer %s\n' "$1" | curl -q -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' -H @- https://models.example.com/v1/models   # positive control: 200 with a model list, printed
 )
-curl -q -sS --noproxy '*' -D - -o invocations-body.txt -w 'http=%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"model":"REPLACE_WITH_A_REAL_SERVED_MODEL","messages":[{"role":"user","content":"ping"}]}' https://models.example.com/invocations
+(
+  set -- REPLACE_WITH_A_REAL_SERVED_MODEL
+  case "$1" in ""|*REPLACE_WITH_*) echo 'substitute a real served model name on the set -- line above; not probing'; exit 2 ;; esac
+  curl -q -sS --noproxy '*' -D - -o invocations-body.txt -w 'http=%{http_code}\n' -X POST -H 'Content-Type: application/json' \
+    -d "{\"model\":\"$1\",\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}]}" https://models.example.com/invocations
+)
                                                         # vLLM /invocations needs JSON (a bare -d '{}' sends form
                                                         # content-type and fails the schema) and a REAL served model.
                                                         # Read the printed headers and saved body, not the status alone: an
@@ -9445,6 +9473,7 @@ ss -tlnp   # a listener inventory in THIS namespace, not a firewall/NAT check: n
            # private container network), with the Postgres and task-runner ports NOT published. Loopback
            # can be 127.0.0.1 and/or ::1; also probe the real public IPv4/IPv6 path from another host.
 # TLS reachability (proves TLS, not authentication):
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
   -w 'tls=%{http_code} exit=%{exitcode} err=%{errormsg}\n' https://n8n.example.com/
 # Public API auth, matched pair against the same URL: without the key n8n returns 401, with a valid key
@@ -10012,12 +10041,14 @@ ss -tlnp   # read every listener; 127.0.0.1:3000 only, never 0.0.0.0 or ::
 
 # Unauthenticated initialize: 401 with a WWW-Authenticate header (Option A) or the proxy's 401 (Option B).
 # --noproxy '*' so a client HTTPS_PROXY cannot answer with its own 401/407 in place of the target.
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -g -si --noproxy '*' -X POST https://mcp.example.com/mcp \
   -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"check","version":"1.0.0"}}}'
 # Option A only: FOLLOW the resource_metadata URL from that 401's WWW-Authenticate header (a deployment may
 # advertise a path-specific document; fall back to /.well-known/oauth-protected-resource/mcp, then the root
 # below) and confirm it names your authorization server; do not assume the root path is the advertised one.
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -g -s --noproxy '*' https://mcp.example.com/.well-known/oauth-protected-resource   # JSON with "authorization_servers"
 
 # Origin control (DNS rebinding): a wrong Origin must be rejected even WITH a valid credential. Run a
@@ -10026,15 +10057,20 @@ curl -q -g -s --noproxy '*' https://mcp.example.com/.well-known/oauth-protected-
 # Origin check and not to an unrelated auth or scope failure. Keep the credential in a mode-0600 header file
 # (secrets.md), never on the command line: REPLACE_WITH_AUTH_HEADER_FILE holds a line like
 # "Authorization: Bearer <token>".
+(
+set -- REPLACE_WITH_AUTH_HEADER_FILE
+case "$1" in ""|*REPLACE_WITH_*) echo 'substitute the mode-0600 auth-header file path on the set -- line above; not probing'; exit 2 ;; esac
+[ -r "$1" ] || { echo 'auth-header file not readable; not probing'; exit 2; }
 init='{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"check","version":"1.0.0"}}}'
 curl -q -g -si --noproxy '*' -X POST https://mcp.example.com/mcp -H 'Origin: https://mcp.example.com' \
-  -H @REPLACE_WITH_AUTH_HEADER_FILE \
+  -H "@$1" \
   -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -d "$init"
                                      # allowed Origin + valid credential: expect a 2xx MCP result
 curl -q -g -si --noproxy '*' -X POST https://mcp.example.com/mcp -H 'Origin: https://attacker.example' \
-  -H @REPLACE_WITH_AUTH_HEADER_FILE \
+  -H "@$1" \
   -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -d "$init"
                                      # only the Origin changed to a disallowed value: expect 403
+)
 ```
 
 A token issued for a different resource (wrong audience) must also fail with `401` under Option A: repeat the initialize POST above with `-H @` a header file holding an otherwise valid, unexpired token whose `aud` names a DIFFERENT resource (a forged or expired token would fail for the wrong reason), and require `401`. This step is reasoned, not demonstrated in the authoring environment: it needs a second resource registered at your authorization server, which is not available here. Fixed: `401`, the audience is rejected; exposed: any `2xx`, meaning the server accepted a token minted for another audience, which the spec's audience-validation MUST forbids. Backlog row 1.75 tracks demonstrating it in the exposed and fixed states.
@@ -10486,6 +10522,7 @@ docker compose ps --format json                 # run in dify/docker: no Publish
 # an unauthenticated editor visit must land on a login route, and https://dify.example.com/install must
 # show "already set up" or redirect to login, NEVER an open create-admin form (an open form means the
 # first visitor owns the instance). The curl below is only a transport-reachability note:
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max-time 15 \
   -o /dev/null -w 'builder final=%{http_code} url=%{url_effective} exit=%{exitcode}\n' https://builder.example.com/
 #
@@ -11257,9 +11294,11 @@ ss -tlnp   # read every listener; 8188/7860/9090: each service on 127.0.0.1 only
        done ;;
   esac
 )
+# guard-conventions: allow probe of a fixed loopback target; no reader-substituted placeholder in this probe's argv
 curl -q -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:9090/api/v1/boards/
                                                        # from the host itself, InvokeAI multiuser mode: 401
                                                        # without a Bearer token, never the app itself
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sI https://imagegen.example.com/                # via the proxy: TLS, and a login prompt
                                                        # or 401 without credentials, before the UI loads
 ```
@@ -11387,7 +11426,9 @@ ss -tlnp   # read every listener; 3001/3210/3000: each UI on 127.0.0.1 only
          -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3210/" ;;
   esac
 )
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -s https://chat.example.com/api/some-endpoint      # without a key/token: 401
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sI https://chat.example.com/                      # via the proxy: TLS, login required
 # LobeChat SSO: attempt to register/sign in with a Google account that has never registered and is
 #   NOT listed in AUTH_ALLOWED_EMAILS; expect rejection at registration, before any account or session
@@ -11561,6 +11602,7 @@ ss -tlnp   # inventory 3000/6006/4317/4318 and identify each listener's namespac
 # Langfuse dashboard: a bare GET of / cannot tell a login page from an exposed project view (both are 200
 # and the body is discarded), so confirm it in a FRESH browser session - an unauthenticated visit must
 # land on login, not a project. The curl below is only transport reachability.
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max-time 15 \
   -o /dev/null -w 'dashboard final=%{http_code} url=%{url_effective} exit=%{exitcode}\n' https://langfuse.example.com/
 # Langfuse public API auth, matched pair: WITHOUT the key expect 401; WITH a valid project key (public:secret)
@@ -11591,6 +11633,7 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 # type (a wrong content type draws a 415 that is not an authentication result). This tests this OTLP/HTTP
 # receiver only; test each enabled OTLP/gRPC receiver separately, and note the Phoenix check further below
 # targets a DIFFERENT server, not this Collector.
+# guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -o /dev/null \
   -w 'otlp no-auth=%{http_code} exit=%{exitcode}\n' -H 'Content-Type: application/json' -d '{"resourceSpans":[]}' \
   https://otel-collector.internal:4318/v1/traces
@@ -11855,9 +11898,11 @@ ss -tlnp   # TCP listeners in THIS network namespace only (4200/3000/8080/7233/8
 # returns a JSON flow list; an anonymous list, even an empty one, is the finding. Feed the auth string on stdin.
 # Do NOT use /api/health or /api/ready as the authentication discriminator. Current server source exempts
 # those GET paths; this behavior is version-dependent and was not present in 3.1.8.
+# guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
   -w '\nprefect-anon http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
   -H 'Content-Type: application/json' -X POST --data-binary '{}' http://prefect.internal:4200/api/flows/filter
+# guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
 python3 -c 'import base64,getpass; print("header = \"Authorization: Basic " + base64.b64encode(getpass.getpass("Prefect username:password: ").encode()).decode() + "\"")' \
   | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --config - \
       -w '\nprefect-auth http=%{http_code} exit=%{exitcode}\n' \
@@ -11868,6 +11913,7 @@ python3 -c 'import base64,getpass; print("header = \"Authorization: Basic " + ba
 # PythonError, top-level GraphQL errors, and transport failures are inconclusive.
 # Test the proxy separately: send this identical query anonymously and authenticated to the SAME proxy URL.
 # Test origin reachability independently; proxy authentication does not authenticate the OSS origin.
+# guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
   -w '\ndagster-anon http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
   -H 'Content-Type: application/json' -X POST \
@@ -11877,10 +11923,12 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
 # on stdin; FAB 3.9.0 returns 201 Created with a nonempty access_token when airflow/airflow works. Compare with a valid account on
 # the same route, and test an API read with no token then a token at the proxy and the origin. On Airflow 2 use
 # its /api/v1/ endpoint and its own auth mechanism instead.
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 printf '{"username":"%s","password":"%s"}' 'airflow' 'airflow' \
   | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
       -w '\nairflow-token http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
       -H 'Content-Type: application/json' --data-binary @- https://airflow.example.com/auth/token
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
   -w '\nairflow-pools-anon http=%{http_code} exit=%{exitcode}\n' https://airflow.example.com/api/v2/pools
 
@@ -11894,8 +11942,10 @@ temporal workflow list --address temporal.internal:7233 --namespace default --li
 # the login flow, not 401, so inspect the redirect without following it and confirm access with a
 # valid session. An anonymous worker list from /api/workers is the finding; an API-disabled response does not
 # prove the dashboard is protected.
+# guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
   -w '\nflower-ui http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' http://flower.internal:5555/
+# guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
   -w '\nflower-api http=%{http_code} exit=%{exitcode}\n' http://flower.internal:5555/api/workers
 
@@ -11908,11 +11958,13 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
 # HTTP 200 with a workflow list. A health endpoint is NOT the discriminator. Replace the hostname and
 # namespace in BOTH calls; use a reachable allowed vantage and trusted TLS, configure the private CA if
 # necessary, never -k. TLS/DNS errors, redirects, 404s, and 5xx are inconclusive.
+# guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
   -w '\nargo-anon http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
   https://argo.internal:2746/api/v1/workflows/argo
 # Enter a Kubernetes bearer token (client mode) or an Argo session token (SSO mode) with list permission in
 # this namespace. The token goes to curl on stdin, never argv.
+# guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
 python3 -c 'import getpass; t=getpass.getpass("Argo bearer token (without Bearer prefix): "); assert t and all(33 <= ord(c) <= 126 for c in t), "invalid token"; print("Authorization: Bearer " + t)' \
   | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
       --header @- -w '\nargo-auth http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
@@ -12187,6 +12239,7 @@ Without `--tlsverify` the daemon does not check client certificates. Firewall 23
 
 ```bash
 ss -tlnp   # read every listener; 9443/9000/8000/3000/81/3001/2375/2376: 127.0.0.1 or absent, never 0.0.0.0
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -s -o /dev/null -w '%{http_code}\n' https://panel.example.com/
                                                                   # 401, 403, or a login redirect, never a dashboard. No -k:
                                                                   # this panel is behind a proxy holding a real certificate, so
@@ -12211,6 +12264,7 @@ env -u DOCKER_HOST -u DOCKER_TLS_VERIFY -u DOCKER_CERT_PATH \
                                                                   # `docker ... info` here: without `--tlsverify` it fails for the
                                                                   # wrong reason, and `DOCKER_CERT_PATH` exported in the setup above
                                                                   # can silently supply the very certificate the check is meant to lack
+# guard-conventions: allow probe of a fixed illustrative target; no reader-substituted placeholder in this probe's argv
 curl -q -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem --cert client-cert.pem --key client-key.pem \
   https://203.0.113.10:2376/_ping                                 # positive control: 200 with the right client certificate
 

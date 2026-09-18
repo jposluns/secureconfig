@@ -122,7 +122,9 @@ than the client, so set it explicitly if you want a per-client cap.
 ## 5. Verify
 
 ```bash
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sI http://app.example.com/     # expect a redirect to https://
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sI https://app.example.com/    # expect 401 without credentials once auth is on
 head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
 (
