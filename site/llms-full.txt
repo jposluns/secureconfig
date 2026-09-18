@@ -6035,6 +6035,7 @@ Keep `auth_type = hba` from section 5. Setting `auth_type = scram-sha-256` here 
 ```
 # /etc/pgbouncer/pg_hba.conf
 hostssl    pgbouncer  pgbadmin    10.0.0.0/24   scram-sha-256
+hostssl    pgbouncer  pgbmetrics  10.0.0.0/24   scram-sha-256
 hostssl    app        app         10.0.0.0/24   scram-sha-256
 local      all        all                       peer
 ```
@@ -6045,11 +6046,13 @@ admin_users = pgbadmin
 stats_users = pgbmetrics
 ```
 
+Provision `pgbmetrics` with a SCRAM-compatible credential in `auth_file`, or through the configured `auth_user` lookup; its TCP connection must pass both the HBA rule above and the console allowlist.
+
 One account bypasses all of this by design, and it is worth knowing about: the documentation states that "the user name `pgbouncer` is allowed to log in without password, if the login comes via the Unix socket and the client has same Unix user UID as the running process". Anyone who can run a process as the pooler's Unix user already has the console.
 
 The `local ... peer` line above has the same shape and the same requirement. `peer` takes the identity from the operating system, so `user=pgbadmin` in a connection string does not supply it: the command has to run as an OS user that maps to `pgbadmin`, or it is rejected whatever password it carries.
 
-`auth_file` "may contain both MD5-encrypted and plain-text passwords", so it is a secret file regardless of what you put in it: mode `600`, owned by the pooler's user, and out of the repository ([secrets.md](secrets.md)). Choosing `scram-sha-256` in the HBA file constrains what has to be in there: the documented format is `"username" "password"` where the second field is "either a plain-text, a MD5-hashed password, or a SCRAM secret", and a SCRAM secret is `SCRAM-SHA-256$<iterations>:<salt>$<storedkey>:<serverkey>`. Copying a stored secret across means copying it exactly, salt and iteration count included, or the two sides do not agree. Stored-SCRAM backend login has further prerequisites: SCRAM on the client connection, no forced `[databases] user=`, and identical secrets on both sides; local `peer` authentication does not supply the SCRAM exchange this forwarding needs, and an MD5 entry cannot satisfy a client speaking SCRAM. `auth_query` avoids the file for user passwords by reading them from the database, and the documentation warns that "Direct access to `pg_authid` requires admin rights. It's preferable to use a non-superuser that calls a SECURITY DEFINER function instead." Set `auth_user` to activate the lookup for users absent from `auth_file` (existing `auth_file` entries take precedence). Give the definer function a trusted `search_path`, revoke its execution from `PUBLIC` and grant it only to the lookup role, and install it in each queried database or set `auth_dbname`. Keep the password-expiry check: CVE-2025-2291 (fixed in 1.24.1) was PgBouncer honouring a role's `VALID UNTIL`; the shipped default query was updated, so a custom `auth_query` must respect `rolvaliduntil` too or it readmits expired passwords.
+`auth_file` "may contain both MD5-encrypted and plain-text passwords", so it is a secret file regardless of what you put in it: mode `600`, owned by the pooler's user, and out of the repository ([secrets.md](secrets.md)). Choosing `scram-sha-256` in the HBA file constrains what has to be in there: the documented format is `"username" "password"` where the second field is "either a plain-text, a MD5-hashed password, or a SCRAM secret", and a SCRAM secret is `SCRAM-SHA-256$<iterations>:<salt>$<storedkey>:<serverkey>`. Copying a stored secret across means copying it exactly, salt and iteration count included, or the two sides do not agree. Stored-SCRAM backend login has further prerequisites: SCRAM on the client connection, no forced `[databases] user=`, and identical secrets on both sides; local `peer` authentication does not supply the SCRAM exchange this forwarding needs, and an MD5 entry cannot satisfy a client speaking SCRAM. `auth_query` avoids the file for user passwords by reading them from the database, and the documentation warns that "Direct access to `pg_authid` requires admin rights. It's preferable to use a non-superuser that calls a SECURITY DEFINER function instead." Set `auth_user` to activate the lookup for users absent from `auth_file` (existing `auth_file` entries take precedence). Give the definer function a trusted `search_path`, revoke its execution from `PUBLIC` and grant it only to the lookup role, and install it in each queried database or set `auth_dbname`. Keep the password-expiry check: CVE-2025-2291, fixed in 1.24.1, allowed expired passwords because PgBouncer's `auth_query` did not honour a role's `VALID UNTIL`. The default query was corrected; a custom query must also check `rolvaliduntil`.
 
 ## 7. Verify
 
@@ -6091,6 +6094,9 @@ Run the same three against pgpool-II on port 9999 where that is the pooler in fr
 psql -X "host=pooler.internal port=9999 dbname=app user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" \
   -c 'PGPOOL SHOW enable_pool_hba;' -c 'PGPOOL SHOW ssl;'
 grep -vE '^\s*(#|$)' /etc/pgpool-II/pool_hba.conf   # active rules, in order; first match wins
+# Reasoned, not demonstrated: no running pgpool-II/PCP deployment in the authoring environment; TODO.md row
+# 1.79 tracks the live test. Correct credentials must succeed; a wrong password must be refused on
+# authentication, and any other error leaves verification incomplete.
 # PCP admin channel on loopback: an authenticated read must succeed, a wrong password must be refused.
 pcp_node_count -h 127.0.0.1 -p 9898 -U pcpadmin -W   # enter the correct PCP password: succeeds
 pcp_node_count -h 127.0.0.1 -p 9898 -U pcpadmin -W   # enter a wrong password: must be refused on authentication
@@ -6106,10 +6112,10 @@ Three commands from one address prove one path. They say nothing about a second 
   psql -X -w -v ON_ERROR_STOP=1 \
     "host=/var/run/postgresql port=6432 dbname=pgbouncer user=pgbadmin" \
     -c 'RELOAD;' -c 'SHOW CONFIG;' || exit 1
+  # Inspect auth_type, auth_hba_file, client_tls_sslmode and server_tls_sslmode above.
+  # Then read the effective HBA file (only reached if the reload succeeded):
+  grep -vE '^\s*(#|$)' /etc/pgbouncer/pg_hba.conf
 )
-# then read the relevant settings from the output above: auth_type, auth_hba_file, client_tls_sslmode,
-# server_tls_sslmode. And read the effective HBA file:
-grep -vE '^\s*(#|$)' /etc/pgbouncer/pg_hba.conf
 ```
 
 `auth_type` must read `hba` for the file below it to matter. Read the rules in order: the first match wins, so a `trust` line decides for every path that reaches it before something stricter does, while one sitting below a rejection that already covers the same path is unreachable. Judge each line by what reaches it, not by its presence.
@@ -6122,9 +6128,9 @@ For the database hop, know what the probe can and cannot tell you:
 psql -X "host=pooler.internal port=6432 dbname=app user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c "SELECT current_user, inet_client_addr(), ssl FROM pg_stat_ssl JOIN pg_stat_activity USING (pid) WHERE pid = pg_backend_pid();"
 ```
 
-`ssl` reports whether the pooler-to-PostgreSQL connection uses SSL. It does not report whether the pooler validated the certificate, so a `t` here is consistent with `server_tls_sslmode = require`, which validates nothing. Certificate validation cannot be observed from the client at all: the only test is to present the pooler with a certificate that should fail, one signed by an untrusted CA and one valid but issued for a different host name, and confirm that it refuses both. It has to be a fresh BACKEND connection rather than a fresh client one: a new client is routinely handed a server connection that was opened earlier, under the old certificate. `inet_client_addr()` is the address section 5 tells you to write into `pg_hba.conf`.
+`ssl` reports whether the pooler-to-PostgreSQL connection uses SSL. It does not report whether the pooler validated the certificate, so a `t` here is consistent with `server_tls_sslmode = require`, which validates nothing. Certificate validation cannot be observed from the client at all: for PgBouncer configured with `server_tls_sslmode = verify-full`, test enforcement by presenting the pooler with a certificate that should fail, one signed by an untrusted CA and one valid but issued for a different host name, and confirm that it refuses both. It has to be a fresh BACKEND connection rather than a fresh client one: a new client is routinely handed a server connection that was opened earlier, under the old certificate. `inet_client_addr()` is the address section 5 tells you to write into `pg_hba.conf`.
 
-Test the bypass the pooler cannot prevent. From an application source that is supposed to go through the pooler, connect to the DATABASE directly with the same credentials and require a rejection, then confirm the permitted pooler egress still connects and the application still connects through the pooler. Give the real destination as `hostaddr` while keeping the certificate host name in `host`, and guard the substituted values:
+These direct-database checks are reasoned, not demonstrated: the authoring environment lacks a running pooler/PostgreSQL deployment with distinct application and pooler source addresses, and TODO.md row 1.79 tracks the live test; an exposed database admits the direct application connection while the intended HBA policy rejects it and the permitted controls succeed, and a password, certificate, DNS, or connection failure is inconclusive. Test the bypass the pooler cannot prevent. From an application source that is supposed to go through the pooler, connect to the DATABASE directly with the same credentials and require a rejection, then confirm the permitted pooler egress still connects and the application still connects through the pooler. Give the real destination as `hostaddr` while keeping the certificate host name in `host`, and guard the substituted values:
 
 ```bash
 (
@@ -6132,13 +6138,19 @@ Test the bypass the pooler cannot prevent. From an application source that is su
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
   shift
   [ "$#" -eq 2 ] || { echo 'exactly two values are required; not probing'; exit 2; }
-  case "$1|$2" in *REPLACE_WITH_*) echo 'substitute both values; not probing'; exit 2 ;; esac
+  for value in "$@"; do
+    case "$value" in
+      ''|*REPLACE_WITH_*) echo 'substitute both nonempty values; not probing'; exit 2 ;;
+    esac
+  done
   # From a client that must NOT bypass the pooler: a direct database connection must be REFUSED by pg_hba.
-  psql -X "host=$1 hostaddr=$2 port=5432 dbname=app user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SELECT 1;'
+  # gssencmode=disable so libpq cannot prefer GSS and take an HBA rejection on that path for proof while a
+  # hostssl path stays open.
+  psql -X "host=$1 hostaddr=$2 port=5432 dbname=app user=app gssencmode=disable sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SELECT 1;'
 )
 ```
 
-For the backend certificate tests, force and identify a fresh BACKEND connection for each case, establish a trusted-certificate control, then test an untrusted CA, a valid certificate for the wrong host name, and a backend that declines TLS, requiring the specific expected error each time and restoring the control afterward; record pgpool-II's unenforceable upstream-TLS case as a limitation, not a pass. Where no isolated test deployment is available these ship reasoned, with the missing prerequisite and demonstration debt recorded in backlog row 1.79.
+These backend tests are reasoned, not demonstrated: the authoring environment lacks an isolated running pooler/PostgreSQL deployment, and TODO.md row 1.79 tracks the demonstration. Force and identify a fresh backend connection before each attempt; establish a trusted-certificate control, change one condition, repeat the query above through the relevant pooler port, and restore the control after each case. PgBouncer with `server_tls_sslmode = verify-full` must reject an untrusted CA, a valid certificate for the wrong host name, and a backend that declines TLS. Pgpool-II 4.7.2 with `ssl_ca_cert` must reject an untrusted CA, but does not enforce backend host-name matching or mandatory TLS; record those two as limitations.
 
 Ask the pooler what it negotiated, and what identity it forces:
 
@@ -6208,6 +6220,7 @@ Put the human paths to the host behind MFA per [mfa.md](mfa.md).
 - PostgreSQL environment variables, on `PGPASSWORD` being "not recommended for security reasons": https://www.postgresql.org/docs/current/libpq-envars.html
 - PostgreSQL password file, for the `~/.pgpass` format and its permission requirement: https://www.postgresql.org/docs/current/libpq-pgpass.html
 - psql, for what `-c` accepts and what `-X` suppresses: https://www.postgresql.org/docs/current/app-psql.html
+- PostgreSQL libpq connection parameters (`host`, `hostaddr`, `sslmode`, and GSS encryption precedence): https://www.postgresql.org/docs/current/libpq-connect.html
 - PgBouncer 1.25.2 console source, which is what settles the `auth_type = any` disagreement above: https://raw.githubusercontent.com/pgbouncer/pgbouncer/pgbouncer_1_25_2/src/admin.c
 - PgBouncer 1.25.2 PAM source, for what `pam` does with the supplied password: https://raw.githubusercontent.com/pgbouncer/pgbouncer/pgbouncer_1_25_2/src/pam.c
 - Pgpool-II parameter syntax, which unlike pgbouncer.ini does treat a trailing `#` as a comment: https://www.pgpool.net/docs/latest/en/html/config-setting.html
