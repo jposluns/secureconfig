@@ -223,7 +223,7 @@ FD_RE = re.compile(r"^\d+$")
 # variable or command substitution in a VALUE (curl "$URL", --json "$BODY") -- so
 # the sweep, not this rule, is what fixed object-storage's presigned "$URL"; a curl
 # invoked through a variable/alias/eval; a secret in a --form/-F field or -F's @/<
-# content reference, an opaque --cookie/-b cookie, or --netrc(-file); and a body
+# content reference, an opaque --cookie/-b cookie, an -e/--referer URL, or --netrc(-file); and a body
 # whose credential key is unicode-escaped. A body match landing in a non-secret
 # value is instead a possible false POSITIVE, waivable per case. Flagging every
 # "$VAR" positional would false-positive on a guide's own guarded "$1" URL, so that
@@ -250,7 +250,8 @@ _CRED_BODY_OPTS = frozenset((
     "-d", "--data", "--data-ascii", "--data-binary",
     "--data-urlencode", "--json", "--data-raw"))
 # value is a URL whose userinfo or signature query may carry a credential
-_CRED_URLVAL_OPTS = frozenset(("--url", "-x", "--proxy", "-e", "--referer"))
+_CRED_URLVAL_OPTS = frozenset(("--url",))
+_CRED_PROXY_OPTS = frozenset(("-x", "--proxy"))
 _CRED_SHORT = {"-u": "user", "-U": "user", "-H": "header", "-d": "body"}
 # Other value-taking curl options: skip their value so it is not read as a URL.
 # Credential-bearing options above are handled explicitly, not skipped here.
@@ -260,7 +261,7 @@ _SKIP_VALUE_OPTS = frozenset((
     "--resolve", "--cacert", "--capath", "--cert", "--key",
     "--range", "-r", "--retry", "--limit-rate", "-m", "--interface",
     "--dns-servers", "-K", "--config", "-c", "--cookie-jar",
-    "-b", "--cookie", "-F", "--form", "--form-string",
+    "-b", "--cookie", "-F", "--form", "--form-string", "-e", "--referer",
 ))
 
 MESSAGES = {
@@ -616,6 +617,13 @@ def _credential_codes(a):
             val, i = _cred_value(a, i, eq, tail)
             if val is None:
                 codes.append("C3-NO-VALUE")
+            elif URL_USERINFO_RE.match(val) or SIGNED_URL_RE.search(val):
+                codes.append("C3-URL-ARGV")
+            continue
+        if name in _CRED_PROXY_OPTS:
+            val, i = _cred_value(a, i, eq, tail)
+            if val is None:
+                codes.append("C3-NO-VALUE")
             elif (URL_USERINFO_RE.match(val) or SCHEMELESS_USERINFO_RE.match(val)
                   or SIGNED_URL_RE.search(val)):
                 codes.append("C3-URL-ARGV")
@@ -632,7 +640,7 @@ def _credential_codes(a):
                     codes.append("C3-BODY-ARGV")
             i += 1
             continue
-        if len(t) > 2 and not t.startswith("--") and t[:2] in ("-x", "-e"):
+        if len(t) > 2 and not t.startswith("--") and t[:2] == "-x":
             val = t[2:]
             if (URL_USERINFO_RE.match(val) or SCHEMELESS_USERINFO_RE.match(val)
                     or SIGNED_URL_RE.search(val)):
@@ -1216,6 +1224,9 @@ SELF_TEST_CASES += [
     ("c3-proxy-schemeless-userinfo-flagged",
      "```bash\ncurl -q --proxy 'admin:secret@proxy:8080' https://h/\n```\n",
      ["C3-URL-ARGV"], ()),
+    ("c3-referer-not-scanned-scheme-less-is-proxy-only",
+     "```bash\ncurl -q --referer 'mailto:help@example.com' https://h/\n"
+     "curl -q -e 'https://ref/?sig=x' https://h/\n```\n", [], ()),
     ("c3-empty-user-url-flagged",
      "```bash\ncurl -q https://:secret@h/\n```\n", ["C3-URL-ARGV"], ()),
     ("c3-oidc-accesstoken-flagged-identity-not",
