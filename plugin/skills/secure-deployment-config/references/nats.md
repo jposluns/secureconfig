@@ -80,6 +80,7 @@ The `nats` CLI reads a saved context and environment variables (`NATS_URL`, `NAT
 ```bash
 # REASONED, not demonstrated here: no NATS runtime in the authoring environment; backlog row 1.81 tracks
 # running it live. A DNS, connection, or TLS-validation error is inconclusive for NATS auth, never a pass.
+# Substitute the values inside the single quotes on each `set --` line and paste each whole subshell.
 ss -tlnp   # inventory: 4222 as intended; 8222 and any route ports (6222/7422/7222) loopback or private only
 (
   set +x
@@ -101,21 +102,29 @@ ss -tlnp   # inventory: 4222 as intended; 8222 and any route ports (6222/7422/72
   env -i PATH="$PATH" nats --no-context --server "$srv" --tlsca "$ca" pub orders.created hi
   # Positive controls: strip ambient NATS_* settings (so no NATS_TOKEN/NATS_SOCKS_PROXY/etc. leaks in), then
   # keep the password in the ENVIRONMENT, never argv:
-  unset NATS_URL NATS_TOKEN NATS_CREDS NATS_NKEY NATS_JWT NATS_SEED NATS_CONTEXT NATS_SOCKS_PROXY 2>/dev/null || true
+  for v in ${!NATS_@}; do unset "$v" 2>/dev/null || { echo "cannot clear ambient $v (readonly?); not probing"; exit 2; }; done
+  # (clears every NATS_* the shell inherited - NATS_TOKEN, NATS_SOCKS_PROXY, NATS_TIMEOUT, NATS_COLOR, ... -
+  #  and stops rather than probe if a readonly one cannot be cleared)
   IFS= read -r -s -p 'order-svc password: ' pw < /dev/tty || { echo 'password input failed; not probing'; exit 2; }
   echo
   [ -n "$pw" ] || { echo 'supply a nonempty password; not probing'; exit 2; }
-  export NATS_USER=order-svc NATS_PASSWORD="$pw"
-  [ "${NATS_PASSWORD-}" = "$pw" ] || { echo 'could not set NATS_PASSWORD (readonly?); not probing'; exit 2; }
+  export NATS_USER=order-svc NATS_PASSWORD="$pw" || { echo 'could not export credentials; not probing'; exit 2; }
+  { [ "${NATS_USER-}" = order-svc ] && [ "${NATS_PASSWORD-}" = "$pw" ]; } || { echo 'credentials not set as intended (readonly?); not probing'; exit 2; }
   tlsc=(--tlsca "$ca" --tlscert "$2" --tlskey "$3")
   nats --no-context --server "$srv" "${tlsc[@]}" pub orders.created hi                  # allowed publish: succeeds
   nats --no-context --server "$srv" "${tlsc[@]}" pub billing.charge hi                  # publish outside the allow list: a permissions error
   timeout 6s nats --no-context --server "$srv" "${tlsc[@]}" sub 'billing.>' --count 1   # subscribe outside the allow list: a permissions error; a timeout is inconclusive, not a pass
 )
-# A SUCCESSFUL subscription is reasoned (row 1.81): with a separately authorized subscriber identity, subscribe
-# to an allowed subject and confirm a marker published by an authorized publisher arrives; a quiet subscriber is
-# not proof. order-svc can publish orders.> but only subscribe _INBOX.order-svc.>, so this needs a second
-# identity or a request-reply pair.
+# A SUCCESSFUL subscription is reasoned (row 1.81) and needs a second identity, because order-svc can publish
+# orders.> but only subscribe _INBOX.order-svc.>. With a consumer identity allowed to subscribe orders.>, prove
+# delivery of a unique marker (a quiet subscriber or a timeout is not proof):
+#   # shell 1 - authorized consumer, bounded (password on stdin, not argv):
+#   printf '%s' "$CONSUMER_PW" | timeout 6s env -i PATH="$PATH" NATS_USER=REPLACE_WITH_CONSUMER nats --no-context \
+#     --server "nats://REPLACE_WITH_NATS_HOST:4222" --tlsca /etc/nats/certs/ca.pem \
+#     --tlscert REPLACE_WITH_CONSUMER_CERT --tlskey REPLACE_WITH_CONSUMER_KEY sub 'orders.>' --count 1
+#   # shell 2 - order-svc publishes the marker (credentials exactly as in the positive control above):
+#   nats --no-context --server "nats://REPLACE_WITH_NATS_HOST:4222" "${tlsc[@]}" pub orders.created "marker-$(date +%s)"
+# The consumer must print that marker; if it does not, the result is inconclusive.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_MONITOR_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
@@ -151,5 +160,5 @@ ss -tlnp   # inventory: 4222 as intended; 8222 and any route ports (6222/7422/72
 - Accounts and multitenancy (`$G`, `$SYS`, accounts, exports/imports): https://docs.nats.io/learn/security/accounts-and-multitenancy
 - Deployment hardening (non-root, sandboxing): https://docs.nats.io/learn/deployment/hardening
 - Decentralized authentication (operator-signs-account, account-signs-user JWT hierarchy): https://docs.nats.io/learn/security/decentralized-auth
-- natscli flags and contexts (`--no-context`, `--inbox-prefix`, `NATS_*` environment variables): https://github.com/nats-io/natscli
+- natscli flag and context definitions (`--no-context`, `--inbox-prefix`, and the `NATS_*` environment bindings): https://github.com/nats-io/natscli/blob/main/nats/main.go
 - nats-server service unit (`User=nats`/`Group=nats` non-root execution): https://github.com/nats-io/nats-server/blob/main/util/nats-server.service
