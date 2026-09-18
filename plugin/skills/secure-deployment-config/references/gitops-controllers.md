@@ -2,7 +2,7 @@
 
 Argo CD and Flux reconcile a git repository into a Kubernetes cluster, so both hold
 cluster-admin-equivalent power: whoever can drive the controller, or change what it reconciles, can
-deploy anything it can reach, across every cluster it is registered against. Three exposures follow
+deploy anything it can reach, across the clusters it is registered against and to the extent the controller's Kubernetes RBAC, its registered-cluster credentials, and project restrictions allow. Three exposures follow
 from that and apply to both. The blast radius is the cluster (or clusters), so administrative access
 deserves the same care as the Kubernetes API itself ([kubernetes.md](kubernetes.md)). Git is an
 authorization boundary: whoever can merge to a reconciled repository, or redirect a source, exercises
@@ -73,8 +73,10 @@ access.
 
 ## Flux
 
-Flux has no built-in UI, API, dashboard, or default external network listener: it is a set of
-in-cluster controllers that reconcile git into the cluster. There is no login surface to harden. Its
+Flux has no standalone user-login or management API of its own: it is a set of in-cluster controllers
+that reconcile git into the cluster, driven through Kubernetes custom resources under the API server's
+authentication and RBAC. There is no login surface of its own to harden, but its controllers still expose
+in-cluster HTTP endpoints (below), and a separately installed Flux dashboard brings its own login and exposure. Its
 controllers do expose in-cluster listeners (the webhook receiver, the source-controller's artifact
 server, metrics, health), so an `ss` inside a controller's own network namespace still shows sockets;
 that is expected, not a finding. The surfaces that matter are three. Git repository credentials,
@@ -99,7 +101,7 @@ route in front of it. When you do, the receiver type is what authenticates the r
 presence of a `secretRef`: a `generic` receiver validates nothing, `generic-hmac` and the GitHub,
 Bitbucket and Nexus types verify an HMAC signature against the referenced secret, `gitlab` compares
 the `X-Gitlab-Token` header against it, and `generic-oidc` validates a bearer token against configured
-OIDC providers rather than a secret (a version-dependent type that rejects `.spec.secretRef`), so
+OIDC providers rather than a secret (new in Flux 2.9, and it rejects `.spec.secretRef`), so
 constrain it with `.spec.oidcProviders[].validations` and a specific `.audience` (which otherwise
 defaults to `notification-controller`), since a public issuer can otherwise mint valid tokens for
 unrelated callers. Choose a validating type,
@@ -132,12 +134,16 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert REPLACE_
   -w '\nanon http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
   'https://argocd.example.com/api/v1/applications'
 # token from `argocd account generate-token` (or a login session); read it without echo, pass via stdin.
-IFS= read -r -s -p 'Argo CD bearer token: ' tok < /dev/tty; echo
-printf 'Authorization: Bearer %s\n' "$tok" \
-  | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert REPLACE_WITH_YOUR_CA_FILE \
-      -H @- -w '\nauth http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-      'https://argocd.example.com/api/v1/applications'
-unset tok
+# Run in a subshell with tracing OFF so an inherited `set -x` cannot echo the token (read -s and the stdin
+# header do not suppress shell tracing).
+(
+  set +x
+  IFS= read -r -s -p 'Argo CD bearer token: ' tok < /dev/tty; echo
+  printf 'Authorization: Bearer %s\n' "$tok" \
+    | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert REPLACE_WITH_YOUR_CA_FILE \
+        -H @- -w '\nauth http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+        'https://argocd.example.com/api/v1/applications'
+)
 # The bootstrap admin Secret should be gone once the password was rotated (its presence proves retained
 # bootstrap material; its absence alone does not prove the password changed). This prints no secret.
 kubectl -n argocd get secret argocd-initial-admin-secret -o name
@@ -193,6 +199,7 @@ need the guarded-subshell form so an unsubstituted address cannot time out and r
 - Argo CD AppProjects: https://argo-cd.readthedocs.io/en/stable/user-guide/projects/
 - Flux security model and best practices (NetworkPolicy artifact isolation, controller permissions): https://fluxcd.io/flux/security/best-practices/
 - Flux notification Receivers (types and payload validation): https://fluxcd.io/flux/components/notification/receivers/
+- Flux v2.9 release (generic-oidc receiver introduced): https://fluxcd.io/blog/2026/06/flux-v2.9.0/
 - Flux webhook receivers guide (port 9292, webhook-receiver Service): https://fluxcd.io/flux/guides/webhook-receivers/
 - Flux multitenancy configuration (cross-namespace and service-account lockdown): https://fluxcd.io/flux/installation/configuration/multitenancy/
 - Argo CD server command parameters (`server.disable.auth`, `server.insecure` defaults in argocd-cmd-params-cm): https://argo-cd.readthedocs.io/en/stable/operator-manual/argocd-cmd-params-cm-yaml/
@@ -201,5 +208,6 @@ need the guarded-subshell form so an unsubstituted address cannot time out and r
 - Argo CD secret management (destination-cluster operators, repo-server/Redis exposure): https://argo-cd.readthedocs.io/en/stable/operator-manual/secret-management/
 - Flux GitHub bootstrap (`--token-auth` PAT Secret, `--read-write-key` for image automation): https://fluxcd.io/flux/installation/bootstrap/github/
 - Flux image update automations (Git write-back): https://fluxcd.io/flux/components/image/imageupdateautomations/
-- Flux SOPS/age decryption and OCIRepository secret references: https://fluxcd.io/flux/guides/mozilla-sops/
+- Flux SOPS/age decryption: https://fluxcd.io/flux/guides/mozilla-sops/
+- Flux OCIRepository and HelmRepository credential references (`.spec.secretRef`): https://fluxcd.io/flux/components/source/ocirepositories/#secret-reference
 - Flux controller permissions (which controllers hold cluster-admin, Secret access): https://fluxcd.io/flux/security/#controller-permissions
