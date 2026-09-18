@@ -43,7 +43,7 @@ Most of these are posture and inventory checks. The ones that need a deployed se
 # are inconclusive (a timeout, NXDOMAIN, or an environment proxy otherwise reads like a false pass).
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -o /dev/null \
   -w 'control http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' https://app.example.com/
-for f in app.db app.db-wal app.db-shm; do
+for f in app.db app.db-wal app.db-shm app.db-journal; do
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -o /dev/null \
     -w "$f http=%{http_code} exit=%{exitcode} err=%{errormsg}\n" "https://app.example.com/$f"
 done   # 404 or the app's catch-all, never 200/206; repeat with the static path prefix your app actually serves
@@ -59,7 +59,11 @@ Scan built client bundles for a leaked Turso/libSQL token, keeping the token off
   shift
   for d in "$@"; do shift; [ -d "$d" ] && set -- "$@" "$d"; done   # keep only the directories that exist
   [ "$#" -ge 1 ] || { echo 'none of the bundle directories exist here; not scanning'; exit 2; }
-  IFS= read -r -s -p 'paste the token value from the secret store (input hidden): ' tok < /dev/tty; echo
+  if ! IFS= read -r -s -p 'paste the token value from the secret store (input hidden): ' tok < /dev/tty; then
+    echo 'token input failed; not scanning'
+    exit 2
+  fi
+  echo
   [ -n "$tok" ] || { echo 'no token supplied; not scanning'; exit 2; }
   printf '%s\n' "$tok" | grep -rnF -f - -- "$@"; echo "token-literal exit: $? (1 is the goal: not found; 0 means the token is in the bundle)"
   grep -rnE 'eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}' -- "$@"; echo "jwt-shape exit: $? (1 is the goal; 0 means a JWT-shaped string needs explaining)"
@@ -71,9 +75,9 @@ A clean result is evidence, not proof: neither pattern matched in the paths sear
 Confirm the database is not tracked in git, not only that a rule exists (ignore rules do not apply to already-tracked files):
 
 ```bash
-git check-ignore -v app.db                            # substitute the real repository path; prints the matching rule
-git ls-files --error-unmatch app.db 2>/dev/null && echo 'TRACKED: .gitignore does not apply to already-tracked files'
-git log --all --oneline -- app.db app.db-wal app.db-journal | head   # any output is a leaked copy in history (scrub per secrets.md)
+git check-ignore -v app.db app.db-wal app.db-shm app.db-journal   # substitute the real repository paths
+git ls-files -- app.db app.db-wal app.db-shm app.db-journal   # any output is a tracked database or sidecar
+git log --all --oneline -- app.db app.db-wal app.db-shm app.db-journal | head   # any output is a copy in history; handle per secrets.md
 ```
 
 Check the live file, its directory, and every existing sidecar while the application is running:
