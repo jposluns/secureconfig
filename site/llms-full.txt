@@ -11807,15 +11807,19 @@ The `.env.example` ships literal placeholders: `POSTGRES_PASSWORD` is
 `DASHBOARD_PASSWORD` is `this_password_is_insecure_and_should_be_updated`, the `ANON_KEY` and
 `SERVICE_ROLE_KEY` are pre-generated JWTs signed with that demo `JWT_SECRET`, and the S3 storage
 credentials (`S3_PROTOCOL_ACCESS_KEY_ID` and `S3_PROTOCOL_ACCESS_KEY_SECRET`) are demo values of their
-own. Rotating the two API keys is not enough on its own: because the demo `JWT_SECRET` is public,
+own, and the stack ships placeholder encryption secrets a step titled "regenerate every secret" must also cover: `SECRET_KEY_BASE` (at least 64 characters), `REALTIME_DB_ENC_KEY` (exactly 16), `VAULT_ENC_KEY` (exactly 32, which protects Supavisor's stored configuration, not the Postgres Vault extension's master key), and `PG_META_CRYPTO_KEY` (at least 32); the vendor generator sets these, so replace them manually only to those lengths. Rotating the two API keys is not enough on its own: because the demo `JWT_SECRET` is public,
 anyone can mint a token for any role, including `service_role`, until the secret itself is replaced and
 every key derived from it is reissued. Use the vendor's scripts to regenerate the JWT secret and the
 keys together (`generate-keys.sh`, and `add-new-auth-keys.sh` for the JWT key pair; an existing
 asymmetric setup also carries the secret in `JWT_KEYS`/`JWT_JWKS`, so change those too), set a strong
 `DASHBOARD_PASSWORD`, `POSTGRES_PASSWORD` and S3 keys, and store the resulting `.env` as
-[secrets.md](secrets.md) describes, never in the repository. On a stack that has already initialized
-its database, changing `POSTGRES_PASSWORD` in `.env` alone does not take effect; follow the vendor's
-separate database-password change procedure. Supabase's own "secure your services" checklist is the
+[secrets.md](secrets.md) describes, never in the repository. Editing `.env` does not change running containers: after regenerating secrets and keys, recreate the affected
+services (`sh run.sh recreate`) and confirm the old credentials are rejected. Removing the old HS256 secret
+from every verifier invalidates the legacy API JWTs and user access tokens signed by it, and regenerating the
+asymmetric key pair invalidates tokens signed by the previous pair; rotating only the newer opaque
+`sb_publishable_*`/`sb_secret_*` keys does not rotate signing keys or invalidate user sessions. On a stack that
+has already initialized its database, changing `POSTGRES_PASSWORD` in `.env` alone does not take effect; follow
+the vendor's separate database-password change procedure (`sh utils/db-passwd.sh`, then recreate services). Supabase's own "secure your services" checklist is the
 authoritative list.
 
 ## 2. Keep the published ports off the public internet
@@ -11823,15 +11827,19 @@ authoritative list.
 The compose file publishes the API gateway on `8000` and the Supavisor pooler on `5432` and `6543` to
 the host, on every interface. The `db` service has no host mapping of its own, but that is not
 isolation: the Docker host can reach a container's ports directly, and the pooler exposes the database
-anyway. Map the two published services to loopback (`127.0.0.1:8000:8000`, `127.0.0.1:5432:5432`,
-`127.0.0.1:6543:6543`) or firewall them, and reach them over a private network or a tunnel
+anyway. The optional Kong override additionally publishes HTTPS on `8443`, so include it when Kong is enabled. Map the
+published services to loopback (`127.0.0.1:8000:8000`, `127.0.0.1:5432:5432`, `127.0.0.1:6543:6543`, and
+`127.0.0.1:8443:8443` under Kong) or firewall them, and reach them over a private network or a tunnel
 ([docker.md](docker.md), [tunnels.md](tunnels.md)). Docker publishes ports through its own NAT rules,
 which bypass a host firewall such as UFW and do not always leave a matching host listening socket, so
 confirm the effective mapping with `docker` and test each port from an external vantage rather than
 trusting the host's socket table. Neither the gateway nor Supavisor terminates TLS by default, so put a
 reverse proxy in front for HTTPS on the API ([nginx.md](nginx.md), [caddy.md](caddy.md),
 [fronting-auth.md](fronting-auth.md)); a web proxy does not protect the PostgreSQL wire protocol on
-`5432`/`6543`, which needs its own TLS or an encrypted tunnel.
+`5432`/`6543`, which needs its own TLS or an encrypted tunnel. If Edge Functions or Storage integrations fetch
+user-controlled URLs, restrict the workload's egress to the destinations it needs and block cloud metadata and
+unrelated internal services per [egress-metadata.md](egress-metadata.md); inbound JWT verification does not
+constrain outbound requests.
 
 ## 3. Treat the service_role key as full database access
 
@@ -11840,10 +11848,11 @@ attribute, so it "skips every Row Level Security policy" and has full read and w
 data (it is not a database superuser, but for handling purposes treat it as one). It is a server-side
 secret only; Supabase's documentation says never to put one in a browser, a shipped application, or
 source control, because "exposing a secret key puts all of your project's data at risk". The `anon`
-key is the opposite: it is meant to be public and is constrained by row-level security. That
-protection only exists where you turn it on: a table with RLS enabled and no policy denies access,
-which is the safe default, but a table with RLS never enabled is readable and writable through the
-`anon` key. Enable RLS on every exposed table and write policies per
+key is the opposite: it is meant to be public and is constrained by row-level security. That protection depends on both SQL grants and RLS: for an ordinary API role, access needs an applicable
+schema/table grant AND a matching RLS policy. With RLS enabled and no applicable policy an ordinary role
+reads no rows (a successful, empty `SELECT`, not an authentication error); with RLS never enabled, the
+operations the role is granted are unrestricted by row policy and readable or writable through the `anon` key.
+`service_role` bypasses RLS but is still subject to SQL privileges. Enable RLS on every exposed table and write policies per
 [firebase-supabase.md](firebase-supabase.md); a view can still serve its owner's rows past RLS, which
 that guide also covers. The same `service_role` and `anon` roles apply on the self-hosted stack.
 
@@ -11853,13 +11862,20 @@ Three defaults ship open. The Studio dashboard is served through the gateway and
 HTTP basic-auth pair `DASHBOARD_USERNAME`/`DASHBOARD_PASSWORD`, whose shipped value
 (`supabase` / `this_password_is_insecure_and_should_be_updated`) is a published credential; set a
 strong password in section 1, and keep the gateway off the public internet regardless, since basic
-auth is only as private as the connection carrying it. Edge Functions ship with
-`FUNCTIONS_VERIFY_JWT=false`, and the gateway does not apply the API key to the `/functions/v1/` route,
-so every deployed function is callable unauthenticated until you set a verification policy; inventory
-your functions and decide each one's policy. And user registration ships open: `DISABLE_SIGNUP` is
+auth is only as private as the connection carrying it. Gateway authentication is route-specific, not blanket: Studio's catch-all route is gated by the dashboard
+Basic-auth pair, REST/GraphQL/Realtime and the protected Auth routes require an API key, and some Auth routes
+(verify, callback, JWKS, SAML metadata) are open by design; Storage and Edge Functions bypass the gateway's
+API-key check and enforce their own controls. Edge Functions ship with `FUNCTIONS_VERIFY_JWT=false`, so the
+main worker applies no JWT check and every deployed function is callable unauthenticated (an individual
+function may still authenticate) until you set a verification policy; inventory your functions and decide each
+one's policy. Studio also listens internally on `3000` with no host mapping of its own: never publish that
+port or otherwise route around the gateway's dashboard authentication. And user registration ships open: `DISABLE_SIGNUP` is
 `false` with `ENABLE_PHONE_SIGNUP` and `ENABLE_PHONE_AUTOCONFIRM` both `true`, so anyone can create an
 account, phone sign-ups self-confirm, and rotating secrets does not close this. Set the registration
-policy you actually want.
+policy you actually want. Supabase Auth supports TOTP MFA for application users (enforce the required
+assurance level in your policies per [firebase-supabase.md](firebase-supabase.md) and [mfa.md](mfa.md)); that
+does not add a factor to the dashboard's Basic auth, so put administrative Studio access behind a private path
+or an identity-aware proxy that enforces MFA.
 
 ## 5. Verify
 
@@ -11867,9 +11883,11 @@ Each probe below is reasoned, not demonstrated: the authoring environment has no
 none was stood up in its exposed and fixed states. Each names its expected exposed and fixed result so
 it discriminates against a live instance; backlog row 2.27 tracks demonstrating them, including forging
 a token with the demo `JWT_SECRET`, which is the check that proves the secret itself was rotated rather
-than just the shipped keys swapped. There are two layers to check. First, from an external host none of these ports should answer at all: a
-connection refused or a timeout during the connect is the hardened state, and any HTTP or database
-response means the port is published and is itself the finding, whatever the credentials do next. The
+than just the shipped keys swapped. There are two layers to check. First, from an external host none of these ports should answer at all: any HTTP or database response means the
+port is published and is itself the finding, whatever the credentials do next. A refused connection is a failed
+connection from that vantage rather than proof of durable firewall enforcement, and a timeout is inconclusive
+(a wrong destination or dropped route looks the same), so corroborate a blocked port with the effective Docker
+mapping, and confirm the service is actually live from an allowed vantage. The
 credential checks below apply to a port you can still reach, because you have not isolated it yet or are
 testing from an allowed internal vantage, and show whether the demo credentials were replaced. If you
 front the gateway with a reverse proxy for HTTPS, aim the HTTP checks at that proxy rather than the raw
@@ -11889,26 +11907,42 @@ stack that enforces verification answers `401`.
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_A_FUNCTION_NAME'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BASE_URL' 'REPLACE_WITH_A_FUNCTION_NAME'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
-  case "$1" in *REPLACE_WITH_*|*YOUR_HOST*|"") echo "substitute your host on the set -- line above; not probing"; exit ;; esac
-  case "$2" in *REPLACE_WITH_*|*FUNCTION_NAME*|"") echo "substitute a function name on the set -- line above; not probing"; exit ;; esac
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in *REPLACE_WITH_*|"") echo "substitute the base URL (https://your-proxy, or http://127.0.0.1:8000 for a private-origin check); not probing"; exit 2 ;; esac
+  case "$2" in *REPLACE_WITH_*|*FUNCTION_NAME*|"") echo "substitute a function name; not probing"; exit 2 ;; esac
+  base=${1%/}
+  # Unauthenticated: with FUNCTIONS_VERIFY_JWT=false the main worker runs the function and answers (http=200 or
+  # a function error, not 401). A lone 401 could be the function's OWN check, so pair it with an authorized call
+  # (a valid CURRENT anon key, which is public by design) that must return the function's known response.
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:8000/functions/v1/$2"
+    -w '\nno-key http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$base/functions/v1/$2"
+  printf 'apikey: %s\n' 'REPLACE_WITH_CURRENT_ANON_KEY' | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -H @- -w '\nwith-key http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$base/functions/v1/$2"
 )
 ```
 
-For a port you can still reach, two more checks show whether the shipped credentials were replaced. The
-Studio dashboard still accepts the default basic-auth if the gateway answers a request carrying
-`supabase:this_password_is_insecure_and_should_be_updated` (a `-u` argument against the gateway on
-`8000`, or your proxy) with `http=200` rather than `401`. The database still accepts the demo password
-if `psql` connects to the Supavisor pooler on `5432` or `6543` with the demo `POSTGRES_PASSWORD`, as
-user `postgres.your-tenant-id` (the demo `POOLER_TENANT_ID`) and database `postgres`; once the password
-is regenerated that connection fails authentication.
+For a port you can still reach, check whether the shipped credentials were replaced, feeding every credential
+through stdin rather than argv (`curl --config -` for Basic auth, `curl --header @-` for `apikey`/`Authorization`;
+disable shell tracing). The shipped API keys still work if a request to `$base/auth/v1/settings` carrying the
+demo `ANON_KEY` (or `SERVICE_ROLE_KEY`) in `apikey` returns settings JSON rather than a rejection; pair each with
+a current key that must be accepted, so a gateway rejection cannot mask backend acceptance. The signing SECRET
+itself is only proven rotated by a forged token (reasoned, backlog row 2.27): mint an unexpired HS256
+`service_role` JWT signed with the public demo `JWT_SECRET`, send it as `Authorization: Bearer` alongside a
+valid current `apikey` against a harmless REST canary, and require the backend to REJECT it (an accepted read
+means the demo secret is still trusted). The Studio dashboard still accepts the default Basic auth if the
+gateway answers `supabase:this_password_is_insecure_and_should_be_updated` (via `--config -`) with `http=200`
+rather than `401`, retrieving a known Studio response as the positive control. The database still accepts the
+demo password if `psql` connects to the Supavisor pooler on `5432`/`6543` with the demo `POSTGRES_PASSWORD`, as
+user `postgres.your-tenant-id` (the demo `POOLER_TENANT_ID`) and database `postgres`, running
+`SELECT current_user, current_database();` before the demo-password rejection counts; once regenerated that
+connection fails authentication.
 
 ## Sources (checked September 2026)
+
+At the time of writing these deployment defaults are checked against `self-hosted/v0.8.1` (Envoy v1.39.1, Auth v2.196.0); compare your installed release and every Compose override before applying them.
 
 - Supabase self-hosting with Docker (Envoy gateway, secure your services, changing the database password): https://supabase.com/docs/guides/self-hosting/docker
 - Supabase API keys (anon vs service_role, BYPASSRLS, keep secret): https://supabase.com/docs/guides/api/api-keys
