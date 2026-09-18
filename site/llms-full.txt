@@ -10312,9 +10312,9 @@ ss -tlnp   # read every listener; 5000: 127.0.0.1 only
   # Authorization, not just authentication: experiments/search only returns results the caller may see, so
   # it tests authn, not authz. Pick a REAL experiment id (not the placeholder), confirm admin can GET it,
   # then confirm a low-permission user is refused THERE - a 403 from MLflow on the backend, not the proxy:
-  printf 'user = "admin:%s"\n' "$1" | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H 'Host: mlflow.example.com' \
+  printf 'user = "admin:%s"\n' "$1" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H 'Host: mlflow.example.com' \
     --config - "http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=$4"   # do this admin check FIRST: 200 means the experiment exists and admin may read it; a 401/403/404 here means a wrong id or wrong admin credentials, so fix that before trusting the next line
-  printf 'user = "%s:%s"\n' "$2" "$3" | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H 'Host: mlflow.example.com' \
+  printf 'user = "%s:%s"\n' "$2" "$3" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H 'Host: mlflow.example.com' \
     --config - "http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=$4"   # 403: authenticated but not permitted, same real experiment from MLflow (a 401 here means the low-permission credentials are wrong, not authz)
 )
 ```
