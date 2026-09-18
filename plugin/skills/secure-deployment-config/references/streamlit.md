@@ -19,6 +19,7 @@ proxy_pass http://127.0.0.1:8501;
 proxy_http_version 1.1;
 proxy_set_header Upgrade $http_upgrade;
 proxy_set_header Connection "upgrade";
+proxy_set_header Host $host;
 ```
 
 Streamlit can serve HTTPS itself via `server.sslCertFile` and `server.sslKeyFile`, but its own documentation says not to use this in production ("It has not gone through security audits or performance tests") and to prefer a reverse proxy or load balancer. Treat the built-in TLS as a development convenience only:
@@ -29,11 +30,11 @@ sslCertFile = "/path/cert.pem"
 sslKeyFile  = "/path/key.pem"
 ```
 
-Leave `server.enableXsrfProtection` and `server.enableCORS` at their defaults (both `true`). Advice to disable them so uploads or embedding work behind a proxy removes protection rather than fixing the proxy; correct the proxy's forwarded headers and WebSocket upgrade instead. Enabling XSRF protection does not by itself enable CORS or require an XSRF token for WebSocket connection establishment, and disabling CORS alone does not remove the cross-site checks while XSRF is on; keep both enabled and set an explicit `corsAllowedOrigins`/`allowedHosts` for your public origin. These are cross-site controls, not user authentication ([cors.md](cors.md)). Configuration precedence runs command-line over environment variables over the project `.streamlit/config.toml` (relative to the service's working directory) over the global config, so inspect the launch configuration actually in effect and restart after changing server settings; restrict writes to app code and configuration to deployment administrators, and note that `client.toolbarMode` only changes menu visibility and is not an authorization boundary.
+Leave `server.enableXsrfProtection` and `server.enableCORS` at their defaults (both `true`). Advice to disable them so uploads or embedding work behind a proxy removes protection rather than fixing the proxy; correct the proxy's forwarded headers and WebSocket upgrade instead. XSRF does not enable CORS or require a token when opening a WebSocket. Disabling CORS permits cross-origin WebSockets even with XSRF enabled. Keep both enabled; configure `server.corsAllowedOrigins` with origins and `server.allowedHosts` with hostnames. Configuring native authentication separately enables both protections. These are cross-site controls, not user authentication ([cors.md](cors.md)). Configuration precedence runs command-line over environment variables over the project `.streamlit/config.toml` (relative to the service's working directory) over the global config, so inspect the launch configuration actually in effect and restart after changing server settings; restrict writes to app code and configuration to deployment administrators, and note that `client.toolbarMode` only changes menu visibility and is not an authorization boundary.
 
 ## 2. Native login (OIDC)
 
-Streamlit 1.64.0 provides `st.login()`, `st.logout()`, and `st.user` for OpenID Connect authentication against Google, Microsoft Entra ID, Okta, or any OIDC provider (the feature has been available since the 1.42.0 series); install the `Authlib` package (1.3.2 or later) in the app's environment, without which the `[auth]` block errors. Configuration lives in `.streamlit/secrets.toml`:
+Streamlit 1.64.0 provides `st.login()`, `st.logout()`, and `st.user` for OpenID Connect authentication against Google, Microsoft Entra ID, Okta, or any OIDC provider (`st.login()` and `st.logout()` were introduced in 1.42.0; `st.user` was introduced in 1.45.0, replacing `st.experimental_user`); install the `Authlib` package (1.3.2 or later) in the app's environment, without which the `[auth]` block errors. Configuration lives in `.streamlit/secrets.toml`:
 
 ```toml
 [auth]
@@ -68,7 +69,7 @@ st.write(f"Hello, {st.user.name}")
 
 Streamlit copies the ID token claims onto `st.user`, readable via `st.user.get(...)` or `st.user["..."]`. The `hd` (hosted domain) claim is the trusted Workspace-domain check (matching [oidc-integration.md](oidc-integration.md)): Google sets it only for Workspace and Cloud-organization accounts, and it is absent for consumer gmail.com accounts. For a small fixed user set, an explicit allowlist of addresses is the alternative. Allowlist rules and claim checks are in [oidc-integration.md](oidc-integration.md).
 
-Notes from the Streamlit docs: this is authentication only (identity, not per-resource authorization), the identity cookie lasts 30 days and that period is not configurable, and `secrets.toml` holds the client secret, so it must never be committed. `st.secrets` exposes secrets to server-side app code but does not make them safe to display, so never render or log secret values; exclude `.streamlit/secrets.toml` from Git and image build contexts, restrict its filesystem access to the service and deployment administrators, keep it outside any served directory, and rotate an exposed client or cookie secret. `client.showErrorDetails` defaults to showing full exception messages and tracebacks in the browser, so on an internet-facing app set it to a non-full value (confirm the current option values for your release) to keep unhandled exceptions from leaking paths and code to viewers.
+Notes from the Streamlit docs: this is authentication only (identity, not per-resource authorization), the identity cookie lasts 30 days and that period is not configurable, and `secrets.toml` holds the client secret, so it must never be committed. `st.secrets` exposes secrets to server-side app code but does not make them safe to display, so never render or log secret values; exclude `.streamlit/secrets.toml` from Git and image build contexts, restrict its filesystem access to the service and deployment administrators, keep it outside any served directory, and rotate an exposed client or cookie secret. In Streamlit 1.64.0, `client.showErrorDetails` accepts `"full"` (default), `"stacktrace"`, `"type"`, and `"none"`; the deprecated booleans `true` and `false` map to `"full"` and `"stacktrace"`. Set `showErrorDetails = "none"` under `[client]` to hide exception details from browsers; details remain in the console logs.
 
 MFA: `st.login()` delegates authentication to the OIDC provider, so enforce MFA there (Google, Microsoft Entra ID, Okta, Keycloak, and authentik all support it). Without OIDC, front the app per section 3. Options in [mfa.md](mfa.md).
 
@@ -81,25 +82,35 @@ Basic auth or an emailed one-time PIN alone is not a second factor: for a sensit
 
 ## 4. Uploads, static files, and egress
 
-`st.file_uploader` accepts files up to `server.maxUploadSize` megabytes (default 200) per file, so lower it to what the app needs (add `maxUploadSize` to the `[server]` table) and rate-limit at the proxy; extension and MIME filters are best-effort, not content validation, and uploaded content must never be executed. `server.enableStaticServing` (default `false`) serves every file under the app's `static/` directory through `/app/static/`, a route answered by the server rather than your script, so an `st.login()` gate does not cover it: leave it off unless that directory holds only public files, and never place secrets or private data there. TLS and login do not sandbox Python, so never pass user input to `eval`, `exec`, a shell, or unsafe deserialization, and run the service with least filesystem privilege and minimal credentials (injection defense itself is application security, beyond this deployment guide's scope). If the app fetches user-supplied URLs, constrain the host's egress and block cloud metadata and unrelated internal networks per [egress-metadata.md](egress-metadata.md).
+`st.file_uploader` defaults to a 200 MB per-file limit, configured globally by `server.maxUploadSize`; an explicit per-widget `max_upload_size` overrides it. Lower the global limit, review every widget override, and rate-limit at the proxy; extension and MIME filters are best-effort, not content validation, and uploaded content must never be executed. `server.enableStaticServing` (default `false`) serves every file under the app's `static/` directory through `/app/static/`, a route answered by the server rather than your script, so an `st.login()` gate does not cover it: leave it off unless that directory holds only public files, and never place secrets or private data there. TLS and login do not sandbox Python, so never pass user input to `eval`, `exec`, a shell, or unsafe deserialization, and run the service with least filesystem privilege and minimal credentials (injection defense itself is application security, beyond this deployment guide's scope). If the app fetches user-supplied URLs, constrain the host's egress and block cloud metadata and unrelated internal networks per [egress-metadata.md](egress-metadata.md).
 
 ## 5. Verify
 
-Reasoned, not demonstrated: the authoring environment has no Streamlit runtime or container runtime and cannot create listening sockets, so these describe the expected exposed and fixed outcomes rather than observed ones, and backlog row 2.36 tracks demonstrating them against a live 1.64.0 deployment. Use curl 7.75.0 or newer; never add `-k`. Substitute your public origin and the server's public address inside the single quotes.
+Reasoned, not demonstrated: the authoring environment has no Streamlit runtime or container runtime and cannot create listening sockets, so these describe the expected exposed and fixed outcomes rather than observed ones, and backlog row 2.36 tracks demonstrating them against a live 1.64.0 deployment. Use curl 7.75.0 or newer; never add `-k`. Substitute the public HTTPS origin, without a trailing slash, and the server's public address inside the single quotes on their respective `set --` lines, and paste each complete subshell.
 
 ```bash
 ss -tlnp   # listeners on the origin host; 8501 must be 127.0.0.1 behind a proxy, not a public interface
-# 1) TLS on the public origin: the certificate verifies. A transport error (nonzero exit, including a
-#    timeout) is inconclusive, not a pass.
-curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -o /dev/null \
-  -w 'tls=%{http_code} exit=%{exitcode} err=%{errormsg}\n' https://app.example.com/
-# 2) Fronting-proxy deployments only: an anonymous request must get the proxy's denial or login
-#    (302/401/403), never reach Streamlit. The health endpoint answers "ok" with no auth, so a 200 whose
-#    body is "ok" through the proxy means requests reach Streamlit ungated (the finding). With NATIVE
-#    st.login and no proxy, Streamlit serves its index (200) to anonymous requests BY DESIGN and gates
-#    inside the script over the websocket, so judge those by the browser checks below, not this status.
-curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-  -w '\nanon=%{http_code} exit=%{exitcode} err=%{errormsg}\n' https://app.example.com/_stcore/health
+# 1) TLS on the public origin, then the fronting-proxy anonymous check. A transport error (nonzero exit,
+#    including a timeout) is inconclusive, not a pass. Native st.login serves an anonymous 200 on the index
+#    BY DESIGN and gates inside the script over the websocket, so judge that pattern by the browser checks
+#    below, not this HTTP status.
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PUBLIC_HTTPS_ORIGIN'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "provide exactly one origin; not probing"; exit 2; }
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute your HTTPS origin; not probing"; exit 2 ;;
+    https://*) ;;
+    *) echo "use an HTTPS origin; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -o /dev/null \
+    -w 'tls=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/" || exit "$?"
+  # Authentication-proxy deployments only: inspect this route's policy and response.
+  # Native st.login permits anonymous index requests; use the browser controls below.
+  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -D - \
+    -w '\nanon=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/_stcore/health"
+)
 # 3) From another host, port 8501 must not answer directly, or the proxy is bypassable. Any HTTP code,
 #    including a 200 "ok", means 8501 answered externally (the finding); a refused or no-route connection
 #    is consistent with closure but not proof; a DNS or local socket error or a timeout is inconclusive.
@@ -111,7 +122,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the server's public address on the set -- line above; not probing"; exit 2 ;;
     *) curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-         -w 'http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:8501/_stcore/health" || true ;;
+         -w 'http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:8501/_stcore/health" ;;
   esac
 )
 ```
