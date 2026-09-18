@@ -29,13 +29,38 @@ code-server also proxies other local services through `/proxy/<port>/`, `/abspro
 ## 3. Verify
 
 ```bash
-# REASONED, not demonstrated here: no running code-server in the authoring environment, so the shell syntax
-# and guards were checked locally but the exposed-vs-fixed responses were not. Backlog row 1.78 tracks it.
+# UNVERIFIED: live exposed-versus-fixed results remain outstanding in TODO row 1.78.
+# Shell syntax and guard checks do not demonstrate authentication or origin isolation.
 # ss is a listener inventory in THIS namespace - not a firewall, publication, or authentication check.
-ss -tlnp   # expect 8080 on loopback or a private address; then, from another host, probe every PUBLIC
-           # IPv4/IPv6 address and any published port directly - ANY HTTP response there (even a 401) means
-           # the origin is reachable, which is a finding on its own
-(                              # unauthenticated control against the SAME editor URL; a proxy 401 proves nothing
+ss -tlnp   # expect 8080 on loopback or a private address; then probe the public origin directly (below):
+           # ANY HTTP response there (even a 401) means the origin is reachable, which is a finding on its own
+# Direct-origin reachability: connect straight to the public IP and published port while keeping the URL
+# hostname for TLS. From an untrusted external host, repeat for every public IPv4/IPv6 address and port.
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ORIGIN_URL' 'REPLACE_WITH_PUBLIC_IP' 'REPLACE_WITH_PUBLISHED_PORT'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
+  shift
+  [ "$#" -eq 3 ] || { echo 'exactly three values are required; not probing'; exit 2; }
+  case "$1|$2|$3" in
+    *REPLACE_WITH_*) echo 'substitute all values inside the quotes; not probing'; exit 2 ;;
+  esac
+  case "$1" in
+    http://*|https://*) ;;
+    *) echo 'an HTTP or HTTPS origin URL is required; not probing'; exit 2 ;;
+  esac
+  [ -n "$2" ] || { echo 'a public IP is required; not probing'; exit 2; }
+  case "$3" in
+    ''|*[!0-9]*) echo 'a numeric published port is required; not probing'; exit 2 ;;
+  esac
+  # bracket an IPv6 literal in REPLACE_WITH_PUBLIC_IP. Any HTTP response (incl 401/403) = a finding;
+  # http=000 is not a pass (a certificate, timeout, or local error is inconclusive). Never add -k.
+  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    --connect-to "::$2:$3" -o /dev/null \
+    -w 'origin http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
+)
+# Auth discrimination against the SAME editor URL: a proxy 401 proves nothing, so pair an unauthenticated
+# request with an authenticated one and confirm the editor in a fresh browser session too.
+(
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_EDITOR_URL'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
   shift
@@ -45,21 +70,36 @@ ss -tlnp   # expect 8080 on loopback or a private address; then, from another ho
     https://*) ;;
     *) echo 'an HTTPS URL is required; not probing'; exit 2 ;;
   esac
-  # An unauthenticated visit must land on the login page, not the editor. A discarded-body request cannot tell
-  # them apart (both are 200), so keep the body and also confirm it in a fresh browser session.
+  # 1) Unauthenticated: follow redirects and inspect the FINAL body - login or challenge, never the editor.
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -w '\nhttp=%{http_code} url=%{url_effective} exit=%{exitcode}\n' "$1"
+    --location --max-redirs 5 --proto-redir '=https' \
+    -w '\nunauth http=%{http_code} url=%{url_effective} exit=%{exitcode} err=%{errormsg}\n' "$1"
+  # 2) Authenticated positive control: paste a cookie from a valid browser session; it enters via stdin
+  #    (curl --header @-), never argv. The authenticated response must contain the editor.
+  set +x
+  unset code_server_cookie || { echo 'cannot initialize cookie input; not probing'; exit 2; }
+  IFS= read -r -s -p 'Cookie value (name=value; name=value), then Enter: ' code_server_cookie < /dev/tty || exit 2
+  printf '\n'
+  case "$code_server_cookie" in
+    ''|*REPLACE_WITH_*|*$'\r'*) echo 'a valid session cookie is required; not probing'; exit 2 ;;
+  esac
+  printf 'Cookie: %s\n' "$code_server_cookie" |
+    curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+      --location --max-redirs 5 --proto-redir '=https' --header @- \
+      -w '\nauth http=%{http_code} url=%{url_effective} exit=%{exitcode} err=%{errormsg}\n' "$1"
 )
-# Authenticated positive control: repeat with a valid session (send the session cookie via a stdin header,
-# curl -H @-, never on the command line) and confirm it reaches the editor. For MFA, confirm password-only
-# access fails and completing the second factor permits the same request. Run these from a network position
-# permitted to reach the origin, and separately confirm untrusted clients cannot reach the origin directly.
+# Fixed: unauthenticated lands on login or challenge and authenticated reaches the editor. For MFA, confirm
+# password-only access cannot open the editor and completing the second factor can. A transport, certificate,
+# or unsuccessful positive control is inconclusive, not a pass.
 ```
 
 An unauthenticated editor in a private browser window means whoever finds the URL owns the host.
 
 ## Sources (checked September 2026)
 
-- code-server deployment guide (exposure recommendations, TLS and self-signed certificates, reverse proxy, `/proxy`+`/absproxy`+`--proxy-domain` routes and `--skip-auth-preflight`; checked against v4.137.0): https://coder.com/docs/code-server/guide
-- code-server FAQ (config.yaml keys map to flags, `cert: false` default, `hashed-password` precedence, `--config`/`CODE_SERVER_CONFIG`/`XDG_CONFIG_HOME`, flags override the file): https://coder.com/docs/code-server/FAQ
-- code-server repository: https://github.com/coder/code-server
+- code-server v4.137.0 deployment guide (exposure, TLS and self-signed certificates, reverse proxy, `/proxy`+`/absproxy`+`--proxy-domain` routes, `--skip-auth-preflight`): https://raw.githubusercontent.com/coder/code-server/v4.137.0/docs/guide.md
+- code-server FAQ (config.yaml keys map to flags, `cert: false` default, `hashed-password` precedence, config path from `--config`/`CODE_SERVER_CONFIG`/`XDG_CONFIG_HOME`, flags override the file): https://coder.com/docs/code-server/FAQ
+- code-server v4.137.0 CLI (credentials, defaults, config generation, proxy flags, `--password` rejected on the CLI): https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/cli.ts
+- code-server v4.137.0 HTTP controls (authentication, proxy auth, `--disable-proxy`): https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/http.ts
+- code-server v4.137.0 path proxy (`/proxy`, `/absproxy` routing): https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/routes/pathProxy.ts
+- code-server v4.137.0 domain proxy (`--proxy-domain` subdomains): https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/routes/domainProxy.ts
