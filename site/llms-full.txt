@@ -2943,7 +2943,7 @@ http-request deny deny_status 413 if { req.body_size gt 10485760 }
 
 The stats page and the runtime API are separate from proxied traffic and easy to leave open. Inventory both in every loaded configuration, and leave each disabled unless needed.
 
-The stats page is off unless a frontend enables it, and enabling it authenticates nothing on its own: an unauthenticated page leaks operational detail, and `stats admin` additionally lets a caller enable, disable, or drain backends. Omit `stats admin` from a monitoring page, keep any admin page private, and reuse the hashed userlist rather than a cleartext `stats auth`:
+The stats page is disabled unless a configuration enables it (in a `frontend`, `listen`, `backend`, or `defaults`), and enabling it authenticates nothing on its own: an unauthenticated page leaks operational detail, and `stats admin` additionally lets a caller enable, disable, or drain backends. Inventory every loaded configuration, omit `stats admin` from a monitoring page, keep any admin page private, and reuse the hashed userlist rather than a cleartext `stats auth`:
 
 ```haproxy
 listen monitoring
@@ -2973,6 +2973,7 @@ sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
   host=$1
   IFS= read -r -s -p 'admin password: ' pw < /dev/tty; echo
   [ -n "$pw" ] || { echo 'supply the admin password; not probing'; exit 2; }
+  esc=$pw; esc=${esc//\\/\\\\}; esc=${esc//\"/\\\"}   # escape \ and " so curl --config parsing keeps the exact password
   base=(-sS --noproxy '*' --connect-timeout 5 --max-time 30)
   # 1) HTTP must redirect to HTTPS.
   curl -q -g "${base[@]}" -D - -o /dev/null -w 'redirect http=%{http_code}\n' "http://$host/"   # expect 301 + https Location
@@ -2980,7 +2981,7 @@ sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
   #    expected success. The password reaches curl through stdin config (curl --config -), never argv.
   curl -q -g "${base[@]}" -o /dev/null -w 'no-creds http=%{http_code}\n' "https://$host/"
   printf 'user = "admin:%s"\n' 'definitely-wrong' | curl -q -g "${base[@]}" --config - -o /dev/null -w 'bad-creds http=%{http_code}\n' "https://$host/"
-  printf 'user = "admin:%s"\n' "$pw"              | curl -q -g "${base[@]}" --config - -o /dev/null -w 'valid http=%{http_code}\n' "https://$host/"
+  printf 'user = "admin:%s"\n' "$esc"             | curl -q -g "${base[@]}" --config - -o /dev/null -w 'valid http=%{http_code}\n' "https://$host/"
   # 3) Body-size guard, BOTH cases with valid creds so a 401 cannot masquerade as the result. Payloads live in
   #    a private temp dir removed on exit.
   tmp=$(mktemp -d) || { echo 'no tempdir; not probing'; exit 2; }
@@ -2988,7 +2989,7 @@ sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
   head -c 1M /dev/zero > "$tmp/under.bin"  || { echo 'payload write failed'; exit 2; }
   head -c 11M /dev/zero > "$tmp/over.bin" || { echo 'payload write failed'; exit 2; }
   for f in under over; do
-    printf 'user = "admin:%s"\n' "$pw" | curl -q -g "${base[@]}" --config - --data-binary @"$tmp/$f.bin" \
+    printf 'user = "admin:%s"\n' "$esc" | curl -q -g "${base[@]}" --config - --data-binary @"$tmp/$f.bin" \
       -o /dev/null -w "$f http=%{http_code}\n" "https://$host/"
   done
   # under: the app's success, not 413; over: 413. req.body_size reads the advertised Content-Length, which curl
@@ -3001,19 +3002,42 @@ ss -tlnp   # inventory: the backend (3000) must be 127.0.0.1 only, never 0.0.0.0
            # socket is a root-owned mode-600 Unix socket (ls -l /run/haproxy/admin.sock), not a TCP listener.
 ```
 
-Verify each management surface you enabled, reasoned the same way (backlog row 1.80). For a stats listener,
-send an unauthenticated request (must be refused) and one with valid credentials (must return the HAProxy
-statistics), against that listener specifically, since a challenge from another frontend proves nothing about
-it. For the runtime API, inspect the socket's ownership and mode and attempt the same socket as an
-unauthorized local identity, requiring a permission-denied failure; `show cli level` reporting `admin` is the
-authorized level, not proof of access control. If you required client certificates (`verify required`), the
-Basic-auth probes above cannot reach the challenge without a certificate: test no certificate and an untrusted
-one (TLS rejection) and a trusted one with `--cert`/`--key` (success), keeping server-certificate verification
-on and adding the Basic credentials only if that rule is still configured.
+Verify each management surface you enabled, reasoned the same way (backlog row 1.80): the stats listener with
+an unauthenticated request (refused) and a valid-credential request (returns the statistics) against that
+listener specifically; the runtime socket by its ownership and mode and an unauthorized local identity
+(permission denied), since `show cli level` reporting `admin` is the authorized level, not proof of access
+control; and, where `verify required` is set, client certificates (no certificate and an untrusted one
+rejected at TLS, a trusted one admitted with `--cert`/`--key`, server verification kept on).
+
+```bash
+(
+  set +x
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HOST'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
+  case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the host; not probing'; exit 2 ;; esac
+  host=$1
+  base=(-sS --noproxy '*' --connect-timeout 5 --max-time 15)
+  # Stats listener: no credentials must be refused; valid credentials return the statistics.
+  curl -q -g "${base[@]}" -o /dev/null -w 'stats no-creds=%{http_code}\n' "https://$host:8404/stats"
+  IFS= read -r -s -p 'stats admin password: ' sp < /dev/tty; echo
+  sp=${sp//\\/\\\\}; sp=${sp//\"/\\\"}
+  printf 'user = "admin:%s"\n' "$sp" | curl -q -g "${base[@]}" --config - -o /dev/null -w 'stats auth=%{http_code}\n' "https://$host:8404/stats"
+  # mTLS, only if `bind ... verify required`: no cert and an untrusted cert rejected at TLS, a trusted one admitted.
+  curl -q -g "${base[@]}" -o /dev/null -w 'mtls no-cert=%{http_code} exit=%{exitcode}\n' "https://$host/"
+  curl -q -g "${base[@]}" --cert REPLACE_WITH_CLIENT_CRT --key REPLACE_WITH_CLIENT_KEY \
+    -o /dev/null -w 'mtls with-cert=%{http_code} exit=%{exitcode}\n' "https://$host/"
+)
+# Runtime socket: root-owned mode-600 Unix socket, and an unauthorized local identity must be denied.
+ls -l /run/haproxy/admin.sock                                       # expect srw------- root root
+printf 'show info\n' | sudo socat - /run/haproxy/admin.sock | head -1   # authorized (root): prints info
+sudo -u nobody socat - /run/haproxy/admin.sock < /dev/null         # unauthorized identity: expect permission denied
+```
 
 ## Common mistakes
 
-- Copying only `fullchain.pem` into the crt file; HAProxy needs the private key in the same PEM.
+- Copying only `fullchain.pem` into the combined crt file used here; that file needs the matching private key too (HAProxy can instead load a separate adjacent key file, but this example uses the combined form).
 - Renewing the certificate without rebuilding the combined PEM or reloading HAProxy.
 - Backends reachable directly on `0.0.0.0`, bypassing the proxy; bind them to `127.0.0.1` and confirm with `ss -tlnp`.
 
