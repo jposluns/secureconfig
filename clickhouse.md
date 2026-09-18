@@ -37,7 +37,7 @@ CREATE USER app HOST IP '10.0.0.0/8' IDENTIFIED WITH sha256_password BY 'REPLACE
 GRANT SELECT, INSERT ON appdb.* TO app;
 ```
 
-Keep external-source privileges out of application accounts unless they are needed. ClickHouse can fetch URLs from SQL through the `url()` table function and HTTP dictionaries, read local files with `file()` (relative to `user_files_path`, not an HTTP fetcher), and reach other servers with `remote()`, so review URL, S3, REMOTE, and FILE access, dictionary creation, and any existing externally backed tables and dictionaries (the `SOURCES` grants, split into READ and WRITE forms since 25.7). Set `remote_url_allow_hosts` to the specific URL destinations you need; the shipped configuration notes that omitting the section allows all hosts. That check matches the host name before DNS resolution and on every redirect, so it does not replace network egress controls on link-local metadata and internal addresses; enforce those per [egress-metadata.md](egress-metadata.md).
+Keep external-source privileges out of application accounts unless they are needed. ClickHouse can fetch URLs from SQL through the `url()` table function and HTTP dictionaries, read local files with `file()` (relative to `user_files_path`, not an HTTP fetcher), and reach other servers with `remote()`, so review URL, S3, REMOTE, and FILE access, dictionary creation, and any existing externally backed tables and dictionaries (the `SOURCES` grants; separate READ and WRITE forms are available since 25.7 only when `access_control_improvements.enable_read_write_grants` is set, otherwise use the legacy source privileges such as `URL`, `S3`, `REMOTE`, and `FILE`). Set `remote_url_allow_hosts` to the specific URL destinations you need; the shipped configuration notes that omitting the section allows all hosts. That check matches the host name before DNS resolution and on every redirect, so it does not replace network egress controls on link-local metadata and internal addresses; enforce those per [egress-metadata.md](egress-metadata.md).
 
 ## 3. TLS listeners, plaintext ports off
 
@@ -85,10 +85,20 @@ ss -tlnp   # expect 8443 and 9440, plus only the private listeners you deliberat
   fmt='\nhttp=%{http_code} exit=%{exitcode} remote=%{remote_ip} err=%{errormsg}\n'
   # 1) Disabled plaintext HTTP 8123 on the SAME origin: expect a transport failure. ANY HTTP status here
   #    (including 401 or 403) is a FAILURE - the plaintext port is still answering.
-  curl -q -g "${common[@]}" -o /dev/null -w "$fmt" "http://$host:8123/?query=SELECT%201"
+  if curl -q -g "${common[@]}" -o /dev/null -w "$fmt" "http://$host:8123/?query=SELECT%201"; then
+    echo 'FAIL: plaintext HTTP 8123 answered'
+  else
+    echo 'plaintext probe: inspect the reported transport error; this alone does not prove the port is disabled'
+  fi
   # 2) HTTPS origin as `app`, a matched triple against the SAME origin. Read the password once with no echo
   #    and pass both credential headers on stdin, so the secret never enters argv or history.
-  read -r -s -p 'app password: ' apppw; echo
+  IFS= read -r -s -p 'app password: ' apppw || {
+    echo 'password input failed; not probing authentication'; exit 2;
+  }
+  echo
+  [ -n "$apppw" ] || {
+    echo 'supply the configured nonempty password; not probing authentication'; exit 2;
+  }
   for label in empty wrong correct; do
     case $label in
       empty)   pw='' ;;
@@ -96,13 +106,18 @@ ss -tlnp   # expect 8443 and 9440, plus only the private listeners you deliberat
       correct) pw=$apppw ;;
     esac
     printf 'X-ClickHouse-User: app\nX-ClickHouse-Key: %s\n' "$pw" \
-      | { echo "[$label]"; curl -q -g "${common[@]}" -o /dev/null -w "$fmt" -H @- "https://$host:8443/?query=SELECT%201"; }
+      | { echo "[$label]"; curl -q -g "${common[@]}" -w "$fmt" -H @- "https://$host:8443/?query=SELECT%201"; }
   done
   unset apppw pw
-  # Native 9440 is a SEPARATE authenticator: SELECT 1 as `app` with a wrong then the correct password at the
-  # prompt. For a private CA, configure the client's openSSL.client.caConfig; keep --secure. Expect a native
-  # auth error and nonzero exit first, the result second. Test the `default` account separately.
-  clickhouse-client --host "$host" --port 9440 --secure --user app --query 'SELECT 1' --password
+  # Native 9440 is a SEPARATE authenticator: SELECT 1 as `app` at each prompt, the wrong password then the
+  # correct one. For a private CA, configure the client's openSSL.client.caConfig; keep --secure. Fixed:
+  # `wrong` gives a native auth error and a nonzero exit, `correct` returns 1 and exits 0. A transport or
+  # certificate error is inconclusive. Test the `default` account separately.
+  for label in wrong correct; do
+    printf '\n[native %s] enter the %s password at the prompt.\n' "$label" "$label"
+    clickhouse-client --host "$host" --port 9440 --secure --user app --query 'SELECT 1' --password
+    printf 'native_exit=%s\n' "$?"
+  done
 )
 ```
 
@@ -118,7 +133,7 @@ or connection error is inconclusive, not a pass: fix the trust or path and retry
 
 ## Sources (checked September 2026)
 
-- Server settings: [`listen_host`](https://clickhouse.com/docs/reference/settings/server-settings/settings/listen#listen_host), [`openSSL`](https://clickhouse.com/docs/reference/settings/server-settings/settings/other#openSSL), [`interserver_listen_host` and `interserver_http_credentials`](https://clickhouse.com/docs/reference/settings/server-settings/settings/interserver-http)
+- Server settings: [`listen_host`](https://clickhouse.com/docs/reference/settings/server-settings/settings/listen#listen_host), [`openSSL`](https://clickhouse.com/docs/reference/settings/server-settings/settings/other#openSSL), [`interserver_listen_host`](https://clickhouse.com/docs/reference/settings/server-settings/settings/interserver#interserver_listen_host), [`interserver_http_credentials`](https://clickhouse.com/docs/reference/settings/server-settings/settings/interserver-http#interserver_http_credentials)
 - Shipped `config.xml` (`listen_host` default comment, `openSSL` block): https://raw.githubusercontent.com/ClickHouse/ClickHouse/master/programs/server/config.xml
 - User settings (`password_sha256_hex`, `networks`, `access_management`): https://clickhouse.com/docs/concepts/features/configuration/settings/settings-users
 - Shipped `users.xml` (default user, empty password, `::/0`): https://raw.githubusercontent.com/ClickHouse/ClickHouse/master/programs/server/users.xml
@@ -128,8 +143,8 @@ or connection error is inconclusive, not a pass: fix the trust or path and retry
 - Configuring SSL-TLS: https://clickhouse.com/docs/concepts/features/security/tls/configuring-tls
 - HTTP interface (ports, authentication): https://clickhouse.com/docs/concepts/features/interfaces/http
 - `remote_url_allow_hosts` (host allow-list checked before DNS and on redirects; omitting the section allows all hosts): https://clickhouse.com/docs/reference/settings/server-settings/settings/remote#remote_url_allow_hosts
-- External-source privileges (`GRANT`, `SOURCES`, READ/WRITE forms since 25.7): https://clickhouse.com/docs/reference/statements/grant#sources
-- `url()`, `file()`, and `remote()` table functions (URL fetch vs local file vs server-to-server): https://clickhouse.com/docs/reference/functions/table-functions/url
+- External-source privileges (`GRANT`, `SOURCES`; READ/WRITE forms require version 25.7 or later and `access_control_improvements.enable_read_write_grants`): https://clickhouse.com/docs/reference/statements/grant#sources
+- External sources: [`url()`](https://clickhouse.com/docs/reference/functions/table-functions/url), [`file()` and `user_files_path`](https://clickhouse.com/docs/reference/functions/table-functions/file), [`remote()`/`remoteSecure()`](https://clickhouse.com/docs/reference/functions/table-functions/remote), and [HTTP(S) dictionary sources](https://clickhouse.com/docs/reference/statements/create/dictionary/sources/http)
 - Native TOTP for XML users (`time_based_one_time_password`; not in SQL-driven access control): https://clickhouse.com/docs/concepts/features/configuration/settings/settings-users#totp-authentication-configuration
 - ClickHouse 26.2 release (native TOTP): https://clickhouse.com/blog/clickhouse-release-26-02
 - Configuration files (`config.d`/`users.d` merging, `remove` and `replace` attributes, `<clickhouse>` root): https://clickhouse.com/docs/concepts/features/configuration/server-config/configuration-files
