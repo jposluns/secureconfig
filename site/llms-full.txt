@@ -8108,6 +8108,9 @@ TLS terminates with normal validation (a trusted CA for private PKI); never use 
 - SurrealDB DEFINE ACCESS (RECORD, JWT, BEARER): https://surrealdb.com/docs/reference/query-language/statements/define/access/record
 - SurrealDB 2.0.0 release (auth on by default, `--unauthenticated`, bind default 127.0.0.1): https://surrealdb.com/releases/2.0
 - SurrealDB HTTP protocol (`/signup`, `/signin`, `POST /sql`, `/health`): https://surrealdb.com/docs/reference/rest-api/http-protocol
+- SurrealDB INFO statement (database information requires a system user): https://surrealdb.com/docs/reference/query-language/statements/info
+- SurrealDB DEFINE ACCESS TYPE JWT (native `AUDIENCE` since 3.3, issuer/audience checks via `AUTHENTICATE`): https://surrealdb.com/docs/reference/query-language/statements/define/access/jwt
+- SurrealDB DEFINE SCOPE (deprecated in 2.x, removed in 3.0): https://surrealdb.com/docs/reference/query-language/statements/define/scope
 
 ======================================================================
 ==> time-series-metrics-stores.md
