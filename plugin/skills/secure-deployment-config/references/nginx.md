@@ -122,14 +122,27 @@ sudo nginx -t && sudo systemctl reload nginx
 curl -q -sI http://example.com/        # expect 301 with a https:// Location
 curl -q -sI --max-time 10 https://example.com/       # TLS must verify with NO -k (a cert error means TLS is misconfigured); status is 200 if / is open, or 401 if you applied section 3's auth to it
 curl -q -s -o /dev/null -w '%{http_code}\n' --max-time 10 https://example.com/                        # if section 3's auth is applied: an uncredentialed request must be 401/403, never 200
-curl -q -s -o /dev/null -w '%{http_code}\n' --max-time 10 -u admin:REPLACE_WITH_PASSWORD https://example.com/   # with credentials: your app's response, never 401
-curl -q -s -o /dev/null -w 'http=%{http_code} err=%{errormsg}\n' --max-time 10 --tlsv1.1 --tls-max 1.1 https://example.com/   # protocol floor: offering only TLS 1.1 MUST be rejected. The pass is specifically a `protocol_version` alert (the server refuses the version); a generic handshake failure (for example no shared cipher) or a local "could not load"/policy error is inconclusive, not proof. This shows the 1.1 boundary; the same TLSv1.2+ floor also refuses 1.0, which you confirm separately with `--tlsv1.0 --tls-max 1.0`
-head -c 9M  /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
-curl -q -s -o /dev/null -w '%{http_code}\n' --max-time 20 -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/under.bin https://example.com/
+(
+  # The admin password reaches curl through a config file on stdin (curl
+  # --config -), never through argv: -u admin:PASSWORD is world-readable via
+  # ps and /proc/<pid>/cmdline on a shared host. Paste the whole parenthesised
+  # block, including its set -- line. (The TLS-floor and size-prep steps sit
+  # inside the same block only so the password is entered once.)
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PASSWORD'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit ;; esac
+  set -- "${1//\\/\\\\}"
+  set -- "${1//\"/\\\"}"
+  printf 'user = "admin:%s"\n' "$1" | curl -q -s -o /dev/null -w '%{http_code}\n' --max-time 10 --config - https://example.com/   # with credentials: your app's response, never 401
+  curl -q -s -o /dev/null -w 'http=%{http_code} err=%{errormsg}\n' --max-time 10 --tlsv1.1 --tls-max 1.1 https://example.com/   # protocol floor: offering only TLS 1.1 MUST be rejected. The pass is specifically a `protocol_version` alert (the server refuses the version); a generic handshake failure (for example no shared cipher) or a local "could not load"/policy error is inconclusive, not proof. This shows the 1.1 boundary; the same TLSv1.2+ floor also refuses 1.0, which you confirm separately with `--tlsv1.0 --tls-max 1.0`
+  head -c 9M  /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
+  printf 'user = "admin:%s"\n' "$1" | curl -q -s -o /dev/null -w '%{http_code}\n' --max-time 20 --config - --data-binary @/tmp/under.bin https://example.com/
                                     # positive control: must be your app's normal response to this POST
                                     # (for example 200/204/405), never 413. A 401 means the credentials, not
                                     # the size limit, were exercised, and a 000 means transport failed: either voids the control
-curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/over.bin  https://example.com/
+  printf 'user = "admin:%s"\n' "$1" | curl -q -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  https://example.com/
                                     # 413. The 9M control is the discriminating half: nginx's default
                                     # client_max_body_size is 1m, so 9M is refused until `10m` is set,
                                     # while 11M returns 413 either way. Neither status says WHICH layer
@@ -137,11 +150,15 @@ curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --dat
                                     # attribute it to nginx, set `client_max_body_size 0` in an isolated
                                     # environment, which disables the check entirely; commenting the
                                     # directive out only restores the 1m default and still returns 413
-seq 1 40 | xargs -P 40 -I{} curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD https://example.com/ | sort | uniq -c
-                                    # Run them CONCURRENTLY: a sequential loop pays a
-                                    # TLS handshake per request and can stay under 10r/s, so every
-                                    # request is admitted and the check passes while no limit exists.
-                                    # A 503 appeared. That is all this shows. `limit_conn` also returns
+)
+seq 1 40 | xargs -P 40 -I{} curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/ | sort | uniq -c
+                                    # Run them CONCURRENTLY and WITHOUT credentials: nginx evaluates
+                                    # limit_req in the PREACCESS phase, before auth_basic in the ACCESS
+                                    # phase, so an unauthenticated flood still exercises the limiter, which
+                                    # is keyed on $binary_remote_addr (the client address). Expect 503s
+                                    # (the limiter rejecting; limit_req_status defaults to 503) mixed with
+                                    # 401s if section 3's auth covers /, or with 200s if it does not.
+                                    # A 503 is not conclusive on its own: `limit_conn` also returns
                                     # 503, and an upstream under load returns it too, so this does not
                                     # establish that either nginx limiter fired. Attributing it needs an
                                     # isolated environment with both limiters disabled as a baseline,

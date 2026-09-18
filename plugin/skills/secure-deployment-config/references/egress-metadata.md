@@ -98,7 +98,7 @@ curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w '%{ht
 # GCP (send the required header). For AWS, do the real IMDSv2 two-step - PUT a token then GET WITH it -
 # because a tokenless 401 proves the header requirement, not a network block; for Azure send Metadata: true:
 #   TOKEN=$(curl -q -sf --noproxy '*' --connect-timeout 5 --max-time 5 -X PUT -H 'X-aws-ec2-metadata-token-ttl-seconds: 60' http://169.254.169.254/latest/api/token); tok_rc=$?; echo "PUT exit: $tok_rc"
-#   if [ "$tok_rc" -eq 0 ] && [ -n "$TOKEN" ]; then curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'aws=%{http_code} time_connect=%{time_connect}\n' -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/iam/security-credentials/; else echo "no usable token (PUT exit $tok_rc): the PUT was refused, timed out, or returned an HTTP error (-f), so this is inconclusive on its own - treat metadata as blocked only with the enforcement-point deny record below"; fi
+#   if [ "$tok_rc" -eq 0 ] && [ -n "$TOKEN" ]; then printf 'X-aws-ec2-metadata-token: %s\n' "$TOKEN" | curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'aws=%{http_code} time_connect=%{time_connect}\n' -H @- http://169.254.169.254/latest/meta-data/iam/security-credentials/; else echo "no usable token (PUT exit $tok_rc): the PUT was refused, timed out, or returned an HTTP error (-f), so this is inconclusive on its own - treat metadata as blocked only with the enforcement-point deny record below"; fi
 #   Where IPv6 IMDS is enabled, repeat the WHOLE probe over IPv6 (do not reuse the IPv4 token - acquire
 #   one over IPv6 too, since IPv4 may be blocked while IPv6 is not). Quote the bracketed literal, -q first
 #   then -g. AWS:

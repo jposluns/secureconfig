@@ -701,9 +701,17 @@ MFA: the emailed one-time PIN proves control of a mailbox only. For anything sen
 For APIs and machine clients, create a **service token** in the Zero Trust dashboard (Access service authentication section), add a **Service Auth** policy to the application, and send the token with each request:
 
 ```bash
-curl -q -H "CF-Access-Client-Id: REPLACE_WITH_CLIENT_ID" \
-     -H "CF-Access-Client-Secret: REPLACE_WITH_CLIENT_SECRET" \
-     https://app.example.com/api
+(
+  # Feed the service-token headers to curl on stdin (curl --header @-), never in
+  # argv: the Client-Secret in -H is readable in ps / /proc/<pid>/cmdline.
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLIENT_ID' 'REPLACE_WITH_CLIENT_SECRET'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Client-Id on the set -- line above; not probing"; exit ;; esac
+  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Client-Secret on the set -- line above; not probing"; exit ;; esac
+  printf 'CF-Access-Client-Id: %s\nCF-Access-Client-Secret: %s\n' "$1" "$2" | curl -q -H @- https://app.example.com/api
+)
 ```
 
 ## 5. Close the side doors
@@ -2508,14 +2516,27 @@ sudo nginx -t && sudo systemctl reload nginx
 curl -q -sI http://example.com/        # expect 301 with a https:// Location
 curl -q -sI --max-time 10 https://example.com/       # TLS must verify with NO -k (a cert error means TLS is misconfigured); status is 200 if / is open, or 401 if you applied section 3's auth to it
 curl -q -s -o /dev/null -w '%{http_code}\n' --max-time 10 https://example.com/                        # if section 3's auth is applied: an uncredentialed request must be 401/403, never 200
-curl -q -s -o /dev/null -w '%{http_code}\n' --max-time 10 -u admin:REPLACE_WITH_PASSWORD https://example.com/   # with credentials: your app's response, never 401
-curl -q -s -o /dev/null -w 'http=%{http_code} err=%{errormsg}\n' --max-time 10 --tlsv1.1 --tls-max 1.1 https://example.com/   # protocol floor: offering only TLS 1.1 MUST be rejected. The pass is specifically a `protocol_version` alert (the server refuses the version); a generic handshake failure (for example no shared cipher) or a local "could not load"/policy error is inconclusive, not proof. This shows the 1.1 boundary; the same TLSv1.2+ floor also refuses 1.0, which you confirm separately with `--tlsv1.0 --tls-max 1.0`
-head -c 9M  /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
-curl -q -s -o /dev/null -w '%{http_code}\n' --max-time 20 -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/under.bin https://example.com/
+(
+  # The admin password reaches curl through a config file on stdin (curl
+  # --config -), never through argv: -u admin:PASSWORD is world-readable via
+  # ps and /proc/<pid>/cmdline on a shared host. Paste the whole parenthesised
+  # block, including its set -- line. (The TLS-floor and size-prep steps sit
+  # inside the same block only so the password is entered once.)
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PASSWORD'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit ;; esac
+  set -- "${1//\\/\\\\}"
+  set -- "${1//\"/\\\"}"
+  printf 'user = "admin:%s"\n' "$1" | curl -q -s -o /dev/null -w '%{http_code}\n' --max-time 10 --config - https://example.com/   # with credentials: your app's response, never 401
+  curl -q -s -o /dev/null -w 'http=%{http_code} err=%{errormsg}\n' --max-time 10 --tlsv1.1 --tls-max 1.1 https://example.com/   # protocol floor: offering only TLS 1.1 MUST be rejected. The pass is specifically a `protocol_version` alert (the server refuses the version); a generic handshake failure (for example no shared cipher) or a local "could not load"/policy error is inconclusive, not proof. This shows the 1.1 boundary; the same TLSv1.2+ floor also refuses 1.0, which you confirm separately with `--tlsv1.0 --tls-max 1.0`
+  head -c 9M  /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
+  printf 'user = "admin:%s"\n' "$1" | curl -q -s -o /dev/null -w '%{http_code}\n' --max-time 20 --config - --data-binary @/tmp/under.bin https://example.com/
                                     # positive control: must be your app's normal response to this POST
                                     # (for example 200/204/405), never 413. A 401 means the credentials, not
                                     # the size limit, were exercised, and a 000 means transport failed: either voids the control
-curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/over.bin  https://example.com/
+  printf 'user = "admin:%s"\n' "$1" | curl -q -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  https://example.com/
                                     # 413. The 9M control is the discriminating half: nginx's default
                                     # client_max_body_size is 1m, so 9M is refused until `10m` is set,
                                     # while 11M returns 413 either way. Neither status says WHICH layer
@@ -2523,11 +2544,15 @@ curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --dat
                                     # attribute it to nginx, set `client_max_body_size 0` in an isolated
                                     # environment, which disables the check entirely; commenting the
                                     # directive out only restores the 1m default and still returns 413
-seq 1 40 | xargs -P 40 -I{} curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD https://example.com/ | sort | uniq -c
-                                    # Run them CONCURRENTLY: a sequential loop pays a
-                                    # TLS handshake per request and can stay under 10r/s, so every
-                                    # request is admitted and the check passes while no limit exists.
-                                    # A 503 appeared. That is all this shows. `limit_conn` also returns
+)
+seq 1 40 | xargs -P 40 -I{} curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/ | sort | uniq -c
+                                    # Run them CONCURRENTLY and WITHOUT credentials: nginx evaluates
+                                    # limit_req in the PREACCESS phase, before auth_basic in the ACCESS
+                                    # phase, so an unauthenticated flood still exercises the limiter, which
+                                    # is keyed on $binary_remote_addr (the client address). Expect 503s
+                                    # (the limiter rejecting; limit_req_status defaults to 503) mixed with
+                                    # 401s if section 3's auth covers /, or with 200s if it does not.
+                                    # A 503 is not conclusive on its own: `limit_conn` also returns
                                     # 503, and an upstream under load returns it too, so this does not
                                     # establish that either nginx limiter fired. Attributing it needs an
                                     # isolated environment with both limiters disabled as a baseline,
@@ -2793,9 +2818,19 @@ curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/admin     #
 curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/admin/x   # 401 as well
 curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/          # to prove the matcher SCOPES auth to /admin (not the whole site), a non-/admin path must NOT return 401: it reaches the app (a 200, or the app's own redirect or 404). A 401 here means auth is applied site-wide, not scoped to /admin
 head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
-curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/under.bin https://app.example.com/
+(
+  # curl reads the admin password from a config stream on stdin (--config -),
+  # never argv (-u admin:PASSWORD is readable in ps / /proc/<pid>/cmdline).
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PASSWORD'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit ;; esac
+  set -- "${1//\\/\\\\}"
+  set -- "${1//\"/\\\"}"
+  printf 'user = "admin:%s"\n' "$1" | curl -q -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/under.bin https://app.example.com/
                                      # positive control: under the limit, must NOT be 413
-curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/over.bin  https://app.example.com/
+  printf 'user = "admin:%s"\n' "$1" | curl -q -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  https://app.example.com/
                                      # 413. Supply credentials: an unauthenticated probe returns 401 and
                                      # tells you nothing about max_size. Caddy's default order puts
                                      # request_body ahead of basic_auth, but the limit is enforced when a
@@ -2803,6 +2838,7 @@ curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --dat
                                      # handler reading at all. A backend with its own limit returns the
                                      # same code, so attributing the refusal needs an isolated
                                      # environment with request_body removed
+)
 rm -f /tmp/under.bin /tmp/over.bin
 ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.0.0.0. Every check above
                                      # passes while the app also answers directly on port 3000, which
@@ -3190,16 +3226,30 @@ than the client, so set it explicitly if you want a per-client cap.
 curl -q -sI http://app.example.com/     # expect a redirect to https://
 curl -q -sI https://app.example.com/    # expect 401 without credentials once auth is on
 head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
-curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/under.bin https://app.example.com/
+(
+  # curl reads the admin password from a config stream on stdin (--config -),
+  # never argv (-u admin:PASSWORD is readable in ps / /proc/<pid>/cmdline).
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PASSWORD'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit ;; esac
+  set -- "${1//\\/\\\\}"
+  set -- "${1//\"/\\\"}"
+  printf 'user = "admin:%s"\n' "$1" | curl -q -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/under.bin https://app.example.com/
                                      # positive control: under the limit, must NOT be 413
-curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/over.bin  https://app.example.com/
+  printf 'user = "admin:%s"\n' "$1" | curl -q -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  https://app.example.com/
                                      # 413. Credentials matter: app-body runs after app-auth, so an
                                      # unauthenticated probe is counted by app-rate/app-inflight but stops
                                      # at 401 before app-body buffers it. A backend with its own limit
                                      # returns the same code, so attributing the refusal needs an isolated
                                      # environment with app-body removed
-seq 1 40 | xargs -P 40 -I{} curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD https://app.example.com/ | sort | uniq -c
-                                     # A 429 appeared. That is all this shows. inflightreq also returns
+)
+seq 1 40 | xargs -P 40 -I{} curl -q -s -o /dev/null -w '%{http_code}\n' https://app.example.com/ | sort | uniq -c
+                                     # No credentials here: app-rate and app-inflight run BEFORE app-auth in the
+                                     # middleware chain (section 4), so an unauthenticated flood is counted by the
+                                     # limiter, keyed on the client source. A 429 appeared. That is all this shows.
+                                     # inflightreq also returns
                                      # 429, and an upstream under load can too, so this does not
                                      # establish that ratelimit fired. Attributing it needs an isolated
                                      # environment with both disabled as a baseline, then each enabled
@@ -3259,7 +3309,7 @@ A `404` for the canary also appears when the whole Docker provider is off, which
 )
 ```
 
-With the authentication from section 3 in place, this unauthenticated probe returns `http=401`: a response, rather than a connection failure or a `404`, means the provider is routing this app. The `401` may come from Traefik's basicAuth or from the app's own login, so it confirms routing, not specifically that the proxy middleware is attached; confirm that separately from the router's `middlewares` in the dashboard or config. (Add `-u admin:REPLACE_WITH_PASSWORD` to the curl line to see the app's own authenticated response instead.) The fix is confirmed when, in the same run, the app answers `401` (or your known authenticated `200`) and the canary answers `404`: routing works and the unlabelled container is excluded. A `404` or a connection failure for the app instead means the provider is not routing it. No `-k` here; the app needs a real certificate.
+With the authentication from section 3 in place, this unauthenticated probe returns `http=401`: a response, rather than a connection failure or a `404`, means the provider is routing this app. The `401` may come from Traefik's basicAuth or from the app's own login, so it confirms routing, not specifically that the proxy middleware is attached; confirm that separately from the router's `middlewares` in the dashboard or config. (Feed the admin credential to that curl on stdin, as the section 5 Verify block does, to see the app's own authenticated response instead.) The fix is confirmed when, in the same run, the app answers `401` (or your known authenticated `200`) and the canary answers `404`: routing works and the unlabelled container is excluded. A `404` or a connection failure for the app instead means the provider is not routing it. No `-k` here; the app needs a real certificate.
 
 ## Common mistakes
 
@@ -5795,7 +5845,7 @@ curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w '%{ht
 # GCP (send the required header). For AWS, do the real IMDSv2 two-step - PUT a token then GET WITH it -
 # because a tokenless 401 proves the header requirement, not a network block; for Azure send Metadata: true:
 #   TOKEN=$(curl -q -sf --noproxy '*' --connect-timeout 5 --max-time 5 -X PUT -H 'X-aws-ec2-metadata-token-ttl-seconds: 60' http://169.254.169.254/latest/api/token); tok_rc=$?; echo "PUT exit: $tok_rc"
-#   if [ "$tok_rc" -eq 0 ] && [ -n "$TOKEN" ]; then curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'aws=%{http_code} time_connect=%{time_connect}\n' -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/iam/security-credentials/; else echo "no usable token (PUT exit $tok_rc): the PUT was refused, timed out, or returned an HTTP error (-f), so this is inconclusive on its own - treat metadata as blocked only with the enforcement-point deny record below"; fi
+#   if [ "$tok_rc" -eq 0 ] && [ -n "$TOKEN" ]; then printf 'X-aws-ec2-metadata-token: %s\n' "$TOKEN" | curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'aws=%{http_code} time_connect=%{time_connect}\n' -H @- http://169.254.169.254/latest/meta-data/iam/security-credentials/; else echo "no usable token (PUT exit $tok_rc): the PUT was refused, timed out, or returned an HTTP error (-f), so this is inconclusive on its own - treat metadata as blocked only with the enforcement-point deny record below"; fi
 #   Where IPv6 IMDS is enabled, repeat the WHOLE probe over IPv6 (do not reuse the IPv4 token - acquire
 #   one over IPv6 too, since IPv4 may be blocked while IPv6 is not). Quote the bracketed literal, -q first
 #   then -g. AWS:
@@ -5922,10 +5972,19 @@ ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not
 # Does the LISTENER itself demand auth? Test it DIRECTLY on loopback, with no platform proxy in the path,
 # as a matched pair. Jupyter uses an 'Authorization: token <token>' (or ?token=) scheme; without it
 # /api/contents returns 403, with a valid token 200. Substitute the real token.
-curl -q -g -sS -o /dev/null -w 'jupyter no-token=%{http_code} exit=%{exitcode}\n' --noproxy '*' \
-  --connect-timeout 5 --max-time 10 http://127.0.0.1:8888/api/contents
-curl -q -g -sS -o /dev/null -w 'jupyter with-token=%{http_code} exit=%{exitcode}\n' --noproxy '*' \
-  --connect-timeout 5 --max-time 10 -H "Authorization: token REPLACE_WITH_JUPYTER_TOKEN" http://127.0.0.1:8888/api/contents
+(
+  # Feed the token to curl on stdin (curl --header @-), never in argv:
+  # -H "Authorization: token TOKEN" is readable in ps / /proc/<pid>/cmdline.
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_JUPYTER_TOKEN'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Jupyter token on the set -- line above; not probing"; exit ;; esac
+  curl -q -g -sS -o /dev/null -w 'jupyter no-token=%{http_code} exit=%{exitcode}\n' --noproxy '*' \
+    --connect-timeout 5 --max-time 10 http://127.0.0.1:8888/api/contents
+  printf 'Authorization: token %s\n' "$1" | curl -q -g -sS -o /dev/null -w 'jupyter with-token=%{http_code} exit=%{exitcode}\n' --noproxy '*' \
+    --connect-timeout 5 --max-time 10 -H @- http://127.0.0.1:8888/api/contents
+)
 # Then confirm the SAME listener is authenticated FROM OUTSIDE, once PER exposed port/mapping. A probe of
 # the platform proxy hostname shows reachability and that something gates the URL, but a 401/200 there can
 # be the PLATFORM proxy rather than the listener, so read it with the direct-loopback pair above: a no-
@@ -5937,9 +5996,9 @@ curl -q -g -sS -o /dev/null -w 'jupyter with-token=%{http_code} exit=%{exitcode}
   shift
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
   case "$1" in *REPLACE_WITH_*|"") echo "substitute the URL on the set -- line above; not probing"; exit ;; esac
-  case "$2" in *REPLACE_WITH_*|"") echo "substitute the token on the set -- line above; not probing"; exit ;; esac
+  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the token on the set -- line above; not probing"; exit ;; esac
   curl -q -g -sS -o /dev/null -w 'no-cred=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 10 "$1"
-  curl -q -g -sS -o /dev/null -w 'with-cred=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 10 -H "Authorization: Bearer $2" "$1"
+  printf 'Authorization: Bearer %s\n' "$2" | curl -q -g -sS -o /dev/null -w 'with-cred=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 10 -H @- "$1"
 )
 ```
 
@@ -7777,12 +7836,14 @@ using ( (select auth.jwt()->>'sub') = owner_id );
 # First prove the object exists and is readable WITH authorization, so a later anonymous denial is about access,
 # not a missing object (S3 also returns 403 for an object you cannot list). presign signs a GET, so test with GET:
 URL="$(aws s3 presign s3://example-bucket/model.safetensors --expires-in 60)"
-curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "$URL"              # 200 now (authorized)
+# The presigned URL is a credential, so feed it to curl on stdin (--config -), never in argv. It is
+# percent-encoded (no " or \ to escape), and the builtin printf keeps it off curl's own argv.
+printf 'url = "%s"\n' "$URL" | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' --config -              # 200 now (authorized)
 # Then the SAME object's unsigned URL must be denied to an anonymous caller, with client proxies disabled so a
 # proxy cannot answer for S3. One object is not the whole bucket, so repeat for other keys and prefixes:
 curl -q -sSI --noproxy '*' https://example-bucket.s3.amazonaws.com/model.safetensors   # 403, never 200
 # And the signed URL stops working once it expires:
-sleep 61; curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "$URL"    # 403 after the minute; a DNS/TLS/proxy error is inconclusive
+sleep 61; printf 'url = "%s"\n' "$URL" | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' --config -    # 403 after the minute; a DNS/TLS/proxy error is inconclusive
 ```
 
 - An anonymous request to any object URL is denied (S3 returns `403`; GCS `401` or `403`; Azure `401` for modern clients, or `409` for legacy clients predating the bearer challenge, when the account disallows anonymous access; Supabase private buckets return an error, not the file).
@@ -8757,6 +8818,7 @@ ss -tlnp                                               # read every listener: 11
   esac
 )
 curl -q -sS -o /dev/null -w 'http=%{http_code}\n' https://ollama.example.com/api/tags                 # no credentials: expect 401 from the Basic-auth proxy (Ollama's /api/tags does not authenticate callers, so a 401 here comes from the proxy)
+# guard-conventions: allow deliberate wrong-password negative control; admin:WRONG is a dummy, not a live credential
 curl -q -sS -o /dev/null -w 'http=%{http_code}\n' -u admin:WRONG https://ollama.example.com/api/tags  # wrong credentials: expect 401, never 200
 curl -q -sS -u admin -w '\nhttp=%{http_code}\n' https://ollama.example.com/api/tags                   # correct credentials: expect http=200 and the model-list JSON
 ```
@@ -8864,7 +8926,7 @@ printf 'Authorization: Bearer %s\n' "$LITELLM_MASTER_KEY" | curl -q https://llm.
 
 Each app gets its own virtual key, which can be revoked or budgeted independently; LiteLLM's docs cover per-key models, budgets, and expiry. Clients send the virtual key in the `Authorization` header (the header name is configurable via `litellm_key_header_name`).
 
-The `$LITELLM_MASTER_KEY` in the request above is expanded into curl's arguments, where it is readable in `/proc/<pid>/cmdline` while it runs (shell history keeps the literal `$LITELLM_MASTER_KEY`, not its value); on a shared host feed the header to curl on stdin instead, as the request above and the Verify below do: `printf 'Authorization: Bearer %s\n' "$LITELLM_MASTER_KEY" | curl -H @- ...`. Virtual keys are stored hashed, but the provider API keys LiteLLM persists when `general_settings.store_model_in_db` is on are ENCRYPTED with `LITELLM_SALT_KEY` (which falls back to the master key when unset): set a permanent `LITELLM_SALT_KEY` BEFORE adding any credential, because changing it later strands what it encrypted, and protect the database and its backups as the store of those secrets. A credential written literally into `config.yaml` stays plaintext in that file, so keep it out of version control ([secrets.md](secrets.md)).
+Written the naive way, with the key in `-H "Authorization: Bearer $LITELLM_MASTER_KEY"` on curl's own arguments, it would be readable in `/proc/<pid>/cmdline` while it runs (shell history keeps the literal `$LITELLM_MASTER_KEY`, not its value); on a shared host feed the header to curl on stdin instead, as the request above and the Verify below do: `printf 'Authorization: Bearer %s\n' "$LITELLM_MASTER_KEY" | curl -H @- ...`. Virtual keys are stored hashed, but the provider API keys LiteLLM persists when `general_settings.store_model_in_db` is on are ENCRYPTED with `LITELLM_SALT_KEY` (which falls back to the master key when unset): set a permanent `LITELLM_SALT_KEY` BEFORE adding any credential, because changing it later strands what it encrypted, and protect the database and its backups as the store of those secrets. A credential written literally into `config.yaml` stays plaintext in that file, so keep it out of version control ([secrets.md](secrets.md)).
 
 ## 3. Bind privately and add TLS in front
 
@@ -8893,8 +8955,9 @@ A model's `api_base` and any pass-through `target` are outbound destinations the
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 1; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 1; }
-  case "$1" in *REPLACE_WITH_*|"") echo "substitute the virtual key on the set -- line above; not probing"; exit 1 ;; esac
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the virtual key on the set -- line above; not probing"; exit 1 ;; esac
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-key=%{http_code} exit=%{exitcode}\n' http://127.0.0.1:4000/v1/models
+  # guard-conventions: allow deliberate bad-key negative control; sk-not-a-real-key is a dummy, not a live credential
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'bad-key=%{http_code} exit=%{exitcode}\n' -H 'Authorization: Bearer sk-not-a-real-key' http://127.0.0.1:4000/v1/models
   printf 'Authorization: Bearer %s\n' "$1" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -w '\ngood-key=%{http_code} exit=%{exitcode}\n' -H @- http://127.0.0.1:4000/v1/models
 )
@@ -9008,8 +9071,17 @@ ss -tlnp   # every listener; 8080/8000/8001/8002/3000/9000/30000/5000/7860/1234.
            # namespace-local BIND, not a host firewall, a cloud security group, or Docker -p NAT
            # publication. From another host, probe EACH backend listener's own host and port (adapt the
            # subshell below, which shows the technique for one endpoint) and confirm each is refused
-curl -q -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' https://models.example.com/v1/models   # PROXY-policy test: 401 without a key. TGI leaves /v1/models outside its native key middleware, so a 200 is not proof the backend enforces the key
-curl -q -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' https://models.example.com/v1/models -H "Authorization: Bearer REPLACE_WITH_API_KEY"   # positive control: 200 with a model list, printed
+(
+  # Feed the API key to curl on stdin (curl --header @-), never in argv:
+  # -H "Authorization: Bearer KEY" is readable in ps / /proc/<pid>/cmdline.
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_API_KEY'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the API key on the set -- line above; not probing"; exit ;; esac
+  curl -q -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' https://models.example.com/v1/models   # PROXY-policy test: 401 without a key. TGI leaves /v1/models outside its native key middleware, so a 200 is not proof the backend enforces the key
+  printf 'Authorization: Bearer %s\n' "$1" | curl -q -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' -H @- https://models.example.com/v1/models   # positive control: 200 with a model list, printed
+)
 curl -q -sS --noproxy '*' -D - -o invocations-body.txt -w 'http=%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"model":"REPLACE_WITH_A_REAL_SERVED_MODEL","messages":[{"role":"user","content":"ping"}]}' https://models.example.com/invocations
                                                         # vLLM /invocations needs JSON (a bare -d '{}' sends form
                                                         # content-type and fails the schema) and a REAL served model.
@@ -9773,7 +9845,7 @@ Then probe each Qdrant backend port from a host **outside** the peer allowlist, 
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
   if [ -z "$1" ] || [ -z "$2" ]; then echo "substitute the values on the set -- line above; not probing"; exit; fi
   case "$1:$2" in
-    *REPLACE_WITH_*) echo "substitute the values on the set -- line above; not probing"; exit ;;
+    *REPLACE_WITH_*|*[[:cntrl:]]*) echo "substitute the values on the set -- line above; not probing"; exit ;;
   esac
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:$2/"
@@ -9794,14 +9866,14 @@ Keep the existing client-API key check, hardened, against the frontend hostname 
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
   if [ -z "$1" ] || [ -z "$2" ]; then echo "substitute the values on the set -- line above; not probing"; exit; fi
   case "$1:$2" in
-    *REPLACE_WITH_*) echo "substitute the values on the set -- line above; not probing"; exit ;;
+    *REPLACE_WITH_*|*[[:cntrl:]]*) echo "substitute the values on the set -- line above; not probing"; exit ;;
   esac
   echo "without key (expect http=401 or 403):"
   curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
     -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1/collections"
   echo "with key (expect http=200):"
-  curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -H "api-key: $2" \
+  printf 'api-key: %s\n' "$2" | curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -H @- \
     -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1/collections"
 )
 ```
@@ -10152,9 +10224,24 @@ admin_password = REPLACE_WITH_LONG_RANDOM_VALUE
 `database_uri` defaults to a SQLite file `basic_auth.db` in the working directory; MLflow recommends a central database for multi-node deployments. The same file can name an `authorization_function` (`module:function`) for a custom scheme, but the shipped one is basic auth. To rotate the admin password on a running server:
 
 ```bash
-curl -q -u 'admin:REPLACE_WITH_CURRENT_ADMIN_PASSWORD' -X PATCH https://mlflow.example.com/api/2.0/mlflow/users/update-password \
-     -H 'Content-Type: application/json' \
-     -d '{"username":"admin","password":"REPLACE_WITH_LONG_RANDOM_VALUE"}'
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CURRENT_ADMIN_PASSWORD' 'REPLACE_WITH_LONG_RANDOM_VALUE'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the current admin password on the set -- line above; not probing"; exit ;; esac
+  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the new password on the set -- line above; not probing"; exit ;; esac
+  # Both passwords reach curl on stdin via a config file (curl --config -), never
+  # argv: -u admin:PASSWORD and the -d body are world-readable in /proc/<pid>/cmdline.
+  # Escape backslashes then quotes for the config; the new password is JSON-escaped
+  # first, then the whole JSON body is config-escaped.
+  set -- "${1//\\/\\\\}" "${2//\\/\\\\}"
+  set -- "${1//\"/\\\"}" "${2//\"/\\\"}"
+  set -- "$1" "{\"username\":\"admin\",\"password\":\"$2\"}"
+  set -- "$1" "${2//\\/\\\\}"
+  set -- "$1" "${2//\"/\\\"}"
+  printf 'user = "admin:%s"\ndata-binary = "%s"\n' "$1" "$2" | curl -q -sS --config - -X PATCH -H 'Content-Type: application/json' https://mlflow.example.com/api/2.0/mlflow/users/update-password
+)
 ```
 
 Creating users requires admin credentials (UI at `/signup`, or `POST /api/2.0/mlflow/users/create`). Give humans individual accounts and CI its own low-permission user per [authentication.md](authentication.md); `~/.mlflow/credentials` stores passwords unencrypted, so prefer the environment variables injected at runtime. The documentation notes that the UI has no limit on login attempts, and basic auth is checked on every protected API request, so rate-limit the authentication-bearing routes at the proxy (not only the login path) per [nginx.md](nginx.md); and because basic auth sends the password with every request ([authentication.md](authentication.md)), step 2 comes first.
@@ -10192,29 +10279,43 @@ ss -tlnp   # read every listener; 5000: 127.0.0.1 only
 # search with 200. If you front MLflow with an identity-aware proxy (Cloudflare Access etc., the MFA
 # option in step 3) instead of plain basic auth, the public https probes also need that proxy's own
 # credentials (its service-token headers), and a denial from that proxy is distinct from MLflow's own
-# backend 401/403. The credentials below are single-quoted so a password containing a `$`, a space, or
-# a backtick is taken literally rather than shell-expanded; if a password itself contains an apostrophe,
-# escape it or read the credential from a file instead of the command line.
-curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
-  https://mlflow.example.com/api/2.0/mlflow/experiments/search   # 401: no credentials
-curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
-  -u 'admin:REPLACE_WITH_ADMIN_PASSWORD' https://mlflow.example.com/api/2.0/mlflow/experiments/search   # positive control: 200 with the admin password
-curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
-  -u 'admin:REPLACE_WITH_A_WRONG_PASSWORD' https://mlflow.example.com/api/2.0/mlflow/experiments/search   # 401: a wrong password is refused (MLflow rejects the legacy password1234 by design, so there is no default to "remove")
-# On the MLflow host, the same no-credential POST must ALSO be 401 - a 401 only at the proxy would leave
-# MLflow open behind it. On the host, --allowed-hosts rejects a bare 127.0.0.1 Host with 403 before auth,
-# so send the allowed Host header:
-curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Host: mlflow.example.com' -H 'Content-Type: application/json' -d '{"max_results":1}' \
-  http://127.0.0.1:5000/api/2.0/mlflow/experiments/search   # 401: no credentials, on the backend
-curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Host: mlflow.example.com' -H 'Content-Type: application/json' -d '{"max_results":1}' \
-  -u 'admin:REPLACE_WITH_ADMIN_PASSWORD' http://127.0.0.1:5000/api/2.0/mlflow/experiments/search   # backend positive control: 200 with the admin password
-# Authorization, not just authentication: experiments/search only returns results the caller may see, so
-# it tests authn, not authz. Pick a REAL experiment id (not the placeholder), confirm admin can GET it,
-# then confirm a low-permission user is refused THERE - a 403 from MLflow on the backend, not the proxy:
-curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H 'Host: mlflow.example.com' \
-  -u 'admin:REPLACE_WITH_ADMIN_PASSWORD' 'http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=REPLACE_WITH_A_REAL_EXPERIMENT_ID'   # do this admin check FIRST: 200 means the experiment exists and admin may read it; a 401/403/404 here means a wrong id or wrong admin credentials, so fix that before trusting the next line
-curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H 'Host: mlflow.example.com' \
-  -u 'REPLACE_WITH_LOWPERM_USER:REPLACE_WITH_LOWPERM_PASSWORD' 'http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=REPLACE_WITH_A_REAL_EXPERIMENT_ID'   # 403: authenticated but not permitted, same real experiment from MLflow (a 401 here means the low-permission credentials are wrong, not authz)
+# backend 401/403. The credentials below reach curl through a config file on stdin (curl --config -),
+# never argv, because -u user:password is world-readable via ps / /proc/<pid>/cmdline; stdin protects
+# the argv channel only, not shell history or set -x tracing. Substitute each password INSIDE the
+# single quotes on the set -- line; a password containing a literal apostrophe must be written '\'' there.
+(
+  # Each credential reaches curl on stdin via a config file (curl --config -), never
+  # argv; -u user:password is world-readable in /proc/<pid>/cmdline on a shared host.
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ADMIN_PASSWORD' 'REPLACE_WITH_LOWPERM_USER' 'REPLACE_WITH_LOWPERM_PASSWORD'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit; }
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit ;; esac
+  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the low-permission user on the set -- line above; not probing"; exit ;; esac
+  case "$3" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the low-permission password on the set -- line above; not probing"; exit ;; esac
+  set -- "${1//\\/\\\\}" "${2//\\/\\\\}" "${3//\\/\\\\}"
+  set -- "${1//\"/\\\"}" "${2//\"/\\\"}" "${3//\"/\\\"}"
+  curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
+    https://mlflow.example.com/api/2.0/mlflow/experiments/search   # 401: no credentials
+  printf 'user = "admin:%s"\n' "$1" | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
+    --config - https://mlflow.example.com/api/2.0/mlflow/experiments/search   # positive control: 200 with the admin password
+  printf 'user = "admin:not-the-real-password"\n' | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
+    --config - https://mlflow.example.com/api/2.0/mlflow/experiments/search   # 401: a wrong password is refused (MLflow rejects the legacy password1234 by design, so there is no default to "remove")
+  # On the MLflow host, the same no-credential POST must ALSO be 401 - a 401 only at the proxy would leave
+  # MLflow open behind it. On the host, --allowed-hosts rejects a bare 127.0.0.1 Host with 403 before auth,
+  # so send the allowed Host header:
+  curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Host: mlflow.example.com' -H 'Content-Type: application/json' -d '{"max_results":1}' \
+    http://127.0.0.1:5000/api/2.0/mlflow/experiments/search   # 401: no credentials, on the backend
+  printf 'user = "admin:%s"\n' "$1" | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Host: mlflow.example.com' -H 'Content-Type: application/json' -d '{"max_results":1}' \
+    --config - http://127.0.0.1:5000/api/2.0/mlflow/experiments/search   # backend positive control: 200 with the admin password
+  # Authorization, not just authentication: experiments/search only returns results the caller may see, so
+  # it tests authn, not authz. Pick a REAL experiment id (not the placeholder), confirm admin can GET it,
+  # then confirm a low-permission user is refused THERE - a 403 from MLflow on the backend, not the proxy:
+  printf 'user = "admin:%s"\n' "$1" | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H 'Host: mlflow.example.com' \
+    --config - 'http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=REPLACE_WITH_A_REAL_EXPERIMENT_ID'   # do this admin check FIRST: 200 means the experiment exists and admin may read it; a 401/403/404 here means a wrong id or wrong admin credentials, so fix that before trusting the next line
+  printf 'user = "%s:%s"\n' "$2" "$3" | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H 'Host: mlflow.example.com' \
+    --config - 'http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=REPLACE_WITH_A_REAL_EXPERIMENT_ID'   # 403: authenticated but not permitted, same real experiment from MLflow (a 401 here means the low-permission credentials are wrong, not authz)
+)
 ```
 
 An authenticated user without permission on a resource gets `403`; a missing or wrong credential gets `401`. The backend authentication and authorization checks above ship marked reasoned, not demonstrated: the authoring environment has no running MLflow basic-auth server, so the exposed and fixed states (anonymous `experiments/search` open versus `401`, and the admin `200` versus low-permission `403` on a real experiment) are not observed here. Backlog row 1.76 tracks demonstrating them against a live server.
@@ -10400,9 +10501,9 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
-  case "$1" in *REPLACE_WITH_*|"") echo "substitute the Dify app key on the set -- line above; not probing"; exit ;; esac
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Dify app key on the set -- line above; not probing"; exit ;; esac
   curl -q -g -sS -w '\ndify no-key=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 15 http://127.0.0.1:8080/v1/parameters
-  curl -q -g -sS -w '\ndify with-key=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 15 -H "Authorization: Bearer $1" http://127.0.0.1:8080/v1/parameters
+  printf 'Authorization: Bearer %s\n' "$1" | curl -q -g -sS -w '\ndify with-key=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 15 -H @- http://127.0.0.1:8080/v1/parameters
 )
 # Repeat the same guarded, paired pattern for Flowise (POST http://127.0.0.1:3000/api/v1/prediction/<id>
 # on a chatflow you ASSIGNED a key to - a keyless chatflow is public by design - key in an
@@ -11464,12 +11565,22 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 # THROUGH a reverse proxy does not prove Langfuse itself authenticated (a proxy can reject anonymous and
 # admit authenticated while its backend stays open), so repeat the pair DIRECTLY against the Langfuse
 # listener from an authorized network position, keeping any proxy credentials constant, and separately
-# confirm untrusted clients cannot reach that backend. The key enters argv/history via -u, so use a
-# short-lived project key and clear the line.
-curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -o /dev/null \
-  -w 'projects no-key=%{http_code} exit=%{exitcode}\n' https://langfuse.example.com/api/public/projects
-curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 \
-  -w '\nprojects with-key=%{http_code} exit=%{exitcode}\n' -u REPLACE_WITH_PUBLIC_KEY:REPLACE_WITH_SECRET_KEY https://langfuse.example.com/api/public/projects
+# confirm untrusted clients cannot reach that backend. The key reaches curl on stdin via a config file (curl --config -), so it stays out
+# of argv and /proc/<pid>/cmdline; still prefer a short-lived project key.
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PUBLIC_KEY' 'REPLACE_WITH_SECRET_KEY'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the public key on the set -- line above; not probing"; exit ;; esac
+  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the secret key on the set -- line above; not probing"; exit ;; esac
+  set -- "${1//\\/\\\\}" "${2//\\/\\\\}"
+  set -- "${1//\"/\\\"}" "${2//\"/\\\"}"
+  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -o /dev/null \
+    -w 'projects no-key=%{http_code} exit=%{exitcode}\n' https://langfuse.example.com/api/public/projects
+  printf 'user = "%s:%s"\n' "$1" "$2" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 \
+    -w '\nprojects with-key=%{http_code} exit=%{exitcode}\n' --config - https://langfuse.example.com/api/public/projects
+)
 # Collector OTLP/HTTP, matched pair: WITHOUT the configured auth header expect 401/403; then repeat WITH it
 # (add -H 'Authorization: Bearer <token>', or -u user:pass for basicauth) and expect a 2xx - the positive
 # control. Run the pair DIRECTLY against the receiver to establish RECEIVER authentication (a proxy can

@@ -86,8 +86,17 @@ ss -tlnp   # every listener; 8080/8000/8001/8002/3000/9000/30000/5000/7860/1234.
            # namespace-local BIND, not a host firewall, a cloud security group, or Docker -p NAT
            # publication. From another host, probe EACH backend listener's own host and port (adapt the
            # subshell below, which shows the technique for one endpoint) and confirm each is refused
-curl -q -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' https://models.example.com/v1/models   # PROXY-policy test: 401 without a key. TGI leaves /v1/models outside its native key middleware, so a 200 is not proof the backend enforces the key
-curl -q -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' https://models.example.com/v1/models -H "Authorization: Bearer REPLACE_WITH_API_KEY"   # positive control: 200 with a model list, printed
+(
+  # Feed the API key to curl on stdin (curl --header @-), never in argv:
+  # -H "Authorization: Bearer KEY" is readable in ps / /proc/<pid>/cmdline.
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_API_KEY'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the API key on the set -- line above; not probing"; exit ;; esac
+  curl -q -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' https://models.example.com/v1/models   # PROXY-policy test: 401 without a key. TGI leaves /v1/models outside its native key middleware, so a 200 is not proof the backend enforces the key
+  printf 'Authorization: Bearer %s\n' "$1" | curl -q -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' -H @- https://models.example.com/v1/models   # positive control: 200 with a model list, printed
+)
 curl -q -sS --noproxy '*' -D - -o invocations-body.txt -w 'http=%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"model":"REPLACE_WITH_A_REAL_SERVED_MODEL","messages":[{"role":"user","content":"ping"}]}' https://models.example.com/invocations
                                                         # vLLM /invocations needs JSON (a bare -d '{}' sends form
                                                         # content-type and fails the schema) and a REAL served model.

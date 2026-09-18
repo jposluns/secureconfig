@@ -144,12 +144,22 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 # THROUGH a reverse proxy does not prove Langfuse itself authenticated (a proxy can reject anonymous and
 # admit authenticated while its backend stays open), so repeat the pair DIRECTLY against the Langfuse
 # listener from an authorized network position, keeping any proxy credentials constant, and separately
-# confirm untrusted clients cannot reach that backend. The key enters argv/history via -u, so use a
-# short-lived project key and clear the line.
-curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -o /dev/null \
-  -w 'projects no-key=%{http_code} exit=%{exitcode}\n' https://langfuse.example.com/api/public/projects
-curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 \
-  -w '\nprojects with-key=%{http_code} exit=%{exitcode}\n' -u REPLACE_WITH_PUBLIC_KEY:REPLACE_WITH_SECRET_KEY https://langfuse.example.com/api/public/projects
+# confirm untrusted clients cannot reach that backend. The key reaches curl on stdin via a config file (curl --config -), so it stays out
+# of argv and /proc/<pid>/cmdline; still prefer a short-lived project key.
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PUBLIC_KEY' 'REPLACE_WITH_SECRET_KEY'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the public key on the set -- line above; not probing"; exit ;; esac
+  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the secret key on the set -- line above; not probing"; exit ;; esac
+  set -- "${1//\\/\\\\}" "${2//\\/\\\\}"
+  set -- "${1//\"/\\\"}" "${2//\"/\\\"}"
+  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -o /dev/null \
+    -w 'projects no-key=%{http_code} exit=%{exitcode}\n' https://langfuse.example.com/api/public/projects
+  printf 'user = "%s:%s"\n' "$1" "$2" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 \
+    -w '\nprojects with-key=%{http_code} exit=%{exitcode}\n' --config - https://langfuse.example.com/api/public/projects
+)
 # Collector OTLP/HTTP, matched pair: WITHOUT the configured auth header expect 401/403; then repeat WITH it
 # (add -H 'Authorization: Bearer <token>', or -u user:pass for basicauth) and expect a 2xx - the positive
 # control. Run the pair DIRECTLY against the receiver to establish RECEIVER authentication (a proxy can
