@@ -4285,9 +4285,9 @@ a label as a security boundary.
 
 The executor decides how much of the host a job controls, and it is the first thing to get right. The
 shell executor runs the job directly as the runner's user with no isolation. The Docker executor is a
-real boundary only when it is unprivileged: GitLab warns that with `privileged = true` "you are practically
-disabling all of the security mechanisms of containers and exposing your host to privilege escalation, which
-can lead to container breakout", and mounting `/var/run/docker.sock` (or reaching a rootful daemon over TCP)
+real boundary only when it is unprivileged: GitLab warns that with `privileged = true` "you are effectively
+disabling all the container's security mechanisms", exposing the host to privilege escalation and container
+breakout. Mounting `/var/run/docker.sock` (or reaching a rootful daemon over TCP)
 hands over the daemon's host even with `privileged = false`. For untrusted work use an unprivileged Docker or a hardened Kubernetes executor on isolated disposable workers,
 never shell on a shared host, never the socket, and never `services_privileged`; build images without the host
 daemon rather than mounting it. Deny job access to the host Docker daemon, sensitive host mounts, host
@@ -4298,7 +4298,7 @@ restrictions. Containers share the host kernel, so use separate disposable VMs o
 insufficient. Make workers disposable, one job each, with an autoscaling executor, since a persistent worker
 lets one job poison the next.
 
-The tokens are distinct credentials. The legacy registration token was disabled by default in GitLab 17.0 and removed in 18.0; registration now uses
+The tokens are distinct credentials. The legacy registration token was disabled by default in GitLab 17.0; removal is currently scheduled for GitLab 20.0. Use
 the runner authentication token, which lives in `config.toml`, so protect that file and its backups and rotate
 the token on any exposure, because a cloned runner using the same token silently steals the jobs meant for the
 original. The access token that creates a runner (through `POST /user/runners`, needing the `create_runner`
@@ -4378,8 +4378,13 @@ gh api --paginate -H 'X-GitHub-Api-Version: 2026-03-10' /repos/REPLACE_WITH_OWNE
 For GitLab, inspect the configuration each runner service actually loads (custom paths and
 deployment-generated config included). This Python 3.11+ inspection decodes TOML and preserves the runner block
 without printing tokens; `null` means absent, and empty output, read errors, or parse errors are inconclusive.
-A `privileged = true`, a `docker.sock` volume or a `host` pointing at a rootful daemon, `services_privileged`,
-or an autoscaler with neither `capacity_per_instance` nor `max_use_count` set to `1` is the finding.
+`privileged = true`, `services_privileged = true`, or a host Docker socket mounted into a job is a finding. The
+reported `docker.host` selects the runner manager's Docker endpoint; resolve an absent value through the
+service's `DOCKER_HOST` environment or the default Unix socket. Inspect the daemon's privilege, authentication
+and network controls, and compare access from the actual job environment with an authorized management client.
+Flag job access to a rootful daemon; a `tcp://` value alone does not establish that access. For an Instance or
+Docker Autoscaler executor, flag either `capacity_per_instance` or `max_use_count` being absent or unequal to
+`1`; require both explicitly set to `1`.
 
 ```bash
 sudo python3 - /etc/gitlab-runner/config.toml <<'PYTOML'
@@ -4421,7 +4426,9 @@ insufficient, and worker destruction does not remove shared caches or artifacts,
 
 Finally, `ss` is an inventory only; inspect the relevant container and pod namespaces and published ports too.
 If a metrics or session-server listener is enabled, run the guarded block against the exact configured URL from
-an allowed monitoring client (the positive control must return the expected response) and from a disallowed
+its permitted client network: monitoring for metrics, GitLab for the session server. Configure trusted
+certificate verification for HTTPS, including the runner-generated session-server certificate. Require the
+expected positive-control response, then repeat from a disallowed
 network; any HTTP response from the disallowed network proves reachability, while a timeout, DNS error, or
 connection failure is inconclusive without a matching firewall deny record. This reachability comparison is
 reasoned, since no deployed endpoint or external vantage was available. Substitute the URL inside the single
@@ -4448,7 +4455,7 @@ sudo ss -tlnp
 
 ## Sources (checked September 2026)
 
-Version boundary: GitHub.com documentation checked 18 September 2026, with REST examples pinned to API version `2026-03-10`; GitLab documentation is rolling, checked that date. The legacy GitLab registration token was disabled by default in Runner 17.0 and removed in 18.0, and the Instance and Docker Autoscaler executors became generally available in Runner 17.1; run a currently supported patched release. No live product-version compatibility matrix was exercised.
+Version boundary: GitHub.com documentation checked 18 September 2026, with REST examples pinned to API version `2026-03-10`; GitLab documentation is rolling, checked that date. The legacy GitLab registration token was disabled by default in GitLab 17.0 and is currently scheduled for removal in GitLab 20.0, and the Instance and Docker Autoscaler executors became generally available in Runner 17.1; run a currently supported patched release. No live product-version compatibility matrix was exercised.
 
 - GitHub Actions security hardening and secure use: https://docs.github.com/en/actions/reference/security/secure-use
 - GitHub self-hosted runner groups and access (private-only default): https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/manage-access
