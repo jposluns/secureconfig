@@ -15,11 +15,13 @@ authorization {
 }
 ```
 
-Decentralized JWT-based auth (accounts and users signed by an operator, for multi-tenant deployments) is documented separately. Do not set `no_auth_user`, which names a user that unauthenticated connections are admitted as, unless an anonymous path is deliberate; it is easy to leave in place after testing and forget it grants access.
+Decentralized JWT-based auth is documented separately, and its trust hierarchy has two levels: the operator (or an operator signing key) signs account JWTs, and each account (or its signing keys) signs its own user JWTs, so accounts and users are not both signed by the operator. NKey-backed users additionally prove possession of their seed by signing the server's nonce. Do not set `no_auth_user`, which names a user that unauthenticated connections are admitted as, unless an anonymous path is deliberate; it is easy to leave in place after testing and forget it grants access.
+
+The examples above put every user in the shared default account (`$G`), and different usernames alone are not tenant isolation. For real separation, define distinct `accounts` (or operator-managed accounts), each with its own subject space, and share subjects only through reviewed exports and imports. Keep application identities out of the system account (`system_account`, default `$SYS`): its credentials are administrative, reaching server monitoring and management rather than ordinary traffic, so protect them as such.
 
 ## 2. Scope what each user can do
 
-A user with no `permissions` block is unrestricted. Give each identity subject-level allow lists so a compromised credential cannot publish or subscribe everywhere:
+A user with no `permissions` block, and no applicable `authorization.default_permissions`, is unrestricted within its account's subject space (explicit user permissions replace the defaults rather than merging with them). Give each identity subject-level allow lists so a compromised credential cannot publish or subscribe everywhere:
 
 ```
 authorization {
@@ -29,14 +31,16 @@ authorization {
       password: "REPLACE_WITH_LONG_RANDOM_PASSWORD"
       permissions: {
         publish:   { allow: ["orders.>"] }
-        subscribe: { allow: ["_INBOX.>"] }
+        # Use a service-specific inbox prefix, not _INBOX.>, which would allow subscribing to every reply
+        # subject in the shared account; set the client's inbox prefix (nats CLI --inbox-prefix) to match.
+        subscribe: { allow: ["_INBOX.order-svc.>"] }
       }
     }
   ]
 }
 ```
 
-The moment a `permissions` block writes an `allow` list, every subject not on it is denied; `deny` entries take precedence over `allow` when both are present.
+`publish.allow` and `subscribe.allow` are independent: a publish allow list restricts only publishing and a subscribe allow list only subscribing, so restrict both explicitly. Within either operation, once an `allow` list is present every subject not on it is denied, and a matching `deny` entry overrides `allow`.
 
 ## 3. Enable TLS
 
@@ -53,18 +57,70 @@ Certificates per [free-certificates.md](free-certificates.md) or [self-signed.md
 
 ## 4. Keep the monitoring port private
 
-The HTTP monitoring endpoint is off unless configured (`http_port: 8222` in the config file, or `-m 8222` on the command line; `https_port` serves the same data over TLS). It answers `/varz`, `/connz`, `/routez`, and, with JetStream enabled, `/jsz`, as JSON, and the documentation is direct about the risk: "anyone who can reach `:8222` can read `/connz` and see your users, subjects, and traffic." Bind it to loopback or a private network, or place it behind an authenticating proxy; do not publish it.
+The HTTP monitoring endpoint is off unless configured (`http_port: 8222` in the config file, or `-m 8222` on the command line; `https_port` serves the same data over TLS). It answers `/varz`, `/connz`, `/routez`, and, with JetStream enabled, `/jsz`, as JSON, and anyone who can reach `:8222` can read `/connz` and enumerate your users, subjects, and traffic. Bind it privately with `http: "127.0.0.1:8222"` (or a specific private interface) rather than a bare `http_port`, or place it behind an authenticating proxy; do not publish it. `https_port` encrypts the same data but does not authenticate it, and the client `verify`/`verify_and_map` settings do not apply to the monitoring endpoint.
+
+## 5. Cluster, leafnode, and gateway routes
+
+If you enable clustering, leafnodes, or gateways, each is a SEPARATE listener with its own authentication and TLS that the client `authorization` and top-level `tls` above do not cover, and each defaults its host to `0.0.0.0`. Restrict every one you enable to its intended peers and give it its own credentials and TLS:
+
+- Cluster routes (port `6222`): configure `cluster.tls` and `cluster.authorization` (route authentication uses a username/password, not client-style `users`/`token`); explicitly configured route URLs carry their own credentials.
+- Leafnodes (accepted on `7422`): configure `leafnodes.authorization` and `leafnodes.tls`, and bind each accepted leaf to its intended account; an outbound remote's `account`, `credentials`, and `tls` are configured separately.
+- Gateways (port `7222`): configure `gateway.tls` and gateway authentication (username/password, not client-style), and supply credentials for each configured remote gateway.
+
+A successful test on the client port `4222` proves nothing about these listeners; test each one independently.
+
+## 6. Resource limits and process privilege
+
+Set `max_connections` and `max_payload` deliberately for the workload; at the time of writing the defaults are 65536 client connections and a 1 MiB payload, and these are capacity limits, not authentication. Run `nats-server` under a dedicated non-root service identity with access only to its config, credentials, TLS private keys, and JetStream storage. For same-host clients, bind `host: "127.0.0.1"` on `port: 4222`; otherwise choose a specific private interface rather than the `0.0.0.0` default.
 
 ## Verify
 
 The `nats` CLI reads a saved context and environment variables (`NATS_URL`, `NATS_USER`, `NATS_PASSWORD`, and similar) before falling back to any default, so a credential-free test has to neutralize both or it can silently inherit credentials from whatever context happens to be active.
 
 ```bash
-ss -tlnp   # read every listener; 4222 as intended, 8222 loopback/private only
-nats pub orders.created hello --tlsca /etc/nats/certs/ca.pem --tlscert REPLACE_WITH_CLIENT_CERT_FILE --tlskey REPLACE_WITH_CLIENT_KEY_FILE --user order-svc --password REPLACE_WITH_LONG_RANDOM_PASSWORD   # allowed subject, valid credentials: succeeds
-nats pub other.subject hello --tlsca /etc/nats/certs/ca.pem --tlscert REPLACE_WITH_CLIENT_CERT_FILE --tlskey REPLACE_WITH_CLIENT_KEY_FILE --user order-svc --password REPLACE_WITH_LONG_RANDOM_PASSWORD     # subject outside the allow list: fails
-nats --context "" --server nats://REPLACE_WITH_NATS_HOST:4222 pub orders.created hello --tlsca /etc/nats/certs/ca.pem --tlscert REPLACE_WITH_CLIENT_CERT_FILE --tlskey REPLACE_WITH_CLIENT_KEY_FILE   # empty context, explicit server, no --user/--password: fails, and cannot inherit credentials from a saved context or NATS_URL/NATS_USER/NATS_PASSWORD
-curl -q -s http://monitor.example.com:8222/connz                                                                                                               # connection refused/timeout from outside
+# REASONED, not demonstrated here: no NATS runtime in the authoring environment; backlog row 1.81 tracks
+# running it live. A DNS, connection, or TLS-validation error is inconclusive for NATS auth, never a pass.
+ss -tlnp   # inventory: 4222 as intended; 8222 and any route ports (6222/7422/7222) loopback or private only
+# Positive controls (this config is verify:true mTLS + password): the password enters via NATS_PASSWORD, not
+# argv, with tracing off. Substitute the host and the client cert/key inside the quotes.
+(
+  set +x
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NATS_HOST' 'REPLACE_WITH_CLIENT_CERT_FILE' 'REPLACE_WITH_CLIENT_KEY_FILE'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
+  shift
+  [ "$#" -eq 3 ] || { echo 'the set -- line needs exactly 3 values; not probing'; exit 2; }
+  case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the host; not probing'; exit 2 ;; esac
+  case "$2" in ''|*REPLACE_WITH_*) echo 'substitute the client cert file; not probing'; exit 2 ;; esac
+  case "$3" in ''|*REPLACE_WITH_*) echo 'substitute the client key file; not probing'; exit 2 ;; esac
+  tls=(--tlsca /etc/nats/certs/ca.pem --tlscert "$2" --tlskey "$3")
+  IFS= read -r -s -p 'order-svc password: ' NATS_PASSWORD < /dev/tty; echo
+  [ -n "$NATS_PASSWORD" ] || { echo 'supply the password; not probing'; exit 2; }
+  export NATS_USER=order-svc NATS_PASSWORD
+  nats --no-context --server "nats://$1:4222" "${tls[@]}" pub orders.created hi                       # allowed publish: succeeds
+  nats --no-context --server "nats://$1:4222" "${tls[@]}" pub billing.charge hi                       # publish outside the allow list: a permissions error
+  nats --no-context --server "nats://$1:4222" "${tls[@]}" sub 'billing.>' --count 1 --timeout 3s      # subscribe outside the allow list: a permissions error, not a quiet timeout
+)
+# Negative control in a CLEAN environment, so no NATS_* variable or saved context can supply credentials
+# (an empty --context name does NOT clear NATS_USER/PASSWORD/TOKEN/CREDS/NKEY/JWT/SEED). It must be REJECTED
+# with an authentication error; a timeout is inconclusive. To separate verify:true's two requirements, reason
+# two more cases per backlog row 1.81: a valid cert with NO password (password enforced) and the password with
+# NO client cert (mTLS enforced), each expected to be rejected.
+env -i PATH="$PATH" nats --no-context --server "nats://REPLACE_WITH_NATS_HOST:4222" \
+  --tlsca /etc/nats/certs/ca.pem pub orders.created hi
+# And a PLAINTEXT, no-TLS, no-credential attempt: on a default-open server this SUCCEEDS and is the exposure
+# itself; on a hardened server it is rejected (TLS/auth required).
+env -i PATH="$PATH" nats --no-context --server "nats://REPLACE_WITH_NATS_HOST:4222" pub orders.created hi
+# Monitoring: from outside, ANY HTTP answer means 8222 is reachable and is a finding; a refusal or timeout is
+# the intended result.
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_MONITOR_HOST'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
+  case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the monitor host; not probing'; exit 2 ;; esac
+  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:8222/connz?subs=true&auth=true"
+)
 ```
 
 ## Common mistakes
@@ -82,3 +138,9 @@ curl -q -s http://monitor.example.com:8222/connz                                
   mutual-TLS page into this one): https://docs.nats.io/learn/security/encryption
 - Monitoring (http_port/https_port, /varz, /connz, /routez, /jsz): https://docs.nats.io/learn/monitoring/monitoring-endpoints
 - JetStream concepts: https://docs.nats.io/concepts/jetstream
+- Configuration reference (`system_account` default `$SYS`, `max_connections` 64K, `max_payload` 1MB, client `host`/`port` defaults): https://docs.nats.io/reference/config
+- Cluster configuration (route port 6222, `cluster.tls`, `cluster.authorization`): https://docs.nats.io/reference/config/cluster
+- Leafnode configuration (port 7422, `leafnodes.authorization`/`.tls`, remotes): https://docs.nats.io/reference/config/leafnodes
+- Gateway configuration (port 7222, `gateway.tls`, gateway authorization): https://docs.nats.io/reference/config/gateway/
+- Accounts and multitenancy (`$G`, `$SYS`, accounts, exports/imports): https://docs.nats.io/learn/security/accounts-and-multitenancy
+- Deployment hardening (non-root, sandboxing): https://docs.nats.io/learn/deployment/hardening
