@@ -54,7 +54,7 @@ A model's `api_base` and any pass-through `target` are outbound destinations the
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 1; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 1; }
-  case "$1" in *REPLACE_WITH_*|"") echo "substitute the virtual key on the set -- line above; not probing"; exit 1 ;; esac
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the virtual key on the set -- line above; not probing"; exit 1 ;; esac
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-key=%{http_code} exit=%{exitcode}\n' http://127.0.0.1:4000/v1/models
   # guard-conventions: allow deliberate bad-key negative control; sk-not-a-real-key is a dummy, not a live credential
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'bad-key=%{http_code} exit=%{exitcode}\n' -H 'Authorization: Bearer sk-not-a-real-key' http://127.0.0.1:4000/v1/models

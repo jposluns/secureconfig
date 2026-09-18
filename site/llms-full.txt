@@ -2549,10 +2549,9 @@ seq 1 40 | xargs -P 40 -I{} curl -q -s -o /dev/null -w '%{http_code}\n' https://
                                     # Run them CONCURRENTLY and WITHOUT credentials: nginx evaluates
                                     # limit_req in the PREACCESS phase, before auth_basic in the ACCESS
                                     # phase, so an unauthenticated flood still exercises the limiter, which
-                                    # is keyed on $binary_remote_addr (the client address). Expect a mix of
-                                    # 401 (admitted by the limiter, then stopped at auth) and 503 (rejected
-                                    # by the limiter; limit_req_status defaults to 503). Any 503 proves the
-                                    # limiter fired, and fired BEFORE password checking.
+                                    # is keyed on $binary_remote_addr (the client address). Expect 503s
+                                    # (the limiter rejecting; limit_req_status defaults to 503) mixed with
+                                    # 401s if section 3's auth covers /, or with 200s if it does not.
                                     # A 503 is not conclusive on its own: `limit_conn` also returns
                                     # 503, and an upstream under load returns it too, so this does not
                                     # establish that either nginx limiter fired. Attributing it needs an
@@ -5997,7 +5996,7 @@ ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not
   shift
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
   case "$1" in *REPLACE_WITH_*|"") echo "substitute the URL on the set -- line above; not probing"; exit ;; esac
-  case "$2" in *REPLACE_WITH_*|"") echo "substitute the token on the set -- line above; not probing"; exit ;; esac
+  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the token on the set -- line above; not probing"; exit ;; esac
   curl -q -g -sS -o /dev/null -w 'no-cred=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 10 "$1"
   printf 'Authorization: Bearer %s\n' "$2" | curl -q -g -sS -o /dev/null -w 'with-cred=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 10 -H @- "$1"
 )
@@ -7837,6 +7836,8 @@ using ( (select auth.jwt()->>'sub') = owner_id );
 # First prove the object exists and is readable WITH authorization, so a later anonymous denial is about access,
 # not a missing object (S3 also returns 403 for an object you cannot list). presign signs a GET, so test with GET:
 URL="$(aws s3 presign s3://example-bucket/model.safetensors --expires-in 60)"
+# The presigned URL is a credential, so feed it to curl on stdin (--config -), never in argv. It is
+# percent-encoded (no " or \ to escape) and $URL is unexported, so it stays out of every child's argv.
 printf 'url = "%s"\n' "$URL" | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' --config -              # 200 now (authorized)
 # Then the SAME object's unsigned URL must be denied to an anonymous caller, with client proxies disabled so a
 # proxy cannot answer for S3. One object is not the whole bucket, so repeat for other keys and prefixes:
@@ -8954,7 +8955,7 @@ A model's `api_base` and any pass-through `target` are outbound destinations the
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 1; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 1; }
-  case "$1" in *REPLACE_WITH_*|"") echo "substitute the virtual key on the set -- line above; not probing"; exit 1 ;; esac
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the virtual key on the set -- line above; not probing"; exit 1 ;; esac
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-key=%{http_code} exit=%{exitcode}\n' http://127.0.0.1:4000/v1/models
   # guard-conventions: allow deliberate bad-key negative control; sk-not-a-real-key is a dummy, not a live credential
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'bad-key=%{http_code} exit=%{exitcode}\n' -H 'Authorization: Bearer sk-not-a-real-key' http://127.0.0.1:4000/v1/models
@@ -9844,7 +9845,7 @@ Then probe each Qdrant backend port from a host **outside** the peer allowlist, 
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
   if [ -z "$1" ] || [ -z "$2" ]; then echo "substitute the values on the set -- line above; not probing"; exit; fi
   case "$1:$2" in
-    *REPLACE_WITH_*) echo "substitute the values on the set -- line above; not probing"; exit ;;
+    *REPLACE_WITH_*|*[[:cntrl:]]*) echo "substitute the values on the set -- line above; not probing"; exit ;;
   esac
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:$2/"
@@ -9865,7 +9866,7 @@ Keep the existing client-API key check, hardened, against the frontend hostname 
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
   if [ -z "$1" ] || [ -z "$2" ]; then echo "substitute the values on the set -- line above; not probing"; exit; fi
   case "$1:$2" in
-    *REPLACE_WITH_*) echo "substitute the values on the set -- line above; not probing"; exit ;;
+    *REPLACE_WITH_*|*[[:cntrl:]]*) echo "substitute the values on the set -- line above; not probing"; exit ;;
   esac
   echo "without key (expect http=401 or 403):"
   curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
@@ -10279,8 +10280,9 @@ ss -tlnp   # read every listener; 5000: 127.0.0.1 only
 # option in step 3) instead of plain basic auth, the public https probes also need that proxy's own
 # credentials (its service-token headers), and a denial from that proxy is distinct from MLflow's own
 # backend 401/403. The credentials below reach curl through a config file on stdin (curl --config -),
-# never argv, because -u user:password is world-readable via ps / /proc/<pid>/cmdline;
-# stdin protects the argv channel only, not shell history or set -x tracing.
+# never argv, because -u user:password is world-readable via ps / /proc/<pid>/cmdline; stdin protects
+# the argv channel only, not shell history or set -x tracing. Substitute each password INSIDE the
+# single quotes on the set -- line; a password containing a literal apostrophe must be written '\'' there.
 (
   # Each credential reaches curl on stdin via a config file (curl --config -), never
   # argv; -u user:password is world-readable in /proc/<pid>/cmdline on a shared host.
@@ -10499,7 +10501,7 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
-  case "$1" in *REPLACE_WITH_*|"") echo "substitute the Dify app key on the set -- line above; not probing"; exit ;; esac
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Dify app key on the set -- line above; not probing"; exit ;; esac
   curl -q -g -sS -w '\ndify no-key=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 15 http://127.0.0.1:8080/v1/parameters
   printf 'Authorization: Bearer %s\n' "$1" | curl -q -g -sS -w '\ndify with-key=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 15 -H @- http://127.0.0.1:8080/v1/parameters
 )

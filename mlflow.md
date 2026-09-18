@@ -97,8 +97,9 @@ ss -tlnp   # read every listener; 5000: 127.0.0.1 only
 # option in step 3) instead of plain basic auth, the public https probes also need that proxy's own
 # credentials (its service-token headers), and a denial from that proxy is distinct from MLflow's own
 # backend 401/403. The credentials below reach curl through a config file on stdin (curl --config -),
-# never argv, because -u user:password is world-readable via ps / /proc/<pid>/cmdline;
-# stdin protects the argv channel only, not shell history or set -x tracing.
+# never argv, because -u user:password is world-readable via ps / /proc/<pid>/cmdline; stdin protects
+# the argv channel only, not shell history or set -x tracing. Substitute each password INSIDE the
+# single quotes on the set -- line; a password containing a literal apostrophe must be written '\'' there.
 (
   # Each credential reaches curl on stdin via a config file (curl --config -), never
   # argv; -u user:password is world-readable in /proc/<pid>/cmdline on a shared host.

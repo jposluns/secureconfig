@@ -59,6 +59,8 @@ using ( (select auth.jwt()->>'sub') = owner_id );
 # First prove the object exists and is readable WITH authorization, so a later anonymous denial is about access,
 # not a missing object (S3 also returns 403 for an object you cannot list). presign signs a GET, so test with GET:
 URL="$(aws s3 presign s3://example-bucket/model.safetensors --expires-in 60)"
+# The presigned URL is a credential, so feed it to curl on stdin (--config -), never in argv. It is
+# percent-encoded (no " or \ to escape) and $URL is unexported, so it stays out of every child's argv.
 printf 'url = "%s"\n' "$URL" | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' --config -              # 200 now (authorized)
 # Then the SAME object's unsigned URL must be denied to an anonymous caller, with client proxies disabled so a
 # proxy cannot answer for S3. One object is not the whole bucket, so repeat for other keys and prefixes:

@@ -155,10 +155,9 @@ seq 1 40 | xargs -P 40 -I{} curl -q -s -o /dev/null -w '%{http_code}\n' https://
                                     # Run them CONCURRENTLY and WITHOUT credentials: nginx evaluates
                                     # limit_req in the PREACCESS phase, before auth_basic in the ACCESS
                                     # phase, so an unauthenticated flood still exercises the limiter, which
-                                    # is keyed on $binary_remote_addr (the client address). Expect a mix of
-                                    # 401 (admitted by the limiter, then stopped at auth) and 503 (rejected
-                                    # by the limiter; limit_req_status defaults to 503). Any 503 proves the
-                                    # limiter fired, and fired BEFORE password checking.
+                                    # is keyed on $binary_remote_addr (the client address). Expect 503s
+                                    # (the limiter rejecting; limit_req_status defaults to 503) mixed with
+                                    # 401s if section 3's auth covers /, or with 200s if it does not.
                                     # A 503 is not conclusive on its own: `limit_conn` also returns
                                     # 503, and an upstream under load returns it too, so this does not
                                     # establish that either nginx limiter fired. Attributing it needs an

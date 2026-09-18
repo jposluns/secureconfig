@@ -117,7 +117,7 @@ Then probe each Qdrant backend port from a host **outside** the peer allowlist, 
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
   if [ -z "$1" ] || [ -z "$2" ]; then echo "substitute the values on the set -- line above; not probing"; exit; fi
   case "$1:$2" in
-    *REPLACE_WITH_*) echo "substitute the values on the set -- line above; not probing"; exit ;;
+    *REPLACE_WITH_*|*[[:cntrl:]]*) echo "substitute the values on the set -- line above; not probing"; exit ;;
   esac
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:$2/"
@@ -138,7 +138,7 @@ Keep the existing client-API key check, hardened, against the frontend hostname 
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
   if [ -z "$1" ] || [ -z "$2" ]; then echo "substitute the values on the set -- line above; not probing"; exit; fi
   case "$1:$2" in
-    *REPLACE_WITH_*) echo "substitute the values on the set -- line above; not probing"; exit ;;
+    *REPLACE_WITH_*|*[[:cntrl:]]*) echo "substitute the values on the set -- line above; not probing"; exit ;;
   esac
   echo "without key (expect http=401 or 403):"
   curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
