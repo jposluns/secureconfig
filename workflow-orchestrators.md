@@ -137,7 +137,7 @@ NetworkPolicy and do not publish the port publicly. Argo Server has no documente
 so enforce private exposure at the network and Service layers. Keep TLS enabled and provision a certificate
 trusted by clients; `--secure=false` explicitly switches the listener to plaintext. Limit the namespaces
 and permissions available to the server, SSO accounts, and workflow execution accounts. Permission to submit
-workflows permits arbitrary containers, and powerful execution accounts or privileged Pods can turn an
+workflows permits arbitrary containers by default (workflow restrictions and admission policies can constrain the permitted specs), and powerful execution accounts or privileged Pods can turn an
 exposed API into cluster compromise.
 
 ## Verify
@@ -206,8 +206,10 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
 
 # Argo: reasoned, not demonstrated; this authoring environment has no container runtime or Kubernetes test
 # deployment. Server mode: an anonymous HTTP 200 containing a workflow list, even empty, is the finding,
-# provided the server identity can list workflows in this namespace. Client/SSO without server mode:
-# expect 401 without a token, or 403 for an authorization denial; the matched authorized call must return
+# provided the server identity can list workflows in this namespace. Without server mode (client/sso only):
+# a missing token is 401. A 403 means only that this operation was denied to the identity used; it does NOT
+# prove server mode is off, since server mode can be enabled yet lack list RBAC in this namespace and also
+# return 403, so confirm the configured --auth-mode separately. The matched authorized call must return
 # HTTP 200 with a workflow list. A health endpoint is NOT the discriminator. Replace the hostname and
 # namespace in BOTH calls; use a reachable allowed vantage and trusted TLS, configure the private CA if
 # necessary, never -k. TLS/DNS errors, redirects, 404s, and 5xx are inconclusive.
@@ -287,4 +289,4 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
   [TLS](https://argo-workflows.readthedocs.io/en/release-3.7/tls/),
   [SSO and RBAC](https://argo-workflows.readthedocs.io/en/release-3.7/argo-server-sso/),
   [workflow-list API](https://argo-workflows.readthedocs.io/en/release-3.7/rest-examples/), and
-  [security model](https://argo-workflows.readthedocs.io/en/latest/security/)
+  [security model](https://argo-workflows.readthedocs.io/en/release-3.7/security/), and the auth mode-selection [source](https://raw.githubusercontent.com/argoproj/argo-workflows/main/server/auth/mode.go)
