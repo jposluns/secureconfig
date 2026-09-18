@@ -40,7 +40,7 @@ authorization {
 }
 ```
 
-`publish.allow` and `subscribe.allow` are independent: a publish allow list restricts only publishing and a subscribe allow list only subscribing, so restrict both explicitly. Within either operation, once an `allow` list is present every subject not on it is denied, and a matching `deny` entry overrides `allow`.
+`publish.allow` and `subscribe.allow` are independent: a publish allow list restricts only publishing and a subscribe allow list only subscribing, so restrict both explicitly. Within either operation, once a NONEMPTY `allow` list is present every subject not on it is denied; an empty `allow` list imposes no restriction, so write an explicit `deny` to lock an operation down. A matching `deny` entry overrides `allow`.
 
 ## 3. Enable TLS
 
@@ -81,8 +81,6 @@ The `nats` CLI reads a saved context and environment variables (`NATS_URL`, `NAT
 # REASONED, not demonstrated here: no NATS runtime in the authoring environment; backlog row 1.81 tracks
 # running it live. A DNS, connection, or TLS-validation error is inconclusive for NATS auth, never a pass.
 ss -tlnp   # inventory: 4222 as intended; 8222 and any route ports (6222/7422/7222) loopback or private only
-# Positive controls (this config is verify:true mTLS + password): the password enters via NATS_PASSWORD, not
-# argv, with tracing off. Substitute the host and the client cert/key inside the quotes.
 (
   set +x
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NATS_HOST' 'REPLACE_WITH_CLIENT_CERT_FILE' 'REPLACE_WITH_CLIENT_KEY_FILE'
@@ -92,26 +90,32 @@ ss -tlnp   # inventory: 4222 as intended; 8222 and any route ports (6222/7422/72
   case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the host; not probing'; exit 2 ;; esac
   case "$2" in ''|*REPLACE_WITH_*) echo 'substitute the client cert file; not probing'; exit 2 ;; esac
   case "$3" in ''|*REPLACE_WITH_*) echo 'substitute the client key file; not probing'; exit 2 ;; esac
-  tls=(--tlsca /etc/nats/certs/ca.pem --tlscert "$2" --tlskey "$3")
-  IFS= read -r -s -p 'order-svc password: ' NATS_PASSWORD < /dev/tty; echo
-  [ -n "$NATS_PASSWORD" ] || { echo 'supply the password; not probing'; exit 2; }
-  export NATS_USER=order-svc NATS_PASSWORD
-  nats --no-context --server "nats://$1:4222" "${tls[@]}" pub orders.created hi                       # allowed publish: succeeds
-  nats --no-context --server "nats://$1:4222" "${tls[@]}" pub billing.charge hi                       # publish outside the allow list: a permissions error
-  nats --no-context --server "nats://$1:4222" "${tls[@]}" sub 'billing.>' --count 1 --timeout 3s      # subscribe outside the allow list: a permissions error, not a quiet timeout
+  srv="nats://$1:4222"; ca=/etc/nats/certs/ca.pem
+  # Negatives need no password, so run them in a fully clean environment (env -i). This config is verify:true,
+  # which requires BOTH a client certificate and a password; test each requirement:
+  # (a) valid cert, no password -> password enforced (expect an authentication rejection):
+  env -i PATH="$PATH" nats --no-context --server "$srv" --tlsca "$ca" --tlscert "$2" --tlskey "$3" pub orders.created hi
+  # (b) no client certificate -> mTLS enforced (expect a TLS rejection); this is also the anonymous-access
+  #     check. With verify_and_map instead, a mapped certificate is the positive control and no or an unmapped
+  #     certificate is the negative:
+  env -i PATH="$PATH" nats --no-context --server "$srv" --tlsca "$ca" pub orders.created hi
+  # Positive controls: strip ambient NATS_* settings (so no NATS_TOKEN/NATS_SOCKS_PROXY/etc. leaks in), then
+  # keep the password in the ENVIRONMENT, never argv:
+  unset NATS_URL NATS_TOKEN NATS_CREDS NATS_NKEY NATS_JWT NATS_SEED NATS_CONTEXT NATS_SOCKS_PROXY 2>/dev/null || true
+  IFS= read -r -s -p 'order-svc password: ' pw < /dev/tty || { echo 'password input failed; not probing'; exit 2; }
+  echo
+  [ -n "$pw" ] || { echo 'supply a nonempty password; not probing'; exit 2; }
+  export NATS_USER=order-svc NATS_PASSWORD="$pw"
+  [ "${NATS_PASSWORD-}" = "$pw" ] || { echo 'could not set NATS_PASSWORD (readonly?); not probing'; exit 2; }
+  tlsc=(--tlsca "$ca" --tlscert "$2" --tlskey "$3")
+  nats --no-context --server "$srv" "${tlsc[@]}" pub orders.created hi                  # allowed publish: succeeds
+  nats --no-context --server "$srv" "${tlsc[@]}" pub billing.charge hi                  # publish outside the allow list: a permissions error
+  timeout 6s nats --no-context --server "$srv" "${tlsc[@]}" sub 'billing.>' --count 1   # subscribe outside the allow list: a permissions error; a timeout is inconclusive, not a pass
 )
-# Negative control in a CLEAN environment, so no NATS_* variable or saved context can supply credentials
-# (an empty --context name does NOT clear NATS_USER/PASSWORD/TOKEN/CREDS/NKEY/JWT/SEED). It must be REJECTED
-# with an authentication error; a timeout is inconclusive. To separate verify:true's two requirements, reason
-# two more cases per backlog row 1.81: a valid cert with NO password (password enforced) and the password with
-# NO client cert (mTLS enforced), each expected to be rejected.
-env -i PATH="$PATH" nats --no-context --server "nats://REPLACE_WITH_NATS_HOST:4222" \
-  --tlsca /etc/nats/certs/ca.pem pub orders.created hi
-# And a PLAINTEXT, no-TLS, no-credential attempt: on a default-open server this SUCCEEDS and is the exposure
-# itself; on a hardened server it is rejected (TLS/auth required).
-env -i PATH="$PATH" nats --no-context --server "nats://REPLACE_WITH_NATS_HOST:4222" pub orders.created hi
-# Monitoring: from outside, ANY HTTP answer means 8222 is reachable and is a finding; a refusal or timeout is
-# the intended result.
+# A SUCCESSFUL subscription is reasoned (row 1.81): with a separately authorized subscriber identity, subscribe
+# to an allowed subject and confirm a marker published by an authorized publisher arrives; a quiet subscriber is
+# not proof. order-svc can publish orders.> but only subscribe _INBOX.order-svc.>, so this needs a second
+# identity or a request-reply pair.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_MONITOR_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
@@ -121,13 +125,15 @@ env -i PATH="$PATH" nats --no-context --server "nats://REPLACE_WITH_NATS_HOST:42
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:8222/connz?subs=true&auth=true"
 )
+# From outside, ANY http= status means 8222 is reachable (a finding). Only a connection FAILURE (curl exit 7,
+# refused) is the intended isolation result; a post-connect timeout is inconclusive, not a pass.
 ```
 
 ## Common mistakes
 
 - Leaving `no_auth_user` set after testing, which quietly readmits anonymous clients.
 - Exposing 8222 (or `https_port`) on a public interface because it "is just monitoring."
-- A user with no `permissions` block, which is unrestricted rather than denied.
+- A user with no `permissions` block and no applicable `default_permissions`, which is unrestricted within its account rather than denied.
 
 ## Sources (checked September 2026)
 
@@ -144,3 +150,6 @@ env -i PATH="$PATH" nats --no-context --server "nats://REPLACE_WITH_NATS_HOST:42
 - Gateway configuration (port 7222, `gateway.tls`, gateway authorization): https://docs.nats.io/reference/config/gateway/
 - Accounts and multitenancy (`$G`, `$SYS`, accounts, exports/imports): https://docs.nats.io/learn/security/accounts-and-multitenancy
 - Deployment hardening (non-root, sandboxing): https://docs.nats.io/learn/deployment/hardening
+- Decentralized authentication (operator-signs-account, account-signs-user JWT hierarchy): https://docs.nats.io/learn/security/decentralized-auth
+- natscli flags and contexts (`--no-context`, `--inbox-prefix`, `NATS_*` environment variables): https://github.com/nats-io/natscli
+- nats-server service unit (`User=nats`/`Group=nats` non-root execution): https://github.com/nats-io/nats-server/blob/main/util/nats-server.service
