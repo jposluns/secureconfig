@@ -58,9 +58,17 @@ MFA: the emailed one-time PIN proves control of a mailbox only. For anything sen
 For APIs and machine clients, create a **service token** in the Zero Trust dashboard (Access service authentication section), add a **Service Auth** policy to the application, and send the token with each request:
 
 ```bash
-curl -q -H "CF-Access-Client-Id: REPLACE_WITH_CLIENT_ID" \
-     -H "CF-Access-Client-Secret: REPLACE_WITH_CLIENT_SECRET" \
-     https://app.example.com/api
+(
+  # Feed the service-token headers to curl on stdin (curl --header @-), never in
+  # argv: the Client-Secret in -H is readable in ps / /proc/<pid>/cmdline.
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLIENT_ID' 'REPLACE_WITH_CLIENT_SECRET'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Client-Id on the set -- line above; not probing"; exit ;; esac
+  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Client-Secret on the set -- line above; not probing"; exit ;; esac
+  printf 'CF-Access-Client-Id: %s\nCF-Access-Client-Secret: %s\n' "$1" "$2" | curl -q -H @- https://app.example.com/api
+)
 ```
 
 ## 5. Close the side doors

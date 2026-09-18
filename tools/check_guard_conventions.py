@@ -210,6 +210,60 @@ ASSIGNMENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*\+?=")
 DURATION_RE = re.compile(r"^\d[\d.]*[smhd]?$")
 FD_RE = re.compile(r"^\d+$")
 
+# C3: a live credential placed in curl argv (readable via ps / /proc/<pid>/cmdline
+# to local observers while it is there, including before curl scrubs supported
+# arguments on some platforms). Detected inside the same per-curl walk as C1/C2 and
+# waivable with the existing `# guard-conventions: allow <reason>` comment. The
+# header policy is a positive denylist of credential-bearing header NAMES, so
+# identity/assertion headers (x-amzn-oidc-identity), CF-Access-Client-Id,
+# X-...-token-ttl-seconds and content-negotiation headers pass by construction,
+# while x-amzn-oidc-accesstoken (a real access token) is flagged. This is a bounded
+# lexical scan with DISCLOSED limits, not a full curl parser. Known false negatives,
+# covered by rule 5's tracing obligation: a credential reached through a shell
+# variable or command substitution in a VALUE (curl "$URL", --json "$BODY") -- so
+# the sweep, not this rule, is what fixed object-storage's presigned "$URL"; a curl
+# invoked through a variable/alias/eval; a secret in a --form/-F field or -F's @/<
+# content reference, an opaque --cookie/-b cookie, an -e/--referer URL, or --netrc(-file); and a body
+# whose credential key is unicode-escaped. A body match landing in a non-secret
+# value is instead a possible false POSITIVE, waivable per case. Flagging every
+# "$VAR" positional would false-positive on a guide's own guarded "$1" URL, so that
+# case is documented rather than flagged.
+CREDENTIAL_HEADER_RE = re.compile(
+    r"^(?:authorization|proxy-authorization|cookie|"
+    r"x-api-key|api-key|apikey|x-auth-token|private-token|x-goog-api-key|"
+    r"x-amzn-oidc-accesstoken|"
+    r"(?:[a-z0-9-]+-)?(?:secret|token|api-key|apikey|access-token))$",
+    re.I,
+)
+BODY_SECRET_RE = re.compile(
+    r"""["']?(?:password|passwd|client[_-]secret|api[_-]key|apikey|"""
+    r"""secret|access[_-]token|refresh[_-]token)["']?\s*[:=]""",
+    re.I,
+)
+URL_USERINFO_RE = re.compile(r"^[a-z][a-z0-9+.-]*://[^/?#@\s]*:[^/?#@\s]+@", re.I)
+SIGNED_URL_RE = re.compile(
+    r"[?&](?:x-amz-signature|x-goog-signature|signature|sig)=", re.I)
+SCHEMELESS_USERINFO_RE = re.compile(r"^[^/?#@\s]+:[^/?#@\s]+@")
+_CRED_USER_OPTS = frozenset(("-u", "-U", "--user", "--proxy-user"))
+_CRED_HEADER_OPTS = frozenset(("-H", "--header", "--proxy-header"))
+_CRED_BODY_OPTS = frozenset((
+    "-d", "--data", "--data-ascii", "--data-binary",
+    "--data-urlencode", "--json", "--data-raw"))
+# value is a URL whose userinfo or signature query may carry a credential
+_CRED_URLVAL_OPTS = frozenset(("--url",))
+_CRED_PROXY_OPTS = frozenset(("-x", "--proxy"))
+_CRED_SHORT = {"-u": "user", "-U": "user", "-H": "header", "-d": "body"}
+# Other value-taking curl options: skip their value so it is not read as a URL.
+# Credential-bearing options above are handled explicitly, not skipped here.
+_SKIP_VALUE_OPTS = frozenset((
+    "-o", "--output", "-w", "--write-out", "-X", "--request",
+    "--connect-timeout", "--max-time", "--noproxy", "-A", "--user-agent",
+    "--resolve", "--cacert", "--capath", "--cert", "--key",
+    "--range", "-r", "--retry", "--limit-rate", "-m", "--interface",
+    "--dns-servers", "-K", "--config", "-c", "--cookie-jar",
+    "-b", "--cookie", "-F", "--form", "--form-string", "-e", "--referer",
+))
+
 MESSAGES = {
     "C1-MISSING-Q": "curl lacks -q/--disable: the reader's ~/.curlrc (proxy, "
                     "insecure, output redirect) can silently alter this probe",
@@ -226,6 +280,22 @@ MESSAGES = {
     "C2-WARN-ONLY-GUARD": "(strict) probe follows a REPLACE_WITH_ if-guard "
                           "whose body never exits/returns; the probe runs "
                           "even when the placeholder is unedited",
+    "C3-USER-ARGV": "curl user:password (or a $-expanded credential) is in "
+                    "argv, world-readable via ps / /proc/<pid>/cmdline; pipe a "
+                    "config line 'user = \"...\"' to curl --config - instead",
+    "C3-HEADER-ARGV": "a credential-bearing curl header (Authorization, "
+                      "*-Secret, *-Token, *-Api-Key, --oauth2-bearer, or a "
+                      "whole $-expanded header) is in argv; pipe the header "
+                      "line to curl --header @- instead",
+    "C3-BODY-ARGV": "a credential-bearing request body is in curl argv; move "
+                    "it into a --config - stream ('data-binary = \"...\"') or "
+                    "feed it from a file with @file",
+    "C3-URL-ARGV": "a credential-bearing URL (user:password userinfo or a "
+                   "presigned signature) is in curl argv; pipe a config line "
+                   "'url = \"...\"' to curl --config - instead",
+    "C3-NO-VALUE": "a curl credential option lacks a statically readable "
+                   "value; move the credential onto stdin (--config - / "
+                   "--header @-) so this gate can see it is not in argv",
 }
 
 
@@ -483,6 +553,136 @@ def _url_needs_globoff(a):
     return False
 
 
+def _cred_value(a, i, eq, tail):
+    """Return (value, next_index); value None means expected-but-absent."""
+    if eq:
+        return tail, i + 1
+    if i + 1 < len(a):
+        return a[i + 1], i + 2
+    return None, i + 1
+
+
+def _cred_header_code(val):
+    """C3-HEADER-ARGV when a header VALUE carries a credential; [] for the safe
+    @-/@file stdin forms and non-secret header names."""
+    if val.startswith("@"):
+        return []
+    hn, colon, rest = val.partition(":")
+    if colon and rest.strip() and CREDENTIAL_HEADER_RE.match(hn.strip()):
+        return ["C3-HEADER-ARGV"]
+    if not colon and "$" in val:
+        return ["C3-HEADER-ARGV"]
+    return []
+
+
+def _credential_codes(a):
+    """a: curl argument tokens (after 'curl', redirections dropped). Returns the
+    C3-* codes for a live credential placed in curl argv. Safe stdin forms
+    (--header @-, --config -) and identity/non-secret headers do not match. See
+    the C3 comment above CREDENTIAL_HEADER_RE for the disclosed false negatives."""
+    codes = []
+    i, n = 0, len(a)
+    while i < n:
+        t = a[i]
+        name, sep, tail = t.partition("=")
+        eq = bool(sep)
+        if name in _CRED_USER_OPTS:
+            val, i = _cred_value(a, i, eq, tail)
+            if val is None:
+                codes.append("C3-NO-VALUE")
+            elif ":" in val or "$" in val:
+                codes.append("C3-USER-ARGV")
+            continue
+        if name == "--oauth2-bearer":
+            _val, i = _cred_value(a, i, eq, tail)
+            codes.append("C3-HEADER-ARGV")
+            continue
+        if name in _CRED_HEADER_OPTS:
+            val, i = _cred_value(a, i, eq, tail)
+            if val is None:
+                codes.append("C3-NO-VALUE")
+            else:
+                codes.extend(_cred_header_code(val))
+            continue
+        if name in _CRED_BODY_OPTS:
+            val, i = _cred_value(a, i, eq, tail)
+            if val is None:
+                codes.append("C3-NO-VALUE")
+            else:
+                fromfile = (name != "--data-raw") and val.startswith("@")
+                if not fromfile and BODY_SECRET_RE.search(val):
+                    codes.append("C3-BODY-ARGV")
+            continue
+        if name in _CRED_URLVAL_OPTS:
+            val, i = _cred_value(a, i, eq, tail)
+            if val is None:
+                codes.append("C3-NO-VALUE")
+            elif URL_USERINFO_RE.match(val) or SIGNED_URL_RE.search(val):
+                codes.append("C3-URL-ARGV")
+            continue
+        if name in _CRED_PROXY_OPTS:
+            val, i = _cred_value(a, i, eq, tail)
+            if val is None:
+                codes.append("C3-NO-VALUE")
+            elif (URL_USERINFO_RE.match(val) or SCHEMELESS_USERINFO_RE.match(val)
+                  or SIGNED_URL_RE.search(val)):
+                codes.append("C3-URL-ARGV")
+            continue
+        if len(t) > 2 and not t.startswith("--") and t[:2] in _CRED_SHORT:
+            kind, val = _CRED_SHORT[t[:2]], t[2:]
+            if kind == "user":
+                if ":" in val or "$" in val:
+                    codes.append("C3-USER-ARGV")
+            elif kind == "header":
+                codes.extend(_cred_header_code(val))
+            elif kind == "body":
+                if not val.startswith("@") and BODY_SECRET_RE.search(val):
+                    codes.append("C3-BODY-ARGV")
+            i += 1
+            continue
+        if len(t) > 2 and not t.startswith("--") and t[:2] == "-x":
+            val = t[2:]
+            if (URL_USERINFO_RE.match(val) or SCHEMELESS_USERINFO_RE.match(val)
+                    or SIGNED_URL_RE.search(val)):
+                codes.append("C3-URL-ARGV")
+            i += 1
+            continue
+        if len(t) > 2 and t.startswith("-") and not t.startswith("--"):
+            cluster = t[1:]
+            j = 0
+            while j < len(cluster) and cluster[j] in NOARG_SHORTS:
+                j += 1
+            if 0 < j < len(cluster) and cluster[j] in ("u", "U", "H", "d"):
+                credc = cluster[j]
+                rest = cluster[j + 1:]
+                if rest:
+                    val = rest
+                    i += 1
+                else:
+                    val, i = (a[i + 1], i + 2) if i + 1 < n else (None, i + 1)
+                if val is None:
+                    codes.append("C3-NO-VALUE")
+                elif credc in ("u", "U"):
+                    if ":" in val or "$" in val:
+                        codes.append("C3-USER-ARGV")
+                elif credc == "H":
+                    codes.extend(_cred_header_code(val))
+                elif credc == "d":
+                    if not val.startswith("@") and BODY_SECRET_RE.search(val):
+                        codes.append("C3-BODY-ARGV")
+                continue
+        if t in _SKIP_VALUE_OPTS:
+            i += 2
+            continue
+        if not t.startswith("-"):
+            if URL_USERINFO_RE.match(t) or SIGNED_URL_RE.search(t):
+                codes.append("C3-URL-ARGV")
+            i += 1
+            continue
+        i += 1
+    return codes
+
+
 def _check_curl(args, q_anywhere_ok):
     codes = []
     a = _drop_redirections(args)
@@ -499,6 +699,7 @@ def _check_curl(args, q_anywhere_ok):
                 for t in a)
     if not has_g and _url_needs_globoff(a):
         codes.append("C1-MISSING-G")
+    codes.extend(_credential_codes(a))
     return codes
 
 
@@ -965,6 +1166,81 @@ SELF_TEST_CASES += [
      "    *REPLACE_WITH_TARGET*) echo \"edit the target first\" >&2;;\n"
      "  esac\n  curl -q -g \"https://$1/healthz\"\n)\n```\n", [],
      ("--no-c2",)),
+    ("c3-user-argv-basic",
+     "```bash\ncurl -q -u admin:REPLACE_WITH_PASSWORD https://h/\n```\n",
+     ["C3-USER-ARGV"], ()),
+    ("c3-user-argv-attached-and-var",
+     "```bash\ncurl -q -uadmin:pw https://h/\ncurl -q -u \"$CREDS\" https://h/\n```\n",
+     ["C3-USER-ARGV", "C3-USER-ARGV"], ()),
+    ("c3-user-colon-free-ok",
+     "```bash\ncurl -q -u admin https://h/\n```\n", [], ()),
+    ("c3-header-argv-authorization",
+     "```bash\ncurl -q -g -H \"Authorization: Bearer REPLACE_WITH_KEY\" https://h/\n```\n",
+     ["C3-HEADER-ARGV"], ()),
+    ("c3-header-argv-secret-and-var",
+     "```bash\ncurl -q --header=X-Api-Key:secret https://h/\n"
+     "curl -q -H \"$HDR\" https://h/\n```\n",
+     ["C3-HEADER-ARGV", "C3-HEADER-ARGV"], ()),
+    ("c3-header-oauth2-bearer",
+     "```bash\ncurl -q --oauth2-bearer REPLACE_WITH_T https://h/\n```\n",
+     ["C3-HEADER-ARGV"], ()),
+    ("c3-header-stdin-safe",
+     "```bash\nprintf 'Authorization: Bearer %s\\n' \"$1\" | "
+     "curl -q -g -sS -H @- http://h/x\n```\n", [], ()),
+    ("c3-header-nonsecret-and-identity-ok",
+     "```bash\ncurl -q -H \"Content-Type: application/json\" https://h/\n"
+     "curl -q -H \"x-amzn-oidc-identity: admin\" https://h/\n"
+     "curl -q -H \"CF-Access-Client-Id: REPLACE_WITH_ID\" https://h/\n```\n",
+     [], ()),
+    ("c3-body-argv-secret",
+     "```bash\ncurl -q --data-urlencode password=x https://h/\n```\n",
+     ["C3-BODY-ARGV"], ()),
+    ("c3-body-file-and-nonsecret-ok",
+     "```bash\ncurl -q --json @body.json https://h/\n"
+     "curl -q -d '{\"model\":\"ping\"}' https://h/\n```\n", [], ()),
+    ("c3-url-userinfo-and-signature",
+     "```bash\ncurl -q https://user:pw@h/\n"
+     "curl -q 'https://b.example/o?X-Amz-Signature=abc&x=1'\n```\n",
+     ["C3-URL-ARGV", "C3-URL-ARGV"], ()),
+    ("c3-url-generic-token-not-gated",
+     "```bash\ncurl -q 'https://h/o?token=abc'\n```\n", [], ()),
+    ("c3-config-stdin-safe",
+     "```bash\nprintf 'user = \"admin:%s\"\\n' \"$1\" | "
+     "curl -q -g -sS --config - -o /dev/null -w '%{http_code}\\n' https://h/\n```\n",
+     [], ()),
+    ("c3-user-argv-waived",
+     "```bash\n# guard-conventions: allow documented teaching example\n"
+     "curl -q -u admin:pw https://h/\n```\n", [], ()),
+    ("c3-cluster-user-flagged",
+     "```bash\ncurl -q -suadmin:secret https://h/\n```\n",
+     ["C3-USER-ARGV"], ()),
+    ("c3-proxy-userinfo-flagged",
+     "```bash\ncurl -q --proxy 'https://u:pw@proxy/' https://h/\n```\n",
+     ["C3-URL-ARGV"], ()),
+    ("c3-form-and-cookie-are-documented-limits",
+     "```bash\ncurl -q --form 'password=hunter2' https://h/\n"
+     "curl -q --form 'password=@-' https://h/\n"
+     "curl -q --cookie 'session=opaque' https://h/\n```\n", [], ()),
+    ("c3-proxy-schemeless-userinfo-flagged",
+     "```bash\ncurl -q --proxy 'admin:secret@proxy:8080' https://h/\n```\n",
+     ["C3-URL-ARGV"], ()),
+    ("c3-referer-not-scanned-scheme-less-is-proxy-only",
+     "```bash\ncurl -q --referer 'mailto:help@example.com' https://h/\n"
+     "curl -q -e 'https://ref/?sig=x' https://h/\n```\n", [], ()),
+    ("c3-empty-user-url-flagged",
+     "```bash\ncurl -q https://:secret@h/\n```\n", ["C3-URL-ARGV"], ()),
+    ("c3-oidc-accesstoken-flagged-identity-not",
+     "```bash\ncurl -q -H \"x-amzn-oidc-accesstoken: REAL\" https://h/\n"
+     "curl -q -H \"x-amzn-oidc-identity: admin\" https://h/\n```\n",
+     ["C3-HEADER-ARGV"], ()),
+    ("c3-config-value-not-a-url",
+     "```bash\ncurl -q --config './settings?sig=public' https://h/\n```\n",
+     [], ()),
+    ("c3-cookie-opaque-session-not-flagged",
+     "```bash\ncurl -q --cookie 'session=opaquevalue' https://h/\n```\n",
+     [], ()),
+    ("c3-credential-option-no-value",
+     "```bash\ncurl -q https://h/ -u\n```\n", ["C3-NO-VALUE"], ()),
 ]
 
 

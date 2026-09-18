@@ -125,16 +125,30 @@ than the client, so set it explicitly if you want a per-client cap.
 curl -q -sI http://app.example.com/     # expect a redirect to https://
 curl -q -sI https://app.example.com/    # expect 401 without credentials once auth is on
 head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
-curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/under.bin https://app.example.com/
+(
+  # curl reads the admin password from a config stream on stdin (--config -),
+  # never argv (-u admin:PASSWORD is readable in ps / /proc/<pid>/cmdline).
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PASSWORD'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit ;; esac
+  set -- "${1//\\/\\\\}"
+  set -- "${1//\"/\\\"}"
+  printf 'user = "admin:%s"\n' "$1" | curl -q -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/under.bin https://app.example.com/
                                      # positive control: under the limit, must NOT be 413
-curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD --data-binary @/tmp/over.bin  https://app.example.com/
+  printf 'user = "admin:%s"\n' "$1" | curl -q -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  https://app.example.com/
                                      # 413. Credentials matter: app-body runs after app-auth, so an
                                      # unauthenticated probe is counted by app-rate/app-inflight but stops
                                      # at 401 before app-body buffers it. A backend with its own limit
                                      # returns the same code, so attributing the refusal needs an isolated
                                      # environment with app-body removed
-seq 1 40 | xargs -P 40 -I{} curl -q -s -o /dev/null -w '%{http_code}\n' -u admin:REPLACE_WITH_PASSWORD https://app.example.com/ | sort | uniq -c
-                                     # A 429 appeared. That is all this shows. inflightreq also returns
+)
+seq 1 40 | xargs -P 40 -I{} curl -q -s -o /dev/null -w '%{http_code}\n' https://app.example.com/ | sort | uniq -c
+                                     # No credentials here: app-rate and app-inflight run BEFORE app-auth in the
+                                     # middleware chain (section 4), so an unauthenticated flood is counted by the
+                                     # limiter, keyed on the client source. A 429 appeared. That is all this shows.
+                                     # inflightreq also returns
                                      # 429, and an upstream under load can too, so this does not
                                      # establish that ratelimit fired. Attributing it needs an isolated
                                      # environment with both disabled as a baseline, then each enabled
@@ -194,7 +208,7 @@ A `404` for the canary also appears when the whole Docker provider is off, which
 )
 ```
 
-With the authentication from section 3 in place, this unauthenticated probe returns `http=401`: a response, rather than a connection failure or a `404`, means the provider is routing this app. The `401` may come from Traefik's basicAuth or from the app's own login, so it confirms routing, not specifically that the proxy middleware is attached; confirm that separately from the router's `middlewares` in the dashboard or config. (Add `-u admin:REPLACE_WITH_PASSWORD` to the curl line to see the app's own authenticated response instead.) The fix is confirmed when, in the same run, the app answers `401` (or your known authenticated `200`) and the canary answers `404`: routing works and the unlabelled container is excluded. A `404` or a connection failure for the app instead means the provider is not routing it. No `-k` here; the app needs a real certificate.
+With the authentication from section 3 in place, this unauthenticated probe returns `http=401`: a response, rather than a connection failure or a `404`, means the provider is routing this app. The `401` may come from Traefik's basicAuth or from the app's own login, so it confirms routing, not specifically that the proxy middleware is attached; confirm that separately from the router's `middlewares` in the dashboard or config. (Feed the admin credential to that curl on stdin, as the section 5 Verify block does, to see the app's own authenticated response instead.) The fix is confirmed when, in the same run, the app answers `401` (or your known authenticated `200`) and the canary answers `404`: routing works and the unlabelled container is excluded. A `404` or a connection failure for the app instead means the provider is not routing it. No `-k` here; the app needs a real certificate.
 
 ## Common mistakes
 

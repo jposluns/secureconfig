@@ -46,10 +46,19 @@ ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not
 # Does the LISTENER itself demand auth? Test it DIRECTLY on loopback, with no platform proxy in the path,
 # as a matched pair. Jupyter uses an 'Authorization: token <token>' (or ?token=) scheme; without it
 # /api/contents returns 403, with a valid token 200. Substitute the real token.
-curl -q -g -sS -o /dev/null -w 'jupyter no-token=%{http_code} exit=%{exitcode}\n' --noproxy '*' \
-  --connect-timeout 5 --max-time 10 http://127.0.0.1:8888/api/contents
-curl -q -g -sS -o /dev/null -w 'jupyter with-token=%{http_code} exit=%{exitcode}\n' --noproxy '*' \
-  --connect-timeout 5 --max-time 10 -H "Authorization: token REPLACE_WITH_JUPYTER_TOKEN" http://127.0.0.1:8888/api/contents
+(
+  # Feed the token to curl on stdin (curl --header @-), never in argv:
+  # -H "Authorization: token TOKEN" is readable in ps / /proc/<pid>/cmdline.
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_JUPYTER_TOKEN'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Jupyter token on the set -- line above; not probing"; exit ;; esac
+  curl -q -g -sS -o /dev/null -w 'jupyter no-token=%{http_code} exit=%{exitcode}\n' --noproxy '*' \
+    --connect-timeout 5 --max-time 10 http://127.0.0.1:8888/api/contents
+  printf 'Authorization: token %s\n' "$1" | curl -q -g -sS -o /dev/null -w 'jupyter with-token=%{http_code} exit=%{exitcode}\n' --noproxy '*' \
+    --connect-timeout 5 --max-time 10 -H @- http://127.0.0.1:8888/api/contents
+)
 # Then confirm the SAME listener is authenticated FROM OUTSIDE, once PER exposed port/mapping. A probe of
 # the platform proxy hostname shows reachability and that something gates the URL, but a 401/200 there can
 # be the PLATFORM proxy rather than the listener, so read it with the direct-loopback pair above: a no-
@@ -61,9 +70,9 @@ curl -q -g -sS -o /dev/null -w 'jupyter with-token=%{http_code} exit=%{exitcode}
   shift
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
   case "$1" in *REPLACE_WITH_*|"") echo "substitute the URL on the set -- line above; not probing"; exit ;; esac
-  case "$2" in *REPLACE_WITH_*|"") echo "substitute the token on the set -- line above; not probing"; exit ;; esac
+  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the token on the set -- line above; not probing"; exit ;; esac
   curl -q -g -sS -o /dev/null -w 'no-cred=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 10 "$1"
-  curl -q -g -sS -o /dev/null -w 'with-cred=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 10 -H "Authorization: Bearer $2" "$1"
+  printf 'Authorization: Bearer %s\n' "$2" | curl -q -g -sS -o /dev/null -w 'with-cred=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 10 -H @- "$1"
 )
 ```
 

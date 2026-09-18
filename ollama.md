@@ -84,6 +84,7 @@ ss -tlnp                                               # read every listener: 11
   esac
 )
 curl -q -sS -o /dev/null -w 'http=%{http_code}\n' https://ollama.example.com/api/tags                 # no credentials: expect 401 from the Basic-auth proxy (Ollama's /api/tags does not authenticate callers, so a 401 here comes from the proxy)
+# guard-conventions: allow deliberate wrong-password negative control; admin:WRONG is a dummy, not a live credential
 curl -q -sS -o /dev/null -w 'http=%{http_code}\n' -u admin:WRONG https://ollama.example.com/api/tags  # wrong credentials: expect 401, never 200
 curl -q -sS -u admin -w '\nhttp=%{http_code}\n' https://ollama.example.com/api/tags                   # correct credentials: expect http=200 and the model-list JSON
 ```
