@@ -78,7 +78,6 @@ ss -tlnp   # expect 8443 and 9440, plus only the private listeners you deliberat
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in *REPLACE_WITH_*|"") echo "substitute the host on the set -- line above; not probing"; exit 2 ;; esac
-  host=$1
   set +e   # inspect each probe's outcome from its write-out below, not via an inherited set -e
   # Private CA or self-signed: keep verification ON and point curl at the CA. Never -k. For a public CA,
   # remove the two --cacert arguments from the array below.
@@ -86,7 +85,7 @@ ss -tlnp   # expect 8443 and 9440, plus only the private listeners you deliberat
   fmt='\nhttp=%{http_code} exit=%{exitcode} remote=%{remote_ip} err=%{errormsg}\n'
   # 1) Disabled plaintext HTTP 8123 on the SAME origin. Read the HTTP status independently of curl's exit:
   #    ANY received status (even if a later transfer error follows, e.g. curl exit 18) proves the port answered.
-  code=$(curl -q -g "${common[@]}" -o /dev/null -w '%{http_code}' "http://$host:8123/?query=SELECT%201"); rc=$?
+  code=$(curl -q -g "${common[@]}" -o /dev/null -w '%{http_code}' "http://$1:8123/?query=SELECT%201"); rc=$?
   printf 'plaintext http=%s exit=%s\n' "$code" "$rc"
   if [ "$code" != 000 ]; then
     echo 'FAIL: plaintext HTTP 8123 answered (any status here means the plaintext port is still serving)'
@@ -109,7 +108,7 @@ ss -tlnp   # expect 8443 and 9440, plus only the private listeners you deliberat
       correct) pw=$apppw ;;
     esac
     printf 'X-ClickHouse-User: app\nX-ClickHouse-Key: %s\n' "$pw" \
-      | { echo "[$label]"; curl -q -g "${common[@]}" -w "$fmt" -H @- "https://$host:8443/?query=SELECT%201"; }
+      | { echo "[$label]"; curl -q -g "${common[@]}" -w "$fmt" -H @- "https://$1:8443/?query=SELECT%201"; }
   done
   unset apppw pw
   # Native 9440 is a SEPARATE authenticator: SELECT 1 as `app` at each prompt, the wrong password then the
@@ -118,7 +117,7 @@ ss -tlnp   # expect 8443 and 9440, plus only the private listeners you deliberat
   # certificate error is inconclusive. Test the `default` account separately.
   for label in wrong correct; do
     printf '\n[native %s] enter the %s password at the prompt.\n' "$label" "$label"
-    clickhouse-client --host "$host" --port 9440 --secure --user app --query 'SELECT 1' --password
+    clickhouse-client --host "$1" --port 9440 --secure --user app --query 'SELECT 1' --password
     printf 'native_exit=%s\n' "$?"
   done
 )
