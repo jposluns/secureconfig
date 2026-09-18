@@ -14,7 +14,7 @@ services; inbound authentication does not constrain what an executing workload r
 ## Prefect (self-hosted server)
 
 There is no default authentication; `prefect server start` accepts unauthenticated API calls until you set
-one up. Basic Auth is a single administrator/password string, set on the server with
+one up. Built-in Basic Auth requires Prefect 3.1.8 or newer. It uses a single administrator/password string, set on the server with
 `PREFECT_SERVER_API_AUTH_STRING` (or the `server.api.auth_string` setting) and the identical value on every
 client with `PREFECT_API_AUTH_STRING` (`api.auth_string`); the UI prompts for the string on first load. This
 is unrelated to Prefect Cloud: `PREFECT_API_KEY` authenticates only to Prefect Cloud, and if it happens to be
@@ -40,9 +40,9 @@ Airflow's own security model states it plainly: "Airflow doesn't support unauthe
 and "Airflow is not designed to be exposed to untrusted users on the public internet"; every user of the UI
 and API is assumed to be authenticated and known, and keeping it off the public internet is the deployment
 manager's responsibility, not something the software enforces for you. The guidance below targets Airflow 3
-(checked against 3.3.2 with FAB provider 3.9.0); earlier releases differ, so confirm your version. Airflow 2.x
-governs API access through `[api] auth_backends` (defaulting to `airflow.api.auth.backend.session`, singular
-`auth_backend` before 2.3), and Airflow 3's public API uses JWT independently of FAB's `[fab] auth_backends`.
+(checked against 3.3.2 with FAB provider 3.9.0); earlier releases differ, so confirm your version. Airflow 2.11.0 governs API authentication through `[api] auth_backends`, defaulting to
+`airflow.api.auth.backend.session`. Before 2.3 the setting was singular `auth_backend`; in 2.2.5 its default was
+`airflow.api.auth.backend.deny_all`. Airflow 3's public API uses JWT independently of FAB's `[fab] auth_backends`.
 Access is governed by a pluggable "auth manager". The default is the Simple Auth Manager, which the documentation marks for development and
 testing only: it prints a warning banner on login, and its users and roles (`viewer`, `user`, `op`, `admin`)
 come from `simple_auth_manager_users` in `[core]` (for example `bob:admin,peter:viewer`), with a password
@@ -72,7 +72,8 @@ on 2.11.0, `[api] secret_key` on 3.3.2): provision a strong value for it too, be
 secure the other. Keep configuration exposure off as well (`AIRFLOW__WEBSERVER__EXPOSE_CONFIG=False` on 2.11.0,
 `AIRFLOW__API__EXPOSE_CONFIG=False` on 3.3.2). An exposed Airflow is also a credential store: its Connections
 and Variables hold credentials for the systems your DAGs reach, protected at rest by the `[core] fernet_key`
-(unset means they sit in plaintext in the metadata database), so restrict permissions on Connections and
+(an effectively empty key disables encryption for newly stored values; normal initialization generates a key,
+and removing an existing key prevents decryption of existing ciphertext), so restrict permissions on Connections and
 Variables and protect the metadata database, the Fernet key, and any secrets backend, since encryption at rest
 and UI masking do not stop an authorized workload from using them. Keep every secret out of the repository
 ([secrets.md](secrets.md)), and publish 8080 to loopback for the proxy (`127.0.0.1:8080:8080`) rather than to
@@ -86,8 +87,8 @@ operations. Configure both an `Authorizer` and a `ClaimMapper`: leaving either s
 no-op claim mapper grants system-admin claims, so both matter. For the built-in JWT implementation set
 `global.authorization.authorizer: default`, `global.authorization.claimMapper: default`, and a trusted
 `global.authorization.jwtKeyProvider.keySourceURIs` (the programmatic equivalents are `temporal.WithAuthorizer()`
-and `temporal.WithClaimMapper()`), with the required audience and frontend TLS configured, so every gRPC call to
-the Temporal Service is checked against a mapped claim before anything runs. This is entirely separate from Web
+and `temporal.WithClaimMapper()`), with the required audience and frontend TLS configured, so protected workflow API
+calls require sufficient mapped claims. The built-in default authorizer permits health-check APIs without claims. This is entirely separate from Web
 UI login: the UI's own config reference documents an `auth` block whose `enabled` flag turns UI login on and
 whose `providers` list carries each OIDC entry (`type: oidc`, `providerUrl`, `issuerUrl`, `clientId`,
 `clientSecret`, `callbackUrl`, `scopes`) for SSO into the dashboard. `enabled` is a sibling of `providers`, not
@@ -109,9 +110,9 @@ rejection as proof the dashboard itself is protected. `--basic-auth="user1:passw
 turns on HTTP Basic Auth with a comma-separated credential list; OAuth 2.0 login against Google, GitHub,
 GitLab, or Okta is enabled by setting `--auth_provider` to the provider's handler class plus `--oauth2_key`,
 `--oauth2_secret`, `--oauth2_redirect_uri`, and an `--auth` regular expression of the email addresses allowed
-to sign in. Supply the Basic Auth list and any OAuth client secret through the `FLOWER_BASIC_AUTH` environment variable or a
-protected config file rather than on the command line, where they are readable in the process list
-([secrets.md](secrets.md)). Prefer OAuth against a provider that enforces MFA over Basic Auth alone
+to sign in. Supply the Basic Auth credential list through `FLOWER_BASIC_AUTH` and the OAuth client secret through
+`FLOWER_OAUTH2_SECRET`, or set `basic_auth` and `oauth2_secret` in a protected configuration file, rather than on
+the command line where they are readable in the process list ([secrets.md](secrets.md)). Prefer OAuth against a provider that enforces MFA over Basic Auth alone
 ([mfa.md](mfa.md)), and bind `--address=127.0.0.1` behind a proxy rather than relying on Basic Auth as the only
 control.
 
@@ -133,35 +134,36 @@ ss -tlnp   # TCP listeners in THIS network namespace only (4200/3000/8080/7233/8
 
 # Prefect: an empty JSON filter. Once the auth string is set the anonymous call is 401 and the authorized call
 # returns a JSON flow list; an anonymous list, even an empty one, is the finding. Feed the auth string on stdin.
-# Do NOT probe /api/health or /api/ready: Prefect exempts those two GET paths, so they answer whether or not
-# authentication is configured.
-curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -o /dev/null \
-  -w 'prefect-anon http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+# Do NOT use /api/health or /api/ready as the authentication discriminator. Current server source exempts
+# those GET paths; this behavior is version-dependent and was not present in 3.1.8.
+curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+  -w '\nprefect-anon http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
   -H 'Content-Type: application/json' -X POST --data-binary '{}' http://prefect.internal:4200/api/flows/filter
-printf 'user = "%s"\n' 'REPLACE_WITH_PREFECT_AUTH_STRING' \
-  | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --config - -o /dev/null \
-      -w 'prefect-auth http=%{http_code} exit=%{exitcode}\n' \
+python3 -c 'import base64,getpass; print("header = \"Authorization: Basic " + base64.b64encode(getpass.getpass("Prefect username:password: ").encode()).decode() + "\"")' \
+  | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --config - \
+      -w '\nprefect-auth http=%{http_code} exit=%{exitcode}\n' \
       -H 'Content-Type: application/json' -X POST --data-binary '{}' http://prefect.internal:4200/api/flows/filter
 
-# Dagster has no login of its own, so test /graphql, which can read configuration and launch runs. An anonymous
-# query returning repository data (not an auth error) is the finding; repeat through your authenticated proxy
-# against the same route, which must return the same data. Inspect the JSON body, since HTTP status alone does
-# not separate a GraphQL result from an error.
+# Dagster has no login of its own, so test /graphql, which can read configuration and launch runs.
+# A RepositoryConnection containing nodes (including an empty nodes list) is a successful read.
+# PythonError, top-level GraphQL errors, and transport failures are inconclusive.
+# Test the proxy separately: send this identical query anonymously and authenticated to the SAME proxy URL.
+# Test origin reachability independently; proxy authentication does not authenticate the OSS origin.
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
   -w '\ndagster-anon http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
   -H 'Content-Type: application/json' -X POST \
-  --data-binary '{"query":"{ repositoriesOrError { __typename } }"}' http://dagster.internal:3000/graphql
+  --data-binary '{"query":"{ repositoriesOrError { __typename ... on RepositoryConnection { nodes { name location { name } } } } }"}' http://dagster.internal:3000/graphql
 
 # Airflow: obtaining a token from the documented Compose account is the finding. Send the credentials as JSON
-# on stdin; a 2xx returning an access_token means airflow/airflow still works. Compare with a valid account on
+# on stdin; FAB 3.9.0 returns 201 Created with a nonempty access_token when airflow/airflow works. Compare with a valid account on
 # the same route, and test an API read with no token then a token at the proxy and the origin. On Airflow 2 use
 # its /api/v1/ endpoint and its own auth mechanism instead.
 printf '{"username":"%s","password":"%s"}' 'airflow' 'airflow' \
-  | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -o /dev/null \
-      -w 'airflow-token http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+  | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+      -w '\nairflow-token http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
       -H 'Content-Type: application/json' --data-binary @- https://airflow.example.com/auth/token
-curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -o /dev/null \
-  -w 'airflow-pools-anon http=%{http_code} exit=%{exitcode}\n' https://airflow.example.com/api/v2/pools
+curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+  -w '\nairflow-pools-anon http=%{http_code} exit=%{exitcode}\n' https://airflow.example.com/api/v2/pools
 
 # Temporal: a protected read against the frontend gRPC port. With an Authorizer and ClaimMapper configured this
 # is rejected without credentials (an mTLS deployment refuses the connection outright); a listing, even an empty
@@ -169,19 +171,20 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -o /dev/null \
 # authorization, so use a real workflow list, not a health call, and run it with no ambient credentials set.
 temporal workflow list --address temporal.internal:7233 --namespace default --limit 1
 
-# Flower: the dashboard and the API. With Basic Auth an anonymous request is 401; with OAuth it is a redirect to
-# the identity provider (302), not 401, so inspect the redirect without following it and confirm access with a
+# Flower: the dashboard and the API. With Basic Auth an anonymous request is 401; with OAuth it is a 302 redirect into
+# the login flow, not 401, so inspect the redirect without following it and confirm access with a
 # valid session. An anonymous worker list from /api/workers is the finding; an API-disabled response does not
 # prove the dashboard is protected.
-curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -o /dev/null \
-  -w 'flower-ui http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' http://flower.internal:5555/
-curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -o /dev/null \
-  -w 'flower-api http=%{http_code} exit=%{exitcode}\n' http://flower.internal:5555/api/workers
+curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
+  -w '\nflower-ui http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' http://flower.internal:5555/
+curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
+  -w '\nflower-api http=%{http_code} exit=%{exitcode}\n' http://flower.internal:5555/api/workers
 
 # Direct-origin reachability from an UNTRUSTED vantage (run from OUTSIDE your network). Paste the whole block and
 # substitute your origin URL inside the quotes; any HTTP response means the origin is published and is itself the
-# finding, whatever a fronting proxy does. A DNS or connection error or a timeout is inconclusive, not a pass; as
-# a positive control, the same block against your proxy's public URL must answer.
+# finding, whatever a fronting proxy does. First confirm this SAME origin URL responds from an allowed
+# vantage, then probe it from the untrusted vantage. DNS, TLS, connection errors, and timeouts remain
+# inconclusive. A responding public proxy is only a separate connectivity check.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ORIGIN_URL'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -209,17 +212,18 @@ cover the frontend gRPC path.
 - Setting `PREFECT_API_KEY` on a client that should be using `PREFECT_API_AUTH_STRING` against a self-hosted
   server, then debugging the resulting 401 as a server problem.
 - Publishing Flower's `5555` or Dagster's `3000` straight to the internet "for the team" with no proxy.
-- Forgetting that an exposed orchestrator is a credential store: Airflow Connections and Variables, Prefect
-  Blocks, and Temporal payloads all expose the credentials the workflows use, which UI masking and encryption
-  at rest do not protect from an authorized caller.
+- Storing credentials in Airflow Connections and Variables, Prefect Blocks, or Temporal payloads without
+  restricting who can retrieve or use them. UI masking and database encryption do not enforce caller
+  authorization. Temporal client-side payload encryption adds a separate boundary: decoding requires the key or
+  access to an authorized Codec Server.
 
 ## Sources (checked September 2026)
 
-These defaults are checked against Prefect 3.x, Dagster 1.13.x, Apache Airflow 3.3.2 with FAB provider 3.9.0 (Airflow 2.11.0 noted where the configuration paths differ), Temporal Server 1.28.x and UI Server 2.34.x, and Flower 2.2.0; confirm your own versions, since several of these settings moved between releases.
+These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x, Apache Airflow 3.3.2 with FAB provider 3.9.0 (Airflow 2.11.0 noted where the configuration paths differ), Temporal Server 1.28.x and UI Server 2.34.x, and Flower 2.2.0; confirm your own versions, since several of these settings moved between releases.
 
 - Prefect, security settings (`PREFECT_SERVER_API_AUTH_STRING`, `PREFECT_API_AUTH_STRING`, Cloud API keys
   taking precedence and causing 401): https://docs.prefect.io/v3/advanced/security-settings
-- Prefect, self-hosted server (default port 4200): https://docs.prefect.io/v3/how-to-guides/self-hosted/server
+- Prefect, self-hosted server (default port 4200): https://docs.prefect.io/v3/how-to-guides/self-hosted/server-cli
 - Dagster, webserver and UI (default local port, no documented built-in auth): https://docs.dagster.io/guides/operate/webserver
 - Apache Airflow, security overview: https://airflow.apache.org/docs/apache-airflow/stable/security/
 - Apache Airflow, auth manager selection (`[core] auth_manager`, `airflow config get-value core auth_manager`): https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/auth-manager/index.html
