@@ -10511,9 +10511,10 @@ surface, and run the process as a non-root user.
 
 Langfuse's container deployment does not terminate TLS, so an `https://` URL in front of it is your proxy's,
 not Langfuse's. Phoenix (8.29 and later) CAN terminate TLS natively for both HTTP and gRPC - set
-`PHOENIX_TLS_ENABLED=True` (it defaults to `False`) with `PHOENIX_TLS_CERT_FILE` and `PHOENIX_TLS_KEY_FILE`
-(or the per-protocol `PHOENIX_TLS_ENABLED_FOR_HTTP`/`PHOENIX_TLS_ENABLED_FOR_GRPC`) - so its default is TLS
-off, not TLS unsupported. Either way terminate TLS deliberately (natively, or at a reverse proxy or tunnel
+`PHOENIX_TLS_ENABLED=True` (it defaults to `False`) with `PHOENIX_TLS_CERT_FILE` and `PHOENIX_TLS_KEY_FILE` -
+so its default is TLS off, not TLS unsupported. Later versions add per-protocol overrides
+(`PHOENIX_TLS_ENABLED_FOR_HTTP` and `PHOENIX_TLS_ENABLED_FOR_GRPC`, each overriding `PHOENIX_TLS_ENABLED` for
+its protocol); check your release. Either way terminate TLS deliberately (natively, or at a reverse proxy or tunnel
 per [nginx.md](nginx.md), [caddy.md](caddy.md)), and make sure any plaintext backend port a proxy forwards
 to is not separately reachable.
 
@@ -10602,8 +10603,11 @@ write-authorized user key. The gRPC OTLP receiver on 4317 is a SEPARATE server w
 protected: test 4317 separately by invoking `opentelemetry.proto.collector.trace.v1.TraceService/Export`
 with an empty `ExportTraceServiceRequest`, first with no metadata (expect `UNAUTHENTICATED`) then with
 `authorization: Bearer <write-authorized key>` (expect `OK`). That needs an OTLP gRPC client carrying the
-protobuf descriptor (and the CA if TLS is on), so it ships REASONED (backlog row 1.45). Because Phoenix's
-gRPC listener always binds `[::]` regardless of `PHOENIX_HOST`, you cannot move it to loopback by host
+protobuf descriptor (and the CA if TLS is on), so it ships REASONED (backlog row 1.45): with authentication
+disabled the same anonymous empty Export returns `OK` (the exposed outcome), and the authenticated,
+viewer-rejected, and empty-request behaviours follow Phoenix's gRPC Export handler and `ApiKeyInterceptor`
+(see Sources). Because Phoenix's gRPC listener always binds `[::]` regardless of `PHOENIX_HOST`, you cannot
+move it to loopback by host
 setting: isolate it in a private container network, restrict or omit its host publication, and inspect its
 namespace, publications, and firewall separately from the HTTP port. A wildcard listener inside an isolated
 namespace is not by itself public exposure.
@@ -10629,7 +10633,8 @@ that accepts spans with no credential at all.
 - Langfuse, self-hosting configuration (`NEXTAUTH_SECRET`, `SALT`, `ENCRYPTION_KEY` and their generation, the bundled MinIO/Postgres/ClickHouse/Redis; checked 2026-09-14): https://langfuse.com/self-hosting/configuration
 - Langfuse, self-hosting docker-compose.yml (the `# CHANGEME` example secrets `mysecret`/`mysalt`/all-zero `ENCRYPTION_KEY`, MinIO `minio`/`miniosecret` on host `9090`, langfuse-web on `3000`; checked 2026-09-14): https://github.com/langfuse/langfuse/blob/main/docker-compose.yml
 - Arize Phoenix, authentication (`PHOENIX_ENABLE_AUTH`, `PHOENIX_SECRET`, system and user API keys, `PHOENIX_API_KEY`, the default `admin@localhost` / `admin` account, `PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD` read only at first-account creation, `/v1/` REST permissions, OAuth2/OIDC identity providers, and the absence of native MFA; read 2026-09-13): https://arize.com/docs/phoenix/self-hosting/features/authentication
-- Arize Phoenix, native TLS for HTTP and gRPC (`PHOENIX_TLS_ENABLED` default `False`, `PHOENIX_TLS_CERT_FILE`, `PHOENIX_TLS_KEY_FILE`, per-protocol toggles; added in 8.29, 2025-04-28): https://arize.com/docs/phoenix/release-notes/04-2025/04-28-2025-tls-support-for-phoenix-server
+- Arize Phoenix, native HTTP and gRPC TLS introduced in 8.29 (2025-04-28): https://arize.com/docs/phoenix/release-notes/04-2025/04-28-2025-tls-support-for-phoenix-server
+- Arize Phoenix, TLS configuration implementation (`PHOENIX_TLS_ENABLED` default `False`, `PHOENIX_TLS_CERT_FILE`/`PHOENIX_TLS_KEY_FILE`, and the per-protocol `PHOENIX_TLS_ENABLED_FOR_HTTP`/`PHOENIX_TLS_ENABLED_FOR_GRPC` overrides): https://github.com/Arize-ai/phoenix/blob/main/src/phoenix/config.py
 - Helicone, self-hosted deployment (default `test@helicone.ai` / `password` login): https://docs.helicone.ai/getting-started/self-host/manual
 - Helicone, all-in-one Docker deployment (Better Auth, `BETTER_AUTH_SECRET` documented default `change-me-in-production`): https://docs.helicone.ai/getting-started/self-host/docker
 - Helicone, repository Compose deployment (`BETTER_AUTH_SECRET` fallback `your-secret-key`; backing stores published on host ports `54388:5432`, `18123:8123`, `19000:9000`, `9000`/`9001`, `6379`, `1025`/`8025`): https://github.com/Helicone/helicone/blob/main/docker/docker-compose.yml
@@ -10640,7 +10645,11 @@ that accepts spans with no credential at all.
 - OpenTelemetry, Collector security best practices (bind addresses, TLS, authenticator extensions, minimal
   components, non-root): https://opentelemetry.io/docs/security/config-best-practices/
 - OpenTelemetry Collector Contrib, `basicauthextension` (htpasswd, `client_auth`, `auth.authenticator` wiring): https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/extension/basicauthextension
-- OpenTelemetry Collector, ancillary listeners (internal metrics `127.0.0.1:8888`; zPages `55679`, pprof `1777`, health-check `13133` diagnostic extensions): https://opentelemetry.io/docs/collector/internal-telemetry/
+- Arize Phoenix, gRPC OTLP Export authorization (`ApiKeyInterceptor`: `UNAUTHENTICATED` without a key, `PERMISSION_DENIED` for a viewer token, `OK` with a write-authorized key or when auth is disabled): https://github.com/Arize-ai/phoenix/blob/main/src/phoenix/server/bearer_auth.py
+- OpenTelemetry Collector, internal Prometheus metrics at `127.0.0.1:8888`: https://opentelemetry.io/docs/collector/internal-telemetry/
+- OpenTelemetry Collector, zPages extension (default endpoint `localhost:55679`): https://github.com/open-telemetry/opentelemetry-collector/blob/main/extension/zpagesextension/README.md
+- OpenTelemetry Collector Contrib, pprof extension (default endpoint `localhost:1777`): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/extension/pprofextension/README.md
+- OpenTelemetry Collector Contrib, health-check extension (default endpoint `localhost:13133`): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/extension/healthcheckextension/README.md
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
 
 ======================================================================
