@@ -286,11 +286,8 @@ These direct-database checks are reasoned, not demonstrated: the authoring envir
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
   shift
   [ "$#" -eq 2 ] || { echo 'exactly two values are required; not probing'; exit 2; }
-  for value in "$@"; do
-    case "$value" in
-      ''|*REPLACE_WITH_*) echo 'substitute both nonempty values; not probing'; exit 2 ;;
-    esac
-  done
+  case "$1" in ''|*REPLACE_WITH_*) echo 'substitute a nonempty hostname; not probing'; exit 2 ;; esac
+  case "$2" in ''|*REPLACE_WITH_*) echo 'substitute a nonempty address; not probing'; exit 2 ;; esac
   # From a client that must NOT bypass the pooler: a direct database connection must be REFUSED by pg_hba.
   # gssencmode=disable so libpq cannot prefer GSS and take an HBA rejection on that path for proof while a
   # hostssl path stays open.
