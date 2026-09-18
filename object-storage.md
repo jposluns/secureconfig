@@ -59,12 +59,12 @@ using ( (select auth.jwt()->>'sub') = owner_id );
 # First prove the object exists and is readable WITH authorization, so a later anonymous denial is about access,
 # not a missing object (S3 also returns 403 for an object you cannot list). presign signs a GET, so test with GET:
 URL="$(aws s3 presign s3://example-bucket/model.safetensors --expires-in 60)"
-curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "$URL"              # 200 now (authorized)
+printf 'url = "%s"\n' "$URL" | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' --config -              # 200 now (authorized)
 # Then the SAME object's unsigned URL must be denied to an anonymous caller, with client proxies disabled so a
 # proxy cannot answer for S3. One object is not the whole bucket, so repeat for other keys and prefixes:
 curl -q -sSI --noproxy '*' https://example-bucket.s3.amazonaws.com/model.safetensors   # 403, never 200
 # And the signed URL stops working once it expires:
-sleep 61; curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "$URL"    # 403 after the minute; a DNS/TLS/proxy error is inconclusive
+sleep 61; printf 'url = "%s"\n' "$URL" | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' --config -    # 403 after the minute; a DNS/TLS/proxy error is inconclusive
 ```
 
 - An anonymous request to any object URL is denied (S3 returns `403`; GCS `401` or `403`; Azure `401` for modern clients, or `409` for legacy clients predating the bearer challenge, when the account disallows anonymous access; Supabase private buckets return an error, not the file).

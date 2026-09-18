@@ -41,9 +41,24 @@ admin_password = REPLACE_WITH_LONG_RANDOM_VALUE
 `database_uri` defaults to a SQLite file `basic_auth.db` in the working directory; MLflow recommends a central database for multi-node deployments. The same file can name an `authorization_function` (`module:function`) for a custom scheme, but the shipped one is basic auth. To rotate the admin password on a running server:
 
 ```bash
-curl -q -u 'admin:REPLACE_WITH_CURRENT_ADMIN_PASSWORD' -X PATCH https://mlflow.example.com/api/2.0/mlflow/users/update-password \
-     -H 'Content-Type: application/json' \
-     -d '{"username":"admin","password":"REPLACE_WITH_LONG_RANDOM_VALUE"}'
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CURRENT_ADMIN_PASSWORD' 'REPLACE_WITH_LONG_RANDOM_VALUE'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the current admin password on the set -- line above; not probing"; exit ;; esac
+  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the new password on the set -- line above; not probing"; exit ;; esac
+  # Both passwords reach curl on stdin via a config file (curl --config -), never
+  # argv: -u admin:PASSWORD and the -d body are world-readable in /proc/<pid>/cmdline.
+  # Escape backslashes then quotes for the config; the new password is JSON-escaped
+  # first, then the whole JSON body is config-escaped.
+  set -- "${1//\\/\\\\}" "${2//\\/\\\\}"
+  set -- "${1//\"/\\\"}" "${2//\"/\\\"}"
+  set -- "$1" "{\"username\":\"admin\",\"password\":\"$2\"}"
+  set -- "$1" "${2//\\/\\\\}"
+  set -- "$1" "${2//\"/\\\"}"
+  printf 'user = "admin:%s"\ndata-binary = "%s"\n' "$1" "$2" | curl -q -sS --config - -X PATCH -H 'Content-Type: application/json' https://mlflow.example.com/api/2.0/mlflow/users/update-password
+)
 ```
 
 Creating users requires admin credentials (UI at `/signup`, or `POST /api/2.0/mlflow/users/create`). Give humans individual accounts and CI its own low-permission user per [authentication.md](authentication.md); `~/.mlflow/credentials` stores passwords unencrypted, so prefer the environment variables injected at runtime. The documentation notes that the UI has no limit on login attempts, and basic auth is checked on every protected API request, so rate-limit the authentication-bearing routes at the proxy (not only the login path) per [nginx.md](nginx.md); and because basic auth sends the password with every request ([authentication.md](authentication.md)), step 2 comes first.
@@ -81,29 +96,42 @@ ss -tlnp   # read every listener; 5000: 127.0.0.1 only
 # search with 200. If you front MLflow with an identity-aware proxy (Cloudflare Access etc., the MFA
 # option in step 3) instead of plain basic auth, the public https probes also need that proxy's own
 # credentials (its service-token headers), and a denial from that proxy is distinct from MLflow's own
-# backend 401/403. The credentials below are single-quoted so a password containing a `$`, a space, or
-# a backtick is taken literally rather than shell-expanded; if a password itself contains an apostrophe,
-# escape it or read the credential from a file instead of the command line.
-curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
-  https://mlflow.example.com/api/2.0/mlflow/experiments/search   # 401: no credentials
-curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
-  -u 'admin:REPLACE_WITH_ADMIN_PASSWORD' https://mlflow.example.com/api/2.0/mlflow/experiments/search   # positive control: 200 with the admin password
-curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
-  -u 'admin:REPLACE_WITH_A_WRONG_PASSWORD' https://mlflow.example.com/api/2.0/mlflow/experiments/search   # 401: a wrong password is refused (MLflow rejects the legacy password1234 by design, so there is no default to "remove")
-# On the MLflow host, the same no-credential POST must ALSO be 401 - a 401 only at the proxy would leave
-# MLflow open behind it. On the host, --allowed-hosts rejects a bare 127.0.0.1 Host with 403 before auth,
-# so send the allowed Host header:
-curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Host: mlflow.example.com' -H 'Content-Type: application/json' -d '{"max_results":1}' \
-  http://127.0.0.1:5000/api/2.0/mlflow/experiments/search   # 401: no credentials, on the backend
-curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Host: mlflow.example.com' -H 'Content-Type: application/json' -d '{"max_results":1}' \
-  -u 'admin:REPLACE_WITH_ADMIN_PASSWORD' http://127.0.0.1:5000/api/2.0/mlflow/experiments/search   # backend positive control: 200 with the admin password
-# Authorization, not just authentication: experiments/search only returns results the caller may see, so
-# it tests authn, not authz. Pick a REAL experiment id (not the placeholder), confirm admin can GET it,
-# then confirm a low-permission user is refused THERE - a 403 from MLflow on the backend, not the proxy:
-curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H 'Host: mlflow.example.com' \
-  -u 'admin:REPLACE_WITH_ADMIN_PASSWORD' 'http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=REPLACE_WITH_A_REAL_EXPERIMENT_ID'   # do this admin check FIRST: 200 means the experiment exists and admin may read it; a 401/403/404 here means a wrong id or wrong admin credentials, so fix that before trusting the next line
-curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H 'Host: mlflow.example.com' \
-  -u 'REPLACE_WITH_LOWPERM_USER:REPLACE_WITH_LOWPERM_PASSWORD' 'http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=REPLACE_WITH_A_REAL_EXPERIMENT_ID'   # 403: authenticated but not permitted, same real experiment from MLflow (a 401 here means the low-permission credentials are wrong, not authz)
+# backend 401/403. The credentials below reach curl through a config file on stdin (curl --config -),
+# never argv, because -u user:password is world-readable via ps / /proc/<pid>/cmdline;
+# stdin protects the argv channel only, not shell history or set -x tracing.
+(
+  # Each credential reaches curl on stdin via a config file (curl --config -), never
+  # argv; -u user:password is world-readable in /proc/<pid>/cmdline on a shared host.
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ADMIN_PASSWORD' 'REPLACE_WITH_LOWPERM_USER' 'REPLACE_WITH_LOWPERM_PASSWORD'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit; }
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit ;; esac
+  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the low-permission user on the set -- line above; not probing"; exit ;; esac
+  case "$3" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the low-permission password on the set -- line above; not probing"; exit ;; esac
+  set -- "${1//\\/\\\\}" "${2//\\/\\\\}" "${3//\\/\\\\}"
+  set -- "${1//\"/\\\"}" "${2//\"/\\\"}" "${3//\"/\\\"}"
+  curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
+    https://mlflow.example.com/api/2.0/mlflow/experiments/search   # 401: no credentials
+  printf 'user = "admin:%s"\n' "$1" | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
+    --config - https://mlflow.example.com/api/2.0/mlflow/experiments/search   # positive control: 200 with the admin password
+  printf 'user = "admin:not-the-real-password"\n' | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
+    --config - https://mlflow.example.com/api/2.0/mlflow/experiments/search   # 401: a wrong password is refused (MLflow rejects the legacy password1234 by design, so there is no default to "remove")
+  # On the MLflow host, the same no-credential POST must ALSO be 401 - a 401 only at the proxy would leave
+  # MLflow open behind it. On the host, --allowed-hosts rejects a bare 127.0.0.1 Host with 403 before auth,
+  # so send the allowed Host header:
+  curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Host: mlflow.example.com' -H 'Content-Type: application/json' -d '{"max_results":1}' \
+    http://127.0.0.1:5000/api/2.0/mlflow/experiments/search   # 401: no credentials, on the backend
+  printf 'user = "admin:%s"\n' "$1" | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Host: mlflow.example.com' -H 'Content-Type: application/json' -d '{"max_results":1}' \
+    --config - http://127.0.0.1:5000/api/2.0/mlflow/experiments/search   # backend positive control: 200 with the admin password
+  # Authorization, not just authentication: experiments/search only returns results the caller may see, so
+  # it tests authn, not authz. Pick a REAL experiment id (not the placeholder), confirm admin can GET it,
+  # then confirm a low-permission user is refused THERE - a 403 from MLflow on the backend, not the proxy:
+  printf 'user = "admin:%s"\n' "$1" | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H 'Host: mlflow.example.com' \
+    --config - 'http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=REPLACE_WITH_A_REAL_EXPERIMENT_ID'   # do this admin check FIRST: 200 means the experiment exists and admin may read it; a 401/403/404 here means a wrong id or wrong admin credentials, so fix that before trusting the next line
+  printf 'user = "%s:%s"\n' "$2" "$3" | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H 'Host: mlflow.example.com' \
+    --config - 'http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=REPLACE_WITH_A_REAL_EXPERIMENT_ID'   # 403: authenticated but not permitted, same real experiment from MLflow (a 401 here means the low-permission credentials are wrong, not authz)
+)
 ```
 
 An authenticated user without permission on a resource gets `403`; a missing or wrong credential gets `401`. The backend authentication and authorization checks above ship marked reasoned, not demonstrated: the authoring environment has no running MLflow basic-auth server, so the exposed and fixed states (anonymous `experiments/search` open versus `401`, and the admin `200` versus low-permission `403` on a real experiment) are not observed here. Backlog row 1.76 tracks demonstrating them against a live server.

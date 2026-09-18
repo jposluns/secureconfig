@@ -144,8 +144,8 @@ Keep the existing client-API key check, hardened, against the frontend hostname 
   curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
     -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1/collections"
   echo "with key (expect http=200):"
-  curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -H "api-key: $2" \
+  printf 'api-key: %s\n' "$2" | curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -H @- \
     -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1/collections"
 )
 ```
