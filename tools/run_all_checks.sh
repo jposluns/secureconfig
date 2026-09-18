@@ -286,7 +286,7 @@ case "$st_out" in
     ;;
 esac
 
-gc_out="$(python3 -I -B tools/check_guard_conventions.py --no-c2 --min-curls 176 . 2>&1)"
+gc_out="$(python3 -I -B tools/check_guard_conventions.py --min-curls 176 . 2>&1)"
 gc_status=$?
 printf '%s\n' "$gc_out"
 case "$gc_out" in

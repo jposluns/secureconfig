@@ -3076,6 +3076,7 @@ rejected at TLS, a trusted one admitted with `--cert`/`--key`, server verificati
 )
 # Runtime socket: root-owned mode-600 Unix socket, and an unauthorized local identity must be denied.
 ls -l /run/haproxy/admin.sock                                       # expect srw------- root root
+# guard-conventions: allow fixed local HAProxy admin socket /run/haproxy/admin.sock; no reader-substituted target
 printf 'show info\n' | sudo socat - /run/haproxy/admin.sock | head -1   # authorized (root): prints info
 sudo -u nobody socat - /run/haproxy/admin.sock < /dev/null         # unauthorized identity: expect permission denied
 ```
@@ -8456,6 +8457,7 @@ access cannot bypass that gateway.
 # running it live. A redirect, missing database, disabled route, proxy rejection, TLS or transport failure is
 # inconclusive, never a pass.
 ss -tlnp   # inventory: 8000 on loopback or a private address, never 0.0.0.0
+# guard-conventions: allow fixed loopback health URL http://127.0.0.1:8000/health; no reader-substituted target
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'health=%{http_code}\n' http://127.0.0.1:8000/health   # process up (not an auth check)
 # Auth discrimination: INFO FOR DB; with no credentials vs with a valid system-user JWT, same NS/DB and
 # endpoint. Substitute inside the quotes and paste the whole block; run first against the direct origin, then
