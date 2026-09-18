@@ -108,7 +108,7 @@ For the webhook route, use an isolated test endpoint and a fresh, valid JSON eve
     *REPLACE_WITH_*|*example.com*|*example.net*|*example.org*) echo 'replace placeholders'; exit 2 ;;
   esac
   case "$1" in https://?*) ;; *) echo 'HTTPS required'; exit 2 ;; esac
-  [ -f "$2" ] && [ -r "$2" ] || { echo 'readable raw-body file required'; exit 2; }
+  if [ -f "$2" ] && [ -r "$2" ]; then :; else echo 'readable raw-body file required'; exit 2; fi
   case "$3" in github|stripe) ;; *) echo 'choose github or stripe'; exit 2 ;; esac
   case "${AUDIT_WEBHOOK_SECRET-}" in
     ''|*REPLACE_WITH_*) echo 'export the test endpoint secret as AUDIT_WEBHOOK_SECRET'; exit 2 ;;
