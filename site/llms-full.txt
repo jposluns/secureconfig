@@ -8130,7 +8130,9 @@ Version scope: Typesense 30.2; Meilisearch current unversioned documentation che
 - Typesense data access control (bootstrap api-key, /keys, actions, collections, filter_by, include_fields/exclude_fields, expires_at): https://typesense.org/docs/guide/data-access-control.html
 - Typesense 30.2 server configuration (api-key required, api-address default 0.0.0.0, api-port 8108, peering-port 8107, ssl-certificate): https://typesense.org/docs/30.2/api/server-configuration.html
 - Typesense 30.2 API keys (parent search-only key, scoped-key derivation, description): https://typesense.org/docs/30.2/api/api-keys.html
-- Typesense 30.2 collections and search (schema fields; a rejected key returns 401): https://typesense.org/docs/30.2/api/collections.html
+- Typesense 30.2 collections (collection creation and schema fields): https://typesense.org/docs/30.2/api/collections.html
+- Typesense v30.2 authorization failure (401): https://raw.githubusercontent.com/typesense/typesense/v30.2/src/http_server.cpp
+- Typesense v30.2 collection creation success (201): https://raw.githubusercontent.com/typesense/typesense/v30.2/src/core_api.cpp
 - Typesense backups (snapshot API, not the live data directory): https://typesense.org/docs/guide/backups.html
 - Typesense 30.2 remote embeddings (outbound requests with provider credentials): https://typesense.org/docs/30.2/api/vector-search.html
 - Meilisearch configuration reference (MEILI_HTTP_ADDR default localhost:7700; MEILI_EXPERIMENTAL_ALLOWED_IP_NETWORKS): https://www.meilisearch.com/docs/resources/self_hosting/configuration/reference
