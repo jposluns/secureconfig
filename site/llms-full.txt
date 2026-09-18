@@ -162,7 +162,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [llm-observability.md](llm-observability.md) | Langfuse, Phoenix, Helicone, OpenTelemetry Collector: they hold prompts and keys |
 | [agent-builders.md](agent-builders.md) | Dify, Flowise, Langflow, LibreChat: admin setup, API keys, fronting TLS |
 | [ai-infra-services.md](ai-infra-services.md) | SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0, Onyx: what the run form publishes, and the store published beside the front door |
-| [workflow-orchestrators.md](workflow-orchestrators.md) | Prefect, Dagster, Airflow, Temporal, Flower: keep off the public internet and require auth |
+| [workflow-orchestrators.md](workflow-orchestrators.md) | Prefect, Dagster, Airflow, Temporal, Flower, Argo: keep off the public internet and require auth |
 | [headless-browser-services.md](headless-browser-services.md) | Chrome DevTools Protocol, Selenium Grid, browserless, Playwright: an exposed browser port is remote code execution |
 | [realtime-voice-infra.md](realtime-voice-infra.md) | LiveKit and coturn: WebRTC SFU signing keys and the TURN open-relay default, RFC 1918 relay policy, TLS |
 
@@ -11690,7 +11690,7 @@ that accepts spans with no credential at all.
 ==> workflow-orchestrators.md
 ======================================================================
 
-# Workflow and agent orchestrators: Prefect, Dagster, Airflow, Temporal, Flower
+# Workflow and agent orchestrators: Prefect, Dagster, Airflow, Temporal, Flower, Argo
 
 These webservers and UIs schedule and trigger arbitrary code execution across your infrastructure, and most
 ship with no authentication at all. Keep every one of them off the public internet and add auth before
@@ -11808,11 +11808,35 @@ the command line where they are readable in the process list ([secrets.md](secre
 ([mfa.md](mfa.md)), and bind `--address=127.0.0.1` behind a proxy rather than relying on Basic Auth as the only
 control.
 
+## Argo Workflows
+
+Argo Server listens on every interface in its network namespace (`--port` defaults to 2746), with HTTPS
+and `--auth-mode=client` enabled by default since v3.0; client mode requires the caller's own Kubernetes
+bearer token and uses that identity's permissions. Avoid `--auth-mode=server`, the dangerous default before
+v3.0: in Kubernetes it uses argo-server's own ServiceAccount for API requests, so anyone who can reach it
+can act with that account's permissions without authenticating; local mode uses the server's kubeconfig
+credentials instead. Adding another auth mode does not remove this anonymous access while `server` remains
+enabled. `--auth-mode=sso` provides OIDC login from v2.9; enable SSO RBAC (`sso.rbac.enabled: true`, v2.12+)
+and map groups to narrowly scoped ServiceAccounts with `workflows.argoproj.io/rbac-rule` and
+`workflows.argoproj.io/rbac-rule-precedence`. Without SSO RBAC, authenticated users share the server's
+permissions. Store OAuth client credentials in Kubernetes Secrets referenced by the SSO configuration,
+and feed API tokens to clients through protected input rather than command-line arguments
+([secrets.md](secrets.md)).
+
+Keep 2746 private behind an authenticating HTTPS proxy, with MFA enforced at the identity provider
+([fronting-auth.md](fronting-auth.md), [mfa.md](mfa.md)); restrict direct Pod and Service access with
+NetworkPolicy and do not publish the port publicly. Argo Server has no documented listener-address flag,
+so enforce private exposure at the network and Service layers. Keep TLS enabled and provision a certificate
+trusted by clients; `--secure=false` explicitly switches the listener to plaintext. Limit the namespaces
+and permissions available to the server, SSO accounts, and workflow execution accounts. Permission to submit
+workflows permits arbitrary containers, and powerful execution accounts or privileged Pods can turn an
+exposed API into cluster compromise.
+
 ## Verify
 
 These probes are reasoned, not demonstrated: the authoring environment has no container runtime, so no live
 orchestrator was stood up in its exposed or fixed state. Each names its expected exposed and fixed result so it
-discriminates against a live instance; backlog row 2.34 tracks demonstrating them across all five tools. The
+discriminates against a live instance; backlog row 2.34 tracks demonstrating them across all six tools. The
 `*.internal` hostnames are examples for a reachable vantage (you have not isolated the port yet, or you are on
 an allowed network); substitute your own. For every negative check run the matched authorized call against the
 SAME origin, and separately probe the origin directly from an untrusted vantage with the guarded block at the
@@ -11820,7 +11844,7 @@ end, because a rejection seen only through a proxy does not prove the origin enf
 fields need curl 7.75.0 or newer; never use `-k`.
 
 ```bash
-ss -tlnp   # TCP listeners in THIS network namespace only (4200/3000/8080/7233/8233/5555): not a firewall,
+ss -tlnp   # TCP listeners in THIS network namespace only (4200/3000/8080/7233/8233/5555/2746): not a firewall,
            # publication, routing, or auth check. Inspect container publications and probe external
            # reachability separately; a wildcard bind is a prompt to investigate, not proof of exposure
 
@@ -11872,6 +11896,23 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
   -w '\nflower-api http=%{http_code} exit=%{exitcode}\n' http://flower.internal:5555/api/workers
 
+# Argo: reasoned, not demonstrated; this authoring environment has no container runtime or Kubernetes test
+# deployment. Server mode: an anonymous HTTP 200 containing a workflow list, even empty, is the finding,
+# provided the server identity can list workflows in this namespace. Client/SSO without server mode:
+# expect 401 without a token, or 403 for an authorization denial; the matched authorized call must return
+# HTTP 200 with a workflow list. A health endpoint is NOT the discriminator. Replace the hostname and
+# namespace in BOTH calls; use a reachable allowed vantage and trusted TLS, configure the private CA if
+# necessary, never -k. TLS/DNS errors, redirects, 404s, and 5xx are inconclusive.
+curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
+  -w '\nargo-anon http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+  https://argo.internal:2746/api/v1/workflows/argo
+# Enter a Kubernetes bearer token (client mode) or an Argo session token (SSO mode) with list permission in
+# this namespace. The token goes to curl on stdin, never argv.
+python3 -c 'import getpass; t=getpass.getpass("Argo bearer token (without Bearer prefix): "); assert t and all(33 <= ord(c) <= 126 for c in t), "invalid token"; print("Authorization: Bearer " + t)' \
+  | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
+      --header @- -w '\nargo-auth http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+      https://argo.internal:2746/api/v1/workflows/argo
+
 # Direct-origin reachability from an UNTRUSTED vantage (run from OUTSIDE your network). Paste the whole block and
 # substitute your origin URL inside the quotes; any HTTP response means the origin is published and is itself the
 # finding, whatever a fronting proxy does. First confirm this SAME origin URL responds from an allowed
@@ -11911,7 +11952,7 @@ cover the frontend gRPC path.
 
 ## Sources (checked September 2026)
 
-These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x, Apache Airflow 3.3.2 with FAB provider 3.9.0 (Airflow 2.11.0 noted where the configuration paths differ), Temporal Server 1.28.x and UI Server 2.34.x, and Flower 2.2.0; confirm your own versions, since several of these settings moved between releases.
+These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x, Apache Airflow 3.3.2 with FAB provider 3.9.0 (Airflow 2.11.0 noted where the configuration paths differ), Temporal Server 1.28.x and UI Server 2.34.x, and Flower 2.2.0; confirm your own versions, since several of these settings moved between releases. Argo Workflows authentication, TLS, SSO, and API behavior was checked against the release-3.7 documentation, with current upstream source for listener and authentication-path details.
 
 - Prefect, security settings (`PREFECT_SERVER_API_AUTH_STRING`, `PREFECT_API_AUTH_STRING`, Cloud API keys
   taking precedence and causing 401): https://docs.prefect.io/v3/advanced/security-settings
@@ -11933,6 +11974,12 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
 - Temporal, CLI server reference (default frontend gRPC port 7233, Web UI port 8233): https://docs.temporal.io/cli/command-reference/server
 - Flower, configuration (`--address`, `--port` 5555 default, `--basic-auth`, `--auth_provider`, `--oauth2_key`,
   `--oauth2_secret`, `--oauth2_redirect_uri`, `--auth`): https://flower.readthedocs.io/en/latest/config.html
+- Argo Workflows, [auth modes](https://argo-workflows.readthedocs.io/en/release-3.7/argo-server-auth-mode/),
+  [server flags and default port 2746](https://argo-workflows.readthedocs.io/en/release-3.7/cli/argo_server/),
+  [TLS](https://argo-workflows.readthedocs.io/en/release-3.7/tls/),
+  [SSO and RBAC](https://argo-workflows.readthedocs.io/en/release-3.7/argo-server-sso/),
+  [workflow-list API](https://argo-workflows.readthedocs.io/en/release-3.7/rest-examples/), and
+  [security model](https://argo-workflows.readthedocs.io/en/latest/security/)
 
 ======================================================================
 ==> admin-uis.md
