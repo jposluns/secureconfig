@@ -103,15 +103,16 @@ ss -tlnp   # read every listener; 5000: 127.0.0.1 only
 (
   # Each credential reaches curl on stdin via a config file (curl --config -), never
   # argv; -u user:password is world-readable in /proc/<pid>/cmdline on a shared host.
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ADMIN_PASSWORD' 'REPLACE_WITH_LOWPERM_USER' 'REPLACE_WITH_LOWPERM_PASSWORD'
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ADMIN_PASSWORD' 'REPLACE_WITH_LOWPERM_USER' 'REPLACE_WITH_LOWPERM_PASSWORD' 'REPLACE_WITH_A_REAL_EXPERIMENT_ID'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
-  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit; }
+  [ "$#" -eq 4 ] || { echo "the set -- line needs exactly 4 values; not probing"; exit; }
   case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit ;; esac
   case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the low-permission user on the set -- line above; not probing"; exit ;; esac
   case "$3" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the low-permission password on the set -- line above; not probing"; exit ;; esac
-  set -- "${1//\\/\\\\}" "${2//\\/\\\\}" "${3//\\/\\\\}"
-  set -- "${1//\"/\\\"}" "${2//\"/\\\"}" "${3//\"/\\\"}"
+  case "$4" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute a real experiment id on the set -- line above; not probing"; exit ;; esac
+  set -- "${1//\\/\\\\}" "${2//\\/\\\\}" "${3//\\/\\\\}" "$4"
+  set -- "${1//\"/\\\"}" "${2//\"/\\\"}" "${3//\"/\\\"}" "$4"
   curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
     https://mlflow.example.com/api/2.0/mlflow/experiments/search   # 401: no credentials
   printf 'user = "admin:%s"\n' "$1" | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
@@ -129,9 +130,9 @@ ss -tlnp   # read every listener; 5000: 127.0.0.1 only
   # it tests authn, not authz. Pick a REAL experiment id (not the placeholder), confirm admin can GET it,
   # then confirm a low-permission user is refused THERE - a 403 from MLflow on the backend, not the proxy:
   printf 'user = "admin:%s"\n' "$1" | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H 'Host: mlflow.example.com' \
-    --config - 'http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=REPLACE_WITH_A_REAL_EXPERIMENT_ID'   # do this admin check FIRST: 200 means the experiment exists and admin may read it; a 401/403/404 here means a wrong id or wrong admin credentials, so fix that before trusting the next line
+    --config - "http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=$4"   # do this admin check FIRST: 200 means the experiment exists and admin may read it; a 401/403/404 here means a wrong id or wrong admin credentials, so fix that before trusting the next line
   printf 'user = "%s:%s"\n' "$2" "$3" | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H 'Host: mlflow.example.com' \
-    --config - 'http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=REPLACE_WITH_A_REAL_EXPERIMENT_ID'   # 403: authenticated but not permitted, same real experiment from MLflow (a 401 here means the low-permission credentials are wrong, not authz)
+    --config - "http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=$4"   # 403: authenticated but not permitted, same real experiment from MLflow (a 401 here means the low-permission credentials are wrong, not authz)
 )
 ```
 
