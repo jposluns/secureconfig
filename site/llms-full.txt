@@ -11833,7 +11833,7 @@ published services to loopback (`127.0.0.1:8000:8000`, `127.0.0.1:5432:5432`, `1
 ([docker.md](docker.md), [tunnels.md](tunnels.md)). Docker publishes ports through its own NAT rules,
 which bypass a host firewall such as UFW and do not always leave a matching host listening socket, so
 confirm the effective mapping with `docker` and test each port from an external vantage rather than
-trusting the host's socket table. Neither the gateway nor Supavisor terminates TLS by default, so put a
+trusting the host's socket table. In the default Envoy deployment, neither the gateway nor Supavisor terminates TLS; the optional Kong override additionally provides an HTTPS listener on `8443`, so put a
 reverse proxy in front for HTTPS on the API ([nginx.md](nginx.md), [caddy.md](caddy.md),
 [fronting-auth.md](fronting-auth.md)); a web proxy does not protect the PostgreSQL wire protocol on
 `5432`/`6543`, which needs its own TLS or an encrypted tunnel. If Edge Functions or Storage integrations fetch
@@ -11847,10 +11847,11 @@ The `SERVICE_ROLE_KEY` is not an API convenience: the role it names has the Post
 attribute, so it "skips every Row Level Security policy" and has full read and write access to your
 data (it is not a database superuser, but for handling purposes treat it as one). It is a server-side
 secret only; Supabase's documentation says never to put one in a browser, a shipped application, or
-source control, because "exposing a secret key puts all of your project's data at risk". The `anon`
-key is the opposite: it is meant to be public and is constrained by row-level security. That protection depends on both SQL grants and RLS: for an ordinary API role, access needs an applicable
-schema/table grant AND a matching RLS policy. With RLS enabled and no applicable policy an ordinary role
-reads no rows (a successful, empty `SELECT`, not an authentication error); with RLS never enabled, the
+source control, because disclosure of a secret key compromises the project's data. The `anon`
+key is the opposite: it is meant to be public and is constrained by row-level security. That protection depends on SQL privileges and, when enabled, RLS. For an ordinary API role subject to RLS,
+reading rows requires the applicable schema and table or column privileges plus a policy permitting those
+rows. With those privileges present, RLS enabled, and no applicable policy, a `SELECT` returns no rows;
+missing privileges instead produce a permission error. With RLS never enabled, the
 operations the role is granted are unrestricted by row policy and readable or writable through the `anon` key.
 `service_role` bypasses RLS but is still subject to SQL privileges. Enable RLS on every exposed table and write policies per
 [firebase-supabase.md](firebase-supabase.md); a view can still serve its owner's rows past RLS, which
@@ -11900,39 +11901,40 @@ refusal from that vantage, and the write-out fields need curl 7.75.0 or newer.
 ss -tlnp   # read every listener; 8000/5432/6543: loopback or internal only
 ```
 
-The gateway serves plain HTTP on `8000`. The block below calls an Edge Functions route without any
-credential; substitute your own host and a function name. An exposed stack runs the function and
-answers (`http=200`, or a function error, but not `401`), because `FUNCTIONS_VERIFY_JWT` is `false`; a
-stack that enforces verification answers `401`.
+The gateway serves plain HTTP on `8000`. Substitute the base URL, function name, and current legacy
+`ANON_KEY` JWT inside the single quotes. Use a canary function with a known response and no independent
+authentication. With `FUNCTIONS_VERIFY_JWT=false`, both requests should reach it; with verification
+enabled, the credential-free request should receive `401` and the Bearer-authenticated request should
+return its known response. An arbitrary function can return its own `401`, so that status alone does not
+identify the main worker's policy.
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BASE_URL' 'REPLACE_WITH_A_FUNCTION_NAME'
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BASE_URL' 'REPLACE_WITH_A_FUNCTION_NAME' 'REPLACE_WITH_CURRENT_ANON_JWT'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
   case "$1" in *REPLACE_WITH_*|"") echo "substitute the base URL (https://your-proxy, or http://127.0.0.1:8000 for a private-origin check); not probing"; exit 2 ;; esac
   case "$2" in *REPLACE_WITH_*|*FUNCTION_NAME*|"") echo "substitute a function name; not probing"; exit 2 ;; esac
-  base=${1%/}
-  # Unauthenticated: with FUNCTIONS_VERIFY_JWT=false the main worker runs the function and answers (http=200 or
-  # a function error, not 401). A lone 401 could be the function's OWN check, so pair it with an authorized call
-  # (a valid CURRENT anon key, which is public by design) that must return the function's known response.
+  case "$3" in *REPLACE_WITH_*|"") echo "substitute a current legacy anon JWT; not probing"; exit 2 ;; esac
+  # Compare the credential-free request with a current legacy anon JWT sent as Bearer.
+  # Use a canary with a known response and no independent authentication.
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -w '\nno-key http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$base/functions/v1/$2"
-  printf 'apikey: %s\n' 'REPLACE_WITH_CURRENT_ANON_KEY' | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -H @- -w '\nwith-key http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$base/functions/v1/$2"
+    -w '\nno-key http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "${1%/}/functions/v1/$2"
+  printf 'Authorization: Bearer %s\n' "$3" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -H @- -w '\nwith-key http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "${1%/}/functions/v1/$2"
 )
 ```
 
 For a port you can still reach, check whether the shipped credentials were replaced, feeding every credential
 through stdin rather than argv (`curl --config -` for Basic auth, `curl --header @-` for `apikey`/`Authorization`;
-disable shell tracing). The shipped API keys still work if a request to `$base/auth/v1/settings` carrying the
-demo `ANON_KEY` (or `SERVICE_ROLE_KEY`) in `apikey` returns settings JSON rather than a rejection; pair each with
-a current key that must be accepted, so a gateway rejection cannot mask backend acceptance. The signing SECRET
-itself is only proven rotated by a forged token (reasoned, backlog row 2.27): mint an unexpired HS256
-`service_role` JWT signed with the public demo `JWT_SECRET`, send it as `Authorization: Bearer` alongside a
-valid current `apikey` against a harmless REST canary, and require the backend to REJECT it (an accepted read
-means the demo secret is still trusted). The Studio dashboard still accepts the default Basic auth if the
+disable shell tracing). Test each shipped API key against `/auth/v1/settings`, then repeat with a current key that must return
+settings JSON. This checks gateway acceptance, not retirement of backend signing keys. Separately, test the
+same harmless REST canary with two correctly formed, unexpired `service_role` JWTs carrying equivalent claims:
+one signed with the current key and one with the demo `JWT_SECRET`. Keep a valid current `apikey` on both
+requests. Require the current token to return the known canary result and the demo-signed token to receive a
+PostgREST JWT signature-verification rejection; transport errors, gateway denials, and SQL permission failures
+are inconclusive. This checks the REST verifier only; check other JWT-verifying services separately. The Studio dashboard still accepts the default Basic auth if the
 gateway answers `supabase:this_password_is_insecure_and_should_be_updated` (via `--config -`) with `http=200`
 rather than `401`, retrieving a known Studio response as the positive control. The database still accepts the
 demo password if `psql` connects to the Supavisor pooler on `5432`/`6543` with the demo `POSTGRES_PASSWORD`, as
