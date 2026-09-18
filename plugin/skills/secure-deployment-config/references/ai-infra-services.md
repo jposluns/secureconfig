@@ -13,7 +13,7 @@ Defaults below describe the vendor examples checked on 2026-09-13. A **host publ
 | SearxNG, direct | Application: `127.0.0.1:8888` | None | No container publication in this form | `server.bind_address` and `server.port` in `settings.yml` | [Front it](fronting-auth.md) |
 | SearxNG, documented Docker run | All host interfaces, `8888:8080` | None | No other mapping in the cited run | Replace with `127.0.0.1:8888:8080`, or publish nothing | [Front it](fronting-auth.md) |
 | LocalAI, documented Docker run | All host interfaces, `8080:8080` | Off: native key is unset | No additional publications established by the verified record | Replace with `127.0.0.1:8080:8080`, or publish nothing | Set `LOCALAI_API_KEY`; `LOCALAI_AUTH=true` enables multi-user OAuth with per-user keys |
-| Text Embeddings Inference, documented Docker run | All host interfaces, `8080:80` | Partial: `--api-key` / `API_KEY` is unset by default, and even when set it covers the inference routes only | On the same port, outside the key: `/`, `/health`, `/ping`, `/metrics`, `/docs`, `/api-doc/openapi.json`. Separately, a metrics listener on `--prometheus-port`, default `9000` | Replace with `127.0.0.1:8080:80`, or publish nothing | Set `--api-key` or `API_KEY`, and front the service, because the key alone leaves the routes above open |
+| Text Embeddings Inference, documented Docker run | All host interfaces, `8080:80` | Partial: `--api-key` / `API_KEY` is unset by default, and even when set it covers the inference routes only | On the same port, outside the key: `/`, `/health`, `/ping`, `/metrics`, `/docs`, `/api-doc/openapi.json` (in the documented HTTP build `/metrics` is served on this main port; `--prometheus-port`, default `9000`, starts a separate exporter only in the gRPC build) | Replace with `127.0.0.1:8080:80`, or publish nothing | Set `--api-key` or `API_KEY`, and front the service, because the key alone leaves the routes above open |
 | LangServe, quickstart | Application: `localhost:8000` | None supplied; the application author provides authentication | No container publication in this form | `host=` in `uvicorn.run` | FastAPI dependencies, or [front it](fronting-auth.md) |
 | Mem0, server Compose | Application: `0.0.0.0:8000` inside the container; all host interfaces, `8888:8000` | On: bearer JWT, per-user `X-API-Key`, or legacy admin key | PostgreSQL `8432:5432`; dashboard `3000:3000`, both on all host interfaces | Remove PostgreSQL's publication; remove or loopback-scope API and dashboard mappings | Keep authentication enabled; do not set `AUTH_DISABLED=true` |
 | Onyx, production Compose | nginx host publications `80:80` and `443:443` | On: email/password | Backing services have no host publications | Keep backing services unpublished; configure the intended TLS ingress | Keep the built-in login; `AUTH_TYPE` is inert since v4.4.0 |
@@ -21,7 +21,7 @@ Defaults below describe the vendor examples checked on 2026-09-13. A **host publ
 
 ## 1. Bind privately, including every container publication
 
-For a process running directly on the host, retain its loopback bind. SearxNG's settings belong under `server:` in `settings.yml`:
+For a process running directly on the host, bind it to loopback explicitly. SearxNG already defaults to `127.0.0.1`, but LocalAI defaults to `:8080` and Text Embeddings Inference to `0.0.0.0:3000`, so bind those yourself: LocalAI `LOCALAI_ADDRESS=127.0.0.1:8080` (or `--address`), TEI `--hostname 127.0.0.1` with the intended `--port` (its CLI port default `3000` is distinct from the container port `80`). SearxNG's settings belong under `server:` in `settings.yml`:
 
 ```yaml
 server:
@@ -69,6 +69,8 @@ The direct configuration binds loopback, but the documented Docker command publi
 
 SearxNG has no authentication in the verified configuration. Put access control in front of it. An open search service lets other people make search requests through your deployment.
 
+Set a unique `server.secret_key` (environment `SEARXNG_SECRET`): it is a cryptographic secret, not user authentication, and SearxNG exits at startup in production rather than run with the shipped `ultrasecretkey` placeholder. SearxNG also fetches remote URLs server-side and its image proxy follows redirects, so it is an SSRF vector: keep it behind the fronting auth and restrict its outbound reach so a search or image fetch cannot be steered at your internal services or the cloud metadata address ([egress-metadata.md](egress-metadata.md)).
+
 ### LocalAI
 
 LocalAI has native authentication; the documented deployment leaves it off unless configured. Set a strong, unique value in the service's runtime environment:
@@ -93,7 +95,7 @@ There is a native inbound control, and it is off until you set it. The CLI refer
 
 The key does not cover the whole port. In the HTTP server the key middleware is applied to the inference routes alone, and the health routes `/`, `/health` and `/ping`, the Prometheus route `/metrics`, and the OpenAPI surface `/docs` and `/api-doc/openapi.json` are merged into the same application beside that layer rather than beneath it. They answer anonymously on the published port with a key set. Read `/metrics` yourself before deciding that is acceptable: it reports model identity and request volumes. Checked against v1.9.0; treat it as version-specific and re-read for your own version.
 
-Two defaults compound it. `--hostname` defaults to `0.0.0.0`, so the process listens on every interface inside its namespace and the publication alone decides what reaches it. `--prometheus-port` defaults to `9000`, a second listener the quick tour does not mention. Leaving that port unpublished does not remove `/metrics` from the application listener, so treat the two as separate exposures and close both.
+Two defaults compound it. `--hostname` defaults to `0.0.0.0`, so the process listens on every interface inside its namespace and the publication alone decides what reaches it. In the documented HTTP build `/metrics` is served on the main application port, not on a separate listener (the `--prometheus-port` default `9000` starts a standalone exporter only in the gRPC build), so publishing the main port publishes `/metrics` with it; do not rely on leaving `9000` unpublished to hide it. Confirm which build you run before deciding either is closed.
 
 Do not assume a token used to download a model authenticates incoming embedding requests.
 
@@ -147,6 +149,8 @@ The Docker documentation also describes access at `localhost:3000`. That is now 
 
 For backing-service controls, see [postgresql.md](postgresql.md), [redis.md](redis.md), [minio.md](minio.md), and the OpenSearch material in [elasticsearch.md](elasticsearch.md). Those controls complement removing unnecessary publications.
 
+Onyx also stores the credentials for each document-source connector you add through its UI (a retained `credential_json` per connector), so those are protected stored data, not just runtime configuration: give each connector the least privilege its source allows, protect the database and its backups where the credentials live, and rotate a connector's credential if the instance was ever exposed.
+
 ## 5. MFA and secrets
 
 Enforce MFA for human access through the identity provider or fronting layer ([mfa.md](mfa.md), [fronting-auth.md](fronting-auth.md)). Native MFA coverage for these six services is **unverified here**; this guide relies on the fronting policy.
@@ -170,9 +174,9 @@ Run this for each configuration or environment file you edited:
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not checking"; exit; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the file name on the set -- line above; not checking" ;;
-    *) grep -nH -o 'REPLACE_WITH_[[:alnum:]_]*' -- "$1"
-       printf 'grep_exit=%s\n' "$?" ;;
+    *REPLACE_WITH_*|"") echo "substitute the file name on the set -- line above; not checking"; exit 1 ;;
+    *) if grep -nH -o 'REPLACE_WITH_[[:alnum:]_]*' -- "$1"; then grep_rc=0; else grep_rc=$?; fi
+       printf 'grep_exit=%s\n' "$grep_rc" ;;
   esac
 )
 ```
@@ -214,7 +218,7 @@ A Compose error, missing service, stopped application, or empty inventory is not
   shift
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
   case "$1:$2" in
-    *REPLACE_WITH_*|:*|*:) echo "substitute the address and port on the set -- line above; not probing" ;;
+    *REPLACE_WITH_*|:*|*:) echo "substitute the address and port on the set -- line above; not probing"; exit 1 ;;
     *) curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
          -w 'http=%{http_code} exit=%{exitcode} remote=%{remote_ip} time_connect=%{time_connect} err=%{errormsg}\n' \
          "http://$1:$2/" ;;
@@ -244,8 +248,8 @@ For the unchanged vendor examples, Mem0 adds 8432 and 3000 beside API port 8888.
   case "$1:$2" in
     *REPLACE_WITH_*) echo "substitute the address and port on the set -- line above; not probing"; exit ;;
   esac
-  nc -vz -w 5 "$1" "$2"
-  printf 'exit=%s\n' "$?"
+  if nc -vz -w 5 "$1" "$2"; then nc_rc=0; else nc_rc=$?; fi
+  printf 'exit=%s\n' "$nc_rc"
 )
 ```
 
@@ -257,9 +261,11 @@ A timeout remains inconclusive without corroborating configuration and filtering
 
 ### 5. Require authentication at the ingress
 
-**Reasoned, not demonstrated** (no container runtime in the authoring environment; row 2.24 tracks demonstrating it). Select a harmless request to a real protected capability. Its path, method, request body, and exact response for each installed tool are **unverified here**. Obtain them from that version's documentation and use the same request in check 7. What separates the exposed outcome from the fixed one is documented per service in Sources: Text Embeddings Inference answers every request until `--api-key` is set, LocalAI's key is unset by default, and Mem0 and Onyx both ship authentication on, so an anonymous `2xx` from any of them is the exposed state and a `401` or `403` is the fixed one.
+**Reasoned, not demonstrated** (no container runtime in the authoring environment; row 2.24 tracks demonstrating it). Select a harmless request to a real protected capability. Its path, method, request body, and exact response for each installed tool are **unverified here**. Obtain them from that version's documentation and use the same request in check 7. What separates the exposed outcome from the fixed one is documented per service in Sources: Text Embeddings Inference answers every request until `--api-key` is set, LocalAI's key is unset by default, and Mem0 and Onyx both ship authentication on, so an anonymous `2xx` from any of them is the exposed state and a `401` or `403` is the fixed one. For example, Text Embeddings Inference's protected capability is `POST /embed` with the harmless body `{"inputs":"probe"}`: expect a `401` without the key and a `2xx` embedding with it (check 7).
 
 Do not choose a health endpoint, documentation page, login page, or an invented path. A `404` or request-validation error cannot demonstrate authentication.
+
+Test the ingress and the native layer as SEPARATE controls. Where a service's native key does not cover every route (Text Embeddings Inference leaves `/metrics`, `/docs` and the health routes outside it), also probe one of those uncovered routes anonymously THROUGH the public ingress: the fronting auth must gate it, so an anonymous `2xx` there is a finding even when the capability route is protected. Where the ingress and the application use different credentials, send the application's own credential WITHOUT the ingress credential and confirm the ingress still rejects it, so a keyed backend behind a TLS-only proxy cannot pass this check while the ingress itself is open.
 
 Set the second value on the `set --` line to the actual method, such as `GET` or `POST`. Keep the third value's empty quotes for a request without a body; otherwise put a harmless JSON test body there.
 
@@ -304,23 +310,30 @@ For SearxNG, for LangServe relying entirely on its proxy, or for any service you
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' ''
-  # $3 is the same harmless JSON body as checks 5 and 7. Keep the empty quotes if none is needed.
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' '' ''
+  # $3 is the same harmless JSON body as checks 5 and 7 (keep the empty quotes if none is needed).
+  # $4 is a credential header: leave it EMPTY for the anonymous run, put a WRONG credential for the
+  # wrong-key run, and the VALID one for the positive control. Run this block three times against the
+  # SAME private URL; the native layer must reject the first two and serve the third.
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
-  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit; }
+  [ "$#" -eq 4 ] || { echo "the set -- line needs exactly 4 values; not probing"; exit; }
   if [ -z "$1" ] || [ -z "$2" ]; then
     echo "fill in the URL and method on the set -- line above; not probing"; exit
   fi
-  case "$1$2$3" in
+  case "$1$2$3$4" in
     *REPLACE_WITH_*) echo "substitute the request values on the set -- line above; not probing"; exit ;;
   esac
   case "$1" in
     http://*|https://*) ;;
     *) echo "use an http:// or https:// URL; not probing"; exit ;;
   esac
-  if [ -n "$3" ]; then
+  if [ -n "$3" ] && [ -n "$4" ]; then
+    set -- -H 'Content-Type: application/json' --data-binary "$3" -H "$4" -X "$2" "$1"
+  elif [ -n "$3" ]; then
     set -- -H 'Content-Type: application/json' --data-binary "$3" -X "$2" "$1"
+  elif [ -n "$4" ]; then
+    set -- -H "$4" -X "$2" "$1"
   else
     set -- -X "$2" "$1"
   fi
@@ -333,7 +346,7 @@ For SearxNG, for LangServe relying entirely on its proxy, or for any service you
 
 **Fixed:** the configured authentication layer rejects that same valid request, while check 7 succeeds with credentials.
 
-An unreachable upstream means native authentication was not tested; it does not prove that authentication works. Likewise, an unknown path, malformed request, or unavailable model does not demonstrate rejection of an anonymous caller.
+An unreachable upstream means native authentication was not tested; it does not prove that authentication works. Likewise, an unknown path, malformed request, or unavailable model does not demonstrate rejection of an anonymous caller. Run the block three times against the SAME private URL, varying only `$4`: empty (anonymous), a deliberately WRONG credential, then the VALID one. The native layer must reject the first two and serve the third; that valid-credential run is the positive control on the private backend, so the three together (anonymous reject, wrong-key reject, valid-key accept) establish the native gate rather than a coincidental error. Check 7 is the separate success test through the HTTPS ingress.
 
 Mem0 and Onyx ship authentication on, but the verified record does not establish the exact response code for a selected endpoint. Investigate a successful anonymous Mem0 request for `AUTH_DISABLED=true`, route coverage, and the running version; the response alone does not identify its cause.
 
@@ -418,4 +431,8 @@ The service facts come from the maintainer's vendor-source verification record d
 - [Compose merge rules](https://docs.docker.com/reference/compose-file/merge/): merged port lists and `!reset`.
 - [Docker Compose ps](https://docs.docker.com/reference/cli/docker/compose/ps/): running service information and publication fields.
 - [curl manual](https://curl.se/docs/manpage.html): request options, TLS verification, proxy bypass, timing, and error reporting.
+- [LocalAI CLI reference](https://localai.io/docs/reference/cli-reference/): the `--address` flag and `LOCALAI_ADDRESS` bind, default `:8080`.
+- [SearxNG webapp implementation](https://raw.githubusercontent.com/searxng/searxng/master/searx/webapp.py): the production startup rejection of the `ultrasecretkey` placeholder and the image proxy following redirects.
+- [Onyx data model](https://raw.githubusercontent.com/onyx-dot-app/onyx/main/backend/onyx/db/models.py): the retained per-connector `Credential.credential_json` storage.
+- [Text Embeddings Inference gRPC server](https://raw.githubusercontent.com/huggingface/text-embeddings-inference/main/router/src/grpc/server.rs): the standalone Prometheus exporter (`prom_builder.install()`) of the gRPC build, distinct from the HTTP build's main-port `/metrics`.
 
