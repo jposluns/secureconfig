@@ -1,47 +1,139 @@
 # Search engines for RAG: Meilisearch and Typesense
 
-Both back RAG pipelines and site search, and both hand out a bootstrap or default key that is full admin over every index; Meilisearch also ships a keyless development mode meant for a laptop, but Typesense requires an API key from the moment it starts, with no keyless mode of its own. Ship an unprotected Meilisearch dev-mode instance, or leak either engine's bootstrap or default key, and the whole corpus, every document your RAG pipeline embedded, is readable and writable by whoever has it.
+Both back RAG pipelines and site search. Meilisearch ships a keyless development mode meant for a laptop and answers unauthenticated until you set a master key; Typesense requires an operator-supplied bootstrap key from the moment it starts, with no keyless mode. Meilisearch's default admin key is full access except key management, and Typesense's bootstrap key is admin over all endpoints and data; ship an unprotected dev-mode instance, or leak either engine's privileged key, and the whole corpus, every document your RAG pipeline embedded, is readable and writable by whoever has it.
 
 ## Meilisearch
 
-Meilisearch runs in two modes. In development mode it answers without a key by default, but development mode can still be protected by launching with `MEILI_MASTER_KEY` set; production mode requires it, together with `--env production`. Either way the master key (at least 16 bytes) is the credential everything else derives from.
+Meilisearch runs in two modes. In development mode it answers without a key by default, but development mode can still be protected by launching with `MEILI_MASTER_KEY` set; production mode requires it, together with `--env production`. Either way the master key (at least 16 bytes) is the credential everything else derives from. For a binary running beside its reverse proxy, set `MEILI_HTTP_ADDR=127.0.0.1:7700`; the binary's documented default is `localhost:7700`, but the official Docker image sets `MEILI_HTTP_ADDR=0.0.0.0:7700`, so with a host-side proxy publish the container port only on host loopback (`127.0.0.1:7700:7700`), and with a containerized proxy use a private container network without publishing the engine port.
 
-From it, Meilisearch generates four default API keys: a Default Search API Key (search only, all indexes), a Default Admin API Key (full access except key management), a Default Read-Only Admin API Key (read-only access to all indexes, documents, and settings), and a Default Chat API Key (search and chat completions). It also supports scoped API keys you create yourself and tenant tokens: "short-lived, client-side tokens derived from API keys" for per-end-user search restrictions without shipping a standing key to each user. Use the Default Search API Key (or a scoped key) in front-end code; never an admin key, the read-only admin key, or the master key.
+At the time of writing, Meilisearch's master-key documentation describes four default API keys (a Default Search API Key, a Default Admin API Key with full access except key management, a Default Read-Only Admin API Key, and a Default Chat API Key); the inventory and permissions are version-dependent, so check `GET /keys` on your deployed release. It also supports scoped API keys you create yourself and tenant tokens: server-generated JWTs derived from an API key for per-end-user search restrictions, so set a short `exp` explicitly (no later than the parent key's expiry) rather than assuming they are short-lived. Expose the Default Search API Key only when every searchable index and document it permits is public; for confidential data, issue an index-restricted search key or a server-generated tenant token with enforced search rules, and keep the token's signing key server-side. Never put an admin key, the read-only admin key, or the master key in front-end code.
 
-Meilisearch does not terminate HTTPS itself in the typical deployment, so put a reverse proxy or your platform's TLS in front ([nginx.md](nginx.md), [caddy.md](caddy.md), [cloudflare.md](cloudflare.md)) and restrict network access with firewall rules as an additional layer ([cloud-firewalls.md](cloud-firewalls.md)).
+Meilisearch supports native HTTPS with `--ssl-cert-path` and `--ssl-key-path`; this guide uses a same-host TLS reverse proxy ([nginx.md](nginx.md), [caddy.md](caddy.md), [cloudflare.md](cloudflare.md)) and keeps the plaintext backend connection on loopback or an isolated local container network. If the proxy connects across machines, protect that hop with verified TLS as well, and restrict engine ingress to the proxy ([cloud-firewalls.md](cloud-firewalls.md)).
 
 ## Typesense
 
-Typesense requires a bootstrap key at startup, set with the `--api-key` server parameter (a required parameter; the server will not start without it); that key has "admin permissions on all endpoints and data." Use it only to create a permanent admin key through the `/keys` API, then stop using the bootstrap key day to day so it can be rotated without a restart-time outage.
+Typesense requires a bootstrap key at startup, set with the `--api-key` server parameter (a required parameter; the server will not start without it); that key has "admin permissions on all endpoints and data." Use the bootstrap key to create a separately revocable operational key through the `/keys` API, then use that operational key for routine administration; rotate the operational key through the API, while the bootstrap key remains a startup credential supplied through `TYPESENSE_API_KEY` or a protected configuration file rather than command-line arguments. Typesense listens on `0.0.0.0:8108` by default (`--api-address`/`--api-port`), so for a same-host proxy set `--api-address=127.0.0.1 --api-port=8108`; its separate peering service defaults to port `8107`, so select a private peering address and restrict it to cluster members ([cloud-firewalls.md](cloud-firewalls.md)).
 
-For anything that runs in a browser, generate a scoped, search-only key through the same `/keys` endpoint:
+Create a parent search-only key through the same `/keys` endpoint:
 
 ```json
 {
+  "description": "Search products",
   "actions": ["documents:search"],
-  "collections": ["*"]
+  "collections": ["products"]
 }
 ```
 
-Narrow `collections` to a name or regex to limit a key to specific collections, embed a `filter_by` clause in a scoped key to restrict it to specific documents (Typesense: "Users will not be able to override the filter embedded inside the scoped API Key"), and use `include_fields`/`exclude_fields` to hide sensitive fields such as billing data from a given key. Typesense's own guidance is direct: "Never expose your Admin API Key or Bootstrap API Key to your frontend application as anyone with access to it will be able to write data into your collection." Set `expires_at` on browser-facing keys so a leaked one has a shelf life.
+For document or field restrictions, keep this parent key server-side and use a Typesense SDK there to derive a Scoped Search API Key containing the required `filter_by`, `include_fields`, or `exclude_fields`; send only the derived key to the browser, with an explicit `expires_at` no later than the parent key's expiry.
 
-Typesense's cloud offering terminates TLS for you. A self-managed cluster can also terminate TLS natively with the `--ssl-certificate` and `--ssl-certificate-key` server parameters, which Typesense documents as sufficient for direct internet exposure; this guide still defaults to the same reverse-proxy or platform TLS pattern as Meilisearch above for consistency and because a proxy already handles certificate renewal, but native termination is a documented, supported alternative.
+Narrow `collections` to a name or regex to limit a key to specific collections, embed a `filter_by` clause in a scoped key to restrict it to specific documents (Typesense: "Users will not be able to override the filter embedded inside the scoped API Key"), and use `include_fields`/`exclude_fields` to hide sensitive fields such as billing data from a given key. Typesense's own guidance is direct: "Never expose your Admin API Key or Bootstrap API Key to your frontend application as anyone with access to it will be able to write data into your collection." Set `expires_at` on browser-facing keys so a leaked one has a shelf life. Collection scoping does not by itself isolate data reachable through JOINs: review referenced collections and joined fields, enforce the intended restrictions in the key, and test joined queries with the browser credential.
+
+Typesense's cloud offering terminates TLS for you. A self-managed cluster can also terminate TLS natively with the `--ssl-certificate` and `--ssl-certificate-key` server parameters; Typesense's production guidance still calls for restricting the public port and the private peering listener, and this guide defaults to the same reverse-proxy or platform TLS pattern as Meilisearch above because a proxy already handles certificate renewal, though native termination is a documented, supported alternative.
 
 ## The pattern, either engine
 
-The credential that goes into a browser must be search-only and, ideally, scoped to what that specific user or page needs (a tenant token in Meilisearch, a scoped key with `filter_by` in Typesense). The admin or bootstrap key stays server-side, in the platform's secret store, never in client bundles or repository history ([secrets.md](secrets.md)).
+The credential that goes into a browser must be search-only, and for confidential or multi-tenant data must enforce the caller's index or collection and document restrictions in the credential itself (a tenant token in Meilisearch, a scoped key with `filter_by` in Typesense); browser-supplied filters are not authorization, and the parent key used to generate tenant tokens or scoped search keys must never be exposed. The admin or bootstrap key stays server-side, in the platform's secret store, never in client bundles or repository history ([secrets.md](secrets.md)).
+
+Treat administration and backup as separate surfaces. Keep any dashboard or management UI private or behind an identity-aware proxy that enforces MFA, since an engine API key is a bearer credential and not a second factor; Meilisearch's development search preview is disabled in production mode. Protect dumps, snapshots, data volumes, and off-host backups independently of search authorization: restrict filesystem and object-store access, prohibit public downloads, and encrypt them, because a Meilisearch dump or a Typesense snapshot contains documents across every index. For Typesense, back up the directory its snapshot API produces rather than copying the live data directory, and restore into an isolated instance with authentication configured before exposing a listener.
+
+Review outbound requests too. Meilisearch v1.8 through v1.34.0 need upgrading for an authenticated blind SSRF fixed in v1.34.1; on current releases do not set `MEILI_EXPERIMENTAL_ALLOWED_IP_NETWORKS=any`, restrict webhook and remote-service configuration to trusted administrators, protect webhook credentials, and constrain egress to approved destinations ([egress-metadata.md](egress-metadata.md)). Typesense's remote embedding configurations also make outbound requests carrying provider credentials, so apply the same destination and secret controls. Leave Meilisearch's experimental document-editing functions disabled unless needed; they run Rhai transformations that belong to trusted server-side workloads, not arbitrary operating-system command execution.
 
 ## Verify
 
-```bash
-curl -q -s -o /dev/null -w '%{http_code}\n' -X POST https://search.example.com/indexes/movies/search -H 'Content-Type: application/json' --data-raw '{"q":"ninja"}'                                             # Meilisearch, no key: 401
-curl -q -s -X POST https://search.example.com/indexes/movies/search -H "Authorization: Bearer REPLACE_WITH_SEARCH_KEY" -H 'Content-Type: application/json' --data-raw '{"q":"ninja"}'                          # search key: search works
-curl -q -s -o /dev/null -w '%{http_code}\n' -X POST https://search.example.com/indexes -H "Authorization: Bearer REPLACE_WITH_SEARCH_KEY" -H 'Content-Type: application/json' --data-raw '{"uid":"movies"}'     # search key attempting to create an index: 403
+Verification status: the request expectations below are reasoned from the linked vendor references, not demonstrated against running engines in this review, so backlog row 2.38 tracks demonstrating them; the review environment had no Meilisearch or Typesense binary and no container runtime. Use Bash and curl 7.75.0 or later; never add `-k`. Substitute your actual HTTPS origin inside the single quotes, without a trailing slash. Run each row of the matrix below through this paired-request block, changing the method, path, JSON body, header prefix, and expected statuses on its `set --` line, and enter credentials at the prompts rather than in the command. Both requests use exactly the same origin, method, path, and body; inspect the engine JSON as well as the status, since a proxy login page, redirect, missing resource, or transport failure does not establish engine authorization.
 
-curl -q -s -o /dev/null -w '%{http_code}\n' "https://search.example.com/collections/products/documents/search?q=stark&query_by=company_name"                                                                    # Typesense, no key: 401
-curl -q -s "https://search.example.com/collections/products/documents/search?q=stark&query_by=company_name" -H "X-TYPESENSE-API-KEY: REPLACE_WITH_SEARCH_ONLY_KEY"                                              # search-only key: search works
-curl -q -s -o /dev/null -w '%{http_code}\n' -X POST https://search.example.com/collections -H "X-TYPESENSE-API-KEY: REPLACE_WITH_SEARCH_ONLY_KEY" -H 'Content-Type: application/json' --data-raw '{"name":"products"}'  # search-only key attempting to create a collection: 403
+```bash
+(
+  set +x
+  set -o pipefail
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_ORIGIN' \
+    'POST' '/indexes/movies/search' '{"q":"ninja"}' \
+    'Authorization: Bearer ' '401' '200'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'Paste the whole block'; exit 2; }
+  shift
+  [ "$#" -eq 7 ] || { echo 'Expected seven values'; exit 2; }
+  case "$*" in
+    *REPLACE_WITH_*) echo 'Substitute inside the single quotes'; exit 2 ;;
+  esac
+  case "$1" in
+    https://?*) ;;
+    *) echo 'Use your HTTPS origin, without a trailing slash'; exit 2 ;;
+  esac
+  case "$5" in
+    'Authorization: Bearer '|'X-TYPESENSE-API-KEY: ') ;;
+    *) echo 'Unknown authentication header'; exit 2 ;;
+  esac
+  for audit_role in negative positive; do
+    printf '%s key (empty only for an anonymous negative): ' "$audit_role"
+    IFS= read -r -s audit_key || exit 2
+    printf '\n'
+    case "$audit_key" in
+      *REPLACE_WITH_*|*$'\r'*|*$'\n'*) echo 'Invalid key input'; exit 2 ;;
+    esac
+    if [ "$audit_role" = positive ]; then
+      [ -n "$audit_key" ] || { echo 'Positive key required'; exit 2; }
+      audit_expected=$7
+    else
+      audit_expected=$6
+    fi
+    if audit_reply=$(
+      {
+        if [ -n "$audit_key" ]; then
+          printf '%s%s\n' "$5" "$audit_key"
+        fi
+      } | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+        --request "$2" --header @- --header 'Content-Type: application/json' \
+        --data-raw "$4" --write-out \
+        '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n%{http_code}' \
+        "$1$3"
+    ); then
+      printf '%s\n' "$audit_reply"
+    else
+      printf '%s\n' "${audit_reply-}" 'INCONCLUSIVE: transport failed'
+      exit 2
+    fi
+    case "$audit_reply" in
+      *$'\n'"$audit_expected") ;;
+      *) echo 'FAIL: unexpected HTTP status'; exit 1 ;;
+    esac
+  done
+  echo 'Statuses matched; inspect the response bodies before accepting the result.'
+)
 ```
+
+| Test | Method and path | JSON body | Negative credential/status | Positive credential/status |
+|---|---|---|---|---|
+| Meilisearch authentication | `POST /indexes/movies/search` | `{"q":"ninja"}` | Empty / `401` | Valid search key / `200`, containing the known fixture |
+| Typesense authentication | `GET /collections/products/documents/search?q=stark&query_by=company_name` | empty string | Empty / `401` | Valid search key / `200`, containing the known fixture |
+| Meilisearch write restriction | `POST /indexes` | `{"uid":"acl_probe"}` | Search-only key / `403` | Authorized admin key / `202` |
+| Typesense write restriction | `POST /collections` | `{"name":"acl_probe","fields":[{"name":"title","type":"string"}]}` | Search-only key / `401` | Authorized admin key / `201` |
+
+Use `Authorization: Bearer ` for Meilisearch and `X-TYPESENSE-API-KEY: ` for Typesense. Prepare the search fixtures first, and for the creation tests confirm `acl_probe` does not already exist, using a disposable resource and removing it afterward. A Meilisearch `202` only acknowledges a queued task, so confirm task success before crediting the positive control. In an isolated exposed-state test, keyless Meilisearch must return the fixture anonymously and the protected instance must reject that request; Typesense's exposed-state discriminator is a known disclosed bootstrap or operational key (it has no keyless mode), which after rotation must fail while its replacement succeeds against the same request. Do not invent a universal default password. Test tenant restrictions with known allowed and forbidden documents: the restricted credential must find the allowed fixture and omit the forbidden one, while an authorized control finds the forbidden fixture on the same query and origin; attempt to override filters and field selection, and test referenced collections where JOINs are used, since an empty result alone proves nothing.
+
+Proxy authentication does not prove the engine or peering ports are private. On the engine host inspect `ss -ltnp`, container port mappings, and the effective IPv4 and IPv6 firewall rules, and confirm the engine answers from its intended private client while running. From an external disallowed source, test every public address and actual published port; the block below covers the default ports with OpenBSD-compatible netcat and numeric addresses:
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PUBLIC_IP'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'Paste the whole block'; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo 'Expected one address'; exit 2; }
+  case "$1" in
+    ''|*REPLACE_WITH_*) echo 'Substitute your address inside the quotes'; exit 2 ;;
+  esac
+  for audit_port in 7700 8108 8107; do
+    if nc -nvz -w 5 "$1" "$audit_port"; then
+      echo "FAIL: TCP $audit_port is reachable"
+      exit 1
+    else
+      echo "INCONCLUSIVE: inspect the connection error and firewall evidence"
+    fi
+  done
+  exit 2
+)
+```
+
+Under the private-backend pattern, any successful external TCP connection is a finding, even if HTTP authentication would reject the caller; a timeout is inconclusive, and a refusal shows only no connection from that source at that moment, so corroborate it with the live private positive control, the listener bindings, and the effective firewall policy. If native HTTPS is intentionally public, run the paired authorization tests against that engine endpoint too, using its certificate-valid hostname and actual port (preserve the hostname with curl's `--resolve` when testing an IP, keep the substituted address guarded, and retain certificate verification); engine API TLS does not establish protection of Typesense's separate peering listener.
 
 Grep the client bundle and repository history for the admin/master/bootstrap key; it should never appear outside the server-side secret store.
 
@@ -53,5 +145,21 @@ Grep the client bundle and repository history for the admin/master/bootstrap key
 
 ## Sources (checked September 2026)
 
+Version scope: Typesense 30.2; Meilisearch current unversioned documentation checked 2026-09-18, with v1.53.2 as the release reference. The first release containing all four default keys and their exact permissions remains to be confirmed against the deployed release, so inspect `GET /keys`. The Verify commands require Bash, curl 7.75.0 or later, and OpenBSD-compatible netcat.
+
 - Meilisearch master API keys (MEILI_MASTER_KEY, the four default API keys): https://www.meilisearch.com/docs/resources/self_hosting/security/master_api_keys
 - Typesense data access control (bootstrap api-key, /keys, actions, collections, filter_by, include_fields/exclude_fields, expires_at): https://typesense.org/docs/guide/data-access-control.html
+- Typesense 30.2 server configuration (api-key required, api-address default 0.0.0.0, api-port 8108, peering-port 8107, ssl-certificate): https://typesense.org/docs/30.2/api/server-configuration.html
+- Typesense 30.2 API keys (parent search-only key, scoped-key derivation, description): https://typesense.org/docs/30.2/api/api-keys.html
+- Typesense 30.2 collections and search (schema fields; a rejected key returns 401): https://typesense.org/docs/30.2/api/collections.html
+- Typesense backups (snapshot API, not the live data directory): https://typesense.org/docs/guide/backups.html
+- Typesense 30.2 remote embeddings (outbound requests with provider credentials): https://typesense.org/docs/30.2/api/vector-search.html
+- Meilisearch configuration reference (MEILI_HTTP_ADDR default localhost:7700; MEILI_EXPERIMENTAL_ALLOWED_IP_NETWORKS): https://www.meilisearch.com/docs/resources/self_hosting/configuration/reference
+- Meilisearch v1.53.2 Dockerfile (image sets MEILI_HTTP_ADDR=0.0.0.0:7700): https://raw.githubusercontent.com/meilisearch/meilisearch/v1.53.2/Dockerfile
+- Meilisearch native TLS (--ssl-cert-path, --ssl-key-path): https://www.meilisearch.com/docs/resources/self_hosting/security/http2_ssl
+- Meilisearch tenant-token payload (exp is optional): https://www.meilisearch.com/docs/capabilities/security/advanced/tenant_token_payload
+- Meilisearch backups and dumps (documents across every index): https://www.meilisearch.com/docs/resources/self_hosting/data_backup/overview
+- Meilisearch SSRF advisory (authenticated blind SSRF fixed in v1.34.1): https://www.meilisearch.com/blog/CVE-update-Jan-2026
+- Meilisearch document-editing functions (Rhai; disabled unless enabled): https://www.meilisearch.com/docs/capabilities/indexing/how_to/edit_documents_with_functions
+- curl options (write-out variables require 7.75.0+): https://curl.se/docs/manpage.html
+- OpenBSD netcat reference: https://man.openbsd.org/nc
