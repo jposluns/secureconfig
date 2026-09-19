@@ -18,12 +18,25 @@ WHAT THIS CATCHES
                  -g and is not flagged, and a { in a -w format string is not a
                  URL. A schemeless glob URL (no "://") is a disclosed blind spot.
   C2-PROBE-OUTSIDE-GUARD
-                 in a fenced shell block with a case PATTERN containing
-                 REPLACE_WITH_, a probe-class command without coverage from
-                 such a guard. A valid case normally covers its lexical
-                 case...esac span. A straight-line case whose every sentinel
-                 arm has a termination certificate may extend coverage to
-                 the close of its execution scope.
+                 in a fenced shell block with a recognized case PATTERN
+                 containing REPLACE_WITH_, a probe-class command without
+                 coverage from a guard. Recognition activates checking even
+                 for quoted or ineffective sentinel lookalikes.
+
+                 Coverage requires an effective unquoted sentinel alternative.
+                 The bounded accepted shape is one or more stars, REPLACE_WITH_,
+                 an optional literal suffix of letters, digits, underscore,
+                 dot or hyphen, and one or more trailing stars. Brackets,
+                 pinned prefixes/suffixes and uncertain shapes earn no coverage.
+                 Before the first effective sentinel arm, any arm not proven
+                 disjoint from placeholder values must have a termination
+                 certificate; otherwise neither ordinary nor extended coverage
+                 is granted. Ineffective sentinel lookalikes cannot certify.
+
+                 An eligible case covers its lexical case...esac span.
+                 A straight-line case whose every recognized sentinel arm
+                 has a termination certificate may extend coverage to the
+                 close of its execution scope.
 
                  A certificate requires a literal, unwrapped exit or return,
                  with no argument or one literal decimal status from 0 to
@@ -47,8 +60,8 @@ WHAT THIS CATCHES
                  false-positive it.
 
 WHAT THIS IS NOT
-  This is a TRIPWIRE for bounded lexical regressions, not a general safety
-  proof for shell programs. A guard over $1 proves nothing about a later
+  This is a tripwire for the accidental case; a determined author walks
+  past it. It is not a general safety proof for shell programs. A guard over $1 proves nothing about a later
   probe of $2 or of a reassigned variable. A pass does not establish that
   every probe is guarded or immune to the reader's environment.
 
@@ -137,6 +150,43 @@ guarantee)
     the wrapping subshell are not caught by the default gate; the
     warn-without-stop if-shape exists behind --strict-guards only.
   - the waiver comment is greppable; review waivers in code review.
+  - C2: composite adjacent punctuation such as );, )& or )) can confuse
+    command and scope boundaries. Write the guard in the standard
+    sentinel-first *REPLACE_WITH_*) form on its own line, probe on its own line.
+  - C2: function name { } and case-bodied functions can lose function scope.
+    Write the guard in the standard sentinel-first *REPLACE_WITH_*) form on
+    its own line, probe on its own line.
+  - C2: a DEBUG trap with extdebug can skip a credited exit or return.
+    Write the guard in the standard sentinel-first *REPLACE_WITH_*) form on
+    its own line, probe on its own line.
+  - C2: negated/bracket sentinel patterns such as *REPLACE_WITH_[!..]* can
+    miss recognition entirely. Write the guard in the standard sentinel-first
+    *REPLACE_WITH_*) form on its own line, probe on its own line.
+  - C2: time -p can hide the probe command behind an unrecognized prefix.
+    Write the guard in the standard sentinel-first *REPLACE_WITH_*) form on
+    its own line, probe on its own line.
+  - C2: quoted '<<' can be mistaken for a heredoc operator and hide commands.
+    Write the guard in the standard sentinel-first *REPLACE_WITH_*) form on
+    its own line, probe on its own line.
+  - C2: a backslash at the end of a comment can swallow the following line.
+    Write the guard in the standard sentinel-first *REPLACE_WITH_*) form on
+    its own line, probe on its own line.
+  - C2: a child-heredoc waiver can leak across execution domains.
+    Write the guard in the standard sentinel-first *REPLACE_WITH_*) form on
+    its own line, probe on its own line.
+  - C2: case-subject $(...) substitution can confuse command/scope tracking.
+    Write the guard in the standard sentinel-first *REPLACE_WITH_*) form on
+    its own line, probe on its own line.
+  - C2: eval, source or enable -n can redefine or disable exit without
+    revoking its certificate. Write the guard in the standard sentinel-first
+    *REPLACE_WITH_*) form on its own line, probe on its own line.
+  - C2: a literal DIFFERENT placeholder in a probe can be cleared by an
+    unrelated guard; placeholder dataflow is not checked. Write the guard in
+    the standard sentinel-first *REPLACE_WITH_*) form on its own line, probe
+    on its own line.
+
+  This formatting guidance keeps the idiom reviewable; it does not repair
+  these bypasses or prove that a guard checks the value actually probed.
 
 EXIT/OUTPUT DISCIPLINE (run_all_checks.sh relies on this)
   Findings print one per line:  path:line: [CODE] message
@@ -237,6 +287,9 @@ _C2_ARM_KILL = frozenset((
     "for", "while", "until", "select", "case", "{", "(", "[[",
 ))
 _C2_STATUS_RE = re.compile(r"[0-9]+")
+_C2_SENTINEL_GLOB_RE = re.compile(r"\*+REPLACE_WITH_[A-Za-z0-9_.-]*\*+")
+_C2_PLAIN_PATTERN_RE = re.compile(r"[A-Za-z0-9_./:-]*")
+
 # Build-gated hardening: disable together with fixtures 28 and 29 only if
 # the existing-fixture/corpus review requires the documented fallback.
 _C2_HARDENING = True
@@ -985,12 +1038,17 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
         arm = f["arm"]
         if terminator in (";&", ";;&"):
             f["has_nonstandard_terminator"] = True
-        if (terminator in (";;", "esac") and arm is not None
-                and arm["owner"] is f["id"] and arm["active"]
-                and arm["exits"]):
-            f["sentinel_certified"] += 1
+        certified = (
+            terminator in (";;", "esac") and arm is not None
+            and arm["owner"] is f["id"] and arm["active"] and arm["exits"])
+        if certified:
+            if arm["sentinel"]:
+                f["sentinel_certified"] += 1
             f["uses_return"] = f["uses_return"] or arm["uses_return"]
         if arm is not None:
+            if (arm["before_effective"] and arm["may_overlap"]
+                    and not certified):
+                f["preempted"] = True
             arm["active"] = False
         f["current_sentinel"] = False
 
@@ -1019,7 +1077,8 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
                 # C2 hardening hook 1: fallthrough cases grant no span.
                 deny_span = (_C2_HARDENING
                              and f["has_nonstandard_terminator"])
-                if f["valid"] and f["sentinel_seen"] and not deny_span:
+                if (f["valid"] and f["effective_seen"]
+                        and not f["preempted"] and not deny_span):
                     span = {
                         "case_id": f["id"],
                         "domain": active_origin,
@@ -1196,7 +1255,7 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
                     kill_arms()
                     k += 1
                     continue
-                if (t == "()" and len(buf) == 1
+                if (literal and t == "()" and len(buf) == 1
                         and buf[0] not in KEYWORDS):
                     kill_arms()
                     funcdef_pending = literal and buf_is_literal
@@ -1204,7 +1263,7 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
                     buf_is_literal = True
                     k += 1
                     continue
-                if (t == "(" and len(buf) == 1 and buf[0] not in KEYWORDS
+                if (literal and t == "(" and len(buf) == 1 and buf[0] not in KEYWORDS
                         and k + 1 < len(toks) and toks[k + 1] == ")"):
                     kill_arms()
                     funcdef_pending = (
@@ -1256,24 +1315,40 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
 
                     if pattern_case is not None:
                         f = pattern_case
-                        alternatives = [
-                            is_literal for word, is_literal
-                            in f["pattern_tokens"]
-                            if SENTINEL in word
+                        patterns = f["pattern_tokens"]
+                        sentinel = any(
+                            SENTINEL in word
                             and PATTERN_TOKEN_RE.fullmatch(word) is not None
-                        ]
-                        # Quoted lookalikes activate checking, but cannot
-                        # certify an arm. Count them so another arm's exit
-                        # cannot compensate for a non-matching quoted glob.
-                        sentinel = bool(alternatives)
-                        sentinel_glob = any(alternatives)
+                            for word, _is_literal in patterns)
+                        # A deliberately small accepted language: an unquoted
+                        # marker with unrestricted stars on both sides, no
+                        # bracket expressions, expansions or pinned affixes.
+                        effective = any(
+                            is_literal
+                            and _C2_SENTINEL_GLOB_RE.fullmatch(word) is not None
+                            for word, is_literal in patterns)
+                        # Only simple fixed strings without the marker are
+                        # proven disjoint. Wildcards, expansions, quote/escape
+                        # ambiguity and unfamiliar syntax may overlap.
+                        may_overlap = not patterns or any(
+                            SENTINEL in word
+                            or _C2_PLAIN_PATTERN_RE.fullmatch(word) is None
+                            for word, _is_literal in patterns)
+                        before_effective = not f["effective_seen"] and not effective
+                        if effective:
+                            f["effective_seen"] += 1
                         f["in_pattern"] = False
                         f["current_sentinel"] = sentinel
                         f["arm"] = {
                             "owner": f["id"],
-                            "active": sentinel,
+                            "active": True,
+                            "sentinel": sentinel,
+                            "before_effective": before_effective,
+                            "may_overlap": may_overlap,
                             "base_depth": len(nest),
-                            "clean_prefix": sentinel_glob,
+                            # Retain the conservative refusal to certify
+                            # ineffective sentinel lookalikes, even with exit.
+                            "clean_prefix": effective or not sentinel,
                             "exits": False,
                             "uses_return": False,
                         }
@@ -1367,6 +1442,8 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
                                         and s["eligible"] and s["valid"]
                                         for s in scopes)),
                             "sentinel_seen": 0,
+                            "effective_seen": 0,
+                            "preempted": False,
                             "sentinel_certified": 0,
                             "has_nonstandard_terminator": False,
                             "valid": True,
@@ -2224,6 +2301,164 @@ esac
 curl -q -g -- "$1"
 ```
 """, ["C2-PROBE-OUTSIDE-GUARD"], ()),
+]
+
+
+SELF_TEST_CASES += [
+    ("c2-quoted-sentinel-default-probe",
+     r"""```bash
+case "$1" in
+  "*REPLACE_WITH_*") exit;;
+  *) curl -q file:///dev/null;;
+esac
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("c2-bracket-sentinel-no-coverage",
+     r"""```bash
+case "$1" in
+  [REPLACE_WITH_]) exit;;
+esac
+curl -q file:///dev/null
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("c2-pinned-prefix-no-coverage",
+     r"""```bash
+case "$1" in
+  prefix*REPLACE_WITH_*) exit;;
+esac
+curl -q file:///dev/null
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("c2-catchall-before-sentinel",
+     r"""```bash
+case "$1" in
+  *) :;;
+  *REPLACE_WITH_*) exit;;
+esac
+curl -q file:///dev/null
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("c2-overlap-before-sentinel",
+     r"""```bash
+case "$1" in
+  REPLACE_*) :;;
+  *REPLACE_WITH_*) exit;;
+esac
+curl -q file:///dev/null
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("c2-quoted-parens-preserve-curl",
+     r"""```bash
+(
+  case "$1" in
+    *REPLACE_WITH_*) exit;;
+  esac
+)
+curl "()" file:///dev/null
+```
+""", ["C1-MISSING-Q", "C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("c2-standard-sentinel-default-clean",
+     r"""```bash
+case "$1" in
+  *REPLACE_WITH_*) exit;;
+  *) curl -q file:///dev/null;;
+esac
+```
+""", [], ()),
+
+    ("c2-empty-alternative-extended-clean",
+     r"""```bash
+case "$1" in
+  ""|*REPLACE_WITH_*) exit;;
+esac
+curl -q file:///dev/null
+```
+""", [], ()),
+
+    ("c2-catchall-denies-ordinary-span",
+     r"""```bash
+case "$1" in
+  *) :;;
+  *REPLACE_WITH_*) exit;;
+  other) curl -q file:///dev/null;;
+esac
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("c2-overlap-denies-ordinary-span",
+     r"""```bash
+case "$1" in
+  REPLACE_*) :;;
+  *REPLACE_WITH_*) exit;;
+  *) curl -q file:///dev/null;;
+esac
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("c2-pinned-suffix-no-coverage",
+     r"""```bash
+case "$1" in
+  *REPLACE_WITH_X-suffix) exit;;
+esac
+curl -q file:///dev/null
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("c2-fixed-marker-no-coverage",
+     r"""```bash
+case "$1" in
+  REPLACE_WITH_X) exit;;
+esac
+curl -q file:///dev/null
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("c2-earlier-overlap-exits-clean",
+     r"""```bash
+case "$1" in
+  REPLACE_*) exit;;
+  *REPLACE_WITH_*) exit;;
+esac
+curl -q file:///dev/null
+```
+""", [], ()),
+
+    ("c2-earlier-disjoint-literal-clean",
+     r"""```bash
+case "$1" in
+  safe) :;;
+  *REPLACE_WITH_*) exit;;
+esac
+curl -q file:///dev/null
+```
+""", [], ()),
+
+    ("c2-earlier-conditional-exit-denied",
+     r"""```bash
+case "$1" in
+  REPLACE_*) false && exit;;
+  *REPLACE_WITH_*) exit;;
+esac
+curl -q file:///dev/null
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("c2-split-quoted-parens-preserve-curl",
+     r"""```bash
+(
+  case "$1" in
+    *REPLACE_WITH_*) exit;;
+  esac
+)
+curl "(" ")" file:///dev/null
+```
+""", ["C1-MISSING-Q", "C2-PROBE-OUTSIDE-GUARD"], ()),
 ]
 
 
