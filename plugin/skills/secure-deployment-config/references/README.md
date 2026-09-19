@@ -121,6 +121,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [mongodb.md](mongodb.md) | MongoDB: requireTLS, authorization, admin user creation, bind address |
 | [redis.md](redis.md) | Redis: TLS listener, ACLs, requirepass, bind and protected mode |
 | [sqlite.md](sqlite.md) | SQLite in deployment, the file is the exposure; Turso tokens; Litestream |
+| [sqlite-http-frontends.md](sqlite-http-frontends.md) | Datasette and sqlite-web: SQLite HTTP exposure, loopback binding, authentication, TLS, and verification |
 | [surrealdb.md](surrealdb.md) | SurrealDB, root credentials, bind address, access levels, TLS |
 | [time-series-metrics-stores.md](time-series-metrics-stores.md) | InfluxDB, VictoriaMetrics, and QuestDB: default-off auth, default credentials, and fronting |
 | [elasticsearch.md](elasticsearch.md) | Elasticsearch and OpenSearch: keep the built-in security on |
