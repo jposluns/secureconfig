@@ -14048,6 +14048,8 @@ Rows say what *may* be listening. Where a guide documents a published container 
 application's own listener, the row says so, because `-p 3000:8080` means two different ports and only
 one of them is the application's.
 
+Rows are ordered by their first port number or the start of a range. Related ports may share a row, and ranges can overlap other entries.
+
 | Port | May be | Documented in |
 | --- | --- | --- |
 | 22 | SSH, which should not be publicly reachable | [cloud-firewalls.md](cloud-firewalls.md), [host.md](host.md) |
@@ -14057,19 +14059,24 @@ one of them is the application's.
 | 81 | Nginx Proxy Manager admin UI (the proxy itself is on 80 and 443) | [devops-uis.md](devops-uis.md) |
 | 465 | SMTP submission over implicit TLS; transport is encrypted from the first byte, authorization is still separate | [transactional-email-posture.md](transactional-email-posture.md) |
 | 587 | SMTP submission with STARTTLS; opportunistic TLS can be stripped, exposing the credential | [transactional-email-posture.md](transactional-email-posture.md) |
+| 1025, 8025 | Helicone Compose backing-service host publications; the guide names MailHog among the backing services but does not assign a protocol to each of these ports | [llm-observability.md](llm-observability.md) |
 | 1234 | LM Studio local server | [model-servers.md](model-servers.md) |
 | 1337 | Strapi HTTP server and admin panel; the first visitor to the admin panel becomes the administrator while no account exists yet | [headless-cms-instant-api.md](headless-cms-instant-api.md) |
+| 1777 | OpenTelemetry Collector pprof diagnostic extension, when enabled | [llm-observability.md](llm-observability.md) |
 | 1880 | Node-RED editor and admin API, which have no authentication by default | [devops-uis.md](devops-uis.md) |
 | 1883 | MQTT, plaintext | [mosquitto.md](mosquitto.md) |
+| 2019 | Caddy admin API, which requires no credentials and defaults to localhost | [caddy.md](caddy.md) |
 | 2375 | Docker API, plaintext and unauthenticated | [devops-uis.md](devops-uis.md) |
 | 2376 | Docker API over TLS. The port is a convention, not proof of client-certificate authentication: `--tls` and `--tlsverify` are different settings | [devops-uis.md](devops-uis.md), [docker.md](docker.md) |
 | 2379, 2380 | etcd client and peer ports on a Kubernetes control-plane node. Every Secret in the cluster is here, unencrypted unless encryption at rest is configured | [kubernetes.md](kubernetes.md) |
-| 3000 | The most crowded port here: 23 guides in this corpus mention it, and the most likely owners are Metabase, Dagster, Gitea, Dokploy, Next.js, SvelteKit's Node adapter (which defaults to `0.0.0.0`), Rails, Flowise, OpenHands, Langfuse, TGI, and the backend behind most proxy examples. Open WebUI's 3000 is a **published host port** mapping to container 8080; and PostgREST, which binds all IPv4 interfaces here by default; and browserless, which is unauthenticated when its TOKEN is unset | [nextjs.md](nextjs.md), [frontend-frameworks.md](frontend-frameworks.md), [ruby.md](ruby.md), [bi-dashboards.md](bi-dashboards.md), [workflow-orchestrators.md](workflow-orchestrators.md), [devops-uis.md](devops-uis.md), [open-webui.md](open-webui.md), [llm-observability.md](llm-observability.md), [model-servers.md](model-servers.md), [agent-builders.md](agent-builders.md), [chat-uis.md](chat-uis.md), [mcp-servers.md](mcp-servers.md), [fronting-auth.md](fronting-auth.md), [headless-cms-instant-api.md](headless-cms-instant-api.md), [headless-browser-services.md](headless-browser-services.md) |
 | 2746 | Argo Server (Argo Workflows API and UI) | [workflow-orchestrators.md](workflow-orchestrators.md) |
+| 3000 | The most crowded port here: 23 guides in this corpus mention it, and the most likely owners are Metabase, Dagster, Gitea, Dokploy, Next.js, SvelteKit's Node adapter (which defaults to `0.0.0.0`), Rails, Flowise, OpenHands, Langfuse, TGI, and the backend behind most proxy examples. Open WebUI's 3000 is a **published host port** mapping to container 8080; and PostgREST, which binds all IPv4 interfaces here by default; and browserless, which is unauthenticated when its TOKEN is unset | [nextjs.md](nextjs.md), [frontend-frameworks.md](frontend-frameworks.md), [ruby.md](ruby.md), [bi-dashboards.md](bi-dashboards.md), [workflow-orchestrators.md](workflow-orchestrators.md), [devops-uis.md](devops-uis.md), [open-webui.md](open-webui.md), [llm-observability.md](llm-observability.md), [model-servers.md](model-servers.md), [agent-builders.md](agent-builders.md), [chat-uis.md](chat-uis.md), [mcp-servers.md](mcp-servers.md), [fronting-auth.md](fronting-auth.md), [headless-cms-instant-api.md](headless-cms-instant-api.md), [headless-browser-services.md](headless-browser-services.md) |
 | 3001 | AnythingLLM, or Uptime Kuma | [chat-uis.md](chat-uis.md), [devops-uis.md](devops-uis.md) |
 | 3080 | LibreChat | [agent-builders.md](agent-builders.md) |
 | 3210 | LobeChat | [chat-uis.md](chat-uis.md) |
 | 3306 | MySQL and MariaDB | [mysql.md](mysql.md), [cloud-firewalls.md](cloud-firewalls.md) |
+| 3389 | RDP, mentioned only as an omitted inventory check in the cloud-firewall guide | [cloud-firewalls.md](cloud-firewalls.md) |
+| 3478 | coturn STUN/TURN over UDP and TCP | [realtime-voice-infra.md](realtime-voice-infra.md) |
 | 4000 | LiteLLM proxy | [litellm.md](litellm.md) |
 | 4180 | oauth2-proxy | [fronting-auth.md](fronting-auth.md) |
 | 4200 | Prefect server | [workflow-orchestrators.md](workflow-orchestrators.md) |
@@ -14079,63 +14086,86 @@ one of them is the application's.
 | 4442, 4443 | Selenium Grid event bus in distributed mode, which Nodes use to register and which the Router's basic auth does not cover | [headless-browser-services.md](headless-browser-services.md) |
 | 4444 | Selenium Grid Router, Hub, or Standalone, plus the Grid web UI on the same port, with no authentication by default | [headless-browser-services.md](headless-browser-services.md) |
 | 5000 | Redash, MLflow tracking server, or a .NET Kestrel default | [bi-dashboards.md](bi-dashboards.md), [mlflow.md](mlflow.md), [dotnet.md](dotnet.md) |
+| 5001 | Dify backend API, in the guide's in-container request example | [agent-builders.md](agent-builders.md) |
 | 5003 | Dify's plugin daemon debugging port, published by the supplied Compose configuration unless you remove or restrict that mapping | [agent-builders.md](agent-builders.md) |
+| 5349 | coturn TLS listener; DTLS is opt-in since 4.17.0, and this port number does not prove encryption is mandatory | [realtime-voice-infra.md](realtime-voice-infra.md) |
 | 5432 | PostgreSQL, and pgvector on the same port; the Supabase self-hosted Supavisor pooler also publishes it | [postgresql.md](postgresql.md), [vector-databases.md](vector-databases.md), [cloud-firewalls.md](cloud-firewalls.md), [supabase-self-hosted.md](supabase-self-hosted.md) |
+| 5553, 5556, 5557, 5559 | Selenium Grid distributed components: Distributor, Session Map, event bus HTTP, and New Session Queue; these listeners are not protected by the Router's basic auth | [headless-browser-services.md](headless-browser-services.md) |
 | 5555 | Flower, the Celery monitor, or a Selenium Grid Node | [workflow-orchestrators.md](workflow-orchestrators.md), [headless-browser-services.md](headless-browser-services.md) |
 | 5671, 5672 | AMQP over TLS, and AMQP plaintext | [rabbitmq.md](rabbitmq.md) |
 | 5678 | n8n | [n8n.md](n8n.md) |
+| 5766 | coturn telnet CLI, disabled by default and bound to loopback when enabled | [realtime-voice-infra.md](realtime-voice-infra.md) |
 | 5900, 7900 | VNC and noVNC in the Selenium Docker browser images, started by default with the vendor example password `secret` | [headless-browser-services.md](headless-browser-services.md) |
+| 5901 | VNC in a GPU desktop template example; an example port, not a platform-wide default | [gpu-clouds.md](gpu-clouds.md) |
 | 6001, 6002 | Coolify real-time updates and terminal | [devops-uis.md](devops-uis.md) |
 | 6006 | Arize Phoenix | [llm-observability.md](llm-observability.md) |
+| 6080 | noVNC web interface in a GPU desktop template example; an example port, not a platform-wide default | [gpu-clouds.md](gpu-clouds.md) |
+| 6222 | NATS cluster routes, a separate listener with its own authentication and TLS | [nats.md](nats.md) |
 | 6333, 6334, 6335 | Qdrant REST, gRPC, and internal cluster gRPC | [vector-databases.md](vector-databases.md) |
 | 6362 | Neo4j backup | [neo4j.md](neo4j.md) |
 | 6379 | Redis, Valkey, or the Ray head node | [redis.md](redis.md), [ray.md](ray.md), [cloud-firewalls.md](cloud-firewalls.md) |
 | 6432 | PgBouncer, whose client-side TLS is disabled by default | [connection-poolers.md](connection-poolers.md), [postgresql.md](postgresql.md) |
 | 6443 | The Kubernetes API server on a self-managed cluster. Managed providers usually serve it on 443 instead, so its absence here proves nothing | [kubernetes.md](kubernetes.md) |
 | 6543 | The Supabase self-hosted Supavisor transaction pooler, a direct database connection published beside 5432 | [supabase-self-hosted.md](supabase-self-hosted.md) |
+| 6789 | Metrics port mentioned only in the realtime voice guide's Verify inventory; service attribution and default status are not established there | [realtime-voice-infra.md](realtime-voice-infra.md) |
 | 7000 | frp server | [tunnels.md](tunnels.md) |
+| 7222 | NATS gateways, a separate listener with its own authentication and TLS | [nats.md](nats.md) |
 | 7233 | Temporal frontend gRPC | [workflow-orchestrators.md](workflow-orchestrators.md) |
+| 7422 | NATS accepted leafnode connections, a separate listener with its own authentication and TLS | [nats.md](nats.md) |
 | 7473, 7474, 7687 | Neo4j HTTPS, HTTP, and Bolt | [neo4j.md](neo4j.md) |
+| 7700 | Meilisearch HTTP API; the binary defaults to localhost, while the official Docker image binds all interfaces | [search-engines.md](search-engines.md) |
+| 7800 | Keycloak clustered cache transport, carrying sessions and tokens; TLS is on by default for TCP stacks | [self-hosted-idp.md](self-hosted-idp.md) |
 | 7860 | Gradio, Stable Diffusion WebUI, or Langflow | [gradio.md](gradio.md), [image-gen-uis.md](image-gen-uis.md), [agent-builders.md](agent-builders.md) |
+| 7880 | LiveKit HTTP/WebSocket signaling and API, which need a TLS proxy | [realtime-voice-infra.md](realtime-voice-infra.md) |
+| 7881 | LiveKit ICE media TCP mux, separate from signaling | [realtime-voice-infra.md](realtime-voice-infra.md) |
+| 7882/UDP | LiveKit development-mode media mux; outside development mode the documented default is the 50000 to 60000 media range | [realtime-voice-infra.md](realtime-voice-infra.md) |
 | 8000 | SurrealDB, Chroma, Triton HTTP, Coolify, Vaultwarden outside Docker, Portainer's Edge agent tunnel, the Supabase self-hosted API gateway (Kong) which fronts the whole stack, or GlitchTip's web, API, and open self-signup | [surrealdb.md](surrealdb.md), [vector-databases.md](vector-databases.md), [model-servers.md](model-servers.md), [devops-uis.md](devops-uis.md), [supabase-self-hosted.md](supabase-self-hosted.md), [self-hosted-error-trackers.md](self-hosted-error-trackers.md) |
 | 8001, 8002 | Triton gRPC and Triton Prometheus metrics | [model-servers.md](model-servers.md) |
 | 8055 | Directus HTTP API and admin app | [headless-cms-instant-api.md](headless-cms-instant-api.md) |
 | 8080 | llama.cpp, Weaviate HTTP, Airflow, code-server, Open WebUI's container port, Dify's nginx when mapped to `127.0.0.1:8080`, Spring Boot, Go, and the Vast.ai Jupyter deployment; Keycloak's HTTP port, which exists only when `--http-enabled=true`; and Hasura GraphQL Engine v2, which binds every interface by default; and Argo CD's argocd-server pod listener, fronted by its Service on 80 and 443 | [model-servers.md](model-servers.md), [vector-databases.md](vector-databases.md), [workflow-orchestrators.md](workflow-orchestrators.md), [code-server.md](code-server.md), [open-webui.md](open-webui.md), [agent-builders.md](agent-builders.md), [java.md](java.md), [go.md](go.md), [gpu-clouds.md](gpu-clouds.md), [self-hosted-idp.md](self-hosted-idp.md), [headless-cms-instant-api.md](headless-cms-instant-api.md), [gitops-controllers.md](gitops-controllers.md) |
 | 8081 | Hasura's bundled data-connector agent, published beside the engine by the vendor quickstart Compose | [headless-cms-instant-api.md](headless-cms-instant-api.md) |
+| 8083 | Argo CD argocd-server metrics, separate from its API and UI listener | [gitops-controllers.md](gitops-controllers.md) |
 | 8086 | InfluxDB HTTP API, UI, and write endpoint (2.x and 1.x); 1.x ships with `auth-enabled = false`, and an un-set-up 2.x instance can be seized through `/api/v2/setup` | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
 | 8088 | Apache Superset | [bi-dashboards.md](bi-dashboards.md) |
-| 8428 | VictoriaMetrics single-node HTTP API, UI, and ingest, with `-httpAuth.username`/`-httpAuth.password` Basic auth disabled by default | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
 | 8093 | The GitLab Runner interactive session server, its documented example listen address, which exists only when `[session_server]` is configured | [self-hosted-ci-runners.md](self-hosted-ci-runners.md) |
+| 8107 | Typesense peering service, which should be restricted to cluster members | [search-engines.md](search-engines.md) |
+| 8108 | Typesense API, which binds all interfaces by default | [search-engines.md](search-engines.md) |
 | 8123 | ClickHouse HTTP, plaintext | [clickhouse.md](clickhouse.md) |
+| 8188 | ComfyUI | [image-gen-uis.md](image-gen-uis.md) |
 | 8200 | HashiCorp Vault API, and its UI at `/ui` on the same listener when `ui = true`; TLS is assumed by default, and `sys/health` and `sys/seal-status` answer unauthenticated | [vault.md](vault.md) |
 | 8201 | HashiCorp Vault cluster port, for server-to-server request forwarding and Raft over mutually authenticated TLS; a peer surface, never a client endpoint | [vault.md](vault.md) |
-| 8188 | ComfyUI | [image-gen-uis.md](image-gen-uis.md) |
 | 8222 | NATS monitoring endpoints | [nats.md](nats.md) |
 | 8233 | Temporal Web UI as started by `temporal server start-dev`, which is the context this corpus documents | [workflow-orchestrators.md](workflow-orchestrators.md) |
 | 8265 | Ray dashboard | [ray.md](ray.md) |
+| 8400, 8401 | VictoriaMetrics cluster native RPC channels, separate from vmstorage's HTTP maintenance and metrics listener | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
+| 8404 | HAProxy HTTPS stats listener in the configured example; a chosen port, and stats are disabled unless configured | [haproxy.md](haproxy.md) |
+| 8428 | VictoriaMetrics single-node HTTP API, UI, and ingest, with `-httpAuth.username`/`-httpAuth.password` Basic auth disabled by default | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
+| 8432 | Mem0 Compose PostgreSQL publication: host port 8432 maps to container port 5432 | [ai-infra-services.md](ai-infra-services.md) |
 | 8443 | ClickHouse HTTPS, the Kubernetes Dashboard forwarding example, and the configured HTTPS listeners in the Gradio, Python, Java and Ruby guides; Keycloak's HTTPS port | [clickhouse.md](clickhouse.md), [devops-uis.md](devops-uis.md), [gradio.md](gradio.md), [python.md](python.md), [java.md](java.md), [ruby.md](ruby.md), [self-hosted-idp.md](self-hosted-idp.md) |
 | 8480 | VictoriaMetrics cluster `vminsert` HTTP ingestion, Basic auth disabled by default | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
 | 8481 | VictoriaMetrics cluster `vmselect` HTTP query and UI, Basic auth disabled by default | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
 | 8482 | VictoriaMetrics cluster `vmstorage` HTTP maintenance and metrics (native RPC on 8400 and 8401) | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
 | 8501 | Streamlit | [streamlit.md](streamlit.md) |
-| 8883 | MQTT over TLS | [mosquitto.md](mosquitto.md) |
 | 8812 | QuestDB PostgreSQL wire protocol, shipping the default credential `admin` / `quest` | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
+| 8883 | MQTT over TLS | [mosquitto.md](mosquitto.md) |
 | 8888 | Jupyter, including RunPod deployments. The Vast.ai Jupyter launch mode uses 8080 instead | [jupyter.md](jupyter.md), [gpu-clouds.md](gpu-clouds.md) |
-| 9222 | Chrome or Chromium DevTools Protocol remote debugging, an endpoint with no authentication whose reachability is full browser takeover | [headless-browser-services.md](headless-browser-services.md) |
 | 9000 | ClickHouse native TCP (plaintext), MinIO's S3 API, PHP-FPM, TGI's Prometheus listener, or Portainer's legacy HTTP port; Keycloak's management port serving `/health` and `/metrics`, authentik's HTTP port, QuestDB's web console, REST, and SQL endpoints whose Basic-auth keys are unset by default, or the Sentry self-hosted web and API, published here by the bundled nginx | [clickhouse.md](clickhouse.md), [minio.md](minio.md), [php.md](php.md), [model-servers.md](model-servers.md), [devops-uis.md](devops-uis.md), [self-hosted-idp.md](self-hosted-idp.md), [time-series-metrics-stores.md](time-series-metrics-stores.md), [self-hosted-error-trackers.md](self-hosted-error-trackers.md) |
-| 9009 | QuestDB InfluxDB line protocol (TCP), which accepts unauthenticated writes unless `line.tcp.auth.db.path` is set; also ClickHouse interserver replica traffic over HTTP | [time-series-metrics-stores.md](time-series-metrics-stores.md), [clickhouse.md](clickhouse.md) |
 | 9001 | MinIO's web console (the `--console-address` / `MINIO_CONSOLE_ADDRESS` port, conventionally 9001) | [minio.md](minio.md) |
 | 9003 | QuestDB minimal HTTP health and metrics server, which follows the HTTP authentication policy you set (unauthenticated when `http.user` is unset) | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
-| 9004, 9005, 9010 | ClickHouse MySQL compatibility, PostgreSQL compatibility, and interserver replica traffic over HTTPS (the HTTP interserver port 9009 is listed above) | [clickhouse.md](clickhouse.md) |
+| 9004, 9005, 9010 | ClickHouse MySQL compatibility, PostgreSQL compatibility, and interserver replica traffic over HTTPS (the HTTP interserver port 9009 is listed separately) | [clickhouse.md](clickhouse.md) |
+| 9009 | QuestDB InfluxDB line protocol (TCP), which accepts unauthenticated writes unless `line.tcp.auth.db.path` is set; also ClickHouse interserver replica traffic over HTTP | [time-series-metrics-stores.md](time-series-metrics-stores.md), [clickhouse.md](clickhouse.md) |
 | 9090 | InvokeAI. Prometheus also defaults here, though its guide does not state the number | [image-gen-uis.md](image-gen-uis.md), [admin-uis.md](admin-uis.md) |
-| 9252 | The GitLab Runner Prometheus metrics endpoint, served with no built-in authorization, which exists only when a metrics `listen_address` is configured | [self-hosted-ci-runners.md](self-hosted-ci-runners.md) |
 | 9091 | Milvus WebUI, or Authelia | [vector-databases.md](vector-databases.md), [fronting-auth.md](fronting-auth.md) |
 | 9092, 9093 | Kafka plaintext and SASL_SSL listeners. Which port carries which is configured, not fixed | [kafka.md](kafka.md) |
-| 9200 | Elasticsearch and OpenSearch HTTP | [elasticsearch.md](elasticsearch.md) |
+| 9094 | Kafka KRaft controller listener in the guide's configured SASL_SSL example; the port is chosen, not fixed | [kafka.md](kafka.md) |
+| 9200 to 9300 | Elasticsearch HTTP default range, binding the first free port; OpenSearch HTTP on 9200 | [elasticsearch.md](elasticsearch.md) |
+| 9222 | Chrome or Chromium DevTools Protocol remote debugging, an endpoint with no authentication whose reachability is full browser takeover | [headless-browser-services.md](headless-browser-services.md) |
+| 9252 | The GitLab Runner Prometheus metrics endpoint, served with no built-in authorization, which exists only when a metrics `listen_address` is configured | [self-hosted-ci-runners.md](self-hosted-ci-runners.md) |
 | 9292 | Puma standalone, whose default bind is all interfaces; and the Flux notification-controller webhook receiver, in-cluster behind the `webhook-receiver` Service | [ruby.md](ruby.md), [gitops-controllers.md](gitops-controllers.md) |
-| 9300 | authentik's Prometheus metrics, which carry no authentication | [self-hosted-idp.md](self-hosted-idp.md) |
+| 9300 to 9400 | Elasticsearch transport default range; authentik's unauthenticated Prometheus metrics on 9300 | [elasticsearch.md](elasticsearch.md), [self-hosted-idp.md](self-hosted-idp.md) |
 | 9440 | ClickHouse native TCP over TLS | [clickhouse.md](clickhouse.md) |
 | 9443 | Portainer HTTPS UI, authentik's HTTPS port | [devops-uis.md](devops-uis.md), [self-hosted-idp.md](self-hosted-idp.md) |
+| 9641 | coturn Prometheus metrics, disabled by default; when enabled, it binds a wildcard address and serves without authentication | [realtime-voice-infra.md](realtime-voice-infra.md) |
 | 9898 | Pgpool-II's PCP administration channel, which has its own credential file | [connection-poolers.md](connection-poolers.md) |
 | 9999 | Pgpool-II | [connection-poolers.md](connection-poolers.md), [postgresql.md](postgresql.md) |
 | 10001 | Ray Client server, which executes code | [ray.md](ray.md) |
@@ -14146,13 +14176,24 @@ one of them is the application's.
 | 10257, 10259 | The Kubernetes controller manager and scheduler, on control-plane nodes | [kubernetes.md](kubernetes.md) |
 | 11211 | Memcached. Check UDP as well as TCP | [memcached.md](memcached.md) |
 | 11434 | Ollama | [ollama.md](ollama.md) |
+| 13133 | OpenTelemetry Collector health-check extension, when enabled | [llm-observability.md](llm-observability.md) |
+| 15671 | RabbitMQ management UI over TLS, as noted in the guide's listener inventory | [rabbitmq.md](rabbitmq.md) |
 | 15672 | RabbitMQ management UI | [rabbitmq.md](rabbitmq.md) |
+| 18123 | Helicone Compose ClickHouse HTTP publication: host port 18123 maps to container port 8123; it also falls inside the Ray worker range | [llm-observability.md](llm-observability.md) |
+| 19000 | Helicone Compose backing-service publication: host port 19000 maps to container port 9000, but the guide does not explicitly attribute this mapping to a service; it also falls inside the Ray worker range | [llm-observability.md](llm-observability.md) |
 | 19530 | Milvus gRPC | [vector-databases.md](vector-databases.md) |
+| 20202 | LiteFS HTTP replication API, including database export/import and administrative operations | [sqlite.md](sqlite.md) |
 | 25672 | RabbitMQ inter-node and CLI Erlang distribution (default, the AMQP port plus 20000); by default the Erlang cookie is its only credential and grants full control of the node | [rabbitmq.md](rabbitmq.md) |
 | 27017 | MongoDB | [mongodb.md](mongodb.md), [cloud-firewalls.md](cloud-firewalls.md) |
-| 30000 | SGLang | [model-servers.md](model-servers.md) |
+| 30000 to 32767 | Kubernetes NodePort range over TCP and UDP; SGLang on 30000 | [kubernetes.md](kubernetes.md), [model-servers.md](model-servers.md) |
+| 33060 | MySQL X Protocol, a separate listener whose bind is not controlled by bind_address; MariaDB does not implement it | [mysql.md](mysql.md) |
+| 49152 to 65535 | coturn relay endpoints, allocated on demand; this range overlaps the LiveKit media range and other entries | [realtime-voice-infra.md](realtime-voice-infra.md) |
+| 50000 to 60000/UDP | LiveKit media sockets outside development mode, allocated during active calls | [realtime-voice-infra.md](realtime-voice-infra.md) |
 | 50051 | Weaviate gRPC | [vector-databases.md](vector-databases.md) |
 | 51820/UDP | WireGuard, in the configured example here. The port is chosen, not assigned | [tunnels.md](tunnels.md) |
+| 54388 | Helicone Compose PostgreSQL publication: host port 54388 maps to container port 5432 | [llm-observability.md](llm-observability.md) |
+| 55679 | OpenTelemetry Collector zPages diagnostic extension, when enabled | [llm-observability.md](llm-observability.md) |
+| 57800 | Keycloak clustered cache failure detection; TLS is on by default for TCP stacks | [self-hosted-idp.md](self-hosted-idp.md) |
 
 ## Verify
 
@@ -14170,8 +14211,12 @@ worked examples over sampled URLs, not an enumeration of your application's sens
 ```bash
 sudo ss -tlnp                    # listening TCP sockets, with the owning process
 sudo ss -tlunp                   # again including UDP, which Memcached and WireGuard answer on
+sudo ss -aunp                    # all UDP sockets, including non-listening sockets
 docker ps --format '{{.Names}}\t{{.Ports}}'   # published container ports, which the host view can miss
 ```
+
+Repeat the [all-UDP-sockets check](https://man7.org/linux/man-pages/man8/ss.8.html) during active calls or
+relay allocations, because media and relay sockets may be absent while idle.
 
 `ss` reports sockets in its own network namespace, so a container's listeners are not all visible from
 the host. A diagnostic such as `Cannot open netlink socket` means the command failed: empty output with
@@ -14242,8 +14287,9 @@ an endpoint no guide here knows the name of.
   https://www.iana.org/assignments/service-names-port-numbers
 - RFC 6335, which defines the registry and the dynamic and private range 49152 to 65535:
   https://www.rfc-editor.org/rfc/rfc6335.html
-- Each application default above is documented in the guide its row links to, and that guide cites the
-  vendor page for it.
+- Defaults, configured examples, published host-port mappings, and ranges above are documented in the
+  linked guides, which cite their vendor sources. Example ports and inventory-only mentions are not
+  claims about application defaults; incomplete attribution is stated in the row.
 
 ======================================================================
 ==> common-mistakes.md
