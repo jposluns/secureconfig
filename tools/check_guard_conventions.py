@@ -18,16 +18,40 @@ WHAT THIS CATCHES
                  -g and is not flagged, and a { in a -w format string is not a
                  URL. A schemeless glob URL (no "://") is a disclosed blind spot.
   C2-PROBE-OUTSIDE-GUARD
-                 in a fenced shell block that uses the house placeholder-guard
-                 idiom (a case arm whose PATTERN contains REPLACE_WITH_), a
-                 probe-class command that sits outside every such case...esac
-                 span -- the known false-pass shape where the guard prints a
-                 warning and the probe runs anyway after esac. NOTE: this rule
-                 enforces the HOUSE IDIOM (probe lexically inside the guarded
-                 case), so it also flags the semantically-safe variant where
-                 the sentinel arm exits and the probe follows esac; that is
-                 deliberate style enforcement -- move the probe into the arm
-                 or waive it.
+                 in a fenced shell block with a recognized case PATTERN
+                 containing REPLACE_WITH_, a probe-class command without
+                 coverage from a guard. Recognition activates checking even
+                 for quoted or ineffective sentinel lookalikes.
+
+                 Coverage requires an effective unquoted sentinel alternative.
+                 The bounded accepted shape is one or more stars, REPLACE_WITH_,
+                 an optional literal suffix of letters, digits, underscore,
+                 dot or hyphen, and one or more trailing stars. Brackets,
+                 pinned prefixes/suffixes and uncertain shapes earn no coverage.
+                 Before the first effective sentinel arm, any arm not proven
+                 disjoint from placeholder values must have a termination
+                 certificate; otherwise neither ordinary nor extended coverage
+                 is granted. Ineffective sentinel lookalikes cannot certify.
+
+                 An eligible case covers its lexical case...esac span.
+                 A straight-line case whose every recognized sentinel arm
+                 has a termination certificate may extend coverage to the
+                 close of its execution scope.
+
+                 A certificate requires a literal, unwrapped exit or return,
+                 with no argument or one literal decimal status from 0 to
+                 255, no redirection, and an unconditional arm-level command
+                 prefix. Compound operators revoke certification. Nested
+                 blocks, function definitions and command substitutions do
+                 not supply an arm-level termination certificate. return
+                 additionally requires a function-body scope.
+
+                 Extension stops at the relevant subshell or function
+                 boundary; exit may pass through ordinary brace groups.
+                 Conditional, loop, pipeline and background contexts deny
+                 extension. Invalid or unterminated cases grant no coverage.
+                 A sentinel arm cannot use its own case to cover its probes;
+                 cases with ;& or ;;& grant no coverage.
   C2-WARN-ONLY-GUARD  (--strict-guards only; NOT registered in run_all_checks)
                  an if/elif whose condition mentions REPLACE_WITH_ but whose
                  body reaches fi without exit/return, followed later in the
@@ -36,10 +60,16 @@ WHAT THIS CATCHES
                  false-positive it.
 
 WHAT THIS IS NOT
-  This is a TRIPWIRE for the accidental case, and a determined author walks
-  past it. A pass is NOT a guarantee that every probe is guarded or immune to
-  the reader's environment; it is a guarantee that the specific regressions
-  above, written in the corpus's own idiom, do not pass silently.
+  This is a tripwire for the accidental case; a determined author walks
+  past it. It is not a general safety proof for shell programs. A guard over $1 proves nothing about a later
+  probe of $2 or of a reassigned variable. A pass does not establish that
+  every probe is guarded or immune to the reader's environment.
+
+  Any claim of zero false negatives on a reviewed corpus depends on human
+  inspection of every cleared and residual finding, not on this parser
+  establishing placeholder dataflow. The shared tokenizer also loses quote
+  identity: C2 uses additional lexical metadata to deny uncertain coverage,
+  but cannot recover commands already hidden by the shared array scanner.
 
 SCOPE
   Fenced blocks come from tools/_markdown.py (blockquote markers stripped;
@@ -120,6 +150,43 @@ guarantee)
     the wrapping subshell are not caught by the default gate; the
     warn-without-stop if-shape exists behind --strict-guards only.
   - the waiver comment is greppable; review waivers in code review.
+  - C2: composite adjacent punctuation such as );, )& or )) can confuse
+    command and scope boundaries. Write the guard in the standard
+    sentinel-first *REPLACE_WITH_*) form on its own line, probe on its own line.
+  - C2: function name { } and case-bodied functions can lose function scope.
+    Write the guard in the standard sentinel-first *REPLACE_WITH_*) form on
+    its own line, probe on its own line.
+  - C2: a DEBUG trap with extdebug can skip a credited exit or return.
+    Write the guard in the standard sentinel-first *REPLACE_WITH_*) form on
+    its own line, probe on its own line.
+  - C2: negated/bracket sentinel patterns such as *REPLACE_WITH_[!..]* can
+    miss recognition entirely. Write the guard in the standard sentinel-first
+    *REPLACE_WITH_*) form on its own line, probe on its own line.
+  - C2: time -p can hide the probe command behind an unrecognized prefix.
+    Write the guard in the standard sentinel-first *REPLACE_WITH_*) form on
+    its own line, probe on its own line.
+  - C2: quoted '<<' can be mistaken for a heredoc operator and hide commands.
+    Write the guard in the standard sentinel-first *REPLACE_WITH_*) form on
+    its own line, probe on its own line.
+  - C2: a backslash at the end of a comment can swallow the following line.
+    Write the guard in the standard sentinel-first *REPLACE_WITH_*) form on
+    its own line, probe on its own line.
+  - C2: a child-heredoc waiver can leak across execution domains.
+    Write the guard in the standard sentinel-first *REPLACE_WITH_*) form on
+    its own line, probe on its own line.
+  - C2: case-subject $(...) substitution can confuse command/scope tracking.
+    Write the guard in the standard sentinel-first *REPLACE_WITH_*) form on
+    its own line, probe on its own line.
+  - C2: eval, source or enable -n can redefine or disable exit without
+    revoking its certificate. Write the guard in the standard sentinel-first
+    *REPLACE_WITH_*) form on its own line, probe on its own line.
+  - C2: a literal DIFFERENT placeholder in a probe can be cleared by an
+    unrelated guard; placeholder dataflow is not checked. Write the guard in
+    the standard sentinel-first *REPLACE_WITH_*) form on its own line, probe
+    on its own line.
+
+  This formatting guidance keeps the idiom reviewable; it does not repair
+  these bypasses or prove that a guard checks the value actually probed.
 
 EXIT/OUTPUT DISCIPLINE (run_all_checks.sh relies on this)
   Findings print one per line:  path:line: [CODE] message
@@ -209,6 +276,24 @@ CLUSTER_Q_RE = re.compile(r"-[%s]*q[%s]*$" % (_NA, _NA))
 ASSIGNMENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*\+?=")
 DURATION_RE = re.compile(r"^\d[\d.]*[smhd]?$")
 FD_RE = re.compile(r"^\d+$")
+
+# C2 only. Keep the shared tokenizer, keyword set, and probe recognition intact.
+_C2_BLOCK_OPEN = frozenset(("if", "for", "while", "until", "select"))
+_C2_BLOCK_CLOSE = frozenset(("fi", "done"))
+_C2_COMPOUND = frozenset(("&&", "||", "|", "|&", "&"))
+_C2_CONTINUATION = frozenset(("&&", "||", "|", "|&"))
+_C2_ARM_KILL = frozenset((
+    "if", "elif", "else", "then", "do", "done",
+    "for", "while", "until", "select", "case", "{", "(", "[[",
+))
+_C2_STATUS_RE = re.compile(r"[0-9]+")
+_C2_SENTINEL_GLOB_RE = re.compile(r"\*+REPLACE_WITH_[A-Za-z0-9_.-]*\*+")
+_C2_PLAIN_PATTERN_RE = re.compile(r"[A-Za-z0-9_./:-]*")
+
+# Build-gated hardening: disable together with fixtures 28 and 29 only if
+# the existing-fixture/corpus review requires the documented fallback.
+_C2_HARDENING = True
+
 
 # C3: a live credential placed in curl argv (readable via ps / /proc/<pid>/cmdline
 # to local observers while it is there, including before curl scrubs supported
@@ -765,6 +850,78 @@ def _strict_if_guards(path, records, probes, findings):
                 break
 
 
+def _c2_literal_tokens(text, toks):
+    """Return unquoted/unescaped flags aligned with the shared token list.
+
+    Mark quoted or escaped words, tokenize with the existing tokenizer, then
+    remove the marker and require exact agreement with the shared tokens.
+    Failure is uncertainty, never permission to grant C2 coverage.
+    """
+    marker = "\ue000"
+    while marker in text:
+        marker += "\ue000"
+    marked = []
+    quote = None
+    i = 0
+    while i < len(text):
+        ch = text[i]
+        if quote is not None:
+            marked.append(ch)
+            if ch == quote:
+                quote = None
+            elif ch == "\\" and quote == '"' and i + 1 < len(text):
+                i += 1
+                marked.append(text[i])
+        elif ch in ("'", '"'):
+            quote = ch
+            marked.extend((ch, marker))
+        elif ch == "\\":
+            marked.extend((marker, ch))
+            if i + 1 < len(text):
+                i += 1
+                marked.append(text[i])
+        elif ch == "#":
+            marked.append(text[i:])
+            break
+        else:
+            marked.append(ch)
+        i += 1
+    try:
+        annotated = _tokenize("".join(marked))
+    except ValueError:
+        return None
+    if [t.replace(marker, "") for t in annotated] != toks:
+        return None
+    return [marker not in t for t in annotated]
+
+
+def _c2_shadows_termination(records):
+    """Visible redefinitions deny every termination certificate in the fence.
+
+    Quote removal is intentional here: quoted function names and alias
+    assignments must also deny certification. Over-detection is safe.
+    """
+    flat = [t for _line, _raw, lines, _waived in records
+            for toks in lines for t in toks]
+    alias_seen = False
+    for i, t in enumerate(flat):
+        if t in SEPARATORS:
+            alias_seen = False
+        elif t == "alias":
+            alias_seen = True
+        if t in ("exit", "return"):
+            tail = flat[i + 1:i + 3]
+            if tail[:1] == ["()"] or tail == ["(", ")"]:
+                return True
+            if i and flat[i - 1] == "function":
+                return True
+        # Includes alias exit='...' and alias -- 'return=...'.
+        # Never infer restoration from a later unalias/unset.
+        if alias_seen and t.startswith(("exit=", "return=")):
+            return True
+    return False
+
+
 def _analyze_fence(path, lang, start, body, findings, stats, opts):
     stats.fences += 1
     shell_heredoc_bodies = []
@@ -774,12 +931,20 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
     else:
         lls = _logical_lines([(start + j, ln) for j, ln in enumerate(body)],
                              stats, shell_heredoc_bodies)
+    # Keep the shared physical command order, but tag each executable
+    # heredoc with its own C2 domain, including recursively queued bodies.
+    c2_origins = {line: 0 for line, _raw in lls}
+    origin_count = 1
     while shell_heredoc_bodies:
-        lls.extend(_logical_lines(shell_heredoc_bodies.pop(0), stats,
-                                  shell_heredoc_bodies))
+        child_lines = _logical_lines(shell_heredoc_bodies.pop(0), stats,
+                                     shell_heredoc_bodies)
+        c2_origins.update((line, origin_count) for line, _raw in child_lines)
+        origin_count += 1
+        lls.extend(child_lines)
     lls.sort(key=lambda p: p[0])
 
     records = []  # (line, raw, [token list per expanded text], waived)
+    c2_records = []  # aligned [(literal flags, lifted), ...]
     pending_waiver = False
     for lineno, raw in lls:
         wm = WAIVER_RE.search(raw)
@@ -788,39 +953,193 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
             stats.waivers += 1
             continue
         token_lines = []
-        for text in _expand(raw):
+        c2_lines = []
+        for expanded_no, text in enumerate(_expand(raw)):
             try:
-                token_lines.append(_tokenize(text))
+                toks = _tokenize(text)
+                token_lines.append(toks)
+                c2_lines.append((_c2_literal_tokens(text, toks),
+                                 expanded_no != 0))
             except ValueError:
                 stats.unparseable += 1
         records.append((lineno, raw, token_lines, pending_waiver))
+        c2_records.append(c2_lines)
         if raw.strip():
             pending_waiver = False
 
-    # Sequential walk: simple commands get sequence numbers; `case` is pushed
-    # eagerly at command position so a sentinel pattern on the SAME line (a
-    # single-line guard) is still credited; `pattern )` marks the open case.
-    # Array initializers and [[ ]] contents are opaque; `name ( )` function
-    # definitions are not invocations.
+    termination_shadowed = _c2_shadows_termination(records)
+
+    # The shared command walk and sequence numbering are retained. Everything
+    # added to its structural bookkeeping below belongs to C2.
     seq = 0
     probes = []          # (seq, line, name, waived)
     curl_findings = []   # (line, code, waived)
-    case_stack = []      # [start_seq, saw_sentinel_pattern]
-    guard_spans = []     # (start_seq, end_seq)
+    case_stack = []
+    guard_spans = []
+    probe_exclusions = {}
+    probe_domains = {}
     array_depth = 0
     in_dbrackets = False
+    c2_array_depth = 0
+    c2_uncertain = False
+    saw_sentinel = False
+    funcdef_pending = False
+    in_compound_stmt = False
+    continuation = False
+    live_handles = []
+    inherited_exclusions = set()
+    buf_is_literal = True
+    boundary_literal = True
+
+    def new_scope(kind, function_body=False, eligible=True):
+        return {
+            "id": object(),
+            "kind": kind,
+            "open_seq": seq,
+            "deferred": [],
+            "block_depth": 0,
+            "function_body": function_body,
+            "eligible": eligible,
+            "valid": True,
+            "closed": False,
+        }
+
+    fence = new_scope("fence")
+    nest = [fence]
+
+    def save_c2_state():
+        return (fence, nest, case_stack, funcdef_pending,
+                in_compound_stmt, continuation, live_handles,
+                inherited_exclusions, c2_array_depth)
+
+    def restore_c2_state(state):
+        nonlocal fence, nest, case_stack, funcdef_pending
+        nonlocal in_compound_stmt, continuation, live_handles
+        nonlocal inherited_exclusions, c2_array_depth
+        (fence, nest, case_stack, funcdef_pending,
+         in_compound_stmt, continuation, live_handles,
+         inherited_exclusions, c2_array_depth) = state
+
+    origin_states = {}
+    active_origin = 0
+
+    def current_scope():
+        return next(f for f in reversed(nest) if f["kind"] != "case")
+
+    def kill_arms(revoke=False):
+        for f in case_stack:
+            arm = f["arm"]
+            if arm is not None and arm["active"]:
+                arm["clean_prefix"] = False
+                if revoke:
+                    arm["exits"] = False
+
+    def finish_arm(f, terminator):
+        arm = f["arm"]
+        if terminator in (";&", ";;&"):
+            f["has_nonstandard_terminator"] = True
+        certified = (
+            terminator in (";;", "esac") and arm is not None
+            and arm["owner"] is f["id"] and arm["active"] and arm["exits"])
+        if certified:
+            if arm["sentinel"]:
+                f["sentinel_certified"] += 1
+            f["uses_return"] = f["uses_return"] or arm["uses_return"]
+        if arm is not None:
+            if (arm["before_effective"] and arm["may_overlap"]
+                    and not certified):
+                f["preempted"] = True
+            arm["active"] = False
+        f["current_sentinel"] = False
+
+    def finish_scope(f, end_seq):
+        f["closed"] = True
+        if f["block_depth"]:
+            f["valid"] = False
+        for span in f["deferred"]:
+            if (not span["revoked"]
+                    and all(s["valid"] for s in span["scopes"])
+                    and all(s["closed"] for s in span["chain"])):
+                span["end"] = end_seq
 
     def commit(cmd, line, waived):
-        nonlocal seq
+        nonlocal seq, live_handles
         seq += 1
         if cmd[0] == "case":
             return
         if cmd[0] == "esac":
-            if case_stack:
-                start_seq, sentinel = case_stack.pop()
-                if sentinel:
-                    guard_spans.append((start_seq, seq))
+            if case_stack and buf_is_literal and boundary_literal:
+                f = case_stack.pop()
+                if nest[-1] is not f or cmd != ["esac"]:
+                    f["valid"] = False
+                finish_arm(f, "esac")
+                nest[:] = [n for n in nest if n is not f]
+                # C2 hardening hook 1: fallthrough cases grant no span.
+                deny_span = (_C2_HARDENING
+                             and f["has_nonstandard_terminator"])
+                if (f["valid"] and f["effective_seen"]
+                        and not f["preempted"] and not deny_span):
+                    span = {
+                        "case_id": f["id"],
+                        "domain": active_origin,
+                        "start": f["start"],
+                        "esac": seq,
+                        "end": seq,
+                        "revoked": False,
+                        "scopes": f["scopes"],
+                        "chain": (),
+                    }
+                    guard_spans.append(span)
+                    certified = (
+                        f["sentinel_certified"] == f["sentinel_seen"]
+                        and not f["has_nonstandard_terminator"])
+                    eligible = (
+                        f["eligible"]
+                        and all(s["valid"] and s["eligible"]
+                                and s["block_depth"] == 0
+                                for s in f["scopes"]))
+                    target = None
+                    if certified and eligible:
+                        if f["uses_return"]:
+                            candidate = f["scopes"][-1]
+                            if candidate["function_body"]:
+                                target = candidate
+                        else:
+                            target = next(
+                                (s for s in reversed(f["scopes"])
+                                 if s["kind"] in ("subshell", "fence")
+                                 or s["function_body"]),
+                                None)
+                    if target is not None:
+                        target_at = next(
+                            i for i, s in enumerate(f["scopes"])
+                            if s is target)
+                        span["chain"] = f["scopes"][target_at:]
+                        target["deferred"].append(span)
+                        live_handles = [span]
             return
+
+        # C2 certificate: inspect the original buffer, before wrapper or
+        # redirection stripping. A quoted separator is not a command boundary.
+        exact_status = len(cmd) == 1
+        if len(cmd) == 2 and _C2_STATUS_RE.fullmatch(cmd[1]):
+            decimal = cmd[1].lstrip("0") or "0"
+            exact_status = len(decimal) <= 3 and int(decimal) <= 255
+        if (not termination_shadowed
+                and cmd[0] in ("exit", "return") and exact_status
+                and buf_is_literal and boundary_literal and case_stack):
+            f = case_stack[-1]
+            arm = f["arm"]
+            if (arm is not None and arm["active"]
+                    and arm["owner"] is f["id"]
+                    and len(nest) == arm["base_depth"]
+                    and arm["clean_prefix"]):
+                target = current_scope()
+                if cmd[0] == "exit" or target["function_body"]:
+                    arm["exits"] = True
+                    arm["uses_return"] = (
+                        arm["uses_return"] or cmd[0] == "return")
+
         stripped = _strip_wrappers(cmd)
         if not stripped:
             return
@@ -834,27 +1153,95 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
                 and stripped[1] == "s_client"):
             stats.probes += 1
             probes.append((seq, line, word.rsplit("/", 1)[-1], waived))
+            probe_domains[seq] = active_origin
+            # C2 hardening hook 2: a sentinel arm cannot protect its own probe.
+            probe_exclusions[seq] = inherited_exclusions | {
+                f["id"] for f in case_stack if f["current_sentinel"]
+            }
 
-    for lineno, _raw, token_lines, waived in records:
-        for toks in token_lines:
+    for record_no, (lineno, _raw, token_lines, waived) in enumerate(records):
+        origin = c2_origins[lineno]
+        if origin != active_origin:
+            origin_states[active_origin] = save_c2_state()
+            if origin not in origin_states:
+                child = new_scope("fence")
+                origin_states[origin] = (
+                    child, [child], [], False, False, False, [], set(), 0)
+            restore_c2_state(origin_states[origin])
+            active_origin = origin
+        raw_substitution = "$(" in _raw or "`" in _raw
+        row_exclusions = inherited_exclusions | {
+            f["id"] for f in case_stack if f["current_sentinel"]
+        }
+        for token_no, toks in enumerate(token_lines):
+            literals, lifted = c2_records[record_no][token_no]
+            if literals is None:
+                literals = [False] * len(toks)
+                c2_uncertain = True
+                kill_arms(revoke=True)
+
+            # A lifted body shares the existing command numbering and C1/C3
+            # scanner, but none of the parent's C2 execution state.
+            saved = None
+            if lifted:
+                saved = save_c2_state()
+                fence = new_scope("subshell")
+                nest = [fence]
+                case_stack = []
+                funcdef_pending = False
+                in_compound_stmt = False
+                continuation = False
+                live_handles = []
+                inherited_exclusions = set(row_exclusions)
+                c2_array_depth = 0
+
+            # A completed statement's newline ends the compound flag.
+            # An unfinished &&, ||, | or |& still conditions the next line.
+            in_compound_stmt = continuation
+            continuation = False
+            live_handles = []
+            if raw_substitution:
+                kill_arms(revoke=True)
+
             buf = []
+            buf_is_literal = True
+            boundary_literal = True
             k = 0
             while k < len(toks):
                 t = toks[k]
+                literal = literals[k]
+                if raw_substitution or "$(" in t or "`" in t:
+                    kill_arms(revoke=True)
+
+                # C2's array boundary check uses quote metadata. The existing
+                # shared array scanner immediately below remains unchanged.
+                if c2_array_depth and literal:
+                    if t == "(":
+                        c2_array_depth += 1
+                    elif t == ")":
+                        c2_array_depth -= 1
                 if array_depth:
                     if t == "(":
                         array_depth += 1
                     elif t == ")":
                         array_depth -= 1
+                    if bool(array_depth) != bool(c2_array_depth):
+                        c2_uncertain = True
                     k += 1
                     continue
                 if in_dbrackets:
                     if t == "]]":
                         in_dbrackets = False
                         buf = []
+                        buf_is_literal = True
+                        if not literal:
+                            c2_uncertain = True
                     k += 1
                     continue
                 if t == "[[":
+                    kill_arms()
+                    if not literal:
+                        c2_uncertain = True
                     in_dbrackets = True
                     k += 1
                     continue
@@ -862,47 +1249,256 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
                         and ASSIGNMENT_RE.match(buf[-1])):
                     buf.pop()
                     array_depth = 1
+                    c2_array_depth = 1 if literal else 0
+                    if not literal:
+                        c2_uncertain = True
+                    kill_arms()
                     k += 1
                     continue
-                if (t == "()" and len(buf) == 1
+                if (literal and t == "()" and len(buf) == 1
                         and buf[0] not in KEYWORDS):
+                    kill_arms()
+                    funcdef_pending = literal and buf_is_literal
                     buf = []  # `name ()` function definition, not a command
+                    buf_is_literal = True
                     k += 1
                     continue
-                if (t == "(" and len(buf) == 1 and buf[0] not in KEYWORDS
+                if (literal and t == "(" and len(buf) == 1 and buf[0] not in KEYWORDS
                         and k + 1 < len(toks) and toks[k + 1] == ")"):
+                    kill_arms()
+                    funcdef_pending = (
+                        literal and literals[k + 1] and buf_is_literal)
                     buf = []
+                    buf_is_literal = True
                     k += 2
                     continue
-                if (t == ")" and k > 0 and case_stack
-                        and SENTINEL in toks[k - 1]
-                        and PATTERN_TOKEN_RE.fullmatch(toks[k - 1])):
-                    case_stack[-1][1] = True
+
+                function_body = (
+                    funcdef_pending and literal and t in ("(", "{"))
+                funcdef_pending = False
+                pattern_case = None
+                if (literal and t == ")" and nest[-1]["kind"] == "case"
+                        and nest[-1]["in_pattern"]):
+                    pattern_case = nest[-1]
+                pattern_open = (
+                    literal and t == "(" and nest[-1]["kind"] == "case"
+                    and nest[-1]["in_pattern"])
+
+                # Accumulate the entire arm pattern, across alternatives
+                # and logical lines. Header operands before 'in' do not count.
+                if nest[-1]["kind"] == "case" and nest[-1]["in_pattern"]:
+                    f = nest[-1]
+                    if not f["pattern_started"]:
+                        if literal and t == "in":
+                            f["pattern_started"] = True
+                    elif not (literal and t in ("(", ")", "|")):
+                        f["pattern_tokens"].append((t, literal))
+
                 if t in SEPARATORS:
                     if buf:
+                        boundary_literal = literal
                         commit(buf, lineno, waived)
                         buf = []
+                        buf_is_literal = True
+                        boundary_literal = True
+                    continuation = False
+                    if not literal:
+                        # The shared scanner still treats this as a separator.
+                        # C2 must not mistake that split for shell structure.
+                        kill_arms(revoke=True)
+                        for span in live_handles:
+                            span["revoked"] = True
+                            span["end"] = span["esac"]
+                        live_handles = []
+                        k += 1
+                        continue
+
+                    if pattern_case is not None:
+                        f = pattern_case
+                        patterns = f["pattern_tokens"]
+                        sentinel = any(
+                            SENTINEL in word
+                            and PATTERN_TOKEN_RE.fullmatch(word) is not None
+                            for word, _is_literal in patterns)
+                        # A deliberately small accepted language: an unquoted
+                        # marker with unrestricted stars on both sides, no
+                        # bracket expressions, expansions or pinned affixes.
+                        effective = any(
+                            is_literal
+                            and _C2_SENTINEL_GLOB_RE.fullmatch(word) is not None
+                            for word, is_literal in patterns)
+                        # Only simple fixed strings without the marker are
+                        # proven disjoint. Wildcards, expansions, quote/escape
+                        # ambiguity and unfamiliar syntax may overlap.
+                        may_overlap = not patterns or any(
+                            SENTINEL in word
+                            or _C2_PLAIN_PATTERN_RE.fullmatch(word) is None
+                            for word, _is_literal in patterns)
+                        before_effective = not f["effective_seen"] and not effective
+                        if effective:
+                            f["effective_seen"] += 1
+                        f["in_pattern"] = False
+                        f["current_sentinel"] = sentinel
+                        f["arm"] = {
+                            "owner": f["id"],
+                            "active": True,
+                            "sentinel": sentinel,
+                            "before_effective": before_effective,
+                            "may_overlap": may_overlap,
+                            "base_depth": len(nest),
+                            # Retain the conservative refusal to certify
+                            # ineffective sentinel lookalikes, even with exit.
+                            "clean_prefix": effective or not sentinel,
+                            "exits": False,
+                            "uses_return": False,
+                        }
+                        if sentinel:
+                            f["sentinel_seen"] += 1
+                            saw_sentinel = True
+                            row_exclusions.add(f["id"])
+                        in_compound_stmt = False
+                        live_handles = []
+                    elif pattern_open:
+                        # POSIX's optional '(' before a case pattern.
+                        live_handles = []
+                    elif t in (";;", ";&", ";;&"):
+                        if case_stack:
+                            f = case_stack[-1]
+                            if nest[-1] is not f:
+                                f["valid"] = False
+                            finish_arm(f, t)
+                            f["in_pattern"] = True
+                            f["pattern_started"] = True
+                            f["pattern_tokens"] = []
+                        in_compound_stmt = False
+                        live_handles = []
+                    elif t in _C2_COMPOUND:
+                        # Flush happened above: revoke even an exit that
+                        # committed immediately before this separator.
+                        kill_arms(revoke=True)
+                        for span in live_handles:
+                            span["revoked"] = True
+                            span["end"] = span["esac"]
+                        live_handles = []
+                        in_compound_stmt = True
+                        continuation = t in _C2_CONTINUATION
+                    elif t == ";":
+                        in_compound_stmt = False
+                        live_handles = []
+                    elif t in ("(", "{"):
+                        kill_arms()
+                        nest.append(new_scope(
+                            "subshell" if t == "(" else "brace",
+                            function_body=function_body,
+                            eligible=not in_compound_stmt))
+                        live_handles = []
+                    elif t in (")", "}"):
+                        expected = "subshell" if t == ")" else "brace"
+                        if len(nest) > 1 and nest[-1]["kind"] == expected:
+                            f = nest.pop()
+                            finish_scope(f, seq)
+                            # Keep exported brace deferrals revocable when
+                            # the whole enclosing group has a trailing list
+                            # or pipeline/background operator.
+                            live_handles = [
+                                span for span in guard_spans
+                                if span["chain"] and any(
+                                    s is f for s in span["scopes"])
+                            ]
+                        else:
+                            c2_uncertain = True
+                            for f in case_stack:
+                                f["valid"] = False
+                            live_handles = []
                 else:
-                    if t == "case" and all(x in KEYWORDS for x in buf):
-                        case_stack.append([seq + 1, False])
+                    # Retain revocation handles through trailing redirections
+                    # and their operands. Only a real statement boundary or
+                    # disposition settles the preceding compound command.
+                    continuation = False
+                    at_command_start = all(x in KEYWORDS for x in buf)
+                    if literal and at_command_start:
+                        scope = current_scope()
+                        if t in _C2_BLOCK_OPEN:
+                            scope["block_depth"] += 1
+                        elif t in _C2_BLOCK_CLOSE:
+                            if scope["block_depth"] == 0:
+                                scope["valid"] = False
+                            scope["block_depth"] = max(
+                                0, scope["block_depth"] - 1)
+                    if literal and t in _C2_ARM_KILL:
+                        kill_arms()
+                    if (literal and t == "case"
+                            and all(x in KEYWORDS for x in buf)):
+                        scopes = tuple(
+                            f for f in nest if f["kind"] != "case")
+                        f = {
+                            "id": object(),
+                            "kind": "case",
+                            "start": seq + 1,
+                            "scopes": scopes,
+                            "eligible": (
+                                not case_stack and not in_compound_stmt
+                                and all(s["block_depth"] == 0
+                                        and s["eligible"] and s["valid"]
+                                        for s in scopes)),
+                            "sentinel_seen": 0,
+                            "effective_seen": 0,
+                            "preempted": False,
+                            "sentinel_certified": 0,
+                            "has_nonstandard_terminator": False,
+                            "valid": True,
+                            "in_pattern": True,
+                            "pattern_started": False,
+                            "pattern_tokens": [],
+                            "current_sentinel": False,
+                            "arm": None,
+                            "uses_return": False,
+                        }
+                        case_stack.append(f)
+                        nest.append(f)
                     buf.append(t)
+                    buf_is_literal = buf_is_literal and literal
                 k += 1
             if buf:
+                boundary_literal = True
                 commit(buf, lineno, waived)
 
-    for start_seq, sentinel in case_stack:  # unterminated case: lenient span
-        if sentinel:
-            guard_spans.append((start_seq, seq + 1))
+            if lifted:
+                # Inclusive end: the next parent command gets seq + 1 and
+                # cannot be covered by this lifted body's certificate.
+                finish_scope(fence, seq)
+                restore_c2_state(saved)
+
+    # Only the implicit fence is closed here. Still-open cases grant nothing;
+    # scope-trapped deferrals retain their original short end.
+    origin_states[active_origin] = save_c2_state()
+    for state in origin_states.values():
+        finish_scope(state[0], seq + 1)
+        if state[-1]:
+            c2_uncertain = True
+    if array_depth or in_dbrackets:
+        c2_uncertain = True
+    for span in guard_spans:
+        if (span["chain"]
+                and (not all(s["closed"] for s in span["chain"])
+                     or not all(s["valid"] for s in span["scopes"]))):
+            span["end"] = span["esac"]
 
     for lineno, code, waived in curl_findings:
         if not waived:
             findings.append((path, lineno, code, ""))
-    if guard_spans:
+    if saw_sentinel:
         stats.guard_fences += 1
         if not opts.no_c2:
             for pseq, lineno, name, waived in probes:
-                if not waived and not any(s < pseq <= e
-                                          for s, e in guard_spans):
+                excluded = (probe_exclusions.get(pseq, set())
+                            if _C2_HARDENING else set())
+                if not waived and not any(
+                        not c2_uncertain
+                        and span["domain"] == probe_domains[pseq]
+                        and span["case_id"] not in excluded
+                        and span["start"] < pseq <= span["end"]
+                        for span in guard_spans):
                     findings.append((path, lineno, "C2-PROBE-OUTSIDE-GUARD",
                                      " (probe: %s)" % name))
     if opts.strict_guards:
@@ -1112,7 +1708,7 @@ SELF_TEST_CASES += [
     ("terminating-arm-variant-flagged-as-idiom-deviation",
      "```bash\n(\n  case \"$1\" in\n    *REPLACE_WITH_TARGET*) exit 2;;\n"
      "  esac\n  curl -q -g -- \"$1\"\n)\n```\n",
-     ["C2-PROBE-OUTSIDE-GUARD"], ()),
+     [], ()),
     ("single-line-guard-ssh-after-esac",
      "```bash\ncase \"$1\" in *REPLACE_WITH_T*) echo warn;; esac\n"
      "ssh admin@$1 uptime\n```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
@@ -1244,6 +1840,641 @@ SELF_TEST_CASES += [
 ]
 
 
+SELF_TEST_CASES += [
+    ("exit-guard-top-level",
+     "```bash\n"
+     "case \"$1\" in *REPLACE_WITH_T*) echo 'edit target' >&2; exit 2;; esac\n"
+     "curl -q -g -- \"$1\"\n"
+     "curl -q -g -- \"$1\"\n"
+     "```\n", [], ()),
+
+    ("exit-guard-own-scope-and-outer-probe",
+     "```bash\n"
+     "(\n"
+     "  case \"$1\" in *REPLACE_WITH_T*) exit 2;; esac\n"
+     "  curl -q -g -- \"$1\"\n"
+     ")\n"
+     "curl -q -g \"https://fixed.example/\"\n"
+     "```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("return-arm-terminates-in-subshell",
+     "```bash\n"
+     "run() (\n"
+     "  case \"$1\" in *REPLACE_WITH_T*) echo warn >&2; return 1;; esac\n"
+     "  curl -q -g \"https://$1/healthz\"\n"
+     ")\n"
+     "```\n", [], ()),
+
+    ("return-guard-function-boundary",
+     "```bash\n"
+     "check_target() {\n"
+     "  case \"$1\" in *REPLACE_WITH_T*) echo 'edit target' >&2; return 2;; esac\n"
+     "  curl -q -g -- \"$1\"\n"
+     "}\n"
+     "check_target \"$1\"\n"
+     "curl -q -g \"https://fixed.example/\"\n"
+     "```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("return-without-function-context",
+     "```bash\n"
+     "(\n"
+     "  case \"$1\" in *REPLACE_WITH_T*) return 2;; esac\n"
+     "  curl -q -g -- \"$1\"\n"
+     ")\n"
+     "```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("conditional-and-exit",
+     "```bash\n"
+     "case \"$1\" in\n"
+     "  *REPLACE_WITH_T*) [ -n \"$x\" ] && exit 2;;\n"
+     "esac\n"
+     "curl -q -g -- \"$1\"\n"
+     "```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("conditional-if-exit",
+     "```bash\n"
+     "case \"$1\" in\n"
+     "  *REPLACE_WITH_T*) if [ -n \"$x\" ]; then exit 2; fi;;\n"
+     "esac\n"
+     "curl -q -g -- \"$1\"\n"
+     "```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("nested-subshell-exit-is-not-arm-exit",
+     "```bash\n"
+     "case \"$1\" in\n"
+     "  *REPLACE_WITH_T*) ( exit 2 ); echo 'still running';;\n"
+     "esac\n"
+     "curl -q -g -- \"$1\"\n"
+     "```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("substitution-exit-is-not-arm-exit",
+     "```bash\n"
+     "case \"$1\" in\n"
+     "  *REPLACE_WITH_T*) message=$(exit 2); echo 'still running';;\n"
+     "esac\n"
+     "curl -q -g -- \"$1\"\n"
+     "```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("pipeline-exit-is-not-arm-exit",
+     "```bash\n"
+     "case \"$1\" in\n"
+     "  *REPLACE_WITH_T*) exit 2 | cat;;\n"
+     "esac\n"
+     "curl -q -g -- \"$1\"\n"
+     "```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("background-guard-does-not-protect-parent",
+     "```bash\n"
+     "case \"$1\" in *REPLACE_WITH_T*) exit 2;; esac &\n"
+     "wait\n"
+     "curl -q -g -- \"$1\"\n"
+     "```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("conditional-guard-can-be-skipped",
+     "```bash\n"
+     "if false; then\n"
+     "  case \"$1\" in *REPLACE_WITH_T*) exit 2;; esac\n"
+     "fi\n"
+     "curl -q -g -- \"$1\"\n"
+     "```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("continue-and-break-are-not-scope-exits",
+     "```bash\n"
+     "(\n"
+     "  for item in one; do\n"
+     "    case \"$1\" in *REPLACE_WITH_T*) echo 'skip'; continue;; esac\n"
+     "  done\n"
+     "  curl -q -g -- \"$1\"\n"
+     ")\n"
+     "(\n"
+     "  while :; do\n"
+     "    case \"$1\" in *REPLACE_WITH_T*) echo 'stop loop'; break;; esac\n"
+     "    break\n"
+     "  done\n"
+     "  curl -q -g -- \"$1\"\n"
+     ")\n"
+     "```\n",
+     ["C2-PROBE-OUTSIDE-GUARD", "C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("loop-continue-not-terminating",
+     "```bash\n"
+     "for h in a b; do\n"
+     "  case \"$1\" in *REPLACE_WITH_T*) echo skip >&2; continue;; esac\n"
+     "  curl -q -g \"https://$1/$h\"\n"
+     "done\n"
+     "```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("multiple-sequential-exit-guards",
+     "```bash\n"
+     "(\n"
+     "  case \"$1\" in *REPLACE_WITH_A*) exit 2;; esac\n"
+     "  curl -q -g -- \"$1\"\n"
+     "  case \"$2\" in *REPLACE_WITH_B*) exit 2;; esac\n"
+     "  curl -q -g -- \"$2\"\n"
+     ")\n"
+     "```\n", [], ()),
+
+    ("every-sentinel-arm-must-terminate",
+     "```bash\n"
+     "case \"$1\" in\n"
+     "  *REPLACE_WITH_A*) exit 2;;\n"
+     "  *REPLACE_WITH_B*) echo 'edit B';;\n"
+     "  *) :;;\n"
+     "esac\n"
+     "curl -q -g -- \"$1\"\n"
+     "```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("exit-in-default-arm-does-not-count",
+     "```bash\n"
+     "case \"$1\" in\n"
+     "  *REPLACE_WITH_T*) echo 'edit target';;\n"
+     "  *) exit 2;;\n"
+     "esac\n"
+     "curl -q -g -- \"$1\"\n"
+     "```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("nested-case-exit-does-not-certify-outer-arm",
+     "```bash\n"
+     "case \"$1\" in\n"
+     "  *REPLACE_WITH_T*)\n"
+     "    case \"$x\" in\n"
+     "      yes) exit 2;;\n"
+     "      *) echo 'still running';;\n"
+     "    esac\n"
+     "    ;;\n"
+     "esac\n"
+     "curl -q -g -- \"$1\"\n"
+     "```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("quoted-exit-is-diagnostic-text",
+     "```bash\n"
+     "case \"$1\" in\n"
+     "  *REPLACE_WITH_T*) printf '%s\\n' 'exit 2';;\n"
+     "esac\n"
+     "curl -q -g -- \"$1\"\n"
+     "```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("wrapped-exit-does-not-count",
+     "```bash\n"
+     "case \"$1\" in\n"
+     "  *REPLACE_WITH_T*) env exit 2;;\n"
+     "esac\n"
+     "curl -q -g -- \"$1\"\n"
+     "```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("invalid-exit-arguments-do-not-count",
+     "```bash\n"
+     "case \"$1\" in\n"
+     "  *REPLACE_WITH_T*) exit 2 extra;;\n"
+     "esac\n"
+     "curl -q -g -- \"$1\"\n"
+     "```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("exit-redirection-can-prevent-execution",
+     "```bash\n"
+     "case \"$1\" in\n"
+     "  *REPLACE_WITH_T*) exit 2 > /dev/null/impossible;;\n"
+     "esac\n"
+     "curl -q -g -- \"$1\"\n"
+     "```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("scope-parentheses-disambiguation",
+     "```bash\n"
+     "(\n"
+     "  case \"$1\" in\n"
+     "    (''|*REPLACE_WITH_T*) echo 'edit target'; exit 2;;\n"
+     "    (*) :;;\n"
+     "  esac\n"
+     "  values=( \"(\" \")\" \"exit\" )\n"
+     "  [[ \"(\" == \")\" ]] || :\n"
+     "  helper() { :; }\n"
+     "  helper_spaced ( ) { :; }\n"
+     "  curl -q -g -- \"$1\"\n"
+     ")\n"
+     "curl -q -g \"https://fixed.example/\"\n"
+     "```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("sibling-scopes-do-not-share-certificates",
+     "```bash\n"
+     "(\n"
+     "  case \"$1\" in *REPLACE_WITH_T*) exit 2;; esac\n"
+     "  curl -q -g -- \"$1\"\n"
+     ")\n"
+     "(\n"
+     "  curl -q -g -- \"$1\"\n"
+     ")\n"
+     "```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("subshell-arm-boundary-tracked",
+     "```bash\n"
+     "(\n"
+     "  case \"$1\" in *REPLACE_WITH_T*) exit 1;; esac\n"
+     "  ( curl -q -g \"https://$1/nested\" )\n"
+     ")\n"
+     "curl -q -g \"https://$1/outer\"\n"
+     "```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("uncalled-function-exit-guard",
+     "```bash\n"
+     "check_target() {\n"
+     "  case \"$1\" in *REPLACE_WITH_T*) exit 2;; esac\n"
+     "}\n"
+     "curl -q -g -- \"$1\"\n"
+     "```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("function-def-in-arm-does-not-certify",
+     "```bash\n"
+     "case \"$1\" in\n"
+     "  *REPLACE_WITH_T*) trap_exit() { exit 1; }; echo warn;;\n"
+     "esac\n"
+     "curl -q -g -- \"$1\"\n"
+     "```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("sentinel-fallthrough-reaches-default-probe",
+     "```bash\n"
+     "case \"$1\" in\n"
+     "  *REPLACE_WITH_T*) echo 'edit target';&\n"
+     "  *) curl -q -g -- \"$1\";;\n"
+     "esac\n"
+     "```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("probe-in-sentinel-arm-is-not-protected",
+     "```bash\n"
+     "case \"$1\" in\n"
+     "  *REPLACE_WITH_T*) echo 'edit target'; curl -q -g -- \"$1\";;\n"
+     "  *) :;;\n"
+     "esac\n"
+     "```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("unterminated-case-grants-no-coverage",
+     "```bash\n"
+     "case \"$1\" in\n"
+     "  *REPLACE_WITH_T*) exit 2;;\n"
+     "  *) curl -q -g -- \"$1\";;\n"
+     "```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("no-c2-suppresses-new-conditional-diagnostic",
+     "```bash\n"
+     "case \"$1\" in\n"
+     "  *REPLACE_WITH_T*) [ -n \"$x\" ] && exit 2;;\n"
+     "esac\n"
+     "curl -q -g -- \"$1\"\n"
+     "```\n", [], ("--no-c2",)),
+]
+
+
+# Additional C2 line assertions; fixture tuples retain their existing format.
+SELF_TEST_CASES += [
+    ("fn-a-placeholder-first-warn",
+     r"""```bash
+case "$1" in
+  *REPLACE_WITH_T*|"") echo 'edit target first' >&2 ;;
+esac
+curl -q -g "https://$1/healthz"
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("fn-a-placeholder-first-exit",
+     r"""```bash
+case "$1" in
+  *REPLACE_WITH_T*|"") exit 2 ;;
+esac
+curl -q -g "https://$1/healthz"
+```
+""", [], ()),
+
+    ("fn-b-heredoc-child-guard",
+     r"""```bash
+bash -s -- "$1" <<'SH'
+case "$1" in *REPLACE_WITH_T*) exit 2;; esac
+SH
+curl -q -g -w "PROBE_RAN\n" -- "$1"
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("fn-b-heredoc-script-exit",
+     r"""```bash
+case "$A" in
+  *REPLACE_WITH_*)
+    cat <<'EOF' > script.sh
+exit 1
+EOF
+    ;;
+esac
+curl $A
+```
+""", ["C1-MISSING-Q", "C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("fn-c-quoted-separator",
+     r"""```bash
+case "$1" in
+  *REPLACE_WITH_T*) printf '%s\n' ';' exit 2;;
+esac
+curl -q -g -w "PROBE_RAN\n" -- "$1"
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("fn-d-redirect-background",
+     r"""```bash
+{ case "$1" in *REPLACE_WITH_T*) exit 2;; esac; } >/dev/null &
+wait
+curl -q -g -w "PROBE_RAN\n" -- "$1"
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("fn-d-redirect-pipeline",
+     r"""```bash
+{ case "$1" in *REPLACE_WITH_T*) exit 2;; esac; } >/dev/null | cat
+wait
+curl -q -g -w "PROBE_RAN\n" -- "$1"
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("fn-e-shadowed-exit",
+     r"""```bash
+exit() { :; }
+set -- 'file:///dev/null#REPLACE_WITH_T'
+case "$1" in *REPLACE_WITH_T*) exit 2;; esac
+curl -q -g -w "PROBE_RAN\n" -- "$1"
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("fn-f-quoted-wildcards",
+     r"""```bash
+case "$1" in '*REPLACE_WITH_T*') exit 2;; esac
+curl -q -g -w "PROBE_RAN\n" -- "$1"
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("fn-a-multiline-alternatives",
+     r"""```bash
+case "$1" in
+  *REPLACE_WITH_T* | \
+  *YOUR_PUBLIC_IP* | \
+  "") exit 2;;
+esac
+curl -q -g -- "$1"
+```
+""", [], ()),
+
+    ("fn-b-parent-span-does-not-cover-script",
+     r"""```bash
+case "$1" in
+  *REPLACE_WITH_T*) exit 2;;
+  *) cat <<'SH' > script.sh
+curl -q -g -- "$1"
+SH
+  ;;
+esac
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("fn-b-multiline-child-guard-own-probe",
+     r"""```bash
+bash -s -- "$1" <<'SH'
+case "$1" in
+  *REPLACE_WITH_T*|"") exit 2;;
+esac
+curl -q -g -- "$1"
+SH
+curl -q -g -- "$1"
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("fn-e-shadowed-exit-spaced",
+     r"""```bash
+exit () { :; }
+case "$1" in *REPLACE_WITH_T*) exit 2;; esac
+curl -q -g -- "$1"
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("fn-e-shadowed-exit-function-keyword",
+     r"""```bash
+function exit { :; }
+case "$1" in *REPLACE_WITH_T*) exit 2;; esac
+curl -q -g -- "$1"
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("fn-e-shadowed-exit-alias",
+     r"""```bash
+alias exit=':'
+case "$1" in *REPLACE_WITH_T*) exit 2;; esac
+curl -q -g -- "$1"
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("fn-e-shadowed-return",
+     r"""```bash
+return() { :; }
+check_target() {
+  case "$1" in *REPLACE_WITH_T*) return 2;; esac
+  curl -q -g -- "$1"
+}
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("fn-e-shadowed-return-alias",
+     r"""```bash
+alias return=':'
+check_target() {
+  case "$1" in *REPLACE_WITH_T*) return 2;; esac
+  curl -q -g -- "$1"
+}
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("fn-f-quoted-first-alternative",
+     r"""```bash
+case "$1" in '*REPLACE_WITH_T*'|"") exit 2;; esac
+curl -q -g -- "$1"
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("fn-f-quoted-arm-beside-real-arm",
+     r"""```bash
+case "$1" in
+  '*REPLACE_WITH_T*') exit 2;;
+  *REPLACE_WITH_OTHER*) exit 2;;
+esac
+curl -q -g -- "$1"
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+]
+
+
+SELF_TEST_CASES += [
+    ("c2-quoted-sentinel-default-probe",
+     r"""```bash
+case "$1" in
+  "*REPLACE_WITH_*") exit;;
+  *) curl -q file:///dev/null;;
+esac
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("c2-bracket-sentinel-no-coverage",
+     r"""```bash
+case "$1" in
+  [REPLACE_WITH_]) exit;;
+esac
+curl -q file:///dev/null
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("c2-pinned-prefix-no-coverage",
+     r"""```bash
+case "$1" in
+  prefix*REPLACE_WITH_*) exit;;
+esac
+curl -q file:///dev/null
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("c2-catchall-before-sentinel",
+     r"""```bash
+case "$1" in
+  *) :;;
+  *REPLACE_WITH_*) exit;;
+esac
+curl -q file:///dev/null
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("c2-overlap-before-sentinel",
+     r"""```bash
+case "$1" in
+  REPLACE_*) :;;
+  *REPLACE_WITH_*) exit;;
+esac
+curl -q file:///dev/null
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("c2-quoted-parens-preserve-curl",
+     r"""```bash
+(
+  case "$1" in
+    *REPLACE_WITH_*) exit;;
+  esac
+)
+curl "()" file:///dev/null
+```
+""", ["C1-MISSING-Q", "C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("c2-standard-sentinel-default-clean",
+     r"""```bash
+case "$1" in
+  *REPLACE_WITH_*) exit;;
+  *) curl -q file:///dev/null;;
+esac
+```
+""", [], ()),
+
+    ("c2-empty-alternative-extended-clean",
+     r"""```bash
+case "$1" in
+  ""|*REPLACE_WITH_*) exit;;
+esac
+curl -q file:///dev/null
+```
+""", [], ()),
+
+    ("c2-catchall-denies-ordinary-span",
+     r"""```bash
+case "$1" in
+  *) :;;
+  *REPLACE_WITH_*) exit;;
+  other) curl -q file:///dev/null;;
+esac
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("c2-overlap-denies-ordinary-span",
+     r"""```bash
+case "$1" in
+  REPLACE_*) :;;
+  *REPLACE_WITH_*) exit;;
+  *) curl -q file:///dev/null;;
+esac
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("c2-pinned-suffix-no-coverage",
+     r"""```bash
+case "$1" in
+  *REPLACE_WITH_X-suffix) exit;;
+esac
+curl -q file:///dev/null
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("c2-fixed-marker-no-coverage",
+     r"""```bash
+case "$1" in
+  REPLACE_WITH_X) exit;;
+esac
+curl -q file:///dev/null
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("c2-earlier-overlap-exits-clean",
+     r"""```bash
+case "$1" in
+  REPLACE_*) exit;;
+  *REPLACE_WITH_*) exit;;
+esac
+curl -q file:///dev/null
+```
+""", [], ()),
+
+    ("c2-earlier-disjoint-literal-clean",
+     r"""```bash
+case "$1" in
+  safe) :;;
+  *REPLACE_WITH_*) exit;;
+esac
+curl -q file:///dev/null
+```
+""", [], ()),
+
+    ("c2-earlier-conditional-exit-denied",
+     r"""```bash
+case "$1" in
+  REPLACE_*) false && exit;;
+  *REPLACE_WITH_*) exit;;
+esac
+curl -q file:///dev/null
+```
+""", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+
+    ("c2-split-quoted-parens-preserve-curl",
+     r"""```bash
+(
+  case "$1" in
+    *REPLACE_WITH_*) exit;;
+  esac
+)
+curl "(" ")" file:///dev/null
+```
+""", ["C1-MISSING-Q", "C2-PROBE-OUTSIDE-GUARD"], ()),
+]
+
+
+_C2_EXPECT_LINES = {
+    "fn-b-parent-span-does-not-cover-script": [5],
+    "fn-b-multiline-child-guard-own-probe": [8],
+    "unguarded-second-probe": [3],
+    "exit-guard-own-scope-and-outer-probe": [6],
+    "return-guard-function-boundary": [7],
+    "continue-and-break-are-not-scope-exits": [6, 13],
+    "scope-parentheses-disambiguation": [13],
+    "sibling-scopes-do-not-share-certificates": [7],
+    "subshell-arm-boundary-tracked": [6],
+}
+
+
 def run_self_test():
     failures = 0
     for name, mdtext, expect, flags in SELF_TEST_CASES:
@@ -1253,6 +2484,15 @@ def run_self_test():
         got = sorted(code for _p, _l, code, _x in findings)
         exp = sorted(expect)
         ok = got == exp
+        if name in _C2_EXPECT_LINES:
+            got_lines = sorted(
+                line for _p, line, code, _x in findings
+                if code == "C2-PROBE-OUTSIDE-GUARD")
+            expected_lines = _C2_EXPECT_LINES[name]
+            if got_lines != expected_lines:
+                ok = False
+                print("  C2 lines expect=%s got=%s"
+                      % (expected_lines, got_lines))
         print("%s %-48s expect=%s got=%s"
               % ("PASS" if ok else "FAIL", name, exp, got))
         if not ok:

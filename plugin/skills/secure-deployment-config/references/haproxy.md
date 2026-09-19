@@ -195,6 +195,7 @@ rejected at TLS, a trusted one admitted with `--cert`/`--key`, server verificati
 )
 # Runtime socket: root-owned mode-600 Unix socket, and an unauthorized local identity must be denied.
 ls -l /run/haproxy/admin.sock                                       # expect srw------- root root
+# guard-conventions: allow fixed local HAProxy admin socket /run/haproxy/admin.sock; no reader-substituted target
 printf 'show info\n' | sudo socat - /run/haproxy/admin.sock | head -1   # authorized (root): prints info
 sudo -u nobody socat - /run/haproxy/admin.sock < /dev/null         # unauthorized identity: expect permission denied
 ```

@@ -40,6 +40,7 @@ Once TLS is on, connect via `https://`; the server no longer answers plain `http
 # the normal trust store (drop --cacert); for a private CA pass that CA's bundle; for a self-signed
 # certificate pass the cert from step 2. Request the host by the name the certificate carries. Never -k
 # (it accepts any certificate, so the check would pass against a substituted one and prove nothing).
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
   -w 'tls=%{http_code} exit=%{exitcode} err=%{errormsg}\n' --cacert /path/cert.pem https://jupyter.example.com:8888/
 # 2) Auth: an https GET of / does not prove the API is protected (a fronting proxy can guard the UI while

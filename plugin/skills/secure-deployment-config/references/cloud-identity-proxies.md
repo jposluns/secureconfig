@@ -90,7 +90,9 @@ Vercel's protection guards a deployment from the public; it is not your applicat
          -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/" ;;
   esac
 )
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sI https://app.example.com/                       # via proxy, no session: 302 to the IdP, or 401/403
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -s -H "x-amzn-oidc-identity: admin" \
      -H "X-MS-CLIENT-PRINCIPAL-NAME: admin" \
      -H "X-Goog-Authenticated-User-Email: admin@example.com" \

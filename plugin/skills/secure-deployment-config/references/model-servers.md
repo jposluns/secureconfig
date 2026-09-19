@@ -97,7 +97,12 @@ ss -tlnp   # every listener; 8080/8000/8001/8002/3000/9000/30000/5000/7860/1234.
   curl -q -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' https://models.example.com/v1/models   # PROXY-policy test: 401 without a key. TGI leaves /v1/models outside its native key middleware, so a 200 is not proof the backend enforces the key
   printf 'Authorization: Bearer %s\n' "$1" | curl -q -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' -H @- https://models.example.com/v1/models   # positive control: 200 with a model list, printed
 )
-curl -q -sS --noproxy '*' -D - -o invocations-body.txt -w 'http=%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"model":"REPLACE_WITH_A_REAL_SERVED_MODEL","messages":[{"role":"user","content":"ping"}]}' https://models.example.com/invocations
+(
+  set -- REPLACE_WITH_A_REAL_SERVED_MODEL
+  case "$1" in ""|*REPLACE_WITH_*) echo 'substitute a real served model name on the set -- line above; not probing'; exit 2 ;; esac
+  curl -q -sS --noproxy '*' -D - -o invocations-body.txt -w 'http=%{http_code}\n' -X POST -H 'Content-Type: application/json' \
+    -d "{\"model\":\"$1\",\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}]}" https://models.example.com/invocations
+)
                                                         # vLLM /invocations needs JSON (a bare -d '{}' sends form
                                                         # content-type and fails the schema) and a REAL served model.
                                                         # Read the printed headers and saved body, not the status alone: an

@@ -92,6 +92,7 @@ access cannot bypass that gateway.
 # running it live. A redirect, missing database, disabled route, proxy rejection, TLS or transport failure is
 # inconclusive, never a pass.
 ss -tlnp   # inventory: 8000 on loopback or a private address, never 0.0.0.0
+# guard-conventions: allow fixed loopback health URL http://127.0.0.1:8000/health; no reader-substituted target
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'health=%{http_code}\n' http://127.0.0.1:8000/health   # process up (not an auth check)
 # Auth discrimination: INFO FOR DB; with no credentials vs with a valid system-user JWT, same NS/DB and
 # endpoint. Substitute inside the quotes and paste the whole block; run first against the direct origin, then

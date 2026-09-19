@@ -97,7 +97,9 @@ ss -tlnp   # read every listener; 3001/3210/3000: each UI on 127.0.0.1 only
          -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3210/" ;;
   esac
 )
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -s https://chat.example.com/api/some-endpoint      # without a key/token: 401
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sI https://chat.example.com/                      # via the proxy: TLS, login required
 # LobeChat SSO: attempt to register/sign in with a Google account that has never registered and is
 #   NOT listed in AUTH_ALLOWED_EMAILS; expect rejection at registration, before any account or session

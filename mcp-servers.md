@@ -89,12 +89,14 @@ ss -tlnp   # read every listener; 127.0.0.1:3000 only, never 0.0.0.0 or ::
 
 # Unauthenticated initialize: 401 with a WWW-Authenticate header (Option A) or the proxy's 401 (Option B).
 # --noproxy '*' so a client HTTPS_PROXY cannot answer with its own 401/407 in place of the target.
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -g -si --noproxy '*' -X POST https://mcp.example.com/mcp \
   -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"check","version":"1.0.0"}}}'
 # Option A only: FOLLOW the resource_metadata URL from that 401's WWW-Authenticate header (a deployment may
 # advertise a path-specific document; fall back to /.well-known/oauth-protected-resource/mcp, then the root
 # below) and confirm it names your authorization server; do not assume the root path is the advertised one.
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -g -s --noproxy '*' https://mcp.example.com/.well-known/oauth-protected-resource   # JSON with "authorization_servers"
 
 # Origin control (DNS rebinding): a wrong Origin must be rejected even WITH a valid credential. Run a
@@ -103,15 +105,20 @@ curl -q -g -s --noproxy '*' https://mcp.example.com/.well-known/oauth-protected-
 # Origin check and not to an unrelated auth or scope failure. Keep the credential in a mode-0600 header file
 # (secrets.md), never on the command line: REPLACE_WITH_AUTH_HEADER_FILE holds a line like
 # "Authorization: Bearer <token>".
+(
+set -- REPLACE_WITH_AUTH_HEADER_FILE
+case "$1" in ""|*REPLACE_WITH_*) echo 'substitute the mode-0600 auth-header file path on the set -- line above; not probing'; exit 2 ;; esac
+[ -r "$1" ] || { echo 'auth-header file not readable; not probing'; exit 2; }
 init='{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"check","version":"1.0.0"}}}'
 curl -q -g -si --noproxy '*' -X POST https://mcp.example.com/mcp -H 'Origin: https://mcp.example.com' \
-  -H @REPLACE_WITH_AUTH_HEADER_FILE \
+  -H "@$1" \
   -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -d "$init"
                                      # allowed Origin + valid credential: expect a 2xx MCP result
 curl -q -g -si --noproxy '*' -X POST https://mcp.example.com/mcp -H 'Origin: https://attacker.example' \
-  -H @REPLACE_WITH_AUTH_HEADER_FILE \
+  -H "@$1" \
   -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -d "$init"
                                      # only the Origin changed to a disallowed value: expect 403
+)
 ```
 
 A token issued for a different resource (wrong audience) must also fail with `401` under Option A: repeat the initialize POST above with `-H @` a header file holding an otherwise valid, unexpired token whose `aud` names a DIFFERENT resource (a forged or expired token would fail for the wrong reason), and require `401`. This step is reasoned, not demonstrated in the authoring environment: it needs a second resource registered at your authorization server, which is not available here. Fixed: `401`, the audience is rejected; exposed: any `2xx`, meaning the server accepted a token minted for another audience, which the spec's audience-validation MUST forbids. Backlog row 1.75 tracks demonstrating it in the exposed and fixed states.

@@ -137,6 +137,7 @@ ss -tlnp   # inventory 3000/6006/4317/4318 and identify each listener's namespac
 # Langfuse dashboard: a bare GET of / cannot tell a login page from an exposed project view (both are 200
 # and the body is discarded), so confirm it in a FRESH browser session - an unauthenticated visit must
 # land on login, not a project. The curl below is only transport reachability.
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max-time 15 \
   -o /dev/null -w 'dashboard final=%{http_code} url=%{url_effective} exit=%{exitcode}\n' https://langfuse.example.com/
 # Langfuse public API auth, matched pair: WITHOUT the key expect 401; WITH a valid project key (public:secret)
@@ -167,6 +168,7 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 # type (a wrong content type draws a 415 that is not an authentication result). This tests this OTLP/HTTP
 # receiver only; test each enabled OTLP/gRPC receiver separately, and note the Phoenix check further below
 # targets a DIFFERENT server, not this Collector.
+# guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -o /dev/null \
   -w 'otlp no-auth=%{http_code} exit=%{exitcode}\n' -H 'Content-Type: application/json' -d '{"resourceSpans":[]}' \
   https://otel-collector.internal:4318/v1/traces
