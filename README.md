@@ -129,7 +129,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [neo4j.md](neo4j.md) | Neo4j: initial password, Bolt and HTTPS TLS, auth stays on |
 | [memcached.md](memcached.md) | Memcached: no auth by default; loopback, SASL and TLS where built in |
 | [search-engines.md](search-engines.md) | Meilisearch and Typesense, master key, scoped search keys, production mode |
-| [minio.md](minio.md) | MinIO: root credentials, certs directory TLS, scoped access keys |
+| [minio.md](minio.md) | MinIO (AIStor): root and scoped credentials, TLS, server-side encryption, object locking, and audit logging |
 | [object-storage.md](object-storage.md) | S3, R2, GCS, Azure Blob, Supabase Storage: private by default, scoped credentials, signed URLs |
 | [firebase-supabase.md](firebase-supabase.md) | Firebase rules and Supabase RLS: the rules are the security |
 | [supabase-self-hosted.md](supabase-self-hosted.md) | The self-hosted Docker stack: replace the demo keys and dashboard password, keep the published ports private |
