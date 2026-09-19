@@ -55,7 +55,8 @@ WHAT THIS CATCHES
   C2-WARN-ONLY-GUARD  (--strict-guards only; NOT registered in run_all_checks)
                  an if/elif whose condition mentions REPLACE_WITH_ but whose
                  body reaches fi without exit/return, followed later in the
-                 fence by a probe-class command. Opt-in because a
+                 fence by a probe-class command without effective C2
+                 guard coverage. Opt-in because a
                  flag-variable guard (MISSING=1 tested later) would
                  false-positive it.
 
@@ -807,9 +808,9 @@ def _console_pairs(body, start):
     return pairs
 
 
-def _strict_if_guards(path, records, probes, findings):
+def _strict_if_guards(path, records, probes, unguarded_probes, findings):
     # Opt-in (--strict-guards): an if/elif mentioning the sentinel whose body
-    # reaches fi without exit/return, with a probe after the fi.
+    # reaches fi without exit/return, with an uncovered probe after the fi.
     # Flag-variable guards WILL false-positive here; that is why this is not
     # registered in run_all_checks.sh.
     flat = []
@@ -843,8 +844,8 @@ def _strict_if_guards(path, records, probes, findings):
         if fi_at is None or stops:
             continue
         fi_line = flat[fi_at][0]
-        for _pseq, plineno, name, waived in probes:
-            if not waived and plineno > fi_line:
+        for pseq, plineno, name, waived in probes:
+            if pseq in unguarded_probes and not waived and plineno > fi_line:
                 findings.append((path, plineno, "C2-WARN-ONLY-GUARD",
                                  " (probe: %s)" % name))
                 break
@@ -1484,6 +1485,20 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
                      or not all(s["valid"] for s in span["scopes"]))):
             span["end"] = span["esac"]
 
+    # Share effective C2 coverage with strict mode, even under --no-c2
+    # or when no case sentinel activates the default C2 diagnostic.
+    unguarded_probes = set()
+    for pseq, _lineno, _name, _waived in probes:
+        excluded = (probe_exclusions.get(pseq, set())
+                    if _C2_HARDENING else set())
+        if not any(
+                not c2_uncertain
+                and span["domain"] == probe_domains[pseq]
+                and span["case_id"] not in excluded
+                and span["start"] < pseq <= span["end"]
+                for span in guard_spans):
+            unguarded_probes.add(pseq)
+
     for lineno, code, waived in curl_findings:
         if not waived:
             findings.append((path, lineno, code, ""))
@@ -1491,18 +1506,11 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
         stats.guard_fences += 1
         if not opts.no_c2:
             for pseq, lineno, name, waived in probes:
-                excluded = (probe_exclusions.get(pseq, set())
-                            if _C2_HARDENING else set())
-                if not waived and not any(
-                        not c2_uncertain
-                        and span["domain"] == probe_domains[pseq]
-                        and span["case_id"] not in excluded
-                        and span["start"] < pseq <= span["end"]
-                        for span in guard_spans):
+                if not waived and pseq in unguarded_probes:
                     findings.append((path, lineno, "C2-PROBE-OUTSIDE-GUARD",
                                      " (probe: %s)" % name))
     if opts.strict_guards:
-        _strict_if_guards(path, records, probes, findings)
+        _strict_if_guards(path, records, probes, unguarded_probes, findings)
 
 
 def scan_text(path, text, findings, stats, opts):
@@ -1747,6 +1755,65 @@ SELF_TEST_CASES += [
      "  echo \"warning: placeholder\" >&2\nfi\n"
      "curl -q -g \"https://$T/\"\n```\n",
      ["C2-WARN-ONLY-GUARD"], ("--strict-guards",)),
+    ("strict-mosquitto-case-guard-clean",
+     r"""```bash
+if mosquitto_sub -P 'REPLACE_WITH_DEVICE_PASSWORD'; then
+  echo "connected"
+else
+  echo "check CONNACK"
+fi
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HOST'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste whole block"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "need one value"; exit; }
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute host";;
+    *) nc -vz -w 5 "$1" 1883 || true;;
+  esac
+)
+```
+""", [], ("--strict-guards",)),
+    ("strict-mosquitto-case-guard-clean-no-c2",
+     r"""```bash
+if mosquitto_sub -P 'REPLACE_WITH_DEVICE_PASSWORD'; then
+  echo "connected"
+else
+  echo "check CONNACK"
+fi
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HOST'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste whole block"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "need one value"; exit; }
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute host";;
+    *) nc -vz -w 5 "$1" 1883 || true;;
+  esac
+)
+```
+""", [], ("--strict-guards", "--no-c2")),
+    ("strict-skips-guarded-probe-flags-unguarded",
+     r"""```bash
+if [ "$1" = REPLACE_WITH_HOST ]; then
+  echo "warning"
+fi
+case "$1" in
+  *REPLACE_WITH_*|"") echo "substitute host";;
+  *) nc -vz -w 5 "$1" 1883;;
+esac
+nc -vz -w 5 "$1" 1883
+```
+""", ["C2-PROBE-OUTSIDE-GUARD", "C2-WARN-ONLY-GUARD"],
+     ("--strict-guards",)),
+    ("strict-unguarded-probe-still-flagged-no-c2",
+     r"""```bash
+if [ "$1" = REPLACE_WITH_HOST ]; then
+  echo "warning"
+fi
+nc -vz -w 5 "$1" 1883
+```
+""", ["C2-WARN-ONLY-GUARD"], ("--strict-guards", "--no-c2")),
     ("strict-shape-off-by-default",
      "```bash\nif [ \"$T\" = \"REPLACE_WITH_TARGET\" ]; then\n"
      "  echo \"warning: placeholder\" >&2\nfi\n"
