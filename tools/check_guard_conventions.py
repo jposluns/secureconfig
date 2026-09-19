@@ -56,7 +56,8 @@ WHAT THIS CATCHES
                  an if/elif whose condition mentions REPLACE_WITH_ but whose
                  body reaches fi without exit/return, followed later in the
                  fence by a probe-class command without effective C2
-                 guard coverage. Opt-in because a
+                 guard coverage for every operand variable. Unknown subjects
+                 or operands do not grant strict suppression. Opt-in because a
                  flag-variable guard (MISSING=1 tested later) would
                  false-positive it.
 
@@ -150,6 +151,14 @@ guarantee)
     sentinel, if [ -z ... ]-style guards, flag-variable guards, or removing
     the wrapping subshell are not caught by the default gate; the
     warn-without-stop if-shape exists behind --strict-guards only.
+  - strict C2: subject/operand matching tracks variable names, not values.
+    Reassignment (including set/shift of positional parameters) or aliasing
+    between guard and probe is not followed. Simple positional and named
+    references, with optional braces, are supported; compound subjects,
+    parameter operators, concatenated quoting and opaque operands deny
+    suppression.
+    All argument variables are included, so options unrelated to the target
+    may over-flag.
   - the waiver comment is greppable; review waivers in code review.
   - C2: composite adjacent punctuation such as );, )& or )) can confuse
     command and scope boundaries. Write the guard in the standard
@@ -808,7 +817,68 @@ def _console_pairs(body, start):
     return pairs
 
 
-def _strict_if_guards(path, records, probes, unguarded_probes, findings):
+_STRICT_VAR_RE = re.compile(
+    r"\$(?:([0-9]|[A-Za-z_][A-Za-z0-9_]*)|\{([0-9]+|[A-Za-z_][A-Za-z0-9_]*)\})")
+
+
+def _strict_tokens(text, toks):
+    """Preserve uncertainty lost by quote removal, without changing the lexer."""
+    marker = "\ue001"
+    while marker in text:
+        marker += "\ue001"
+    marked, quote, i = [], None, 0
+    while i < len(text):
+        ch = text[i]
+        if ch == "\\" and quote != "'" and i + 1 < len(text):
+            if quote is None or text[i + 1] in ("$", '`'):
+                marked.append(marker)
+            marked.extend(text[i:i + 2])
+            i += 2
+            continue
+        if ch in ("'", '"'):
+            boundaries = " \t\r\n();<>|&"
+            if quote is None:
+                if i and text[i - 1] not in boundaries:
+                    marked.append(marker)
+                quote = ch
+            elif quote == ch:
+                if i + 1 < len(text) and text[i + 1] not in boundaries:
+                    marked.append(marker)
+                quote = None
+        if ch == "$" and quote == "'":
+            marked.append(marker)
+        marked.append(ch)
+        i += 1
+    try:
+        annotated = _tokenize("".join(marked))
+    except ValueError:
+        return [None] * len(toks)
+    if [t.replace(marker, "") for t in annotated] != toks:
+        return [None] * len(toks)
+    return [None if marker in t else t for t in annotated]
+
+
+def _strict_subject(word):
+    match = _STRICT_VAR_RE.fullmatch(word) if word is not None else None
+    return (match.group(1) or match.group(2)) if match else None
+
+
+def _strict_operand_vars(args):
+    # Include every argument variable, even option values: over-flagging is
+    # preferable to silently omitting a placeholder-relevant operand.
+    variables = set()
+    for word in args:
+        if (word is None or SENTINEL in word or "__CMDSUB__" in word
+                or '`' in word):
+            return None
+        for match in _STRICT_VAR_RE.finditer(word):
+            variables.add(match.group(1) or match.group(2))
+        if "$" in _STRICT_VAR_RE.sub("", word):
+            return None  # unsupported expansion, not a partial match
+    return variables or None
+
+
+def _strict_if_guards(path, records, probes, guarded_probes, findings):
     # Opt-in (--strict-guards): an if/elif mentioning the sentinel whose body
     # reaches fi without exit/return, with an uncovered probe after the fi.
     # Flag-variable guards WILL false-positive here; that is why this is not
@@ -845,7 +915,7 @@ def _strict_if_guards(path, records, probes, unguarded_probes, findings):
             continue
         fi_line = flat[fi_at][0]
         for pseq, plineno, name, waived in probes:
-            if pseq in unguarded_probes and not waived and plineno > fi_line:
+            if pseq not in guarded_probes and not waived and plineno > fi_line:
                 findings.append((path, plineno, "C2-WARN-ONLY-GUARD",
                                  " (probe: %s)" % name))
                 break
@@ -946,6 +1016,7 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
 
     records = []  # (line, raw, [token list per expanded text], waived)
     c2_records = []  # aligned [(literal flags, lifted), ...]
+    strict_records = []  # aligned tokens retaining unknown value references
     pending_waiver = False
     for lineno, raw in lls:
         wm = WAIVER_RE.search(raw)
@@ -955,16 +1026,20 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
             continue
         token_lines = []
         c2_lines = []
+        strict_lines = []
         for expanded_no, text in enumerate(_expand(raw)):
             try:
                 toks = _tokenize(text)
                 token_lines.append(toks)
                 c2_lines.append((_c2_literal_tokens(text, toks),
                                  expanded_no != 0))
+                strict_lines.append(
+                    _strict_tokens(text, toks) if opts.strict_guards else toks)
             except ValueError:
                 stats.unparseable += 1
         records.append((lineno, raw, token_lines, pending_waiver))
         c2_records.append(c2_lines)
+        strict_records.append(strict_lines)
         if raw.strip():
             pending_waiver = False
 
@@ -979,6 +1054,7 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
     guard_spans = []
     probe_exclusions = {}
     probe_domains = {}
+    probe_operands = {}
     array_depth = 0
     in_dbrackets = False
     c2_array_depth = 0
@@ -1063,7 +1139,7 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
                     and all(s["closed"] for s in span["chain"])):
                 span["end"] = end_seq
 
-    def commit(cmd, line, waived):
+    def commit(cmd, line, waived, strict_cmd):
         nonlocal seq, live_handles
         seq += 1
         if cmd[0] == "case":
@@ -1082,6 +1158,7 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
                         and not f["preempted"] and not deny_span):
                     span = {
                         "case_id": f["id"],
+                        "subject": f["subject"],
                         "domain": active_origin,
                         "start": f["start"],
                         "esac": seq,
@@ -1155,6 +1232,10 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
             stats.probes += 1
             probes.append((seq, line, word.rsplit("/", 1)[-1], waived))
             probe_domains[seq] = active_origin
+            if opts.strict_guards:
+                # _strip_wrappers returns a suffix of cmd; preserve alignment.
+                probe_operands[seq] = _strict_operand_vars(
+                    strict_cmd[len(cmd) - len(stripped) + 1:])
             # C2 hardening hook 2: a sentinel arm cannot protect its own probe.
             probe_exclusions[seq] = inherited_exclusions | {
                 f["id"] for f in case_stack if f["current_sentinel"]
@@ -1176,6 +1257,7 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
         }
         for token_no, toks in enumerate(token_lines):
             literals, lifted = c2_records[record_no][token_no]
+            strict_toks = strict_records[record_no][token_no]
             if literals is None:
                 literals = [False] * len(toks)
                 c2_uncertain = True
@@ -1205,6 +1287,7 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
                 kill_arms(revoke=True)
 
             buf = []
+            strict_buf = []
             buf_is_literal = True
             boundary_literal = True
             k = 0
@@ -1234,6 +1317,7 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
                     if t == "]]":
                         in_dbrackets = False
                         buf = []
+                        strict_buf = []
                         buf_is_literal = True
                         if not literal:
                             c2_uncertain = True
@@ -1249,6 +1333,7 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
                 if (t == "(" and buf and buf[-1].endswith("=")
                         and ASSIGNMENT_RE.match(buf[-1])):
                     buf.pop()
+                    strict_buf.pop()
                     array_depth = 1
                     c2_array_depth = 1 if literal else 0
                     if not literal:
@@ -1260,6 +1345,7 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
                         and buf[0] not in KEYWORDS):
                     kill_arms()
                     funcdef_pending = literal and buf_is_literal
+                    strict_buf = []
                     buf = []  # `name ()` function definition, not a command
                     buf_is_literal = True
                     k += 1
@@ -1270,6 +1356,7 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
                     funcdef_pending = (
                         literal and literals[k + 1] and buf_is_literal)
                     buf = []
+                    strict_buf = []
                     buf_is_literal = True
                     k += 2
                     continue
@@ -1298,8 +1385,9 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
                 if t in SEPARATORS:
                     if buf:
                         boundary_literal = literal
-                        commit(buf, lineno, waived)
+                        commit(buf, lineno, waived, strict_buf)
                         buf = []
+                        strict_buf = []
                         buf_is_literal = True
                         boundary_literal = True
                     continuation = False
@@ -1435,6 +1523,11 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
                         f = {
                             "id": object(),
                             "kind": "case",
+                            "subject": (
+                                _strict_subject(strict_toks[k + 1])
+                                if opts.strict_guards and k + 2 < len(toks)
+                                and toks[k + 2] == "in" and literals[k + 2]
+                                else None),
                             "start": seq + 1,
                             "scopes": scopes,
                             "eligible": (
@@ -1458,11 +1551,12 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
                         case_stack.append(f)
                         nest.append(f)
                     buf.append(t)
+                    strict_buf.append(strict_toks[k])
                     buf_is_literal = buf_is_literal and literal
                 k += 1
             if buf:
                 boundary_literal = True
-                commit(buf, lineno, waived)
+                commit(buf, lineno, waived, strict_buf)
 
             if lifted:
                 # Inclusive end: the next parent command gets seq + 1 and
@@ -1485,8 +1579,8 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
                      or not all(s["valid"] for s in span["scopes"]))):
             span["end"] = span["esac"]
 
-    # Share effective C2 coverage with strict mode, even under --no-c2
-    # or when no case sentinel activates the default C2 diagnostic.
+    # Keep main C2 coverage unchanged. Strict mode refines it below, even
+    # under --no-c2 or when no sentinel activates the default C2 diagnostic.
     unguarded_probes = set()
     for pseq, _lineno, _name, _waived in probes:
         excluded = (probe_exclusions.get(pseq, set())
@@ -1510,7 +1604,21 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
                     findings.append((path, lineno, "C2-PROBE-OUTSIDE-GUARD",
                                      " (probe: %s)" % name))
     if opts.strict_guards:
-        _strict_if_guards(path, records, probes, unguarded_probes, findings)
+        guarded_probes = set()
+        for pseq, _lineno, _name, _waived in probes:
+            operands = probe_operands[pseq]
+            if pseq in unguarded_probes or not operands:
+                continue
+            subjects = {
+                span["subject"] for span in guard_spans
+                if span["domain"] == probe_domains[pseq]
+                and span["case_id"] not in probe_exclusions.get(pseq, set())
+                and span["start"] < pseq <= span["end"]
+                and span["subject"] is not None
+            }
+            if operands <= subjects:
+                guarded_probes.add(pseq)
+        _strict_if_guards(path, records, probes, guarded_probes, findings)
 
 
 def scan_text(path, text, findings, stats, opts):
@@ -2528,6 +2636,99 @@ curl "(" ")" file:///dev/null
 """, ["C1-MISSING-Q", "C2-PROBE-OUTSIDE-GUARD"], ()),
 ]
 
+
+# Subject/operand regressions run in both modes: --no-c2 must not disable
+# strict coverage analysis. Existing cases above are retained unchanged.
+_STRICT_VALUE_CASES = [
+    ("same-arm-nc",
+     'case "$1" in *REPLACE_WITH_*|"") echo sub;; '
+     '*) nc -vz "$1" 1883;; esac\n', []),
+    ("same-exit",
+     'case "$1" in *REPLACE_WITH_*) exit;; esac\n'
+     'curl -q -g "$1"\n', []),
+    ("codex-mismatch",
+     'case "$2" in *REPLACE_WITH_*|"") echo sub;; '
+     '*) curl -q -g "https://$1/";; esac\n', ["C2-WARN-ONLY-GUARD"]),
+    ("gemini-mismatch",
+     'case "$2" in *REPLACE_WITH_Y*) exit 1;; esac\n'
+     'curl "https://$1/"\n', ["C1-MISSING-Q", "C2-WARN-ONLY-GUARD"]),
+    ("unguarded",
+     'nc -vz "$1" 1883\n', ["C2-WARN-ONLY-GUARD"]),
+    ("braced-positional",
+     'case "${1}" in *REPLACE_WITH_*) exit;; esac\n'
+     'curl -q -g "$1"\n', []),
+    ("braced-multidigit",
+     'case "${10}" in *REPLACE_WITH_*) exit;; esac\n'
+     'curl -q -g "${10}"\n', []),
+    ("named",
+     'case "$HOST" in *REPLACE_WITH_*) exit;; esac\n'
+     'curl -q -g "https://${HOST}/"\n', []),
+    ("partial-coverage",
+     'case "$1" in *REPLACE_WITH_*) exit;; esac\n'
+     'curl -q -g "https://$1/$2"\n', ["C2-WARN-ONLY-GUARD"]),
+    ("all-operands-covered",
+     'case "$1" in *REPLACE_WITH_*) exit;; esac\n'
+     'case "$2" in *REPLACE_WITH_*) exit;; esac\n'
+     'curl -q -g "https://$1/$2"\n', []),
+    ("matching-span-out-of-scope",
+     '(\ncase "$1" in *REPLACE_WITH_*) exit;; esac\n)\n'
+     'case "$2" in *REPLACE_WITH_*) exit;; esac\n'
+     'curl -q -g "$1"\n', ["C2-WARN-ONLY-GUARD"]),
+    ("unknown-subject",
+     'case fixed in *REPLACE_WITH_*) exit;; esac\n'
+     'curl -q -g "$1"\n', ["C2-WARN-ONLY-GUARD"]),
+    ("literal-subject",
+     "case '$1' in *REPLACE_WITH_*) exit;; esac\n"
+     'curl -q -g "$1"\n', ["C2-WARN-ONLY-GUARD"]),
+    ("escaped-subject",
+     'case \\$1 in *REPLACE_WITH_*) exit;; esac\n'
+     'curl -q -g "$1"\n', ["C2-WARN-ONLY-GUARD"]),
+    ("compound-subject",
+     'case "$1$2" in *REPLACE_WITH_*) exit;; esac\n'
+     'curl -q -g "$1"\n', ["C2-WARN-ONLY-GUARD"]),
+    ("unknown-operand",
+     'case "$1" in *REPLACE_WITH_*) exit;; esac\n'
+     'curl -q -g https://fixed.example/\n', ["C2-WARN-ONLY-GUARD"]),
+    ("parameter-operator",
+     'case "$1" in *REPLACE_WITH_*) exit;; esac\n'
+     'curl -q -g "$1/${2:-fallback}"\n', ["C2-WARN-ONLY-GUARD"]),
+    ("literal-operand",
+     'case "$1" in *REPLACE_WITH_*) exit;; esac\n'
+     "curl -q -g '$1'\n", ["C2-WARN-ONLY-GUARD"]),
+    ("escaped-operand",
+     'case "$1" in *REPLACE_WITH_*) exit;; esac\n'
+     'curl -q -g \\$1\n', ["C2-WARN-ONLY-GUARD"]),
+    ("opaque-operand",
+     'case "$1" in *REPLACE_WITH_*) exit;; esac\n'
+     'curl -q -g "$1/$(printf host)"\n', ["C2-WARN-ONLY-GUARD"]),
+    ("ansi-subject",
+     "case $'1' in *REPLACE_WITH_*) exit;; esac\n"
+     'curl -q -g "$1"\n', ["C2-WARN-ONLY-GUARD"]),
+    ("ansi-operand",
+     'case "$HOST" in *REPLACE_WITH_*) exit;; esac\n'
+     "curl -q -g $'HOST'\n", ["C2-WARN-ONLY-GUARD"]),
+    ("concatenated-subject",
+     'case "$H"OST in *REPLACE_WITH_*) exit;; esac\n'
+     'curl -q -g "$HOST"\n', ["C2-WARN-ONLY-GUARD"]),
+    ("concatenated-operand",
+     'case "$HOST" in *REPLACE_WITH_*) exit;; esac\n'
+     'curl -q -g "$H"OST\n', ["C2-WARN-ONLY-GUARD"]),
+    ("escaped-name",
+     'case "$HOST" in *REPLACE_WITH_*) exit;; esac\n'
+     'curl -q -g $H\\OST\n', ["C2-WARN-ONLY-GUARD"]),
+    ("literal-placeholder",
+     'case "$1" in *REPLACE_WITH_*) exit;; esac\n'
+     'curl -q -g "https://$1/REPLACE_WITH_PATH"\n',
+     ["C2-WARN-ONLY-GUARD"]),
+]
+SELF_TEST_CASES.extend(
+    ("strict-value-" + name + ("-no-c2" if no_c2 else ""),
+     '~~~bash\nif [ "$1" = REPLACE_WITH_X ]; then echo warn; fi\n'
+     + shell + '~~~\n', expected,
+     ("--strict-guards", "--no-c2") if no_c2 else ("--strict-guards",))
+    for name, shell, expected in _STRICT_VALUE_CASES
+    for no_c2 in (False, True)
+)
 
 _C2_EXPECT_LINES = {
     "fn-b-parent-span-does-not-cover-script": [5],
