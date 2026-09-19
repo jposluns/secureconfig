@@ -113,10 +113,15 @@ systemd creates `/run/caddy` owned by `caddy` when the service starts, so the sw
 
 ```bash
 caddy validate --config /etc/caddy/Caddyfile
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sI http://app.example.com/     # expect a redirect to https://
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sI https://app.example.com/    # expect 401 without credentials once auth is on
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/admin     # with the @admin matcher variant: 401
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/admin/x   # 401 as well
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/          # to prove the matcher SCOPES auth to /admin (not the whole site), a non-/admin path must NOT return 401: it reaches the app (a 200, or the app's own redirect or 404). A 401 here means auth is applied site-wide, not scoped to /admin
 head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
 (

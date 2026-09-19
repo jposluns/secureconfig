@@ -93,7 +93,9 @@ sudo ufw status verbose           # default deny incoming; then `sudo ufw show r
     # output at all is inconclusive: nothing reached the network
   esac
 )
+# guard-conventions: allow probe of an illustrative user@host; no reader-substituted placeholder in this probe's argv
 ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no user@host   # keys-only: expect an immediate "Permission denied (publickey)" with NO password prompt; a password prompt means password auth is still on
+# guard-conventions: allow probe of an illustrative user@host; no reader-substituted placeholder in this probe's argv
 ssh user@host                     # with PAM MFA: the key is accepted, then a code is required before a shell. Also confirm a wrong or omitted code is REJECTED, that unenrolled users are denied (drop `nullok`), and that Duo fails closed (`failmode=secure`), per mfa.md; otherwise the factor is optional, not mandatory
 ```
 

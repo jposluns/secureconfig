@@ -70,9 +70,11 @@ ss -tlnp   # read every listener; 8188/7860/9090: each service on 127.0.0.1 only
        done ;;
   esac
 )
+# guard-conventions: allow probe of a fixed loopback target; no reader-substituted placeholder in this probe's argv
 curl -q -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:9090/api/v1/boards/
                                                        # from the host itself, InvokeAI multiuser mode: 401
                                                        # without a Bearer token, never the app itself
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -sI https://imagegen.example.com/                # via the proxy: TLS, and a login prompt
                                                        # or 401 without credentials, before the UI loads
 ```

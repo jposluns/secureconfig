@@ -80,6 +80,7 @@ sudo stat -c '%a %U' /var/lib/rabbitmq/.erlang.cookie   # expect 600 (or 400), o
 # which is what makes this an easy mistake to make and a hard one to see. A certificate
 # carrying both serverAuth and clientAuth does satisfy it, which RabbitMQ documents
 # while still recommending separate certificates for the two purposes.
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 sleep 10 | openssl s_client -connect mq.example.com:5671 -CAfile ca.pem \
   -cert client.pem -key client.key \
   -verify_hostname mq.example.com -verify_return_error
@@ -87,6 +88,7 @@ echo "positive run exit $?"
 
 # Negative, and this half is what discriminates: drop -cert and -key, and the broker must
 # refuse the connection, because ssl_options.fail_if_no_peer_cert = true requires one.
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 sleep 10 | openssl s_client -connect mq.example.com:5671 -CAfile ca.pem \
   -verify_hostname mq.example.com -verify_return_error
 echo "negative run exit $?"

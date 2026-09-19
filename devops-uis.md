@@ -103,6 +103,7 @@ Without `--tlsverify` the daemon does not check client certificates. Firewall 23
 
 ```bash
 ss -tlnp   # read every listener; 9443/9000/8000/3000/81/3001/2375/2376: 127.0.0.1 or absent, never 0.0.0.0
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -s -o /dev/null -w '%{http_code}\n' https://panel.example.com/
                                                                   # 401, 403, or a login redirect, never a dashboard. No -k:
                                                                   # this panel is behind a proxy holding a real certificate, so
@@ -127,6 +128,7 @@ env -u DOCKER_HOST -u DOCKER_TLS_VERIFY -u DOCKER_CERT_PATH \
                                                                   # `docker ... info` here: without `--tlsverify` it fails for the
                                                                   # wrong reason, and `DOCKER_CERT_PATH` exported in the setup above
                                                                   # can silently supply the very certificate the check is meant to lack
+# guard-conventions: allow probe of a fixed illustrative target; no reader-substituted placeholder in this probe's argv
 curl -q -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem --cert client-cert.pem --key client-key.pem \
   https://203.0.113.10:2376/_ping                                 # positive control: 200 with the right client certificate
 
