@@ -152,13 +152,22 @@ guarantee)
     the wrapping subshell are not caught by the default gate; the
     warn-without-stop if-shape exists behind --strict-guards only.
   - strict C2: subject/operand matching tracks variable names, not values.
-    Reassignment (including set/shift of positional parameters) or aliasing
-    between guard and probe is not followed. Simple positional and named
-    references, with optional braces, are supported; compound subjects,
-    parameter operators, concatenated quoting and opaque operands deny
-    suppression.
+    Reassignment (including set/shift of positional parameters, or
+    function-parameter re-binding) or aliasing between guard and probe is not
+    followed. Simple positional and named references, with optional braces, are
+    supported; compound subjects, parameter operators, concatenated quoting and
+    opaque operands deny suppression.
     All argument variables are included, so options unrelated to the target
     may over-flag.
+    Two further name-matched-but-value-unsafe shapes are NOT caught (both
+    require deliberate authoring; neither occurs in the corpus): a guard whose
+    sentinel pattern rejects a DIFFERENT placeholder than the probe carries
+    (e.g. a *REPLACE_WITH_Y* arm crediting a probe of $1=REPLACE_WITH_X),
+    because the subject variable is matched but the arm pattern is not checked
+    against the probe's value; and a probe that concatenates several
+    separately-guarded variables (e.g. "$1$2") whose fragments each pass their
+    own guard while the concatenation assembles a placeholder no single guard
+    rejected.
   - the waiver comment is greppable; review waivers in code review.
   - C2: composite adjacent punctuation such as );, )& or )) can confuse
     command and scope boundaries. Write the guard in the standard
