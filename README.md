@@ -124,7 +124,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [sqlite-http-frontends.md](sqlite-http-frontends.md) | Datasette and sqlite-web: SQLite HTTP exposure, loopback binding, authentication, TLS, and verification |
 | [surrealdb.md](surrealdb.md) | SurrealDB, root credentials, bind address, access levels, TLS |
 | [time-series-metrics-stores.md](time-series-metrics-stores.md) | InfluxDB, VictoriaMetrics, and QuestDB: default-off auth, default credentials, and fronting |
-| [elasticsearch.md](elasticsearch.md) | Elasticsearch and OpenSearch: keep the built-in security on |
+| [elasticsearch.md](elasticsearch.md) | Elasticsearch and OpenSearch: keep built-in security on, scoped roles and API keys, anonymous/CORS lockdown, audit logging |
 | [clickhouse.md](clickhouse.md) | ClickHouse: user passwords, secure ports, network restrictions |
 | [neo4j.md](neo4j.md) | Neo4j: initial password, Bolt and HTTPS TLS, auth stays on |
 | [memcached.md](memcached.md) | Memcached: no auth by default; loopback, SASL and TLS where built in |
