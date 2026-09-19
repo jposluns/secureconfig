@@ -76,6 +76,7 @@
 - [mongodb](https://raw.githubusercontent.com/jposluns/secureconfig/main/mongodb.md): MongoDB: requireTLS, authorization, admin user creation, bind address
 - [redis](https://raw.githubusercontent.com/jposluns/secureconfig/main/redis.md): Redis: TLS listener, ACLs, requirepass, bind and protected mode
 - [sqlite](https://raw.githubusercontent.com/jposluns/secureconfig/main/sqlite.md): SQLite in deployment, the file is the exposure; Turso tokens; Litestream
+- [sqlite-http-frontends](https://raw.githubusercontent.com/jposluns/secureconfig/main/sqlite-http-frontends.md): Datasette and sqlite-web: SQLite HTTP exposure, loopback binding, authentication, TLS, and verification
 - [surrealdb](https://raw.githubusercontent.com/jposluns/secureconfig/main/surrealdb.md): SurrealDB, root credentials, bind address, access levels, TLS
 - [time-series-metrics-stores](https://raw.githubusercontent.com/jposluns/secureconfig/main/time-series-metrics-stores.md): InfluxDB, VictoriaMetrics, and QuestDB auth defaults and fronting
 - [elasticsearch](https://raw.githubusercontent.com/jposluns/secureconfig/main/elasticsearch.md): Elasticsearch and OpenSearch
