@@ -106,9 +106,9 @@ git ls-files config/master.key                                   # prints nothin
 
 ## Sources (checked September 2026)
 
-- Puma README (binding): https://github.com/puma/puma/blob/master/README.md
-- Puma DSL (`bind`, `ssl_bind`, default bind): https://github.com/puma/puma/blob/master/lib/puma/dsl.rb
-- Puma configuration defaults (`tcp://[::]:9292`): https://github.com/puma/puma/blob/master/lib/puma/configuration.rb
+- Puma README (binding): https://github.com/puma/puma/blob/main/README.md
+- Puma DSL (`bind`, `ssl_bind`, default bind): https://github.com/puma/puma/blob/main/lib/puma/dsl.rb
+- Puma configuration defaults (`tcp://[::]:9292`): https://github.com/puma/puma/blob/main/lib/puma/configuration.rb
 - Rails configuring guide (`force_ssl`, `assume_ssl`, `ssl_options`, `hosts`, `session_store`, `cookies_same_site_protection`, `require_master_key`): https://guides.rubyonrails.org/configuring.html
 - Action Pack 7.1 changelog (`ActionDispatch::AssumeSSL`): https://github.com/rails/rails/blob/7-1-stable/actionpack/CHANGELOG.md
 - `ActionDispatch::RemoteIp` (trusted proxies, spoofing warning): https://api.rubyonrails.org/classes/ActionDispatch/RemoteIp.html
