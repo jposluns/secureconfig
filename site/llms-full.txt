@@ -7215,7 +7215,7 @@ The expected distinctions are:
 | Check | Exposed or misconfigured outcome | Fixed outcome |
 | --- | --- | --- |
 | Application RBAC | A broad application identity reads both known documents. | The scoped identity reads `app-data` with `200` and receives an authorization `403` for `other-data`. A `401`, `404`, or connection error does not demonstrate correct RBAC. See [Elasticsearch privileges](https://www.elastic.co/docs/reference/elasticsearch/security-privileges) and [OpenSearch permissions](https://docs.opensearch.org/latest/security/access-control/permissions/). |
-| Anonymous access | Disabled security or an anonymous read grant permits the no-credential document request. | No-credential requests are rejected with `401` for the configurations above. Checking `/` alone cannot rule out anonymous access granted only to an index. See [Elasticsearch anonymous access](https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/anonymous-access) and [OpenSearch anonymous authentication](https://docs.opensearch.org/latest/security/access-control/anonymous-authentication/). |
+| Anonymous access | An anonymous read grant returns the permitted document. In Elasticsearch, an enabled anonymous identity lacking permission also returns `401` when `xpack.security.authc.anonymous.authz_exception: false`. | A `401` establishes rejection only for the tested endpoint, not that anonymous access is disabled. After restarting affected nodes, require confirmation that `xpack.security.authc.anonymous.roles` is absent from EVERY node's EFFECTIVE configuration. Removal of the roles setting disables anonymous access; there is no `xpack.security.authc.anonymous.enabled` switch. Also require the previously anonymously readable document control below. For OpenSearch, confirm the live `config.dynamic.http.anonymous_auth_enabled: false` setting. See [Elasticsearch anonymous access](https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/anonymous-access), [Elasticsearch security settings](https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/security-settings), and [OpenSearch anonymous authentication](https://docs.opensearch.org/latest/security/access-control/anonymous-authentication/). |
 | CORS | An overly broad policy grants the untrusted origin. | No `Access-Control-Allow-Origin` grant for the untrusted origin. If CORS is enabled, the trusted-origin positive control succeeds and grants exactly that origin. If CORS is disabled, neither origin is granted. Judge the headers, not just the status. See [Elasticsearch CORS](https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/networking-settings) and [OpenSearch CORS](https://docs.opensearch.org/latest/install-and-configure/configuring-opensearch/network-settings/). |
 | Audit | Failed authentication returns `401`, but disabled or suppressed auditing produces no corresponding audit event. | The same failure produces a new Elasticsearch `authentication_failed` or OpenSearch `FAILED_LOGIN` event. A `401` alone does not prove auditing. Elasticsearch requires the paid audit tier. See [Elasticsearch audit events](https://www.elastic.co/docs/reference/elasticsearch/elasticsearch-audit-events) and [OpenSearch audit fields](https://docs.opensearch.org/latest/security/audit-logs/field-reference/). |
 
@@ -7259,10 +7259,40 @@ The expected distinctions are:
     -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
     --cacert "$2" --header @/path/app-user.header "https://$1:$3/other-data/_doc/rbac-probe"
 
-  # Reasoned: no target cluster or container runtime. Anonymous access to data.
+  # Reasoned: no target cluster or container runtime. Endpoint-specific check.
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
     -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
     --cacert "$2" "https://$1:$3/app-data/_doc/rbac-probe"
+
+  # Effective configuration means what each restarted process actually loaded:
+  # inspect its selected config directory, flattened and nested YAML, resolved
+  # environment substitutions, and startup overrides. Record every node and
+  # its restart. Inspecting one local file is insufficient. Settings omitted
+  # from a filtered Nodes Info response are not proof of absence.
+  # Require xpack.security.enabled: true and anonymous.roles absent everywhere.
+
+  # Positive discriminator: use the URL-encoded path of a document previously
+  # observed returning 200 and its expected contents WITHOUT credentials.
+  # Establish that exposed-state control only in an isolated test cluster.
+  # Substitute inside the quotes, retaining the leading slash.
+  set -- "$1" "$2" "$3" '/REPLACE_WITH_KNOWN_DOCUMENT_PATH'
+  case "${4-}" in
+    *REPLACE_WITH_*|"") echo "known document path required; not probing"; exit 1 ;;
+    /*) ;;
+    *) echo "document path must start with /; not probing"; exit 1 ;;
+  esac
+  # Administrator must still retrieve that same document with 200 and its
+  # expected contents; deletion or a different document invalidates the control.
+  curl -q -g -sS --fail-with-body --noproxy '*' --connect-timeout 5 --max-time 10 \
+    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+    --cacert "$2" --header @/path/admin.header "https://$1:$3$4" || exit 1
+  # Reasoned: exposed anonymous read grant -> 200 and expected document;
+  # roles removed and every node restarted -> 401. Other outcomes unresolved.
+  # For OpenSearch, apply and read back anonymous_auth_enabled: false instead.
+  # Without the recorded exposed-state success, this discriminator is unresolved.
+  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
+    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+    --cacert "$2" "https://$1:$3$4"
 
   # Reasoned: no target cluster or container runtime.
   # Browser preflights send no credentials.
@@ -7281,16 +7311,33 @@ The expected distinctions are:
 
   # Reasoned: no cluster, audit collector, or eligible ES audit license here.
   # audit-probe.header contains Basic auth for a nonexistent audit_probe user.
+  # Requires python3. Generate and record a fresh harmless marker for each run.
+  set -- "$1" "$2" "$3" "$(python3 -c 'import uuid; print(uuid.uuid4().hex)')"
+  case "$4" in
+    ""|*[!0-9a-f]*) echo "marker generation failed; not probing"; exit 1 ;;
+  esac
+  [ "${#4}" -eq 32 ] || { echo "invalid marker; not probing"; exit 1; }
+  printf 'audit body marker=%s\n' "$4"
   date -u '+%Y-%m-%dT%H:%M:%SZ'
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
-    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-    --cacert "$2" --header @/path/audit-probe.header "https://$1:$3/"
+  printf '{"query":{"term":{"audit_probe_marker":"%s"}}}\n' "$4" |
+    curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
+      -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+      --cacert "$2" --header @/path/audit-probe.header \
+      --header 'Content-Type: application/json' --request POST \
+      --data-binary @- "https://$1:$3/app-data/_search"
+  date -u '+%Y-%m-%dT%H:%M:%SZ'
 )
 ```
 
 The administrative HTTPS control must return `200` and cluster JSON before interpreting the plaintext probe. With HTTP TLS enforced, plaintext must receive no HTTP response. Elasticsearch closes a plaintext connection to its HTTPS listener; OpenSearch's enabled REST TLS allows only HTTPS. Expect `http=000` with a reset or empty reply after connection. DNS failures, timeouts, or an unreachable service are inconclusive. Any actual HTTP status, including `401`, means that endpoint answered over plaintext and is a finding. See [Elasticsearch HTTP TLS settings](https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/security-settings) and [OpenSearch REST TLS](https://docs.opensearch.org/latest/security/configuration/tls/).
 
-For the audit check, inspect the receiving node's new `CLUSTERNAME_audit.json` entries or the corresponding OpenSearch audit index and separately collected copy. Match the recorded time, `audit_probe` identity, and request path. Require a new matching event, not an older failure. Verify that sensitive headers and request bodies are excluded. Missing events leave the audit check unresolved until collection delay, filtering, licensing, and configuration have been checked.
+For the audit check, expect `401` and require a matching NEW REST-layer Elasticsearch `authentication_failed` or OpenSearch `FAILED_LOGIN` event. Inspect the receiving node's new `CLUSTERNAME_audit.json` entries or the corresponding OpenSearch audit index and separately collected copy. Match the recorded time interval, `audit_probe` identity, POST method, and `/app-data/_search` path. Run probes separately so each event can be attributed to its request.
+
+**Reasoned, not demonstrated:** no target cluster, audit collector, or eligible Elasticsearch audit license is available here. In an isolated test cluster, run the probe with request-body logging enabled, then disabled, generating a fresh marker each time. With Elasticsearch `xpack.security.audit.logfile.events.emit_request_body: true`, require that run's marker in the matching event's `request.body`. With OpenSearch `config.audit.log_request_body: true`, require it in `audit_request_body`. After setting the respective setting to `false`, require another matching new event, with its request-body field absent and that run's marker absent from the event. A bodyless request, a missing event, or absence of a marker without the enabled-state positive control cannot establish request-body exclusion. See [Elasticsearch request-body auditing](https://www.elastic.co/docs/deploy-manage/security/logging-configuration/auditing-search-queries), [Elasticsearch auditing settings](https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/auding-settings), and [OpenSearch audit fields](https://docs.opensearch.org/latest/security/audit-logs/field-reference/).
+
+Retain configuration readback: confirm Elasticsearch's effective `xpack.security.audit.logfile.events.emit_request_body: false`, accounting for transient and persistent cluster-setting overrides as well as each node's configuration. Repeat the OpenSearch audit configuration GET above and confirm `config.enabled: true`, `config.audit.enable_rest: true`, `config.audit.log_request_body: false`, and `config.audit.exclude_sensitive_headers: true`. Check that sensitive headers, including the Authorization value sent from the header file, are absent from the matching events and their collected copies in both test states. Header exclusion and body exclusion are separate checks. Restore and read back body logging as disabled after the isolated positive-control test. See [OpenSearch body logging](https://docs.opensearch.org/latest/security/audit-logs/index/) and [audit configuration fields](https://docs.opensearch.org/latest/security/api/audit/update-audit-configuration/).
+
+Missing events leave the audit check unresolved until collection delay, filtering, licensing, and configuration have been checked. A `401` alone proves neither audit delivery nor body exclusion.
 
 On the node itself, inspect listeners:
 
@@ -7306,7 +7353,7 @@ An unauthenticated `GET /` returning cluster JSON is the classic finding; so is 
 
 | Demonstration backlog | Required work | Status |
 | --- | --- | --- |
-| ES-OS-VERIFY-1 | Demonstrate every check against exposed and fixed states in isolated Elasticsearch 8.x and OpenSearch test clusters, including OpenSearch 3.7+ keys and an eligible Elasticsearch audit license. Record versions, effective configuration, HTTP responses, listener output, and matching newly collected audit events. | Open: target clusters, container runtime, and audit collection are unavailable in the authoring environment. |
+| ES-OS-VERIFY-1 | Demonstrate every check against exposed and fixed states in isolated Elasticsearch 8.x and OpenSearch test clusters, including OpenSearch 3.7+ keys and an eligible Elasticsearch audit license. Include the Elasticsearch counterexample: anonymous roles remain configured, authz_exception is false, and the anonymous identity lacks permission for both / and app-data, so both probes return 401 while a document in another permitted index remains anonymously readable with 200. Record that document and its contents, remove anonymous.roles, restart affected nodes, confirm its absence from every node's effective configuration, and require the same document request to return 401 while an administrator still retrieves it with 200. Also demonstrate fresh failed-authentication audit events with a unique harmless JSON marker present when body logging is enabled and absent when disabled; retain configuration-readback and sensitive-header-exclusion checks. Record versions, effective configuration, HTTP responses, listener output, and matching newly collected audit events. | Open: target clusters, container runtime, and audit collection are unavailable in the authoring environment. |
 
 ## Sources (checked September 2026)
 
