@@ -84,7 +84,7 @@
 - [neo4j](https://raw.githubusercontent.com/jposluns/secureconfig/main/neo4j.md): initial password, Bolt and HTTPS TLS, auth stays on
 - [memcached](https://raw.githubusercontent.com/jposluns/secureconfig/main/memcached.md): no auth by default; loopback, SASL and TLS where built in
 - [search-engines](https://raw.githubusercontent.com/jposluns/secureconfig/main/search-engines.md): Meilisearch and Typesense, master key, scoped search keys, production mode
-- [minio](https://raw.githubusercontent.com/jposluns/secureconfig/main/minio.md): MinIO: root credentials, certs directory TLS, scoped access keys
+- [minio](https://raw.githubusercontent.com/jposluns/secureconfig/main/minio.md): MinIO (AIStor): root and scoped credentials, TLS, server-side encryption, object locking, and audit logging
 - [object-storage](https://raw.githubusercontent.com/jposluns/secureconfig/main/object-storage.md): S3, R2, GCS, Azure Blob, Supabase Storage: private by default, scoped credentials, signed URLs
 - [firebase-supabase](https://raw.githubusercontent.com/jposluns/secureconfig/main/firebase-supabase.md): security rules and row-level security
 - [supabase-self-hosted](https://raw.githubusercontent.com/jposluns/secureconfig/main/supabase-self-hosted.md): the self-hosted Docker stack ships demo keys and a default dashboard password; an unedited compose up publishes the database
