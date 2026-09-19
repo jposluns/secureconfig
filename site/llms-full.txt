@@ -8572,6 +8572,7 @@ Choose a URL that returns known nonsensitive protected data. When arbitrary SQL 
   case "$2" in ''|*REPLACE_WITH_*) echo 'substitute the header file; not probing'; exit 2 ;; esac
   case "$1" in *@*) echo 'userinfo rejected; not probing'; exit 2 ;; esac
   case "$1$2" in *[[:cntrl:]]*) echo 'control character rejected; not probing'; exit 2 ;; esac
+  [ -f "$2" ] || { echo 'regular header file required; not probing'; exit 2; }
   [ -r "$2" ] || { echo 'readable header file required; not probing'; exit 2; }
 
   curl -q -g -sS -i --noproxy '*' --connect-timeout 5 --max-time 20 \
