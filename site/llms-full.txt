@@ -7064,7 +7064,7 @@ Expect `OK` for reading inputs, writing outputs, and publishing within the allow
 
 | Backlog ID | Outstanding demonstration | Status |
 | --- | --- | --- |
-| REDIS-LIVE-1 | In an isolated environment with Redis, TLS certificates, and socket access, record exact versions and demonstrate exposed/fixed listeners, plaintext rejection, authentication, ACL readback, actual CONFIG denial and ACL logging, directional key/channel checks, both persistence methods across restart, and old-user session revocation. Parse the applicable configuration examples with the real Redis server. | Open; REASONED checks above remain un demonstrated. |
+| REDIS-LIVE-1 | In an isolated environment with Redis, TLS certificates, and socket access, record exact versions and demonstrate exposed/fixed listeners, plaintext rejection, authentication, ACL readback, actual CONFIG denial and ACL logging, directional key/channel checks, both persistence methods across restart, and old-user session revocation. Parse the applicable configuration examples with the real Redis server. | Open; REASONED checks above remain undemonstrated. |
 
 ## Common mistakes
 
