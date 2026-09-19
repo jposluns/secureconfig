@@ -93,7 +93,6 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 3.14 | Convention 2, the general guard grammar: gate a probe that escapes its guard for the shapes the sentinel-scoped C2 rule cannot reach without false positives (if/elif and `-z` sentinel guards, flag-variable guards, renamed sentinels). The corpus idiom is guard-then-early-exit, the probe correctly after `esac`, which is lexically indistinguishable from a warn-only guard, so any lexical rule cries wolf; `check_guard_conventions.py --strict-guards` is the manual-audit tool. Deferred from 3.11, whose gate registered `--no-c2` because the corpus uses the exit-then-probe variant the sentinel rule over-flags (M, S) | `[gap]` |
 
 ## Decisions
 
