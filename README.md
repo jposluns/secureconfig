@@ -135,7 +135,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [supabase-self-hosted.md](supabase-self-hosted.md) | The self-hosted Docker stack: replace the demo keys and dashboard password, keep the published ports private |
 | [pocketbase.md](pocketbase.md) | PocketBase and Appwrite: the rules are the security; lock the admin console |
 | [headless-cms-instant-api.md](headless-cms-instant-api.md) | Strapi, Directus, Hasura, and PostgREST: one control gates the whole datastore |
-| [rabbitmq.md](rabbitmq.md) | RabbitMQ: users and permissions, TLS listener, guest account |
+| [rabbitmq.md](rabbitmq.md) | RabbitMQ: users and permissions, TLS listener, guest account, vhost isolation and resource limits, management HTTPS, monitoring/admin role separation, concrete private bindings, and safe definitions import |
 | [mosquitto.md](mosquitto.md) | Mosquitto (MQTT): per-device credentials, TLS listener, mutual TLS |
 | [kafka.md](kafka.md) | Apache Kafka: SASL_SSL listeners, SCRAM credentials, ACLs |
 | [nats.md](nats.md) | NATS and JetStream, auth, TLS, and the unauthenticated monitoring port |
