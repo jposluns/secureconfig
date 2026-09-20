@@ -165,7 +165,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [open-webui.md](open-webui.md) | Open WebUI: signup control, pending role, fronting TLS, persistent signing key, trusted-proxy and OAuth boundaries, tool and code-execution limits, model and admin-data access control, API-key restrictions, and retrieval/SSRF limits |
 | [chat-uis.md](chat-uis.md) | AnythingLLM, LobeChat, Chainlit, OpenHands: open by default; front with login |
 | [image-gen-uis.md](image-gen-uis.md) | ComfyUI, A1111, InvokeAI, Fooocus: keep on loopback and add a login before exposing |
-| [gradio.md](gradio.md) | Gradio: launch() auth and TLS parameters, share link risks |
+| [gradio.md](gradio.md) | Gradio: launch() auth and TLS, share-link risks, file-access and cache isolation, optional-execution-surface and API-visibility controls, queue and resource limits, URL-fetch SSRF limits, external auth, and flagging/telemetry controls |
 | [streamlit.md](streamlit.md) | Streamlit: TLS options, native OIDC login, reverse proxy deployment |
 | [jupyter.md](jupyter.md) | Jupyter Server, Lab, and Notebook: hashed password and TLS, unprivileged execution, origin/XSRF/DNS-rebinding protection, JupyterHub identities and per-user isolation, and auth by default |
 | [n8n.md](n8n.md) | n8n: listen address, native TLS, owner setup, MFA enforcement |
