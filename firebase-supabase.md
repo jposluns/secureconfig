@@ -107,6 +107,14 @@ This authorizes objects beneath the caller's UID path. Other paths remain denied
 rule grants access. See [basic rules](https://firebase.google.com/docs/rules/basics) and
 [Storage rule structure](https://firebase.google.com/docs/storage/security/core-syntax).
 
+A distributed Storage download URL is a bearer credential: it does not expire, and anyone
+holding it can access the object. Tightening ownership Rules does not revoke that URL. For
+sensitive objects, revoke previously distributed download tokens in the Firebase console and
+use authenticated SDK direct downloads such as `getBlob()` or `getBytes()` so Rules govern
+access. See [Admin shareable URLs](https://firebase.google.com/docs/storage/admin/start),
+[download-token revocation](https://firebase.google.com/docs/reference/kotlin/com/google/firebase/storage/StorageReference),
+and [SDK direct downloads](https://firebase.google.com/docs/storage/web/download-files).
+
 Inspect the deployed rules for every Firestore database, bucket, and RTDB instance; keep
 production locked-by-default, open specific paths deliberately, and test with the Rules
 Playground and emulator before deploying. Keep local and deployed rule definitions in sync.
@@ -223,6 +231,13 @@ and [the documented localhost default](https://firebase.google.com/docs/emulator
 
 ## Supabase
 
+For the hosted direct-Postgres endpoint and database pooler, restrict allowed client IP ranges
+with Dashboard **Network Restrictions**, enable **Enforce SSL on incoming connections**, and
+keep the `postgres` and other database-role passwords secret; see
+[Network Restrictions](https://supabase.com/docs/guides/platform/network-restrictions),
+[SSL enforcement](https://supabase.com/docs/guides/platform/ssl-enforcement), and
+[database roles and passwords](https://supabase.com/docs/guides/database/postgres/roles).
+
 ### 1. Restrict the Data API, grants, and rows
 
 Enable RLS on **every** table exposed through the API, then write policies for intended access.
@@ -283,8 +298,11 @@ using ((select auth.uid()) = user_id);
 ```
 
 The UPDATE policy checks both the existing row and its proposed replacement, preventing a caller
-from taking another user's row or changing ownership away from themselves. UPDATE also needs
-the applicable SELECT policy. See
+from taking another user's row or changing ownership away from themselves. For roles subject
+to RLS, UPDATE also needs applicable SELECT (or ALL) policies when it reads table columns,
+for example in WHERE, RETURNING, or a SET expression. Data API updates that filter on existing
+rows therefore need the SELECT policy too. See
+[PostgreSQL CREATE POLICY](https://www.postgresql.org/docs/current/sql-createpolicy.html) and
 [operation-specific RLS policies](https://supabase.com/docs/guides/database/postgres/row-level-security).
 
 `public` is exposed by default. Restrict **Exposed schemas** to the schemas intended for client
@@ -542,6 +560,29 @@ their permissions; it does not grant access itself. Repeat the assurance require
 protected surfaces where needed. See
 [restrictive policies](https://www.postgresql.org/docs/current/sql-createpolicy.html).
 
+### 7. Authorize Edge Functions before privileged work
+
+[Edge Functions](https://supabase.com/docs/guides/functions) expose server-side handlers.
+At the time of writing, platform JWT verification is configured per function and enabled by
+default (`verify_jwt = true`). Deploying with `supabase functions deploy --no-verify-jwt`
+disables that check, as commonly needed for external webhooks. The handler MUST then
+authenticate and authorize callers itself before protected work, for example by verifying
+the provider's webhook signature. See the
+[deployment CLI reference](https://supabase.com/docs/reference/cli/supabase-functions-deploy)
+and [function authentication](https://supabase.com/docs/guides/functions/auth).
+
+Even with JWT verification enabled, authorize the verified caller for the requested resource
+and operation. Passing the platform check alone does not establish user authorization:
+Supabase also documents API-key compatibility paths through that check. See
+[authorization headers and JWT verification](https://supabase.com/docs/guides/functions/auth-headers).
+
+The function environment carries privileged secrets, including the legacy
+`SUPABASE_SERVICE_ROLE_KEY`, which bypasses RLS. Treat an unauthenticated function with access
+to those credentials as a privileged surface. Keep secrets in managed environment variables,
+exclude local secret files from source control, and never expose secret values in responses,
+logs, or client bundles. Secret hygiene and in-function authorization are both required. See
+[Edge Function secrets](https://supabase.com/docs/guides/functions/secrets).
+
 ## Verify
 
 Use disposable projects and harmless fixtures for exposed/fixed comparisons. Do not temporarily
@@ -570,6 +611,7 @@ Compare the following requests against a disposable exposed fixture and its fixe
 | Firestore | **REASONED:** In the Rules Playground or client test harness, get and write `/users/REPLACE_WITH_USER_B_ID` and `/users/REPLACE_WITH_USER_B_ID/items/probe` without authentication, as A, and as B. Open rules admit the first two identities; the ownership rules deny them and admit B for these operations. Test the user document itself to catch a version-1 recursive-match mistake. See [Firestore rules](https://firebase.google.com/docs/firestore/security/rules-structure). |
 | RTDB | **REASONED:** Read and write `/users/REPLACE_WITH_USER_B_ID/probe` with the same identities. An ancestor grant admits unauthorized requests; the fixed rules deny them and admit B. See [RTDB cascading](https://firebase.google.com/docs/database/security/core-syntax). |
 | Firebase Storage | **REASONED:** Read and upload `users/REPLACE_WITH_USER_B_ID/probe.txt` through the Storage client. Open or authentication-only rules admit unauthorized access; ownership rules admit B and reject A and unsigned requests. See [Storage rules](https://firebase.google.com/docs/storage/security/core-syntax). |
+| Firebase Storage download tokens | **REASONED:** No disposable object, existing download URL, token-revocation access, or owner session was supplied. Save an existing download URL for `users/REPLACE_WITH_USER_B_ID/probe.txt`. With caching disabled and no session, cookies, or Authorization header, send HTTP GET to that exact URL before and after tightening ownership Rules: both should return the object's bytes. Revoke its download token in the Firebase console, keep the object and Rules unchanged, and repeat GET to the same saved URL: require an HTTP denial with no object bytes. A network or CORS failure is inconclusive. Before and after revocation, B's authenticated `getBytes(ref(storage, 'users/REPLACE_WITH_USER_B_ID/probe.txt'))` must still return the bytes; configure browser CORS for the test origin. See [shareable URLs](https://firebase.google.com/docs/storage/admin/start), [token revocation](https://firebase.google.com/docs/reference/kotlin/com/google/firebase/storage/StorageReference), and [direct downloads](https://firebase.google.com/docs/storage/web/download-files). |
 | Supabase tables | **REASONED:** Request `GET /rest/v1/profiles?select=user_id&user_id=eq.REPLACE_WITH_USER_B_ID`. With matching grants and RLS disabled, B's seeded row is exposed. With the fixed grants/policies, unsigned requests and A receive no B row; B at the required assurance level receives it. For intentionally enabled writes, use POST to create a disposable profile, PATCH to change it, and DELETE to remove it; inspect persisted state as well as response status. See [select requests](https://supabase.com/docs/reference/javascript/select) and [row-security semantics](https://www.postgresql.org/docs/current/ddl-rowsecurity.html). |
 
 For the Supabase GET comparison, prepare protected header files privately, outside source control.
@@ -657,6 +699,22 @@ so an unrelated App Check rejection does not hide an open rule.
 
 ### 4. Test Functions, App Check, and emulator exposure
 
+- **REASONED:** No deployed Supabase Edge Function, disposable operation fixture, or caller
+  credentials was supplied. Send `POST /functions/v1/REPLACE_WITH_FUNCTION_NAME` to the
+  disposable project's function with a valid fixture payload, first without `Authorization`
+  or `apikey`, then with `Authorization: Bearer invalid-test-token` and no `apikey`.
+  With JWT verification disabled and handler authorization absent, these requests can reach
+  privileged work; the corrected handler must reject unauthorized requests before that work.
+  With JWT verification enabled, both requests must receive HTTP 401 before the handler runs.
+  Omit API keys in these two probes because API-key compatibility can pass the platform check.
+  For a webhook, also compare missing/invalid provider signatures with a valid signed request.
+  For a user endpoint, compare A attempting B's operation with the authorized owner's request.
+  The authorized positive control must succeed; inspect persisted effects as well as response
+  status, and check that responses and logs disclose no secrets. See
+  [JWT verification](https://supabase.com/docs/guides/functions/auth-headers),
+  [handler authentication](https://supabase.com/docs/guides/functions/auth), and
+  [secret handling](https://supabase.com/docs/guides/functions/secrets).
+
 - **REASONED:** No deployed callable, HTTP endpoint, or test credentials was supplied. Send
   `POST` with `{"data":{}}` to each callable, first with valid App Check but no user ID token.
   A handler lacking its own authentication check can enter privileged work; the fixed handler
@@ -690,9 +748,18 @@ so an unrelated App Check rejection does not hide an open rule.
 
 ### 5. Test account controls, MFA, and key retirement
 
-- **REASONED:** No controlled signup accounts or mailboxes was supplied. Attempt Firebase
-  `signInAnonymously()` before and after disabling Anonymous: enabling it permits account
-  creation, disabling it must reject new anonymous sign-ins. Test each other disabled provider.
+- **REASONED:** No controlled signup accounts or mailboxes was supplied. Use a signed-out
+  Firebase Auth context for EACH Anonymous-provider comparison: explicitly `await signOut(auth)`
+  and confirm `auth.currentUser === null` before each `await signInAnonymously(auth)` call,
+  including the retry after disabling Anonymous. With Anonymous enabled, require a successful
+  result and `getAdditionalUserInfo(result)?.isNewUser === true` to confirm account creation.
+  With Anonymous disabled, require rejection of new-account creation due to the disabled
+  provider; a network failure is inconclusive. An already signed-in anonymous user can be
+  returned without creating an account. This tests signup restrictions, not revocation of
+  existing sessions. See the [Auth JS reference](https://firebase.google.com/docs/reference/js/auth),
+  [new-user indicator](https://firebase.google.com/docs/reference/js/auth.additionaluserinfo), and
+  [session revocation](https://firebase.google.com/docs/auth/admin/manage-sessions).
+  Test each other disabled provider.
   For email enumeration protection, compare password-sign-in requests for a nonexistent
   address and a known account with a wrong password; protected sign-in responses must not
   reveal that distinction. Do not expect signup to stop returning `EMAIL_EXISTS`. See
@@ -790,7 +857,7 @@ was not installed in the repository, and no whole-corpus gate result is claimed.
 
 | ID | Required exposed/fixed demonstration | Status |
 | --- | --- | --- |
-| FIREBASE-SUPABASE-LIVE | Demonstrate every REASONED comparison above using disposable Firebase and Supabase projects, controlled A/B accounts and mailboxes, MFA sessions, registered App Check clients, a writable emulator/service fixture, a second host, Storage objects, Realtime clients, view/RPC inventories, an outbound-request collector, a Vault canary, key-lifecycle controls, and the actual client build. Record versions, effective rules/grants/settings, requests, responses, persisted write results, positive controls, propagation intervals, and cleanup. Include all three Firebase Rules engines, Functions, emulators, API restrictions, signup, Data API removal, views, every function overload, HTTP wrappers, Vault, Storage, both Realtime authorization paths, MFA, API-key retirement, JWT-signing-key revocation, and bundle-scan controls. | Open; live behavior is reasoned, not demonstrated. |
+| FIREBASE-SUPABASE-LIVE | Demonstrate every REASONED comparison above using disposable Firebase and Supabase projects, controlled A/B accounts and mailboxes, MFA sessions, registered App Check clients, a writable emulator/service fixture, a second host, Storage objects, Realtime clients, view/RPC inventories, an outbound-request collector, a Vault canary, key-lifecycle controls, and the actual client build. Record versions, effective rules/grants/settings, requests, responses, persisted write results, positive controls, propagation intervals, and cleanup. Include all three Firebase Rules engines, Firebase Functions, Supabase Edge Functions (using deployed operation fixtures and caller/webhook credentials to compare JWT verification enabled/disabled, handler authorization, positive controls, persisted effects, and secret hygiene), emulators, API restrictions, signup (including signed-out Anonymous-provider comparisons that confirm new-account creation when enabled and rejection when disabled), Data API removal, views, every function overload, HTTP wrappers, Vault, Storage (including sessionless GET of the same saved download URL before and after Rules tightening and token revocation, with an authorized SDK direct-download positive control), both Realtime authorization paths, MFA, API-key retirement, JWT-signing-key revocation, and bundle-scan controls. | Open; live behavior is reasoned, not demonstrated. |
 
 ## Sources (checked September 2026)
 
@@ -857,3 +924,11 @@ was not installed in the repository, and no whole-corpus gate result is claimed.
 - [Supabase TOTP availability and assurance-level transitions](https://supabase.com/docs/guides/auth/auth-mfa/totp).
 - [Supabase JavaScript select requests](https://supabase.com/docs/reference/javascript/select).
 - [Supabase JavaScript RPC requests](https://supabase.com/docs/reference/javascript/rpc).
+- [Supabase Edge Functions overview](https://supabase.com/docs/guides/functions).
+- [Supabase Edge Function deployment CLI and JWT-verification flag](https://supabase.com/docs/reference/cli/supabase-functions-deploy).
+- [Supabase Edge Function authentication and webhook verification](https://supabase.com/docs/guides/functions/auth).
+- [Supabase Edge Function authorization headers, per-function JWT verification, and API-key compatibility](https://supabase.com/docs/guides/functions/auth-headers).
+- [Supabase Edge Function secrets and privileged environment credentials](https://supabase.com/docs/guides/functions/secrets).
+- [Supabase database Network Restrictions](https://supabase.com/docs/guides/platform/network-restrictions).
+- [Supabase Postgres SSL enforcement](https://supabase.com/docs/guides/platform/ssl-enforcement).
+- [Supabase database roles and password handling](https://supabase.com/docs/guides/database/postgres/roles).
