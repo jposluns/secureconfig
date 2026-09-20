@@ -118,7 +118,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [postgresql.md](postgresql.md) | PostgreSQL: server TLS, SCRAM authentication, pg_hba rules, verified client connections |
 | [connection-poolers.md](connection-poolers.md) | PgBouncer and pgpool-II: client TLS that is off by default, a server hop that falls back to plaintext, and the pg_hba rules a pooler stops matching |
 | [mysql.md](mysql.md) | MySQL and MariaDB: required TLS transport, per-user TLS, modern auth plugins |
-| [mongodb.md](mongodb.md) | MongoDB: requireTLS, authorization, admin user creation, bind address |
+| [mongodb.md](mongodb.md) | MongoDB: requireTLS, authorization, bind address, least-privilege roles with explicit SCRAM-SHA-256, replica/cluster membership auth, per-user source restrictions, and x.509 client identities |
 | [redis.md](redis.md) | Redis: TLS, requirepass, bind/protected-mode, and least-privilege ACLs with durable rules, key/channel scoping, and runtime command lockdown |
 | [sqlite.md](sqlite.md) | SQLite in deployment, the file is the exposure; Turso tokens; Litestream |
 | [sqlite-http-frontends.md](sqlite-http-frontends.md) | Datasette and sqlite-web: SQLite HTTP exposure, loopback binding, authentication, TLS, and verification |
