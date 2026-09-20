@@ -10534,7 +10534,8 @@ Leave the final value as `browser` for a password-only server. If a token is alr
     *'@'*|*'?'*|*'#'*|*' '*) echo "use a URL without credentials, query, fragment or spaces; not probing"; exit 1 ;;
   esac
   case "$2" in /*) ;; *) echo "absolute CA bundle path required; not probing"; exit 1 ;; esac
-  [ -f "$2" ] && [ -r "$2" ] || { echo "CA bundle is not a readable file; not probing"; exit 1; }
+  [ -f "$2" ] || { echo "CA bundle is not a readable file; not probing"; exit 1; }
+  [ -r "$2" ] || { echo "CA bundle is not a readable file; not probing"; exit 1; }
   case "$3" in browser|token) ;; *) echo "choose browser or token; not probing"; exit 1 ;; esac
 
   case "$1" in
@@ -10635,8 +10636,12 @@ Set the base URL to the actual server URL, including any deployment prefix. Set 
   case "$3" in *'='*) echo "cookie file path must not contain =; not probing"; exit 1 ;; esac
   case "$3" in /*) ;; *) echo "absolute cookie file path required; not probing"; exit 1 ;; esac
   case "$4" in /*) ;; *) echo "absolute XSRF header file path required; not probing"; exit 1 ;; esac
-  [ -f "$2" ] && [ -r "$2" ] && [ -f "$3" ] && [ -r "$3" ] &&
-    [ -f "$4" ] && [ -r "$4" ] || { echo "a required file is unreadable; not probing"; exit 1; }
+  [ -f "$2" ] || { echo "a required file is unreadable; not probing"; exit 1; }
+  [ -r "$2" ] || { echo "a required file is unreadable; not probing"; exit 1; }
+  [ -f "$3" ] || { echo "a required file is unreadable; not probing"; exit 1; }
+  [ -r "$3" ] || { echo "a required file is unreadable; not probing"; exit 1; }
+  [ -f "$4" ] || { echo "a required file is unreadable; not probing"; exit 1; }
+  [ -r "$4" ] || { echo "a required file is unreadable; not probing"; exit 1; }
   set -- "${1%/}" "$2" "$3" "$4" "$5"
 
   case "$1" in
