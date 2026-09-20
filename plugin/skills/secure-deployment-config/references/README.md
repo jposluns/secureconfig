@@ -65,7 +65,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [mfa.md](mfa.md) | MFA options: identity layers with QR-code TOTP enrolment, app libraries, SSH modules, Duo |
 | [machine-auth.md](machine-auth.md) | Machine identity: API keys, client credentials, mutual TLS, workload identity federation, secret managers |
 | [secrets.md](secrets.md) | Secrets: repository hygiene, scanning, rotation after a leak, sops/age |
-| [vault.md](vault.md) | HashiCorp Vault: dev mode, listener TLS, seal custody, audit devices, retiring the initial root token |
+| [vault.md](vault.md) | HashiCorp Vault: dev mode, listener TLS, seal custody, audit devices, retiring the initial root token, path-scoped ACL policies, bounded AppRole credentials and tokens, response-wrapped secret delivery, and authenticated metrics/profiling |
 
 ### Web servers and proxies
 
