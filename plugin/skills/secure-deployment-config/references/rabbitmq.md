@@ -61,6 +61,8 @@ definitions.local.path = /etc/rabbitmq/definitions/approved.json
 
 Keep the directory administrator-owned and the file readable by RabbitMQ but not writable by it. Review accounts, permissions, policies, and runtime parameters before deployment. Core boot imports do not require management. They do not overwrite existing broker definitions, so they cannot reconcile or revoke stale grants. A blank node importing definitions does not create the default user and vhost; the approved file must supply the intended accounts and vhosts. See [boot import behaviour](https://www.rabbitmq.com/docs/definitions).
 
+Runtime imports through `rabbitmqadmin definitions import` or `POST /api/definitions` merge with existing state: omitted objects remain, conflicting mutable objects are overwritten, and conflicting immutable queues, exchanges, and bindings retain their existing definitions. An error can leave a partial import. Do not treat runtime import as full reconciliation either. See [HTTP API import semantics](https://www.rabbitmq.com/docs/http-api-reference#post-apidefinitions).
+
 For a reduced export, provision `$HOME/.rabbitmqadmin.conf` as an owner-only TOML file through your secret-management workflow. Replace the illustrative hostname and password, preserving valid TOML escaping:
 
 ```toml
@@ -110,13 +112,7 @@ Requiring a trusted client certificate does not map it to a RabbitMQ username. C
 
 ## 3. Management UI
 
-The management plugin's web UI is an admin panel: keep it off public interfaces and reach it per [admin-uis.md](admin-uis.md) (SSH forward, tailnet, or Access), with its own TLS when remote. Enable the plugin if it is not already enabled:
-
-```bash
-sudo rabbitmq-plugins enable rabbitmq_management
-```
-
-Add its independent listener configuration to `rabbitmq.conf`:
+The management plugin's web UI is an admin panel: keep it off public interfaces and reach it per [admin-uis.md](admin-uis.md) (SSH forward, tailnet, or Access), with its own TLS when remote. First add its independent restricted listener configuration to `rabbitmq.conf`, substituting the broker's private IPv4 address:
 
 ```ini
 management.tcp.ip = 127.0.0.1
@@ -128,6 +124,16 @@ management.ssl.cacertfile = /etc/rabbitmq/tls/ca.pem
 management.ssl.certfile = /etc/rabbitmq/tls/management.pem
 management.ssl.keyfile = /etc/rabbitmq/tls/management.key
 ```
+
+Start or restart the node through your deployment's service manager with this configuration in place BEFORE enabling the plugin. `rabbitmq.conf` changes require a node restart; editing the file alone does not update a running node. The plugin reads the effective listener configuration when it starts. Enabling it on a running broker starts it immediately; without listener restrictions, HTTP listens on all interfaces at port `15672`. See [configuration application](https://www.rabbitmq.com/docs/configure#when-will-configuration-file-changes-be-applied) and [plugin activation](https://www.rabbitmq.com/docs/plugins#different-ways-to-enable-plugins).
+
+Only after that start/restart succeeds, enable the plugin if it is not already enabled:
+
+```bash
+sudo rabbitmq-plugins enable rabbitmq_management
+```
+
+If the plugin is already enabled, apply the restricted configuration and restart the node before it becomes reachable, or keep management access firewalled until the restart and listener verification in check 2 are complete.
 
 This deliberately retains HTTP on loopback and exposes HTTPS only on the selected private address. Restrict HTTPS reachability to administration hosts. The management certificate must cover the management hostname. AMQP `ssl_options` do not configure management TLS.
 
@@ -197,12 +203,16 @@ From an external non-peer host, target the broker's public address:
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "need exactly 1 public address; not probing"; exit 2; }
-  case "$1" in *REPLACE_WITH_*|"") echo "substitute the public address; not probing"; exit 2;; esac
-  for p in 4369 25672 15672 15671 5671; do
-    nc -vz -w 5 "$1" "$p"
-  done
-  # Removed plaintext AMQP is checked separately.
-  nc -vz -w 5 "$1" 5672
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute the public address; not probing"; exit 1 ;;
+    *)
+      for p in 4369 25672 15672 15671 5671; do
+        nc -vz -w 5 "$1" "$p"
+      done
+      # Removed plaintext AMQP is checked separately.
+      nc -vz -w 5 "$1" 5672
+    ;;
+  esac
 )
 ```
 
@@ -214,15 +224,19 @@ From hosts allowed by the corresponding firewall rules, target the private addre
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "need exactly 1 private address; not probing"; exit 2; }
-  case "$1" in *REPLACE_WITH_*|"") echo "substitute the private address; not probing"; exit 2;; esac
-  # Run from an allowed cluster/CLI host.
-  for p in 4369 25672; do nc -vz -w 5 "$1" "$p"; done
-  # Run these from the respective allowed application and administration hosts.
-  nc -vz -w 5 "$1" 5671
-  nc -vz -w 5 "$1" 15671
-  # Neither listener should accept connections on the private interface.
-  nc -vz -w 5 "$1" 15672
-  nc -vz -w 5 "$1" 5672
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute the private address; not probing"; exit 1 ;;
+    *)
+      # Run from an allowed cluster/CLI host.
+      for p in 4369 25672; do nc -vz -w 5 "$1" "$p"; done
+      # Run these from the respective allowed application and administration hosts.
+      nc -vz -w 5 "$1" 5671
+      nc -vz -w 5 "$1" 15671
+      # Neither listener should accept connections on the private interface.
+      nc -vz -w 5 "$1" 15672
+      nc -vz -w 5 "$1" 5672
+    ;;
+  esac
 )
 ```
 
@@ -234,8 +248,12 @@ From an allowed CLI host with its owner-only matching cookie file, also require 
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "need exactly 1 node name; not probing"; exit 2; }
-  case "$1" in *REPLACE_WITH_*|"") echo "substitute the broker node name; not probing"; exit 2;; esac
-  sudo rabbitmq-diagnostics -n "$1" ping
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute the broker node name; not probing"; exit 1 ;;
+    *)
+      sudo rabbitmq-diagnostics -n "$1" ping
+    ;;
+  esac
 )
 ```
 
@@ -260,27 +278,31 @@ For removed plaintext AMQP, first demonstrate a connection to its old listener i
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "need exactly 1 hostname; not probing"; exit 2; }
-  case "$1" in *REPLACE_WITH_*|"") echo "substitute the management hostname; not probing"; exit 2;; esac
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute the management hostname; not probing"; exit 1 ;;
+    *)
 
-  # Username only: curl prompts for the password.
-  curl -q -g --noproxy '*' --cacert /etc/rabbitmq/tls/ca.pem \
-    --connect-timeout 5 --max-time 20 -sS --user observer \
-    -w 'observer http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-    "https://$1:15671/api/overview"
-  curl -q -g --noproxy '*' --cacert /etc/rabbitmq/tls/ca.pem \
-    --connect-timeout 5 --max-time 20 -sS \
-    -w 'anonymous http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-    "https://$1:15671/api/overview"
+      # Username only: curl prompts for the password.
+      curl -q -g --noproxy '*' --cacert /etc/rabbitmq/tls/ca.pem \
+        --connect-timeout 5 --max-time 20 -sS --user observer \
+        -w 'observer http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+        "https://$1:15671/api/overview"
+      curl -q -g --noproxy '*' --cacert /etc/rabbitmq/tls/ca.pem \
+        --connect-timeout 5 --max-time 20 -sS \
+        -w 'anonymous http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+        "https://$1:15671/api/overview"
 
-  # Paired administrative authority check; each password is prompted separately.
-  curl -q -g --noproxy '*' --cacert /etc/rabbitmq/tls/ca.pem \
-    --connect-timeout 5 --max-time 20 -sS --user ops \
-    -w 'ops http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-    "https://$1:15671/api/users"
-  curl -q -g --noproxy '*' --cacert /etc/rabbitmq/tls/ca.pem \
-    --connect-timeout 5 --max-time 20 -sS --user observer \
-    -w 'observer http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-    "https://$1:15671/api/users"
+      # Paired administrative authority check; each password is prompted separately.
+      curl -q -g --noproxy '*' --cacert /etc/rabbitmq/tls/ca.pem \
+        --connect-timeout 5 --max-time 20 -sS --user ops \
+        -w 'ops http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+        "https://$1:15671/api/users"
+      curl -q -g --noproxy '*' --cacert /etc/rabbitmq/tls/ca.pem \
+        --connect-timeout 5 --max-time 20 -sS --user observer \
+        -w 'observer http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+        "https://$1:15671/api/users"
+    ;;
+  esac
 )
 ```
 
@@ -296,25 +318,29 @@ An exposed management listener can still require authentication: external reacha
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "need exactly 1 hostname; not probing"; exit 2; }
-  case "$1" in *REPLACE_WITH_*|"") echo "substitute the AMQP hostname; not probing"; exit 2;; esac
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute the AMQP hostname; not probing"; exit 1 ;;
+    *)
 
-  # Keep stdin open to allow a delayed TLS rejection to arrive.
-  if sleep 10 | openssl s_client -connect "$1:5671" -servername "$1" \
-    -CAfile ca.pem -cert client.pem -key client.key \
-    -verify_hostname "$1" -verify_return_error; then
-    echo "certificate-present run exited 0; inspect the handshake and broker log"
-  else
-    echo "positive control failed; the pair is inconclusive"
-    exit 1
-  fi
+      # Keep stdin open to allow a delayed TLS rejection to arrive.
+      if sleep 10 | openssl s_client -connect "$1:5671" -servername "$1" \
+        -CAfile ca.pem -cert client.pem -key client.key \
+        -verify_hostname "$1" -verify_return_error; then
+        echo "certificate-present run exited 0; inspect the handshake and broker log"
+      else
+        echo "positive control failed; the pair is inconclusive"
+        exit 1
+      fi
 
-  if sleep 10 | openssl s_client -connect "$1:5671" -servername "$1" \
-    -CAfile ca.pem -verify_hostname "$1" -verify_return_error; then
-    echo "certificate-absent run exited 0; required rejection was not demonstrated"
-    exit 1
-  else
-    echo "negative run failed; require a matching missing-client-certificate broker log"
-  fi
+      if sleep 10 | openssl s_client -connect "$1:5671" -servername "$1" \
+        -CAfile ca.pem -verify_hostname "$1" -verify_return_error; then
+        echo "certificate-absent run exited 0; required rejection was not demonstrated"
+        exit 1
+      else
+        echo "negative run failed; require a matching missing-client-certificate broker log"
+      fi
+    ;;
+  esac
 )
 ```
 
@@ -332,9 +358,13 @@ The positive control declares, binds, publishes, and retrieves a message as `app
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
   [ "$#" -eq 2 ] || { echo "need hostname and existing ungranted vhost; not probing"; exit 2; }
-  case "$1" in *REPLACE_WITH_*|"") echo "substitute the AMQP hostname; not probing"; exit 2;; esac
-  case "$2" in *REPLACE_WITH_*|"") echo "substitute the ungranted vhost; not probing"; exit 2;; esac
-  python3 - "$1" "$2" <<'PY'
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute the AMQP hostname; not probing"; exit 1 ;;
+    *)
+      case "$2" in
+        *REPLACE_WITH_*|"") echo "substitute the ungranted vhost; not probing"; exit 1 ;;
+        *)
+          python3 - "$1" "$2" <<'PY'
 import getpass
 import ssl
 import sys
@@ -436,6 +466,10 @@ if findings:
     raise SystemExit("unexpectedly allowed: " + ", ".join(findings))
 print("Expected results observed by this run; retain the matching broker logs.")
 PY
+        ;;
+      esac
+    ;;
+  esac
 )
 ```
 
@@ -456,7 +490,8 @@ from pathlib import Path
 data = json.loads(Path("definitions.redacted.json").read_text())
 if not isinstance(data, dict):
     raise SystemExit("not a definitions object")
-for field in ("users", "permissions", "parameters", "global_parameters"):
+for field in ("users", "permissions", "topic_permissions",
+              "parameters", "global_parameters"):
     if data.get(field):
         raise SystemExit("review required: non-empty " + field)
 print("Selected sensitive sections are absent or empty; review all other content.")
@@ -465,7 +500,7 @@ PY
 
 Compare users and grants with the approved list, including absence of `guest`. For the exposed comparison, use a separately reviewed test fixture containing an unwanted test account or grant and confirm that the inventory detects it. Then repeat on another blank node with the approved file; importing over the first node is not reconciliation.
 
-Run section 1's reduced export and compare it with a private untransformed export from the same test broker containing known test users, grants, and runtime parameters. The selected sections must be removed or empty in the reduced JSON. The local JSON check is deliberately conservative: any retained global parameters also require review. Review all remaining fields for secrets; empty selected sections do not establish that the whole document is safe to share. See [definitions import and export](https://www.rabbitmq.com/docs/definitions).
+Run section 1's reduced export and compare it with a private untransformed export from the same test broker containing known test users, vhost grants, topic permissions, and runtime parameters. The selected sections must be removed or empty in the reduced JSON. The local JSON check is deliberately conservative: any retained topic permissions or global parameters also require review. Review all remaining fields for secrets; empty selected sections do not establish that the whole document is safe to share. See [definitions import and export](https://www.rabbitmq.com/docs/definitions) and [exported definition contents](https://www.rabbitmq.com/docs/http-api-reference#get-apidefinitions).
 
 Local authoring checks, completed without a broker:
 
@@ -489,6 +524,8 @@ No broker, container, or whole-corpus gate suite was run. Local syntax checks do
 - RabbitMQ virtual hosts and logical isolation: https://www.rabbitmq.com/docs/vhosts
 - RabbitMQ CLI user, vhost, permission, and tag commands: https://www.rabbitmq.com/docs/man/rabbitmqctl.8
 - RabbitMQ management listeners, HTTPS, and roles: https://www.rabbitmq.com/docs/management
+- RabbitMQ configuration files and restart requirements: https://www.rabbitmq.com/docs/configure
+- RabbitMQ plugin activation: https://www.rabbitmq.com/docs/plugins
 - RabbitMQ plugin enable command: https://www.rabbitmq.com/docs/man/rabbitmq-plugins.8
 - RabbitMQ HTTP API authentication and endpoints: https://www.rabbitmq.com/docs/http-api-reference
 - RabbitMQ TLS, peer verification, certificate usage, and verification depth: https://www.rabbitmq.com/docs/ssl
