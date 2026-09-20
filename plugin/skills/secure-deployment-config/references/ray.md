@@ -93,7 +93,7 @@ ss -tlnp   # read every listener; 127.0.0.1:8265 (or the tailnet IP), never 0.0.
 ss -tlnp   # read every listener; 6379/10001: private interface only
 ss -tlnp   # if you run Ray Serve, keep 8000 (HTTP proxy) private too, and 9000 (gRPC) when configured
 # from another network, checking that each externally facing Ray port (8265 dashboard, 6379 head, 10001
-# Client, plus 8000 if Ray Serve is deployed; the first three are unauthenticated code-execution endpoints and the Serve proxy answers any caller, all unless token auth (step 3) or a fronting proxy is enabled) is unreachable from outside. The pass is that
+# Client, plus 8000 if Ray Serve is deployed) is unreachable from outside: the first three execute arbitrary code with no cluster authentication, and the Serve proxy answers any caller because token auth (step 3) does not cover it, so every one of these origins must stay off untrusted networks whatever else fronts them. The pass is that
 # no TCP connection formed: time_connect stays 0.000000 and err names a connection-level failure (refused,
 # no route, or a filtered-port connect timeout). A non-zero time_connect (even if the port then speaks gRPC
 # not HTTP, so http is 000) means the handshake completed and the port answered, which is the finding. A
@@ -152,7 +152,8 @@ Service behaviour is not demonstrated here: the authoring environment has no Ray
 - Ray runtime environments (`runtime_env`, pip/conda/working_dir/py_modules/setup hook, no admission-control policy): https://docs.ray.io/en/latest/ray-core/handling-dependencies.html
 - Ray RuntimeEnv and RuntimeEnvConfig API (`eager_install`, `setup_timeout_seconds`): https://docs.ray.io/en/latest/ray-core/api/doc/ray.runtime_env.RuntimeEnv.html
 - Ray Serve HTTPOptions (Python host default 127.0.0.1, port 8000, ssl_keyfile/ssl_certfile/ssl_ca_certs): https://docs.ray.io/en/latest/serve/api/doc/ray.serve.config.HTTPOptions.html
-- Ray Serve config schema (config-file http_options 0.0.0.0 default, proxy_location EveryNode): https://docs.ray.io/en/latest/serve/api/doc/ray.serve.schema.HTTPOptionsSchema.html
+- Ray Serve config schema HTTPOptionsSchema (config-file http_options 0.0.0.0 host default): https://docs.ray.io/en/latest/serve/api/doc/ray.serve.schema.HTTPOptionsSchema.html
+- Ray Serve deploy schema (proxy_location EveryNode default): https://docs.ray.io/en/latest/serve/api/doc/ray.serve.schema.ServeDeploySchema.html
 - Ray Serve HTTP guide (FastAPI integration for app-level auth): https://docs.ray.io/en/latest/serve/http-guide.html
 - GCS fault tolerance with external Redis (KubeRay `gcsFaultToleranceOptions.redisPassword`): https://docs.ray.io/en/latest/cluster/kubernetes/user-guides/kuberay-gcs-ft.html
 - Redis in Ray, past and future (Redis dropped as the default in Ray 1.11): https://www.anyscale.com/blog/redis-in-ray-past-and-future
