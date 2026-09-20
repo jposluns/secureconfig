@@ -638,8 +638,8 @@ fi
 echo "== source citations are pinned, not mutable branch refs =="
 # tools/check_pinned_citations.py flags raw.githubusercontent/github-blob citations whose REF segment
 # is main or master (a main/master inside a file path is not flagged). Advisory: it fails only when a
-# NEW mutable citation pushes the count above its recorded baseline, while the corpus pinning sweep
-# (TODO 30) proceeds. Self-test first, so what runs is the shipped entry point.
+# NEW mutable citation pushes the count above its recorded baseline, while the corpus-wide pinning
+# sweep proceeds (see the sweep note in CHANGELOG.md). Self-test first, so what runs is the shipped entry point.
 pc_st="$(python3 -I -B tools/check_pinned_citations.py --self-test 2>&1)"
 if [ $? -eq 0 ] && printf '%s\n' "$pc_st" | grep -q '^PASS'; then
   ok "pinned-citation self-test"
