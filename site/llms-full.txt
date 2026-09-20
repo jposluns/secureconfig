@@ -5702,7 +5702,7 @@ If you need pprof or expvar, register them on a separate mux and serve it on loo
 
 ```go
 diag := http.NewServeMux()
-diag.HandleFunc("/debug/pprof/", pprof.Index)              // import "net/http/pprof"; Index alone does not route the sub-handlers
+diag.HandleFunc("/debug/pprof/", pprof.Index)              // import "net/http/pprof"; Index serves the named runtime profiles but not profile/trace/cmdline/symbol
 diag.HandleFunc("/debug/pprof/profile", pprof.Profile)
 diag.HandleFunc("/debug/pprof/trace", pprof.Trace)
 diag.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
@@ -5742,7 +5742,7 @@ srv := &http.Server{
 }
 ```
 
-These are a starting policy for short, bounded requests, not Go defaults. For `ReadTimeout` and `WriteTimeout`, a zero or negative value disables that timeout; for `ReadHeaderTimeout` and `IdleTimeout`, zero instead falls back to `ReadTimeout`, so only a negative value disables them. Give the port-80 redirect server the same deadlines (the `http.ListenAndServe` helper sets none). For genuinely long uploads or streaming, keep the server defaults generous and set a per-request budget with `http.NewResponseController(w)` (`SetReadDeadline`/`SetWriteDeadline`, Go 1.20+), handling the unsupported-operation error.
+These are a starting policy for short, bounded requests, not Go defaults. For `ReadTimeout` and `WriteTimeout`, a zero or negative value disables that timeout; for `ReadHeaderTimeout` and `IdleTimeout`, zero instead falls back to `ReadTimeout`, so a negative value disables them, as does zero when `ReadTimeout` is itself zero or negative. Give the port-80 redirect server the same deadlines (the `http.ListenAndServe` helper sets none). For genuinely long uploads or streaming, keep the server defaults generous and set a per-request budget with `http.NewResponseController(w)` (`SetReadDeadline`/`SetWriteDeadline`, Go 1.20+), handling the unsupported-operation error.
 
 ## 8. Security headers when Go terminates TLS
 
@@ -5768,6 +5768,7 @@ curl -q -sI https://example.com/        # succeeds without -k
 curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/api   # 401 or 403 without credentials
 ss -tlnp   # read every listener; REPLACE_WITH_BINARY_NAME: behind a proxy: 127.0.0.1 only
 curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' http://127.0.0.1:6060/debug/pprof/   # local availability only: 200 here just means you enabled a diagnostic listener (section 5). What matters is off-host reachability, checked next.
+curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/debug/pprof/   # diagnostics must never be routed on your PUBLIC app: substitute your hostname, expect 404, never 200
 ```
 
 ```bash
@@ -5779,9 +5780,7 @@ curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' http://127.0.0.1:6
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the server's public address on the set -- line above; not probing" ;;
     *) curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
-         -w 'diag_6060 http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:6060/debug/pprof/" || true   # the diagnostic listener must be UNREACHABLE from outside (a refusal/timeout, not a 200)
-       curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
-         -w 'app_pprof http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1/debug/pprof/" || true ;;   # and /debug/pprof/ must NOT be served on the public app routes (expect 404, never 200)
+         -w 'diag_6060 http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:6060/debug/pprof/" || true ;;   # run from a machine OUTSIDE the server's network: the diagnostic listener (section 5) must be UNREACHABLE (a refusal or timeout, never a 200)
   esac
 )
 ```
