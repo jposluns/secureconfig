@@ -86,7 +86,7 @@
 - [search-engines](https://raw.githubusercontent.com/jposluns/secureconfig/main/search-engines.md): Meilisearch and Typesense, master key, scoped search keys, production mode
 - [minio](https://raw.githubusercontent.com/jposluns/secureconfig/main/minio.md): MinIO (AIStor): root and scoped credentials, TLS, server-side encryption, object locking, and audit logging
 - [object-storage](https://raw.githubusercontent.com/jposluns/secureconfig/main/object-storage.md): S3, R2, GCS, Azure Blob, Supabase Storage: private by default, scoped credentials, signed URLs
-- [firebase-supabase](https://raw.githubusercontent.com/jposluns/secureconfig/main/firebase-supabase.md): security rules and row-level security
+- [firebase-supabase](https://raw.githubusercontent.com/jposluns/secureconfig/main/firebase-supabase.md): security rules and row-level security, ownership across Firestore/RTDB/Storage, Data-API and key hygiene, function/Storage/Realtime authorization, App Check, and signup controls
 - [supabase-self-hosted](https://raw.githubusercontent.com/jposluns/secureconfig/main/supabase-self-hosted.md): the self-hosted Docker stack ships demo keys and a default dashboard password; an unedited compose up publishes the database
 - [pocketbase](https://raw.githubusercontent.com/jposluns/secureconfig/main/pocketbase.md): PocketBase and Appwrite: API and collection rules are the security, plus auth-record and file-field protection, operator and console lockdown, settings encryption, rate limits, and hostname and upload controls
 - [headless-cms-instant-api](https://raw.githubusercontent.com/jposluns/secureconfig/main/headless-cms-instant-api.md): Strapi, Directus, Hasura, and PostgREST: one control gates the whole datastore
