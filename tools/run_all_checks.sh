@@ -654,7 +654,8 @@ elif [ "$pc_rc" -eq 1 ]; then
   bad "a new mutable GitHub citation was added; pin it to a commit SHA or version tag:"
   printf '%s\n' "$pc" | sed 's/^/          /'
 else
-  bad "pinned-citation gate crashed (exit $pc_rc); citations are unverified"
+  bad "the pinned-citation gate could not complete (exit $pc_rc); failing closed:"
+  printf '%s\n' "$pc" | sed 's/^/          /'
 fi
 echo "== no committed secrets =="
 # Deliberately narrow: only material that is a credential wherever it appears.
