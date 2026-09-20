@@ -17121,7 +17121,7 @@ Environment="OLLAMA_CONTEXT_LENGTH=4096"
 
 At v0.34.2, parallelism defaults to **1**, queue capacity to **512**, and keep-alive to **5 minutes**. Loaded-model capacity is selected automatically when not explicitly configured. See the [environment configuration](https://github.com/ollama/ollama/blob/v0.34.2/envconfig/config.go) and [scheduler](https://github.com/ollama/ollama/blob/v0.34.2/server/sched.go).
 
-Context defaults are **VRAM-dependent: 4K, 32K, or 256K**. The dedicated context document describes 4K below 24 GiB, 32K for the intermediate VRAM band, and 256K at 48 GiB or more. The pinned FAQ's universal 4096 statement is inconsistent with that dedicated document; this example sets 4096 explicitly. See the [pinned context reference](https://github.com/ollama/ollama/blob/v0.34.2/docs/context-length.mdx).
+Context defaults are **VRAM-dependent: 4K, 32K, or 256K**. The dedicated context document describes 4K below 24 GiB, 32K for the intermediate VRAM band, and 256K at 48 GiB or more; the implementation selects these tiers slightly lower, at roughly 23 GiB and 47 GiB of summed detected VRAM after the configured GPU overhead, so treat the documented figures as nominal. The pinned FAQ's universal 4096 statement is inconsistent with that dedicated document; this example sets 4096 explicitly. See the [pinned context reference](https://github.com/ollama/ollama/blob/v0.34.2/docs/context-length.mdx) and [server startup](https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go).
 
 C2 already includes these nginx admission controls. Define the zones once in `http`:
 
@@ -17481,7 +17481,7 @@ Run against the private test backend to isolate Ollama's CORS behavior, then aga
 
 Exposed: with wildcard additional origins, the unrelated browser origin is permitted. Fixed: unnecessary additional origins are refused; required origins still work. Inspect access-control response headers and perform an actual browser request, because curl itself does not enforce CORS.
 
-For the C2 POST-only proxy, OPTIONS returns 405 and is not forwarded. That is the expected non-browser policy, not a successful cross-origin frontend deployment. If a cross-origin browser frontend is required, demonstrate its separately designed preflight/authentication flow, including any authorization header it needs.
+For the C2 POST-only proxy, an OPTIONS request is not forwarded; the exact status depends on the variant: the nginx Basic-auth example returns 405, the nginx bearer variant returns 401 for a missing or wrong credential and 405 once a valid one passes, and the Caddy example falls through to 404. Each denies forwarding, so any of these is the expected non-browser policy, not a successful cross-origin frontend deployment. If a cross-origin browser frontend is required, demonstrate its separately designed preflight/authentication flow, including any authorization header it needs.
 
 Repeat the actual POST with and without Origin. Removing Origin must not bypass proxy authentication; a non-browser caller with valid credentials is not constrained by CORS. The built-in origins remain as described by C4's [AllowedOrigins implementation](https://github.com/ollama/ollama/blob/v0.34.2/envconfig/config.go).
 
