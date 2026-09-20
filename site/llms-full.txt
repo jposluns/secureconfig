@@ -20850,6 +20850,12 @@ was not installed in the repository, and no whole-corpus gate result is claimed.
 - [Supabase database Network Restrictions](https://supabase.com/docs/guides/platform/network-restrictions).
 - [Supabase Postgres SSL enforcement](https://supabase.com/docs/guides/platform/ssl-enforcement).
 - [Supabase database roles and password handling](https://supabase.com/docs/guides/database/postgres/roles).
+- [Firebase Authentication JavaScript reference (anonymous sign-in and existing-user reuse)](https://firebase.google.com/docs/reference/js/auth).
+- [Firebase AdditionalUserInfo isNewUser indicator](https://firebase.google.com/docs/reference/js/auth.additionaluserinfo).
+- [Firebase Admin session revocation](https://firebase.google.com/docs/auth/admin/manage-sessions).
+- [Firebase Storage Admin shareable download URLs](https://firebase.google.com/docs/storage/admin/start).
+- [Firebase StorageReference download-token revocation](https://firebase.google.com/docs/reference/kotlin/com/google/firebase/storage/StorageReference).
+- [Firebase Storage SDK direct downloads and browser CORS](https://firebase.google.com/docs/storage/web/download-files).
 
 ======================================================================
 ==> supabase-self-hosted.md
