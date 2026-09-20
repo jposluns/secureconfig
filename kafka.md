@@ -223,7 +223,7 @@ bin/kafka-acls.sh --bootstrap-server kafka.example.com:9093 \
   --resource-pattern-type literal
 ```
 
-Use that identity as the producer's `transactional.id`. Do not automatically add cluster-wide `IdempotentWrite`: Kafka 4.3.0's non-transactional producer initialization also accepts a principal with topic `Write` permission. The manual's authorization table is less precise on this point; the tagged [InitProducerId implementation](https://github.com/apache/kafka/blob/4.3.0/core/src/main/scala/kafka/server/KafkaApis.scala#L1481) supplies the distinction.
+Use that identity as the producer's `transactional.id`. Do not automatically add cluster-wide `IdempotentWrite`: Kafka 4.3.0's non-transactional producer initialization also accepts a principal with topic `Write` permission. The manual's authorization table is less precise on this point; the tagged [InitProducerId implementation](https://github.com/apache/kafka/blob/4.3.0/core/src/main/scala/kafka/server/KafkaApis.scala) supplies the distinction.
 
 See [Authorization and ACLs](https://kafka.apache.org/43/security/authorization-and-acls/) and [multi-tenancy topic-creation controls](https://kafka.apache.org/43/operations/multi-tenancy/).
 
@@ -435,9 +435,11 @@ Create `plain.properties` containing only:
 security.protocol=PLAINTEXT
 ```
 
-Create `wrong.properties` from `orders-reader.properties`, changing only its password to a deliberately incorrect value.
+Create `wrong.properties` from `orders-reader.properties`, changing only its password to a deliberately incorrect value. Use a seeded `orders` fixture with records available at the `app-workers` group's current offsets for the matched authenticated consumer control.
 
 **REASONED:** No live broker or external client host is available here. The authenticated control must work first. A plaintext Kafka service would answer the plaintext tool; the fixed `SASL_SSL` listener must not serve it. The wrong-password consumer must report `SaslAuthenticationException`; an empty result, timeout, group denial, DNS error, or local failure is not that result. Sources: [SASL/SCRAM](https://kafka.apache.org/43/security/authentication-using-sasl/), [broker API versions CLI](https://github.com/apache/kafka/blob/4.3.0/tools/src/main/java/org/apache/kafka/tools/BrokerApiVersionsCommand.java), and [console-consumer options](https://github.com/apache/kafka/blob/4.3.0/tools/src/main/java/org/apache/kafka/tools/consumer/ConsoleConsumerOptions.java).
+
+Kafka 4.3.0's [ConsoleConsumer implementation](https://github.com/apache/kafka/blob/4.3.0/tools/src/main/java/org/apache/kafka/tools/consumer/ConsoleConsumer.java) catches and logs exceptions from `receive()` inside `process()`, then returns; only exceptions escaping to `main()` cause its explicit exit with status 1. A consumer's exit status therefore does not prove denial. Both consumer denial checks below inspect the specific exception in stderr, regardless of exit status; records returned by a denied probe are a finding.
 
 ```bash
 (
@@ -463,17 +465,25 @@ Create `wrong.properties` from `orders-reader.properties`, changing only its pas
       else
         echo "Plaintext failed; inspect plain.log and broker logs to exclude local, DNS and routing errors"
       fi
-      if bin/kafka-console-consumer.sh --bootstrap-server "$1" \
+      bin/kafka-console-consumer.sh --bootstrap-server "$1" \
+        --command-config orders-reader.properties --group app-workers \
+        --topic orders --from-beginning --max-messages 1 --timeout-ms 10000 \
+        >"$2/authenticated.out" 2>"$2/authenticated.log" \
+        || { echo "authenticated consumer control failed; inspect authenticated.log"; exit 1; }
+      [ -s "$2/authenticated.out" ] \
+        || { echo "authenticated consumer returned no records; not probing denial"; exit 1; }
+      bin/kafka-console-consumer.sh --bootstrap-server "$1" \
         --command-config wrong.properties --group app-workers \
-        --topic orders --max-messages 1 --timeout-ms 10000 \
-        >"$2/wrong.out" 2>"$2/wrong.log"; then
-        echo "No authentication-denial proof"
+        --topic orders --from-beginning --max-messages 1 --timeout-ms 10000 \
+        >"$2/wrong.out" 2>"$2/wrong.log" \
+        || printf 'Consumer exit=%s; checking wrong.log for the specific denial\n' "$?"
+      if [ -s "$2/wrong.out" ]; then
+        echo "FINDING: wrong-password consumer returned records"
         exit 1
-      else
-        grep -F 'SaslAuthenticationException' "$2/wrong.log" >/dev/null \
-          || { echo "not the expected authentication denial; inspect wrong.log"; exit 1; }
-        echo "wrong password rejected at SASL authentication"
       fi
+      grep -F 'SaslAuthenticationException' "$2/wrong.log" >/dev/null \
+        || { echo "not the expected authentication denial; inspect wrong.log"; exit 1; }
+      echo "wrong password rejected at SASL authentication"
       ;;
   esac
 )
@@ -592,21 +602,22 @@ After ACL propagation, the fixed state must report `TopicAuthorizationException`
       printf 'Type NO_TOPIC_ACLS only after confirming no matching topic ACL remains: '
       read -r REPLY || { echo "ACL confirmation unavailable"; exit 1; }
       [ "$REPLY" = NO_TOPIC_ACLS ] || { echo "ACL precondition not confirmed"; exit 1; }
-      if bin/kafka-console-consumer.sh --bootstrap-server "$1" \
+      bin/kafka-console-consumer.sh --bootstrap-server "$1" \
         --command-config low.properties --group "$2-negative" --topic "$2" \
         --from-beginning --max-messages 1 --timeout-ms 10000 \
-        >"$3/negative" 2>"$3/negative.log"; then
-        if grep -Fx -- "$2" "$3/negative" >/dev/null; then
-          echo "FINDING: low user read the marker without a matching topic ACL"
-        else
-          echo "No marker and no proven denial: inconclusive"
-        fi
+        >"$3/negative" 2>"$3/negative.log" \
+        || printf 'Consumer exit=%s; checking negative.log for the specific denial\n' "$?"
+      if grep -Fx -- "$2" "$3/negative" >/dev/null; then
+        echo "FINDING: low user read the marker without a matching topic ACL"
         exit 1
-      else
-        grep -F 'TopicAuthorizationException' "$3/negative.log" >/dev/null \
-          || { echo "not the expected topic denial; inspect negative.log"; exit 1; }
-        echo "topic deny-by-default observed"
       fi
+      if [ -s "$3/negative" ]; then
+        echo "FINDING: low user returned records without a matching topic ACL"
+        exit 1
+      fi
+      grep -F 'TopicAuthorizationException' "$3/negative.log" >/dev/null \
+        || { echo "not the expected topic denial; inspect negative.log"; exit 1; }
+      echo "topic deny-by-default observed"
       bin/kafka-acls.sh --bootstrap-server "$1" --command-config admin.properties \
         --remove --allow-principal User:low --operation Read \
         --group "$2" --resource-pattern-type prefixed \
@@ -735,7 +746,7 @@ This producer workload does not demonstrate consumer quotas, controller mutation
 
 **REASONED:** No live authorizer or collected logs are available here. Run the marker/write-denial pair above in a quiet test window, then inspect only that window's collected authorizer log. Correlate timestamps, client host, principal, operation, resource, and outcome so old records cannot satisfy the check.
 
-At INFO, the requested denial should be present while the allowed write is absent. At DEBUG, both should be present. If the denied record is also absent, logger routing or collection has failed; absence of an allowed record alone is not proof of the intended INFO behavior. Sources: [StandardAuthorizer audit messages](https://github.com/apache/kafka/blob/4.3.0/metadata/src/main/java/org/apache/kafka/metadata/authorizer/StandardAuthorizerData.java#L232) and [the logging configuration](https://github.com/apache/kafka/blob/4.3.0/config/log4j2.yaml).
+At INFO, the requested denial should be present while the allowed write is absent. At DEBUG, both should be present. If the denied record is also absent, logger routing or collection has failed; absence of an allowed record alone is not proof of the intended INFO behavior. Sources: [StandardAuthorizer audit messages](https://github.com/apache/kafka/blob/4.3.0/metadata/src/main/java/org/apache/kafka/metadata/authorizer/StandardAuthorizerData.java) and [the logging configuration](https://github.com/apache/kafka/blob/4.3.0/config/log4j2.yaml).
 
 ```bash
 (
@@ -810,6 +821,7 @@ No existing Kafka live-demonstration row was found in the reviewed backlog. This
 - Authorizer Action audit-logging flags: https://kafka.apache.org/43/javadoc/org/apache/kafka/server/authorizer/Action.html
 - Console producer options, configuration files, and synchronous sends, tagged 4.3.0: https://github.com/apache/kafka/blob/4.3.0/tools/src/main/java/org/apache/kafka/tools/ConsoleProducer.java
 - Console consumer options, configuration files, groups, and timeouts, tagged 4.3.0: https://github.com/apache/kafka/blob/4.3.0/tools/src/main/java/org/apache/kafka/tools/consumer/ConsoleConsumerOptions.java
+- Console consumer exception logging and exit behavior, tagged 4.3.0: https://github.com/apache/kafka/blob/4.3.0/tools/src/main/java/org/apache/kafka/tools/consumer/ConsoleConsumer.java
 - Broker API versions CLI options, tagged 4.3.0: https://github.com/apache/kafka/blob/4.3.0/tools/src/main/java/org/apache/kafka/tools/BrokerApiVersionsCommand.java
 - Topic administration CLI options and error handling, tagged 4.3.0: https://github.com/apache/kafka/blob/4.3.0/tools/src/main/java/org/apache/kafka/tools/TopicCommand.java
 - Producer performance CLI options and metrics, tagged 4.3.0: https://github.com/apache/kafka/blob/4.3.0/tools/src/main/java/org/apache/kafka/tools/ProducerPerformance.java
