@@ -198,10 +198,12 @@ curl -q -g --noproxy '*' -sI https://app.example.com/login | grep -i set-cookie 
     *)
       curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 \
         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' -- "$1" || true
-      # Read the headers and body: expect 401 or 403, or a redirect whose Location is the login page, with
-      # no session cookie and no protected content in the response. An unrelated canonical redirect (for
-      # example to a trailing slash) is not a login redirect; a 200 carrying protected content is a failure.
-      # TLS and cookie flags say nothing about whether a route actually refuses an unauthenticated request.
+      # This request sends no session cookie. Expect 401 or 403, or a redirect whose Location is the login
+      # page, and no protected content in the response; an anonymous session Set-Cookie in the response is
+      # permitted (Laravel's StartSession issues one even for a denied request). An unrelated canonical
+      # redirect (for example to a trailing slash) is not a login redirect; a 200 carrying protected content
+      # is a failure. TLS and cookie flags say nothing about whether a route actually refuses an
+      # unauthenticated request.
       ;;
   esac
 ) || true
