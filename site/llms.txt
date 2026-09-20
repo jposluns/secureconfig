@@ -92,7 +92,7 @@
 - [headless-cms-instant-api](https://raw.githubusercontent.com/jposluns/secureconfig/main/headless-cms-instant-api.md): Strapi, Directus, Hasura, and PostgREST: one control gates the whole datastore
 - [rabbitmq](https://raw.githubusercontent.com/jposluns/secureconfig/main/rabbitmq.md): RabbitMQ: users and permissions, TLS listener, guest account, vhost isolation and resource limits, management HTTPS, monitoring/admin role separation, concrete private bindings, and safe definitions import
 - [mosquitto](https://raw.githubusercontent.com/jposluns/secureconfig/main/mosquitto.md): MQTT
-- [kafka](https://raw.githubusercontent.com/jposluns/secureconfig/main/kafka.md): SASL_SSL listeners, SCRAM credentials, ACLs
+- [kafka](https://raw.githubusercontent.com/jposluns/secureconfig/main/kafka.md): SASL_SSL listeners, SCRAM credentials, ACLs, client/replication/controller listener separation, per-role least-privilege ACLs, user quotas and connection limits, and authorization audit logging
 - [nats](https://raw.githubusercontent.com/jposluns/secureconfig/main/nats.md): NATS and JetStream, auth, TLS, and the unauthenticated monitoring port
 
 ## AI and agent infrastructure
