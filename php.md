@@ -49,7 +49,7 @@ Force HTTPS in generated URLs with `URL::forceHttps()` (or `URL::forceScheme('ht
 
 ```php
 RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)->by($request->email.$request->ip()));
-Route::post('/login', ...)->middleware('throttle:login');
+Route::post('/login', [AuthController::class, 'store'])->middleware('throttle:login');   // attach the limiter to your real login route and handler
 ```
 
 The 12.x starter kits (React, Vue, Svelte, Livewire) authenticate through Laravel Fortify, which throttles login by username plus IP, regenerates the session ID on login, and ships TOTP two-factor authentication with recovery codes: `Features::twoFactorAuthentication(['confirm' => true, 'confirmPassword' => true])` in `config/fortify.php`. Fortify alone (`composer require laravel/fortify`, `php artisan fortify:install`) gives the same backend without views. Laravel Socialite handles OAuth login for Google, GitHub, GitLab, Slack, and others; OpenID Connect providers come through the community Socialite Providers packages. After the callback, apply the allowlist and token checks in [oidc-integration.md](oidc-integration.md), and keep the `redirect` in `config/services.php` on `https://`.
@@ -196,11 +196,12 @@ curl -q -g --noproxy '*' -sI https://app.example.com/login | grep -i set-cookie 
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the full HTTPS URL inside the quotes above; not probing" ;;
     *)
-      curl -q -g --noproxy '*' -sS -o /dev/null --connect-timeout 5 --max-time 20 \
+      curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 \
         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' -- "$1" || true
-      # 401, 403, or a redirect to /login with no session cookie.
-      # TLS and cookie flags say nothing about whether a route
-      # actually refuses an unauthenticated request
+      # Read the headers and body: expect 401 or 403, or a redirect whose Location is the login page, with
+      # no session cookie and no protected content in the response. An unrelated canonical redirect (for
+      # example to a trailing slash) is not a login redirect; a 200 carrying protected content is a failure.
+      # TLS and cookie flags say nothing about whether a route actually refuses an unauthenticated request.
       ;;
   esac
 ) || true
