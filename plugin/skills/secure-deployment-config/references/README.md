@@ -131,7 +131,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [search-engines.md](search-engines.md) | Meilisearch and Typesense, master key, scoped search keys, production mode |
 | [minio.md](minio.md) | MinIO (AIStor): root and scoped credentials, TLS, server-side encryption, object locking, and audit logging |
 | [object-storage.md](object-storage.md) | S3, R2, GCS, Azure Blob, Supabase Storage: private by default, scoped credentials, signed URLs |
-| [firebase-supabase.md](firebase-supabase.md) | Firebase rules and Supabase RLS: the rules are the security |
+| [firebase-supabase.md](firebase-supabase.md) | Firebase rules and Supabase RLS: ownership rules across Firestore/RTDB/Storage, Data-API and key hygiene, function/Storage/Realtime authorization, App Check, and signup controls |
 | [supabase-self-hosted.md](supabase-self-hosted.md) | The self-hosted Docker stack: replace the demo keys and dashboard password, keep the published ports private |
 | [pocketbase.md](pocketbase.md) | PocketBase and Appwrite: API and collection rules are the security, plus auth-record and file-field protection, operator and console lockdown, settings encryption, rate limits, and hostname and upload controls |
 | [headless-cms-instant-api.md](headless-cms-instant-api.md) | Strapi, Directus, Hasura, and PostgREST: one control gates the whole datastore |
