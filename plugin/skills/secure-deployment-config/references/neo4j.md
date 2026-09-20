@@ -1,6 +1,6 @@
 # Neo4j: listen address, initial password, and TLS on Bolt and HTTPS
 
-A packaged Neo4j 5 listens on `localhost` only by default and ships with authentication on, but with the well-known `neo4j`/`neo4j` credential, Bolt TLS at `DISABLED`, and plaintext HTTP enabled instead of HTTPS. Setting `server.default_listen_address=0.0.0.0` on such an install to "make it reachable" therefore exposes a database with a guessable password over plaintext. These defaults remain documented at the time of writing. The official Docker instructions publish container ports for access from the host; do not assume the packaged loopback boundary protects a published container port. Docker's `NEO4J_AUTH=neo4j/REPLACE_WITH_LONG_RANDOM_VALUE` initializes authentication for a NEW database; it does not rotate an existing database's password. Supply credentials through the execution environment or secret-management mechanism, never as literal command-line arguments, and never use `NEO4J_AUTH=none`. See [network connectors](https://neo4j.com/docs/operations-manual/current/configuration/connectors/) and [Docker authentication](https://neo4j.com/docs/operations-manual/current/docker/introduction/).
+A packaged Neo4j 5 listens on `localhost` only by default and ships with authentication on, but with the well-known `neo4j`/`neo4j` credential, Bolt TLS at `DISABLED`, and plaintext HTTP enabled instead of HTTPS. Setting `server.default_listen_address=0.0.0.0` on such an install to "make it reachable" therefore exposes a database with a guessable password over plaintext. These defaults remain documented at the time of writing. The official Docker image is the exception: its entrypoint sets `server.default_listen_address=0.0.0.0` by default, so publishing a container port exposes the listener immediately, subject to the host's port binding and firewall. Do not assume the packaged loopback boundary protects a published container port. Docker's `NEO4J_AUTH=neo4j/REPLACE_WITH_LONG_RANDOM_VALUE` initializes authentication for a NEW database; it does not rotate an existing database's password. Supply credentials through the execution environment or secret-management mechanism, never as literal command-line arguments, and never use `NEO4J_AUTH=none`, which disables authentication. See [network connectors](https://neo4j.com/docs/operations-manual/current/configuration/connectors/), [Docker authentication](https://neo4j.com/docs/operations-manual/current/docker/introduction/), [Docker configuration](https://neo4j.com/docs/operations-manual/current/docker/configuration/), and the [official Neo4j 5 entrypoint](https://raw.githubusercontent.com/neo4j/docker-neo4j/master/docker-image-src/5/coredb/docker-entrypoint.sh).
 
 Examples use current configuration names, also used in Neo4j 5 except where a newer option is explicitly marked. Neo4j 4.x names differ. Configuration belongs in `neo4j.conf` unless another file is named.
 
@@ -17,7 +17,7 @@ For a packaged, isolated first start, block network access and retain the loopba
 
 Enter the initial password and its long, randomly generated replacement at the prompts. This plaintext loopback connection is only for isolated bootstrap before TLS setup. Use certificate-verified TLS for an already configured remote server.
 
-The documented `neo4j-admin dbms set-initial-password` interface takes a positional password. Secret-store substitution and disabling shell history do not remove that password from process arguments; there is no documented stdin or password-file option to substitute here. Cypher Shell provides the prompted alternative. For automation, it also documents `NEO4J_PASSWORD`: supply it through the execution environment, never expand it into `-p`. Environment delivery does not protect against every form of local process inspection. See [initial-password configuration](https://neo4j.com/docs/operations-manual/current/configuration/set-initial-password/) and [Cypher Shell](https://neo4j.com/docs/operations-manual/current/cypher-shell/).
+The documented `neo4j-admin dbms set-initial-password` interface is intended for one-time use before the database's first start, not password rotation. Its `--require-password-change=false` option avoids requiring another change at first login. It takes a positional password. The documentation warns that typing a password into the command stores it in shell history. Secret-store substitution and disabling shell history do not remove that password from process arguments such as `/proc/<pid>/cmdline`; there is no documented stdin or password-file option to substitute here. Cypher Shell provides the prompted alternative. For automation, it also documents `NEO4J_PASSWORD`: supply it through the execution environment, never expand it into `-p`. Environment delivery does not protect against every form of local process inspection. See [initial-password configuration](https://neo4j.com/docs/operations-manual/current/configuration/set-initial-password/) and [Cypher Shell](https://neo4j.com/docs/operations-manual/current/cypher-shell/).
 
 At the time of writing, the default minimum password length is 8 characters. `dbms.security.auth_minimum_password_length` was introduced in 5.3; a minimum is not a recommendation to use an eight-character password. Leave `dbms.security.auth_enabled` at its default `true`. The authentication documentation reserves disabling it for recovery with network access blocked. See [configuration changes in Neo4j 5](https://neo4j.com/docs/upgrade-migration-guide/current/version-5/changelogs/configuration-settings/) and [authentication configuration](https://neo4j.com/docs/operations-manual/current/authentication-authorization/).
 
@@ -27,19 +27,19 @@ At the time of writing, the default minimum password length is 8 characters. `db
 
 Online backup is Enterprise-only. Its `server.backup.listen_address` defaults to `127.0.0.1:6362` at the time of writing; keep it off external interfaces. Community readers should not expect an online-backup listener. See [online backup](https://neo4j.com/docs/operations-manual/current/backup-restore/online-backup/) and the [configuration reference](https://neo4j.com/docs/operations-manual/current/configuration/configuration-settings/).
 
-Firewall per [cloud-firewalls.md](cloud-firewalls.md) or [host.md), and widen access only after TLS and authentication are configured.
+Firewall per [cloud-firewalls.md](cloud-firewalls.md) or [host.md](host.md), and widen access only after TLS and authentication are configured.
 
-```ini
+```properties
 server.default_listen_address=REPLACE_WITH_PRIVATE_IP
 ```
 
 ## 3. TLS on Bolt and HTTPS, HTTP off
 
-Put a PKCS#8 PEM private key and certificate ([free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md)) under each policy directory. Use the service account as owner, normally `neo4j:neo4j`, with key mode `0400` and certificate mode `0644`. Convert legacy PKCS#1 private keys to the documented PKCS#8 format.
+Put a PKCS#8 PEM private key and certificate ([free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md)) under each policy directory. Use the service account as owner, normally `neo4j:neo4j`, with key mode `0400` and certificate mode `0644`. Legacy PKCS#1 keys, whose PEM header labels the key type as RSA rather than the generic PKCS#8 form, are deprecated; convert them to the documented PKCS#8 format.
 
-`server.bolt.tls_level=REQUIRED` refuses unencrypted Bolt; `OPTIONAL` continues accepting it. `server.http.enabled=false` removes the plaintext HTTP endpoint. This baseline uses server authentication through TLS and database credentials for clients. See the [SSL framework](https://neo4j.com/docs/operations-manual/current/security/ssl-framework/).
+`server.bolt.tls_level=REQUIRED` refuses unencrypted Bolt; `OPTIONAL` continues accepting it. `server.http.enabled=false` removes the plaintext HTTP endpoint. This baseline uses server authentication through TLS and database credentials for clients. For machine clients that can hold certificates, replace `dbms.ssl.policy.bolt.client_auth=NONE` with `dbms.ssl.policy.bolt.client_auth=REQUIRE` to add mutual TLS, and configure the policy's trusted certificates and the clients' certificates and private keys. See the [SSL framework](https://neo4j.com/docs/operations-manual/current/security/ssl-framework/).
 
-```ini
+```properties
 dbms.ssl.policy.bolt.enabled=true
 dbms.ssl.policy.bolt.base_directory=certificates/bolt
 dbms.ssl.policy.bolt.private_key=private.key
@@ -62,7 +62,7 @@ Use a separate account per application instead of sharing `neo4j` ([authenticati
 
 For native authentication, failed logins trigger `dbms.security.auth_lock_time` after `dbms.security.auth_max_failed_attempts`. At the time of writing, these defaults remain `5s` and `3`. These controls do not establish the lockout policy of an external identity provider. See [authentication configuration](https://neo4j.com/docs/operations-manual/current/authentication-authorization/).
 
-**Enterprise-only: restrict the application's database, labels, and properties.** An application credential should expose only the data it needs. Enterprise's built-in `reader` role grants broad graph reads and access across databases; it is not a database-specific application role. Create a custom role for narrower access and keep administrator credentials out of application configuration. The example permits reading two properties on `Product` nodes in the existing `neo4j` database. See [built-in roles](https://neo4j.com/docs/operations-manual/current/authentication-authorization/built-in-roles/), [database access privileges](https://neo4j.com/docs/operations-manual/current/authentication-authorization/database-administration/), and [MATCH privileges](https://neo4j.com/docs/operations-manual/current/authentication-authorization/privileges-reads/).
+**Enterprise-only: restrict the application's database, labels, and properties.** An application credential should expose only the data it needs. Enterprise supports built-in roles `reader`, `editor`, `publisher`, `architect`, and `admin`, plus custom roles. `editor` and `publisher` provide write capabilities; choose only the required privileges for writers. The built-in `reader` role grants broad graph reads and access across databases; it is not a database-specific application role. Create a custom role for narrower access and keep administrator credentials out of application configuration. The example permits reading two properties on `Product` nodes in the existing `neo4j` database. See [built-in roles](https://neo4j.com/docs/operations-manual/current/authentication-authorization/built-in-roles/), [database access privileges](https://neo4j.com/docs/operations-manual/current/authentication-authorization/database-administration/), and [MATCH privileges](https://neo4j.com/docs/operations-manual/current/authentication-authorization/privileges-reads/).
 
 Run this Cypher as an administrator in an interactive session with persistent history disabled. Substitute the password there; do not pass this password-bearing statement as a Cypher Shell command-line argument. The guarded session in Verify can be used with the administrator username and `-d system`.
 
@@ -84,7 +84,7 @@ Use a fresh application account and role. Adding a narrow role to an existing ac
 
 Community Edition cannot enforce these grants. Restrict direct database access to trusted services and enforce end-user authorization in the application or a fronting service that controls the operations exposed.
 
-MFA: native password authentication has no second-factor step. Enterprise can delegate authentication to an OIDC provider whose policy enforces MFA ([oidc-integration.md](oidc-integration.md)). Enterprise's LDAP `simple` authentication uses a username and password; that alone is not MFA. Confirm second-factor enforcement and ensure alternate native or password paths cannot bypass it ([mfa.md](mfa.md)). Put human access to the host and application behind MFA. See [SSO integration](https://neo4j.com/docs/operations-manual/current/authentication-authorization/sso-integration/) and [LDAP integration](https://neo4j.com/docs/operations-manual/current/authentication-authorization/ldap-integration/).
+MFA: native password authentication has no second-factor step. Enterprise can delegate authentication to an OIDC provider whose policy enforces MFA ([oidc-integration.md](oidc-integration.md)). Enterprise's LDAP `simple` authentication uses a username and password; that alone is not MFA. Confirm second-factor enforcement and ensure alternate native or password paths cannot bypass it ([mfa.md](mfa.md)). For services that can hold client certificates, mutual TLS adds a possession factor alongside database credentials. Put every human access path to the host and application behind MFA. See [SSO integration](https://neo4j.com/docs/operations-manual/current/authentication-authorization/sso-integration/) and [LDAP integration](https://neo4j.com/docs/operations-manual/current/authentication-authorization/ldap-integration/).
 
 ## 5. Restrict procedures, file import, and outbound requests
 
@@ -106,10 +106,10 @@ These denials affect users holding `catalog_reader`; they do not change `PUBLIC`
 
 Do not grant application roles boosted execution. APOC documents that boosted procedures can bypass graph and loading restrictions. Keep these additional boundaries:
 
-- Keep `dbms.security.procedures.unrestricted` empty unless a reviewed extension specifically requires access to internal APIs. Narrow `dbms.security.procedures.allowlist` to the procedures and functions the workload needs; its default is `*` at the time of writing. This controls which extensions load, rather than providing Community with per-user execution privileges. Install only necessary plugins. See [securing extensions](https://neo4j.com/docs/operations-manual/current/security/securing-extensions/).
-- If APOC is installed, put its settings in `apoc.conf`, not `neo4j.conf`, for Neo4j 5 and later. Retain `apoc.import.file.enabled=false` unless local file import is required, and keep `apoc.import.file.use_neo4j_config=true`. These are the defaults in the [APOC configuration reference](https://neo4j.com/docs/apoc/current/config/).
+- Keep `dbms.security.procedures.unrestricted` empty unless a reviewed extension specifically requires access to internal APIs. Unrestricted extensions can bypass security, as the [configuration reference](https://neo4j.com/docs/operations-manual/current/configuration/configuration-settings/) warns. Narrow `dbms.security.procedures.allowlist` to the procedures and functions the workload needs; its default is `*` at the time of writing. This controls which extensions load, rather than providing Community with per-user execution privileges. Install only necessary plugins. See [securing extensions](https://neo4j.com/docs/operations-manual/current/security/securing-extensions/).
+- If APOC is installed, put its settings in `apoc.conf`, not `neo4j.conf`, for Neo4j 5 and later. Retain `apoc.import.file.enabled=false` unless local file import is required, and keep `apoc.import.file.use_neo4j_config=true` so Neo4j's file-access and configured import-directory checks still apply. These are the defaults in the [APOC configuration reference](https://neo4j.com/docs/apoc/current/config/).
 - Set `dbms.security.allow_csv_import_from_file_urls=false` when local `LOAD CSV` is unnecessary. The current [Neo4j configuration reference](https://neo4j.com/docs/operations-manual/current/configuration/configuration-settings/) directly documents its default as `true`. The APOC security overview disagrees on that default and uses an inconsistent APOC setting spelling; use the configuration references for these values and the dotted `apoc.import.file.use_neo4j_config` spelling.
-- `LOAD CSV` and URL-loading extensions such as `apoc.load.json` can make outbound requests. Restrict egress so queries cannot reach internal services or cloud metadata at `169.254.169.254` ([egress-metadata.md](egress-metadata.md)). The current [APOC security guidance](https://neo4j.com/docs/apoc/current/security-guidelines/) also documents `internal.dbms.cypher_ip_blocklist` for Community SSRF mitigation. Check compatibility with the installed version and retain network egress restrictions.
+- `LOAD CSV` and APOC procedures such as `apoc.load.json` and `apoc.load.jdbc` can make outbound requests, creating an SSRF risk when queries can select internal destinations. `apoc.load.jdbc` belongs to APOC Extended and requires a compatible JDBC driver; see its [vendor reference](https://neo4j.com/labs/apoc/5/overview/apoc.load/apoc.load.jdbc/). Restrict egress so queries cannot reach internal services or cloud metadata at `169.254.169.254` ([egress-metadata.md](egress-metadata.md)). Where supported, set `internal.dbms.cypher_ip_blocklist` to block internal CIDRs; check compatibility with the installed version and retain network egress restrictions. See [APOC security guidance](https://neo4j.com/docs/apoc/current/security-guidelines/) and [Protecting against SSRF](https://support.neo4j.com/s/article/8584271681427-Protecting-against-Server-Side-Request-Forgery-SSRF), the current destination of the former `https://neo4j.com/developer/kb/protecting-against-ssrf/` URL.
 
 ## 6. Bound transaction memory and set a default timeout
 
@@ -152,7 +152,7 @@ On versions supporting error obfuscation, also set:
 db.logs.query.obfuscate_errors=true
 ```
 
-The configuration reference marks this setting as introduced in **2026.01.3**. Do not add it to Neo4j 5 or another version that lacks it. Literal obfuscation alone does not sanitize error details. See the [error-obfuscation setting](https://neo4j.com/docs/operations-manual/current/configuration/configuration-settings/).
+The Neo4j 5 configuration reference marks `db.logs.query.obfuscate_errors` as introduced in **5.26.21**; the current-series reference marks it as introduced in **2026.01.3**. It is therefore available in Neo4j 5.26.21 and later 5.26 patches, as well as current releases that include it. Check the exact installed version before adding the setting; do not add it to an older release that lacks it. Literal obfuscation alone does not sanitize error details. See the [Neo4j 5 setting](https://neo4j.com/docs/operations-manual/5/configuration/configuration-settings/#config_db.logs.query.obfuscate_errors) and the [current-series setting](https://neo4j.com/docs/operations-manual/current/configuration/configuration-settings/#config_db.logs.query.obfuscate_errors).
 
 Obfuscation does not hide every identifier or query detail. Treat the logs as sensitive.
 
@@ -168,11 +168,11 @@ Enable HTTP request logging only when an HTTP/HTTPS connector is in use. It does
 
 **Service verification status: REASONED, not demonstrated.** The authoring environment has no Neo4j server, Cypher Shell, Docker, or Podman available, and no authorized running deployment was supplied. All service comparisons below require capabilities missing here. Run exposed/fixed comparisons only in disposable test deployments. Record server, edition, client, and plugin versions alongside results.
 
-Local validation was run: the five shell blocks passed `bash -n` and ShellCheck 0.11.0, and the repository's guard scanner reported no findings. Guard-only tests rejected eight placeholder cases and three malformed marker/count cases, and accepted one substituted hostname. All four guarded blocks rejected their original placeholders before reaching probes. Six configuration fragments passed basic key/value parsing and duplicate-key checks. These are local syntax checks, not Neo4j configuration validation or service verification.
+Local validation of this revision: all six shell blocks passed `bash -n` and ShellCheck 0.11.0. The repository's guard scanner found no issues in the in-memory text. Guard-only checks exercised placeholder and malformed marker/count rejection in all five guarded blocks. Six configuration fragments passed basic key/value parsing and duplicate-key checks. These are local syntax checks, not Neo4j configuration validation or service verification. The whole-corpus gate suite was not run.
 
 For each guarded block, replace the hostname inside the single quotes and paste the whole block. The blocks assume ordinary shell builtins; do not insert a literal apostrophe into the quoted substitution. A fragment pasted below the guards is unguarded.
 
-Use `neo4j+s://` for certificate-verified routing connections or `bolt+s://` for a certificate-verified direct connection. The `+ssc` variants skip certificate verification and do not establish server identity. The checks below use direct Bolt to avoid routing discovery obscuring the result. Install the signing CA in the Cypher Shell client's trust store when necessary; OpenSSL's `-CAfile` and curl's `--cacert` do not configure Cypher Shell's trust. See [TLS connection schemes](https://neo4j.com/docs/operations-manual/current/security/ssl-framework/).
+Use `neo4j+s://` for certificate-verified routing connections or `bolt+s://` for a certificate-verified direct connection. The `+ssc` variants, including `neo4j+ssc://`, skip certificate verification and do not establish server identity; reserve them for development. The checks below use direct Bolt to avoid routing discovery obscuring the result. Install the signing CA in the Cypher Shell client's trust store when necessary; OpenSSL's `-CAfile` and curl's `--cacert` do not configure Cypher Shell's trust. See [TLS connection schemes](https://neo4j.com/docs/operations-manual/current/security/ssl-framework/).
 
 ### Listener inventory
 
@@ -202,9 +202,11 @@ Compare an exposed disposable installation with the configured state. Expect Bol
 
 ### Transport, default password, and prompted bootstrap
 
-**REASONED: requires an isolated fresh installation, a reachable TLS deployment, client tools, and an external test vantage, unavailable here.** Supply the signing CA as `ca.pem`. Run against the actual deployment hostname, including each relevant public IPv4/IPv6 path from another host.
+**REASONED: requires an isolated fresh installation, a reachable TLS deployment, client tools, and an external test vantage, unavailable here.** Supply the signing CA as `ca.pem`. For a publicly trusted certificate only, the explicit `-CAfile ca.pem` and `--cacert ca.pem` options and the corresponding file-readability checks may be omitted if the clients' default stores already trust its issuer. Keep them for a private or self-signed CA. Run against the actual deployment hostname, including each relevant public IPv4/IPv6 path from another host.
 
 The first password prompt below is deliberately for the public default password only. Never enter a real password into the plaintext test.
+
+The OpenSSL command and Cypher Shell checks below assume `client_auth=NONE`. If Bolt requires mutual TLS, add `-cert client.crt -key client.key` to the guarded OpenSSL command, using a client certificate trusted by the server. Without it, the server can refuse the client even when OpenSSL prints `Verification: OK` for the server certificate. Use a certificate-capable client with its certificate configured for the remaining Bolt comparisons. Keep `-verify_hostname` and `-verify_return_error`: merely connecting with `s_client` does not enforce the required server identity checks.
 
 ```bash
 (
@@ -246,7 +248,7 @@ The first password prompt below is deliberately for the public default password 
 
 - With Bolt TLS `DISABLED`, the TLS handshake cannot establish the configured TLS service. With the fixed policy, certificate and hostname verification must succeed and the authenticated TLS query must return `ok=1`. A successful handshake alone does not prove that plaintext is refused.
 - With plaintext Bolt accepted, the plaintext test reaches authentication: a query result, password-change requirement, or authentication error proves that plaintext reached the service. With `REQUIRED`, it must fail at the transport layer, while the TLS positive control succeeds.
-- With the original HTTP endpoint exposed, the 7474 request returns an HTTP status. With the fixed policy, that endpoint must not answer. A timeout, DNS failure, or local routing failure is inconclusive. A connection refusal is useful only after confirming the intended host and path, alongside the working TLS service and listener inventory.
+- With the original HTTP endpoint exposed, the 7474 request returns an HTTP status. With the fixed policy, that endpoint must not answer. Curl exit `7` means a connection could not be established; it can also indicate a local socket or routing problem. Exit `6` is DNS failure and `28` is a timeout. These are inconclusive without evidence that the intended host and path were reached. A connection refusal is useful only after confirming the intended host and path, alongside the working TLS service and listener inventory.
 - Before bootstrap rotation, the default password is accepted, including a response requiring a password change. After rotation, it must fail authentication while the replacement succeeds. Distinguish a temporary lockout from an invalid password; allow the configured lock period to expire before the positive control. During the isolated bootstrap reproduction, inspect process arguments to confirm the prompted secrets do not appear there.
 
 The expected distinctions follow [connector TLS behavior](https://neo4j.com/docs/operations-manual/current/configuration/connectors/), [initial-password behavior](https://neo4j.com/docs/operations-manual/current/configuration/set-initial-password/), and [native authentication](https://neo4j.com/docs/operations-manual/current/authentication-authorization/).
@@ -397,7 +399,7 @@ This deliberately invalid date should produce a query error. Establish whether t
 
 **REASONED: requires HTTPS, trusted certificates, a protected credential file, and the Query API, unavailable here.** The transactional HTTP API endpoint `/db/neo4j/tx/commit` was deprecated in 5.26; deprecation does not mean every deployment has removed it. Prefer the Query API when enabled. It arrived in 5.19 and became enabled by default on self-managed installations in 5.25. See the [HTTP API deprecation](https://neo4j.com/docs/http-api/current/) and [Query API availability](https://neo4j.com/docs/query-api/current/).
 
-Provision `neo4j-auth.header` through your secret-management mechanism as an owner-readable-only file containing the complete Authorization header for a valid database account. Do not construct it with a secret-bearing command-line argument. `ca.pem` contains the signing CA. Skip this pair when HTTPS is deliberately unavailable.
+Provision `neo4j-auth.header` through your secret-management mechanism as an owner-readable-only file containing the complete Authorization header for a valid database account. Do not construct it with a secret-bearing command-line argument. `ca.pem` contains the signing CA. For an interactive authenticated positive control, replacing `--header @neo4j-auth.header` with `--user neo4j` prompts for the password; remove the header-file check for that variant. Never append a password to the username. For publicly trusted certificates, the explicit CA option and file check may be omitted only when curl's default trust store suffices. Skip the HTTPS pairs when HTTPS is deliberately unavailable.
 
 ```bash
 (
@@ -431,18 +433,52 @@ Provision `neo4j-auth.header` through your secret-management mechanism as an own
 
 **REASONED outcomes:** an exposed authentication-disabled test service returns the query result anonymously. With authentication enabled, the first request returns 401; the authenticated request must contain the expected `ok=1` result. A Query API 202 response alone does not prove query success: inspect the body for errors and the expected data. A 404 or connection/TLS failure does not prove authentication enforcement. See [authorization responses](https://neo4j.com/docs/query-api/current/authentication-authorization/) and [query response semantics](https://neo4j.com/docs/query-api/current/query/).
 
+For deployments exposing the legacy transactional HTTP API, including Neo4j 5 versions predating the Query API, run this pair as well. When both APIs are enabled, test both. Its JSON uses `statements`, unlike the Query API's singular `statement`. See the [legacy query endpoint](https://neo4j.com/docs/http-api/current/query/) and [legacy authentication](https://neo4j.com/docs/http-api/current/authentication-authorization/).
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NEO4J_HOST'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 1 ] || { echo "expected exactly one hostname; not probing"; exit 1; }
+  case "$1" in
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
+      echo "substitute the hostname inside the quotes; not probing"
+      exit 1
+      ;;
+    *)
+      [ -r ca.pem ] || { echo "provide the signing CA in ca.pem"; exit 1; }
+      [ -r neo4j-auth.header ] || { echo "provide the protected header file"; exit 1; }
+      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+        --cacert ca.pem -H 'Content-Type: application/json' \
+        --data '{"statements":[{"statement":"RETURN 1 AS ok"}]}' \
+        -w '\nlegacy-no-auth=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+        "https://$1:7473/db/neo4j/tx/commit"
+      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+        --cacert ca.pem --header @neo4j-auth.header \
+        -H 'Content-Type: application/json' \
+        --data '{"statements":[{"statement":"RETURN 1 AS ok"}]}' \
+        -w '\nlegacy-auth=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+        "https://$1:7473/db/neo4j/tx/commit"
+      ;;
+  esac
+)
+```
+
+**REASONED: requires a deployment with the legacy HTTP API, trusted certificates, and protected credentials, unavailable here.** With authentication disabled in a disposable baseline, the anonymous request returns the query result. With authentication enabled, it must return 401; the authenticated request must return `ok=1` with an empty `errors` array. HTTP 200 alone does not demonstrate query success. A missing endpoint, TLS error, connection failure, or an authentication failure without a working positive control is inconclusive. See [legacy authorization responses](https://neo4j.com/docs/http-api/current/authentication-authorization/) and [legacy query results](https://neo4j.com/docs/http-api/current/query/).
+
 ### Verification backlog
 
 The single row below records the outstanding service demonstration debt for this guide. It is not a claim that `TODO.md` was edited.
 
 | ID | Status and completion evidence |
 |---|---|
-| NEO4J-LIVE-1 | REASONED, not demonstrated. Reproduce all Verify comparisons in disposable Community and Enterprise deployments: prompted bootstrap and process arguments; listeners, TLS, plaintext refusal, and default-password rotation; scoped graph reads and denied writes; effective privileges; procedure/UDF/LOAD denials and the separate existing local-file setting; each memory budget and default/client timeout; security events, query literal/parameter/error obfuscation, Community HTTP request logging, and the Query API anonymous/authenticated pair. Requires server and client runtimes, Enterprise capability, fixtures, compatible APOC, trusted certificates, protected credentials, concurrent workloads, log/process access, and an external network vantage. Record versions, exposed/fixed outcomes, matched positive controls, and errors before replacing any REASONED label. |
+| NEO4J-LIVE-1 | REASONED, not demonstrated. Reproduce all Verify comparisons in disposable Community and Enterprise deployments: prompted bootstrap and process arguments; listeners, TLS, plaintext refusal, and default-password rotation; scoped graph reads and denied writes; effective privileges; procedure/UDF/LOAD denials and the separate existing local-file setting; each memory budget and default/client timeout; security events, query literal/parameter/error obfuscation, Community HTTP request logging, and the Query API and legacy transactional HTTP API anonymous/authenticated pairs; mutual TLS where configured. Requires server and client runtimes, Enterprise capability, fixtures, compatible APOC, trusted certificates, protected credentials, concurrent workloads, log/process access, and an external network vantage. Record versions, exposed/fixed outcomes, matched positive controls, and errors before replacing any REASONED label. |
 
 ## Common mistakes
 
 - `server.default_listen_address=0.0.0.0` set during installation "to test", with `neo4j`/`neo4j` still in place.
-- Bolt TLS configured but left at `server.bolt.tls_level=OPTIONAL`, so plaintext clients keep connecting.
+- Bolt TLS configured but left at `server.bolt.tls_level=OPTIONAL`, so `neo4j://` clients keep connecting in plaintext.
 - HTTPS enabled while `server.http.enabled` stays `true`, leaving 7474 open beside 7473.
 - Treating a separate Community username as a restricted account, or Enterprise's built-in `reader` as a database-specific role.
 - Adding a narrow role without removing broader privileges inherited by the same account.
@@ -456,6 +492,7 @@ The single row below records the outstanding service demonstration debt for this
 - Ports: https://neo4j.com/docs/operations-manual/current/configuration/ports/
 - Set an initial password: https://neo4j.com/docs/operations-manual/current/configuration/set-initial-password/
 - Exact configuration settings, defaults, editions, and error-obfuscation version: https://neo4j.com/docs/operations-manual/current/configuration/configuration-settings/
+- Neo4j 5 configuration reference and error obfuscation since 5.26.21: https://neo4j.com/docs/operations-manual/5/configuration/configuration-settings/
 - Configuration changes in Neo4j 5: https://neo4j.com/docs/upgrade-migration-guide/current/version-5/changelogs/configuration-settings/
 - SSL framework and certificate-verified connection schemes: https://neo4j.com/docs/operations-manual/current/security/ssl-framework/
 - Authentication and native lockout configuration: https://neo4j.com/docs/operations-manual/current/authentication-authorization/
@@ -471,10 +508,14 @@ The single row below records the outstanding service demonstration debt for this
 - LOAD privilege introduction versions: https://neo4j.com/docs/cypher-manual/5/deprecations-additions-removals-compatibility/
 - Cypher Shell prompts, environment credentials, history, parameters, and timeouts: https://neo4j.com/docs/operations-manual/current/cypher-shell/
 - Docker introduction and initial authentication: https://neo4j.com/docs/operations-manual/current/docker/introduction/
+- Docker configuration and container listen addresses: https://neo4j.com/docs/operations-manual/current/docker/configuration/
+- Official Neo4j 5 Docker entrypoint and default listen address: https://raw.githubusercontent.com/neo4j/docker-neo4j/master/docker-image-src/5/coredb/docker-entrypoint.sh
 - Single sign-on integration: https://neo4j.com/docs/operations-manual/current/authentication-authorization/sso-integration/
 - LDAP integration: https://neo4j.com/docs/operations-manual/current/authentication-authorization/ldap-integration/
 - Securing extensions and plugin loading: https://neo4j.com/docs/operations-manual/current/security/securing-extensions/
 - APOC configuration and exact import-setting spelling: https://neo4j.com/docs/apoc/current/config/
+- Protecting against SSRF, redirected from the original developer KB URL: https://support.neo4j.com/s/article/8584271681427-Protecting-against-Server-Side-Request-Forgery-SSRF
+- APOC Extended JDBC outbound loading: https://neo4j.com/labs/apoc/5/overview/apoc.load/apoc.load.jdbc/
 - APOC security, boosted execution, and SSRF: https://neo4j.com/docs/apoc/current/security-guidelines/
 - Transaction memory limits and accounting: https://neo4j.com/docs/operations-manual/current/performance/memory-configuration/
 - Transaction timeout behavior: https://neo4j.com/docs/operations-manual/current/database-internals/transaction-management/
@@ -482,6 +523,8 @@ The single row below records the outstanding service demonstration debt for this
 - Logging, edition availability, security events, and rotation: https://neo4j.com/docs/operations-manual/current/monitoring/logging/
 - Enterprise online backup: https://neo4j.com/docs/operations-manual/current/backup-restore/online-backup/
 - Transactional HTTP API deprecation: https://neo4j.com/docs/http-api/current/
+- Legacy transactional HTTP API query payload and results: https://neo4j.com/docs/http-api/current/query/
+- Legacy transactional HTTP API authentication: https://neo4j.com/docs/http-api/current/authentication-authorization/
 - Query API availability: https://neo4j.com/docs/query-api/current/
 - Query API authentication and authorization: https://neo4j.com/docs/query-api/current/authentication-authorization/
 - Query API endpoint and response semantics: https://neo4j.com/docs/query-api/current/query/
