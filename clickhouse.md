@@ -13,6 +13,8 @@ The shipped `config.xml` comments out the `listen_host` examples and defaults to
 </clickhouse>
 ```
 
+Use a `config.d` override for server settings and a `users.d` override for user settings, as named below. Each server or user XML document retains the `<clickhouse>` root. If editing base `config.xml` or `users.xml` instead, modify the existing children in place rather than replacing the whole file.
+
 Remove any inherited wildcard listener when adapting an existing configuration. Inspect the merged configuration rather than assuming an additional narrow entry cancels a broad one. [Listener settings](https://clickhouse.com/docs/reference/settings/server-settings/settings/listen#listen_host), [configuration merging](https://clickhouse.com/docs/concepts/features/configuration/server-config/configuration-files).
 
 Inventory the listeners actually enabled. Documented port numbers include HTTP 8123, native TCP 9000, MySQL emulation 9004, PostgreSQL emulation 9005, and interserver HTTP 9009; listing a port does not mean it is active. PostgreSQL emulation can also use TLS when configured. Replica communication follows `interserver_listen_host`, which defaults to `listen_host` but can be set separately. Inspect every effective listener before writing firewall rules per [cloud-firewalls.md](cloud-firewalls.md) or [host.md](host.md). [Network ports](https://clickhouse.com/docs/concepts/features/security/network-ports), [interserver listener setting](https://clickhouse.com/docs/reference/settings/server-settings/settings/interserver#interserver_listen_host).
@@ -137,7 +139,7 @@ Version note: use the documented `READONLY` constraint syntax. Do not substitute
 
 ## 4. TLS listeners, plaintext ports off
 
-Get a certificate per [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md). Install `/etc/clickhouse-server/config.d/hardening.xml`, adapting the certificate paths:
+Get a certificate per [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md). Install `/etc/clickhouse-server/config.d/hardening.xml`, adapting the certificate paths. This baseline disables interserver listeners; replicated deployments must apply the replica variant below before restarting:
 
 ```xml
 <clickhouse>
@@ -145,6 +147,8 @@ Get a certificate per [free-certificates.md](free-certificates.md) or [self-sign
   <tcp_port_secure>9440</tcp_port_secure>
   <http_port remove="remove"/>
   <tcp_port remove="remove"/>
+  <interserver_http_port remove="remove"/>
+  <interserver_https_port remove="remove"/>
   <openSSL>
     <server>
       <certificateFile>/etc/clickhouse-server/certs/server.crt</certificateFile>
@@ -155,6 +159,38 @@ Get a certificate per [free-certificates.md](free-certificates.md) or [self-sign
   </openSSL>
 </clickhouse>
 ```
+
+Do not leave the shipped plaintext `interserver_http_port` 9009 inherited. For replicas, replace the two interserver removal entries in the same `hardening.xml` with the corresponding settings below, add the other children to its existing `<clickhouse>` root, and merge `<client>` into its existing `<openSSL>` block. Retain `<openSSL><server>` above for the HTTPS certificate and key. Do not install these alternatives side by side. [Shipped replication listener](https://raw.githubusercontent.com/ClickHouse/ClickHouse/master/programs/server/config.xml), [interserver HTTPS settings](https://clickhouse.com/docs/reference/settings/server-settings/settings/interserver-https).
+
+```xml
+<clickhouse>
+  <interserver_http_port remove="remove"/>
+  <interserver_https_port>9010</interserver_https_port>
+  <interserver_listen_host replace="replace">REPLACE_WITH_PRIVATE_IP</interserver_listen_host>
+  <interserver_https_host>REPLACE_WITH_REPLICA_CERTIFICATE_HOSTNAME</interserver_https_host>
+  <interserver_http_credentials replace="replace">
+    <user>replication</user>
+    <password>REPLACE_WITH_LONG_RANDOM_REPLICATION_SECRET</password>
+    <allow_empty>false</allow_empty>
+  </interserver_http_credentials>
+  <openSSL>
+    <client>
+      <caConfig>/etc/clickhouse-server/certs/ca.crt</caConfig>
+      <verificationMode>strict</verificationMode>
+      <extendedVerification>true</extendedVerification>
+      <invalidCertificateHandler>
+        <name>RejectCertificateHandler</name>
+      </invalidCertificateHandler>
+    </client>
+  </openSSL>
+</clickhouse>
+```
+
+Use each replica's private address and certificate-covered hostname; that hostname must resolve to its private address from its peers. Remove inherited wildcard interserver bindings, inspect the merged configuration, and allow 9010 only from replica addresses in the firewall. Install the trusted CA on every server for outbound HTTPS verification. A native client's separate configuration does not configure the server's outbound connections. [Interserver bind](https://clickhouse.com/docs/reference/settings/server-settings/settings/interserver#interserver_listen_host), [HTTPS hostname](https://clickhouse.com/docs/reference/settings/server-settings/settings/interserver-https#interserver_https_host), [OpenSSL verification](https://clickhouse.com/docs/reference/settings/server-settings/settings/other#openSSL).
+
+Require matching `interserver_http_credentials` on every replica, with a separately generated secret and `allow_empty` false. Omitting the credentials section disables replication authentication; setting `allow_empty` true admits unauthenticated peers. These credentials apply to both HTTP and HTTPS and are independent of SQL-user credentials; TLS alone does not supply them. Provision the secret through a secure editor or secret-management mechanism, protect the configuration and its preprocessed copies from other users, and keep it out of argv, shell history, and source control. Coordinate the rollout across replicas before enabling access. [Replication authentication](https://clickhouse.com/docs/reference/settings/server-settings/settings/interserver-http#interserver_http_credentials).
+
+This secures the replication data listener. Distributed-query and Keeper connections need their own TLS configuration; complete the vendor's [cluster TLS procedure](https://clickhouse.com/docs/concepts/features/security/tls/configuring-tls) for those enabled paths.
 
 Remove unused emulation listeners with `/etc/clickhouse-server/config.d/disable-emulation.xml`:
 
@@ -167,7 +203,7 @@ Remove unused emulation listeners with `/etc/clickhouse-server/config.d/disable-
 
 PostgreSQL emulation on 9005 can use TLS; the removal above closes an unused interface rather than assuming every connection on that port is plaintext. Inventory other enabled listeners separately. [TLS setup](https://clickhouse.com/docs/concepts/features/security/tls/configuring-tls), [network ports](https://clickhouse.com/docs/concepts/features/security/network-ports).
 
-Commenting out an element in an override does not remove an inherited setting. The explicit `remove` attributes above do. Inspect the effective merged configuration and apply the listener changes before opening the private address to clients. [Configuration files](https://clickhouse.com/docs/concepts/features/configuration/server-config/configuration-files).
+When editing the base `config.xml` directly, remove or comment out the active plaintext `http_port`, `tcp_port`, and `interserver_http_port` elements, checking that no override re-enables them. Commenting out an element in an override does not remove an inherited setting. The explicit `remove` attributes above do. Inspect the effective merged configuration and apply the listener changes before opening the private address to clients. [Configuration files](https://clickhouse.com/docs/concepts/features/configuration/server-config/configuration-files).
 
 On each native client machine, install the trusted CA at `/etc/clickhouse-client/ca.crt` and merge this into `~/.config/clickhouse/config.xml`:
 
@@ -211,7 +247,7 @@ For a deployment that requires one approved HTTPS source, install `/etc/clickhou
 </clickhouse>
 ```
 
-Replace the hostname and use an explicit `:443` in the permitted source URL. A hostname-only entry permits every port on that hostname. Matching occurs before DNS resolution and on redirects. This is not a universal restriction on every external protocol, nor does a host-and-port entry itself require HTTPS. Retain network egress restrictions on metadata endpoints and internal addresses per [egress-metadata.md](egress-metadata.md). [URL host allow-list](https://clickhouse.com/docs/reference/settings/server-settings/settings/remote#remote_url_allow_hosts).
+Omitting `remote_url_allow_hosts` allows all hosts for the URL interfaces it covers, as the [shipped configuration](https://raw.githubusercontent.com/ClickHouse/ClickHouse/master/programs/server/config.xml) documents. Replace the hostname and use an explicit `:443` in the permitted source URL. A hostname-only entry permits every port on that hostname. Matching occurs before DNS resolution and on redirects. This is not a universal restriction on every external protocol, nor does a host-and-port entry itself require HTTPS. Retain network egress restrictions on metadata endpoints and internal addresses per [egress-metadata.md](egress-metadata.md). [URL host allow-list](https://clickhouse.com/docs/reference/settings/server-settings/settings/remote#remote_url_allow_hosts).
 
 For accounts that must create tables, enable engine-grant enforcement before relying on an engine allow-list. Grant only the required engine, for example to a separately provisioned schema-management role:
 
@@ -332,13 +368,13 @@ Paste each whole shell block into Bash, substituting values inside the quotes. T
 )
 ```
 
-The exposed fixture has the plaintext listeners enabled. The fixed deployment should show 8443 and 9440 on the intended addresses, no removed listeners, and only other listeners deliberately retained. Inspect host/container publication and firewalls separately. `ss` observes the current network namespace; it proves neither remote reachability nor authentication. [Listener configuration](https://clickhouse.com/docs/concepts/features/security/tls/configuring-tls), [port inventory](https://clickhouse.com/docs/concepts/features/security/network-ports).
+The exposed fixture has the plaintext listeners enabled. The fixed deployment should show 8443 and 9440 on the intended addresses, no removed listeners (including plaintext replication 9009), and only other listeners deliberately retained, such as replication HTTPS 9010 on its explicit private address. A node without replication should expose neither 9009 nor 9010. Repeat the inventory on every replica; listener presence does not demonstrate replication authentication. Inspect host/container publication and firewalls separately. `ss` observes the current network namespace; it proves neither remote reachability nor authentication. [Listener configuration](https://clickhouse.com/docs/concepts/features/security/tls/configuring-tls), [port inventory](https://clickhouse.com/docs/concepts/features/security/network-ports).
 
 **REASONED: transport and authentication require the missing server/client runtime and reachable TLS endpoints.** For the exposed authentication fixture, provision the same named account, `app_reader`, with `IDENTIFIED WITH no_password`, the same allowed client origin, and sufficient access to execute `SELECT 1`. This is an isolated alternative to the password-authenticated account in step 2. A stock passwordless `default` account does not establish anything about `app_reader`. Keep the host, certificate, interface, and request constant between fixture states. [Authentication methods](https://clickhouse.com/docs/reference/statements/create/user#identification).
 
-For the correct HTTP request, provision `~/.config/clickhouse/app-reader.headers` through a secure editor or secret-management mechanism, readable only by its owner, with two lines: `X-ClickHouse-User: app_reader` and `X-ClickHouse-Key: ` followed by the actual password. Use a nonempty, single-line password without control characters, different from the deliberate wrong-password value below. Do not put the secret in a shell command. Install the CA and native client configuration from step 4 first.
+For the correct HTTP request, provision `~/.config/clickhouse/app-reader.headers` through a secure editor or secret-management mechanism, readable only by its owner, with two lines: `X-ClickHouse-User: app_reader` and `X-ClickHouse-Key: ` followed by the actual password. Use a nonempty, single-line password without control characters, different from the deliberate wrong-password value below. Do not put the secret in a shell command. The correct request reads both headers from that protected file on stdin, keeping the password out of curl's argv and shell history. Install the CA and native client configuration from step 4 first. For a certificate trusted by curl's system CA store, omit each `--cacert /etc/clickhouse-client/ca.crt` pair from the HTTP probes; retain certificate verification.
 
-Clients use native TLS on 9440 or HTTPS on 8443. HTTP supports Basic authentication and the `X-ClickHouse-User`/`X-ClickHouse-Key` headers; avoid password URL parameters because intermediaries can log them. The block requires curl 7.75.0 or later for its diagnostic write-out fields. [HTTP authentication](https://clickhouse.com/docs/concepts/features/interfaces/http), [native client](https://clickhouse.com/docs/concepts/features/interfaces/client).
+Clients use native TLS on 9440 or HTTPS on 8443. HTTP supports Basic authentication and the `X-ClickHouse-User`/`X-ClickHouse-Key` headers; avoid `user` and `password` URL parameters because intermediaries can log them. The block requires curl 7.75.0 or later for its diagnostic write-out fields. [HTTP authentication](https://clickhouse.com/docs/concepts/features/interfaces/http), [native client](https://clickhouse.com/docs/concepts/features/interfaces/client).
 
 ```bash
 # REASONED: no ClickHouse server/client binary or container runtime is available here.
@@ -381,9 +417,10 @@ Clients use native TLS on 9440 or HTTPS on 8443. HTTP supports Basic authenticat
       echo '[HTTPS correct password]'
       curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
         --cacert /etc/clickhouse-client/ca.crt \
-        --header @"$HOME/.config/clickhouse/app-reader.headers" \
+        --header @- \
         -w '\nhttp=%{http_code} exit=%{exitcode} remote=%{remote_ip} err=%{errormsg}\n' \
-        "https://$1:8443/?query=SELECT%201"
+        "https://$1:8443/?query=SELECT%201" \
+        < "$HOME/.config/clickhouse/app-reader.headers"
 
       echo '[native wrong password: enter a deliberately wrong password]'
       clickhouse-client --config-file "$HOME/.config/clickhouse/config.xml" \
@@ -554,15 +591,16 @@ The following is one proposed backlog row, not a change made to `TODO.md`. Exist
 
 | Proposed row | Missing capability and required completion evidence |
 |---|---|
-| CLICKHOUSE-LIVE-1 | REASONED: demonstrate every service-level check above in isolated exposed and fixed ClickHouse deployments. Requires server/client binaries or a container runtime, allowed and disallowed client networks, TLS certificates, populated table and bounded resource fixtures, a fresh quota account, local-file and HTTPS fixtures, a scratch schema user, retained logs and an independent collector, and an enrolled XML TOTP account. Record matched positive controls, exact server/client versions, actual errors, merged configuration, default retirement on both interfaces, resource and quota enforcement, source and engine denials, and log collection/retention. Use a second test server for server-local quota accounting. |
+| CLICKHOUSE-LIVE-1 | REASONED: demonstrate every service-level check above in isolated exposed and fixed ClickHouse deployments. Requires server/client binaries or a container runtime, allowed and disallowed client networks, TLS certificates, populated table and bounded resource fixtures, a fresh quota account, local-file and HTTPS fixtures, a scratch schema user, retained logs and an independent collector, and an enrolled XML TOTP account. Record matched positive controls, exact server/client versions, actual errors, merged configuration, default retirement on both interfaces, resource and quota enforcement, source and engine denials, and log collection/retention. Use a second test server for server-local quota accounting and replication HTTPS. Demonstrate replica credential enforcement with missing, wrong, and matching secrets, private binding, removal of 9009, and peer certificate verification; existing row 1.77 also tracks replication authentication. |
 
-Local validation completed during authoring: all 11 XML documents/fragments passed well-formedness parsing; all three shell blocks passed `bash -n` and ShellCheck; the guard-conventions scanner reported no findings. Thirty rejection cases passed under `bash -u`, covering unresolved and embedded placeholders, angle brackets, `example.com`, empty input, missing marker/arguments, and invalid usernames. These checks do not validate ClickHouse configuration semantics or SQL execution. No service probes ran, no files were edited, and `run_all_checks.sh` was not run.
+Local validation completed during authoring: all 12 XML documents/fragments passed well-formedness parsing; all three shell blocks passed `bash -n` and ShellCheck; the guard-conventions scanner reported no findings. Thirty rejection cases passed under `bash -u`, covering unresolved and embedded placeholders, angle brackets, `example.com`, empty input, missing marker/arguments, and invalid usernames. These checks do not validate ClickHouse configuration semantics or SQL execution. No service probes ran, no files were edited, and `run_all_checks.sh` was not run.
 
 ## Common mistakes
 
 - `<listen_host>::</listen_host>` uncommented to reach the server from a laptop, with `default` still passwordless.
 - A password set on `default` while `<networks>` still says `::/0`, leaving a privileged account reachable from anywhere.
 - `https_port` added while `http_port` 8123 stays open beside it.
+- Client TLS enabled while plaintext replication 9009 remains inherited, or replication HTTPS enabled without private binding and interserver credentials.
 - Commenting out a setting in an override and expecting the inherited setting to disappear.
 - Assuming `access_management` alone permits the complete `GRANT ALL` handoff.
 - Adding a narrow role while leaving broad direct grants or inherited roles active.
@@ -591,6 +629,8 @@ Local validation completed during authoring: all 11 XML documents/fragments pass
 - Query-class permissions and exceptions: https://clickhouse.com/docs/concepts/features/configuration/settings/permissions-for-queries
 - Network ports and PostgreSQL TLS support: https://clickhouse.com/docs/concepts/features/security/network-ports
 - Interserver listener address: https://clickhouse.com/docs/reference/settings/server-settings/settings/interserver#interserver_listen_host
+- Replication credentials, allow_empty, and plaintext interserver port: https://clickhouse.com/docs/reference/settings/server-settings/settings/interserver-http
+- Replication HTTPS port and advertised hostname: https://clickhouse.com/docs/reference/settings/server-settings/settings/interserver-https
 - Configuring TLS: https://clickhouse.com/docs/concepts/features/security/tls/configuring-tls
 - OpenSSL certificate and hostname verification: https://clickhouse.com/docs/reference/settings/server-settings/settings/other#openSSL
 - Configuration merging, remove, and replace: https://clickhouse.com/docs/concepts/features/configuration/server-config/configuration-files
