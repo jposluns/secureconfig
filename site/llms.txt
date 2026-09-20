@@ -70,7 +70,7 @@
 
 ## Databases, storage, and messaging
 
-- [postgresql](https://raw.githubusercontent.com/jposluns/secureconfig/main/postgresql.md): PostgreSQL: server TLS, SCRAM authentication, pg_hba rules, verified client connections
+- [postgresql](https://raw.githubusercontent.com/jposluns/secureconfig/main/postgresql.md): PostgreSQL: server TLS, SCRAM authentication, pg_hba rules, verified client connections, runtime-vs-owner privilege separation, restricted CONNECT and schema CREATE, secure search_path, and connection/DDL audit logging
 - [connection-poolers](https://raw.githubusercontent.com/jposluns/secureconfig/main/connection-poolers.md): PgBouncer and pgpool-II: client TLS that is off by default, a server hop that falls back to plaintext, and the pg_hba rules a pooler stops matching
 - [mysql](https://raw.githubusercontent.com/jposluns/secureconfig/main/mysql.md): MySQL and MariaDB: required TLS transport, per-user TLS, modern auth plugins
 - [mongodb](https://raw.githubusercontent.com/jposluns/secureconfig/main/mongodb.md): MongoDB: requireTLS, authorization, bind address, least-privilege roles with explicit SCRAM-SHA-256, replica/cluster membership auth, per-user source restrictions, and x.509 client identities
