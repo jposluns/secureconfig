@@ -85,7 +85,11 @@ If you need pprof or expvar, register them on a separate mux and serve it on loo
 
 ```go
 diag := http.NewServeMux()
-diag.HandleFunc("/debug/pprof/", pprof.Index)   // import "net/http/pprof" for pprof.Index/Profile/Trace
+diag.HandleFunc("/debug/pprof/", pprof.Index)              // import "net/http/pprof"; Index alone does not route the sub-handlers
+diag.HandleFunc("/debug/pprof/profile", pprof.Profile)
+diag.HandleFunc("/debug/pprof/trace", pprof.Trace)
+diag.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+diag.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
 diag.Handle("/debug/vars", expvar.Handler())
 go func() { log.Fatal((&http.Server{Addr: "127.0.0.1:6060", Handler: diag, ReadHeaderTimeout: 10 * time.Second}).ListenAndServe()) }()
 ```
@@ -96,14 +100,15 @@ Cap request bodies per endpoint so a large or slow upload cannot exhaust memory.
 
 ```go
 r.Body = http.MaxBytesReader(w, r.Body, 1<<20)   // 1 MiB example policy, choose per endpoint
-if err := dec.Decode(&v); err != nil {
+dec := json.NewDecoder(r.Body)                   // build the decoder AFTER wrapping, or the cap is not applied
+if err := dec.Decode(&v); err != nil {           // v is the endpoint's destination value
     var mbe *http.MaxBytesError
     if errors.As(err, &mbe) { http.Error(w, "request body too large", http.StatusRequestEntityTooLarge); return }
     http.Error(w, "bad request", http.StatusBadRequest); return
 }
 ```
 
-Header size is a separate control: `Server.MaxHeaderBytes` defaults to `1 << 20` (1 MiB, covering the request line and headers, not the body), and Go 1.27 adds `Server.MaxHeaderValueCount` (default 500) to bound the number of header lines. Neither substitutes for the body limit above; set the body limit where you read untrusted input.
+Header size is a separate control: `Server.MaxHeaderBytes` defaults to `1 << 20` (1 MiB, covering the request line and headers, not the body), and Go 1.27 adds `Server.MaxHeaderValueCount` (default 500) to bound the number of header values. Neither substitutes for the body limit above; set the body limit where you read untrusted input.
 
 ## 7. Set server deadlines
 
@@ -120,7 +125,7 @@ srv := &http.Server{
 }
 ```
 
-These are a starting policy for short, bounded requests, not Go defaults: a zero or negative field disables that timeout. Give the port-80 redirect server the same deadlines (the `http.ListenAndServe` helper sets none). For genuinely long uploads or streaming, keep the server defaults generous and set a per-request budget with `http.NewResponseController(w)` (`SetReadDeadline`/`SetWriteDeadline`, Go 1.20+), handling the unsupported-operation error.
+These are a starting policy for short, bounded requests, not Go defaults. For `ReadTimeout` and `WriteTimeout`, a zero or negative value disables that timeout; for `ReadHeaderTimeout` and `IdleTimeout`, zero instead falls back to `ReadTimeout`, so only a negative value disables them. Give the port-80 redirect server the same deadlines (the `http.ListenAndServe` helper sets none). For genuinely long uploads or streaming, keep the server defaults generous and set a per-request budget with `http.NewResponseController(w)` (`SetReadDeadline`/`SetWriteDeadline`, Go 1.20+), handling the unsupported-operation error.
 
 ## 8. Security headers when Go terminates TLS
 
@@ -136,7 +141,7 @@ func secure(next http.Handler) http.Handler {
 }
 ```
 
-Defer the full header catalogue and values to [headers.md](headers.md); do not send HSTS over plain HTTP. (Go enables HTTP/2 automatically for HTTPS servers; on Go 1.26+ `Server.HTTP2` tunes it, but leave the maintained cipher and curve defaults and the TLS 1.2 minimum from section 1 alone unless you have a specific requirement.)
+Defer the full header catalogue and values to [headers.md](headers.md); do not send HSTS over plain HTTP. Install it with `srv.Handler = secure(mux)` (or wrap your router); defining the wrapper alone adds no headers. (Go enables HTTP/2 automatically for HTTPS servers, and a `Server.HTTP2` field (`HTTP2Config`) tunes it on current releases, but leave the maintained cipher and curve defaults and the TLS 1.2 minimum from section 1 alone unless you have a specific requirement.)
 
 ## 9. Verify
 
@@ -145,7 +150,23 @@ curl -q -sI http://example.com/         # expect 301 with a https:// Location
 curl -q -sI https://example.com/        # succeeds without -k
 curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/api   # 401 or 403 without credentials
 ss -tlnp   # read every listener; REPLACE_WITH_BINARY_NAME: behind a proxy: 127.0.0.1 only
-curl -q -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:6060/debug/pprof/   # if you run a diagnostic listener (section 5), keep it on loopback; from another host this port must refuse the connection
+curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' http://127.0.0.1:6060/debug/pprof/   # local availability only: 200 here just means you enabled a diagnostic listener (section 5). What matters is off-host reachability, checked next.
+```
+
+```bash
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_SERVER_PUBLIC_IP'   # replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute the server's public address on the set -- line above; not probing" ;;
+    *) curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
+         -w 'diag_6060 http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:6060/debug/pprof/" || true   # the diagnostic listener must be UNREACHABLE from outside (a refusal/timeout, not a 200)
+       curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
+         -w 'app_pprof http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1/debug/pprof/" || true ;;   # and /debug/pprof/ must NOT be served on the public app routes (expect 404, never 200)
+  esac
+)
 ```
 
 ## Sources (checked September 2026)
@@ -161,3 +182,5 @@ curl -q -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:6060/debug/pprof/ 
 - net/http MaxBytesReader, MaxBytesError, Server.MaxHeaderBytes / MaxHeaderValueCount: https://pkg.go.dev/net/http#MaxBytesReader
 - net/http Server timeouts (ReadTimeout, WriteTimeout, IdleTimeout, ReadHeaderTimeout): https://pkg.go.dev/net/http#Server
 - net/http ResponseController (per-request deadlines): https://pkg.go.dev/net/http#ResponseController
+- expvar (registers /debug/vars on the default mux): https://pkg.go.dev/expvar
+- Linux ip-sysctl, ip_unprivileged_port_start (the privileged-port threshold is configurable): https://docs.kernel.org/networking/ip-sysctl.html#ip-unprivileged-port-start
