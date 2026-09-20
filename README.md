@@ -146,7 +146,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 |---|---|
 | [ollama.md](ollama.md) | Ollama: no built-in auth or TLS; protect it with a proxy or tunnel |
 | [model-servers.md](model-servers.md) | llama.cpp, vLLM, TGI, SGLang, Triton, LM Studio: loopback, API keys, TLS in front |
-| [litellm.md](litellm.md) | LiteLLM proxy: master key, per-app virtual keys |
+| [litellm.md](litellm.md) | LiteLLM proxy: master key, per-app virtual keys, per-key spend and rate limits, model-access allowlists, key expiry and revocation, admin/route separation, egress and pass-through limits, and request-content log redaction |
 | [vector-databases.md](vector-databases.md) | Qdrant, Weaviate, Milvus, Chroma, pgvector: API keys, TLS, what has no native auth |
 | [mcp-servers.md](mcp-servers.md) | MCP servers: stdio versus Streamable HTTP, loopback, Origin checks, OAuth 2.1 or a fronting layer |
 | [ray.md](ray.md) | Ray: dashboard, Jobs, and Client ports execute code; isolate, token auth, SSH forward |

@@ -99,7 +99,7 @@
 
 - [ollama](https://raw.githubusercontent.com/jposluns/secureconfig/main/ollama.md): no built-in auth or TLS; protect with a proxy or tunnel
 - [model-servers](https://raw.githubusercontent.com/jposluns/secureconfig/main/model-servers.md): llama.cpp, vLLM, TGI, SGLang, Triton, LM Studio
-- [litellm](https://raw.githubusercontent.com/jposluns/secureconfig/main/litellm.md): master key and virtual keys
+- [litellm](https://raw.githubusercontent.com/jposluns/secureconfig/main/litellm.md): master key and virtual keys, per-key spend and rate limits, model-access allowlists, key expiry and revocation, admin/route separation, egress and pass-through limits, and request-content log redaction
 - [vector-databases](https://raw.githubusercontent.com/jposluns/secureconfig/main/vector-databases.md): Qdrant, Weaviate, Milvus, Chroma, pgvector: API keys, TLS, what has no native auth
 - [mcp-servers](https://raw.githubusercontent.com/jposluns/secureconfig/main/mcp-servers.md): stdio versus Streamable HTTP, loopback, Origin checks, OAuth 2.1 or a fronting layer
 - [ray](https://raw.githubusercontent.com/jposluns/secureconfig/main/ray.md): dashboard, Jobs, and Client ports execute code; isolate, token auth, SSH forward
