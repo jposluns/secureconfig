@@ -162,7 +162,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 
 | Guide | Covers |
 |---|---|
-| [open-webui.md](open-webui.md) | Open WebUI: signup control, pending role, fronting TLS |
+| [open-webui.md](open-webui.md) | Open WebUI: signup control, pending role, fronting TLS, persistent signing key, trusted-proxy and OAuth boundaries, tool and code-execution limits, model and admin-data access control, API-key restrictions, and retrieval/SSRF limits |
 | [chat-uis.md](chat-uis.md) | AnythingLLM, LobeChat, Chainlit, OpenHands: open by default; front with login |
 | [image-gen-uis.md](image-gen-uis.md) | ComfyUI, A1111, InvokeAI, Fooocus: keep on loopback and add a login before exposing |
 | [gradio.md](gradio.md) | Gradio: launch() auth and TLS parameters, share link risks |
