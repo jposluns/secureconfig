@@ -1677,14 +1677,32 @@ to avoid printing secrets or profiles.
 | --- | --- | --- | --- |
 | Application's own secret | `GET /v1/kv/data/payments/config`, payments application token | Authenticated `200` for an existing, readable test fixture | Failure makes the cross-application denial inconclusive |
 | Another application's secret | `GET /v1/kv/data/inventory/config`, payments application token | Application receives `403`; repeat the same URL with a fixture-reader identity authorized for that existing path and require `200` | Application receives `200` |
-| Metrics | `GET /v1/sys/metrics`, metrics collector token | Anonymous `403`, collector `200`, on every API listener | Anonymous `200` |
-| Profiling | `GET /v1/sys/pprof/`, operator authorized for that profiling path | Anonymous `403`, authorized operator `200`, on every API listener | Anonymous `200` |
+| Metrics | `GET /v1/sys/metrics`, metrics collector token, directly on the active node | Anonymous `403`, collector `200`, on each API listener of the active node | Anonymous `200` |
+| Profiling | `GET /v1/sys/pprof/`, separate operator with `read` on `sys/pprof/*`, directly on the active node | Anonymous `403`, authorized operator `200`, on each API listener of the active node | Anonymous `200` |
 | Collector isolation | `GET /v1/kv/data/payments/config`, metrics collector token | Collector receives `403`; payments application receives `200` for the same existing fixture | Collector receives `200` |
 
 Use non-sensitive fixtures in an isolated test deployment. A `404` is not proof of an ACL denial.
 For metrics, use the default JSON representation so the positive control does not depend on enabling
-Prometheus output. A collector's metrics-only policy is not a positive control for profiling;
-use the separately authorized operator. These checks follow the
+Prometheus output. For both monitoring checks, target the active node directly, or the sole server
+in a single-node deployment. Confirm its role with the guarded status/health check above before
+running the paired requests. Do not use a load balancer that can select a standby.
+
+Authenticated metrics and profiling use local-only HTTP handlers. An ordinary HA standby returns
+`307` to the active node's advertised API address when a leader is available; that redirect is not
+an authentication result. Performance standbys can serve local requests, but the local-only handler
+rejects requests that require forwarding with `400` in the inspected implementation. Do not follow
+redirects with the token or count redirects, forwarding errors, or missing positive controls as
+passes; reconfirm the active node and repeat the pair. See the
+[HTTP route and standby redirect implementation](https://raw.githubusercontent.com/hashicorp/vault/v1.21.0/http/handler.go)
+and [local-only forwarding handling](https://raw.githubusercontent.com/hashicorp/vault/v1.20.0/http/logical.go).
+Keep both anonymous-access settings disabled on every node's API listeners. Inspect each listener's
+configuration and repeat the paired checks on each node when it is active during an authorized HA
+test; a pair on the current active node does not verify other nodes' listener settings.
+
+A collector's metrics-only policy is not a positive control for profiling; use the separately
+authorized operator. HashiCorp's [debug permissions](https://developer.hashicorp.com/vault/docs/commands/debug#permissions)
+grant `read` on `sys/pprof/*`, covering the trailing-slash index and profiling subpaths without
+`sudo`. Leave the collector's policy unchanged. These checks follow the
 [KV v2 API](https://developer.hashicorp.com/vault/api-docs/secret/kv/kv-v2),
 [ACL capabilities](https://developer.hashicorp.com/vault/docs/concepts/policies#capabilities),
 [listener authentication settings](https://developer.hashicorp.com/vault/docs/configuration/listener/tcp#telemetry-parameters),
