@@ -125,7 +125,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [surrealdb.md](surrealdb.md) | SurrealDB, root credentials, bind address, access levels, TLS |
 | [time-series-metrics-stores.md](time-series-metrics-stores.md) | InfluxDB, VictoriaMetrics, and QuestDB: default-off auth, default credentials, and fronting |
 | [elasticsearch.md](elasticsearch.md) | Elasticsearch and OpenSearch: keep built-in security on, scoped roles and API keys, anonymous/CORS lockdown, audit logging |
-| [clickhouse.md](clickhouse.md) | ClickHouse: user passwords, secure ports, network restrictions |
+| [clickhouse.md](clickhouse.md) | ClickHouse: user passwords, secure ports, network restrictions, SQL-driven RBAC with table-scoped roles, query/memory limits and quotas, external-source restrictions, and protected query/session logs |
 | [neo4j.md](neo4j.md) | Neo4j: initial password, Bolt and HTTPS TLS, auth stays on |
 | [memcached.md](memcached.md) | Memcached: no auth by default; loopback, SASL and TLS where built in |
 | [search-engines.md](search-engines.md) | Meilisearch and Typesense, master key, scoped search keys, production mode |
