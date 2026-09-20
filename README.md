@@ -133,7 +133,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [object-storage.md](object-storage.md) | S3, R2, GCS, Azure Blob, Supabase Storage: private by default, scoped credentials, signed URLs |
 | [firebase-supabase.md](firebase-supabase.md) | Firebase rules and Supabase RLS: the rules are the security |
 | [supabase-self-hosted.md](supabase-self-hosted.md) | The self-hosted Docker stack: replace the demo keys and dashboard password, keep the published ports private |
-| [pocketbase.md](pocketbase.md) | PocketBase and Appwrite: the rules are the security; lock the admin console |
+| [pocketbase.md](pocketbase.md) | PocketBase and Appwrite: API and collection rules are the security, plus auth-record and file-field protection, operator and console lockdown, settings encryption, rate limits, and hostname and upload controls |
 | [headless-cms-instant-api.md](headless-cms-instant-api.md) | Strapi, Directus, Hasura, and PostgREST: one control gates the whole datastore |
 | [rabbitmq.md](rabbitmq.md) | RabbitMQ: users and permissions, TLS listener, guest account, vhost isolation and resource limits, management HTTPS, monitoring/admin role separation, concrete private bindings, and safe definitions import |
 | [mosquitto.md](mosquitto.md) | Mosquitto (MQTT): per-device credentials, TLS listener, mutual TLS, topic ACLs with `$SYS` isolation, connection/packet/queue limits, per-listener scoping, bridge security, and runtime hardening |
