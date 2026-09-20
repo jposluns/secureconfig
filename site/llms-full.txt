@@ -19925,7 +19925,7 @@ Ray warns that this costs performance (large for small workloads, smaller for la
 
 ## 5. Job dependencies and setup hooks run as code
 
-Ray installs a job's `runtime_env` before the job's entrypoint runs, so submitting a job, or connecting a Client, is permission to execute code on the cluster, not just to run a fixed program. `ray job submit --runtime-env env.yaml` (or `--runtime-env-json`) and the `runtime_env=` argument to `ray.init` accept `pip`/`conda` (which download and install packages, and package installation can run distribution-provided code), `working_dir`/`py_modules` (pulled from a local path or a remote archive URI), a `py_executable` command, and an experimental `worker_process_setup_hook` that runs on every worker before your tasks. Ray ships no built-in policy that disables runtime environments or allowlists their packages, URIs, or hooks: `RuntimeEnvConfig`'s `eager_install` and `setup_timeout_seconds` only change when and how long installation runs, never whether a dependency is trusted. So the boundary is the same token and network boundary as everything else here, plus the operational practice of prebuilding reviewed dependencies into the image ([docker.md](docker.md)) rather than resolving them from an untrusted submission at run time. Treat anyone who can submit a job or reach the Client port as able to run arbitrary code.
+For a job submitted through the Jobs API, Ray installs its `runtime_env` before the entrypoint runs (a `runtime_env` passed to `ray.init` instead applies to the child tasks and actors it spawns), so submitting a job, or connecting a Client, is permission to execute code on the cluster, not just to run a fixed program. `ray job submit --runtime-env env.yaml` (or `--runtime-env-json`) and the `runtime_env=` argument to `ray.init` accept `pip`/`conda` (which download and install packages, and package installation can run distribution-provided code), `working_dir`/`py_modules` (pulled from a local path or a remote archive URI), a `py_executable` command, and an experimental `worker_process_setup_hook` that runs on every worker before your tasks. Ray ships no built-in policy that disables runtime environments or allowlists their packages, URIs, or hooks: `RuntimeEnvConfig`'s `eager_install` and `setup_timeout_seconds` only change when and how long installation runs, never whether a dependency is trusted. So the boundary is the same token and network boundary as everything else here, plus the operational practice of prebuilding reviewed dependencies into the image ([docker.md](docker.md)) rather than resolving them from an untrusted submission at run time. Treat anyone who can submit a job or reach the Client port as able to run arbitrary code.
 
 ## 6. Keep Ray Serve application endpoints private
 
@@ -19933,7 +19933,7 @@ Ray Serve runs your Python deployment code behind an HTTP proxy on port `8000`, 
 
 ## 7. Run Ray processes with restricted privileges
 
-The official `rayproject/ray` image already runs as the non-root user `ray` (UID 1000, GID 100), but its base image grants that user passwordless `sudo`, so a compromised worker can regain root inside the container: "starts non-root" is not "stays unprivileged". On Kubernetes, KubeRay (v1.7.0) exposes `podSecurityContext` and `securityContext` on both the head and every worker group (each defaults to `{}`), so set an explicit container security context on the Ray containers:
+The official `rayproject/ray` image already runs as the non-root user `ray` (UID 1000, GID 100), but its base image grants that user passwordless `sudo`, so a compromised worker can regain root inside the container: "starts non-root" is not "stays unprivileged". On Kubernetes, KubeRay's ray-cluster Helm chart (v1.7.0) exposes `podSecurityContext` and `securityContext` on both the head and every worker group (each defaults to `{}`); on a plain `RayCluster` manifest the same settings live on the pod template and container. Set an explicit container security context on the Ray containers:
 
 ```yaml
 securityContext:
@@ -19954,8 +19954,9 @@ For a plain `RayCluster`, the containers are at `spec.headGroupSpec.template.spe
 ```bash
 ss -tlnp   # read every listener; 127.0.0.1:8265 (or the tailnet IP), never 0.0.0.0 or *
 ss -tlnp   # read every listener; 6379/10001: private interface only
-# from another network, checking each externally facing Ray port (8265 dashboard, 6379 head, 10001 Client;
-# the last two are unauthenticated code-execution endpoints unless token auth (step 3) is enabled) is unreachable from outside. The pass is that
+ss -tlnp   # if you run Ray Serve, keep 8000 (HTTP proxy) private too, and 9000 (gRPC) when configured
+# from another network, checking that each externally facing Ray port (8265 dashboard, 6379 head, 10001
+# Client, plus 8000 if Ray Serve is deployed; the first three are unauthenticated code-execution endpoints and the Serve proxy answers any caller, all unless token auth (step 3) or a fronting proxy is enabled) is unreachable from outside. The pass is that
 # no TCP connection formed: time_connect stays 0.000000 and err names a connection-level failure (refused,
 # no route, or a filtered-port connect timeout). A non-zero time_connect (even if the port then speaks gRPC
 # not HTTP, so http is 000) means the handshake completed and the port answered, which is the finding. A
@@ -19972,7 +19973,9 @@ ss -tlnp   # read every listener; 6379/10001: private interface only
        curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
          -w 'port=6379 http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:6379/" || true
        curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
-         -w 'port=10001 http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:10001/" || true ;;
+         -w 'port=10001 http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:10001/" || true
+       curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
+         -w 'port=8000 http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:8000/" || true ;;   # Ray Serve, if deployed; 9000 too when its gRPC proxy is configured
   esac
 )
 # Through the SSH tunnel of step 1, with RAY_AUTH_MODE=token on the cluster.
@@ -19987,6 +19990,8 @@ ray job submit --address http://127.0.0.1:8265 -- python -c "print(1)"   # must 
 # RAY_TLS_CA_CERT (succeeds) and once with a MISMATCHED CA or server name (Ray demonstrates a
 # certificate-name mismatch), which must fail verification; a local configuration error is inconclusive.
 ```
+
+Service behaviour is not demonstrated here: the authoring environment has no Ray cluster, auth token, or gRPC-TLS fixture. The `ss` listener check runs locally, but the external-reachability probe, the token-authentication positive and negative controls, and the gRPC-TLS health-check are **REASONED**, written to be run against a live cluster in both the exposed and fixed states, tracked as RAY-LIVE-1 (`TODO.md` row 2.40).
 
 ## Common mistakes
 
@@ -20009,12 +20014,14 @@ ray job submit --address http://127.0.0.1:8265 -- python -c "print(1)"   # must 
 - curl manual (`--connect-timeout` bounds the connection phase only; the `time_connect`, `exitcode`, and `errormsg` write-out variables, the last two added in curl 7.75.0): https://curl.se/docs/manpage.html
 - Ray runtime environments (`runtime_env`, pip/conda/working_dir/py_modules/setup hook, no admission-control policy): https://docs.ray.io/en/latest/ray-core/handling-dependencies.html
 - Ray RuntimeEnv and RuntimeEnvConfig API (`eager_install`, `setup_timeout_seconds`): https://docs.ray.io/en/latest/ray-core/api/doc/ray.runtime_env.RuntimeEnv.html
-- Ray Serve HTTPOptions (host/port defaults, ssl_* fields) and config-file `http_options` 0.0.0.0 default: https://docs.ray.io/en/latest/serve/api/doc/ray.serve.config.HTTPOptions.html
+- Ray Serve HTTPOptions (Python host default 127.0.0.1, port 8000, ssl_keyfile/ssl_certfile/ssl_ca_certs): https://docs.ray.io/en/latest/serve/api/doc/ray.serve.config.HTTPOptions.html
+- Ray Serve config schema (config-file http_options 0.0.0.0 default, proxy_location EveryNode): https://docs.ray.io/en/latest/serve/api/doc/ray.serve.schema.HTTPOptionsSchema.html
 - Ray Serve HTTP guide (FastAPI integration for app-level auth): https://docs.ray.io/en/latest/serve/http-guide.html
 - GCS fault tolerance with external Redis (KubeRay `gcsFaultToleranceOptions.redisPassword`): https://docs.ray.io/en/latest/cluster/kubernetes/user-guides/kuberay-gcs-ft.html
 - Redis in Ray, past and future (Redis dropped as the default in Ray 1.11): https://www.anyscale.com/blog/redis-in-ray-past-and-future
 - Ray base image user and passwordless sudo (pinned tag): https://raw.githubusercontent.com/ray-project/ray/ray-2.58.0/docker/base-deps/Dockerfile
 - Kubernetes security contexts (runAsNonRoot, drop capabilities, seccomp): https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+- KubeRay ray-cluster Helm chart values (head/worker podSecurityContext and securityContext, default {}): https://github.com/ray-project/kuberay/blob/v1.7.0/helm-chart/ray-cluster/values.yaml
 
 ======================================================================
 ==> mlflow.md
