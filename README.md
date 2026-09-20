@@ -167,7 +167,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [image-gen-uis.md](image-gen-uis.md) | ComfyUI, A1111, InvokeAI, Fooocus: keep on loopback and add a login before exposing |
 | [gradio.md](gradio.md) | Gradio: launch() auth and TLS parameters, share link risks |
 | [streamlit.md](streamlit.md) | Streamlit: TLS options, native OIDC login, reverse proxy deployment |
-| [jupyter.md](jupyter.md) | Jupyter Server, Lab, and Notebook: hashed password and TLS |
+| [jupyter.md](jupyter.md) | Jupyter Server, Lab, and Notebook: hashed password and TLS, unprivileged execution, origin/XSRF/DNS-rebinding protection, JupyterHub identities and per-user isolation, and auth by default |
 | [n8n.md](n8n.md) | n8n: listen address, native TLS, owner setup, MFA enforcement |
 | [code-server.md](code-server.md) | code-server: SSH forwarding first, password auth, TLS |
 | [self-hosted-error-trackers.md](self-hosted-error-trackers.md) | Sentry and GlitchTip: registration defaults, event-data leakage, reverse-proxy TLS |
