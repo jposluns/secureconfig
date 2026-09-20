@@ -7188,7 +7188,7 @@ In the permitted session, inspect:
 db.runCommand({connectionStatus: 1});
 ```
 
-Confirm the expected application user and authentication database, then run the collection checks. Repeat through each required listener address to exercise `serverAddress`. See [source and listener address matching](https://www.mongodb.com/docs/manual/reference/method/db.updateuser/) and [authenticated identity reporting](https://www.mongodb.com/docs/manual/reference/command/connectionstatus/).
+Confirm the expected application user and authentication database, then run the collection checks. Test `serverAddress` on its own: hold the permitted source, valid credentials, and client certificate constant, and connect through both an allowed listener address and a reachable listener address you will exclude. Before `serverAddress` is applied, authentication must succeed through both, which proves the excluded listener is reachable. After applying `serverAddress`, authentication must fail through the excluded listener and continue to succeed through the allowed one; MongoDB matches `serverAddress` against the address that accepted the connection. Repeating the probes through permitted listeners only would pass with `serverAddress` omitted, so it does not demonstrate the restriction, and a TLS error or timeout against the excluded listener does not either. See [source and listener address matching](https://www.mongodb.com/docs/manual/reference/method/db.updateuser/#authentication-restrictions) and [authenticated identity reporting](https://www.mongodb.com/docs/manual/reference/command/connectionstatus/).
 
 ### x.509 identity and certificate requirement
 
