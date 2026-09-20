@@ -136,7 +136,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [pocketbase.md](pocketbase.md) | PocketBase and Appwrite: the rules are the security; lock the admin console |
 | [headless-cms-instant-api.md](headless-cms-instant-api.md) | Strapi, Directus, Hasura, and PostgREST: one control gates the whole datastore |
 | [rabbitmq.md](rabbitmq.md) | RabbitMQ: users and permissions, TLS listener, guest account, vhost isolation and resource limits, management HTTPS, monitoring/admin role separation, concrete private bindings, and safe definitions import |
-| [mosquitto.md](mosquitto.md) | Mosquitto (MQTT): per-device credentials, TLS listener, mutual TLS |
+| [mosquitto.md](mosquitto.md) | Mosquitto (MQTT): per-device credentials, TLS listener, mutual TLS, topic ACLs with `$SYS` isolation, connection/packet/queue limits, per-listener scoping, bridge security, and runtime hardening |
 | [kafka.md](kafka.md) | Apache Kafka: SASL_SSL listeners, SCRAM credentials, ACLs, client/replication/controller listener separation, per-role least-privilege ACLs, user quotas and connection limits, and authorization audit logging |
 | [nats.md](nats.md) | NATS and JetStream, auth, TLS, and the unauthenticated monitoring port |
 
