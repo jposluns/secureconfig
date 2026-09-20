@@ -64,12 +64,12 @@ Apply the configuration before bootstrapping. Prepare step 4's TLS listener and 
 ```sql
 CREATE USER sql_admin
 IDENTIFIED WITH sha256_hash BY 'REPLACE_WITH_ADMIN_SHA256_HEX'
-HOST IP '127.0.0.1', IP '10.20.30.10/32';
+HOST IP '127.0.0.1', IP '::1', IP '10.20.30.10/32';
 
 GRANT ALL ON *.* TO sql_admin WITH GRANT OPTION;
 ```
 
-Replace `10.20.30.10/32` with the actual administrator workstation address. Loopback permits local administration and the matched retirement check below. The global grant belongs only to this dedicated administrator. `HOST IP` restricts connection origins; it does not require encryption. Enforce TLS through step 4's secure listeners and plaintext-listener removal. The current `CREATE USER` grammar does not document a `REQUIRE SSL` clause. [CREATE USER](https://clickhouse.com/docs/reference/statements/create/user).
+Replace `10.20.30.10/32` with the actual administrator workstation address. Both IPv4 and IPv6 loopback permit local administration and the matched retirement check below. The global grant belongs only to this dedicated administrator. `HOST IP` restricts connection origins; it does not require encryption. Enforce TLS through step 4's secure listeners and plaintext-listener removal. The current `CREATE USER` grammar does not document a `REQUIRE SSL` clause. [CREATE USER](https://clickhouse.com/docs/reference/statements/create/user).
 
 After authenticating successfully as `sql_admin`, create a separate reader for an existing application table:
 
@@ -230,7 +230,7 @@ MFA: ClickHouse 26.2 introduced native TOTP. Current documentation supports `tim
 
 ## 5. Restrict external sources and executable discovery
 
-SQL that reaches external sources can read local data or use the database's network access. Keep `URL`, `FILE`, `HDFS`, `S3`, and `REMOTE` source privileges out of ordinary application accounts. Review direct grants, inherited roles, and existing externally backed tables and dictionaries. Separate READ/WRITE source grants require ClickHouse 25.7 or later and `access_control_improvements.enable_read_write_grants`; filtered source grants require 25.8 or later with the same switch. Otherwise, use the documented legacy source privileges. [Source privileges](https://clickhouse.com/docs/reference/statements/grant#sources).
+SQL that reaches external sources can read local data or use the database's network access. Withhold the blanket `SOURCES` privilege and every individual source privilege from ordinary application accounts, including all source-specific `READ` and `WRITE` grants when enabled. Remove any such access and grant options from direct grants and inherited roles; withholding only the blanket grant does not cancel individual or inherited grants. This covers every source type in the deployed version, including database connectors, message queues, object stores, and local files. Review existing externally backed tables and dictionaries. Separate READ/WRITE source grants require ClickHouse 25.7 or later and `access_control_improvements.enable_read_write_grants`; filtered source grants require 25.8 or later with the same switch. Otherwise, use the documented legacy source privileges. [Source privileges](https://clickhouse.com/docs/reference/statements/grant#sources), [upstream source privilege registry](https://raw.githubusercontent.com/ClickHouse/ClickHouse/master/src/Access/Common/AccessType.h).
 
 ClickHouse can fetch HTTPS data through `url()` and HTTP dictionaries, read local files through `file()` relative to `user_files_path`, and reach other servers through `remote()`. `file()` is a local-file interface, not an HTTP fetcher. [URL function](https://clickhouse.com/docs/reference/functions/table-functions/url), [file function](https://clickhouse.com/docs/reference/functions/table-functions/file), [remote function](https://clickhouse.com/docs/reference/functions/table-functions/remote), [HTTP dictionary sources](https://clickhouse.com/docs/reference/statements/create/dictionary/sources/http).
 
@@ -401,7 +401,7 @@ Clients use native TLS on 9440 or HTTPS on 8443. HTTP supports Basic authenticat
         "http://$1:8123/?query=SELECT%201"
 
       echo '[HTTPS empty password]'
-      printf 'X-ClickHouse-User: app_reader\nX-ClickHouse-Key:\n' |
+      printf 'X-ClickHouse-User: app_reader\nX-ClickHouse-Key;\n' |
         curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
           --cacert /etc/clickhouse-client/ca.crt --header @- \
           -w '\nhttp=%{http_code} exit=%{exitcode} remote=%{remote_ip} err=%{errormsg}\n' \
@@ -437,6 +437,8 @@ Clients use native TLS on 9440 or HTTPS on 8443. HTTP supports Basic authenticat
 ```
 
 Any received HTTP status on 8123, including an error status or a status followed by a transfer error, proves that the plaintext port answered. `http=000` is only a transport failure; combine it with the server inventory and successful TLS positive controls before concluding that the listener was removed.
+
+The empty-password request uses curl's `X-ClickHouse-Key;` form to transmit an empty-valued header; a trailing colon without a value would omit the header. [curl header syntax](https://curl.se/docs/manpage.html#-H).
 
 In the deliberately authentication-disabled fixture, empty, wrong, and supplied passwords should all allow the HTTPS `SELECT 1` result. In the fixed state, empty and wrong passwords must produce ClickHouse authentication errors, while the correct password returns `1`. For native TLS, the fixed state must reject the wrong password with an authentication error and nonzero exit, then return `1` with exit zero for the correct password. A DNS, proxy, certificate, or connection error is inconclusive.
 
@@ -480,7 +482,7 @@ SELECT * FROM appdb.private_events LIMIT 1;
 
 A broadly granted baseline reads both tables. The fixed reader reads `events` and receives an authorization error for `private_events`. A missing table is not a passing denial. Repeat a successful login from the allowed application subnet and a login with the same credentials from a disallowed origin. For the host-restriction discriminator, first demonstrate that both origins can reach and authenticate to the permissive fixture; a fixed-state timeout alone does not prove `HOST IP` enforcement. [User hosts](https://clickhouse.com/docs/reference/statements/create/user#user-host), [roles and combined grants](https://clickhouse.com/docs/reference/statements/create/role).
 
-**REASONED: default retirement requires the missing runtime and access to server loopback.** Before retirement, use the guarded connection locally with the certificate-valid loopback hostname as `default`, enter its configured password, and run `SELECT 1`. After retirement, repeat a fresh connection with the same credentials: it must fail authentication. From the same loopback origin and TLS endpoint, a fresh `sql_admin` connection must still run `SELECT 1` successfully. Repeat the credential check on HTTPS using an owner-only header file for each account and the guarded correct-password request shape above. Inspect the merged configuration for removal of `default`; a rejection from a previously disallowed network proves no retirement. [Default-account handoff](https://clickhouse.com/docs/concepts/features/security/access-rights), [XML removal](https://clickhouse.com/docs/concepts/features/configuration/server-config/configuration-files).
+**REASONED: default retirement requires the missing runtime and access to server loopback.** Before retirement, use the guarded connection locally with the certificate-valid loopback hostname as `default`, enter its configured password, and run `SELECT 1`. After retirement, repeat a fresh connection with the same credentials: it must fail authentication. From the same loopback origin and TLS endpoint, a fresh `sql_admin` connection must still run `SELECT 1` successfully. Repeat the credential check on HTTPS using an owner-only header file for each account and the guarded correct-password request shape above. Inspect the merged configuration for removal of `default`; a rejection from a previously disallowed network proves nothing about retirement. [Default-account handoff](https://clickhouse.com/docs/concepts/features/security/access-rights), [XML removal](https://clickhouse.com/docs/concepts/features/configuration/server-config/configuration-files).
 
 **REASONED: locked settings and resource enforcement require the missing runtime and a calibrated finite workload.** Run individually as `app_reader`:
 
@@ -496,7 +498,7 @@ SELECT getSetting('max_memory_usage');
 SET ROLE DEFAULT;
 ```
 
-An unconstrained baseline accepts the override. The fixed account rejects it and reports `1073741824`, `2147483648`, `30`, and `0` for the four settings. The account-bound memory profile remains effective with its role disabled. These checks establish settings and constraints, not actual resource enforcement. [Constraints](https://clickhouse.com/docs/concepts/features/configuration/settings/constraints-on-settings), [memory settings and inspection](https://clickhouse.com/docs/reference/settings/session-settings/max-memory-usage), [SET ROLE](https://clickhouse.com/docs/reference/statements/set-role).
+An unconstrained baseline accepts the override. The fixed account rejects it and reports `1073741824`, `2147483648`, `30`, and `0` for the four settings. The account-bound memory profile remains effective with its role disabled. `SET ROLE NONE` and `SET ROLE DEFAULT` change the session's active roles and are permitted with `readonly = 1`; they do not use the settings-changing `SET` path. Require both role statements to succeed; an error does not demonstrate profile persistence. [SET ROLE implementation](https://raw.githubusercontent.com/ClickHouse/ClickHouse/master/src/Interpreters/Access/InterpreterSetRoleQuery.cpp). These checks establish settings and constraints, not actual resource enforcement. [Constraints](https://clickhouse.com/docs/concepts/features/configuration/settings/constraints-on-settings), [memory settings and inspection](https://clickhouse.com/docs/reference/settings/session-settings/max-memory-usage), [SET ROLE](https://clickhouse.com/docs/reference/statements/set-role).
 
 For a memory discriminator, give the isolated `events` fixture an `x UInt64` column with a finite, recorded number of distinct values. Use:
 
@@ -619,7 +621,9 @@ Local validation completed during authoring: all 12 XML documents/fragments pass
 - CREATE USER and authentication methods: https://clickhouse.com/docs/reference/statements/create/user
 - CREATE ROLE and combined privileges: https://clickhouse.com/docs/reference/statements/create/role
 - SET ROLE and SET DEFAULT ROLE: https://clickhouse.com/docs/reference/statements/set-role
+- Session role changes and their separate execution path: https://raw.githubusercontent.com/ClickHouse/ClickHouse/master/src/Interpreters/Access/InterpreterSetRoleQuery.cpp
 - Privileges, external sources, engines, and dictionaries: https://clickhouse.com/docs/reference/statements/grant
+- Complete upstream source privilege registry: https://raw.githubusercontent.com/ClickHouse/ClickHouse/master/src/Access/Common/AccessType.h
 - CREATE SETTINGS PROFILE: https://clickhouse.com/docs/reference/statements/create/settings-profile
 - Settings constraints and profile interactions: https://clickhouse.com/docs/concepts/features/configuration/settings/constraints-on-settings
 - Query and per-user memory limits: https://clickhouse.com/docs/reference/settings/session-settings/max-memory-usage
@@ -637,6 +641,7 @@ Local validation completed during authoring: all 12 XML documents/fragments pass
 - Docker default-user network access: https://clickhouse.com/docs/get-started/setup/self-managed/docker#managing-default-user
 - Native client options and configuration: https://clickhouse.com/docs/concepts/features/interfaces/client
 - HTTP interface and authentication: https://clickhouse.com/docs/concepts/features/interfaces/http
+- curl empty-valued headers and header input from stdin: https://curl.se/docs/manpage.html#-H
 - Native TOTP for XML users: https://clickhouse.com/docs/concepts/features/configuration/settings/settings-users#totp-authentication-configuration
 - ClickHouse 26.2 TOTP introduction: https://clickhouse.com/blog/clickhouse-release-26-02
 - URL host allow-list: https://clickhouse.com/docs/reference/settings/server-settings/settings/remote#remote_url_allow_hosts
