@@ -7406,11 +7406,14 @@ Persist their settings in the server option file:
 simple_password_check_minimal_length = 16
 password_reuse_check_interval = 365
 strict_password_validation = ON
+secure_timestamp = replication
 ```
 
 MariaDB's reuse plugin provides a time-based policy, not MySQL's `PASSWORD HISTORY 6` syntax. Its interval defaults to zero, meaning unlimited retention, not disabled checking. Keep strict validation enabled so supplying password hashes cannot bypass the installed validators. [Simple Password Check](https://mariadb.com/docs/server/reference/plugins/password-validation-plugins/simple-password-check-plugin), [reuse interval](https://mariadb.com/docs/server/reference/plugins/password-validation-plugins/password_reuse_check_interval).
 
-Reuse checking appeared in MariaDB 10.7. Use a maintained release with plugin version 2.0; upgrading from its older storage format invalidated previously recorded reuse protection. MariaDB also supports the per-account expiration statement above when policy requires it. [Password Reuse Check](https://mariadb.com/docs/server/reference/plugins/password-validation-plugins/password-reuse-check-plugin.md), [MariaDB password expiry](https://mariadb.com/docs/server/security/user-account-management/user-password-expiry).
+Reuse checking appeared in MariaDB 10.7. Use a maintained release with plugin version 2.0; upgrading from its older storage format invalidated previously recorded reuse protection. MariaDB also supports the per-account expiration statement above when policy requires it. [Password Reuse Check](https://mariadb.com/docs/server/reference/plugins/password-validation-plugins/password-reuse-check-plugin), [MariaDB password expiry](https://mariadb.com/docs/server/security/user-account-management/user-password-expiry).
+
+For MariaDB password expiration and temporal controls to resist session-clock tampering, set `secure_timestamp` to `YES` or `replication`, as in the option file above. The default `NO` lets any user use `SET TIMESTAMP` to advance the session clock before changing a password, recording a future last-change time and evading expiration. `YES` pins timestamps to the system clock; `replication` permits only replication threads to adjust them. Use `replication` on replicas, since `YES` can cause discrepancies with statement-based replication. This is a startup-only setting: restart and check the effective value before relying on expiration. Review existing password-change timestamps for prior tampering. [MariaDB password expiry bypass](https://mariadb.com/docs/server/security/user-account-management/user-password-expiry), [MariaDB secure_timestamp](https://mariadb.com/docs/server/server-management/variables-and-modes/server-system-variables#secure_timestamp).
 
 The account, role, and password controls above are Community-available. Plugin examples require the relevant installed libraries and compatible clients.
 
@@ -7520,13 +7523,13 @@ Apply the same MariaDB client substitution when appropriate. Restrict access to 
 
 Service behavior below is **REASONED, not demonstrated**. The authoring environment has a read-only filesystem, no MySQL/MariaDB client or server binaries, no Docker/Podman runtime, and no supplied writable deployment or database credentials. No available authorized environment could reproduce the exposed and fixed service states.
 
-Locally, all six shell blocks passed `bash -n` and ShellCheck. Guard-only execution under `bash -u` rejected 76 tested invalid-input cases across the four guarded blocks, including an empty value in every argument position, embedded placeholders, angle brackets, example hostnames, missing/wrong markers, and incorrect argument counts. Each guard also accepted one valid dispatch case. These tests exercised guards only; no database behavior was simulated.
+Locally, all seven shell blocks passed `bash -n` and ShellCheck. Guard-only execution under `bash -u` rejected 119 tested invalid-input cases across the five guarded blocks, including an empty value in every argument position, embedded placeholders, angle brackets, example hostnames, missing/wrong markers, and incorrect argument counts. Each guard also accepted one valid dispatch case. These tests exercised guards only; no database behavior was simulated.
 
 All five INI fragments parsed with an in-memory INI parser. This checks basic structure, not vendor option acceptance. Native configuration parsing and restart behavior remain REASONED because the server binaries and writable deployment are unavailable.
 
 The snapshot's C2 scanner does not classify `mysql`, `mariadb`, or `ss` as probes. A supplemental in-memory check added those command names, accepted these guarded blocks, and detected a deliberately unguarded probe before the guard. No gate or repository file was changed.
 
-### TLS and account requirements: MYSQL-V12
+### TLS and account requirements
 
 **REASONED: missing a writable deployment, compatible clients, known-good credentials, and deployment certificates.**
 
@@ -7598,9 +7601,53 @@ MySQL error 1045 is generic access denial, not standalone proof of TLS enforceme
 
 In an isolated exposed-state test, both TLS restrictions are absent and the same cleartext request must succeed. If `caching_sha2_password` instead needs an unavailable RSA exchange after its cache is cleared, that failure does not demonstrate TLS policy. Repeat the positive control and resolve authentication prerequisites before drawing a conclusion. [MySQL authentication exchange](https://dev.mysql.com/doc/refman/8.4/en/caching-sha2-pluggable-authentication.html).
 
-For server identity, repeat the positive connection against the same reachable endpoint using a valid but unrelated CA file, or a test hostname resolving to that endpoint but absent from its certificate. Expect certificate verification failure; restore the correct CA and hostname and require success. For the existing `batch` account, use its complete client invocation above and require a successful TLS connection with the intended account. [MySQL certificate verification](https://dev.mysql.com/doc/refman/8.4/en/using-encrypted-connections.html).
+For server identity, repeat the positive connection against the same reachable endpoint using a valid but unrelated CA file, or a test hostname resolving to that endpoint but absent from its certificate. Expect certificate verification failure; restore the correct CA and hostname and require success. [MySQL certificate verification](https://dev.mysql.com/doc/refman/8.4/en/using-encrypted-connections.html).
 
-### Listeners: MYSQL-V08, listener portion
+For the existing `batch` account, compare a connection with its valid client certificate to an otherwise matched connection without one. Run from its permitted source host, using the same known-good password at both prompts. This MySQL client block disables option-file and login-path loading so the negative cannot inherit a certificate. [MySQL option-file controls](https://dev.mysql.com/doc/refman/8.4/en/option-file-options.html).
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DATABASE_HOST' 'REPLACE_WITH_CA_FILE' 'REPLACE_WITH_CLIENT_CERT_FILE' 'REPLACE_WITH_CLIENT_KEY_FILE'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 1; }
+  shift
+  [ "$#" -eq 4 ] || { echo "supply exactly 4 values; not connecting"; exit 1; }
+  case "$1$2$3$4" in
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
+      echo "replace every placeholder; not connecting"; exit 1 ;;
+    *)
+      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 1; }
+      [ -n "$2" ] || { echo "argument 2 is empty; not connecting"; exit 1; }
+      [ -n "$3" ] || { echo "argument 3 is empty; not connecting"; exit 1; }
+      [ -n "$4" ] || { echo "argument 4 is empty; not connecting"; exit 1; }
+      [ -f "$2" ] || { echo "CA must be a regular file"; exit 1; }
+      [ -r "$2" ] || { echo "CA must be readable"; exit 1; }
+      [ -f "$3" ] || { echo "certificate must be a regular file"; exit 1; }
+      [ -r "$3" ] || { echo "certificate must be readable"; exit 1; }
+      [ -f "$4" ] || { echo "key must be a regular file"; exit 1; }
+      [ -r "$4" ] || { echo "key must be readable"; exit 1; }
+      mysql --no-defaults --no-login-paths --protocol=TCP --host="$1" --port=3306 --user=batch -p \
+        --ssl-mode=VERIFY_IDENTITY --ssl-ca="$2" \
+        --ssl-cert="$3" --ssl-key="$4" --connect-timeout=5 \
+        -e "SELECT 1; SELECT CURRENT_USER(); SHOW SESSION STATUS LIKE 'Ssl_cipher';" \
+        || { echo "certificate positive control failed; stop"; exit 1; }
+      if mysql --no-defaults --no-login-paths --protocol=TCP \
+        --host="$1" --port=3306 --user=batch -p --connect-timeout=5 \
+        --ssl-mode=VERIFY_IDENTITY --ssl-ca="$2" -e 'SELECT 1;'
+      then
+        echo "FAIL: connection without a client certificate succeeded"; exit 1
+      else
+        echo "inspect the certificate requirement and refusal; failure alone is not a pass"
+      fi
+      ;;
+  esac
+)
+```
+
+The certificate-bearing positive must succeed as the intended `batch` account with a nonempty cipher. In an isolated baseline where that same account has only `REQUIRE SSL`, the certificate-free command must also succeed. After enforcing `REQUIRE X509` (or `SUBJECT`/`ISSUER`, which imply X509), that same command must be rejected for lacking the required client certificate while the positive still succeeds. Inspect the effective account requirement and refusal; generic error 1045 alone does not establish the cause. Wrong credentials, connectivity failures, or failed server-certificate verification are inconclusive. A missing-certificate test distinguishes certificate-required policy from SSL-only policy; to test a specific subject or issuer restriction, also use a valid certificate with a non-matching subject or issuer and require rejection. [MySQL account certificate requirements](https://dev.mysql.com/doc/refman/8.4/en/create-user.html#create-user-tls).
+
+For MariaDB, adapt the whole block using `mariadb --no-defaults`, omit MySQL's `--no-login-paths`, and replace `--ssl-mode=VERIFY_IDENTITY` with `--ssl --ssl-verify-server-cert` in both commands. Retain the CA, certificate/key positive, certificate-free negative, password prompts, and guards. [MariaDB client options](https://mariadb.com/docs/server/clients-and-utilities/mariadb-client/mariadb-command-line-client).
+
+### Listeners
 
 **REASONED: missing access to the database server's network namespace and its writable listener configuration.**
 
@@ -7611,7 +7658,7 @@ Run on the database server, using its actual `hostname` output:
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DATABASE_SERVER_HOSTNAME'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 1; }
   shift
-  [ "$#" -eq 1 ] || { echo "supply exactly 1 values; not connecting"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "supply exactly 1 value; not connecting"; exit 1; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
       echo "replace every placeholder; not connecting"; exit 1 ;;
@@ -7636,29 +7683,40 @@ As an administrator, inspect the runtime account:
 SHOW GRANTS FOR 'app'@'10.0.0.10';
 ```
 
-If using the role alternative, inspect `app_runtime` and any roles it inherits. In MySQL, expand the named role's effective grants with:
+On MySQL, always check the server-wide role settings, even if the account uses direct grants:
 
 ```sql
-SHOW GRANTS FOR 'app'@'10.0.0.10' USING app_runtime;
+SELECT @@GLOBAL.mandatory_roles, @@GLOBAL.activate_all_roles_on_login;
 ```
 
-In MariaDB, inspect the role directly:
+`SHOW GRANTS FOR 'app'@'10.0.0.10'` omits mandatory roles and does not expand role privileges. Combine its explicitly granted roles with every existing role in `@@GLOBAL.mandatory_roles`. Mandatory roles are treated as granted to every account; they still require activation. With `activate_all_roles_on_login=ON`, all granted roles, including mandatory roles, activate at login. Otherwise, only default roles activate at login; the session can activate other granted roles with `SET ROLE`. [MySQL roles and activation](https://dev.mysql.com/doc/refman/8.4/en/roles.html).
+
+Expand the full combined list with `SHOW GRANTS ... USING`, preserving each role's host part. If `app_runtime` is the only granted role and there are no mandatory roles:
+
+```sql
+SHOW GRANTS FOR 'app'@'10.0.0.10' USING 'app_runtime'@'%';
+```
+
+When other explicit or mandatory roles exist, append all of them as comma-separated role names in that same `USING` clause. Inspect inherited roles too. The resulting privileges describe access available with those roles activated, not necessarily the roles active in a particular session. Plain `SHOW GRANTS` in the application's own session includes mandatory role assignments, but still needs `USING` to expand role privileges. [MySQL SHOW GRANTS](https://dev.mysql.com/doc/refman/8.4/en/show-grants.html).
+
+In MariaDB, inspect each granted role and recursively inspect roles it inherits:
 
 ```sql
 SHOW GRANTS FOR app_runtime;
 ```
 
-Also repeat `SHOW GRANTS FOR PUBLIC` on MariaDB 10.11+. A `USAGE ON *.*` line denotes no privileges; it is not equivalent to a global data-access grant. [MySQL SHOW GRANTS](https://dev.mysql.com/doc/refman/8.4/en/show-grants.html), [MariaDB roles](https://mariadb.com/docs/server/security/user-account-management/roles/roles_overview).
+MariaDB permits one current role plus its inherited privileges; do not use MySQL's multiple-role activation or `SHOW GRANTS ... USING` audit there. Also repeat `SHOW GRANTS FOR PUBLIC` on MariaDB 10.11+, since its grants apply to every account independently of the selected role. A `USAGE ON *.*` line denotes no privileges; it is not equivalent to a global data-access grant. [MariaDB SHOW GRANTS](https://mariadb.com/docs/server/reference/sql-statements/administrative-sql-statements/show/show-grants), [MariaDB roles](https://mariadb.com/docs/server/security/user-account-management/roles/roles_overview), [MariaDB role activation](https://mariadb.com/docs/server/reference/sql-statements/account-management-sql-statements/set-role), [MariaDB PUBLIC privileges](https://mariadb.com/docs/server/security/user-account-management/roles/system-users-roles-and-privileges).
 
 For a behavioral comparison, use an isolated fixture with existing, populated `app.orders` and `app.private_probe` tables. From a fresh application connection:
 
 ```sql
 SELECT CURRENT_USER();
+SELECT CURRENT_ROLE();
 SELECT 1 FROM app.orders LIMIT 1;
 SELECT 1 FROM app.private_probe LIMIT 1;
 ```
 
-The positive read of `orders` must succeed. With an exposed broad read grant, the second table read succeeds too; with the scoped grant, it must receive a privilege denial. A nonexistent table or failed login is not the expected denial. Repeat required application operations on disposable fixtures, and inspect grants for unnecessary operations and inherited privileges. [MySQL table privileges](https://dev.mysql.com/doc/refman/8.4/en/grant.html).
+The positive read of `orders` must succeed. With an exposed broad read grant, the second table read succeeds too; with the scoped grant, it must receive a privilege denial. A nonexistent table or failed login is not the expected denial. Repeat the reads in the same disposable MySQL session after `SET ROLE ALL;`, and inspect `CURRENT_ROLE()` again, so an inactive mandatory or granted role cannot hide broader access. On MariaDB, repeat with each granted role activated individually using `SET ROLE role_name;`, substituting its actual name. Repeat required application operations on disposable fixtures, and inspect grants for unnecessary operations and inherited privileges. [MySQL table privileges](https://dev.mysql.com/doc/refman/8.4/en/grant.html).
 
 Repeat the two installation inventories from section 2 before and after cleanup. The fixed inventory has no anonymous accounts, no unused remote root accounts, and no unintended anonymous or test-schema grants. Deliberately retained administrative accounts and similarly named application databases must remain identifiable. Preserve a successful administrative login and the runtime positive control across cleanup. [MySQL cleanup behavior](https://dev.mysql.com/doc/refman/8.4/en/mysql-secure-installation.html), [MariaDB cleanup behavior](https://mariadb.com/docs/server/clients-and-utilities/deployment-tools/mariadb-secure-installation).
 
@@ -7730,11 +7788,12 @@ SHOW GLOBAL VARIABLES
 WHERE Variable_name IN (
   'simple_password_check_minimal_length',
   'password_reuse_check_interval',
-  'strict_password_validation'
+  'strict_password_validation',
+  'secure_timestamp'
 );
 ```
 
-Require both validation plugins to be active and the selected values to survive restart. Confirm the installed reuse plugin is version 2.0 through the deployment's plugin metadata. [MariaDB validation plugin](https://mariadb.com/docs/server/reference/plugins/password-validation-plugins/simple-password-check-plugin), [MariaDB reuse plugin](https://mariadb.com/docs/server/reference/plugins/password-validation-plugins/password-reuse-check-plugin.md).
+Require both validation plugins to be active and the selected values to survive restart. Require `secure_timestamp` to report `REPLICATION` for the example configuration, or `YES` for a deliberate non-replica policy; `NO` leaves the expiration bypass open. Confirm the installed reuse plugin is version 2.0 through the deployment's plugin metadata. [MariaDB validation plugin](https://mariadb.com/docs/server/reference/plugins/password-validation-plugins/simple-password-check-plugin), [MariaDB reuse plugin](https://mariadb.com/docs/server/reference/plugins/password-validation-plugins/password-reuse-check-plugin).
 
 For behavioral checks, provision a disposable `policy_probe` account with the same authentication plugin and inherited policy as the account being tested. Through an administrative session, use the applicable statement repeatedly.
 
@@ -7754,13 +7813,13 @@ ALTER USER 'policy_probe'@'10.0.0.20'
 
 In the isolated exposed state without validation, a deliberately weak test value such as `x` is accepted. With validation enabled, it must be rejected while a fresh generated password satisfying the policy succeeds.
 
-For reuse, set two distinct policy-compliant test passwords in sequence, then attempt the first again. Without reuse protection the third change succeeds; with protection enabled and history recorded under that policy, it must fail. A third fresh password must succeed. Keep the authentication plugin unchanged throughout, and do not use production credentials. These tests distinguish validation and history enforcement from a general inability to change passwords. [MySQL validation behavior](https://dev.mysql.com/doc/refman/8.4/en/validate-password.html), [MySQL password reuse](https://dev.mysql.com/doc/refman/8.4/en/password-management.html), [MariaDB password changes](https://mariadb.com/docs/server/reference/plugins/authentication-plugins/authentication-plugin-ed25519), [MariaDB reuse behavior](https://mariadb.com/docs/server/reference/plugins/password-validation-plugins/password-reuse-check-plugin.md).
+For reuse, set two distinct policy-compliant test passwords in sequence, then attempt the first again. Without reuse protection the third change succeeds; with protection enabled and history recorded under that policy, it must fail. A third fresh password must succeed. Keep the authentication plugin unchanged throughout, and do not use production credentials. These tests distinguish validation and history enforcement from a general inability to change passwords. [MySQL validation behavior](https://dev.mysql.com/doc/refman/8.4/en/validate-password.html), [MySQL password reuse](https://dev.mysql.com/doc/refman/8.4/en/password-management.html), [MariaDB password changes](https://mariadb.com/docs/server/reference/plugins/authentication-plugins/authentication-plugin-ed25519), [MariaDB reuse behavior](https://mariadb.com/docs/server/reference/plugins/password-validation-plugins/password-reuse-check-plugin).
 
 Verification debt:
 
 | ID | Status | Required demonstration |
 | --- | --- | --- |
-| MYSQL-LIVE-1 | Open; REASONED | Provide isolated writable MySQL 8.4 and MariaDB 10.11/11.4 deployments, compatible clients, administrative access, certificates, files, and disposable accounts/tables. Demonstrate exposed and fixed outcomes for MYSQL-V12, the listener portion of MYSQL-V08, scoped grants, cleanup, file loading, and password policies; run native configuration checks and restart tests. Record versions, requests, positive controls, refusals, and observed outcomes before removing REASONED labels. |
+| MYSQL-LIVE-1 | Open; REASONED | Provide isolated writable MySQL 8.4 and MariaDB 10.11/11.4 deployments, compatible clients, administrative access, certificates, files, and disposable accounts/tables. Demonstrate exposed and fixed outcomes for TLS and account requirements, listeners, scoped grants, cleanup, file loading, and password policies; run native configuration checks and restart tests. Record versions, requests, positive controls, refusals, and observed outcomes before removing REASONED labels. |
 
 ## Common mistakes
 
@@ -7806,6 +7865,7 @@ Verification debt:
 - MySQL LOCAL loading security: https://dev.mysql.com/doc/refman/8.4/en/load-data-local-security.html
 - MySQL LOAD DATA syntax and privileges: https://dev.mysql.com/doc/refman/8.4/en/load-data.html
 - MySQL option-file syntax and groups: https://dev.mysql.com/doc/refman/8.4/en/option-files.html
+- MySQL option-file command-line controls: https://dev.mysql.com/doc/refman/8.4/en/option-file-options.html
 - MySQL connection options and password prompting: https://dev.mysql.com/doc/refman/8.4/en/connection-options.html
 - MySQL client options: https://dev.mysql.com/doc/refman/8.4/en/mysql-command-options.html
 - MySQL interactive client commands: https://dev.mysql.com/doc/refman/8.4/en/mysql-commands.html
@@ -7829,6 +7889,7 @@ Verification debt:
 - MariaDB ALTER USER: https://mariadb.com/docs/server/reference/sql-statements/account-management-sql-statements/alter-user
 - MariaDB GRANT and privilege availability: https://mariadb.com/docs/server/reference/sql-statements/account-management-sql-statements/grant
 - MariaDB roles overview: https://mariadb.com/docs/server/security/user-account-management/roles/roles_overview
+- MariaDB SHOW GRANTS: https://mariadb.com/docs/server/reference/sql-statements/administrative-sql-statements/show/show-grants
 - MariaDB SET DEFAULT ROLE: https://mariadb.com/docs/server/reference/sql-statements/account-management-sql-statements/set-default-role
 - MariaDB SET ROLE: https://mariadb.com/docs/server/reference/sql-statements/account-management-sql-statements/set-role
 - MariaDB PUBLIC role: https://mariadb.com/docs/server/security/user-account-management/roles/system-users-roles-and-privileges
@@ -7836,8 +7897,9 @@ Verification debt:
 - MariaDB mysql.user compatibility view: https://mariadb.com/docs/server/reference/system-tables/the-mysql-database-tables/mysql-user-table
 - MariaDB mysql.db grant table: https://mariadb.com/docs/server/reference/system-tables/the-mysql-database-tables/mysql-db-table
 - MariaDB Simple Password Check: https://mariadb.com/docs/server/reference/plugins/password-validation-plugins/simple-password-check-plugin
-- MariaDB Password Reuse Check and version notes: https://mariadb.com/docs/server/reference/plugins/password-validation-plugins/password-reuse-check-plugin.md
+- MariaDB Password Reuse Check and version notes: https://mariadb.com/docs/server/reference/plugins/password-validation-plugins/password-reuse-check-plugin
 - MariaDB password reuse interval: https://mariadb.com/docs/server/reference/plugins/password-validation-plugins/password_reuse_check_interval
+- MariaDB secure_timestamp and session-clock restrictions: https://mariadb.com/docs/server/server-management/variables-and-modes/server-system-variables#secure_timestamp
 - MariaDB password expiry: https://mariadb.com/docs/server/security/user-account-management/user-password-expiry
 - MariaDB LOAD DATA: https://mariadb.com/docs/server/reference/sql-statements/data-manipulation/inserting-loading-data/load-data-into-tables-or-index/load-data-infile
 - MariaDB client options: https://mariadb.com/docs/server/clients-and-utilities/mariadb-client/mariadb-command-line-client
