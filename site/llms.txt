@@ -90,7 +90,7 @@
 - [supabase-self-hosted](https://raw.githubusercontent.com/jposluns/secureconfig/main/supabase-self-hosted.md): the self-hosted Docker stack ships demo keys and a default dashboard password; an unedited compose up publishes the database
 - [pocketbase](https://raw.githubusercontent.com/jposluns/secureconfig/main/pocketbase.md): PocketBase and Appwrite: the rules are the security; lock the admin console
 - [headless-cms-instant-api](https://raw.githubusercontent.com/jposluns/secureconfig/main/headless-cms-instant-api.md): Strapi, Directus, Hasura, and PostgREST: one control gates the whole datastore
-- [rabbitmq](https://raw.githubusercontent.com/jposluns/secureconfig/main/rabbitmq.md): RabbitMQ: users and permissions, TLS listener, guest account
+- [rabbitmq](https://raw.githubusercontent.com/jposluns/secureconfig/main/rabbitmq.md): RabbitMQ: users and permissions, TLS listener, guest account, vhost isolation and resource limits, management HTTPS, monitoring/admin role separation, concrete private bindings, and safe definitions import
 - [mosquitto](https://raw.githubusercontent.com/jposluns/secureconfig/main/mosquitto.md): MQTT
 - [kafka](https://raw.githubusercontent.com/jposluns/secureconfig/main/kafka.md): SASL_SSL listeners, SCRAM credentials, ACLs
 - [nats](https://raw.githubusercontent.com/jposluns/secureconfig/main/nats.md): NATS and JetStream, auth, TLS, and the unauthenticated monitoring port
