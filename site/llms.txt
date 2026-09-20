@@ -118,7 +118,7 @@
 - [image-gen-uis](https://raw.githubusercontent.com/jposluns/secureconfig/main/image-gen-uis.md): ComfyUI, A1111, InvokeAI, Fooocus: keep on loopback and add a login before exposing
 - [gradio](https://raw.githubusercontent.com/jposluns/secureconfig/main/gradio.md): Gradio: launch() auth and TLS parameters, share link risks
 - [streamlit](https://raw.githubusercontent.com/jposluns/secureconfig/main/streamlit.md): Streamlit: TLS options, native OIDC login, reverse proxy deployment
-- [jupyter](https://raw.githubusercontent.com/jposluns/secureconfig/main/jupyter.md): Jupyter Server, Lab, and Notebook: hashed password and TLS
+- [jupyter](https://raw.githubusercontent.com/jposluns/secureconfig/main/jupyter.md): Jupyter Server, Lab, and Notebook: hashed password and TLS, unprivileged execution, origin/XSRF/DNS-rebinding protection, JupyterHub identities and per-user isolation, and auth by default
 - [n8n](https://raw.githubusercontent.com/jposluns/secureconfig/main/n8n.md): n8n: listen address, native TLS, owner setup, MFA enforcement
 - [code-server](https://raw.githubusercontent.com/jposluns/secureconfig/main/code-server.md): code-server: SSH forwarding first, password auth, TLS
 - [self-hosted-error-trackers](https://raw.githubusercontent.com/jposluns/secureconfig/main/self-hosted-error-trackers.md): Sentry and GlitchTip registration defaults and reverse-proxy TLS
