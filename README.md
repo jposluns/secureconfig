@@ -127,7 +127,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [elasticsearch.md](elasticsearch.md) | Elasticsearch and OpenSearch: keep built-in security on, scoped roles and API keys, anonymous/CORS lockdown, audit logging |
 | [clickhouse.md](clickhouse.md) | ClickHouse: user passwords, secure ports, network restrictions, SQL-driven RBAC with table-scoped roles, query/memory limits and quotas, external-source restrictions, and protected query/session logs |
 | [neo4j.md](neo4j.md) | Neo4j: initial password, Bolt and HTTPS TLS, auth stays on, scoped Enterprise roles with label/property grants, procedure/function/load denials, transaction memory and timeout limits, and security-event logging |
-| [memcached.md](memcached.md) | Memcached: no auth by default; loopback, SASL and TLS where built in |
+| [memcached.md](memcached.md) | Memcached: no auth by default; private binding and UDP off, dedicated unprivileged account, connection and item-memory limits, disabled cache-wide flush and key enumeration, SASL and TLS where built in |
 | [search-engines.md](search-engines.md) | Meilisearch and Typesense, master key, scoped search keys, production mode |
 | [minio.md](minio.md) | MinIO (AIStor): root and scoped credentials, TLS, server-side encryption, object locking, and audit logging |
 | [object-storage.md](object-storage.md) | S3, R2, GCS, Azure Blob, Supabase Storage: private by default, scoped credentials, signed URLs |
