@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.86**, **2.44**, **3.16**, **4.12**.
+Next ids: **1.86**, **2.44**, **3.17**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -97,6 +97,7 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
+| 3.16 | Pin the remaining mutable named-branch GitHub source citations to commit SHAs: SeleniumHQ/docker-selenium `trunk`, hasura/graphql-engine `stable`, php/php-src `PHP-8.3` and `PHP-8.4`, pgaudit/pgaudit `REL_18_STABLE`, laravel/laravel `12.x`, and rails/rails `7-1-stable` (10 occurrences across `headless-browser-services.md`, `headless-cms-instant-api.md`, `php.md`, `postgresql.md`, `ruby.md`, and `php.md` body lines). These are mutable branch refs the pinned-citation gate does not target, because it scopes to `main`/`master` and cannot, offline, distinguish an arbitrary branch name from a release tag. Confirm each is a branch rather than a tag, pin to the current commit, and consider whether the gate should carry a small allowlist of known moving-branch names (L, S) | `[gap]` |
 
 ## Decisions
 
