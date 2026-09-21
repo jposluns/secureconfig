@@ -502,6 +502,23 @@ Compare users and grants with the approved list, including absence of `guest`. F
 
 Run section 1's reduced export and compare it with a private untransformed export from the same test broker containing known test users, vhost grants, topic permissions, and runtime parameters. The selected sections must be removed or empty in the reduced JSON. The local JSON check is deliberately conservative: any retained topic permissions or global parameters also require review. Review all remaining fields for secrets; empty selected sections do not establish that the whole document is safe to share. See [definitions import and export](https://www.rabbitmq.com/docs/definitions) and [exported definition contents](https://www.rabbitmq.com/docs/http-api-reference#get-apidefinitions).
 
+**8. Inter-node and CLI distribution TLS - REASONED: no Erlang runtime, RabbitMQ broker, or multi-node cluster is available.** On an authorized test cluster with the section 6 configuration, from an authorized CLI host holding the matching cookie:
+
+```bash
+sudo rabbitmq-diagnostics -n rabbit@node1.internal ping
+sudo rabbitmqctl -n rabbit@node1.internal cluster_status
+```
+
+With plaintext distribution a plaintext CLI authenticates; with TLS required, a plaintext CLI connection fails on the transport, while a CLI given the matching `RABBITMQ_CTL_ERL_ARGS` succeeds, and a CLI presenting a missing or untrusted client certificate is rejected. Two configured nodes must form a cluster over the selected TLS transport, and a plaintext node must not join. Correlate a failure with the TLS logs; a wrong cookie, bad DNS, or a stopped node is inconclusive, and `ping` and `cluster_status` alone do not prove every peer link is encrypted. See the [inter-node TLS guide](https://www.rabbitmq.com/docs/clustering-ssl).
+
+**9. Topic-exchange routing-key authorization - REASONED: no RabbitMQ broker or AMQP client is available.** On an authorized broker with an administrator-provisioned `app.shared.topic` exchange, hold the section 1 resource permissions constant and vary only whether the section 7 topic permission exists:
+
+```bash
+sudo rabbitmqctl list_topic_permissions -p 'app-prod'
+```
+
+As the `app` user with publisher confirms, publish to `tenant1.created` and to `tenant2.created`, and bind a queue with each routing key, then repeat with `#` and `tenant1.#`. With no topic permission every publish and binding succeeds; with the section 7 permission `tenant1.created` succeeds while `tenant2.created`, `#`, and `tenant1.#` are refused with a broker-attributed `ACCESS_REFUSED`. Require that broker refusal rather than a client-side timeout; the listing shows the stored policy, not enforcement. See the [topic authorization reference](https://www.rabbitmq.com/docs/access-control#topic-authorisation).
+
 Local authoring checks, completed without a broker:
 
 | Check | Observed result |
@@ -516,13 +533,73 @@ No broker, container, or whole-corpus gate suite was run. Local syntax checks do
 
 | ID | Outstanding demonstration | Status |
 |---|---|---|
-| RABBITMQ-LIVE-1 | Demonstrate checks 1-7 against isolated exposed and fixed states: scoped grants and vhost refusal; monitoring versus administration and message operations; listener/epmd bindings, cookie permissions, external denial and allowed-peer controls including 15671 and removed 5672; management authenticated/anonymous responses; mutual TLS and AMQP user authentication; approved blank-node imports and reduced exports. Include native RabbitMQ configuration parsing/startup and retain commands, versions, outputs, and matching broker logs. | OPEN: missing RabbitMQ/Erlang, rabbitmqadmin, Pika, container runtime, test certificates, and peer infrastructure in the authoring environment. |
+| RABBITMQ-LIVE-1 | Demonstrate checks 1-9 against isolated exposed and fixed states: scoped grants and vhost refusal; monitoring versus administration and message operations; listener/epmd bindings, cookie permissions, external denial and allowed-peer controls including 15671 and removed 5672; management authenticated/anonymous responses; mutual TLS and AMQP user authentication; approved blank-node imports and reduced exports; plaintext versus TLS-required inter-node and CLI distribution, with rejection of a missing or untrusted client certificate; and topic-exchange routing-key authorization, with a broker ACCESS_REFUSED for an out-of-pattern publish or binding. Include native RabbitMQ configuration parsing/startup and retain commands, versions, outputs, and matching broker logs. | OPEN: missing RabbitMQ/Erlang, rabbitmqadmin, Pika, container runtime, test certificates, and peer infrastructure in the authoring environment. |
+
+## 6. Encrypt inter-node and CLI distribution traffic with TLS
+
+Section 4 binds the Erlang distribution port privately but leaves that traffic in plaintext. Distribution carries clustering messages and the full authority of `rabbitmqctl` and `rabbitmq-diagnostics`, so encrypt it with mutually authenticated TLS across every node and CLI host. This is an Erlang runtime mechanism, not a `rabbitmq.conf` setting: it is selected through `rabbitmq-env.conf` and a separate Erlang-term options file, and requires Erlang/OTP 27 for RabbitMQ 4.3. See the [inter-node TLS guide](https://www.rabbitmq.com/docs/clustering-ssl) and the [OTP distribution-over-TLS reference](https://www.erlang.org/docs/27/apps/ssl/ssl_distribution.html).
+
+In `/etc/rabbitmq/rabbitmq-env.conf`, select the TLS distribution module for both the server and the CLI tools, pointing each at the options file:
+
+```bash
+# shellcheck disable=SC2034  # rabbitmq-env.conf is sourced by RabbitMQ; these variables are read externally
+ERL_SSL_PATH="REPLACE_WITH_INSTALLED_SSL_EBIN_DIRECTORY"
+SERVER_ADDITIONAL_ERL_ARGS="-pa $ERL_SSL_PATH -proto_dist inet_tls -ssl_dist_optfile /etc/rabbitmq/inter_node_tls.config"
+RABBITMQ_CTL_ERL_ARGS="-pa $ERL_SSL_PATH -proto_dist inet_tls -ssl_dist_optfile /etc/rabbitmq/inter_node_tls.config"
+```
+
+Determine the installed Erlang `ssl` application `ebin` directory on the host rather than copying a version-specific example. `SERVER_ADDITIONAL_ERL_ARGS` configures the broker's distribution; `RABBITMQ_CTL_ERL_ARGS` gives `rabbitmqctl` and `rabbitmq-diagnostics` the matching configuration so CLI connections are not refused. In a systemd or container launch environment the server variable's prefixed form is `RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS`. See the [pinned launch-variable handling](https://raw.githubusercontent.com/rabbitmq/rabbitmq-server/v4.3.6/deps/rabbit/scripts/rabbitmq-env).
+
+In `/etc/rabbitmq/inter_node_tls.config`, require and verify peer certificates in both directions, because a node both accepts and initiates distribution connections:
+
+```erlang
+[
+  {server, [
+    {cacertfile, "/etc/rabbitmq/distribution/ca.pem"},
+    {certfile, "/etc/rabbitmq/distribution/server.pem"},
+    {keyfile, "/etc/rabbitmq/distribution/server.key"},
+    {verify, verify_peer},
+    {fail_if_no_peer_cert, true}
+  ]},
+  {client, [
+    {cacertfile, "/etc/rabbitmq/distribution/ca.pem"},
+    {certfile, "/etc/rabbitmq/distribution/client.pem"},
+    {keyfile, "/etc/rabbitmq/distribution/client.key"},
+    {verify, verify_peer}
+  ]}
+].
+```
+
+Provision credentials readable by the effective process identity on every node and CLI host. Peer verification checks the certificate against the target Erlang node name, so issue distribution certificates for the actual node names rather than assuming the AMQP hostname certificate satisfies it, and never disable peer verification to resolve a mismatch. Plan a coordinated switch: distribution endpoints with mismatched transports cannot communicate, so a plaintext node and a TLS node will not form a cluster during a rolling change. TLS does not remove the Erlang cookie, epmd, or firewall requirements from section 4. See the [OTP distribution semantics](https://www.erlang.org/docs/27/apps/ssl/ssl_distribution.html).
+
+## 7. Restrict routing keys on shared topic exchanges
+
+Section 1 bounds which exchanges and queues a user may configure, write, and read, but on a shared topic exchange those permissions do not restrict which routing keys a user may publish or bind. Topic authorization adds that layer. It is off until configured: with no topic permission set, RabbitMQ authorizes every topic operation, subject only to the section 1 resource permissions. Topic authorization has been available since RabbitMQ 3.7. See the [topic authorization documentation](https://www.rabbitmq.com/docs/access-control#topic-authorisation).
+
+Topic permissions are broker records managed with `rabbitmqctl`, not entries in `rabbitmq.conf` or `advanced.config`. For an administrator-provisioned topic exchange `app.shared.topic` where the `app` user should publish and bind only its own tenant's routing keys, first narrow the section 1 resource grant so the application cannot reconfigure the shared exchange, then grant the scoped topic permission. The argument order is the user, then the exchange, then the write and read patterns:
+
+```bash
+sudo rabbitmqctl set_permissions -p 'app-prod' 'app' \
+  '^app[.]q[.][a-z0-9_-]+$' \
+  '^(app[.]shared[.]topic|app[.]q[.][a-z0-9_-]+)$' \
+  '^(app[.]shared[.]topic|app[.]q[.][a-z0-9_-]+)$'
+
+sudo rabbitmqctl set_topic_permissions -p 'app-prod' 'app' \
+  'app.shared.topic' \
+  '^tenant1[.][a-z0-9_-]+$' \
+  '^tenant1[.][a-z0-9_-]+$'
+```
+
+The write pattern gates publishing and the read pattern gates the routing keys a binding may use; both are regular expressions, not AMQP topic wildcards, so this example admits exact `tenant1.<name>` keys and excludes `#` and `*` subscriptions. Consumers still read from their queues under ordinary queue permissions, so topic authorization does not filter messages already sitting in an accessible queue, nor does it remove existing broad bindings: audit current bindings and queue grants, and reconnect clients after changing them. Clearing a topic permission returns that exchange to the unrestricted default; it is not a deny rule. Other authorization backends enforce their own topic rules. See the [topic authorization reference](https://www.rabbitmq.com/docs/access-control#topic-authorisation) and the [rabbitmqctl command reference](https://www.rabbitmq.com/docs/man/rabbitmqctl.8).
 
 ## Sources (checked September 2026)
 
 - RabbitMQ access control, guest restrictions, interactive user creation, and resource permissions: https://www.rabbitmq.com/docs/access-control
 - RabbitMQ virtual hosts and logical isolation: https://www.rabbitmq.com/docs/vhosts
 - RabbitMQ CLI user, vhost, permission, and tag commands: https://www.rabbitmq.com/docs/man/rabbitmqctl.8
+- RabbitMQ inter-node TLS (distribution over TLS): https://www.rabbitmq.com/docs/clustering-ssl
+- Erlang/OTP 27 distribution over TLS: https://www.erlang.org/docs/27/apps/ssl/ssl_distribution.html
+- RabbitMQ v4.3.6 launch-variable handling (rabbitmq-env): https://raw.githubusercontent.com/rabbitmq/rabbitmq-server/v4.3.6/deps/rabbit/scripts/rabbitmq-env
 - RabbitMQ management listeners, HTTPS, and roles: https://www.rabbitmq.com/docs/management
 - RabbitMQ configuration files and restart requirements: https://www.rabbitmq.com/docs/configure
 - RabbitMQ plugin activation: https://www.rabbitmq.com/docs/plugins
