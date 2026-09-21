@@ -634,6 +634,29 @@ else
   bad "the site copy-button check itself failed to run"
 fi
 
+
+echo "== source citations are pinned, not mutable branch refs =="
+# tools/check_pinned_citations.py flags raw.githubusercontent/github-blob citations whose REF segment
+# is main or master (a main/master inside a file path is not flagged). Advisory: it fails only when a
+# NEW mutable citation pushes the count above its recorded baseline, while the corpus-wide pinning
+# sweep proceeds (see the sweep note in CHANGELOG.md). Self-test first, so what runs is the shipped entry point.
+pc_st="$(python3 -I -B tools/check_pinned_citations.py --self-test 2>&1)"
+if [ $? -eq 0 ] && printf '%s\n' "$pc_st" | grep -q '^PASS'; then
+  ok "pinned-citation self-test"
+else
+  bad "pinned-citation self-test failed: $(printf '%s' "$pc_st" | tail -1)"
+fi
+pc="$(python3 -I -B tools/check_pinned_citations.py 2>&1)"
+pc_rc=$?
+if [ "$pc_rc" -eq 0 ]; then
+  ok "$(printf '%s\n' "$pc" | tail -1)"
+elif [ "$pc_rc" -eq 1 ]; then
+  bad "a new mutable GitHub citation was added; pin it to a commit SHA or version tag:"
+  printf '%s\n' "$pc" | sed 's/^/          /'
+else
+  bad "the pinned-citation gate could not complete (exit $pc_rc); failing closed:"
+  printf '%s\n' "$pc" | sed 's/^/          /'
+fi
 echo "== no committed secrets =="
 # Deliberately narrow: only material that is a credential wherever it appears.
 # A guide that must show sample key output will trip this; allowlist it here
