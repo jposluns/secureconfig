@@ -93,7 +93,7 @@ Every port `ss` shows listening should be either closed (not exposed at the plat
 - Vast.ai Instance Portal (PORTAL_CONFIG, Caddy reverse proxy, secure-token links): https://docs.vast.ai/guides/instances/connect/instance-portal
 - Lambda Cloud firewalls (default-deny inbound, SSH/ICMP exception, rule types): https://docs.lambda.ai/public-cloud/firewalls/
 - Modal proxy auth for web endpoints (Endpoints/Servers vs Web Functions defaults, headers): https://modal.com/docs/guide/webhook-proxy-auth
-- Vast.ai base image (portal auth: `OPEN_BUTTON_TOKEN`, `WEB_PASSWORD`, `ENABLE_AUTH`/`AUTH_EXCLUDE`): https://github.com/vast-ai/base-image/blob/main/README.md
+- Vast.ai base image (portal auth: `OPEN_BUTTON_TOKEN`, `WEB_PASSWORD`, `ENABLE_AUTH`/`AUTH_EXCLUDE`): https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/README.md
 - Jupyter Server security (token authentication; a missing token is refused with 403): https://jupyter-server.readthedocs.io/en/latest/operators/security.html
 - Lambda SSH (an SSH key is required at launch): https://docs.lambda.ai/public-cloud/on-demand/connecting-instance/
 - Vast.ai SSH (password authentication is disabled; register a key): https://docs.vast.ai/guides/instances/connect/ssh
