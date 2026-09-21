@@ -255,7 +255,7 @@ def main(argv) -> int:
 
 # Existing mutable ref-segment citations across the root Markdown files. Tracked
 # for pinning by the corpus-wide sweep; lower this as refs are pinned, to 0 when done.
-BASELINE = 18
+BASELINE = 0
 
 
 if __name__ == "__main__":
