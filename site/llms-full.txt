@@ -11278,7 +11278,7 @@ Provision the encrypted volume before deploying data. Mount it at `/srv/search-d
 path.data: /srv/search-data
 ```
 
-**`path.data` selects a directory; it does not enable encryption.** For an existing deployment, plan the storage migration and recovery procedure before changing the path. Include logs, swap, and local snapshot storage in the encryption assessment. See [Elasticsearch 8.19 path settings](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/path-settings-overview.html).
+**`path.data` selects a directory; it does not enable encryption.** For an existing deployment, plan the storage migration and recovery procedure before changing the path. Include logs, swap, and local snapshot storage in the encryption assessment. See [Elasticsearch 8.19 path settings](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/path-settings-overview.html) and [OpenSearch 3.6 configuration settings](https://docs.opensearch.org/3.6/install-and-configure/configuring-opensearch/configuration-system/).
 
 Prevent startup from silently using an ordinary directory when the intended mount is unavailable. For a systemd deployment with `/srv/search-data` configured as a dedicated mount, add this service drop-in to the relevant Elasticsearch or OpenSearch unit:
 
@@ -11853,6 +11853,7 @@ An unauthenticated `GET /` returning cluster JSON is the classic finding; so is 
 - OpenSearch 3.6 DLS, modes, and role composition: https://docs.opensearch.org/3.6/security/access-control/document-level-security/
 - Elasticsearch 8.19 dm-crypt-backed storage: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/tune-for-search-speed.html
 - Elasticsearch 8.19 path settings: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/path-settings-overview.html
+- OpenSearch 3.6 configuration settings (path.data): https://docs.opensearch.org/3.6/install-and-configure/configuring-opensearch/configuration-system/
 - OpenSearch 3.0 encryption-at-rest guidance: https://docs.opensearch.org/3.0/troubleshoot/#encryption-at-rest
 - Elasticsearch 8.19 S3 repository: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-s3.html
 - OpenSearch 3.1 repository API and encryption-setting change: https://docs.opensearch.org/3.1/api-reference/snapshots/create-repository/
