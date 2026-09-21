@@ -10127,7 +10127,7 @@ Generate passwords per [authentication.md](authentication.md). The `default` use
 
 MFA: Redis has no second-factor dialogue. For machine clients, `tls-auth-clients yes` (mutual TLS, below) adds a possession factor, a certificate, alongside the password; that is stronger than a password alone but it is not MFA for a person. Human paths to the host go behind MFA per [mfa.md](mfa.md).
 
-On Redis 8.10+, the certificate-plus-password description assumes certificate-to-user automatic authentication is disabled. Redis 8.10 introduced `tls-auth-clients-user`, which defaults to `off`; enabling it can authenticate a connection without a separate password exchange. On Redis 8.10+, keep this setting `off` for the guide's certificate-plus-password and unauthenticated-certificate `NOAUTH` checks. Earlier releases do not support this directive; omit it entirely, because an unknown configuration directive prevents startup. See the [pinned certificate authentication configuration](https://raw.githubusercontent.com/redis/redis/8.10.1/redis.conf) and [registered default](https://raw.githubusercontent.com/redis/redis/8.10.1/src/config.c).
+On Redis 8.6+, the certificate-plus-password description assumes certificate-to-user automatic authentication is disabled. Redis 8.6 introduced `tls-auth-clients-user`, which defaults to `off`; enabling it can authenticate a connection without a separate password exchange. On Redis 8.6+, keep this setting `off` for the guide's certificate-plus-password and unauthenticated-certificate `NOAUTH` checks. Earlier releases do not support this directive; omit it entirely, because an unknown configuration directive prevents startup. See the [pinned certificate authentication configuration](https://raw.githubusercontent.com/redis/redis/8.6.0/redis.conf) and [registered default](https://raw.githubusercontent.com/redis/redis/8.6.0/src/config.c).
 
 ## 3. Make ACL restrictions durable and replace old permissions explicitly
 
@@ -10347,7 +10347,7 @@ Expect `OK` for reading inputs, writing outputs, and publishing within the allow
 
 **REASONED: persistence and revocation.** During a planned restart of a disposable test instance, repeat `ACL GETUSER app`, `ACL GETUSER default`, and the applicable permission checks. A runtime-only change reverts; the persisted policy survives. After retiring `app-old`, its existing connection must close and a fresh authentication attempt must fail. Use section 7's masked prompt with the old username to test this, without putting its password in arguments. See [ACL persistence](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/#use-an-external-acl-file) and [CLIENT KILL](https://redis.io/docs/latest/commands/client-kill/).
 
-The following checks cover sections 9-15. All are **REASONED, not demonstrated**: the authoring environment has no `redis-server`, `redis-cli`, Docker, or Podman, and no live HA topology was supplied. Run exposed-state comparisons only in a disposable isolated environment. Redis-prompt commands below are not shell commands. Use section 7's guarded connection block, masked password prompt, and disabled CLI history for authenticated data-server sessions, changing the username as directed. Certificate and key options name files; never put their contents or passwords in process arguments. References below to disabling certificate-to-user automatic authentication apply only to Redis 8.10+, as explained in section 2. Earlier releases lack that setting; do not add the directive to their configuration.
+The following checks cover sections 9-15. All are **REASONED, not demonstrated**: the authoring environment has no `redis-server`, `redis-cli`, Docker, or Podman, and no live HA topology was supplied. Run exposed-state comparisons only in a disposable isolated environment. Redis-prompt commands below are not shell commands. Use section 7's guarded connection block, masked password prompt, and disabled CLI history for authenticated data-server sessions, changing the username as directed. Certificate and key options name files; never put their contents or passwords in process arguments. References below to disabling certificate-to-user automatic authentication apply only to Redis 8.6+, as explained in section 2. Earlier releases lack that setting; do not add the directive to their configuration.
 
 **REASONED: replication authentication and promotion, section 9.** No live primary/replica pair or failover topology was available. Compare an unsecured primary accepting an uncredentialed replica with a secured primary rejecting missing or wrong replication credentials. After restoring correct credentials, run this in an administrative session on the replica:
 
@@ -10445,7 +10445,7 @@ ss -tnp
 
 Identify the replica process's established connection to the recorded primary address and TLS port. Use an account permitted to see process information. Missing process information or a socket-inspection error is inconclusive.
 
-From an allowed client location, probe that same primary endpoint. Substitute a DNS hostname or IPv4 address and the recorded TLS port inside the quotes. Use the installed CA and client certificate paths. The commands deliberately omit Redis credentials; on Redis 8.10+, keep certificate-to-user automatic authentication disabled for this comparison.
+From an allowed client location, probe that same primary endpoint. Substitute a DNS hostname or IPv4 address and the recorded TLS port inside the quotes. Use the installed CA and client certificate paths. The commands deliberately omit Redis credentials; on Redis 8.6+, keep certificate-to-user automatic authentication disabled for this comparison.
 
 ```bash
 (
@@ -10788,7 +10788,7 @@ tls-cluster yes
 
 Where replication is configured explicitly, point `replicaof` at the primary's TLS endpoint. `tls-auth-clients yes` is already the Redis default; restoring it from section 6's deliberate `no` requires incoming replicas, as well as ordinary clients, to present trusted certificates. Retain replication credentials from section 9, subject to the certificate-to-user authentication qualification in section 2. See the [pinned TLS and replication settings](https://raw.githubusercontent.com/redis/redis/8.10.1/redis.conf).
 
-Redis normally reuses its certificate for outgoing connections. On Redis 6.2+, if certificates have separate server and client purposes, configure `tls-client-cert-file` and `tls-client-key-file` for the outgoing certificate and key. Redis 6.0/6.1 readers must instead use one certificate suitable for both server and client authentication, configured through `tls-cert-file` and `tls-key-file`. Omit both `tls-client-*` directives on those releases: an unknown configuration directive prevents startup. Compare the pinned [6.0.20 certificate configuration](https://raw.githubusercontent.com/redis/redis/6.0.20/redis.conf) with the [6.2.0 certificate configuration](https://raw.githubusercontent.com/redis/redis/6.2.0/redis.conf).
+Redis normally reuses its certificate for outgoing connections. On Redis 6.2+, if certificates have separate server and client purposes, configure `tls-client-cert-file` and `tls-client-key-file` for the outgoing certificate and key. Readers on Redis releases before 6.2 must instead use one certificate suitable for both server and client authentication, configured through `tls-cert-file` and `tls-key-file`. Omit both `tls-client-*` directives on those releases: an unknown configuration directive prevents startup. Compare the pinned [6.0.20 certificate configuration](https://raw.githubusercontent.com/redis/redis/6.0.20/redis.conf) with the [6.2.0 certificate configuration](https://raw.githubusercontent.com/redis/redis/6.2.0/redis.conf).
 
 The TLS cluster bus always requests and requires a peer certificate. Its accept path explicitly uses `TLS_CLIENT_AUTH_YES`; setting data-port `tls-auth-clients no` does not disable cluster-bus certificate authentication. See `clusterAcceptHandler` in the [pinned implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/cluster_legacy.c).
 
@@ -10852,13 +10852,13 @@ The tagged configuration files below pin syntax and historical behaviour; they a
 
 - Redis security model, authentication, and deprecated command renaming: https://redis.io/docs/latest/operate/oss_and_stack/management/security/
 - Redis configuration format: https://redis.io/docs/latest/operate/oss_and_stack/management/config/
-- Redis TLS build support, listeners, client certificates, replication, and cluster transport: https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/
+- Redis TLS build support, listeners, and client certificates: https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/
 - Redis ACL rules, categories, selectors, key/channel permissions, and persistence: https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/
 - Redis 8.2.1 pinned configuration, including ACL-file compatibility and debug/module defaults: https://raw.githubusercontent.com/redis/redis/8.2.1/redis.conf
 - Redis 6.0.20 pinned bind and protected-mode configuration: https://raw.githubusercontent.com/redis/redis/6.0.20/redis.conf
 - Redis 6.2.14 pinned optional-bind syntax and protected-mode configuration: https://raw.githubusercontent.com/redis/redis/6.2.14/redis.conf
 - Redis 7.0.15 pinned protected-mode and hardened-command configuration: https://raw.githubusercontent.com/redis/redis/7.0.15/redis.conf
-- Redis CLI connection flags, TLS and certificate options, masked password input, and history control: https://redis.io/docs/latest/develop/tools/cli/
+- Redis CLI connection flags, masked password input, TLS options, and history control: https://redis.io/docs/latest/develop/tools/cli/
 - AUTH named-user and default-user authentication: https://redis.io/docs/latest/commands/auth/
 - ACL SETUSER replacement rules and version history: https://redis.io/docs/latest/commands/acl-setuser/
 - CONFIG REWRITE persistence and prerequisites: https://redis.io/docs/latest/commands/config-rewrite/
@@ -10884,6 +10884,7 @@ The tagged configuration files below pin syntax and historical behaviour; they a
 - CONFIG SET runtime configuration changes and multiple-parameter syntax: https://redis.io/docs/latest/commands/config-set/
 - Redis 8.10.1 pinned Sentinel configuration: https://raw.githubusercontent.com/redis/redis/8.10.1/sentinel.conf
 - Redis 8.10.1 registered TLS and certificate-authentication defaults: https://raw.githubusercontent.com/redis/redis/8.10.1/src/config.c
+- Redis 8.6.0 tls-auth-clients-user introduction and default: https://raw.githubusercontent.com/redis/redis/8.6.0/redis.conf
 - Redis 8.10.1 replication authentication implementation: https://raw.githubusercontent.com/redis/redis/8.10.1/src/replication.c
 - Redis 8.10.1 Sentinel authentication, outgoing TLS, and announcements: https://raw.githubusercontent.com/redis/redis/8.10.1/src/sentinel.c
 - Redis 8.10.1 cluster listeners, announcements, and mandatory TLS peer certificates: https://raw.githubusercontent.com/redis/redis/8.10.1/src/cluster_legacy.c
