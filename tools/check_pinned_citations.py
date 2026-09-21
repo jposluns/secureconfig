@@ -30,6 +30,18 @@ components is never counted, and a real citation in any ordinary Markdown form i
     `main`/`master`, because git refs are case-sensitive -- an uppercase `MAIN` may
     be a pinned tag and must not be treated as the mutable default branch.
 
+GitHub URL aliases that serve the same mutable content are covered: the legacy
+`raw.github.com` host, the `github.com/.../raw/<ref>/` path alongside `/blob/`, a
+leading `www.`, a trailing FQDN dot, and a percent-encoded ref. What is deliberately
+NOT covered, and disclosed rather than chased, is out-of-scope by design: this is an
+ADVISORY count-cap over the corpus's own citation forms, not a perfect adversarial
+URL classifier. A contributor set on smuggling a mutable citation past it (an
+IDN/punycode host, an open-redirector chain, a deliberately malformed URL) is not
+the threat -- the honest author who pastes a `.../main/...` link is -- and a
+committer bent on evasion has far simpler routes than an exotic URL. The gate's
+guarantee is that no NEW citation in the ordinary forms this corpus uses can push
+the count past the baseline.
+
 Scope: every root-level `.md` file is scanned (guides plus the adapters, CHANGELOG
 and TODO), because a mutable citation is a defect wherever it lands; the generated
 plugin reference copies live outside the root and would double-count.
@@ -46,10 +58,17 @@ the gate becomes a hard no-mutable-refs rule.
 import re
 import sys
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
 
-TARGET_HOSTS = {"raw.githubusercontent.com", "github.com"}
+# Hosts that serve a file straight from a git ref. raw.github.com is the legacy
+# alias that still redirects to raw.githubusercontent.com with the same
+# /<owner>/<repo>/<ref>/... layout.
+RAW_HOSTS = {"raw.githubusercontent.com", "raw.github.com"}
+# The web host, where a ref-served path sits under /<owner>/<repo>/blob|raw/<ref>/.
+GH_HOSTS = {"github.com"}
+GH_REF_MARKERS = {"blob", "raw"}
 MUTABLE_REFS = {"main", "master"}  # matched case-sensitively: git refs are case-sensitive
+_TRAILING_PUNCT = ".,;:!?"          # sentence punctuation that can trail a bare URL
 
 # An angle-bracket Markdown destination: <URL> up to the closing '>'.
 _ANGLE = re.compile(r"<((?:https?:)?//[^>\s]*)>")
@@ -66,24 +85,40 @@ def _urls(line: str):
     return urls
 
 
+def _norm_host(host):
+    """Normalise a URL host to its canonical form, or None.
+
+    Hosts are compared after stripping a trailing FQDN dot and a leading `www.`,
+    both of which GitHub honours and redirects, so `www.github.com` and
+    `github.com.` are treated as `github.com`.
+    """
+    if host is None:
+        return None
+    host = host.rstrip(".")
+    if host.startswith("www."):
+        host = host[4:]
+    return host
+
+
 def _mutable_ref(url: str):
     """Return ('raw'|'blob', ref) if url is a mutable-branch citation, else None."""
+    url = url.rstrip(_TRAILING_PUNCT)  # a URL ending a sentence keeps its punctuation out
     try:
         parts = urlsplit(url)
     except ValueError:
         return None  # not parseable as a URL: not a citation
-    host = parts.hostname  # lowercased; userinfo and port stripped; None if absent
-    if host not in TARGET_HOSTS:
-        return None
-    segments = [s for s in parts.path.split("/") if s]
-    if host == "raw.githubusercontent.com":
+    host = _norm_host(parts.hostname)  # lowercased; userinfo and port stripped
+    # Percent-decode each path segment so an encoded ref (m%61in) is compared decoded.
+    segments = [unquote(s) for s in parts.path.split("/") if s]
+    if host in RAW_HOSTS:
         # /<owner>/<repo>/<ref>/...
         if len(segments) >= 3 and segments[2] in MUTABLE_REFS:
             return "raw", segments[2]
-    else:  # github.com
-        # /<owner>/<repo>/blob/<ref>/...
-        if len(segments) >= 4 and segments[2] == "blob" and segments[3] in MUTABLE_REFS:
-            return "blob", segments[3]
+    elif host in GH_HOSTS:
+        # /<owner>/<repo>/(blob|raw)/<ref>/...
+        if len(segments) >= 4 and segments[2] in GH_REF_MARKERS and segments[3] in MUTABLE_REFS:
+            kind = "raw" if segments[2] == "raw" else "blob"
+            return kind, segments[3]
     return None
 
 
@@ -161,6 +196,16 @@ def self_test() -> int:
         ("[source](<https://example.org/?q='https://github.com/a/b/blob/main/file>)", 0),
         # --- angle-bracket with parens in path, target embedded in path ---
         ("[src](<https://example.com/a(b)/github.com/o/r/blob/main/f>)", 0),
+        # --- GitHub URL aliases and encodings (codex/gemini round 3) ---
+        ("See https://github.com/owner/repo/blob/main.", 1),      # trailing sentence punct
+        ("https://github.com/owner/repo/blob/m%61in/file.py", 1), # percent-encoded ref
+        ("https://github.com/owner/repo/raw/main/file.py", 1),    # /raw/ path alias
+        ("https://www.github.com/owner/repo/blob/main/f", 1),     # www. prefix
+        ("https://github.com./owner/repo/blob/main/f", 1),        # trailing-dot FQDN
+        ("https://raw.github.com/owner/repo/main/file.py", 1),    # legacy raw host
+        # aliases must not create false positives on pinned refs
+        ("https://github.com/owner/repo/raw/v1.2.3/file.py", 0),
+        ("https://raw.github.com/owner/repo/abc1234/file.py", 0),
     ]
     ok = True
     for text, expected in cases:
