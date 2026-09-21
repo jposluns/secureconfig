@@ -10071,27 +10071,13 @@ With encryption enabled, the log records that the encryption key manager initial
 
 **REASONED:** no MongoDB deployment, encryption-capable driver, or provisioned data-encryption key is available.
 
-Insert a known canary into an ordinary collection and, separately, through the CSFLE-configured client into a protected collection, then read each document by `_id` through a client that performs no automatic decryption:
-
-```javascript
-const probeId = db.people.insertOne({ssn: "SECURECONFIG_CSFLE_CANARY"}).insertedId;
-db.people.find({_id: probeId}, {ssn: 1});
-```
-
-Against the exposed collection the field returns plaintext; against the protected collection it returns encrypted binary data, and only a key-authorized client recovers the original value. A plaintext write attempted against a server-side `$jsonSchema` that requires encryption is rejected. A denied read alone does not demonstrate field encryption. See [CSFLE](https://www.mongodb.com/docs/v8.0/core/csfle/) and its [manual-encryption reference](https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/manual-encryption/).
+CSFLE is verified with distinct client handles, not a single shell session, because a client configured for automatic encryption also decrypts on read. Through an encryption-configured client, insert a known canary into a protected collection and retain the returned `_id`; on the Community explicit path, encrypt the field value with `ClientEncryption.encrypt()` before the write. Read that document by `_id` through a client configured without automatic decryption: against an ordinary collection the field is plaintext, while against the protected collection it is encrypted binary data, and a key-authorized client recovers the original value. A plaintext write attempted against a server-side `$jsonSchema` that requires encryption is rejected. A denied read alone does not demonstrate field encryption, and a read through the same automatic-encryption client silently decrypts the field, so it cannot serve as the exposed control. See [CSFLE](https://www.mongodb.com/docs/v8.0/core/csfle/), its [manual-encryption reference](https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/manual-encryption/), and [CSFLE client options](https://www.mongodb.com/docs/v8.0/core/csfle/reference/csfle-options-clients/).
 
 ### Verify Queryable Encryption
 
 **REASONED:** no replica-set or sharded MongoDB deployment, encryption-capable driver, or provisioned key is available.
 
-Compare an ordinary plaintext collection with a Queryable Encryption collection created with `encryptedFields`. Read a known document by `_id` through a client that performs no decryption, then run a supported encrypted query through the configured client:
-
-```javascript
-const probeId = db.records.insertOne({balance: "SECURECONFIG_QE_CANARY"}).insertedId;
-db.records.find({_id: probeId}, {balance: 1});
-```
-
-Against the exposed collection the field is plaintext; against the encrypted collection it is ciphertext, while the configured client still matches a supported equality query (and, on 8.0, a range query) using inside and outside fixtures. A plaintext write against the declared encrypted fields is rejected. Missing results or a connection error alone do not establish confidentiality. See [Queryable Encryption](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/), its [limitations](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/limitations/), and the [manual-encryption reference](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/fundamentals/manual-encryption/).
+Create a Queryable Encryption collection with an `encryptedFields` definition and compare it against an ordinary collection, using distinct client handles as for CSFLE. Through the configured client, insert a canary and retain its `_id`; on the Community explicit path, encrypt values explicitly. Read by `_id` through a client configured without decryption: the ordinary collection returns plaintext, the encrypted collection ciphertext, and the configured client recovers the value. The configured client still matches a supported encrypted equality query on a string field. A range query is a separate fixture: it requires the encrypted field to be a numeric or date type (`int`, `long`, `double`, `decimal`, or `date`), not a string, with documents inside and outside the tested interval. A plaintext write against the declared encrypted fields is rejected. Missing results or a connection error alone do not establish confidentiality. See [Queryable Encryption](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/), its [limitations](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/limitations/), the [manual-encryption reference](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/fundamentals/manual-encryption/), and [supported operations](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/supported-operations/).
 
 | Backlog ID | Status | Outstanding demonstration |
 | --- | --- | --- |
@@ -10128,7 +10114,7 @@ security:
   redactClientLogData: true
 ```
 
-Redaction replaces the values accompanying a log message with `###`. Metadata such as error and operation codes, line numbers, and source-file names remain visible, and redaction protects the diagnostic log, not the audit log. MongoDB documents using it together with encryption at rest and TLS. See the [redactClientLogData parameter](https://www.mongodb.com/docs/v8.0/reference/parameters/), the [mongod flag reference](https://www.mongodb.com/docs/v8.0/reference/program/mongod/), and the [log-redaction example](https://www.mongodb.com/docs/v8.0/administration/monitoring/).
+Redaction replaces the values accompanying a log message with `###`. Metadata such as error and operation codes, line numbers, and source-file names remain visible, and the documentation scopes redaction to the diagnostic log; do not rely on it for the audit log. MongoDB documents using it together with encryption at rest and TLS. See the [redactClientLogData parameter](https://www.mongodb.com/docs/v8.0/reference/parameters/), the [mongod flag reference](https://www.mongodb.com/docs/v8.0/reference/program/mongod/), and the [log-redaction example](https://www.mongodb.com/docs/v8.0/administration/monitoring/).
 
 ## 7. Encrypt the storage engine with a managed key
 
@@ -10168,7 +10154,7 @@ Automatic CSFLE configures the client with an `autoEncryption` object naming the
 
 Queryable Encryption (QE) encrypts fields in the driver while still allowing the server to run supported queries against the ciphertext. Equality queries became generally available in MongoDB 7.0 and range queries in MongoDB 8.0; the 6.0 public preview is incompatible with the generally available format and is not a production baseline. As with CSFLE, automatic encryption requires Enterprise or Atlas, while explicit QE and automatic decryption are available in Community. See the [7.0 GA release notes](https://www.mongodb.com/docs/v8.0/release-notes/7.0/), the [8.0 range-query release notes](https://www.mongodb.com/docs/v8.0/release-notes/8.0/), [Queryable Encryption](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/), and the [QE manual encryption edition split](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/fundamentals/manual-encryption/).
 
-QE requires a new encrypted collection created with an `encryptedFields` definition; an existing collection cannot have QE turned on in place, and one collection cannot combine CSFLE and QE. Automatic clients set `autoEncryption` with the key-vault namespace, the KMS providers, and a local `encryptedFieldsMap`. For the Community explicit path, set `bypassQueryAnalysis: true` and drive `ClientEncryption` directly. QE supports replica sets and sharded clusters, not standalones. Do not carry forward 6.0 `rangePreview` recipes; that option was removed in 8.0. See the [QE limitations](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/limitations/), [QE client options](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/qe-options-clients/), the [8.0 compatibility notes](https://www.mongodb.com/docs/v8.0/release-notes/8.0-compatibility/), and the [manual-encryption reference](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/fundamentals/manual-encryption/).
+QE requires a new encrypted collection created with an `encryptedFields` definition; an existing collection cannot have QE turned on in place, and one collection cannot combine CSFLE and QE. Automatic clients set `autoEncryption` with the key-vault namespace, the KMS providers, and a local `encryptedFieldsMap`. For the Community explicit path, set `bypassQueryAnalysis: true` and drive `ClientEncryption` directly. QE supports replica sets and sharded clusters, not standalones. Do not carry forward legacy `rangePreview` recipes; that option was removed in 8.0. See the [QE limitations](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/limitations/), [QE client options](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/qe-options-clients/), the [8.0 compatibility notes](https://www.mongodb.com/docs/v8.0/release-notes/8.0-compatibility/), and the [manual-encryption reference](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/fundamentals/manual-encryption/).
 
 ## Common mistakes
 
@@ -10183,7 +10169,7 @@ QE requires a new encrypted collection created with an `encryptedFields` definit
 - Assuming MongoDB Community offers Enterprise auditing, `redactClientLogData`, or native storage encryption.
 - Enabling storage encryption on a populated data directory and assuming the existing files become encrypted.
 - Trusting a server-supplied CSFLE schema, which a compromised server can weaken to induce plaintext writes.
-- Combining CSFLE and Queryable Encryption on one collection, or carrying a 6.0 `rangePreview` recipe into 8.0.
+- Combining CSFLE and Queryable Encryption on one collection, or carrying a legacy `rangePreview` recipe into 8.0.
 
 ## Sources (checked September 2026)
 
@@ -10234,6 +10220,7 @@ QE requires a new encrypted collection created with an `encryptedFields` definit
 - MongoDB 8.0 Queryable Encryption limitations: https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/limitations/
 - MongoDB 8.0 Queryable Encryption client options: https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/qe-options-clients/
 - MongoDB 8.0 Queryable Encryption manual encryption (edition split): https://www.mongodb.com/docs/v8.0/core/queryable-encryption/fundamentals/manual-encryption/
+- MongoDB 8.0 Queryable Encryption supported operations (range BSON types): https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/supported-operations/
 - MongoDB 8.0 log-redaction example: https://www.mongodb.com/docs/v8.0/administration/monitoring/
 - MongoDB 8.0 CSFLE encryption algorithms: https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/encryption-algorithms/
 - MongoDB 8.0 release notes (Queryable Encryption range queries): https://www.mongodb.com/docs/v8.0/release-notes/8.0/
