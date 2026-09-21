@@ -97,7 +97,7 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 3.16 | Pin the remaining mutable named-branch GitHub source citations to commit SHAs: SeleniumHQ/docker-selenium `trunk`, hasura/graphql-engine `stable`, php/php-src `PHP-8.3` and `PHP-8.4`, pgaudit/pgaudit `REL_18_STABLE`, laravel/laravel `12.x`, and rails/rails `7-1-stable` (10 occurrences across `headless-browser-services.md`, `headless-cms-instant-api.md`, `php.md`, `postgresql.md`, `ruby.md`, and `php.md` body lines). These are mutable branch refs the pinned-citation gate does not target, because it scopes to `main`/`master` and cannot, offline, distinguish an arbitrary branch name from a release tag. Confirm each is a branch rather than a tag, pin to the current commit, and consider whether the gate should carry a small allowlist of known moving-branch names (L, S) | `[gap]` |
+| 3.16 | Pin the remaining mutable named-branch GitHub source citations to commit SHAs: SeleniumHQ/docker-selenium `trunk`, hasura/graphql-engine `stable`, php/php-src `PHP-8.3` and `PHP-8.4`, pgaudit/pgaudit `REL_18_STABLE`, laravel/laravel `12.x`, and rails/rails `7-1-stable` (12 occurrences across `headless-browser-services.md`, `headless-cms-instant-api.md`, `php.md`, `postgresql.md`, and `ruby.md`, including body citations). These are mutable branch refs the pinned-citation gate does not target, because it scopes to `main`/`master` and cannot, offline, distinguish an arbitrary branch name from a release tag. Confirm each is a branch rather than a tag, pin to the current commit, and consider whether the gate should carry a small allowlist of known moving-branch names (L, S) | `[gap]` |
 
 ## Decisions
 
