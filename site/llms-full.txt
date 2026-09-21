@@ -22392,13 +22392,13 @@ The handling is not "reject every response that has no `iss`". It depends on whe
 | No or omitted | Present | Compare with the recorded issuer; reject on mismatch |
 | No or omitted | Absent | Proceed under this table (an `iss`-independent mix-up defence still applies) |
 
-Record the issuer you selected from validated metadata (step 2) in the authorization transaction, bound to the same `state`/PKCE record, and compare `iss` against it with exact string comparison: do not normalize hostname case, port, a trailing slash, or percent-encoding, because RFC 9207's "simple string comparison" is defeated by any normalization an attacker can exploit. This defends the mix-up attack of RFC 9700 §4.4, where a client that trusts more than one authorization server is tricked into sending an honest server's code to an attacker's token endpoint; RFC 9700 requires that "clients MUST prevent mix-up attacks". Where `iss` is genuinely unavailable (the last table row), a client that talks to more than one authorization server still needs an applicable mix-up defence and cannot treat the absence as safe.
+Record the issuer you selected from validated metadata (step 2) in the authorization transaction, bound to the same `state`/PKCE record, and compare `iss` against it with exact string comparison: do not normalize hostname case, port, a trailing slash, or percent-encoding, because RFC 9207's "simple string comparison" is defeated by any normalization an attacker can exploit. This defends the mix-up attack of RFC 9700 §4.4.2, where a client that trusts more than one authorization server is tricked into sending an honest server's code to an attacker's token endpoint; RFC 9700 requires that "clients MUST prevent mix-up attacks". Where `iss` is genuinely unavailable (the last table row), a client that talks to more than one authorization server still needs an applicable mix-up defence and cannot treat the absence as safe.
 
 ## 2. Validate discovery metadata identity: `issuer` (not `resource`)
 
 Two different identifiers are validated in the discovery flow, and confusing them leaves a hole:
 
-- **Authorization-server metadata** carries an `issuer`, and RFC 8414 §3.3 requires that "The \"issuer\" value returned MUST be identical" to the issuer identifier used to build the well-known URL, "including its issuer path", not merely the hostname and not the full metadata URL. "If these values are not identical, the data contained in the response MUST NOT be used." MCP restates it: "the `issuer` value in the document MUST be identical to the issuer identifier used to construct the well-known URL." Preserve the issuer you used to derive the discovery URL and compare the returned `issuer` to it exactly, before you use any endpoint from the document. When you discover through OpenID Connect instead, apply the equivalent OIDC provider-configuration validation of `issuer`.
+- **Authorization-server metadata** carries an `issuer`, and RFC 8414 §3.3 requires that "The \"issuer\" value returned MUST be identical" to the issuer identifier used to build the well-known URL (which includes any issuer path component, not merely the hostname, and is not the full metadata URL). "If these values are not identical, the data contained in the response MUST NOT be used." MCP restates it: "the `issuer` value in the document MUST be identical to the issuer identifier used to construct the well-known URL." Preserve the issuer you used to derive the discovery URL and compare the returned `issuer` to it exactly, before you use any endpoint from the document. When you discover through OpenID Connect instead, apply the equivalent OIDC provider-configuration validation of `issuer`.
 - **Protected-resource metadata** carries a `resource`, and RFC 9728 §3.3 validates *that* against the resource identifier you intended to reach. This is a separate check from the `issuer` check above; RFC 9728 §3.3 is about `resource`, not `issuer`, so do both.
 
 Skipping the `issuer` check lets an attacker serve metadata from a location it controls while naming an honest issuer, associating that honest issuer with attacker-chosen endpoints and undermining the expected-issuer record that step 1's mix-up defence relies on.
@@ -22407,9 +22407,9 @@ Skipping the `issuer` check lets an attacker serve metadata from a location it c
 
 MCP 2026-07-28 prefers **Client ID Metadata Documents** (CIMD, `draft-ietf-oauth-client-id-metadata-document-00`, dated 8 October 2025): the client uses an HTTPS URL as its `client_id`, and the authorization server fetches JSON client metadata from that URL instead of requiring prior registration. The draft requires that "Client identifier URLs MUST have an \"https\" scheme, MUST contain a path component", and that the document's own `client_id` "value MUST match the URL of the document" by simple string comparison. MCP states clients "SHOULD support OAuth Client ID Metadata Documents", and a client that supports several mechanisms SHOULD prefer an available pre-registration, then supported CIMD, then Dynamic Client Registration.
 
-Dynamic Client Registration (DCR) remains a **MAY**, deprecated but kept for compatibility. When you fall back to it, MCP requires an explicit application type: "MCP clients MUST specify an appropriate `application_type` during Dynamic Client Registration." MCP's guidance is to use `native` (a SHOULD) for desktop, mobile, CLI, and localhost-hosted applications, and `web` (a SHOULD) for remotely hosted browser applications. This matters because the default is not neutral: OpenID Connect registration says "The default, if omitted, is `web`", and `web` applies redirect-URI constraints that a native client's loopback or custom-scheme redirect will fail, so an omitted `application_type` can get the registration rejected. Supply the type explicitly and handle a rejection by fixing the registration, never by loosening redirect validation to make it pass.
+Dynamic Client Registration (DCR) remains a **MAY**, deprecated but kept for compatibility. When you fall back to it, MCP requires an explicit application type: "MCP clients MUST specify an appropriate `application_type` during Dynamic Client Registration." MCP's guidance is to use `native` (a SHOULD) for desktop, mobile, CLI, and localhost-hosted applications, and `web` (a SHOULD) for remotely hosted browser applications. This matters because the default is not neutral: OpenID Connect registration says "The default, if omitted, is `web`", and `web` implies redirect-URI constraints that can conflict with a native client's loopback or custom-scheme redirect, so under a provider policy that enforces them an omitted `application_type` can be rejected. Supply the type explicitly and handle a rejection by fixing the registration, never by loosening redirect validation to make it pass.
 
-(Version boundary: MCP 2025-06-18 instead said servers and clients "SHOULD support the OAuth 2.0 Dynamic Client Registration Protocol". The CIMD-first preference is specific to 2026-07-28; carry the revision label when you cite it.)
+(Version boundary: MCP 2025-06-18 said its clients and authorization servers "SHOULD support the OAuth 2.0 Dynamic Client Registration Protocol"; the CIMD-first priority order was already present by 2025-11-25, so it is not new in 2026-07-28. Carry the revision label when you cite it.)
 
 ## 4. Keep refresh tokens confidential, and request `offline_access` correctly
 
@@ -22438,12 +22438,12 @@ For a deployment with a known set of providers, an issuer allowlist and an appro
 The controls above are the MCP-specific additions; the client still owes the baseline that [oidc-integration.md](oidc-integration.md) covers, which MCP also mandates:
 
 - **PKCE.** Clients "MUST implement PKCE", MUST use `S256` "when technically capable", and "MUST refuse to proceed" if the authorization server's metadata lacks `code_challenge_methods_supported`. See MCP Authorization Security Considerations.
-- **Resource parameter.** Clients MUST send the RFC 8707 `resource` parameter in both the authorization and token requests, naming the MCP server's canonical URI, so a token cannot be replayed at a different resource. See MCP Authorization.
-- **HTTPS everywhere.** Every authorization-server endpoint is contacted over HTTPS; bearer tokens and codes never travel in cleartext or in a URL query string. See MCP Authorization Security Considerations.
+- **Resource parameter.** Clients MUST send the RFC 8707 `resource` parameter in both the authorization and token requests, naming the MCP server's canonical URI, which requests an access token scoped to that resource. Preventing cross-resource replay then depends on the authorization server supporting audience binding and issuing an audience-restricted token, and on each resource server validating that it is the intended audience; sending the parameter alone does not guarantee it. See MCP Authorization.
+- **HTTPS everywhere.** Every authorization-server endpoint is contacted over HTTPS, and every redirect URI is `localhost` or HTTPS. Bearer and access tokens never travel in a URL query string; they go in the `Authorization` header. The authorization code, by contrast, is returned in the registered redirect URI's query by the flow itself, so it is protected instead by PKCE and the step 1 `iss` check, and the client keeps callback URLs out of logs and referrer headers. See MCP Authorization Security Considerations.
 
 ## Verify
 
-These checks are client-behaviour checks. Standing up a full malicious-authorization-server harness to drive a specific MCP client is infrastructure this repository's authoring environment does not have, so the behavioural steps below are marked **reasoned**: each names the prerequisite that is unavailable, gives the concrete request or command, and states the exposed and fixed outcomes and the source passage that distinguishes them, per the contributing rule on Verify steps. The locally feasible checks (the SSRF address test and the config greps) are run as written. A backlog row tracks demonstrating the reasoned steps against a real client once a client-plus-authorization-server harness exists.
+These checks are client-behaviour checks. Standing up a full malicious-authorization-server harness to drive a specific MCP client is infrastructure this repository's authoring environment does not have, so the behavioural steps below are marked **reasoned**: each names the prerequisite that is unavailable, gives the concrete request or command, and states the exposed and fixed outcomes and the source passage that distinguishes them, per the contributing rule on Verify steps. The locally feasible checks (the SSRF address test and the config greps) are run as written. TODO row 1.86 tracks demonstrating the reasoned steps against a real client once a client-plus-authorization-server harness exists.
 
 1. **`iss` mismatch is rejected before redemption (reasoned).** Prerequisite unavailable: a controllable authorization server and a target MCP client. Drive an authorization response whose `iss` differs from the metadata issuer the client recorded (for example issuer `https://as.example.com` recorded, `iss=https://evil.example.net` returned). Exposed (vulnerable) client: it proceeds to `POST` the code to a token endpoint. Fixed client: it rejects the response and sends no token request. The distinguishing source is RFC 9207 §2.4 ("clients MUST reject ... and MUST NOT proceed") applied before redemption per MCP Authorization ("before transmitting the authorization code to any token endpoint"). Observe the difference on the wire (a token request appears only in the exposed case).
 
@@ -22459,9 +22459,9 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
    )
    ```
 
-   Every line must print `BLOCK`; a printed `ALLOW` for any of these is an SSRF hole. Reasoned (prerequisite unavailable: a malicious server plus the target client): a discovery URL resolving to one of these addresses is refused by the client before the fetch, per RFC 9728 §7.7 and, for server-deployed clients, the MCP MUST in Security Best Practices.
+   Every line must print `BLOCK`; a printed `ALLOW` for any of these is an SSRF hole. Reasoned (prerequisite unavailable: a malicious server plus the target client): point a server's discovery URL at one of these addresses (for example `http://169.254.169.254/latest/meta-data/`). Exposed (vulnerable) client: it fetches the URL and reaches the internal service. Fixed client: it classifies the resolved address as blocked and refuses before the fetch. Distinguishing source: RFC 9728 §7.7 and, for server-deployed clients, the MCP MUST in Security Best Practices.
 
-4. **No refresh token or long-lived secret in client logs or config (runnable).** Grep the client's configuration and log locations for a stored refresh token or bearer token written in the clear. Substitute the client's own paths for the placeholder:
+4. **No refresh token or long-lived bearer token stored in cleartext (runnable, bounded heuristic).** This is a heuristic scan, not a proof: it searches the client's config and log paths for a refresh-token or bearer-token value in the clear, lists only the filenames (never the secret itself), and separates a clean scan from a scan error. Substitute the client's own paths for the placeholder:
 
    ```bash
    (
@@ -22469,13 +22469,17 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
      case "$1" in
        *REPLACE_WITH_*|"") echo "substitute the client's config/log directory above; not probing"; exit ;;
      esac
-     grep -rInE 'refresh_token|Bearer [A-Za-z0-9._-]{20,}' "$1" 2>/dev/null \
-       && echo "FOUND a token in cleartext; investigate" \
-       || echo "no cleartext token found under $1"
+     [ -d "$1" ] || { echo "not a directory: $1; not probing"; exit; }
+     grep -rlIE '"refresh_token"[[:space:]]*:[[:space:]]*"[^"]|refresh_token=[A-Za-z0-9._~+/-]|Bearer[[:space:]]+[A-Za-z0-9._-]{20,}' "$1"
+     case $? in
+       0) echo "FOUND: the file(s) listed above hold a token value in cleartext; move it to a protected credential store" ;;
+       1) echo "clean: no cleartext token value found under $1" ;;
+       *) echo "scan error: grep could not read part of $1; re-run with access before trusting a clean result" ;;
+     esac
    )
    ```
 
-   A match means a refresh or bearer token is sitting in cleartext where OAuth 2.1 §4.3 requires confidentiality; the fixed state stores it in a protected credential store instead and this grep finds nothing.
+   A listed file means a refresh or bearer token value sits in cleartext where OAuth 2.1 §4.3 requires confidentiality; the fixed state keeps it in a protected credential store and the scan reports `clean`. The pattern matches a token value (a JSON `"refresh_token": "..."` pair, a `refresh_token=` assignment, or a `Bearer <token>` header), so the bare word `refresh_token` inside a `grant_types` list does not trip it, and it lists filenames rather than printing the secret. It cannot see a token that is encrypted, wrapped, or split across fields, so read a `clean` result as "nothing obvious", not "nothing present".
 
 5. **`application_type` is present on DCR (reasoned).** Prerequisite unavailable: the client's live DCR request. Capture the registration request body the client sends and confirm it includes `application_type` (`native` or `web` per step 3). Exposed: the field is absent and the server defaults it to `web` (OIDC Registration §2), breaking a native client's redirect. Fixed: the field is present and matches the client's deployment. Distinguishing source: MCP's "MUST specify an appropriate `application_type`".
 
@@ -22486,7 +22490,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 - MCP Client Registration, 2026-07-28 (CIMD SHOULD, mechanism preference, DCR `application_type` MUST): https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/client-registration
 - MCP Security Best Practices, 2026-07-28 (SSRF MUST for server-deployed clients): https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices
 - RFC 9207 §2.4, OAuth 2.0 Authorization Server Issuer Identification (`iss` simple string comparison, reject on mismatch): https://www.rfc-editor.org/rfc/rfc9207.html#section-2.4
-- RFC 9700 §4.4, OAuth 2.0 Security Best Current Practice (mix-up attacks): https://www.rfc-editor.org/rfc/rfc9700.html#section-4.4
+- RFC 9700 §4.4.2, OAuth 2.0 Security Best Current Practice (mix-up attacks): https://www.rfc-editor.org/rfc/rfc9700.html#section-4.4.2
 - RFC 8414 §3.3, OAuth 2.0 Authorization Server Metadata (`issuer` identity): https://www.rfc-editor.org/rfc/rfc8414.html#section-3.3
 - RFC 9728 §3.3 and §7.7, OAuth 2.0 Protected Resource Metadata (`resource` validation; SSRF precautions): https://www.rfc-editor.org/rfc/rfc9728.html#section-7.7
 - RFC 8707, Resource Indicators for OAuth 2.0 (`resource` parameter): https://www.rfc-editor.org/rfc/rfc8707.html
