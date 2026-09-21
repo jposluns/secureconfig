@@ -395,13 +395,13 @@ Send separate and conflicting spoofed `X-Forwarded-For`/`X-Real-IP`, `X-Scheme`/
 
 **REASONED:** no JupyterHub, spawner, or single-user server is available in the authoring environment.
 
-Keep the public HTTPS listener constant and compare internal TLS off against on (section 10). Inspect each actual internal connection (Hub to proxy API, proxy to Hub, and proxy to single-user server): with internal TLS on, a request using the intended internal certificate authority and client certificate succeeds, while one presenting an untrusted certificate or connecting under an incorrect server hostname is rejected. Require a successful login, spawn, notebook execution, and kernel WebSocket exchange as positive controls. The single-user-server-to-kernel ZeroMQ connection must be observed separately and must not be counted as encrypted by this test, since `internal_ssl` does not cover it. See the [internal_ssl definition](https://raw.githubusercontent.com/jupyterhub/jupyterhub/5.5.2/jupyterhub/app.py) and the [Jupyter messaging protocol](https://raw.githubusercontent.com/jupyter/jupyter_client/v8.6.3/docs/messaging.rst).
+Keep the public HTTPS listener constant and compare internal TLS off against on (section 10). Inspect each actual internal connection (Hub to proxy API, proxy to Hub, proxy to single-user server, and Hub to single-user server): with internal TLS on, a request using the intended internal certificate authority and client certificate succeeds, while one presenting an untrusted certificate or connecting under an incorrect server hostname is rejected. Require a successful login, spawn, notebook execution, and kernel WebSocket exchange as positive controls. The single-user-server-to-kernel ZeroMQ connection must be observed separately and must not be counted as encrypted by this test, since `internal_ssl` does not cover it. See the [internal_ssl definition](https://raw.githubusercontent.com/jupyterhub/jupyterhub/5.5.2/jupyterhub/app.py) and the [Jupyter messaging protocol](https://raw.githubusercontent.com/jupyter/jupyter_client/v8.6.3/docs/messaging.rst).
 
 ### Local authoring checks and demonstration backlog
 
 The following checks were run without editing files or running `tools/run_all_checks.sh`:
 
-- All eight Python configuration blocks passed ASCII and Python syntax checks and loaded into `traitlets.Config`. This checks configuration-file construction, not Jupyter trait recognition or runtime enforcement.
+- All thirteen Python configuration blocks passed ASCII and Python syntax checks and loaded into `traitlets.Config`. This checks configuration-file construction, not Jupyter trait recognition or runtime enforcement.
 - All five Bash blocks passed `bash -n` and ShellCheck.
 - Both unchanged HTTP blocks refused their placeholders locally under `bash -u`.
 - Eighty positional-guard cases passed, covering valid inputs, empty values, embedded placeholders, angle brackets, the example hostname, control characters, missing markers, wrong argument counts, and an altered `IFS` count case.
@@ -431,7 +431,7 @@ For JupyterHub behind the same-host proxy, set the listener and base URL togethe
 c.JupyterHub.bind_url = 'http://127.0.0.1:8000/jupyter/'
 ```
 
-This sets both the bind address and `JupyterHub.base_url`. Configure the prefix consistently on both sides of the proxy; do not combine a `bind_url` prefix with separate conflicting URL settings, and do not reach for the configurable-http-proxy `--no-include-prefix` or `--no-prepend-path` flags as a generic prefix fix, since neither establishes an authentication boundary. See the [JupyterHub proxy configuration](https://jupyterhub.readthedocs.io/en/5.5.2/howto/configuration/config-proxy.html).
+This sets both the bind address and `JupyterHub.base_url`. Configure the prefix consistently on both sides of the proxy; do not combine a `bind_url` prefix with separate conflicting URL settings, and do not reach for the configurable-http-proxy `--no-include-prefix` or `--no-prepend-path` flags as a generic prefix fix, since neither establishes an authentication boundary. See the [JupyterHub proxy configuration](https://jupyterhub.readthedocs.io/en/5.5.2/howto/configuration/config-proxy.html) and the [configurable-http-proxy 5.3.0 command-line options](https://raw.githubusercontent.com/jupyterhub/configurable-http-proxy/5.3.0/bin/configurable-http-proxy).
 
 ## 9. Trust forwarded headers only behind a sanitizing ingress
 
@@ -465,7 +465,7 @@ c.JupyterHub.internal_ssl = True
 c.JupyterHub.internal_certs_location = '/srv/jupyterhub/internal-ssl'
 ```
 
-JupyterHub then generates an internal certificate authority and per-component certificates and enables TLS with client-certificate verification for the Hub-to-proxy API and the proxy-to-Hub and proxy-to-single-user connections. Treat the certificate directory as protected persistent state, and give the spawner the ability to deliver each server's key, certificate, and trust bundle (`LocalProcessSpawner` relocates them; a remote spawner needs its own `move_certs` support). Set `Spawner.ssl_alt_names` to the actual connection names when they are not the defaults, and never resolve a certificate error by disabling verification. See the [internal_ssl definition](https://raw.githubusercontent.com/jupyterhub/jupyterhub/5.5.2/jupyterhub/app.py) and the [JupyterHub configuration reference](https://jupyterhub.readthedocs.io/en/5.5.2/reference/config-reference.html).
+JupyterHub then generates an internal certificate authority and per-component certificates and enables TLS with client-certificate verification for the Hub-to-proxy API, the proxy-to-Hub and proxy-to-single-user connections, and the Hub-to-single-user connection used during spawn readiness. Treat the certificate directory as protected persistent state, and give the spawner the ability to deliver each server's key, certificate, and trust bundle (`LocalProcessSpawner` relocates them; a remote spawner needs its own `move_certs` support). Set `Spawner.ssl_alt_names` to the actual connection names when they are not the defaults, and never resolve a certificate error by disabling verification. See the [internal_ssl definition](https://raw.githubusercontent.com/jupyterhub/jupyterhub/5.5.2/jupyterhub/app.py) and the [JupyterHub configuration reference](https://jupyterhub.readthedocs.io/en/5.5.2/reference/config-reference.html).
 
 Internal TLS does not encrypt the single-user server's connection to its kernels. That link uses the Jupyter messaging protocol over ZeroMQ, whose HMAC signature authenticates messages but does not encrypt them. Local kernels bind loopback; a remote-kernel deployment needs a separately configured encrypted transport such as an SSH tunnel, which this guide does not configure. See the [Jupyter messaging protocol](https://raw.githubusercontent.com/jupyter/jupyter_client/v8.6.3/docs/messaging.rst).
 
@@ -498,6 +498,7 @@ Internal TLS does not encrypt the single-user server's connection to its kernels
 - curl TLS certificate and hostname verification: https://curl.se/docs/sslcerts.html
 - curl options, stdin headers, cookie files, and diagnostic variables: https://curl.se/docs/manpage.html
 - JupyterHub 5.5.2 proxy configuration and path prefix: https://jupyterhub.readthedocs.io/en/5.5.2/howto/configuration/config-proxy.html
+- configurable-http-proxy 5.3.0 command-line options: https://raw.githubusercontent.com/jupyterhub/configurable-http-proxy/5.3.0/bin/configurable-http-proxy
 - JupyterHub 5.5.2 configuration reference (trusted_downstream_ips, public_url, internal_ssl): https://jupyterhub.readthedocs.io/en/5.5.2/reference/config-reference.html
 - Jupyter Server 2.18.0 application definition and HTTP-server construction: https://raw.githubusercontent.com/jupyter-server/jupyter_server/v2.18.0/jupyter_server/serverapp.py
 - JupyterHub 5.5.2 application (internal_ssl and forwarded-header trust): https://raw.githubusercontent.com/jupyterhub/jupyterhub/5.5.2/jupyterhub/app.py
