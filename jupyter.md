@@ -379,6 +379,24 @@ Run this in the deployment's network namespace and identify the actual server li
 
 The standalone port normally starts at 8888 but can change through configuration or port retries. Do not assume it from an example. [Server port implementation](https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/serverapp.py), [default port constant](https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/__init__.py).
 
+### Verify the reverse-proxy path prefix
+
+**REASONED:** no Jupyter Server, JupyterHub, or configurable-http-proxy is running in the authoring environment.
+
+In an isolated fixture, compare the consistent-prefix configuration from section 8 against a deployment where only part of the stack carries the prefix. Request the prefixed application routes (for a standalone Server, `GET /jupyter/api/kernels`; for JupyterHub, `GET /jupyter/hub/login` and a spawned user's actual prefixed URL) and, separately, probe any unprefixed alias (`GET /api/kernels`, `GET /hub/login`). The fixed configuration keeps every application route behind the intended authentication and routing boundary and leaves no unprefixed alias serving the application, while a bare `404` proves neither authentication nor a working deployment, so confirm authenticated access and a working kernel WebSocket on the prefixed path as the positive control. See the [JupyterHub proxy configuration](https://jupyterhub.readthedocs.io/en/5.5.2/howto/configuration/config-proxy.html).
+
+### Verify forwarded-header trust
+
+**REASONED:** no Jupyter Server or JupyterHub behind a real ingress is available in the authoring environment.
+
+Send separate and conflicting spoofed `X-Forwarded-For`/`X-Real-IP`, `X-Scheme`/`X-Forwarded-Proto`, and forwarded-host headers through the real ingress, and separately attempt to reach the backend directly from an untrusted network. Compare the request-derived client address in the logs, the redirect targets, the cookie `Secure` attribute, and the cookie-authenticated origin check. In the exposed fixture (header trust enabled while the backend is reachable or the proxy passes headers through unchanged) the attacker-controlled value takes effect; in the fixed fixture (section 9: a private bind plus a sanitizing ingress) it does not, while a legitimate login and WebSocket still succeed. See the [JupyterHub configuration reference](https://jupyterhub.readthedocs.io/en/5.5.2/reference/config-reference.html) and the [Jupyter Server HTTP-server construction](https://raw.githubusercontent.com/jupyter-server/jupyter_server/v2.18.0/jupyter_server/serverapp.py).
+
+### Verify internal Hub TLS
+
+**REASONED:** no JupyterHub, spawner, or single-user server is available in the authoring environment.
+
+Keep the public HTTPS listener constant and compare internal TLS off against on (section 10). Inspect each actual internal connection (Hub to proxy API, proxy to Hub, and proxy to single-user server): with internal TLS on, a request using the intended internal certificate authority and client certificate succeeds, while one presenting an untrusted certificate or connecting under an incorrect server hostname is rejected. Require a successful login, spawn, notebook execution, and kernel WebSocket exchange as positive controls. The single-user-server-to-kernel ZeroMQ connection must be observed separately and must not be counted as encrypted by this test, since `internal_ssl` does not cover it. See the [internal_ssl definition](https://raw.githubusercontent.com/jupyterhub/jupyterhub/5.5.2/jupyterhub/app.py) and the [Jupyter messaging protocol](https://raw.githubusercontent.com/jupyter/jupyter_client/v8.6.3/docs/messaging.rst).
+
 ### Local authoring checks and demonstration backlog
 
 The following checks were run without editing files or running `tools/run_all_checks.sh`:
