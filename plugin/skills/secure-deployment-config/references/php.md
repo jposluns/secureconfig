@@ -92,7 +92,7 @@ expose_php = Off              ; built-in default On
 
 `error_reporting` selects which diagnostics PHP reports; it does not decide whether they reach the HTTP response. Keep reporting enabled while directing errors into protected logs. Pre-create the example log destination outside the document root, make it writable by the PHP worker identity, restrict access to that identity and authorized operators, and arrange rotation. An unset `error_log` uses the SAPI's logger. Configure error display before requests execute; an `ini_set()` inside a script cannot protect against a fatal error that prevents that statement from running. [PHP error configuration](https://www.php.net/manual/en/errorfunc.configuration.php).
 
-Use the bundled `php.ini-production` as a starting point, then review its actual settings. For example, PHP 8.4's template disables both display settings and enables logging, but uses `E_ALL & ~E_DEPRECATED` and leaves `expose_php` enabled. The explicit settings above retain all diagnostic levels in logs and disable PHP's banner. [PHP 8.4 production template](https://raw.githubusercontent.com/php/php-src/PHP-8.4/php.ini-production).
+Use the bundled `php.ini-production` as a starting point, then review its actual settings. For example, PHP 8.4's template disables both display settings and enables logging, but uses `E_ALL & ~E_DEPRECATED` and leaves `expose_php` enabled. The explicit settings above retain all diagnostic levels in logs and disable PHP's banner. [PHP 8.4 production template](https://raw.githubusercontent.com/php/php-src/d313ad6098430f4e61f0121a9e7ab392d195e4e4/php.ini-production).
 
 `expose_php=Off` suppresses PHP's own `X-Powered-By: PHP/...` header. It does not remove headers added elsewhere or make the application unidentifiable. [Hiding PHP](https://www.php.net/manual/en/security.hiding.php).
 
@@ -140,7 +140,7 @@ max_input_time = 60
 
 `upload_max_filesize` limits each uploaded file; `post_max_size` limits the complete POST body and must exceed it, allowing room for other fields and multipart overhead. A count limit of 20 does not mean twenty maximum-sized files fit into an 8M request. If POST data exceeds `post_max_size`, PHP leaves `$_POST` and `$_FILES` empty; handle that condition as a rejected request. `memory_limit` bounds a script's allocation and should generally exceed `post_max_size`; `-1` removes that memory limit. [PHP core directives](https://www.php.net/manual/en/ini.core.php).
 
-`max_input_vars=1000` applies separately to GET, POST, and COOKIE input; excess variables generate a warning and are truncated. It is not a general JSON-body limit. `max_execution_time` defaults to 30 seconds for web execution and 0 for CLI. It is not a portable wall-clock deadline: accounting depends on the platform and build and can exclude I/O waits. The built-in `max_input_time` default is `-1`, meaning use `max_execution_time`; 0 permits unlimited input-parsing time. The production template sets it to 60. [PHP execution and input limits](https://www.php.net/manual/en/info.configuration.php), [production template](https://raw.githubusercontent.com/php/php-src/PHP-8.4/php.ini-production).
+`max_input_vars=1000` applies separately to GET, POST, and COOKIE input; excess variables generate a warning and are truncated. It is not a general JSON-body limit. `max_execution_time` defaults to 30 seconds for web execution and 0 for CLI. It is not a portable wall-clock deadline: accounting depends on the platform and build and can exclude I/O waits. The built-in `max_input_time` default is `-1`, meaning use `max_execution_time`; 0 permits unlimited input-parsing time. The production template sets it to 60. [PHP execution and input limits](https://www.php.net/manual/en/info.configuration.php), [production template](https://raw.githubusercontent.com/php/php-src/d313ad6098430f4e61f0121a9e7ab392d195e4e4/php.ini-production).
 
 Uploads also consume input-processing time. Test slow and multiple-file uploads, and coordinate these values with the web server's request-size and timeout limits. These settings bound individual requests; they do not replace capacity limits or rate limiting. [PHP upload pitfalls](https://www.php.net/manual/en/features.file-upload.common-pitfalls.php).
 
@@ -171,7 +171,7 @@ Garbage collection is probabilistic by default and is not an authentication-expi
 
 For the default `files` save handler, pre-create a private directory outside the document root for each application, writable by its PHP identity. A directory mode of 0700 is appropriate for a dedicated runtime account; session files default to 0600. Separate untrusted applications by runtime identity as well as path. Avoid a shared, world-readable session directory. [Session configuration](https://www.php.net/manual/en/session.configuration.php#ini.session.save-path).
 
-PHP 8.x's built-in `session.sid_length` and `session.sid_bits_per_character` defaults are 32 and 4. Changing either away from its default is deprecated from PHP 8.4. Do not add new tuning overrides on those versions. Older templates differ: PHP 8.3's production template sets 26 and 5, so review inherited configuration during upgrades. [Session configuration](https://www.php.net/manual/en/session.configuration.php), [PHP 8.3 production template](https://raw.githubusercontent.com/php/php-src/PHP-8.3/php.ini-production).
+PHP 8.x's built-in `session.sid_length` and `session.sid_bits_per_character` defaults are 32 and 4. Changing either away from its default is deprecated from PHP 8.4. Do not add new tuning overrides on those versions. Older templates differ: PHP 8.3's production template sets 26 and 5, so review inherited configuration during upgrades. [Session configuration](https://www.php.net/manual/en/session.configuration.php), [PHP 8.3 production template](https://raw.githubusercontent.com/php/php-src/b94f9f68a610e0fca5f2fea5bfa7c7d6d3d5a847/php.ini-production).
 
 ## Verify
 
@@ -280,7 +280,7 @@ For Laravel 12.x, repeat the body probe against a controlled route that raises a
 - PHP cURL constants (`CURLOPT_SSL_VERIFYPEER`, `CURLOPT_SSL_VERIFYHOST`, `CURLOPT_CAINFO`): https://www.php.net/manual/en/curl.constants.php
 - Laravel 12.x encryption (`APP_KEY`, `key:generate`, `APP_PREVIOUS_KEYS`): https://laravel.com/framework/docs/12.x/encryption
 - Laravel 12.x requests (trusted proxies, trusted hosts): https://laravel.com/framework/docs/12.x/requests
-- Laravel 12.x `config/session.php` defaults: https://github.com/laravel/laravel/blob/12.x/config/session.php
+- Laravel 12.x `config/session.php` defaults: https://github.com/laravel/laravel/blob/f6b2e79bdbfc5bf4a37ad16466cc06ad79cc9e8f/config/session.php
 - Laravel 12.x `UrlGenerator::forceHttps()` and `forceScheme()`: https://api.laravel.com/docs/12.x/Illuminate/Routing/UrlGenerator.html
 - Laravel 12.x hashing: https://laravel.com/framework/docs/12.x/hashing
 - Laravel 12.x routing (rate limiting): https://laravel.com/framework/docs/12.x/routing
@@ -291,8 +291,8 @@ For Laravel 12.x, repeat the body probe against a controlled route that raises a
 - PHP 8.x error configuration (`display_errors`, `display_startup_errors`, `log_errors`, `error_log`, `error_reporting`): https://www.php.net/manual/en/errorfunc.configuration.php
 - PHP core directives (`disable_functions`, `open_basedir`, memory and upload limits): https://www.php.net/manual/en/ini.core.php
 - PHP hiding and `expose_php`: https://www.php.net/manual/en/security.hiding.php
-- PHP 8.4 bundled production template: https://raw.githubusercontent.com/php/php-src/PHP-8.4/php.ini-production
-- PHP 8.3 bundled production template (older session ID overrides): https://raw.githubusercontent.com/php/php-src/PHP-8.3/php.ini-production
+- PHP 8.4 bundled production template: https://raw.githubusercontent.com/php/php-src/d313ad6098430f4e61f0121a9e7ab392d195e4e4/php.ini-production
+- PHP 8.3 bundled production template (older session ID overrides): https://raw.githubusercontent.com/php/php-src/b94f9f68a610e0fca5f2fea5bfa7c7d6d3d5a847/php.ini-production
 - PHP filesystem and streams configuration (`allow_url_fopen`, `allow_url_include`): https://www.php.net/manual/en/filesystem.configuration.php
 - PHP execution and input limits (`max_execution_time`, `max_input_time`, `max_input_vars`): https://www.php.net/manual/en/info.configuration.php
 - PHP upload-limit interactions and pitfalls: https://www.php.net/manual/en/features.file-upload.common-pitfalls.php

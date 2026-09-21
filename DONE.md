@@ -117,3 +117,4 @@ gets proposed again six months later.
 | 2.2 | Cover connection poolers (PgBouncer, pgpool-II) | Done, #30 |
 | 3.2 | Give `site/llms.txt` the README's categories, and gate the three against each other | Done, #36 |
 | 4.1 | Add a skip link to `site/index.html` | Dropped: SC 2.4.1 governs content repeated across multiple pages and this is one page, and the sufficient technique ARIA11 is already satisfied by `<nav aria-label>` plus `<main>` |
+| 3.16 | Pin the remaining mutable named-branch GitHub source citations (SeleniumHQ trunk, hasura stable, php-src PHP-8.3/8.4, pgaudit REL_18_STABLE, laravel 12.x, rails 7-1-stable) to commit SHAs | Done, #268 |

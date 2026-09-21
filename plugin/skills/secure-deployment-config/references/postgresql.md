@@ -207,7 +207,7 @@ ALTER DATABASE app SET pgaudit.log = 'read,write,ddl,role';
 
 Create the extension before setting `pgaudit.log`. Reconnect to apply the database default. Choose audit classes for the actual requirement and measure volume. Installing the extension alone does not demonstrate auditing.
 
-At the time of writing, pgAudit 18.x targets PostgreSQL 18. Package and managed-service availability need separate checks. Its parameters are extension parameters, not PostgreSQL core settings. See the [official pgAudit 18 documentation](https://github.com/pgaudit/pgaudit/blob/REL_18_STABLE/README.md), [CREATE EXTENSION](https://www.postgresql.org/docs/current/sql-createextension.html) and [shared_preload_libraries](https://www.postgresql.org/docs/current/runtime-config-client.html#GUC-SHARED-PRELOAD-LIBRARIES).
+At the time of writing, pgAudit 18.x targets PostgreSQL 18. Package and managed-service availability need separate checks. Its parameters are extension parameters, not PostgreSQL core settings. See the [official pgAudit 18 documentation](https://github.com/pgaudit/pgaudit/blob/dedd42ec3fe880bf581dd578c0df87ed4ad246cd/README.md), [CREATE EXTENSION](https://www.postgresql.org/docs/current/sql-createextension.html) and [shared_preload_libraries](https://www.postgresql.org/docs/current/runtime-config-client.html#GUC-SHARED-PRELOAD-LIBRARIES).
 
 ## 8. Verify
 
@@ -544,7 +544,7 @@ SELECT * FROM app_data.security_probe;
 
 Compare fresh sessions with the effective `pgaudit.log` setting disabled (`none`) and with the selected audit classes enabled. The seeded query must succeed in both states. An appropriate server-side `READ` audit event, correlated to that query and session, must appear in the enabled state and be absent from the disabled state. Confirm effective settings for this login; role-specific defaults can override database defaults.
 
-Extension installation alone is not a passing result. See the [pgAudit session audit documentation](https://github.com/pgaudit/pgaudit/blob/REL_18_STABLE/README.md).
+Extension installation alone is not a passing result. See the [pgAudit session audit documentation](https://github.com/pgaudit/pgaudit/blob/dedd42ec3fe880bf581dd578c0df87ed4ad246cd/README.md).
 
 ### 8.8. Supplemental diagnostics
 
@@ -614,7 +614,7 @@ WHERE error IS NOT NULL OR NOT applied;
 - CREATE FUNCTION and safe SECURITY DEFINER functions: https://www.postgresql.org/docs/current/sql-createfunction.html
 - ALTER FUNCTION: https://www.postgresql.org/docs/current/sql-alterfunction.html
 - Logging configuration: https://www.postgresql.org/docs/current/runtime-config-logging.html
-- Official pgAudit 18 documentation: https://github.com/pgaudit/pgaudit/blob/REL_18_STABLE/README.md
+- Official pgAudit 18 documentation: https://github.com/pgaudit/pgaudit/blob/dedd42ec3fe880bf581dd578c0df87ed4ad246cd/README.md
 - CREATE EXTENSION: https://www.postgresql.org/docs/current/sql-createextension.html
 - CREATE TABLE and temporary tables: https://www.postgresql.org/docs/current/sql-createtable.html
 - ALTER TABLE and ownership transfer: https://www.postgresql.org/docs/current/sql-altertable.html
