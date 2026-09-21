@@ -21069,28 +21069,28 @@ For text-generation-webui, ask the API edge for the model list without a key. Th
 
 ## Sources (checked September 2026)
 
-- llama.cpp server README (defaults, --api-key, SSL flags): https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md
+- llama.cpp server README (defaults, --api-key, SSL flags): https://github.com/ggml-org/llama.cpp/blob/e0dff58475bc9ed68eedcb265ee998f2fcabb3b1/tools/server/README.md
 - vLLM documentation: https://docs.vllm.ai/
-- vLLM server host default (`FrontendArgs.host` defaults to `None`; checked 2026-09-14): https://github.com/vllm-project/vllm/blob/main/vllm/entrypoints/launchers/cli_args.py
-- vLLM server socket bind (the launcher builds `(args.host or "", port)`, so an unset host binds every IPv4 interface, and renders the empty host as `0.0.0.0` in the startup log; checked 2026-09-14): https://github.com/vllm-project/vllm/blob/main/vllm/entrypoints/launchers/launcher.py
+- vLLM server host default (`FrontendArgs.host` defaults to `None`; checked 2026-09-14): https://github.com/vllm-project/vllm/blob/dee37d89115db4c94a820a79a78a7828e141c910/vllm/entrypoints/launchers/cli_args.py
+- vLLM server socket bind (the launcher builds `(args.host or "", port)`, so an unset host binds every IPv4 interface, and renders the empty host as `0.0.0.0` in the startup log; checked 2026-09-14): https://github.com/vllm-project/vllm/blob/8c1557a79c539ffe82d004d2a0c8d7b5e71159ce/vllm/entrypoints/launchers/launcher.py
 - vLLM security, API key authentication limitations (protected prefixes, unprotected `/invocations` and profiler routes): https://docs.vllm.ai/en/latest/usage/security/
 - TGI launcher arguments (--hostname, --port, --api-key, --prometheus-port): https://huggingface.co/docs/text-generation-inference/reference/launcher
-- TGI router source (what --api-key enforces): https://github.com/huggingface/text-generation-inference/blob/main/router/src/server.rs
+- TGI router source (what --api-key enforces): https://github.com/huggingface/text-generation-inference/blob/24ee40d143d8d046039f12f76940a85886cbe152/router/src/server.rs
 - TGI repository (maintenance-mode notice, archived 2026-03-21): https://github.com/huggingface/text-generation-inference
 - SGLang server arguments (--host, --port, --api-key, --admin-api-key, SSL flags; docs.sglang.ai redirects here): https://docs.sglang.io/docs/advanced_features/server_arguments
 - Triton secure deployment considerations: https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/customization_guide/deploy.html
-- Triton quickstart (default listeners on 8000, 8001, 8002): https://github.com/triton-inference-server/server/blob/main/docs/getting_started/quickstart.md
-- Triton inference protocols (gRPC SSL flags, restricted APIs): https://github.com/triton-inference-server/server/blob/main/docs/customization_guide/inference_protocols.md
-- Triton command line parser (address and port flags with defaults): https://github.com/triton-inference-server/server/blob/main/src/command_line_parser.cc
+- Triton quickstart (default listeners on 8000, 8001, 8002): https://github.com/triton-inference-server/server/blob/0194c3da9ddeeff07547f46aa058cf88acb51893/docs/getting_started/quickstart.md
+- Triton inference protocols (gRPC SSL flags, restricted APIs): https://github.com/triton-inference-server/server/blob/c29bbe17eac256bbcd8fea47cde2f219d2be37cf/docs/customization_guide/inference_protocols.md
+- Triton command line parser (address and port flags with defaults): https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc
 - LM Studio local server: https://lmstudio.ai/docs/developer/core/server
 - LM Studio serve on local network: https://lmstudio.ai/docs/developer/core/server/serve-on-network
 - LM Studio server settings: https://lmstudio.ai/docs/developer/core/server/settings
 - LM Studio authentication: https://lmstudio.ai/docs/developer/core/authentication
 - LM Studio OpenAI compatibility (localhost:1234 examples): https://lmstudio.ai/docs/developer/openai-compat
 - text-generation-webui README, command-line flags: https://github.com/oobabooga/text-generation-webui#command-line-flags
-- text-generation-webui, OpenAI-compatible API documentation: https://github.com/oobabooga/text-generation-webui/blob/main/docs/12%20-%20OpenAI%20API.md
-- text-generation-webui, flag definitions and defaults (modules/shared.py): https://github.com/oobabooga/text-generation-webui/blob/main/modules/shared.py
-- text-generation-webui, API bind and key checks (modules/api/script.py): https://github.com/oobabooga/text-generation-webui/blob/main/modules/api/script.py
+- text-generation-webui, OpenAI-compatible API documentation: https://github.com/oobabooga/text-generation-webui/blob/ceade2eb1ba3f84518076270df2240b6bbb01da0/docs/12%20-%20OpenAI%20API.md
+- text-generation-webui, flag definitions and defaults (modules/shared.py): https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py
+- text-generation-webui, API bind and key checks (modules/api/script.py): https://github.com/oobabooga/text-generation-webui/blob/619a2b8ee4b7e48541a9be5c07e04cd31b91b44f/modules/api/script.py
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
 
 ======================================================================
@@ -24007,27 +24007,27 @@ that accepts spans with no credential at all.
 - Langfuse, authentication and SSO (signup default, `AUTH_DISABLE_SIGNUP`, `AUTH_DISABLE_USERNAME_PASSWORD`,
   SSO providers, `AUTH_SESSION_MAX_AGE`, `NEXTAUTH_URL`): https://langfuse.com/self-hosting/security/authentication-and-sso
 - Langfuse, public API authentication (Basic Auth with project public/secret key): https://langfuse.com/docs/api-and-data-platform/features/public-api
-- Langfuse, session-lifetime implementation (`AUTH_SESSION_MAX_AGE` validated as an integer greater than five, default `14 * 24 * 60` = 20160 minutes, vs the 43200 in the docs): https://github.com/langfuse/langfuse/blob/main/web/src/env.mjs
+- Langfuse, session-lifetime implementation (`AUTH_SESSION_MAX_AGE` validated as an integer greater than five, default `14 * 24 * 60` = 20160 minutes, vs the 43200 in the docs): https://github.com/langfuse/langfuse/blob/24c949d8dd5617219a8415f80e4c65ad611ff05c/web/src/env.mjs
 - Langfuse, self-hosting configuration (`NEXTAUTH_SECRET`, `SALT`, `ENCRYPTION_KEY` and their generation, the bundled MinIO/Postgres/ClickHouse/Redis; checked 2026-09-14): https://langfuse.com/self-hosting/configuration
-- Langfuse, self-hosting docker-compose.yml (the `# CHANGEME` example secrets `mysecret`/`mysalt`/all-zero `ENCRYPTION_KEY`, MinIO `minio`/`miniosecret` on host `9090`, langfuse-web on `3000`; checked 2026-09-14): https://github.com/langfuse/langfuse/blob/main/docker-compose.yml
+- Langfuse, self-hosting docker-compose.yml (the `# CHANGEME` example secrets `mysecret`/`mysalt`/all-zero `ENCRYPTION_KEY`, MinIO `minio`/`miniosecret` on host `9090`, langfuse-web on `3000`; checked 2026-09-14): https://github.com/langfuse/langfuse/blob/0dd0a7fbe2feb300b8776f02b3684eeee3fbceab/docker-compose.yml
 - Arize Phoenix, authentication (`PHOENIX_ENABLE_AUTH`, `PHOENIX_SECRET`, system and user API keys, `PHOENIX_API_KEY`, the default `admin@localhost` / `admin` account, `PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD` read only at first-account creation, `/v1/` REST permissions, OAuth2/OIDC identity providers, and the absence of native MFA; read 2026-09-13): https://arize.com/docs/phoenix/self-hosting/features/authentication
 - Arize Phoenix, native HTTP and gRPC TLS introduced in 8.29 (2025-04-28): https://arize.com/docs/phoenix/release-notes/04-2025/04-28-2025-tls-support-for-phoenix-server
-- Arize Phoenix, TLS configuration implementation (`PHOENIX_TLS_ENABLED` default `False`, `PHOENIX_TLS_CERT_FILE`/`PHOENIX_TLS_KEY_FILE`, and the per-protocol `PHOENIX_TLS_ENABLED_FOR_HTTP`/`PHOENIX_TLS_ENABLED_FOR_GRPC` overrides): https://github.com/Arize-ai/phoenix/blob/main/src/phoenix/config.py
+- Arize Phoenix, TLS configuration implementation (`PHOENIX_TLS_ENABLED` default `False`, `PHOENIX_TLS_CERT_FILE`/`PHOENIX_TLS_KEY_FILE`, and the per-protocol `PHOENIX_TLS_ENABLED_FOR_HTTP`/`PHOENIX_TLS_ENABLED_FOR_GRPC` overrides): https://github.com/Arize-ai/phoenix/blob/080959576563900038688ddf01f3bee110005df5/src/phoenix/config.py
 - Helicone, self-hosted deployment (default `test@helicone.ai` / `password` login): https://docs.helicone.ai/getting-started/self-host/manual
 - Helicone, all-in-one Docker deployment (Better Auth, `BETTER_AUTH_SECRET` documented default `change-me-in-production`): https://docs.helicone.ai/getting-started/self-host/docker
-- Helicone, repository Compose deployment (`BETTER_AUTH_SECRET` fallback `your-secret-key`; backing stores published on host ports `54388:5432`, `18123:8123`, `19000:9000`, `9000`/`9001`, `6379`, `1025`/`8025`): https://github.com/Helicone/helicone/blob/main/docker/docker-compose.yml
+- Helicone, repository Compose deployment (`BETTER_AUTH_SECRET` fallback `your-secret-key`; backing stores published on host ports `54388:5432`, `18123:8123`, `19000:9000`, `9000`/`9001`, `6379`, `1025`/`8025`): https://github.com/Helicone/helicone/blob/b12ebaccb824ab9778757ca197ff302d97fda421/docker/docker-compose.yml
 - Langfuse, headless initialization (`LANGFUSE_INIT_ORG_ID`/`USER_EMAIL`/`USER_PASSWORD`, org-before-user ordering): https://langfuse.com/self-hosting/administration/headless-initialization
 - Arize Phoenix, OAuth2 sign-up and basic-auth controls (`PHOENIX_OAUTH2_<IDP>_ALLOW_SIGN_UP` default True, `PHOENIX_DISABLE_BASIC_AUTH`): https://arize.com/docs/phoenix/self-hosting/features/authentication
 - OpenTelemetry Collector, localhost default introduced in v0.104.0: https://opentelemetry.io/blog/2024/hardening-the-collector-one/
 - OpenTelemetry Collector, `component.UseLocalHostAsDefaultHost` feature-gate removal in v0.112.0: https://github.com/open-telemetry/opentelemetry-collector/blob/v0.112.0/CHANGELOG.md
 - OpenTelemetry, Collector security best practices (bind addresses, TLS, authenticator extensions, minimal
   components, non-root): https://opentelemetry.io/docs/security/config-best-practices/
-- OpenTelemetry Collector Contrib, `basicauthextension` (htpasswd, `client_auth`, `auth.authenticator` wiring): https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/extension/basicauthextension
-- Arize Phoenix, gRPC OTLP Export authorization (`ApiKeyInterceptor`: `UNAUTHENTICATED` without a key, `PERMISSION_DENIED` for a viewer token, `OK` with a write-authorized key or when auth is disabled): https://github.com/Arize-ai/phoenix/blob/main/src/phoenix/server/bearer_auth.py
+- OpenTelemetry Collector Contrib, `basicauthextension` (htpasswd, `client_auth`, `auth.authenticator` wiring): https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/basicauthextension
+- Arize Phoenix, gRPC OTLP Export authorization (`ApiKeyInterceptor`: `UNAUTHENTICATED` without a key, `PERMISSION_DENIED` for a viewer token, `OK` with a write-authorized key or when auth is disabled): https://github.com/Arize-ai/phoenix/blob/f11c885c063f1c9b6146693cda401c5d645d8294/src/phoenix/server/bearer_auth.py
 - OpenTelemetry Collector, internal Prometheus metrics at `127.0.0.1:8888`: https://opentelemetry.io/docs/collector/internal-telemetry/
-- OpenTelemetry Collector, zPages extension (default endpoint `localhost:55679`): https://github.com/open-telemetry/opentelemetry-collector/blob/main/extension/zpagesextension/README.md
-- OpenTelemetry Collector Contrib, pprof extension (default endpoint `localhost:1777`): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/extension/pprofextension/README.md
-- OpenTelemetry Collector Contrib, health-check extension (default endpoint `localhost:13133`): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/extension/healthcheckextension/README.md
+- OpenTelemetry Collector, zPages extension (default endpoint `localhost:55679`): https://github.com/open-telemetry/opentelemetry-collector/blob/71f0462d5460ad3055201fd0f17658e56362d63a/extension/zpagesextension/README.md
+- OpenTelemetry Collector Contrib, pprof extension (default endpoint `localhost:1777`): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/443567a6a00d7cff8cae1432a6fef655d8698e94/extension/pprofextension/README.md
+- OpenTelemetry Collector Contrib, health-check extension (default endpoint `localhost:13133`): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/d922ffb299c6b9be026f97dd7d6a5f0f507efdeb/extension/healthcheckextension/README.md
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
 
 ======================================================================
