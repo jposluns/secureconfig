@@ -98,7 +98,7 @@ connection string or the tool's own login is not enough.
 - Metabase public links and embeds: https://www.metabase.com/docs/latest/embedding/public-links
 - Metabase data permissions (row and column security is Pro/Enterprise): https://www.metabase.com/docs/latest/permissions/data
 - Superset security: https://superset.apache.org/admin-docs/security/
-- Superset docker-compose.yml (production warning): https://github.com/apache/superset/blob/master/docker-compose.yml
+- Superset docker-compose.yml (production warning): https://github.com/apache/superset/blob/3d01094d231712e3470eb625be3f9925aeaeadb5/docker-compose.yml
 - Redash help center: https://redash.io/help/
 - Redash setting up a Redash instance: https://redash.io/help/open-source/setup/
 - Redash secret keys (cookie signing, data-source-credential encryption, do not reuse across instances or commit): https://redash.io/help/open-source/admin-guide/secrets/

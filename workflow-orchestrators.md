@@ -280,7 +280,7 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
 - Apache Airflow, security overview: https://airflow.apache.org/docs/apache-airflow/stable/security/
 - Apache Airflow, auth manager selection (`[core] auth_manager`, `airflow config get-value core auth_manager`): https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/auth-manager/index.html
 - Apache Airflow FAB provider, API authentication (`[fab] auth_backends`, independent of the auth manager): https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/api-authentication.html
-- Prefect server source (health and ready paths exempted from the auth string on GET): https://github.com/PrefectHQ/prefect/blob/main/src/prefect/server/api/server.py
+- Prefect server source (health and ready paths exempted from the auth string on GET): https://github.com/PrefectHQ/prefect/blob/9e560c9b6df4e19a5109a66e66d461f9facb538d/src/prefect/server/api/server.py
 - Apache Airflow, quickstart (default port 8080): https://airflow.apache.org/docs/apache-airflow/stable/start.html
 - Apache Airflow, running Airflow in Docker (the `docker-compose.yaml` default `airflow`/`airflow` web user via `_AIRFLOW_WWW_USER_*`, `AIRFLOW__API_AUTH__JWT_SECRET` default `airflow_jwt_secret`, FAB auth manager, port 8080 published on all interfaces, "for local development. Do not use it in a production deployment"; checked 2026-09-14): https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html
 - Apache Airflow, security model ("doesn't support unauthenticated users", "not designed to be exposed... to
@@ -298,4 +298,4 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
   [TLS](https://argo-workflows.readthedocs.io/en/release-3.7/tls/),
   [SSO and RBAC](https://argo-workflows.readthedocs.io/en/release-3.7/argo-server-sso/),
   [workflow-list API](https://argo-workflows.readthedocs.io/en/release-3.7/rest-examples/), and
-  [security model](https://argo-workflows.readthedocs.io/en/release-3.7/security/), and the auth mode-selection [source](https://raw.githubusercontent.com/argoproj/argo-workflows/main/server/auth/mode.go)
+  [security model](https://argo-workflows.readthedocs.io/en/release-3.7/security/), and the auth mode-selection [source](https://raw.githubusercontent.com/argoproj/argo-workflows/c811f057f1ef059611294979ba60ba97b1494179/server/auth/mode.go)
