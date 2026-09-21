@@ -10030,9 +10030,131 @@ The fixed configuration must permit valid members and reject invalid membership 
 
 See [internal membership authentication](https://www.mongodb.com/docs/manual/core/security-internal-authentication/), [member source restrictions](https://www.mongodb.com/docs/manual/reference/configuration-options/#security.clusterIpSourceAllowlist), and [replica-set status](https://www.mongodb.com/docs/manual/reference/command/replsetgetstatus/).
 
+### Verify Enterprise auditing
+
+**REASONED:** no MongoDB Enterprise deployment or readable audit destination is available.
+
+In an isolated Enterprise fixture with the auditing configuration from section 5, perform a successful authentication, a failed authentication, a collection creation, a permitted collection read, and a read attempted by an authenticated user that lacks find permission on the collection, then inspect the audit destination. Confirm the successful-authorization-check setting first:
+
+```javascript
+db.adminCommand({getParameter: 1, auditAuthorizationSuccess: 1});
+```
+
+With no destination configured, no audit records are produced. With the destination configured, a failed authentication is recorded as an `authenticate` event, a schema change such as the collection creation is recorded by default, and the unauthorized read is recorded as a failed `authCheck` (result 13) regardless of the setting; the permitted read's successful `authCheck` appears only once `auditAuthorizationSuccess` is `true`, at a performance cost, and an authentication-only filter records nothing else. The presence of an audit file alone proves neither event coverage nor successful-operation auditing; correlate each record with the test identity, operation, and time. See [auditing](https://www.mongodb.com/docs/v8.0/core/auditing/), [the auditAuthorizationSuccess parameter](https://www.mongodb.com/docs/v8.0/reference/parameters/), and the [audit event definitions](https://www.mongodb.com/docs/v8.0/reference/audit-message/mongo/).
+
+### Verify diagnostic-log redaction
+
+**REASONED:** no MongoDB Enterprise binaries, running test server, or process-log access is available.
+
+Set the log verbosity to 1 in both fixtures so the operation is logged regardless of latency, insert a harmless canary, read the corresponding entry in the process log, then restore the previous verbosity:
+
+```javascript
+db.setLogLevel(1);
+db.clients.insertOne({name: "Probe", note: "SECURECONFIG_REDACTION_CANARY"});
+```
+
+Without redaction, the canary value appears in the matching log entry. With `security.redactClientLogData` enabled, the entry still exists but its attached values are shown as `###`, while metadata such as error and operation codes and line numbers remains visible. A missing log entry is inconclusive on its own. See [the redactClientLogData parameter](https://www.mongodb.com/docs/v8.0/reference/parameters/) and the [log-redaction example](https://www.mongodb.com/docs/v8.0/administration/monitoring/).
+
+### Verify storage encryption
+
+**REASONED:** no MongoDB Enterprise binaries, disposable data directory, or KMIP endpoint is available.
+
+Create equivalent unencrypted and encrypted fixtures, each holding a known document, then confirm on disposable copies that the encrypted data files require the key configuration while a correctly configured server reads them. Inspect the startup log for the key-manager initialization:
+
+```bash
+grep -iE 'encryption.*key|key manager' /var/log/mongodb/mongod.log
+```
+
+With encryption enabled, the log records that the encryption key manager initialized; with a mismatched KMIP server identity or a missing key, initialization fails and the server does not start. The unencrypted fixture reopens with no key. Do not treat the absence of plaintext under `strings` as proof of encryption, since compression alone can produce that result. See the [encryption-at-rest reference](https://www.mongodb.com/docs/v8.0/core/security-encryption-at-rest/) and the [configure-encryption procedure](https://www.mongodb.com/docs/v8.0/tutorial/configure-encryption/).
+
+### Verify field-level encryption (CSFLE)
+
+**REASONED:** no MongoDB deployment, encryption-capable driver, or provisioned data-encryption key is available.
+
+CSFLE is verified with distinct client handles, not a single shell session, because a client configured for automatic encryption also decrypts on read. Through an encryption-configured client, insert a known canary into a protected collection and retain the returned `_id`; on the Community explicit path, encrypt the field value with `ClientEncryption.encrypt()` before the write. Read that document by `_id` through a client configured without automatic decryption: against an ordinary collection the field is plaintext, while against the protected collection it is encrypted binary data, and a key-authorized client recovers the original value. A plaintext write attempted against a server-side `$jsonSchema` that requires encryption is rejected. A denied read alone does not demonstrate field encryption, and a read through the same automatic-encryption client silently decrypts the field, so it cannot serve as the exposed control. See [CSFLE](https://www.mongodb.com/docs/v8.0/core/csfle/), its [manual-encryption reference](https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/manual-encryption/), and [CSFLE client options](https://www.mongodb.com/docs/v8.0/core/csfle/reference/csfle-options-clients/).
+
+### Verify Queryable Encryption
+
+**REASONED:** no replica-set or sharded MongoDB deployment, encryption-capable driver, or provisioned key is available.
+
+Create a Queryable Encryption collection with an `encryptedFields` definition and compare it against an ordinary collection, using distinct client handles as for CSFLE. Through the configured client, insert a canary and retain its `_id`; on the Community explicit path, encrypt values explicitly. Read by `_id` through a client configured without decryption: the ordinary collection returns plaintext, the encrypted collection ciphertext, and the configured client recovers the value. Query support depends on the field's configured query type: a field declared in `encryptedFields` without a `queryType` is encrypted but not queryable, so set `queryType: "equality"` on the encrypted string field and confirm the configured client matches an encrypted equality query. A range query is a separate fixture with `queryType: "range"`, which requires the encrypted field to be a numeric or date type (`int`, `long`, `double`, `decimal`, or `date`), not a string, with documents inside and outside the tested interval. A plaintext write against the declared encrypted fields is rejected. Missing results or a connection error alone do not establish confidentiality. See [Queryable Encryption](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/), its [limitations](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/limitations/), the [manual-encryption reference](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/fundamentals/manual-encryption/), and [supported operations](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/supported-operations/).
+
 | Backlog ID | Status | Outstanding demonstration |
 | --- | --- | --- |
-| MONGODB-LIVE-1 | Open; service behavior not yet demonstrated | On an authorized isolated deployment with MongoDB binaries, certificates, listener-inspection permission, and permitted/excluded source hosts, demonstrate exposed versus fixed listener binding, plaintext/TLS behavior, unauthenticated collection access with a valid client certificate, collection-role allows and denials, user source/listener restrictions, registered/unregistered/missing client-certificate cases, membership credentials, and member/router source restrictions. Record commands, versions, responses, and positive controls. |
+| MONGODB-LIVE-1 | Open; service behavior not yet demonstrated | On an authorized isolated deployment with MongoDB binaries, certificates, listener-inspection permission, and permitted/excluded source hosts, demonstrate exposed versus fixed listener binding, plaintext/TLS behavior, unauthenticated collection access with a valid client certificate, collection-role allows and denials, user source/listener restrictions, registered/unregistered/missing client-certificate cases, membership credentials, and member/router source restrictions. Record commands, versions, responses, and positive controls. The sections 5 to 9 controls are also REASONED: on an authorized MongoDB Enterprise deployment with an audit destination, encryption keys or a KMIP endpoint, and an encryption-capable driver, additionally demonstrate audit records for authentication and authorization events with auditAuthorizationSuccess off and on, diagnostic-log redaction of a canary value, encrypted versus plaintext storage fixtures under local-key and KMIP configurations, and CSFLE and Queryable Encryption field ciphertext with a permitted encrypted query and a rejected plaintext write. |
+
+## 5. Enable Enterprise auditing with deliberate event coverage
+
+MongoDB Enterprise provides an auditing facility for `mongod` and `mongos`; MongoDB Community has no equivalent, and the diagnostic log is not a substitute. Without a configured destination, no audit records are produced. Configure a destination on every process, including each shard and config-server member, since one unaudited process leaves a gap. See [MongoDB 8.0 auditing](https://www.mongodb.com/docs/v8.0/core/auditing/).
+
+```yaml
+auditLog:
+  destination: file
+  format: JSON
+  path: /var/log/mongodb/audit.json
+```
+
+A failed audit write can terminate the process, so confirm the destination is writable during deployment validation. Omitting a filter records every auditable event; a filter such as `auditLog.filter: '{"atype": "authenticate"}'` records only that event type and deliberately excludes the rest. See [configure auditing](https://www.mongodb.com/docs/v8.0/tutorial/configure-auditing/) and [audit filters](https://www.mongodb.com/docs/v8.0/tutorial/configure-audit-filters/).
+
+Recording successful authorization checks is a separate decision. `auditAuthorizationSuccess` defaults to `false`, so the audit system logs only authorization failures until it is enabled, and enabling it carries a performance cost:
+
+```yaml
+setParameter:
+  auditAuthorizationSuccess: true
+```
+
+Set it only where the accountability requirement justifies the overhead. See the [auditAuthorizationSuccess parameter](https://www.mongodb.com/docs/v8.0/reference/parameters/).
+
+## 6. Redact document values from the diagnostic log
+
+`redactClientLogData` is a MongoDB Enterprise feature; MongoDB Community does not offer it. Without redaction, logged operations can carry document field values into the diagnostic log, where a reader who is not a database user can see them. The documented startup routes are the `--redactClientLogData` flag or the configuration setting; use the configuration setting to keep redaction in the node's configuration file:
+
+```yaml
+security:
+  redactClientLogData: true
+```
+
+Redaction replaces the values accompanying a log message with `###`. Metadata such as error and operation codes, line numbers, and source-file names remain visible, and the documentation scopes redaction to the diagnostic log; do not rely on it for the audit log. MongoDB documents using it together with encryption at rest and TLS. See the [redactClientLogData parameter](https://www.mongodb.com/docs/v8.0/reference/parameters/), the [mongod flag reference](https://www.mongodb.com/docs/v8.0/reference/program/mongod/), and the [log-redaction example](https://www.mongodb.com/docs/v8.0/administration/monitoring/).
+
+## 7. Encrypt the storage engine with a managed key
+
+MongoDB Enterprise 3.2 introduced native encryption for the WiredTiger storage engine; MongoDB Community has no native equivalent and depends on host or filesystem encryption. `security.enableEncryption` defaults to `false` (see the [encryption configuration options](https://www.mongodb.com/docs/v8.0/reference/configuration-options/)). Native encryption cannot encrypt existing data: enable it on a fresh member and populate it through initial sync or the documented migration, rather than restarting a populated data directory with the flag set. See [encryption at rest](https://www.mongodb.com/docs/v8.0/core/security-encryption-at-rest/).
+
+For a local key file:
+
+```yaml
+security:
+  enableEncryption: true
+  encryptionKeyFile: /etc/mongodb/storage-master.key
+```
+
+This key encrypts storage and is unrelated to `security.keyFile`, which authenticates cluster members in section 2. The local key procedure does not support key rotation. See the [encryption configuration options](https://www.mongodb.com/docs/v8.0/reference/configuration-options/).
+
+MongoDB recommends a KMIP key server over a local key file. Keep `enableEncryption: true` and replace the key file with a `security.kmip` block:
+
+```yaml
+security:
+  enableEncryption: true
+  kmip:
+    serverName: kmip.example.internal
+    port: 5696
+    serverCAFile: /etc/mongodb/kmip-ca.pem
+    clientCertificateFile: /etc/mongodb/kmip-client.pem
+```
+
+The client PEM holds the client certificate and its private key. Supply `security.kmip.keyIdentifier` only to adopt an existing key when first enabling encryption; otherwise MongoDB requests a new key from the server. See the [configure encryption procedure](https://www.mongodb.com/docs/v8.0/tutorial/configure-encryption/).
+
+## 8. Encrypt selected fields with client-side field level encryption
+
+Transport TLS and storage encryption still leave ordinary field values readable by a sufficiently privileged database or host user. Client-side field level encryption (CSFLE) encrypts chosen fields in the driver before they reach the server; there is no `mongod` switch. Explicit CSFLE is available in MongoDB Community, Enterprise Advanced, and Atlas, while automatic encryption requires Enterprise or Atlas. Automatic decryption is available in Community. See [CSFLE](https://www.mongodb.com/docs/v8.0/core/csfle/) and [manual encryption](https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/manual-encryption/).
+
+Automatic CSFLE configures the client with an `autoEncryption` object naming the key-vault namespace, the KMS providers, and a local `schemaMap` that marks the encrypted fields. Supply that schema locally: a schema fetched only from the server lets a compromised server drop the encryption requirement and induce plaintext writes. For the Community explicit path, set `bypassAutoEncryption: true` and call `ClientEncryption.encrypt()` before writing, encrypting query values explicitly as well. A randomized algorithm does not support equality matching on the field; the deterministic variant does, at the cost of revealing which stored values are equal. Consider a server-side `$jsonSchema` that rejects plaintext writes to the encrypted fields, and keep master-key access separate from ordinary database access. See the [automatic-encryption schemas](https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/automatic-encryption/), [CSFLE client options](https://www.mongodb.com/docs/v8.0/core/csfle/reference/csfle-options-clients/), and [CSFLE encryption algorithms](https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/encryption-algorithms/).
+
+## 9. Query encrypted fields with Queryable Encryption
+
+Queryable Encryption (QE) encrypts fields in the driver while still allowing the server to run supported queries against the ciphertext. Equality queries became generally available in MongoDB 7.0 and range queries in MongoDB 8.0; the 6.0 public preview is incompatible with the generally available format and is not a production baseline. As with CSFLE, automatic encryption requires Enterprise or Atlas, while explicit QE and automatic decryption are available in Community. See the [7.0 GA release notes](https://www.mongodb.com/docs/v8.0/release-notes/7.0/), the [8.0 range-query release notes](https://www.mongodb.com/docs/v8.0/release-notes/8.0/), [Queryable Encryption](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/), and the [QE manual encryption edition split](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/fundamentals/manual-encryption/).
+
+QE requires a new encrypted collection created with an `encryptedFields` definition; an existing collection cannot have QE turned on in place, and one collection cannot combine CSFLE and QE. Automatic clients set `autoEncryption` with the key-vault namespace, the KMS providers, and a local `encryptedFieldsMap`. For the Community explicit path, set `bypassQueryAnalysis: true` and drive `ClientEncryption` directly. QE supports replica sets and sharded clusters, not standalones. Do not carry forward legacy `rangePreview` recipes; that option was removed in 8.0. See the [QE limitations](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/limitations/), [QE client options](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/qe-options-clients/), the [8.0 compatibility notes](https://www.mongodb.com/docs/v8.0/release-notes/8.0-compatibility/), and the [manual-encryption reference](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/fundamentals/manual-encryption/).
 
 ## Common mistakes
 
@@ -10044,6 +10166,10 @@ See [internal membership authentication](https://www.mongodb.com/docs/manual/cor
 - Treating a trusted TLS certificate as an authenticated, least-privilege MongoDB user.
 - Issuing application certificates with cluster-member attributes.
 - Treating a timeout or `listDatabases` output as proof of collection authorization.
+- Assuming MongoDB Community offers Enterprise auditing, `redactClientLogData`, or native storage encryption.
+- Enabling storage encryption on a populated data directory and assuming the existing files become encrypted.
+- Trusting a server-supplied CSFLE schema, which a compromised server can weaken to induce plaintext writes.
+- Combining CSFLE and Queryable Encryption on one collection, or carrying a legacy `rangePreview` recipe into 8.0.
 
 ## Sources (checked September 2026)
 
@@ -10077,6 +10203,29 @@ See [internal membership authentication](https://www.mongodb.com/docs/manual/cor
 - MongoDB authorization and authentication error codes: https://www.mongodb.com/docs/manual/reference/error-codes/
 - listDatabases privilege-dependent behavior: https://www.mongodb.com/docs/manual/reference/command/listdatabases/
 - Replica-set status and required privilege: https://www.mongodb.com/docs/manual/reference/command/replsetgetstatus/
+- MongoDB 8.0 Enterprise auditing: https://www.mongodb.com/docs/v8.0/core/auditing/
+- MongoDB 8.0 audit event definitions (authCheck and authenticate results): https://www.mongodb.com/docs/v8.0/reference/audit-message/mongo/
+- MongoDB 8.0 configure auditing and destinations: https://www.mongodb.com/docs/v8.0/tutorial/configure-auditing/
+- MongoDB 8.0 audit filters: https://www.mongodb.com/docs/v8.0/tutorial/configure-audit-filters/
+- MongoDB 8.0 server parameters (auditAuthorizationSuccess, redactClientLogData): https://www.mongodb.com/docs/v8.0/reference/parameters/
+- MongoDB 8.0 mongod redactClientLogData flag: https://www.mongodb.com/docs/v8.0/reference/program/mongod/
+- MongoDB 8.0 encryption at rest: https://www.mongodb.com/docs/v8.0/core/security-encryption-at-rest/
+- MongoDB 8.0 encryption configuration options: https://www.mongodb.com/docs/v8.0/reference/configuration-options/
+- MongoDB 8.0 configure encryption and KMIP procedure: https://www.mongodb.com/docs/v8.0/tutorial/configure-encryption/
+- MongoDB 8.0 client-side field level encryption: https://www.mongodb.com/docs/v8.0/core/csfle/
+- MongoDB 8.0 CSFLE manual (explicit) encryption: https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/manual-encryption/
+- MongoDB 8.0 CSFLE automatic-encryption schemas: https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/automatic-encryption/
+- MongoDB 8.0 CSFLE client options: https://www.mongodb.com/docs/v8.0/core/csfle/reference/csfle-options-clients/
+- MongoDB 8.0 Queryable Encryption: https://www.mongodb.com/docs/v8.0/core/queryable-encryption/
+- MongoDB 8.0 Queryable Encryption 7.0 GA release notes: https://www.mongodb.com/docs/v8.0/release-notes/7.0/
+- MongoDB 8.0 Queryable Encryption limitations: https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/limitations/
+- MongoDB 8.0 Queryable Encryption client options: https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/qe-options-clients/
+- MongoDB 8.0 Queryable Encryption manual encryption (edition split): https://www.mongodb.com/docs/v8.0/core/queryable-encryption/fundamentals/manual-encryption/
+- MongoDB 8.0 Queryable Encryption supported operations (range BSON types): https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/supported-operations/
+- MongoDB 8.0 log-redaction example: https://www.mongodb.com/docs/v8.0/administration/monitoring/
+- MongoDB 8.0 CSFLE encryption algorithms: https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/encryption-algorithms/
+- MongoDB 8.0 release notes (Queryable Encryption range queries): https://www.mongodb.com/docs/v8.0/release-notes/8.0/
+- MongoDB 8.0 compatibility notes (rangePreview removal): https://www.mongodb.com/docs/v8.0/release-notes/8.0-compatibility/
 - Bash file-creation mask: https://www.gnu.org/s/bash/manual/html_node/Bourne-Shell-Builtins.html
 - Bash redirection and noclobber behavior: https://www.gnu.org/s/bash/manual/bash.html
 
@@ -10999,6 +11148,39 @@ PUT /_security/role_mapping/app_ldap
 
 Use the actual realm and group DN. Native users receive their roles through the user API above; this mapping is for directory identities. See [LDAP authentication](https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/ldap) and the [role-mapping API](https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-security-put-role-mapping).
 
+### Field-level and document-level security
+
+**Paid Platinum/Enterprise; unavailable with Basic. Minimum version within this guide: Elasticsearch 8.0; syntax pinned to 8.19.** FLS/DLS predate 8.0; their first historical release is not established here. At the time of writing, self-managed Platinum is available to existing customers only. Basic security became free in 6.8.0 and 7.1.0, explicitly excluding FLS/DLS. The default Elasticsearch distribution remains under ELv2; the additional AGPL source option does not make subscription features free. See the [dated subscription matrix](https://www.elastic.co/pdf/subscriptions-2025-07-29.pdf), [current subscription terms](https://www.elastic.co/subscriptions), [free-security announcement](https://www.elastic.co/blog/security-for-elasticsearch-is-now-free), and [licensing explanation](https://www.elastic.co/pricing/faq/licensing).
+
+The existing `app_reader` role permits reading every document and field in `app-data`. Where tenants or sensitive fields share an index, restrict both documents and fields. Map `tenant_id` as `keyword`, then create a separate read-only role:
+
+```http
+PUT /_security/role/app_tenant_a_reader
+{
+  "cluster": [],
+  "indices": [
+    {
+      "names": ["app-data"],
+      "privileges": ["read"],
+      "field_security": {
+        "grant": ["tenant_id", "title", "category"]
+      },
+      "query": {
+        "term": {
+          "tenant_id": "tenant-a"
+        }
+      }
+    }
+  ]
+}
+```
+
+`field_security.grant` selects readable fields; `query` selects readable documents. Use concrete field names, not field aliases. Some metadata fields remain accessible. Omitting field permissions permits all fields; omitting `query` removes DLS for that index permission entry. See the [8.19 role API](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/security-api-put-role.html), [FLS](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/field-level-security.html), and [DLS](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/document-level-security.html).
+
+Assign this role to the application identity **instead of also retaining unrestricted `app_reader` access**. Elasticsearch combines grants across roles: unrestricted access to the same index can defeat these restrictions. Keep the account read-only. Review application API keys separately, including permissions captured when they were created; do not assume changing a user role repairs previously issued credentials. See [8.19 access-control and role-combination rules](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/field-and-document-access-control.html).
+
+DLS does not remove every inference channel. Elasticsearch documents global scoring statistics and search requests that can reveal aggregate information about inaccessible documents. DLS role queries cannot use `has_child`, `has_parent`, terms lookup, indexed-shape lookup, or `percolate`; date ranges cannot use `now`. DLS also affects suggesters, profiling, and other APIs. Test the application's actual queries and aggregations. Prefer separate indices when stronger tenant or confidentiality isolation is required. See [8.19 security limitations](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/security-limitations.html).
+
 ### Anonymous access off and narrow CORS
 
 **Free Basic.** Remove `xpack.security.authc.anonymous.roles` from `elasticsearch.yml`, including any equivalent nested configuration. With no anonymous roles specified, anonymous access is disabled and requests without credentials receive `401`. Apply the static configuration change by restarting affected nodes. See [anonymous access](https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/anonymous-access).
@@ -11126,6 +11308,36 @@ The controls below are provided by **free Apache-2.0 OpenSearch Security**, with
 
    The token API uses **`index_pattern`**, singular, while the role API uses **`index_patterns`**. Lifetime is **`duration_seconds`**, not Elasticsearch's `expiration`. If omitted, lifetime uses `max_duration_seconds`, whose documented default is 7,776,000 seconds; the configuration above explicitly reduces it. Store the returned `token` once, in `/path/app-key.header` after `Authorization: ApiKey `. It cannot be retrieved again. See [API-key configuration](https://docs.opensearch.org/latest/security/access-control/api-keys/) and [Create API Key](https://docs.opensearch.org/latest/security/api/api-keys/create/).
 
+### Field-level and document-level security
+
+**Free Apache-2.0 OpenSearch Security; no paid feature tier. The FLS/DLS role schema is documented from OpenSearch 3.0 and applies across this guide's 3.x scope; the citations below are pinned to 3.6 and the behaviour is reviewed current to 3.8.0.** The role API was introduced in 1.0, and DLS appears in the 1.0 archive. These establish earlier availability, not the introduction release of every combined behavior below. See the [3.6 Security API](https://docs.opensearch.org/3.6/security/access-control/api/), [1.0 DLS archive](https://docs.opensearch.org/1.0/security-plugin/access-control/document-level-security/), and [3.8.0.0 Security licence](https://raw.githubusercontent.com/opensearch-project/security/3.8.0.0/LICENSE.txt).
+
+The existing `app_reader` role permits reading every document and field in `app-data`. Map `tenant_id` as `keyword`, then create a separate read-only role using OpenSearch's schema:
+
+```http
+PUT /_plugins/_security/api/roles/app_tenant_a_reader
+{
+  "cluster_permissions": [],
+  "index_permissions": [
+    {
+      "index_patterns": ["app-data"],
+      "allowed_actions": ["read"],
+      "dls": "{\"term\":{\"tenant_id\":\"tenant-a\"}}",
+      "fls": ["tenant_id", "title", "category"]
+    }
+  ],
+  "tenant_permissions": []
+}
+```
+
+`dls` is a JSON-encoded string. Keep `tenant_id` visible in `fls`: fields used by DLS must remain readable. Map the dedicated application identity to this role and review every other effective role and mapping. Do not mix FLS inclusion and exclusion rules across roles without checking their documented interaction. See [3.6 FLS](https://docs.opensearch.org/3.6/security/access-control/field-level-security/) and [3.6 DLS](https://docs.opensearch.org/3.6/security/access-control/document-level-security/).
+
+OpenSearch's role-combination behavior differs from Elasticsearch's. In particular, `plugins.security.dfm_empty_overrides_all` affects whether a role without DLS overrides a restricted role. Inspect the effective setting and test the actual identity. DLS does not constrain writes, so grant no write permissions to this reader.
+
+Use the dedicated internal-user credential for this recipe. The earlier API-token example contains its own index permissions; assigning this role to a user does not establish that the token enforces equivalent restrictions. Any application token must independently pass the restricted-access checks below before use.
+
+OpenSearch's adaptive DLS uses filter-level evaluation for terms-lookup queries. Filter-level DLS permits retrieval through `get`, `search`, `mget`, and `msearch`, and limits cross-cluster search. Review the application's exact queries and aggregations against these OpenSearch-specific restrictions. Do not substitute Elasticsearch's limitations or claim that FLS/DLS eliminates every inference channel. Prefer separate indices when stronger isolation is required. See [3.6 DLS modes, role composition, and limitations](https://docs.opensearch.org/3.6/security/access-control/document-level-security/).
+
 ### Anonymous access off and narrow CORS
 
 **Free Apache-2.0.** In the security `config.yml`, set `config.dynamic.http.anonymous_auth_enabled: false`. Preserve a working authentication domain. For example, merge this into an existing internal-user configuration, keeping its `_meta` section and other required settings:
@@ -11202,6 +11414,164 @@ config:
 Apply that complete file with the same `securityadmin.sh` certificate arguments, replacing the file/type arguments with `-f config/opensearch-security/audit.yml -t audit`. Preserve the enabled and request-body settings. The GET response's `_readonly` list identifies fields that REST updates cannot change; do not treat a rejected PATCH as success. Repeat GET and confirm `enabled: true`, `enable_rest: true`, `log_request_body: false`, and `exclude_sensitive_headers: true`. See [GET audit configuration](https://docs.opensearch.org/latest/security/api/audit/get-audit-configuration/), [PATCH audit configuration](https://docs.opensearch.org/latest/security/api/audit/patch-audit-configuration/), and [audit configuration fields](https://docs.opensearch.org/latest/security/api/audit/update-audit-configuration/).
 
 Ensure audit exclusions do not suppress `FAILED_LOGIN` or the identities and requests being tested. Collect audit events into a separately protected logging destination; application credentials must not be able to alter the evidence.
+
+## Storage encryption
+
+**Both products: operating-system or storage-provider control, with no paid product feature tier required. Minimum versions within scope: Elasticsearch 8.0 and OpenSearch 3.0.** Elasticsearch guidance is pinned to 8.19; the cited OpenSearch encryption guidance is explicitly the 3.0 archive.
+
+TLS and authentication do not encrypt files on an unencrypted node volume. Use host/block-storage encryption, such as Linux dm-crypt, independently of the search security configuration. Elasticsearch documents dm-crypt beneath its data path; OpenSearch assigns encryption at rest to the operating system. Elastic's subscription row is **"Encryption at rest support"**, not a native encryption switch or a licence requirement for using dm-crypt. See [Elasticsearch 8.19 storage guidance](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/tune-for-search-speed.html), [OpenSearch 3.0 encryption guidance](https://docs.opensearch.org/3.0/troubleshoot/#encryption-at-rest), and the [dated subscription matrix](https://www.elastic.co/pdf/subscriptions-2025-07-29.pdf).
+
+Provision the encrypted volume before deploying data. Mount it at `/srv/search-data`, then select that directory in the respective `elasticsearch.yml` or `opensearch.yml`:
+
+```yaml
+path.data: /srv/search-data
+```
+
+**`path.data` selects a directory; it does not enable encryption.** For an existing deployment, plan the storage migration and recovery procedure before changing the path. Include logs, swap, and local snapshot storage in the encryption assessment. See [Elasticsearch 8.19 path settings](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/path-settings-overview.html) and [OpenSearch 3.6 configuration settings](https://docs.opensearch.org/3.6/install-and-configure/configuring-opensearch/configuration-system/).
+
+Prevent startup from silently using an ordinary directory when the intended mount is unavailable. For a systemd deployment with `/srv/search-data` configured as a dedicated mount, add this service drop-in to the relevant Elasticsearch or OpenSearch unit:
+
+```ini
+[Unit]
+RequiresMountsFor=/srv/search-data
+AssertPathIsMountPoint=/srv/search-data
+```
+
+Reload systemd after installing the drop-in. The dependency requires the configured mount; the assertion rejects an ordinary directory. Neither proves that the mounted device is encrypted: verify the device chain separately. Other service managers need equivalent startup enforcement. See [systemd mount dependencies and assertions](https://man7.org/linux/man-pages/man5/systemd.unit.5.html).
+
+## Snapshot repository encryption
+
+**Elasticsearch: ordinary snapshot/restore is available with free Basic; the examples target 8.x and are pinned to 8.19. OpenSearch: free Apache-2.0; the S3 encryption syntax below requires 3.1 or later, with the changed default pinned to 3.8.0.** These are ordinary repositories, separate from paid Elasticsearch searchable-snapshot features. Provider storage and KMS charges are separate from product subscription tiers. See the [dated subscription matrix](https://www.elastic.co/pdf/subscriptions-2025-07-29.pdf) and [OpenSearch 3.1 repository API](https://docs.opensearch.org/3.1/api-reference/snapshots/create-repository/).
+
+An encrypted node disk does not protect a remote snapshot repository. Server-side encryption also does not prevent a principal with the necessary object and key permissions from downloading decrypted contents.
+
+Distinguish three properties:
+
+- **Server-side encryption:** the storage provider encrypts stored objects and decrypts authorized reads.
+- **Customer-managed keys:** the customer controls the encryption key and its permissions; this can still be server-side encryption.
+- **Client-side encryption:** data is encrypted before upload, requiring a compatible reader and separately managed decryption keys.
+
+Do not describe new AWS S3, GCS, or Azure objects as generally plaintext by default. AWS encrypts new S3 uploads automatically, GCS always applies server-side encryption, and Azure Storage encryption is enabled by default. Assess retained objects and required key ownership separately. See [AWS defaults](https://docs.aws.amazon.com/AmazonS3/latest/userguide/default-encryption-faq.html), [GCS encryption distinctions](https://docs.cloud.google.com/storage/docs/encryption), and [Azure Storage encryption](https://learn.microsoft.com/en-us/azure/storage/common/storage-service-encryption).
+
+### Elasticsearch S3
+
+**Free Basic; minimum version within this guide: 8.0; syntax pinned to 8.19.** After configuring repository credentials through the documented secure client settings, this requests SSE-S3:
+
+```http
+PUT /_snapshot/private_s3
+{
+  "type": "s3",
+  "settings": {
+    "bucket": "REPLACE_WITH_BUCKET",
+    "server_side_encryption": true
+  }
+}
+```
+
+Elasticsearch 8.19's `server_side_encryption` defaults to `false`; `true` requests server-side AES256 encryption. Neither value enables client-side encryption. `false` does not mean AWS stores plaintext.
+
+For customer-managed KMS encryption through the bucket default, omit this AES256 request, configure the intended bucket encryption/key policy, and verify the resulting object metadata. Do not add SSE-S3 blindly to a repository intended to use bucket-default KMS. See [8.19 S3 repository settings](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-s3.html).
+
+### OpenSearch S3
+
+**Free Apache-2.0; minimum version for this syntax: 3.1.** OpenSearch removed `server_side_encryption` in 3.1. Use `server_side_encryption_type`, which accepts `AES256`, `aws:kms`, or `bucket_default`. The default was `bucket_default` in 3.1 and changed to **`AES256` in 3.8**. See the [3.1 repository settings](https://docs.opensearch.org/3.1/api-reference/snapshots/create-repository/) and [3.8.0-tagged implementation](https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-s3/src/main/java/org/opensearch/repositories/s3/S3Repository.java).
+
+For an explicit customer-managed KMS key:
+
+```http
+PUT /_snapshot/private_s3
+{
+  "type": "s3",
+  "settings": {
+    "bucket": "REPLACE_WITH_BUCKET",
+    "server_side_encryption_type": "aws:kms",
+    "server_side_encryption_kms_key_id": "REPLACE_WITH_KMS_KEY_ARN"
+  }
+}
+```
+
+Grant the repository principal the required object-store and KMS permissions. The ARN identifies a key; do not supply key material. This remains server-side encryption. To follow the bucket's encryption policy instead, explicitly select `bucket_default`, especially when upgrading to 3.8. Do not copy these OpenSearch settings into Elasticsearch. See [AWS SSE-KMS permissions](https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingKMSEncryption.html).
+
+### GCS, Azure, and repository integrity
+
+**Elasticsearch: free Basic; minimum version within this guide: 8.0; declarations pinned to 8.19.** With the appropriate secure client credentials configured:
+
+```http
+PUT /_snapshot/private_gcs
+{
+  "type": "gcs",
+  "settings": {
+    "bucket": "REPLACE_WITH_BUCKET"
+  }
+}
+```
+
+```http
+PUT /_snapshot/private_azure
+{
+  "type": "azure",
+  "settings": {
+    "container": "REPLACE_WITH_CONTAINER"
+  }
+}
+```
+
+The complete Elasticsearch 8.19 setting lists document no client-side-encryption switch for these repositories. Configure required customer-managed encryption through the provider's bucket/account policy and grant the required key access. GCS customer-supplied encryption keys are also a server-side mechanism. Azure account keys and SAS tokens authenticate requests; they do not establish client-side encryption. See [8.19 GCS settings](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-gcs.html), [8.19 Azure settings](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-azure.html), and [GCS encryption distinctions](https://docs.cloud.google.com/storage/docs/encryption).
+
+**OpenSearch: free Apache-2.0; the cited repository workflow is version 3.6.** Follow OpenSearch's own plugin and credential instructions, including its Azure workflow. A tag-pinned review of OpenSearch's GCS/Azure client-side-encryption implementations remains outstanding. Their capability and minimum version are **not established here**; do not infer absence from Elasticsearch's settings or from failed source retrieval. See [OpenSearch 3.6 snapshot/repository guidance](https://docs.opensearch.org/3.6/tuning-your-cluster/availability-and-recovery/snapshots/snapshot-restore/).
+
+Keep repository access private and keys recoverable for the required retention period. Do not rewrite files inside an active repository as an improvised encryption layer. Elasticsearch configuration-file backups are separate from snapshots and should be assessed for encryption; snapshots containing security feature state are sensitive too. See [8.19 backup guidance](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-take-snapshot.html) and [repository-integrity requirements](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshot-restore.html).
+
+## Kibana and OpenSearch Dashboards
+
+The UI is a separate service, normally on port **5601**. Securing cluster ports 9200/9300 does not configure browser-to-UI TLS.
+
+### Kibana
+
+**Free Basic; minimum version within this guide: Kibana 8.0; settings pinned to 8.19.** No Platinum/Enterprise subscription is required for browser-listener TLS. The cited versions establish support, not the first historical introduction of each setting.
+
+Kibana defaults to HTTP on `localhost:5601`, with `server.ssl.enabled: false`. Its Docker image changes the host default to `0.0.0.0`. Check installation overrides, environment, and process arguments. See [8.19 Kibana settings](https://www.elastic.co/guide/en/kibana/8.19/settings.html) and [Docker defaults](https://www.elastic.co/guide/en/kibana/8.19/docker.html).
+
+Merge into `kibana.yml`, preserving the existing server identity and authentication configuration:
+
+```yaml
+server.host: "127.0.0.1"
+server.port: 5601
+server.ssl.enabled: true
+server.ssl.certificate: /etc/search-ui/tls/server.crt
+server.ssl.key: /etc/search-ui/tls/server.key
+
+elasticsearch.hosts: ["https://search.example.com:9200"]
+elasticsearch.ssl.certificateAuthorities: ["/path/http_ca.crt"]
+elasticsearch.ssl.verificationMode: full
+```
+
+The `server.ssl.*` settings protect incoming browser or proxy connections. The `elasticsearch.ssl.*` settings protect the separate Kibana-to-Elasticsearch connection. Keep full certificate and hostname verification on that connection. See [8.19 inbound and outbound TLS settings](https://www.elastic.co/guide/en/kibana/8.19/settings.html).
+
+### OpenSearch Dashboards
+
+**Free Apache-2.0; the TLS recipe is documented from at least OpenSearch Dashboards 2.19 and applies across this guide's 3.x scope; defaults are checked against 3.8.0.**
+
+The 3.8.0 sample configuration identifies localhost, port 5601, and disabled server TLS. Check installation and container overrides separately. See the [3.8.0-tagged configuration](https://raw.githubusercontent.com/opensearch-project/OpenSearch-Dashboards/3.8.0/config/opensearch_dashboards.yml).
+
+Merge into `opensearch_dashboards.yml`, preserving the existing server identity and authentication configuration:
+
+```yaml
+server.host: "127.0.0.1"
+server.port: 5601
+server.ssl.enabled: true
+server.ssl.certificate: /etc/search-ui/tls/server.crt
+server.ssl.key: /etc/search-ui/tls/server.key
+opensearch_security.cookie.secure: true
+
+opensearch.hosts: ["https://search.example.com:9200"]
+opensearch.ssl.certificateAuthorities: ["/path/production-ca.pem"]
+opensearch.ssl.verificationMode: full
+```
+
+`server.ssl.*` protects the UI listener; `opensearch_security.cookie.secure` restricts the security cookie to HTTPS. `opensearch.ssl.*` controls the separate connection to OpenSearch. Retain full certificate and hostname verification. See [Dashboards 3.6 TLS settings](https://docs.opensearch.org/3.6/install-and-configure/install-dashboards/tls/).
+
+For either UI, loopback binding suits a proxy in the same network namespace. For direct private-network access, select the intended private interface and restrict network access. A proxy in another container does not share the UI container's loopback. Use certificates matching the hostname used by clients or the proxy, protect private-key files, and restart the UI after applying settings.
 
 ## Verify
 
@@ -11354,11 +11724,221 @@ ss -tlnp 'sport = :9300'
 
 These use `ss`'s own port filter, avoiding accidental PID matches. For Elasticsearch, HTTP defaults to the range `9200-9300` and transport to `9300-9400`; each binds an available port. Inspect the actual ports used by either product. Expect loopback or deliberate private listeners. An unexpected public or wildcard listener is a finding to review against the network controls; no output is inconclusive until the running process and its actual ports are located.
 
+### Residual-control checks
+
+These additional deployment checks are **REASONED, not demonstrated**. No target Elasticsearch/OpenSearch cluster, eligible Elasticsearch FLS/DLS licence, target storage, provider repository access, or running UI with deployed certificates is available in the authoring environment. Demonstration remains part of `ES-OS-VERIFY-1`.
+
+Use isolated test deployments for exposed-state fixtures. Substitute values inside single quotes and paste whole shell blocks. Values containing a literal apostrophe need proper shell quoting. Keep credentials in the protected header files described above, with tracing disabled. The following blocks assume the shell's normal builtins.
+
+For the REST request tables below, save each JSON body in a protected file. Run this block once per request, setting the method, path, and body-file arguments. Use `/dev/null` for a request with no body. Select the administrator or application header file as directed:
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_SEARCH_HOST' 'REPLACE_WITH_CA_FILE' '9200' 'REPLACE_WITH_HEADER_FILE' 'GET' '/REPLACE_WITH_REQUEST_PATH' '/dev/null'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 7 ] || { echo "set host, CA, port, header file, method, path, and body file; not probing"; exit 1; }
+  case "$1|$2|$3|$4|$5|$6|$7" in
+    *REPLACE_WITH_*|*example.com*) echo "substitute your deployment; not probing"; exit 1 ;;
+  esac
+  case "$1" in ""|*[!A-Za-z0-9.-]*) echo "use a DNS hostname or IPv4 address; not probing"; exit 1 ;; esac
+  case "$3" in ""|*[!0-9]*) echo "numeric port required; not probing"; exit 1 ;; esac
+  [ "$3" -ge 1 ] && [ "$3" -le 65535 ] || exit 1
+  [ -r "$2" ] && [ -r "$4" ] && [ -r "$7" ] || { echo "readable CA, header, and body files required"; exit 1; }
+  case "$5" in GET|POST|PUT) ;; *) echo "unsupported method; not probing"; exit 1 ;; esac
+  case "$6" in /*) ;; *) echo "request path must start with /; not probing"; exit 1 ;; esac
+  # REASONED: no target cluster, eligible ES licence, or repository access.
+  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 120 \
+    --cacert "$2" --header "@$4" --header 'Content-Type: application/json' \
+    --request "$5" --data-binary "@$7" \
+    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+    "https://$1:$3$6"
+)
+```
+
+Judge the HTTP status and response contents, not the shell's final status alone. A transport failure or `401` is not evidence of correct field/document restrictions.
+
+### Verify field and document restrictions
+
+**REASONED, not demonstrated:** requires both live products and an eligible Elasticsearch FLS/DLS licence.
+
+In an isolated cluster where `app-data` does not already exist, use the administrator header and REST block to create this harmless fixture:
+
+| Method | Path | JSON body |
+| --- | --- | --- |
+| `PUT` | `/app-data` | `{"mappings":{"properties":{"tenant_id":{"type":"keyword"},"title":{"type":"keyword"},"category":{"type":"keyword"},"secret":{"type":"keyword"}}}}` |
+| `PUT` | `/app-data/_doc/fls-a?refresh=true` | `{"tenant_id":"tenant-a","title":"A","category":"public-a","secret":"fixture-secret-a"}` |
+| `PUT` | `/app-data/_doc/fls-b?refresh=true` | `{"tenant_id":"tenant-b","title":"B","category":"public-b","secret":"fixture-secret-b"}` |
+
+Require successful creation responses. These markers are deliberately harmless, not real secrets. See the [Elasticsearch 8.19 create-index API](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/indices-create-index.html), [index-document API](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/docs-index_.html), [OpenSearch 3.6 create-index API](https://docs.opensearch.org/3.6/api-reference/index-apis/create-index/), and [index-document API](https://docs.opensearch.org/3.6/api-reference/document-apis/index-document/).
+
+Run the following requests first as an identity with the existing unrestricted `app_reader` role, then as the restricted application identity:
+
+| Method | Path | JSON body |
+| --- | --- | --- |
+| `POST` | `/app-data/_search` | `{"query":{"match_all":{}},"fields":["tenant_id","title","category","secret"]}` |
+| `GET` | `/app-data/_doc/fls-a` | No body |
+| `GET` | `/app-data/_doc/fls-b` | No body |
+| `POST` | `/app-data/_search` | `{"size":0,"aggs":{"values":{"terms":{"field":"secret"}}}}` |
+| `POST` | `/app-data/_search` | `{"size":0,"aggs":{"values":{"terms":{"field":"category"}}}}` |
+
+The unrestricted control must retrieve both documents and both secret markers, including the secret aggregation buckets. With the restricted identity:
+
+- Search returns only `fls-a`; neither `_source` nor requested `fields` contains a secret marker.
+- Direct retrieval returns `fls-a` without `secret`, while `fls-b` is not retrievable.
+- The secret aggregation discloses neither secret value. Record the exact response; a failed query alone does not demonstrate working FLS.
+- The allowed `category` aggregation succeeds and returns `public-a`, excluding `public-b`.
+- The administrator still retrieves `fls-b` and its original marker, ruling out a missing fixture.
+
+A `401`, unavailable index, or broken allowed-field query leaves the result unresolved. Repeat with the actual application credential, including any API key intended for production, and retain its effective permission configuration.
+
+These checks exercise ordinary retrieval and aggregations; they do not prove absence of statistical inference channels. The distinctions follow [Elasticsearch 8.19 FLS](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/field-level-security.html), [DLS](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/document-level-security.html), [search syntax](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/search-search.html), [OpenSearch 3.6 FLS](https://docs.opensearch.org/3.6/security/access-control/field-level-security/), [DLS](https://docs.opensearch.org/3.6/security/access-control/document-level-security/), and [search syntax](https://docs.opensearch.org/3.6/api-reference/search-apis/search/).
+
+### Verify storage encryption
+
+**REASONED, not demonstrated:** these inspections do not require a running cluster, but target-node and target-storage access are unavailable here.
+
+Run on the node, with sufficient permission to inspect the intended dm-crypt mapping:
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DATA_PATH' 'REPLACE_WITH_CRYPT_MAPPING'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 2 ] || { echo "set data path and mapping name; not probing"; exit 1; }
+  case "$1|$2" in *REPLACE_WITH_*) echo "substitute your storage; not probing"; exit 1 ;; esac
+  case "$1" in /*) ;; *) echo "absolute data path required"; exit 1 ;; esac
+  case "$2" in ""|-*|*/*) echo "mapping name required"; exit 1 ;; esac
+  [ -d "$1" ] || { echo "data directory missing; unresolved"; exit 1; }
+  # REASONED: no access to the target node or encrypted storage.
+  findmnt -T "$1" || exit 1
+  lsblk -o NAME,TYPE,FSTYPE,MOUNTPOINTS || exit 1
+  cryptsetup status "$2"
+)
+```
+
+Compare the exposed unencrypted volume with the fixed volume. Require the actual data path's mount/device chain to traverse the intended encrypted mapping. An unrelated active mapping is insufficient. For provider-managed volume encryption, inspect the actual attached volume's encryption and key metadata instead; the guest may not expose a dm-crypt device. Successful reads through an unlocked filesystem neither prove nor disprove encryption at rest. See [findmnt](https://man7.org/linux/man-pages/man8/findmnt.8.html), [lsblk](https://man7.org/linux/man-pages/man8/lsblk.8.html), and [cryptsetup status](https://man7.org/linux/man-pages/man8/cryptsetup-status.8.html).
+
+**REASONED, not demonstrated:** in an isolated systemd fixture, stop the service and make the required test mount unavailable, including preventing automatic remount. Run the following with the test service unit. Do not perform this fault injection on production storage.
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_SERVICE_UNIT'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 1 ] || { echo "set exactly one service unit; not probing"; exit 1; }
+  case "$1" in ""|-*|*REPLACE_WITH_*|*/*) echo "substitute the test service unit"; exit 1 ;; esac
+  # REASONED: isolated target service and unavailable-mount fixture absent.
+  systemctl start "$1"
+  systemctl --no-pager status "$1"
+)
+```
+
+Without startup enforcement, an otherwise valid fixture may start on the ordinary underlying directory. With the mount dependency/assertion, require the start job to fail specifically because the mount is unavailable, with no search process writing into that directory. Restore the intended encrypted mount and require successful startup as the positive control. Permission errors or unrelated startup failures are inconclusive. See [systemd assertions](https://man7.org/linux/man-pages/man5/systemd.unit.5.html) and [systemctl](https://man7.org/linux/man-pages/man1/systemctl.1.html).
+
+### Verify snapshot encryption and key isolation
+
+**REASONED, not demonstrated:** requires a live cluster, configured repository, provider access, and controlled test identities.
+
+Using the administrator header and REST block, snapshot only the harmless fixture. Select an unused snapshot name and an unused restore index; the names below are for the isolated fixture.
+
+| Method | Path | JSON body |
+| --- | --- | --- |
+| `PUT` | `/_snapshot/private_s3/encryption-probe?wait_for_completion=true` | `{"indices":"app-data","include_global_state":false}` |
+| `GET` | `/_snapshot/private_s3/encryption-probe` | No body |
+| `POST` | `/_snapshot/private_s3/encryption-probe/_restore?wait_for_completion=true` | `{"indices":"app-data","include_global_state":false,"include_aliases":false,"rename_pattern":"app-data","rename_replacement":"restored-app-data"}` |
+| `GET` | `/restored-app-data/_doc/fls-a` | No body |
+| `GET` | `/restored-app-data/_doc/fls-b` | No body |
+
+Require snapshot success, completed restore, and both original fixture documents. A client timeout does not establish failure or success; inspect operation state before retrying. The explicit index selection and `include_global_state: false` avoid restoring security state in this fixture. See [Elasticsearch 8.19 snapshot creation](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-take-snapshot.html), [restore](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-restore-snapshot.html), and [OpenSearch 3.6 snapshot/restore](https://docs.opensearch.org/3.6/tuning-your-cluster/availability-and-recovery/snapshots/snapshot-restore/).
+
+For AWS S3, identify actual newly written repository objects through the provider inventory or console. With AWS CLI v2 and preconfigured profiles, inspect a known object and attempt a download:
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_AWS_PROFILE' 'REPLACE_WITH_BUCKET' 'REPLACE_WITH_OBJECT_KEY'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 3 ] || { echo "set profile, bucket, and object key; not probing"; exit 1; }
+  case "$1|$2|$3" in *REPLACE_WITH_*) echo "substitute the test object and identity"; exit 1 ;; esac
+  [ -n "$1" ] && [ -n "$2" ] && [ -n "$3" ] || exit 1
+  # REASONED: no repository, provider credentials, or KMS test identities.
+  aws --profile "$1" --no-cli-pager s3api head-object --bucket "$2" --key "$3"
+  aws --profile "$1" --no-cli-pager s3api get-object --bucket "$2" --key "$3" /dev/null
+)
+```
+
+The profile name and object key are identifiers, not credentials or encryption-key material. Load authentication through the protected AWS credential mechanism. See [HeadObject](https://docs.aws.amazon.com/cli/latest/reference/s3api/head-object.html) and [GetObject](https://docs.aws.amazon.com/cli/latest/reference/s3api/get-object.html).
+
+Require the following distinctions:
+
+| Check | Exposed or misconfigured outcome | Fixed outcome |
+| --- | --- | --- |
+| Encryption/key policy | Objects use an unintended mode or key, even if provider default encryption is active. | Actual object metadata matches the required mode; for KMS, `SSEKMSKeyId` identifies the intended customer-managed key. |
+| Repository access | A deliberately overprivileged test principal downloads the known object. | After removing that access, the same principal cannot download it, while the authorized principal still can. |
+| KMS isolation | The controlled principal can decrypt the known KMS object. | Removing the necessary KMS permission causes the same operation to fail for that reason, while its S3 read permission remains and a permitted identity succeeds. |
+
+Use provider authorization/audit evidence to distinguish KMS denial from S3 denial, missing objects, expired credentials, or network errors. If caching or another effective grant prevents a clean KMS negative control, leave that check unresolved.
+
+Inspect retained objects as well as newly written ones; changing a default does not prove old objects were rewritten. For GCS/Azure repositories, retain equivalent object-encryption/key metadata and authorized/unauthorized download evidence from those providers. A successful repository `_verify` request establishes neither encryption mode nor key isolation. Server-side-encrypted downloads normally return decrypted contents; this is not a client-side-encryption test. See [AWS encryption behavior](https://docs.aws.amazon.com/AmazonS3/latest/userguide/default-encryption-faq.html) and [SSE-KMS authorization](https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingKMSEncryption.html).
+
+### Verify the separate UI listener
+
+**REASONED, not demonstrated:** requires Kibana or OpenSearch Dashboards, deployed certificates, and authorized/prohibited network test paths.
+
+In an isolated exposed fixture, record an HTTP login page or redirect on the actual UI port. After applying the fixed configuration, run:
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_UI_HOST' 'REPLACE_WITH_UI_CA_FILE' '5601'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 3 ] || { echo "set UI host, CA file, and port; not probing"; exit 1; }
+  case "$1|$2|$3" in *REPLACE_WITH_*|*example.com*) echo "substitute your UI deployment"; exit 1 ;; esac
+  case "$1" in ""|*[!A-Za-z0-9.-]*) echo "use a DNS hostname or IPv4 address"; exit 1 ;; esac
+  case "$3" in ""|*[!0-9]*) echo "numeric UI port required"; exit 1 ;; esac
+  [ "$3" -ge 1 ] && [ "$3" -le 65535 ] || exit 1
+  [ -r "$2" ] || { echo "readable UI CA file required"; exit 1; }
+  # REASONED: no running UI, deployed certificates, or network test paths.
+  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    --cacert "$2" --output /dev/null --dump-header - \
+    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1:$3/"
+  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    --output /dev/null --dump-header - \
+    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:$3/"
+)
+```
+
+On the authorized path, require successful CA-validated HTTPS with the expected UI response. Plaintext on that TLS listener must not serve the UI; a connection close or explicit protocol rejection can demonstrate rejection. A timeout or DNS failure alone cannot.
+
+For loopback deployments, test locally using a certificate hostname that resolves to the UI's loopback listener. Separately test the real deployment address from the prohibited network, not that client's own loopback. Require the prohibited connection to fail while the authorized path still works, and retain network-control evidence.
+
+On the UI host, inspect the actual listener:
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_UI_PORT'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 1 ] || { echo "set exactly one UI port; not probing"; exit 1; }
+  case "$1" in ""|*[!0-9]*) echo "substitute the numeric UI port"; exit 1 ;; esac
+  [ "$1" -ge 1 ] && [ "$1" -le 65535 ] || exit 1
+  # REASONED: no access to the target UI host. Run on that host.
+  ss -tlnp "sport = :$1"
+)
+```
+
+Require the intended loopback/private bind. Inspect container port publication, selected configuration, environment, and process arguments too. Confirm the UI-to-cluster connection still uses HTTPS and full verification; successful browser TLS alone does not establish that. For Dashboards, confirm `opensearch_security.cookie.secure: true` and the Secure attribute on its session cookie. See [Kibana 8.19 settings](https://www.elastic.co/guide/en/kibana/8.19/settings.html), [Kibana Docker overrides](https://www.elastic.co/guide/en/kibana/8.19/docker.html), and [Dashboards 3.6 TLS settings](https://docs.opensearch.org/3.6/install-and-configure/install-dashboards/tls/).
+
 An unauthenticated `GET /` returning cluster JSON is the classic finding; so is `_cat/indices` listing your data to the world.
 
 | Demonstration backlog | Required work | Status |
 | --- | --- | --- |
 | ES-OS-VERIFY-1 | Demonstrate every check against exposed and fixed states in isolated Elasticsearch 8.x and OpenSearch test clusters, including OpenSearch 3.7+ keys and an eligible Elasticsearch audit license. Include the Elasticsearch counterexample: anonymous roles remain configured, authz_exception is false, and the anonymous identity lacks permission for both / and app-data, so both probes return 401 while a document in another permitted index remains anonymously readable with 200. Record that document and its contents, remove anonymous.roles, restart affected nodes, confirm its absence from every node's effective configuration, and require the same document request to return 401 while an administrator still retrieves it with 200. Also demonstrate fresh failed-authentication audit events with a unique harmless JSON marker present when body logging is enabled and absent when disabled; retain configuration-readback and sensitive-header-exclusion checks. Record versions, effective configuration, HTTP responses, listener output, and matching newly collected audit events. | Open: target clusters, container runtime, and audit collection are unavailable in the authoring environment. |
+| ES-OS-VERIFY-1, FLS/DLS extension | Demonstrate the two-tenant fixture on Elasticsearch 8.19 with an eligible Platinum/Enterprise licence and OpenSearch 3.8.0. Record unrestricted and restricted search, direct GET, `_source`, requested-field, secret-aggregation, and allowed-aggregation results. Retain administrator fixture controls, effective roles/settings, and actual application-credential results. Record documented inference limitations separately from ordinary retrieval results. | Open: live clusters and an eligible Elasticsearch FLS/DLS licence are unavailable. |
+| ES-OS-VERIFY-1, storage extension | Record actual data-path mount/device chains before and after encryption. Demonstrate refusal to start when the required encrypted mount is unavailable and successful startup after restoration. Cover logs, swap, and local snapshot storage; use provider volume/key metadata where applicable. | Open: target-node, target-storage, and service-manager fixture access are unavailable. |
+| ES-OS-VERIFY-1, snapshot extension | On both products, take and restore a harmless snapshot. Record new and retained object encryption/key metadata, authorized and unauthorized object downloads, and a KMS-dependent denial with a working positive control. Record the OpenSearch version and explicit S3 encryption settings. Separately complete tag-pinned inspection of OpenSearch GCS/Azure client-side-encryption capability before asserting support or absence. | Open: clusters, repositories, provider/KMS test identities, and the identified implementation evidence are unavailable. |
+| ES-OS-VERIFY-1, UI extension | Demonstrate exposed HTTP and fixed CA-validated HTTPS for Kibana 8.19 and Dashboards 3.8.0. Record plaintext rejection, listener addresses, container overrides/publication, prohibited-network denial with an authorized positive control, backend full verification, and the Dashboards Secure cookie. | Open: UI processes, deployed certificates, target hosts, and network test paths are unavailable. |
 
 ## Sources (checked September 2026)
 
@@ -11406,6 +11986,56 @@ An unauthenticated `GET /` returning cluster JSON is the classic finding; so is 
 - OpenSearch document retrieval API: https://docs.opensearch.org/latest/api-reference/document-apis/get-documents/
 - curl options, header-file input, and request-body file input: https://curl.se/docs/manpage.html
 - ss listener and port-filter syntax: https://manpages.ubuntu.com/manpages/noble/man8/ss.8.html
+- Elastic distribution/source licensing: https://www.elastic.co/pricing/faq/licensing
+- Basic security introduction and FLS/DLS exclusion: https://www.elastic.co/blog/security-for-elasticsearch-is-now-free
+- Dated subscription matrix: https://www.elastic.co/pdf/subscriptions-2025-07-29.pdf
+- Current subscription terms and Platinum availability: https://www.elastic.co/subscriptions
+- Elasticsearch 8.19 role API: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/security-api-put-role.html
+- Elasticsearch 8.19 access control and role composition: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/field-and-document-access-control.html
+- Elasticsearch 8.19 FLS: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/field-level-security.html
+- Elasticsearch 8.19 DLS: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/document-level-security.html
+- Elasticsearch 8.19 security limitations: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/security-limitations.html
+- OpenSearch Security licence, tag 3.8.0.0: https://raw.githubusercontent.com/opensearch-project/security/3.8.0.0/LICENSE.txt
+- OpenSearch 3.6 Security API and role schema: https://docs.opensearch.org/3.6/security/access-control/api/
+- OpenSearch 1.0 DLS archive: https://docs.opensearch.org/1.0/security-plugin/access-control/document-level-security/
+- OpenSearch 3.6 FLS: https://docs.opensearch.org/3.6/security/access-control/field-level-security/
+- OpenSearch 3.6 DLS, modes, and role composition: https://docs.opensearch.org/3.6/security/access-control/document-level-security/
+- Elasticsearch 8.19 dm-crypt-backed storage: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/tune-for-search-speed.html
+- Elasticsearch 8.19 path settings: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/path-settings-overview.html
+- OpenSearch 3.6 configuration settings (path.data): https://docs.opensearch.org/3.6/install-and-configure/configuring-opensearch/configuration-system/
+- OpenSearch 3.0 encryption-at-rest guidance: https://docs.opensearch.org/3.0/troubleshoot/#encryption-at-rest
+- Elasticsearch 8.19 S3 repository: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-s3.html
+- OpenSearch 3.1 repository API and encryption-setting change: https://docs.opensearch.org/3.1/api-reference/snapshots/create-repository/
+- OpenSearch S3 implementation, tag 3.8.0: https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-s3/src/main/java/org/opensearch/repositories/s3/S3Repository.java
+- Elasticsearch 8.19 GCS repository: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-gcs.html
+- Elasticsearch 8.19 Azure repository: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-azure.html
+- OpenSearch 3.6 snapshot/repository workflow: https://docs.opensearch.org/3.6/tuning-your-cluster/availability-and-recovery/snapshots/snapshot-restore/
+- AWS S3 default encryption and retained objects: https://docs.aws.amazon.com/AmazonS3/latest/userguide/default-encryption-faq.html
+- AWS SSE-KMS permissions: https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingKMSEncryption.html
+- GCS encryption distinctions: https://docs.cloud.google.com/storage/docs/encryption
+- Azure Storage encryption: https://learn.microsoft.com/en-us/azure/storage/common/storage-service-encryption
+- Elasticsearch 8.19 snapshot creation and configuration backups: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-take-snapshot.html
+- Elasticsearch 8.19 repository integrity: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshot-restore.html
+- Elasticsearch 8.19 restore: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-restore-snapshot.html
+- Kibana 8.19 settings: https://www.elastic.co/guide/en/kibana/8.19/settings.html
+- Kibana 8.19 Docker defaults and overrides: https://www.elastic.co/guide/en/kibana/8.19/docker.html
+- Dashboards configuration, tag 3.8.0: https://raw.githubusercontent.com/opensearch-project/OpenSearch-Dashboards/3.8.0/config/opensearch_dashboards.yml
+- Dashboards 3.6 TLS and cookie settings: https://docs.opensearch.org/3.6/install-and-configure/install-dashboards/tls/
+- Elasticsearch 8.19 create index: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/indices-create-index.html
+- Elasticsearch 8.19 index document: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/docs-index_.html
+- Elasticsearch 8.19 search: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/search-search.html
+- OpenSearch 3.6 create index: https://docs.opensearch.org/3.6/api-reference/index-apis/create-index/
+- OpenSearch 3.6 index document: https://docs.opensearch.org/3.6/api-reference/document-apis/index-document/
+- OpenSearch 3.6 search: https://docs.opensearch.org/3.6/api-reference/search-apis/search/
+- AWS CLI HeadObject: https://docs.aws.amazon.com/cli/latest/reference/s3api/head-object.html
+- AWS CLI GetObject: https://docs.aws.amazon.com/cli/latest/reference/s3api/get-object.html
+- Mount inspection: https://man7.org/linux/man-pages/man8/findmnt.8.html
+- Block-device inspection: https://man7.org/linux/man-pages/man8/lsblk.8.html
+- Encryption-mapping inspection: https://man7.org/linux/man-pages/man8/cryptsetup-status.8.html
+- systemd mount dependencies and assertions: https://man7.org/linux/man-pages/man5/systemd.unit.5.html
+- systemd start/status commands: https://man7.org/linux/man-pages/man1/systemctl.1.html
+- curl options and file input: https://curl.se/docs/manpage.html
+- Listener inspection: https://manpages.ubuntu.com/manpages/noble/man8/ss.8.html
 
 ======================================================================
 ==> minio.md
