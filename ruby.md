@@ -106,9 +106,9 @@ git ls-files config/master.key                                   # prints nothin
 
 ## Sources (checked September 2026)
 
-- Puma README (binding): https://github.com/puma/puma/blob/main/README.md
-- Puma DSL (`bind`, `ssl_bind`, default bind): https://github.com/puma/puma/blob/main/lib/puma/dsl.rb
-- Puma configuration defaults (`tcp://[::]:9292`): https://github.com/puma/puma/blob/main/lib/puma/configuration.rb
+- Puma README (binding): https://github.com/puma/puma/blob/aef89221e4d729c3133c723844382331ba3bbbd9/README.md
+- Puma DSL (`bind`, `ssl_bind`, default bind): https://github.com/puma/puma/blob/d70de8b4e926f1f5fa0269dc46cdfadf52562628/lib/puma/dsl.rb
+- Puma configuration defaults (`tcp://[::]:9292`): https://github.com/puma/puma/blob/0daa1a174ae8cc9ab2dd54d4fa09c74ff787bbb9/lib/puma/configuration.rb
 - Rails configuring guide (`force_ssl`, `assume_ssl`, `ssl_options`, `hosts`, `session_store`, `cookies_same_site_protection`, `require_master_key`): https://guides.rubyonrails.org/configuring.html
 - Action Pack 7.1 changelog (`ActionDispatch::AssumeSSL`): https://github.com/rails/rails/blob/7-1-stable/actionpack/CHANGELOG.md
 - `ActionDispatch::RemoteIp` (trusted proxies, spoofing warning): https://api.rubyonrails.org/classes/ActionDispatch/RemoteIp.html
@@ -116,9 +116,9 @@ git ls-files config/master.key                                   # prints nothin
 - Rails security guide (authentication generator, `has_secure_password`, `rate_limit`, credentials): https://guides.rubyonrails.org/security.html
 - `has_secure_password`: https://api.rubyonrails.org/classes/ActiveModel/SecurePassword/ClassMethods.html
 - `ActionController::RateLimiting`: https://api.rubyonrails.org/classes/ActionController/RateLimiting/ClassMethods.html
-- `bin/rails credentials:help` text (`master.key`, `RAILS_MASTER_KEY`): https://github.com/rails/rails/blob/main/railties/lib/rails/commands/credentials/USAGE
+- `bin/rails credentials:help` text (`master.key`, `RAILS_MASTER_KEY`): https://github.com/rails/rails/blob/e4cd6ae6f1f0a847958b3aa846c9fd8a3014922a/railties/lib/rails/commands/credentials/USAGE
 - Rack::Attack README: https://github.com/rack/rack-attack
 - Sidekiq Web UI security (the mount, the Devise `authenticate` constraint, and `Rack::Auth::Basic`): https://github.com/sidekiq/sidekiq/wiki/Monitoring
-- Net::HTTP source (`verify_mode`, `ca_file`, `VERIFY_PEER` default): https://github.com/ruby/net-http/blob/master/lib/net/http.rb
-- Ruby OpenSSL `SSLContext` defaults (`DEFAULT_CERT_STORE.set_default_paths`, `VERIFY_PEER`): https://github.com/ruby/openssl/blob/master/lib/openssl/ssl.rb
+- Net::HTTP source (`verify_mode`, `ca_file`, `VERIFY_PEER` default): https://github.com/ruby/net-http/blob/39cf5f648a9e5e25312909a2dc26681edaa2402c/lib/net/http.rb
+- Ruby OpenSSL `SSLContext` defaults (`DEFAULT_CERT_STORE.set_default_paths`, `VERIFY_PEER`): https://github.com/ruby/openssl/blob/a77ed4b9908e179cea8f018f7e245535301746a8/lib/openssl/ssl.rb
 - OpenSSL environment variables (`SSL_CERT_FILE`, `SSL_CERT_DIR`): https://docs.openssl.org/master/man7/openssl-env/
