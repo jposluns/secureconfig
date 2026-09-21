@@ -9,27 +9,26 @@ gate suite and the advisory lychee sweep stay green while the cited evidence
 silently drifts. New source citations must pin to a commit SHA or a version tag
 (vendor doc-page slugs under docs.<vendor> may stay unpinned).
 
-How the scan avoids false positives AND false negatives. Each line is split into
-whole URL tokens: an optional scheme, an authority (a dotted host with an optional
-`:port`), and then a single run of path/query/fragment characters, so a query
-string, a fragment, a port, or a parenthesised path segment stays part of the SAME
-URL and is never re-scanned as if it were a fresh URL. Each token is parsed with
-`urllib.parse.urlsplit`, which separates the host, the path, the query and the
-fragment properly:
+How URLs are extracted, so a target host or ref that appears inside ANOTHER URL's
+components is never counted, and a real citation in any ordinary Markdown form is:
 
-  * the HOST is compared case-insensitively (hosts are case-insensitive, so
-    `GITHUB.COM` is caught) and by EXACT equality (a greedy host label means
-    `notgithub.com` is its own host, not a `github.com` suffix), and a target host
-    or ref appearing inside another URL's path or query is never matched because
-    that inner text is part of the outer token;
-  * only the PATH is inspected -- never the query or fragment -- for the ref
-    segment: the component right after `<owner>/<repo>` for a raw URL, or right
-    after `.../blob/` for a blob URL, so a legitimate `main`/`master` deeper in a
-    file path (for example `.../<tag>/clients/src/main/java/...`) is not flagged;
-  * the REF is matched CASE-SENSITIVELY against `main`/`master`. Git refs are
-    case-sensitive -- `refs/tags/MAIN` and `refs/heads/main` are different refs --
-    so an uppercase `MAIN` may be a pinned tag and must NOT be treated as the
-    mutable default branch.
+  * A citation must carry a scheme (`https:`/`http:`) or be scheme-relative (`//`).
+    Every citation in this corpus is a scheme-qualified working link; a bare
+    host-only reference is not a working citation and is deliberately OUT OF SCOPE.
+  * Two Markdown destination contexts are handled explicitly. An angle-bracket
+    destination `<URL>` runs to the `>`, so a query string that itself contains a
+    quote or a second URL stays inside it. Every other URL runs from its scheme to
+    the first delimiter, and a parenthesis, square bracket or quote ENDS the run --
+    so a Markdown `](url)` closing paren does not glue onto the ref, adjacent
+    `[a](u)[b](v)` links are not merged, and the embedded URL of a redirector stays
+    part of the outer URL's query.
+  * Each extracted URL is parsed with `urllib.parse.urlsplit`, which separates the
+    host (userinfo and port stripped, lowercased), the path, the query and the
+    fragment. The HOST is matched case-insensitively by exact equality (so
+    `GITHUB.COM` is caught and `notgithub.com` is not); only the PATH is inspected
+    for the ref segment; and the REF is matched CASE-SENSITIVELY against
+    `main`/`master`, because git refs are case-sensitive -- an uppercase `MAIN` may
+    be a pinned tag and must not be treated as the mutable default branch.
 
 Scope: every root-level `.md` file is scanned (guides plus the adapters, CHANGELOG
 and TODO), because a mutable citation is a defect wherever it lands; the generated
@@ -52,56 +51,48 @@ from urllib.parse import urlsplit
 TARGET_HOSTS = {"raw.githubusercontent.com", "github.com"}
 MUTABLE_REFS = {"main", "master"}  # matched case-sensitively: git refs are case-sensitive
 
-# One whole URL token. The left look-behind refuses a start glued to a host/path
-# character, so a match cannot begin in the middle of a longer host (notgithub.com)
-# or at a host-looking segment inside another URL's path. The optional scheme is
-# part of the token, so a scheme-qualified URL still starts at its scheme. The rest
-# is a single run beginning at the first `/`, `?` or `#` and ending only at
-# whitespace, an angle bracket, a quote or a backtick -- parentheses are allowed, so
-# an angle-bracket Markdown destination that contains them stays one token.
-URL_TOKEN = re.compile(
-    r"""(?xi)
-    (?<![A-Za-z0-9._%+@:/~-])
-    (?:https?://|//)?
-    (?P<authority>[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+(?::\d+)?)
-    (?P<rest>[/?\#][^\s<>"'`]*)?
-    """
-)
+# An angle-bracket Markdown destination: <URL> up to the closing '>'.
+_ANGLE = re.compile(r"<((?:https?:)?//[^>\s]*)>")
+# Any other URL: scheme (or scheme-relative //) to the first delimiter. A paren,
+# square bracket, quote, backtick, angle bracket or whitespace ends the run.
+_BARE = re.compile(r"(?:https?:)?//[^\s<>)\]\"'`]+")
 
 
-def _ref_segment(host: str, path: str):
-    """Return the mutable ref of this URL's own path, or None.
+def _urls(line: str):
+    """Yield each URL on the line, angle-bracket destinations first."""
+    urls = [m.group(1) for m in _ANGLE.finditer(line)]
+    remainder = _ANGLE.sub(" ", line)  # blank them so the bare scan cannot re-hit
+    urls.extend(m.group(0) for m in _BARE.finditer(remainder))
+    return urls
 
-    host is lowercased (from urlsplit). path is the URL path with query and
-    fragment already stripped. Only the ref position is examined.
-    """
-    segments = [s for s in path.split("/") if s]
+
+def _mutable_ref(url: str):
+    """Return ('raw'|'blob', ref) if url is a mutable-branch citation, else None."""
+    try:
+        parts = urlsplit(url)
+    except ValueError:
+        return None  # not parseable as a URL: not a citation
+    host = parts.hostname  # lowercased; userinfo and port stripped; None if absent
+    if host not in TARGET_HOSTS:
+        return None
+    segments = [s for s in parts.path.split("/") if s]
     if host == "raw.githubusercontent.com":
         # /<owner>/<repo>/<ref>/...
         if len(segments) >= 3 and segments[2] in MUTABLE_REFS:
-            return segments[2]
-    elif host == "github.com":
+            return "raw", segments[2]
+    else:  # github.com
         # /<owner>/<repo>/blob/<ref>/...
         if len(segments) >= 4 and segments[2] == "blob" and segments[3] in MUTABLE_REFS:
-            return segments[3]
+            return "blob", segments[3]
     return None
 
 
 def mutable_refs_in(line: str):
     """Yield ('raw'|'blob', ref) for each mutable-ref citation on the line."""
-    for match in URL_TOKEN.finditer(line):
-        authority = match.group("authority")
-        rest = match.group("rest") or ""
-        # Reconstruct as a scheme-relative URL so urlsplit fills netloc, and it
-        # then separates host/port, path, query and fragment for us.
-        parts = urlsplit("//" + authority + rest)
-        host = parts.hostname  # lowercased, port stripped; None if unparseable
-        if host not in TARGET_HOSTS:
-            continue
-        ref = _ref_segment(host, parts.path)
-        if ref is not None:
-            kind = "raw" if host == "raw.githubusercontent.com" else "blob"
-            yield kind, ref
+    for url in _urls(line):
+        hit = _mutable_ref(url)
+        if hit is not None:
+            yield hit
 
 
 def scan(root: Path):
@@ -123,49 +114,52 @@ def scan(root: Path):
 def self_test() -> int:
     # (text, expected number of mutable-ref hits on the line)
     cases = [
+        # --- ordinary citations ---
         ("https://raw.githubusercontent.com/o/r/main/f.py", 1),
         ("https://raw.githubusercontent.com/o/r/master/f.py", 1),
         ("see https://github.com/o/r/blob/main/docker-compose.yml here", 1),
-        # schemeless still flags
-        ("raw.githubusercontent.com/o/r/main/f.py", 1),
-        # a blob ref with no trailing file (points at a directory) is still mutable
-        ("github.com/o/r/blob/master", 1),
-        # two mutable citations on one line count as two
-        ("a raw.githubusercontent.com/o/r/main/f and github.com/o/r/blob/main/g", 2),
-        # pinned tag whose PATH contains 'main' (src/main/java): must NOT flag
-        ("raw.githubusercontent.com/apache/kafka/4.3.0/clients/src/main/java/X.java", 0),
-        # pinned commit SHA / version tag: must NOT flag
-        ("raw.githubusercontent.com/o/r/6ef7b86748118ceecd95271727c2fa167ce55fec/f", 0),
-        ("raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/x.cs", 0),
-        # vendor doc page that merely contains 'main' in the path: must NOT flag
-        ("docs.spring.io/spring-boot/main/reference/x.html", 0),
-        # blob with a pinned tag: must NOT flag
-        ("github.com/o/r/blob/v1.2.3/f.py", 0),
-        # host-boundary: a host ENDING in a target host must NOT flag
-        ("notgithub.com/o/r/blob/main/f.py", 0),
-        ("evilraw.githubusercontent.com.example.com/o/r/main/f", 0),
-        # uppercase host must flag (hosts are case-insensitive)
-        ("RAW.GITHUBUSERCONTENT.COM/o/r/main/f.py", 1),
-        ("GitHub.com/o/r/blob/main/f.py", 1),
-        # ref is case-SENSITIVE: MAIN / MASTER are distinct refs and must NOT flag
-        ("github.com/o/r/blob/MAIN/f.py", 0),
+        ("https://github.com/o/r/blob/master", 1),               # blob dir ref, no file
+        ("scheme-relative //github.com/o/r/blob/main/f", 1),
+        ("a https://raw.githubusercontent.com/o/r/main/f and https://github.com/o/r/blob/main/g", 2),
+        # --- must NOT flag: pinned refs / path-'main' / vendor docs ---
+        ("https://raw.githubusercontent.com/apache/kafka/4.3.0/clients/src/main/java/X.java", 0),
+        ("https://raw.githubusercontent.com/o/r/6ef7b86748118ceecd95271727c2fa167ce55fec/f", 0),
+        ("https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/x.cs", 0),
+        ("https://docs.spring.io/spring-boot/main/reference/x.html", 0),
+        ("https://github.com/o/r/blob/v1.2.3/f.py", 0),
+        ("https://github.com/o/r/tree/main/f", 0),               # tree, not blob (scope)
+        # --- host boundary ---
+        ("https://notgithub.com/o/r/blob/main/f.py", 0),
+        ("https://evilraw.githubusercontent.com.example.com/o/r/main/f", 0),
+        # --- case: host insensitive, ref sensitive ---
+        ("https://RAW.GITHUBUSERCONTENT.COM/o/r/main/f.py", 1),
+        ("https://GitHub.com/o/r/blob/main/f.py", 1),
+        ("https://github.com/o/r/blob/MAIN/f.py", 0),            # MAIN is a distinct ref
         ("https://github.com/o/r/blob/MASTER/f.py", 0),
-        # Markdown link: path stops at the closing paren, still flags
-        ("[src](https://github.com/o/r/blob/main/f.py) and text", 1),
-        # --- codex regression cases (ports, query, fragment, embedding) ---
-        # a port must not break detection (was a false negative)
+        # --- schemeless is out of scope (not a working citation) ---
+        ("raw.githubusercontent.com/o/r/main/f.py", 0),
+        ("github.com/o/r/blob/main/f", 0),
+        # --- ports / query / fragment (codex round 1) ---
         ("https://github.com:443/o/r/blob/main/f", 1),
         ("https://raw.githubusercontent.com:443/o/r/main/f", 1),
-        # target host embedded in another URL's QUERY must NOT flag
         ("https://example.com?u=https://github.com/o/r/blob/main/f", 0),
-        # target host embedded in another URL's PATH (with a port) must NOT flag
         ("https://example.com:443/redir/github.com/o/r/blob/main/f", 0),
-        # a QUERY that merely contains /blob/main/ must NOT flag
         ("https://github.com/o/r?x=/blob/main/f", 0),
-        # a real blob ref carrying a query or fragment must STILL flag
         ("https://github.com/o/r/blob/main?raw=1", 1),
         ("https://github.com/o/r/blob/main#readme", 1),
-        # angle-bracket Markdown destination containing parens, target embedded in path
+        # --- Markdown link forms (codex round 2) ---
+        ("[src](https://github.com/o/r/blob/main/f.py) and text", 1),
+        ("[source](https://github.com/a/b/blob/main)", 1),       # closing paren not part of ref
+        ("[source](https://raw.githubusercontent.com/a/b/master)", 1),
+        ("[one](https://example.org/doc)[two](https://github.com/a/b/blob/main/file)", 1),
+        ("[a](https://github.com/x/y/blob/main/f)[b](https://raw.githubusercontent.com/x/y/main/g)", 2),
+        # --- exotic authorities (codex round 2) ---
+        ("<https://reader@github.com/a/b/blob/main/file>", 1),   # userinfo, real host
+        ("<https://localhost/?u=https://github.com/a/b/blob/main/file>", 0),
+        ("<https://[::1]/?u=https://github.com/a/b/blob/main/file>", 0),
+        ("<https://reader@example.org/?u=https://github.com/a/b/blob/main/file>", 0),
+        ("[source](<https://example.org/?q='https://github.com/a/b/blob/main/file>)", 0),
+        # --- angle-bracket with parens in path, target embedded in path ---
         ("[src](<https://example.com/a(b)/github.com/o/r/blob/main/f>)", 0),
     ]
     ok = True
@@ -175,10 +169,11 @@ def self_test() -> int:
             print(f"  self-test FAIL: {text!r} expected {expected} hit(s), got {got}")
             ok = False
     if ok:
-        print("PASS: pinned-citation self-test (mutable main/master refs caught with "
-              "case-insensitive host and case-sensitive ref; ports/queries/fragments "
-              "parsed; pinned SHAs/tags, path-'main', host-suffix look-alikes, distinct "
-              "uppercase refs, and refs embedded in another URL's path/query not flagged)")
+        print("PASS: pinned-citation self-test (scheme-qualified mutable main/master "
+              "refs caught with case-insensitive host and case-sensitive ref; "
+              "ports/query/fragment/userinfo/IPv6 parsed; Markdown link and "
+              "angle-bracket forms bounded; pinned refs, path-'main', host look-alikes, "
+              "distinct uppercase refs, and embedded targets not flagged)")
         return 0
     print("FAIL: pinned-citation self-test")
     return 1
