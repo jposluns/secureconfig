@@ -10030,9 +10030,131 @@ The fixed configuration must permit valid members and reject invalid membership 
 
 See [internal membership authentication](https://www.mongodb.com/docs/manual/core/security-internal-authentication/), [member source restrictions](https://www.mongodb.com/docs/manual/reference/configuration-options/#security.clusterIpSourceAllowlist), and [replica-set status](https://www.mongodb.com/docs/manual/reference/command/replsetgetstatus/).
 
+### Verify Enterprise auditing
+
+**REASONED:** no MongoDB Enterprise deployment or readable audit destination is available.
+
+In an isolated Enterprise fixture with the auditing configuration from section 5, perform a successful authentication, a failed authentication, a collection creation, a permitted collection read, and a read attempted by an authenticated user that lacks find permission on the collection, then inspect the audit destination. Confirm the successful-authorization-check setting first:
+
+```javascript
+db.adminCommand({getParameter: 1, auditAuthorizationSuccess: 1});
+```
+
+With no destination configured, no audit records are produced. With the destination configured, a failed authentication is recorded as an `authenticate` event, a schema change such as the collection creation is recorded by default, and the unauthorized read is recorded as a failed `authCheck` (result 13) regardless of the setting; the permitted read's successful `authCheck` appears only once `auditAuthorizationSuccess` is `true`, at a performance cost, and an authentication-only filter records nothing else. The presence of an audit file alone proves neither event coverage nor successful-operation auditing; correlate each record with the test identity, operation, and time. See [auditing](https://www.mongodb.com/docs/v8.0/core/auditing/), [the auditAuthorizationSuccess parameter](https://www.mongodb.com/docs/v8.0/reference/parameters/), and the [audit event definitions](https://www.mongodb.com/docs/v8.0/reference/audit-message/mongo/).
+
+### Verify diagnostic-log redaction
+
+**REASONED:** no MongoDB Enterprise binaries, running test server, or process-log access is available.
+
+Set the log verbosity to 1 in both fixtures so the operation is logged regardless of latency, insert a harmless canary, read the corresponding entry in the process log, then restore the previous verbosity:
+
+```javascript
+db.setLogLevel(1);
+db.clients.insertOne({name: "Probe", note: "SECURECONFIG_REDACTION_CANARY"});
+```
+
+Without redaction, the canary value appears in the matching log entry. With `security.redactClientLogData` enabled, the entry still exists but its attached values are shown as `###`, while metadata such as error and operation codes and line numbers remains visible. A missing log entry is inconclusive on its own. See [the redactClientLogData parameter](https://www.mongodb.com/docs/v8.0/reference/parameters/) and the [log-redaction example](https://www.mongodb.com/docs/v8.0/administration/monitoring/).
+
+### Verify storage encryption
+
+**REASONED:** no MongoDB Enterprise binaries, disposable data directory, or KMIP endpoint is available.
+
+Create equivalent unencrypted and encrypted fixtures, each holding a known document, then confirm on disposable copies that the encrypted data files require the key configuration while a correctly configured server reads them. Inspect the startup log for the key-manager initialization:
+
+```bash
+grep -iE 'encryption.*key|key manager' /var/log/mongodb/mongod.log
+```
+
+With encryption enabled, the log records that the encryption key manager initialized; with a mismatched KMIP server identity or a missing key, initialization fails and the server does not start. The unencrypted fixture reopens with no key. Do not treat the absence of plaintext under `strings` as proof of encryption, since compression alone can produce that result. See the [encryption-at-rest reference](https://www.mongodb.com/docs/v8.0/core/security-encryption-at-rest/) and the [configure-encryption procedure](https://www.mongodb.com/docs/v8.0/tutorial/configure-encryption/).
+
+### Verify field-level encryption (CSFLE)
+
+**REASONED:** no MongoDB deployment, encryption-capable driver, or provisioned data-encryption key is available.
+
+CSFLE is verified with distinct client handles, not a single shell session, because a client configured for automatic encryption also decrypts on read. Through an encryption-configured client, insert a known canary into a protected collection and retain the returned `_id`; on the Community explicit path, encrypt the field value with `ClientEncryption.encrypt()` before the write. Read that document by `_id` through a client configured without automatic decryption: against an ordinary collection the field is plaintext, while against the protected collection it is encrypted binary data, and a key-authorized client recovers the original value. A plaintext write attempted against a server-side `$jsonSchema` that requires encryption is rejected. A denied read alone does not demonstrate field encryption, and a read through the same automatic-encryption client silently decrypts the field, so it cannot serve as the exposed control. See [CSFLE](https://www.mongodb.com/docs/v8.0/core/csfle/), its [manual-encryption reference](https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/manual-encryption/), and [CSFLE client options](https://www.mongodb.com/docs/v8.0/core/csfle/reference/csfle-options-clients/).
+
+### Verify Queryable Encryption
+
+**REASONED:** no replica-set or sharded MongoDB deployment, encryption-capable driver, or provisioned key is available.
+
+Create a Queryable Encryption collection with an `encryptedFields` definition and compare it against an ordinary collection, using distinct client handles as for CSFLE. Through the configured client, insert a canary and retain its `_id`; on the Community explicit path, encrypt values explicitly. Read by `_id` through a client configured without decryption: the ordinary collection returns plaintext, the encrypted collection ciphertext, and the configured client recovers the value. Query support depends on the field's configured query type: a field declared in `encryptedFields` without a `queryType` is encrypted but not queryable, so set `queryType: "equality"` on the encrypted string field and confirm the configured client matches an encrypted equality query. A range query is a separate fixture with `queryType: "range"`, which requires the encrypted field to be a numeric or date type (`int`, `long`, `double`, `decimal`, or `date`), not a string, with documents inside and outside the tested interval. A plaintext write against the declared encrypted fields is rejected. Missing results or a connection error alone do not establish confidentiality. See [Queryable Encryption](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/), its [limitations](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/limitations/), the [manual-encryption reference](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/fundamentals/manual-encryption/), and [supported operations](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/supported-operations/).
+
 | Backlog ID | Status | Outstanding demonstration |
 | --- | --- | --- |
-| MONGODB-LIVE-1 | Open; service behavior not yet demonstrated | On an authorized isolated deployment with MongoDB binaries, certificates, listener-inspection permission, and permitted/excluded source hosts, demonstrate exposed versus fixed listener binding, plaintext/TLS behavior, unauthenticated collection access with a valid client certificate, collection-role allows and denials, user source/listener restrictions, registered/unregistered/missing client-certificate cases, membership credentials, and member/router source restrictions. Record commands, versions, responses, and positive controls. |
+| MONGODB-LIVE-1 | Open; service behavior not yet demonstrated | On an authorized isolated deployment with MongoDB binaries, certificates, listener-inspection permission, and permitted/excluded source hosts, demonstrate exposed versus fixed listener binding, plaintext/TLS behavior, unauthenticated collection access with a valid client certificate, collection-role allows and denials, user source/listener restrictions, registered/unregistered/missing client-certificate cases, membership credentials, and member/router source restrictions. Record commands, versions, responses, and positive controls. The sections 5 to 9 controls are also REASONED: on an authorized MongoDB Enterprise deployment with an audit destination, encryption keys or a KMIP endpoint, and an encryption-capable driver, additionally demonstrate audit records for authentication and authorization events with auditAuthorizationSuccess off and on, diagnostic-log redaction of a canary value, encrypted versus plaintext storage fixtures under local-key and KMIP configurations, and CSFLE and Queryable Encryption field ciphertext with a permitted encrypted query and a rejected plaintext write. |
+
+## 5. Enable Enterprise auditing with deliberate event coverage
+
+MongoDB Enterprise provides an auditing facility for `mongod` and `mongos`; MongoDB Community has no equivalent, and the diagnostic log is not a substitute. Without a configured destination, no audit records are produced. Configure a destination on every process, including each shard and config-server member, since one unaudited process leaves a gap. See [MongoDB 8.0 auditing](https://www.mongodb.com/docs/v8.0/core/auditing/).
+
+```yaml
+auditLog:
+  destination: file
+  format: JSON
+  path: /var/log/mongodb/audit.json
+```
+
+A failed audit write can terminate the process, so confirm the destination is writable during deployment validation. Omitting a filter records every auditable event; a filter such as `auditLog.filter: '{"atype": "authenticate"}'` records only that event type and deliberately excludes the rest. See [configure auditing](https://www.mongodb.com/docs/v8.0/tutorial/configure-auditing/) and [audit filters](https://www.mongodb.com/docs/v8.0/tutorial/configure-audit-filters/).
+
+Recording successful authorization checks is a separate decision. `auditAuthorizationSuccess` defaults to `false`, so the audit system logs only authorization failures until it is enabled, and enabling it carries a performance cost:
+
+```yaml
+setParameter:
+  auditAuthorizationSuccess: true
+```
+
+Set it only where the accountability requirement justifies the overhead. See the [auditAuthorizationSuccess parameter](https://www.mongodb.com/docs/v8.0/reference/parameters/).
+
+## 6. Redact document values from the diagnostic log
+
+`redactClientLogData` is a MongoDB Enterprise feature; MongoDB Community does not offer it. Without redaction, logged operations can carry document field values into the diagnostic log, where a reader who is not a database user can see them. The documented startup routes are the `--redactClientLogData` flag or the configuration setting; use the configuration setting to keep redaction in the node's configuration file:
+
+```yaml
+security:
+  redactClientLogData: true
+```
+
+Redaction replaces the values accompanying a log message with `###`. Metadata such as error and operation codes, line numbers, and source-file names remain visible, and the documentation scopes redaction to the diagnostic log; do not rely on it for the audit log. MongoDB documents using it together with encryption at rest and TLS. See the [redactClientLogData parameter](https://www.mongodb.com/docs/v8.0/reference/parameters/), the [mongod flag reference](https://www.mongodb.com/docs/v8.0/reference/program/mongod/), and the [log-redaction example](https://www.mongodb.com/docs/v8.0/administration/monitoring/).
+
+## 7. Encrypt the storage engine with a managed key
+
+MongoDB Enterprise 3.2 introduced native encryption for the WiredTiger storage engine; MongoDB Community has no native equivalent and depends on host or filesystem encryption. `security.enableEncryption` defaults to `false` (see the [encryption configuration options](https://www.mongodb.com/docs/v8.0/reference/configuration-options/)). Native encryption cannot encrypt existing data: enable it on a fresh member and populate it through initial sync or the documented migration, rather than restarting a populated data directory with the flag set. See [encryption at rest](https://www.mongodb.com/docs/v8.0/core/security-encryption-at-rest/).
+
+For a local key file:
+
+```yaml
+security:
+  enableEncryption: true
+  encryptionKeyFile: /etc/mongodb/storage-master.key
+```
+
+This key encrypts storage and is unrelated to `security.keyFile`, which authenticates cluster members in section 2. The local key procedure does not support key rotation. See the [encryption configuration options](https://www.mongodb.com/docs/v8.0/reference/configuration-options/).
+
+MongoDB recommends a KMIP key server over a local key file. Keep `enableEncryption: true` and replace the key file with a `security.kmip` block:
+
+```yaml
+security:
+  enableEncryption: true
+  kmip:
+    serverName: kmip.example.internal
+    port: 5696
+    serverCAFile: /etc/mongodb/kmip-ca.pem
+    clientCertificateFile: /etc/mongodb/kmip-client.pem
+```
+
+The client PEM holds the client certificate and its private key. Supply `security.kmip.keyIdentifier` only to adopt an existing key when first enabling encryption; otherwise MongoDB requests a new key from the server. See the [configure encryption procedure](https://www.mongodb.com/docs/v8.0/tutorial/configure-encryption/).
+
+## 8. Encrypt selected fields with client-side field level encryption
+
+Transport TLS and storage encryption still leave ordinary field values readable by a sufficiently privileged database or host user. Client-side field level encryption (CSFLE) encrypts chosen fields in the driver before they reach the server; there is no `mongod` switch. Explicit CSFLE is available in MongoDB Community, Enterprise Advanced, and Atlas, while automatic encryption requires Enterprise or Atlas. Automatic decryption is available in Community. See [CSFLE](https://www.mongodb.com/docs/v8.0/core/csfle/) and [manual encryption](https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/manual-encryption/).
+
+Automatic CSFLE configures the client with an `autoEncryption` object naming the key-vault namespace, the KMS providers, and a local `schemaMap` that marks the encrypted fields. Supply that schema locally: a schema fetched only from the server lets a compromised server drop the encryption requirement and induce plaintext writes. For the Community explicit path, set `bypassAutoEncryption: true` and call `ClientEncryption.encrypt()` before writing, encrypting query values explicitly as well. A randomized algorithm does not support equality matching on the field; the deterministic variant does, at the cost of revealing which stored values are equal. Consider a server-side `$jsonSchema` that rejects plaintext writes to the encrypted fields, and keep master-key access separate from ordinary database access. See the [automatic-encryption schemas](https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/automatic-encryption/), [CSFLE client options](https://www.mongodb.com/docs/v8.0/core/csfle/reference/csfle-options-clients/), and [CSFLE encryption algorithms](https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/encryption-algorithms/).
+
+## 9. Query encrypted fields with Queryable Encryption
+
+Queryable Encryption (QE) encrypts fields in the driver while still allowing the server to run supported queries against the ciphertext. Equality queries became generally available in MongoDB 7.0 and range queries in MongoDB 8.0; the 6.0 public preview is incompatible with the generally available format and is not a production baseline. As with CSFLE, automatic encryption requires Enterprise or Atlas, while explicit QE and automatic decryption are available in Community. See the [7.0 GA release notes](https://www.mongodb.com/docs/v8.0/release-notes/7.0/), the [8.0 range-query release notes](https://www.mongodb.com/docs/v8.0/release-notes/8.0/), [Queryable Encryption](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/), and the [QE manual encryption edition split](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/fundamentals/manual-encryption/).
+
+QE requires a new encrypted collection created with an `encryptedFields` definition; an existing collection cannot have QE turned on in place, and one collection cannot combine CSFLE and QE. Automatic clients set `autoEncryption` with the key-vault namespace, the KMS providers, and a local `encryptedFieldsMap`. For the Community explicit path, set `bypassQueryAnalysis: true` and drive `ClientEncryption` directly. QE supports replica sets and sharded clusters, not standalones. Do not carry forward legacy `rangePreview` recipes; that option was removed in 8.0. See the [QE limitations](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/limitations/), [QE client options](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/qe-options-clients/), the [8.0 compatibility notes](https://www.mongodb.com/docs/v8.0/release-notes/8.0-compatibility/), and the [manual-encryption reference](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/fundamentals/manual-encryption/).
 
 ## Common mistakes
 
@@ -10044,6 +10166,10 @@ See [internal membership authentication](https://www.mongodb.com/docs/manual/cor
 - Treating a trusted TLS certificate as an authenticated, least-privilege MongoDB user.
 - Issuing application certificates with cluster-member attributes.
 - Treating a timeout or `listDatabases` output as proof of collection authorization.
+- Assuming MongoDB Community offers Enterprise auditing, `redactClientLogData`, or native storage encryption.
+- Enabling storage encryption on a populated data directory and assuming the existing files become encrypted.
+- Trusting a server-supplied CSFLE schema, which a compromised server can weaken to induce plaintext writes.
+- Combining CSFLE and Queryable Encryption on one collection, or carrying a legacy `rangePreview` recipe into 8.0.
 
 ## Sources (checked September 2026)
 
@@ -10077,6 +10203,29 @@ See [internal membership authentication](https://www.mongodb.com/docs/manual/cor
 - MongoDB authorization and authentication error codes: https://www.mongodb.com/docs/manual/reference/error-codes/
 - listDatabases privilege-dependent behavior: https://www.mongodb.com/docs/manual/reference/command/listdatabases/
 - Replica-set status and required privilege: https://www.mongodb.com/docs/manual/reference/command/replsetgetstatus/
+- MongoDB 8.0 Enterprise auditing: https://www.mongodb.com/docs/v8.0/core/auditing/
+- MongoDB 8.0 audit event definitions (authCheck and authenticate results): https://www.mongodb.com/docs/v8.0/reference/audit-message/mongo/
+- MongoDB 8.0 configure auditing and destinations: https://www.mongodb.com/docs/v8.0/tutorial/configure-auditing/
+- MongoDB 8.0 audit filters: https://www.mongodb.com/docs/v8.0/tutorial/configure-audit-filters/
+- MongoDB 8.0 server parameters (auditAuthorizationSuccess, redactClientLogData): https://www.mongodb.com/docs/v8.0/reference/parameters/
+- MongoDB 8.0 mongod redactClientLogData flag: https://www.mongodb.com/docs/v8.0/reference/program/mongod/
+- MongoDB 8.0 encryption at rest: https://www.mongodb.com/docs/v8.0/core/security-encryption-at-rest/
+- MongoDB 8.0 encryption configuration options: https://www.mongodb.com/docs/v8.0/reference/configuration-options/
+- MongoDB 8.0 configure encryption and KMIP procedure: https://www.mongodb.com/docs/v8.0/tutorial/configure-encryption/
+- MongoDB 8.0 client-side field level encryption: https://www.mongodb.com/docs/v8.0/core/csfle/
+- MongoDB 8.0 CSFLE manual (explicit) encryption: https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/manual-encryption/
+- MongoDB 8.0 CSFLE automatic-encryption schemas: https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/automatic-encryption/
+- MongoDB 8.0 CSFLE client options: https://www.mongodb.com/docs/v8.0/core/csfle/reference/csfle-options-clients/
+- MongoDB 8.0 Queryable Encryption: https://www.mongodb.com/docs/v8.0/core/queryable-encryption/
+- MongoDB 8.0 Queryable Encryption 7.0 GA release notes: https://www.mongodb.com/docs/v8.0/release-notes/7.0/
+- MongoDB 8.0 Queryable Encryption limitations: https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/limitations/
+- MongoDB 8.0 Queryable Encryption client options: https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/qe-options-clients/
+- MongoDB 8.0 Queryable Encryption manual encryption (edition split): https://www.mongodb.com/docs/v8.0/core/queryable-encryption/fundamentals/manual-encryption/
+- MongoDB 8.0 Queryable Encryption supported operations (range BSON types): https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/supported-operations/
+- MongoDB 8.0 log-redaction example: https://www.mongodb.com/docs/v8.0/administration/monitoring/
+- MongoDB 8.0 CSFLE encryption algorithms: https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/encryption-algorithms/
+- MongoDB 8.0 release notes (Queryable Encryption range queries): https://www.mongodb.com/docs/v8.0/release-notes/8.0/
+- MongoDB 8.0 compatibility notes (rangePreview removal): https://www.mongodb.com/docs/v8.0/release-notes/8.0-compatibility/
 - Bash file-creation mask: https://www.gnu.org/s/bash/manual/html_node/Bourne-Shell-Builtins.html
 - Bash redirection and noclobber behavior: https://www.gnu.org/s/bash/manual/bash.html
 
@@ -10087,6 +10236,8 @@ See [internal membership authentication](https://www.mongodb.com/docs/manual/cor
 # Redis: TLS and authentication
 
 Redis trusts its network by design, so the network boundary and credentials are your job. An exposed unauthenticated Redis leaks its data, and historic attack tooling has also used the CONFIG command against open instances to write files and take over hosts. Applies to Redis 6.0 and later for TLS and ACLs; the server and client must be built with TLS support. Additional controls below carry their minimum versions. See the [Redis security](https://redis.io/docs/latest/operate/oss_and_stack/management/security/) and [TLS documentation](https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/).
+
+This guide targets upstream Redis 6.0 and later. The existing configuration references through 8.2.1 pin syntax and historical behaviour, not a deployment version. Sections 9-15 add deployment-exposure controls for replication, Sentinel, and Redis Cluster, reviewed against upstream Redis 8.10.1. Version-specific examples carry their own qualifications; the Redis 8.10 peer-name control does not belong in a generic Redis 6.0+ configuration. These HA findings establish no equivalent Valkey or Redis Enterprise behaviour; the Valkey compatibility note remains separate.
 
 ## 1. Keep it local unless remote access is deliberate
 
@@ -10124,6 +10275,8 @@ The `-flushall -flushdb -swapdb` above removes those three commands only, not ev
 Generate passwords per [authentication.md](authentication.md). The `default` user starts `on nopass ~* +@all` (Redis 6.2 adds `&*` for Pub/Sub channels), so with ACLs as your control you must secure it before any remote exposure: give it a strong password, or set `user default off resetpass` in `redis.conf` or the ACL file and apply it on a running server with `ACL SETUSER default off resetpass`. Do that only after every client authenticates as a named user and a separate named administrator has been tested. A connection already authenticated as `default` keeps working until it disconnects; section 3 covers revocation. See the [ACL authentication and user-state rules](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/).
 
 MFA: Redis has no second-factor dialogue. For machine clients, `tls-auth-clients yes` (mutual TLS, below) adds a possession factor, a certificate, alongside the password; that is stronger than a password alone but it is not MFA for a person. Human paths to the host go behind MFA per [mfa.md](mfa.md).
+
+On Redis 8.6+, the certificate-plus-password description assumes certificate-to-user automatic authentication is disabled. Redis 8.6 introduced `tls-auth-clients-user`, which defaults to `off`; enabling it can authenticate a connection without a separate password exchange. On Redis 8.6+, keep this setting `off` for the guide's certificate-plus-password and unauthenticated-certificate `NOAUTH` checks. Earlier releases do not support this directive; omit it entirely, because an unknown configuration directive prevents startup. See the [8.6 release notes](https://redis.io/docs/latest/operate/oss_and_stack/stack-with-enterprise/release-notes/redisce/redisos-8.6-release-notes/), [pinned certificate authentication configuration](https://raw.githubusercontent.com/redis/redis/8.6.0/redis.conf), and [registered default](https://raw.githubusercontent.com/redis/redis/8.6.0/src/config.c).
 
 ## 3. Make ACL restrictions durable and replace old permissions explicitly
 
@@ -10233,6 +10386,8 @@ tls-auth-clients no
 
 Set `tls-auth-clients yes` for machine-to-machine deployments where clients can hold certificates; it is stronger than passwords alone. With `yes`, clients must also pass `--cert client.crt --key client.key`, or the TLS handshake is rejected before any `AUTH`. Confirm that a missing or untrusted client certificate is refused. See [Redis TLS](https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/).
 
+For HA deployments, the deliberate `tls-auth-clients no` above also removes the client-certificate requirement for incoming replicas on the data listener. Use section 13's mutual TLS settings for those connections. Enabling the client TLS listener alone does not enable outgoing replication TLS or cluster-bus TLS. The TLS cluster bus always requires a peer certificate, regardless of the data listener's `tls-auth-clients` setting. See the [replication TLS documentation](https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/) and pinned [cluster accept implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/cluster_legacy.c).
+
 ## 7. Client side
 
 Replace the host inside the single quotes with your Redis hostname, such as `redis.example.com`, and paste the whole block. `--askpass` reads the password from standard input with masking, keeping it out of process arguments. Use `--user ops` for administrative sessions.
@@ -10341,9 +10496,488 @@ Expect `OK` for reading inputs, writing outputs, and publishing within the allow
 
 **REASONED: persistence and revocation.** During a planned restart of a disposable test instance, repeat `ACL GETUSER app`, `ACL GETUSER default`, and the applicable permission checks. A runtime-only change reverts; the persisted policy survives. After retiring `app-old`, its existing connection must close and a fresh authentication attempt must fail. Use section 7's masked prompt with the old username to test this, without putting its password in arguments. See [ACL persistence](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/#use-an-external-acl-file) and [CLIENT KILL](https://redis.io/docs/latest/commands/client-kill/).
 
+The following checks cover sections 9-15. All are **REASONED, not demonstrated**: the authoring environment has no `redis-server`, `redis-cli`, Docker, or Podman, and no live HA topology was supplied. Run exposed-state comparisons only in a disposable isolated environment. Redis-prompt commands below are not shell commands. Use section 7's guarded connection block, masked password prompt, and disabled CLI history for authenticated data-server sessions, changing the username as directed. Certificate and key options name files; never put their contents or passwords in process arguments. References below to disabling certificate-to-user automatic authentication apply only to Redis 8.6+, as explained in section 2. Earlier releases lack that setting; do not add the directive to their configuration.
+
+**REASONED: replication authentication and promotion, section 9.** No live primary/replica pair or failover topology was available. Compare an unsecured primary accepting an uncredentialed replica with a secured primary rejecting missing or wrong replication credentials. After restoring correct credentials, run this in an administrative session on the replica:
+
+```
+INFO replication
+```
+
+Require `master_link_status:up`, then write a disposable canary through an authorized primary session and read it from the replica. Separately repeat the unauthenticated data-listener check against the replica: it must reject the request even though its outbound replication login succeeds. See the [replication authentication implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/replication.c), [replica authentication documentation](https://redis.io/docs/latest/operate/oss_and_stack/management/replication/#setting-a-replica-to-authenticate-to-a-master), and [INFO replication fields](https://redis.io/docs/latest/commands/info/).
+
+On Redis 7+, run these at the administrative Redis prompt:
+
+```
+ACL DRYRUN replication PSYNC ? -1
+ACL DRYRUN app PSYNC ? -1
+```
+
+Expect `OK` for `replication` and a permission-denial description for the guide's restricted `app` user. These are permission checks, not synchronization tests. They need one server; synchronization needs two processes; preserving authentication through promotion needs a live failover exercise with the checks repeated after roles change. See [ACL DRYRUN](https://redis.io/docs/latest/commands/acl-dryrun/) and the [replica command requirements](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/#acl-rules-for-sentinel-and-replicas).
+
+**REASONED: Sentinel listener, incoming authentication, and peers, section 10.** No live Sentinel or peer group was available. Repeat the unfiltered `ss -tlnp` inventory on the Sentinel host and account for its separate 26379 listener. Against Sentinel itself, compare this request before and after securing incoming authentication, while holding the transport configuration constant:
+
+```
+SENTINEL GET-MASTER-ADDR-BY-NAME mymaster
+```
+
+An exposed instance returns the monitored endpoint; the secured instance returns `NOAUTH` without Redis authentication, then permits discovery with valid credentials. Supply a trusted client certificate when mutual TLS is required, with certificate-to-user automatic authentication disabled for this comparison. The guarded Sentinel probe below supplies the TLS form. Authenticate as `discovery` and confirm administrative subcommands are denied with `NOPERM`; a read-only administrative check is `SENTINEL CONFIG GET '*'` on Redis 6.2+. A connection error or `NOAUTH` does not demonstrate the discovery user's ACL denial. See the [Sentinel command and authentication documentation](https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/#configuring-sentinel-instances-with-authentication).
+
+One Sentinel suffices for listener and incoming-authentication checks. From an administrative Sentinel session, use `SENTINEL SENTINELS mymaster` to inspect peer announcements, and verify actual authenticated peer communication with multiple Sentinels. Announcement readback alone does not establish reachability. See the [pinned peer and announcement settings](https://raw.githubusercontent.com/redis/redis/8.10.1/sentinel.conf).
+
+**REASONED: Sentinel monitored-server permissions and failover, section 11.** No live data server or Sentinel topology was available. In a data-server session authenticated as `sentinel-monitor`, run:
+
+```
+PING
+GET app:probe
+PUBLISH unrelated:probe value
+```
+
+Expect `PONG`, then `NOPERM` for both the key read and unrelated-channel publish. An unrestricted account permits the latter operations. Review `ACL LOG 20` from the separate administrator during monitoring; preserve relevant denials without clearing the log. These permission checks need one data server. See the [Sentinel-specific channel and command policy](https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/#redis-access-control-list-authentication).
+
+In a disposable Sentinel and primary/replica topology, missing or wrong `sentinel auth-pass` must prevent successful authenticated monitoring; correct credentials must restore it. Exercise promotion, then confirm Sentinel monitoring and replication continue with the former replica as primary. The [pinned authentication implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/sentinel.c) uses the monitored primary's credentials for its replicas too.
+
+**REASONED: cluster-bus exposure and announcements, section 12.** No cluster-enabled process or multi-node topology was available. Repeat unfiltered `ss -tlnp`, then run this through an authenticated administrative data-port session:
+
+```
+CLUSTER NODES
+```
+
+Inspect the advertised address and `@bus-port`. Compare bus connectivity from an unauthorized network with connectivity from an allowed peer: an exposed bus permits the former, while the fixed network boundary denies it and retains the working peer path. Failure from outside is meaningful only alongside a working authorized path and listener/network-policy evidence. A missing Redis `PING` response is not evidence that the binary bus is blocked. One cluster-enabled process can demonstrate its listener; working membership and advertised reachability need multiple nodes. See [CLUSTER NODES](https://redis.io/docs/latest/commands/cluster-nodes/), [cluster networking](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/#redis-cluster-tcp-ports), and the [pinned listener and announcement implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/cluster_legacy.c).
+
+For the **REASONED** section 12 network comparison, no live bus endpoint or authorized and unauthorized probe locations were available. Run this concrete TCP probe from both locations, using OpenBSD `nc`. Substitute the actual host and bus port inside the quotes.
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLUSTER_HOST' 'REPLACE_WITH_BUS_PORT'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 1 host and 1 port; not probing"; exit 1; }
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute the host; not probing"; exit 1 ;;
+  esac
+  case "$2" in
+    *[!0-9]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
+  esac
+  [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 1; }
+  if nc -vz -w 5 "$1" "$2"; then
+    echo "TCP connected; the bus port is reachable from here"
+  else
+    printf 'TCP probe exit=%s; compare with the allowed-peer control\n' "$?"
+  fi
+)
+```
+
+An exposed network boundary permits a TCP connection from the unauthorized location. The fixed boundary denies that connection while retaining the allowed peer's successful connection to the intended listener. A local tool error, name-resolution failure, or failed allowed-peer control is inconclusive. This probes TCP reachability only, not TLS, certificate acceptance, or cluster membership. See the [cluster networking requirements](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/#redis-cluster-tcp-ports).
+
+**REASONED: replication encryption and incoming certificates, section 13.** No live primary/replica pair, certificate fixtures, or connection evidence was available. Use a disposable pair connected directly, without a TLS-terminating proxy. Correlate the primary's actual listener, the replica's established connection, and successful replication. `INFO replication` reports link status, not encryption.
+
+At the primary's authenticated administrative Redis prompt:
+
+```
+CONFIG GET port
+CONFIG GET tls-port
+```
+
+For the fixed configuration, require `port` to be `0` and record the nonzero `tls-port`. At the replica's authenticated administrative Redis prompt:
+
+```
+CONFIG GET tls-replication
+INFO replication
+```
+
+Require `tls-replication` to be `yes`, `master_host` and `master_port` to identify that primary's TLS endpoint, and `master_link_status:up`. On the replica host, inspect established connections:
+
+```bash
+ss -tnp
+```
+
+Identify the replica process's established connection to the recorded primary address and TLS port. Use an account permitted to see process information. Missing process information or a socket-inspection error is inconclusive.
+
+From an allowed client location, probe that same primary endpoint. Substitute a DNS hostname or IPv4 address and the recorded TLS port inside the quotes. Use the installed CA and client certificate paths. The commands deliberately omit Redis credentials; on Redis 8.6+, keep certificate-to-user automatic authentication disabled for this comparison.
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PRIMARY_HOST' 'REPLACE_WITH_PRIMARY_TLS_PORT'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 1 host and 1 port; not probing"; exit 1; }
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute the host; not probing"; exit 1 ;;
+  esac
+  case "$2" in
+    *[!0-9]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
+  esac
+  [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 1; }
+  unset REDISCLI_AUTH || exit 1
+  printf '\nNo client certificate\n'
+  if timeout 10s redis-cli --tls --cacert /etc/redis/tls/ha-ca.crt \
+      -h "$1" -p "$2" PING; then
+    echo "inspect the RESP reply; exit=0 alone is not a pass"
+  else
+    printf 'probe exit=%s; inspect the TLS or authentication error\n' "$?"
+  fi
+  printf '\nTrusted client certificate, positive control\n'
+  if timeout 10s redis-cli --tls --cacert /etc/redis/tls/ha-ca.crt \
+      --cert /etc/redis/tls/client.crt --key /etc/redis/tls/client.key \
+      -h "$1" -p "$2" PING; then
+    echo "inspect the RESP reply; exit=0 alone is not a pass"
+  else
+    printf 'probe exit=%s; inspect the TLS or authentication error\n' "$?"
+  fi
+)
+```
+
+With `tls-auth-clients yes`, require a TLS certificate rejection for the first request and `NOAUTH` for the trusted-certificate positive control. In the isolated comparison with `tls-auth-clients no`, both requests reach `NOAUTH`. This tests the data listener's certificate requirement, which also applies to incoming replicas; it does not authenticate a replication session. A timeout, missing certificate file, or unreachable endpoint is inconclusive.
+
+To confirm current synchronization, write a fresh disposable value at an authorized primary Redis prompt:
+
+```
+SET app:ha-tls-probe tls-check-1
+```
+
+Then read it at an authorized replica Redis prompt:
+
+```
+GET app:ha-tls-probe
+```
+
+Require the newly written value, changing it on each repetition. In the exposed comparison, use `tls-replication no` and the primary's plaintext endpoint: replication and the canary can still succeed, while the connection terminates on the plaintext listener. In the fixed comparison, require the active replica connection to terminate on the primary's TLS-only listener, the successful TLS positive control, and the fresh canary together. Neither link status nor a separate successful TLS probe alone proves that replication is encrypted. See the [TLS replication documentation](https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/), [pinned listener implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/server.c), [INFO replication fields](https://redis.io/docs/latest/commands/info/), and [Redis CLI options](https://redis.io/docs/latest/develop/tools/cli/).
+
+**REASONED: cluster-bus client certificates, section 13.** No live TLS cluster-bus listener or certificate fixtures were available. From an allowed peer location, probe the actual bus port with no certificate, an otherwise valid certificate from an untrusted CA, and a trusted certificate. If Redis 8.10+ peer-name checking is enabled, both certificate fixtures must contain the expected name so this comparison isolates CA trust.
+
+These OpenSSL probes require TLS 1.2 to be enabled on the test endpoint and GNU `timeout`. They select TLS 1.2 so a completed handshake includes the server's acceptance of the client certificate. Do not weaken a TLS 1.3-only deployment for this check; these particular probes are inconclusive there. Use protected PEM fixture files at the paths below, replace the DNS hostname or IPv4 address and actual bus port inside the quotes, and paste the whole block.
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLUSTER_HOST' 'REPLACE_WITH_BUS_PORT' 'REPLACE_WITH_EXPECTED_PEER_NAME'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 1 host, 1 port, and 1 expected peer name; not probing"; exit 1; }
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute the host; not probing"; exit 1 ;;
+  esac
+  case "$2" in
+    *[!0-9]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
+  esac
+  [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 1; }
+  case "$3" in
+    *REPLACE_WITH_*|"") echo "substitute the expected peer name; not probing"; exit 1 ;;
+  esac
+  printf '\nNo client certificate\n'
+  if timeout 10s openssl s_client -connect "$1:$2" -tls1_2 -brief \
+      -verify_hostname "$3" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt </dev/null; then
+    echo "probe exit=0; inspect the handshake result"
+  else
+    printf 'probe exit=%s; inspect the TLS error\n' "$?"
+  fi
+  printf '\nUntrusted client certificate\n'
+  if timeout 10s openssl s_client -connect "$1:$2" -tls1_2 -brief \
+      -verify_hostname "$3" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt \
+      -cert /etc/redis/tls/untrusted-client.crt -key /etc/redis/tls/untrusted-client.key </dev/null; then
+    echo "probe exit=0; inspect the handshake result"
+  else
+    printf 'probe exit=%s; inspect the TLS error\n' "$?"
+  fi
+  printf '\nTrusted client certificate, positive control\n'
+  if timeout 10s openssl s_client -connect "$1:$2" -tls1_2 -brief \
+      -verify_hostname "$3" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt \
+      -cert /etc/redis/tls/ha-client.crt -key /etc/redis/tls/ha-client.key </dev/null; then
+    echo "probe exit=0; inspect the handshake result"
+  else
+    printf 'probe exit=%s; inspect the TLS error\n' "$?"
+  fi
+)
+```
+
+Require certificate-related TLS rejection for the first two probes and a completed, verified TLS handshake for the trusted positive control. Repeat with data-port `tls-auth-clients no` and `yes`; the bus must require a trusted certificate in both cases. A timeout, local file error, protocol-version mismatch, or failed server-certificate verification does not demonstrate rejection of the client certificate.
+
+An exposed plaintext bus has no TLS certificate gate and will fail the TLS positive control; that failure must not be mistaken for a protected bus. Use the section 12 TCP reachability comparison separately. OpenSSL does not speak the binary cluster protocol, so a successful handshake establishes neither cluster membership nor working node-to-node traffic. Listener checks need one cluster-enabled process; working cluster transport needs multiple nodes. See the [pinned cluster certificate requirement](https://raw.githubusercontent.com/redis/redis/8.10.1/src/cluster_legacy.c) and [TLS cluster documentation](https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/).
+
+**REASONED: Sentinel TLS and outgoing connections, section 14.** No live Sentinel or data-node topology was available. Repeat the plaintext/TLS discriminator on 26379, not only on the Redis data port. The following block assumes the Redis 6.2+ `discovery` account, the monitored group `mymaster`, and certificate-to-user automatic authentication disabled. For the password-only Sentinel arrangement, use `--user default` instead. Replace the host inside the single quotes and use the installed certificate file paths, then paste the whole block:
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_SENTINEL_HOST'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 host; not probing"; exit 1; }
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute your Sentinel host; not probing"; exit 1 ;;
+    *)
+      unset REDISCLI_AUTH || exit 1
+      timeout 10s redis-cli -h "$1" -p 26379 SENTINEL GET-MASTER-ADDR-BY-NAME mymaster
+      timeout 10s redis-cli --tls --cacert /etc/redis/tls/ha-ca.crt \
+        --cert /etc/redis/tls/client.crt --key /etc/redis/tls/client.key \
+        -h "$1" -p 26379 SENTINEL GET-MASTER-ADDR-BY-NAME mymaster
+      REDISCLI_HISTFILE=/dev/null timeout 10s redis-cli --tls \
+        --cacert /etc/redis/tls/ha-ca.crt \
+        --cert /etc/redis/tls/client.crt --key /etc/redis/tls/client.key \
+        -h "$1" -p 26379 --user discovery --askpass \
+        SENTINEL GET-MASTER-ADDR-BY-NAME mymaster
+      ;;
+  esac
+)
+```
+
+Any RESP reply to the first request proves plaintext Redis protocol is available at that endpoint. With the TLS-only configuration, expect no plaintext RESP reply; the trusted-certificate TLS request without Redis credentials must reach `NOAUTH`, and the authenticated request must return the monitored endpoint. A timeout, resolution error, or connection refusal alone proves nothing. Repeat the TLS requests without a client certificate and with an untrusted certificate; both must fail under `tls-auth-clients yes`. Restore the trusted certificate and valid credentials as the positive control. See [Sentinel TLS](https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/#sentinel), [Sentinel authentication](https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/#configuring-sentinel-instances-with-authentication), and [Redis CLI options](https://redis.io/docs/latest/develop/tools/cli/).
+
+One Sentinel can demonstrate its incoming listener. Outgoing TLS, peer discovery, and failover need a live Sentinel/data-node topology and independent connection evidence; success on 26379 does not prove those outgoing connections use TLS. See the [pinned outgoing connection and advertisement implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/sentinel.c).
+
+The Sentinel shell block above passed local Bash syntax and ShellCheck checks. With `set -u`, it rejected the unchanged placeholder, an embedded placeholder, an empty host, a marker-only assignment, an omitted assignment with no inherited arguments, and an extra host argument before any connection command ran. These local checks did not demonstrate Redis behaviour.
+
+**REASONED: enforced HA peer identity, Redis 8.10+, section 15.** No Redis 8.10 runtime, certificate fixtures, or HA endpoints were available. Prepare two otherwise valid client certificates signed by the same trusted CA: one matching the configured HA identity and one that does not match it through either SAN or CN fallback. Keep certificate purpose, validity, CA trust, and Redis credentials constant.
+
+For incoming identity enforcement, target the TLS cluster-bus port. An ordinary client handshake to the data port does not exercise this incoming peer-name restriction. At the test node's authenticated administrative data-port prompt, first establish the isolated comparison without the restriction:
+
+```
+CONFIG SET tls-expected-peer-name ""
+```
+
+Run the following block, then enable the intended identity at that same administrative prompt and run the block again:
+
+```
+CONFIG SET tls-expected-peer-name redis-ha.example.com
+```
+
+Replace the example identity consistently with the identity issued to intended HA nodes. Require `OK` from each configuration change. The shell block uses the same TLS 1.2, GNU `timeout`, and protected PEM-file prerequisites as the preceding bus-certificate check. Substitute the DNS hostname or IPv4 address and actual bus port inside the quotes.
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLUSTER_HOST' 'REPLACE_WITH_BUS_PORT' 'REPLACE_WITH_EXPECTED_PEER_NAME'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 1 host, 1 port, and 1 expected peer name; not probing"; exit 1; }
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute the host; not probing"; exit 1 ;;
+  esac
+  case "$2" in
+    *[!0-9]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
+  esac
+  [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 1; }
+  case "$3" in
+    *REPLACE_WITH_*|"") echo "substitute the expected peer name; not probing"; exit 1 ;;
+  esac
+  printf '\nSame CA, wrong peer name\n'
+  if timeout 10s openssl s_client -connect "$1:$2" -tls1_2 -brief \
+      -verify_hostname "$3" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt \
+      -cert /etc/redis/tls/wrong-name-client.crt -key /etc/redis/tls/wrong-name-client.key </dev/null; then
+    echo "probe exit=0; inspect the handshake result"
+  else
+    printf 'probe exit=%s; inspect the TLS error\n' "$?"
+  fi
+  printf '\nSame CA, matching peer name, positive control\n'
+  if timeout 10s openssl s_client -connect "$1:$2" -tls1_2 -brief \
+      -verify_hostname "$3" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt \
+      -cert /etc/redis/tls/matching-name-client.crt -key /etc/redis/tls/matching-name-client.key </dev/null; then
+    echo "probe exit=0; inspect the handshake result"
+  else
+    printf 'probe exit=%s; inspect the TLS error\n' "$?"
+  fi
+)
+```
+
+Without the name restriction, require both handshakes to complete. With enforcement enabled, require the wrong-name handshake to be rejected and the matching-name handshake to complete. Correlate rejection with the accepting node's certificate-verification error. An unrelated failure or a failed positive control is inconclusive. Inspect startup warnings indicating that this build does not enforce peer-name verification; accepting the wrong-name certificate with the setting enabled fails this enforcement check. See the [pinned identity configuration](https://raw.githubusercontent.com/redis/redis/8.10.1/redis.conf) and [enforcement and warning paths](https://raw.githubusercontent.com/redis/redis/8.10.1/src/tls.c).
+
+Test outbound replication separately in a disposable Redis 8.10+ pair. Prepare matching-name and wrong-name server certificates from the same CA, with valid server-authentication purposes. At the primary's authenticated administrative prompt, install the wrong-name fixture:
+
+```
+CONFIG SET tls-cert-file /etc/redis/tls/wrong-name-server.crt tls-key-file /etc/redis/tls/wrong-name-server.key
+```
+
+Require `OK`. At the replica's authenticated administrative prompt, remove the name restriction and force a fresh connection:
+
+```
+CONFIG SET tls-expected-peer-name ""
+CLIENT KILL TYPE master
+INFO replication
+```
+
+Repeat `INFO replication` until the connection attempt completes; require `master_link_status:up` as the unrestricted control. Then enable the intended identity on the replica and force another connection:
+
+```
+CONFIG SET tls-expected-peer-name redis-ha.example.com
+CLIENT KILL TYPE master
+INFO replication
+```
+
+Require the new connection to fail with a certificate-name verification error in the replica's log. A down link without that evidence is inconclusive. At the primary's administrative prompt, restore the matching fixture:
+
+```
+CONFIG SET tls-cert-file /etc/redis/tls/matching-name-server.crt tls-key-file /etc/redis/tls/matching-name-server.key
+```
+
+Require `OK`, then repeat `INFO replication` on the replica and the fresh canary check above; both must recover. These commands intentionally reconnect replication and belong only in the isolated comparison. Keep the intended name restriction enabled afterward. File paths are arguments, but private-key contents and passwords are not. See [CONFIG SET](https://redis.io/docs/latest/commands/config-set/), the [pinned modifiable TLS settings](https://raw.githubusercontent.com/redis/redis/8.10.1/src/config.c), [CLIENT KILL](https://redis.io/docs/latest/commands/client-kill/), and [INFO replication fields](https://redis.io/docs/latest/commands/info/).
+
+Small isolated endpoints can exercise these handshakes without a complete functioning cluster. Proving the full HA trust boundary requires testing every connection class, including outgoing cluster-bus and `MIGRATE` connections and Sentinel separately. Do not expect the directive to reject the wrong-name certificate on Sentinel's reviewed outgoing path; verify Sentinel's dedicated trust boundary independently. That exception is derived from the [pinned Sentinel source](https://raw.githubusercontent.com/redis/redis/8.10.1/src/sentinel.c), not a runtime demonstration.
+
 | Backlog ID | Outstanding demonstration | Status |
 | --- | --- | --- |
-| REDIS-LIVE-1 | In an isolated environment with Redis, TLS certificates, and socket access, record exact versions and demonstrate exposed/fixed listeners, plaintext rejection, authentication, ACL readback, actual CONFIG denial and ACL logging, directional key/channel checks, both persistence methods across restart, and old-user session revocation. Parse the applicable configuration examples with the real Redis server. | Open; REASONED checks above remain undemonstrated. |
+| REDIS-LIVE-1 | In an isolated environment with Redis, TLS certificates, and socket access, record exact versions and demonstrate exposed/fixed listeners, plaintext rejection, authentication, ACL readback, actual CONFIG denial and ACL logging, directional key/channel checks, both persistence methods across restart, and old-user session revocation. Parse the applicable configuration examples with the real Redis server. Also demonstrate the seven HA checks: (1) replication credential rejection, successful synchronization and canary transfer, replica listener authentication, Redis 7+ replication ACL checks, and authentication through promotion; (2) Sentinel listener restrictions, incoming authentication, discovery-user denials, announcements, and authenticated peer communication; (3) Sentinel monitored-server command/channel restrictions, ACL logging, credential failure/recovery, and monitoring through failover; (4) cluster-bus listener and announcement correctness with denied unauthorized and working authorized paths; (5) replication encryption using correlated TLS listener, established-connection, and fresh canary evidence, incoming replica certificate requirements, and mandatory TLS cluster-bus certificates; (6) Sentinel plaintext rejection, incoming certificate/password checks, outgoing TLS, peer discovery, and failover; (7) Redis 8.10+ same-CA wrong-name rejection with matching-certificate positive controls, outbound replication and incoming bus tests, build-warning inspection, and every remaining connection class including Sentinel's separate trust boundary. Parse the added server, ACL, and Sentinel examples on their stated versions and record exact Redis versions and TLS build capabilities. | Open; REASONED checks above remain undemonstrated. |
+
+## 9. Authenticate replication through role changes
+
+Within this guide's Redis 6.0+ scope, an unsecured default user permits replication commands as well as ordinary commands once the network permits access. A dedicated replication user requires data-server ACLs, available since Redis 6.0. The required replication commands are `PING`, `REPLCONF`, and `PSYNC`. See the [ACL rules for replicas](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/#acl-rules-for-sentinel-and-replicas).
+
+For the password-only arrangement, configure both directions on every member eligible to become primary:
+
+```
+requirepass REPLACE_WITH_DATA_PASSWORD
+masterauth REPLACE_WITH_DATA_PASSWORD
+```
+
+`requirepass` protects incoming access. `masterauth` supplies an outbound credential; it does not protect the replica's own listener. Configure both on potential primaries so authentication survives role changes. See the [pinned replication configuration](https://raw.githubusercontent.com/redis/redis/8.10.1/redis.conf) and [Sentinel authentication documentation](https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/#redis-access-control-list-authentication).
+
+Prefer a dedicated replication account, provisioned on every potential primary. Put this rule in the ACL persistence surface chosen in section 3:
+
+```
+user replication reset on >REPLACE_WITH_REPLICATION_PASSWORD +ping +replconf +psync
+```
+
+Put the outbound credentials in each data member's server configuration:
+
+```
+masteruser replication
+masterauth REPLACE_WITH_REPLICATION_PASSWORD
+```
+
+Retain the secured default user and separate administrator from sections 2 and 3. The replication account receives the full replication stream: omitting key-pattern grants does not restrict it to an application prefix. The pinned [configuration](https://raw.githubusercontent.com/redis/redis/8.10.1/redis.conf) documents both credential directives; the [replication implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/replication.c) sends username/password authentication when configured and aborts the handshake on authentication failure. See also [persistent replica authentication](https://redis.io/docs/latest/operate/oss_and_stack/management/replication/#setting-a-replica-to-authenticate-to-a-master).
+
+## 10. Secure Sentinel's separate listener and peer authentication
+
+Sentinel has a separate listener, normally TCP 26379. Its shipped configuration disables protected mode and supplies no active authentication rule. Protecting the Redis data port does not protect Sentinel. Password-only Sentinel authentication is available throughout this guide's Redis 6.0+ scope; Sentinel ACLs require Redis 6.2+. See the [pinned Sentinel configuration](https://raw.githubusercontent.com/redis/redis/8.10.1/sentinel.conf) and [Sentinel authentication documentation](https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/#configuring-sentinel-instances-with-authentication).
+
+For a representative private Sentinel address, the password-only arrangement is:
+
+```
+bind 10.0.0.11
+port 26379
+requirepass REPLACE_WITH_SENTINEL_PASSWORD
+sentinel announce-ip 10.0.0.11
+sentinel announce-port 26379
+```
+
+Restrict network access to the required Sentinel peers, discovery clients, and administrators. Use the same Sentinel password across peers in this arrangement, with a credential distinct from the data-server password. The announcement directives publish discovery information; they neither bind sockets nor enforce access restrictions. Section 14 replaces the plaintext listener with TLS. See the [pinned listener, announcement, and password settings](https://raw.githubusercontent.com/redis/redis/8.10.1/sentinel.conf).
+
+Alternatively, on Redis 6.2+, use ACL authentication. Retain the private bind and announcements, and use these account rules instead of the password-only `requirepass` arrangement:
+
+```
+user sentinel-peer reset on >REPLACE_WITH_SENTINEL_PEER_PASSWORD &* +@all
+user discovery reset on >REPLACE_WITH_DISCOVERY_PASSWORD +ping +sentinel|get-master-addr-by-name
+user default off resetpass
+```
+
+Configure Sentinel's outgoing peer credentials separately:
+
+```
+sentinel sentinel-user sentinel-peer
+sentinel sentinel-pass REPLACE_WITH_SENTINEL_PEER_PASSWORD
+```
+
+Provision the peer account consistently across the Sentinel group. Establish and test administrative access before disabling `default`. The peer account above has administrative authority; the discovery account permits only `PING` and `SENTINEL GET-MASTER-ADDR-BY-NAME`. Add other commands only when the actual client library needs them. Use the chosen ACL persistence surface for `user` rules and Sentinel configuration for peer credentials. Choose ACL authentication or the password-only arrangement rather than combining their examples. See the [pinned ACL and peer settings](https://raw.githubusercontent.com/redis/redis/8.10.1/sentinel.conf).
+
+## 11. Give Sentinel dedicated monitored-server credentials
+
+Sentinel's own password does not authenticate it to Redis data servers. Monitored-instance credentials are initially unset. Leaving data servers unauthenticated to permit monitoring exposes them; giving Sentinel an application or unrestricted administrator credential grants unnecessary authority. The monitored-server ACL mechanism requires Redis 6.0+, while the channel-restricted policy below requires Redis 6.2+. See the [pinned credential settings](https://raw.githubusercontent.com/redis/redis/8.10.1/sentinel.conf) and [Sentinel-specific ACL documentation](https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/#redis-access-control-list-authentication).
+
+On every Sentinel monitoring the group named `mymaster`:
+
+```
+sentinel auth-user mymaster sentinel-monitor
+sentinel auth-pass mymaster REPLACE_WITH_MONITOR_PASSWORD
+```
+
+On every data member of that group, provision the same dedicated account in the ACL persistence surface chosen in section 3:
+
+```
+user sentinel-monitor reset on >REPLACE_WITH_MONITOR_PASSWORD resetchannels &__sentinel__:hello +ping +info +role +multi +exec +slaveof +subscribe +publish +config|rewrite +client|setname +client|kill +script|kill
+```
+
+This policy is adapted from the current Sentinel-specific vendor example and reviewed for Redis 8.10.1. It permits the reserved discovery channel specifically, rather than every Pub/Sub channel. It remains a powerful operational account. Redis 6.0 cannot enforce this channel restriction; do not describe an account there as having equivalent channel isolation. See the [Sentinel ACL requirements](https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/#redis-access-control-list-authentication).
+
+For password-only data servers, omit `auth-user` and set `auth-pass` to their `requirepass` value. Sentinel uses the monitored primary's credentials for its replicas too, so provision them on every member eligible for either role. Its monitored-server credentials are distinct from its Sentinel-peer credentials. See `sentinelSendAuthIfNeeded` in the [pinned implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/sentinel.c).
+
+## 12. Restrict the cluster bus and announce private endpoints
+
+Cluster mode is opt-in. When enabled, it adds a binary node-to-node listener for discovery, failure detection, and failover coordination. Restrict this listener separately throughout this guide's Redis 6.0+ scope. Its default port is the data port plus 10000, normally 16379 beside 6379. Data-port password authentication does not provide a RESP `AUTH` gate on the binary bus. See the [cluster networking documentation](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/#redis-cluster-tcp-ports).
+
+For an existing TLS cluster using section 13, this explicit listener and announcement example targets Redis 8.10.1; it is not a claim that every directive is available on every Redis 6.x release:
+
+```
+bind 10.0.0.11
+cluster-port 16379
+cluster-announce-ip 10.0.0.11
+cluster-announce-port 0
+cluster-announce-tls-port 6379
+cluster-announce-bus-port 16379
+```
+
+Permit the bus only between cluster nodes. Permit the data port to intended clients and nodes that need it. `cluster-port` selects the actual bus listener; `cluster-announce-*` publishes endpoint information and is not a firewall. Account for remapping rather than assuming the externally reachable bus port retains the 10000 offset. See the [pinned cluster and NAT configuration](https://raw.githubusercontent.com/redis/redis/8.10.1/redis.conf).
+
+In TLS cluster mode, the default offset is based on `tls-port`; the bus uses the configured bind addresses. The listener and announced endpoints must both match the intended deployment. See `defaultClientPort`, `deriveAnnouncedPorts`, and `clusterInitLast` in the [pinned cluster implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/cluster_legacy.c).
+
+## 13. Enable TLS for replication and cluster traffic
+
+Redis 6.0+ with TLS support needs separate switches for outgoing replication and cluster traffic. Enabling the client TLS listener does not enable either one; both switches default to disabled. See the [TLS documentation](https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/) and [pinned defaults](https://raw.githubusercontent.com/redis/redis/8.10.1/src/config.c).
+
+On all applicable data nodes, retain section 6's certificate, key, and CA configuration and use:
+
+```
+port 0
+tls-port 6379
+tls-replication yes
+tls-auth-clients yes
+```
+
+On cluster nodes, also configure:
+
+```
+tls-cluster yes
+```
+
+Where replication is configured explicitly, point `replicaof` at the primary's TLS endpoint. `tls-auth-clients yes` is already the Redis default; restoring it from section 6's deliberate `no` requires incoming replicas, as well as ordinary clients, to present trusted certificates. Retain replication credentials from section 9, subject to the certificate-to-user authentication qualification in section 2. See the [pinned TLS and replication settings](https://raw.githubusercontent.com/redis/redis/8.10.1/redis.conf).
+
+Redis normally reuses its certificate for outgoing connections. On Redis 6.2+, if certificates have separate server and client purposes, configure `tls-client-cert-file` and `tls-client-key-file` for the outgoing certificate and key. Readers on Redis releases before 6.2 must instead use one certificate suitable for both server and client authentication, configured through `tls-cert-file` and `tls-key-file`. Omit both `tls-client-*` directives on those releases: an unknown configuration directive prevents startup. Compare the pinned [6.0.20 certificate configuration](https://raw.githubusercontent.com/redis/redis/6.0.20/redis.conf) with the [6.2.0 certificate configuration](https://raw.githubusercontent.com/redis/redis/6.2.0/redis.conf).
+
+The TLS cluster bus always requests and requires a peer certificate. Its accept path explicitly uses `TLS_CLIENT_AUTH_YES`; setting data-port `tls-auth-clients no` does not disable cluster-bus certificate authentication. See `clusterAcceptHandler` in the [pinned implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/cluster_legacy.c).
+
+## 14. Configure TLS on Sentinel and its outgoing connections
+
+Sentinel is a separate process; data-node TLS configuration does not configure it. On Redis 6.0+ with TLS support, a nonzero `tls-port` creates Sentinel's incoming TLS listener independently of `tls-replication`. The `tls-replication yes` setting selects TLS for outgoing connections to monitored servers and Sentinel peers. It also selects the configured TLS port for Sentinel's default port advertisement; an explicit `sentinel announce-port` overrides that choice. Configure both `tls-port` and `tls-replication yes` for end-to-end TLS, and set `port 0` to disable the plaintext listener. See `initListeners` in the [pinned server implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/server.c), and `sentinelReconnectInstance` and `sentinelSendHello` in the [pinned Sentinel implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/sentinel.c).
+
+In each Sentinel's configuration:
+
+```
+port 0
+tls-port 26379
+tls-replication yes
+tls-auth-clients yes
+tls-cert-file /etc/redis/tls/sentinel.crt
+tls-key-file /etc/redis/tls/sentinel.key
+tls-ca-cert-file /etc/redis/tls/ha-ca.crt
+sentinel announce-port 26379
+```
+
+Retain section 10's private bind and chosen authentication arrangement, and section 11's monitored-server credentials. Set `sentinel monitor` to the primary's TLS data port. Provision certificates and trust for Sentinel-to-data-server connections, Sentinel-to-Sentinel connections, and discovery clients. `tls-cluster` is not Sentinel's TLS switch. Certificate directives are documented in the [pinned Redis configuration](https://raw.githubusercontent.com/redis/redis/8.10.1/redis.conf); `sentinelReconnectInstance`, `instanceLinkNegotiateTLS`, and `sentinelSendHello` in the [pinned Sentinel implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/sentinel.c) establish the outgoing TLS selection and TLS-port advertisement.
+
+## 15. Restrict trusted HA peer identities
+
+Redis 8.10 introduced server-to-server certificate-name authentication. The setting is unset by default, leaving CA validation without this additional peer-name restriction. This control is newer than the guide's existing 8.2.1 configuration references and must not be added to the generic Redis 6.0+ baseline. See the [8.10 release notes](https://redis.io/docs/latest/operate/oss_and_stack/stack-with-enterprise/release-notes/redisce/redisos-8.10-release-notes/) and [pinned peer-name configuration](https://raw.githubusercontent.com/redis/redis/8.10.1/redis.conf).
+
+On Redis 8.10+ builds that enforce the feature:
+
+```
+tls-expected-peer-name redis-ha.example.com
+```
+
+Replace the example identity with the intended HA trust-group name. Issue intended nodes certificates containing that shared identity in their SANs, including the outgoing client certificates. This adds identity checking to CA validation for outgoing replication, cluster-bus, and `MIGRATE` connections, and incoming cluster-bus connections. It identifies membership in the configured trust group, not a unique certificate-to-node-ID mapping. See the [pinned configuration](https://raw.githubusercontent.com/redis/redis/8.10.1/redis.conf) and [`tlsSetVerifyName` and its callers](https://raw.githubusercontent.com/redis/redis/8.10.1/src/tls.c).
+
+Two limits apply:
+
+- Builds with `TLS_NO_PEER_NAME_VERIFICATION` warn and continue without enforcing the name; CA validation still applies. Configuration readback alone does not prove enforcement. See the [pinned TLS implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/tls.c).
+- Sentinel's outgoing `instanceLinkNegotiateTLS` path creates an SSL object and invokes hiredis directly without applying this name check. This is a source-derived conclusion from Redis 8.10.1, not a demonstrated runtime result. Do not rely on this directive to protect Sentinel's outgoing peer identity. See the [separate Sentinel TLS path](https://raw.githubusercontent.com/redis/redis/8.10.1/src/sentinel.c).
+
+Use a dedicated HA trust boundary for Sentinel and releases without this identity control. Do not trust a general-purpose CA whose other certificate holders should not be able to impersonate HA peers. The [pinned configuration](https://raw.githubusercontent.com/redis/redis/8.10.1/redis.conf) explains why shared CA trust alone is insufficient.
 
 ## Common mistakes
 
@@ -10358,6 +10992,8 @@ Expect `OK` for reading inputs, writing outputs, and publishing within the allow
 ## Valkey
 
 Valkey, the community fork of Redis, uses the same `requirepass`, ACL, and TLS configuration concepts described above. Apply the version-appropriate controls and check the installed release's syntax and defaults. See the Valkey [security](https://valkey.io/topics/security/), [ACL](https://valkey.io/topics/acl/), and [TLS](https://valkey.io/topics/tls/) documentation.
+
+The upstream Redis HA controls and source-derived limitations in sections 9-15 have not been established for Valkey. Verify those controls separately against the installed Valkey release before applying them.
 
 ## Sources (checked September 2026)
 
@@ -10391,6 +11027,27 @@ The tagged configuration files below pin syntax and historical behaviour; they a
 - Read-only scripting variants: https://redis.io/docs/latest/commands/eval_ro/ and https://redis.io/docs/latest/commands/evalsha_ro/ and https://redis.io/docs/latest/commands/fcall_ro/
 - Pub/Sub publishing and subscriptions: https://redis.io/docs/latest/commands/publish/ and https://redis.io/docs/latest/commands/subscribe/ and https://redis.io/docs/latest/commands/psubscribe/
 - Valkey security, ACLs, and TLS: https://valkey.io/topics/security/ and https://valkey.io/topics/acl/ and https://valkey.io/topics/tls/
+- Redis 8.10.1 pinned server configuration: https://raw.githubusercontent.com/redis/redis/8.10.1/redis.conf
+- Redis 6.2.0 separate outgoing TLS certificate and key configuration: https://raw.githubusercontent.com/redis/redis/6.2.0/redis.conf
+- Redis 8.10.1 independent TCP and TLS listener initialization: https://raw.githubusercontent.com/redis/redis/8.10.1/src/server.c
+- CONFIG SET runtime configuration changes and multiple-parameter syntax: https://redis.io/docs/latest/commands/config-set/
+- Redis 8.10.1 pinned Sentinel configuration: https://raw.githubusercontent.com/redis/redis/8.10.1/sentinel.conf
+- Redis 8.10.1 registered TLS and certificate-authentication defaults: https://raw.githubusercontent.com/redis/redis/8.10.1/src/config.c
+- Redis 8.6.0 tls-auth-clients-user introduction and default: https://raw.githubusercontent.com/redis/redis/8.6.0/redis.conf
+- Redis 8.6 release notes and tls-auth-clients-user introduction: https://redis.io/docs/latest/operate/oss_and_stack/stack-with-enterprise/release-notes/redisce/redisos-8.6-release-notes/
+- Redis 8.10.1 replication authentication implementation: https://raw.githubusercontent.com/redis/redis/8.10.1/src/replication.c
+- Redis 8.10.1 Sentinel authentication, outgoing TLS, and announcements: https://raw.githubusercontent.com/redis/redis/8.10.1/src/sentinel.c
+- Redis 8.10.1 cluster listeners, announcements, and mandatory TLS peer certificates: https://raw.githubusercontent.com/redis/redis/8.10.1/src/cluster_legacy.c
+- Redis 8.10.1 peer-name enforcement and build opt-out: https://raw.githubusercontent.com/redis/redis/8.10.1/src/tls.c
+- Replica ACL command requirements: https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/#acl-rules-for-sentinel-and-replicas
+- Persistent replica authentication: https://redis.io/docs/latest/operate/oss_and_stack/management/replication/#setting-a-replica-to-authenticate-to-a-master
+- Sentinel incoming and peer authentication: https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/#configuring-sentinel-instances-with-authentication
+- Sentinel monitored-server ACL and channel requirements: https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/#redis-access-control-list-authentication
+- Cluster data and bus networking: https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/#redis-cluster-tcp-ports
+- Sentinel TLS configuration: https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/#sentinel
+- Redis 8.10 release notes and peer-name feature boundary: https://redis.io/docs/latest/operate/oss_and_stack/stack-with-enterprise/release-notes/redisce/redisos-8.10-release-notes/
+- Replication status fields: https://redis.io/docs/latest/commands/info/
+- Cluster advertised addresses and bus ports: https://redis.io/docs/latest/commands/cluster-nodes/
 
 ======================================================================
 ==> elasticsearch.md
@@ -10490,6 +11147,39 @@ PUT /_security/role_mapping/app_ldap
 ```
 
 Use the actual realm and group DN. Native users receive their roles through the user API above; this mapping is for directory identities. See [LDAP authentication](https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/ldap) and the [role-mapping API](https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-security-put-role-mapping).
+
+### Field-level and document-level security
+
+**Paid Platinum/Enterprise; unavailable with Basic. Minimum version within this guide: Elasticsearch 8.0; syntax pinned to 8.19.** FLS/DLS predate 8.0; their first historical release is not established here. At the time of writing, self-managed Platinum is available to existing customers only. Basic security became free in 6.8.0 and 7.1.0, explicitly excluding FLS/DLS. The default Elasticsearch distribution remains under ELv2; the additional AGPL source option does not make subscription features free. See the [dated subscription matrix](https://www.elastic.co/pdf/subscriptions-2025-07-29.pdf), [current subscription terms](https://www.elastic.co/subscriptions), [free-security announcement](https://www.elastic.co/blog/security-for-elasticsearch-is-now-free), and [licensing explanation](https://www.elastic.co/pricing/faq/licensing).
+
+The existing `app_reader` role permits reading every document and field in `app-data`. Where tenants or sensitive fields share an index, restrict both documents and fields. Map `tenant_id` as `keyword`, then create a separate read-only role:
+
+```http
+PUT /_security/role/app_tenant_a_reader
+{
+  "cluster": [],
+  "indices": [
+    {
+      "names": ["app-data"],
+      "privileges": ["read"],
+      "field_security": {
+        "grant": ["tenant_id", "title", "category"]
+      },
+      "query": {
+        "term": {
+          "tenant_id": "tenant-a"
+        }
+      }
+    }
+  ]
+}
+```
+
+`field_security.grant` selects readable fields; `query` selects readable documents. Use concrete field names, not field aliases. Some metadata fields remain accessible. Omitting field permissions permits all fields; omitting `query` removes DLS for that index permission entry. See the [8.19 role API](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/security-api-put-role.html), [FLS](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/field-level-security.html), and [DLS](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/document-level-security.html).
+
+Assign this role to the application identity **instead of also retaining unrestricted `app_reader` access**. Elasticsearch combines grants across roles: unrestricted access to the same index can defeat these restrictions. Keep the account read-only. Review application API keys separately, including permissions captured when they were created; do not assume changing a user role repairs previously issued credentials. See [8.19 access-control and role-combination rules](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/field-and-document-access-control.html).
+
+DLS does not remove every inference channel. Elasticsearch documents global scoring statistics and search requests that can reveal aggregate information about inaccessible documents. DLS role queries cannot use `has_child`, `has_parent`, terms lookup, indexed-shape lookup, or `percolate`; date ranges cannot use `now`. DLS also affects suggesters, profiling, and other APIs. Test the application's actual queries and aggregations. Prefer separate indices when stronger tenant or confidentiality isolation is required. See [8.19 security limitations](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/security-limitations.html).
 
 ### Anonymous access off and narrow CORS
 
@@ -10618,6 +11308,36 @@ The controls below are provided by **free Apache-2.0 OpenSearch Security**, with
 
    The token API uses **`index_pattern`**, singular, while the role API uses **`index_patterns`**. Lifetime is **`duration_seconds`**, not Elasticsearch's `expiration`. If omitted, lifetime uses `max_duration_seconds`, whose documented default is 7,776,000 seconds; the configuration above explicitly reduces it. Store the returned `token` once, in `/path/app-key.header` after `Authorization: ApiKey `. It cannot be retrieved again. See [API-key configuration](https://docs.opensearch.org/latest/security/access-control/api-keys/) and [Create API Key](https://docs.opensearch.org/latest/security/api/api-keys/create/).
 
+### Field-level and document-level security
+
+**Free Apache-2.0 OpenSearch Security; no paid feature tier. The FLS/DLS role schema is documented from OpenSearch 3.0 and applies across this guide's 3.x scope; the citations below are pinned to 3.6 and the behaviour is reviewed current to 3.8.0.** The role API was introduced in 1.0, and DLS appears in the 1.0 archive. These establish earlier availability, not the introduction release of every combined behavior below. See the [3.6 Security API](https://docs.opensearch.org/3.6/security/access-control/api/), [1.0 DLS archive](https://docs.opensearch.org/1.0/security-plugin/access-control/document-level-security/), and [3.8.0.0 Security licence](https://raw.githubusercontent.com/opensearch-project/security/3.8.0.0/LICENSE.txt).
+
+The existing `app_reader` role permits reading every document and field in `app-data`. Map `tenant_id` as `keyword`, then create a separate read-only role using OpenSearch's schema:
+
+```http
+PUT /_plugins/_security/api/roles/app_tenant_a_reader
+{
+  "cluster_permissions": [],
+  "index_permissions": [
+    {
+      "index_patterns": ["app-data"],
+      "allowed_actions": ["read"],
+      "dls": "{\"term\":{\"tenant_id\":\"tenant-a\"}}",
+      "fls": ["tenant_id", "title", "category"]
+    }
+  ],
+  "tenant_permissions": []
+}
+```
+
+`dls` is a JSON-encoded string. Keep `tenant_id` visible in `fls`: fields used by DLS must remain readable. Map the dedicated application identity to this role and review every other effective role and mapping. Do not mix FLS inclusion and exclusion rules across roles without checking their documented interaction. See [3.6 FLS](https://docs.opensearch.org/3.6/security/access-control/field-level-security/) and [3.6 DLS](https://docs.opensearch.org/3.6/security/access-control/document-level-security/).
+
+OpenSearch's role-combination behavior differs from Elasticsearch's. In particular, `plugins.security.dfm_empty_overrides_all` affects whether a role without DLS overrides a restricted role. Inspect the effective setting and test the actual identity. DLS does not constrain writes, so grant no write permissions to this reader.
+
+Use the dedicated internal-user credential for this recipe. The earlier API-token example contains its own index permissions; assigning this role to a user does not establish that the token enforces equivalent restrictions. Any application token must independently pass the restricted-access checks below before use.
+
+OpenSearch's adaptive DLS uses filter-level evaluation for terms-lookup queries. Filter-level DLS permits retrieval through `get`, `search`, `mget`, and `msearch`, and limits cross-cluster search. Review the application's exact queries and aggregations against these OpenSearch-specific restrictions. Do not substitute Elasticsearch's limitations or claim that FLS/DLS eliminates every inference channel. Prefer separate indices when stronger isolation is required. See [3.6 DLS modes, role composition, and limitations](https://docs.opensearch.org/3.6/security/access-control/document-level-security/).
+
 ### Anonymous access off and narrow CORS
 
 **Free Apache-2.0.** In the security `config.yml`, set `config.dynamic.http.anonymous_auth_enabled: false`. Preserve a working authentication domain. For example, merge this into an existing internal-user configuration, keeping its `_meta` section and other required settings:
@@ -10694,6 +11414,164 @@ config:
 Apply that complete file with the same `securityadmin.sh` certificate arguments, replacing the file/type arguments with `-f config/opensearch-security/audit.yml -t audit`. Preserve the enabled and request-body settings. The GET response's `_readonly` list identifies fields that REST updates cannot change; do not treat a rejected PATCH as success. Repeat GET and confirm `enabled: true`, `enable_rest: true`, `log_request_body: false`, and `exclude_sensitive_headers: true`. See [GET audit configuration](https://docs.opensearch.org/latest/security/api/audit/get-audit-configuration/), [PATCH audit configuration](https://docs.opensearch.org/latest/security/api/audit/patch-audit-configuration/), and [audit configuration fields](https://docs.opensearch.org/latest/security/api/audit/update-audit-configuration/).
 
 Ensure audit exclusions do not suppress `FAILED_LOGIN` or the identities and requests being tested. Collect audit events into a separately protected logging destination; application credentials must not be able to alter the evidence.
+
+## Storage encryption
+
+**Both products: operating-system or storage-provider control, with no paid product feature tier required. Minimum versions within scope: Elasticsearch 8.0 and OpenSearch 3.0.** Elasticsearch guidance is pinned to 8.19; the cited OpenSearch encryption guidance is explicitly the 3.0 archive.
+
+TLS and authentication do not encrypt files on an unencrypted node volume. Use host/block-storage encryption, such as Linux dm-crypt, independently of the search security configuration. Elasticsearch documents dm-crypt beneath its data path; OpenSearch assigns encryption at rest to the operating system. Elastic's subscription row is **"Encryption at rest support"**, not a native encryption switch or a licence requirement for using dm-crypt. See [Elasticsearch 8.19 storage guidance](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/tune-for-search-speed.html), [OpenSearch 3.0 encryption guidance](https://docs.opensearch.org/3.0/troubleshoot/#encryption-at-rest), and the [dated subscription matrix](https://www.elastic.co/pdf/subscriptions-2025-07-29.pdf).
+
+Provision the encrypted volume before deploying data. Mount it at `/srv/search-data`, then select that directory in the respective `elasticsearch.yml` or `opensearch.yml`:
+
+```yaml
+path.data: /srv/search-data
+```
+
+**`path.data` selects a directory; it does not enable encryption.** For an existing deployment, plan the storage migration and recovery procedure before changing the path. Include logs, swap, and local snapshot storage in the encryption assessment. See [Elasticsearch 8.19 path settings](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/path-settings-overview.html) and [OpenSearch 3.6 configuration settings](https://docs.opensearch.org/3.6/install-and-configure/configuring-opensearch/configuration-system/).
+
+Prevent startup from silently using an ordinary directory when the intended mount is unavailable. For a systemd deployment with `/srv/search-data` configured as a dedicated mount, add this service drop-in to the relevant Elasticsearch or OpenSearch unit:
+
+```ini
+[Unit]
+RequiresMountsFor=/srv/search-data
+AssertPathIsMountPoint=/srv/search-data
+```
+
+Reload systemd after installing the drop-in. The dependency requires the configured mount; the assertion rejects an ordinary directory. Neither proves that the mounted device is encrypted: verify the device chain separately. Other service managers need equivalent startup enforcement. See [systemd mount dependencies and assertions](https://man7.org/linux/man-pages/man5/systemd.unit.5.html).
+
+## Snapshot repository encryption
+
+**Elasticsearch: ordinary snapshot/restore is available with free Basic; the examples target 8.x and are pinned to 8.19. OpenSearch: free Apache-2.0; the S3 encryption syntax below requires 3.1 or later, with the changed default pinned to 3.8.0.** These are ordinary repositories, separate from paid Elasticsearch searchable-snapshot features. Provider storage and KMS charges are separate from product subscription tiers. See the [dated subscription matrix](https://www.elastic.co/pdf/subscriptions-2025-07-29.pdf) and [OpenSearch 3.1 repository API](https://docs.opensearch.org/3.1/api-reference/snapshots/create-repository/).
+
+An encrypted node disk does not protect a remote snapshot repository. Server-side encryption also does not prevent a principal with the necessary object and key permissions from downloading decrypted contents.
+
+Distinguish three properties:
+
+- **Server-side encryption:** the storage provider encrypts stored objects and decrypts authorized reads.
+- **Customer-managed keys:** the customer controls the encryption key and its permissions; this can still be server-side encryption.
+- **Client-side encryption:** data is encrypted before upload, requiring a compatible reader and separately managed decryption keys.
+
+Do not describe new AWS S3, GCS, or Azure objects as generally plaintext by default. AWS encrypts new S3 uploads automatically, GCS always applies server-side encryption, and Azure Storage encryption is enabled by default. Assess retained objects and required key ownership separately. See [AWS defaults](https://docs.aws.amazon.com/AmazonS3/latest/userguide/default-encryption-faq.html), [GCS encryption distinctions](https://docs.cloud.google.com/storage/docs/encryption), and [Azure Storage encryption](https://learn.microsoft.com/en-us/azure/storage/common/storage-service-encryption).
+
+### Elasticsearch S3
+
+**Free Basic; minimum version within this guide: 8.0; syntax pinned to 8.19.** After configuring repository credentials through the documented secure client settings, this requests SSE-S3:
+
+```http
+PUT /_snapshot/private_s3
+{
+  "type": "s3",
+  "settings": {
+    "bucket": "REPLACE_WITH_BUCKET",
+    "server_side_encryption": true
+  }
+}
+```
+
+Elasticsearch 8.19's `server_side_encryption` defaults to `false`; `true` requests server-side AES256 encryption. Neither value enables client-side encryption. `false` does not mean AWS stores plaintext.
+
+For customer-managed KMS encryption through the bucket default, omit this AES256 request, configure the intended bucket encryption/key policy, and verify the resulting object metadata. Do not add SSE-S3 blindly to a repository intended to use bucket-default KMS. See [8.19 S3 repository settings](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-s3.html).
+
+### OpenSearch S3
+
+**Free Apache-2.0; minimum version for this syntax: 3.1.** OpenSearch removed `server_side_encryption` in 3.1. Use `server_side_encryption_type`, which accepts `AES256`, `aws:kms`, or `bucket_default`. The default was `bucket_default` in 3.1 and changed to **`AES256` in 3.8**. See the [3.1 repository settings](https://docs.opensearch.org/3.1/api-reference/snapshots/create-repository/) and [3.8.0-tagged implementation](https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-s3/src/main/java/org/opensearch/repositories/s3/S3Repository.java).
+
+For an explicit customer-managed KMS key:
+
+```http
+PUT /_snapshot/private_s3
+{
+  "type": "s3",
+  "settings": {
+    "bucket": "REPLACE_WITH_BUCKET",
+    "server_side_encryption_type": "aws:kms",
+    "server_side_encryption_kms_key_id": "REPLACE_WITH_KMS_KEY_ARN"
+  }
+}
+```
+
+Grant the repository principal the required object-store and KMS permissions. The ARN identifies a key; do not supply key material. This remains server-side encryption. To follow the bucket's encryption policy instead, explicitly select `bucket_default`, especially when upgrading to 3.8. Do not copy these OpenSearch settings into Elasticsearch. See [AWS SSE-KMS permissions](https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingKMSEncryption.html).
+
+### GCS, Azure, and repository integrity
+
+**Elasticsearch: free Basic; minimum version within this guide: 8.0; declarations pinned to 8.19.** With the appropriate secure client credentials configured:
+
+```http
+PUT /_snapshot/private_gcs
+{
+  "type": "gcs",
+  "settings": {
+    "bucket": "REPLACE_WITH_BUCKET"
+  }
+}
+```
+
+```http
+PUT /_snapshot/private_azure
+{
+  "type": "azure",
+  "settings": {
+    "container": "REPLACE_WITH_CONTAINER"
+  }
+}
+```
+
+The complete Elasticsearch 8.19 setting lists document no client-side-encryption switch for these repositories. Configure required customer-managed encryption through the provider's bucket/account policy and grant the required key access. GCS customer-supplied encryption keys are also a server-side mechanism. Azure account keys and SAS tokens authenticate requests; they do not establish client-side encryption. See [8.19 GCS settings](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-gcs.html), [8.19 Azure settings](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-azure.html), and [GCS encryption distinctions](https://docs.cloud.google.com/storage/docs/encryption).
+
+**OpenSearch: free Apache-2.0; the cited repository workflow is version 3.6.** Follow OpenSearch's own plugin and credential instructions, including its Azure workflow. A tag-pinned review of OpenSearch's GCS/Azure client-side-encryption implementations remains outstanding. Their capability and minimum version are **not established here**; do not infer absence from Elasticsearch's settings or from failed source retrieval. See [OpenSearch 3.6 snapshot/repository guidance](https://docs.opensearch.org/3.6/tuning-your-cluster/availability-and-recovery/snapshots/snapshot-restore/).
+
+Keep repository access private and keys recoverable for the required retention period. Do not rewrite files inside an active repository as an improvised encryption layer. Elasticsearch configuration-file backups are separate from snapshots and should be assessed for encryption; snapshots containing security feature state are sensitive too. See [8.19 backup guidance](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-take-snapshot.html) and [repository-integrity requirements](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshot-restore.html).
+
+## Kibana and OpenSearch Dashboards
+
+The UI is a separate service, normally on port **5601**. Securing cluster ports 9200/9300 does not configure browser-to-UI TLS.
+
+### Kibana
+
+**Free Basic; minimum version within this guide: Kibana 8.0; settings pinned to 8.19.** No Platinum/Enterprise subscription is required for browser-listener TLS. The cited versions establish support, not the first historical introduction of each setting.
+
+Kibana defaults to HTTP on `localhost:5601`, with `server.ssl.enabled: false`. Its Docker image changes the host default to `0.0.0.0`. Check installation overrides, environment, and process arguments. See [8.19 Kibana settings](https://www.elastic.co/guide/en/kibana/8.19/settings.html) and [Docker defaults](https://www.elastic.co/guide/en/kibana/8.19/docker.html).
+
+Merge into `kibana.yml`, preserving the existing server identity and authentication configuration:
+
+```yaml
+server.host: "127.0.0.1"
+server.port: 5601
+server.ssl.enabled: true
+server.ssl.certificate: /etc/search-ui/tls/server.crt
+server.ssl.key: /etc/search-ui/tls/server.key
+
+elasticsearch.hosts: ["https://search.example.com:9200"]
+elasticsearch.ssl.certificateAuthorities: ["/path/http_ca.crt"]
+elasticsearch.ssl.verificationMode: full
+```
+
+The `server.ssl.*` settings protect incoming browser or proxy connections. The `elasticsearch.ssl.*` settings protect the separate Kibana-to-Elasticsearch connection. Keep full certificate and hostname verification on that connection. See [8.19 inbound and outbound TLS settings](https://www.elastic.co/guide/en/kibana/8.19/settings.html).
+
+### OpenSearch Dashboards
+
+**Free Apache-2.0; the TLS recipe is documented from at least OpenSearch Dashboards 2.19 and applies across this guide's 3.x scope; defaults are checked against 3.8.0.**
+
+The 3.8.0 sample configuration identifies localhost, port 5601, and disabled server TLS. Check installation and container overrides separately. See the [3.8.0-tagged configuration](https://raw.githubusercontent.com/opensearch-project/OpenSearch-Dashboards/3.8.0/config/opensearch_dashboards.yml).
+
+Merge into `opensearch_dashboards.yml`, preserving the existing server identity and authentication configuration:
+
+```yaml
+server.host: "127.0.0.1"
+server.port: 5601
+server.ssl.enabled: true
+server.ssl.certificate: /etc/search-ui/tls/server.crt
+server.ssl.key: /etc/search-ui/tls/server.key
+opensearch_security.cookie.secure: true
+
+opensearch.hosts: ["https://search.example.com:9200"]
+opensearch.ssl.certificateAuthorities: ["/path/production-ca.pem"]
+opensearch.ssl.verificationMode: full
+```
+
+`server.ssl.*` protects the UI listener; `opensearch_security.cookie.secure` restricts the security cookie to HTTPS. `opensearch.ssl.*` controls the separate connection to OpenSearch. Retain full certificate and hostname verification. See [Dashboards 3.6 TLS settings](https://docs.opensearch.org/3.6/install-and-configure/install-dashboards/tls/).
+
+For either UI, loopback binding suits a proxy in the same network namespace. For direct private-network access, select the intended private interface and restrict network access. A proxy in another container does not share the UI container's loopback. Use certificates matching the hostname used by clients or the proxy, protect private-key files, and restart the UI after applying settings.
 
 ## Verify
 
@@ -10846,11 +11724,221 @@ ss -tlnp 'sport = :9300'
 
 These use `ss`'s own port filter, avoiding accidental PID matches. For Elasticsearch, HTTP defaults to the range `9200-9300` and transport to `9300-9400`; each binds an available port. Inspect the actual ports used by either product. Expect loopback or deliberate private listeners. An unexpected public or wildcard listener is a finding to review against the network controls; no output is inconclusive until the running process and its actual ports are located.
 
+### Residual-control checks
+
+These additional deployment checks are **REASONED, not demonstrated**. No target Elasticsearch/OpenSearch cluster, eligible Elasticsearch FLS/DLS licence, target storage, provider repository access, or running UI with deployed certificates is available in the authoring environment. Demonstration remains part of `ES-OS-VERIFY-1`.
+
+Use isolated test deployments for exposed-state fixtures. Substitute values inside single quotes and paste whole shell blocks. Values containing a literal apostrophe need proper shell quoting. Keep credentials in the protected header files described above, with tracing disabled. The following blocks assume the shell's normal builtins.
+
+For the REST request tables below, save each JSON body in a protected file. Run this block once per request, setting the method, path, and body-file arguments. Use `/dev/null` for a request with no body. Select the administrator or application header file as directed:
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_SEARCH_HOST' 'REPLACE_WITH_CA_FILE' '9200' 'REPLACE_WITH_HEADER_FILE' 'GET' '/REPLACE_WITH_REQUEST_PATH' '/dev/null'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 7 ] || { echo "set host, CA, port, header file, method, path, and body file; not probing"; exit 1; }
+  case "$1|$2|$3|$4|$5|$6|$7" in
+    *REPLACE_WITH_*|*example.com*) echo "substitute your deployment; not probing"; exit 1 ;;
+  esac
+  case "$1" in ""|*[!A-Za-z0-9.-]*) echo "use a DNS hostname or IPv4 address; not probing"; exit 1 ;; esac
+  case "$3" in ""|*[!0-9]*) echo "numeric port required; not probing"; exit 1 ;; esac
+  [ "$3" -ge 1 ] && [ "$3" -le 65535 ] || exit 1
+  [ -r "$2" ] && [ -r "$4" ] && [ -r "$7" ] || { echo "readable CA, header, and body files required"; exit 1; }
+  case "$5" in GET|POST|PUT) ;; *) echo "unsupported method; not probing"; exit 1 ;; esac
+  case "$6" in /*) ;; *) echo "request path must start with /; not probing"; exit 1 ;; esac
+  # REASONED: no target cluster, eligible ES licence, or repository access.
+  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 120 \
+    --cacert "$2" --header "@$4" --header 'Content-Type: application/json' \
+    --request "$5" --data-binary "@$7" \
+    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+    "https://$1:$3$6"
+)
+```
+
+Judge the HTTP status and response contents, not the shell's final status alone. A transport failure or `401` is not evidence of correct field/document restrictions.
+
+### Verify field and document restrictions
+
+**REASONED, not demonstrated:** requires both live products and an eligible Elasticsearch FLS/DLS licence.
+
+In an isolated cluster where `app-data` does not already exist, use the administrator header and REST block to create this harmless fixture:
+
+| Method | Path | JSON body |
+| --- | --- | --- |
+| `PUT` | `/app-data` | `{"mappings":{"properties":{"tenant_id":{"type":"keyword"},"title":{"type":"keyword"},"category":{"type":"keyword"},"secret":{"type":"keyword"}}}}` |
+| `PUT` | `/app-data/_doc/fls-a?refresh=true` | `{"tenant_id":"tenant-a","title":"A","category":"public-a","secret":"fixture-secret-a"}` |
+| `PUT` | `/app-data/_doc/fls-b?refresh=true` | `{"tenant_id":"tenant-b","title":"B","category":"public-b","secret":"fixture-secret-b"}` |
+
+Require successful creation responses. These markers are deliberately harmless, not real secrets. See the [Elasticsearch 8.19 create-index API](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/indices-create-index.html), [index-document API](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/docs-index_.html), [OpenSearch 3.6 create-index API](https://docs.opensearch.org/3.6/api-reference/index-apis/create-index/), and [index-document API](https://docs.opensearch.org/3.6/api-reference/document-apis/index-document/).
+
+Run the following requests first as an identity with the existing unrestricted `app_reader` role, then as the restricted application identity:
+
+| Method | Path | JSON body |
+| --- | --- | --- |
+| `POST` | `/app-data/_search` | `{"query":{"match_all":{}},"fields":["tenant_id","title","category","secret"]}` |
+| `GET` | `/app-data/_doc/fls-a` | No body |
+| `GET` | `/app-data/_doc/fls-b` | No body |
+| `POST` | `/app-data/_search` | `{"size":0,"aggs":{"values":{"terms":{"field":"secret"}}}}` |
+| `POST` | `/app-data/_search` | `{"size":0,"aggs":{"values":{"terms":{"field":"category"}}}}` |
+
+The unrestricted control must retrieve both documents and both secret markers, including the secret aggregation buckets. With the restricted identity:
+
+- Search returns only `fls-a`; neither `_source` nor requested `fields` contains a secret marker.
+- Direct retrieval returns `fls-a` without `secret`, while `fls-b` is not retrievable.
+- The secret aggregation discloses neither secret value. Record the exact response; a failed query alone does not demonstrate working FLS.
+- The allowed `category` aggregation succeeds and returns `public-a`, excluding `public-b`.
+- The administrator still retrieves `fls-b` and its original marker, ruling out a missing fixture.
+
+A `401`, unavailable index, or broken allowed-field query leaves the result unresolved. Repeat with the actual application credential, including any API key intended for production, and retain its effective permission configuration.
+
+These checks exercise ordinary retrieval and aggregations; they do not prove absence of statistical inference channels. The distinctions follow [Elasticsearch 8.19 FLS](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/field-level-security.html), [DLS](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/document-level-security.html), [search syntax](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/search-search.html), [OpenSearch 3.6 FLS](https://docs.opensearch.org/3.6/security/access-control/field-level-security/), [DLS](https://docs.opensearch.org/3.6/security/access-control/document-level-security/), and [search syntax](https://docs.opensearch.org/3.6/api-reference/search-apis/search/).
+
+### Verify storage encryption
+
+**REASONED, not demonstrated:** these inspections do not require a running cluster, but target-node and target-storage access are unavailable here.
+
+Run on the node, with sufficient permission to inspect the intended dm-crypt mapping:
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DATA_PATH' 'REPLACE_WITH_CRYPT_MAPPING'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 2 ] || { echo "set data path and mapping name; not probing"; exit 1; }
+  case "$1|$2" in *REPLACE_WITH_*) echo "substitute your storage; not probing"; exit 1 ;; esac
+  case "$1" in /*) ;; *) echo "absolute data path required"; exit 1 ;; esac
+  case "$2" in ""|-*|*/*) echo "mapping name required"; exit 1 ;; esac
+  [ -d "$1" ] || { echo "data directory missing; unresolved"; exit 1; }
+  # REASONED: no access to the target node or encrypted storage.
+  findmnt -T "$1" || exit 1
+  lsblk -o NAME,TYPE,FSTYPE,MOUNTPOINTS || exit 1
+  cryptsetup status "$2"
+)
+```
+
+Compare the exposed unencrypted volume with the fixed volume. Require the actual data path's mount/device chain to traverse the intended encrypted mapping. An unrelated active mapping is insufficient. For provider-managed volume encryption, inspect the actual attached volume's encryption and key metadata instead; the guest may not expose a dm-crypt device. Successful reads through an unlocked filesystem neither prove nor disprove encryption at rest. See [findmnt](https://man7.org/linux/man-pages/man8/findmnt.8.html), [lsblk](https://man7.org/linux/man-pages/man8/lsblk.8.html), and [cryptsetup status](https://man7.org/linux/man-pages/man8/cryptsetup-status.8.html).
+
+**REASONED, not demonstrated:** in an isolated systemd fixture, stop the service and make the required test mount unavailable, including preventing automatic remount. Run the following with the test service unit. Do not perform this fault injection on production storage.
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_SERVICE_UNIT'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 1 ] || { echo "set exactly one service unit; not probing"; exit 1; }
+  case "$1" in ""|-*|*REPLACE_WITH_*|*/*) echo "substitute the test service unit"; exit 1 ;; esac
+  # REASONED: isolated target service and unavailable-mount fixture absent.
+  systemctl start "$1"
+  systemctl --no-pager status "$1"
+)
+```
+
+Without startup enforcement, an otherwise valid fixture may start on the ordinary underlying directory. With the mount dependency/assertion, require the start job to fail specifically because the mount is unavailable, with no search process writing into that directory. Restore the intended encrypted mount and require successful startup as the positive control. Permission errors or unrelated startup failures are inconclusive. See [systemd assertions](https://man7.org/linux/man-pages/man5/systemd.unit.5.html) and [systemctl](https://man7.org/linux/man-pages/man1/systemctl.1.html).
+
+### Verify snapshot encryption and key isolation
+
+**REASONED, not demonstrated:** requires a live cluster, configured repository, provider access, and controlled test identities.
+
+Using the administrator header and REST block, snapshot only the harmless fixture. Select an unused snapshot name and an unused restore index; the names below are for the isolated fixture.
+
+| Method | Path | JSON body |
+| --- | --- | --- |
+| `PUT` | `/_snapshot/private_s3/encryption-probe?wait_for_completion=true` | `{"indices":"app-data","include_global_state":false}` |
+| `GET` | `/_snapshot/private_s3/encryption-probe` | No body |
+| `POST` | `/_snapshot/private_s3/encryption-probe/_restore?wait_for_completion=true` | `{"indices":"app-data","include_global_state":false,"include_aliases":false,"rename_pattern":"app-data","rename_replacement":"restored-app-data"}` |
+| `GET` | `/restored-app-data/_doc/fls-a` | No body |
+| `GET` | `/restored-app-data/_doc/fls-b` | No body |
+
+Require snapshot success, completed restore, and both original fixture documents. A client timeout does not establish failure or success; inspect operation state before retrying. The explicit index selection and `include_global_state: false` avoid restoring security state in this fixture. See [Elasticsearch 8.19 snapshot creation](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-take-snapshot.html), [restore](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-restore-snapshot.html), and [OpenSearch 3.6 snapshot/restore](https://docs.opensearch.org/3.6/tuning-your-cluster/availability-and-recovery/snapshots/snapshot-restore/).
+
+For AWS S3, identify actual newly written repository objects through the provider inventory or console. With AWS CLI v2 and preconfigured profiles, inspect a known object and attempt a download:
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_AWS_PROFILE' 'REPLACE_WITH_BUCKET' 'REPLACE_WITH_OBJECT_KEY'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 3 ] || { echo "set profile, bucket, and object key; not probing"; exit 1; }
+  case "$1|$2|$3" in *REPLACE_WITH_*) echo "substitute the test object and identity"; exit 1 ;; esac
+  [ -n "$1" ] && [ -n "$2" ] && [ -n "$3" ] || exit 1
+  # REASONED: no repository, provider credentials, or KMS test identities.
+  aws --profile "$1" --no-cli-pager s3api head-object --bucket "$2" --key "$3"
+  aws --profile "$1" --no-cli-pager s3api get-object --bucket "$2" --key "$3" /dev/null
+)
+```
+
+The profile name and object key are identifiers, not credentials or encryption-key material. Load authentication through the protected AWS credential mechanism. See [HeadObject](https://docs.aws.amazon.com/cli/latest/reference/s3api/head-object.html) and [GetObject](https://docs.aws.amazon.com/cli/latest/reference/s3api/get-object.html).
+
+Require the following distinctions:
+
+| Check | Exposed or misconfigured outcome | Fixed outcome |
+| --- | --- | --- |
+| Encryption/key policy | Objects use an unintended mode or key, even if provider default encryption is active. | Actual object metadata matches the required mode; for KMS, `SSEKMSKeyId` identifies the intended customer-managed key. |
+| Repository access | A deliberately overprivileged test principal downloads the known object. | After removing that access, the same principal cannot download it, while the authorized principal still can. |
+| KMS isolation | The controlled principal can decrypt the known KMS object. | Removing the necessary KMS permission causes the same operation to fail for that reason, while its S3 read permission remains and a permitted identity succeeds. |
+
+Use provider authorization/audit evidence to distinguish KMS denial from S3 denial, missing objects, expired credentials, or network errors. If caching or another effective grant prevents a clean KMS negative control, leave that check unresolved.
+
+Inspect retained objects as well as newly written ones; changing a default does not prove old objects were rewritten. For GCS/Azure repositories, retain equivalent object-encryption/key metadata and authorized/unauthorized download evidence from those providers. A successful repository `_verify` request establishes neither encryption mode nor key isolation. Server-side-encrypted downloads normally return decrypted contents; this is not a client-side-encryption test. See [AWS encryption behavior](https://docs.aws.amazon.com/AmazonS3/latest/userguide/default-encryption-faq.html) and [SSE-KMS authorization](https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingKMSEncryption.html).
+
+### Verify the separate UI listener
+
+**REASONED, not demonstrated:** requires Kibana or OpenSearch Dashboards, deployed certificates, and authorized/prohibited network test paths.
+
+In an isolated exposed fixture, record an HTTP login page or redirect on the actual UI port. After applying the fixed configuration, run:
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_UI_HOST' 'REPLACE_WITH_UI_CA_FILE' '5601'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 3 ] || { echo "set UI host, CA file, and port; not probing"; exit 1; }
+  case "$1|$2|$3" in *REPLACE_WITH_*|*example.com*) echo "substitute your UI deployment"; exit 1 ;; esac
+  case "$1" in ""|*[!A-Za-z0-9.-]*) echo "use a DNS hostname or IPv4 address"; exit 1 ;; esac
+  case "$3" in ""|*[!0-9]*) echo "numeric UI port required"; exit 1 ;; esac
+  [ "$3" -ge 1 ] && [ "$3" -le 65535 ] || exit 1
+  [ -r "$2" ] || { echo "readable UI CA file required"; exit 1; }
+  # REASONED: no running UI, deployed certificates, or network test paths.
+  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    --cacert "$2" --output /dev/null --dump-header - \
+    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1:$3/"
+  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    --output /dev/null --dump-header - \
+    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:$3/"
+)
+```
+
+On the authorized path, require successful CA-validated HTTPS with the expected UI response. Plaintext on that TLS listener must not serve the UI; a connection close or explicit protocol rejection can demonstrate rejection. A timeout or DNS failure alone cannot.
+
+For loopback deployments, test locally using a certificate hostname that resolves to the UI's loopback listener. Separately test the real deployment address from the prohibited network, not that client's own loopback. Require the prohibited connection to fail while the authorized path still works, and retain network-control evidence.
+
+On the UI host, inspect the actual listener:
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_UI_PORT'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 1 ] || { echo "set exactly one UI port; not probing"; exit 1; }
+  case "$1" in ""|*[!0-9]*) echo "substitute the numeric UI port"; exit 1 ;; esac
+  [ "$1" -ge 1 ] && [ "$1" -le 65535 ] || exit 1
+  # REASONED: no access to the target UI host. Run on that host.
+  ss -tlnp "sport = :$1"
+)
+```
+
+Require the intended loopback/private bind. Inspect container port publication, selected configuration, environment, and process arguments too. Confirm the UI-to-cluster connection still uses HTTPS and full verification; successful browser TLS alone does not establish that. For Dashboards, confirm `opensearch_security.cookie.secure: true` and the Secure attribute on its session cookie. See [Kibana 8.19 settings](https://www.elastic.co/guide/en/kibana/8.19/settings.html), [Kibana Docker overrides](https://www.elastic.co/guide/en/kibana/8.19/docker.html), and [Dashboards 3.6 TLS settings](https://docs.opensearch.org/3.6/install-and-configure/install-dashboards/tls/).
+
 An unauthenticated `GET /` returning cluster JSON is the classic finding; so is `_cat/indices` listing your data to the world.
 
 | Demonstration backlog | Required work | Status |
 | --- | --- | --- |
 | ES-OS-VERIFY-1 | Demonstrate every check against exposed and fixed states in isolated Elasticsearch 8.x and OpenSearch test clusters, including OpenSearch 3.7+ keys and an eligible Elasticsearch audit license. Include the Elasticsearch counterexample: anonymous roles remain configured, authz_exception is false, and the anonymous identity lacks permission for both / and app-data, so both probes return 401 while a document in another permitted index remains anonymously readable with 200. Record that document and its contents, remove anonymous.roles, restart affected nodes, confirm its absence from every node's effective configuration, and require the same document request to return 401 while an administrator still retrieves it with 200. Also demonstrate fresh failed-authentication audit events with a unique harmless JSON marker present when body logging is enabled and absent when disabled; retain configuration-readback and sensitive-header-exclusion checks. Record versions, effective configuration, HTTP responses, listener output, and matching newly collected audit events. | Open: target clusters, container runtime, and audit collection are unavailable in the authoring environment. |
+| ES-OS-VERIFY-1, FLS/DLS extension | Demonstrate the two-tenant fixture on Elasticsearch 8.19 with an eligible Platinum/Enterprise licence and OpenSearch 3.8.0. Record unrestricted and restricted search, direct GET, `_source`, requested-field, secret-aggregation, and allowed-aggregation results. Retain administrator fixture controls, effective roles/settings, and actual application-credential results. Record documented inference limitations separately from ordinary retrieval results. | Open: live clusters and an eligible Elasticsearch FLS/DLS licence are unavailable. |
+| ES-OS-VERIFY-1, storage extension | Record actual data-path mount/device chains before and after encryption. Demonstrate refusal to start when the required encrypted mount is unavailable and successful startup after restoration. Cover logs, swap, and local snapshot storage; use provider volume/key metadata where applicable. | Open: target-node, target-storage, and service-manager fixture access are unavailable. |
+| ES-OS-VERIFY-1, snapshot extension | On both products, take and restore a harmless snapshot. Record new and retained object encryption/key metadata, authorized and unauthorized object downloads, and a KMS-dependent denial with a working positive control. Record the OpenSearch version and explicit S3 encryption settings. Separately complete tag-pinned inspection of OpenSearch GCS/Azure client-side-encryption capability before asserting support or absence. | Open: clusters, repositories, provider/KMS test identities, and the identified implementation evidence are unavailable. |
+| ES-OS-VERIFY-1, UI extension | Demonstrate exposed HTTP and fixed CA-validated HTTPS for Kibana 8.19 and Dashboards 3.8.0. Record plaintext rejection, listener addresses, container overrides/publication, prohibited-network denial with an authorized positive control, backend full verification, and the Dashboards Secure cookie. | Open: UI processes, deployed certificates, target hosts, and network test paths are unavailable. |
 
 ## Sources (checked September 2026)
 
@@ -10898,6 +11986,56 @@ An unauthenticated `GET /` returning cluster JSON is the classic finding; so is 
 - OpenSearch document retrieval API: https://docs.opensearch.org/latest/api-reference/document-apis/get-documents/
 - curl options, header-file input, and request-body file input: https://curl.se/docs/manpage.html
 - ss listener and port-filter syntax: https://manpages.ubuntu.com/manpages/noble/man8/ss.8.html
+- Elastic distribution/source licensing: https://www.elastic.co/pricing/faq/licensing
+- Basic security introduction and FLS/DLS exclusion: https://www.elastic.co/blog/security-for-elasticsearch-is-now-free
+- Dated subscription matrix: https://www.elastic.co/pdf/subscriptions-2025-07-29.pdf
+- Current subscription terms and Platinum availability: https://www.elastic.co/subscriptions
+- Elasticsearch 8.19 role API: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/security-api-put-role.html
+- Elasticsearch 8.19 access control and role composition: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/field-and-document-access-control.html
+- Elasticsearch 8.19 FLS: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/field-level-security.html
+- Elasticsearch 8.19 DLS: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/document-level-security.html
+- Elasticsearch 8.19 security limitations: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/security-limitations.html
+- OpenSearch Security licence, tag 3.8.0.0: https://raw.githubusercontent.com/opensearch-project/security/3.8.0.0/LICENSE.txt
+- OpenSearch 3.6 Security API and role schema: https://docs.opensearch.org/3.6/security/access-control/api/
+- OpenSearch 1.0 DLS archive: https://docs.opensearch.org/1.0/security-plugin/access-control/document-level-security/
+- OpenSearch 3.6 FLS: https://docs.opensearch.org/3.6/security/access-control/field-level-security/
+- OpenSearch 3.6 DLS, modes, and role composition: https://docs.opensearch.org/3.6/security/access-control/document-level-security/
+- Elasticsearch 8.19 dm-crypt-backed storage: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/tune-for-search-speed.html
+- Elasticsearch 8.19 path settings: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/path-settings-overview.html
+- OpenSearch 3.6 configuration settings (path.data): https://docs.opensearch.org/3.6/install-and-configure/configuring-opensearch/configuration-system/
+- OpenSearch 3.0 encryption-at-rest guidance: https://docs.opensearch.org/3.0/troubleshoot/#encryption-at-rest
+- Elasticsearch 8.19 S3 repository: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-s3.html
+- OpenSearch 3.1 repository API and encryption-setting change: https://docs.opensearch.org/3.1/api-reference/snapshots/create-repository/
+- OpenSearch S3 implementation, tag 3.8.0: https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-s3/src/main/java/org/opensearch/repositories/s3/S3Repository.java
+- Elasticsearch 8.19 GCS repository: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-gcs.html
+- Elasticsearch 8.19 Azure repository: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-azure.html
+- OpenSearch 3.6 snapshot/repository workflow: https://docs.opensearch.org/3.6/tuning-your-cluster/availability-and-recovery/snapshots/snapshot-restore/
+- AWS S3 default encryption and retained objects: https://docs.aws.amazon.com/AmazonS3/latest/userguide/default-encryption-faq.html
+- AWS SSE-KMS permissions: https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingKMSEncryption.html
+- GCS encryption distinctions: https://docs.cloud.google.com/storage/docs/encryption
+- Azure Storage encryption: https://learn.microsoft.com/en-us/azure/storage/common/storage-service-encryption
+- Elasticsearch 8.19 snapshot creation and configuration backups: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-take-snapshot.html
+- Elasticsearch 8.19 repository integrity: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshot-restore.html
+- Elasticsearch 8.19 restore: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-restore-snapshot.html
+- Kibana 8.19 settings: https://www.elastic.co/guide/en/kibana/8.19/settings.html
+- Kibana 8.19 Docker defaults and overrides: https://www.elastic.co/guide/en/kibana/8.19/docker.html
+- Dashboards configuration, tag 3.8.0: https://raw.githubusercontent.com/opensearch-project/OpenSearch-Dashboards/3.8.0/config/opensearch_dashboards.yml
+- Dashboards 3.6 TLS and cookie settings: https://docs.opensearch.org/3.6/install-and-configure/install-dashboards/tls/
+- Elasticsearch 8.19 create index: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/indices-create-index.html
+- Elasticsearch 8.19 index document: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/docs-index_.html
+- Elasticsearch 8.19 search: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/search-search.html
+- OpenSearch 3.6 create index: https://docs.opensearch.org/3.6/api-reference/index-apis/create-index/
+- OpenSearch 3.6 index document: https://docs.opensearch.org/3.6/api-reference/document-apis/index-document/
+- OpenSearch 3.6 search: https://docs.opensearch.org/3.6/api-reference/search-apis/search/
+- AWS CLI HeadObject: https://docs.aws.amazon.com/cli/latest/reference/s3api/head-object.html
+- AWS CLI GetObject: https://docs.aws.amazon.com/cli/latest/reference/s3api/get-object.html
+- Mount inspection: https://man7.org/linux/man-pages/man8/findmnt.8.html
+- Block-device inspection: https://man7.org/linux/man-pages/man8/lsblk.8.html
+- Encryption-mapping inspection: https://man7.org/linux/man-pages/man8/cryptsetup-status.8.html
+- systemd mount dependencies and assertions: https://man7.org/linux/man-pages/man5/systemd.unit.5.html
+- systemd start/status commands: https://man7.org/linux/man-pages/man1/systemctl.1.html
+- curl options and file input: https://curl.se/docs/manpage.html
+- Listener inspection: https://manpages.ubuntu.com/manpages/noble/man8/ss.8.html
 
 ======================================================================
 ==> minio.md
@@ -10932,6 +12070,26 @@ Certificates per [free-certificates.md](free-certificates.md) or [self-signed.md
 ## 3. Exposure posture
 
 MinIO's S3 API binds every interface by default: `--address` defaults to `:9000` (all IPv4 and IPv6 addresses), so a default install is reachable from any network the host is on, not loopback-only. Bind it explicitly with `--address 127.0.0.1:9000` (or a private address), and expose public access only via the TLS endpoints above or behind a proxy/tunnel ([nginx.md](nginx.md), [cloudflare.md](cloudflare.md)). The web console is a second listener, configured independently of the S3 API: MinIO serves its embedded console on the address set by `--console-address` (env `MINIO_CONSOLE_ADDRESS`), and left unset it picks a free port at startup and prints the console URL in its log. A console address with no host, whether the default or an explicit `:9001`, binds every interface even when the S3 API is bound to loopback, so the console can be reachable while the API is not. Bind it explicitly with `--console-address 127.0.0.1:9001` (or a private address), keep it off the public internet, and give human logins MFA at the fronting layer ([mfa.md](mfa.md)). Buckets are private unless a policy says otherwise; before exposing anything, inspect every bucket's full anonymous policy with `mc anonymous get-json ALIAS/BUCKET` (it shows the download and upload grants, resource prefixes, and conditions; the GET probes below cannot audit upload permissions or untested objects and prefixes) and remove any unintended anonymous access.
+
+### 3.1. Disable the embedded Console when unnecessary
+
+Once Console-based setup is complete, disable the embedded Console if administration uses `mc` or other API clients. Add this to the protected server environment file on every node and restart AIStor:
+
+```dotenv
+MINIO_BROWSER="off"
+```
+
+`MINIO_BROWSER_REDIRECT` controls automatic browser redirection to the Console; disabling redirection does not disable the Console. Use `MINIO_BROWSER` for that control. Source: [AIStor Console settings](https://docs.min.io/aistor/reference/aistor-server/settings/console/).
+
+### 3.2. Set a workload-sized API concurrency budget
+
+The automatic request budget is based on available host RAM. If it exceeds what the deployment's storage, CPU, or workload can sustain, configure an explicit value in the server environment on every node and restart AIStor:
+
+```dotenv
+MINIO_API_REQUESTS_MAX="64"
+```
+
+This is a cluster-wide budget for concurrent S3 and administrative API requests, divided among the nodes. For example, 64 across four nodes gives a request pool of 16 per node. It is neither requests per second nor a TCP-connection limit. The number is an illustrative workload-sizing choice, not a recommendation: measure representative workloads before selecting it. Source: [AIStor core settings](https://docs.min.io/aistor/reference/aistor-server/settings/core/).
 
 ## 4. Create scoped application access
 
@@ -10977,6 +12135,82 @@ The explicit parent username prevents accidentally creating a child of the admin
 The `--policy` document is an inline restriction on the parent's permissions, not an independent grant. It cannot expand access beyond the parent's user and group policies, and its maximum size is 4096 bytes. Check the size after substitution. Arrange rotation before the example's 24-hour expiry; retire the old key through the Console after the application switches.
 
 Identity policies and anonymous bucket policies are separate controls. Review both: a scoped key does not remove an anonymous grant on another bucket.
+
+### 4.1. Map OIDC identities to scoped policies
+
+Authentication does not establish an appropriate authorization boundary. With role-policy mapping, every authentication request using the provider's `RoleArn` receives the configured policies. Assigning a broad policy therefore spreads that access across the identities using that role. Source: [AIStor OIDC access management](https://docs.min.io/aistor/administration/iam/access/oidc-access/).
+
+For an already configured OIDC provider, choose exactly one mapping method. Remove the other method's explicit settings from both the environment and stored configuration; configuring both `role_policy` and `claim_name` is an error. Apply consistent settings across nodes and restart AIStor. Source: [AIStor OIDC identity management](https://docs.min.io/aistor/administration/iam/identity/oidc-identity/).
+
+Use role-policy mapping only when every identity admitted through that role should receive the section 4 application's access:
+
+```dotenv
+MINIO_IDENTITY_OPENID_ROLE_POLICY="app-bucket"
+```
+
+The `app-bucket` policy must already exist with the intended bucket substitutions. Clients must supply the provider's corresponding `RoleArn` in their STS request. Source: [AIStor OpenID settings](https://docs.min.io/aistor/reference/aistor-server/settings/iam/openid/).
+
+Alternatively, select claim mapping when identities need different policies:
+
+```dotenv
+MINIO_IDENTITY_OPENID_CLAIM_NAME="policy"
+```
+
+Configure the IdP to issue `"policy": "app-bucket"` only for identities entitled to that policy; other identities receive their own existing, narrowly scoped policy names. Treat this claim as an authorization decision controlled by the IdP administrator. A user without an assigned policy has no access. Sources: [AIStor OpenID settings](https://docs.min.io/aistor/reference/aistor-server/settings/iam/openid/), [OIDC identity management](https://docs.min.io/aistor/administration/iam/identity/oidc-identity/), and [OIDC access management](https://docs.min.io/aistor/administration/iam/access/oidc-access/).
+
+Do not describe a short `MINIO_STS_DURATION` as a universal maximum. `AssumeRoleWithWebIdentity` accepts explicit `DurationSeconds` values from 900 through 31536000 seconds (365 days); with a usable JWT expiry, an explicit duration takes precedence over that expiry. `MINIO_STS_DURATION` is a default, not this ceiling. AIStor separately documents the native `sts:DurationSeconds` policy condition for restricting WebIdentity credential duration. Sources: [AssumeRoleWithWebIdentity](https://docs.min.io/aistor/developers/security-token-service/assumerolewithwebidentity/), [STS settings](https://docs.min.io/aistor/reference/aistor-server/settings/iam/sts/), and [access-management condition keys](https://docs.min.io/aistor/administration/iam/access/).
+
+### 4.2. Shorten presigned URLs and cap signature age
+
+A presigned download URL contains access credentials: possession permits its authorized download even when the bucket is private. Generate it with the scoped `app` identity and a short expiry. Save the output in a new file inside an owner-only directory, and share the URL through a protected channel:
+
+```bash
+(
+  umask 077
+  set -C
+  mc share download --expire 5m \
+    app/REPLACE_WITH_APP_BUCKET/REPLACE_WITH_KNOWN_PRIVATE_OBJECT \
+    > /path/to/REPLACE_WITH_NEW_SHARE_OUTPUT.txt
+)
+```
+
+The example requests five minutes instead of `mc share download`'s default seven days. Keep the output out of logs and version control. Source: [AIStor `mc share download`](https://docs.min.io/aistor/reference/cli/mc-share/mc-share-download/).
+
+Add a server-enforced policy restriction as well. AIStor documents support for `s3:signatureAge` and AWS-compatible policy evaluation. The following example uses the referenced S3 semantics: 600000 milliseconds is ten minutes, and `NumericGreaterThan` matches an older signature. Its expected AIStor behaviour remains subject to the REASONED comparison below. Sources: [AIStor access management](https://docs.min.io/aistor/administration/iam/access/) and the supplementary [S3 signature-condition reference](https://docs.aws.amazon.com/AmazonS3/latest/developerguide/bucket-policy-s3-sigv4-conditions.html).
+
+Save this as `/path/to/REPLACE_WITH_SIGNATURE_AGE_POLICY.json`, substituting the section 4 bucket name:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Deny",
+      "Action": ["s3:*"],
+      "Resource": [
+        "arn:aws:s3:::REPLACE_WITH_APP_BUCKET",
+        "arn:aws:s3:::REPLACE_WITH_APP_BUCKET/*"
+      ],
+      "Condition": {
+        "NumericGreaterThan": {
+          "s3:signatureAge": "600000"
+        }
+      }
+    }
+  ]
+}
+```
+
+Choose an unused policy name; creating an existing name overwrites its policy. Attach the restriction to the existing non-root application parent user, retaining its `app-bucket` grant:
+
+```bash
+mc admin policy create mys3 app-signature-age /path/to/REPLACE_WITH_SIGNATURE_AGE_POLICY.json
+mc admin policy attach mys3 app-signature-age --user REPLACE_WITH_APP_USER
+```
+
+Sources: [AIStor `mc admin policy create`](https://docs.min.io/aistor/reference/cli/admin/mc-admin-policy/mc-admin-policy-create/) and [`mc admin policy attach`](https://docs.min.io/aistor/reference/cli/admin/mc-admin-policy/mc-admin-policy-attach/).
+
+A matching explicit deny overrides an allow. This attachment restricts the governed application identity and its inherited access on the named resources; it is not a deployment-wide ban on older presigned URLs. It does not attach the restriction to unrelated identities or OIDC roles, or remove anonymous grants. Review those separately. Source: [AIStor access management](https://docs.min.io/aistor/administration/iam/access/).
 
 ## 5. Encrypt stored data with a key manager
 
@@ -11200,7 +12434,81 @@ mc cat app/REPLACE_WITH_OTHER_BUCKET/REPLACE_WITH_KNOWN_PRIVATE_OBJECT
 
 Query the receiver's persisted records for the matching bucket, object, operation, time, identity, status, and request ID. Confirm records for both the successful operations and the denied read, and confirm they remain available from durable storage, for example after restarting the receiver. With no target configured, these S3 requests can complete without any external audit record. With delivery configured, the matching records must actually be stored at the receiver. An S3 200 proves nothing about logging; a webhook 2xx proves only acknowledgement. Sources: audit logging, webhook delivery, and Kafka delivery.
 
+**OIDC authorization, REASONED:** no live AIStor deployment, configured IdP, or authenticated S3 test client is available here. Use two known private fixtures, one in the application bucket and one outside it, and establish administrative reads of both.
+
+Through an STS-capable SDK client, call `AssumeRoleWithWebIdentity` with `Version=2011-06-15`, a valid `WebIdentityToken`, and the configured `RoleArn` for role-policy mapping; omit `RoleArn` for claim mapping. Load tokens and returned credentials from protected storage, not command-line arguments or logs. Using the returned access key, secret key, and session token, issue `GetObject` for both fixtures.
+
+In a disposable broad-policy comparison, both reads succeed. After applying `app-bucket` mapping and obtaining fresh credentials, the application read must succeed and the other read must be denied by AIStor. For claim mapping, also test an identity without a mapped policy: it must gain no object access. A failed login alone does not demonstrate scoped authorization. Sources: [AIStor OIDC access management](https://docs.min.io/aistor/administration/iam/access/oidc-access/) and [AssumeRoleWithWebIdentity](https://docs.min.io/aistor/developers/security-token-service/assumerolewithwebidentity/).
+
+For the duration caveat, use a valid JWT expiring in approximately 20 minutes, `MINIO_STS_DURATION=15m`, and an explicit `DurationSeconds=3600` in a disposable deployment without an additional duration-restricting policy. Inspect the returned expiration and repeat the permitted read after JWT expiry but before STS expiry. The documented expectation is credentials lasting approximately one hour, despite the shorter default and JWT lifetime. This demonstrates the limitation of the default, not a failure of bucket scoping. Source: [AIStor AssumeRoleWithWebIdentity](https://docs.min.io/aistor/developers/security-token-service/assumerolewithwebidentity/).
+
+**Presigned URLs, REASONED:** no live AIStor deployment or `mc` is available here. Use a known private fixture and signing credentials that remain valid throughout the comparison. Confirm ordinary signed reads before and after each trial.
+
+Paste whole Bash blocks. Substitute inside the single quotes; values containing a literal apostrophe need proper shell quoting. Disable shell history recording and tracing before handling a real URL. The block keeps the URL out of curl's argv, but does not protect it from history, tracing, or the account owner.
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PRESIGNED_URL'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  case "$1" in
+    *REPLACE_WITH_*|*example.com*|*[[:cntrl:]]*|"") echo "substitute the complete URL without control characters; not probing"; exit ;;
+    https://*) ;;
+    *) echo "use the deployment HTTPS URL; not probing"; exit ;;
+  esac
+  set -- "${1//\\/\\\\}"
+  set -- "${1//\"/\\\"}"
+  printf 'url = "%s"\n' "$1" |
+    curl -q -g -s --noproxy '*' --connect-timeout 5 --max-time 20 \
+      -o /dev/null -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+      --config -
+)
+```
+
+Use URLs generated for the direct AIStor endpoint; do not alter their signed hostname or path.
+
+1. Test a five-minute URL immediately and again after six minutes. The first GET must succeed; the later GET must fail while a newly generated URL succeeds. This isolates URL expiry before the ten-minute signature-age threshold. Source: [AIStor `mc share download`](https://docs.min.io/aistor/reference/cli/mc-share/mc-share-download/).
+2. Separately generate a one-hour URL using the same section 4.2 command with `--expire 1h` and a new output filename. Without the deny policy in a disposable comparison, GETs immediately and after eleven minutes should succeed. Repeat with the deny policy attached: the immediate GET should succeed, but a new GET using that URL after eleven minutes should receive an AIStor denial while a fresh URL still succeeds. This distinguishes the signature-age restriction from the URL's own expiry. Sources: [AIStor supported condition keys](https://docs.min.io/aistor/administration/iam/access/) and [S3 signature-condition semantics](https://docs.aws.amazon.com/AmazonS3/latest/developerguide/bucket-policy-s3-sigv4-conditions.html).
+
+Correlate denials with AIStor's own request or audit evidence. A proxy error, expired signing key, missing object, or network failure does not establish either control.
+
+**Console disabled, REASONED:** no live AIStor deployment or `mc` is available here. Run this on each AIStor host with permission to inspect its listeners. Supply the direct Console URL established by section 3, without credentials or query parameters, and a proven application object:
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DIRECT_CONSOLE_HTTPS_URL' 'app/REPLACE_WITH_APP_BUCKET/REPLACE_WITH_KNOWN_PRIVATE_OBJECT'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
+  [ -n "$1" ] && [ -n "$2" ] || { echo "supply both values; not probing"; exit; }
+  case "$1|$2" in
+    *REPLACE_WITH_*|*example.com*|*[[:cntrl:]]*) echo "substitute deployment values without control characters; not probing"; exit ;;
+  esac
+  case "$1" in
+    https://*) ;;
+    *) echo "use the deployment HTTPS Console URL; not probing"; exit ;;
+  esac
+  mc cat "$2" > /dev/null || { echo "signed S3 read failed; stop"; exit 1; }
+  ss -tlnp
+  curl -q -g -s --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -o /dev/null -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
+)
+```
+
+With the Console enabled, establish that its UI is served. After applying `MINIO_BROWSER=off` and restarting, confirm that the running service received that setting, the embedded Console listener is absent, and signed S3 reads still succeed. A failed request to the previous URL alone is insufficient. Disabling only `MINIO_BROWSER_REDIRECT` leaves the direct Console available. Sources: [AIStor Console settings](https://docs.min.io/aistor/reference/aistor-server/settings/console/) and [`mc cat`](https://docs.min.io/aistor/reference/cli/mc-cat/).
+
+**API concurrency, REASONED:** no live multi-node AIStor deployment, authenticated load client, or metrics collector is available here. In a disposable four-node deployment, compare automatic sizing with the illustrative explicit budget of 64. Verify the effective setting on every node after restart.
+
+Have the load client issue signed `GetObject` requests for `REPLACE_WITH_APP_BUCKET/REPLACE_WITH_LARGE_PRIVATE_FIXTURE`, first individually, then with 128 concurrent requests distributed evenly across the four nodes. Use sufficiently long transfers to observe simultaneous processing. Keep credentials in the client's protected credential store.
+
+The automatic comparison must actually admit more than 16 simultaneous requests per node to discriminate this example. With the explicit budget, expect the per-node request pools to constrain admission to 16; client concurrency or throughput alone cannot establish enforcement. Source: [AIStor core settings](https://docs.min.io/aistor/reference/aistor-server/settings/core/).
+
+Record `minio_api_requests_inflight_total` and `minio_api_requests_waiting_total` by server, alongside client outcomes and latency. Account for concurrent administrative traffic. If the client, network, or storage cannot saturate the pools, record the comparison as inconclusive. Do not infer an RPS limit or require an undocumented HTTP rejection code. Source: [AIStor metrics v3 reference](https://docs.min.io/aistor/operations/monitoring/metrics-and-alerts/metrics-v3/).
+
 Backlog row (open): demonstrate the exposure probes and all four service checks against exposed and fixed states on live AIStor with `mc`, a KMS, and an independent durable audit receiver; record versions, commands, outcomes, and receiver evidence. These capabilities were unavailable in the authoring environment.
+
+MINIO-LIVE additions (open): demonstrate OIDC role-policy and claim-policy scoping, including an unmapped identity and explicit STS duration overriding a shorter default and JWT expiry; five-minute presigned-URL expiry and independent signature-age denial before a longer URL expires; embedded Console disablement with successful S3 access and a redirect-only comparison; and cluster-wide API concurrency budgeting divided among nodes under measured load. Add an IdP, authenticated STS/S3 test client, load client, and per-node metrics collection to the existing prerequisites. Record AIStor and client RELEASE tags, redacted requests, effective settings, positive controls, denials, timing, listener evidence, and load measurements. All four additions remain REASONED until those comparisons are demonstrated.
 
 ## Sources (checked September 2026)
 
@@ -11241,6 +12549,17 @@ Backlog row (open): demonstrate the exposure probes and all four service checks 
 - AIStor Kafka audit settings (TLS defaults off and SASL authentication): https://docs.min.io/aistor/reference/aistor-server/settings/metrics-and-logging/kafka-audit-logs/
 - AIStor Kafka audit delivery (environment settings and restart): https://docs.min.io/aistor/operations/monitoring/audit-logging/kafka-audit-logging/
 - AIStor global audit event queue: https://docs.min.io/aistor/reference/aistor-server/settings/metrics-and-logging/audit-event-queue/
+- AIStor Console settings (disablement and browser redirection): https://docs.min.io/aistor/reference/aistor-server/settings/console/
+- AIStor core settings (automatic and explicit cluster-wide concurrency budgets): https://docs.min.io/aistor/reference/aistor-server/settings/core/
+- AIStor OIDC access management (role and claim mapping): https://docs.min.io/aistor/administration/iam/access/oidc-access/
+- AIStor OIDC identity management (mutually exclusive mappings and restart): https://docs.min.io/aistor/administration/iam/identity/oidc-identity/
+- AIStor OpenID settings (role policy and claim name): https://docs.min.io/aistor/reference/aistor-server/settings/iam/openid/
+- AIStor AssumeRoleWithWebIdentity (duration bounds and JWT-expiry precedence): https://docs.min.io/aistor/developers/security-token-service/assumerolewithwebidentity/
+- AIStor STS settings (default duration): https://docs.min.io/aistor/reference/aistor-server/settings/iam/sts/
+- AIStor `mc share download` (presigned credentials and expiry): https://docs.min.io/aistor/reference/cli/mc-share/mc-share-download/
+- AWS S3 signature-condition reference (supplementary semantics for AIStor's documented condition key): https://docs.aws.amazon.com/AmazonS3/latest/developerguide/bucket-policy-s3-sigv4-conditions.html
+- AIStor metrics v3 (active and queued requests): https://docs.min.io/aistor/operations/monitoring/metrics-and-alerts/metrics-v3/
+- AIStor release artifacts (server and client RELEASE baselines): https://docs.min.io/aistor/operations/release-artifacts/
 
 ======================================================================
 ==> rabbitmq.md
@@ -11413,7 +12732,7 @@ Restart the node through your deployment's service manager after applying listen
 
 ## 5. Verify
 
-Service behaviour has not been demonstrated in the authoring environment. The seven service checks below are REASONED: RabbitMQ/Erlang binaries, `rabbitmqadmin`, Pika, Docker, and Podman are absent, and no broker or external peer test environment was supplied. Outstanding demonstrations are tracked in `RABBITMQ-LIVE-1` below.
+Service behaviour has not been demonstrated in the authoring environment. The nine service checks below are REASONED: RabbitMQ/Erlang binaries, `rabbitmqadmin`, Pika, Docker, and Podman are absent, and no broker or external peer test environment was supplied. Outstanding demonstrations are tracked in `RABBITMQ-LIVE-1` below.
 
 Use Bash and paste whole guarded blocks. Substitute inside the single quotes on each `set --` line, retaining the quotes; do not insert literal apostrophes. The guards assume real shell builtins. A fragment pasted below its guard is unguarded, and inherited arguments identical to the marker and expected values cannot be distinguished from a complete paste. Use curl 7.75.0 or newer for the diagnostic write-out fields. `--user` below contains only a username and prompts for the password; do not append a password.
 
@@ -11750,6 +13069,23 @@ Compare users and grants with the approved list, including absence of `guest`. F
 
 Run section 1's reduced export and compare it with a private untransformed export from the same test broker containing known test users, vhost grants, topic permissions, and runtime parameters. The selected sections must be removed or empty in the reduced JSON. The local JSON check is deliberately conservative: any retained topic permissions or global parameters also require review. Review all remaining fields for secrets; empty selected sections do not establish that the whole document is safe to share. See [definitions import and export](https://www.rabbitmq.com/docs/definitions) and [exported definition contents](https://www.rabbitmq.com/docs/http-api-reference#get-apidefinitions).
 
+**8. Inter-node and CLI distribution TLS - REASONED: no Erlang runtime, RabbitMQ broker, or multi-node cluster is available.** On an authorized test cluster with the section 6 configuration, from an authorized CLI host holding the matching cookie and substituting the deployed long node name for `rabbit@node1.internal`:
+
+```bash
+sudo rabbitmq-diagnostics --longnames -n rabbit@node1.internal ping
+sudo rabbitmqctl --longnames -n rabbit@node1.internal cluster_status
+```
+
+With plaintext distribution a plaintext CLI authenticates; with TLS required, a plaintext CLI connection fails on the transport, while a CLI given the matching `RABBITMQ_CTL_ERL_ARGS` succeeds, and a CLI presenting a missing or untrusted client certificate is rejected. Two configured nodes must form a cluster over the selected TLS transport, and a plaintext node must not join. Correlate a failure with the TLS logs; a wrong cookie, bad DNS, or a stopped node is inconclusive, and `ping` and `cluster_status` alone do not prove every peer link is encrypted. See the [inter-node TLS guide](https://www.rabbitmq.com/docs/clustering-ssl).
+
+**9. Topic-exchange routing-key authorization - REASONED: no RabbitMQ broker or AMQP client is available.** On an authorized broker with an administrator-provisioned `app.shared.topic` exchange, hold the section 1 resource permissions constant and vary only whether the section 7 topic permission exists:
+
+```bash
+sudo rabbitmqctl list_topic_permissions -p 'app-prod'
+```
+
+As the `app` user with publisher confirms, publish to `tenant1.created` and to `tenant2.created`, and bind a queue with each routing key, then repeat with `#` and `tenant1.#`. With no topic permission every publish and binding succeeds; with the section 7 permission `tenant1.created` succeeds while `tenant2.created`, `#`, and `tenant1.#` are refused with a broker-attributed `ACCESS_REFUSED`. Require that broker refusal rather than a client-side timeout; the listing shows the stored policy, not enforcement. Also test the exchange-to-exchange bypass across both grants. Under the baseline grant, where the `app` user can declare exchanges, it declares its own exchange, binds it to `app.shared.topic` with `tenant2.created`, and publishes through it; the message reaches the shared exchange, confirming that topic authorization alone is insufficient. Under the hardened grant, the exchange declaration is refused because the application has no configure permission, and an `exchange.bind` into `app.shared.topic` is refused with `ACCESS_REFUSED` because the application holds read permission on no exchange, so no relay route can be created. See the [topic authorization reference](https://www.rabbitmq.com/docs/access-control#topic-authorisation).
+
 Local authoring checks, completed without a broker:
 
 | Check | Observed result |
@@ -11764,13 +13100,70 @@ No broker, container, or whole-corpus gate suite was run. Local syntax checks do
 
 | ID | Outstanding demonstration | Status |
 |---|---|---|
-| RABBITMQ-LIVE-1 | Demonstrate checks 1-7 against isolated exposed and fixed states: scoped grants and vhost refusal; monitoring versus administration and message operations; listener/epmd bindings, cookie permissions, external denial and allowed-peer controls including 15671 and removed 5672; management authenticated/anonymous responses; mutual TLS and AMQP user authentication; approved blank-node imports and reduced exports. Include native RabbitMQ configuration parsing/startup and retain commands, versions, outputs, and matching broker logs. | OPEN: missing RabbitMQ/Erlang, rabbitmqadmin, Pika, container runtime, test certificates, and peer infrastructure in the authoring environment. |
+| RABBITMQ-LIVE-1 | Demonstrate checks 1-9 against isolated exposed and fixed states: scoped grants and vhost refusal; monitoring versus administration and message operations; listener/epmd bindings, cookie permissions, external denial and allowed-peer controls including 15671 and removed 5672; management authenticated/anonymous responses; mutual TLS and AMQP user authentication; approved blank-node imports and reduced exports; plaintext versus TLS-required inter-node and CLI distribution, with rejection of a missing or untrusted client certificate; and topic-exchange routing-key authorization, with a broker ACCESS_REFUSED for an out-of-pattern publish or binding. Include native RabbitMQ configuration parsing/startup and retain commands, versions, outputs, and matching broker logs. | OPEN: missing RabbitMQ/Erlang, rabbitmqadmin, Pika, container runtime, test certificates, and peer infrastructure in the authoring environment. |
+
+## 6. Encrypt inter-node and CLI distribution traffic with TLS
+
+Section 4 binds the Erlang distribution port privately but leaves that traffic in plaintext. Distribution carries clustering messages and the full authority of `rabbitmqctl` and `rabbitmq-diagnostics`, so encrypt it with mutually authenticated TLS across every node and CLI host. This is an Erlang runtime mechanism, not a `rabbitmq.conf` setting: it is selected through `rabbitmq-env.conf` and a separate Erlang-term options file, and requires at least Erlang/OTP 27 for RabbitMQ 4.3 (this example targets OTP 27). See the [inter-node TLS guide](https://www.rabbitmq.com/docs/clustering-ssl) and the [OTP distribution-over-TLS reference](https://www.erlang.org/docs/27/apps/ssl/ssl_distribution.html).
+
+In `/etc/rabbitmq/rabbitmq-env.conf`, select the TLS distribution module for both the server and the CLI tools, pointing each at the options file:
+
+```bash
+# shellcheck disable=SC2034  # rabbitmq-env.conf is sourced by RabbitMQ; these variables are read externally
+ERL_SSL_PATH="REPLACE_WITH_INSTALLED_SSL_EBIN_DIRECTORY"
+SERVER_ADDITIONAL_ERL_ARGS="-pa $ERL_SSL_PATH -proto_dist inet_tls -ssl_dist_optfile /etc/rabbitmq/inter_node_tls.config"
+RABBITMQ_CTL_ERL_ARGS="-pa $ERL_SSL_PATH -proto_dist inet_tls -ssl_dist_optfile /etc/rabbitmq/inter_node_tls.config"
+```
+
+Determine the installed Erlang `ssl` application `ebin` directory on the host rather than copying a version-specific example. `SERVER_ADDITIONAL_ERL_ARGS` configures the broker's distribution; `RABBITMQ_CTL_ERL_ARGS` gives `rabbitmqctl` and `rabbitmq-diagnostics` the matching configuration so CLI connections are not refused. In a systemd or container launch environment the server variable's prefixed form is `RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS`. See the [pinned launch-variable handling](https://raw.githubusercontent.com/rabbitmq/rabbitmq-server/v4.3.6/deps/rabbit/scripts/rabbitmq-env).
+
+In `/etc/rabbitmq/inter_node_tls.config`, require and verify peer certificates in both directions, because a node both accepts and initiates distribution connections:
+
+```erlang
+[
+  {server, [
+    {cacertfile, "/etc/rabbitmq/distribution/ca.pem"},
+    {certfile, "/etc/rabbitmq/distribution/server.pem"},
+    {keyfile, "/etc/rabbitmq/distribution/server.key"},
+    {verify, verify_peer},
+    {fail_if_no_peer_cert, true}
+  ]},
+  {client, [
+    {cacertfile, "/etc/rabbitmq/distribution/ca.pem"},
+    {certfile, "/etc/rabbitmq/distribution/client.pem"},
+    {keyfile, "/etc/rabbitmq/distribution/client.key"},
+    {verify, verify_peer}
+  ]}
+].
+```
+
+Provision credentials readable by the effective process identity on every node and CLI host. Peer verification checks the certificate against the hostname portion of the target Erlang node name (the part after the `@`), so issue each distribution certificate with a subject or SAN DNS identity matching that hostname rather than assuming the AMQP hostname certificate satisfies it. This outbound hostname verification is distinct from the inbound client-certificate trust that `verify_peer` and `fail_if_no_peer_cert` enforce; never disable either to resolve a mismatch. Plan a coordinated switch: distribution endpoints with mismatched transports cannot communicate, so a plaintext node and a TLS node will not form a cluster during a rolling change. TLS does not remove the Erlang cookie, epmd, or firewall requirements from section 4. See the [OTP distribution semantics](https://www.erlang.org/docs/27/apps/ssl/ssl_distribution.html) and the [OTP 27 distribution TLS implementation](https://raw.githubusercontent.com/erlang/otp/OTP-27.0/lib/ssl/src/inet_tls_dist.erl).
+
+## 7. Restrict routing keys on shared topic exchanges
+
+Section 1 bounds which exchanges and queues a user may configure, write, and read, but on a shared topic exchange those permissions do not restrict which routing keys a user may publish or bind. Topic authorization adds that layer. It is off until configured: with no topic permission set, RabbitMQ authorizes every topic operation, subject only to the section 1 resource permissions. Topic authorization has been available since [RabbitMQ 3.7](https://github.com/rabbitmq/rabbitmq-server/releases/tag/v3.7.0). See the [topic authorization documentation](https://www.rabbitmq.com/docs/access-control#topic-authorisation).
+
+Topic permissions are broker records managed with `rabbitmqctl`, not entries in `rabbitmq.conf` or `advanced.config`. For an administrator-provisioned topic exchange `app.shared.topic` where the `app` user should publish and bind only its own tenant's routing keys, grant the scoped topic permission. The argument order is the user, then the exchange, then the write and read patterns:
+
+```bash
+sudo rabbitmqctl set_topic_permissions -p 'app-prod' 'app' \
+  'app.shared.topic' \
+  '^tenant1[.][a-z0-9_-]+$' \
+  '^tenant1[.][a-z0-9_-]+$'
+```
+
+The write pattern gates publishing and the read pattern gates the routing keys a binding may use; both are regular expressions, not AMQP topic wildcards, so this example admits exact `tenant1.<name>` keys and excludes `#` and `*` subscriptions. Consumers still read from their queues under ordinary queue permissions, so topic authorization does not filter messages already sitting in an accessible queue, nor does it remove existing broad bindings: audit current bindings and queue grants, and reconnect clients after changing them. Topic authorization checks routing keys only on a direct publish to the topic exchange; if the section 1 resource grant lets the application declare its own exchanges, it can bind one to the shared exchange and route a disallowed key through it without the topic write check, because a resource-name grant does not distinguish an exchange from a queue, so for strong tenant isolation the administrator must own every route into the shared exchange: deny the application configure permission so it cannot declare a relay exchange, and scope its read grant so it matches no exchange at all (for example a queue-only naming scheme such as `^app[.]q[.]`), because binding any readable exchange into the shared exchange needs only the write grant the application already holds for publishing; the administrator provisions its queues, exchanges, and bindings. Clearing a topic permission returns that exchange to the unrestricted default; it is not a deny rule. Other authorization backends enforce their own topic rules. See the [topic authorization reference](https://www.rabbitmq.com/docs/access-control#topic-authorisation) and the [rabbitmqctl command reference](https://www.rabbitmq.com/docs/man/rabbitmqctl.8).
 
 ## Sources (checked September 2026)
 
 - RabbitMQ access control, guest restrictions, interactive user creation, and resource permissions: https://www.rabbitmq.com/docs/access-control
 - RabbitMQ virtual hosts and logical isolation: https://www.rabbitmq.com/docs/vhosts
 - RabbitMQ CLI user, vhost, permission, and tag commands: https://www.rabbitmq.com/docs/man/rabbitmqctl.8
+- RabbitMQ inter-node TLS (distribution over TLS): https://www.rabbitmq.com/docs/clustering-ssl
+- Erlang/OTP 27 distribution over TLS: https://www.erlang.org/docs/27/apps/ssl/ssl_distribution.html
+- OTP 27 distribution TLS implementation (hostname verification): https://raw.githubusercontent.com/erlang/otp/OTP-27.0/lib/ssl/src/inet_tls_dist.erl
+- RabbitMQ v4.3.6 launch-variable handling (rabbitmq-env): https://raw.githubusercontent.com/rabbitmq/rabbitmq-server/v4.3.6/deps/rabbit/scripts/rabbitmq-env
+- RabbitMQ 3.7.0 release notes (topic authorization introduction): https://github.com/rabbitmq/rabbitmq-server/releases/tag/v3.7.0
 - RabbitMQ management listeners, HTTPS, and roles: https://www.rabbitmq.com/docs/management
 - RabbitMQ configuration files and restart requirements: https://www.rabbitmq.com/docs/configure
 - RabbitMQ plugin activation: https://www.rabbitmq.com/docs/plugins
@@ -17752,11 +19145,29 @@ Run this in the deployment's network namespace and identify the actual server li
 
 The standalone port normally starts at 8888 but can change through configuration or port retries. Do not assume it from an example. [Server port implementation](https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/serverapp.py), [default port constant](https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/__init__.py).
 
+### Verify the reverse-proxy path prefix
+
+**REASONED:** no Jupyter Server, JupyterHub, or configurable-http-proxy is running in the authoring environment.
+
+In an isolated fixture, compare the consistent-prefix configuration from section 8 against a deployment where only part of the stack carries the prefix. Request the prefixed application routes (for a standalone Server, `GET /jupyter/api/kernels`; for JupyterHub, `GET /jupyter/hub/login` and a spawned user's actual prefixed URL) and, separately, probe any unprefixed alias (`GET /api/kernels`, `GET /hub/login`). The fixed configuration keeps every application route behind the intended authentication and routing boundary and leaves no unprefixed alias serving the application, while a bare `404` proves neither authentication nor a working deployment, so confirm authenticated access and a working kernel WebSocket on the prefixed path as the positive control. See the [JupyterHub proxy configuration](https://jupyterhub.readthedocs.io/en/5.5.2/howto/configuration/config-proxy.html).
+
+### Verify forwarded-header trust
+
+**REASONED:** no Jupyter Server or JupyterHub behind a real ingress is available in the authoring environment.
+
+Send separate and conflicting spoofed `X-Forwarded-For`/`X-Real-IP` and `X-Scheme`/`X-Forwarded-Proto` headers through the real ingress, and separately attempt to reach the backend directly from an untrusted network. Compare the request-derived client address in the logs, the redirect targets, and the cookie `Secure` attribute. In the exposed fixture (header trust enabled while the backend is reachable or the proxy passes headers through unchanged) the attacker-controlled address or scheme takes effect; in the fixed fixture (section 9: a private bind plus a sanitizing ingress) it does not, while a legitimate login and WebSocket still succeed. Include a spoofed `Forwarded: proto=http` header and compare the detected browser-facing scheme (the redirect target and any scheme-derived decision) between the sanitizing and the pass-through ingress. Because section 6 sets `cookie_host_prefix_enabled`, the single-user OAuth cookie stays `Secure` regardless, so a stripped-`Secure` cookie is demonstrable only in an isolated fixture with host-prefixed cookies disabled; with this guide's configuration, verify instead that the ingress removes or overwrites `Forwarded`. The host is a separate case: the forwarded-header machinery rewrites only the client address and scheme, not the host; the standalone Server's origin check reads the genuine `Host` header, and JupyterHub 5 ignores `X-Forwarded-Host` unconditionally (the `forwarded_host_header` trait is defined but no longer consumed), so confirm that a spoofed `X-Forwarded-Host` has no effect and test an unintended genuine `Host` value at the ingress instead. See the [JupyterHub configuration reference](https://jupyterhub.readthedocs.io/en/5.5.2/reference/config-reference.html) and the [Jupyter Server HTTP-server construction](https://raw.githubusercontent.com/jupyter-server/jupyter_server/v2.18.0/jupyter_server/serverapp.py).
+
+### Verify internal Hub TLS
+
+**REASONED:** no JupyterHub, spawner, or single-user server is available in the authoring environment.
+
+Keep the public HTTPS listener constant and compare internal TLS off against on (section 10). Inspect each actual internal connection (Hub to proxy API, proxy to Hub, proxy to single-user server, and Hub to single-user server): with internal TLS on, a request using the intended internal certificate authority and client certificate succeeds, while one presenting an untrusted certificate is rejected, and, on JupyterHub 5.4 or later (which enabled internal hostname verification by default), a connection under an incorrect server hostname is likewise rejected. Require a successful login, spawn, notebook execution, and kernel WebSocket exchange as positive controls. The single-user-server-to-kernel ZeroMQ connection must be observed separately and must not be counted as encrypted by this test, since `internal_ssl` does not cover it. See the [internal_ssl definition](https://raw.githubusercontent.com/jupyterhub/jupyterhub/5.5.2/jupyterhub/app.py) and the [Jupyter messaging protocol](https://raw.githubusercontent.com/jupyter/jupyter_client/v8.6.3/docs/messaging.rst).
+
 ### Local authoring checks and demonstration backlog
 
 The following checks were run without editing files or running `tools/run_all_checks.sh`:
 
-- All eight Python configuration blocks passed ASCII and Python syntax checks and loaded into `traitlets.Config`. This checks configuration-file construction, not Jupyter trait recognition or runtime enforcement.
+- All thirteen Python configuration blocks passed ASCII and Python syntax checks and loaded into `traitlets.Config`. This checks configuration-file construction, not Jupyter trait recognition or runtime enforcement.
 - All five Bash blocks passed `bash -n` and ShellCheck.
 - Both unchanged HTTP blocks refused their placeholders locally under `bash -u`.
 - Eighty positional-guard cases passed, covering valid inputs, empty values, embedded placeholders, angle brackets, the example hostname, control characters, missing markers, wrong argument counts, and an altered `IFS` count case.
@@ -17766,7 +19177,63 @@ The following checks were run without editing files or running `tools/run_all_ch
 
 | ID | Status | Outstanding exposed-versus-fixed demonstrations |
 |---|---|---|
-| JUPYTER-LIVE-1 | Open; REASONED, not demonstrated. Requires Jupyter Server 2.18+, JupyterHub 5+, suitable Unix test accounts, TLS/DNS, browser sessions, terminal support, representative extension routes, and an authorized isolated deployment. | Demonstrate TLS and anonymous/authenticated API access; external reachability and listener inventory; metrics and unclassified extension authentication; cookie-session XSRF and origin checks; Host rejection with an authenticated positive control; root refusal and workload UIDs; terminal disabling; Hub admission including historical users; separate execution accounts and browser origins; host-prefixed cookies; ignored user configuration and protected server environments. Record versions, requests, responses, logs, positive controls, and cleanup. |
+| JUPYTER-LIVE-1 | Open; REASONED, not demonstrated. Requires Jupyter Server 2.18+, JupyterHub 5+, suitable Unix test accounts, TLS/DNS, browser sessions, terminal support, representative extension routes, and an authorized isolated deployment. | Demonstrate TLS and anonymous/authenticated API access; external reachability and listener inventory; metrics and unclassified extension authentication; cookie-session XSRF and origin checks; Host rejection with an authenticated positive control; root refusal and workload UIDs; terminal disabling; Hub admission including historical users; separate execution accounts and browser origins; host-prefixed cookies; ignored user configuration and protected server environments. Record versions, requests, responses, logs, positive controls, and cleanup. For the sections 8 to 10 controls: demonstrate a route reaching the application outside the intended prefix versus a consistent prefix; a spoofed forwarded IP and scheme taking effect with header trust misconfigured versus rejected behind a sanitizing ingress, a spoofed Forwarded header not changing the detected browser scheme behind the ingress, and a spoofed X-Forwarded-Host ignored unconditionally (the forwarded_host_header trait is inert across the 5.x range); and internal Hub traffic in plaintext versus TLS with client-certificate verification, keeping the kernel ZeroMQ transport excluded from the internal-TLS claim. |
+
+## 8. Preserve the deployment path prefix through the reverse proxy
+
+When a reverse proxy serves Jupyter under a path prefix such as `/jupyter/`, the application must be told the same prefix, or another route can reach the application outside the authentication and routing boundary the proxy establishes. Both the standalone Server and JupyterHub default their prefix to `/`.
+
+For a standalone Jupyter Server behind a prefix, set it in `jupyter_server_config.py`:
+
+```python
+c.ServerApp.base_url = '/jupyter/'
+```
+
+The Server applies the prefix to its registered handlers. See the [Server 2.18.0 application definition](https://raw.githubusercontent.com/jupyter-server/jupyter_server/v2.18.0/jupyter_server/serverapp.py).
+
+For JupyterHub behind the same-host proxy, set the listener and base URL together in `jupyterhub_config.py`:
+
+```python
+c.JupyterHub.bind_url = 'http://127.0.0.1:8000/jupyter/'
+```
+
+This sets both the bind address and `JupyterHub.base_url`. Configure the prefix consistently on both sides of the proxy; do not combine a `bind_url` prefix with separate conflicting URL settings, and do not reach for the configurable-http-proxy `--no-include-prefix` or `--no-prepend-path` flags as a generic prefix fix, since neither establishes an authentication boundary. See the [JupyterHub proxy configuration](https://jupyterhub.readthedocs.io/en/5.5.2/howto/configuration/config-proxy.html) and the [configurable-http-proxy 5.3.0 command-line options](https://raw.githubusercontent.com/jupyterhub/configurable-http-proxy/5.3.0/bin/configurable-http-proxy).
+
+## 9. Trust forwarded headers only behind a sanitizing ingress
+
+A standalone Jupyter Server does not trust proxy-forwarded headers by default (`ServerApp.trust_xheaders` is `False`), while JupyterHub constructs its HTTP server with forwarded-header trust enabled. Trusting these headers while the backend can still be reached by an untrusted peer, or while the proxy passes client-supplied headers through unchanged, lets a client spoof its apparent address or scheme. Bind the backend privately and trust the headers only behind an ingress that overwrites them.
+
+For a standalone Server behind a same-host TLS ingress, in `jupyter_server_config.py`:
+
+```python
+c.ServerApp.ip = '127.0.0.1'
+c.ServerApp.trust_xheaders = True
+```
+
+Keep `trust_xheaders` at `False` unless a trusted ingress sets `X-Forwarded-For`/`X-Real-IP` and `X-Scheme`/`X-Forwarded-Proto` itself. See the [Server 2.18.0 HTTP-server construction](https://raw.githubusercontent.com/jupyter-server/jupyter_server/v2.18.0/jupyter_server/serverapp.py).
+
+For the same-host JupyterHub topology, in `jupyterhub_config.py`:
+
+```python
+c.JupyterHub.hub_ip = '127.0.0.1'
+c.JupyterHub.trusted_downstream_ips = ['127.0.0.1']
+c.JupyterHub.public_url = 'https://jupyter.example.com/jupyter/'
+```
+
+`trusted_downstream_ips` names the proxy hops that are trusted and skipped when Hub selects the client address from `X-Forwarded-For`; it controls address selection, not whether a connecting peer may supply headers, so it is not a substitute for an ingress that sanitizes them, and an empty list does not disable header trust. The ingress must normalize both forwarded-IP forms (`X-Forwarded-For`, `X-Real-IP`), both scheme forms (`X-Forwarded-Proto`, `X-Scheme`), and the standard RFC 7239 `Forwarded` header, and reject unintended `Host` values. JupyterHub reads the `Forwarded` header before the `X-` scheme forms when deciding the browser-facing scheme, so the ingress must own it too. In this guide's configuration `public_url` (this section) and `cookie_host_prefix_enabled` (section 6) already guard the scheme-derived redirect and single-user OAuth cookie paths, but leaving `Forwarded` unsanitized still lets a client-supplied value reach any scheme decision, so normalize it alongside the other forwarded headers. Binding to loopback excludes a remote peer but not other local processes. See the [JupyterHub configuration reference](https://jupyterhub.readthedocs.io/en/5.5.2/reference/config-reference.html).
+
+## 10. Encrypt internal Hub communication
+
+Public HTTPS (sections 3 and 4) protects only the browser-facing listener. By default JupyterHub leaves the internal traffic between the Hub, the proxy, and the single-user servers unencrypted (`internal_ssl` is `False`). Enable internal TLS in `jupyterhub_config.py`:
+
+```python
+c.JupyterHub.internal_ssl = True
+c.JupyterHub.internal_certs_location = '/srv/jupyterhub/internal-ssl'
+```
+
+JupyterHub then generates an internal certificate authority and per-component certificates and enables TLS with client-certificate verification for the Hub-to-proxy API, the proxy-to-Hub and proxy-to-single-user connections, and the Hub-to-single-user connection used during spawn readiness. Treat the certificate directory as protected persistent state, and give the spawner the ability to deliver each server's key, certificate, and trust bundle (`LocalProcessSpawner` relocates them; a remote spawner needs its own `move_certs` support). Set `Spawner.ssl_alt_names` to the actual connection names when they are not the defaults, and never resolve a certificate error by disabling verification. Internal hostname verification is on by default from [JupyterHub 5.4](https://raw.githubusercontent.com/jupyterhub/jupyterhub/5.5.2/docs/source/reference/changelog.md) and is verified against 5.5.2; earlier 5.x releases left it disabled, so upgrade before relying on it. See the [internal_ssl definition](https://raw.githubusercontent.com/jupyterhub/jupyterhub/5.5.2/jupyterhub/app.py) and the [JupyterHub configuration reference](https://jupyterhub.readthedocs.io/en/5.5.2/reference/config-reference.html).
+
+Internal TLS does not encrypt the single-user server's connection to its kernels. That link uses the Jupyter messaging protocol over ZeroMQ, whose HMAC signature authenticates messages but does not encrypt them. Local kernels bind loopback; a remote-kernel deployment needs a separately configured encrypted transport such as an SSH tunnel, which this guide does not configure. See the [Jupyter messaging protocol](https://raw.githubusercontent.com/jupyter/jupyter_client/v8.6.3/docs/messaging.rst) and the [kernel connection defaults](https://raw.githubusercontent.com/jupyter/jupyter_client/v8.6.3/jupyter_client/connect.py).
 
 ## Sources (checked September 2026)
 
@@ -17796,6 +19263,14 @@ The following checks were run without editing files or running `tools/run_all_ch
 - Tornado XSRF cookies and request headers: https://www.tornadoweb.org/en/stable/guide/security.html
 - curl TLS certificate and hostname verification: https://curl.se/docs/sslcerts.html
 - curl options, stdin headers, cookie files, and diagnostic variables: https://curl.se/docs/manpage.html
+- JupyterHub 5.5.2 proxy configuration and path prefix: https://jupyterhub.readthedocs.io/en/5.5.2/howto/configuration/config-proxy.html
+- configurable-http-proxy 5.3.0 command-line options: https://raw.githubusercontent.com/jupyterhub/configurable-http-proxy/5.3.0/bin/configurable-http-proxy
+- JupyterHub 5.5.2 configuration reference (trusted_downstream_ips, public_url, internal_ssl): https://jupyterhub.readthedocs.io/en/5.5.2/reference/config-reference.html
+- JupyterHub 5.4 changelog (internal-TLS hostname verification default): https://raw.githubusercontent.com/jupyterhub/jupyterhub/5.5.2/docs/source/reference/changelog.md
+- Jupyter Server 2.18.0 application definition and HTTP-server construction: https://raw.githubusercontent.com/jupyter-server/jupyter_server/v2.18.0/jupyter_server/serverapp.py
+- JupyterHub 5.5.2 application (internal_ssl and forwarded-header trust): https://raw.githubusercontent.com/jupyterhub/jupyterhub/5.5.2/jupyterhub/app.py
+- Jupyter messaging protocol (jupyter_client 8.6.3): https://raw.githubusercontent.com/jupyter/jupyter_client/v8.6.3/docs/messaging.rst
+- Jupyter kernel connection defaults (jupyter_client 8.6.3): https://raw.githubusercontent.com/jupyter/jupyter_client/v8.6.3/jupyter_client/connect.py
 
 ======================================================================
 ==> ollama.md
