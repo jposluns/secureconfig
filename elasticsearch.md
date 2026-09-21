@@ -255,7 +255,7 @@ The controls below are provided by **free Apache-2.0 OpenSearch Security**, with
 
 ### Field-level and document-level security
 
-**Free Apache-2.0 OpenSearch Security; no paid feature tier. Minimum documented version for this complete recipe: OpenSearch 3.6; review current to 3.8.0.** The role API was introduced in 1.0, and DLS appears in the 1.0 archive. These establish earlier availability, not the introduction release of every combined behavior below. See the [3.6 Security API](https://docs.opensearch.org/3.6/security/access-control/api/), [1.0 DLS archive](https://docs.opensearch.org/1.0/security-plugin/access-control/document-level-security/), and [3.8.0.0 Security licence](https://raw.githubusercontent.com/opensearch-project/security/3.8.0.0/LICENSE.txt).
+**Free Apache-2.0 OpenSearch Security; no paid feature tier. The FLS/DLS role schema is documented from OpenSearch 3.0 and applies across this guide's 3.x scope; the citations below are pinned to 3.6 and the behaviour is reviewed current to 3.8.0.** The role API was introduced in 1.0, and DLS appears in the 1.0 archive. These establish earlier availability, not the introduction release of every combined behavior below. See the [3.6 Security API](https://docs.opensearch.org/3.6/security/access-control/api/), [1.0 DLS archive](https://docs.opensearch.org/1.0/security-plugin/access-control/document-level-security/), and [3.8.0.0 Security licence](https://raw.githubusercontent.com/opensearch-project/security/3.8.0.0/LICENSE.txt).
 
 The existing `app_reader` role permits reading every document and field in `app-data`. Map `tenant_id` as `keyword`, then create a separate read-only role using OpenSearch's schema:
 
@@ -364,7 +364,7 @@ Ensure audit exclusions do not suppress `FAILED_LOGIN` or the identities and req
 
 **Both products: operating-system or storage-provider control, with no paid product feature tier required. Minimum versions within scope: Elasticsearch 8.0 and OpenSearch 3.0.** Elasticsearch guidance is pinned to 8.19; the cited OpenSearch encryption guidance is explicitly the 3.0 archive.
 
-TLS and authentication do not encrypt files on an unencrypted node volume. Use host/block-storage encryption, such as Linux dm-crypt, independently of the search security configuration. Elasticsearch documents dm-crypt beneath its data path; OpenSearch assigns encryption at rest to the operating system. Elastic's subscription row is **“Encryption at rest support”**, not a native encryption switch or a licence requirement for using dm-crypt. See [Elasticsearch 8.19 storage guidance](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/tune-for-search-speed.html), [OpenSearch 3.0 encryption guidance](https://docs.opensearch.org/3.0/troubleshoot/#encryption-at-rest), and the [dated subscription matrix](https://www.elastic.co/pdf/subscriptions-2025-07-29.pdf).
+TLS and authentication do not encrypt files on an unencrypted node volume. Use host/block-storage encryption, such as Linux dm-crypt, independently of the search security configuration. Elasticsearch documents dm-crypt beneath its data path; OpenSearch assigns encryption at rest to the operating system. Elastic's subscription row is **"Encryption at rest support"**, not a native encryption switch or a licence requirement for using dm-crypt. See [Elasticsearch 8.19 storage guidance](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/tune-for-search-speed.html), [OpenSearch 3.0 encryption guidance](https://docs.opensearch.org/3.0/troubleshoot/#encryption-at-rest), and the [dated subscription matrix](https://www.elastic.co/pdf/subscriptions-2025-07-29.pdf).
 
 Provision the encrypted volume before deploying data. Mount it at `/srv/search-data`, then select that directory in the respective `elasticsearch.yml` or `opensearch.yml`:
 
@@ -495,7 +495,7 @@ The `server.ssl.*` settings protect incoming browser or proxy connections. The `
 
 ### OpenSearch Dashboards
 
-**Free Apache-2.0; minimum documented version for this recipe: Dashboards 3.6; defaults checked against 3.8.0.** Earlier introduction versions are not established here.
+**Free Apache-2.0; the TLS recipe is documented from at least OpenSearch Dashboards 2.19 and applies across this guide's 3.x scope; defaults are checked against 3.8.0.**
 
 The 3.8.0 sample configuration identifies localhost, port 5601, and disabled server TLS. Check installation and container overrides separately. See the [3.8.0-tagged configuration](https://raw.githubusercontent.com/opensearch-project/OpenSearch-Dashboards/3.8.0/config/opensearch_dashboards.yml).
 
@@ -931,52 +931,52 @@ An unauthenticated `GET /` returning cluster JSON is the classic finding; so is 
 - OpenSearch document retrieval API: https://docs.opensearch.org/latest/api-reference/document-apis/get-documents/
 - curl options, header-file input, and request-body file input: https://curl.se/docs/manpage.html
 - ss listener and port-filter syntax: https://manpages.ubuntu.com/manpages/noble/man8/ss.8.html
-- Elastic distribution/source licensing: [https://www.elastic.co/pricing/faq/licensing](https://www.elastic.co/pricing/faq/licensing)
-- Basic security introduction and FLS/DLS exclusion: [https://www.elastic.co/blog/security-for-elasticsearch-is-now-free](https://www.elastic.co/blog/security-for-elasticsearch-is-now-free)
-- Dated subscription matrix: [https://www.elastic.co/pdf/subscriptions-2025-07-29.pdf](https://www.elastic.co/pdf/subscriptions-2025-07-29.pdf)
-- Current subscription terms and Platinum availability: [https://www.elastic.co/subscriptions](https://www.elastic.co/subscriptions)
-- Elasticsearch 8.19 role API: [https://www.elastic.co/guide/en/elasticsearch/reference/8.19/security-api-put-role.html](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/security-api-put-role.html)
-- Elasticsearch 8.19 access control and role composition: [https://www.elastic.co/guide/en/elasticsearch/reference/8.19/field-and-document-access-control.html](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/field-and-document-access-control.html)
-- Elasticsearch 8.19 FLS: [https://www.elastic.co/guide/en/elasticsearch/reference/8.19/field-level-security.html](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/field-level-security.html)
-- Elasticsearch 8.19 DLS: [https://www.elastic.co/guide/en/elasticsearch/reference/8.19/document-level-security.html](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/document-level-security.html)
-- Elasticsearch 8.19 security limitations: [https://www.elastic.co/guide/en/elasticsearch/reference/8.19/security-limitations.html](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/security-limitations.html)
-- OpenSearch Security licence, tag 3.8.0.0: [https://raw.githubusercontent.com/opensearch-project/security/3.8.0.0/LICENSE.txt](https://raw.githubusercontent.com/opensearch-project/security/3.8.0.0/LICENSE.txt)
-- OpenSearch 3.6 Security API and role schema: [https://docs.opensearch.org/3.6/security/access-control/api/](https://docs.opensearch.org/3.6/security/access-control/api/)
-- OpenSearch 1.0 DLS archive: [https://docs.opensearch.org/1.0/security-plugin/access-control/document-level-security/](https://docs.opensearch.org/1.0/security-plugin/access-control/document-level-security/)
-- OpenSearch 3.6 FLS: [https://docs.opensearch.org/3.6/security/access-control/field-level-security/](https://docs.opensearch.org/3.6/security/access-control/field-level-security/)
-- OpenSearch 3.6 DLS, modes, and role composition: [https://docs.opensearch.org/3.6/security/access-control/document-level-security/](https://docs.opensearch.org/3.6/security/access-control/document-level-security/)
-- Elasticsearch 8.19 dm-crypt-backed storage: [https://www.elastic.co/guide/en/elasticsearch/reference/8.19/tune-for-search-speed.html](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/tune-for-search-speed.html)
-- Elasticsearch 8.19 path settings: [https://www.elastic.co/guide/en/elasticsearch/reference/8.19/path-settings-overview.html](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/path-settings-overview.html)
-- OpenSearch 3.0 encryption-at-rest guidance: [https://docs.opensearch.org/3.0/troubleshoot/#encryption-at-rest](https://docs.opensearch.org/3.0/troubleshoot/#encryption-at-rest)
-- Elasticsearch 8.19 S3 repository: [https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-s3.html](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-s3.html)
-- OpenSearch 3.1 repository API and encryption-setting change: [https://docs.opensearch.org/3.1/api-reference/snapshots/create-repository/](https://docs.opensearch.org/3.1/api-reference/snapshots/create-repository/)
-- OpenSearch S3 implementation, tag 3.8.0: [https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-s3/src/main/java/org/opensearch/repositories/s3/S3Repository.java](https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-s3/src/main/java/org/opensearch/repositories/s3/S3Repository.java)
-- Elasticsearch 8.19 GCS repository: [https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-gcs.html](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-gcs.html)
-- Elasticsearch 8.19 Azure repository: [https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-azure.html](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-azure.html)
-- OpenSearch 3.6 snapshot/repository workflow: [https://docs.opensearch.org/3.6/tuning-your-cluster/availability-and-recovery/snapshots/snapshot-restore/](https://docs.opensearch.org/3.6/tuning-your-cluster/availability-and-recovery/snapshots/snapshot-restore/)
-- AWS S3 default encryption and retained objects: [https://docs.aws.amazon.com/AmazonS3/latest/userguide/default-encryption-faq.html](https://docs.aws.amazon.com/AmazonS3/latest/userguide/default-encryption-faq.html)
-- AWS SSE-KMS permissions: [https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingKMSEncryption.html](https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingKMSEncryption.html)
-- GCS encryption distinctions: [https://docs.cloud.google.com/storage/docs/encryption](https://docs.cloud.google.com/storage/docs/encryption)
-- Azure Storage encryption: [https://learn.microsoft.com/en-us/azure/storage/common/storage-service-encryption](https://learn.microsoft.com/en-us/azure/storage/common/storage-service-encryption)
-- Elasticsearch 8.19 snapshot creation and configuration backups: [https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-take-snapshot.html](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-take-snapshot.html)
-- Elasticsearch 8.19 repository integrity: [https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshot-restore.html](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshot-restore.html)
-- Elasticsearch 8.19 restore: [https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-restore-snapshot.html](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-restore-snapshot.html)
-- Kibana 8.19 settings: [https://www.elastic.co/guide/en/kibana/8.19/settings.html](https://www.elastic.co/guide/en/kibana/8.19/settings.html)
-- Kibana 8.19 Docker defaults and overrides: [https://www.elastic.co/guide/en/kibana/8.19/docker.html](https://www.elastic.co/guide/en/kibana/8.19/docker.html)
-- Dashboards configuration, tag 3.8.0: [https://raw.githubusercontent.com/opensearch-project/OpenSearch-Dashboards/3.8.0/config/opensearch_dashboards.yml](https://raw.githubusercontent.com/opensearch-project/OpenSearch-Dashboards/3.8.0/config/opensearch_dashboards.yml)
-- Dashboards 3.6 TLS and cookie settings: [https://docs.opensearch.org/3.6/install-and-configure/install-dashboards/tls/](https://docs.opensearch.org/3.6/install-and-configure/install-dashboards/tls/)
-- Elasticsearch 8.19 create index: [https://www.elastic.co/guide/en/elasticsearch/reference/8.19/indices-create-index.html](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/indices-create-index.html)
-- Elasticsearch 8.19 index document: [https://www.elastic.co/guide/en/elasticsearch/reference/8.19/docs-index_.html](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/docs-index_.html)
-- Elasticsearch 8.19 search: [https://www.elastic.co/guide/en/elasticsearch/reference/8.19/search-search.html](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/search-search.html)
-- OpenSearch 3.6 create index: [https://docs.opensearch.org/3.6/api-reference/index-apis/create-index/](https://docs.opensearch.org/3.6/api-reference/index-apis/create-index/)
-- OpenSearch 3.6 index document: [https://docs.opensearch.org/3.6/api-reference/document-apis/index-document/](https://docs.opensearch.org/3.6/api-reference/document-apis/index-document/)
-- OpenSearch 3.6 search: [https://docs.opensearch.org/3.6/api-reference/search-apis/search/](https://docs.opensearch.org/3.6/api-reference/search-apis/search/)
-- AWS CLI HeadObject: [https://docs.aws.amazon.com/cli/latest/reference/s3api/head-object.html](https://docs.aws.amazon.com/cli/latest/reference/s3api/head-object.html)
-- AWS CLI GetObject: [https://docs.aws.amazon.com/cli/latest/reference/s3api/get-object.html](https://docs.aws.amazon.com/cli/latest/reference/s3api/get-object.html)
-- Mount inspection: [https://man7.org/linux/man-pages/man8/findmnt.8.html](https://man7.org/linux/man-pages/man8/findmnt.8.html)
-- Block-device inspection: [https://man7.org/linux/man-pages/man8/lsblk.8.html](https://man7.org/linux/man-pages/man8/lsblk.8.html)
-- Encryption-mapping inspection: [https://man7.org/linux/man-pages/man8/cryptsetup-status.8.html](https://man7.org/linux/man-pages/man8/cryptsetup-status.8.html)
-- systemd mount dependencies and assertions: [https://man7.org/linux/man-pages/man5/systemd.unit.5.html](https://man7.org/linux/man-pages/man5/systemd.unit.5.html)
-- systemd start/status commands: [https://man7.org/linux/man-pages/man1/systemctl.1.html](https://man7.org/linux/man-pages/man1/systemctl.1.html)
-- curl options and file input: [https://curl.se/docs/manpage.html](https://curl.se/docs/manpage.html)
-- Listener inspection: [https://manpages.ubuntu.com/manpages/noble/man8/ss.8.html](https://manpages.ubuntu.com/manpages/noble/man8/ss.8.html)
+- Elastic distribution/source licensing: https://www.elastic.co/pricing/faq/licensing
+- Basic security introduction and FLS/DLS exclusion: https://www.elastic.co/blog/security-for-elasticsearch-is-now-free
+- Dated subscription matrix: https://www.elastic.co/pdf/subscriptions-2025-07-29.pdf
+- Current subscription terms and Platinum availability: https://www.elastic.co/subscriptions
+- Elasticsearch 8.19 role API: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/security-api-put-role.html
+- Elasticsearch 8.19 access control and role composition: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/field-and-document-access-control.html
+- Elasticsearch 8.19 FLS: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/field-level-security.html
+- Elasticsearch 8.19 DLS: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/document-level-security.html
+- Elasticsearch 8.19 security limitations: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/security-limitations.html
+- OpenSearch Security licence, tag 3.8.0.0: https://raw.githubusercontent.com/opensearch-project/security/3.8.0.0/LICENSE.txt
+- OpenSearch 3.6 Security API and role schema: https://docs.opensearch.org/3.6/security/access-control/api/
+- OpenSearch 1.0 DLS archive: https://docs.opensearch.org/1.0/security-plugin/access-control/document-level-security/
+- OpenSearch 3.6 FLS: https://docs.opensearch.org/3.6/security/access-control/field-level-security/
+- OpenSearch 3.6 DLS, modes, and role composition: https://docs.opensearch.org/3.6/security/access-control/document-level-security/
+- Elasticsearch 8.19 dm-crypt-backed storage: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/tune-for-search-speed.html
+- Elasticsearch 8.19 path settings: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/path-settings-overview.html
+- OpenSearch 3.0 encryption-at-rest guidance: https://docs.opensearch.org/3.0/troubleshoot/#encryption-at-rest
+- Elasticsearch 8.19 S3 repository: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-s3.html
+- OpenSearch 3.1 repository API and encryption-setting change: https://docs.opensearch.org/3.1/api-reference/snapshots/create-repository/
+- OpenSearch S3 implementation, tag 3.8.0: https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-s3/src/main/java/org/opensearch/repositories/s3/S3Repository.java
+- Elasticsearch 8.19 GCS repository: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-gcs.html
+- Elasticsearch 8.19 Azure repository: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-azure.html
+- OpenSearch 3.6 snapshot/repository workflow: https://docs.opensearch.org/3.6/tuning-your-cluster/availability-and-recovery/snapshots/snapshot-restore/
+- AWS S3 default encryption and retained objects: https://docs.aws.amazon.com/AmazonS3/latest/userguide/default-encryption-faq.html
+- AWS SSE-KMS permissions: https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingKMSEncryption.html
+- GCS encryption distinctions: https://docs.cloud.google.com/storage/docs/encryption
+- Azure Storage encryption: https://learn.microsoft.com/en-us/azure/storage/common/storage-service-encryption
+- Elasticsearch 8.19 snapshot creation and configuration backups: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-take-snapshot.html
+- Elasticsearch 8.19 repository integrity: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshot-restore.html
+- Elasticsearch 8.19 restore: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-restore-snapshot.html
+- Kibana 8.19 settings: https://www.elastic.co/guide/en/kibana/8.19/settings.html
+- Kibana 8.19 Docker defaults and overrides: https://www.elastic.co/guide/en/kibana/8.19/docker.html
+- Dashboards configuration, tag 3.8.0: https://raw.githubusercontent.com/opensearch-project/OpenSearch-Dashboards/3.8.0/config/opensearch_dashboards.yml
+- Dashboards 3.6 TLS and cookie settings: https://docs.opensearch.org/3.6/install-and-configure/install-dashboards/tls/
+- Elasticsearch 8.19 create index: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/indices-create-index.html
+- Elasticsearch 8.19 index document: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/docs-index_.html
+- Elasticsearch 8.19 search: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/search-search.html
+- OpenSearch 3.6 create index: https://docs.opensearch.org/3.6/api-reference/index-apis/create-index/
+- OpenSearch 3.6 index document: https://docs.opensearch.org/3.6/api-reference/document-apis/index-document/
+- OpenSearch 3.6 search: https://docs.opensearch.org/3.6/api-reference/search-apis/search/
+- AWS CLI HeadObject: https://docs.aws.amazon.com/cli/latest/reference/s3api/head-object.html
+- AWS CLI GetObject: https://docs.aws.amazon.com/cli/latest/reference/s3api/get-object.html
+- Mount inspection: https://man7.org/linux/man-pages/man8/findmnt.8.html
+- Block-device inspection: https://man7.org/linux/man-pages/man8/lsblk.8.html
+- Encryption-mapping inspection: https://man7.org/linux/man-pages/man8/cryptsetup-status.8.html
+- systemd mount dependencies and assertions: https://man7.org/linux/man-pages/man5/systemd.unit.5.html
+- systemd start/status commands: https://man7.org/linux/man-pages/man1/systemctl.1.html
+- curl options and file input: https://curl.se/docs/manpage.html
+- Listener inspection: https://manpages.ubuntu.com/manpages/noble/man8/ss.8.html
