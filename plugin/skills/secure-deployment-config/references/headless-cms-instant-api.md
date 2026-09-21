@@ -332,4 +332,4 @@ Version boundary at the time of writing: Strapi 5 documentation; current Directu
 - Directus static tokens (scope, persistence and management): https://directus.com/docs/guides/auth/tokens-cookies
 - Directus error codes (authentication versus permission failures): https://directus.com/docs/guides/connect/errors
 - Hasura v2 Docker quickstart (selects the stable Compose manifest): https://hasura.io/docs/2.0/getting-started/docker-simple/
-- Hasura stable quickstart Compose (2.46.0 when checked): https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/docker-compose/docker-compose.yaml
+- Hasura stable quickstart Compose (2.46.0 when checked): https://raw.githubusercontent.com/hasura/graphql-engine/5fa3e0d2b617a4ae85f65491c5ff6c056cb612de/install-manifests/docker-compose/docker-compose.yaml

@@ -6762,7 +6762,7 @@ expose_php = Off              ; built-in default On
 
 `error_reporting` selects which diagnostics PHP reports; it does not decide whether they reach the HTTP response. Keep reporting enabled while directing errors into protected logs. Pre-create the example log destination outside the document root, make it writable by the PHP worker identity, restrict access to that identity and authorized operators, and arrange rotation. An unset `error_log` uses the SAPI's logger. Configure error display before requests execute; an `ini_set()` inside a script cannot protect against a fatal error that prevents that statement from running. [PHP error configuration](https://www.php.net/manual/en/errorfunc.configuration.php).
 
-Use the bundled `php.ini-production` as a starting point, then review its actual settings. For example, PHP 8.4's template disables both display settings and enables logging, but uses `E_ALL & ~E_DEPRECATED` and leaves `expose_php` enabled. The explicit settings above retain all diagnostic levels in logs and disable PHP's banner. [PHP 8.4 production template](https://raw.githubusercontent.com/php/php-src/PHP-8.4/php.ini-production).
+Use the bundled `php.ini-production` as a starting point, then review its actual settings. For example, PHP 8.4's template disables both display settings and enables logging, but uses `E_ALL & ~E_DEPRECATED` and leaves `expose_php` enabled. The explicit settings above retain all diagnostic levels in logs and disable PHP's banner. [PHP 8.4 production template](https://raw.githubusercontent.com/php/php-src/d313ad6098430f4e61f0121a9e7ab392d195e4e4/php.ini-production).
 
 `expose_php=Off` suppresses PHP's own `X-Powered-By: PHP/...` header. It does not remove headers added elsewhere or make the application unidentifiable. [Hiding PHP](https://www.php.net/manual/en/security.hiding.php).
 
@@ -6810,7 +6810,7 @@ max_input_time = 60
 
 `upload_max_filesize` limits each uploaded file; `post_max_size` limits the complete POST body and must exceed it, allowing room for other fields and multipart overhead. A count limit of 20 does not mean twenty maximum-sized files fit into an 8M request. If POST data exceeds `post_max_size`, PHP leaves `$_POST` and `$_FILES` empty; handle that condition as a rejected request. `memory_limit` bounds a script's allocation and should generally exceed `post_max_size`; `-1` removes that memory limit. [PHP core directives](https://www.php.net/manual/en/ini.core.php).
 
-`max_input_vars=1000` applies separately to GET, POST, and COOKIE input; excess variables generate a warning and are truncated. It is not a general JSON-body limit. `max_execution_time` defaults to 30 seconds for web execution and 0 for CLI. It is not a portable wall-clock deadline: accounting depends on the platform and build and can exclude I/O waits. The built-in `max_input_time` default is `-1`, meaning use `max_execution_time`; 0 permits unlimited input-parsing time. The production template sets it to 60. [PHP execution and input limits](https://www.php.net/manual/en/info.configuration.php), [production template](https://raw.githubusercontent.com/php/php-src/PHP-8.4/php.ini-production).
+`max_input_vars=1000` applies separately to GET, POST, and COOKIE input; excess variables generate a warning and are truncated. It is not a general JSON-body limit. `max_execution_time` defaults to 30 seconds for web execution and 0 for CLI. It is not a portable wall-clock deadline: accounting depends on the platform and build and can exclude I/O waits. The built-in `max_input_time` default is `-1`, meaning use `max_execution_time`; 0 permits unlimited input-parsing time. The production template sets it to 60. [PHP execution and input limits](https://www.php.net/manual/en/info.configuration.php), [production template](https://raw.githubusercontent.com/php/php-src/d313ad6098430f4e61f0121a9e7ab392d195e4e4/php.ini-production).
 
 Uploads also consume input-processing time. Test slow and multiple-file uploads, and coordinate these values with the web server's request-size and timeout limits. These settings bound individual requests; they do not replace capacity limits or rate limiting. [PHP upload pitfalls](https://www.php.net/manual/en/features.file-upload.common-pitfalls.php).
 
@@ -6841,7 +6841,7 @@ Garbage collection is probabilistic by default and is not an authentication-expi
 
 For the default `files` save handler, pre-create a private directory outside the document root for each application, writable by its PHP identity. A directory mode of 0700 is appropriate for a dedicated runtime account; session files default to 0600. Separate untrusted applications by runtime identity as well as path. Avoid a shared, world-readable session directory. [Session configuration](https://www.php.net/manual/en/session.configuration.php#ini.session.save-path).
 
-PHP 8.x's built-in `session.sid_length` and `session.sid_bits_per_character` defaults are 32 and 4. Changing either away from its default is deprecated from PHP 8.4. Do not add new tuning overrides on those versions. Older templates differ: PHP 8.3's production template sets 26 and 5, so review inherited configuration during upgrades. [Session configuration](https://www.php.net/manual/en/session.configuration.php), [PHP 8.3 production template](https://raw.githubusercontent.com/php/php-src/PHP-8.3/php.ini-production).
+PHP 8.x's built-in `session.sid_length` and `session.sid_bits_per_character` defaults are 32 and 4. Changing either away from its default is deprecated from PHP 8.4. Do not add new tuning overrides on those versions. Older templates differ: PHP 8.3's production template sets 26 and 5, so review inherited configuration during upgrades. [Session configuration](https://www.php.net/manual/en/session.configuration.php), [PHP 8.3 production template](https://raw.githubusercontent.com/php/php-src/b94f9f68a610e0fca5f2fea5bfa7c7d6d3d5a847/php.ini-production).
 
 ## Verify
 
@@ -6950,7 +6950,7 @@ For Laravel 12.x, repeat the body probe against a controlled route that raises a
 - PHP cURL constants (`CURLOPT_SSL_VERIFYPEER`, `CURLOPT_SSL_VERIFYHOST`, `CURLOPT_CAINFO`): https://www.php.net/manual/en/curl.constants.php
 - Laravel 12.x encryption (`APP_KEY`, `key:generate`, `APP_PREVIOUS_KEYS`): https://laravel.com/framework/docs/12.x/encryption
 - Laravel 12.x requests (trusted proxies, trusted hosts): https://laravel.com/framework/docs/12.x/requests
-- Laravel 12.x `config/session.php` defaults: https://github.com/laravel/laravel/blob/12.x/config/session.php
+- Laravel 12.x `config/session.php` defaults: https://github.com/laravel/laravel/blob/f6b2e79bdbfc5bf4a37ad16466cc06ad79cc9e8f/config/session.php
 - Laravel 12.x `UrlGenerator::forceHttps()` and `forceScheme()`: https://api.laravel.com/docs/12.x/Illuminate/Routing/UrlGenerator.html
 - Laravel 12.x hashing: https://laravel.com/framework/docs/12.x/hashing
 - Laravel 12.x routing (rate limiting): https://laravel.com/framework/docs/12.x/routing
@@ -6961,8 +6961,8 @@ For Laravel 12.x, repeat the body probe against a controlled route that raises a
 - PHP 8.x error configuration (`display_errors`, `display_startup_errors`, `log_errors`, `error_log`, `error_reporting`): https://www.php.net/manual/en/errorfunc.configuration.php
 - PHP core directives (`disable_functions`, `open_basedir`, memory and upload limits): https://www.php.net/manual/en/ini.core.php
 - PHP hiding and `expose_php`: https://www.php.net/manual/en/security.hiding.php
-- PHP 8.4 bundled production template: https://raw.githubusercontent.com/php/php-src/PHP-8.4/php.ini-production
-- PHP 8.3 bundled production template (older session ID overrides): https://raw.githubusercontent.com/php/php-src/PHP-8.3/php.ini-production
+- PHP 8.4 bundled production template: https://raw.githubusercontent.com/php/php-src/d313ad6098430f4e61f0121a9e7ab392d195e4e4/php.ini-production
+- PHP 8.3 bundled production template (older session ID overrides): https://raw.githubusercontent.com/php/php-src/b94f9f68a610e0fca5f2fea5bfa7c7d6d3d5a847/php.ini-production
 - PHP filesystem and streams configuration (`allow_url_fopen`, `allow_url_include`): https://www.php.net/manual/en/filesystem.configuration.php
 - PHP execution and input limits (`max_execution_time`, `max_input_time`, `max_input_vars`): https://www.php.net/manual/en/info.configuration.php
 - PHP upload-limit interactions and pitfalls: https://www.php.net/manual/en/features.file-upload.common-pitfalls.php
@@ -7090,7 +7090,7 @@ git ls-files config/master.key                                   # prints nothin
 - Puma DSL (`bind`, `ssl_bind`, default bind): https://github.com/puma/puma/blob/d70de8b4e926f1f5fa0269dc46cdfadf52562628/lib/puma/dsl.rb
 - Puma configuration defaults (`tcp://[::]:9292`): https://github.com/puma/puma/blob/0daa1a174ae8cc9ab2dd54d4fa09c74ff787bbb9/lib/puma/configuration.rb
 - Rails configuring guide (`force_ssl`, `assume_ssl`, `ssl_options`, `hosts`, `session_store`, `cookies_same_site_protection`, `require_master_key`): https://guides.rubyonrails.org/configuring.html
-- Action Pack 7.1 changelog (`ActionDispatch::AssumeSSL`): https://github.com/rails/rails/blob/7-1-stable/actionpack/CHANGELOG.md
+- Action Pack 7.1 changelog (`ActionDispatch::AssumeSSL`): https://github.com/rails/rails/blob/ffcbf6f205363f8c2fb3e9834bc86690dd59f1cb/actionpack/CHANGELOG.md
 - `ActionDispatch::RemoteIp` (trusted proxies, spoofing warning): https://api.rubyonrails.org/classes/ActionDispatch/RemoteIp.html
 - `ActionDispatch::Session::CookieStore` options: https://api.rubyonrails.org/classes/ActionDispatch/Session/CookieStore.html
 - Rails security guide (authentication generator, `has_secure_password`, `rate_limit`, credentials): https://guides.rubyonrails.org/security.html
@@ -7961,7 +7961,7 @@ ALTER DATABASE app SET pgaudit.log = 'read,write,ddl,role';
 
 Create the extension before setting `pgaudit.log`. Reconnect to apply the database default. Choose audit classes for the actual requirement and measure volume. Installing the extension alone does not demonstrate auditing.
 
-At the time of writing, pgAudit 18.x targets PostgreSQL 18. Package and managed-service availability need separate checks. Its parameters are extension parameters, not PostgreSQL core settings. See the [official pgAudit 18 documentation](https://github.com/pgaudit/pgaudit/blob/REL_18_STABLE/README.md), [CREATE EXTENSION](https://www.postgresql.org/docs/current/sql-createextension.html) and [shared_preload_libraries](https://www.postgresql.org/docs/current/runtime-config-client.html#GUC-SHARED-PRELOAD-LIBRARIES).
+At the time of writing, pgAudit 18.x targets PostgreSQL 18. Package and managed-service availability need separate checks. Its parameters are extension parameters, not PostgreSQL core settings. See the [official pgAudit 18 documentation](https://github.com/pgaudit/pgaudit/blob/dedd42ec3fe880bf581dd578c0df87ed4ad246cd/README.md), [CREATE EXTENSION](https://www.postgresql.org/docs/current/sql-createextension.html) and [shared_preload_libraries](https://www.postgresql.org/docs/current/runtime-config-client.html#GUC-SHARED-PRELOAD-LIBRARIES).
 
 ## 8. Verify
 
@@ -8298,7 +8298,7 @@ SELECT * FROM app_data.security_probe;
 
 Compare fresh sessions with the effective `pgaudit.log` setting disabled (`none`) and with the selected audit classes enabled. The seeded query must succeed in both states. An appropriate server-side `READ` audit event, correlated to that query and session, must appear in the enabled state and be absent from the disabled state. Confirm effective settings for this login; role-specific defaults can override database defaults.
 
-Extension installation alone is not a passing result. See the [pgAudit session audit documentation](https://github.com/pgaudit/pgaudit/blob/REL_18_STABLE/README.md).
+Extension installation alone is not a passing result. See the [pgAudit session audit documentation](https://github.com/pgaudit/pgaudit/blob/dedd42ec3fe880bf581dd578c0df87ed4ad246cd/README.md).
 
 ### 8.8. Supplemental diagnostics
 
@@ -8368,7 +8368,7 @@ WHERE error IS NOT NULL OR NOT applied;
 - CREATE FUNCTION and safe SECURITY DEFINER functions: https://www.postgresql.org/docs/current/sql-createfunction.html
 - ALTER FUNCTION: https://www.postgresql.org/docs/current/sql-alterfunction.html
 - Logging configuration: https://www.postgresql.org/docs/current/runtime-config-logging.html
-- Official pgAudit 18 documentation: https://github.com/pgaudit/pgaudit/blob/REL_18_STABLE/README.md
+- Official pgAudit 18 documentation: https://github.com/pgaudit/pgaudit/blob/dedd42ec3fe880bf581dd578c0df87ed4ad246cd/README.md
 - CREATE EXTENSION: https://www.postgresql.org/docs/current/sql-createextension.html
 - CREATE TABLE and temporary tables: https://www.postgresql.org/docs/current/sql-createtable.html
 - ALTER TABLE and ownership transfer: https://www.postgresql.org/docs/current/sql-altertable.html
@@ -27268,7 +27268,7 @@ is already the finding. The distinguishing behaviour for each is in the cited ve
 - Chrome 136 remote-debugging user-data-dir change: https://developer.chrome.com/blog/remote-debugging-port
 - Selenium Grid CLI options (host, bind-host, username, password, https-certificate): https://www.selenium.dev/documentation/grid/configuration/cli_options/
 - Selenium Grid getting started (components, ports, distributed topology): https://www.selenium.dev/documentation/grid/getting_started/
-- Selenium Docker images env vars (SE_START_VNC, SE_VNC_PASSWORD, SE_BIND_HOST, SE_ROUTER_USERNAME): https://github.com/SeleniumHQ/docker-selenium/blob/trunk/ENV_VARIABLES.md
+- Selenium Docker images env vars (SE_START_VNC, SE_VNC_PASSWORD, SE_BIND_HOST, SE_ROUTER_USERNAME): https://github.com/SeleniumHQ/docker-selenium/blob/aafe4d6136f3bb5afcd9b7cb691c624516d06e1b/ENV_VARIABLES.md
 - browserless Docker configuration (TOKEN, ALLOW_FILE_PROTOCOL, port 3000): https://docs.browserless.io/baas/docker/config
 - Playwright BrowserType.launchServer and connect: https://playwright.dev/docs/api/class-browsertype
 - Playwright Docker (run-server remote connection): https://playwright.dev/docs/docker
@@ -27611,7 +27611,7 @@ Version boundary at the time of writing: Strapi 5 documentation; current Directu
 - Directus static tokens (scope, persistence and management): https://directus.com/docs/guides/auth/tokens-cookies
 - Directus error codes (authentication versus permission failures): https://directus.com/docs/guides/connect/errors
 - Hasura v2 Docker quickstart (selects the stable Compose manifest): https://hasura.io/docs/2.0/getting-started/docker-simple/
-- Hasura stable quickstart Compose (2.46.0 when checked): https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/docker-compose/docker-compose.yaml
+- Hasura stable quickstart Compose (2.46.0 when checked): https://raw.githubusercontent.com/hasura/graphql-engine/5fa3e0d2b617a4ae85f65491c5ff6c056cb612de/install-manifests/docker-compose/docker-compose.yaml
 
 ======================================================================
 ==> exposure-index.md
