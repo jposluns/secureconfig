@@ -506,14 +506,14 @@ MINIO-LIVE additions (open): demonstrate OIDC role-policy and claim-policy scopi
 - AIStor Kafka audit settings (TLS defaults off and SASL authentication): https://docs.min.io/aistor/reference/aistor-server/settings/metrics-and-logging/kafka-audit-logs/
 - AIStor Kafka audit delivery (environment settings and restart): https://docs.min.io/aistor/operations/monitoring/audit-logging/kafka-audit-logging/
 - AIStor global audit event queue: https://docs.min.io/aistor/reference/aistor-server/settings/metrics-and-logging/audit-event-queue/
-- AIStor Console settings (disablement and browser redirection): [https://docs.min.io/aistor/reference/aistor-server/settings/console/](https://docs.min.io/aistor/reference/aistor-server/settings/console/)
-- AIStor core settings (automatic and explicit cluster-wide concurrency budgets): [https://docs.min.io/aistor/reference/aistor-server/settings/core/](https://docs.min.io/aistor/reference/aistor-server/settings/core/)
-- AIStor OIDC access management (role and claim mapping): [https://docs.min.io/aistor/administration/iam/access/oidc-access/](https://docs.min.io/aistor/administration/iam/access/oidc-access/)
-- AIStor OIDC identity management (mutually exclusive mappings and restart): [https://docs.min.io/aistor/administration/iam/identity/oidc-identity/](https://docs.min.io/aistor/administration/iam/identity/oidc-identity/)
-- AIStor OpenID settings (role policy and claim name): [https://docs.min.io/aistor/reference/aistor-server/settings/iam/openid/](https://docs.min.io/aistor/reference/aistor-server/settings/iam/openid/)
-- AIStor AssumeRoleWithWebIdentity (duration bounds and JWT-expiry precedence): [https://docs.min.io/aistor/developers/security-token-service/assumerolewithwebidentity/](https://docs.min.io/aistor/developers/security-token-service/assumerolewithwebidentity/)
-- AIStor STS settings (default duration): [https://docs.min.io/aistor/reference/aistor-server/settings/iam/sts/](https://docs.min.io/aistor/reference/aistor-server/settings/iam/sts/)
-- AIStor `mc share download` (presigned credentials and expiry): [https://docs.min.io/aistor/reference/cli/mc-share/mc-share-download/](https://docs.min.io/aistor/reference/cli/mc-share/mc-share-download/)
-- AWS S3 signature-condition reference (supplementary semantics for AIStor's documented condition key): [https://docs.aws.amazon.com/AmazonS3/latest/developerguide/bucket-policy-s3-sigv4-conditions.html](https://docs.aws.amazon.com/AmazonS3/latest/developerguide/bucket-policy-s3-sigv4-conditions.html)
-- AIStor metrics v3 (active and queued requests): [https://docs.min.io/aistor/operations/monitoring/metrics-and-alerts/metrics-v3/](https://docs.min.io/aistor/operations/monitoring/metrics-and-alerts/metrics-v3/)
-- AIStor release artifacts (server and client RELEASE baselines): [https://docs.min.io/aistor/operations/release-artifacts/](https://docs.min.io/aistor/operations/release-artifacts/)
+- AIStor Console settings (disablement and browser redirection): https://docs.min.io/aistor/reference/aistor-server/settings/console/
+- AIStor core settings (automatic and explicit cluster-wide concurrency budgets): https://docs.min.io/aistor/reference/aistor-server/settings/core/
+- AIStor OIDC access management (role and claim mapping): https://docs.min.io/aistor/administration/iam/access/oidc-access/
+- AIStor OIDC identity management (mutually exclusive mappings and restart): https://docs.min.io/aistor/administration/iam/identity/oidc-identity/
+- AIStor OpenID settings (role policy and claim name): https://docs.min.io/aistor/reference/aistor-server/settings/iam/openid/
+- AIStor AssumeRoleWithWebIdentity (duration bounds and JWT-expiry precedence): https://docs.min.io/aistor/developers/security-token-service/assumerolewithwebidentity/
+- AIStor STS settings (default duration): https://docs.min.io/aistor/reference/aistor-server/settings/iam/sts/
+- AIStor `mc share download` (presigned credentials and expiry): https://docs.min.io/aistor/reference/cli/mc-share/mc-share-download/
+- AWS S3 signature-condition reference (supplementary semantics for AIStor's documented condition key): https://docs.aws.amazon.com/AmazonS3/latest/developerguide/bucket-policy-s3-sigv4-conditions.html
+- AIStor metrics v3 (active and queued requests): https://docs.min.io/aistor/operations/monitoring/metrics-and-alerts/metrics-v3/
+- AIStor release artifacts (server and client RELEASE baselines): https://docs.min.io/aistor/operations/release-artifacts/
