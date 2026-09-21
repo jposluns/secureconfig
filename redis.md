@@ -41,7 +41,7 @@ Generate passwords per [authentication.md](authentication.md). The `default` use
 
 MFA: Redis has no second-factor dialogue. For machine clients, `tls-auth-clients yes` (mutual TLS, below) adds a possession factor, a certificate, alongside the password; that is stronger than a password alone but it is not MFA for a person. Human paths to the host go behind MFA per [mfa.md](mfa.md).
 
-On Redis 8.6+, the certificate-plus-password description assumes certificate-to-user automatic authentication is disabled. Redis 8.6 introduced `tls-auth-clients-user`, which defaults to `off`; enabling it can authenticate a connection without a separate password exchange. On Redis 8.6+, keep this setting `off` for the guide's certificate-plus-password and unauthenticated-certificate `NOAUTH` checks. Earlier releases do not support this directive; omit it entirely, because an unknown configuration directive prevents startup. See the [pinned certificate authentication configuration](https://raw.githubusercontent.com/redis/redis/8.6.0/redis.conf) and [registered default](https://raw.githubusercontent.com/redis/redis/8.6.0/src/config.c).
+On Redis 8.6+, the certificate-plus-password description assumes certificate-to-user automatic authentication is disabled. Redis 8.6 introduced `tls-auth-clients-user`, which defaults to `off`; enabling it can authenticate a connection without a separate password exchange. On Redis 8.6+, keep this setting `off` for the guide's certificate-plus-password and unauthenticated-certificate `NOAUTH` checks. Earlier releases do not support this directive; omit it entirely, because an unknown configuration directive prevents startup. See the [8.6 release notes](https://redis.io/docs/latest/operate/oss_and_stack/stack-with-enterprise/release-notes/redisce/redisos-8.6-release-notes/), [pinned certificate authentication configuration](https://raw.githubusercontent.com/redis/redis/8.6.0/redis.conf), and [registered default](https://raw.githubusercontent.com/redis/redis/8.6.0/src/config.c).
 
 ## 3. Make ACL restrictions durable and replace old permissions explicitly
 
@@ -380,7 +380,7 @@ From an allowed client location, probe that same primary endpoint. Substitute a 
       -h "$1" -p "$2" PING; then
     echo "inspect the RESP reply; exit=0 alone is not a pass"
   else
-    printf 'probe exit=%s; inspect the TLS error\n' "$?"
+    printf 'probe exit=%s; inspect the TLS or authentication error\n' "$?"
   fi
   printf '\nTrusted client certificate, positive control\n'
   if timeout 10s redis-cli --tls --cacert /etc/redis/tls/ha-ca.crt \
@@ -388,7 +388,7 @@ From an allowed client location, probe that same primary endpoint. Substitute a 
       -h "$1" -p "$2" PING; then
     echo "inspect the RESP reply; exit=0 alone is not a pass"
   else
-    printf 'probe exit=%s; inspect the TLS error\n' "$?"
+    printf 'probe exit=%s; inspect the TLS or authentication error\n' "$?"
   fi
 )
 ```
@@ -425,10 +425,10 @@ These OpenSSL probes require TLS 1.2 to be enabled on the test endpoint and GNU 
   case "$2" in
     *[!0-9]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
   esac
+  [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 1; }
   case "$3" in
     *REPLACE_WITH_*|"") echo "substitute the expected peer name; not probing"; exit 1 ;;
   esac
-  [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 1; }
   printf '\nNo client certificate\n'
   if timeout 10s openssl s_client -connect "$1:$2" -tls1_2 -brief \
       -verify_hostname "$3" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt </dev/null; then
@@ -471,11 +471,11 @@ An exposed plaintext bus has no TLS certificate gate and will fail the TLS posit
     *REPLACE_WITH_*|"") echo "substitute your Sentinel host; not probing"; exit 1 ;;
     *)
       unset REDISCLI_AUTH || exit 1
-      redis-cli -h "$1" -p 26379 SENTINEL GET-MASTER-ADDR-BY-NAME mymaster
-      redis-cli --tls --cacert /etc/redis/tls/ha-ca.crt \
+      timeout 10s redis-cli -h "$1" -p 26379 SENTINEL GET-MASTER-ADDR-BY-NAME mymaster
+      timeout 10s redis-cli --tls --cacert /etc/redis/tls/ha-ca.crt \
         --cert /etc/redis/tls/client.crt --key /etc/redis/tls/client.key \
         -h "$1" -p 26379 SENTINEL GET-MASTER-ADDR-BY-NAME mymaster
-      REDISCLI_HISTFILE=/dev/null redis-cli --tls \
+      REDISCLI_HISTFILE=/dev/null timeout 10s redis-cli --tls \
         --cacert /etc/redis/tls/ha-ca.crt \
         --cert /etc/redis/tls/client.crt --key /etc/redis/tls/client.key \
         -h "$1" -p 26379 --user discovery --askpass \
@@ -519,10 +519,10 @@ Replace the example identity consistently with the identity issued to intended H
   case "$2" in
     *[!0-9]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
   esac
+  [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 1; }
   case "$3" in
     *REPLACE_WITH_*|"") echo "substitute the expected peer name; not probing"; exit 1 ;;
   esac
-  [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 1; }
   printf '\nSame CA, wrong peer name\n'
   if timeout 10s openssl s_client -connect "$1:$2" -tls1_2 -brief \
       -verify_hostname "$3" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt \
@@ -542,7 +542,7 @@ Replace the example identity consistently with the identity issued to intended H
 )
 ```
 
-Without the name restriction, require both handshakes to complete. With enforcement enabled, require the wrong-name handshake to be rejected and the matching-name handshake to complete. Correlate rejection with the accepting node's certificate-verification error. An unrelated failure or a failed positive control is inconclusive. Inspect warnings for `TLS_NO_PEER_NAME_VERIFICATION`; accepting the wrong-name certificate with the setting enabled fails this enforcement check. See the [pinned identity configuration](https://raw.githubusercontent.com/redis/redis/8.10.1/redis.conf) and [enforcement and warning paths](https://raw.githubusercontent.com/redis/redis/8.10.1/src/tls.c).
+Without the name restriction, require both handshakes to complete. With enforcement enabled, require the wrong-name handshake to be rejected and the matching-name handshake to complete. Correlate rejection with the accepting node's certificate-verification error. An unrelated failure or a failed positive control is inconclusive. Inspect startup warnings indicating that this build does not enforce peer-name verification; accepting the wrong-name certificate with the setting enabled fails this enforcement check. See the [pinned identity configuration](https://raw.githubusercontent.com/redis/redis/8.10.1/redis.conf) and [enforcement and warning paths](https://raw.githubusercontent.com/redis/redis/8.10.1/src/tls.c).
 
 Test outbound replication separately in a disposable Redis 8.10+ pair. Prepare matching-name and wrong-name server certificates from the same CA, with valid server-authentication purposes. At the primary's authenticated administrative prompt, install the wrong-name fixture:
 
@@ -781,7 +781,7 @@ The tagged configuration files below pin syntax and historical behaviour; they a
 - CLIENT KILL user filtering and SKIPME behaviour: https://redis.io/docs/latest/commands/client-kill/
 - ACL GETUSER effective-policy readback: https://redis.io/docs/latest/commands/acl-getuser/
 - ACL LOG failure reasons and retrieval: https://redis.io/docs/latest/commands/acl-log/
-- Redis 7+ ACL DRYRUN permission checks without command execution: https://redis.io/docs/latest/commands/acl-dryrun/
+- ACL DRYRUN checks without command execution: https://redis.io/docs/latest/commands/acl-dryrun/
 - CONFIG GET read-only configuration inspection: https://redis.io/docs/latest/commands/config-get/
 - GET and SET syntax and key access: https://redis.io/docs/latest/commands/get/ and https://redis.io/docs/latest/commands/set/
 - PING command categories: https://redis.io/docs/latest/commands/ping/
@@ -799,6 +799,7 @@ The tagged configuration files below pin syntax and historical behaviour; they a
 - Redis 8.10.1 pinned Sentinel configuration: https://raw.githubusercontent.com/redis/redis/8.10.1/sentinel.conf
 - Redis 8.10.1 registered TLS and certificate-authentication defaults: https://raw.githubusercontent.com/redis/redis/8.10.1/src/config.c
 - Redis 8.6.0 tls-auth-clients-user introduction and default: https://raw.githubusercontent.com/redis/redis/8.6.0/redis.conf
+- Redis 8.6 release notes and tls-auth-clients-user introduction: https://redis.io/docs/latest/operate/oss_and_stack/stack-with-enterprise/release-notes/redisce/redisos-8.6-release-notes/
 - Redis 8.10.1 replication authentication implementation: https://raw.githubusercontent.com/redis/redis/8.10.1/src/replication.c
 - Redis 8.10.1 Sentinel authentication, outgoing TLS, and announcements: https://raw.githubusercontent.com/redis/redis/8.10.1/src/sentinel.c
 - Redis 8.10.1 cluster listeners, announcements, and mandatory TLS peer certificates: https://raw.githubusercontent.com/redis/redis/8.10.1/src/cluster_legacy.c
