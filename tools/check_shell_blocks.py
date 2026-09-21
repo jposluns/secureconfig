@@ -70,13 +70,16 @@ produced a parse error against a block that renders and runs fine.
 WHEN SHELLCHECK IS NOT INSTALLED this prints a SKIP and returns 0. That is a GAP, not a pass, and
 the message says so. The recorded cases skip alongside it so the suite really does stay green.
 
-THE VERSION IS REPORTED, NOT PINNED. `ubuntu-latest` floats the shellcheck it ships and default
-rule sets do change between releases. Pinning by download would put a network fetch inside the
-required status check, and CLAUDE.md is explicit that every gate is offline so nothing outside
-this repository can turn the build red. Vendoring a binary with a checked digest would be
-offline, and is declined because a multi-megabyte executable does not belong in a documentation
-repository. So the version is printed: a corpus that reddens without changing is then one log
-line from its explanation.
+THE VERSION IS PINNED IN CI, AND REPORTED HERE. `ubuntu-latest` floats the shellcheck it ships and
+default rule sets change between releases: in #231 the runner's older shellcheck raised an SC2015 on
+a correct `A && B || { ...; exit; }` guard that this gate's local 0.11.0 does not, so a green local
+run reddened only in CI after push. The `Checks` workflow now installs a SHA-256-verified shellcheck
+0.11.0 before running the suite, the same determinism reason its Python pin carries. The pin lives in
+the workflow, not in this gate: the gate still reads `shellcheck` from PATH and stays offline, so
+nothing inside the suite fetches anything, and the version is still printed so a corpus that reddens
+without changing is one log line from its explanation. Vendoring a multi-megabyte binary in a
+documentation repository is still declined; the accepted tradeoff, already made for the Python pin,
+is that a release-asset outage can fail the job.
 
 BASH PARSES EVERY BLOCK, separately from shellcheck. The pass line has always said the blocks
 parse, and until now that rested on shellcheck, which a guide can silence: a reviewer put
@@ -152,7 +155,7 @@ def blocks_of(path):
 
 
 def shellcheck_version():
-    """The version string, for the pass line. See THE VERSION IS REPORTED in the docstring."""
+    """The version string, for the pass line. See THE VERSION IS PINNED IN CI in the docstring."""
     try:
         done = subprocess.run(["shellcheck", "--version"], capture_output=True, text=True,
                               timeout=30,
