@@ -72,7 +72,7 @@ the message says so. The recorded cases skip alongside it so the suite really do
 
 THE VERSION IS PINNED IN CI, AND REPORTED HERE. `ubuntu-latest` floats the shellcheck it ships and
 default rule sets change between releases: in #231 the runner's older shellcheck raised an SC2015 on
-a correct `A && B || { ...; exit; }` guard that this gate's local 0.11.0 does not, so a green local
+a correct `[ -f ] && [ -r ] || { ...; exit; }` guard that this gate's local 0.11.0 does not, so a green local
 run reddened only in CI after push. The `Checks` workflow now installs a SHA-256-verified shellcheck
 0.11.0 before running the suite, the same determinism reason its Python pin carries. The pin lives in
 the workflow, not in this gate: the gate still reads `shellcheck` from PATH and stays offline, so

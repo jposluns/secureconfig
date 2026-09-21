@@ -23,7 +23,7 @@ jobs:
           python-version: "3.14"
       # shellcheck also floats on `ubuntu-latest`, and its default rule set changes between
       # releases: in #231 the runner's older shellcheck raised SC2015 on a correct
-      # `A && B || { ...; exit; }` guard that the gate's local 0.11.0 does not, so a green
+      # `[ -f ] && [ -r ] || { ...; exit; }` guard that the gate's local 0.11.0 does not, so a green
       # local run reddened only in CI after push. Pin shellcheck to the version the gate is
       # developed against, so local == CI. Same determinism reason as the Python pin above.
       # The download is verified by SHA-256; a release-asset outage failing the job is the
