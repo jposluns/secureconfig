@@ -19145,11 +19145,29 @@ Run this in the deployment's network namespace and identify the actual server li
 
 The standalone port normally starts at 8888 but can change through configuration or port retries. Do not assume it from an example. [Server port implementation](https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/serverapp.py), [default port constant](https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/__init__.py).
 
+### Verify the reverse-proxy path prefix
+
+**REASONED:** no Jupyter Server, JupyterHub, or configurable-http-proxy is running in the authoring environment.
+
+In an isolated fixture, compare the consistent-prefix configuration from section 8 against a deployment where only part of the stack carries the prefix. Request the prefixed application routes (for a standalone Server, `GET /jupyter/api/kernels`; for JupyterHub, `GET /jupyter/hub/login` and a spawned user's actual prefixed URL) and, separately, probe any unprefixed alias (`GET /api/kernels`, `GET /hub/login`). The fixed configuration keeps every application route behind the intended authentication and routing boundary and leaves no unprefixed alias serving the application, while a bare `404` proves neither authentication nor a working deployment, so confirm authenticated access and a working kernel WebSocket on the prefixed path as the positive control. See the [JupyterHub proxy configuration](https://jupyterhub.readthedocs.io/en/5.5.2/howto/configuration/config-proxy.html).
+
+### Verify forwarded-header trust
+
+**REASONED:** no Jupyter Server or JupyterHub behind a real ingress is available in the authoring environment.
+
+Send separate and conflicting spoofed `X-Forwarded-For`/`X-Real-IP` and `X-Scheme`/`X-Forwarded-Proto` headers through the real ingress, and separately attempt to reach the backend directly from an untrusted network. Compare the request-derived client address in the logs, the redirect targets, and the cookie `Secure` attribute. In the exposed fixture (header trust enabled while the backend is reachable or the proxy passes headers through unchanged) the attacker-controlled address or scheme takes effect; in the fixed fixture (section 9: a private bind plus a sanitizing ingress) it does not, while a legitimate login and WebSocket still succeed. Include a spoofed `Forwarded: proto=http` header and compare the detected browser-facing scheme (the redirect target and any scheme-derived decision) between the sanitizing and the pass-through ingress. Because section 6 sets `cookie_host_prefix_enabled`, the single-user OAuth cookie stays `Secure` regardless, so a stripped-`Secure` cookie is demonstrable only in an isolated fixture with host-prefixed cookies disabled; with this guide's configuration, verify instead that the ingress removes or overwrites `Forwarded`. The host is a separate case: the forwarded-header machinery rewrites only the client address and scheme, not the host; the standalone Server's origin check reads the genuine `Host` header, and JupyterHub 5 ignores `X-Forwarded-Host` unconditionally (the `forwarded_host_header` trait is defined but no longer consumed), so confirm that a spoofed `X-Forwarded-Host` has no effect and test an unintended genuine `Host` value at the ingress instead. See the [JupyterHub configuration reference](https://jupyterhub.readthedocs.io/en/5.5.2/reference/config-reference.html) and the [Jupyter Server HTTP-server construction](https://raw.githubusercontent.com/jupyter-server/jupyter_server/v2.18.0/jupyter_server/serverapp.py).
+
+### Verify internal Hub TLS
+
+**REASONED:** no JupyterHub, spawner, or single-user server is available in the authoring environment.
+
+Keep the public HTTPS listener constant and compare internal TLS off against on (section 10). Inspect each actual internal connection (Hub to proxy API, proxy to Hub, proxy to single-user server, and Hub to single-user server): with internal TLS on, a request using the intended internal certificate authority and client certificate succeeds, while one presenting an untrusted certificate is rejected, and, on JupyterHub 5.4 or later (which enabled internal hostname verification by default), a connection under an incorrect server hostname is likewise rejected. Require a successful login, spawn, notebook execution, and kernel WebSocket exchange as positive controls. The single-user-server-to-kernel ZeroMQ connection must be observed separately and must not be counted as encrypted by this test, since `internal_ssl` does not cover it. See the [internal_ssl definition](https://raw.githubusercontent.com/jupyterhub/jupyterhub/5.5.2/jupyterhub/app.py) and the [Jupyter messaging protocol](https://raw.githubusercontent.com/jupyter/jupyter_client/v8.6.3/docs/messaging.rst).
+
 ### Local authoring checks and demonstration backlog
 
 The following checks were run without editing files or running `tools/run_all_checks.sh`:
 
-- All eight Python configuration blocks passed ASCII and Python syntax checks and loaded into `traitlets.Config`. This checks configuration-file construction, not Jupyter trait recognition or runtime enforcement.
+- All thirteen Python configuration blocks passed ASCII and Python syntax checks and loaded into `traitlets.Config`. This checks configuration-file construction, not Jupyter trait recognition or runtime enforcement.
 - All five Bash blocks passed `bash -n` and ShellCheck.
 - Both unchanged HTTP blocks refused their placeholders locally under `bash -u`.
 - Eighty positional-guard cases passed, covering valid inputs, empty values, embedded placeholders, angle brackets, the example hostname, control characters, missing markers, wrong argument counts, and an altered `IFS` count case.
@@ -19159,7 +19177,63 @@ The following checks were run without editing files or running `tools/run_all_ch
 
 | ID | Status | Outstanding exposed-versus-fixed demonstrations |
 |---|---|---|
-| JUPYTER-LIVE-1 | Open; REASONED, not demonstrated. Requires Jupyter Server 2.18+, JupyterHub 5+, suitable Unix test accounts, TLS/DNS, browser sessions, terminal support, representative extension routes, and an authorized isolated deployment. | Demonstrate TLS and anonymous/authenticated API access; external reachability and listener inventory; metrics and unclassified extension authentication; cookie-session XSRF and origin checks; Host rejection with an authenticated positive control; root refusal and workload UIDs; terminal disabling; Hub admission including historical users; separate execution accounts and browser origins; host-prefixed cookies; ignored user configuration and protected server environments. Record versions, requests, responses, logs, positive controls, and cleanup. |
+| JUPYTER-LIVE-1 | Open; REASONED, not demonstrated. Requires Jupyter Server 2.18+, JupyterHub 5+, suitable Unix test accounts, TLS/DNS, browser sessions, terminal support, representative extension routes, and an authorized isolated deployment. | Demonstrate TLS and anonymous/authenticated API access; external reachability and listener inventory; metrics and unclassified extension authentication; cookie-session XSRF and origin checks; Host rejection with an authenticated positive control; root refusal and workload UIDs; terminal disabling; Hub admission including historical users; separate execution accounts and browser origins; host-prefixed cookies; ignored user configuration and protected server environments. Record versions, requests, responses, logs, positive controls, and cleanup. For the sections 8 to 10 controls: demonstrate a route reaching the application outside the intended prefix versus a consistent prefix; a spoofed forwarded IP and scheme taking effect with header trust misconfigured versus rejected behind a sanitizing ingress, a spoofed Forwarded header not changing the detected browser scheme behind the ingress, and a spoofed X-Forwarded-Host ignored unconditionally (the forwarded_host_header trait is inert across the 5.x range); and internal Hub traffic in plaintext versus TLS with client-certificate verification, keeping the kernel ZeroMQ transport excluded from the internal-TLS claim. |
+
+## 8. Preserve the deployment path prefix through the reverse proxy
+
+When a reverse proxy serves Jupyter under a path prefix such as `/jupyter/`, the application must be told the same prefix, or another route can reach the application outside the authentication and routing boundary the proxy establishes. Both the standalone Server and JupyterHub default their prefix to `/`.
+
+For a standalone Jupyter Server behind a prefix, set it in `jupyter_server_config.py`:
+
+```python
+c.ServerApp.base_url = '/jupyter/'
+```
+
+The Server applies the prefix to its registered handlers. See the [Server 2.18.0 application definition](https://raw.githubusercontent.com/jupyter-server/jupyter_server/v2.18.0/jupyter_server/serverapp.py).
+
+For JupyterHub behind the same-host proxy, set the listener and base URL together in `jupyterhub_config.py`:
+
+```python
+c.JupyterHub.bind_url = 'http://127.0.0.1:8000/jupyter/'
+```
+
+This sets both the bind address and `JupyterHub.base_url`. Configure the prefix consistently on both sides of the proxy; do not combine a `bind_url` prefix with separate conflicting URL settings, and do not reach for the configurable-http-proxy `--no-include-prefix` or `--no-prepend-path` flags as a generic prefix fix, since neither establishes an authentication boundary. See the [JupyterHub proxy configuration](https://jupyterhub.readthedocs.io/en/5.5.2/howto/configuration/config-proxy.html) and the [configurable-http-proxy 5.3.0 command-line options](https://raw.githubusercontent.com/jupyterhub/configurable-http-proxy/5.3.0/bin/configurable-http-proxy).
+
+## 9. Trust forwarded headers only behind a sanitizing ingress
+
+A standalone Jupyter Server does not trust proxy-forwarded headers by default (`ServerApp.trust_xheaders` is `False`), while JupyterHub constructs its HTTP server with forwarded-header trust enabled. Trusting these headers while the backend can still be reached by an untrusted peer, or while the proxy passes client-supplied headers through unchanged, lets a client spoof its apparent address or scheme. Bind the backend privately and trust the headers only behind an ingress that overwrites them.
+
+For a standalone Server behind a same-host TLS ingress, in `jupyter_server_config.py`:
+
+```python
+c.ServerApp.ip = '127.0.0.1'
+c.ServerApp.trust_xheaders = True
+```
+
+Keep `trust_xheaders` at `False` unless a trusted ingress sets `X-Forwarded-For`/`X-Real-IP` and `X-Scheme`/`X-Forwarded-Proto` itself. See the [Server 2.18.0 HTTP-server construction](https://raw.githubusercontent.com/jupyter-server/jupyter_server/v2.18.0/jupyter_server/serverapp.py).
+
+For the same-host JupyterHub topology, in `jupyterhub_config.py`:
+
+```python
+c.JupyterHub.hub_ip = '127.0.0.1'
+c.JupyterHub.trusted_downstream_ips = ['127.0.0.1']
+c.JupyterHub.public_url = 'https://jupyter.example.com/jupyter/'
+```
+
+`trusted_downstream_ips` names the proxy hops that are trusted and skipped when Hub selects the client address from `X-Forwarded-For`; it controls address selection, not whether a connecting peer may supply headers, so it is not a substitute for an ingress that sanitizes them, and an empty list does not disable header trust. The ingress must normalize both forwarded-IP forms (`X-Forwarded-For`, `X-Real-IP`), both scheme forms (`X-Forwarded-Proto`, `X-Scheme`), and the standard RFC 7239 `Forwarded` header, and reject unintended `Host` values. JupyterHub reads the `Forwarded` header before the `X-` scheme forms when deciding the browser-facing scheme, so the ingress must own it too. In this guide's configuration `public_url` (this section) and `cookie_host_prefix_enabled` (section 6) already guard the scheme-derived redirect and single-user OAuth cookie paths, but leaving `Forwarded` unsanitized still lets a client-supplied value reach any scheme decision, so normalize it alongside the other forwarded headers. Binding to loopback excludes a remote peer but not other local processes. See the [JupyterHub configuration reference](https://jupyterhub.readthedocs.io/en/5.5.2/reference/config-reference.html).
+
+## 10. Encrypt internal Hub communication
+
+Public HTTPS (sections 3 and 4) protects only the browser-facing listener. By default JupyterHub leaves the internal traffic between the Hub, the proxy, and the single-user servers unencrypted (`internal_ssl` is `False`). Enable internal TLS in `jupyterhub_config.py`:
+
+```python
+c.JupyterHub.internal_ssl = True
+c.JupyterHub.internal_certs_location = '/srv/jupyterhub/internal-ssl'
+```
+
+JupyterHub then generates an internal certificate authority and per-component certificates and enables TLS with client-certificate verification for the Hub-to-proxy API, the proxy-to-Hub and proxy-to-single-user connections, and the Hub-to-single-user connection used during spawn readiness. Treat the certificate directory as protected persistent state, and give the spawner the ability to deliver each server's key, certificate, and trust bundle (`LocalProcessSpawner` relocates them; a remote spawner needs its own `move_certs` support). Set `Spawner.ssl_alt_names` to the actual connection names when they are not the defaults, and never resolve a certificate error by disabling verification. Internal hostname verification is on by default from [JupyterHub 5.4](https://raw.githubusercontent.com/jupyterhub/jupyterhub/5.5.2/docs/source/reference/changelog.md) and is verified against 5.5.2; earlier 5.x releases left it disabled, so upgrade before relying on it. See the [internal_ssl definition](https://raw.githubusercontent.com/jupyterhub/jupyterhub/5.5.2/jupyterhub/app.py) and the [JupyterHub configuration reference](https://jupyterhub.readthedocs.io/en/5.5.2/reference/config-reference.html).
+
+Internal TLS does not encrypt the single-user server's connection to its kernels. That link uses the Jupyter messaging protocol over ZeroMQ, whose HMAC signature authenticates messages but does not encrypt them. Local kernels bind loopback; a remote-kernel deployment needs a separately configured encrypted transport such as an SSH tunnel, which this guide does not configure. See the [Jupyter messaging protocol](https://raw.githubusercontent.com/jupyter/jupyter_client/v8.6.3/docs/messaging.rst) and the [kernel connection defaults](https://raw.githubusercontent.com/jupyter/jupyter_client/v8.6.3/jupyter_client/connect.py).
 
 ## Sources (checked September 2026)
 
@@ -19189,6 +19263,14 @@ The following checks were run without editing files or running `tools/run_all_ch
 - Tornado XSRF cookies and request headers: https://www.tornadoweb.org/en/stable/guide/security.html
 - curl TLS certificate and hostname verification: https://curl.se/docs/sslcerts.html
 - curl options, stdin headers, cookie files, and diagnostic variables: https://curl.se/docs/manpage.html
+- JupyterHub 5.5.2 proxy configuration and path prefix: https://jupyterhub.readthedocs.io/en/5.5.2/howto/configuration/config-proxy.html
+- configurable-http-proxy 5.3.0 command-line options: https://raw.githubusercontent.com/jupyterhub/configurable-http-proxy/5.3.0/bin/configurable-http-proxy
+- JupyterHub 5.5.2 configuration reference (trusted_downstream_ips, public_url, internal_ssl): https://jupyterhub.readthedocs.io/en/5.5.2/reference/config-reference.html
+- JupyterHub 5.4 changelog (internal-TLS hostname verification default): https://raw.githubusercontent.com/jupyterhub/jupyterhub/5.5.2/docs/source/reference/changelog.md
+- Jupyter Server 2.18.0 application definition and HTTP-server construction: https://raw.githubusercontent.com/jupyter-server/jupyter_server/v2.18.0/jupyter_server/serverapp.py
+- JupyterHub 5.5.2 application (internal_ssl and forwarded-header trust): https://raw.githubusercontent.com/jupyterhub/jupyterhub/5.5.2/jupyterhub/app.py
+- Jupyter messaging protocol (jupyter_client 8.6.3): https://raw.githubusercontent.com/jupyter/jupyter_client/v8.6.3/docs/messaging.rst
+- Jupyter kernel connection defaults (jupyter_client 8.6.3): https://raw.githubusercontent.com/jupyter/jupyter_client/v8.6.3/jupyter_client/connect.py
 
 ======================================================================
 ==> ollama.md
