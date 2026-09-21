@@ -512,13 +512,13 @@ See [internal membership authentication](https://www.mongodb.com/docs/manual/cor
 
 **REASONED:** no MongoDB Enterprise deployment or readable audit destination is available.
 
-In an isolated Enterprise fixture with the auditing configuration from section 5, perform a successful authentication, a failed authentication, a collection creation, and a permitted collection read, then inspect the audit destination. Confirm the successful-authorization-check setting first:
+In an isolated Enterprise fixture with the auditing configuration from section 5, perform a successful authentication, a failed authentication, a collection creation, a permitted collection read, and a read attempted by an authenticated user that lacks find permission on the collection, then inspect the audit destination. Confirm the successful-authorization-check setting first:
 
 ```javascript
 db.adminCommand({getParameter: 1, auditAuthorizationSuccess: 1});
 ```
 
-With no destination configured, no audit records are produced. With the destination configured, authentication and authorization failures are recorded, while successful authorization checks (the `authCheck` action) appear only once `auditAuthorizationSuccess` is `true`, and an authentication-only filter records nothing else. The presence of an audit file alone proves neither event coverage nor successful-operation auditing; correlate each record with the test identity, operation, and time. See [auditing](https://www.mongodb.com/docs/v8.0/core/auditing/) and [the auditAuthorizationSuccess parameter](https://www.mongodb.com/docs/v8.0/reference/parameters/).
+With no destination configured, no audit records are produced. With the destination configured, a failed authentication is recorded as an `authenticate` event, a schema change such as the collection creation is recorded by default, and the unauthorized read is recorded as a failed `authCheck` (result 13) regardless of the setting; the permitted read's successful `authCheck` appears only once `auditAuthorizationSuccess` is `true`, at a performance cost, and an authentication-only filter records nothing else. The presence of an audit file alone proves neither event coverage nor successful-operation auditing; correlate each record with the test identity, operation, and time. See [auditing](https://www.mongodb.com/docs/v8.0/core/auditing/), [the auditAuthorizationSuccess parameter](https://www.mongodb.com/docs/v8.0/reference/parameters/), and the [audit event definitions](https://www.mongodb.com/docs/v8.0/reference/audit-message/mongo/).
 
 ### Verify diagnostic-log redaction
 
@@ -555,7 +555,7 @@ CSFLE is verified with distinct client handles, not a single shell session, beca
 
 **REASONED:** no replica-set or sharded MongoDB deployment, encryption-capable driver, or provisioned key is available.
 
-Create a Queryable Encryption collection with an `encryptedFields` definition and compare it against an ordinary collection, using distinct client handles as for CSFLE. Through the configured client, insert a canary and retain its `_id`; on the Community explicit path, encrypt values explicitly. Read by `_id` through a client configured without decryption: the ordinary collection returns plaintext, the encrypted collection ciphertext, and the configured client recovers the value. The configured client still matches a supported encrypted equality query on a string field. A range query is a separate fixture: it requires the encrypted field to be a numeric or date type (`int`, `long`, `double`, `decimal`, or `date`), not a string, with documents inside and outside the tested interval. A plaintext write against the declared encrypted fields is rejected. Missing results or a connection error alone do not establish confidentiality. See [Queryable Encryption](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/), its [limitations](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/limitations/), the [manual-encryption reference](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/fundamentals/manual-encryption/), and [supported operations](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/supported-operations/).
+Create a Queryable Encryption collection with an `encryptedFields` definition and compare it against an ordinary collection, using distinct client handles as for CSFLE. Through the configured client, insert a canary and retain its `_id`; on the Community explicit path, encrypt values explicitly. Read by `_id` through a client configured without decryption: the ordinary collection returns plaintext, the encrypted collection ciphertext, and the configured client recovers the value. Query support depends on the field's configured query type: a field declared in `encryptedFields` without a `queryType` is encrypted but not queryable, so set `queryType: "equality"` on the encrypted string field and confirm the configured client matches an encrypted equality query. A range query is a separate fixture with `queryType: "range"`, which requires the encrypted field to be a numeric or date type (`int`, `long`, `double`, `decimal`, or `date`), not a string, with documents inside and outside the tested interval. A plaintext write against the declared encrypted fields is rejected. Missing results or a connection error alone do not establish confidentiality. See [Queryable Encryption](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/), its [limitations](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/limitations/), the [manual-encryption reference](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/fundamentals/manual-encryption/), and [supported operations](https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/supported-operations/).
 
 | Backlog ID | Status | Outstanding demonstration |
 | --- | --- | --- |
@@ -585,7 +585,7 @@ Set it only where the accountability requirement justifies the overhead. See the
 
 ## 6. Redact document values from the diagnostic log
 
-`redactClientLogData` is a MongoDB Enterprise feature; MongoDB Community does not offer it. Without redaction, logged operations can carry document field values into the diagnostic log, where a reader who is not a database user can see them. The documented startup routes are the `--redactClientLogData` flag or the configuration setting; keep the configuration setting so it survives restarts:
+`redactClientLogData` is a MongoDB Enterprise feature; MongoDB Community does not offer it. Without redaction, logged operations can carry document field values into the diagnostic log, where a reader who is not a database user can see them. The documented startup routes are the `--redactClientLogData` flag or the configuration setting; use the configuration setting to keep redaction in the node's configuration file:
 
 ```yaml
 security:
@@ -596,7 +596,7 @@ Redaction replaces the values accompanying a log message with `###`. Metadata su
 
 ## 7. Encrypt the storage engine with a managed key
 
-MongoDB Enterprise 3.2 introduced native encryption for the WiredTiger storage engine; MongoDB Community has no native equivalent and depends on host or filesystem encryption. `security.enableEncryption` defaults to `false`. Native encryption cannot encrypt existing data: enable it on a fresh member and populate it through initial sync or the documented migration, rather than restarting a populated data directory with the flag set. See [encryption at rest](https://www.mongodb.com/docs/v8.0/core/security-encryption-at-rest/).
+MongoDB Enterprise 3.2 introduced native encryption for the WiredTiger storage engine; MongoDB Community has no native equivalent and depends on host or filesystem encryption. `security.enableEncryption` defaults to `false` (see the [encryption configuration options](https://www.mongodb.com/docs/v8.0/reference/configuration-options/)). Native encryption cannot encrypt existing data: enable it on a fresh member and populate it through initial sync or the documented migration, rather than restarting a populated data directory with the flag set. See [encryption at rest](https://www.mongodb.com/docs/v8.0/core/security-encryption-at-rest/).
 
 For a local key file:
 
@@ -682,6 +682,7 @@ QE requires a new encrypted collection created with an `encryptedFields` definit
 - listDatabases privilege-dependent behavior: https://www.mongodb.com/docs/manual/reference/command/listdatabases/
 - Replica-set status and required privilege: https://www.mongodb.com/docs/manual/reference/command/replsetgetstatus/
 - MongoDB 8.0 Enterprise auditing: https://www.mongodb.com/docs/v8.0/core/auditing/
+- MongoDB 8.0 audit event definitions (authCheck and authenticate results): https://www.mongodb.com/docs/v8.0/reference/audit-message/mongo/
 - MongoDB 8.0 configure auditing and destinations: https://www.mongodb.com/docs/v8.0/tutorial/configure-auditing/
 - MongoDB 8.0 audit filters: https://www.mongodb.com/docs/v8.0/tutorial/configure-audit-filters/
 - MongoDB 8.0 server parameters (auditAuthorizationSuccess, redactClientLogData): https://www.mongodb.com/docs/v8.0/reference/parameters/
