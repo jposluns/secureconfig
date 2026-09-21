@@ -53,7 +53,7 @@ Run the standalone server and its local kernels under a dedicated, unprivileged 
 c.ServerApp.allow_root = False
 ```
 
-Do not bypass this with `--allow-root`. The setting refuses root startup; it does not change the process's account or sandbox notebook code. Grant the account only the filesystem and service access its notebooks require. Apply this privilege requirement to Hub user workloads separately from the privileges required by the selected spawner. [Server startup implementation](https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/serverapp.py).
+Do not bypass this with `--allow-root`. The setting refuses root startup; it does not change the process's account or sandbox notebook code. Grant the account only the filesystem and service access its notebooks require. Apply this privilege requirement to Hub user workloads separately from the privileges required by the selected spawner. [Server startup implementation](https://raw.githubusercontent.com/jupyter-server/jupyter_server/9a4d6eea2b16815a493b11fffe0b51b1fe55a81b/jupyter_server/serverapp.py).
 
 If terminals are unnecessary, disable them:
 
@@ -61,7 +61,7 @@ If terminals are unnecessary, disable them:
 c.ServerApp.terminals_enabled = False
 ```
 
-Notebook kernels can still execute shell commands. This removes an unused interface; it does not create an execution boundary. At the time of writing, the generated reference displays `False`, while the implementation dynamically defaults to `True`, subject to terminal availability. Configure it explicitly. [Terminal configuration](https://jupyter-server.readthedocs.io/en/latest/other/full-config.html#ServerApp.terminals_enabled), [implementation](https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/serverapp.py).
+Notebook kernels can still execute shell commands. This removes an unused interface; it does not create an execution boundary. At the time of writing, the generated reference displays `False`, while the implementation dynamically defaults to `True`, subject to terminal availability. Configure it explicitly. [Terminal configuration](https://jupyter-server.readthedocs.io/en/latest/other/full-config.html#ServerApp.terminals_enabled), [implementation](https://raw.githubusercontent.com/jupyter-server/jupyter_server/9a4d6eea2b16815a493b11fffe0b51b1fe55a81b/jupyter_server/serverapp.py).
 
 ## 3. Enable TLS
 
@@ -111,7 +111,7 @@ c.ServerApp.local_hostnames = ['localhost', 'jupyter.example.com']
 
 Replace `jupyter.example.com`. Setting `allow_remote_access = True` disables the Host check; adding a known hostname does not require it. This static hostname example is for a standalone server; Hub single-user servers need their actual generated hostnames accounted for. [Host-check configuration](https://jupyter-server.readthedocs.io/en/latest/other/full-config.html#ServerApp.allow_remote_access).
 
-Token-authenticated requests bypass origin and XSRF checks by design. Use a cookie-authenticated session, without an authorization token, to test these browser-session protections. [Identity-provider implementation](https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/auth/identity.py), [request-handler implementation](https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/base/handlers.py).
+Token-authenticated requests bypass origin and XSRF checks by design. Use a cookie-authenticated session, without an authorization token, to test these browser-session protections. [Identity-provider implementation](https://raw.githubusercontent.com/jupyter-server/jupyter_server/3df9a70b8aea53557ad04510a63c95ce9d4c3abc/jupyter_server/auth/identity.py), [request-handler implementation](https://raw.githubusercontent.com/jupyter-server/jupyter_server/00d45c80eeb0f50f191b236ee47cc1d82a7db9ca/jupyter_server/base/handlers.py).
 
 ## 5. Give Hub users individual identities and execution accounts
 
@@ -245,7 +245,7 @@ Use these exposed-versus-fixed comparisons:
 | Fronting authentication | Demonstrate that the exposed external route returns kernel data anonymously. | Anonymous access yields no kernel data; a login redirect may replace native `403`. Complete all required login layers and obtain authenticated kernel JSON. |
 | Host check | With `allow_remote_access = True` in the isolated fixture, the token-authenticated wrong-Host request reaches the kernel API. | With the step 4 settings, wrong Host is refused with native `403`, while the normal-Host token request succeeds. |
 
-Native protected-API `403` and Host-check behaviour come from the [handler implementation](https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/base/handlers.py). If a fronting layer rejects the wrong Host in both states, that demonstrates its rejection only; the Server Host-check comparison remains outstanding.
+Native protected-API `403` and Host-check behaviour come from the [handler implementation](https://raw.githubusercontent.com/jupyter-server/jupyter_server/00d45c80eeb0f50f191b236ee47cc1d82a7db9ca/jupyter_server/base/handlers.py). If a fronting layer rejects the wrong Host in both states, that demonstrates its rejection only; the Server Host-check comparison remains outstanding.
 
 ### Metrics and extension routes
 
@@ -253,7 +253,7 @@ Native protected-API `403` and Host-check behaviour come from the [handler imple
 
 Repeat the guarded HTTPS block with the actual Server `/metrics` URL, then each installed extension's documented, read-only protected URL. Complete the authenticated positive control for every route. Metrics should return their expected metrics body after authentication, rather than kernel JSON. An absent route, login page, or generic error is not that positive control.
 
-For the metrics comparison, set `authenticate_prometheus = False` only in the isolated exposed fixture: anonymous metrics should become available. Restore `True`: anonymous metrics should be refused and authenticated metrics should remain available. [Metrics handler](https://github.com/jupyter-server/jupyter_server/blob/main/jupyter_server/base/handlers.py).
+For the metrics comparison, set `authenticate_prometheus = False` only in the isolated exposed fixture: anonymous metrics should become available. Restore `True`: anonymous metrics should be refused and authenticated metrics should remain available. [Metrics handler](https://github.com/jupyter-server/jupyter_server/blob/00d45c80eeb0f50f191b236ee47cc1d82a7db9ca/jupyter_server/base/handlers.py).
 
 To demonstrate `allow_unauthenticated_access`, identify an extension route using Jupyter's handler machinery without an explicit authentication decorator or public-access declaration. With `True`, its anonymous GET is permitted; with `False`, login is required and its authenticated response remains available. Record the actual route and expected body. If no such route is installed, this feature demonstration remains outstanding; testing an already protected kernel route does not replace it. Explicitly public routes require a separate review of whether their exposure is intentional. [Default authentication enforcement](https://jupyter-server.readthedocs.io/en/stable/api/jupyter_server.html#jupyter_server.serverapp.ServerApp.allow_unauthenticated_access).
 
@@ -346,7 +346,7 @@ Set the base URL to the actual server URL, including any deployment prefix. Set 
 | XSRF | With `disable_check_xsrf = True` only in the isolated fixture, the same-origin POST without the XSRF header creates a kernel. | With `False`, missing XSRF produces `403`; the same session with the matching header creates a kernel with `201`. The cookie GET must also succeed. |
 | Origin | With `allow_origin = '*'` only in the isolated fixture, the wrong-Origin cookie GET returns kernel JSON. | With the step 4 origin settings, the wrong-Origin API request is rejected; current native `APIHandler` uses `404`. The same-origin cookie GET returns `200` and kernel JSON. |
 
-The POST body selects the default kernel, and successful creation returns `201`. [Kernel handler](https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/services/kernels/handlers.py). XSRF and origin outcomes follow the [request-handler checks](https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/base/handlers.py).
+The POST body selects the default kernel, and successful creation returns `201`. [Kernel handler](https://raw.githubusercontent.com/jupyter-server/jupyter_server/c8bbb1a77a1d482816bac0dfe5c14c08d37b59ac/jupyter_server/services/kernels/handlers.py). XSRF and origin outcomes follow the [request-handler checks](https://raw.githubusercontent.com/jupyter-server/jupyter_server/00d45c80eeb0f50f191b236ee47cc1d82a7db9ca/jupyter_server/base/handlers.py).
 
 A `403` or `404` in both states proves nothing about the intended control. Inspect the response and server logs, and require the positive controls above. Curl does not enforce browser CORS rules: also inspect a cookie-authenticated browser request and confirm that the fixed deployment does not grant cross-origin access through `Access-Control-Allow-Origin` or `Access-Control-Allow-Credentials`. [Origin configuration](https://jupyter-server.readthedocs.io/en/stable/api/jupyter_server.html).
 
@@ -365,7 +365,7 @@ Each check below is **REASONED: Jupyter/JupyterHub runtimes and the required tes
 | Hub browser origins and cookies | In each user's own server tab, inspect `location.origin`. Inspect Hub and single-user authentication cookies in browser developer tools. | A single-domain fixture shares an origin; fixed user servers have distinct HTTPS origins. Host-prefixed authentication cookies use the `__Host-` prefix, `Secure`, path `/`, and no `Domain` attribute. |
 | Hub user configuration and environment | In a disposable user account, place `c.ServerApp.terminals_enabled = True` in its user configuration while the administrator disables terminals, then restart its server. Compare loading versus disabling user configuration. Check write permissions on the server executable, environment, and launch-path directories as that user. | The exposed fixture loads the user override or permits server replacement. The fixed deployment ignores the user configuration and denies writes to the administrator-controlled server environment; an ordinary notebook remains usable. |
 
-Root refusal and terminal behaviour are documented in the [Server implementation](https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/serverapp.py). Hub comparisons follow its [admission rules](https://jupyterhub.readthedocs.io/en/stable/reference/api/auth.html), [local spawner behaviour](https://jupyterhub.readthedocs.io/en/stable/reference/api/spawner.html), [browser security requirements](https://jupyterhub.readthedocs.io/en/stable/explanation/websecurity.html), and [host-prefixed cookie configuration](https://jupyterhub.readthedocs.io/en/stable/reference/config-reference.html).
+Root refusal and terminal behaviour are documented in the [Server implementation](https://raw.githubusercontent.com/jupyter-server/jupyter_server/9a4d6eea2b16815a493b11fffe0b51b1fe55a81b/jupyter_server/serverapp.py). Hub comparisons follow its [admission rules](https://jupyterhub.readthedocs.io/en/stable/reference/api/auth.html), [local spawner behaviour](https://jupyterhub.readthedocs.io/en/stable/reference/api/spawner.html), [browser security requirements](https://jupyterhub.readthedocs.io/en/stable/explanation/websecurity.html), and [host-prefixed cookie configuration](https://jupyterhub.readthedocs.io/en/stable/reference/config-reference.html).
 
 ### Listener inventory and external reachability
 
@@ -377,7 +377,7 @@ ss -tlnp
 
 Run this in the deployment's network namespace and identify the actual server listener. It inventories listeners; it does not test a firewall or forwarding. Confirm the intended loopback bind, then repeat the guarded HTTPS probe from another host against the actual external endpoint. In an exposed fixture, a listener published externally can answer; in the fixed private-backend arrangement, only the intended public entry point should be reachable. A backend timeout without a working public positive control is inconclusive.
 
-The standalone port normally starts at 8888 but can change through configuration or port retries. Do not assume it from an example. [Server port implementation](https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/serverapp.py), [default port constant](https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/__init__.py).
+The standalone port normally starts at 8888 but can change through configuration or port retries. Do not assume it from an example. [Server port implementation](https://raw.githubusercontent.com/jupyter-server/jupyter_server/9a4d6eea2b16815a493b11fffe0b51b1fe55a81b/jupyter_server/serverapp.py), [default port constant](https://raw.githubusercontent.com/jupyter-server/jupyter_server/c5c452c3d5f3060557e57caaadce8f2fffc1c417/jupyter_server/__init__.py).
 
 ### Verify the reverse-proxy path prefix
 
@@ -502,17 +502,17 @@ Keep `open_signup` at its default `False`: with it off, a pending account waits 
 
 - Jupyter Server public server guide and password/TLS setup: https://jupyter-server.readthedocs.io/en/latest/operators/public-server.html
 - Jupyter Server security and token/password authentication: https://jupyter-server.readthedocs.io/en/latest/operators/security.html
-- Jupyter Server API base handler, protected API responses, and metrics enforcement: https://github.com/jupyter-server/jupyter_server/blob/main/jupyter_server/base/handlers.py
+- Jupyter Server API base handler, protected API responses, and metrics enforcement: https://github.com/jupyter-server/jupyter_server/blob/00d45c80eeb0f50f191b236ee47cc1d82a7db9ca/jupyter_server/base/handlers.py
 - Jupyter Server configuration reference and authentication migrations: https://jupyter-server.readthedocs.io/en/latest/other/full-config.html
 - Migrating from the classic Notebook server: https://jupyter-server.readthedocs.io/en/latest/operators/migrate-from-nbserver.html
 - Jupyter Server API reference for authentication, origin, Host, root, and terminal controls: https://jupyter-server.readthedocs.io/en/stable/api/jupyter_server.html
 - Jupyter Server authentication API: https://jupyter-server.readthedocs.io/en/stable/api/jupyter_server.auth.html
 - Jupyter Server release history, including endpoint authentication under 2.13.0 and 2.18.0: https://jupyter-server.readthedocs.io/en/stable/other/changelog.html
-- Jupyter Server startup, dynamic defaults, and root refusal implementation: https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/serverapp.py
-- Jupyter Server default port constant: https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/__init__.py
-- Jupyter Server identity provider and token-authenticated origin exception: https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/auth/identity.py
-- Jupyter Server Host, origin, XSRF, and default authentication implementation: https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/base/handlers.py
-- Jupyter Server kernel API implementation: https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/services/kernels/handlers.py
+- Jupyter Server startup, dynamic defaults, and root refusal implementation: https://raw.githubusercontent.com/jupyter-server/jupyter_server/9a4d6eea2b16815a493b11fffe0b51b1fe55a81b/jupyter_server/serverapp.py
+- Jupyter Server default port constant: https://raw.githubusercontent.com/jupyter-server/jupyter_server/c5c452c3d5f3060557e57caaadce8f2fffc1c417/jupyter_server/__init__.py
+- Jupyter Server identity provider and token-authenticated origin exception: https://raw.githubusercontent.com/jupyter-server/jupyter_server/3df9a70b8aea53557ad04510a63c95ce9d4c3abc/jupyter_server/auth/identity.py
+- Jupyter Server Host, origin, XSRF, and default authentication implementation: https://raw.githubusercontent.com/jupyter-server/jupyter_server/00d45c80eeb0f50f191b236ee47cc1d82a7db9ca/jupyter_server/base/handlers.py
+- Jupyter Server kernel API implementation: https://raw.githubusercontent.com/jupyter-server/jupyter_server/c8bbb1a77a1d482816bac0dfe5c14c08d37b59ac/jupyter_server/services/kernels/handlers.py
 - Jupyter Server REST API: https://jupyter-server.readthedocs.io/en/stable/developers/rest-api.html
 - Notebook 7 configuration and Jupyter Server backend: https://jupyter-notebook.readthedocs.io/en/stable/configuring/config_overview.html
 - JupyterLab kernel and terminal management: https://jupyterlab.readthedocs.io/en/stable/user/running.html
