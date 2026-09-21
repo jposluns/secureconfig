@@ -66,8 +66,12 @@ from urllib.parse import unquote, urlsplit
 RAW_HOSTS = {"raw.githubusercontent.com", "raw.github.com"}
 # The web host, where a ref-served path sits under /<owner>/<repo>/blob|raw/<ref>/.
 GH_HOSTS = {"github.com"}
-GH_REF_MARKERS = {"blob", "raw"}
+GH_REF_MARKERS = {"blob", "raw", "tree"}
 MUTABLE_REFS = {"main", "master"}  # matched case-sensitively: git refs are case-sensitive
+# The project's own repository. A self-navigation link to its own current directory
+# (for example .../secureconfig/tree/main/requests) is re-verifiable against this repo
+# and is intentional navigation, so it is never flagged as a mutable citation.
+SELF_REPO = ("jposluns", "secureconfig")
 _TRAILING_PUNCT = ".,;:!?"          # sentence punctuation that can trail a bare URL
 
 # An angle-bracket Markdown destination: <URL> up to the closing '>'.
@@ -101,7 +105,11 @@ def _norm_host(host):
 
 
 def _mutable_ref(url: str):
-    """Return ('raw'|'blob', ref) if url is a mutable-branch citation, else None."""
+    """Return ('raw'|'blob'|'tree', ref) if url is a mutable-branch citation, else None.
+
+    The project's own repository (SELF_REPO) is excluded: a link to its own current
+    directory is re-verifiable against this repo and is intentional navigation.
+    """
     url = url.rstrip(_TRAILING_PUNCT)  # a URL ending a sentence keeps its punctuation out
     try:
         parts = urlsplit(url)
@@ -110,20 +118,21 @@ def _mutable_ref(url: str):
     host = _norm_host(parts.hostname)  # lowercased; userinfo and port stripped
     # Percent-decode each path segment so an encoded ref (m%61in) is compared decoded.
     segments = [unquote(s) for s in parts.path.split("/") if s]
+    own = len(segments) >= 2 and (segments[0].lower(), segments[1].lower()) == SELF_REPO
     if host in RAW_HOSTS:
         # /<owner>/<repo>/<ref>/...
-        if len(segments) >= 3 and segments[2] in MUTABLE_REFS:
+        if len(segments) >= 3 and segments[2] in MUTABLE_REFS and not own:
             return "raw", segments[2]
     elif host in GH_HOSTS:
-        # /<owner>/<repo>/(blob|raw)/<ref>/...
-        if len(segments) >= 4 and segments[2] in GH_REF_MARKERS and segments[3] in MUTABLE_REFS:
-            kind = "raw" if segments[2] == "raw" else "blob"
+        # /<owner>/<repo>/(blob|raw|tree)/<ref>/...
+        if len(segments) >= 4 and segments[2] in GH_REF_MARKERS and segments[3] in MUTABLE_REFS and not own:
+            kind = segments[2] if segments[2] in {"raw", "tree"} else "blob"
             return kind, segments[3]
     return None
 
 
 def mutable_refs_in(line: str):
-    """Yield ('raw'|'blob', ref) for each mutable-ref citation on the line."""
+    """Yield ('raw'|'blob'|'tree', ref) for each mutable-ref citation on the line."""
     for url in _urls(line):
         hit = _mutable_ref(url)
         if hit is not None:
@@ -162,7 +171,11 @@ def self_test() -> int:
         ("https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/x.cs", 0),
         ("https://docs.spring.io/spring-boot/main/reference/x.html", 0),
         ("https://github.com/o/r/blob/v1.2.3/f.py", 0),
-        ("https://github.com/o/r/tree/main/f", 0),               # tree, not blob (scope)
+        ("https://github.com/o/r/tree/main/f", 1),               # tree dir ref (now in scope)
+        ("https://github.com/o/r/tree/master/d", 1),             # tree at master
+        ("https://github.com/jposluns/secureconfig/tree/main/requests", 0),  # self-repo navigation excluded
+        ("https://github.com/jposluns/secureconfig/blob/main/x.py", 0),      # self-repo excluded (all markers)
+        ("https://raw.githubusercontent.com/jposluns/secureconfig/main/x", 0),  # self-repo raw excluded
         # --- host boundary ---
         ("https://notgithub.com/o/r/blob/main/f.py", 0),
         ("https://evilraw.githubusercontent.com.example.com/o/r/main/f", 0),

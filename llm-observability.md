@@ -259,7 +259,7 @@ that accepts spans with no credential at all.
 - OpenTelemetry Collector, `component.UseLocalHostAsDefaultHost` feature-gate removal in v0.112.0: https://github.com/open-telemetry/opentelemetry-collector/blob/v0.112.0/CHANGELOG.md
 - OpenTelemetry, Collector security best practices (bind addresses, TLS, authenticator extensions, minimal
   components, non-root): https://opentelemetry.io/docs/security/config-best-practices/
-- OpenTelemetry Collector Contrib, `basicauthextension` (htpasswd, `client_auth`, `auth.authenticator` wiring): https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/extension/basicauthextension
+- OpenTelemetry Collector Contrib, `basicauthextension` (htpasswd, `client_auth`, `auth.authenticator` wiring): https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/basicauthextension
 - Arize Phoenix, gRPC OTLP Export authorization (`ApiKeyInterceptor`: `UNAUTHENTICATED` without a key, `PERMISSION_DENIED` for a viewer token, `OK` with a write-authorized key or when auth is disabled): https://github.com/Arize-ai/phoenix/blob/f11c885c063f1c9b6146693cda401c5d645d8294/src/phoenix/server/bearer_auth.py
 - OpenTelemetry Collector, internal Prometheus metrics at `127.0.0.1:8888`: https://opentelemetry.io/docs/collector/internal-telemetry/
 - OpenTelemetry Collector, zPages extension (default endpoint `localhost:55679`): https://github.com/open-telemetry/opentelemetry-collector/blob/71f0462d5460ad3055201fd0f17658e56362d63a/extension/zpagesextension/README.md
