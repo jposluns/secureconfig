@@ -22175,7 +22175,7 @@ Pick an identity provider from [identity-providers.md](identity-providers.md) as
 
 Azure App Service can serve the RFC 9728 document for an app behind its built-in authentication: set the `WEBSITE_AUTH_PRM_DEFAULT_WITH_SCOPES` application setting to a comma-separated list of the required scopes, and the 401 challenge then carries the metadata URL and scopes. Microsoft marks this **preview** at the time of writing and says the configuration may change ([cloud-identity-proxies.md](cloud-identity-proxies.md) covers the rest of Easy Auth). See Azure App Service authentication.
 
-Client-side authorization implementation details are deferred to [TODO.md](TODO.md), row 1.83. Proxying long-lived subscription responses and configuring response caches are tracked separately in row 1.84; the Origin examples above do not configure those surfaces.
+Client-side authorization implementation details are deferred to [TODO.md](TODO.md), row 1.83. Section 6 covers proxying long-lived subscription streams and response caches, which the Origin examples above do not configure.
 
 **Option B, a fronting layer.** Keep the server on loopback and authenticate at the edge: a reverse proxy bearer-token check (the nginx `if ($http_authorization ...)` block in [ollama.md](ollama.md)) or basic auth per [nginx.md](nginx.md)/[caddy.md](caddy.md); Cloudflare Access with a service token for machine clients per [cloudflare.md](cloudflare.md); or an identity-aware proxy per [cloud-identity-proxies.md](cloud-identity-proxies.md). Generate and rotate the token per [machine-auth.md](machine-auth.md).
 
@@ -22188,6 +22188,25 @@ MFA: MCP has no login dialogue of its own. Under Option A, MFA is whatever the a
 - Each tool's upstream API key is a secret the server holds on behalf of every caller. Load it from the environment or a secret manager, one key per server and environment, never from the repository ([secrets.md](secrets.md)).
 - Least privilege per tool: a read-only tool gets a read-only key. A server that wraps a database, a cloud account, and a mail API with admin credentials turns every prompt injection into an administrator.
 - Never forward the client's token upstream (spec: "Token passthrough" is an anti-pattern and "explicitly forbidden"). Log tool calls with the authenticated identity so an incident can be traced. See Security Best Practices.
+
+## 6. Proxy long-lived subscription streams and response caches
+
+The proxy configuration above handles short request/response calls. Two MCP surfaces need more from a fronting layer.
+
+**Subscriptions are a long-lived server-to-client stream.** A `subscriptions/listen` POST opens a `text/event-stream` (Server-Sent Events) response that "opens a long-lived notification stream" and "stays open and delivers notifications until the client cancels it". See Subscriptions. A default reverse proxy breaks it two ways: it buffers the response, so notifications arrive late or batched rather than as they happen, and it closes the connection when an idle gap exceeds the read timeout. In the MCP location, disable response buffering and raise the read timeout above the longest expected gap between events:
+
+```nginx
+location /mcp {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_buffering off;          # deliver each event as it arrives, not held in a buffer
+    proxy_read_timeout 3600s;     # above the longest idle gap; the 60s default drops a quiet stream
+    # keep the Origin, TLS, and Authorization handling from the sections above
+}
+```
+
+`proxy_buffering off` disables response buffering for the location, which nginx defaults to `on`. Alternatively an MCP server SHOULD send the `X-Accel-Buffering: no` response header, which nginx honours to disable buffering for that one response unless it is stripped by `proxy_ignore_headers`. `proxy_read_timeout` defaults to 60 seconds and measures the gap between two successive reads, so a stream quieter than that is dropped; size it to the deployment's idle periods, and a server that sends frequent keep-alive comments can keep a shorter timeout. There is no required timeout value; match it to the traffic. Preserve the `text/event-stream` content type and event framing through every intermediary. See the nginx `proxy_buffering` and `proxy_read_timeout` reference, and MCP Streamable HTTP and Subscriptions.
+
+**A shared response cache can cross authorization contexts.** MCP's caching utility carries a `cacheScope`, and the spec is explicit that "Caches MUST NOT be shared across authorization contexts" and that an implementer "MUST NOT rely on `cacheScope` alone to prevent unauthorized access to primitives". See Caching. A fronting cache keyed only on the request path, or on the method and parameters without the caller's identity, will hand one caller's private tool result or filtered list to another. Do not put a generic response cache in front of an MCP server unless it implements MCP's rules: separate private authorization contexts, distinguish methods and result-affecting parameters, and keep the primitive access check independent of any cache hint. A `public`-scope result may be shared even when first obtained through an authenticated endpoint, so the server must classify visibility correctly rather than the cache guessing. For nginx, keep proxy caching off for the MCP location (`proxy_cache off;`). nginx caches nothing by default and caches only `GET`/`HEAD` unless `proxy_cache_methods` adds `POST`, so this hazard appears only where an operator deliberately turns on shared or POST caching in front of the POST-only endpoint. See the nginx `proxy_cache` and `proxy_cache_methods` reference, and MCP Caching.
 
 ## Verify
 
@@ -22338,11 +22357,13 @@ Header files keep credential values out of curl's argv; this does not protect a 
 - MCP specification 2026-07-28, Client Registration (DCR deprecation, Client ID Metadata Documents, `application_type`): https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/client-registration
 - MCP specification 2026-07-28, Security Best Practices (local-server controls, state-handle hijacking, forbidden token passthrough): https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices
 - MCP specification 2026-07-28, Caching (`ttlMs` and `cacheScope` required on complete discovery results): https://modelcontextprotocol.io/specification/2026-07-28/server/utilities/caching
+- MCP specification 2026-07-28, Subscriptions (`subscriptions/listen` long-lived SSE notification stream): https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/subscriptions
 - MCP specification 2025-11-25, Transports - **legacy** handshake/session shape, for deployments not yet on 2026-07-28: https://modelcontextprotocol.io/specification/2025-11-25/basic/transports
 - Azure App Service authentication (protected resource metadata preview, `WEBSITE_AUTH_PRM_DEFAULT_WITH_SCOPES`, comma-separated scopes): https://learn.microsoft.com/en-us/azure/app-service/overview-authentication-authorization
 - nginx rewrite module (`if` and `return` directives): https://nginx.org/en/docs/http/ngx_http_rewrite_module.html
 - nginx core module (embedded `$http_name` variables): https://nginx.org/en/docs/http/ngx_http_core_module.html
 - nginx map module (Origin allowlist map): https://nginx.org/en/docs/http/ngx_http_map_module.html
+- nginx proxy module (`proxy_buffering`, `proxy_read_timeout`, `X-Accel-Buffering`, `proxy_cache`, `proxy_cache_methods`): https://nginx.org/en/docs/http/ngx_http_proxy_module.html
 - MCP specification versioning (2026-07-28 is the Current revision; 2025-11-25 and earlier are Final, handshake-based revisions): https://modelcontextprotocol.io/specification/versioning
 - curl manual (leading `-q`, header files, `exitcode` and `errormsg`, both added in curl 7.75.0): https://curl.se/docs/manpage.html
 
