@@ -21,5 +21,24 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.14"
+      # shellcheck also floats on `ubuntu-latest`, and its default rule set changes between
+      # releases: in #231 the runner's older shellcheck raised SC2015 on a correct
+      # `[ -f ] && [ -r ] || { ...; exit; }` guard that the gate's local 0.11.0 does not, so a green
+      # local run reddened only in CI after push. Pin shellcheck to the version the gate is
+      # developed against, so local == CI. Same determinism reason as the Python pin above.
+      # The download is verified by SHA-256; a release-asset outage failing the job is the
+      # tradeoff already accepted for setup-python, and the gate itself stays offline.
+      - name: Pin shellcheck to 0.11.0
+        run: |
+          set -euo pipefail
+          ver=0.11.0
+          sha=8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198
+          url="https://github.com/koalaman/shellcheck/releases/download/v${ver}/shellcheck-v${ver}.linux.x86_64.tar.xz"
+          curl -fsSL --retry 3 --retry-all-errors -o shellcheck.tar.xz "$url"
+          echo "${sha}  shellcheck.tar.xz" | sha256sum -c -
+          tar xf shellcheck.tar.xz
+          sudo install -m0755 "shellcheck-v${ver}/shellcheck" /usr/local/bin/shellcheck
+          rm -rf shellcheck.tar.xz "shellcheck-v${ver}"
+          shellcheck --version
       - name: Run the gate suite
         run: tools/run_all_checks.sh
