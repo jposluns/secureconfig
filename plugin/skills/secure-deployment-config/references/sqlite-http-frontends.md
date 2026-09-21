@@ -219,8 +219,8 @@ Every URL listed below was fetched during authoring. This list also records the 
 - Datasette Docker installation: https://docs.datasette.io/en/stable/installation.html
 - Datasette proxy deployment: https://docs.datasette.io/en/stable/deploying.html
 - Datasette publishing: https://docs.datasette.io/en/stable/publish.html
-- Datasette container generator: https://raw.githubusercontent.com/simonw/datasette/main/datasette/utils/__init__.py
-- Datasette Cloud Run publisher: https://github.com/simonw/datasette/blob/main/datasette/publish/cloudrun.py
+- Datasette container generator: https://raw.githubusercontent.com/simonw/datasette/caf238aac86ebe370959b25384d6e05f6a1e2359/datasette/utils/__init__.py
+- Datasette Cloud Run publisher: https://github.com/simonw/datasette/blob/e889403d3bbe143854262682161c98a57bdb6594/datasette/publish/cloudrun.py
 - Datasette Fly publishing plugin: https://github.com/simonw/datasette-publish-fly
 - Datasette immutable mode and hashed URLs: https://docs.datasette.io/en/stable/performance.html
 - Datasette CSRF protection: https://docs.datasette.io/en/stable/internals.html#csrf-protection
@@ -230,8 +230,8 @@ Every URL listed below was fetched during authoring. This list also records the 
 - Datasette GitHub authentication plugin: https://github.com/simonw/datasette-auth-github
 - Datasette write plugin: https://github.com/simonw/datasette-write
 - sqlite-web README, features, options, and Docker usage: https://github.com/coleifer/sqlite-web
-- sqlite-web implementation: https://raw.githubusercontent.com/coleifer/sqlite-web/master/sqlite_web/sqlite_web.py
-- sqlite-web Dockerfile: https://raw.githubusercontent.com/coleifer/sqlite-web/master/docker/Dockerfile
+- sqlite-web implementation: https://raw.githubusercontent.com/coleifer/sqlite-web/825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2/sqlite_web/sqlite_web.py
+- sqlite-web Dockerfile: https://raw.githubusercontent.com/coleifer/sqlite-web/7f6658b012a789f0b9418cad543e7798ce850130/docker/Dockerfile
 - SQLite security: https://www.sqlite.org/security.html
 - SQLite serverless architecture and filesystem access: https://www.sqlite.org/serverless.html
 - SQLite URI semantics: https://www.sqlite.org/uri.html

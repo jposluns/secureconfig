@@ -182,9 +182,9 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 
 - Dify Docker Compose deployment (setup at `/install`): https://docs.dify.ai/en/self-host/deploy/quick-start/docker-compose
 - Dify environment variables (`SECRET_KEY`, `INIT_PASSWORD`, `CONSOLE_API_URL`, `CONSOLE_WEB_URL`, `APP_WEB_URL`): https://docs.dify.ai/en/self-host/deploy/configuration/environments
-- Dify `docker/.env.example` (`EXPOSE_NGINX_PORT`, `NGINX_HTTPS_ENABLED`, certificate variables): https://github.com/langgenius/dify/blob/main/docker/.env.example ; `docker-compose.yaml` (which services publish ports): https://github.com/langgenius/dify/blob/main/docker/docker-compose.yaml
+- Dify `docker/.env.example` (`EXPOSE_NGINX_PORT`, `NGINX_HTTPS_ENABLED`, certificate variables): https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/docker/.env.example ; `docker-compose.yaml` (which services publish ports): https://github.com/langgenius/dify/blob/8387590ace4a094de812b7847fc6a4c3a27cd52b/docker/docker-compose.yaml
 - Docker packet filtering and firewalls (published ports bypass UFW): https://docs.docker.com/engine/network/packet-filtering-firewalls/
-- Dify certbot README (HTTPS steps): https://github.com/langgenius/dify/blob/main/docker/certbot/README.md
+- Dify certbot README (HTTPS steps): https://github.com/langgenius/dify/blob/4c1ad40f8e8a6ee58a958330558f2178b7e47fa7/docker/certbot/README.md
 - Dify API keys (Bearer, backend-only): https://docs.dify.ai/en/api-reference/guides/get-started
 - Flowise app-level authentication (v3.0.1 accounts, deprecated username/password, JWT secrets): https://docs.flowiseai.com/configuration/authorization/app-level
 - Flowise chatflow-level API keys: https://docs.flowiseai.com/configuration/authorization/chatflow-level
@@ -192,9 +192,9 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 - Flowise SSO (Enterprise-plan only): https://docs.flowiseai.com/configuration/sso
 - Flowise prediction API (401 without key): https://docs.flowiseai.com/api-reference/prediction
 - Flowise deployment with nginx and certbot: https://docs.flowiseai.com/configuration/deployment/digital-ocean
-- Flowise Compose (publishes `${PORT}:${PORT}`): https://github.com/FlowiseAI/Flowise/blob/main/docker/docker-compose.yml
-- Langflow example Compose (publishes `7860:7860` and PostgreSQL `5432:5432`): https://github.com/langflow-ai/langflow/blob/main/docker_example/docker-compose.yml
-- LibreChat Compose (publishes `${PORT}:${PORT}`; extended via a docker-compose.override.yaml): https://github.com/danny-avila/LibreChat/blob/main/docker-compose.yml
+- Flowise Compose (publishes `${PORT}:${PORT}`): https://github.com/FlowiseAI/Flowise/blob/4ea391204a499fb6d19747104502362295b4dde3/docker/docker-compose.yml
+- Langflow example Compose (publishes `7860:7860` and PostgreSQL `5432:5432`): https://github.com/langflow-ai/langflow/blob/c6dbca308dc85526d5cecb31211821ec4f5e1d05/docker_example/docker-compose.yml
+- LibreChat Compose (publishes `${PORT}:${PORT}`; extended via a docker-compose.override.yaml): https://github.com/danny-avila/LibreChat/blob/1596df724a840f894831fc74f21de8d8df72fcb1/docker-compose.yml
 - Langflow API keys and authentication: https://docs.langflow.org/api-keys-and-authentication
 - Langflow environment variables (`LANGFLOW_HOST`, `LANGFLOW_PORT`, SSL files): https://docs.langflow.org/environment-variables
 - Langflow production best practices (`LANGFLOW_SECRET_KEY` preflight): https://docs.langflow.org/deployment-prod-best-practices
@@ -209,5 +209,5 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 - LibreChat Actions (domain allowlist, built-in SSRF checks): https://www.librechat.ai/docs/configuration/librechat_yaml/object_structure/actions
 - LibreChat v0.7.7 changelog (two-factor authentication): https://www.librechat.ai/changelog/v0.7.7
 - Docker Compose merge rules (sequences merge rather than replace; the `!reset` tag): https://docs.docker.com/reference/compose-file/merge/
-- Dify `docker/docker-compose.yaml` (`plugin_daemon` publishes `${EXPOSE_PLUGIN_DEBUGGING_PORT:-5003}` with no host address): https://github.com/langgenius/dify/blob/main/docker/docker-compose.yaml
+- Dify `docker/docker-compose.yaml` (`plugin_daemon` publishes `${EXPOSE_PLUGIN_DEBUGGING_PORT:-5003}` with no host address): https://github.com/langgenius/dify/blob/8387590ace4a094de812b7847fc6a4c3a27cd52b/docker/docker-compose.yaml
 - `docker compose ps` output fields (`Service`, `Publishers`, `PublishedPort`): https://docs.docker.com/reference/cli/docker/compose/ps/

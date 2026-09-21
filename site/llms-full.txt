@@ -7086,9 +7086,9 @@ git ls-files config/master.key                                   # prints nothin
 
 ## Sources (checked September 2026)
 
-- Puma README (binding): https://github.com/puma/puma/blob/main/README.md
-- Puma DSL (`bind`, `ssl_bind`, default bind): https://github.com/puma/puma/blob/main/lib/puma/dsl.rb
-- Puma configuration defaults (`tcp://[::]:9292`): https://github.com/puma/puma/blob/main/lib/puma/configuration.rb
+- Puma README (binding): https://github.com/puma/puma/blob/aef89221e4d729c3133c723844382331ba3bbbd9/README.md
+- Puma DSL (`bind`, `ssl_bind`, default bind): https://github.com/puma/puma/blob/d70de8b4e926f1f5fa0269dc46cdfadf52562628/lib/puma/dsl.rb
+- Puma configuration defaults (`tcp://[::]:9292`): https://github.com/puma/puma/blob/0daa1a174ae8cc9ab2dd54d4fa09c74ff787bbb9/lib/puma/configuration.rb
 - Rails configuring guide (`force_ssl`, `assume_ssl`, `ssl_options`, `hosts`, `session_store`, `cookies_same_site_protection`, `require_master_key`): https://guides.rubyonrails.org/configuring.html
 - Action Pack 7.1 changelog (`ActionDispatch::AssumeSSL`): https://github.com/rails/rails/blob/7-1-stable/actionpack/CHANGELOG.md
 - `ActionDispatch::RemoteIp` (trusted proxies, spoofing warning): https://api.rubyonrails.org/classes/ActionDispatch/RemoteIp.html
@@ -7096,11 +7096,11 @@ git ls-files config/master.key                                   # prints nothin
 - Rails security guide (authentication generator, `has_secure_password`, `rate_limit`, credentials): https://guides.rubyonrails.org/security.html
 - `has_secure_password`: https://api.rubyonrails.org/classes/ActiveModel/SecurePassword/ClassMethods.html
 - `ActionController::RateLimiting`: https://api.rubyonrails.org/classes/ActionController/RateLimiting/ClassMethods.html
-- `bin/rails credentials:help` text (`master.key`, `RAILS_MASTER_KEY`): https://github.com/rails/rails/blob/main/railties/lib/rails/commands/credentials/USAGE
+- `bin/rails credentials:help` text (`master.key`, `RAILS_MASTER_KEY`): https://github.com/rails/rails/blob/e4cd6ae6f1f0a847958b3aa846c9fd8a3014922a/railties/lib/rails/commands/credentials/USAGE
 - Rack::Attack README: https://github.com/rack/rack-attack
 - Sidekiq Web UI security (the mount, the Devise `authenticate` constraint, and `Rack::Auth::Basic`): https://github.com/sidekiq/sidekiq/wiki/Monitoring
-- Net::HTTP source (`verify_mode`, `ca_file`, `VERIFY_PEER` default): https://github.com/ruby/net-http/blob/master/lib/net/http.rb
-- Ruby OpenSSL `SSLContext` defaults (`DEFAULT_CERT_STORE.set_default_paths`, `VERIFY_PEER`): https://github.com/ruby/openssl/blob/master/lib/openssl/ssl.rb
+- Net::HTTP source (`verify_mode`, `ca_file`, `VERIFY_PEER` default): https://github.com/ruby/net-http/blob/39cf5f648a9e5e25312909a2dc26681edaa2402c/lib/net/http.rb
+- Ruby OpenSSL `SSLContext` defaults (`DEFAULT_CERT_STORE.set_default_paths`, `VERIFY_PEER`): https://github.com/ruby/openssl/blob/a77ed4b9908e179cea8f018f7e245535301746a8/lib/openssl/ssl.rb
 - OpenSSL environment variables (`SSL_CERT_FILE`, `SSL_CERT_DIR`): https://docs.openssl.org/master/man7/openssl-env/
 
 ======================================================================
@@ -11213,7 +11213,7 @@ Collect audit files into a separately protected logging destination. Restrict ac
 
 ## OpenSearch
 
-The controls below are provided by **free Apache-2.0 OpenSearch Security**, with no paid security tier. Native scoped API keys have an additional version requirement: **OpenSearch 3.7 or later**. See the [Security plugin license](https://github.com/opensearch-project/security/blob/main/LICENSE.txt).
+The controls below are provided by **free Apache-2.0 OpenSearch Security**, with no paid security tier. Native scoped API keys have an additional version requirement: **OpenSearch 3.7 or later**. See the [Security plugin license](https://github.com/opensearch-project/security/blob/4ba3cc0e2ebec61b726b227fdf51e55f4a502182/LICENSE.txt).
 
 - The security plugin provides authentication and TLS; never run with it disabled, including in Docker examples.
 - Starting with 2.12, new installations using the demo configuration require an initial admin password through `OPENSEARCH_INITIAL_ADMIN_PASSWORD`. Make it long and random. See [demo configuration](https://docs.opensearch.org/latest/security/configuration/demo-configuration/).
@@ -11960,9 +11960,9 @@ An unauthenticated `GET /` returning cluster JSON is the classic finding; so is 
 - Elasticsearch auditing settings and request-body default: https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/auding-settings
 - Elasticsearch audit event names and attributes: https://www.elastic.co/docs/reference/elasticsearch/elasticsearch-audit-events
 - Elasticsearch 8.x document retrieval API: https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-get
-- OpenSearch Security Apache-2.0 license: https://github.com/opensearch-project/security/blob/main/LICENSE.txt
+- OpenSearch Security Apache-2.0 license: https://github.com/opensearch-project/security/blob/4ba3cc0e2ebec61b726b227fdf51e55f4a502182/LICENSE.txt
 - OpenSearch demo security configuration and initial admin password: https://docs.opensearch.org/latest/security/configuration/demo-configuration/
-- OpenSearch shipped demo accounts: https://github.com/opensearch-project/security/blob/main/config/internal_users.yml
+- OpenSearch shipped demo accounts: https://github.com/opensearch-project/security/blob/03a224d16045a8f561e2d7d84b8765c95309524c/config/internal_users.yml
 - OpenSearch TLS settings and admin certificates: https://docs.opensearch.org/latest/security/configuration/tls/
 - OpenSearch applying security configuration files: https://docs.opensearch.org/latest/security/configuration/security-admin/
 - OpenSearch users, roles, and all_access breadth: https://docs.opensearch.org/latest/security/access-control/users-roles/
@@ -18447,8 +18447,8 @@ Every URL listed below was fetched during authoring. This list also records the 
 - Datasette Docker installation: https://docs.datasette.io/en/stable/installation.html
 - Datasette proxy deployment: https://docs.datasette.io/en/stable/deploying.html
 - Datasette publishing: https://docs.datasette.io/en/stable/publish.html
-- Datasette container generator: https://raw.githubusercontent.com/simonw/datasette/main/datasette/utils/__init__.py
-- Datasette Cloud Run publisher: https://github.com/simonw/datasette/blob/main/datasette/publish/cloudrun.py
+- Datasette container generator: https://raw.githubusercontent.com/simonw/datasette/caf238aac86ebe370959b25384d6e05f6a1e2359/datasette/utils/__init__.py
+- Datasette Cloud Run publisher: https://github.com/simonw/datasette/blob/e889403d3bbe143854262682161c98a57bdb6594/datasette/publish/cloudrun.py
 - Datasette Fly publishing plugin: https://github.com/simonw/datasette-publish-fly
 - Datasette immutable mode and hashed URLs: https://docs.datasette.io/en/stable/performance.html
 - Datasette CSRF protection: https://docs.datasette.io/en/stable/internals.html#csrf-protection
@@ -18458,8 +18458,8 @@ Every URL listed below was fetched during authoring. This list also records the 
 - Datasette GitHub authentication plugin: https://github.com/simonw/datasette-auth-github
 - Datasette write plugin: https://github.com/simonw/datasette-write
 - sqlite-web README, features, options, and Docker usage: https://github.com/coleifer/sqlite-web
-- sqlite-web implementation: https://raw.githubusercontent.com/coleifer/sqlite-web/master/sqlite_web/sqlite_web.py
-- sqlite-web Dockerfile: https://raw.githubusercontent.com/coleifer/sqlite-web/master/docker/Dockerfile
+- sqlite-web implementation: https://raw.githubusercontent.com/coleifer/sqlite-web/825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2/sqlite_web/sqlite_web.py
+- sqlite-web Dockerfile: https://raw.githubusercontent.com/coleifer/sqlite-web/7f6658b012a789f0b9418cad543e7798ce850130/docker/Dockerfile
 - SQLite security: https://www.sqlite.org/security.html
 - SQLite serverless architecture and filesystem access: https://www.sqlite.org/serverless.html
 - SQLite URI semantics: https://www.sqlite.org/uri.html
@@ -22862,9 +22862,9 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 
 - Dify Docker Compose deployment (setup at `/install`): https://docs.dify.ai/en/self-host/deploy/quick-start/docker-compose
 - Dify environment variables (`SECRET_KEY`, `INIT_PASSWORD`, `CONSOLE_API_URL`, `CONSOLE_WEB_URL`, `APP_WEB_URL`): https://docs.dify.ai/en/self-host/deploy/configuration/environments
-- Dify `docker/.env.example` (`EXPOSE_NGINX_PORT`, `NGINX_HTTPS_ENABLED`, certificate variables): https://github.com/langgenius/dify/blob/main/docker/.env.example ; `docker-compose.yaml` (which services publish ports): https://github.com/langgenius/dify/blob/main/docker/docker-compose.yaml
+- Dify `docker/.env.example` (`EXPOSE_NGINX_PORT`, `NGINX_HTTPS_ENABLED`, certificate variables): https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/docker/.env.example ; `docker-compose.yaml` (which services publish ports): https://github.com/langgenius/dify/blob/8387590ace4a094de812b7847fc6a4c3a27cd52b/docker/docker-compose.yaml
 - Docker packet filtering and firewalls (published ports bypass UFW): https://docs.docker.com/engine/network/packet-filtering-firewalls/
-- Dify certbot README (HTTPS steps): https://github.com/langgenius/dify/blob/main/docker/certbot/README.md
+- Dify certbot README (HTTPS steps): https://github.com/langgenius/dify/blob/4c1ad40f8e8a6ee58a958330558f2178b7e47fa7/docker/certbot/README.md
 - Dify API keys (Bearer, backend-only): https://docs.dify.ai/en/api-reference/guides/get-started
 - Flowise app-level authentication (v3.0.1 accounts, deprecated username/password, JWT secrets): https://docs.flowiseai.com/configuration/authorization/app-level
 - Flowise chatflow-level API keys: https://docs.flowiseai.com/configuration/authorization/chatflow-level
@@ -22872,9 +22872,9 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 - Flowise SSO (Enterprise-plan only): https://docs.flowiseai.com/configuration/sso
 - Flowise prediction API (401 without key): https://docs.flowiseai.com/api-reference/prediction
 - Flowise deployment with nginx and certbot: https://docs.flowiseai.com/configuration/deployment/digital-ocean
-- Flowise Compose (publishes `${PORT}:${PORT}`): https://github.com/FlowiseAI/Flowise/blob/main/docker/docker-compose.yml
-- Langflow example Compose (publishes `7860:7860` and PostgreSQL `5432:5432`): https://github.com/langflow-ai/langflow/blob/main/docker_example/docker-compose.yml
-- LibreChat Compose (publishes `${PORT}:${PORT}`; extended via a docker-compose.override.yaml): https://github.com/danny-avila/LibreChat/blob/main/docker-compose.yml
+- Flowise Compose (publishes `${PORT}:${PORT}`): https://github.com/FlowiseAI/Flowise/blob/4ea391204a499fb6d19747104502362295b4dde3/docker/docker-compose.yml
+- Langflow example Compose (publishes `7860:7860` and PostgreSQL `5432:5432`): https://github.com/langflow-ai/langflow/blob/c6dbca308dc85526d5cecb31211821ec4f5e1d05/docker_example/docker-compose.yml
+- LibreChat Compose (publishes `${PORT}:${PORT}`; extended via a docker-compose.override.yaml): https://github.com/danny-avila/LibreChat/blob/1596df724a840f894831fc74f21de8d8df72fcb1/docker-compose.yml
 - Langflow API keys and authentication: https://docs.langflow.org/api-keys-and-authentication
 - Langflow environment variables (`LANGFLOW_HOST`, `LANGFLOW_PORT`, SSL files): https://docs.langflow.org/environment-variables
 - Langflow production best practices (`LANGFLOW_SECRET_KEY` preflight): https://docs.langflow.org/deployment-prod-best-practices
@@ -22889,7 +22889,7 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 - LibreChat Actions (domain allowlist, built-in SSRF checks): https://www.librechat.ai/docs/configuration/librechat_yaml/object_structure/actions
 - LibreChat v0.7.7 changelog (two-factor authentication): https://www.librechat.ai/changelog/v0.7.7
 - Docker Compose merge rules (sequences merge rather than replace; the `!reset` tag): https://docs.docker.com/reference/compose-file/merge/
-- Dify `docker/docker-compose.yaml` (`plugin_daemon` publishes `${EXPOSE_PLUGIN_DEBUGGING_PORT:-5003}` with no host address): https://github.com/langgenius/dify/blob/main/docker/docker-compose.yaml
+- Dify `docker/docker-compose.yaml` (`plugin_daemon` publishes `${EXPOSE_PLUGIN_DEBUGGING_PORT:-5003}` with no host address): https://github.com/langgenius/dify/blob/8387590ace4a094de812b7847fc6a4c3a27cd52b/docker/docker-compose.yaml
 - `docker compose ps` output fields (`Service`, `Publishers`, `PublishedPort`): https://docs.docker.com/reference/cli/docker/compose/ps/
 
 ======================================================================
@@ -23330,9 +23330,9 @@ The service facts come from the maintainer's vendor-source verification record d
 - [Docker Compose ps](https://docs.docker.com/reference/cli/docker/compose/ps/): running service information and publication fields.
 - [curl manual](https://curl.se/docs/manpage.html): request options, TLS verification, proxy bypass, timing, and error reporting.
 - [LocalAI CLI reference](https://localai.io/docs/reference/cli-reference/): the `--address` flag and `LOCALAI_ADDRESS` bind, default `:8080`.
-- [SearxNG webapp implementation](https://raw.githubusercontent.com/searxng/searxng/master/searx/webapp.py): the production startup rejection of the `ultrasecretkey` placeholder and the image proxy following redirects.
-- [Onyx data model](https://raw.githubusercontent.com/onyx-dot-app/onyx/main/backend/onyx/db/models.py): the retained per-connector `Credential.credential_json` storage.
-- [Text Embeddings Inference gRPC server](https://raw.githubusercontent.com/huggingface/text-embeddings-inference/main/router/src/grpc/server.rs): the standalone Prometheus exporter (`prom_builder.install()`) of the gRPC build, distinct from the HTTP build's main-port `/metrics`.
+- [SearxNG webapp implementation](https://raw.githubusercontent.com/searxng/searxng/d4ce87c23431f607162fc5c39ce52c538d64588f/searx/webapp.py): the production startup rejection of the `ultrasecretkey` placeholder and the image proxy following redirects.
+- [Onyx data model](https://raw.githubusercontent.com/onyx-dot-app/onyx/15ead4ca364e654d40dac842ee9d0bb9e0fe5471/backend/onyx/db/models.py): the retained per-connector `Credential.credential_json` storage.
+- [Text Embeddings Inference gRPC server](https://raw.githubusercontent.com/huggingface/text-embeddings-inference/1bb59202500e5f69dd8be63dd1604f7625124fbe/router/src/grpc/server.rs): the standalone Prometheus exporter (`prom_builder.install()`) of the gRPC build, distinct from the HTTP build's main-port `/metrics`.
 
 
 ======================================================================
