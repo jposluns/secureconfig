@@ -41,7 +41,7 @@ Generate passwords per [authentication.md](authentication.md). The `default` use
 
 MFA: Redis has no second-factor dialogue. For machine clients, `tls-auth-clients yes` (mutual TLS, below) adds a possession factor, a certificate, alongside the password; that is stronger than a password alone but it is not MFA for a person. Human paths to the host go behind MFA per [mfa.md](mfa.md).
 
-The certificate-plus-password description assumes certificate-to-user automatic authentication is disabled. Redis 8.10.1 also supports `tls-auth-clients-user`, which defaults to `off`; enabling certificate-to-user authentication can authenticate a connection without a separate password exchange. The guide's certificate-plus-password and unauthenticated-certificate `NOAUTH` checks assume this setting remains `off` where supported. Do not add an unsupported directive to an older release. See the [pinned certificate authentication configuration](https://raw.githubusercontent.com/redis/redis/8.10.1/redis.conf) and [registered default](https://raw.githubusercontent.com/redis/redis/8.10.1/src/config.c).
+On Redis 8.10+, the certificate-plus-password description assumes certificate-to-user automatic authentication is disabled. Redis 8.10 introduced `tls-auth-clients-user`, which defaults to `off`; enabling it can authenticate a connection without a separate password exchange. On Redis 8.10+, keep this setting `off` for the guide's certificate-plus-password and unauthenticated-certificate `NOAUTH` checks. Earlier releases do not support this directive; omit it entirely, because an unknown configuration directive prevents startup. See the [pinned certificate authentication configuration](https://raw.githubusercontent.com/redis/redis/8.10.1/redis.conf) and [registered default](https://raw.githubusercontent.com/redis/redis/8.10.1/src/config.c).
 
 ## 3. Make ACL restrictions durable and replace old permissions explicitly
 
@@ -261,7 +261,7 @@ Expect `OK` for reading inputs, writing outputs, and publishing within the allow
 
 **REASONED: persistence and revocation.** During a planned restart of a disposable test instance, repeat `ACL GETUSER app`, `ACL GETUSER default`, and the applicable permission checks. A runtime-only change reverts; the persisted policy survives. After retiring `app-old`, its existing connection must close and a fresh authentication attempt must fail. Use section 7's masked prompt with the old username to test this, without putting its password in arguments. See [ACL persistence](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/#use-an-external-acl-file) and [CLIENT KILL](https://redis.io/docs/latest/commands/client-kill/).
 
-The following checks cover sections 9-15. All are **REASONED, not demonstrated**: the authoring environment has no `redis-server`, `redis-cli`, Docker, or Podman, and no live HA topology was supplied. Run exposed-state comparisons only in a disposable isolated environment. Redis-prompt commands below are not shell commands. Use section 7's guarded connection block, masked password prompt, and disabled CLI history for authenticated data-server sessions, changing the username as directed. Certificate and key options name files; never put their contents or passwords in process arguments.
+The following checks cover sections 9-15. All are **REASONED, not demonstrated**: the authoring environment has no `redis-server`, `redis-cli`, Docker, or Podman, and no live HA topology was supplied. Run exposed-state comparisons only in a disposable isolated environment. Redis-prompt commands below are not shell commands. Use section 7's guarded connection block, masked password prompt, and disabled CLI history for authenticated data-server sessions, changing the username as directed. Certificate and key options name files; never put their contents or passwords in process arguments. References below to disabling certificate-to-user automatic authentication apply only to Redis 8.10+, as explained in section 2. Earlier releases lack that setting; do not add the directive to their configuration.
 
 **REASONED: replication authentication and promotion, section 9.** No live primary/replica pair or failover topology was available. Compare an unsecured primary accepting an uncredentialed replica with a secured primary rejecting missing or wrong replication credentials. After restoring correct credentials, run this in an administrative session on the replica:
 
@@ -310,9 +310,154 @@ CLUSTER NODES
 
 Inspect the advertised address and `@bus-port`. Compare bus connectivity from an unauthorized network with connectivity from an allowed peer: an exposed bus permits the former, while the fixed network boundary denies it and retains the working peer path. Failure from outside is meaningful only alongside a working authorized path and listener/network-policy evidence. A missing Redis `PING` response is not evidence that the binary bus is blocked. One cluster-enabled process can demonstrate its listener; working membership and advertised reachability need multiple nodes. See [CLUSTER NODES](https://redis.io/docs/latest/commands/cluster-nodes/), [cluster networking](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/#redis-cluster-tcp-ports), and the [pinned listener and announcement implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/cluster_legacy.c).
 
-**REASONED: replication and cluster TLS, section 13.** No live replication pair, cluster, or traffic capture was available. Compare captured disposable replication traffic with `tls-replication no` and `yes`, using the appropriate primary endpoint in each setup and confirming synchronization with `INFO replication` and a replicated canary. The first setup exposes plaintext replication; the second must show TLS while synchronization still works. A failed connection does not demonstrate encrypted replication. See the [TLS replication documentation](https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/).
+For the **REASONED** section 12 network comparison, no live bus endpoint or authorized and unauthorized probe locations were available. Run this concrete TCP probe from both locations, using OpenBSD `nc`. Substitute the actual host and bus port inside the quotes.
 
-Hold valid replication credentials constant and compare a TLS replication connection without a client certificate under `tls-auth-clients no` with rejection under `yes`. Restore a trusted certificate as the positive control. Keep certificate-to-user automatic authentication disabled when testing certificate-plus-password requirements. Separately test missing and untrusted certificates against the TLS cluster bus; both must fail, while authorized certificate-bearing peers connect regardless of the data-port `tls-auth-clients` setting. Listener certificate checks need one process; synchronization needs a pair; end-to-end cluster transport needs multiple nodes. See the [pinned TLS defaults](https://raw.githubusercontent.com/redis/redis/8.10.1/src/config.c) and [cluster certificate requirement](https://raw.githubusercontent.com/redis/redis/8.10.1/src/cluster_legacy.c).
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLUSTER_HOST' 'REPLACE_WITH_BUS_PORT'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 1 host and 1 port; not probing"; exit 1; }
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute the host; not probing"; exit 1 ;;
+  esac
+  case "$2" in
+    *[!0-9]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
+  esac
+  [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 1; }
+  if nc -vz -w 5 "$1" "$2"; then
+    echo "TCP connected; the bus port is reachable from here"
+  else
+    printf 'TCP probe exit=%s; compare with the allowed-peer control\n' "$?"
+  fi
+)
+```
+
+An exposed network boundary permits a TCP connection from the unauthorized location. The fixed boundary denies that connection while retaining the allowed peer's successful connection to the intended listener. A local tool error, name-resolution failure, or failed allowed-peer control is inconclusive. This probes TCP reachability only, not TLS, certificate acceptance, or cluster membership. See the [cluster networking requirements](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/#redis-cluster-tcp-ports).
+
+**REASONED: replication encryption and incoming certificates, section 13.** No live primary/replica pair, certificate fixtures, or connection evidence was available. Use a disposable pair connected directly, without a TLS-terminating proxy. Correlate the primary's actual listener, the replica's established connection, and successful replication. `INFO replication` reports link status, not encryption.
+
+At the primary's authenticated administrative Redis prompt:
+
+```
+CONFIG GET port
+CONFIG GET tls-port
+```
+
+For the fixed configuration, require `port` to be `0` and record the nonzero `tls-port`. At the replica's authenticated administrative Redis prompt:
+
+```
+CONFIG GET tls-replication
+INFO replication
+```
+
+Require `tls-replication` to be `yes`, `master_host` and `master_port` to identify that primary's TLS endpoint, and `master_link_status:up`. On the replica host, inspect established connections:
+
+```bash
+ss -tnp
+```
+
+Identify the replica process's established connection to the recorded primary address and TLS port. Use an account permitted to see process information. Missing process information or a socket-inspection error is inconclusive.
+
+From an allowed client location, probe that same primary endpoint. Substitute a DNS hostname or IPv4 address and the recorded TLS port inside the quotes. Use the installed CA and client certificate paths. The commands deliberately omit Redis credentials; on Redis 8.10+, keep certificate-to-user automatic authentication disabled for this comparison.
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PRIMARY_HOST' 'REPLACE_WITH_PRIMARY_TLS_PORT'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 1 host and 1 port; not probing"; exit 1; }
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute the host; not probing"; exit 1 ;;
+  esac
+  case "$2" in
+    *[!0-9]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
+  esac
+  [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 1; }
+  unset REDISCLI_AUTH || exit 1
+  printf '\nNo client certificate\n'
+  if timeout 10s redis-cli --tls --cacert /etc/redis/tls/ha-ca.crt \
+      -h "$1" -p "$2" PING; then
+    echo "inspect the RESP reply; exit=0 alone is not a pass"
+  else
+    printf 'probe exit=%s; inspect the TLS error\n' "$?"
+  fi
+  printf '\nTrusted client certificate, positive control\n'
+  if timeout 10s redis-cli --tls --cacert /etc/redis/tls/ha-ca.crt \
+      --cert /etc/redis/tls/client.crt --key /etc/redis/tls/client.key \
+      -h "$1" -p "$2" PING; then
+    echo "inspect the RESP reply; exit=0 alone is not a pass"
+  else
+    printf 'probe exit=%s; inspect the TLS error\n' "$?"
+  fi
+)
+```
+
+With `tls-auth-clients yes`, require a TLS certificate rejection for the first request and `NOAUTH` for the trusted-certificate positive control. In the isolated comparison with `tls-auth-clients no`, both requests reach `NOAUTH`. This tests the data listener's certificate requirement, which also applies to incoming replicas; it does not authenticate a replication session. A timeout, missing certificate file, or unreachable endpoint is inconclusive.
+
+To confirm current synchronization, write a fresh disposable value at an authorized primary Redis prompt:
+
+```
+SET app:ha-tls-probe tls-check-1
+```
+
+Then read it at an authorized replica Redis prompt:
+
+```
+GET app:ha-tls-probe
+```
+
+Require the newly written value, changing it on each repetition. In the exposed comparison, use `tls-replication no` and the primary's plaintext endpoint: replication and the canary can still succeed, while the connection terminates on the plaintext listener. In the fixed comparison, require the active replica connection to terminate on the primary's TLS-only listener, the successful TLS positive control, and the fresh canary together. Neither link status nor a separate successful TLS probe alone proves that replication is encrypted. See the [TLS replication documentation](https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/), [pinned listener implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/server.c), [INFO replication fields](https://redis.io/docs/latest/commands/info/), and [Redis CLI options](https://redis.io/docs/latest/develop/tools/cli/).
+
+**REASONED: cluster-bus client certificates, section 13.** No live TLS cluster-bus listener or certificate fixtures were available. From an allowed peer location, probe the actual bus port with no certificate, an otherwise valid certificate from an untrusted CA, and a trusted certificate. If Redis 8.10+ peer-name checking is enabled, both certificate fixtures must contain the expected name so this comparison isolates CA trust.
+
+These OpenSSL probes require TLS 1.2 to be enabled on the test endpoint and GNU `timeout`. They select TLS 1.2 so a completed handshake includes the server's acceptance of the client certificate. Do not weaken a TLS 1.3-only deployment for this check; these particular probes are inconclusive there. Use protected PEM fixture files at the paths below, replace the DNS hostname or IPv4 address and actual bus port inside the quotes, and paste the whole block.
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLUSTER_HOST' 'REPLACE_WITH_BUS_PORT' 'REPLACE_WITH_EXPECTED_PEER_NAME'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 1 host, 1 port, and 1 expected peer name; not probing"; exit 1; }
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute the host; not probing"; exit 1 ;;
+  esac
+  case "$2" in
+    *[!0-9]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
+  esac
+  case "$3" in
+    *REPLACE_WITH_*|"") echo "substitute the expected peer name; not probing"; exit 1 ;;
+  esac
+  [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 1; }
+  printf '\nNo client certificate\n'
+  if timeout 10s openssl s_client -connect "$1:$2" -tls1_2 -brief \
+      -verify_hostname "$3" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt </dev/null; then
+    echo "probe exit=0; inspect the handshake result"
+  else
+    printf 'probe exit=%s; inspect the TLS error\n' "$?"
+  fi
+  printf '\nUntrusted client certificate\n'
+  if timeout 10s openssl s_client -connect "$1:$2" -tls1_2 -brief \
+      -verify_hostname "$3" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt \
+      -cert /etc/redis/tls/untrusted-client.crt -key /etc/redis/tls/untrusted-client.key </dev/null; then
+    echo "probe exit=0; inspect the handshake result"
+  else
+    printf 'probe exit=%s; inspect the TLS error\n' "$?"
+  fi
+  printf '\nTrusted client certificate, positive control\n'
+  if timeout 10s openssl s_client -connect "$1:$2" -tls1_2 -brief \
+      -verify_hostname "$3" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt \
+      -cert /etc/redis/tls/ha-client.crt -key /etc/redis/tls/ha-client.key </dev/null; then
+    echo "probe exit=0; inspect the handshake result"
+  else
+    printf 'probe exit=%s; inspect the TLS error\n' "$?"
+  fi
+)
+```
+
+Require certificate-related TLS rejection for the first two probes and a completed, verified TLS handshake for the trusted positive control. Repeat with data-port `tls-auth-clients no` and `yes`; the bus must require a trusted certificate in both cases. A timeout, local file error, protocol-version mismatch, or failed server-certificate verification does not demonstrate rejection of the client certificate.
+
+An exposed plaintext bus has no TLS certificate gate and will fail the TLS positive control; that failure must not be mistaken for a protected bus. Use the section 12 TCP reachability comparison separately. OpenSSL does not speak the binary cluster protocol, so a successful handshake establishes neither cluster membership nor working node-to-node traffic. Listener checks need one cluster-enabled process; working cluster transport needs multiple nodes. See the [pinned cluster certificate requirement](https://raw.githubusercontent.com/redis/redis/8.10.1/src/cluster_legacy.c) and [TLS cluster documentation](https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/).
 
 **REASONED: Sentinel TLS and outgoing connections, section 14.** No live Sentinel or data-node topology was available. Repeat the plaintext/TLS discriminator on 26379, not only on the Redis data port. The following block assumes the Redis 6.2+ `discovery` account, the monitored group `mymaster`, and certificate-to-user automatic authentication disabled. For the password-only Sentinel arrangement, use `--user default` instead. Replace the host inside the single quotes and use the installed certificate file paths, then paste the whole block:
 
@@ -344,15 +489,96 @@ Any RESP reply to the first request proves plaintext Redis protocol is available
 
 One Sentinel can demonstrate its incoming listener. Outgoing TLS, peer discovery, and failover need a live Sentinel/data-node topology and independent connection evidence; success on 26379 does not prove those outgoing connections use TLS. See the [pinned outgoing connection and advertisement implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/sentinel.c).
 
-The new shell block passed local Bash syntax and ShellCheck checks. With `set -u`, it rejected the unchanged placeholder, an embedded placeholder, an empty host, a marker-only assignment, an omitted assignment with no inherited arguments, and an extra host argument before any connection command ran. These local checks did not demonstrate Redis behaviour.
+The Sentinel shell block above passed local Bash syntax and ShellCheck checks. With `set -u`, it rejected the unchanged placeholder, an embedded placeholder, an empty host, a marker-only assignment, an omitted assignment with no inherited arguments, and an extra host argument before any connection command ran. These local checks did not demonstrate Redis behaviour.
 
-**REASONED: enforced HA peer identity, Redis 8.10+, section 15.** No Redis 8.10 runtime, certificate fixtures, or HA endpoints were available. Hold credentials and CA trust constant while substituting an otherwise valid certificate from the same CA that lacks the expected identity. Without the name restriction, CA validation accepts that certificate; with enforced `tls-expected-peer-name`, the handshake must fail. Restore the matching certificate as the positive control. Test outbound replication and incoming cluster-bus directions separately, and inspect warnings for `TLS_NO_PEER_NAME_VERIFICATION`; configuration readback alone is insufficient. See the [pinned identity configuration](https://raw.githubusercontent.com/redis/redis/8.10.1/redis.conf) and [enforcement and warning paths](https://raw.githubusercontent.com/redis/redis/8.10.1/src/tls.c).
+**REASONED: enforced HA peer identity, Redis 8.10+, section 15.** No Redis 8.10 runtime, certificate fixtures, or HA endpoints were available. Prepare two otherwise valid client certificates signed by the same trusted CA: one matching the configured HA identity and one that does not match it through either SAN or CN fallback. Keep certificate purpose, validity, CA trust, and Redis credentials constant.
+
+For incoming identity enforcement, target the TLS cluster-bus port. An ordinary client handshake to the data port does not exercise this incoming peer-name restriction. At the test node's authenticated administrative data-port prompt, first establish the isolated comparison without the restriction:
+
+```
+CONFIG SET tls-expected-peer-name ""
+```
+
+Run the following block, then enable the intended identity at that same administrative prompt and run the block again:
+
+```
+CONFIG SET tls-expected-peer-name redis-ha.example.com
+```
+
+Replace the example identity consistently with the identity issued to intended HA nodes. Require `OK` from each configuration change. The shell block uses the same TLS 1.2, GNU `timeout`, and protected PEM-file prerequisites as the preceding bus-certificate check. Substitute the DNS hostname or IPv4 address and actual bus port inside the quotes.
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLUSTER_HOST' 'REPLACE_WITH_BUS_PORT' 'REPLACE_WITH_EXPECTED_PEER_NAME'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 1 host, 1 port, and 1 expected peer name; not probing"; exit 1; }
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute the host; not probing"; exit 1 ;;
+  esac
+  case "$2" in
+    *[!0-9]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
+  esac
+  case "$3" in
+    *REPLACE_WITH_*|"") echo "substitute the expected peer name; not probing"; exit 1 ;;
+  esac
+  [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 1; }
+  printf '\nSame CA, wrong peer name\n'
+  if timeout 10s openssl s_client -connect "$1:$2" -tls1_2 -brief \
+      -verify_hostname "$3" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt \
+      -cert /etc/redis/tls/wrong-name-client.crt -key /etc/redis/tls/wrong-name-client.key </dev/null; then
+    echo "probe exit=0; inspect the handshake result"
+  else
+    printf 'probe exit=%s; inspect the TLS error\n' "$?"
+  fi
+  printf '\nSame CA, matching peer name, positive control\n'
+  if timeout 10s openssl s_client -connect "$1:$2" -tls1_2 -brief \
+      -verify_hostname "$3" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt \
+      -cert /etc/redis/tls/matching-name-client.crt -key /etc/redis/tls/matching-name-client.key </dev/null; then
+    echo "probe exit=0; inspect the handshake result"
+  else
+    printf 'probe exit=%s; inspect the TLS error\n' "$?"
+  fi
+)
+```
+
+Without the name restriction, require both handshakes to complete. With enforcement enabled, require the wrong-name handshake to be rejected and the matching-name handshake to complete. Correlate rejection with the accepting node's certificate-verification error. An unrelated failure or a failed positive control is inconclusive. Inspect warnings for `TLS_NO_PEER_NAME_VERIFICATION`; accepting the wrong-name certificate with the setting enabled fails this enforcement check. See the [pinned identity configuration](https://raw.githubusercontent.com/redis/redis/8.10.1/redis.conf) and [enforcement and warning paths](https://raw.githubusercontent.com/redis/redis/8.10.1/src/tls.c).
+
+Test outbound replication separately in a disposable Redis 8.10+ pair. Prepare matching-name and wrong-name server certificates from the same CA, with valid server-authentication purposes. At the primary's authenticated administrative prompt, install the wrong-name fixture:
+
+```
+CONFIG SET tls-cert-file /etc/redis/tls/wrong-name-server.crt tls-key-file /etc/redis/tls/wrong-name-server.key
+```
+
+Require `OK`. At the replica's authenticated administrative prompt, remove the name restriction and force a fresh connection:
+
+```
+CONFIG SET tls-expected-peer-name ""
+CLIENT KILL TYPE master
+INFO replication
+```
+
+Repeat `INFO replication` until the connection attempt completes; require `master_link_status:up` as the unrestricted control. Then enable the intended identity on the replica and force another connection:
+
+```
+CONFIG SET tls-expected-peer-name redis-ha.example.com
+CLIENT KILL TYPE master
+INFO replication
+```
+
+Require the new connection to fail with a certificate-name verification error in the replica's log. A down link without that evidence is inconclusive. At the primary's administrative prompt, restore the matching fixture:
+
+```
+CONFIG SET tls-cert-file /etc/redis/tls/matching-name-server.crt tls-key-file /etc/redis/tls/matching-name-server.key
+```
+
+Require `OK`, then repeat `INFO replication` on the replica and the fresh canary check above; both must recover. These commands intentionally reconnect replication and belong only in the isolated comparison. Keep the intended name restriction enabled afterward. File paths are arguments, but private-key contents and passwords are not. See [CONFIG SET](https://redis.io/docs/latest/commands/config-set/), the [pinned modifiable TLS settings](https://raw.githubusercontent.com/redis/redis/8.10.1/src/config.c), [CLIENT KILL](https://redis.io/docs/latest/commands/client-kill/), and [INFO replication fields](https://redis.io/docs/latest/commands/info/).
 
 Small isolated endpoints can exercise these handshakes without a complete functioning cluster. Proving the full HA trust boundary requires testing every connection class, including outgoing cluster-bus and `MIGRATE` connections and Sentinel separately. Do not expect the directive to reject the wrong-name certificate on Sentinel's reviewed outgoing path; verify Sentinel's dedicated trust boundary independently. That exception is derived from the [pinned Sentinel source](https://raw.githubusercontent.com/redis/redis/8.10.1/src/sentinel.c), not a runtime demonstration.
 
 | Backlog ID | Outstanding demonstration | Status |
 | --- | --- | --- |
-| REDIS-LIVE-1 | In an isolated environment with Redis, TLS certificates, and socket access, record exact versions and demonstrate exposed/fixed listeners, plaintext rejection, authentication, ACL readback, actual CONFIG denial and ACL logging, directional key/channel checks, both persistence methods across restart, and old-user session revocation. Parse the applicable configuration examples with the real Redis server. Also demonstrate the seven HA checks: (1) replication credential rejection, successful synchronization and canary transfer, replica listener authentication, Redis 7+ replication ACL checks, and authentication through promotion; (2) Sentinel listener restrictions, incoming authentication, discovery-user denials, announcements, and authenticated peer communication; (3) Sentinel monitored-server command/channel restrictions, ACL logging, credential failure/recovery, and monitoring through failover; (4) cluster-bus listener and announcement correctness with denied unauthorized and working authorized paths; (5) plaintext/TLS replication captures, incoming replica certificate requirements, and mandatory TLS cluster-bus certificates; (6) Sentinel plaintext rejection, incoming certificate/password checks, outgoing TLS, peer discovery, and failover; (7) Redis 8.10+ same-CA wrong-name rejection with matching-certificate positive controls, outbound replication and incoming bus tests, build-warning inspection, and every remaining connection class including Sentinel's separate trust boundary. Parse the added server, ACL, and Sentinel examples on their stated versions and record exact Redis versions and TLS build capabilities. | Open; REASONED checks above remain undemonstrated. |
+| REDIS-LIVE-1 | In an isolated environment with Redis, TLS certificates, and socket access, record exact versions and demonstrate exposed/fixed listeners, plaintext rejection, authentication, ACL readback, actual CONFIG denial and ACL logging, directional key/channel checks, both persistence methods across restart, and old-user session revocation. Parse the applicable configuration examples with the real Redis server. Also demonstrate the seven HA checks: (1) replication credential rejection, successful synchronization and canary transfer, replica listener authentication, Redis 7+ replication ACL checks, and authentication through promotion; (2) Sentinel listener restrictions, incoming authentication, discovery-user denials, announcements, and authenticated peer communication; (3) Sentinel monitored-server command/channel restrictions, ACL logging, credential failure/recovery, and monitoring through failover; (4) cluster-bus listener and announcement correctness with denied unauthorized and working authorized paths; (5) replication encryption using correlated TLS listener, established-connection, and fresh canary evidence, incoming replica certificate requirements, and mandatory TLS cluster-bus certificates; (6) Sentinel plaintext rejection, incoming certificate/password checks, outgoing TLS, peer discovery, and failover; (7) Redis 8.10+ same-CA wrong-name rejection with matching-certificate positive controls, outbound replication and incoming bus tests, build-warning inspection, and every remaining connection class including Sentinel's separate trust boundary. Parse the added server, ACL, and Sentinel examples on their stated versions and record exact Redis versions and TLS build capabilities. | Open; REASONED checks above remain undemonstrated. |
 
 ## 9. Authenticate replication through role changes
 
@@ -476,13 +702,13 @@ tls-cluster yes
 
 Where replication is configured explicitly, point `replicaof` at the primary's TLS endpoint. `tls-auth-clients yes` is already the Redis default; restoring it from section 6's deliberate `no` requires incoming replicas, as well as ordinary clients, to present trusted certificates. Retain replication credentials from section 9, subject to the certificate-to-user authentication qualification in section 2. See the [pinned TLS and replication settings](https://raw.githubusercontent.com/redis/redis/8.10.1/redis.conf).
 
-Redis normally reuses its certificate for outgoing connections. If certificates have separate server and client purposes, configure `tls-client-cert-file` and `tls-client-key-file` for the outgoing certificate and key. See the [pinned certificate configuration](https://raw.githubusercontent.com/redis/redis/8.10.1/redis.conf).
+Redis normally reuses its certificate for outgoing connections. On Redis 6.2+, if certificates have separate server and client purposes, configure `tls-client-cert-file` and `tls-client-key-file` for the outgoing certificate and key. Redis 6.0/6.1 readers must instead use one certificate suitable for both server and client authentication, configured through `tls-cert-file` and `tls-key-file`. Omit both `tls-client-*` directives on those releases: an unknown configuration directive prevents startup. Compare the pinned [6.0.20 certificate configuration](https://raw.githubusercontent.com/redis/redis/6.0.20/redis.conf) with the [6.2.0 certificate configuration](https://raw.githubusercontent.com/redis/redis/6.2.0/redis.conf).
 
 The TLS cluster bus always requests and requires a peer certificate. Its accept path explicitly uses `TLS_CLIENT_AUTH_YES`; setting data-port `tls-auth-clients no` does not disable cluster-bus certificate authentication. See `clusterAcceptHandler` in the [pinned implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/cluster_legacy.c).
 
 ## 14. Configure TLS on Sentinel and its outgoing connections
 
-Sentinel is a separate process; data-node TLS configuration does not configure it. On Redis 6.0+ with TLS support, Sentinel uses `tls-replication` to select TLS for outgoing monitored-server connections, and its TLS-port operation also depends on that switch. Configure the complete combination explicitly. See the [Sentinel TLS documentation](https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/#sentinel).
+Sentinel is a separate process; data-node TLS configuration does not configure it. On Redis 6.0+ with TLS support, a nonzero `tls-port` creates Sentinel's incoming TLS listener independently of `tls-replication`. The `tls-replication yes` setting selects TLS for outgoing connections to monitored servers and Sentinel peers. It also selects the configured TLS port for Sentinel's default port advertisement; an explicit `sentinel announce-port` overrides that choice. Configure both `tls-port` and `tls-replication yes` for end-to-end TLS, and set `port 0` to disable the plaintext listener. See `initListeners` in the [pinned server implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/server.c), and `sentinelReconnectInstance` and `sentinelSendHello` in the [pinned Sentinel implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/sentinel.c).
 
 In each Sentinel's configuration:
 
@@ -540,13 +766,13 @@ The tagged configuration files below pin syntax and historical behaviour; they a
 
 - Redis security model, authentication, and deprecated command renaming: https://redis.io/docs/latest/operate/oss_and_stack/management/security/
 - Redis configuration format: https://redis.io/docs/latest/operate/oss_and_stack/management/config/
-- Redis TLS build support, listeners, and client certificates: https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/
+- Redis TLS build support, listeners, client certificates, replication, and cluster transport: https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/
 - Redis ACL rules, categories, selectors, key/channel permissions, and persistence: https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/
 - Redis 8.2.1 pinned configuration, including ACL-file compatibility and debug/module defaults: https://raw.githubusercontent.com/redis/redis/8.2.1/redis.conf
 - Redis 6.0.20 pinned bind and protected-mode configuration: https://raw.githubusercontent.com/redis/redis/6.0.20/redis.conf
 - Redis 6.2.14 pinned optional-bind syntax and protected-mode configuration: https://raw.githubusercontent.com/redis/redis/6.2.14/redis.conf
 - Redis 7.0.15 pinned protected-mode and hardened-command configuration: https://raw.githubusercontent.com/redis/redis/7.0.15/redis.conf
-- Redis CLI connection flags, masked password input, TLS options, and history control: https://redis.io/docs/latest/develop/tools/cli/
+- Redis CLI connection flags, TLS and certificate options, masked password input, and history control: https://redis.io/docs/latest/develop/tools/cli/
 - AUTH named-user and default-user authentication: https://redis.io/docs/latest/commands/auth/
 - ACL SETUSER replacement rules and version history: https://redis.io/docs/latest/commands/acl-setuser/
 - CONFIG REWRITE persistence and prerequisites: https://redis.io/docs/latest/commands/config-rewrite/
@@ -555,7 +781,7 @@ The tagged configuration files below pin syntax and historical behaviour; they a
 - CLIENT KILL user filtering and SKIPME behaviour: https://redis.io/docs/latest/commands/client-kill/
 - ACL GETUSER effective-policy readback: https://redis.io/docs/latest/commands/acl-getuser/
 - ACL LOG failure reasons and retrieval: https://redis.io/docs/latest/commands/acl-log/
-- ACL DRYRUN checks without command execution: https://redis.io/docs/latest/commands/acl-dryrun/
+- Redis 7+ ACL DRYRUN permission checks without command execution: https://redis.io/docs/latest/commands/acl-dryrun/
 - CONFIG GET read-only configuration inspection: https://redis.io/docs/latest/commands/config-get/
 - GET and SET syntax and key access: https://redis.io/docs/latest/commands/get/ and https://redis.io/docs/latest/commands/set/
 - PING command categories: https://redis.io/docs/latest/commands/ping/
@@ -567,6 +793,9 @@ The tagged configuration files below pin syntax and historical behaviour; they a
 - Pub/Sub publishing and subscriptions: https://redis.io/docs/latest/commands/publish/ and https://redis.io/docs/latest/commands/subscribe/ and https://redis.io/docs/latest/commands/psubscribe/
 - Valkey security, ACLs, and TLS: https://valkey.io/topics/security/ and https://valkey.io/topics/acl/ and https://valkey.io/topics/tls/
 - Redis 8.10.1 pinned server configuration: https://raw.githubusercontent.com/redis/redis/8.10.1/redis.conf
+- Redis 6.2.0 separate outgoing TLS certificate and key configuration: https://raw.githubusercontent.com/redis/redis/6.2.0/redis.conf
+- Redis 8.10.1 independent TCP and TLS listener initialization: https://raw.githubusercontent.com/redis/redis/8.10.1/src/server.c
+- CONFIG SET runtime configuration changes and multiple-parameter syntax: https://redis.io/docs/latest/commands/config-set/
 - Redis 8.10.1 pinned Sentinel configuration: https://raw.githubusercontent.com/redis/redis/8.10.1/sentinel.conf
 - Redis 8.10.1 registered TLS and certificate-authentication defaults: https://raw.githubusercontent.com/redis/redis/8.10.1/src/config.c
 - Redis 8.10.1 replication authentication implementation: https://raw.githubusercontent.com/redis/redis/8.10.1/src/replication.c
@@ -578,10 +807,7 @@ The tagged configuration files below pin syntax and historical behaviour; they a
 - Sentinel incoming and peer authentication: https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/#configuring-sentinel-instances-with-authentication
 - Sentinel monitored-server ACL and channel requirements: https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/#redis-access-control-list-authentication
 - Cluster data and bus networking: https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/#redis-cluster-tcp-ports
-- Redis client, replication, and cluster TLS: https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/
 - Sentinel TLS configuration: https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/#sentinel
 - Redis 8.10 release notes and peer-name feature boundary: https://redis.io/docs/latest/operate/oss_and_stack/stack-with-enterprise/release-notes/redisce/redisos-8.10-release-notes/
-- Redis CLI TLS options, masked password input, and history control: https://redis.io/docs/latest/develop/tools/cli/
-- Redis 7+ ACL permission simulation: https://redis.io/docs/latest/commands/acl-dryrun/
 - Replication status fields: https://redis.io/docs/latest/commands/info/
 - Cluster advertised addresses and bus ports: https://redis.io/docs/latest/commands/cluster-nodes/
