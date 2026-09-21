@@ -110,7 +110,7 @@ git ls-files config/master.key                                   # prints nothin
 - Puma DSL (`bind`, `ssl_bind`, default bind): https://github.com/puma/puma/blob/d70de8b4e926f1f5fa0269dc46cdfadf52562628/lib/puma/dsl.rb
 - Puma configuration defaults (`tcp://[::]:9292`): https://github.com/puma/puma/blob/0daa1a174ae8cc9ab2dd54d4fa09c74ff787bbb9/lib/puma/configuration.rb
 - Rails configuring guide (`force_ssl`, `assume_ssl`, `ssl_options`, `hosts`, `session_store`, `cookies_same_site_protection`, `require_master_key`): https://guides.rubyonrails.org/configuring.html
-- Action Pack 7.1 changelog (`ActionDispatch::AssumeSSL`): https://github.com/rails/rails/blob/7-1-stable/actionpack/CHANGELOG.md
+- Action Pack 7.1 changelog (`ActionDispatch::AssumeSSL`): https://github.com/rails/rails/blob/ffcbf6f205363f8c2fb3e9834bc86690dd59f1cb/actionpack/CHANGELOG.md
 - `ActionDispatch::RemoteIp` (trusted proxies, spoofing warning): https://api.rubyonrails.org/classes/ActionDispatch/RemoteIp.html
 - `ActionDispatch::Session::CookieStore` options: https://api.rubyonrails.org/classes/ActionDispatch/Session/CookieStore.html
 - Rails security guide (authentication generator, `has_secure_password`, `rate_limit`, credentials): https://guides.rubyonrails.org/security.html
