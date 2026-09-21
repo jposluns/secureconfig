@@ -104,8 +104,8 @@ ss -tlnp   # every listener: loopback for a same-host reverse proxy, or the plat
 
 - Python `http.server` (binds all interfaces by default, serves the current directory, follows symlinks, not for production): https://docs.python.org/3/library/http.server.html
 - Gunicorn documentation (settings reference: bind, certfile, keyfile, ca_certs): https://gunicorn.org/reference/settings/
-- Uvicorn settings reference: https://github.com/Kludex/uvicorn/blob/main/docs/settings.md
+- Uvicorn settings reference: https://github.com/Kludex/uvicorn/blob/5ac6265a01ff6dcadb0e4250152c3deaf8a168a9/docs/settings.md
 - Django deployment checklist: https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 - argon2-cffi: https://argon2-cffi.readthedocs.io/
 - Werkzeug serving (`ssl_context="adhoc"` requires cryptography): https://werkzeug.palletsprojects.com/en/stable/serving/
-- FastAPI security reference: https://fastapi.tiangolo.com/reference/security/ ; `OpenIdConnect` source (stub warning): https://github.com/fastapi/fastapi/blob/master/fastapi/security/open_id_connect_url.py
+- FastAPI security reference: https://fastapi.tiangolo.com/reference/security/ ; `OpenIdConnect` source (stub warning): https://github.com/fastapi/fastapi/blob/31bbb380748ccead62fc0f42dbf4273f11dadccf/fastapi/security/open_id_connect_url.py

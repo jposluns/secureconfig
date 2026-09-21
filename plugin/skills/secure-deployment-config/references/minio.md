@@ -475,7 +475,7 @@ MINIO-LIVE additions (open): demonstrate OIDC role-policy and claim-policy scopi
 - MinIO `mc anonymous set` (anonymous policies are set per bucket or prefix, cover download and upload, and permit actions without authentication): https://docs.min.io/aistor/reference/cli/mc-anonymous/mc-anonymous-set/
 - MinIO `mc anonymous get-json` (retrieve a bucket's anonymous policy as JSON to inspect grants, prefixes, and conditions): https://docs.min.io/aistor/reference/cli/mc-anonymous/mc-anonymous-get-json/
 - MinIO/AIStor server address flags (`--address` defaults to `:9000` on all interfaces; `--console-address` / `MINIO_CONSOLE_ADDRESS`: a static port for the embedded console UI, or a dynamic one logged at startup when omitted): https://docs.min.io/aistor/reference/aistor-server/
-- MinIO console listener in the server source (`--console-address` and its `MINIO_CONSOLE_ADDRESS` env var in `cmd/server-main.go`; `cmd/common-main.go` binds all interfaces when the host is omitted): https://github.com/minio/minio/blob/master/cmd/common-main.go
+- MinIO console listener in the server source (`--console-address` and its `MINIO_CONSOLE_ADDRESS` env var in `cmd/server-main.go`; `cmd/common-main.go` binds all interfaces when the host is omitted): https://github.com/minio/minio/blob/f0b91e5504663c4672da451877857b57c3345295/cmd/common-main.go
 - AIStor identity and access management (root defaults and child access keys): https://docs.min.io/aistor/administration/iam/
 - AIStor Console security and access (user creation and key rotation): https://docs.min.io/aistor/administration/console/security-and-access/
 - AIStor access management (built-in policies, custom policy structure, actions, and resources): https://docs.min.io/aistor/administration/iam/access/
