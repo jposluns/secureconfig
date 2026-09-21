@@ -160,7 +160,7 @@ Get a certificate per [free-certificates.md](free-certificates.md) or [self-sign
 </clickhouse>
 ```
 
-Do not leave the shipped plaintext `interserver_http_port` 9009 inherited. For replicas, replace the two interserver removal entries in the same `hardening.xml` with the corresponding settings below, add the other children to its existing `<clickhouse>` root, and merge `<client>` into its existing `<openSSL>` block. Retain `<openSSL><server>` above for the HTTPS certificate and key. Do not install these alternatives side by side. [Shipped replication listener](https://raw.githubusercontent.com/ClickHouse/ClickHouse/master/programs/server/config.xml), [interserver HTTPS settings](https://clickhouse.com/docs/reference/settings/server-settings/settings/interserver-https).
+Do not leave the shipped plaintext `interserver_http_port` 9009 inherited. For replicas, replace the two interserver removal entries in the same `hardening.xml` with the corresponding settings below, add the other children to its existing `<clickhouse>` root, and merge `<client>` into its existing `<openSSL>` block. Retain `<openSSL><server>` above for the HTTPS certificate and key. Do not install these alternatives side by side. [Shipped replication listener](https://raw.githubusercontent.com/ClickHouse/ClickHouse/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/programs/server/config.xml), [interserver HTTPS settings](https://clickhouse.com/docs/reference/settings/server-settings/settings/interserver-https).
 
 ```xml
 <clickhouse>
@@ -230,7 +230,7 @@ MFA: ClickHouse 26.2 introduced native TOTP. Current documentation supports `tim
 
 ## 5. Restrict external sources and executable discovery
 
-SQL that reaches external sources can read local data or use the database's network access. Withhold the blanket `SOURCES` privilege and every individual source privilege from ordinary application accounts, including all source-specific `READ` and `WRITE` grants when enabled. Remove any such access and grant options from direct grants and inherited roles; withholding only the blanket grant does not cancel individual or inherited grants. This covers every source type in the deployed version, including database connectors, message queues, object stores, and local files. Review existing externally backed tables and dictionaries. Separate READ/WRITE source grants require ClickHouse 25.7 or later and `access_control_improvements.enable_read_write_grants`; filtered source grants require 25.8 or later with the same switch. Otherwise, use the documented legacy source privileges. [Source privileges](https://clickhouse.com/docs/reference/statements/grant#sources), [upstream source privilege registry](https://raw.githubusercontent.com/ClickHouse/ClickHouse/master/src/Access/Common/AccessType.h).
+SQL that reaches external sources can read local data or use the database's network access. Withhold the blanket `SOURCES` privilege and every individual source privilege from ordinary application accounts, including all source-specific `READ` and `WRITE` grants when enabled. Remove any such access and grant options from direct grants and inherited roles; withholding only the blanket grant does not cancel individual or inherited grants. This covers every source type in the deployed version, including database connectors, message queues, object stores, and local files. Review existing externally backed tables and dictionaries. Separate READ/WRITE source grants require ClickHouse 25.7 or later and `access_control_improvements.enable_read_write_grants`; filtered source grants require 25.8 or later with the same switch. Otherwise, use the documented legacy source privileges. [Source privileges](https://clickhouse.com/docs/reference/statements/grant#sources), [upstream source privilege registry](https://raw.githubusercontent.com/ClickHouse/ClickHouse/37c6c8c9bfc1de323e9a27711c5649352364bcba/src/Access/Common/AccessType.h).
 
 ClickHouse can fetch HTTPS data through `url()` and HTTP dictionaries, read local files through `file()` relative to `user_files_path`, and reach other servers through `remote()`. `file()` is a local-file interface, not an HTTP fetcher. [URL function](https://clickhouse.com/docs/reference/functions/table-functions/url), [file function](https://clickhouse.com/docs/reference/functions/table-functions/file), [remote function](https://clickhouse.com/docs/reference/functions/table-functions/remote), [HTTP dictionary sources](https://clickhouse.com/docs/reference/statements/create/dictionary/sources/http).
 
@@ -247,7 +247,7 @@ For a deployment that requires one approved HTTPS source, install `/etc/clickhou
 </clickhouse>
 ```
 
-Omitting `remote_url_allow_hosts` allows all hosts for the URL interfaces it covers, as the [shipped configuration](https://raw.githubusercontent.com/ClickHouse/ClickHouse/master/programs/server/config.xml) documents. Replace the hostname and use an explicit `:443` in the permitted source URL. A hostname-only entry permits every port on that hostname. Matching occurs before DNS resolution and on redirects. This is not a universal restriction on every external protocol, nor does a host-and-port entry itself require HTTPS. Retain network egress restrictions on metadata endpoints and internal addresses per [egress-metadata.md](egress-metadata.md). [URL host allow-list](https://clickhouse.com/docs/reference/settings/server-settings/settings/remote#remote_url_allow_hosts).
+Omitting `remote_url_allow_hosts` allows all hosts for the URL interfaces it covers, as the [shipped configuration](https://raw.githubusercontent.com/ClickHouse/ClickHouse/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/programs/server/config.xml) documents. Replace the hostname and use an explicit `:443` in the permitted source URL. A hostname-only entry permits every port on that hostname. Matching occurs before DNS resolution and on redirects. This is not a universal restriction on every external protocol, nor does a host-and-port entry itself require HTTPS. Retain network egress restrictions on metadata endpoints and internal addresses per [egress-metadata.md](egress-metadata.md). [URL host allow-list](https://clickhouse.com/docs/reference/settings/server-settings/settings/remote#remote_url_allow_hosts).
 
 For accounts that must create tables, enable engine-grant enforcement before relying on an engine allow-list. Grant only the required engine, for example to a separately provisioned schema-management role:
 
@@ -498,7 +498,7 @@ SELECT getSetting('max_memory_usage');
 SET ROLE DEFAULT;
 ```
 
-An unconstrained baseline accepts the override. The fixed account rejects it and reports `1073741824`, `2147483648`, `30`, and `0` for the four settings. The account-bound memory profile remains effective with its role disabled. `SET ROLE NONE` and `SET ROLE DEFAULT` change the session's active roles and are permitted with `readonly = 1`; they do not use the settings-changing `SET` path. Require both role statements to succeed; an error does not demonstrate profile persistence. [SET ROLE implementation](https://raw.githubusercontent.com/ClickHouse/ClickHouse/master/src/Interpreters/Access/InterpreterSetRoleQuery.cpp). These checks establish settings and constraints, not actual resource enforcement. [Constraints](https://clickhouse.com/docs/concepts/features/configuration/settings/constraints-on-settings), [memory settings and inspection](https://clickhouse.com/docs/reference/settings/session-settings/max-memory-usage), [SET ROLE](https://clickhouse.com/docs/reference/statements/set-role).
+An unconstrained baseline accepts the override. The fixed account rejects it and reports `1073741824`, `2147483648`, `30`, and `0` for the four settings. The account-bound memory profile remains effective with its role disabled. `SET ROLE NONE` and `SET ROLE DEFAULT` change the session's active roles and are permitted with `readonly = 1`; they do not use the settings-changing `SET` path. Require both role statements to succeed; an error does not demonstrate profile persistence. [SET ROLE implementation](https://raw.githubusercontent.com/ClickHouse/ClickHouse/1163c482760fb0204e40f8fb5d81ffa1272bc9ea/src/Interpreters/Access/InterpreterSetRoleQuery.cpp). These checks establish settings and constraints, not actual resource enforcement. [Constraints](https://clickhouse.com/docs/concepts/features/configuration/settings/constraints-on-settings), [memory settings and inspection](https://clickhouse.com/docs/reference/settings/session-settings/max-memory-usage), [SET ROLE](https://clickhouse.com/docs/reference/statements/set-role).
 
 For a memory discriminator, give the isolated `events` fixture an `x UInt64` column with a finite, recorded number of distinct values. Use:
 
@@ -612,8 +612,8 @@ Local validation completed during authoring: all 12 XML documents/fragments pass
 ## Sources (checked September 2026)
 
 - Listen address settings: https://clickhouse.com/docs/reference/settings/server-settings/settings/listen#listen_host
-- Shipped server configuration and localhost default: https://raw.githubusercontent.com/ClickHouse/ClickHouse/master/programs/server/config.xml
-- Shipped default-user configuration: https://raw.githubusercontent.com/ClickHouse/ClickHouse/master/programs/server/users.xml
+- Shipped server configuration and localhost default: https://raw.githubusercontent.com/ClickHouse/ClickHouse/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/programs/server/config.xml
+- Shipped default-user configuration: https://raw.githubusercontent.com/ClickHouse/ClickHouse/b40982f9416bb4bc2d423d7e75ec384e79494b99/programs/server/users.xml
 - User settings, password hashes, networks, and bootstrap capabilities: https://clickhouse.com/docs/concepts/features/configuration/settings/settings-users
 - Administrator bootstrap and account management: https://clickhouse.com/docs/concepts/features/security/access-rights
 - SQL access storage: https://clickhouse.com/docs/reference/settings/server-settings/settings/access-control#access_control_path
@@ -621,9 +621,9 @@ Local validation completed during authoring: all 12 XML documents/fragments pass
 - CREATE USER and authentication methods: https://clickhouse.com/docs/reference/statements/create/user
 - CREATE ROLE and combined privileges: https://clickhouse.com/docs/reference/statements/create/role
 - SET ROLE and SET DEFAULT ROLE: https://clickhouse.com/docs/reference/statements/set-role
-- Session role changes and their separate execution path: https://raw.githubusercontent.com/ClickHouse/ClickHouse/master/src/Interpreters/Access/InterpreterSetRoleQuery.cpp
+- Session role changes and their separate execution path: https://raw.githubusercontent.com/ClickHouse/ClickHouse/1163c482760fb0204e40f8fb5d81ffa1272bc9ea/src/Interpreters/Access/InterpreterSetRoleQuery.cpp
 - Privileges, external sources, engines, and dictionaries: https://clickhouse.com/docs/reference/statements/grant
-- Complete upstream source privilege registry: https://raw.githubusercontent.com/ClickHouse/ClickHouse/master/src/Access/Common/AccessType.h
+- Complete upstream source privilege registry: https://raw.githubusercontent.com/ClickHouse/ClickHouse/37c6c8c9bfc1de323e9a27711c5649352364bcba/src/Access/Common/AccessType.h
 - CREATE SETTINGS PROFILE: https://clickhouse.com/docs/reference/statements/create/settings-profile
 - Settings constraints and profile interactions: https://clickhouse.com/docs/concepts/features/configuration/settings/constraints-on-settings
 - Query and per-user memory limits: https://clickhouse.com/docs/reference/settings/session-settings/max-memory-usage

@@ -69,7 +69,7 @@ This demonstrates SASL enablement; add TLS as in step 5 before sending PLAIN cre
 
 The binary protocol is [deprecated upstream](https://docs.memcached.org/protocols/). For new text/meta clients, use private networking and an appropriate authenticated TLS deployment. ASCII has no SASL authentication, but optional ASCII token authentication exists: `-Y /etc/memcached/authfile`.
 
-Provision that file with one `username:password` pair per line, readable only by the service account. Configure a client that implements the token exchange: a fake `set` command carries `username password` as its value. Carry that exchange over TLS and keep passwords out of startup arguments. See the [authentication wire format](https://raw.githubusercontent.com/memcached/memcached/master/doc/protocol.txt).
+Provision that file with one `username:password` pair per line, readable only by the service account. Configure a client that implements the token exchange: a fake `set` command carries `username password` as its value. Carry that exchange over TLS and keep passwords out of startup arguments. See the [authentication wire format](https://raw.githubusercontent.com/memcached/memcached/7278bdee96329915bbc87731ba005095453f5c2f/doc/protocol.txt).
 
 `-Y` arrived in 1.5.15, is built in without SASL dependencies, and provides no per-user authorization after login. Choose it as an alternative to binary SASL. See the [1.5.15 release notes](https://github.com/memcached/memcached/wiki/ReleaseNotes1515). It remains experimental in 1.6.45. Binary operation is excluded; a nonzero UDP configuration is rejected at startup, rather than silently overridden, so retain `-U 0`. See the [1.6.45 option handling](https://raw.githubusercontent.com/memcached/memcached/1.6.45/memcached.c).
 
@@ -88,7 +88,7 @@ memcached -l 10.0.0.5 -p 11211 -U 0 -u memcache -c 256 -m 256 -S -Z -F -X -W \
 
 A `-l notls:127.0.0.1:11211` listener explicitly bypasses TLS for local tooling. It does not remove `-S`'s binary-protocol requirement. Keep this exception restricted to loopback if an existing deployment requires it; do not add a plaintext listener merely to obtain text administration commands.
 
-On a text-capable listener, `refresh_certs` reloads certificates without a restart, and `stats settings` shows active `ssl_` values. Those text requests cannot simply be sent to the demonstrated `-S` listener. In 1.6.45, use the service manager to send SIGHUP to the verified memcached process for certificate reload, and use an authenticated binary client's STAT request with key `settings` for settings inspection. Retain the configured certificate paths; check reload errors and inspect the certificate on a new connection. Existing connections retain their established sessions. See the [TLS reload design](https://raw.githubusercontent.com/memcached/memcached/master/doc/tls.txt), [1.6.45 signal handling](https://raw.githubusercontent.com/memcached/memcached/1.6.45/memcached.c), and [binary statistics implementation](https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_bin.c).
+On a text-capable listener, `refresh_certs` reloads certificates without a restart, and `stats settings` shows active `ssl_` values. Those text requests cannot simply be sent to the demonstrated `-S` listener. In 1.6.45, use the service manager to send SIGHUP to the verified memcached process for certificate reload, and use an authenticated binary client's STAT request with key `settings` for settings inspection. Retain the configured certificate paths; check reload errors and inspect the certificate on a new connection. Existing connections retain their established sessions. See the [TLS reload design](https://raw.githubusercontent.com/memcached/memcached/4b9e6198fc44c9eb3ae80802a1b0dcbaf9602969/doc/tls.txt), [1.6.45 signal handling](https://raw.githubusercontent.com/memcached/memcached/1.6.45/memcached.c), and [binary statistics implementation](https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_bin.c).
 
 MFA: there is no login for a person, so no second factor applies; human access to the host goes behind MFA per [mfa.md](mfa.md).
 
@@ -98,7 +98,7 @@ If the application does not require cache-wide invalidation, add `-F`. This disa
 
 Leave `-A` absent so the ASCII `shutdown` command remains disabled. Check inherited service arguments as well as the configuration you edited.
 
-Both controls are documented in the [1.6.45 man page](https://raw.githubusercontent.com/memcached/memcached/1.6.45/doc/memcached.1). A rejected flush still increments `cmd_flush`; that counter alone does not establish that flushing succeeded. Verify the command response and a previously readable test item. The [protocol reference](https://raw.githubusercontent.com/memcached/memcached/master/doc/protocol.txt) describes invalidation and shutdown; its general flush success description must be read with the `-F` restriction.
+Both controls are documented in the [1.6.45 man page](https://raw.githubusercontent.com/memcached/memcached/1.6.45/doc/memcached.1). A rejected flush still increments `cmd_flush`; that counter alone does not establish that flushing succeeded. Verify the command response and a previously readable test item. The [protocol reference](https://raw.githubusercontent.com/memcached/memcached/7278bdee96329915bbc87731ba005095453f5c2f/doc/protocol.txt) describes invalidation and shutdown; its general flush success description must be read with the `-F` restriction.
 
 ## 7. Disable key enumeration and live watch access
 
@@ -108,7 +108,7 @@ In 1.6.45, `-X` blocks `stats cachedump`, `stats detail`, `lru_crawler metadump`
 
 `-W` was introduced in [1.5.21](https://github.com/memcached/memcached/wiki/ReleaseNotes1521). The flags are listed in the [1.6.45 CLI help](https://raw.githubusercontent.com/memcached/memcached/1.6.45/memcached.c).
 
-Do not substitute `-o no_lru_crawler` for `-X`. It disables the background crawler, and protocol commands can enable the crawler again. It is a maintenance setting, not an authorization boundary. See the [crawler protocol](https://raw.githubusercontent.com/memcached/memcached/master/doc/protocol.txt).
+Do not substitute `-o no_lru_crawler` for `-X`. It disables the background crawler, and protocol commands can enable the crawler again. It is a maintenance setting, not an authorization boundary. See the [crawler protocol](https://raw.githubusercontent.com/memcached/memcached/7278bdee96329915bbc87731ba005095453f5c2f/doc/protocol.txt).
 
 ## Verify
 
@@ -206,7 +206,7 @@ A timeout alone proves nothing about isolation: a wrong target, unavailable serv
 )
 ```
 
-Expect statistics terminated by `END` on the applicable text listener. On the combined private-address SASL/TLS deployment, this probe fails for independent reasons: nothing need listen on loopback, `-S` rejects text `stats`, and `-Z` requires TLS. That failure proves none of those controls individually. Pair it with V1's listener evidence and V6's successful authenticated request. See the [text protocol](https://raw.githubusercontent.com/memcached/memcached/master/doc/protocol.txt) and [binary dispatcher](https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_bin.c).
+Expect statistics terminated by `END` on the applicable text listener. On the combined private-address SASL/TLS deployment, this probe fails for independent reasons: nothing need listen on loopback, `-S` rejects text `stats`, and `-Z` requires TLS. That failure proves none of those controls individually. Pair it with V1's listener evidence and V6's successful authenticated request. See the [text protocol](https://raw.githubusercontent.com/memcached/memcached/7278bdee96329915bbc87731ba005095453f5c2f/doc/protocol.txt) and [binary dispatcher](https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_bin.c).
 
 ### V4. Verify TLS, certificate identity, and the existing mutual-TLS option
 
@@ -238,7 +238,7 @@ A reachable plaintext comparison cannot complete this TLS handshake; the fixed T
 
 The example matches the default server behavior, which does not require client certificates. With `-o ssl_verify_mode=2`, add `-cert` and `-key` pointing to the approved client certificate and key files. Compare a valid client certificate with an omitted certificate against the same service. Only the valid client must complete an application request. `Verification: OK` describes server-certificate verification and can still print when the server subsequently refuses the client.
 
-For certificate reload, replace the certificate material at the configured paths, send SIGHUP through the service manager to the verified process, and repeat on a new connection. Expect the new certificate and a successful application request; retaining the old certificate or reporting a reload error is not success. See the [TLS documentation](https://docs.memcached.org/features/tls/) and [reload design](https://raw.githubusercontent.com/memcached/memcached/master/doc/tls.txt).
+For certificate reload, replace the certificate material at the configured paths, send SIGHUP through the service manager to the verified process, and repeat on a new connection. Expect the new certificate and a successful application request; retaining the old certificate or reporting a reload error is not success. See the [TLS documentation](https://docs.memcached.org/features/tls/) and [reload design](https://raw.githubusercontent.com/memcached/memcached/4b9e6198fc44c9eb3ae80802a1b0dcbaf9602969/doc/tls.txt).
 
 ### V5. Exercise flush, dump, watch, and shutdown restrictions
 
@@ -291,7 +291,7 @@ Read the responses, not just the block's final exit status:
 
 The short item uses slab class 1 with the stated default geometry; inspect `stats items` before interpreting that dump. A disabled or busy crawler, malformed request, connection failure, or protocol mismatch does not prove `-X`. A watcher timeout does not prove `-W`; inspect whether the watcher was accepted or explicitly refused. The two-second pause separates item creation from immediate flush timing.
 
-These comparisons follow the [basic command semantics](https://docs.memcached.org/protocols/basic/), [1.6.45 restrictions](https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_text.c), and [shutdown protocol](https://raw.githubusercontent.com/memcached/memcached/master/doc/protocol.txt). The disposable text fixture isolates these flags; it does not demonstrate the production authentication or TLS configuration.
+These comparisons follow the [basic command semantics](https://docs.memcached.org/protocols/basic/), [1.6.45 restrictions](https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_text.c), and [shutdown protocol](https://raw.githubusercontent.com/memcached/memcached/7278bdee96329915bbc87731ba005095453f5c2f/doc/protocol.txt). The disposable text fixture isolates these flags; it does not demonstrate the production authentication or TLS configuration.
 
 For a binary SASL deployment, also repeat SET, GET, FLUSH, and GET through the authenticated TLS client on a disposable equivalent. Without `-F`, FLUSH invalidates the item; with `-F`, FLUSH is refused and the item remains readable. See the [binary flush implementation](https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_bin.c).
 
@@ -308,7 +308,7 @@ Seed `sc:auth-probe` with a short-lived known value through an authorized client
 
 Also test an intentionally incorrect password on a fresh connection and confirm it cannot retrieve the item; retain the successful correct-credential request against the same endpoint. Keep the same TLS and client-certificate conditions across each authentication comparison so a TLS failure cannot masquerade as authentication enforcement.
 
-Binary VERSION and SASL negotiation success are not substitutes for GET. A missing key, closed connection, or unavailable server without the matched successful request is inconclusive. See the [binary protocol](https://docs.memcached.org/protocols/binary/), [SASL status codes](https://docs.memcached.org/protocols/binarysasl/), [binary enforcement](https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_bin.c), and [ASCII token exchange](https://raw.githubusercontent.com/memcached/memcached/master/doc/protocol.txt).
+Binary VERSION and SASL negotiation success are not substitutes for GET. A missing key, closed connection, or unavailable server without the matched successful request is inconclusive. See the [binary protocol](https://docs.memcached.org/protocols/binary/), [SASL status codes](https://docs.memcached.org/protocols/binarysasl/), [binary enforcement](https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_bin.c), and [ASCII token exchange](https://raw.githubusercontent.com/memcached/memcached/7278bdee96329915bbc87731ba005095453f5c2f/doc/protocol.txt).
 
 | Backlog ID | Status | Required demonstration |
 | --- | --- | --- |
@@ -332,8 +332,8 @@ Binary VERSION and SASL negotiation success are not substitutes for GET. A missi
 - memcached documentation, binary protocol SASL authentication: https://docs.memcached.org/protocols/binarysasl/
 - memcached documentation, TLS: https://docs.memcached.org/features/tls/
 - memcached documentation, configuring the server (`-l`, `-U`, exposure warning): https://docs.memcached.org/serverguide/configuring/
-- memcached man page (`-l` default `INADDR_ANY`, `-U` default 0, `-S`): https://raw.githubusercontent.com/memcached/memcached/master/doc/memcached.1
-- memcached protocol reference (`-Y` text protocol authentication): https://raw.githubusercontent.com/memcached/memcached/master/doc/protocol.txt
+- memcached man page (`-l` default `INADDR_ANY`, `-U` default 0, `-S`): https://raw.githubusercontent.com/memcached/memcached/5d17f8f4bb068a0bdd4809e80e3ed5d378ef2fad/doc/memcached.1
+- memcached protocol reference (`-Y` text protocol authentication): https://raw.githubusercontent.com/memcached/memcached/7278bdee96329915bbc87731ba005095453f5c2f/doc/protocol.txt
 - memcached current stable release: https://memcached.org/
 - memcached 1.6.42 security release notes: https://github.com/memcached/memcached/wiki/ReleaseNotes1642
 - memcached 1.6.45 security and crash fixes: https://github.com/memcached/memcached/wiki/ReleaseNotes1645
@@ -347,6 +347,6 @@ Binary VERSION and SASL negotiation success are not substitutes for GET. A missi
 - memcached 1.6.45 CLI help, defaults, effective settings, and signal handling: https://raw.githubusercontent.com/memcached/memcached/1.6.45/memcached.c
 - memcached 1.6.45 text command enforcement: https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_text.c
 - memcached 1.6.45 binary authentication, statistics, and flush enforcement: https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_bin.c
-- memcached TLS design and certificate reload: https://raw.githubusercontent.com/memcached/memcached/master/doc/tls.txt
+- memcached TLS design and certificate reload: https://raw.githubusercontent.com/memcached/memcached/4b9e6198fc44c9eb3ae80802a1b0dcbaf9602969/doc/tls.txt
 - memcached basic text command semantics: https://docs.memcached.org/protocols/basic/
 - memcached binary requests and responses: https://docs.memcached.org/protocols/binary/
