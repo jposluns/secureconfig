@@ -158,7 +158,7 @@ Collect audit files into a separately protected logging destination. Restrict ac
 
 ## OpenSearch
 
-The controls below are provided by **free Apache-2.0 OpenSearch Security**, with no paid security tier. Native scoped API keys have an additional version requirement: **OpenSearch 3.7 or later**. See the [Security plugin license](https://github.com/opensearch-project/security/blob/main/LICENSE.txt).
+The controls below are provided by **free Apache-2.0 OpenSearch Security**, with no paid security tier. Native scoped API keys have an additional version requirement: **OpenSearch 3.7 or later**. See the [Security plugin license](https://github.com/opensearch-project/security/blob/4ba3cc0e2ebec61b726b227fdf51e55f4a502182/LICENSE.txt).
 
 - The security plugin provides authentication and TLS; never run with it disabled, including in Docker examples.
 - Starting with 2.12, new installations using the demo configuration require an initial admin password through `OPENSEARCH_INITIAL_ADMIN_PASSWORD`. Make it long and random. See [demo configuration](https://docs.opensearch.org/latest/security/configuration/demo-configuration/).
@@ -905,9 +905,9 @@ An unauthenticated `GET /` returning cluster JSON is the classic finding; so is 
 - Elasticsearch auditing settings and request-body default: https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/auding-settings
 - Elasticsearch audit event names and attributes: https://www.elastic.co/docs/reference/elasticsearch/elasticsearch-audit-events
 - Elasticsearch 8.x document retrieval API: https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-get
-- OpenSearch Security Apache-2.0 license: https://github.com/opensearch-project/security/blob/main/LICENSE.txt
+- OpenSearch Security Apache-2.0 license: https://github.com/opensearch-project/security/blob/4ba3cc0e2ebec61b726b227fdf51e55f4a502182/LICENSE.txt
 - OpenSearch demo security configuration and initial admin password: https://docs.opensearch.org/latest/security/configuration/demo-configuration/
-- OpenSearch shipped demo accounts: https://github.com/opensearch-project/security/blob/main/config/internal_users.yml
+- OpenSearch shipped demo accounts: https://github.com/opensearch-project/security/blob/03a224d16045a8f561e2d7d84b8765c95309524c/config/internal_users.yml
 - OpenSearch TLS settings and admin certificates: https://docs.opensearch.org/latest/security/configuration/tls/
 - OpenSearch applying security configuration files: https://docs.opensearch.org/latest/security/configuration/security-admin/
 - OpenSearch users, roles, and all_access breadth: https://docs.opensearch.org/latest/security/access-control/users-roles/

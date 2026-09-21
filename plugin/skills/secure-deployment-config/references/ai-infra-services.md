@@ -432,7 +432,7 @@ The service facts come from the maintainer's vendor-source verification record d
 - [Docker Compose ps](https://docs.docker.com/reference/cli/docker/compose/ps/): running service information and publication fields.
 - [curl manual](https://curl.se/docs/manpage.html): request options, TLS verification, proxy bypass, timing, and error reporting.
 - [LocalAI CLI reference](https://localai.io/docs/reference/cli-reference/): the `--address` flag and `LOCALAI_ADDRESS` bind, default `:8080`.
-- [SearxNG webapp implementation](https://raw.githubusercontent.com/searxng/searxng/master/searx/webapp.py): the production startup rejection of the `ultrasecretkey` placeholder and the image proxy following redirects.
-- [Onyx data model](https://raw.githubusercontent.com/onyx-dot-app/onyx/main/backend/onyx/db/models.py): the retained per-connector `Credential.credential_json` storage.
-- [Text Embeddings Inference gRPC server](https://raw.githubusercontent.com/huggingface/text-embeddings-inference/main/router/src/grpc/server.rs): the standalone Prometheus exporter (`prom_builder.install()`) of the gRPC build, distinct from the HTTP build's main-port `/metrics`.
+- [SearxNG webapp implementation](https://raw.githubusercontent.com/searxng/searxng/d4ce87c23431f607162fc5c39ce52c538d64588f/searx/webapp.py): the production startup rejection of the `ultrasecretkey` placeholder and the image proxy following redirects.
+- [Onyx data model](https://raw.githubusercontent.com/onyx-dot-app/onyx/15ead4ca364e654d40dac842ee9d0bb9e0fe5471/backend/onyx/db/models.py): the retained per-connector `Credential.credential_json` storage.
+- [Text Embeddings Inference gRPC server](https://raw.githubusercontent.com/huggingface/text-embeddings-inference/1bb59202500e5f69dd8be63dd1604f7625124fbe/router/src/grpc/server.rs): the standalone Prometheus exporter (`prom_builder.install()`) of the gRPC build, distinct from the HTTP build's main-port `/metrics`.
 
