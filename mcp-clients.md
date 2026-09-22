@@ -98,7 +98,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
        *REPLACE_WITH_*|"") echo "substitute the client's config/log directory inside the quotes above; not probing"; exit ;;
      esac
      [ -d "$1" ] || { echo "not a directory: $1; not probing"; exit; }
-     if grep -D skip -RlaiE '"refresh_token"[[:space:]]*:[[:space:]]*"[^"]|refresh_token=[ -~]+|Bearer[[:space:]]+[A-Za-z0-9._~+/-]{20,}' -- "$1/"; then
+     if LC_ALL=C grep -D skip -RlaiE '"refresh_token"[[:space:]]*:[[:space:]]*"[^"]|refresh_token=[ -~]+|Bearer[[:space:]]+[A-Za-z0-9._~+/-]{20,}' -- "$1/"; then
        echo "FOUND: the file(s) listed above hold a token value in cleartext; move it to a protected credential store"
      else
        case $? in
