@@ -119,3 +119,4 @@ gets proposed again six months later.
 | 4.1 | Add a skip link to `site/index.html` | Dropped: SC 2.4.1 governs content repeated across multiple pages and this is one page, and the sufficient technique ARIA11 is already satisfied by `<nav aria-label>` plus `<main>` |
 | 3.16 | Pin the remaining mutable named-branch GitHub source citations (SeleniumHQ trunk, hasura stable, php-src PHP-8.3/8.4, pgaudit REL_18_STABLE, laravel 12.x, rails 7-1-stable) to commit SHAs | Done, #268 |
 | 1.84 | Proxy long-lived MCP subscription streams and configure response caches in mcp-servers.md | Done, #269 |
+| 1.83 | New client-side authorization guide `mcp-clients.md`: iss validation and mix-up defence, metadata issuer identity, Client ID Metadata Documents and application_type, refresh-token confidentiality, and OAuth-discovery SSRF | Done, #270 |

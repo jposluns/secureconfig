@@ -1,6 +1,6 @@
 # OIDC login: wiring Google, Microsoft Entra, GitHub, and Okta into your app
 
-Adding "Sign in with Google" takes an afternoon; the recurring defects are in what happens after the redirect comes back: an unvalidated ID token, an account matched by email, or an app that admits every Google or Microsoft account in existence because nobody checked whose it was. This guide gives the one flow every recipe shares, the exact claim to check per provider, the registration steps, and library pointers. Choosing a provider is covered in [identity-providers.md](identity-providers.md); login placed in front of an app without code changes is covered in [cloud-identity-proxies.md](cloud-identity-proxies.md).
+Adding "Sign in with Google" takes an afternoon; the recurring defects are in what happens after the redirect comes back: an unvalidated ID token, an account matched by email, or an app that admits every Google or Microsoft account in existence because nobody checked whose it was. This guide gives the one flow every recipe shares, the exact claim to check per provider, the registration steps, and library pointers. Choosing a provider is covered in [identity-providers.md](identity-providers.md); login placed in front of an app without code changes is covered in [cloud-identity-proxies.md](cloud-identity-proxies.md). Authorizing an MCP client to a remote server layers additional obligations on this flow and is covered in [mcp-clients.md](mcp-clients.md).
 
 ## 1. The flow every recipe uses
 

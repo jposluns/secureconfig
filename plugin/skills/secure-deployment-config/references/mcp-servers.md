@@ -67,7 +67,7 @@ Pick an identity provider from [identity-providers.md](identity-providers.md) as
 
 Azure App Service can serve the RFC 9728 document for an app behind its built-in authentication: set the `WEBSITE_AUTH_PRM_DEFAULT_WITH_SCOPES` application setting to a comma-separated list of the required scopes, and the 401 challenge then carries the metadata URL and scopes. Microsoft marks this **preview** at the time of writing and says the configuration may change ([cloud-identity-proxies.md](cloud-identity-proxies.md) covers the rest of Easy Auth). See Azure App Service authentication.
 
-Client-side authorization implementation details are deferred to [TODO.md](TODO.md), row 1.83. Section 6 covers proxying long-lived subscription streams and response caches, which the Origin examples above do not configure.
+Client-side authorization implementation details (authorization-response `iss` validation, discovery-metadata issuer identity, Client ID Metadata Documents, refresh-token confidentiality, and OAuth-discovery SSRF) are covered in [mcp-clients.md](mcp-clients.md). Section 6 covers proxying long-lived subscription streams and response caches, which the Origin examples above do not configure.
 
 **Option B, a fronting layer.** Keep the server on loopback and authenticate at the edge: a reverse proxy bearer-token check (the nginx `if ($http_authorization ...)` block in [ollama.md](ollama.md)) or basic auth per [nginx.md](nginx.md)/[caddy.md](caddy.md); Cloudflare Access with a service token for machine clients per [cloudflare.md](cloudflare.md); or an identity-aware proxy per [cloud-identity-proxies.md](cloud-identity-proxies.md). Generate and rotate the token per [machine-auth.md](machine-auth.md).
 
