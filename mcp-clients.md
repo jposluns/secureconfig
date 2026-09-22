@@ -98,7 +98,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
        *REPLACE_WITH_*|"") echo "substitute the client's config/log directory inside the quotes above; not probing"; exit ;;
      esac
      [ -d "$1" ] || { echo "not a directory: $1; not probing"; exit; }
-     if grep -D skip -RlaiE '"refresh_token"[[:space:]]*:[[:space:]]*"[^"]|refresh_token=("[^"]+"|'\''[^'\'']+'\''|[^[:space:]"'\'']+)|Bearer[[:space:]]+[A-Za-z0-9._~+/-]{20,}' -- "$1/"; then
+     if grep -D skip -RlaiE '"refresh_token"[[:space:]]*:[[:space:]]*"[^"]|refresh_token=[ -~]+|Bearer[[:space:]]+[A-Za-z0-9._~+/-]{20,}' -- "$1/"; then
        echo "FOUND: the file(s) listed above hold a token value in cleartext; move it to a protected credential store"
      else
        case $? in
@@ -109,7 +109,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
    )
    ```
 
-   A listed file means a refresh or bearer token value sits in cleartext where OAuth 2.1 requires confidentiality (section 4.3 for the refresh token, section 1.4 for the bearer access token); the fixed state keeps it in a protected credential store and the scan reports `clean`. The pattern matches a token value (a JSON `"refresh_token": "..."` pair, a `refresh_token=` assignment, or a `Bearer <token>` header), so the bare word `refresh_token` inside a `grant_types` list does not trip it, and it lists filenames rather than printing the secret. It cannot see a token that is encrypted, wrapped, or split across fields, so read a `clean` result as "nothing obvious", not "nothing present".
+   A listed file flags a possible cleartext refresh or bearer token value where OAuth 2.1 requires confidentiality (section 4.3 for the refresh token, section 1.4 for the bearer access token); the fixed state keeps it in a protected credential store and the scan reports `clean`. The pattern matches a token value (a JSON `"refresh_token": "..."` pair, a `refresh_token=` assignment with any nonempty printable value, or a `Bearer <token>` header), so the bare word `refresh_token` inside a `grant_types` list does not trip it; the assignment match is deliberately broad, so it can also flag a benign empty quoted assignment, which is the safe direction for a secret scan, and it lists filenames rather than printing the secret. It cannot see a token that is encrypted, wrapped, or split across fields, so read a `clean` result as "nothing obvious", not "nothing present".
 
 5. **`application_type` is present on DCR (reasoned).** Prerequisite unavailable: the client's live DCR request. Capture the registration request body the client `POST`s to the DCR endpoint and confirm it includes `application_type` (`native` or `web` per step 3). A fixed native client's captured body looks like this (an illustrative shape, not a live capture):
 
