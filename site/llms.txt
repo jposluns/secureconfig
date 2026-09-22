@@ -102,6 +102,7 @@
 - [litellm](https://raw.githubusercontent.com/jposluns/secureconfig/main/litellm.md): master key and virtual keys, per-key spend and rate limits, model-access allowlists, key expiry and revocation, admin/route separation, egress and pass-through limits, and request-content log redaction
 - [vector-databases](https://raw.githubusercontent.com/jposluns/secureconfig/main/vector-databases.md): Qdrant, Weaviate, Milvus, Chroma, pgvector: API keys, TLS, what has no native auth
 - [mcp-servers](https://raw.githubusercontent.com/jposluns/secureconfig/main/mcp-servers.md): stdio versus Streamable HTTP, loopback, Origin checks, OAuth 2.1 or a fronting layer
+- [mcp-clients](https://raw.githubusercontent.com/jposluns/secureconfig/main/mcp-clients.md): MCP client authorization: iss validation and mix-up defence, metadata issuer identity, Client ID Metadata Documents, refresh-token confidentiality, OAuth-discovery SSRF
 - [ray](https://raw.githubusercontent.com/jposluns/secureconfig/main/ray.md): dashboard, Jobs, and Client ports execute code; isolate, token auth, SSH forward
 - [mlflow](https://raw.githubusercontent.com/jposluns/secureconfig/main/mlflow.md): no auth by default; basic-auth app, TLS in front
 - [llm-observability](https://raw.githubusercontent.com/jposluns/secureconfig/main/llm-observability.md): Langfuse, Phoenix, Helicone, OpenTelemetry Collector: they hold prompts and keys

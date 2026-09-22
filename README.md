@@ -149,6 +149,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [litellm.md](litellm.md) | LiteLLM proxy: master key, per-app virtual keys, per-key spend and rate limits, model-access allowlists, key expiry and revocation, admin/route separation, egress and pass-through limits, and request-content log redaction |
 | [vector-databases.md](vector-databases.md) | Qdrant, Weaviate, Milvus, Chroma, pgvector: API keys, TLS, what has no native auth |
 | [mcp-servers.md](mcp-servers.md) | MCP servers: stdio versus Streamable HTTP, loopback, Origin checks, OAuth 2.1 or a fronting layer |
+| [mcp-clients.md](mcp-clients.md) | MCP clients: authorization-response iss validation, metadata issuer identity, Client ID Metadata Documents and application_type, refresh-token confidentiality, OAuth-discovery SSRF |
 | [ray.md](ray.md) | Ray: dashboard, Jobs, and Client ports execute code; isolate, token auth, SSH forward |
 | [mlflow.md](mlflow.md) | MLflow tracking server: no auth by default; basic-auth app, TLS in front |
 | [llm-observability.md](llm-observability.md) | Langfuse, Phoenix, Helicone, OpenTelemetry Collector: they hold prompts and keys |
