@@ -22473,12 +22473,15 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
        *REPLACE_WITH_*|"") echo "substitute the client's config/log directory inside the quotes above; not probing"; exit ;;
      esac
      [ -d "$1" ] || { echo "not a directory: $1; not probing"; exit; }
-     grep -rlIE '"refresh_token"[[:space:]]*:[[:space:]]*"[^"]|refresh_token=[A-Za-z0-9._~+/-]|Bearer[[:space:]]+[A-Za-z0-9._-]{20,}' -- "$1"
-     case $? in
-       0) echo "FOUND: the file(s) listed above hold a token value in cleartext; move it to a protected credential store" ;;
-       1) echo "clean: no cleartext token value found under $1" ;;
-       *) echo "scan error: grep could not read part of $1; re-run with access before trusting a clean result" ;;
-     esac
+     if grep -RlIE '"refresh_token"[[:space:]]*:[[:space:]]*"[^"]|refresh_token=[A-Za-z0-9._~+/-]|Bearer[[:space:]]+[A-Za-z0-9._-]{20,}' -- "$1"; then
+       echo "FOUND: the file(s) listed above hold a token value in cleartext; move it to a protected credential store"
+     else
+       scan_rc=$?
+       case $scan_rc in
+         1) echo "clean: no cleartext token value found under $1" ;;
+         *) echo "scan error: grep could not read part of $1; re-run with access before trusting a clean result" ;;
+       esac
+     fi
    )
    ```
 
