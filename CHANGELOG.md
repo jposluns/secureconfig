@@ -9,6 +9,10 @@ can check `VERSION` against GitHub: the suite is deliberately offline so that no
 turn the build red, and a pull request number is only knowable from outside. Keeping `VERSION` in step
 with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-09-24
+
+- Hardened the reasoned-row gate's parsing (#272). `tools/check_reasoned_rows.py` now splits guide and backlog text into lines on `\n` only, so a U+2028 or U+2029 inside a paragraph no longer fakes a heading, and its backlog filename match uses an allowlist of edge characters, so `archive+redis.md`, `redis.md~` or a basename touching a non-ASCII letter no longer counts as tracking `redis.md`, while `_redis.md_` and `__redis.md__` now do. The shared `tools/_markdown.py` closes a fence only when spaces or tabs follow the closing run, so a non-breaking space no longer closes it (CommonMark). Regression cases 18 to 21 were added. The corpus result is unchanged (53 reasoned guides, 20 grandfathered, 0 new), and every gate that uses `tools/_markdown.py` gives identical output before and after. A fence opened inside a list item is still not closed at the item boundary, which remains a disclosed limit.
+
 ## 2026-09-23
 
 - Added the reasoned-row gate (#271): `tools/check_reasoned_rows.py` flags a guide whose Verify section marks a step "reasoned" but has no demonstration backlog row (a row naming the guide) in `TODO.md` or `DONE.md`, the tracking CONTRIBUTING rule 5 requires. Wired advisory into `tools/run_all_checks.sh` so it never fails the suite; the 20 pre-existing reasoned guides without a row are grandfathered in `tools/reasoned_row_baseline.txt`, and a `--strict` promotion to a blocking gate is left for Architect sign-off. Closes the recurrence path behind the #270 D1 finding.

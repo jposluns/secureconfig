@@ -11,7 +11,7 @@ command hidden after the false close, and ordinary Python rejected as prose afte
 
 CommonMark's rule, which this implements: a fence opens with three or more backticks or
 three or more tildes, indented no more than three spaces. It closes on a line whose run
-uses the SAME character and is AT LEAST AS LONG, followed by nothing but whitespace. An
+uses the SAME character and is AT LEAST AS LONG, followed by only spaces or tabs. An
 opening line may carry an info string; a closing line may not.
 
 https://spec.commonmark.org/0.31.2/#fenced-code-blocks
@@ -71,7 +71,9 @@ class Fences:
                 return False
             self.char, self.length = char, length
             return True
-        if char == self.char and length >= self.length and not rest.strip():
+        # Only spaces or tabs may follow a closing run. str.strip() would also remove a
+        # non-breaking space or other Unicode whitespace, which CommonMark treats as content.
+        if char == self.char and length >= self.length and not rest.strip(" \t"):
             self.char, self.length = None, 0
             return True
         # A shorter run, a different character, or a trailing info string is CONTENT of
