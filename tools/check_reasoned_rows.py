@@ -41,15 +41,18 @@ THE DEMONSTRATION-ROW DETECTOR. A guide is "tracked" iff at least one line in TO
 OR DONE.md carries the case-insensitive word "demonstrate" or "demonstration" AND names
 the guide's basename as a COMPLETE filename token. The token stands alone: on each side
 it meets the start or end of the line, whitespace, or punctuation that surrounds a
-filename in prose or Markdown (a backtick, bracket, quote, emphasis star, `|`, `/`, `,`,
-`;`, `:`, `!` or `?`, plus `#` and a run of sentence-ending periods on the right), and it
-may be wrapped in balanced underscore emphasis (`_redis.md_`, `__redis.md__`). That edge
-set is an allowlist, so anything else beside the basename means it belongs to a longer
-token naming a different file. So `redis.md` matches `Demonstrate redis.md`, a
-trailing-period `redis.md.`, `_redis.md_` or `[redis.md](redis.md)`, but not
-`hiredis.md`, `not-redis.md`, `my_redis.md`, `redis.md_backup`, `redis.md-old`,
-`redis.md.bak`, `redis.md..bak`, `redis.md._backup`, `redis.md.-old`, `redis.mdx`,
-`archive+redis.md`, `redis.md~` or a basename touching a non-ASCII letter. A
+filename in prose or Markdown (a backtick, bracket, straight or typographic quote,
+emphasis star, `|`, `/`, `,`, `;`, `:`, `!` or `?`, plus `#` and a run of
+sentence-ending periods on the right). That edge set is an allowlist, so anything else
+beside the basename means it belongs to a longer token naming a different file. So
+`redis.md` matches `Demonstrate redis.md`, a trailing-period `redis.md.`, a quoted
+"redis.md" or `[redis.md](redis.md)`, but not `hiredis.md`, `not-redis.md`,
+`my_redis.md`, `redis.md_backup`, `redis.md-old`, `redis.md.bak`, `redis.md..bak`,
+`redis.md._backup`, `redis.md.-old`, `redis.mdx`, `archive+redis.md`, `redis.md~` or a
+basename touching a non-ASCII letter. Underscore emphasis (`_redis.md_`) is NOT credited:
+the gate does not parse code spans, so it cannot tell emphasis from underscores that are
+part of a filename (`` `_redis.md_` `` names a different file), and it errs toward
+reporting a gap, which a human resolves by writing the basename plainly. A
 creation-or-deepen row that names the guide but does not say "demonstrate" does not
 count: the point is a row that commits to demonstrating the reasoned step, not merely
 one that mentions the file.
@@ -69,7 +72,10 @@ paragraph cannot fake a heading; and fences come from the shared tools/_markdown
 closing fence accepts only trailing spaces or tabs. One known edge remains, a disclosed
 limit of that shared module: a fence opened inside a list item is not closed at the item
 boundary. No guide in this corpus uses that construction, and a corpus-parity check
-confirmed it changes no real guide's result.
+confirmed it changes no real guide's result. The backlog filename match does not parse
+code spans either, so it does not credit underscore emphasis around a basename (it reports
+a gap instead, the conservative direction), while a `*`-wrapped basename inside a code span
+still counts, as it did before this gate's edge allowlist.
 
 Everything is offline and reads files as UTF-8. Nothing is written except under
 `--write-baseline`.
@@ -111,7 +117,11 @@ VERIFY_TITLE = re.compile(r"(?i)\bverify\b")
 # Markdown. This is an allowlist, so another filename character, `+`, `~` or any non-ASCII
 # letter beside the basename means it is part of a longer token naming a different file.
 # The right edge also allows `#` (a section link) and a run of sentence-ending periods.
-_EDGE = r"`()\[\]{}<>\"'*|/,;:!?"
+# Typographic quotes are written as \N{...} names so this source stays ASCII; re resolves
+# them in the character class.
+_EDGE = (r"`()\[\]{}<>\"'*|/,;:!?"
+         r"\N{LEFT DOUBLE QUOTATION MARK}\N{RIGHT DOUBLE QUOTATION MARK}"
+         r"\N{LEFT SINGLE QUOTATION MARK}\N{RIGHT SINGLE QUOTATION MARK}")
 LEFT_EDGE = r"(?<![^\s" + _EDGE + r"])"
 RIGHT_EDGE = r"(?=\.*(?:$|[\s#" + _EDGE + r"]))"
 
@@ -220,20 +230,19 @@ def tracked_basenames(root: Path, names):
     """Return the subset of guide basenames named on a demonstration row in TODO/DONE.
 
     A basename `b` is tracked iff some demonstration line references `b` as a COMPLETE
-    filename token: bare, or wrapped in balanced underscore emphasis (`_b_`, `__b__`), with
-    only an allowed edge on each side (LEFT_EDGE / RIGHT_EDGE). So `redis.md` matches
-    `Demonstrate redis.md`, `` `redis.md` ``, `redis.md.`, `redis.md,`, `_redis.md_` and
-    `[redis.md](redis.md)` but NOT `hiredis.md`, `not-redis.md`, `my_redis.md`,
-    `redis.md_backup`, `redis.md-old`, `redis.md.bak`, `redis.md..bak`, `redis.md._backup`,
-    `redis.md.-old`, `redis.mdx`, `archive+redis.md`, `redis.md~` or a basename touching a
-    non-ASCII letter.
+    filename token with only an allowed edge on each side (LEFT_EDGE / RIGHT_EDGE). So
+    `redis.md` matches `Demonstrate redis.md`, `` `redis.md` ``, `redis.md.`, `redis.md,`,
+    a quoted "redis.md" and `[redis.md](redis.md)` but NOT `hiredis.md`, `not-redis.md`,
+    `my_redis.md`, `_redis.md_`, `redis.md_backup`, `redis.md-old`, `redis.md.bak`,
+    `redis.md..bak`, `redis.md._backup`, `redis.md.-old`, `redis.mdx`, `archive+redis.md`,
+    `redis.md~` or a basename touching a non-ASCII letter. Underscore emphasis is not
+    credited (see the module docstring): it would need code-span parsing to tell apart
+    from a filename that contains underscores.
     """
     lines = demonstration_lines(root)
     tracked = set()
     for b in names:
-        e = re.escape(b)
-        token = re.compile(
-            LEFT_EDGE + r"(?:__" + e + r"__|_" + e + r"_|" + e + r")" + RIGHT_EDGE)
+        token = re.compile(LEFT_EDGE + re.escape(b) + RIGHT_EDGE)
         if any(token.search(line) for line in lines):
             tracked.add(b)
     return tracked

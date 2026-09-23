@@ -36,14 +36,16 @@ The cases mirror the proposal:
  17. right filename boundary: a dot-run continuation (redis.md..bak / redis.md._backup /
      redis.md.-old) does not clear the redis.md gap.
  18. Markdown line endings only: a U+2028/U+2029 inside a Verify paragraph does not fake a
-     heading that ends the section; a CRLF guide parses normally; a U+2028 inside a backlog
-     row does not split the row.
- 19. allowlisted filename edges: a basename touching `+`, `~`, a non-ASCII letter, or an
-     embedded or unbalanced underscore does not clear the redis.md gap.
- 20. emphasis and link forms (`_redis.md_`, `__redis.md__`, `**redis.md**`,
+     heading that ends the section; a U+2028 inside a backlog row does not split the row;
+     and (a regression guard that also passes on the old code) a CRLF guide parses normally.
+ 19. allowlisted filename edges: a basename touching `+`, `~`, a non-ASCII letter, or any
+     underscore (embedded, unbalanced, emphasis, or emphasis inside a code span) does not
+     clear the redis.md gap.
+ 20. quoted, starred and link forms (straight and typographic quotes, `**redis.md**`,
      `[redis.md](redis.md)`, `redis.md#verify`, `(redis.md)`) DO clear the gap.
  21. closing fence (shared _markdown.Fences): a ``` followed by a non-breaking space does
-     not close the block; one followed by spaces and a tab does.
+     not close the block; and (a regression guard that also passes on the old code) one
+     followed by spaces and a tab does.
 """
 import shutil
 import subprocess
@@ -297,9 +299,11 @@ def main() -> int:
     # 18. Markdown line endings only. 18a/18b: a U+2028 or U+2029 inside the Verify
     #     paragraph is NOT a line break, so the "## Notes" text after it is not a heading
     #     that closes the section early, and the later reasoned marker is still inside
-    #     Verify (splitlines() would have hidden it). 18c: a CRLF guide parses as ordinary
-    #     lines. 18d: a U+2028 inside a backlog row does not split "Demonstrate" from the
-    #     basename, so the row still clears the gap.
+    #     Verify (splitlines() would have hidden it). 18c is a REGRESSION GUARD, not a fix
+    #     guard: read_text() normalizes CRLF before either split sees it, so it passes on
+    #     the old code too, and it pins that a CRLF guide keeps parsing as ordinary lines.
+    #     18d: a U+2028 inside a backlog row does not split "Demonstrate" from the basename,
+    #     so the row still clears the gap.
     for sep, label in (("\u2028", "18a-U+2028"), ("\u2029", "18b-U+2029")):
         rc, out = run({"redis.md": "# Redis\n\n## Verify\n\nRun the check." + sep
                                    + "## Notes\n\nThis check is reasoned rather than run.\n"})
@@ -318,10 +322,13 @@ def main() -> int:
           rc == 0 and "REASONED-ROW" not in out and "0 reasoned guide" in out)
 
     # 19. Allowlisted filename edges. A basename touching `+`, `~`, a non-ASCII letter, or
-    #     an embedded or unbalanced underscore is part of a longer token naming a
-    #     different file, so it does NOT clear the redis.md gap.
+    #     any underscore is part of a longer token naming a different file, or cannot be
+    #     told apart from one without code-span parsing, so it does NOT clear the redis.md
+    #     gap. This includes underscore emphasis and emphasis inside a code span, whose
+    #     underscores are literal (`_redis.md_` there names a different file).
     for bad in ("archive+redis.md", "redis.md~", "\u00e9redis.md", "redis.md\u00e9",
-                "my_redis.md", "_redis.md", "_redis.md_backup"):
+                "my_redis.md", "_redis.md", "_redis.md_backup", "_redis.md_",
+                "__redis.md__", "`_redis.md_`", "`__redis.md__`"):
         rc, out = run({"redis.md": REASONED_GUIDE},
                       todo=f"- [ ] 1.1 Demonstrate {bad}\n")
         check(f"19: 'Demonstrate {bad}' does not clear the redis.md gap "
@@ -329,9 +336,12 @@ def main() -> int:
               rc == 0 and "REASONED-ROW: redis.md has a reasoned Verify step" in out
               and "1 reasoned guide(s) without a demonstration row (1 new" in out)
 
-    # 20. Emphasis and link forms around the real basename DO clear the gap.
-    for good in ("_redis.md_", "__redis.md__", "**redis.md**", "[redis.md](redis.md)",
-                 "redis.md#verify", "(redis.md)"):
+    # 20. Quoted, starred and link forms around the real basename DO clear the gap,
+    #     including typographic quotes, which ordinary prose uses.
+    for good in ("\"redis.md\"", "'redis.md'",
+                 "\N{LEFT DOUBLE QUOTATION MARK}redis.md\N{RIGHT DOUBLE QUOTATION MARK}",
+                 "\N{LEFT SINGLE QUOTATION MARK}redis.md\N{RIGHT SINGLE QUOTATION MARK}",
+                 "**redis.md**", "[redis.md](redis.md)", "redis.md#verify", "(redis.md)"):
         rc, out = run({"redis.md": REASONED_GUIDE},
                       todo=f"- [ ] 1.1 Demonstrate {good}\n")
         check(f"20: 'Demonstrate {good}' clears the redis.md gap (rc={rc}, out={out!r})",
@@ -340,8 +350,9 @@ def main() -> int:
     # 21. Closing fence (shared _markdown.Fences). 21a: only spaces or tabs may follow a
     #     closing run, so a ``` followed by a non-breaking space is fence CONTENT, not a
     #     close; the `## Verify` after it stays inside the still-open block, so it is not a
-    #     gap. 21b: a ``` followed by spaces and a tab DOES close, so the Verify section
-    #     after it is parsed and its reasoned marker is a gap.
+    #     gap. 21b is a REGRESSION GUARD, not a fix guard (it passes on the old code too): a
+    #     ``` followed by spaces and a tab still closes, so the Verify section after it is
+    #     parsed and its reasoned marker is a gap.
     rc, out = run({"redis.md": "# Redis\n\n## Setup\n\n```sh\necho hi\n```\u00a0\n\n"
                                "## Verify\n\nThis check is reasoned rather than run.\n"})
     check("21a: a closing fence followed by a non-breaking space does not close the block "
@@ -374,9 +385,9 @@ def main() -> int:
           "4-space-indented or backtick-info fence does not hide a Verify section; a "
           "dot-run filename continuation does not clear the gap; a Unicode line separator "
           "neither fakes a heading nor splits a backlog row; a basename beside +, ~, a "
-          "non-ASCII letter or a stray underscore does not clear the gap while balanced "
-          "emphasis and link forms do; and a non-breaking space after a closing fence "
-          "does not close it)")
+          "non-ASCII letter or any underscore (including emphasis and code-span forms) "
+          "does not clear the gap while quoted, starred and link forms do; and a "
+          "non-breaking space after a closing fence does not close it)")
     return 0
 
 
