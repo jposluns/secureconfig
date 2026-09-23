@@ -39,9 +39,10 @@ classifier, and a guide that reasons under another phrasing is out of scope by d
 
 THE DEMONSTRATION-ROW DETECTOR. A guide is "tracked" iff at least one line in TODO.md
 OR DONE.md carries the case-insensitive word "demonstrate" or "demonstration" AND names
-the guide's basename as a COMPLETE filename token (for example `redis.md`), where the
-match is not followed by another filename character -- so `redis.md` matches
-`Demonstrate redis.md` or a trailing-period `redis.md.` but not `redis.md.bak` or
+the guide's basename as a COMPLETE filename token (for example `redis.md`), bounded on
+BOTH sides so it is neither preceded nor followed by another filename character -- so
+`redis.md` matches `Demonstrate redis.md` or a trailing-period `redis.md.` but not
+`hiredis.md`, `not-redis.md`, `redis.md_backup`, `redis.md-old`, `redis.md.bak` or
 `redis.mdx`. A creation-or-deepen row that names the guide but does not say
 "demonstrate" does not count: the point is a row that commits to demonstrating the
 reasoned step, not merely one that mentions the file.
@@ -83,6 +84,10 @@ DEMONSTRATE = re.compile(r"(?i)\b(?:demonstrate|demonstration)\b")
 HEADING = re.compile(r"^(#{1,6})\s+(.*)$")
 # A heading whose title names a Verify step (whole word, case-insensitive).
 VERIFY_TITLE = re.compile(r"(?i)\bverify\b")
+# A fenced-code-block delimiter: a run of 3+ backticks or tildes, optionally
+# indented and (on the opening fence) carrying an info string. Group 1 is the run;
+# group 2 is the trailing text (the info string, if any).
+FENCE = re.compile(r"^\s*(`{3,}|~{3,})(.*)$")
 
 BASELINE_PATH = Path("tools/reasoned_row_baseline.txt")
 
@@ -94,28 +99,63 @@ def guides(root: Path):
             yield path
 
 
-def verify_sections_text(text: str) -> str:
-    """Concatenate the body of every Verify section in the guide.
+def atx_headings(lines):
+    """Return a list parallel to `lines`: (level, title) for each line that is an ATX
+    heading OUTSIDE a fenced code block, else None.
 
-    Lines are parsed as ATX headings. A Verify section begins at a heading whose title
-    contains the word 'verify' and runs from the line AFTER that heading up to (but not
-    including) the next heading whose level is <= the Verify heading's level, or the end
-    of the file. This captures a `## Verify` section with its deeper subsections and each
-    per-tool `### Verify` subsection in a catalogue guide. Returns the joined text of all
-    such sections; a guide with no Verify heading yields the empty string.
+    Code fences are tracked so a `# comment` or a `## Verify` EXAMPLE inside a ``` or
+    ~~~ block is not mistaken for a heading -- inside a fence no line is a heading, and
+    only a matching closing fence (the same marker char, at least as long, no info
+    string) ends the block. The opening fence itself is never a heading either.
+    """
+    fence_char = None  # the fence marker char while inside a fenced block, else None
+    fence_len = 0
+    out = []
+    for line in lines:
+        fm = FENCE.match(line)
+        if fence_char is None:
+            if fm:
+                fence_char = fm.group(1)[0]
+                fence_len = len(fm.group(1))
+                out.append(None)
+                continue
+            m = HEADING.match(line)
+            out.append((len(m.group(1)), m.group(2)) if m else None)
+        else:
+            if (fm and fm.group(1)[0] == fence_char
+                    and len(fm.group(1)) >= fence_len and fm.group(2).strip() == ""):
+                fence_char = None
+            out.append(None)
+    return out
+
+
+def verify_sections_text(text: str) -> str:
+    """Concatenate the title and body of every Verify section in the guide.
+
+    Lines are parsed as ATX headings, fence-aware (see atx_headings): a `#` line inside
+    a fenced code block is not a heading. A Verify section begins at a heading whose
+    title contains the word 'verify' and runs from that heading's OWN title text through
+    the lines after it up to (but not including) the next heading whose level is <= the
+    Verify heading's level, or the end of the file. Including the heading's title means a
+    marker in the heading itself (`## Verify (reasoned)`) is scanned. This captures a
+    `## Verify` section with its deeper subsections and each per-tool `### Verify`
+    subsection in a catalogue guide. Returns the joined text of all such sections; a
+    guide with no Verify heading yields the empty string.
     """
     lines = text.splitlines()
+    heads = atx_headings(lines)
     collected = []
     i = 0
     n = len(lines)
     while i < n:
-        m = HEADING.match(lines[i])
-        if m and VERIFY_TITLE.search(m.group(2)):
-            level = len(m.group(1))
+        h = heads[i]
+        if h and VERIFY_TITLE.search(h[1]):
+            level = h[0]
+            collected.append(h[1])  # the Verify heading's own title text
             j = i + 1
             while j < n:
-                mj = HEADING.match(lines[j])
-                if mj and len(mj.group(1)) <= level:
+                hj = heads[j]
+                if hj and hj[0] <= level:
                     break
                 collected.append(lines[j])
                 j += 1
@@ -155,15 +195,18 @@ def tracked_basenames(root: Path, names):
     """Return the subset of guide basenames named on a demonstration row in TODO/DONE.
 
     A basename `b` is tracked iff some demonstration line references `b` as a COMPLETE
-    filename token: the match must not be followed by another filename character
-    (a letter/digit, or a dot introducing another alphanumeric), so `redis.md` matches
-    `Demonstrate redis.md`, `` `redis.md` ``, `redis.md.` and `redis.md,` but NOT
-    `redis.md.bak` or `redis.mdx`.
+    filename token, bounded on BOTH sides. The match must not be preceded by another
+    filename character (a letter, digit, dot, underscore or hyphen) and must not be
+    followed by one (a letter/digit/underscore/hyphen, or a dot introducing another
+    alphanumeric), so `redis.md` matches `Demonstrate redis.md`, `` `redis.md` ``,
+    `redis.md.` and `redis.md,` but NOT `hiredis.md`, `not-redis.md`, `redis.md_backup`,
+    `redis.md-old`, `redis.md.bak` or `redis.mdx`.
     """
     lines = demonstration_lines(root)
     tracked = set()
     for b in names:
-        token = re.compile(re.escape(b) + r"(?![A-Za-z0-9]|\.[A-Za-z0-9])")
+        token = re.compile(
+            r"(?<![A-Za-z0-9._-])" + re.escape(b) + r"(?![A-Za-z0-9_-]|\.[A-Za-z0-9])")
         if any(token.search(line) for line in lines):
             tracked.add(b)
     return tracked

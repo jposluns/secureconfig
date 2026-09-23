@@ -19,6 +19,15 @@ The cases mirror the proposal:
   9. scope: "reasoned" only in non-Verify prose (a demonstrated Verify) -> not a gap.
  10. complete-filename backlog match: `redis.md.bak`/`redis.mdx` do not clear the
      redis.md gap; a trailing-period `redis.md.` does.
+ 11. fence-aware parsing: a fenced `# comment` in a Verify section does not end it, so a
+     later reasoned marker is still detected.
+ 12. fence-aware parsing: a fenced `## Verify` example (under Setup) does not open a
+     Verify section, so a reasoned marker inside it is not detected.
+ 13. both-sided filename boundary: hiredis.md/not-redis.md/redis.md_backup/redis.md-old
+     do not clear the redis.md gap; a backticked `redis.md` and a trailing-comma
+     `redis.md,` do.
+ 14. the Verify heading's own title is scanned: `## Verify (reasoned)` is detected even
+     when the body carries no marker.
 """
 import shutil
 import subprocess
@@ -97,8 +106,12 @@ def main() -> int:
           rc == 0 and "REASONED-ROW" not in out and "0 reasoned guide" in out)
 
     # 5. a "reasoned" mention in a meta-file (CONTRIBUTING.md) -> ignored, not a guide.
-    rc, out = run({"CONTRIBUTING.md": "A Verify step may be reasoned rather than run.\n"})
-    check("5: a reasoned mention in an excluded meta-file is not a guide "
+    #    The fixture gives CONTRIBUTING.md a real Verify section CONTAINING the marker and
+    #    no backlog row, so the ONLY reason it is not a gap is the meta exclusion:
+    #    replacing that exclusion with `if True:` would make this case fail (non-vacuous).
+    rc, out = run({"CONTRIBUTING.md": "# Contributing\n\n## Verify\n\n"
+                                      "This check is reasoned rather than run.\n"})
+    check("5: a reasoned Verify in an excluded meta-file is not a guide "
           f"(rc={rc}, out={out!r})",
           rc == 0 and "REASONED-ROW" not in out and "0 reasoned guide" in out)
 
@@ -167,19 +180,76 @@ def main() -> int:
           f"(rc={rc}, out={out!r})",
           rc == 0 and "REASONED-ROW" not in out and "0 reasoned guide" in out)
 
+    # 11. Fix E, fence-aware heading parsing. A Verify section whose fenced code block
+    #     contains a `# comment` line (a level-1 ATX heading if fences were ignored)
+    #     followed by a later reasoned marker STILL detects the marker: the fenced `#`
+    #     must not prematurely end the section.
+    rc, out = run({"redis.md": "# Redis\n\n## Verify\n\n"
+                               "```sh\n# run this check\necho hi\n```\n\n"
+                               "The output above is reasoned about rather than asserted.\n"})
+    check("11: a fenced `#` in a Verify section does not end it; a later reasoned marker "
+          f"is still a gap (rc={rc}, out={out!r})",
+          rc == 0 and "REASONED-ROW: redis.md has a reasoned Verify step" in out
+          and "1 reasoned guide(s) without a demonstration row (1 new" in out)
+
+    # 12. Fix E, the other direction. A `## Verify` that appears only INSIDE a fenced
+    #     code block (an example under a Setup section) does NOT open a Verify section,
+    #     so a reasoned marker within that fenced example is not detected: not a gap.
+    rc, out = run({"redis.md": "# Redis\n\n## Setup\n\n"
+                               "```md\n## Verify\n\nThis is reasoned, not run.\n```\n\n"
+                               "Run the setup steps.\n"})
+    check("12: a fenced `## Verify` example does not open a Verify section "
+          f"(rc={rc}, out={out!r})",
+          rc == 0 and "REASONED-ROW" not in out and "0 reasoned guide" in out)
+
+    # 13. Fix F, both-sided complete-filename boundary. A demonstrate row naming a
+    #     DIFFERENT complete file that merely embeds "redis.md" as a substring on either
+    #     side must NOT clear the redis.md gap; a leading backtick and a trailing comma
+    #     around the real basename DO clear it.
+    for bad in ("hiredis.md", "not-redis.md", "redis.md_backup", "redis.md-old"):
+        rc, out = run({"redis.md": REASONED_GUIDE},
+                      todo=f"- [ ] 1.1 Demonstrate {bad}\n")
+        check(f"13-neg: 'Demonstrate {bad}' does not clear the redis.md gap "
+              f"(rc={rc}, out={out!r})",
+              rc == 0 and "REASONED-ROW: redis.md has a reasoned Verify step" in out
+              and "1 reasoned guide(s) without a demonstration row (1 new" in out)
+    rc, out = run({"redis.md": REASONED_GUIDE},
+                  todo="- [ ] 1.1 Demonstrate the reasoned Verify in `redis.md`\n")
+    check("13-pos-backtick: a backticked `redis.md` clears the gap "
+          f"(rc={rc}, out={out!r})",
+          rc == 0 and "REASONED-ROW" not in out and "0 reasoned guide" in out)
+    rc, out = run({"redis.md": REASONED_GUIDE},
+                  todo="- [ ] 1.1 Demonstrate redis.md, then move on\n")
+    check("13-pos-comma: a trailing-comma 'redis.md,' clears the gap "
+          f"(rc={rc}, out={out!r})",
+          rc == 0 and "REASONED-ROW" not in out and "0 reasoned guide" in out)
+
+    # 14. Fix G, the Verify heading's own title is scanned. A `## Verify (reasoned)`
+    #     heading whose body carries neither the marker nor a row is a gap on the
+    #     strength of the marker in the heading title alone.
+    rc, out = run({"redis.md": "# Redis\n\n## Verify (reasoned)\n\n"
+                               "Run the check and read the output.\n"})
+    check("14: a marker in the Verify heading title (`## Verify (reasoned)`) is detected "
+          f"(rc={rc}, out={out!r})",
+          rc == 0 and "REASONED-ROW: redis.md has a reasoned Verify step" in out
+          and "1 reasoned guide(s) without a demonstration row (1 new" in out)
+
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")
-        print(f"FAIL: {len(failures)} of 10 reasoned-row self-test cases failed")
+        print(f"FAIL: {len(failures)} of 14 reasoned-row self-test cases failed")
         return 1
-    print("PASS: 10 of 10 reasoned-row self-test cases passed (matching TODO/DONE "
+    print("PASS: 14 of 14 reasoned-row self-test cases passed (matching TODO/DONE "
           "demonstration rows clear the gap; an untracked reasoned guide is a gap and "
-          "reddens --strict; a non-reasoned guide, a reasoned mention in a meta-file, "
+          "reddens --strict; a non-reasoned guide, a reasoned Verify in a meta-file, "
           "and the substrings 'unreasoned'/'reasonedness'/'reasoning'/'reasonable' are "
           "not gaps; `_reasoned_`/`__reasoned__` emphasis IS detected; 'reasoned' only "
           "in non-Verify prose is not a gap; a suffix-continuation backlog token "
           "(redis.md.bak / redis.mdx) does not clear the redis.md gap while a "
-          "trailing-period 'redis.md.' does; a baselined gap is grandfathered)")
+          "trailing-period 'redis.md.' does; a baselined gap is grandfathered; a fenced "
+          "`#` does not end a Verify section and a fenced `## Verify` does not open one; "
+          "a both-sided filename boundary rejects hiredis.md/not-redis.md/redis.md_backup"
+          "/redis.md-old; and a marker in the Verify heading title is detected)")
     return 0
 
 
