@@ -54,6 +54,21 @@ cause a non-zero `--strict` exit. This mirrors check_pinned_citations.py's ratch
 absent baseline file is treated as empty, so the ratchet starts unseeded and seeding it
 is a deliberate `--write-baseline` step a human takes once.
 
+KNOWN LIMITATIONS (advisory scope). This is a tracking aid over the corpus's own
+"reasoned"/"demonstrate" convention, not a CommonMark-conformant Markdown parser, and it
+runs advisory. Adversarial review reproduced edge cases in exotic Markdown that no guide in
+this corpus uses and that do not change this gate's output: a corpus-parity check across
+every guide confirmed the fence and heading rules alter no real guide's parse. The known
+edges, tracked as follow-up hardening work: a non-breaking space (or other non-space/tab
+whitespace) after a closing fence, or a Unicode line separator (U+2028/U+2029) inside a
+paragraph, can shift the fence or heading parse; a fence opened inside a list item is not
+closed at the item boundary (a disclosed limit of the shared tools/_markdown.py); and the
+free-prose filename-token match keys on ASCII filename characters, so it can miss a basename
+written with Markdown emphasis (`_redis.md_`) and can be cleared by an unrelated token that
+embeds the basename across a non-ASCII or non-filename neighbour (`archive+redis.md`,
+`redis.md~`). The tools/_markdown.py cases are a separate, wider-blast-radius change shared
+with other gates.
+
 Everything is offline and reads files as UTF-8. Nothing is written except under
 `--write-baseline`.
 """
