@@ -41,8 +41,9 @@ The cases mirror the proposal:
  19. allowlisted filename edges: a basename touching `+`, `~`, a non-ASCII letter, or any
      underscore (embedded, unbalanced, emphasis, or emphasis inside a code span) does not
      clear the redis.md gap.
- 20. quoted, starred and link forms (straight and typographic quotes, `**redis.md**`,
-     `[redis.md](redis.md)`, `redis.md#verify`, `(redis.md)`) DO clear the gap.
+ 20. quoted, starred, dashed and link forms (straight and typographic quotes, guillemets,
+     an em dash, a colon, `**redis.md**`, `[redis.md](redis.md)`, `redis.md#verify`,
+     `(redis.md)`) DO clear the gap.
  21. closing fence (shared _markdown.Fences): a ``` followed by a non-breaking space does
      not close the block; and (a regression guard that also passes on the old code) one
      followed by spaces and a tab does.
@@ -336,11 +337,14 @@ def main() -> int:
               rc == 0 and "REASONED-ROW: redis.md has a reasoned Verify step" in out
               and "1 reasoned guide(s) without a demonstration row (1 new" in out)
 
-    # 20. Quoted, starred and link forms around the real basename DO clear the gap,
-    #     including typographic quotes, which ordinary prose uses.
+    # 20. Quoted, starred, dashed and link forms around the real basename DO clear the
+    #     gap, including the typographic quotes, guillemets and dashes of ordinary prose.
     for good in ("\"redis.md\"", "'redis.md'",
                  "\N{LEFT DOUBLE QUOTATION MARK}redis.md\N{RIGHT DOUBLE QUOTATION MARK}",
                  "\N{LEFT SINGLE QUOTATION MARK}redis.md\N{RIGHT SINGLE QUOTATION MARK}",
+                 "\N{LEFT-POINTING DOUBLE ANGLE QUOTATION MARK}redis.md"
+                 "\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}",
+                 "redis.md\N{EM DASH}verify its TLS", "redis.md: verify",
                  "**redis.md**", "[redis.md](redis.md)", "redis.md#verify", "(redis.md)"):
         rc, out = run({"redis.md": REASONED_GUIDE},
                       todo=f"- [ ] 1.1 Demonstrate {good}\n")
@@ -386,7 +390,7 @@ def main() -> int:
           "dot-run filename continuation does not clear the gap; a Unicode line separator "
           "neither fakes a heading nor splits a backlog row; a basename beside +, ~, a "
           "non-ASCII letter or any underscore (including emphasis and code-span forms) "
-          "does not clear the gap while quoted, starred and link forms do; and a "
+          "does not clear the gap while quoted, starred, dashed and link forms do; and a "
           "non-breaking space after a closing fence does not close it)")
     return 0
 

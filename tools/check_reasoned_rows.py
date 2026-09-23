@@ -39,12 +39,11 @@ classifier, and a guide that reasons under another phrasing is out of scope by d
 
 THE DEMONSTRATION-ROW DETECTOR. A guide is "tracked" iff at least one line in TODO.md
 OR DONE.md carries the case-insensitive word "demonstrate" or "demonstration" AND names
-the guide's basename as a COMPLETE filename token. The token stands alone: on each side
-it meets the start or end of the line, whitespace, or punctuation that surrounds a
-filename in prose or Markdown (a backtick, bracket, straight or typographic quote,
-emphasis star, `|`, `/`, `,`, `;`, `:`, `!` or `?`, plus `#` and a run of
-sentence-ending periods on the right). That edge set is an allowlist, so anything else
-beside the basename means it belongs to a longer token naming a different file. So
+the guide's basename as a COMPLETE filename token: no filename character touches it. A
+filename character is a letter or digit (ASCII or not), `_`, `-`, `~` or `+`, and on the
+left also `.`; on the right a run of periods is a sentence end unless it leads into a
+filename character. Every other character, whitespace and punctuation alike (quotes of
+any kind, brackets, dashes, `#`, `:`), is a boundary. So
 `redis.md` matches `Demonstrate redis.md`, a trailing-period `redis.md.`, a quoted
 "redis.md" or `[redis.md](redis.md)`, but not `hiredis.md`, `not-redis.md`,
 `my_redis.md`, `redis.md_backup`, `redis.md-old`, `redis.md.bak`, `redis.md..bak`,
@@ -74,8 +73,9 @@ limit of that shared module: a fence opened inside a list item is not closed at 
 boundary. No guide in this corpus uses that construction, and a corpus-parity check
 confirmed it changes no real guide's result. The backlog filename match does not parse
 code spans either, so it does not credit underscore emphasis around a basename (it reports
-a gap instead, the conservative direction), while a `*`-wrapped basename inside a code span
-still counts, as it did before this gate's edge allowlist.
+a gap instead, the conservative direction), while a code span that joins the basename to
+other text with punctuation, such as `` `archive:redis.md` `` or `` `*redis.md*` ``, still
+counts, as it did before.
 
 Everything is offline and reads files as UTF-8. Nothing is written except under
 `--write-baseline`.
@@ -112,18 +112,13 @@ DEMONSTRATE = re.compile(r"(?i)\b(?:demonstrate|demonstration)\b")
 HEADING = re.compile(r"^ {0,3}(#{1,6})(?:[ \t]+(.*?))?[ \t]*$")
 # A heading whose title names a Verify step (whole word, case-insensitive).
 VERIFY_TITLE = re.compile(r"(?i)\bverify\b")
-# What may sit directly beside a basename for a backlog line to name that file: the start
-# or end of the line, whitespace, or punctuation that surrounds a filename in prose or
-# Markdown. This is an allowlist, so another filename character, `+`, `~` or any non-ASCII
-# letter beside the basename means it is part of a longer token naming a different file.
-# The right edge also allows `#` (a section link) and a run of sentence-ending periods.
-# Typographic quotes are written as \N{...} names so this source stays ASCII; re resolves
-# them in the character class.
-_EDGE = (r"`()\[\]{}<>\"'*|/,;:!?"
-         r"\N{LEFT DOUBLE QUOTATION MARK}\N{RIGHT DOUBLE QUOTATION MARK}"
-         r"\N{LEFT SINGLE QUOTATION MARK}\N{RIGHT SINGLE QUOTATION MARK}")
-LEFT_EDGE = r"(?<![^\s" + _EDGE + r"])"
-RIGHT_EDGE = r"(?=\.*(?:$|[\s#" + _EDGE + r"]))"
+# A basename names a file only as a complete token: no filename character may touch it.
+# A filename character is a letter or digit (\w, so non-ASCII letters too), `_`, `-`, `~`
+# or `+`, and on the left also `.`; on the right a run of periods is a sentence end unless
+# it leads into a filename character (redis.md..bak). Everything else, whitespace and
+# punctuation alike (quotes of any kind, brackets, dashes, `#`, `:`), is a boundary.
+LEFT_EDGE = r"(?<![\w.~+-])"
+RIGHT_EDGE = r"(?![\w~+-]|\.+[\w~+-])"
 
 BASELINE_PATH = Path("tools/reasoned_row_baseline.txt")
 
@@ -230,7 +225,7 @@ def tracked_basenames(root: Path, names):
     """Return the subset of guide basenames named on a demonstration row in TODO/DONE.
 
     A basename `b` is tracked iff some demonstration line references `b` as a COMPLETE
-    filename token with only an allowed edge on each side (LEFT_EDGE / RIGHT_EDGE). So
+    filename token, with no filename character touching it (LEFT_EDGE / RIGHT_EDGE). So
     `redis.md` matches `Demonstrate redis.md`, `` `redis.md` ``, `redis.md.`, `redis.md,`,
     a quoted "redis.md" and `[redis.md](redis.md)` but NOT `hiredis.md`, `not-redis.md`,
     `my_redis.md`, `_redis.md_`, `redis.md_backup`, `redis.md-old`, `redis.md.bak`,
