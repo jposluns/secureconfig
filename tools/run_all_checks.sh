@@ -657,6 +657,20 @@ else
   bad "the pinned-citation gate could not complete (exit $pc_rc); failing closed:"
   printf '%s\n' "$pc" | sed 's/^/          /'
 fi
+echo "== reasoned Verify steps are tracked by a demonstration backlog row (advisory) =="
+# tools/check_reasoned_rows.py: CONTRIBUTING rule 5 makes a demonstration backlog row a condition of the
+# reasoned-step allowance ("reasoned is a debt, not a destination"). ADVISORY: this block never fails the
+# suite. Pre-existing reasoned guides without a row are grandfathered in tools/reasoned_row_baseline.txt;
+# a future --strict promotion (Architect sign-off) would fail only on a NEW untracked reasoned guide above
+# that baseline. Self-test first so what runs is the shipped checker.
+rr_st="$(python3 -I -B tools/test_reasoned_rows.py 2>&1)"
+if [ $? -eq 0 ] && ! printf '%s\n' "$rr_st" | grep -q '^  FAIL  '; then
+  printf '  note  reasoned-row self-test passed (advisory gate)\n'
+else
+  printf '  note  reasoned-row self-test did NOT pass (advisory, not gating): %s\n' "$(printf '%s' "$rr_st" | tail -1)"
+fi
+rr="$(python3 -I -B tools/check_reasoned_rows.py 2>&1)"
+printf '  note  %s\n' "$(printf '%s\n' "$rr" | tail -1)"
 echo "== no committed secrets =="
 # Deliberately narrow: only material that is a credential wherever it appears.
 # A guide that must show sample key output will trip this; allowlist it here
