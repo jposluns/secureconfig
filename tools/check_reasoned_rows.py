@@ -39,13 +39,23 @@ classifier, and a guide that reasons under another phrasing is out of scope by d
 
 THE DEMONSTRATION-ROW DETECTOR. A guide is "tracked" iff at least one line in TODO.md
 OR DONE.md carries the case-insensitive word "demonstrate" or "demonstration" AND names
-the guide's basename as a COMPLETE filename token (for example `redis.md`), bounded on
-BOTH sides so it is neither preceded nor followed by another filename character -- so
-`redis.md` matches `Demonstrate redis.md` or a trailing-period `redis.md.` but not
-`hiredis.md`, `not-redis.md`, `redis.md_backup`, `redis.md-old`, `redis.md.bak`,
-`redis.md..bak`, `redis.md._backup`, `redis.md.-old` or `redis.mdx`. A creation-or-deepen row that names the guide but does not say
-"demonstrate" does not count: the point is a row that commits to demonstrating the
-reasoned step, not merely one that mentions the file.
+the guide's basename as a COMPLETE filename token: no filename character touches it. A
+filename character is a word character (Python's Unicode word class: any letter, digit or other
+numeric character, such as a vulgar fraction), `_`, `-`, `~` or `+`, and on the
+left also `.`; on the right a run of periods is a sentence end unless it leads into a
+filename character. Every other character, whitespace and punctuation alike (quotes of
+any kind, brackets, dashes, `#`, `:`), is a boundary. So
+`redis.md` matches `Demonstrate redis.md`, a trailing-period `redis.md.`, a quoted
+"redis.md" or `[redis.md](redis.md)`, but not `hiredis.md`, `not-redis.md`,
+`my_redis.md`, `redis.md_backup`, `redis.md-old`, `redis.md.bak`, `redis.md..bak`,
+`redis.md._backup`, `redis.md.-old`, `redis.mdx`, `archive+redis.md`, `redis.md~` or a
+basename touching a non-ASCII letter. Underscore emphasis (`_redis.md_`) is NOT credited:
+the gate does not parse code spans, so it cannot tell emphasis from underscores that are
+part of a filename (`` `_redis.md_` `` names a different file), and it errs toward
+reporting a gap, which a human resolves by writing the basename plainly. A
+creation-or-deepen row that names the guide but does not say "demonstrate" does not
+count: the point is a row that commits to demonstrating the reasoned step, not merely
+one that mentions the file.
 
 THE BASELINE RATCHET. An optional `tools/reasoned_row_baseline.txt` (one guide basename
 per line; blank lines and `#` comments ignored) grandfathers known pre-existing gaps:
@@ -56,18 +66,17 @@ is a deliberate `--write-baseline` step a human takes once.
 
 KNOWN LIMITATIONS (advisory scope). This is a tracking aid over the corpus's own
 "reasoned"/"demonstrate" convention, not a CommonMark-conformant Markdown parser, and it
-runs advisory. Adversarial review reproduced edge cases in exotic Markdown that no guide in
-this corpus uses and that do not change this gate's output: a corpus-parity check across
-every guide confirmed the fence and heading rules alter no real guide's parse. The known
-edges, tracked as follow-up hardening work: a non-breaking space (or other non-space/tab
-whitespace) after a closing fence, or a Unicode line separator (U+2028/U+2029) inside a
-paragraph, can shift the fence or heading parse; a fence opened inside a list item is not
-closed at the item boundary (a disclosed limit of the shared tools/_markdown.py); and the
-free-prose filename-token match keys on ASCII filename characters, so it can miss a basename
-written with Markdown emphasis (`_redis.md_`) and can be cleared by an unrelated token that
-embeds the basename across a non-ASCII or non-filename neighbour (`archive+redis.md`,
-`redis.md~`). The tools/_markdown.py cases are a separate, wider-blast-radius change shared
-with other gates.
+runs advisory. Guide and backlog text is split into lines on line feeds only (read_text() has
+already normalized CRLF and CR), so a Unicode line or paragraph separator inside a
+paragraph cannot fake a heading; and fences come from the shared tools/_markdown.py, whose
+closing fence accepts only trailing spaces or tabs. One known edge remains, a disclosed
+limit of that shared module: a fence opened inside a list item is not closed at the item
+boundary. No guide in this corpus uses that construction, and a corpus-parity check
+confirmed it changes no real guide's result. The backlog filename match does not parse
+code spans either, so it does not credit underscore emphasis around a basename (it reports
+a gap instead, the conservative direction), while a code span that joins the basename to
+other text with punctuation, such as `` `archive:redis.md` `` or `` `*redis.md*` ``, still
+counts, as it did before.
 
 Everything is offline and reads files as UTF-8. Nothing is written except under
 `--write-baseline`.
@@ -104,6 +113,14 @@ DEMONSTRATE = re.compile(r"(?i)\b(?:demonstrate|demonstration)\b")
 HEADING = re.compile(r"^ {0,3}(#{1,6})(?:[ \t]+(.*?))?[ \t]*$")
 # A heading whose title names a Verify step (whole word, case-insensitive).
 VERIFY_TITLE = re.compile(r"(?i)\bverify\b")
+# A basename names a file only as a complete token: no filename character may touch it.
+# A filename character is a word character (Unicode \w: letters, digits and other numeric
+# characters such as a vulgar fraction), `_`, `-`, `~`
+# or `+`, and on the left also `.`; on the right a run of periods is a sentence end unless
+# it leads into a filename character (redis.md..bak). Everything else, whitespace and
+# punctuation alike (quotes of any kind, brackets, dashes, `#`, `:`), is a boundary.
+LEFT_EDGE = r"(?<![\w.~+-])"
+RIGHT_EDGE = r"(?![\w~+-]|\.+[\w~+-])"
 
 BASELINE_PATH = Path("tools/reasoned_row_baseline.txt")
 
@@ -154,7 +171,10 @@ def verify_sections_text(text: str) -> str:
     subsection in a catalogue guide. Returns the joined text of all such sections; a
     guide with no Verify heading yields the empty string.
     """
-    lines = text.splitlines()
+    # split("\n"), not splitlines(): splitlines() also breaks on U+2028/U+2029 and other
+    # characters that Markdown treats as ordinary text, so a paragraph carrying one could
+    # fake a heading line. read_text() has already normalized CRLF and CR to "\n".
+    lines = text.split("\n")
     heads = atx_headings(lines)
     collected = []
     i = 0
@@ -197,7 +217,7 @@ def demonstration_lines(root: Path):
             text = path.read_text(encoding="utf-8")
         except OSError:
             continue  # a missing or unreadable backlog file contributes no rows
-        for line in text.splitlines():
+        for line in text.split("\n"):  # Markdown line endings only, as in verify_sections_text
             if DEMONSTRATE.search(line):
                 lines.append(line)
     return lines
@@ -207,19 +227,19 @@ def tracked_basenames(root: Path, names):
     """Return the subset of guide basenames named on a demonstration row in TODO/DONE.
 
     A basename `b` is tracked iff some demonstration line references `b` as a COMPLETE
-    filename token, bounded on BOTH sides. The match must not be preceded by another
-    filename character (a letter, digit, dot, underscore or hyphen) and must not be
-    followed by one (a letter/digit/underscore/hyphen, or a dot introducing another
-    alphanumeric), so `redis.md` matches `Demonstrate redis.md`, `` `redis.md` ``,
-    `redis.md.` and `redis.md,` but NOT `hiredis.md`, `not-redis.md`, `redis.md_backup`,
-    `redis.md-old`, `redis.md.bak`, `redis.md..bak`, `redis.md._backup`, `redis.md.-old`
-    or `redis.mdx`.
+    filename token, with no filename character touching it (LEFT_EDGE / RIGHT_EDGE). So
+    `redis.md` matches `Demonstrate redis.md`, `` `redis.md` ``, `redis.md.`, `redis.md,`,
+    a quoted "redis.md" and `[redis.md](redis.md)` but NOT `hiredis.md`, `not-redis.md`,
+    `my_redis.md`, `_redis.md_`, `redis.md_backup`, `redis.md-old`, `redis.md.bak`,
+    `redis.md..bak`, `redis.md._backup`, `redis.md.-old`, `redis.mdx`, `archive+redis.md`,
+    `redis.md~` or a basename touching a non-ASCII letter. Underscore emphasis is not
+    credited (see the module docstring): it would need code-span parsing to tell apart
+    from a filename that contains underscores.
     """
     lines = demonstration_lines(root)
     tracked = set()
     for b in names:
-        token = re.compile(
-            r"(?<![A-Za-z0-9._-])" + re.escape(b) + r"(?![A-Za-z0-9_-]|\.+[A-Za-z0-9_-])")
+        token = re.compile(LEFT_EDGE + re.escape(b) + RIGHT_EDGE)
         if any(token.search(line) for line in lines):
             tracked.add(b)
     return tracked
