@@ -23,20 +23,28 @@ DECISIONS describe the rule-5 marker itself -- so that in the guides that remain
 word appears only as the Verify marker.
 
 THE REASONED DETECTOR AND ITS KNOWN BLIND SPOT. A guide "has a reasoned Verify step"
-iff it contains the whole word "reasoned" (case-insensitive, `(?i)\breasoned\b`). This
-is deliberately a whole-word substring test, not a parse of the Verify section: it does
-not confirm the word sits under a `## Verify` heading, and it does not catch a guide
-that reasons in its Verify step without ever writing the word "reasoned". The gate's
-guarantee is only over the corpus's own convention, where the word IS the marker; it is
-a tracking aid, not an adversarial classifier, and a guide that reasons under another
-phrasing is out of scope by design rather than chased.
+iff the word "reasoned" (case-insensitive) appears INSIDE a Verify section of the guide.
+The word boundary excludes only ASCII letters and digits, so Markdown emphasis around
+the word still matches -- `_reasoned_`, `__reasoned__`, `**REASONED**`, `(reasoned)`,
+`REASONED:` all count -- while a longer word does not: `unreasoned`, `reasonedness`,
+`reasoning`, `reasonable` are NOT the marker. A Verify section begins at any ATX heading
+whose title matches the word "verify" and runs to the next heading of the same or a
+shallower level (or end of file), so it captures a `## Verify` section with its `###`
+subsections and each per-tool `### Verify` subsection in a catalogue guide. Text outside
+every Verify section is ignored, so the word used in an intro or rationale does not
+trip the gate. It does not catch a guide that reasons in its Verify step without ever
+writing the word "reasoned": the gate's guarantee is only over the corpus's own
+convention, where the word IS the marker; it is a tracking aid, not an adversarial
+classifier, and a guide that reasons under another phrasing is out of scope by design.
 
 THE DEMONSTRATION-ROW DETECTOR. A guide is "tracked" iff at least one line in TODO.md
-OR DONE.md contains the guide's exact basename (for example `redis.md`) AND the
-case-insensitive word "demonstrate" or "demonstration" on that same line. A
-creation-or-deepen row that names the guide but does not say "demonstrate" does not
-count: the point is a row that commits to demonstrating the reasoned step, not merely
-one that mentions the file.
+OR DONE.md carries the case-insensitive word "demonstrate" or "demonstration" AND names
+the guide's basename as a COMPLETE filename token (for example `redis.md`), where the
+match is not followed by another filename character -- so `redis.md` matches
+`Demonstrate redis.md` or a trailing-period `redis.md.` but not `redis.md.bak` or
+`redis.mdx`. A creation-or-deepen row that names the guide but does not say
+"demonstrate" does not count: the point is a row that commits to demonstrating the
+reasoned step, not merely one that mentions the file.
 
 THE BASELINE RATCHET. An optional `tools/reasoned_row_baseline.txt` (one guide basename
 per line; blank lines and `#` comments ignored) grandfathers known pre-existing gaps:
@@ -65,11 +73,16 @@ META_EXCLUDE = frozenset({
     "PENDING-DECISIONS.md", "controls-reference.md",
 })
 
-# The rule-5 Verify marker, as a whole word so "reasoning"/"reasonable" do not match.
-REASONED = re.compile(r"(?i)\breasoned\b")
+# The rule-5 Verify marker. The boundary excludes only ASCII letters/digits, so Markdown
+# emphasis (_reasoned_, **REASONED**) still matches while "reasoning"/"unreasoned" do not.
+REASONED = re.compile(r"(?i)(?<![A-Za-z0-9])reasoned(?![A-Za-z0-9])")
 # A backlog row that commits to demonstrating: the whole word "demonstrate" or
 # "demonstration" (case-insensitive), per the gate's definition of a tracking row.
 DEMONSTRATE = re.compile(r"(?i)\b(?:demonstrate|demonstration)\b")
+# An ATX heading line: capturing groups are the level (#s) and the title text.
+HEADING = re.compile(r"^(#{1,6})\s+(.*)$")
+# A heading whose title names a Verify step (whole word, case-insensitive).
+VERIFY_TITLE = re.compile(r"(?i)\bverify\b")
 
 BASELINE_PATH = Path("tools/reasoned_row_baseline.txt")
 
@@ -81,19 +94,51 @@ def guides(root: Path):
             yield path
 
 
-def has_reasoned_step(path: Path) -> bool:
-    """True iff the guide contains the whole word 'reasoned' (case-insensitive)."""
-    return REASONED.search(path.read_text(encoding="utf-8")) is not None
+def verify_sections_text(text: str) -> str:
+    """Concatenate the body of every Verify section in the guide.
 
-
-def tracked_basenames(root: Path):
-    """Return the set of guide basenames named on a demonstration row in TODO/DONE.
-
-    A basename is tracked iff some line of TODO.md or DONE.md contains BOTH that exact
-    basename and the word 'demonstrate'/'demonstration'. A missing backlog file is
-    treated as empty rather than an error, so the gate is robust to either being absent.
+    Lines are parsed as ATX headings. A Verify section begins at a heading whose title
+    contains the word 'verify' and runs from the line AFTER that heading up to (but not
+    including) the next heading whose level is <= the Verify heading's level, or the end
+    of the file. This captures a `## Verify` section with its deeper subsections and each
+    per-tool `### Verify` subsection in a catalogue guide. Returns the joined text of all
+    such sections; a guide with no Verify heading yields the empty string.
     """
-    tracked = set()
+    lines = text.splitlines()
+    collected = []
+    i = 0
+    n = len(lines)
+    while i < n:
+        m = HEADING.match(lines[i])
+        if m and VERIFY_TITLE.search(m.group(2)):
+            level = len(m.group(1))
+            j = i + 1
+            while j < n:
+                mj = HEADING.match(lines[j])
+                if mj and len(mj.group(1)) <= level:
+                    break
+                collected.append(lines[j])
+                j += 1
+            i = j
+        else:
+            i += 1
+    return "\n".join(collected)
+
+
+def has_reasoned_step(path: Path) -> bool:
+    """True iff the word 'reasoned' appears inside a Verify section of the guide."""
+    verify_text = verify_sections_text(path.read_text(encoding="utf-8"))
+    return REASONED.search(verify_text) is not None
+
+
+def demonstration_lines(root: Path):
+    """Return the list of TODO/DONE lines that commit to a demonstration.
+
+    A demonstration line is any line of TODO.md or DONE.md that contains the word
+    'demonstrate'/'demonstration'. A missing backlog file is treated as empty rather than
+    an error, so the gate is robust to either being absent.
+    """
+    lines = []
     for name in ("TODO.md", "DONE.md"):
         path = root / name
         try:
@@ -102,8 +147,25 @@ def tracked_basenames(root: Path):
             continue  # a missing or unreadable backlog file contributes no rows
         for line in text.splitlines():
             if DEMONSTRATE.search(line):
-                for token in re.findall(r"[\w.\-]+\.md", line):
-                    tracked.add(token)
+                lines.append(line)
+    return lines
+
+
+def tracked_basenames(root: Path, names):
+    """Return the subset of guide basenames named on a demonstration row in TODO/DONE.
+
+    A basename `b` is tracked iff some demonstration line references `b` as a COMPLETE
+    filename token: the match must not be followed by another filename character
+    (a letter/digit, or a dot introducing another alphanumeric), so `redis.md` matches
+    `Demonstrate redis.md`, `` `redis.md` ``, `redis.md.` and `redis.md,` but NOT
+    `redis.md.bak` or `redis.mdx`.
+    """
+    lines = demonstration_lines(root)
+    tracked = set()
+    for b in names:
+        token = re.compile(re.escape(b) + r"(?![A-Za-z0-9]|\.[A-Za-z0-9])")
+        if any(token.search(line) for line in lines):
+            tracked.add(b)
     return tracked
 
 
@@ -127,12 +189,9 @@ def load_baseline(root: Path):
 
 def scan(root: Path):
     """Return the sorted list of guide basenames with a reasoned step but no demo row."""
-    tracked = tracked_basenames(root)
-    gaps = []
-    for path in guides(root):
-        if has_reasoned_step(path) and path.name not in tracked:
-            gaps.append(path.name)
-    return gaps
+    reasoned = [path for path in guides(root) if has_reasoned_step(path)]
+    tracked = tracked_basenames(root, {path.name for path in reasoned})
+    return [path.name for path in reasoned if path.name not in tracked]
 
 
 def main(argv) -> int:

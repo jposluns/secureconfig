@@ -6,14 +6,19 @@ runs the real gate as a subprocess against it, so nothing here touches the real 
 files and the gate's own root resolution (`parents[1]` of the tool) is exercised end to
 end rather than mocked.
 
-The seven cases mirror the proposal:
+The cases mirror the proposal:
   1. reasoned guide + a matching TODO "Demonstrate ... <guide>" row -> not a gap.
   2. reasoned guide + only a DONE.md demonstration row -> not a gap.
   3. reasoned guide + no row anywhere -> gap, and --strict exits 1.
   4. a guide that only DEMONSTRATES (never says "reasoned") + no row -> not a gap.
   5. a "reasoned" mention in a meta-file (CONTRIBUTING.md) -> ignored, not a guide.
   6. a reasoned gap listed in the baseline -> reported grandfathered, --strict exits 0.
-  7. word boundary: "reasoning"/"reasonable" but not "reasoned" -> not detected.
+  7. marker boundary: substrings ("unreasoned"/"reasonedness"/"reasoning"/"reasonable")
+     are not the word, so a Verify section carrying only them is not detected.
+  8. Markdown emphasis: `_reasoned_`/`__reasoned__` in a Verify section IS detected.
+  9. scope: "reasoned" only in non-Verify prose (a demonstrated Verify) -> not a gap.
+ 10. complete-filename backlog match: `redis.md.bak`/`redis.mdx` do not clear the
+     redis.md gap; a trailing-period `redis.md.` does.
 """
 import shutil
 import subprocess
@@ -111,21 +116,70 @@ def main() -> int:
           rc == 0 and "PASS" in out
           and "REASONED-ROW (baseline, grandfathered): redis.md" in out)
 
-    # 7. word boundary: "reasoning"/"reasonable" but not "reasoned" -> not detected.
-    rc, out = run({"redis.md": "# Redis\n\n## Verify\n\nApply reasoning; it is reasonable.\n"})
-    check("7: 'reasoning'/'reasonable' without 'reasoned' is not detected "
+    # 7. marker boundary: fixtures CONTAIN the substring "reasoned" yet are not the word.
+    #    "unreasoned"/"reasonedness" (plus "reasoning"/"reasonable") in a Verify section
+    #    must NOT be detected -- removing the boundary would wrongly match them.
+    rc, out = run({"redis.md": "# Redis\n\n## Verify\n\n"
+                               "This is unreasoned; its reasonedness and reasoning are "
+                               "reasonable.\n"})
+    check("7: substrings 'unreasoned'/'reasonedness'/'reasoning'/'reasonable' are not "
+          f"the marker (rc={rc}, out={out!r})",
+          rc == 0 and "REASONED-ROW" not in out and "0 reasoned guide" in out)
+
+    # 8. Markdown emphasis: `_reasoned_`/`__reasoned__` in a Verify section IS detected.
+    rc, out = run({"redis.md": "# Redis\n\n## Verify\n\nThe check is _reasoned_ here.\n"})
+    check("8a: a `_reasoned_` marker in a Verify section is a gap "
+          f"(rc={rc}, out={out!r})",
+          rc == 0 and "REASONED-ROW: redis.md has a reasoned Verify step" in out
+          and "1 reasoned guide(s) without a demonstration row (1 new" in out)
+    rc, out = run({"redis.md": "# Redis\n\n## Verify\n\nThe check is __reasoned__ here.\n"})
+    check("8b: a `__reasoned__` marker in a Verify section is a gap "
+          f"(rc={rc}, out={out!r})",
+          rc == 0 and "REASONED-ROW: redis.md has a reasoned Verify step" in out
+          and "1 reasoned guide(s) without a demonstration row (1 new" in out)
+
+    # 9. scope: "reasoned" only in non-Verify prose -> not a gap. The intro reasons, but
+    #    the Verify section is fully demonstrated (no "reasoned" marker inside it).
+    rc, out = run({"redis.md": "# Redis\n\nThis intro is reasoned about at length.\n\n"
+                               "## Verify\n\nRun the check and read the output.\n"})
+    check("9: 'reasoned' only in non-Verify prose is not a gap "
+          f"(rc={rc}, out={out!r})",
+          rc == 0 and "REASONED-ROW" not in out and "0 reasoned guide" in out)
+
+    # 10. complete-filename backlog match (Fix C). A reasoned redis.md with a demonstrate
+    #     row that names a DIFFERENT complete file (redis.md.bak / redis.mdx) is STILL a
+    #     gap; a trailing-period "redis.md." clears it.
+    rc, out = run({"redis.md": REASONED_GUIDE},
+                  todo="- [ ] 1.1 Demonstrate redis.md.bak\n")
+    check("10a: 'Demonstrate redis.md.bak' does not clear the redis.md gap "
+          f"(rc={rc}, out={out!r})",
+          rc == 0 and "REASONED-ROW: redis.md has a reasoned Verify step" in out
+          and "1 reasoned guide(s) without a demonstration row (1 new" in out)
+    rc, out = run({"redis.md": REASONED_GUIDE},
+                  todo="- [ ] 1.1 Demonstrate redis.mdx\n")
+    check("10b: 'Demonstrate redis.mdx' does not clear the redis.md gap "
+          f"(rc={rc}, out={out!r})",
+          rc == 0 and "REASONED-ROW: redis.md has a reasoned Verify step" in out
+          and "1 reasoned guide(s) without a demonstration row (1 new" in out)
+    rc, out = run({"redis.md": REASONED_GUIDE},
+                  todo="- [ ] 1.1 Demonstrate redis.md.\n")
+    check("10c: a trailing-period 'Demonstrate redis.md.' clears the gap "
           f"(rc={rc}, out={out!r})",
           rc == 0 and "REASONED-ROW" not in out and "0 reasoned guide" in out)
 
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")
-        print(f"FAIL: {len(failures)} of 7 reasoned-row self-test cases failed")
+        print(f"FAIL: {len(failures)} of 10 reasoned-row self-test cases failed")
         return 1
-    print("PASS: 7 of 7 reasoned-row self-test cases passed (matching TODO/DONE "
+    print("PASS: 10 of 10 reasoned-row self-test cases passed (matching TODO/DONE "
           "demonstration rows clear the gap; an untracked reasoned guide is a gap and "
           "reddens --strict; a non-reasoned guide, a reasoned mention in a meta-file, "
-          "and 'reasoning'/'reasonable' are not gaps; a baselined gap is grandfathered)")
+          "and the substrings 'unreasoned'/'reasonedness'/'reasoning'/'reasonable' are "
+          "not gaps; `_reasoned_`/`__reasoned__` emphasis IS detected; 'reasoned' only "
+          "in non-Verify prose is not a gap; a suffix-continuation backlog token "
+          "(redis.md.bak / redis.mdx) does not clear the redis.md gap while a "
+          "trailing-period 'redis.md.' does; a baselined gap is grandfathered)")
     return 0
 
 
