@@ -38,7 +38,7 @@ The cases mirror the proposal:
  18. Markdown line endings only: a U+2028/U+2029 inside a Verify paragraph does not fake a
      heading that ends the section; a U+2028 inside a backlog row does not split the row;
      and (a regression guard that also passes on the old code) a CRLF guide parses normally.
- 19. allowlisted filename edges: a basename touching `+`, `~`, a non-ASCII letter, or any
+ 19. denylisted filename edges: a basename touching `+`, `~`, a non-ASCII letter, or any
      underscore (embedded, unbalanced, emphasis, or emphasis inside a code span) does not
      clear the redis.md gap.
  20. quoted, starred, dashed and link forms (straight and typographic quotes, guillemets,
@@ -322,14 +322,15 @@ def main() -> int:
     check(f"18d: a U+2028 inside a backlog row does not split the row (rc={rc}, out={out!r})",
           rc == 0 and "REASONED-ROW" not in out and "0 reasoned guide" in out)
 
-    # 19. Allowlisted filename edges. A basename touching `+`, `~`, a non-ASCII letter, or
+    # 19. Denylisted filename edges. A basename touching `+`, `~`, a non-ASCII letter, or
     #     any underscore is part of a longer token naming a different file, or cannot be
     #     told apart from one without code-span parsing, so it does NOT clear the redis.md
     #     gap. This includes underscore emphasis and emphasis inside a code span, whose
     #     underscores are literal (`_redis.md_` there names a different file).
     for bad in ("archive+redis.md", "redis.md~", "\u00e9redis.md", "redis.md\u00e9",
                 "my_redis.md", "_redis.md", "_redis.md_backup", "_redis.md_",
-                "__redis.md__", "`_redis.md_`", "`__redis.md__`"):
+                "__redis.md__", "`_redis.md_`", "`__redis.md__`",
+                "redis.md\N{VULGAR FRACTION ONE QUARTER}"):
         rc, out = run({"redis.md": REASONED_GUIDE},
                       todo=f"- [ ] 1.1 Demonstrate {bad}\n")
         check(f"19: 'Demonstrate {bad}' does not clear the redis.md gap "

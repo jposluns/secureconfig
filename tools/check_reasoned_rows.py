@@ -40,7 +40,8 @@ classifier, and a guide that reasons under another phrasing is out of scope by d
 THE DEMONSTRATION-ROW DETECTOR. A guide is "tracked" iff at least one line in TODO.md
 OR DONE.md carries the case-insensitive word "demonstrate" or "demonstration" AND names
 the guide's basename as a COMPLETE filename token: no filename character touches it. A
-filename character is a letter or digit (ASCII or not), `_`, `-`, `~` or `+`, and on the
+filename character is a word character (Python's Unicode word class: any letter, digit or other
+numeric character, such as a vulgar fraction), `_`, `-`, `~` or `+`, and on the
 left also `.`; on the right a run of periods is a sentence end unless it leads into a
 filename character. Every other character, whitespace and punctuation alike (quotes of
 any kind, brackets, dashes, `#`, `:`), is a boundary. So
@@ -65,7 +66,7 @@ is a deliberate `--write-baseline` step a human takes once.
 
 KNOWN LIMITATIONS (advisory scope). This is a tracking aid over the corpus's own
 "reasoned"/"demonstrate" convention, not a CommonMark-conformant Markdown parser, and it
-runs advisory. Guide and backlog text is split into lines on "\n" only (read_text() has
+runs advisory. Guide and backlog text is split into lines on line feeds only (read_text() has
 already normalized CRLF and CR), so a Unicode line or paragraph separator inside a
 paragraph cannot fake a heading; and fences come from the shared tools/_markdown.py, whose
 closing fence accepts only trailing spaces or tabs. One known edge remains, a disclosed
@@ -113,7 +114,8 @@ HEADING = re.compile(r"^ {0,3}(#{1,6})(?:[ \t]+(.*?))?[ \t]*$")
 # A heading whose title names a Verify step (whole word, case-insensitive).
 VERIFY_TITLE = re.compile(r"(?i)\bverify\b")
 # A basename names a file only as a complete token: no filename character may touch it.
-# A filename character is a letter or digit (\w, so non-ASCII letters too), `_`, `-`, `~`
+# A filename character is a word character (Unicode \w: letters, digits and other numeric
+# characters such as a vulgar fraction), `_`, `-`, `~`
 # or `+`, and on the left also `.`; on the right a run of periods is a sentence end unless
 # it leads into a filename character (redis.md..bak). Everything else, whitespace and
 # punctuation alike (quotes of any kind, brackets, dashes, `#`, `:`), is a boundary.
