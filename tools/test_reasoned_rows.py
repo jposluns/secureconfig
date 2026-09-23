@@ -28,6 +28,13 @@ The cases mirror the proposal:
      `redis.md,` do.
  14. the Verify heading's own title is scanned: `## Verify (reasoned)` is detected even
      when the body carries no marker.
+ 15. ATX heading parsing (CommonMark): a Verify heading indented up to 3 spaces still
+     opens a section, and an empty `##` heading closes one.
+ 16. fence tightening (via _markdown.Fences): a 4+-space-indented ``` and a backtick
+     fence carrying a backtick in its info string do NOT open a fence that hides a later
+     Verify section.
+ 17. right filename boundary: a dot-run continuation (redis.md..bak / redis.md._backup /
+     redis.md.-old) does not clear the redis.md gap.
 """
 import shutil
 import subprocess
@@ -50,6 +57,7 @@ def run(files, todo="", done="", baseline=None, flags=()):
     try:
         (d / "tools").mkdir()
         shutil.copy(TOOL, d / "tools" / "check_reasoned_rows.py")
+        shutil.copy(TOOL.parent / "_markdown.py", d / "tools" / "_markdown.py")
         for name, body in files.items():
             (d / name).write_text(body, encoding="utf-8")
         (d / "TODO.md").write_text(todo, encoding="utf-8")
@@ -234,12 +242,55 @@ def main() -> int:
           rc == 0 and "REASONED-ROW: redis.md has a reasoned Verify step" in out
           and "1 reasoned guide(s) without a demonstration row (1 new" in out)
 
+    # 15. ATX heading parsing (CommonMark). 15a: a Verify heading indented up to 3 spaces
+    #     still opens a section, so a reasoned marker under it is detected. 15b: an empty
+    #     `##` heading (same level) closes the Verify section, so a later reasoned marker
+    #     in the appendix that follows is outside Verify and is not a gap.
+    rc, out = run({"redis.md": "# Redis\n\n   ## Verify\n\n"
+                               "This check is reasoned rather than run.\n"})
+    check("15a: a Verify heading indented 3 spaces opens a Verify section "
+          f"(rc={rc}, out={out!r})",
+          rc == 0 and "REASONED-ROW: redis.md has a reasoned Verify step" in out
+          and "1 reasoned guide(s) without a demonstration row (1 new" in out)
+    rc, out = run({"redis.md": "# Redis\n\n## Verify\n\nRun the check and read the "
+                               "output.\n\n##\n\nThis appendix is reasoned about.\n"})
+    check("15b: an empty `##` heading closes the Verify section, so a later reasoned "
+          f"marker is outside it (rc={rc}, out={out!r})",
+          rc == 0 and "REASONED-ROW" not in out and "0 reasoned guide" in out)
+
+    # 16. Fence tightening via _markdown.Fences. 16a: a fence indented 4+ spaces is NOT an
+    #     opening fence, so a `## Verify` heading after it is not swallowed and its
+    #     reasoned marker is detected. 16b: a backtick fence whose info string contains a
+    #     backtick is NOT an opening fence, so a following `## Verify` is still recognized.
+    rc, out = run({"redis.md": "# Redis\n\n## Setup\n\n    ```\n\n## Verify\n\n"
+                               "This check is reasoned rather than run.\n"})
+    check("16a: a 4-space-indented ``` does not open a fence hiding a later Verify "
+          f"section (rc={rc}, out={out!r})",
+          rc == 0 and "REASONED-ROW: redis.md has a reasoned Verify step" in out
+          and "1 reasoned guide(s) without a demonstration row (1 new" in out)
+    rc, out = run({"redis.md": "# Redis\n\n## Setup\n\n```example with a `backtick`\n\n"
+                               "## Verify\n\nThis check is reasoned rather than run.\n"})
+    check("16b: a backtick fence with a backtick in its info string does not open a "
+          f"fence hiding a later Verify section (rc={rc}, out={out!r})",
+          rc == 0 and "REASONED-ROW: redis.md has a reasoned Verify step" in out
+          and "1 reasoned guide(s) without a demonstration row (1 new" in out)
+
+    # 17. Right filename boundary rejects dot-run continuations. A demonstrate row naming
+    #     a dot-run continuation of the basename must NOT clear the redis.md gap.
+    for bad in ("redis.md..bak", "redis.md._backup", "redis.md.-old"):
+        rc, out = run({"redis.md": REASONED_GUIDE},
+                      todo=f"- [ ] 1.1 Demonstrate {bad}\n")
+        check(f"17: 'Demonstrate {bad}' does not clear the redis.md gap "
+              f"(rc={rc}, out={out!r})",
+              rc == 0 and "REASONED-ROW: redis.md has a reasoned Verify step" in out
+              and "1 reasoned guide(s) without a demonstration row (1 new" in out)
+
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")
-        print(f"FAIL: {len(failures)} of 14 reasoned-row self-test cases failed")
+        print(f"FAIL: {len(failures)} of 17 reasoned-row self-test cases failed")
         return 1
-    print("PASS: 14 of 14 reasoned-row self-test cases passed (matching TODO/DONE "
+    print("PASS: 17 of 17 reasoned-row self-test cases passed (matching TODO/DONE "
           "demonstration rows clear the gap; an untracked reasoned guide is a gap and "
           "reddens --strict; a non-reasoned guide, a reasoned Verify in a meta-file, "
           "and the substrings 'unreasoned'/'reasonedness'/'reasoning'/'reasonable' are "
@@ -249,7 +300,10 @@ def main() -> int:
           "trailing-period 'redis.md.' does; a baselined gap is grandfathered; a fenced "
           "`#` does not end a Verify section and a fenced `## Verify` does not open one; "
           "a both-sided filename boundary rejects hiredis.md/not-redis.md/redis.md_backup"
-          "/redis.md-old; and a marker in the Verify heading title is detected)")
+          "/redis.md-old; a marker in the Verify heading title is detected; an ATX "
+          "heading indented up to 3 spaces or with an empty title is parsed correctly; a "
+          "4-space-indented or backtick-info fence does not hide a Verify section; and a "
+          "dot-run filename continuation does not clear the gap)")
     return 0
 
 

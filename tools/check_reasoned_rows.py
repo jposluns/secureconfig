@@ -42,8 +42,8 @@ OR DONE.md carries the case-insensitive word "demonstrate" or "demonstration" AN
 the guide's basename as a COMPLETE filename token (for example `redis.md`), bounded on
 BOTH sides so it is neither preceded nor followed by another filename character -- so
 `redis.md` matches `Demonstrate redis.md` or a trailing-period `redis.md.` but not
-`hiredis.md`, `not-redis.md`, `redis.md_backup`, `redis.md-old`, `redis.md.bak` or
-`redis.mdx`. A creation-or-deepen row that names the guide but does not say
+`hiredis.md`, `not-redis.md`, `redis.md_backup`, `redis.md-old`, `redis.md.bak`,
+`redis.md..bak`, `redis.md._backup`, `redis.md.-old` or `redis.mdx`. A creation-or-deepen row that names the guide but does not say
 "demonstrate" does not count: the point is a row that commits to demonstrating the
 reasoned step, not merely one that mentions the file.
 
@@ -61,6 +61,9 @@ import argparse
 import re
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _markdown import Fences  # noqa: E402  one definition of a fenced block
 
 # Root-level Markdown that is not a guide: the adapters, the changelogs, the backlog,
 # and the contributor/decision records whose prose defines the "reasoned" marker. This
@@ -80,14 +83,12 @@ REASONED = re.compile(r"(?i)(?<![A-Za-z0-9])reasoned(?![A-Za-z0-9])")
 # A backlog row that commits to demonstrating: the whole word "demonstrate" or
 # "demonstration" (case-insensitive), per the gate's definition of a tracking row.
 DEMONSTRATE = re.compile(r"(?i)\b(?:demonstrate|demonstration)\b")
-# An ATX heading line: capturing groups are the level (#s) and the title text.
-HEADING = re.compile(r"^(#{1,6})\s+(.*)$")
+# An ATX heading line (CommonMark): up to 3 leading spaces, then 1-6 #, then either the
+# end of the line (an empty heading) or a space/tab before the title. Group 1 is the #
+# run (its length is the level); group 2 is the title, absent for an empty heading.
+HEADING = re.compile(r"^ {0,3}(#{1,6})(?:[ \t]+(.*?))?[ \t]*$")
 # A heading whose title names a Verify step (whole word, case-insensitive).
 VERIFY_TITLE = re.compile(r"(?i)\bverify\b")
-# A fenced-code-block delimiter: a run of 3+ backticks or tildes, optionally
-# indented and (on the opening fence) carrying an info string. Group 1 is the run;
-# group 2 is the trailing text (the info string, if any).
-FENCE = re.compile(r"^\s*(`{3,}|~{3,})(.*)$")
 
 BASELINE_PATH = Path("tools/reasoned_row_baseline.txt")
 
@@ -103,29 +104,25 @@ def atx_headings(lines):
     """Return a list parallel to `lines`: (level, title) for each line that is an ATX
     heading OUTSIDE a fenced code block, else None.
 
-    Code fences are tracked so a `# comment` or a `## Verify` EXAMPLE inside a ``` or
-    ~~~ block is not mistaken for a heading -- inside a fence no line is a heading, and
-    only a matching closing fence (the same marker char, at least as long, no info
-    string) ends the block. The opening fence itself is never a heading either.
+    Code fences are tracked with _markdown.Fences (this repository's one CommonMark fence
+    definition) so a `# comment` or a `## Verify` EXAMPLE inside a ``` or ~~~ block is not
+    mistaken for a heading, and neither an opening nor a closing fence marker line is a
+    heading. Fences reuses the shared rules -- an opening fence is indented no more than
+    three spaces and a backtick fence carries no backtick in its info string -- so indented
+    code and inline code spans are not misread as fences. An absent ATX title (an empty
+    heading such as a bare `##`) normalizes to the empty string.
     """
-    fence_char = None  # the fence marker char while inside a fenced block, else None
-    fence_len = 0
+    fences = Fences()
     out = []
     for line in lines:
-        fm = FENCE.match(line)
-        if fence_char is None:
-            if fm:
-                fence_char = fm.group(1)[0]
-                fence_len = len(fm.group(1))
-                out.append(None)
-                continue
-            m = HEADING.match(line)
-            out.append((len(m.group(1)), m.group(2)) if m else None)
-        else:
-            if (fm and fm.group(1)[0] == fence_char
-                    and len(fm.group(1)) >= fence_len and fm.group(2).strip() == ""):
-                fence_char = None
+        if fences.feed(line):
+            out.append(None)  # a fence marker line is neither heading nor content
+            continue
+        if fences.inside:
             out.append(None)
+            continue
+        m = HEADING.match(line)
+        out.append((len(m.group(1)), m.group(2) or "") if m else None)
     return out
 
 
@@ -200,13 +197,14 @@ def tracked_basenames(root: Path, names):
     followed by one (a letter/digit/underscore/hyphen, or a dot introducing another
     alphanumeric), so `redis.md` matches `Demonstrate redis.md`, `` `redis.md` ``,
     `redis.md.` and `redis.md,` but NOT `hiredis.md`, `not-redis.md`, `redis.md_backup`,
-    `redis.md-old`, `redis.md.bak` or `redis.mdx`.
+    `redis.md-old`, `redis.md.bak`, `redis.md..bak`, `redis.md._backup`, `redis.md.-old`
+    or `redis.mdx`.
     """
     lines = demonstration_lines(root)
     tracked = set()
     for b in names:
         token = re.compile(
-            r"(?<![A-Za-z0-9._-])" + re.escape(b) + r"(?![A-Za-z0-9_-]|\.[A-Za-z0-9])")
+            r"(?<![A-Za-z0-9._-])" + re.escape(b) + r"(?![A-Za-z0-9_-]|\.+[A-Za-z0-9_-])")
         if any(token.search(line) for line in lines):
             tracked.add(b)
     return tracked
