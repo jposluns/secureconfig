@@ -1538,10 +1538,12 @@ configuration unchanged apart from addresses and paths, with the API on 127.0.0.
 listener on 127.0.0.1:8201, a private test CA, a file audit device, and the section 2 and section 7
 policies and AppRole role with `127.0.0.1/32` as the CIDR. Each block ran as printed, with only its
 placeholders substituted, except where a step says otherwise. Exposed states ran in further runs of
-the same binary on the same addresses: one with both anonymous-access settings `true` throughout, one
-with `tls_disable = true` on the listener (a health check only), and one with the section 3
-configuration unchanged apart from addresses and paths; the first and third ran the policies, roles
-or delivery policy under test without their limits. What these runs do
+the same binary: one with both anonymous-access settings `true` throughout, one with `tls_disable =
+true` on the listener (a health check only), one with the section 3 configuration unchanged apart
+from addresses and paths, and a follow-up run with that configuration, then stopped for a
+health-output check, then with one added listener stanza on 127.0.0.2:8200 (which also bound
+127.0.0.2:8201). The first, third and follow-up runs exercised the policies, roles or delivery policy
+under test without their limits. What these runs do
 not show is marked **REASONED** where it occurs, with the reason: HA behavior (no multi-node cluster
 was set up for these runs), a second audit device in a separate failure domain (the host has no second network), the recipient's
 own validation (it belongs to the receiving application), a wildcard bind (the host forbids binding
