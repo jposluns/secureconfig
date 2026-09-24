@@ -70,6 +70,10 @@ Open the guide before relying on either, because defaults change between release
 | 4369 | epmd, the Erlang Port Mapper Daemon, which maps Erlang node names to distribution ports (RabbitMQ and other Erlang or Elixir clustered services) | not stated | [rabbitmq.md](rabbitmq.md) |
 | 4442, 4443 | Selenium Grid event bus in distributed mode, which Nodes use to register and which the Router's basic auth does not cover | Grid ships with no authentication; Router basic auth does not cover the bus | [headless-browser-services.md](headless-browser-services.md) |
 | 4444 | Selenium Grid Router, Hub, or Standalone, plus the Grid web UI on the same port, with no authentication by default | No authentication by default; Router basic-auth credentials unset | [headless-browser-services.md](headless-browser-services.md) |
+| 4646 | Nomad's HTTP API and web UI, on every address by default | No authentication by default (ACLs off); anonymous job registration | [nomad-consul.md](nomad-consul.md) |
+| 4647 | Nomad server RPC, on every address by default | not stated | [nomad-consul.md](nomad-consul.md) |
+| 4648 | Nomad Serf gossip, on every address by default | Gossip is unencrypted until an `encrypt` key is set | [nomad-consul.md](nomad-consul.md) |
+| 4648/UDP | Nomad Serf gossip, on every address by default | Gossip is unencrypted until an `encrypt` key is set | [nomad-consul.md](nomad-consul.md) |
 | 5000 | Redash, MLflow tracking server, or a .NET Kestrel default | varies by service; see the guides | [bi-dashboards.md](bi-dashboards.md), [mlflow.md](mlflow.md), [dotnet.md](dotnet.md) |
 | 5001 | Dify backend API, in the guide's in-container request example | not stated for this port; Dify's `INIT_PASSWORD` is empty by default, so on a reachable host the first visitor to `/install` owns the instance | [agent-builders.md](agent-builders.md) |
 | 5003 | Dify's plugin daemon debugging port, published by the supplied Compose configuration unless you remove or restrict that mapping | not stated | [agent-builders.md](agent-builders.md) |
@@ -129,6 +133,11 @@ Open the guide before relying on either, because defaults change between release
 | 8222 | NATS monitoring endpoints | No login of its own | [nats.md](nats.md) |
 | 8233 | Temporal Web UI as started by `temporal server start-dev`, which is the context this corpus documents | not stated | [workflow-orchestrators.md](workflow-orchestrators.md) |
 | 8265 | Ray dashboard | No login unless token auth enabled (off by default) | [ray.md](ray.md) |
+| 8300 | Consul server RPC, on `bind_addr` (every address by default) | not stated | [nomad-consul.md](nomad-consul.md) |
+| 8301 | Consul Serf gossip (LAN), on `bind_addr` (every address by default) | Gossip is unencrypted until an `encrypt` key is set | [nomad-consul.md](nomad-consul.md) |
+| 8301/UDP | Consul Serf gossip (LAN), on `bind_addr` (every address by default) | Gossip is unencrypted until an `encrypt` key is set | [nomad-consul.md](nomad-consul.md) |
+| 8302 | Consul Serf gossip (WAN), on `bind_addr` (every address by default) | Gossip is unencrypted until an `encrypt` key is set | [nomad-consul.md](nomad-consul.md) |
+| 8302/UDP | Consul Serf gossip (WAN), on `bind_addr` (every address by default) | Gossip is unencrypted until an `encrypt` key is set | [nomad-consul.md](nomad-consul.md) |
 | 8400, 8401 | VictoriaMetrics cluster native RPC channels, separate from vmstorage's HTTP maintenance and metrics listener | No authentication by default | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
 | 8404 | HAProxy HTTPS stats listener in the configured example; a chosen port, and stats are disabled unless configured | Stats disabled unless configured; enabling authenticates nothing on its own | [haproxy.md](haproxy.md) |
 | 8428 | VictoriaMetrics single-node HTTP API, UI, and ingest, with `-httpAuth.username`/`-httpAuth.password` Basic auth disabled by default | Basic auth disabled by default | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
@@ -137,7 +146,11 @@ Open the guide before relying on either, because defaults change between release
 | 8480 | VictoriaMetrics cluster `vminsert` HTTP ingestion, Basic auth disabled by default | Basic auth disabled by default | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
 | 8481 | VictoriaMetrics cluster `vmselect` HTTP query and UI, Basic auth disabled by default | Basic auth disabled by default | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
 | 8482 | VictoriaMetrics cluster `vmstorage` HTTP maintenance and metrics (native RPC on 8400 and 8401) | Basic auth disabled by default | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
+| 8500 | Consul's HTTP API and web UI (UI off by default), on `client_addr`, 127.0.0.1 by default | No authentication by default (ACLs off); with ACLs on, `default_policy` stays `allow` | [nomad-consul.md](nomad-consul.md) |
 | 8501 | Streamlit | No access control unless you add it | [streamlit.md](streamlit.md) |
+| 8503 | Consul servers' gRPC with TLS, on `client_addr` | not stated | [nomad-consul.md](nomad-consul.md) |
+| 8600 | Consul's DNS interface, on `client_addr` | not stated | [nomad-consul.md](nomad-consul.md) |
+| 8600/UDP | Consul's DNS interface, on `client_addr` | not stated | [nomad-consul.md](nomad-consul.md) |
 | 8812 | QuestDB PostgreSQL wire protocol, shipping the default credential `admin` / `quest` | `admin` / `quest` | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
 | 8883 | MQTT over TLS | Mosquitto 2.0+: explicit listener rejects unauthenticated clients | [mosquitto.md](mosquitto.md) |
 | 8888 | Jupyter, including RunPod deployments. The Vast.ai Jupyter launch mode uses 8080 instead; also Jaeger v2's self-metrics, on localhost in its all-in-one configuration unless `JAEGER_LISTEN_HOST` is set (the official image sets `0.0.0.0`, every interface) | Jupyter: auth on by default via generated token; Jaeger: not stated | [jupyter.md](jupyter.md), [gpu-clouds.md](gpu-clouds.md), [observability-components.md](observability-components.md) |
