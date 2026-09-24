@@ -27133,8 +27133,9 @@ debugger". Do not publish 25 unless you use email triggers.
 
 ## Verify
 
-Three checks here were demonstrated: the sample-values check, the Windmill default-login pair, and the
-TCP reachability probe's three outcomes. Everything else is reasoned. NocoDB 2026.09.0, Baserow,
+Three checks here were demonstrated: the sample-token check, the Windmill default-login pair, and
+the TCP reachability probe's outcomes on loopback; the NocoDB key check's logic was exercised with a
+stand-in for `docker exec`. Everything else is reasoned. NocoDB 2026.09.0, Baserow,
 Appsmith and Budibase ship for production as container images and the authoring host has no container
 runtime. NocoDB also cannot run here outside a container: its server calls `listen` with no host, so it
 can only bind every interface, which the host forbids; the same applies to Windmill's default bind.
@@ -27152,7 +27153,8 @@ Exposed, the reasoned expectation is a wildcard address, on the host or in a Doc
 of those ports; fixed means a loopback or private address only.
 
 Check each environment and Compose file the deployment uses for the vendor sample values: run the block
-once per file, including every file an `env_file:` line names. Substitute the file path inside the
+once per file, including every file an `env_file:` line names and the `.env` Compose reads for
+variable substitution. Substitute the file path inside the
 single quotes (a path containing an apostrophe needs other quoting), and paste the whole block.
 
 ```bash
@@ -27169,26 +27171,45 @@ single quotes (a path containing an apostrophe needs other quoting), and paste t
     1) echo "no vendor sample tokens found" ;;
     *) echo "grep could not read $1; not checked" ;;
   esac
-  if grep -q -E '^[[:space:]-]*NC_[A-Z_]+[[:space:]]*[:=]' -- "$1"; then
-    if grep -q -E "^[[:space:]-]*NC_CONNECTION_ENCRYPT_KEY[[:space:]]*[:=][[:space:]]*[\"']?[^\"'[:space:]#]" -- "$1"; then
-      echo "NC_CONNECTION_ENCRYPT_KEY is set to a non-empty value"
-    else
-      echo "NocoDB settings without an active, non-empty NC_CONNECTION_ENCRYPT_KEY: stored database credentials will be plaintext"
-    fi
-  fi
 )
 ```
 
 The search matches each sample value as a whole token wherever it appears, so it cannot report a file
 clean while one of them is still in it; the cost is that it also reports harmless lines such as `image:
-budibase/apps`, so inspect each hit. This was demonstrated. On Budibase's sample `hosting/.env` it
+budibase/apps`, so inspect each hit. Values supplied from outside the files, such as the shell
+environment Compose runs in, are beyond its reach. This was demonstrated. On Budibase's sample `hosting/.env` it
 reported all eleven sample lines, on Appsmith's development Compose file the two `abcd` lines, and on
 Windmill's Compose file its `changeme` Postgres password. It also reported Compose defaults
 (`${JWT_SECRET:-testsecret}`), flow mappings and lists (`{COUCH_DB_PASSWORD: budibase, X: 1}`),
-URL parameters (`&password=changeme&`) and trailing punctuation. On NocoDB's sample `docker.env` it
-reported the missing encryption key, and it did the same for an empty, quoted-empty, commented-out or
-comment-only key, while a real key printed "is set". On copies with the values replaced it printed "no
+URL parameters (`&password=changeme&`) and trailing punctuation. On copies with the values replaced it printed "no
 vendor sample tokens found", and on an unreadable path it reported that it did not check.
+
+For NocoDB, check the encryption key in the running container rather than in a file: Compose variable
+substitution, `env_file:` precedence and YAML values all decide what the process finally sees. The block
+reports only whether the key is non-empty and never prints it. Substitute the container name inside the
+single quotes.
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NOCODB_CONTAINER_NAME'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not checking"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not checking"; exit; }
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the container name on the set -- line above; not checking"; exit ;; esac
+  # shellcheck disable=SC2016  # the single-quoted script is meant to expand inside the container
+  docker exec "$1" sh -c 'if [ -n "${NC_CONNECTION_ENCRYPT_KEY-}" ]; then exit 0; else exit 3; fi'
+  case "$?" in
+    0) echo "NC_CONNECTION_ENCRYPT_KEY is non-empty in the running container" ;;
+    3) echo "NC_CONNECTION_ENCRYPT_KEY is EMPTY or unset in the running container: stored database credentials are plaintext" ;;
+    *) echo "could not run the check in container $1; not checked" ;;
+  esac
+)
+```
+
+Exposed: "EMPTY or unset". Fixed: "non-empty". Anything else means the check did not run. With a
+stand-in for `docker exec`, the block printed "non-empty" for a set key, "EMPTY or unset" for an empty
+and an unset one, and "not checked" when the container was missing; it was not run against a real
+NocoDB container (no container runtime on the authoring host).
 
 For Windmill, check whether the default login still works. The password below is the vendor's
 published default, not a secret, so it is fine in the request body. Substitute the base URL (for
@@ -27248,37 +27269,48 @@ window, open the instance's sign-up page and try to create an account with an ad
 Exposed: the account is created, or, on a fresh instance, you become its administrator. Fixed: the
 signup is refused. The backends' refusal messages are NocoDB's "Not allowed to signup, contact super
 admin.", Baserow's "Sign up is disabled." and Appsmith's `SIGNUP_DISABLED` error ("Signup is restricted
-on this instance of Appsmith"); the web UIs may word them differently or hide the sign-up link, which
-also counts as refused. Delete any test account the exposed state let you create, then sign in as your
+on this instance of Appsmith"); the web UIs may word them differently. A hidden sign-up link is
+inconclusive, because the frontend does not enforce the setting: check the backend setting itself
+(NocoDB's `invite_only_signup` app setting, Baserow's `allow_new_signups` admin setting, Appsmith's
+`APPSMITH_SIGNUP_DISABLED`). Delete any test account the exposed state let you create, then sign in as your
 admin as the positive control.
 
-Finally, from a host that should not have access, try a TCP connection to each published port. The
-block uses bash's `/dev/tcp`, so it works for SMTP on 25 as well as the web ports. Substitute the
-address inside the single quotes.
+Finally, from a host that should not have access, try a TCP connection to each published port, plus a
+port you know is open on that address from this host (for example SSH on 22) as the positive control.
+The block uses bash's `/dev/tcp`, so it works for SMTP on 25 as well as the web ports. Substitute the
+address (an IP address or host name, without a port or brackets) and the control port inside the single
+quotes.
 
 ```bash
 (
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_SERVICE_ADDRESS'
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_SERVICE_ADDRESS' 'REPLACE_WITH_A_KNOWN_OPEN_PORT'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
-  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*|*/*) echo "substitute a bare address on the set -- line above; not probing"; exit ;; esac
-  for p in 80 443 8080 10000 4000 8000 25; do
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*|*/*|*\[*|*\]*) echo "substitute a bare address (no brackets, no port) on the set -- line above; not probing"; exit ;; esac
+  case "$1" in *:*:*) ;; *:*) echo "give the address without a port; not probing"; exit ;; esac
+  case "$2" in *[!0-9]*|"") echo "substitute a known-open control port on the set -- line above; not probing"; exit ;; esac
+  command -v timeout >/dev/null || { echo "timeout is not installed here; not probing"; exit; }
+  for p in "$2" 80 443 8080 10000 4000 8000 25; do
     # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
-    timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$p" 2>/dev/null
-    case "$?" in
-      0) echo "$1:$p connected: reachable" ;;
-      124) echo "$1:$p timed out: filtered, or nothing answered" ;;
-      *) echo "$1:$p refused or failed" ;;
+    err=$(timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$p" 2>&1)
+    case "$?:$err" in
+      0:*) echo "$1:$p connected: reachable" ;;
+      124:*) echo "$1:$p timed out: filtered, or nothing answered" ;;
+      *"Connection refused"*) echo "$1:$p refused" ;;
+      *) echo "$1:$p inconclusive, a local or lookup error: ${err:-no message}" ;;
     esac
   done
 )
 ```
 
-Exposed, a port reports "connected". Fixed, it reports "refused" or "timed out"; a cloud firewall that
-drops packets produces the timeout. On a loopback test, an open port printed "connected", a closed one
-"refused", and an unroutable test address "timed out". A "connected" on a port you did not mean to
-publish is the finding.
+Exposed, a port reports "connected". Fixed, it reports "refused" or "timed out"; a firewall that
+drops packets produces the timeout. "inconclusive" is a lookup or local error and says nothing about
+the port, and if the control port is not "connected", none of the results mean anything. On loopback,
+with a test server as the control, the block printed "connected" for the control, "refused" for
+closed ports, "timed out" for an unroutable test address, "inconclusive" with the resolver's error for
+a mistyped host name, and refused to run for an address with a port, a bracketed address, or a machine
+without `timeout`. A "connected" on a port you did not mean to publish is the finding.
 
 ## Sources (checked September 2026)
 
