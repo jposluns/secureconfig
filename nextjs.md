@@ -188,5 +188,7 @@ fi
 - Better Auth introduction: https://better-auth.com/docs/introduction ; installation: https://better-auth.com/docs/installation ; options: https://better-auth.com/docs/reference/options ; Next.js integration: https://better-auth.com/docs/integrations/next ; two-factor plugin: https://better-auth.com/docs/plugins/2fa
 - Vercel Deployment Protection: https://vercel.com/docs/deployment-protection
 - Vercel changelog, protect production deployments for free on every plan (9 September 2026): https://vercel.com/changelog/protect-production-deployments-for-free-on-every-plan
-- Next.js `next start` calls `server.listen(port, hostname)` with no default hostname (pinned tag v16.3.6): https://github.com/vercel/next.js/blob/v16.3.6/packages/next/src/server/lib/start-server.ts#L309
+- Next.js `next start` declares `-H, --hostname` with help text only and no default value, unlike `--port`'s `.default(3000)` (pinned tag v16.3.6): https://github.com/vercel/next.js/blob/v16.3.6/packages/next/src/bin/next.ts#L455-L458
+- Next.js `next start` passes `options.hostname` on unchanged (pinned tag v16.3.6): https://github.com/vercel/next.js/blob/v16.3.6/packages/next/src/cli/next-start.ts#L44
+- Next.js calls `server.listen(port, hostname)` (pinned tag v16.3.6): https://github.com/vercel/next.js/blob/v16.3.6/packages/next/src/server/lib/start-server.ts#L309
 - Node.js `server.listen()` without a host binds the unspecified IPv6 address `::` when available, otherwise `0.0.0.0`: https://github.com/nodejs/node/blob/v22.22.1/doc/api/net.md

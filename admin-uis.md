@@ -87,4 +87,6 @@ Run these from a second network against each panel's real hostname; a 200 that r
 - Adminer, database management in a single PHP file (login uses the database server's own credentials): https://www.adminer.org/
 - Prometheus `--web.listen-address` default `0.0.0.0:9090` (pinned tag v3.14.0): https://github.com/prometheus/prometheus/blob/v3.14.0/cmd/prometheus/main.go#L424-L425
 - Grafana default `http_addr` is empty (pinned tag v13.2.2): https://github.com/grafana/grafana/blob/v13.2.2/conf/defaults.ini#L50
-- Grafana joins an empty `http_addr` with the port and calls `net.Listen("tcp", ...)`, which binds every interface (pinned tag v13.2.2): https://github.com/grafana/grafana/blob/v13.2.2/pkg/api/http_server.go#L467-L469
+- Grafana joins `http_addr` with the port into the server address (pinned tag v13.2.2): https://github.com/grafana/grafana/blob/v13.2.2/pkg/api/http_server.go#L467-L469
+- Grafana listens on that address with `net.Listen("tcp", ...)` (pinned tag v13.2.2): https://github.com/grafana/grafana/blob/v13.2.2/pkg/api/http_server.go#L568
+- Go `net.Listen` with an empty host listens on all available unicast and anycast addresses of the local system: https://pkg.go.dev/net#Listen

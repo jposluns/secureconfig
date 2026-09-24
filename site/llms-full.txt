@@ -2960,7 +2960,7 @@ After a real login through the proxy, confirm a session reaches the app and the 
 - Authelia second-factor introduction: https://www.authelia.com/configuration/second-factor/introduction/
 - Pomerium identity provider settings: https://www.pomerium.com/docs/reference/identity-provider-settings
 - Pomerium documentation: https://www.pomerium.com/docs
-- oauth2-proxy `--http-address` default `127.0.0.1:4180` (the v7.15.4 release binary's own `--help`; configuration reference): https://oauth2-proxy.github.io/oauth2-proxy/configuration/overview
+- oauth2-proxy `--http-address` default `127.0.0.1:4180` (pinned tag v7.15.4; the release binary's `--help` prints the same default): https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/pkg/apis/options/legacy_options.go#L494
 - Authelia `server.address` default `tcp://:9091/` (pinned tag v4.39.28): https://github.com/authelia/authelia/blob/v4.39.28/internal/configuration/schema/server.go#L90-L92
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
 
@@ -4321,6 +4321,7 @@ ss -tlnp   # every listener: loopback for a same-host reverse proxy, or the plat
 - Werkzeug serving (`ssl_context="adhoc"` requires cryptography): https://werkzeug.palletsprojects.com/en/stable/serving/
 - FastAPI security reference: https://fastapi.tiangolo.com/reference/security/ ; `OpenIdConnect` source (stub warning): https://github.com/fastapi/fastapi/blob/31bbb380748ccead62fc0f42dbf4273f11dadccf/fastapi/security/open_id_connect_url.py
 - `http.server` binds with `bind=None` and `AI_PASSIVE`, the wildcard address (pinned tag v3.14.4): https://github.com/python/cpython/blob/v3.14.4/Lib/http/server.py#L1322-L1334
+- `python -m http.server`'s `-b/--bind` has no default value, and its help says "default: all interfaces" (pinned tag v3.14.4): https://github.com/python/cpython/blob/v3.14.4/Lib/http/server.py#L1371-L1373
 
 ======================================================================
 ==> docker.md
@@ -4409,7 +4410,7 @@ Caddy obtains and renews the certificate automatically ([free-certificates.md](f
 ## 4. Verify
 
 ```bash
-docker compose ps                     # project-scoped: only the proxy shows a published (0.0.0.0 or a host IP) binding; review every container on the host, IPv6 included
+docker compose ps                     # project-scoped: only the proxy shows a published (0.0.0.0/[::] or a host IP) binding; review every container on the host, IPv6 included
 ss -tulnp                             # host sockets (TCP and UDP); socket visibility varies by Docker version and config, so a socket listing alone does not prove reachability
 curl -q -sI http://app.example.com/      # expect a redirect to https://
 curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' https://app.example.com/api  # unauthenticated: expect 401 or 403, never 200 (then confirm an authorized request succeeds)
@@ -5270,7 +5271,7 @@ Version boundary: GitHub.com documentation checked 18 September 2026, with REST 
 
 # Full-stack JS frameworks: SvelteKit, Nuxt, Vite
 
-SvelteKit, Nuxt, and Vite-based apps built by AI assistants inherit the same traps as [nextjs.md](nextjs.md): a server bind that defaults wide open, a proxy that has to be explicitly trusted before secure cookies and correct origins work, and a public-env prefix that ships anything given it straight to the browser. Each framework also has more than one server entry point (endpoints, server routes, load functions), and a check placed in only one of them leaves the others open, exactly as with Next.js layouts versus Server Actions.
+SvelteKit, Nuxt, and Vite-based apps built by AI assistants inherit the same traps as [nextjs.md](nextjs.md): a server bind that can default wide open (SvelteKit's Node adapter binds `0.0.0.0`, though Vite's dev server defaults to `localhost`), a proxy that has to be explicitly trusted before secure cookies and correct origins work, and a public-env prefix that ships anything given it straight to the browser. Each framework also has more than one server entry point (endpoints, server routes, load functions), and a check placed in only one of them leaves the others open, exactly as with Next.js layouts versus Server Actions.
 
 ## SvelteKit (`adapter-node`)
 
@@ -5704,7 +5705,9 @@ fi
 - Better Auth introduction: https://better-auth.com/docs/introduction ; installation: https://better-auth.com/docs/installation ; options: https://better-auth.com/docs/reference/options ; Next.js integration: https://better-auth.com/docs/integrations/next ; two-factor plugin: https://better-auth.com/docs/plugins/2fa
 - Vercel Deployment Protection: https://vercel.com/docs/deployment-protection
 - Vercel changelog, protect production deployments for free on every plan (9 September 2026): https://vercel.com/changelog/protect-production-deployments-for-free-on-every-plan
-- Next.js `next start` calls `server.listen(port, hostname)` with no default hostname (pinned tag v16.3.6): https://github.com/vercel/next.js/blob/v16.3.6/packages/next/src/server/lib/start-server.ts#L309
+- Next.js `next start` declares `-H, --hostname` with help text only and no default value, unlike `--port`'s `.default(3000)` (pinned tag v16.3.6): https://github.com/vercel/next.js/blob/v16.3.6/packages/next/src/bin/next.ts#L455-L458
+- Next.js `next start` passes `options.hostname` on unchanged (pinned tag v16.3.6): https://github.com/vercel/next.js/blob/v16.3.6/packages/next/src/cli/next-start.ts#L44
+- Next.js calls `server.listen(port, hostname)` (pinned tag v16.3.6): https://github.com/vercel/next.js/blob/v16.3.6/packages/next/src/server/lib/start-server.ts#L309
 - Node.js `server.listen()` without a host binds the unspecified IPv6 address `::` when available, otherwise `0.0.0.0`: https://github.com/nodejs/node/blob/v22.22.1/doc/api/net.md
 
 ======================================================================
@@ -24827,7 +24830,9 @@ Run these from a second network against each panel's real hostname; a 200 that r
 - Adminer, database management in a single PHP file (login uses the database server's own credentials): https://www.adminer.org/
 - Prometheus `--web.listen-address` default `0.0.0.0:9090` (pinned tag v3.14.0): https://github.com/prometheus/prometheus/blob/v3.14.0/cmd/prometheus/main.go#L424-L425
 - Grafana default `http_addr` is empty (pinned tag v13.2.2): https://github.com/grafana/grafana/blob/v13.2.2/conf/defaults.ini#L50
-- Grafana joins an empty `http_addr` with the port and calls `net.Listen("tcp", ...)`, which binds every interface (pinned tag v13.2.2): https://github.com/grafana/grafana/blob/v13.2.2/pkg/api/http_server.go#L467-L469
+- Grafana joins `http_addr` with the port into the server address (pinned tag v13.2.2): https://github.com/grafana/grafana/blob/v13.2.2/pkg/api/http_server.go#L467-L469
+- Grafana listens on that address with `net.Listen("tcp", ...)` (pinned tag v13.2.2): https://github.com/grafana/grafana/blob/v13.2.2/pkg/api/http_server.go#L568
+- Go `net.Listen` with an empty host listens on all available unicast and anycast addresses of the local system: https://pkg.go.dev/net#Listen
 
 ======================================================================
 ==> observability-components.md

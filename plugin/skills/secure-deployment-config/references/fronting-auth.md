@@ -171,6 +171,6 @@ After a real login through the proxy, confirm a session reaches the app and the 
 - Authelia second-factor introduction: https://www.authelia.com/configuration/second-factor/introduction/
 - Pomerium identity provider settings: https://www.pomerium.com/docs/reference/identity-provider-settings
 - Pomerium documentation: https://www.pomerium.com/docs
-- oauth2-proxy `--http-address` default `127.0.0.1:4180` (the v7.15.4 release binary's own `--help`; configuration reference): https://oauth2-proxy.github.io/oauth2-proxy/configuration/overview
+- oauth2-proxy `--http-address` default `127.0.0.1:4180` (pinned tag v7.15.4; the release binary's `--help` prints the same default): https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/pkg/apis/options/legacy_options.go#L494
 - Authelia `server.address` default `tcp://:9091/` (pinned tag v4.39.28): https://github.com/authelia/authelia/blob/v4.39.28/internal/configuration/schema/server.go#L90-L92
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
