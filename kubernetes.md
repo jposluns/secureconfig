@@ -99,10 +99,9 @@ Gateway API defines no authentication filter; each implementation adds its own. 
   printf '%s' "$PASSWORD" | htpasswd -cis .htpasswd admin
   # -i does no verification, so the block asks twice and refuses a mismatch; `-vi` below then
   # confirms the file holds that value, and the secret is created only if it does. Paste the block by
-  # itself: the shell reads the whole subshell before `read` runs. Without bracketed paste, `read`
-  # takes the NEXT LINE of input, so a line pasted
-  # after the closing `)` becomes the password and every command after that still succeeds; with
-  # bracketed paste, that line instead runs as a command once the block finishes.
+  # itself: the shell reads the whole subshell before either `read` runs. Without bracketed paste,
+  # lines pasted after the closing `)` feed the two prompts instead, and the block refuses unless both
+  # are identical; with bracketed paste, they run as commands once the block finishes.
   printf '%s' "$PASSWORD" | htpasswd -vi .htpasswd admin ||
     { echo 'htpasswd could not verify the file; not creating the secret'; exit 2; }
   kubectl create secret generic app-basic-auth --from-file=.htpasswd
