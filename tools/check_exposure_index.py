@@ -164,16 +164,16 @@ def cell_problem(name: str, cell: str):
     This is a whitelist, not a model of what a renderer shows. Every cell must be printable ASCII
     (the Port cell may also use an en dash, and has its own grammar in port_cell_ok). A non-Port
     cell must split, left to right with nothing left over, into these tokens: a single-backtick
-    code span with no backslash; a link `[text](target)` whose own text contains an ASCII letter
-    or digit and no bracket, backtick, backslash, `<`, `>`, `&` or `$`, and whose target uses
-    only letters, digits and `._/#:?=%+-`; an escaped pipe; or one plain character from the ASCII letters, digits, space and
-    `.,;:'"()/+*=?!%_@~^#{}>-` (so no `<`, `&`, `$`, bracket, backtick or backslash in plain text,
-    and no `![`). Some plain characters do open GitHub constructs (emphasis, strikethrough, emoji
-    shortcodes); the requirement that follows is what keeps those visible: the text the tokens
-    show (code content, link text and plain characters, never a link target) must include a
-    letter or digit. Anything else (HTML, entities, math, images, empty or reference links,
-    multi-backtick code, other escapes) is rejected rather than interpreted. Every row of the
-    current table already meets this.
+    code span with no backslash; a link `[text](target)` whose own text contains an ASCII letter or
+    digit and no bracket, backtick, backslash, `<`, `>`, `&` or `$`, and whose target uses only
+    letters, digits and `._/#:?=%+-`; an escaped pipe; or one plain character from the ASCII
+    letters, digits, space and `.,;:'"()/+*=?!%_@~^#{}>-` (so no `<`, `&`, `$`, bracket, backtick
+    or backslash in plain text, and no `![`). Some plain characters do open GitHub constructs
+    (emphasis, strikethrough, emoji shortcodes); the requirement that follows is what keeps those
+    visible: the text the tokens show (code content, link text and plain characters, never a link
+    target) must include a letter or digit. Anything else (HTML, entities, math, images, empty or
+    reference links, multi-backtick code, other escapes) is rejected rather than interpreted. Every
+    row of the current table already meets this.
     """
     if not cell:
         if name == "Default credential":
