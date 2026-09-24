@@ -33,8 +33,9 @@ Two secrets need your attention:
   value (`569a1821-0a93-45e8-87ab-eb857f20a010`), so everyone who copies that example signs sessions
   with the same key. Generate your own.
 
-The server trusts proxy headers and allows every CORS origin, so put it behind a proxy you control
-rather than on the network directly. The README says the release binaries "are only for quick testing
+The entry file allows every CORS origin. It also enables Express's `trust proxy`, but startup then
+resets that from `NC_TRUST_PROXY`, which trusts no proxy unless you set it; once a proxy is in front,
+set it to that proxy's hop count or subnet, and never to `true` on a server clients can reach directly. The README says the release binaries "are only for quick testing
 locally", and the 2026.09.0 GitHub release publishes no binaries; production installs use the
 container image or the vendor's install script.
 
@@ -76,14 +77,18 @@ Budibase's Compose file publishes its nginx proxy on `MAIN_PORT` (10000 in the s
 LiteLLM service on `${LITELLM_PORT:-4000}`. The proxy forwards `/db/` to CouchDB. The sample
 `hosting/.env` sets `JWT_SECRET` and `API_ENCRYPTION_KEY` to `testsecret`, and the CouchDB, MinIO and
 Redis passwords, `INTERNAL_API_KEY` and `LITELLM_MASTER_KEY` to `budibase`, under a comment that says
-"These should be updated". Nothing in the code rejects those values. With the sample file unchanged,
+"These should be updated". A search of the v3.46.0 source finds `testsecret` only in those sample files,
+a DigitalOcean first-boot script, a test setup and a development script, and no code that checks for
+it. With the sample file unchanged,
 anyone who can reach the proxy can try `budibase`/`budibase` against CouchDB through `/db/`, and the
 LiteLLM port answers to the master key `budibase`. Replace every one of those values before the first
 start.
 
 The first-run admin route `POST /api/global/users/init` needs no login and works until the first user
 exists; after that it returns an error ("You cannot initialise once an global user has been created").
-Create the admin first, or seed it with `BB_ADMIN_USER_EMAIL` and `BB_ADMIN_USER_PASSWORD`.
+The route validates its request body before that check, so no read-only request shows whether an
+instance is claimed. Create the admin first, or seed it with `BB_ADMIN_USER_EMAIL` and
+`BB_ADMIN_USER_PASSWORD`.
 
 ## Windmill
 
@@ -112,11 +117,12 @@ debugger". Do not publish 25 unless you use email triggers.
 
 ## Verify
 
-Two checks here were demonstrated: the sample-values check and the Windmill default-login pair.
-Everything else is reasoned. NocoDB 2026.09.0, Baserow, Appsmith and Budibase ship for production as
-container images and the authoring host has no container runtime. NocoDB also cannot run here outside
-a container: its server calls `listen` with no host, so it can only bind every interface, which the host
-forbids; the same applies to Windmill's default bind. Backlog row 1.109 tracks demonstrating the rest.
+Three checks here were demonstrated: the sample-values check, the Windmill default-login pair, and the
+TCP reachability probe's three outcomes. Everything else is reasoned. NocoDB 2026.09.0, Baserow,
+Appsmith and Budibase ship for production as container images and the authoring host has no container
+runtime. NocoDB also cannot run here outside a container: its server calls `listen` with no host, so it
+can only bind every interface, which the host forbids; the same applies to Windmill's default bind.
+Backlog row 1.109 tracks demonstrating the rest.
 
 On the host, list the listeners, then read Docker's own publications, because a port published through
 Docker's NAT may have no host socket at all, so absence from `ss` is not proof of isolation:
@@ -129,9 +135,9 @@ docker ps --format '{{.Names}}\t{{.Ports}}'   # every "0.0.0.0:" or ":::" public
 Exposed, the reasoned expectation is a wildcard address, on the host or in a Docker publication, for any
 of those ports; fixed means a loopback or private address only.
 
-Check the deployment's own environment and Compose files for the vendor sample values. Substitute the
-file path inside the single quotes (a path containing an apostrophe needs other quoting), and paste the
-whole block.
+Check each environment and Compose file the deployment uses for the vendor sample values: run the block
+once per file, including every file an `env_file:` line names. Substitute the file path inside the
+single quotes (a path containing an apostrophe needs other quoting), and paste the whole block.
 
 ```bash
 (
@@ -141,24 +147,32 @@ whole block.
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not checking"; exit; }
   case "$1" in *REPLACE_WITH_*|"") echo "substitute your file on the set -- line above; not checking"; exit ;; esac
   { [ -f "$1" ] && [ -r "$1" ]; } || { echo "cannot read $1 as a regular file; not checked"; exit; }
-  grep -n -E "(^|[=:[:space:]\"'])(testsecret|budibase|abcd|changeme|569a1821-0a93-45e8-87ab-eb857f20a010)([\"'@[:space:]]|\$)" -- "$1"
+  grep -n -E '(^|[^A-Za-z0-9_])(testsecret|budibase|abcd|changeme|569a1821-0a93-45e8-87ab-eb857f20a010)([^A-Za-z0-9_]|$)' -- "$1"
   case "$?" in
-    0) echo "FOUND vendor sample values: replace them" ;;
-    1) echo "no vendor sample values found" ;;
+    0) echo "FOUND vendor sample tokens: inspect each line above; replace every secret still set to one" ;;
+    1) echo "no vendor sample tokens found" ;;
     *) echo "grep could not read $1; not checked" ;;
   esac
-  if grep -q 'NC_' -- "$1" && ! grep -q -E 'NC_CONNECTION_ENCRYPT_KEY[[:space:]]*[:=][[:space:]]*[^[:space:]]' -- "$1"; then
-    echo "NocoDB settings without NC_CONNECTION_ENCRYPT_KEY: stored database credentials will be plaintext"
+  if grep -q -E '^[[:space:]-]*NC_[A-Z_]+[[:space:]]*[:=]' -- "$1"; then
+    if grep -q -E "^[[:space:]-]*NC_CONNECTION_ENCRYPT_KEY[[:space:]]*[:=][[:space:]]*[\"']?[^\"'[:space:]#]" -- "$1"; then
+      echo "NC_CONNECTION_ENCRYPT_KEY is set to a non-empty value"
+    else
+      echo "NocoDB settings without an active, non-empty NC_CONNECTION_ENCRYPT_KEY: stored database credentials will be plaintext"
+    fi
   fi
 )
 ```
 
-This was demonstrated against the vendor files themselves. On Budibase's sample `hosting/.env` it
-prints the `testsecret` and `budibase` lines, on Appsmith's development Compose file the two `abcd`
-lines, on Windmill's Compose file its `changeme` Postgres password, and on NocoDB's sample `docker.env`
-the missing encryption key. It also finds the quoted, YAML and list forms of those values. On copies with
-the values replaced it prints "no vendor sample values found", and on an unreadable path it reports
-that it did not check.
+The search matches each sample value as a whole token wherever it appears, so it cannot report a file
+clean while one of them is still in it; the cost is that it also reports harmless lines such as `image:
+budibase/apps`, so inspect each hit. This was demonstrated. On Budibase's sample `hosting/.env` it
+reported all eleven sample lines, on Appsmith's development Compose file the two `abcd` lines, and on
+Windmill's Compose file its `changeme` Postgres password. It also reported Compose defaults
+(`${JWT_SECRET:-testsecret}`), flow mappings and lists (`{COUCH_DB_PASSWORD: budibase, X: 1}`),
+URL parameters (`&password=changeme&`) and trailing punctuation. On NocoDB's sample `docker.env` it
+reported the missing encryption key, and it did the same for an empty, quoted-empty, commented-out or
+comment-only key, while a real key printed "is set". On copies with the values replaced it printed "no
+vendor sample tokens found", and on an unreadable path it reported that it did not check.
 
 For Windmill, check whether the default login still works. The password below is the vendor's
 published default, not a secret, so it is fine in the request body. Substitute the base URL (for
@@ -184,8 +198,8 @@ Exposed, the default login gets `200` with a token; fixed, it gets `400` (both o
 on the loopback run). Before trusting a `400`, log in once with your real credentials, so that a dead
 service is not read as fixed.
 
-For Budibase, three reasoned requests, each run against the proxy (`http://HOST:10000` in the sample
-setup) or the LiteLLM port, with the published sample values, which are not secrets:
+For Budibase, two reasoned requests use the published sample values, which are not secrets. Substitute
+the proxy URL (`http://HOST:10000` in the sample setup) and the LiteLLM URL inside the single quotes.
 
 ```bash
 (
@@ -193,35 +207,68 @@ setup) or the LiteLLM port, with the published sample values, which are not secr
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
-  case "$1$2" in *REPLACE_WITH_*|*[[:cntrl:]]*) echo "substitute both URLs on the set -- line above; not probing"; exit ;; esac
-  curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 15 -H 'Content-Type: application/json' \
-    --data-binary '{}' -w 'admin init: http=%{http_code} exit=%{exitcode}\n' "$1/api/global/users/init"
-  printf 'user = "budibase:budibase"\n' | curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 15 \
-    --config - -w 'couchdb sample login: http=%{http_code} exit=%{exitcode}\n' "$1/db/_session?basic=true"
-  printf 'Authorization: Bearer budibase\n' | curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 \
-    --max-time 15 -H @- -w 'litellm sample key: http=%{http_code} exit=%{exitcode}\n' "$2/v1/models"
+  case "$1|$2" in
+    *REPLACE_WITH_*|"|"*|*"|"|*[[:cntrl:]]*) echo "substitute both URLs on the set -- line above; not probing" ;;
+    *) printf 'user = "budibase:budibase"\n' | curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 \
+         --max-time 15 --config - -w 'couchdb sample login: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+         "$1/db/_session?basic=true"
+       printf 'Authorization: Bearer budibase\n' | curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 \
+         --max-time 15 -H @- -w 'litellm sample key: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+         "$2/v1/models" ;;
+  esac
 )
 ```
 
-Fixed: `admin init` returns the error quoted in the Budibase section once an admin exists, the
-CouchDB sample login gets `401` ("Username or password
-wasn't recognized", per CouchDB's `/_session` reference), and the LiteLLM sample key gets `401` (the
-`/v1/models` comparison in [litellm.md](litellm.md)). A `200` on the CouchDB or LiteLLM line means the
-sample secret is live. Confirm the service is up with your real credentials as the positive control.
+Exposed, either line gets `200`, which means the sample secret is live. Fixed, the CouchDB sample login
+gets `401` ("Username or password wasn't recognized", per CouchDB's `/_session` reference) and the
+LiteLLM sample key gets `401` (the `/v1/models` comparison in [litellm.md](litellm.md)). Confirm each
+service answers your real credentials as the positive control. Budibase's first-run admin route has no
+equivalent probe: its request validation runs before the "already initialised" check, so a request
+either fails validation in both states or, with a valid body on a fresh instance, creates the admin.
+Claim the admin yourself before the proxy is reachable.
 
 For NocoDB, Baserow and Appsmith, check signup by hand, reasoned from source. In a private browser
 window, open the instance's sign-up page and try to create an account with an address you control.
-Exposed: the account is created, or, on a fresh instance, you become its administrator. Fixed: NocoDB
-answers "Not allowed to signup, contact super admin.", Baserow "Sign up is disabled.", and Appsmith
-"Signup is restricted on this instance of Appsmith" (its `SIGNUP_DISABLED` error). Sign in as your
-admin afterwards as the positive control. From a host that should not have access, every one of the
-ports listed above should refuse the connection; read curl's `err` text to confirm the refusal happened
-while connecting.
+Exposed: the account is created, or, on a fresh instance, you become its administrator. Fixed: the
+signup is refused. The backends' refusal messages are NocoDB's "Not allowed to signup, contact super
+admin.", Baserow's "Sign up is disabled." and Appsmith's `SIGNUP_DISABLED` error ("Signup is restricted
+on this instance of Appsmith"); the web UIs may word them differently or hide the sign-up link, which
+also counts as refused. Delete any test account the exposed state let you create, then sign in as your
+admin as the positive control.
+
+Finally, from a host that should not have access, try a TCP connection to each published port. The
+block uses bash's `/dev/tcp`, so it works for SMTP on 25 as well as the web ports. Substitute the
+address inside the single quotes.
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_SERVICE_ADDRESS'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*|*/*) echo "substitute a bare address on the set -- line above; not probing"; exit ;; esac
+  for p in 80 443 8080 10000 4000 8000 25; do
+    # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
+    timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$p" 2>/dev/null
+    case "$?" in
+      0) echo "$1:$p connected: reachable" ;;
+      124) echo "$1:$p timed out: filtered, or nothing answered" ;;
+      *) echo "$1:$p refused or failed" ;;
+    esac
+  done
+)
+```
+
+Exposed, a port reports "connected". Fixed, it reports "refused" or "timed out"; a cloud firewall that
+drops packets produces the timeout. On a loopback test, an open port printed "connected", a closed one
+"refused", and an unroutable test address "timed out". A "connected" on a port you did not mean to
+publish is the finding.
 
 ## Sources (checked September 2026)
 
-- NocoDB 2026.09.0 port default and JWT secret generation: https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/Noco.ts
-- NocoDB 2026.09.0 entry point (listen with no host, trust proxy, CORS): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/run/dockerEntry.ts
+- NocoDB 2026.09.0 port default, JWT secret generation and proxy-trust reset: https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/Noco.ts
+- NocoDB 2026.09.0 proxy trust default (`NC_TRUST_PROXY`): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/utils/trustProxy.ts
+- NocoDB 2026.09.0 entry point (listen with no host, CORS): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/run/dockerEntry.ts
 - NocoDB 2026.09.0 first user, signup and its refusal message: https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/services/users/users.service.ts
 - NocoDB 2026.09.0 app settings (`invite_only_signup`): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/interface/AppSettings.ts
 - NocoDB 2026.09.0 admin from environment (`NC_ADMIN_EMAIL`, `NC_ADMIN_PASSWORD`): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/helpers/initAdminFromEnv.ts
@@ -246,6 +293,7 @@ while connecting.
 - Budibase v3.46.0 proxy configuration (`/db/`): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/proxy/nginx.prod.conf
 - Budibase v3.46.0 public worker routes: https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/index.ts
 - Budibase v3.46.0 admin init: https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/controllers/global/users.ts
+- Budibase v3.46.0 admin init route and its validation: https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/routes/global/users.ts
 - Apache CouchDB 3.5.2 `/_session` reference: https://github.com/apache/couchdb/blob/3.5.2/src/docs/src/api/server/authn.rst
 - Windmill v1.817.0 README (default credentials): https://github.com/windmill-labs/windmill/blob/v1.817.0/README.md
 - Windmill v1.817.0 server defaults: https://github.com/windmill-labs/windmill/blob/v1.817.0/backend/src/main.rs
