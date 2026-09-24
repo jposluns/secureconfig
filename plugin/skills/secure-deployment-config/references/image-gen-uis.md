@@ -98,4 +98,4 @@ curl -q -sI https://imagegen.example.com/                # via the proxy: TLS, a
 - InvokeAI Multi-User Administrator Guide: https://invoke.ai/features/multi-user-mode/admin-guide/
 - Fooocus repository README (`--listen`, `--share`, auth.json): https://github.com/lllyasviel/Fooocus
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
-- ComfyUI `--listen` default `127.0.0.1`, and `0.0.0.0,::` when given without a value (pinned tag v0.37.0): https://github.com/comfyanonymous/ComfyUI/blob/v0.37.0/comfy/cli_args.py#L63
+- ComfyUI `--listen` default `127.0.0.1`, and `0.0.0.0,::` when given without a value (pinned tag v0.37.0): https://github.com/Comfy-Org/ComfyUI/blob/v0.37.0/comfy/cli_args.py#L63
