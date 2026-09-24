@@ -86,7 +86,7 @@ Basic auth or an emailed one-time PIN alone is not a second factor: for a sensit
 
 ## 5. Verify
 
-Reasoned, not demonstrated: the authoring environment has no Streamlit runtime or container runtime and cannot create listening sockets, so these describe the expected exposed and fixed outcomes rather than observed ones, and backlog row 2.36 tracks demonstrating them against a live 1.64.0 deployment. Use curl 7.75.0 or newer; never add `-k`. Substitute the public HTTPS origin, without a trailing slash, and the server's public address inside the single quotes on their respective `set --` lines, and paste each complete subshell.
+Verification status: the listener, TLS, proxy, websocket, direct-origin and canary checks below were demonstrated on loopback against Streamlit 1.64.0 (the PyPI wheel, its SHA-256 equal to PyPI's published digest) behind Caddy v2.11.4, in the exposed and fixed states except for the wildcard bind; the native `st.login` checks remain REASONED, and the end of this section records what was observed and what was not. Use curl 7.75.0 or newer; never add `-k`. Substitute the public HTTPS origin, without a trailing slash, and the server's public address inside the single quotes on their respective `set --` lines, and paste each complete subshell.
 
 ```bash
 ss -tlnp   # listeners on the origin host; 8501 must be 127.0.0.1 behind a proxy, not a public interface
@@ -128,6 +128,23 @@ ss -tlnp   # listeners on the origin host; 8501 must be 127.0.0.1 behind a proxy
 ```
 
 Then check the application gate in a browser, using the same scheme, hostname, port, and protected page for every comparison. In a fresh profile with no session an anonymous visitor must not see protected content or reach a protected operation; an allowed user who completes the provider's MFA must; and a valid identity outside the allowlist (for the `hd` check, a consumer account) must be denied with nothing rendered. Visit every protected page directly, including administrative ones. A login page, a blank page, or a broken websocket is not a positive control. In an isolated test deployment only, place `st.write("SECURECONFIG_AUTH_CANARY")` after the gate, disable the applicable authentication boundary, and confirm the anonymous visit then reveals the canary; restore protection afterward, and never disable authentication on a public deployment. For a fronting proxy, confirm an unauthenticated websocket upgrade is also denied and that an authenticated browser can establish it.
+
+On the loopback runs, with `server.address` set to `127.0.0.1`, `ss` showed Streamlit only on `127.0.0.1:8501`. With the address unset, `streamlit config show` lists it as unset, and Streamlit 1.64.0's source binds the IPv6 dual-stack wildcard `::` in that case (`_get_bind_address` in `web/server/starlette/starlette_server.py`); that bind is REASONED, because the host forbids listening on every interface. The runs used Caddy on `127.0.0.1:8443` with TLS files from a private test CA that curl trusted through `CURL_CA_BUNDLE`, and a headless Chrome 154 trusting only that certificate's key.
+
+- **Block 1 against native TLS:** `tls=200` with the test CA trusted. With curl not trusting the certificate it stopped at `tls=000 exit=60`.
+- **Proxy with no authentication (exposed):** block 1 printed `tls=200`, then `anon=200` with the body `ok`, which is the finding. A websocket upgrade to `/_stcore/stream` got `101` anonymously, and an anonymous browser rendered the canary.
+- **[caddy.md](caddy.md)'s `basic_auth` covering every route (fixed):**
+  - Block 1 got `401` on both requests.
+  - The websocket upgrade got `401` anonymously and `101` with the credential.
+  - The anonymous browser got an empty `401` page, and a browser sending the credential rendered the canary.
+- **Websocket path in a separate unauthenticated location (exposed):** the index and the health route still returned `401`, but the anonymous upgrade got `101`. That is the bypass section 1 describes. Only the handshake was run, not an app session over it.
+- **Block 3 from the same host:** `http=200` against the address Streamlit listened on, and `exit=7` against another loopback address.
+- **Static serving:** with `server.enableStaticServing` on, the script called `st.stop()` at once, yet `/app/static/public.txt` returned the file with `200` and `text/plain`. With it off, the same path returned `200` with the app's HTML page, not the file. Judge a static-route probe by its body, not its status.
+
+REASONED, and tracked in backlog row 1.121:
+- native `st.login` with an OIDC provider, with MFA, the allowlist and the outside-identity controls, since no OIDC provider was stood up;
+- an external vantage, since there was one host with no second network;
+- the wildcard bind.
 
 ## Sources (checked September 2026)
 
