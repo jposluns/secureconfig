@@ -95,7 +95,7 @@ Two references answer questions rather than covering a tool:
 - `references/common-mistakes.md` is the recurring findings, each linked to its fix. Worth
   reading before a review.
 
-`references/README.md` carries the full index of all 86 guides by category, and the verification
+`references/README.md` carries the full index of every guide by category, and the verification
 checklist to run at the end of a deployment.
 
 ## What this skill does not do
