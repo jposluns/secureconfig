@@ -870,7 +870,7 @@ auth.token = "REPLACE_WITH_LONG_RANDOM_VALUE"
 
 frp also supports `auth.method = "oidc"`: frpc obtains a token from an OIDC provider through the Client Credentials Grant and frps validates it by issuer and audience, authenticating frpc to frps instead of using a shared token, useful for centralizing frp auth behind an identity provider. Audience validation is conditional, though: frps skips it when `auth.oidc.audience` is left empty (it sets the token verifier's `SkipClientIDCheck` in that case), so set a nonempty `auth.oidc.audience` and the intended `auth.oidc.issuer` explicitly rather than assuming that selecting `auth.method = "oidc"` binds the token to your server.
 
-Both the shared token and OIDC authenticate `frpc` to `frps`; neither authenticates the callers who reach a service you publish through the tunnel. A registered proxy binds on `proxyBindAddr`, which defaults to the server's `bindAddr` of `0.0.0.0`, so once the proxy is up anyone who can reach that listener reaches the service behind it, exactly as if the app faced a public port directly. Give the published service its own authentication, or keep the proxy on loopback and front it with an authenticated TLS proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)); a strong `auth.token` protects the tunnel, not the service.
+Both the shared token and OIDC authenticate `frpc` to `frps`; neither authenticates the callers who reach a service you publish through the tunnel. A registered proxy binds on `proxyBindAddr`, which defaults to the server's `bindAddr` of `0.0.0.0` (as of v0.71.0), so once the proxy is up anyone who can reach that listener reaches the service behind it, exactly as if the app faced a public port directly. Give the published service its own authentication, or keep the proxy on loopback and front it with an authenticated TLS proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)); a strong `auth.token` protects the tunnel, not the service.
 
 From frp v0.50.0, `transport.tls.enable` defaults to `true`, so the connection between `frpc` and `frps` is encrypted out of the box; the gap is verification, not encryption. `frpc` still does not verify `frps`'s certificate by default, so it will encrypt to whatever server answers on `serverAddr`, genuine or not. Set `transport.tls.certFile`/`transport.tls.keyFile` on the server and `transport.tls.trustedCaFile` on every client so `frpc` verifies the server's certificate against a trusted CA, and set `transport.tls.force = true` on the server so it refuses any client that did not negotiate TLS at all.
 
@@ -976,6 +976,9 @@ ss -tlnp   # read every listener; 8080: only a loopback address unless you delib
 - frp TLS (`transport.tls.enable` default from v0.50.0, `transport.tls.force`, cert/key/CA roles): https://gofrp.org/en/docs/features/common/network/network-tls/
 - nftables manual (forward/input hooks, verdicts, and rule counters): https://netfilter.org/projects/nftables/manpage.html
 - frps `bindAddr` default `0.0.0.0`, and an empty `proxyBindAddr` takes `bindAddr` (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/pkg/config/v1/server.go#L110-L114
+- frps TCP proxies listen on `proxyBindAddr` (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/tcp.go#L76
+- frps UDP proxies listen on `proxyBindAddr` (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/udp.go#L92
+- frps HTTP and HTTPS vhost listeners bind `proxyBindAddr` (L303 and L334), sharing the main listener only when `bindAddr` equals `proxyBindAddr` (L229-L235) (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L303
 
 ======================================================================
 ==> authentication.md
