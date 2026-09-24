@@ -24,7 +24,7 @@ These control only the web login; MongoDB credentials go in `ME_CONFIG_MONGODB_U
 ```ini
 [server]
 protocol  = https
-# bind loopback (Grafana's default http_addr is empty = all interfaces, as of v13.2.2); reach it via a tunnel or proxy
+# bind loopback (Grafana's default http_addr is empty as of v13.2.2, which means all interfaces); reach it via a tunnel or proxy
 http_addr = 127.0.0.1
 cert_file = /etc/grafana/grafana.crt
 cert_key  = /etc/grafana/grafana.key

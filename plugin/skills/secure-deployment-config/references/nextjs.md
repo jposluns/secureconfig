@@ -4,7 +4,7 @@ A Next.js app has many entry points: pages, layouts, Route Handlers (`app/**/rou
 
 ## 1. Bind privately; TLS comes from the platform or the proxy
 
-On Vercel and similar platforms the platform terminates TLS; nothing to configure ([paas.md](paas.md)). Self-hosted, `next start` listens on every interface on port 3000 by default as of v16.3.6 (it passes no hostname to Node's `listen`, which binds `::` where IPv6 is available and `0.0.0.0` otherwise; its `-H` option's help text still says `(default: 0.0.0.0)`); bind to loopback and put a reverse proxy in front, which the Next.js self-hosting guide itself recommends, with TLS and headers per [nodejs.md](nodejs.md), [nginx.md](nginx.md), or [caddy.md](caddy.md).
+On Vercel and similar platforms the platform terminates TLS; nothing to configure ([paas.md](paas.md)). Self-hosted, `next start` listens on every interface on port 3000 by default (as of v16.3.6 its `--port` defaults to 3000 and it passes no hostname to Node's `listen`, which binds `::` where IPv6 is available and `0.0.0.0` otherwise; its `-H` option's help text still says `(default: 0.0.0.0)`); bind to loopback and put a reverse proxy in front, which the Next.js self-hosting guide itself recommends, with TLS and headers per [nodejs.md](nodejs.md), [nginx.md](nginx.md), or [caddy.md](caddy.md).
 
 ```bash
 next build && next start -H 127.0.0.1 -p 3000    # or PORT=3000; PORT cannot be set in .env
