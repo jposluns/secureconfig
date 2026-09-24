@@ -18035,9 +18035,10 @@ Verification status: the checks below were demonstrated on loopback against the 
 
 ```bash
 (
-  set +x
+  set +x +a
   set -o pipefail
-  unset -v audit_role audit_key audit_expected audit_reply 2>/dev/null ||
+  { unset -n audit_role audit_key audit_expected audit_reply &&
+    unset -v audit_role audit_key audit_expected audit_reply; } 2>/dev/null ||
     { echo 'A readonly audit_* variable is set in this shell'; exit 2; }
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_ORIGIN' \
     'POST' '/indexes/movies/search' '{"q":"ninja"}' \
@@ -18103,11 +18104,14 @@ Verification status: the checks below were demonstrated on loopback against the 
 
 Use `Authorization: Bearer ` for Meilisearch and `X-TYPESENSE-API-KEY: ` for Typesense. Prepare the search fixtures first, and for the creation tests confirm `acl_probe` does not already exist, using a disposable resource and removing it afterward. A Meilisearch `202` only acknowledges a queued task, so confirm task success before crediting the positive control. In an isolated exposed-state test, keyless Meilisearch must return the fixture anonymously and the protected instance must reject that request; Typesense's exposed-state discriminator is a known disclosed bootstrap or operational key (it has no keyless mode), which after rotation must fail while its replacement succeeds against the same request. Do not invent a universal default password. Test tenant restrictions with known allowed and forbidden documents: the restricted credential must find the allowed fixture and omit the forbidden one, while an authorized control finds the forbidden fixture on the same query and origin; attempt to override filters and field selection, and test referenced collections where JOINs are used, since an empty result alone proves nothing.
 
-The paired-request block clears its own variables before it runs, because an earlier version printed
-`Statuses matched` and exited `0` without sending any request when the calling shell held a readonly
-`audit_role`; on loopback it now exits `2` with `A readonly audit_* variable is set in this shell` for a
-readonly `audit_role` or `audit_expected`, and an exported `audit_key` in the calling shell no longer
-reaches child processes. On the loopback runs, keyless Meilisearch returned the fixture to an anonymous search with `200`, so the
+The paired-request block turns off `allexport` and removes its own variables, namerefs included,
+before it runs, because an earlier version printed `Statuses matched` and exited `0` without sending any
+request when the calling shell held a readonly `audit_role`. On loopback, with a curl stand-in that
+reported its environment, the block exited `2` with `A readonly audit_* variable is set in this shell` for
+a readonly `audit_role` or `audit_expected`; kept both key roles for a nameref named `audit_role`; and kept
+the prompted key out of curl's environment for an inherited `set -a`, an exported `audit_key`, a nameref
+`audit_key` and `declare -i audit_key`. It still assumes ordinary shell builtins, not shell functions
+that shadow `read`, `printf` or `curl`. On the loopback runs, keyless Meilisearch returned the fixture to an anonymous search with `200`, so the
 authentication row printed `FAIL: unexpected HTTP status`: the exposed state. With a master key set, the
 same row got `401` `missing_authorization_header` anonymously and `200` with the fixture on the Default
 Search API Key, and `GET /keys` listed the four default keys named above; the write row got `403`
