@@ -4538,8 +4538,9 @@ Gateway API defines no authentication filter; each implementation adds its own. 
   printf '%s' "$PASSWORD" | htpasswd -cis .htpasswd admin
   # -i does no verification, so a mistyped or mis-consumed value is written silently. Check it
   # before the secret is created. Paste the block by itself: the shell reads the whole subshell
-  # before `read` runs, but `read` takes the NEXT LINE of input, so a line pasted after the closing
-  # `)` becomes the password, and every command after that still succeeds.
+  # before `read` runs. Without bracketed paste, `read` takes the NEXT LINE of input, so a line pasted
+  # after the closing `)` becomes the password and every command after that still succeeds; with
+  # bracketed paste, that line instead runs as a command once the block finishes.
   printf '%s' "$PASSWORD" | htpasswd -vi .htpasswd admin
   kubectl create secret generic app-basic-auth --from-file=.htpasswd
 )
@@ -17657,18 +17658,18 @@ The first publish is the allowed control. The subsequent operations deliberately
   case "$3" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the key path'; exit 2 ;; esac
   case "$4" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the CA path'; exit 2 ;; esac
   case "$1" in *[!A-Za-z0-9.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
-  { unset -n v f && unset -v v f; } 2>/dev/null || { echo 'cannot clear v or f in this shell; not probing'; exit 2; }
-  for v in ${!NATS_@}; do
-    unset "$v" || { echo "cannot clear ambient $v; not probing"; exit 2; }
+  { unset -n v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA &&
+    unset -v v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA; } 2>/dev/null ||
+    { echo 'cannot clear the variables this block uses; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
+  for v in "${!NATS_@}"; do
+    { unset -n "$v" && unset -v "$v"; } 2>/dev/null || { echo "cannot clear ambient $v; not probing"; exit 2; }
   done
-  { unset -n pw NATS_PASSWORD && unset -v pw NATS_PASSWORD; } 2>/dev/null ||
-    { echo 'cannot clear pw or NATS_PASSWORD in this shell; not probing'; exit 2; }
   for f in "$2" "$3" "$4"; do
     [ -r "$f" ] || { echo 'a TLS fixture is unreadable; not probing'; exit 2; }
   done
   export NATS_CERT="$2" NATS_KEY="$3" NATS_CA="$4"
   srv="nats://$1:4222"
-  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   IFS= read -r -s -t 60 -p 'order-svc password: ' pw < /dev/tty || { echo 'password input failed'; exit 2; }
   printf '\n'
   case "$pw" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'supply a real password'; exit 2 ;; esac
@@ -17719,18 +17720,18 @@ Terminal 1 is self-contained and reads its password inside the guarded subshell.
   case "$3" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the key path'; exit 2 ;; esac
   case "$4" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the CA path'; exit 2 ;; esac
   case "$1" in *[!A-Za-z0-9.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
-  { unset -n v f && unset -v v f; } 2>/dev/null || { echo 'cannot clear v or f in this shell; not probing'; exit 2; }
-  for v in ${!NATS_@}; do
-    unset "$v" || { echo "cannot clear ambient $v; not probing"; exit 2; }
+  { unset -n v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA &&
+    unset -v v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA; } 2>/dev/null ||
+    { echo 'cannot clear the variables this block uses; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
+  for v in "${!NATS_@}"; do
+    { unset -n "$v" && unset -v "$v"; } 2>/dev/null || { echo "cannot clear ambient $v; not probing"; exit 2; }
   done
   for f in "$2" "$3" "$4"; do
     [ -r "$f" ] || { echo 'a TLS fixture is unreadable; not probing'; exit 2; }
   done
   export NATS_CERT="$2" NATS_KEY="$3" NATS_CA="$4"
   srv="nats://$1:4222"
-  { unset -n pw NATS_PASSWORD && unset -v pw NATS_PASSWORD; } 2>/dev/null ||
-    { echo 'cannot clear pw or NATS_PASSWORD in this shell; not probing'; exit 2; }
-  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   IFS= read -r -s -t 60 -p 'order-consumer password: ' pw < /dev/tty || { echo 'password input failed'; exit 2; }
   printf '\n'
   case "$pw" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'supply a real password'; exit 2 ;; esac
@@ -17753,18 +17754,18 @@ Terminal 2 independently establishes its target, TLS configuration, and credenti
   case "$3" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the key path'; exit 2 ;; esac
   case "$4" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the CA path'; exit 2 ;; esac
   case "$1" in *[!A-Za-z0-9.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
-  { unset -n v f && unset -v v f; } 2>/dev/null || { echo 'cannot clear v or f in this shell; not probing'; exit 2; }
-  for v in ${!NATS_@}; do
-    unset "$v" || { echo "cannot clear ambient $v; not probing"; exit 2; }
+  { unset -n v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA &&
+    unset -v v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA; } 2>/dev/null ||
+    { echo 'cannot clear the variables this block uses; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
+  for v in "${!NATS_@}"; do
+    { unset -n "$v" && unset -v "$v"; } 2>/dev/null || { echo "cannot clear ambient $v; not probing"; exit 2; }
   done
   for f in "$2" "$3" "$4"; do
     [ -r "$f" ] || { echo 'a TLS fixture is unreadable; not probing'; exit 2; }
   done
   export NATS_CERT="$2" NATS_KEY="$3" NATS_CA="$4"
   srv="nats://$1:4222"
-  { unset -n pw NATS_PASSWORD && unset -v pw NATS_PASSWORD; } 2>/dev/null ||
-    { echo 'cannot clear pw or NATS_PASSWORD in this shell; not probing'; exit 2; }
-  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   IFS= read -r -s -t 60 -p 'order-svc password: ' pw < /dev/tty || { echo 'password input failed'; exit 2; }
   printf '\n'
   case "$pw" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'supply a real password'; exit 2 ;; esac
@@ -17795,18 +17796,18 @@ The following self-contained request block is also used by V4 and V5. Its last t
   case "$6" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the request subject'; exit 2 ;; esac
   case "$7" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the request body'; exit 2 ;; esac
   case "$1" in *[!A-Za-z0-9.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
-  { unset -n v f && unset -v v f; } 2>/dev/null || { echo 'cannot clear v or f in this shell; not probing'; exit 2; }
-  for v in ${!NATS_@}; do
-    unset "$v" || { echo "cannot clear ambient $v; not probing"; exit 2; }
+  { unset -n v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA &&
+    unset -v v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA; } 2>/dev/null ||
+    { echo 'cannot clear the variables this block uses; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
+  for v in "${!NATS_@}"; do
+    { unset -n "$v" && unset -v "$v"; } 2>/dev/null || { echo "cannot clear ambient $v; not probing"; exit 2; }
   done
   for f in "$2" "$3" "$4"; do
     [ -r "$f" ] || { echo 'a TLS fixture is unreadable; not probing'; exit 2; }
   done
   export NATS_CERT="$2" NATS_KEY="$3" NATS_CA="$4"
   srv="nats://$1:4222"
-  { unset -n pw NATS_PASSWORD && unset -v pw NATS_PASSWORD; } 2>/dev/null ||
-    { echo 'cannot clear pw or NATS_PASSWORD in this shell; not probing'; exit 2; }
-  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   IFS= read -r -s -t 60 -p "$5 password: " pw < /dev/tty || { echo 'password input failed'; exit 2; }
   printf '\n'
   case "$pw" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'supply a real password'; exit 2 ;; esac
@@ -18764,8 +18765,8 @@ never exported:
 ```
 
 This moves the password out of argv, not out of reach: it stays readable through `/proc/<pid>/environ` by
-the same user and by root for the server's whole lifetime, and so does any process that inherits the
-server's environment. Treat it as exposed to that account and to root while the server runs.
+the same user and by root for the server's whole lifetime, as it does through the environment of any
+process that inherits it. Treat it as exposed to that account and to root while the server runs.
 
 The `--unauthenticated` flag (`SURREAL_UNAUTHENTICATED`) allows unauthenticated access instead; a
 guest connecting under it gets permissions equivalent to the `OWNER` role. Do not run it, or carry it
@@ -18887,7 +18888,7 @@ TLS terminates with normal validation (a trusted CA for private PKI); never use 
 ## Sources (checked September 2026)
 
 - SurrealDB CLI, `surreal start`: https://surrealdb.com/docs/reference/cli/surrealdb-cli/commands/start
-- SurrealDB 3.2.4 `surreal start` root password: `--password`/`--pass` or `SURREAL_PASS`, with no stdin form (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/cli/start.rs#L148-L162
+- SurrealDB 3.2.4 `surreal start` root password: `--password`/`--pass`/`-p` or `SURREAL_PASS`, with no stdin form (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/cli/start.rs#L148-L162
 - SurrealDB CLI, `surreal sql`: https://surrealdb.com/docs/reference/cli/surrealdb-cli/commands/sql
 - SurrealDB security overview: https://surrealdb.com/docs/learn/security
 - SurrealDB authentication overview: https://surrealdb.com/docs/learn/security/authentication/overview
@@ -28157,7 +28158,7 @@ same account and by root.
 )
 ```
 
-All of these outcomes were observed with this block and these commands, on agents listening on test
+All of these outcomes were observed with the curl probe block and these commands, on agents listening on test
 ports. In a cluster whose server had ACLs on and was bootstrapped, a client agent configured with
 `acl { enabled = false }` answered the first two paths with the ACLs-on results and `/v1/agent/self`
 with `200`, while the server answered it with `403`. Before bootstrap, the probe already printed the
@@ -28166,7 +28167,7 @@ printed a management token and the second failed with `Unexpected response code:
 already done ...)`. `nomad acl policy info anonymous` reported `404 (ACL policy not found)`, observed
 with the token exported in a subshell, the form this guide used before #306. After an
 `anonymous` policy granting only `submit-job` was applied, the probe's results did not change, an
-anonymous job registration returned `200`, and `nomad acl policy info anonymous` showed the policy.
+anonymous job registration returned `200`, and `nomad acl policy info anonymous`, run the same earlier way, showed the policy.
 With ACLs off, an anonymous job registration also returned `200`; with ACLs on and no `anonymous`
 policy, it returned `403`.
 

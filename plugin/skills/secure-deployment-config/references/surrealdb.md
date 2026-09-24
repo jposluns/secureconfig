@@ -29,8 +29,8 @@ never exported:
 ```
 
 This moves the password out of argv, not out of reach: it stays readable through `/proc/<pid>/environ` by
-the same user and by root for the server's whole lifetime, and so does any process that inherits the
-server's environment. Treat it as exposed to that account and to root while the server runs.
+the same user and by root for the server's whole lifetime, as it does through the environment of any
+process that inherits it. Treat it as exposed to that account and to root while the server runs.
 
 The `--unauthenticated` flag (`SURREAL_UNAUTHENTICATED`) allows unauthenticated access instead; a
 guest connecting under it gets permissions equivalent to the `OWNER` role. Do not run it, or carry it
@@ -152,7 +152,7 @@ TLS terminates with normal validation (a trusted CA for private PKI); never use 
 ## Sources (checked September 2026)
 
 - SurrealDB CLI, `surreal start`: https://surrealdb.com/docs/reference/cli/surrealdb-cli/commands/start
-- SurrealDB 3.2.4 `surreal start` root password: `--password`/`--pass` or `SURREAL_PASS`, with no stdin form (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/cli/start.rs#L148-L162
+- SurrealDB 3.2.4 `surreal start` root password: `--password`/`--pass`/`-p` or `SURREAL_PASS`, with no stdin form (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/cli/start.rs#L148-L162
 - SurrealDB CLI, `surreal sql`: https://surrealdb.com/docs/reference/cli/surrealdb-cli/commands/sql
 - SurrealDB security overview: https://surrealdb.com/docs/learn/security
 - SurrealDB authentication overview: https://surrealdb.com/docs/learn/security/authentication/overview
