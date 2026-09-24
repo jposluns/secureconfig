@@ -51,14 +51,16 @@ ranges (`9300 to 9400`, `8000-8010`). A single port, or a range covering at most
 because otherwise it would silently cover every high port in the corpus.
 
 ROW SHAPE. The header line must appear exactly, and exactly `| --- | --- | --- | --- |` must follow
-it. As in GitHub-flavored Markdown, the table then runs until the first blank line, so every
-non-blank line after the separator is a table row and must be in the table's form: flush left,
-starting `| ` and ending ` |`, four cells split on unescaped pipes (a backslash-escaped pipe
-is content), one space inside each pipe, and visible text in every cell (an HTML comment,
-`&nbsp;` or a zero-width character does not count). The Port cell must be a comma-separated
-list of ports or ranges (`N`,
-`N to N`, `N-N`, or an en dash, each optionally `/TCP` or `/UDP`), every number from 1 to 65535
-and every range ascending. "not stated" is the credential value when the cited guides are
+it. The table then runs until the first blank line (spaces and tabs only). That is stricter than
+GFM, which also ends a table at another block such as a heading: here such a line is a malformed
+row, so every line between the separator and the blank line is checked. Each of those lines must
+be flush left, start `| ` and end ` |`, and have four cells split on unescaped pipes (a
+backslash-escaped pipe is content), with one space inside each pipe. Each cell must carry a letter
+or digit outside any link destination, stay within printable ASCII (an en dash is allowed in the
+Port cell), and hold no raw HTML or character entity outside a code span: a positive rule, not a
+model of what a renderer shows. The Port cell must be a comma-separated list of ports or ranges
+(`N`, `N to N`, `N-N`, or an en dash, each optionally `/TCP` or `/UDP`), every number from 1 to
+65535 and every range ascending. "not stated" is the credential value when the cited guides are
 silent. A row that breaks this fails the gate and maps nothing. A second table later in the file
 is not read.
 
@@ -75,7 +77,6 @@ script against throwaway trees.
 """
 import re
 import sys
-import unicodedata
 from pathlib import Path
 
 sys.dont_write_bytecode = True
@@ -90,7 +91,9 @@ COLUMNS = 4  # every data row has exactly this many cells
 CELL_NAMES = ("Port", "May be", "Default credential", "Documented in")
 SEPARATOR = "| --- | --- | --- | --- |"
 _UNESCAPED_PIPE = re.compile(r"(?<!\\)\|")  # GFM: `\|` inside a cell is content, not a boundary
-_INVISIBLE = re.compile(r"<!--.*?-->|&(?:nbsp|#160|#x[aA]0|ZeroWidthSpace|#8203|#x200[bB]);")
+_CODE_SPAN = re.compile(r"`[^`]*`")
+_LINK_DEST = re.compile(r"\]\([^)]*\)")
+_ENTITY = re.compile(r"&[#A-Za-z0-9]+;")
 _PORT_ITEM = r"\d{1,5}(?:(?: to |-|\N{EN DASH})\d{1,5})?(?:/(?:TCP|UDP))?"
 PORT_CELL = re.compile(_PORT_ITEM + r"(?:, " + _PORT_ITEM + r")*")
 WIDE = 101  # a range covering more ports than this maps them only for the guides its row cites
@@ -142,11 +145,24 @@ def split_row(line: str) -> list:
     return [c.strip() for c in _UNESCAPED_PIPE.split(body)]
 
 
-def visible(cell: str) -> bool:
-    """True iff the cell renders some text: comments, blank entities and format characters do not count."""
-    text = _INVISIBLE.sub("", cell)
-    return any(not ch.isspace() and unicodedata.category(ch) not in ("Cc", "Cf", "Zs", "Zl", "Zp")
-               for ch in text)
+def cell_problem(name: str, cell: str):
+    """Name what is wrong with one cell's content, or return None.
+
+    The rule is positive rather than a model of rendering: a cell must carry a letter or digit
+    outside any link destination, stay within printable ASCII (an en dash is allowed in the Port
+    cell, for ranges), and hold no raw HTML or character entity outside a code span. Every row of
+    the current table already meets it.
+    """
+    if not re.search(r"[A-Za-z0-9]", _LINK_DEST.sub("]", cell)):
+        if name == "Default credential":
+            return "has an empty Default credential cell; write `not stated` when the cited guides are silent"
+        return f"has an empty {name} cell"
+    if any(not (" " <= ch <= "~" or (name == "Port" and ch == "\N{EN DASH}")) for ch in cell):
+        return f"has a character outside printable ASCII in its {name} cell"
+    outside_code = _CODE_SPAN.sub("", cell)
+    if "<" in outside_code or _ENTITY.search(outside_code):
+        return f"has raw HTML or a character entity in its {name} cell"
+    return None
 
 
 def row_problem(line: str):
@@ -154,7 +170,7 @@ def row_problem(line: str):
     if line != line.lstrip():
         return "is indented; write table rows flush left"
     cells = split_row(line)
-    if not visible(cells[0]):
+    if not cells[0]:
         return "has an empty Port cell"
     if not (line.startswith("| ") and line.endswith(" |")):
         return ("does not start with `| ` and end with ` |`; every line up to the blank line after the "
@@ -162,11 +178,9 @@ def row_problem(line: str):
     if len(cells) != COLUMNS:
         return f"has {len(cells)} cells; the table has {COLUMNS}"
     for name, cell in zip(CELL_NAMES, cells):
-        if not visible(cell):
-            if name == "Default credential":
-                return (
-                    "has an empty Default credential cell; write `not stated` when the cited guides are silent")
-            return f"has an empty {name} cell"
+        problem = cell_problem(name, cell)
+        if problem:
+            return problem
     if " | ".join(cells) != line[2:-2]:
         return "is not in the table's `| a | b | c | d |` form (one space inside each pipe)"
     return None
@@ -204,8 +218,8 @@ def parse_index(root: Path):
     else:
         start += 1
     for ln, line in enumerate(lines[start:], start + 1):
-        if not line.strip():
-            break  # as in GFM, the table runs until a blank line
+        if not line.strip(" \t"):
+            break  # a blank line (spaces and tabs only, as CommonMark defines it) ends the table
         problem = row_problem(line)
         if problem:
             malformed.append((ln, split_row(line)[0] or "(blank)", problem))
