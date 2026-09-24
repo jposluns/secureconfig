@@ -11,6 +11,7 @@ with the merged pull request is therefore an authoring obligation, not an enforc
 
 ## 2026-09-24
 
+- frps proxy-listener citation (#304), row 1.125. `tunnels.md` said a registered proxy binds on `proxyBindAddr` but cited only how that value defaults. Three Sources lines now cite, at pinned tag v0.71.0, the TCP and UDP proxy listeners and the HTTP and HTTPS vhost listeners that bind it. The claim now carries "as of v0.71.0", the frps part of row 1.124.
 - Default-bind version notes, #293 set (#302), row 1.124. CONTRIBUTING rule 1 asks for a version note on a default that shifts, so the fourteen default-bind claims #293 checked now carry one in the body text, scoped to the part of the sentence the cited source shows.
   - Thirteen name the release of the guide's own pinned citation: oauth2-proxy v7.15.4 and Authelia v4.39.28 (`fronting-auth.md`), Grafana v13.2.2 and Prometheus v3.14.0 (`admin-uis.md`), Phoenix 20.16.0 (`llm-observability.md`), Python 3.14.4 (`python.md`), the Caddy admin API at v2.11.4 (`caddy.md`), Gitea v1.27.3 (`devops-uis.md`), Next.js v16.3.6 (`nextjs.md`), n8n 2.40.6 (`n8n.md`), SvelteKit adapter-node 5.5.7 and Vite 8.3.1 (`frontend-frameworks.md`), and LiteLLM v1.102.1 (`litellm.md`).
   - Docker's publishing default (`docker.md`) is cited from the vendor documentation rather than a tag, so it says "at the time of writing".
