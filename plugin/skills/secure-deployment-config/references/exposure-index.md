@@ -68,7 +68,7 @@ Rows are ordered by their first port number or the start of a range. Related por
 | 5432 | PostgreSQL, and pgvector on the same port; the Supabase self-hosted Supavisor pooler also publishes it | [postgresql.md](postgresql.md), [vector-databases.md](vector-databases.md), [cloud-firewalls.md](cloud-firewalls.md), [supabase-self-hosted.md](supabase-self-hosted.md) |
 | 5553, 5556, 5557, 5559 | Selenium Grid distributed components: Distributor, Session Map, event bus HTTP, and New Session Queue; these listeners are not protected by the Router's basic auth | [headless-browser-services.md](headless-browser-services.md) |
 | 5555 | Flower, the Celery monitor, or a Selenium Grid Node | [workflow-orchestrators.md](workflow-orchestrators.md), [headless-browser-services.md](headless-browser-services.md) |
-| 5601 | Kibana, which defaults to HTTP on `localhost:5601` with `server.ssl.enabled: false`; its Docker image changes the host default to `0.0.0.0` | [elasticsearch.md](elasticsearch.md) |
+| 5601 | Kibana, which defaults to HTTP on `localhost:5601` with `server.ssl.enabled: false` (its Docker image changes the host default to `0.0.0.0`), and OpenSearch Dashboards, whose 3.8.0 sample configuration also uses localhost and port 5601 with server TLS disabled | [elasticsearch.md](elasticsearch.md) |
 | 5671, 5672 | AMQP over TLS, and AMQP plaintext | [rabbitmq.md](rabbitmq.md) |
 | 5678 | n8n | [n8n.md](n8n.md) |
 | 5766 | coturn telnet CLI, disabled by default and bound to loopback when enabled | [realtime-voice-infra.md](realtime-voice-infra.md) |
@@ -170,6 +170,7 @@ Rows are ordered by their first port number or the start of a range. Related por
 | 27017 | MongoDB | [mongodb.md](mongodb.md), [cloud-firewalls.md](cloud-firewalls.md) |
 | 30000 to 32767 | Kubernetes NodePort range over TCP and UDP; SGLang on 30000 | [kubernetes.md](kubernetes.md), [model-servers.md](model-servers.md) |
 | 33060 | MySQL X Protocol, a separate listener whose bind is not controlled by bind_address; MariaDB does not implement it | [mysql.md](mysql.md) |
+| 35672 to 35682 | RabbitMQ remote CLI tools' own Erlang distribution-port range (default); allow it only from authorized CLI hosts | [rabbitmq.md](rabbitmq.md) |
 | 49152 to 65535 | coturn relay endpoints, allocated on demand; this range overlaps the LiveKit media range and other entries | [realtime-voice-infra.md](realtime-voice-infra.md) |
 | 50000 to 60000/UDP | LiveKit media sockets outside development mode, allocated during active calls | [realtime-voice-infra.md](realtime-voice-infra.md) |
 | 50051 | Weaviate gRPC | [vector-databases.md](vector-databases.md) |

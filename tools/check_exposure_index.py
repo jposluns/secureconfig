@@ -5,38 +5,46 @@ exposure-index.md is the corpus's port-to-guide lookup: a reader with a scan res
 port there and opens the guides it names. A guide that documents a listener the index never
 mentions leaves that reader with nothing to search on, so this gate keeps the two in step.
 
-WHAT COUNTS AS A PORT MENTION. Nine high-precision shapes, in prose and inside fenced code
-blocks alike (several real listeners appear only in configuration examples):
-  - "port 9090", "ports 80 and 443", "ports 80, 443 and 8080";
-  - a host:port on a loopback, any-address or localhost host, or after a scheme
-    (`0.0.0.0:9090`, `127.0.0.1:9090`, `localhost:9090`, `[::]:9090`, `https://host:9090`);
-  - "TCP 26379" / "UDP 3478";
+WHAT COUNTS AS A PORT MENTION. Eight shapes, in prose and inside fenced code blocks alike
+(several real listeners appear only in configuration examples). Where the word "port" itself
+names the number, one to five digits count; elsewhere two to five do:
+  - "port 9090", "port 7", "port `9090`", "port **9090**", "ports 80 and 443",
+    "ports 80, 443 and 8080", "ports 5000 to 5010" (both ends); a thousands separator
+    ("port 80,000") is not a list;
+  - a host:port on a loopback, any-address or localhost host, a bracketed IPv6 literal, or after
+    a scheme, including userinfo and shell-variable hosts (`0.0.0.0:9090`, `localhost:9090`,
+    `[::]:9090`, `https://[2001:db8::1]:9090`, `https://host:9090`, `postgres://u:p@db:9090`);
+  - "TCP 26379" / "udp 3478", either case (not followed by a decimal or dotted continuation, so an IP address
+    after "TCP" is not a port);
   - "9090/tcp" / "3478/udp";
-  - a port flag (`--port 9090`, `--port=9090`, `--http-port=8080`);
   - a published mapping (`-p 3000:8080`, `--publish 3000:8080`, a Compose `- "3000:8080"`),
     where both sides count: the host side is what a scan sees, the container side is what the
-    index rows cite;
+    index rows cite; a Compose-style `- H:C` must end its line, so a bullet such as
+    "- 10:30 UTC" is not a mapping;
   - a line-initial `listen` or `bind` directive (`listen 443 ssl;`, `bind *:443`);
-  - a Dockerfile `EXPOSE 9090`;
-  - a port key (`port: 9090`, `KEY_PORT=9090`, `"port": 9090`, `containerPort: 9090`).
-A broader net (any `word:N`, or any bare four- or five-digit number) was measured at the time
-this gate was written and found to be mostly years, sizes, counts and versions, so it is not used.
+  - a Dockerfile `EXPOSE`, every port on the line (`EXPOSE 80 443/tcp`);
+  - a port key whose name is "port", ends in `_port`/`-port`, or ends in a camel-case `Port`
+    (`port: 9090`, `KEY_PORT=9090`, `containerPort: 9090`, but not `transport: 2026`).
+A port flag needs no shape of its own: `--port 9090` is the prose shape and `--port=9090` or
+`--http-port=8080` is the key shape, while `--support=2026` and `--export 2024` match neither.
+A broader net (any `word:N`, or any bare four- or five-digit number) was measured when this gate
+was written and found to be mostly years, sizes, counts and versions, so it is not used.
 
 WHAT COUNTS AS MAPPED. The index table's first column lists single ports, comma lists and
-ranges (`9300 to 9400`, `8000-8010`). A single port or a range of at most 101 ports maps that
-port for every guide. A wider range (Ray's worker range, coturn's relay range) maps its ports
-only for the guides its own row cites, because otherwise it would silently cover every high
-port in the corpus.
+ranges (`9300 to 9400`, `8000-8010`). A single port, or a range covering at most 101 ports
+(counting both ends), maps its ports for every guide. A range covering more than 101 ports
+(Ray's worker range, coturn's relay range) maps them only for the guides its own row cites,
+because otherwise it would silently cover every high port in the corpus.
 
 ALLOWLIST. tools/exposure_index_allowlist.txt lists `<guide> <port>  # reason` pairs that match a
 pattern but are not listeners this corpus documents (an outbound destination, an illustrative
-number). An entry that no longer matches any mention is STALE and fails the gate, so the list
-cannot quietly outlive the text it excuses.
+number). An entry fails the gate when it is STALE (no mention of that port remains in that
+guide) or REDUNDANT (the mention remains but the index now maps it), so the list cannot outlive
+the text or the gap it excuses.
 
-Exit status: 0 when every mention is mapped or allowlisted and no allowlist entry is stale; 1
-otherwise; 2 when the index table cannot be found. Everything is offline and reads files as
-UTF-8. `--self-test` is not provided here; tools/test_exposure_index.py drives this script
-against throwaway trees.
+Exit status: 0 when every mention is mapped or allowlisted and every allowlist entry is still
+needed; 1 otherwise; 2 when the index table cannot be found. Everything is offline and reads
+files as UTF-8. tools/test_exposure_index.py drives this script against throwaway trees.
 """
 import re
 import sys
@@ -50,25 +58,33 @@ from check_reasoned_rows import META_EXCLUDE  # noqa: E402  one definition of "n
 INDEX = "exposure-index.md"
 ALLOWLIST = Path("tools/exposure_index_allowlist.txt")
 TABLE_HEADER = "| Port | May be | Documented in |"
-WIDE = 101  # a range wider than this maps its ports only for the guides its row cites
+WIDE = 101  # a range covering more ports than this maps them only for the guides its row cites
 
 RANGE = re.compile(r"(\d+)\s*(?:to|-|\N{EN DASH})\s*(\d+)")
 N = r"(\d{2,5})"
-END = r"(?![\d.,]\d)(?!\d)"  # the number ends here: no more digits, no decimal continuation
+N1 = r"(\d{1,5})"  # where the word "port" itself names the number
+END = r"(?![\d.,]\d)(?!\d)"  # the number ends here: no more digits, no decimal or dotted continuation
+EMPH = r"[`*]{0,2}"  # a code span or bold around the number
 PATTERNS = {
     "prose_port": re.compile(
-        r"(?i)\bports?\s+`?(\d{2,5})`?((?:\s*(?:,|and|or|/)\s*(?:and\s+|or\s+)?`?\d{2,5}`?)*)" + END),
+        r"(?i)\bports?\s+" + EMPH + N1 + END + EMPH
+        + r"((?:(?:,\s+|\s+and\s+|\s+or\s+|\s*/\s*|\s+to\s+|\s+through\s+|\s*-\s*)(?:and\s+|or\s+)?"
+        + EMPH + r"\d{1,5}" + END + EMPH + r")*)"),
     "hostport": re.compile(
-        r"(?:\b(?:0\.0\.0\.0|127\.0\.0\.1|localhost)|\[::1?\]|://[A-Za-z0-9.\-_]+):" + N + END),
-    "proto_space": re.compile(r"\b(?:TCP|UDP)\s+`?(\d{2,5})`?(?!\d)"),
+        r"(?:\b(?:0\.0\.0\.0|127\.0\.0\.1|localhost)|\[[0-9A-Fa-f:.]*\]|://(?:[^@/\s]+@)?[A-Za-z0-9.\-_${}]+):"
+        + N + END),
+    "proto_space": re.compile(r"(?i)\b(?:TCP|UDP)\s+`?" + N + r"`?" + END),
     "slash_proto": re.compile(r"(?i)(?<![\d/.:])(\d{2,5})/(?:tcp|udp)\b"),
-    "port_flag": re.compile(r"(?i)--?[a-z\-.]*port[=\s]+`?" + N + END),
     "publish": re.compile(
-        r"""(?:(?:-p|--publish)[=\s]+|^\s*-\s*["']?)(?:(?:\d{1,3}\.){3}\d{1,3}:)?(\d{2,5}):(\d{2,5})"""
-        + END),
+        r"(?:-p|--publish)[=\s]+(?:(?:\d{1,3}\.){3}\d{1,3}:)?(\d{2,5}):(\d{2,5})" + END),
+    # a Compose `- H:C` list item must end its line, so "- 10:30 UTC" is not a mapping
+    "compose": re.compile(
+        r"""^\s*-\s*["']?(?:(?:\d{1,3}\.){3}\d{1,3}:)?(\d{2,5}):(\d{2,5})""" + END
+        + r"""(?=(?:/(?:tcp|udp))?["']?\s*(?:$|#))"""),
     "listen": re.compile(r"(?i)^\s*(?:listen|bind)\s+(?:\[?[\w.:*]*\]?:)?" + N + END),
-    "expose": re.compile(r"^\s*EXPOSE\s+" + N + END),
-    "port_key": re.compile(r"""(?i)\b\w*port["']?\s*[:=]\s*["']?""" + N + END),
+    "expose": re.compile(r"^\s*EXPOSE\s+((?:\d{1,5}(?:/(?:tcp|udp))?\s*)+)"),
+    "port_key": re.compile(
+        r"""(?:(?<![A-Za-z])(?i:port)|(?<=[a-z])Port)["']?\s*[:=]\s*["']?""" + N1 + END),
 }
 
 
@@ -94,10 +110,10 @@ def parse_index(root: Path):
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
         if set(cells[0]) <= set("- "):
             continue  # the separator row
-        cited = set(re.findall(r"\]\(([^)#]+\.md)\)", cells[-1]))
+        cited = set(re.findall(r"\]\(([^)#]+\.md)(?:#[^)]*)?\)", cells[-1]))
         for a, b in RANGE.findall(cells[0]):
             lo, hi = int(a), int(b)
-            if hi - lo > WIDE:
+            if hi - lo + 1 > WIDE:
                 for p in range(lo, hi + 1):
                     wide_cites.setdefault(p, set()).update(cited)
             else:
@@ -122,9 +138,11 @@ def mentions(path: Path):
         for name, rx in PATTERNS.items():
             for m in rx.finditer(line):
                 if name == "prose_port":
-                    nums = [m.group(1)] + re.findall(r"\d{2,5}", m.group(2) or "")
-                elif name == "publish":
+                    nums = [m.group(1)] + re.findall(r"\d{1,5}", m.group(2) or "")
+                elif name in ("publish", "compose"):
                     nums = [m.group(1), m.group(2)]
+                elif name == "expose":
+                    nums = re.findall(r"\d{1,5}", m.group(1))
                 else:
                     nums = [m.group(1)]
                 for n in nums:
@@ -155,25 +173,32 @@ def main() -> int:
         return 2
     explicit, wide_cites = parsed
     allow = load_allowlist(root)
-    used, gaps = set(), []
+    used, mapped_mentions, gaps = set(), set(), []
     for path in guides(root):
         for ln, port in mentions(path):
             if port in explicit or path.name in wide_cites.get(port, ()):
+                mapped_mentions.add((path.name, port))
                 continue
             if (path.name, port) in allow:
                 used.add((path.name, port))
                 continue
             gaps.append((path.name, ln, port))
-    stale = sorted(set(allow) - used)
+    unneeded = sorted(set(allow) - used)
     for name, ln, port in gaps:
         print(f"EXPOSURE-INDEX: {name}:{ln} names port {port}, which {INDEX} does not map "
               f"(add a row, or allowlist it with a reason in {ALLOWLIST})")
-    for name, port in stale:
-        print(f"EXPOSURE-INDEX: stale allowlist entry `{name} {port}` "
-              f"({ALLOWLIST}:{allow[(name, port)]}) matches no mention; remove it")
+    for name, port in unneeded:
+        where = f"{ALLOWLIST}:{allow[(name, port)]}"
+        if (name, port) in mapped_mentions:
+            print(f"EXPOSURE-INDEX: redundant allowlist entry `{name} {port}` ({where}): {INDEX} "
+                  f"now maps it; remove the entry")
+        else:
+            print(f"EXPOSURE-INDEX: stale allowlist entry `{name} {port}` ({where}) matches no "
+                  f"mention; remove it")
     pairs = len({(n, p) for n, _, p in gaps})
-    if gaps or stale:
-        print(f"FAIL: {pairs} unmapped guide/port pair(s), {len(stale)} stale allowlist entr(y/ies)")
+    if gaps or unneeded:
+        print(f"FAIL: {pairs} unmapped guide/port pair(s), {len(unneeded)} allowlist entr(y/ies) "
+              f"no longer needed")
         return 1
     print(f"PASS: every port mention in the guides is mapped by {INDEX} or allowlisted "
           f"({len(allow)} allowlisted)")
