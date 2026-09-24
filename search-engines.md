@@ -40,7 +40,7 @@ Review outbound requests too. Meilisearch v1.8 through v1.34.0 need upgrading fo
 
 ## Verify
 
-Verification status: the request expectations below are reasoned from the linked vendor references, not demonstrated against running engines in this review, so backlog row 2.38 tracks demonstrating them; the review environment had no Meilisearch or Typesense binary and no container runtime. Use Bash and curl 7.75.0 or later; never add `-k`. Substitute your actual HTTPS origin inside the single quotes, without a trailing slash. Run each row of the matrix below through this paired-request block, changing the method, path, JSON body, header prefix, and expected statuses on its `set --` line, and enter credentials at the prompts rather than in the command. Both requests use exactly the same origin, method, path, and body; inspect the engine JSON as well as the status, since a proxy login page, redirect, missing resource, or transport failure does not establish engine authorization.
+Verification status: the checks below were demonstrated on loopback against the Meilisearch v1.53.2 release binary (its SHA-256 matched the digest GitHub publishes for the asset) and the Typesense 30.2 server (its MD5 matched the one in the release tarball), each with native TLS on 127.0.0.1 from a private test CA that curl trusted through `CURL_CA_BUNDLE`, and every address set before start. The blocks ran as printed with only their `set --` values substituted, and keys were fed to the prompts on stdin. What those runs do not show is marked **REASONED** where it occurs, with its reason; backlog row 1.117 tracks it. Use Bash and curl 7.75.0 or later; never add `-k`. Substitute your actual HTTPS origin inside the single quotes, without a trailing slash. Run each row of the matrix below through this paired-request block, changing the method, path, JSON body, header prefix, and expected statuses on its `set --` line, and enter credentials at the prompts rather than in the command. Both requests use exactly the same origin, method, path, and body; inspect the engine JSON as well as the status, since a proxy login page, redirect, missing resource, or transport failure does not establish engine authorization.
 
 ```bash
 (
@@ -110,7 +110,27 @@ Verification status: the request expectations below are reasoned from the linked
 
 Use `Authorization: Bearer ` for Meilisearch and `X-TYPESENSE-API-KEY: ` for Typesense. Prepare the search fixtures first, and for the creation tests confirm `acl_probe` does not already exist, using a disposable resource and removing it afterward. A Meilisearch `202` only acknowledges a queued task, so confirm task success before crediting the positive control. In an isolated exposed-state test, keyless Meilisearch must return the fixture anonymously and the protected instance must reject that request; Typesense's exposed-state discriminator is a known disclosed bootstrap or operational key (it has no keyless mode), which after rotation must fail while its replacement succeeds against the same request. Do not invent a universal default password. Test tenant restrictions with known allowed and forbidden documents: the restricted credential must find the allowed fixture and omit the forbidden one, while an authorized control finds the forbidden fixture on the same query and origin; attempt to override filters and field selection, and test referenced collections where JOINs are used, since an empty result alone proves nothing.
 
-Proxy authentication does not prove the engine or peering ports are private. On the engine host inspect `ss -ltnp`, container port mappings, and the effective IPv4 and IPv6 firewall rules, and confirm the engine answers from its intended private client while running. From an external disallowed source, test every public address and actual published port; the block below covers the default ports with OpenBSD-compatible netcat and numeric addresses:
+On the loopback runs, keyless Meilisearch returned the fixture to an anonymous search with `200`, so the
+authentication row printed `FAIL: unexpected HTTP status`: the exposed state. With a master key set, the
+same row got `401` `missing_authorization_header` anonymously and `200` with the fixture on the Default
+Search API Key, and `GET /keys` listed the four default keys named above; the write row got `403`
+`invalid_api_key` for the search key and `202` for the Default Admin API Key, whose task then reported
+`succeeded`. Started with `--env production` and no master key, Meilisearch refused to start: "You must
+provide a master key to secure your instance in a production environment". Typesense, with its
+bootstrap key from `TYPESENSE_API_KEY`, answered the authentication row with `401` anonymously and `200`
+on a collection-scoped search key, and the write row with `401` for that key and `201` for the
+bootstrap key. A disclosed operational key got `200` before rotation, `401` after it was deleted, and
+its replacement `200`. A Meilisearch tenant token filtered to one tenant returned only that tenant's
+fixture, and a request adding a filter for the other tenant returned nothing, while the parent key
+returned both; a Typesense scoped key embedding `filter_by` behaved the same way under an overriding
+`filter_by`. For JOINs, a Typesense key scoped to collection `products` was refused a direct search of
+`companies` with `401`, but a `products` search with `include_fields=$companies(billing)` returned the
+joined company's billing field: collection scoping alone did not isolate joined data. A scoped key
+embedding `exclude_fields=$companies(billing)` returned the same query without it.
+
+**REASONED for proxies, container mappings, IPv6 and firewalls (the runs used native TLS on one host
+with no container runtime and no second network):** proxy authentication does not prove the engine or
+peering ports are private. On the engine host inspect `ss -ltnp`, container port mappings, and the effective IPv4 and IPv6 firewall rules, and confirm the engine answers from its intended private client while running. From an external disallowed source, test every public address and actual published port; the block below covers the default ports with OpenBSD-compatible netcat and numeric addresses:
 
 ```bash
 (
@@ -135,7 +155,14 @@ Proxy authentication does not prove the engine or peering ports are private. On 
 
 Under the private-backend pattern, any successful external TCP connection is a finding, even if HTTP authentication would reject the caller; a timeout is inconclusive, and a refusal shows only no connection from that source at that moment, so corroborate it with the live private positive control, the listener bindings, and the effective firewall policy. If native HTTPS is intentionally public, run the paired authorization tests against that engine endpoint too, using its certificate-valid hostname and actual port (preserve the hostname with curl's `--resolve` when testing an IP, keep the substituted address guarded, and retain certificate verification); engine API TLS does not establish protection of Typesense's separate peering listener.
 
-Grep the client bundle and repository history for the admin/master/bootstrap key; it should never appear outside the server-side secret store.
+On loopback, `ss` showed Typesense only on `127.0.0.1:8108` and `127.0.0.1:8107`. The block against
+127.0.0.1, where the engines listened, printed `FAIL: TCP 7700 is reachable` (exit `1`), the reachable
+shape; against 127.0.0.2, where nothing listens, each port's `Connection refused` printed `INCONCLUSIVE`
+and the block ended with exit `2`, the refused shape. A real external vantage is REASONED for the same
+reason.
+
+**REASONED (no client bundle in this review):** grep the client bundle and repository history for the
+admin/master/bootstrap key; it should never appear outside the server-side secret store.
 
 ## Common mistakes
 
