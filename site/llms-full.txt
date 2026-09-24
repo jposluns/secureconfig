@@ -1539,8 +1539,9 @@ listener on 127.0.0.1:8201, a private test CA, a file audit device, and the sect
 policies and AppRole role with `127.0.0.1/32` as the CIDR. Each block ran as printed, with only its
 placeholders substituted, except where a step says otherwise. Exposed states ran in further runs of
 the same binary on the same addresses: one with both anonymous-access settings `true` throughout, one
-with `tls_disable = true` on the listener, and one with the section 3 configuration as written, each
-with the policies, roles or delivery policy under test set without their limits. What these runs do
+with `tls_disable = true` on the listener (a health check only), and one with the section 3
+configuration unchanged apart from addresses and paths; the first and third ran the policies, roles
+or delivery policy under test without their limits. What these runs do
 not show is marked **REASONED** where it occurs, with the reason: HA behavior (no multi-node cluster
 was set up for these runs), a second independent audit device (none was configured), the recipient's
 own validation (it belongs to the receiving application), a wildcard bind (the host forbids binding
@@ -1723,8 +1724,9 @@ On the loopback run, every row gave its fixed outcome: anonymous `403` throughou
 collector `200` on `sys/metrics` and `403` on `sys/pprof/` and on the payments secret; the profiling
 operator `200` on `sys/pprof/`. With the listener's two anonymous-access settings set to `true`,
 anonymous requests got `200` on `sys/metrics` and `sys/pprof/`, and a token with a broad `kv/data/*`
-read policy got `200` on the inventory secret, and a collector whose policy added `kv/data/*` got `200`
-on the payments secret: the exposed outcomes.
+read policy got `200` on the inventory secret: the exposed outcomes. In the run with the section 3
+configuration and its anonymous-access settings left `false`, a collector whose policy added
+`kv/data/*` got `200` on the payments secret, the collector-isolation exposed outcome.
 
 **REASONED (no multi-node cluster was set up for these runs):** authenticated metrics and profiling use local-only HTTP handlers. An ordinary HA standby returns
 `307` to the active node's advertised API address when a leader is available; that redirect is not
@@ -1799,7 +1801,7 @@ another test:
   then an expired SecretID still logs in: on the loopback run, SecretIDs 10 seconds past their TTL
   logged in, while one 70 seconds past it was refused with `invalid role or secret ID`. Successful
   login more than two minutes after expiry is the exposed state; the margin allows for a tidy that is
-  only nominally once a minute. With a 20-second test TTL, a SecretID tried 130 seconds past it was
+  only nominally once a minute. With a 20-second test TTL, a SecretID tried about 130 seconds past it was
   refused with `invalid role or secret ID`, while one from a role with no `secret_id_ttl` logged in.
 - **Source bounds (demonstrated with a second loopback address):** try a fresh SecretID from outside the configured CIDR but within
   a test network that can reach Vault. Require authentication rejection, paired with successful
