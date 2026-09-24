@@ -92,7 +92,7 @@ The inspected query handler executes a read through GET, while writes and script
 
 sqlite-web documents native TLS through `--ssl-cert` and `--ssl-key`; the recommended deployment here still uses the shared TLS proxy.
 
-CSRF protection was not established by this review. The inspected moving `master` identifies itself as 0.8.1; equivalence to a released package was not established. Recheck flags and routes against the installed package.
+sqlite-web 0.8.1 from PyPI showed no CSRF protection on loopback: an authenticated `POST` insert with no token and a foreign `Origin` header wrote a row, and the insert form carries no token. Its session cookie was set with `HttpOnly; Path=/` and no `SameSite` or `Secure` attribute, even over TLS, so whether a browser sends it on a cross-site request depends on that browser's default. Prefer `--read-only` behind the proxy. The flags and routes described here matched the installed 0.8.1 package for everything the loopback runs exercised.
 
 ## Fronting layer, TLS, and least privilege
 
@@ -110,25 +110,25 @@ Run the service under a dedicated unprivileged OS account with access only to th
 
 ## Verify
 
-The service outcomes below are **REASONED, not demonstrated**. The authoring environment has no Datasette or sqlite-web runtime, no container runtime, no authorized external testing vantage, and no socket capability. A loopback bind was denied; `ss` reported that it could not open its netlink socket. Backlog row 2.39 records the required demonstrations.
+The service outcomes below were **demonstrated on loopback** against Datasette 0.65.5 (with datasette-auth-passwords 1.1.1 and datasette-write 0.4) and sqlite-web 0.8.1, installed from PyPI into a virtual environment, with every server on 127.0.0.1 and, for the HTTPS blocks, native TLS from a private test CA that curl trusted through `CURL_CA_BUNDLE`. The blocks ran as printed with only their placeholders substituted. What those runs do not show is marked **REASONED** where it occurs, with its reason; backlog row 1.118 tracks it.
 
 Use Bash with real, unshadowed builtins and curl 7.75.0 or newer. Paste whole subshells and substitute inside the single quotes. A literal apostrophe requires proper shell escaping; do not simply paste it between those quotes. Use URLs without embedded credentials or signed tokens. Every curl begins with `-q -g`, disables environment proxies, and reports the error text. Do not add `-k` or redirect-following.
 
 ### A. Listener inventory
 
-**REASONED:** socket inspection was denied in the authoring environment. On the deployment host, inspect the complete listener table:
+**The fixed bind demonstrated on loopback; a wildcard bind and container publications REASONED** (the host forbids binding every interface and has no container runtime). On the deployment host, inspect the complete listener table:
 
 ```bash
 sudo ss -tlnp
 ```
 
-For the same-host examples, expect `127.0.0.1:8001` and/or `127.0.0.1:8080`, owned by the intended processes. A wildcard origin bind is the finding. Read IPv6 entries and unexpected ports too. An inspection error followed by an empty table is inconclusive. These example ports match the documented CLI defaults; substitute the actual configured ports when testing.
+For the same-host examples, expect `127.0.0.1:8001` and/or `127.0.0.1:8080`, owned by the intended processes. A wildcard origin bind is the finding. Read IPv6 entries and unexpected ports too. An inspection error followed by an empty table is inconclusive. These example ports match the documented CLI defaults; substitute the actual configured ports when testing. On loopback, bare `datasette serve` with no host or port flag listened on `127.0.0.1:8001` and bare `sqlite_web` on `127.0.0.1:8080`, as `ss -tlnp` run without `sudo` by the same account showed (the authoring host has no `sudo`).
 
 Inspect container publications separately: Docker forwarding can expose a port without a corresponding host listening process. A wildcard bind inside a container is distinct from a public host publication; managed ingress such as Cloud Run also has its own binding contract. Confirm those boundaries through configuration and external probes.
 
 ### B. Direct reachability and anonymous access
 
-**REASONED:** no service runtime, container runtime, listening-socket capability, or authorized external vantage was available.
+**Demonstrated on loopback against both tools; an external vantage and provider hostnames REASONED** (the host has no second network and no provider deployment).
 
 First obtain a successful local control against the running backend. Then run the block from an authorized external testing host against each direct origin and provider hostname, followed by the published HTTPS routes. For a protected route, establish section C's authorized positive control first. Use disposable databases for any local exposed-state reproduction.
 
@@ -165,11 +165,11 @@ For external testing, replace loopback with the actual deployment address, port,
 - **SQL disabled:** an authorized browsing account still reaches its permitted table page but receives no SQL result. Check that browsing positive control separately.
 - **Proxy-only authentication:** a loopback backend may intentionally return data without credentials. Exposure exists when an untrusted caller reaches it or bypasses the proxy.
 
-These are reasoned discriminators derived from the documented query interfaces, SQL permission setting, proxy bypass precautions, and curl's transport diagnostics.
+On loopback, block B against bare `datasette serve` returned the database listing, and the SQL JSON route returned the known row (`widget-canary`), both with `200`, and `/-/versions.json` answered `200` anonymously: the exposed state. Against the baseline command above, the SQL JSON route returned `403` while the table page still returned `200` (SQL disabled, browsing permitted), and `/published.db` returned `403`; without `--setting allow_download off` it returned `200`. `--cors` added `Access-Control-Allow-Origin: *`, absent without it. Bare `sqlite_web` answered the query GET with `200` anonymously, and an anonymous `POST` insert wrote a row to a disposable database; with `--read-only` the read still returned `200` and the insert changed nothing. `SQLITE_WEB_PASSWORD` set without `-P` left sqlite-web open (`200` anonymously), as the source reading above says; with `-P` the anonymous query GET got `302` to `/login/`.
 
 ### C. Authorized positive control versus anonymous access
 
-**REASONED:** no protected deployment or valid credential was available.
+**Demonstrated on loopback over native TLS.**
 
 Prepare a private mode-0600 header file per [secrets.md](secrets.md), containing the required Authorization, session Cookie, or fronting-layer headers. Only its path enters argv through `-H "@file"`. Keep credentials out of the URL, shell history, tracing, and shared output. The guard checks that the file is readable and regular; preparation must establish its privacy.
 
@@ -198,15 +198,17 @@ Choose a URL that returns known nonsensitive protected data. When arbitrary SQL 
 
 The authorized response must contain the expected data; HTTP success alone is insufficient. Only then assess whether the anonymous response withholds that result. If the control fails, the comparison is inconclusive. Repeat with an authenticated but unauthorized account where actor permissions apply.
 
-Local authoring checks passed: `bash -n` on all five shell blocks, parsing of the metadata JSON, and 120 guard executions covering 40 cases under ordinary Bash, `set -u`, and `set -u` with `IFS=0`. The cases included missing assignments or markers, shortened and extra arguments, embedded placeholders, invalid schemes, URL userinfo, control characters, invalid header-file paths, and valid argument forwarding. An isolated curl argument recorder measured guard behavior; it did not demonstrate HTTP outcomes.
+On loopback, with the metadata above plus datasette-auth-passwords, the block returned the table's rows to the `analyst` session cookie (`authorized http=200`) and `403` anonymously; an authenticated `guest` got `403`, the unauthorized outcome, and the analyst got `403` on SQL under `allow_sql: false`. For sqlite-web with `-P`, the session cookie got the row with `200` and the anonymous request `302` to `/login/`. With datasette-write on a disposable database, an anonymous write got `403`, a root write without the CSRF token `403`, and with the token `302`, and the row was written.
+
+Local authoring checks passed: `bash -n` on all five shell blocks, parsing of the metadata JSON, and 120 guard executions covering 40 cases under ordinary Bash, `set -u`, and `set -u` with `IFS=0`. The cases included missing assignments or markers, shortened and extra arguments, embedded placeholders, invalid schemes, URL userinfo, control characters, invalid header-file paths, and valid argument forwarding. An isolated curl argument recorder measured guard behavior; the HTTP outcomes above were demonstrated separately on loopback.
 
 Partial pastes beginning below the guards remain unguarded. An inherited marker with exactly the expected arguments is indistinguishable from a complete assignment. Paste whole blocks; these checks do not claim otherwise.
 
-**Verification debt:** backlog row 2.39 requires exposed and fixed demonstrations on a socket-capable host with exact installed versions, an external vantage, and valid credentials. Include disposable-database write rejection, SQL-disabled and download checks, introspection routes, and CSRF behavior for enabled write plugins. All-reasoned service checks do not meet the finished-guide verification standard.
+**Verification debt:** backlog row 1.118 tracks what the loopback runs could not show: a wildcard bind and container publications, an external vantage against direct origins and provider hostnames, the reverse-proxy and identity-aware-proxy patterns, and `ss` run as root.
 
 ## Sources (checked September 2026)
 
-Applicability checked on 2026-09-18: Datasette stable documentation lists 0.65.5; Datasette packaging source was inspected on moving `main`. sqlite-web source was inspected on moving `master`, identifying itself as 0.8.1; equivalence to a released package was not established. Installed service versions were unavailable for runtime confirmation.
+Applicability checked on 2026-09-18: Datasette stable documentation lists 0.65.5; Datasette packaging source was inspected on moving `main`. sqlite-web source was inspected on moving `master`, identifying itself as 0.8.1; the released 0.8.1 package matched it for the flags and routes the loopback runs exercised. Runtime confirmation used Datasette 0.65.5, datasette-auth-passwords 1.1.1, datasette-write 0.4 and sqlite-web 0.8.1 from PyPI.
 
 Every URL listed below was fetched during authoring. This list also records the source-fetch review.
 
