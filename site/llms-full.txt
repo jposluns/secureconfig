@@ -27694,7 +27694,7 @@ listens on every address. The UI is enabled by default, at `/ui/` on the API por
 binds 127.0.0.1 on Linux, except `-dev-connect`, which binds `0.0.0.0`.
 
 ACLs are disabled by default, and with ACLs off requests are allowed without a token, including job
-registration; the agent's debug endpoints still need `enable_debug`.
+registration; the agent's debug endpoints still need `enable_debug`, which `-dev` turns on.
 A job is code: on a Linux client running as root, the `exec` driver runs a job's commands in a chroot
 as the task's `user`, `nobody` when the task sets none (by default the client refuses `root` for
 `exec`), and `raw_exec`, which runs commands with no isolation, is off by default but turned on by
@@ -27846,7 +27846,8 @@ an agent whose `client_addr` is loopback, the default, from its own host (for ex
 Exposed with ACLs off: `/v1/acl/token/self` returns `401` `ACL support disabled`, and
 `/v1/agent/self` returns `200`. Exposed with ACLs on and the default `allow` policy:
 `/v1/acl/token/self` returns `403` `token does not exist: ACL not found`, and `/v1/agent/self` still
-returns `200`. Each agent applies its own `acl` block, so any agent that answers `/v1/agent/self`
+returns `200`. Each agent applies its own `acl` block (observed for `enabled` and `default_policy`),
+so any agent that answers `/v1/agent/self`
 with `200` is exposed. With ACLs on and `default_policy = "deny"`, `/v1/agent/self` returns `403`
 `Permission denied: anonymous token lacks permission`, but that `403` covers `agent:read` only, and it
 looks the same before bootstrap, so fixed needs two more checks. First, `consul acl bootstrap` must
@@ -27855,7 +27856,10 @@ keep it as your own. Second, with a management token in `CONSUL_HTTP_TOKEN`, `co
 -accessor-id 00000000-0000-0000-0000-000000000002` (the anonymous token) must list no policies,
 roles, or service, node or templated identities, and no agent may have a default token, set in
 `acl.tokens.default` or through the agent's token API: a request without a token uses it instead of
-the anonymous token, and the probe then prints a result this guide does not list. Set
+the anonymous token. On the loopback run, a default token holding key write, set through the
+agent's token API on a deny-policy agent, made the block print `200` on `/v1/acl/token/self` and a
+`403` on `/v1/agent/self` without the anonymous-token message, while a key-value write without a
+token succeeded. Set
 `CONSUL_HTTP_TOKEN` the same way, in a subshell around the command. A connection failure prints curl's error and exit code, and says nothing about ACLs. Any other
 status or message is inconclusive: a redirect (for example from a trailing slash, or from HTTP to
 HTTPS), a proxy's own response, or a certificate error once TLS is on says nothing about the
