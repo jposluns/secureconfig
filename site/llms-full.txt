@@ -18309,7 +18309,7 @@ On the authoring host, without opening any socket, these three checks ran in exp
   - With `app.db` committed before an `app.db*` ignore rule was added, `git check-ignore -v` listed the sidecars but not the tracked `app.db`. `git ls-files` printed `app.db`, and `git log` printed its commit.
   - After `git rm --cached`, `git log` still printed both commits touching it.
   - With the rule in place and the file never committed, only the rule matches printed.
-- **`stat` check.** The database was in WAL mode with a connection held open.
+- **`stat` check.** A connection was held open while `stat` ran: in WAL mode, and separately with a write transaction in rollback-journal mode.
   - Under umask `022` the directory was `755`, and `app.db`, `app.db-wal` and `app.db-shm` were `644`.
   - Under umask `077` they were `700` and `600`.
   - With a write transaction held open in rollback-journal mode, `app.db-journal` was `644` under umask `022` and `600` under `077`, the same as `app.db`.
