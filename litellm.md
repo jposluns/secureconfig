@@ -410,3 +410,4 @@ This row carries the original probes and the new controls together. Service beha
 - [LiteLLM pass-through authorization: required allowed_passthrough_routes for non-admin callers](https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/auth/route_checks.py).
 - [LiteLLM premium metadata fields: allowed_passthrough_routes](https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/_types.py).
 - [LiteLLM metadata setter: Enterprise licence enforcement](https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/management_endpoints/common_utils.py).
+- [LiteLLM proxy CLI `--host` default `0.0.0.0` (pinned tag v1.102.1)](https://github.com/BerriAI/litellm/blob/v1.102.1/litellm/proxy/proxy_cli.py#L666)

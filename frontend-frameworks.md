@@ -1,6 +1,6 @@
 # Full-stack JS frameworks: SvelteKit, Nuxt, Vite
 
-SvelteKit, Nuxt, and Vite-based apps built by AI assistants inherit the same traps as [nextjs.md](nextjs.md): a server bind that defaults wide open, a proxy that has to be explicitly trusted before secure cookies and correct origins work, and a public-env prefix that ships anything given it straight to the browser. Each framework also has more than one server entry point (endpoints, server routes, load functions), and a check placed in only one of them leaves the others open, exactly as with Next.js layouts versus Server Actions.
+SvelteKit, Nuxt, and Vite-based apps built by AI assistants inherit the same traps as [nextjs.md](nextjs.md): a server bind that can default wide open (SvelteKit's Node adapter binds `0.0.0.0`, though Vite's dev server defaults to `localhost`), a proxy that has to be explicitly trusted before secure cookies and correct origins work, and a public-env prefix that ships anything given it straight to the browser. Each framework also has more than one server entry point (endpoints, server routes, load functions), and a check placed in only one of them leaves the others open, exactly as with Next.js layouts versus Server Actions.
 
 ## SvelteKit (`adapter-node`)
 
@@ -72,3 +72,5 @@ Behind a reverse proxy, confirm cookies still carry `Secure` and redirects use a
 - Nuxt server directory structure: https://nuxt.com/docs/4.x/directory-structure/server
 - Vite server options (`server.host`, `server.allowedHosts`): https://vite.dev/config/server-options
 - Vite CLI (`vite preview`): https://vite.dev/guide/cli
+- Vite resolves an unset `server.host` to `'localhost'` (pinned tag v8.3.1): https://github.com/vitejs/vite/blob/v8.3.1/packages/vite/src/node/utils.ts#L1010-L1016
+- SvelteKit adapter-node `host = env('HOST', '0.0.0.0')` (pinned tag @sveltejs/adapter-node@5.5.7): https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/index.js#L11

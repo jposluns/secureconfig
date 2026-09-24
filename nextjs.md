@@ -4,7 +4,7 @@ A Next.js app has many entry points: pages, layouts, Route Handlers (`app/**/rou
 
 ## 1. Bind privately; TLS comes from the platform or the proxy
 
-On Vercel and similar platforms the platform terminates TLS; nothing to configure ([paas.md](paas.md)). Self-hosted, `next start` listens on `0.0.0.0:3000` by default; bind to loopback and put a reverse proxy in front, which the Next.js self-hosting guide itself recommends, with TLS and headers per [nodejs.md](nodejs.md), [nginx.md](nginx.md), or [caddy.md](caddy.md).
+On Vercel and similar platforms the platform terminates TLS; nothing to configure ([paas.md](paas.md)). Self-hosted, `next start` listens on every interface on port 3000 by default (it passes no hostname to Node's `listen`, which binds `::` where IPv6 is available and `0.0.0.0` otherwise; its `-H` option's help text still says `(default: 0.0.0.0)`); bind to loopback and put a reverse proxy in front, which the Next.js self-hosting guide itself recommends, with TLS and headers per [nodejs.md](nodejs.md), [nginx.md](nginx.md), or [caddy.md](caddy.md).
 
 ```bash
 next build && next start -H 127.0.0.1 -p 3000    # or PORT=3000; PORT cannot be set in .env
@@ -188,3 +188,9 @@ fi
 - Better Auth introduction: https://better-auth.com/docs/introduction ; installation: https://better-auth.com/docs/installation ; options: https://better-auth.com/docs/reference/options ; Next.js integration: https://better-auth.com/docs/integrations/next ; two-factor plugin: https://better-auth.com/docs/plugins/2fa
 - Vercel Deployment Protection: https://vercel.com/docs/deployment-protection
 - Vercel changelog, protect production deployments for free on every plan (9 September 2026): https://vercel.com/changelog/protect-production-deployments-for-free-on-every-plan
+- Next.js `next start` declares `-H, --hostname` with help text only and no default value, unlike `--port`'s `.default(3000)` just above it, both under `.command('start')` (pinned tag v16.3.6): https://github.com/vercel/next.js/blob/v16.3.6/packages/next/src/bin/next.ts#L436-L458
+- Next.js `next start` copies `options.hostname` into `hostname` unchanged (pinned tag v16.3.6): https://github.com/vercel/next.js/blob/v16.3.6/packages/next/src/cli/next-start.ts#L44
+- Next.js `next start` passes that `hostname` to `startServer({ ... hostname, ... })` (pinned tag v16.3.6): https://github.com/vercel/next.js/blob/v16.3.6/packages/next/src/cli/next-start.ts#L84-L87
+- Next.js `startServer` destructures `hostname` from `serverOptions` with no default (pinned tag v16.3.6): https://github.com/vercel/next.js/blob/v16.3.6/packages/next/src/server/lib/start-server.ts#L187-L196
+- Next.js calls `server.listen(port, hostname)` (pinned tag v16.3.6): https://github.com/vercel/next.js/blob/v16.3.6/packages/next/src/server/lib/start-server.ts#L309
+- Node.js `server.listen()` without a host binds the unspecified IPv6 address `::` when available, otherwise `0.0.0.0`: https://github.com/nodejs/node/blob/v22.22.1/doc/api/net.md

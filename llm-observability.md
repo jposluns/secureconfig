@@ -266,3 +266,5 @@ that accepts spans with no credential at all.
 - OpenTelemetry Collector Contrib, pprof extension (default endpoint `localhost:1777`): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/443567a6a00d7cff8cae1432a6fef655d8698e94/extension/pprofextension/README.md
 - OpenTelemetry Collector Contrib, health-check extension (default endpoint `localhost:13133`): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/d922ffb299c6b9be026f97dd7d6a5f0f507efdeb/extension/healthcheckextension/README.md
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
+- Phoenix defaults `HOST = "0.0.0.0"`, `PORT = 6006`, `GRPC_PORT = 4317` (pinned tag arize-phoenix-v20.16.0): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.16.0/src/phoenix/config.py#L3111-L3117
+- Phoenix gRPC OTLP server binds `[::]` regardless of the HTTP host (pinned tag arize-phoenix-v20.16.0): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.16.0/src/phoenix/server/grpc_server.py#L107-L109
