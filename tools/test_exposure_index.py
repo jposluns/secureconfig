@@ -36,6 +36,29 @@ Allowlist: A1 an allowlisted pair passes; A2 a stale entry fails; A3 a redundant
   now mapped) fails as redundant.
 Other: O1 meta files are not scanned; O2 a missing index table fails closed with exit 2; O3 a port
   above 65535 and O4 port 0 are not mentions.
+Row shape: R1 a three-cell row fails; R2 an empty Default credential cell fails; R3 the old
+  three-column header fails closed with exit 2; R4 an empty Port cell fails; R5 a three-cell
+  separator row fails; R6 a blank-port three-cell row fails; R7 a row opening `||` (a blank Port
+  cell) fails; R8 a separator with a fifth cell fails; R9 a Port cell with no number and R10 a
+  second separator row mid-table fail; R11 a digit inside other text (`version9090`) is not a port
+  and maps nothing; R12 a number above 65535 fails; R13 a header with an extra column fails
+  closed; R14 a missing separator fails; R15 an indented row fails and later rows are still
+  checked; R16 a version label is not a Port cell; R17 a descending range fails; R18 a row without
+  a leading pipe fails and later rows are still checked; R19 an escaped pipe is content and the row
+  maps; R20 a comment-only and R21 a zero-width credential cell count as empty; R22 prose directly
+  under the table is a table row and fails; R23-R25 an entity (`&nbsp;`, `&NonBreakingSpace;`) or
+  raw HTML in a cell fails; R26 an empty link is an empty cell; R27 a non-ASCII character in a
+  cell fails; R28 a no-break-space line does not end the table; R29 a heading directly under the
+  table is a malformed row; R30-R34 an empty link with a parenthesized target, escaped backticks,
+  math, double-backtick code and an image each fail the cell grammar; R35 HTML-like text inside
+  single-backtick code is content and the row maps; R36 a leading zero in a Port cell fails;
+  R37-R38 a non-ASCII character inside code or link text fails; R39 a non-ASCII digit in a Port
+  cell fails and maps nothing; R40 code that looks like a link target counts as text; R41-R43
+  `$x$`, a parenthesized target and a backslash in code fail; R44 `>` is plain text; R45 a table
+  inside an HTML comment and R46 inside a fence fail; R47 a repeated header fails; R48 a citation
+  inside a code span is not a citation; R49-R52 `<`, a list item or blockquote directly above, or a
+  fence marker above the header fails; R53 a link whose text is only spaces fails; R54 YAML front
+  matter wrapping the table fails; R55 a math block opened above the table fails.
 """
 import shutil
 import subprocess
@@ -44,12 +67,13 @@ import tempfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-INDEX = ("# Exposure index\n\n| Port | May be | Documented in |\n| --- | --- | --- |\n"
-         "| 80, 443 | Proxy | [a.md](a.md) |\n"
-         "| 8000-8010 | A narrow range | [a.md](a.md) |\n"
-         "| 9090 | Prometheus | [a.md](a.md) |\n"
-         "| 10000 to 10100 | A 101-port range | [a.md](a.md) |\n"
-         "| 20000 to 20101 | A 102-port worker range | [ray.md](ray.md#ports) |\n")
+INDEX = ("# Exposure index\n\n| Port | May be | Default credential | Documented in |\n"
+         "| --- | --- | --- | --- |\n"
+         "| 80, 443 | Proxy | not stated | [a.md](a.md) |\n"
+         "| 8000-8010 | A narrow range | not stated | [a.md](a.md) |\n"
+         "| 9090 | Prometheus | No authentication by default | [a.md](a.md) |\n"
+         "| 10000 to 10100 | A 101-port range | not stated | [a.md](a.md) |\n"
+         "| 20000 to 20101 | A 102-port worker range | not stated | [ray.md](ray.md#ports) |\n")
 
 
 def run(files, allow=None, index=INDEX):
@@ -167,7 +191,7 @@ def main() -> int:
     rc, out = run(guide("It listens on ports 80,443 by default."))
     check(f"M6: a compact plural list of mapped ports passes (rc={rc}, out={out!r})", rc == 0)
     rc, out = run({"b.md": "# B\n\nThe API uses port 30005.\n"},
-                  index=INDEX + "| 30000\N{EN DASH}30010 | An en-dash range | [a.md](a.md) |\n")
+                  index=INDEX + "| 30000\N{EN DASH}30010 | An en-dash range | not stated | [a.md](a.md) |\n")
     check(f"M7: an en-dash index range maps its ports (rc={rc}, out={out!r})", rc == 0)
 
     rc, out = run(guide("It connects out to port 7777."), allow="a.md 7777  # outbound\n")
@@ -189,7 +213,159 @@ def main() -> int:
     rc, out = run(guide("It listens on port 0 until configured."))
     check(f"O4: port 0 is not a port mention (rc={rc}, out={out!r})", rc == 0)
 
-    total = len(DETECT) + len(PRECISE) + 7 + 3 + 4
+    rc, out = run(guide("port 9090"), index=INDEX + "| 7777 | Three cells | [a.md](a.md) |\n")
+    check(f"R1: a row without the Default credential cell fails (rc={rc}, out={out!r})",
+          rc == 1 and "row `7777` has 3 cells" in out)
+    rc, out = run(guide("port 9090"), index=INDEX + "| 7777 | Empty cell |  | [a.md](a.md) |\n")
+    check(f"R2: an empty Default credential cell fails (rc={rc}, out={out!r})",
+          rc == 1 and "row `7777` has an empty Default credential cell" in out)
+    rc, out = run(guide("port 9090"), index=INDEX.replace("| Default credential ", "", 1))
+    check(f"R3: the old three-column header fails closed (rc={rc}, out={out!r})", rc == 2)
+    rc, out = run(guide("port 9090"), index=INDEX + "|  | Blank port | not stated | [a.md](a.md) |\n")
+    check(f"R4: an empty Port cell fails (rc={rc}, out={out!r})",
+          rc == 1 and "has an empty Port cell" in out)
+    rc, out = run(guide("port 9090"),
+                  index=INDEX.replace("| --- | --- | --- | --- |", "| --- | --- | --- |", 1))
+    check(f"R5: a three-cell separator row fails (rc={rc}, out={out!r})",
+          rc == 1 and "is not a 4-cell separator row" in out)
+    rc, out = run(guide("port 9090"), index=INDEX + "|  | Three cells | [a.md](a.md) |\n")
+    check(f"R6: a blank-port three-cell row fails (rc={rc}, out={out!r})",
+          rc == 1 and "has an empty Port cell" in out)
+    rc, out = run(guide("port 9090"), index=INDEX + "|| 7777 | not stated | [a.md](a.md) | x |\n")
+    check(f"R7: a row opening with two pipes has a blank Port cell (rc={rc}, out={out!r})",
+          rc == 1 and "has an empty Port cell" in out)
+    rc, out = run(guide("port 9090"),
+                  index=INDEX.replace("| --- | --- | --- | --- |", "| --- | --- | --- | --- ||", 1))
+    check(f"R8: a separator row with a fifth cell fails (rc={rc}, out={out!r})",
+          rc == 1 and "is not a 4-cell separator row" in out)
+    bad_port = "has a Port cell that is not a list of ports or ranges"
+    rc, out = run(guide("port 9090"), index=INDEX + "| TBD | Unknown | not stated | [a.md](a.md) |\n")
+    check(f"R9: a Port cell with no number fails (rc={rc}, out={out!r})",
+          rc == 1 and bad_port in out)
+    rc, out = run(guide("port 9090"), index=INDEX + "| --- | --- | --- | --- |\n")
+    check(f"R10: a second separator row mid-table fails (rc={rc}, out={out!r})",
+          rc == 1 and "row `---` has" in out)
+    rc, out = run(guide("port 9090"), index=INDEX.replace("| 9090 |", "| version9090 |", 1))
+    check(f"R11: a digit inside other text is not a port, and maps nothing (rc={rc}, out={out!r})",
+          rc == 1 and bad_port in out and "names port 9090" in out)
+    rc, out = run(guide("port 9090"),
+                  index=INDEX + "| 99999 | Too high | not stated | [a.md](a.md) |\n")
+    check(f"R12: a number above 65535 in the Port cell fails (rc={rc}, out={out!r})",
+          rc == 1 and bad_port in out)
+    rc, out = run(guide("port 9090"),
+                  index=INDEX.replace("| Documented in |", "| Documented in | EXTRA |", 1))
+    check(f"R13: a header with an extra column fails closed (rc={rc}, out={out!r})",
+          rc == 2)
+    rc, out = run(guide("port 9090"), index=INDEX.replace("| --- | --- | --- | --- |\n", "", 1))
+    check(f"R14: a header with no separator row fails (rc={rc}, out={out!r})",
+          rc == 1 and "is not a 4-cell separator row" in out)
+    rc, out = run(guide("port 9090"),
+                  index=INDEX + " | 7777 | Indented |  | [a.md](a.md) |\n| 7778 | Three | [a.md](a.md) |\n")
+    check(f"R15: an indented row fails, and rows after it are still checked (rc={rc}, out={out!r})",
+          rc == 1 and "is indented" in out and "row `7778`" in out)
+    rc, out = run(guide("port 9090"), index=INDEX + "| v2 | x | not stated | [a.md](a.md) |\n")
+    check(f"R16: a version label is not a Port cell (rc={rc}, out={out!r})", rc == 1 and bad_port in out)
+    rc, out = run(guide("port 9090"),
+                  index=INDEX + "| 9400 to 9300 | Descending | not stated | [a.md](a.md) |\n")
+    check(f"R17: a descending range fails (rc={rc}, out={out!r})", rc == 1 and bad_port in out)
+    rc, out = run(guide("port 9090"),
+                  index=INDEX + "60001 | No leading pipe | not stated | [a.md](a.md) |\n"
+                  "| 60002 | Bad row |  | [a.md](a.md) |\n")
+    check(f"R18: a row without a leading pipe fails, and rows after it are checked (rc={rc}, out={out!r})",
+          rc == 1 and "does not start with" in out
+          and "row `60002` has an empty Default credential cell" in out)
+    rc, out = run(guide("It listens on port 7777."),
+                  index=INDEX + "| 7777 | A \\| B | not stated | [a.md](a.md) |\n")
+    check(f"R19: an escaped pipe is cell content, and the row maps (rc={rc}, out={out!r})", rc == 0)
+    rc, out = run(guide("port 9090"), index=INDEX + "| 7777 | Hidden | <!-- --> | [a.md](a.md) |\n")
+    check(f"R20: a comment-only credential cell fails (rc={rc}, out={out!r})",
+          rc == 1 and "outside the table's cell grammar" in out)
+    rc, out = run(guide("port 9090"),
+                  index=INDEX + "| 7777 | Hidden | \N{ZERO WIDTH SPACE} | [a.md](a.md) |\n")
+    check(f"R21: a zero-width credential cell fails (rc={rc}, out={out!r})",
+          rc == 1 and "outside printable ASCII" in out)
+    rc, out = run(guide("port 9090"), index=INDEX + "See the guides for more.\n")
+    check(f"R22: prose directly under the table is a table row and fails (rc={rc}, out={out!r})",
+          rc == 1 and "does not start with" in out)
+    entity = "outside the table's cell grammar"
+    for cid, cell in (("R23", "&nbsp;"), ("R24", "&NonBreakingSpace;"), ("R25", "<span></span>")):
+        rc, out = run(guide("port 9090"), index=INDEX + f"| 7777 | Svc | {cell} | [a.md](a.md) |\n")
+        check(f"{cid}: {cell!r} in a cell fails (rc={rc}, out={out!r})", rc == 1 and entity in out)
+    rc, out = run(guide("port 9090"), index=INDEX + "| 7777 | Svc | not stated | [](a.md) |\n")
+    check(f"R26: an empty link fails (rc={rc}, out={out!r})",
+          rc == 1 and "outside the table's cell grammar" in out)
+    rc, out = run(guide("port 9090"),
+                  index=INDEX + "| 7777 | Svc | not\N{ZERO WIDTH SPACE} stated | [a.md](a.md) |\n")
+    check(f"R27: a non-ASCII character in a cell fails (rc={rc}, out={out!r})",
+          rc == 1 and "outside printable ASCII" in out)
+    rc, out = run(guide("port 9090"),
+                  index=INDEX + "\N{NO-BREAK SPACE}\n| 99999 | Bad port | not stated | [a.md](a.md) |\n")
+    check(f"R28: a no-break-space line does not end the table (rc={rc}, out={out!r})",
+          rc == 1 and "is indented" in out and bad_port in out)
+    rc, out = run(guide("port 9090"), index=INDEX + "## Heading\n")
+    check(f"R29: a heading directly under the table is a malformed row (rc={rc}, out={out!r})",
+          rc == 1 and "does not start with" in out)
+    for cid, cell in (("R30", "[](a(b).md)"), ("R31", "[](\\`)&nbsp;[](\\`)"), ("R32", "$\\phantom{x}$"),
+                      ("R33", "``a < b``"), ("R34", "![x](a.md)")):
+        rc, out = run(guide("port 9090"), index=INDEX + f"| 7777 | Svc | {cell} | [a.md](a.md) |\n")
+        check(f"{cid}: {cell!r} in a cell fails (rc={rc}, out={out!r})", rc == 1 and "outside the table's cell grammar" in out)
+    rc, out = run(guide("It listens on port 7777."),
+                  index=INDEX + "| 7777 | Svc | `<none>` and `a&amp;b` | [a.md](a.md) |\n")
+    check(f"R35: HTML-like text inside single-backtick code is content, and maps (rc={rc}, out={out!r})",
+          rc == 0)
+    rc, out = run(guide("port 9090"), index=INDEX + "| 00443 | Zero | not stated | [a.md](a.md) |\n")
+    check(f"R36: a leading zero in the Port cell fails (rc={rc}, out={out!r})", rc == 1 and bad_port in out)
+    ascii_msg = "outside printable ASCII"
+    for cid, cell in (("R37", "`a\N{ESCAPE}`"), ("R38", "[a\N{ZERO WIDTH SPACE}](a.md)")):
+        rc, out = run(guide("port 9090"), index=INDEX + f"| 7777 | Svc | {cell} | [a.md](a.md) |\n")
+        check(f"{cid}: a non-ASCII character inside code or link text fails (rc={rc}, out={out!r})",
+              rc == 1 and ascii_msg in out)
+    rc, out = run(guide("It listens on port 81."),
+                  index=INDEX + "| 8\N{ARABIC-INDIC DIGIT ONE} | Svc | not stated | [a.md](a.md) |\n")
+    check(f"R39: a non-ASCII digit in the Port cell fails and maps nothing (rc={rc}, out={out!r})",
+          rc == 1 and "names port 81" in out)
+    rc, out = run(guide("It listens on port 7777."),
+                  index=INDEX + "| 7777 | Svc | `](password)` | [a.md](a.md) |\n")
+    check(f"R40: code that looks like a link target still counts as text (rc={rc}, out={out!r})", rc == 0)
+    for cid, cell in (("R41", "$x$"), ("R42", "[a](b(c))"), ("R43", "`a\\b`")):
+        rc, out = run(guide("port 9090"), index=INDEX + f"| 7777 | Svc | {cell} | [a.md](a.md) |\n")
+        check(f"{cid}: {cell!r} fails the cell grammar (rc={rc}, out={out!r})",
+              rc == 1 and "outside the table's cell grammar" in out)
+    rc, out = run(guide("It listens on port 7777."), index=INDEX + "| 7777 | A > B | not stated | [a.md](a.md) |\n")
+    check(f"R44: `>` is plain text (rc={rc}, out={out!r})", rc == 0)
+    rc, out = run(guide("It listens on port 7777."), index="<!--\n" + INDEX + "| 7777 | Svc | not stated | [a.md](a.md) |\n\n-->\n")
+    check(f"R45: a table inside an HTML comment fails (rc={rc}, out={out!r})",
+          rc == 1 and "puts `<` above the table" in out)
+    rc, out = run(guide("It listens on port 7777."), index="```\n" + INDEX + "| 7777 | Svc | not stated | [a.md](a.md) |\n```\n")
+    check(f"R46: a table inside a fenced block fails (rc={rc}, out={out!r})",
+          rc == 1 and "puts a code-fence marker above the table" in out)
+    rc, out = run(guide("port 9090"), index=INDEX + "\n" + INDEX)
+    check(f"R47: a second copy of the header fails (rc={rc}, out={out!r})",
+          rc == 1 and "repeats the table header" in out)
+    rc, out = run({"ray.md": "# Ray\n\nWorkers use port 20050.\n", "b.md": "# B\n\nThe proxy uses port 20050.\n"},
+                  index=INDEX.replace("[ray.md](ray.md#ports)", "[ray.md](ray.md#ports) `[b.md](b.md)`", 1))
+    check(f"R48: a citation inside a code span is not a citation (rc={rc}, out={out!r})",
+          rc == 1 and "b.md:3 names port 20050" in out)
+    row7 = "| 7777 | Svc | not stated | [a.md](a.md) |\n"
+    for cid, above, msg in (("R49", "- <!--\n\n", "puts `<` above the table"),
+                            ("R50", "- note above the table\n", "must have a blank line directly above it"),
+                            ("R51", "> note above the table\n", "must have a blank line directly above it"),
+                            ("R52", "- example\n  ```\n  x\n```\n\n", "puts a code-fence marker above the table")):
+        rc, out = run(guide("It listens on port 7777."), index=above + INDEX.split("\n\n", 1)[1] + row7)
+        check(f"{cid}: {above!r} above the header fails (rc={rc}, out={out!r})", rc == 1 and msg in out)
+    rc, out = run({"ray.md": "# Ray\n\nWorkers use port 20050.\n", "b.md": "# B\n\nThe proxy uses port 20050.\n"},
+                  index=INDEX.replace("[ray.md](ray.md#ports)", "[ray.md](ray.md#ports)[ ](b.md)", 1))
+    check(f"R53: a link whose text is only spaces fails (rc={rc}, out={out!r})",
+          rc == 1 and "outside the table's cell grammar" in out)
+    rc, out = run(guide("It listens on port 7777."),
+                  index="---\ntitle: x\n\n" + INDEX.split("\n\n", 1)[1] + row7 + "\n---\n\nText.\n")
+    check(f"R54: YAML front matter wrapping the table fails (rc={rc}, out={out!r})",
+          rc == 1 and "must open the page with a `# ` heading" in out)
+    rc, out = run(guide("It listens on port 7777."), index="# X\n\n$$\n\n" + INDEX.split("\n\n", 1)[1] + row7)
+    check(f"R55: a math block opened above the table fails (rc={rc}, out={out!r})",
+          rc == 1 and "puts `$` above the table" in out)
+
+    total = len(DETECT) + len(PRECISE) + 7 + 3 + 4 + 55
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")
