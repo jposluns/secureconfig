@@ -11,6 +11,13 @@ with the merged pull request is therefore an authoring obligation, not an enforc
 
 ## 2026-09-24
 
+- Guarded secret reads, batch 1 (#298): six `read -s` prompts in four guides now meet rule 7's guarded-read exception.
+  - Each block turns off tracing and allexport (`set +x +a`) before the read and clears the variable with `unset -n` then `unset -v`. If either fails, as it does for a readonly name, the block refuses with exit 2. The four reads that lacked `|| exit 2` now have it.
+  - `code-server.md`: the session-cookie probe now rejects any control character in the cookie, not only a carriage return.
+  - `gitops-controllers.md`: the Argo CD token probe now refuses an empty or control-character token. The Flux `generic-hmac` probe now runs in its own subshell and refuses an empty key; the subshell's exit discards the key and the signature, so the trailing `unset` is gone. The key still reaches `openssl` on its command line, as the block's comment says.
+  - `haproxy.md`: the admin-password and stats-password probes now refuse an empty or control-character password. The admin probe escapes the password in place instead of copying it into a second variable, because the exception allows only one.
+  - `surrealdb.md`: the system-user JWT probe, whose existing pattern check already refuses an empty or control-character token.
+  - The six steps stay REASONED or UNVERIFIED, so no verification status changed. Row 1.126 stays open for the remaining sites.
 - `CONTRIBUTING.md` (#296), carrying the maintainer's rulings of 2026-09-24.
   - Rule 5 now requires two things. A review brief for a demonstrated step states the exposed run, the fixed run and what each observed. Adding a demonstration run means rereading the guide's run-provenance sentence. Both lines were proposed by guardrails.
   - Rule 7 now allows one exception to its no-named-variable rule. `read` cannot target the positional parameters, so a key read with `read -r -s` may sit in a single subshell-local variable, if tracing and allexport are off (`set +x +a`), the variable is cleared first (`unset -n` then `unset -v`, failing closed), and it is never exported. A secret the reader already holds in an environment variable is not covered.
