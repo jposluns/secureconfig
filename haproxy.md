@@ -122,6 +122,7 @@ sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
   set +x +a                                     # never trace or export the credential read below
   { unset -n pw && unset -v pw; } 2>/dev/null ||
     { echo 'a readonly pw is set in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
   shift
@@ -170,6 +171,7 @@ rejected at TLS, a trusted one admitted with `--cert`/`--key`, server verificati
   set +x +a
   { unset -n sp && unset -v sp; } 2>/dev/null ||
     { echo 'a readonly sp is set in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
   shift
