@@ -322,9 +322,9 @@ closed port, and it stopped when the control was closed. It refused to run for t
 zeros and colons (measured: `::`, `::0`, `0::`, `0000::`, `0:0:0:0:0:0:0:0`), because those reach
 the probing host itself or are not addresses, and any IPv6 value containing a dot (measured:
 `::ffff:0.0.0.0`, `::ffff:127.0.0.1`, `::0.0.0.0`), asking for the IPv4 address instead. It does not
-refuse every value that reaches the probing host: loopback addresses and hex spellings such as
-`::ffff:0:0` and `::ffff:7f00:1` passed and connected to a loopback listener, so give the service's
-public address. Any other value with two or
+refuse every value that reaches the probing host: loopback addresses pass, and hex spellings such as
+`::ffff:0:0` and `::ffff:7f00:1` passed and connected to a listener bound to 127.0.0.1, so give the
+service's public address. Any other value with two or
 more colons, made only of hex digits and colons, is passed on as IPv6, so a port appended without brackets changes the address: `2001:db8::1:22` is still a valid
 address and was probed as that different address, while `2001:db8::1:10000` and `dead::beef::` are
 not, and each failed the name lookup at the control and stopped. A "connected" on a port you did not
