@@ -11,18 +11,26 @@ carried over.
 `surreal start` takes `--user`/`-u` and `--pass`/`-p` (also `SURREAL_USER`/`SURREAL_PASS`) to set
 "the initial database root user, applied only if no other root user exists": they initialize that user when
 none exists, and do not disable authentication or rotate an existing root password. Pass the password through
-the environment or a prompt, never argv (which reaches `ps` and shell history):
+the environment, never argv (which reaches `ps` and shell history). `surreal start` has no stdin input for it
+(checked at v3.2.4), so the block prompts for it and hands it to that one command as a prefix assignment,
+never exported:
 
 ```bash
 (
-  set +x
-  IFS= read -r -s -p 'Initial root password: ' SURREAL_PASS || exit 2
+  set +x +a
+  { unset -n pw SURREAL_USER SURREAL_PASS && unset -v pw SURREAL_USER SURREAL_PASS; } 2>/dev/null ||
+    { echo 'cannot clear pw, SURREAL_USER or SURREAL_PASS in this shell; not starting'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not starting'; exit 2; }
+  IFS= read -r -s -p 'Initial root password: ' pw < /dev/tty || exit 2
   printf '\n'
-  [ -n "$SURREAL_PASS" ] || exit 2
-  export SURREAL_PASS
-  SURREAL_USER=root surreal start rocksdb:/data/mydb.db --bind 127.0.0.1:8000
+  [ -n "$pw" ] || exit 2
+  SURREAL_USER=root SURREAL_PASS="$pw" surreal start rocksdb:/data/mydb.db --bind 127.0.0.1:8000
 )
 ```
+
+This moves the password out of argv, not out of reach: it stays readable through `/proc/<pid>/environ` by
+the same user and by root for the server's whole lifetime, as it does through the environment of any
+process that inherits it. Treat it as exposed to that account and to root while the server runs.
 
 The `--unauthenticated` flag (`SURREAL_UNAUTHENTICATED`) allows unauthenticated access instead; a
 guest connecting under it gets permissions equivalent to the `OWNER` role. Do not run it, or carry it
@@ -144,6 +152,7 @@ TLS terminates with normal validation (a trusted CA for private PKI); never use 
 ## Sources (checked September 2026)
 
 - SurrealDB CLI, `surreal start`: https://surrealdb.com/docs/reference/cli/surrealdb-cli/commands/start
+- SurrealDB 3.2.4 `surreal start` root password: `--password`/`--pass`/`-p` or `SURREAL_PASS`, with no stdin form (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/cli/start.rs#L148-L162
 - SurrealDB CLI, `surreal sql`: https://surrealdb.com/docs/reference/cli/surrealdb-cli/commands/sql
 - SurrealDB security overview: https://surrealdb.com/docs/learn/security
 - SurrealDB authentication overview: https://surrealdb.com/docs/learn/security/authentication/overview
