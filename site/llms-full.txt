@@ -1348,7 +1348,7 @@ See [audit hashing and exemptions](https://developer.hashicorp.com/vault/docs/au
 The initial root token has unlimited access and no expiry, so it is a bootstrap credential, not an
 operating one. Retire it in order: enable an audit device, configure an auth method and write scoped
 admin policies, then actually log in as a non-root admin and confirm that identity works, and only then
-revoke the root token from its own session with `vault token revoke -self`. Log in through the auth method, not with a token made by
+revoke the root token from its own session with `vault token revoke -self`. Log in through the auth method, not with a non-orphan token made by
 `vault token create` while the root token is selected: that token is the root token's child and is
 revoked with it (observed on the loopback run in Verify). Confirm the revocation (the
 Verify section does), and delete any token-helper copy left in `~/.vault-token`. Keep no live root
@@ -1537,9 +1537,12 @@ checksum verified against HashiCorp's published SHA256SUMS: a single Raft node r
 configuration unchanged apart from addresses and paths, with the API on 127.0.0.1:8200, the cluster
 listener on 127.0.0.1:8201, a private test CA, a file audit device, and the section 2 and section 7
 policies and AppRole role with `127.0.0.1/32` as the CIDR. Each block ran as printed, with only its
-placeholders substituted. What that setup cannot show is marked **REASONED** where it occurs: HA
-standbys, a second independent audit device, renewal up to the explicit ceiling, the recipient's own
-validation, and real network paths and firewalls; backlog row 1.114 and VAULT-LIVE-1 below track
+placeholders substituted, except where a step says otherwise. Exposed states ran on the same node
+with the setting under test changed: the listener's anonymous-access settings set to `true`, a broad
+policy, and AppRole roles and a delivery policy without the limits. What that setup cannot show is
+marked **REASONED** where it occurs: HA standbys, a second independent audit device, the recipient's
+own validation, a wildcard bind (the host forbids binding every interface), `ss` run as root, and real
+network paths and firewalls; backlog row 1.114 and VAULT-LIVE-1 below track
 them. The authoring host has no `sudo`, so the first block's `sudo ss -tlnp` ran through a stand-in
 that runs `ss` without it; as the same account, `ss` still showed the Vault process.
 
@@ -1594,13 +1597,15 @@ and read the example AppRole:
 
 Interpret the checks separately; the block's final exit status does not summarize them:
 
-- **Bind and TLS (demonstrated on one node; the firewall REASONED):** read the whole socket table. Confirm `8200` is bound to the intended
+- **Bind and TLS (the fixed bind demonstrated on one node; a wildcard bind, `ss` as root and the
+  firewall REASONED):** read the whole socket table. Confirm `8200` is bound to the intended
   private address and `8201` to the cluster address, with nothing unexpected. A wildcard or unintended
   listener is a finding. The TLS health request must reach the intended server with certificate
   verification enabled. `ss` shows the bind, not the firewall; "only between nodes" is a firewall
   property. Confirm it with firewall rules and the permitted/forbidden-source probes below.
   See the [listener reference](https://developer.hashicorp.com/vault/docs/configuration/listener/tcp).
-- **Server state (demonstrated for `501`, `503` and `200`):** status should report `initialized: true` and `sealed: false`.
+- **Server state (demonstrated for `501`, `503` and `200`; the standby and removed-node codes
+  REASONED):** status should report `initialized: true` and `sealed: false`.
   Status exit code `2` means sealed; an unsealed standby returns `0`; `1` means an error.
   Health codes `200` active, `429` standby, `501` uninitialized, and `503` sealed are common
   examples, not an exhaustive list. Current documentation also includes `474` for an unhealthy
@@ -1621,8 +1626,8 @@ Interpret the checks separately; the block's final exit status does not summariz
   [audit listing](https://developer.hashicorp.com/vault/docs/commands/audit/list), and the
   [audit schema](https://developer.hashicorp.com/vault/docs/audit/schema).
 - **Root revocation (demonstrated):** the scoped-admin token lookup is the positive control. Log that
-  admin in through an auth method: a token made with `vault token create` while the root token is
-  selected is the root token's child and is revoked with it.
+  admin in through an auth method: a non-orphan token made with `vault token create` while the root
+  token is selected is the root token's child and is revoked with it.
   Repeat the guarded block with the revoked initial root credential still selected and judge its
   token-lookup results: Vault must return permission-denied or invalid-token errors. Other
   authenticated commands in that repeat will also fail. A successful root-token lookup is the
@@ -1646,7 +1651,9 @@ device, and the JSON token lookup's `request_id` matched two audit entries, the 
 response. The role read returned every section 7 value, with durations in seconds. After `vault token
 revoke -self`, the block with the revoked root token selected got `403` `invalid token` for the audit
 list, both token lookups and the role read. A scoped admin created as a child of the root token lost
-access with it, while an orphan token and a userpass login kept working.
+access with it, while an orphan token and a userpass login kept working. In the exposed states, before
+any audit device was enabled the audit list printed `No audit devices are enabled.`, and before
+revocation the root token's lookup succeeded with policy `root` and `ttl` `0s`.
 
 **Application ACLs and authenticated monitoring (demonstrated on loopback):** for API authentication, provision an
 owner-readable header file containing the selected identity's `X-Vault-Token` header through a
@@ -1708,7 +1715,9 @@ running the paired requests. Do not use a load balancer that can select a standb
 On the loopback run, every row gave its fixed outcome: anonymous `403` throughout; the payments token
 `200` on its own secret and `403` on the inventory secret, where the fixture reader got `200`; the
 collector `200` on `sys/metrics` and `403` on `sys/pprof/` and on the payments secret; the profiling
-operator `200` on `sys/pprof/`.
+operator `200` on `sys/pprof/`. With the listener's two anonymous-access settings set to `true`,
+anonymous requests got `200` on `sys/metrics` and `sys/pprof/`, and a token with a broad `kv/data/*`
+read policy got `200` on the inventory secret: the exposed outcomes.
 
 **REASONED (no HA cluster here):** authenticated metrics and profiling use local-only HTTP handlers. An ordinary HA standby returns
 `307` to the active node's advertised API address when a leader is available; that redirect is not
@@ -1774,13 +1783,16 @@ another test:
 
 - **SecretID use limit (demonstrated):** a fresh SecretID succeeds once from an allowed source.
   An immediate repeat with the same request file must fail with a Vault authentication error;
-  another freshly delivered SecretID must succeed. Successful reuse is the exposed state.
-- **SecretID expiry (demonstrated):** leave a separate SecretID unused for more than a minute beyond
-  its ten-minute lifetime, then submit its login request. It must fail while a fresh SecretID succeeds
+  another freshly delivered SecretID must succeed. Successful reuse is the exposed state. On the loopback
+  run, the section 7 role refused the reuse with `400`, and a role with `secret_id_num_uses=0` accepted
+  the same SecretID twice.
+- **SecretID expiry (demonstrated):** leave a separate SecretID unused for more than two minutes
+  beyond its ten-minute lifetime, then submit its login request. It must fail while a fresh SecretID succeeds
   from the same source. AppRole deletes expired SecretIDs in a tidy that runs once a minute, and until
   then an expired SecretID still logs in: on the loopback run, SecretIDs 10 seconds past their TTL
   logged in, while one 70 seconds past it was refused with `invalid role or secret ID`. Successful
-  login more than a minute after expiry is the exposed state.
+  login more than two minutes after expiry is the exposed state; the margin allows for a tidy that is
+  only nominally once a minute.
 - **Source bounds (demonstrated with a second loopback address):** try a fresh SecretID from outside the configured CIDR but within
   a test network that can reach Vault. Require authentication rejection, paired with successful
   login using fresh credentials from the allowed CIDR. Test the resulting token's payments read
@@ -1789,8 +1801,10 @@ another test:
   `127.0.0.1/32` as the CIDR, a login sent from 127.0.0.2 (the same JSON request through
   `curl --interface`, because the block's CLI cannot choose its source address) was refused with
   `source address "127.0.0.2" unauthorized by CIDR restrictions on the role`, a login from 127.0.0.1
-  succeeded, and its token read the payments secret with `200` from 127.0.0.1 and `403` from 127.0.0.2.
-- **Token lifetime and use budget (demonstrated; the renewal ceiling REASONED):** the login response
+  succeeded, and its token read the payments secret with `200` from 127.0.0.1 and `403` from 127.0.0.2 (that read
+  also went through `curl --interface`, not the block). With no CIDR bound on the role, a login from
+  127.0.0.2 succeeded with `200`.
+- **Token lifetime, use budget and renewal ceiling (demonstrated):** the login response
   must show the intended `token_policies` and a `lease_duration` of at most 300 seconds, and its token
   must begin `hvs.`, the service-token prefix (the CLI's JSON output has no token-type field). Using the guarded payments
   GET, require success before expiry and `403` after the issued lease expires, paired with `200`
@@ -1802,7 +1816,10 @@ another test:
   default policy and does not grant that permission. On the loopback run, the login returned
   `token_policies` `payments-read` and `lease_duration` `300` with an `hvs.` token; a read returned
   `200` before the TTL and `403` ten seconds after it, while a fresh token got `200`; and 100 reads
-  returned `200` before read 101 got `403`.
+  returned `200` before read 101 got `403`; with `token_num_uses=0`, all 101 reads returned `200`. With
+  short test durations (`token_ttl=10s`, `token_explicit_max_ttl=30s`), a token renewed every 8 seconds
+  was refused with `403` at about 43 seconds, while the same schedule without an explicit ceiling kept
+  a token working.
 
 The discriminators come from the
 [AppRole credential and role parameters](https://developer.hashicorp.com/vault/api-docs/auth/approle),
@@ -1810,8 +1827,9 @@ The discriminators come from the
 [token lifetime rules](https://developer.hashicorp.com/vault/docs/concepts/tokens).
 
 **Mandatory wrapping (demonstrated on loopback):** select the deployment identity, not an administrator or root token. In an isolated test deployment,
-the first two requests below must be rejected for their wrapping settings; inspect Vault's errors
-rather than interpreting every nonzero exit as success. The sixty-second request is the matched
+the first two requests below must be rejected for their wrapping settings. Vault's error, `403`
+`permission denied`, does not name the setting, so rely on the controls: the sixty-second positive
+control and the exposed comparison below. The sixty-second request is the matched
 positive control and must return wrapping information. Unexpectedly successful negative requests
 are findings; their credential-bearing output is discarded.
 
@@ -1855,7 +1873,9 @@ with a longer wrapping TTL. That is the exposed comparison. A failure of the six
 control leaves the result inconclusive. On the loopback run, both negative requests were refused
 with `403` `permission denied`, which does not name the wrapping setting, so the positive control is
 what separates a wrapping refusal from a missing permission; the sixty-second request returned
-`wrapping_token_ttl` `1m` and `wrapping_token_creation_path` `auth/approle/role/payments/secret-id`.
+`wrapping_token_ttl` `1m` and `wrapping_token_creation_path` `auth/approle/role/payments/secret-id`. With a delivery policy that sets
+neither wrapping TTL, the same kind of identity's unwrapped request returned the SecretID fields and a
+sixty-one-second request succeeded: the exposed comparison.
 See [required wrapping TTLs](https://developer.hashicorp.com/vault/docs/concepts/policies#required-response-wrapping-ttls)
 and [wrapping requests](https://developer.hashicorp.com/vault/docs/concepts/response-wrapping).
 
@@ -1902,7 +1922,7 @@ an unexpected creation path must be rejected by the recipient before unwrapping;
 is a recipient-validation finding even though Vault itself recognizes the token. On the loopback run,
 the lookup returned `creation_path` `auth/approle/role/payments/secret-id`, `creation_ttl` `60` and the
 creation time, and a lookup of the consumed token failed with `wrapping token is not valid or does
-not exist`.
+not exist`. A wrapping token looked up three seconds after its two-second TTL failed the same way.
 See [wrapping lookup fields](https://developer.hashicorp.com/vault/api-docs/system/wrapping-lookup)
 and [recipient validation](https://developer.hashicorp.com/vault/docs/concepts/response-wrapping).
 
@@ -1989,7 +2009,7 @@ See [production firewall guidance](https://developer.hashicorp.com/vault/docs/co
 
 | Backlog ID | Status | Required demonstration |
 | --- | --- | --- |
-| VAULT-LIVE-1 | OPEN - REASONED parts only; backlog row 1.114 | In an authorized isolated Vault deployment, demonstrate what a single loopback node cannot: HA standby behavior for the monitoring checks (redirects and local-only handlers), a second independent audit device and delivery to both destinations, renewal through the explicit token lifetime ceiling, recipient-side rejection of an unexpected creation path, and the external isolation probe from real permitted and forbidden sources against 8200 and 8201. Record the Vault version and edition, effective settings, requests, errors, and matched positive controls without credentials. |
+| VAULT-LIVE-1 | OPEN - REASONED parts only; backlog row 1.114 | In an authorized isolated Vault deployment, demonstrate what a single loopback node cannot: HA standby behavior for the monitoring checks (redirects and local-only handlers), a second independent audit device and delivery to both destinations, a wildcard bind and `ss` run as root, recipient-side rejection of an unexpected creation path, and the external isolation probe from real permitted and forbidden sources against 8200 and 8201. Record the Vault version and edition, effective settings, requests, errors, and matched positive controls without credentials. |
 
 ## Sources (checked September 2026)
 
