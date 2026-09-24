@@ -50,16 +50,18 @@ ranges (`9300 to 9400`, `8000-8010`). A single port, or a range covering at most
 (Ray's worker range, coturn's relay range) maps them only for the guides its own row cites,
 because otherwise it would silently cover every high port in the corpus.
 
-ROW SHAPE. The header line must appear exactly once, outside any fenced block and with no HTML
-block above it, so the table the gate reads is the one GitHub renders; exactly `| --- | --- | --- |
---- |` must follow it. The table then runs until the first blank line (spaces and tabs only). That
+ROW SHAPE. The header line must appear exactly once, flush left, with a blank line directly above
+it and no `<` or code-fence marker anywhere above it, so the table the gate reads is the one
+GitHub renders (a whitelist for the page above the table, not a model of its containers);
+exactly `| --- | --- | --- | --- |` must follow it. The table then runs until the first blank line (spaces and tabs only). That
 is stricter than GFM, which also ends a table at another block such as a heading: here such a
 line is a malformed row, so every line between the separator and the blank line is checked. Each
 of those lines must be flush left, start `| ` and end ` |`, and have four cells split on unescaped
 pipes, with one space inside each pipe. Every cell must be printable ASCII (an en dash is allowed
 in the Port cell). Cells are held to a whitelist rather than to a model of rendering: every cell
 but Port must split into single-backtick code, `[text](target)` links with a simple target,
-escaped pipes and a fixed set of plain characters, and must show a letter or digit
+escaped pipes and a fixed set of plain characters, every link's text must show a letter or digit,
+and the cell must show a letter or digit
 (cell_problem has the detail). The Port cell must be a comma-separated list of ports or ranges
 (`N`, `N to N`, `N-N`, or an en dash, each optionally `/TCP` or `/UDP`), every number from 1 to
 65535 in ASCII digits with no leading zero and every range ascending. Citations are read from
@@ -98,7 +100,7 @@ _UNESCAPED_PIPE = re.compile(r"(?<!\\)\|")  # GFM: `\|` inside a cell is content
 # re.ASCII keeps digit classes ASCII too.
 _TOKEN = re.compile(
     r"(?P<code>`(?P<inner>[^`\\]+)`)"
-    r"|(?P<link>\[(?P<label>[^\[\]`\\<>&$]+)\]\((?P<dest>[A-Za-z0-9._/#:?=%+-]+)\))"
+    r"|(?P<link>\[(?P<label>[^\[\]`\\<>&$]*[A-Za-z0-9][^\[\]`\\<>&$]*)\]\((?P<dest>[A-Za-z0-9._/#:?=%+-]+)\))"
     r"|(?P<pipe>\\\|)"
     r"|(?P<plain>(?!!\[)[A-Za-z0-9 .,;:'\"()/+*=?!%_@~^#{}>-])",
     re.ASCII)
@@ -230,8 +232,9 @@ def parse_index(root: Path):
     """Return (explicit_ports, wide_cites, malformed) from the index table, or None if it is missing.
 
     explicit_ports maps a port for every guide; wide_cites[port] is the set of guides a wide
-    range maps that port for; malformed lists (line, label, problem) for a missing or wrong
-    separator row and for every table line that breaks the row grammar (see ROW SHAPE). A
+    range maps that port for; malformed lists (line, label, problem) for a missing blank line
+    above the header, `<` or a fence marker above it, a repeated header, a missing or wrong
+    separator row, and every table line that breaks the row grammar (see ROW SHAPE). A
     malformed row maps nothing.
     """
     try:
@@ -243,17 +246,23 @@ def parse_index(root: Path):
     header = lines.index(TABLE_HEADER)
     start = header + 1
     explicit, wide_cites, malformed = set(), {}, []
-    # The table must be the one GitHub renders: its header once, outside any fenced block, and no
-    # HTML block (a line opening with `<`, which also covers an HTML comment) anywhere above it.
-    fences, in_code = Fences(), []
-    for line in lines:
-        in_code.append(fences.feed(line) or fences.inside)
-    if in_code[header]:
-        malformed.append((header + 1, "header", "is inside a fenced code block, so it does not render as a table"))
+    # The table must be the one GitHub renders. Rather than model which containers above it could
+    # swallow it (a list item, a blockquote, an HTML block, a fence opened inside a list item), the
+    # text above the header is held to a whitelist: no `<` anywhere (so no HTML block or comment can
+    # open), no code-fence marker anywhere, and a blank line directly above the header (so the
+    # header, flush left, starts a new block rather than continuing a list item or blockquote).
+    if header == 0 or lines[header - 1].strip(" \t"):
+        malformed.append((header + 1, "header", "must have a blank line directly above it, so the table "
+                          "starts a new block"))
     for k, line in enumerate(lines[:header]):
-        if not in_code[k] and re.match(r" {0,3}<", line):
-            malformed.append((k + 1, "html", "opens an HTML block above the table, which can hide it; keep raw "
-                              "HTML out of this page"))
+        if "<" in line:
+            malformed.append((k + 1, "above", "puts `<` above the table, which can open an HTML block that "
+                              "hides it; keep `<` out of the text above the table"))
+            break
+    for k, line in enumerate(lines[:header]):
+        if "```" in line or "~~~" in line:
+            malformed.append((k + 1, "above", "puts a code-fence marker above the table, which can hide it; "
+                              "keep fences below the table"))
             break
     for k in range(header + 1, len(lines)):
         if lines[k] == TABLE_HEADER:

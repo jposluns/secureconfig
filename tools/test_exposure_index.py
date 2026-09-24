@@ -56,7 +56,8 @@ Row shape: R1 a three-cell row fails; R2 an empty Default credential cell fails;
   cell fails and maps nothing; R40 code that looks like a link target counts as text; R41-R43
   `$x$`, a parenthesized target and a backslash in code fail; R44 `>` is plain text; R45 a table
   inside an HTML comment and R46 inside a fence fail; R47 a repeated header fails; R48 a citation
-  inside a code span is not a citation.
+  inside a code span is not a citation; R49-R52 `<`, a list item or blockquote directly above, or a
+  fence marker above the header fails; R53 a link whose text is only spaces fails.
 """
 import shutil
 import subprocess
@@ -333,10 +334,10 @@ def main() -> int:
     check(f"R44: `>` is plain text (rc={rc}, out={out!r})", rc == 0)
     rc, out = run(guide("It listens on port 7777."), index="<!--\n" + INDEX + "| 7777 | Svc | not stated | [a.md](a.md) |\n\n-->\n")
     check(f"R45: a table inside an HTML comment fails (rc={rc}, out={out!r})",
-          rc == 1 and "opens an HTML block above the table" in out)
+          rc == 1 and "puts `<` above the table" in out)
     rc, out = run(guide("It listens on port 7777."), index="```\n" + INDEX + "| 7777 | Svc | not stated | [a.md](a.md) |\n```\n")
     check(f"R46: a table inside a fenced block fails (rc={rc}, out={out!r})",
-          rc == 1 and "is inside a fenced code block" in out)
+          rc == 1 and "puts a code-fence marker above the table" in out)
     rc, out = run(guide("port 9090"), index=INDEX + "\n" + INDEX)
     check(f"R47: a second copy of the header fails (rc={rc}, out={out!r})",
           rc == 1 and "repeats the table header" in out)
@@ -344,8 +345,19 @@ def main() -> int:
                   index=INDEX.replace("[ray.md](ray.md#ports)", "[ray.md](ray.md#ports) `[b.md](b.md)`", 1))
     check(f"R48: a citation inside a code span is not a citation (rc={rc}, out={out!r})",
           rc == 1 and "b.md:3 names port 20050" in out)
+    row7 = "| 7777 | Svc | not stated | [a.md](a.md) |\n"
+    for cid, above, msg in (("R49", "- <!--\n\n", "puts `<` above the table"),
+                            ("R50", "- note above the table\n", "must have a blank line directly above it"),
+                            ("R51", "> note above the table\n", "must have a blank line directly above it"),
+                            ("R52", "- example\n  ```\n  x\n```\n\n", "puts a code-fence marker above the table")):
+        rc, out = run(guide("It listens on port 7777."), index=above + INDEX.split("\n\n", 1)[1] + row7)
+        check(f"{cid}: {above!r} above the header fails (rc={rc}, out={out!r})", rc == 1 and msg in out)
+    rc, out = run({"ray.md": "# Ray\n\nWorkers use port 20050.\n", "b.md": "# B\n\nThe proxy uses port 20050.\n"},
+                  index=INDEX.replace("[ray.md](ray.md#ports)", "[ray.md](ray.md#ports)[ ](b.md)", 1))
+    check(f"R53: a link whose text is only spaces fails (rc={rc}, out={out!r})",
+          rc == 1 and "outside the table's cell grammar" in out)
 
-    total = len(DETECT) + len(PRECISE) + 7 + 3 + 4 + 48
+    total = len(DETECT) + len(PRECISE) + 7 + 3 + 4 + 53
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")
