@@ -24795,6 +24795,11 @@ There are two fixes, and you can use both:
   under `server`, and advise `RequireAndVerifyClientCert` for the strictest setting:
 
   ```yaml
+  common:
+    instance_addr: 127.0.0.1   # the address the rings advertise; it must match the gRPC bind
+    ring:
+      kvstore:
+        store: inmemory        # single binary: no memberlist gossip listener
   server:
     http_listen_address: 10.0.0.6
     grpc_listen_address: 127.0.0.1   # single binary: Loki's own components call this port
@@ -24807,15 +24812,20 @@ There are two fixes, and you can use both:
 
   On the loopback run, a client with a certificate from that CA got `200`. A client without one was
   refused in the handshake (curl exit 56, `tlsv13 alert certificate required`), with or without a tenant
-  header. Plain HTTP got `400`. With exactly this shape (HTTP mTLS, gRPC on 127.0.0.1), a push with a
-  client certificate returned `204` and a query returned the pushed line with `200`. Keep gRPC off the
-  network: left at its default it listens on every interface in plaintext. Do not simply add
-  `grpc_tls_config` with `RequireAndVerifyClientCert` to a single binary: on the loopback run that made
-  a push with a valid client certificate return `500` and queries hang, because Loki's own components
-  call its gRPC server without a client certificate. A multi-process deployment whose components talk
-  gRPC across hosts needs matching client TLS settings on every component; that was not demonstrated
-  here, so take it from the Loki configuration reference for your version. mTLS does not set
-  `X-Scope-OrgID`, so your agent or proxy still does.
+  header. Plain HTTP got `400`. With exactly this shape (HTTP mTLS; gRPC, `instance_addr` and an
+  `inmemory` ring on 127.0.0.1), a push with a client certificate returned `204` and a query returned
+  the pushed line with `200`, and Loki held no listener but its HTTP and gRPC ports. `instance_addr`
+  matters: the rings advertise it and internal traffic dials it, so if it resolves to a routable address
+  while gRPC listens on loopback, ingestion breaks (inferred from the source, not run here). Keep gRPC
+  off the network: left at its default it listens on every interface in plaintext. With `memberlist` as
+  the ring store, the same run opened a gossip listener (TCP only) on `memberlist.bind_addr`; bind that
+  privately, or set `memberlist.tls-enabled`, if you need it. Do not add `grpc_tls_config` to a single
+  binary on its own: on the loopback run, `RequireAndVerifyClientCert` there made a push with a valid
+  client certificate return `500` and queries hang, and Loki logged `error reading server preface`,
+  because its own components call that gRPC server in plaintext. A deployment whose components talk gRPC
+  across hosts needs TLS on every component's gRPC client as well; that was not demonstrated here, so
+  take it from the Loki configuration reference for your version. mTLS does not set `X-Scope-OrgID`, so
+  your agent or proxy still does.
 - **An authenticating proxy that owns the tenant header.** The vendor's nginx example sets
   `proxy_set_header X-Scope-OrgID $remote_user;` so that "nginx overwrites any tenant header sent by the
   client". Keep Loki itself reachable only from that proxy. See [nginx.md](nginx.md) and
