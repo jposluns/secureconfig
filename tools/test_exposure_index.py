@@ -38,7 +38,9 @@ Other: O1 meta files are not scanned; O2 a missing index table fails closed with
   above 65535 and O4 port 0 are not mentions.
 Row shape: R1 a three-cell row fails; R2 an empty Default credential cell fails; R3 the old
   three-column header fails closed with exit 2; R4 an empty Port cell fails; R5 a three-cell
-  separator row fails; R6 a blank-port three-cell row fails.
+  separator row fails; R6 a blank-port three-cell row fails; R7 a row opening `||` (a blank Port
+  cell) fails; R8 a separator with a fifth cell fails; R9 a Port cell with no number and R10 a
+  second separator row mid-table fail.
 """
 import shutil
 import subprocess
@@ -211,8 +213,21 @@ def main() -> int:
     rc, out = run(guide("port 9090"), index=INDEX + "|  | Three cells | [a.md](a.md) |\n")
     check(f"R6: a blank-port three-cell row fails (rc={rc}, out={out!r})",
           rc == 1 and "has an empty Port cell" in out)
+    rc, out = run(guide("port 9090"), index=INDEX + "|| 7777 | not stated | [a.md](a.md) | x |\n")
+    check(f"R7: a row opening with two pipes has a blank Port cell (rc={rc}, out={out!r})",
+          rc == 1 and "has an empty Port cell" in out)
+    rc, out = run(guide("port 9090"),
+                  index=INDEX.replace("| --- | --- | --- | --- |", "| --- | --- | --- | --- ||", 1))
+    check(f"R8: a separator row with a fifth cell fails (rc={rc}, out={out!r})",
+          rc == 1 and "is not a 4-cell separator row" in out)
+    rc, out = run(guide("port 9090"), index=INDEX + "| TBD | Unknown | not stated | [a.md](a.md) |\n")
+    check(f"R9: a Port cell with no number fails (rc={rc}, out={out!r})",
+          rc == 1 and "has no port number in its Port cell" in out)
+    rc, out = run(guide("port 9090"), index=INDEX + "| --- | --- | --- | --- |\n")
+    check(f"R10: a second separator row mid-table fails (rc={rc}, out={out!r})",
+          rc == 1 and "has no port number in its Port cell" in out)
 
-    total = len(DETECT) + len(PRECISE) + 7 + 3 + 4 + 6
+    total = len(DETECT) + len(PRECISE) + 7 + 3 + 4 + 10
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")

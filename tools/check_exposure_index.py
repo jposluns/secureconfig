@@ -51,8 +51,8 @@ ranges (`9300 to 9400`, `8000-8010`). A single port, or a range covering at most
 because otherwise it would silently cover every high port in the corpus.
 
 ROW SHAPE. The separator row directly under the header has four cells of dashes. Every other row
-has four cells (Port, May be, Default credential, Documented in), a non-empty Port cell, and a
-non-empty Default credential cell: "not stated" is the value when the cited guides are silent,
+has four cells (Port, May be, Default credential, Documented in), a Port cell that names at least
+one port number, and a non-empty Default credential cell: "not stated" is the value when the cited guides are silent,
 so a row cannot lose the column without the gate noticing.
 
 ALLOWLIST. tools/exposure_index_allowlist.txt lists `<guide> <port>  # reason` pairs that match a
@@ -124,8 +124,8 @@ def parse_index(root: Path):
     """Return (explicit_ports, wide_cites, malformed) from the index table, or None if it is missing.
 
     explicit_ports maps a port for every guide; wide_cites[port] is the set of guides a wide
-    range maps that port for; malformed lists (line, first cell, problem) for each row that is
-    not four cells with a filled Default credential cell.
+    range maps that port for; malformed lists (line, first cell, problem) for a bad separator row
+    and for each row without four cells, a port number in its Port cell, or a Default credential.
     """
     try:
         lines = (root / INDEX).read_text(encoding="utf-8").split("\n")
@@ -140,13 +140,18 @@ def parse_index(root: Path):
             continue
         if not line.startswith("|"):
             break
-        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        body = line.strip()
+        body = body[1:] if body.startswith("|") else body  # one outer pipe per side, so `||` keeps
+        body = body[:-1] if body.endswith("|") else body  # its empty cell and is counted
+        cells = [c.strip() for c in body.split("|")]
         if ln == header_ln + 1:  # the separator row: a real one, never a row that merely looks blank
             if len(cells) != COLUMNS or not all(re.fullmatch(r":?-+:?", c) for c in cells):
                 malformed.append((ln, "---", f"is not a {COLUMNS}-cell separator row"))
             continue
         if not cells[0]:
             malformed.append((ln, "(blank)", "has an empty Port cell"))
+        elif not re.search(r"\d", cells[0]):
+            malformed.append((ln, cells[0], "has no port number in its Port cell"))
         elif len(cells) != COLUMNS:
             malformed.append((ln, cells[0], f"has {len(cells)} cells; the table has {COLUMNS}"))
         elif not cells[2]:
