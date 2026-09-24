@@ -21598,7 +21598,7 @@ Leave `server.enableXsrfProtection` and `server.enableCORS` at their defaults (b
 
 ## 2. Native login (OIDC)
 
-Streamlit 1.64.0 provides `st.login()`, `st.logout()`, and `st.user` for OpenID Connect authentication against Google, Microsoft Entra ID, Okta, or any OIDC provider (`st.login()` and `st.logout()` were introduced in 1.42.0; `st.user` was introduced in 1.45.0, replacing `st.experimental_user`); install the `Authlib` package (1.3.2 or later) in the app's environment, without which the `[auth]` block errors. Configuration lives in `.streamlit/secrets.toml`:
+Streamlit 1.64.0 provides `st.login()`, `st.logout()`, and `st.user` for OpenID Connect authentication against Google, Microsoft Entra ID, Okta, or any OIDC provider (`st.login()` and `st.logout()` were introduced in 1.42.0; `st.user` was introduced in 1.45.0, replacing `st.experimental_user`); install Streamlit's `auth` extra in the app's environment (`pip install "streamlit[auth]"`), which in 1.64.0 requires `Authlib` 1.3.2 or later and `httpx` 0.24.1 or later; without Authlib the `[auth]` block errors, and in the loopback run with Authlib installed but not httpx every browser login attempt got `Internal Server Error`, with `ModuleNotFoundError: No module named 'httpx'` in Streamlit's log. Configuration lives in `.streamlit/secrets.toml`:
 
 ```toml
 [auth]
@@ -21650,10 +21650,11 @@ Basic auth or an emailed one-time PIN alone is not a second factor: for a sensit
 
 ## 5. Verify
 
-Reasoned, not demonstrated: the authoring environment has no Streamlit runtime or container runtime and cannot create listening sockets, so these describe the expected exposed and fixed outcomes rather than observed ones, and backlog row 2.36 tracks demonstrating them against a live 1.64.0 deployment. Use curl 7.75.0 or newer; never add `-k`. Substitute the public HTTPS origin, without a trailing slash, and the server's public address inside the single quotes on their respective `set --` lines, and paste each complete subshell.
+Verification status: the checks below were demonstrated on loopback against Streamlit 1.64.0 (the PyPI wheel, its SHA-256 equal to PyPI's published digest), with native `st.login`, and behind Caddy v2.11.4 and oauth2-proxy v7.15.4, using Keycloak 26.7.4 as the OIDC provider, in the exposed and fixed states. The wildcard bind and block 3's external vantage are REASONED and marked at their steps; the end of this section records what was observed. Use curl 7.75.0 or newer; never add `-k`. Substitute the public HTTPS origin, without a trailing slash, and the server's public address inside the single quotes on their respective `set --` lines, and paste each complete subshell.
 
 ```bash
 ss -tlnp   # listeners on the origin host; 8501 must be 127.0.0.1 behind a proxy, not a public interface
+           # (loopback runs saw 127.0.0.1:8501; the default wildcard bind is REASONED: the host forbids it)
 # 1) TLS on the public origin, then the fronting-proxy anonymous check. A transport error (nonzero exit,
 #    including a timeout) is inconclusive, not a pass. Native st.login serves an anonymous 200 on the index
 #    BY DESIGN and gates inside the script over the websocket, so judge that pattern by the browser checks
@@ -21678,6 +21679,7 @@ ss -tlnp   # listeners on the origin host; 8501 must be 127.0.0.1 behind a proxy
 # 3) From another host, port 8501 must not answer directly, or the proxy is bypassable. Any HTTP code,
 #    including a 200 "ok", means 8501 answered externally (the finding); a refused or no-route connection
 #    is consistent with closure but not proof; a DNS or local socket error or a timeout is inconclusive.
+#    REASONED from another host: the loopback runs had one host and no second network (see below).
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_SERVER_PUBLIC_IP'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -21693,6 +21695,46 @@ ss -tlnp   # listeners on the origin host; 8501 must be 127.0.0.1 behind a proxy
 
 Then check the application gate in a browser, using the same scheme, hostname, port, and protected page for every comparison. In a fresh profile with no session an anonymous visitor must not see protected content or reach a protected operation; an allowed user who completes the provider's MFA must; and a valid identity outside the allowlist (for the `hd` check, a consumer account) must be denied with nothing rendered. Visit every protected page directly, including administrative ones. A login page, a blank page, or a broken websocket is not a positive control. In an isolated test deployment only, place `st.write("SECURECONFIG_AUTH_CANARY")` after the gate, disable the applicable authentication boundary, and confirm the anonymous visit then reveals the canary; restore protection afterward, and never disable authentication on a public deployment. For a fronting proxy, confirm an unauthenticated websocket upgrade is also denied and that an authenticated browser can establish it.
 
+On the loopback runs, with `server.address` set to `127.0.0.1`, `ss` showed Streamlit only on `127.0.0.1:8501`. With the address unset, `streamlit config show` lists it as unset, and Streamlit 1.64.0's source binds the IPv6 wildcard `::` in that case when `socket.has_ipv6` holds (`_get_bind_address` in `web/server/starlette/starlette_server.py`). That bind is REASONED, because the host forbids listening on every interface. The runs used Caddy and oauth2-proxy on `127.0.0.1:8443`, with TLS files from a private test CA that curl trusted through `CURL_CA_BUNDLE`, and a headless Chrome 154 with an SPKI exception for the test certificate's key.
+
+The Keycloak realm was served over plain HTTP on loopback. Section 2's example uses an HTTPS metadata URL, as a real provider should. The realm had four users, and three of them carried an `hd` claim from a user-attribute mapper standing in for Google's:
+- an allowed user in `example.com` with a verified email and TOTP required;
+- a verified user in another domain;
+- an `example.com` user whose email was not verified;
+- a verified `example.com` user with no `hd` claim, standing in for a consumer account.
+
+What each run observed:
+
+- **Block 1 against native TLS:** `tls=200` with the test CA trusted. With curl not trusting the certificate it stopped at `tls=000 exit=60`.
+- **Proxy with no authentication (exposed):** block 1 printed `tls=200`, then `anon=200` with the body `ok`, which is the finding. A websocket upgrade to `/_stcore/stream` got `101` anonymously, and an anonymous browser rendered the canary.
+- **[caddy.md](caddy.md)'s `basic_auth` covering every route (fixed):**
+  - Block 1 got `401` on both requests, and a wrong credential also got `401`.
+  - An app session over the websocket was refused with `401` anonymously and with the wrong credential, and received the canary with the right one.
+  - The anonymous browser and the browser sending the wrong credential saw an empty page; the browser sending the credential rendered the canary.
+- **Websocket path in a separate unauthenticated location (exposed):** the index and the health route still returned `401`, but an anonymous client that opened `/_stcore/stream` and asked for a script run received the app's output, the canary. That is the bypass section 1 describes.
+- **oauth2-proxy with Keycloak, restricted to `example.com` (fixed):**
+  - The anonymous health request got a `302`, and an anonymous websocket upgrade was redirected to the provider's authorization endpoint instead of upgraded.
+  - The anonymous browser stopped at the provider's sign-in page.
+  - The allowed user rendered the canary after the password and a TOTP code; with a wrong code the provider kept them at the one-time-code prompt ("Invalid authenticator code.").
+  - The user in another domain got oauth2-proxy's `403 Forbidden`.
+  - The unverified user got oauth2-proxy's `500 Internal Server Error` page, with oauth2-proxy logging "email in id_token … isn't verified".
+- **oauth2-proxy with `--email-domain='*'` (exposed allowlist):** the user in another domain rendered the canary.
+- **Native `st.login` with section 2's gate** (the guide's code, with only the final `Hello` line replaced by the canary):
+  - The anonymous index returned `200` by design, and the anonymous browser was sent to the provider's sign-in page.
+  - The allowed user rendered the canary after enrolling and then entering TOTP codes; a wrong code kept them at the one-time-code prompt.
+  - The user in another domain, and the user with no `hd` claim, saw "This account is not authorized for this app."
+  - The unverified user saw "This account's email is not verified."
+  - None of those three saw the canary.
+- **Native `st.login` exposed states:**
+  - With only the `st.login()` check and no `hd` or email check, the user in another domain and the unverified user each rendered the canary.
+  - With no gate at all, an anonymous browser rendered it.
+- **Block 3 from the same host:** `http=200` against the address Streamlit listened on, and `exit=7` against another loopback address.
+- **Static serving:** with `server.enableStaticServing` on, the script called `st.stop()` at once, yet `/app/static/public.txt` returned the file with `200` and `text/plain`. With it off, the same path returned `200` with the app's HTML page, not the file. Judge a static-route probe by its body, not its status.
+
+REASONED, and tracked in backlog row 1.121:
+- an external vantage for block 3, since there was one host with no second network;
+- the default wildcard bind, since the host forbids binding every interface.
+
 ## Sources (checked September 2026)
 
 Source-checked on 2026-09-18 against Streamlit 1.64.0, the current release at the time of writing; `server.address` defaults to unset (all interfaces) and `server.port` to `8501`, and the explicit loopback setting above is required for the fronting-proxy pattern. `st.login()` has been available since the 1.42.0 series.
@@ -21702,6 +21744,7 @@ Source-checked on 2026-09-18 against Streamlit 1.64.0, the current release at th
 - st.user API reference (claims copied from the ID token, `st.user.email`): https://docs.streamlit.io/develop/api-reference/user/st.user
 - Streamlit release notes (1.64.0 current; st.login since the 1.42.0 series): https://docs.streamlit.io/develop/quick-reference/release-notes
 - st.login reference (OIDC, Authlib 1.3.2+ dependency): https://docs.streamlit.io/develop/api-reference/user/st.login
+- Streamlit 1.64.0 package metadata (the `auth` extra requires `Authlib>=1.3.2` and `httpx>=0.24.1`): https://pypi.org/project/streamlit/1.64.0/
 - Configuration options and precedence (command line over env over project over global; restart on server changes): https://docs.streamlit.io/develop/concepts/configuration/options
 - config.toml (enableCORS, enableXsrfProtection, maxUploadSize, enableStaticServing, showErrorDetails): https://docs.streamlit.io/develop/api-reference/configuration/config.toml
 - Static file serving (server.enableStaticServing default false, served by the server not the script): https://docs.streamlit.io/develop/concepts/configuration/serving-static-files
