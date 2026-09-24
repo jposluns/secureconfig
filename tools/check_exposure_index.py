@@ -50,19 +50,21 @@ ranges (`9300 to 9400`, `8000-8010`). A single port, or a range covering at most
 (Ray's worker range, coturn's relay range) maps them only for the guides its own row cites,
 because otherwise it would silently cover every high port in the corpus.
 
-ROW SHAPE. The header line must appear exactly, and exactly `| --- | --- | --- | --- |` must follow
-it. The table then runs until the first blank line (spaces and tabs only). That is stricter than
-GFM, which also ends a table at another block such as a heading: here such a line is a malformed
-row, so every line between the separator and the blank line is checked. Each of those lines must
-be flush left, start `| ` and end ` |`, and have four cells split on unescaped pipes, with one
-space inside each pipe. Cells are held to a whitelist rather than to a model of rendering: every
-cell but Port may contain only printable ASCII text that opens no other construct, single-backtick
-code spans, `[text](target)` links with text and a simple target, and an escaped pipe, and must
-carry a letter or digit outside link targets (cell_problem has the detail). The Port cell must
-be a comma-separated list of ports or ranges (`N`, `N to N`, `N-N`, or an en dash, each
-optionally `/TCP` or `/UDP`), every number from 1 to 65535 with no leading zero and every range
-ascending. "not stated" is the credential value when the cited guides are silent. A row that
-breaks this fails the gate and maps nothing. A second table later in the file is not read.
+ROW SHAPE. The header line must appear exactly once, outside any fenced block and with no HTML
+block above it, so the table the gate reads is the one GitHub renders; exactly `| --- | --- | --- |
+--- |` must follow it. The table then runs until the first blank line (spaces and tabs only). That
+is stricter than GFM, which also ends a table at another block such as a heading: here such a
+line is a malformed row, so every line between the separator and the blank line is checked. Each
+of those lines must be flush left, start `| ` and end ` |`, and have four cells split on unescaped
+pipes, with one space inside each pipe. Every cell must be printable ASCII (an en dash is allowed
+in the Port cell). Cells are held to a whitelist rather than to a model of rendering: every cell
+but Port must split into single-backtick code, `[text](target)` links with a simple target,
+escaped pipes and a fixed set of plain characters, and must show a letter or digit
+(cell_problem has the detail). The Port cell must be a comma-separated list of ports or ranges
+(`N`, `N to N`, `N-N`, or an en dash, each optionally `/TCP` or `/UDP`), every number from 1 to
+65535 in ASCII digits with no leading zero and every range ascending. Citations are read from
+the Documented in cell outside code spans. "not stated" is the credential value when the cited
+guides are silent. A row that breaks this fails the gate and maps nothing.
 
 ALLOWLIST. tools/exposure_index_allowlist.txt lists `<guide> <port>  # reason` pairs that match a
 pattern but are not listeners this corpus documents (an outbound destination, an illustrative
@@ -91,16 +93,19 @@ COLUMNS = 4  # every data row has exactly this many cells
 CELL_NAMES = ("Port", "May be", "Default credential", "Documented in")
 SEPARATOR = "| --- | --- | --- | --- |"
 _UNESCAPED_PIPE = re.compile(r"(?<!\\)\|")  # GFM: `\|` inside a cell is content, not a boundary
-# The whitelist a non-Port cell is built from: single-backtick code, links with text and a simple
-# target, an escaped pipe, and plain ASCII text that cannot open any other construct.
-_CODE = r"`[^`\\]+`"
-_LINK = r"\[[^\[\]`\\<>&$]*[A-Za-z0-9][^\[\]`\\<>&$]*\]\([A-Za-z0-9._/#:?=%+-]+\)"
-_PLAIN = r"[A-Za-z0-9 .,;:'\"()/+*=?!%_@~^#{}-]"
-CELL_TEXT = re.compile(rf"(?:{_CODE}|{_LINK}|\\\||(?!!\[){_PLAIN})+")
-_LINK_DEST = re.compile(r"\]\([^)]*\)")
-_NUM = r"[1-9]\d{0,4}"  # no leading zeros
+# The whitelist a non-Port cell is built from, as one tokenizer: single-backtick code, a link with
+# text and a simple target, an escaped pipe, or one plain character. Every class is ASCII, and
+# re.ASCII keeps digit classes ASCII too.
+_TOKEN = re.compile(
+    r"(?P<code>`(?P<inner>[^`\\]+)`)"
+    r"|(?P<link>\[(?P<label>[^\[\]`\\<>&$]+)\]\((?P<dest>[A-Za-z0-9._/#:?=%+-]+)\))"
+    r"|(?P<pipe>\\\|)"
+    r"|(?P<plain>(?!!\[)[A-Za-z0-9 .,;:'\"()/+*=?!%_@~^#{}>-])",
+    re.ASCII)
+_NUM = r"[1-9][0-9]{0,4}"  # ASCII digits, no leading zero
 _PORT_ITEM = _NUM + r"(?:(?: to |-|\N{EN DASH})" + _NUM + r")?(?:/(?:TCP|UDP))?"
-PORT_CELL = re.compile(_PORT_ITEM + r"(?:, " + _PORT_ITEM + r")*")
+PORT_CELL = re.compile(_PORT_ITEM + r"(?:, " + _PORT_ITEM + r")*", re.ASCII)
+_CODE_SPAN = re.compile(r"`[^`\\]+`")
 WIDE = 101  # a range covering more ports than this maps them only for the guides its row cites
 
 RANGE = re.compile(r"(\d+)\s*(?:to|-|\N{EN DASH})\s*(\d+)")
@@ -153,25 +158,38 @@ def split_row(line: str) -> list:
 def cell_problem(name: str, cell: str):
     """Name what is wrong with one cell's content, or return None.
 
-    This is a whitelist, not a model of what a renderer shows. A non-Port cell may contain only
-    printable ASCII text that opens no other construct (no `<`, `&`, `$`, bracket, backtick or
-    backslash), single-backtick code spans, links written `[text](target)` with a letter or digit
-    in the text and a target of letters, digits and `._/#:?=%+-`, and an escaped pipe; and it must
-    carry a letter or digit outside link targets. Anything else (HTML, entities, math, images,
-    empty or reference links, multi-backtick code, other escapes) is rejected rather than
-    interpreted. The Port cell has its own grammar (port_cell_ok). Every row of the current table
-    already meets this.
+    This is a whitelist, not a model of what a renderer shows. Every cell must be printable ASCII
+    (the Port cell may also use an en dash, and has its own grammar in port_cell_ok). A non-Port
+    cell must split, left to right with nothing left over, into these tokens: a single-backtick
+    code span with no backslash; a link `[text](target)` whose text has no bracket, backtick,
+    backslash, `<`, `>`, `&` or `$` and whose target uses only letters, digits and `._/#:?=%+-`;
+    an escaped pipe; or one plain character from the ASCII letters, digits, space and
+    `.,;:'"()/+*=?!%_@~^#{}>-` (so no `<`, `&`, `$`, bracket, backtick or backslash in plain text,
+    and no `![`). Some plain characters do open GitHub constructs (emphasis, strikethrough, emoji
+    shortcodes); the requirement that follows is what keeps those visible: the text the tokens
+    show (code content, link text and plain characters, never a link target) must include a
+    letter or digit. Anything else (HTML, entities, math, images, empty or reference links,
+    multi-backtick code, other escapes) is rejected rather than interpreted. Every row of the
+    current table already meets this.
     """
     if not cell:
         if name == "Default credential":
             return "has an empty Default credential cell; write `not stated` when the cited guides are silent"
         return f"has an empty {name} cell"
+    if any(not (" " <= ch <= "~" or (name == "Port" and ch == "\N{EN DASH}")) for ch in cell):
+        return f"has a character outside printable ASCII in its {name} cell"
     if name == "Port":
         return None
-    if not CELL_TEXT.fullmatch(cell):
-        return (f"has content outside the table's cell grammar in its {name} cell (allowed: printable "
+    shown, pos = [], 0
+    for m in _TOKEN.finditer(cell):
+        if m.start() != pos:
+            break
+        shown.append(m.group("inner") or m.group("label") or m.group("plain") or "")
+        pos = m.end()
+    if pos != len(cell):
+        return (f"has content outside the table's cell grammar in its {name} cell (allowed: plain "
                 "ASCII text, single-backtick code, [text](target) links, and an escaped pipe)")
-    if not re.search(r"[A-Za-z0-9]", _LINK_DEST.sub("]", cell)):
+    if not re.search(r"[A-Za-z0-9]", "".join(shown)):
         return f"has no letter or digit in its {name} cell"
     return None
 
@@ -222,8 +240,24 @@ def parse_index(root: Path):
         return None
     if TABLE_HEADER not in lines:
         return None
-    start = lines.index(TABLE_HEADER) + 1
+    header = lines.index(TABLE_HEADER)
+    start = header + 1
     explicit, wide_cites, malformed = set(), {}, []
+    # The table must be the one GitHub renders: its header once, outside any fenced block, and no
+    # HTML block (a line opening with `<`, which also covers an HTML comment) anywhere above it.
+    fences, in_code = Fences(), []
+    for line in lines:
+        in_code.append(fences.feed(line) or fences.inside)
+    if in_code[header]:
+        malformed.append((header + 1, "header", "is inside a fenced code block, so it does not render as a table"))
+    for k, line in enumerate(lines[:header]):
+        if not in_code[k] and re.match(r" {0,3}<", line):
+            malformed.append((k + 1, "html", "opens an HTML block above the table, which can hide it; keep raw "
+                              "HTML out of this page"))
+            break
+    for k in range(header + 1, len(lines)):
+        if lines[k] == TABLE_HEADER:
+            malformed.append((k + 1, "header", "repeats the table header; this page has one table"))
     if start >= len(lines) or lines[start] != SEPARATOR:
         malformed.append((start + 1, "---", f"is not a {COLUMNS}-cell separator row `{SEPARATOR}`"))
     else:
@@ -240,7 +274,7 @@ def parse_index(root: Path):
             malformed.append(
                 (ln, port, "has a Port cell that is not a list of ports or ranges from 1 to 65535"))
             continue
-        cited = set(re.findall(r"\]\(([^)#]+\.md)(?:#[^)]*)?\)", docs))
+        cited = set(re.findall(r"\]\(([^)#]+\.md)(?:#[^)]*)?\)", _CODE_SPAN.sub("", docs)))
         for lo_s, hi_s in RANGE.findall(port):
             lo, hi = int(lo_s), int(hi_s)
             if hi - lo + 1 > WIDE:
