@@ -92,7 +92,7 @@ The inspected query handler executes a read through GET, while writes and script
 
 sqlite-web documents native TLS through `--ssl-cert` and `--ssl-key`; the recommended deployment here still uses the shared TLS proxy.
 
-sqlite-web 0.8.1 from PyPI showed no CSRF protection on loopback: an authenticated `POST` insert with no token and a foreign `Origin` header wrote a row, and the insert form contains no CSRF field. Its session cookie was set with `HttpOnly; Path=/` and no `SameSite` or `Secure` attribute, even over TLS, so whether a browser sends it on a cross-site request depends on that browser's default. Prefer `--read-only` behind the proxy. The flags and routes described here matched the installed 0.8.1 package for everything the loopback runs exercised.
+sqlite-web 0.8.1 from PyPI showed no CSRF check on its insert route on loopback: an authenticated `POST` insert with no token and a foreign `Origin` header wrote a row, and the insert form contains no CSRF field. Its session cookie was set with `HttpOnly; Path=/` and no `SameSite` or `Secure` attribute, even over TLS, so whether a browser sends it on a cross-site request depends on that browser's default. Prefer `--read-only` behind the proxy. The flags and routes described here matched the installed 0.8.1 package for everything the loopback runs exercised.
 
 ## Fronting layer, TLS, and least privilege
 
@@ -110,7 +110,7 @@ Run the service under a dedicated unprivileged OS account with access only to th
 
 ## Verify
 
-The service outcomes below were **demonstrated on loopback** against Datasette 0.65.5 (with datasette-auth-passwords 1.1.1 and datasette-write 0.4) and sqlite-web 0.8.1, installed from PyPI into a virtual environment, with every server on 127.0.0.1 and, for the HTTPS blocks, native TLS from a private test CA that curl trusted through `CURL_CA_BUNDLE`. Blocks B and C ran as printed with only their placeholders substituted. What those runs do not show is marked **REASONED** where it occurs, with its reason; backlog row 1.118 tracks it.
+The service outcomes below were **demonstrated on loopback** against Datasette 0.65.5 (with datasette-auth-passwords 1.1.1 and datasette-write 0.4) and sqlite-web 0.8.1, installed from PyPI into a virtual environment, with every server on 127.0.0.1 and, for the HTTPS blocks, native TLS or a Caddy TLS proxy with certificates from a private test CA that curl trusted through `CURL_CA_BUNDLE`. Blocks B and C ran as printed with only their placeholders substituted. What those runs do not show is marked **REASONED** where it occurs, with its reason; backlog row 1.118 tracks it.
 
 Use Bash with real, unshadowed builtins and curl 7.75.0 or newer. Paste whole subshells and substitute inside the single quotes. A literal apostrophe requires proper shell escaping; do not simply paste it between those quotes. Use URLs without embedded credentials or signed tokens. Every curl begins with `-q -g`, disables environment proxies, and reports the error text. Do not add `-k` or redirect-following.
 
@@ -128,7 +128,7 @@ Inspect container publications separately: Docker forwarding can expose a port w
 
 ### B. Direct reachability and anonymous access
 
-**Demonstrated on loopback against both tools; an external vantage and provider hostnames REASONED** (the host has no second network and no provider deployment). The published HTTPS routes through a reverse proxy or identity-aware proxy are REASONED as well: no reverse proxy is installed on the authoring host.
+**Demonstrated on loopback against both tools; an external vantage and provider hostnames REASONED** (the host has no second network and no provider deployment). The same-host reverse proxy was demonstrated with Caddy (section C); identity-aware-proxy routes are REASONED, since no IAP or Cloudflare Access tenancy was available.
 
 First obtain a successful local control against the running backend. Then run the block from an authorized external testing host against each direct origin and provider hostname, followed by the published HTTPS routes. For a protected route, establish section C's authorized positive control first. Use disposable databases for any local exposed-state reproduction.
 
@@ -163,13 +163,13 @@ For external testing, replace loopback with the actual deployment address, port,
 - **Anonymous exposure:** a bare GET of the UI, a `?sql=` route, or a `.json` route returns a database listing, schema result, or protected rows without credentials. That is the finding. The schema query reveals a name; repeat with a known nonsensitive row endpoint to check row access.
 - **Fixed:** a denial or the configured login redirect returns no protected data. A 200 login page is not query success, and an unexplained 404 does not prove authentication.
 - **SQL disabled:** an authorized browsing account still reaches its permitted table page but receives no SQL result. Check that browsing positive control separately.
-- **Proxy-only authentication (REASONED; no reverse proxy is installed on the authoring host):** a loopback backend may intentionally return data without credentials. Exposure exists when an untrusted caller reaches it or bypasses the proxy.
+- **Proxy-only authentication (demonstrated with Caddy; see section C):** a loopback backend may intentionally return data without credentials. Exposure exists when an untrusted caller reaches it or bypasses the proxy.
 
 On loopback, block B against bare `datasette serve` returned the database listing, and the SQL JSON route returned the known row (`widget-canary`), both with `200`, and `/-/versions.json` answered `200` anonymously: the exposed state. Against the baseline command above, the SQL JSON route returned `403` while the table's JSON page still returned `200` (SQL disabled, browsing permitted), and `/published.db` returned `403`; without `--setting allow_download off` it returned `200`. `--cors` added `Access-Control-Allow-Origin: *`, absent without it. Bare `sqlite_web` answered the query GET with `200` anonymously, and an anonymous `POST` insert wrote a row to a disposable database; with `--read-only` the read still returned `200` and the insert changed nothing. `SQLITE_WEB_PASSWORD` set without `-P` left sqlite-web open (`200` anonymously), as the source reading above says; with `-P` the anonymous query GET got `302` to `/login/`.
 
 ### C. Authorized positive control versus anonymous access
 
-**Demonstrated on loopback over native TLS; fronting-layer headers from a proxy REASONED, since no reverse proxy is installed on the authoring host.**
+**Demonstrated on loopback over native TLS; the same-host proxy demonstrated with Caddy; identity-aware-proxy headers REASONED, since no IAP or Cloudflare Access tenancy was available.**
 
 Prepare a private mode-0600 header file per [secrets.md](secrets.md), containing the required Authorization, session Cookie, or fronting-layer headers. Only its path enters argv through `-H "@file"`. Keep credentials out of the URL, shell history, tracing, and shared output. The guard checks that the file is readable and regular; preparation must establish its privacy.
 
@@ -200,11 +200,13 @@ The authorized response must contain the expected data; HTTP success alone is in
 
 On loopback, with the metadata above plus datasette-auth-passwords, the block returned the table's rows to the `analyst` session cookie (`authorized http=200`) and `403` anonymously; an authenticated `guest` got `403`, the unauthorized outcome, and the analyst got `403` on SQL under `allow_sql: false`. For sqlite-web with `-P`, the session cookie got the row with `200` and the anonymous request `302` to `/login/`. With datasette-write on a disposable database, an anonymous write got `403`, a root write without the CSRF token `403`, and with the token `302`, and the row was written. Under the same metadata, `/-/versions.json`, `/-/metadata.json`, `/-/plugins.json`, `/-/settings.json` and `/-/databases.json` returned `403` anonymously and `200` to a freshly logged-in analyst, and `/-/metadata.json` showed that analyst both users' password hashes when they were written inline in the plugin configuration, but only the `$env` references when they were supplied through environment variables.
 
+Behind Caddy v2.11.4 (the release tarball, its SHA-256 equal to GitHub's published digest) on `127.0.0.1:8443` with `bind 127.0.0.1`, `auto_https off`, the admin API off and TLS files from the test CA, with [caddy.md](caddy.md)'s `basic_auth` in front of a Datasette that had no authentication of its own, `/`, the SQL JSON route, `/published.db`, `/-/versions.json` and `/published/items.csv` returned `401` anonymously and `200` with the Basic credential, while the loopback backend answered each of them directly with `200`: the proxy-only pattern, safe only while nothing untrusted reaches the backend. Block C through the proxy gave `authorized http=200` with the rows and `anonymous http=401` with `www-authenticate: Basic realm="restricted"`.
+
 Local authoring checks passed: `bash -n` on all five shell blocks, parsing of the metadata JSON, and 120 guard executions covering 40 cases under ordinary Bash, `set -u`, and `set -u` with `IFS=0`. The cases included missing assignments or markers, shortened and extra arguments, embedded placeholders, invalid schemes, URL userinfo, control characters, invalid header-file paths, and valid argument forwarding. An isolated curl argument recorder measured guard behavior; the HTTP outcomes above were demonstrated separately on loopback.
 
 Partial pastes beginning below the guards remain unguarded. An inherited marker with exactly the expected arguments is indistinguishable from a complete assignment. Paste whole blocks; these checks do not claim otherwise.
 
-**Verification debt:** backlog row 1.118 tracks what the loopback runs could not show: a wildcard bind and container publications, an external vantage against direct origins and provider hostnames, the reverse-proxy and identity-aware-proxy patterns, and `ss` run as root.
+**Verification debt:** backlog row 1.118 tracks what the loopback runs could not show: a wildcard bind and container publications, an external vantage against direct origins and provider hostnames, the identity-aware-proxy pattern, and `ss` run as root.
 
 ## Sources (checked September 2026)
 
