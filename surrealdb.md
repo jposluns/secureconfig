@@ -102,6 +102,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w '
   set -o pipefail
   { unset -n probe_jwt && unset -v probe_jwt; } 2>/dev/null ||
     { echo 'a readonly probe_jwt is set in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   set -- PASTE_WHOLE_BLOCK 'http://127.0.0.1:8000' 'REPLACE_WITH_NAMESPACE' 'REPLACE_WITH_DATABASE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
   shift

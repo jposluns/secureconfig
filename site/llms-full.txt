@@ -3736,6 +3736,7 @@ sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
   set +x +a                                     # never trace or export the credential read below
   { unset -n pw && unset -v pw; } 2>/dev/null ||
     { echo 'a readonly pw is set in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
   shift
@@ -3784,6 +3785,7 @@ rejected at TLS, a trusted one admitted with `--cert`/`--key`, server verificati
   set +x +a
   { unset -n sp && unset -v sp; } 2>/dev/null ||
     { echo 'a readonly sp is set in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
   shift
@@ -4936,6 +4938,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert REPLACE_
   set +x +a
   { unset -n tok && unset -v tok; } 2>/dev/null ||
     { echo 'a readonly tok is set in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   IFS= read -r -s -p 'Argo CD bearer token: ' tok < /dev/tty || exit 2; echo
   case "$tok" in ''|*[[:cntrl:]]*) echo 'supply the token; not probing'; exit 2 ;; esac
   printf 'Authorization: Bearer %s\n' "$tok" \
@@ -4970,6 +4973,7 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
   set +x +a
   { unset -n hmac sig && unset -v hmac sig; } 2>/dev/null ||
     { echo 'a readonly hmac or sig is set in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   IFS= read -r -s -p 'receiver HMAC secret: ' hmac < /dev/tty || exit 2; echo
   [ -n "$hmac" ] || { echo 'supply the HMAC secret; not probing'; exit 2; }
   body='{"ref":"refs/heads/main"}'
@@ -18074,6 +18078,7 @@ Verification status: the checks below were demonstrated on loopback against the 
   { unset -n audit_role audit_key audit_expected audit_reply &&
     unset -v audit_role audit_key audit_expected audit_reply; } 2>/dev/null ||
     { echo 'A readonly audit_* variable is set in this shell'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'A readonly IFS is set in this shell'; exit 2; }
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_ORIGIN' \
     'POST' '/indexes/movies/search' '{"q":"ninja"}' \
     'Authorization: Bearer ' '401' '200'
@@ -18813,6 +18818,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w '
   set -o pipefail
   { unset -n probe_jwt && unset -v probe_jwt; } 2>/dev/null ||
     { echo 'a readonly probe_jwt is set in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   set -- PASTE_WHOLE_BLOCK 'http://127.0.0.1:8000' 'REPLACE_WITH_NAMESPACE' 'REPLACE_WITH_DATABASE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
   shift
@@ -22040,6 +22046,7 @@ ss -tlnp   # expect 8080 on loopback or a private address; then probe the public
   set +x +a
   { unset -n code_server_cookie && unset -v code_server_cookie; } 2>/dev/null ||
     { echo 'cannot initialize cookie input; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   IFS= read -r -s -p 'Cookie value (name=value; name=value), then Enter: ' code_server_cookie < /dev/tty || exit 2
   printf '\n'
   case "$code_server_cookie" in
