@@ -677,6 +677,25 @@ if [ $? -eq 0 ] && ! printf '%s\n' "$rr_st" | grep -q '^  FAIL  '; then
 else
   bad "reasoned-row self-test failed: $(printf '%s' "$rr_st" | tail -1)"
 fi
+echo "== every port a guide names is mapped by the exposure index =="
+# tools/check_exposure_index.py: a guide that documents a listener exposure-index.md never maps leaves a
+# reader holding a scan result with nothing to search on. Nine high-precision port shapes, code blocks
+# included; tools/exposure_index_allowlist.txt excuses non-listener matches with a reason, and a stale
+# entry fails. Self-test first so what runs is the shipped checker; a failing self-test fails closed.
+ei_st="$(python3 -I -B tools/test_exposure_index.py 2>&1)"
+if [ $? -eq 0 ] && ! printf '%s\n' "$ei_st" | grep -q '^  FAIL  '; then
+  ok "exposure-index self-test"
+  ei="$(python3 -I -B tools/check_exposure_index.py 2>&1)"
+  ei_rc=$?
+  if [ "$ei_rc" -eq 0 ]; then
+    ok "$(printf '%s\n' "$ei" | tail -1)"
+  else
+    bad "exposure-index gaps (exit $ei_rc):"
+    printf '%s\n' "$ei" | sed 's/^/          /'
+  fi
+else
+  bad "exposure-index self-test failed: $(printf '%s' "$ei_st" | tail -1)"
+fi
 echo "== no committed secrets =="
 # Deliberately narrow: only material that is a credential wherever it appears.
 # A guide that must show sample key output will trip this; allowlist it here

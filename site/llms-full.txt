@@ -27861,6 +27861,7 @@ Rows are ordered by their first port number or the start of a range. Related por
 | 5432 | PostgreSQL, and pgvector on the same port; the Supabase self-hosted Supavisor pooler also publishes it | [postgresql.md](postgresql.md), [vector-databases.md](vector-databases.md), [cloud-firewalls.md](cloud-firewalls.md), [supabase-self-hosted.md](supabase-self-hosted.md) |
 | 5553, 5556, 5557, 5559 | Selenium Grid distributed components: Distributor, Session Map, event bus HTTP, and New Session Queue; these listeners are not protected by the Router's basic auth | [headless-browser-services.md](headless-browser-services.md) |
 | 5555 | Flower, the Celery monitor, or a Selenium Grid Node | [workflow-orchestrators.md](workflow-orchestrators.md), [headless-browser-services.md](headless-browser-services.md) |
+| 5601 | Kibana, which defaults to HTTP on `localhost:5601` with `server.ssl.enabled: false`; its Docker image changes the host default to `0.0.0.0` | [elasticsearch.md](elasticsearch.md) |
 | 5671, 5672 | AMQP over TLS, and AMQP plaintext | [rabbitmq.md](rabbitmq.md) |
 | 5678 | n8n | [n8n.md](n8n.md) |
 | 5766 | coturn telnet CLI, disabled by default and bound to loopback when enabled | [realtime-voice-infra.md](realtime-voice-infra.md) |
@@ -27868,6 +27869,7 @@ Rows are ordered by their first port number or the start of a range. Related por
 | 5901 | VNC in a GPU desktop template example; an example port, not a platform-wide default | [gpu-clouds.md](gpu-clouds.md) |
 | 6001, 6002 | Coolify real-time updates and terminal | [devops-uis.md](devops-uis.md) |
 | 6006 | Arize Phoenix | [llm-observability.md](llm-observability.md) |
+| 6060 | A Go service's pprof and expvar diagnostics listener, bound to loopback in the guide's example | [go.md](go.md) |
 | 6080 | noVNC web interface in a GPU desktop template example; an example port, not a platform-wide default | [gpu-clouds.md](gpu-clouds.md) |
 | 6222 | NATS cluster routes, a separate listener with its own authentication and TLS | [nats.md](nats.md) |
 | 6333, 6334, 6335 | Qdrant REST, gRPC, and internal cluster gRPC | [vector-databases.md](vector-databases.md) |
@@ -27896,6 +27898,7 @@ Rows are ordered by their first port number or the start of a range. Related por
 | 8083 | Argo CD argocd-server metrics, separate from its API and UI listener | [gitops-controllers.md](gitops-controllers.md) |
 | 8086 | InfluxDB HTTP API, UI, and write endpoint (2.x and 1.x); 1.x ships with `auth-enabled = false`, and an un-set-up 2.x instance can be seized through `/api/v2/setup` | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
 | 8088 | Apache Superset | [bi-dashboards.md](bi-dashboards.md) |
+| 8090 | PocketBase `serve`, which binds `127.0.0.1:8090` when no domain is given | [pocketbase.md](pocketbase.md) |
 | 8093 | The GitLab Runner interactive session server, its documented example listen address, which exists only when `[session_server]` is configured | [self-hosted-ci-runners.md](self-hosted-ci-runners.md) |
 | 8107 | Typesense peering service, which should be restricted to cluster members | [search-engines.md](search-engines.md) |
 | 8108 | Typesense API, which binds all interfaces by default | [search-engines.md](search-engines.md) |
@@ -27923,10 +27926,11 @@ Rows are ordered by their first port number or the start of a range. Related por
 | 9003 | QuestDB minimal HTTP health and metrics server, which follows the HTTP authentication policy you set (unauthenticated when `http.user` is unset) | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
 | 9004, 9005, 9010 | ClickHouse MySQL compatibility, PostgreSQL compatibility, and interserver replica traffic over HTTPS (the HTTP interserver port 9009 is listed separately) | [clickhouse.md](clickhouse.md) |
 | 9009 | QuestDB InfluxDB line protocol (TCP), which accepts unauthenticated writes unless `line.tcp.auth.db.path` is set; also ClickHouse interserver replica traffic over HTTP | [time-series-metrics-stores.md](time-series-metrics-stores.md), [clickhouse.md](clickhouse.md) |
-| 9090 | InvokeAI. Prometheus also defaults here, though its guide does not state the number | [image-gen-uis.md](image-gen-uis.md), [admin-uis.md](admin-uis.md) |
+| 9090 | InvokeAI, and the Prometheus server, which listens on `0.0.0.0:9090` by default with no authentication | [image-gen-uis.md](image-gen-uis.md), [admin-uis.md](admin-uis.md) |
 | 9091 | Milvus WebUI, or Authelia | [vector-databases.md](vector-databases.md), [fronting-auth.md](fronting-auth.md) |
 | 9092, 9093 | Kafka plaintext and SASL_SSL listeners. Which port carries which is configured, not fixed | [kafka.md](kafka.md) |
 | 9094 | Kafka KRaft controller listener in the guide's configured SASL_SSL example; the port is chosen, not fixed | [kafka.md](kafka.md) |
+| 9095 | Kafka's `INTERNAL` listener in the guide's example configuration, on a private address | [kafka.md](kafka.md) |
 | 9200 to 9300 | Elasticsearch HTTP default range, binding the first free port; OpenSearch HTTP on 9200 | [elasticsearch.md](elasticsearch.md) |
 | 9222 | Chrome or Chromium DevTools Protocol remote debugging, an endpoint with no authentication whose reachability is full browser takeover | [headless-browser-services.md](headless-browser-services.md) |
 | 9252 | The GitLab Runner Prometheus metrics endpoint, served with no built-in authorization, which exists only when a metrics `listen_address` is configured | [self-hosted-ci-runners.md](self-hosted-ci-runners.md) |
@@ -27945,14 +27949,17 @@ Rows are ordered by their first port number or the start of a range. Related por
 | 10257, 10259 | The Kubernetes controller manager and scheduler, on control-plane nodes | [kubernetes.md](kubernetes.md) |
 | 11211 | Memcached. Check UDP as well as TCP | [memcached.md](memcached.md) |
 | 11434 | Ollama | [ollama.md](ollama.md) |
+| 11435 | The Ollama guide's local policy proxy, an nginx listener on `127.0.0.1:11435` for the inference-only deployment | [ollama.md](ollama.md) |
 | 13133 | OpenTelemetry Collector health-check extension, when enabled | [llm-observability.md](llm-observability.md) |
 | 15671 | RabbitMQ management UI over TLS, as noted in the guide's listener inventory | [rabbitmq.md](rabbitmq.md) |
 | 15672 | RabbitMQ management UI | [rabbitmq.md](rabbitmq.md) |
+| 16379 | Redis Cluster's node-to-node bus (`cluster-port 16379` in the guide's example), which is opt-in and needs its own restriction | [redis.md](redis.md) |
 | 18123 | Helicone Compose ClickHouse HTTP publication: host port 18123 maps to container port 8123; it also falls inside the Ray worker range | [llm-observability.md](llm-observability.md) |
 | 19000 | Helicone Compose backing-service publication: host port 19000 maps to container port 9000, but the guide does not explicitly attribute this mapping to a service; it also falls inside the Ray worker range | [llm-observability.md](llm-observability.md) |
 | 19530 | Milvus gRPC | [vector-databases.md](vector-databases.md) |
 | 20202 | LiteFS HTTP replication API, including database export/import and administrative operations | [sqlite.md](sqlite.md) |
 | 25672 | RabbitMQ inter-node and CLI Erlang distribution (default, the AMQP port plus 20000); by default the Erlang cookie is its only credential and grants full control of the node | [rabbitmq.md](rabbitmq.md) |
+| 26379 | Redis Sentinel's separate listener; its shipped configuration disables protected mode and supplies no active authentication rule | [redis.md](redis.md) |
 | 27017 | MongoDB | [mongodb.md](mongodb.md), [cloud-firewalls.md](cloud-firewalls.md) |
 | 30000 to 32767 | Kubernetes NodePort range over TCP and UDP; SGLang on 30000 | [kubernetes.md](kubernetes.md), [model-servers.md](model-servers.md) |
 | 33060 | MySQL X Protocol, a separate listener whose bind is not controlled by bind_address; MariaDB does not implement it | [mysql.md](mysql.md) |
