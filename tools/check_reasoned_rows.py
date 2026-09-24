@@ -13,8 +13,9 @@ This is the reasoned-row gate. It is BLOCKING: tools/run_all_checks.sh runs it w
 guide has no demonstration row and is not grandfathered. Without `--strict` it reports
 gaps and exits 0. In either mode an OS error while scanning the guides exits 2 (fail
 closed), and a file that is not valid UTF-8 stops it with a traceback (exit 1). A missing
-or unreadable TODO.md, DONE.md or baseline file is read as empty, so under `--strict` every
-reasoned guide then counts as untracked and the gate fails (unless no guide is reasoned).
+or unreadable TODO.md, DONE.md or baseline file contributes no rows or exemptions, and
+`--strict` then fails only for a reasoned guide that the remaining backlog does not track
+and the baseline does not grandfather.
 
 WHAT COUNTS AS A GUIDE. Every top-level `*.md` in the repository root, scanned
 non-recursively, EXCEPT the meta-file exclude set (CONTRIBUTING.md, SECURITY.md,
