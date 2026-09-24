@@ -50,15 +50,35 @@ ranges (`9300 to 9400`, `8000-8010`). A single port, or a range covering at most
 (Ray's worker range, coturn's relay range) maps them only for the guides its own row cites,
 because otherwise it would silently cover every high port in the corpus.
 
+ROW SHAPE. The page must open with a `# ` heading (so no front matter), and the header line must
+appear exactly once, flush left, with a blank line directly above it and no `<`, `$` or
+code-fence marker anywhere above it, so the table the gate reads is the one GitHub renders (a
+whitelist for the page above the table, not a model of its containers); exactly
+`| --- | --- | --- | --- |` must follow it. The table then runs until the first blank line
+(spaces and tabs only). That is stricter than GFM, which also ends a table at another block such
+as a heading: here such a line is a malformed row, so every line between the separator and the
+blank line is checked. Each of those lines must be flush left, start `| ` and end ` |`, and have
+four cells split on unescaped pipes, with one space inside each pipe. Every cell must be
+printable ASCII (an en dash is allowed in the Port cell). Cells are held to a whitelist rather
+than to a model of rendering: every cell but Port must split into single-backtick code,
+`[text](target)` links with a simple target, escaped pipes and a fixed set of plain characters;
+every link's own text must contain a letter or digit, and so must the text the cell shows
+(cell_problem has the detail). The Port cell must be a comma-separated list of ports or ranges
+(`N`, `N to N`, `N-N`, or an en dash, each optionally `/TCP` or `/UDP`), every number from 1 to
+65535 in ASCII digits with no leading zero and every range ascending. Citations are read from
+the Documented in cell outside code spans. "not stated" is the credential value when the cited
+guides are silent. A row that breaks this fails the gate and maps nothing.
+
 ALLOWLIST. tools/exposure_index_allowlist.txt lists `<guide> <port>  # reason` pairs that match a
 pattern but are not listeners this corpus documents (an outbound destination, an illustrative
 number). An entry fails the gate when it is STALE (no mention of that port remains in that
 guide) or REDUNDANT (the mention remains but the index now maps it), so the list cannot outlive
 the text or the gap it excuses.
 
-Exit status: 0 when every mention is mapped or allowlisted and every allowlist entry is still
-needed; 1 otherwise; 2 when the index table cannot be found. Everything is offline and reads
-files as UTF-8. tools/test_exposure_index.py drives this script against throwaway trees.
+Exit status: 0 when every mention is mapped or allowlisted, every allowlist entry is still
+needed, and every index row is well formed; 1 otherwise; 2 when the exact header line cannot be
+found. Everything is offline and reads files as UTF-8. tools/test_exposure_index.py drives this
+script against throwaway trees.
 """
 import re
 import sys
@@ -71,7 +91,24 @@ from check_reasoned_rows import META_EXCLUDE  # noqa: E402  one definition of "n
 
 INDEX = "exposure-index.md"
 ALLOWLIST = Path("tools/exposure_index_allowlist.txt")
-TABLE_HEADER = "| Port | May be | Documented in |"
+TABLE_HEADER = "| Port | May be | Default credential | Documented in |"
+COLUMNS = 4  # every data row has exactly this many cells
+CELL_NAMES = ("Port", "May be", "Default credential", "Documented in")
+SEPARATOR = "| --- | --- | --- | --- |"
+_UNESCAPED_PIPE = re.compile(r"(?<!\\)\|")  # GFM: `\|` inside a cell is content, not a boundary
+# The whitelist a non-Port cell is built from, as one tokenizer: single-backtick code, a link with
+# text and a simple target, an escaped pipe, or one plain character. Every class is ASCII, and
+# re.ASCII keeps digit classes ASCII too.
+_TOKEN = re.compile(
+    r"(?P<code>`(?P<inner>[^`\\]+)`)"
+    r"|(?P<link>\[(?P<label>[^\[\]`\\<>&$]*[A-Za-z0-9][^\[\]`\\<>&$]*)\]\((?P<dest>[A-Za-z0-9._/#:?=%+-]+)\))"
+    r"|(?P<pipe>\\\|)"
+    r"|(?P<plain>(?!!\[)[A-Za-z0-9 .,;:'\"()/+*=?!%_@~^#{}>-])",
+    re.ASCII)
+_NUM = r"[1-9][0-9]{0,4}"  # ASCII digits, no leading zero
+_PORT_ITEM = _NUM + r"(?:(?: to |-|\N{EN DASH})" + _NUM + r")?(?:/(?:TCP|UDP))?"
+PORT_CELL = re.compile(_PORT_ITEM + r"(?:, " + _PORT_ITEM + r")*", re.ASCII)
+_CODE_SPAN = re.compile(r"`[^`\\]+`")
 WIDE = 101  # a range covering more ports than this maps them only for the guides its row cites
 
 RANGE = re.compile(r"(\d+)\s*(?:to|-|\N{EN DASH})\s*(\d+)")
@@ -113,38 +150,159 @@ PATTERNS = {
 }
 
 
+def split_row(line: str) -> list:
+    """Cells of a table line: one outer pipe per side, then a split on unescaped pipes."""
+    body = line.strip()
+    body = body[1:] if body.startswith("|") else body  # one outer pipe per side, so `||` keeps
+    body = body[:-1] if body.endswith("|") and not body.endswith("\\|") else body  # its empty cell
+    return [c.strip() for c in _UNESCAPED_PIPE.split(body)]
+
+
+def cell_problem(name: str, cell: str):
+    """Name what is wrong with one cell's content, or return None.
+
+    This is a whitelist, not a model of what a renderer shows. Every cell must be printable ASCII
+    (the Port cell may also use an en dash, and has its own grammar in port_cell_ok). A non-Port
+    cell must split, left to right with nothing left over, into these tokens: a single-backtick
+    code span with no backslash; a link `[text](target)` whose own text contains an ASCII letter or
+    digit and no bracket, backtick, backslash, `<`, `>`, `&` or `$`, and whose target uses only
+    letters, digits and `._/#:?=%+-`; an escaped pipe; or one plain character from the ASCII
+    letters, digits, space and `.,;:'"()/+*=?!%_@~^#{}>-` (so no `<`, `&`, `$`, bracket, backtick
+    or backslash in plain text, and no `![`). Some plain characters do open GitHub constructs
+    (emphasis, strikethrough, emoji shortcodes); the requirement that follows is what keeps those
+    visible: the text the tokens show (code content, link text and plain characters, never a link
+    target) must include a letter or digit. Anything else (HTML, entities, math, images, empty or
+    reference links, multi-backtick code, other escapes) is rejected rather than interpreted. Every
+    row of the current table already meets this.
+    """
+    if not cell:
+        if name == "Default credential":
+            return "has an empty Default credential cell; write `not stated` when the cited guides are silent"
+        return f"has an empty {name} cell"
+    if any(not (" " <= ch <= "~" or (name == "Port" and ch == "\N{EN DASH}")) for ch in cell):
+        return f"has a character outside printable ASCII in its {name} cell"
+    if name == "Port":
+        return None
+    shown, pos = [], 0
+    for m in _TOKEN.finditer(cell):
+        if m.start() != pos:
+            break
+        shown.append(m.group("inner") or m.group("label") or m.group("plain") or "")
+        pos = m.end()
+    if pos != len(cell):
+        return (f"has content outside the table's cell grammar in its {name} cell (allowed: plain "
+                "ASCII text, single-backtick code, [text](target) links, and an escaped pipe)")
+    if not re.search(r"[A-Za-z0-9]", "".join(shown)):
+        return f"has no letter or digit in its {name} cell"
+    return None
+
+
+def row_problem(line: str):
+    """Name what is wrong with a table line, or return None when it is in the table's form."""
+    if line != line.lstrip():
+        return "is indented; write table rows flush left"
+    cells = split_row(line)
+    if not cells[0]:
+        return "has an empty Port cell"
+    if not (line.startswith("| ") and line.endswith(" |")):
+        return ("does not start with `| ` and end with ` |`; every line up to the blank line after the "
+                "table is a table row")
+    if len(cells) != COLUMNS:
+        return f"has {len(cells)} cells; the table has {COLUMNS}"
+    for name, cell in zip(CELL_NAMES, cells):
+        problem = cell_problem(name, cell)
+        if problem:
+            return problem
+    if " | ".join(cells) != line[2:-2]:
+        return "is not in the table's `| a | b | c | d |` form (one space inside each pipe)"
+    return None
+
+
+def port_cell_ok(cell: str) -> bool:
+    """True iff the Port cell is a list of ports or ranges, every number 1 to 65535, ranges ascending."""
+    if not PORT_CELL.fullmatch(cell):
+        return False
+    for item in cell.split(", "):
+        nums = [int(n) for n in re.findall(r"\d+", item)]
+        if any(not 1 <= n <= 65535 for n in nums) or nums != sorted(nums):
+            return False
+    return True
+
+
 def parse_index(root: Path):
-    """Return (explicit_ports, wide_cites) from the index table, or None if it is missing.
+    """Return (explicit_ports, wide_cites, malformed) from the index table, or None if it is missing.
 
     explicit_ports maps a port for every guide; wide_cites[port] is the set of guides a wide
-    range maps that port for.
+    range maps that port for; malformed lists (line, label, problem) for a page that does not
+    open with a `# ` heading, a missing blank line above the header, `<`, `$` or a fence marker
+    above it, a repeated header, a missing or wrong separator row, and every table line that
+    breaks the row grammar (see ROW SHAPE). A malformed row maps nothing.
     """
     try:
         lines = (root / INDEX).read_text(encoding="utf-8").split("\n")
     except OSError:
         return None
-    explicit, wide_cites, in_table, found = set(), {}, False, False
-    for line in lines:
-        if line.startswith(TABLE_HEADER):
-            in_table, found = True, True
-            continue
-        if not in_table:
-            continue
-        if not line.startswith("|"):
+    if TABLE_HEADER not in lines:
+        return None
+    header = lines.index(TABLE_HEADER)
+    start = header + 1
+    explicit, wide_cites, malformed = set(), {}, []
+    # The table must be the one GitHub renders. Rather than model which containers above it could
+    # swallow it (a list item, a blockquote, an HTML block, a fence opened inside a list item), the
+    # page above the header is held to a whitelist: it opens with a `# ` heading (so no front
+    # matter), it has no `<` anywhere (so no HTML block or comment can open), no `$` (so no math
+    # block) and no code-fence marker, and a blank line sits directly above the header (so the
+    # header, flush left, starts a new block rather than continuing a list item or blockquote).
+    if not lines[0].startswith("# "):
+        malformed.append((1, "top", "must open the page with a `# ` heading; front matter or other "
+                          "leading blocks can hide the table"))
+    if header == 0 or lines[header - 1].strip(" \t"):
+        malformed.append((header + 1, "header", "must have a blank line directly above it, so the table "
+                          "starts a new block"))
+    for k, line in enumerate(lines[:header]):
+        if "<" in line:
+            malformed.append((k + 1, "above", "puts `<` above the table, which can open an HTML block that "
+                              "hides it; keep `<` out of the text above the table"))
             break
-        cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        if set(cells[0]) <= set("- "):
-            continue  # the separator row
-        cited = set(re.findall(r"\]\(([^)#]+\.md)(?:#[^)]*)?\)", cells[-1]))
-        for a, b in RANGE.findall(cells[0]):
-            lo, hi = int(a), int(b)
+    for k, line in enumerate(lines[:header]):
+        if "$" in line:
+            malformed.append((k + 1, "above", "puts `$` above the table, which can open a math block that "
+                              "hides it; keep `$` out of the text above the table"))
+            break
+    for k, line in enumerate(lines[:header]):
+        if "```" in line or "~~~" in line:
+            malformed.append((k + 1, "above", "puts a code-fence marker above the table, which can hide it; "
+                              "keep fences below the table"))
+            break
+    for k in range(header + 1, len(lines)):
+        if lines[k] == TABLE_HEADER:
+            malformed.append((k + 1, "header", "repeats the table header; this page has one table"))
+    if start >= len(lines) or lines[start] != SEPARATOR:
+        malformed.append((start + 1, "---", f"is not a {COLUMNS}-cell separator row `{SEPARATOR}`"))
+    else:
+        start += 1
+    for ln, line in enumerate(lines[start:], start + 1):
+        if not line.strip(" \t"):
+            break  # a blank line (spaces and tabs only, as CommonMark defines it) ends the table
+        problem = row_problem(line)
+        if problem:
+            malformed.append((ln, split_row(line)[0] or "(blank)", problem))
+            continue
+        port, docs = split_row(line)[0], split_row(line)[3]
+        if not port_cell_ok(port):
+            malformed.append(
+                (ln, port, "has a Port cell that is not a list of ports or ranges from 1 to 65535"))
+            continue
+        cited = set(re.findall(r"\]\(([^)#]+\.md)(?:#[^)]*)?\)", _CODE_SPAN.sub("", docs)))
+        for lo_s, hi_s in RANGE.findall(port):
+            lo, hi = int(lo_s), int(hi_s)
             if hi - lo + 1 > WIDE:
                 for p in range(lo, hi + 1):
                     wide_cites.setdefault(p, set()).update(cited)
             else:
                 explicit.update(range(lo, hi + 1))
-        explicit.update(int(n) for n in re.findall(r"\d+", RANGE.sub("", cells[0])))
-    return (explicit, wide_cites) if found else None
+        explicit.update(int(n) for n in re.findall(r"\d+", RANGE.sub("", port)))
+    return explicit, wide_cites, malformed
 
 
 def guides(root: Path):
@@ -197,7 +355,7 @@ def main() -> int:
     if parsed is None:
         print(f"error: the `{TABLE_HEADER}` table was not found in {INDEX}; fail-closed")
         return 2
-    explicit, wide_cites = parsed
+    explicit, wide_cites, malformed = parsed
     allow = load_allowlist(root)
     used, mapped_mentions, gaps = set(), set(), []
     for path in guides(root):
@@ -222,9 +380,11 @@ def main() -> int:
             print(f"EXPOSURE-INDEX: stale allowlist entry `{name} {port}` ({where}) matches no "
                   f"mention; remove it")
     pairs = len({(n, p) for n, _, p in gaps})
-    if gaps or unneeded:
+    for ln, first, problem in malformed:
+        print(f"EXPOSURE-INDEX: {INDEX}:{ln} row `{first}` {problem}")
+    if gaps or unneeded or malformed:
         print(f"FAIL: {pairs} unmapped guide/port pair(s), {len(unneeded)} allowlist entr(y/ies) "
-              f"no longer needed")
+              f"no longer needed, {len(malformed)} malformed index row(s)")
         return 1
     print(f"PASS: every port mention in the guides is mapped by {INDEX} or allowlisted "
           f"({len(allow)} allowlisted)")
