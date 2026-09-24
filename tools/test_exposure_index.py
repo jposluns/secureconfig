@@ -20,7 +20,8 @@ check (deleting each shape in turn) confirmed that every shape is needed by at l
   "ports 80/7777"; D30 an en-dash range "ports 7000-7777" (written with an en dash); D31 an IPv4 bind
   host on a published mapping "-p 10.0.0.5:7777:9090"; D32 "bind *:7777"; D33 a backticked
   "TCP `7777`"; D34-D36 the "or", "through" and hyphen list separators; D37 "127.0.0.2:7777";
-  D38-D39 a backticked range after a camel-case or `_port` identifier.
+  D38-D39 a backticked range after a camel-case or `_port` identifier; D40-D41 capitalized "To" and
+  "THROUGH" separators in a backticked range.
 Precision: N1 "TCP 192.168.1.1"; N2 "TCP 7777.2"; N3 "--support=2026" and "--export 2024";
   N4 "transport: 2026" and "report: 2024"; N5 "- 10:30 UTC"; N6 "port 7,777" (an
   unmapped number, so only the thousands rule passes it); N7 versions,
@@ -114,6 +115,8 @@ DETECT = [
     ("D37", "The listener binds 127.0.0.2:7777 locally.", 7777),
     ("D38", "The `listenPort` range is `7700` to `7777`.", 7777),
     ("D39", "The rtc_port range is `7700` to `7777`.", 7777),
+    ("D40", "The port range is `7700` To `7777`.", 7777),
+    ("D41", "The port range is `7700` THROUGH `7777`.", 7777),
 ]
 PRECISE = [
     ("N1", "The gateway is TCP 192.168.1.1 on the LAN."),

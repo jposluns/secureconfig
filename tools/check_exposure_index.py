@@ -11,7 +11,9 @@ names the number, one to five digits count; elsewhere two to five do:
   - "port 9090", "port 7", "port `9090`", "port **9090**", "ports 80 and 443",
     "ports 80, 443 and 8080", "ports 80,443", "ports 5000 to 5010" (both ends); after the
     singular "port" a comma is a thousands separator ("port 80,000"), after "ports" it separates
-    list items; and a backticked range after "port" in the same clause ("distribution-port
+    list items; and a backticked range after "port" in the same clause, where "port" may also be a
+    `_port`/`-port`/camel-case `Port` identifier and the separator is to, through, a hyphen or an
+    en dash in any case ("distribution-port
     range, by default `35672` through `35682`", both ends);
   - a host:port on an IPv4 loopback (127.0.0.0/8), the any-address or localhost host, a bracketed IPv6 literal, or after
     a scheme, including userinfo and shell-variable hosts (`0.0.0.0:9090`, `localhost:9090`,
@@ -92,7 +94,7 @@ PATTERNS = {
     # a backticked numeric range in prose, after "port" earlier in the same clause (the word, or a
     # `_port`/`-port`/camel-case `Port` identifier, as in the key shape; not "report" or "support")
     # ("distribution-port range, by default `35672` through `35682`"), so "pages `10` to `20`" is not one
-    "tick_range": re.compile(r"(?:(?<![A-Za-z])(?i:port)|(?<=[a-z])Port)(?i:[^.;]*?)`(\d{2,5})`\s*(?:to|through|-|\N{EN DASH})\s*`(\d{2,5})`"),
+    "tick_range": re.compile(r"(?:(?<![A-Za-z])(?i:port)|(?<=[a-z])Port)(?i:[^.;]*?)`(\d{2,5})`\s*(?:(?i:to|through)|-|\N{EN DASH})\s*`(\d{2,5})`"),
     "hostport": re.compile(
         r"(?:\b(?:0\.0\.0\.0|127(?:\.\d{1,3}){3}|localhost)|\[[0-9A-Fa-f:.]*\]|://(?:[^@/\s]+@)?[A-Za-z0-9.\-_${}]+):"
         + N + END),
