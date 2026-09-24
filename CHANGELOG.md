@@ -11,7 +11,7 @@ with the merged pull request is therefore an authoring obligation, not an enforc
 
 ## 2026-09-24
 
-- Default-bind sources (#293), the first batches of an audit of the corpus's default-listen claims against pinned vendor source. Fourteen claims were checked, and every one was confirmed at a release tag, from the release binary's own `--help`, or from the vendor docs.
+- Default-bind sources (#293), the first batches of an audit of the corpus's default-listen claims against pinned vendor source. Fourteen claims were checked, and every one was confirmed at a release tag, or from the vendor docs.
   - Four of them had no source for the bind, and each is now cited: Authelia, Prometheus, Phoenix (including its separate gRPC server on `[::]:4317`) and Docker's publishing default.
   - Ten more gained a tag-pinned citation: oauth2-proxy, Python `http.server`, the Caddy admin API, Grafana, Gitea, Next.js, n8n, Vite, SvelteKit adapter-node and LiteLLM.
   - `docker.md` now names both `0.0.0.0` and `[::]`.
