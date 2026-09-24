@@ -22802,7 +22802,7 @@ For a plain `RayCluster`, the containers are at `spec.headGroupSpec.template.spe
 
 ```bash
 ss -tlnp   # read every listener; 127.0.0.1:8265 (or the tailnet IP), never 0.0.0.0 or *
-ss -tlnp   # read every listener; 10001 should show the node's private address (plus a loopback listener, per the source), but 6379 can show every
+ss -tlnp   # read every listener; per the source, 10001 shows the node's private address plus a loopback listener, but 6379 can show every
            # interface (see step 2), so only the network boundary keeps it private
 ss -tlnp   # if you run Ray Serve, keep 8000 (HTTP proxy) private too, and 9000 (gRPC) when configured
 # from another network, checking that each externally facing Ray port (8265 dashboard, 6379 head, 10001
@@ -22874,8 +22874,10 @@ Service behaviour is not demonstrated here. A watcher stopped each of four loopb
 - Ray core gRPC server bind address (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/src/ray/rpc/grpc_server.cc#L67-L68
 - Ray `IsLocalhost` (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/src/ray/util/network_util.h#L111-L113
 - Ray Serve replica inter-deployment gRPC server (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/serve/_private/replica.py#L1778
-- Ray Client server listeners, node address plus loopback (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/util/client/server/server.py#L799-L801
-- Ray Client proxier listeners, node address plus loopback (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/util/client/server/proxier.py#L929-L931
+- Ray Client server listeners, `--host` address plus loopback (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/util/client/server/server.py#L799-L801
+- Ray Client proxier listeners, `--host` address plus loopback (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/util/client/server/proxier.py#L929-L931
+- Ray Client server started with the node IP address (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/node.py#L1572-L1575
+- Ray Client server `--host` set from that address (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/services.py#L2464-L2471
 - Kubernetes security contexts (runAsNonRoot, drop capabilities, seccomp): https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
 - KubeRay ray-cluster Helm chart values (head/worker podSecurityContext and securityContext, default {}): https://github.com/ray-project/kuberay/blob/v1.7.0/helm-chart/ray-cluster/values.yaml
 
