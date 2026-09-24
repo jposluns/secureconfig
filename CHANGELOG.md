@@ -11,6 +11,10 @@ with the merged pull request is therefore an authoring obligation, not an enforc
 
 ## 2026-09-24
 
+- Guarded secret reads, batch 2 (#301), plan A2: `sqlite.md`'s two secret inputs now meet rule 7's guarded-read exception.
+  - Bundle scan: the block turns off allexport as well as tracing (`set +x +a`) and clears `tok` with `unset -n` then `unset -v` before its other guards, refusing with exit 2 if either fails, as it does for a readonly name. Its token-literal and jwt-shape lines and its not-scanning refusals are otherwise unchanged.
+  - Turso check, row 1.123: the block no longer reads the token from `TURSO_AUTH_TOKEN`. It prompts for it with input hidden, into one subshell-local variable under the same guards, before either request is sent, and refuses an empty, `REPLACE_WITH_` or control-character token, so the token cannot inject a second header. The anonymous and authorized requests are unchanged, and the check stays REASONED (row 2.37).
+  - Row 1.126 stays open for the remaining sites.
 - Download-probe guard (#297), row 1.122. `sqlite.md`'s download probe named a literal `app.example.com`, so an unsubstituted paste probed that host. It now takes the HTTPS origin and a static path prefix on a `set -- PASTE_WHOLE_BLOCK` line inside a subshell, as the guide's listener and Turso blocks do, and drives its probes from positional parameters rather than named loop variables. It refuses to probe on a missing marker, a wrong value count, an empty or `REPLACE_WITH_` value, a non-HTTPS origin, an origin other than `https://` with a host and an optional numeric `:port` (one trailing `/` is dropped), or a prefix without a leading `/` or containing `//`, `?`, `#`, whitespace or a control character. The probe stays REASONED (row 2.37).
 - Guarded secret reads, batch 1 (#298): six `read -s` prompts in four guides now meet rule 7's guarded-read exception.
   - Each block turns off tracing and allexport (`set +x +a`) before the read and clears the variable with `unset -n` then `unset -v`. If either fails, as it does for a readonly name, the block refuses with exit 2. The four reads that lacked `|| exit 2` now have it.

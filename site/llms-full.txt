@@ -18322,7 +18322,9 @@ Scan built client bundles for a leaked Turso/libSQL token, keeping the token off
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
-  set +x                                # never trace the token read below
+  set +x +a                             # never trace or export the token read below
+  { unset -n tok && unset -v tok; } 2>/dev/null ||
+    { echo 'a readonly tok is set in this shell; not scanning'; exit 2; }
   set -- PASTE_WHOLE_BLOCK build dist .next/static
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not scanning'; exit 2; }
   shift
@@ -18361,6 +18363,9 @@ On the authoring host, without opening any socket, these three checks ran in exp
   - A bundle carrying the placeholder printed `token-literal exit: 0` and `jwt-shape exit: 0`.
   - A clean bundle printed `1` for both.
   - With none of the named directories present, the block refused to scan.
+  - With `tok` readonly in the calling shell, the block refused before prompting: `a readonly tok is set in this shell; not scanning` (exit 2). The block before this change failed at the prompt instead ("token input failed").
+  - With `tok` a nameref to `PATH` in the calling shell, the block scanned as in the placeholder run, printed `0` for both lines, and left `PATH` intact. The block before this change wrote the token into `PATH`, so `grep` was not found and both lines printed `127`.
+  - With `declare -l tok` inherited, the block printed `0` for both lines. The block before this change lower-cased the token and printed `token-literal exit: 1`, a false clean result with the token in the bundle.
 - **Git inventory.** It was run in three throwaway repositories.
   - With `app.db` committed before an `app.db*` ignore rule was added, `git check-ignore -v` listed the sidecars but not the tracked `app.db`. `git ls-files` printed `app.db`, and `git log` printed its commit.
   - After `git rm --cached`, `git log` still printed both commits touching it.
@@ -18386,23 +18391,28 @@ For LiteFS (`20202`) or an enabled Litestream metrics/MCP listener (REASONED: ne
 )
 ```
 
-Any HTTP response from the untrusted vantage is a reachable listener (the finding); a timeout, DNS, or TLS error, or a failed authorized control, is inconclusive, so corroborate with the bind address and firewall. For Turso (REASONED: this outbound check needs a Turso database and token, and none was available to the authoring environment), prove the HTTP database rejects anonymous queries. Load a valid token from the secret store into `TURSO_AUTH_TOKEN`:
+Any HTTP response from the untrusted vantage is a reachable listener (the finding); a timeout, DNS, or TLS error, or a failed authorized control, is inconclusive, so corroborate with the bind address and firewall. For Turso (REASONED: this outbound check needs a Turso database and token, and none was available to the authoring environment), prove the HTTP database rejects anonymous queries. Have a valid database token from the secret store ready to paste. The block prompts for it with input hidden, never exports it, and refuses a control character, so a pasted token cannot inject a second header. This keeps the token out of curl's argv, not out of reach of the account that runs the block:
 
 ```bash
 (
-  set +x
+  set +x +a
+  { unset -n turso_tok && unset -v turso_tok; } 2>/dev/null ||
+    { echo "a readonly turso_tok is set in this shell; not probing"; exit 2; }
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_DATABASE_URL'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "exactly one URL required; not probing"; exit 2; }
   case "$1" in ""|*REPLACE_WITH_*) echo "substitute the HTTPS database URL; not probing"; exit 2 ;; esac
   case "$1" in https://?*) ;; *) echo "HTTPS required; not probing"; exit 2 ;; esac
-  case "${TURSO_AUTH_TOKEN-}" in ""|*REPLACE_WITH_*) echo "load a valid database token from the secret store into TURSO_AUTH_TOKEN; not probing"; exit 2 ;; esac
+  IFS= read -r -s -p 'Turso database token (input hidden): ' turso_tok < /dev/tty ||
+    { echo "token input failed; not probing"; exit 2; }
+  printf '\n'
+  case "$turso_tok" in ""|*REPLACE_WITH_*|*[[:cntrl:]]*) echo "paste a valid database token, with no control characters; not probing"; exit 2 ;; esac
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     -H 'Content-Type: application/json' \
     --data '{"requests":[{"type":"execute","stmt":{"sql":"SELECT 1"}},{"type":"close"}]}' \
     -w '\nanonymous http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "${1%/}/v2/pipeline"
-  printf 'Authorization: Bearer %s\n' "$TURSO_AUTH_TOKEN" |
+  printf 'Authorization: Bearer %s\n' "$turso_tok" |
     curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --header @- \
       -H 'Content-Type: application/json' \
       --data '{"requests":[{"type":"execute","stmt":{"sql":"SELECT 1"}},{"type":"close"}]}' \
