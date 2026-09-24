@@ -27188,9 +27188,10 @@ For NocoDB, check the encryption key in the container rather than in a file: Com
 substitution, `env_file:` precedence and YAML values all decide the value, and the container's
 configured environment is their result. `docker exec` runs with that configured environment, not with
 the server process's own, so the two differ if the image's startup changes the variable. NocoDB's
-pinned `docker/start.sh` only runs `node docker/main.js`, but the image's build recipe is not in the
-pinned source, so that was not verified. The block reports only whether the key is non-empty and never
-prints it. Substitute the container name inside the single quotes.
+pinned start scripts, `docker/start.sh` and `docker/start-litestream.sh`, run `node docker/main.js`
+without touching it, but the pinned tree has no Dockerfile, so which script the image runs was not
+verified. The block reports only whether the key is non-empty and never prints it. Substitute the
+container name inside the single quotes.
 
 ```bash
 (
@@ -27198,12 +27199,12 @@ prints it. Substitute the container name inside the single quotes.
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not checking"; exit; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not checking"; exit; }
-  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the container name on the set -- line above; not checking"; exit ;; esac
+  case "$1" in *REPLACE_WITH_*|""|-*|*[[:cntrl:]]*) echo "substitute the container name on the set -- line above; not checking"; exit ;; esac
   # shellcheck disable=SC2016  # the single-quoted script is meant to expand inside the container
   docker exec "$1" sh -c 'if [ -n "${NC_CONNECTION_ENCRYPT_KEY-}" ]; then exit 0; else exit 3; fi'
   case "$?" in
     0) echo "NC_CONNECTION_ENCRYPT_KEY is non-empty in the container's configured environment" ;;
-    3) echo "NC_CONNECTION_ENCRYPT_KEY is EMPTY or unset in the container's configured environment: stored database credentials are plaintext" ;;
+    3) echo "NC_CONNECTION_ENCRYPT_KEY is EMPTY or unset in the container's configured environment" ;;
     *) echo "could not run the check in container $1; not checked" ;;
   esac
 )
@@ -27280,8 +27281,8 @@ admin as the positive control.
 
 Finally, from a host that should not have access, try a TCP connection to each published port. The
 block uses bash's `/dev/tcp`, so it works for SMTP on 25 as well as the web ports. It takes one IP
-address, not a host name, so that a name with both IPv4 and IPv6 addresses cannot hide one behind a
-timeout on the other: run it once for each public address of the host. It also takes a port you know
+address rather than a host name, so that a name with both IPv4 and IPv6 addresses cannot hide one
+behind a timeout on the other: run it once for each public address of the host. It also takes a port you know
 is open on that address from this host (for example SSH on 22) as the positive control, and stops if
 the control does not connect. Substitute both inside the single quotes.
 
@@ -27291,8 +27292,12 @@ the control does not connect. Substitute both inside the single quotes.
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
-  case "$1" in *REPLACE_WITH_*|""|*[!0-9A-Fa-f.:]*) echo "substitute one IP address (no host name, port or brackets) on the set -- line above; not probing"; exit ;; esac
-  case "$1" in *:*:*) ;; *:*) echo "give the address without a port; not probing"; exit ;; esac
+  case "$1" in *REPLACE_WITH_*|"") echo "substitute one IP address on the set -- line above; not probing"; exit ;; esac
+  ipv4='^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])[.]){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$'
+  case "$1" in
+    *:*:*) case "$1" in *[!0-9A-Fa-f.:]*) echo "$1 is not an IPv6 address; not probing"; exit ;; esac ;;
+    *) [[ $1 =~ $ipv4 ]] || { echo "give one IPv4 address (four numbers, 0 to 255, joined by dots) or one IPv6 address, with no host name, port or brackets; not probing"; exit; } ;;
+  esac
   case "$2" in *[!0-9]*|"") echo "substitute a known-open control port on the set -- line above; not probing"; exit ;; esac
   command -v timeout >/dev/null || { echo "timeout is not installed here; not probing"; exit; }
   # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
@@ -27312,16 +27317,21 @@ the control does not connect. Substitute both inside the single quotes.
 )
 ```
 
-Exposed, a port reports "connected". "refused" and "timed out" show only that this host could not
-reach the port: a firewall in front of the service produces either, but so can filtering on the
-probing host's own network (many providers block outbound SMTP on 25), and the control proves only
-its own port. Treat them as consistent with fixed, and take the `ss` and `docker ps` check on the
-host as the authority. "inconclusive" is any other result and says nothing about the port. The block
-runs the probe in the C locale so that bash's refusal message is matched in English. On loopback it
-printed "connected" for the control and an open port, "timed out" for a port whose accept queue was
-full (standing in for a filtered one) and "refused" for a closed port; it stopped when the control
-was closed, and refused to run for a host name, an address with a port, a bracketed address, or a
-machine without `timeout`. A "connected" on a port you did not mean to publish is the finding.
+Exposed, a port reports "connected"; a transparent proxy on the probing host's network can also
+complete the handshake, so confirm a surprising "connected" with `ss` on the host. "refused" and
+"timed out" show only that this host could not reach the port: a firewall in front of the service
+produces either, but so can filtering on the probing host's own network (many providers block outbound
+SMTP on 25), and the control proves only its own port. Treat them as consistent with fixed, and take
+the `ss` and `docker ps` check on the host as the authority. "inconclusive" is any other result and
+says nothing about the port. The block runs the probe in the C locale so that bash's refusal message
+is matched in English. On loopback it printed "connected" for the control and an open port, "timed
+out" for a port whose accept queue was full (standing in for a filtered one) and "refused" for a
+closed port, and it stopped when the control was closed. It refused to run for the host names
+`localhost`, `cafe.be`, `fe01`, `db1` and `face`, for `1.2.3.4.5`, `999.1.1.1`, `01.2.3.4` and
+`1.2.3`, for an address with a port, a bracketed address or a leading space, and on a machine without
+`timeout`. A value with two or more colons is passed on as IPv6; an invalid one, `dead::beef::`,
+failed the name lookup at the control and stopped. A "connected" on a port you did not mean to
+publish is the finding.
 
 ## Sources (checked September 2026)
 
@@ -27332,7 +27342,7 @@ machine without `timeout`. A "connected" on a port you did not mean to publish i
 - NocoDB 2026.09.0 app settings (`invite_only_signup`): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/interface/AppSettings.ts
 - NocoDB 2026.09.0 admin from environment (`NC_ADMIN_EMAIL`, `NC_ADMIN_PASSWORD`): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/helpers/initAdminFromEnv.ts
 - NocoDB 2026.09.0 credential encryption: https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/utils/encryptDecrypt.ts and https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/helpers/initDataSourceEncryption.ts
-- NocoDB 2026.09.0 container start script: https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/docker/start.sh
+- NocoDB 2026.09.0 container start scripts: https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/docker/start.sh and https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/docker/start-litestream.sh
 - Docker `docker exec` environment: https://docs.docker.com/reference/cli/docker/container/exec/
 - NocoDB 2026.09.0 README (Docker example JWT secret, binaries note): https://github.com/nocodb/nocodb/blob/2026.09.0/README.md
 - NocoDB 2026.09.0 sample environment without an encryption key: https://github.com/nocodb/nocodb/blob/2026.09.0/docker-compose/examples/external-postgres-and-redis/docker.env
