@@ -4546,10 +4546,9 @@ Gateway API defines no authentication filter; each implementation adds its own. 
   printf '%s' "$PASSWORD" | htpasswd -cis .htpasswd admin
   # -i does no verification, so the block asks twice and refuses a mismatch; `-vi` below then
   # confirms the file holds that value, and the secret is created only if it does. Paste the block by
-  # itself: the shell reads the whole subshell before `read` runs. Without bracketed paste, `read`
-  # takes the NEXT LINE of input, so a line pasted
-  # after the closing `)` becomes the password and every command after that still succeeds; with
-  # bracketed paste, that line instead runs as a command once the block finishes.
+  # itself: the shell reads the whole subshell before either `read` runs. Without bracketed paste,
+  # lines pasted after the closing `)` feed the two prompts instead, and the block refuses unless both
+  # are identical; with bracketed paste, they run as commands once the block finishes.
   printf '%s' "$PASSWORD" | htpasswd -vi .htpasswd admin ||
     { echo 'htpasswd could not verify the file; not creating the secret'; exit 2; }
   kubectl create secret generic app-basic-auth --from-file=.htpasswd
@@ -18768,7 +18767,7 @@ never exported:
     { echo 'cannot clear pw, SURREAL_USER or SURREAL_PASS in this shell; not starting'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not starting'; exit 2; }
   set -- "${!SURREAL_@}"
-  [ "$#" -eq 0 ] || { echo "inherited $* would reach surreal start; unset them first; not starting"; exit 2; }
+  [ "$#" -eq 0 ] || { printf 'SURREAL_* variables set in this shell:'; printf ' %s' "$@"; printf '; unset them first; not starting\n'; exit 2; }
   IFS= read -r -s -p 'Initial root password: ' pw < /dev/tty || exit 2
   printf '\n'
   [ -n "$pw" ] || exit 2
@@ -18780,7 +18779,7 @@ This moves the password out of argv, not out of reach: it stays readable through
 the same user and by root for the server's whole lifetime, as it does through the environment of any
 process that inherits it. Treat it as exposed to that account and to root while the server runs.
 
-The block also refuses to start while any `SURREAL_*` variable is set in the calling shell. `surreal start` reads many of its options from such variables, including `SURREAL_UNAUTHENTICATED` and `SURREAL_BIND`, so an inherited one would start the server differently from what the block shows. Unset them, or start from a clean shell.
+The block clears `SURREAL_USER` and `SURREAL_PASS` itself, then refuses to start while any other `SURREAL_*` variable is set in the calling shell, naming each. `surreal start` reads many of its options from such variables, including `SURREAL_UNAUTHENTICATED` and `SURREAL_BIND`, so an inherited one would start the server differently from what the block shows. Unset them, or start from a clean shell.
 
 The `--unauthenticated` flag (`SURREAL_UNAUTHENTICATED`) allows unauthenticated access instead; a
 guest connecting under it gets permissions equivalent to the `OWNER` role. Do not run it, or carry it
