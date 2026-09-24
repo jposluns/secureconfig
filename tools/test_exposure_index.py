@@ -17,11 +17,15 @@ check (deleting each shape in turn) confirmed that every shape is needed by at l
   D20 a compact plural list "ports 80,7777"; D21 a backticked range after "port" in the clause;
   D22 a quoted "-p \"7777:9090\""; D23 "-p [::]:9090:7777"; D24 a Compose IPv6 "- \"[::]:9090:7777\"";
   D25 lowercase "tcp 7777"; D26 "7777/TCP"; D27 "bind 7777"; D28 "localhost:7777"; D29 a slash list
-  "ports 80/7777"; D30 an en-dash range "ports 7000-7777" (written with an en dash).
+  "ports 80/7777"; D30 an en-dash range "ports 7000-7777" (written with an en dash); D31 an IPv4 bind
+  host on a published mapping "-p 10.0.0.5:7777:9090"; D32 "bind *:7777"; D33 a backticked
+  "TCP `7777`"; D34-D36 the "or", "through" and hyphen list separators; D37 "127.0.0.2:7777".
 Precision: N1 "TCP 192.168.1.1"; N2 "TCP 7777.2"; N3 "--support=2026" and "--export 2024";
-  N4 "transport: 2026" and "report: 2024"; N5 "- 10:30 UTC"; N6 "port 80,000"; N7 versions,
+  N4 "transport: 2026" and "report: 2024"; N5 "- 10:30 UTC"; N6 "port 7,777" (an
+  unmapped number, so only the thousands rule passes it); N7 versions,
   years and counts in prose; N8 a backticked range with no "port" in the clause; N9 "EXPOSE 999999"
-  and N10 "EXPOSE 7777.2" (malformed tokens yield nothing).
+  and N10 "EXPOSE 7777.2" (malformed tokens yield nothing); N11 "report" is not the word "port";
+  N12 a decimal list item "7777.5"; N13 a dotted "1.7777/tcp" is not a port.
 Mapping: M1 a mapped port passes; M2 a narrow range maps for every guide; M3 a 101-port range maps
   for every guide; M4 a 102-port range maps only for its cited guide (ray.md passes, b.md fails);
   M5 a cited link with an anchor still counts as cited; M6 a compact plural list of mapped ports;
@@ -100,6 +104,13 @@ DETECT = [
     ("D28", "Browse to localhost:7777 to reach it.", 7777),
     ("D29", "It listens on ports 80/7777.", 7777),
     ("D30", "It listens on ports 7000\N{EN DASH}7777.", 7777),
+    ("D31", "```sh\ndocker run -p 10.0.0.5:7777:9090 img\n```", 7777),
+    ("D32", "```haproxy\nbind *:7777\n```", 7777),
+    ("D33", "It serves TCP `7777` to clients.", 7777),
+    ("D34", "It listens on ports 80 or 7777.", 7777),
+    ("D35", "It listens on ports 80 through 7777.", 7777),
+    ("D36", "It listens on ports 80-7777.", 7777),
+    ("D37", "The listener binds 127.0.0.2:7777 locally.", 7777),
 ]
 PRECISE = [
     ("N1", "The gateway is TCP 192.168.1.1 on the LAN."),
@@ -107,11 +118,14 @@ PRECISE = [
     ("N3", "Pass --support=2026 and --export 2024 to the tool."),
     ("N4", "```yaml\ntransport: 2026\nreport: 2024\n```"),
     ("N5", "- 10:30 UTC stand-up"),
-    ("N6", "It handles port 80,000 rows a day."),
+    ("N6", "It handles port 7,777 rows a day."),
     ("N7", "Version 3.12, released in 2026, handles 5000 requests."),
     ("N8", "See pages `10` to `20` of the manual."),
     ("N9", "```dockerfile\nEXPOSE 999999\n```"),
     ("N10", "```dockerfile\nEXPOSE 7777.2\n```"),
+    ("N11", "The report covers years `2020` to `2026`."),
+    ("N12", "It listens on ports 80,7777.5 in the release notes."),
+    ("N13", "See section 1.7777/tcp of the spec."),
 ]
 
 

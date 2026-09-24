@@ -13,7 +13,7 @@ names the number, one to five digits count; elsewhere two to five do:
     singular "port" a comma is a thousands separator ("port 80,000"), after "ports" it separates
     list items; and a backticked range after "port" in the same clause ("distribution-port
     range, by default `35672` through `35682`", both ends);
-  - a host:port on a loopback, any-address or localhost host, a bracketed IPv6 literal, or after
+  - a host:port on an IPv4 loopback (127.0.0.0/8), the any-address or localhost host, a bracketed IPv6 literal, or after
     a scheme, including userinfo and shell-variable hosts (`0.0.0.0:9090`, `localhost:9090`,
     `[::]:9090`, `https://[2001:db8::1]:9090`, `https://host:9090`, `postgres://u:p@db:9090`);
   - "TCP 26379" / "udp 3478", either case (not followed by a decimal or dotted continuation, so an IP address
@@ -35,8 +35,10 @@ These shapes are the gate's whole definition of a mention: a port written in any
 not seen, so the gate keeps the index complete only over what it can recognize. Known latent edges,
 none present in the corpus when this gate was written: a number joined to a port by a list
 separator is read as a port ("port 5432, 10 connections" reads 10) and a YAML list of times under
-a Compose-like key reads as mappings, both failing closed; and "TCP 9000-9010" or "9000-9010/tcp"
-reads only one end of the range.
+a Compose-like key reads as mappings, and "EXPOSE 80 443/udp 8080/sctp" reads 8080 through the
+TCP/UDP shape, all failing closed; "TCP 9000-9010" or "9000-9010/tcp" reads only one end of the
+range; and three forms are not seen at all: an EXPOSE range ("EXPOSE 8080-8090"), an unspaced
+"-p8080:80", and a port split from its "port" word by a hard line wrap.
 A broader net (any `word:N`, or any bare four- or five-digit number) was measured when this gate
 was written and found to be mostly years, sizes, counts and versions, so it is not used.
 
@@ -89,9 +91,9 @@ PATTERNS = {
                               + EMPH + r")*)"),
     # a backticked numeric range in prose, after "port" earlier in the same clause
     # ("distribution-port range, by default `35672` through `35682`"), so "pages `10` to `20`" is not one
-    "tick_range": re.compile(r"(?i)port[^.;]*?`(\d{2,5})`\s*(?:to|through|-|\N{EN DASH})\s*`(\d{2,5})`"),
+    "tick_range": re.compile(r"(?i)\bport[^.;]*?`(\d{2,5})`\s*(?:to|through|-|\N{EN DASH})\s*`(\d{2,5})`"),
     "hostport": re.compile(
-        r"(?:\b(?:0\.0\.0\.0|127\.0\.0\.1|localhost)|\[[0-9A-Fa-f:.]*\]|://(?:[^@/\s]+@)?[A-Za-z0-9.\-_${}]+):"
+        r"(?:\b(?:0\.0\.0\.0|127(?:\.\d{1,3}){3}|localhost)|\[[0-9A-Fa-f:.]*\]|://(?:[^@/\s]+@)?[A-Za-z0-9.\-_${}]+):"
         + N + END),
     "proto_space": re.compile(r"(?i)\b(?:TCP|UDP)\s+`?" + N + r"`?" + END),
     "slash_proto": re.compile(r"(?i)(?<![\d/.:])(\d{2,5})/(?:tcp|udp)\b"),
