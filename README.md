@@ -183,6 +183,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [bi-dashboards.md](bi-dashboards.md) | Metabase, Superset, Redash: never public; least-privilege database user |
 | [low-code-builders.md](low-code-builders.md) | NocoDB, Baserow, Appsmith, Budibase, Windmill: first-run admin, open signup, sample secrets |
 | [server-admin-panels.md](server-admin-panels.md) | Cockpit, Webmin, Proxmox VE: root-level host panels on every address, no default second factor |
+| [nomad-consul.md](nomad-consul.md) | Nomad, Consul: APIs with ACLs off by default, anonymous bootstrap, Consul's allow default |
 
 ### Web application controls
 
