@@ -46,6 +46,8 @@ Verification status: the checks below were demonstrated on loopback against the 
 (
   set +x
   set -o pipefail
+  unset -v audit_role audit_key audit_expected audit_reply 2>/dev/null ||
+    { echo 'A readonly audit_* variable is set in this shell'; exit 2; }
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_ORIGIN' \
     'POST' '/indexes/movies/search' '{"q":"ninja"}' \
     'Authorization: Bearer ' '401' '200'
@@ -110,7 +112,11 @@ Verification status: the checks below were demonstrated on loopback against the 
 
 Use `Authorization: Bearer ` for Meilisearch and `X-TYPESENSE-API-KEY: ` for Typesense. Prepare the search fixtures first, and for the creation tests confirm `acl_probe` does not already exist, using a disposable resource and removing it afterward. A Meilisearch `202` only acknowledges a queued task, so confirm task success before crediting the positive control. In an isolated exposed-state test, keyless Meilisearch must return the fixture anonymously and the protected instance must reject that request; Typesense's exposed-state discriminator is a known disclosed bootstrap or operational key (it has no keyless mode), which after rotation must fail while its replacement succeeds against the same request. Do not invent a universal default password. Test tenant restrictions with known allowed and forbidden documents: the restricted credential must find the allowed fixture and omit the forbidden one, while an authorized control finds the forbidden fixture on the same query and origin; attempt to override filters and field selection, and test referenced collections where JOINs are used, since an empty result alone proves nothing.
 
-On the loopback runs, keyless Meilisearch returned the fixture to an anonymous search with `200`, so the
+The paired-request block clears its own variables before it runs, because an earlier version printed
+`Statuses matched` and exited `0` without sending any request when the calling shell held a readonly
+`audit_role`; on loopback it now exits `2` with `A readonly audit_* variable is set in this shell` for a
+readonly `audit_role` or `audit_expected`, and an exported `audit_key` in the calling shell no longer
+reaches child processes. On the loopback runs, keyless Meilisearch returned the fixture to an anonymous search with `200`, so the
 authentication row printed `FAIL: unexpected HTTP status`: the exposed state. With a master key set, the
 same row got `401` `missing_authorization_header` anonymously and `200` with the fixture on the Default
 Search API Key, and `GET /keys` listed the four default keys named above; the write row got `403`
@@ -128,8 +134,9 @@ returned both; a Typesense scoped key embedding `filter_by` behaved the same way
 joined company's billing field: collection scoping alone did not isolate joined data. A scoped key
 embedding `exclude_fields=$companies(billing)` returned the same query without it.
 
-**REASONED for proxies, container mappings, IPv6 and firewalls (the runs used native TLS on one host
-with no container runtime and no second network):** proxy authentication does not prove the engine or
+**REASONED for proxies, container mappings, IPv6, firewalls and a wildcard bind (the runs used native
+TLS on one host with no container runtime, no second network, and no root or `sudo` to read the
+rulesets, and the host forbids binding every interface):** proxy authentication does not prove the engine or
 peering ports are private. On the engine host inspect `ss -ltnp`, container port mappings, and the effective IPv4 and IPv6 firewall rules, and confirm the engine answers from its intended private client while running. From an external disallowed source, test every public address and actual published port; the block below covers the default ports with OpenBSD-compatible netcat and numeric addresses:
 
 ```bash
@@ -155,7 +162,9 @@ peering ports are private. On the engine host inspect `ss -ltnp`, container port
 
 Under the private-backend pattern, any successful external TCP connection is a finding, even if HTTP authentication would reject the caller; a timeout is inconclusive, and a refusal shows only no connection from that source at that moment, so corroborate it with the live private positive control, the listener bindings, and the effective firewall policy. If native HTTPS is intentionally public, run the paired authorization tests against that engine endpoint too, using its certificate-valid hostname and actual port (preserve the hostname with curl's `--resolve` when testing an IP, keep the substituted address guarded, and retain certificate verification); engine API TLS does not establish protection of Typesense's separate peering listener.
 
-On loopback, `ss` showed Typesense only on `127.0.0.1:8108` and `127.0.0.1:8107`. The block against
+On loopback, the harness's `ss -tulnp` listener check, run at every engine start, showed Typesense
+only on `127.0.0.1:8108` and `127.0.0.1:8107`; the exposed half, a wildcard bind such as Typesense's
+default `0.0.0.0:8108`, was not observed. The block against
 127.0.0.1, where the engines listened, printed `FAIL: TCP 7700 is reachable` (exit `1`), the reachable
 shape; against 127.0.0.2, where nothing listens, each port's `Connection refused` printed `INCONCLUSIVE`
 and the block ended with exit `2`, the refused shape. A real external vantage is REASONED for the same
