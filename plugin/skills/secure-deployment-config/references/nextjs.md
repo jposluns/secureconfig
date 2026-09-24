@@ -195,3 +195,4 @@ fi
 - Next.js calls `server.listen(port, hostname)` (pinned tag v16.3.6): https://github.com/vercel/next.js/blob/v16.3.6/packages/next/src/server/lib/start-server.ts#L309
 - Node.js `server.listen()` without a host binds the unspecified IPv6 address `::` when available, otherwise `0.0.0.0`: https://github.com/nodejs/node/blob/v22.22.1/doc/api/net.md
 - Commander 12.1.0 (the version Next.js v16.3.6 pins): an option that takes a value is `undefined` unless specified on the command line: https://github.com/tj/commander.js/blob/v12.1.0/Readme.md#L203-L205
+- Next.js v16.3.6 pins `commander` at `12.1.0` (pinned tag v16.3.6): https://github.com/vercel/next.js/blob/v16.3.6/packages/next/package.json#L246
