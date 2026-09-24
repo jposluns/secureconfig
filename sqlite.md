@@ -82,6 +82,7 @@ Scan built client bundles for a leaked Turso/libSQL token, keeping the token off
   set +x +a                             # never trace or export the token read below
   { unset -n tok && unset -v tok; } 2>/dev/null ||
     { echo 'a readonly tok is set in this shell; not scanning'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not scanning'; exit 2; }
   set -- PASTE_WHOLE_BLOCK build dist .next/static
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not scanning'; exit 2; }
   shift
@@ -123,6 +124,7 @@ On the authoring host, without opening any socket, these three checks ran in exp
   - With `tok` readonly in the calling shell, the block refused before prompting: `a readonly tok is set in this shell; not scanning` (exit 2). The block before this change failed at the prompt instead ("token input failed").
   - With `tok` a nameref to `PATH` in the calling shell, the block scanned as in the placeholder run, printed `0` for both lines, and left `PATH` intact. The block before this change wrote the token into `PATH`, so `grep` was not found and both lines printed `127`.
   - With `declare -l tok` inherited, the block printed `0` for both lines. The block before this change lower-cased the token and printed `token-literal exit: 1`, a false clean result with the token in the bundle.
+  - With `IFS` readonly in the calling shell, the block refused before prompting: `a readonly IFS is set in this shell; not scanning` (exit 2). The block before this change prompted and scanned with the readonly `IFS` in force.
 - **Git inventory.** It was run in three throwaway repositories.
   - With `app.db` committed before an `app.db*` ignore rule was added, `git check-ignore -v` listed the sidecars but not the tracked `app.db`. `git ls-files` printed `app.db`, and `git log` printed its commit.
   - After `git rm --cached`, `git log` still printed both commits touching it.
@@ -155,6 +157,7 @@ Any HTTP response from the untrusted vantage is a reachable listener (the findin
   set +x +a
   { unset -n turso_tok && unset -v turso_tok; } 2>/dev/null ||
     { echo "a readonly turso_tok is set in this shell; not probing"; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo "a readonly IFS is set in this shell; not probing"; exit 2; }
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_DATABASE_URL'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
