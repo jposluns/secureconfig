@@ -182,6 +182,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | [devops-uis.md](devops-uis.md) | Portainer, Coolify, Dokploy, Nginx Proxy Manager, Vaultwarden, Kubernetes Dashboard, Jenkins, Gitea, Uptime Kuma, Docker API: never public |
 | [bi-dashboards.md](bi-dashboards.md) | Metabase, Superset, Redash: never public; least-privilege database user |
 | [low-code-builders.md](low-code-builders.md) | NocoDB, Baserow, Appsmith, Budibase, Windmill: first-run admin, open signup, sample secrets |
+| [server-admin-panels.md](server-admin-panels.md) | Cockpit, Webmin, Proxmox VE: root-level host panels on every address, no default second factor |
 
 ### Web application controls
 
