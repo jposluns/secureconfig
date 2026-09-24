@@ -57,7 +57,8 @@ Row shape: R1 a three-cell row fails; R2 an empty Default credential cell fails;
   `$x$`, a parenthesized target and a backslash in code fail; R44 `>` is plain text; R45 a table
   inside an HTML comment and R46 inside a fence fail; R47 a repeated header fails; R48 a citation
   inside a code span is not a citation; R49-R52 `<`, a list item or blockquote directly above, or a
-  fence marker above the header fails; R53 a link whose text is only spaces fails.
+  fence marker above the header fails; R53 a link whose text is only spaces fails; R54 YAML front
+  matter wrapping the table fails; R55 a math block opened above the table fails.
 """
 import shutil
 import subprocess
@@ -356,8 +357,15 @@ def main() -> int:
                   index=INDEX.replace("[ray.md](ray.md#ports)", "[ray.md](ray.md#ports)[ ](b.md)", 1))
     check(f"R53: a link whose text is only spaces fails (rc={rc}, out={out!r})",
           rc == 1 and "outside the table's cell grammar" in out)
+    rc, out = run(guide("It listens on port 7777."),
+                  index="---\ntitle: x\n\n" + INDEX.split("\n\n", 1)[1] + row7 + "\n---\n\nText.\n")
+    check(f"R54: YAML front matter wrapping the table fails (rc={rc}, out={out!r})",
+          rc == 1 and "must open the page with a `# ` heading" in out)
+    rc, out = run(guide("It listens on port 7777."), index="# X\n\n$$\n\n" + INDEX.split("\n\n", 1)[1] + row7)
+    check(f"R55: a math block opened above the table fails (rc={rc}, out={out!r})",
+          rc == 1 and "puts `$` above the table" in out)
 
-    total = len(DETECT) + len(PRECISE) + 7 + 3 + 4 + 53
+    total = len(DETECT) + len(PRECISE) + 7 + 3 + 4 + 55
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")

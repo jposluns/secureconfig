@@ -50,10 +50,12 @@ ranges (`9300 to 9400`, `8000-8010`). A single port, or a range covering at most
 (Ray's worker range, coturn's relay range) maps them only for the guides its own row cites,
 because otherwise it would silently cover every high port in the corpus.
 
-ROW SHAPE. The header line must appear exactly once, flush left, with a blank line directly above
-it and no `<` or code-fence marker anywhere above it, so the table the gate reads is the one
-GitHub renders (a whitelist for the page above the table, not a model of its containers);
-exactly `| --- | --- | --- | --- |` must follow it. The table then runs until the first blank line (spaces and tabs only). That
+ROW SHAPE. The page must open with a `# ` heading (so no front matter), and the header line must
+appear exactly once, flush left, with a blank line directly above it and no `<`, `$` or
+code-fence marker anywhere above it, so the table the gate reads is the one GitHub renders (a
+whitelist for the page above the table, not a model of its containers); exactly
+`| --- | --- | --- | --- |` must follow it. The table then runs until the first blank line
+(spaces and tabs only). That
 is stricter than GFM, which also ends a table at another block such as a heading: here such a
 line is a malformed row, so every line between the separator and the blank line is checked. Each
 of those lines must be flush left, start `| ` and end ` |`, and have four cells split on unescaped
@@ -163,8 +165,9 @@ def cell_problem(name: str, cell: str):
     This is a whitelist, not a model of what a renderer shows. Every cell must be printable ASCII
     (the Port cell may also use an en dash, and has its own grammar in port_cell_ok). A non-Port
     cell must split, left to right with nothing left over, into these tokens: a single-backtick
-    code span with no backslash; a link `[text](target)` whose text has no bracket, backtick,
-    backslash, `<`, `>`, `&` or `$` and whose target uses only letters, digits and `._/#:?=%+-`;
+    code span with no backslash; a link `[text](target)` whose own text contains an ASCII letter
+    or digit and no bracket, backtick, backslash, `<`, `>`, `&` or `$`, and whose target uses
+    only letters, digits and `._/#:?=%+-`;
     an escaped pipe; or one plain character from the ASCII letters, digits, space and
     `.,;:'"()/+*=?!%_@~^#{}>-` (so no `<`, `&`, `$`, bracket, backtick or backslash in plain text,
     and no `![`). Some plain characters do open GitHub constructs (emphasis, strikethrough, emoji
@@ -232,8 +235,9 @@ def parse_index(root: Path):
     """Return (explicit_ports, wide_cites, malformed) from the index table, or None if it is missing.
 
     explicit_ports maps a port for every guide; wide_cites[port] is the set of guides a wide
-    range maps that port for; malformed lists (line, label, problem) for a missing blank line
-    above the header, `<` or a fence marker above it, a repeated header, a missing or wrong
+    range maps that port for; malformed lists (line, label, problem) for a page that does not
+    open with a `# ` heading, a missing blank line above the header, `<`, `$` or a fence marker
+    above it, a repeated header, a missing or wrong
     separator row, and every table line that breaks the row grammar (see ROW SHAPE). A
     malformed row maps nothing.
     """
@@ -251,6 +255,9 @@ def parse_index(root: Path):
     # text above the header is held to a whitelist: no `<` anywhere (so no HTML block or comment can
     # open), no code-fence marker anywhere, and a blank line directly above the header (so the
     # header, flush left, starts a new block rather than continuing a list item or blockquote).
+    if not lines[0].startswith("# "):
+        malformed.append((1, "top", "must open the page with a `# ` heading; front matter or other "
+                          "leading blocks can hide the table"))
     if header == 0 or lines[header - 1].strip(" \t"):
         malformed.append((header + 1, "header", "must have a blank line directly above it, so the table "
                           "starts a new block"))
@@ -258,6 +265,11 @@ def parse_index(root: Path):
         if "<" in line:
             malformed.append((k + 1, "above", "puts `<` above the table, which can open an HTML block that "
                               "hides it; keep `<` out of the text above the table"))
+            break
+    for k, line in enumerate(lines[:header]):
+        if "$" in line:
+            malformed.append((k + 1, "above", "puts `$` above the table, which can open a math block that "
+                              "hides it; keep `$` out of the text above the table"))
             break
     for k, line in enumerate(lines[:header]):
         if "```" in line or "~~~" in line:
