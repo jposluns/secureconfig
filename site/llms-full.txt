@@ -27684,7 +27684,7 @@ register a job, which is code the cluster runs, and anyone who reaches Consul's 
 write the catalog and the key-value store. Keep both APIs on private or management addresses
 ([cloud-firewalls.md](cloud-firewalls.md), [host.md](host.md), [tunnels.md](tunnels.md)), turn ACLs
 on with a deny default, and bootstrap them before the API is reachable. Versions checked: Nomad
-2.0.7 and Consul 2.0.4.
+2.0.7 and Consul 2.0.4, Community Edition; Enterprise namespaces and partitions are not covered.
 
 ## Nomad
 
@@ -27767,7 +27767,7 @@ ports, 4646 and 8500; fixed means a private or management address. On the loopba
 listened on TCP on test ports standing in for Nomad's 4646, 4647 and 4648 and Consul's 8500, 8300
 and 8301 (the runs turned off Consul's DNS, Serf WAN and gRPC), and on UDP on the two Serf ports.
 
-For Nomad, send two requests without a token. Substitute the API URL (for example
+For Nomad, send three requests without a token, to every agent's API, servers and clients. Substitute the API URL (for example
 `http://10.0.0.5:4646`) inside the single quotes, and paste the whole block.
 
 ```bash
@@ -27778,7 +27778,7 @@ For Nomad, send two requests without a token. Substitute the API URL (for exampl
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
   case "$1" in
     *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Nomad URL on the set -- line above; not probing" ;;
-    *) for path in /v1/acl/token/self /v1/jobs; do
+    *) for path in /v1/acl/token/self /v1/jobs /v1/agent/self; do
          out=$(curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -w '\n%{http_code} %{exitcode}' -- "$1$path" 2>&1)
          status=${out##*$'\n'}
          echo "GET $path (no token): http/exit=$status $(printf '%s' "${out%$'\n'*}" | grep -o -E '"AccessorID":"[^"]*"|^Permission denied$|^curl: .*' | head -n 1)"
@@ -27788,20 +27788,27 @@ For Nomad, send two requests without a token. Substitute the API URL (for exampl
 ```
 
 Exposed (ACLs off): `/v1/acl/token/self` returns `200` with `"AccessorID":"acls-disabled"`, and
-`/v1/jobs` returns `200`. With ACLs on, `/v1/acl/token/self` returns `200` with
-`"AccessorID":"anonymous"` and `/v1/jobs` returns `403` `Permission denied`, but that `403` covers
-listing jobs in the default namespace only, and it looks the same before bootstrap, so fixed needs
-two more checks on a server. First, `nomad acl bootstrap` must fail with an error that includes "ACL
+`/v1/jobs` and `/v1/agent/self` return `200`. With ACLs on, `/v1/acl/token/self` returns `200` with
+`"AccessorID":"anonymous"`, and `/v1/jobs` and `/v1/agent/self` return `403` `Permission denied`.
+The first two paths are answered by the servers, so only `/v1/agent/self` shows an agent whose own
+`acl.enabled` is off; any agent that answers it with `200` is exposed. Those `403`s cover listing jobs
+in the default namespace and reading the agent only, and they look the same before bootstrap, so
+fixed needs two more checks on a server. First, `nomad acl bootstrap` must fail with an error that includes "ACL
 bootstrap already done"; if it prints a management token instead, the cluster was claimable until
 that moment, so keep the token as your own. Second, with a management token in `NOMAD_TOKEN`,
 `nomad acl policy info anonymous` must report `404 (ACL policy not found)`: the anonymous token takes
-its rights from the policy named `anonymous`. A connection failure prints curl's error and exit code, and says nothing about ACLs. Any other
+its rights from the policy named `anonymous`. Set the token without leaving it in shell history, for
+example with `read -rs NOMAD_TOKEN && export NOMAD_TOKEN`, and `unset NOMAD_TOKEN` afterwards; an
+exported variable can be read from `/proc` by the same account and by root. A connection failure prints curl's error and exit code, and says nothing about ACLs. Any other
 status or message is inconclusive: a redirect (for example from a trailing slash, or from HTTP to
 HTTPS), a proxy's own response, or a certificate error once TLS is on says nothing about the
 server's ACLs; run the block from a host that trusts the cluster's CA.
 
 All of these outcomes were observed with this block and these commands, on agents listening on test
-ports. Before bootstrap, the probe already printed the ACLs-on results; the first `nomad acl bootstrap`
+ports. In a cluster whose server had ACLs on and was bootstrapped, a client agent configured with
+`acl { enabled = false }` answered the first two paths with the ACLs-on results and `/v1/agent/self`
+with `200`, while the server answered it with `403`. Before bootstrap, the probe already printed the
+ACLs-on results; the first `nomad acl bootstrap`
 printed a management token and the second failed with `Unexpected response code: 400 (ACL bootstrap
 already done ...)`. `nomad acl policy info anonymous` reported `404 (ACL policy not found)`. After an
 `anonymous` policy granting only `submit-job` was applied, the probe's results did not change, an
@@ -27838,7 +27845,7 @@ looks the same before bootstrap, so fixed needs two more checks. First, `consul 
 fail with an error that includes "ACL bootstrap no longer allowed"; if it prints a token instead,
 keep it as your own. Second, with a management token in `CONSUL_HTTP_TOKEN`, `consul acl token read
 -accessor-id 00000000-0000-0000-0000-000000000002` (the anonymous token) must list no policies,
-roles, or service, node or templated identities. A connection failure prints curl's error and exit code, and says nothing about ACLs. Any other
+roles, or service, node or templated identities. Set and unset `CONSUL_HTTP_TOKEN` the same way. A connection failure prints curl's error and exit code, and says nothing about ACLs. Any other
 status or message is inconclusive: a redirect (for example from a trailing slash, or from HTTP to
 HTTPS), a proxy's own response, or a certificate error once TLS is on says nothing about the
 server's ACLs; run the block from a host that trusts the cluster's CA.
@@ -27916,10 +27923,12 @@ give the host's public address. A "connected" on a port you did not mean to expo
 - Nomad 2.0.7 client user denylist (`root` refused for `exec`): https://github.com/hashicorp/nomad/blob/v2.0.7/client/config/config.go
 - Nomad 2.0.7 server data directory (`<data_dir>/server`, for the bootstrap reset file): https://github.com/hashicorp/nomad/blob/v2.0.7/command/agent/agent.go
 - Nomad 2.0.7 ACL resolution when disabled: https://github.com/hashicorp/nomad/blob/v2.0.7/nomad/auth/auth.go and https://github.com/hashicorp/nomad/blob/v2.0.7/acl/acl.go
+- Nomad 2.0.7 anonymous token (its rights come from the policy named `anonymous`): https://github.com/hashicorp/nomad/blob/v2.0.7/nomad/structs/acl.go
 - Nomad 2.0.7 ACL bootstrap: https://github.com/hashicorp/nomad/blob/v2.0.7/nomad/acl_endpoint.go
 - Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`): https://github.com/hashicorp/consul/blob/v2.0.4/agent/config/default.go
 - Consul 2.0.4 configuration builder (listener addresses, ACL default, script checks and their warning, UI): https://github.com/hashicorp/consul/blob/v2.0.4/agent/config/builder.go
 - Consul 2.0.4 ACL resolution when disabled: https://github.com/hashicorp/consul/blob/v2.0.4/agent/consul/acl.go
+- Consul 2.0.4 anonymous token accessor ID: https://github.com/hashicorp/consul/blob/v2.0.4/acl/acl.go
 - Consul 2.0.4 ACL bootstrap: https://github.com/hashicorp/consul/blob/v2.0.4/agent/acl_endpoint.go and https://github.com/hashicorp/consul/blob/v2.0.4/agent/consul/acl_endpoint.go
 
 ======================================================================
