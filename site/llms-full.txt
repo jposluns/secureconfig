@@ -18248,9 +18248,10 @@ LiteFS replicates a SQLite file across a cluster's nodes rather than to object s
 
 ## Verify
 
-Most of these are posture and inventory checks. The ones that need a deployed service (the LiteFS/Litestream listeners and the Turso HTTP endpoint) are reasoned, not demonstrated: the authoring environment has no such runtime, no external vantage, and cannot create listening sockets, so those outcomes are derived from the cited vendor pages and backlog row 2.37 tracks demonstrating them. Use Bash and curl 7.75.0 or newer; never add `-k`. Substitute inside the single quotes and paste each complete subshell.
+The bundle scan, the git inventory and the `stat` check were demonstrated on the authoring host in exposed and fixed states; the paragraph after the `stat` step records what was observed. The download probe, the LiteFS/Litestream listener check and the Turso check are REASONED, each marked at its step with the capability that was missing. Their outcomes are derived from the cited vendor pages, and backlog row 2.37 tracks demonstrating them. Use Bash and curl 7.75.0 or newer; never add `-k`. Substitute inside the single quotes and paste each complete subshell.
 
 ```bash
+# REASONED: needs a served application, which opens a listener; the authoring host forbids that without an isolated network namespace, and none was available.
 # The database and its sidecars must not be downloadable. The positive control must answer first, or the 404s
 # are inconclusive (a timeout, NXDOMAIN, or an environment proxy otherwise reads like a false pass).
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -o /dev/null \
@@ -18298,7 +18299,23 @@ Check the live file, its directory, and every existing sidecar while the applica
 stat -c '%a %U %n' /var/lib/myapp /var/lib/myapp/app.db*   # 700 on the directory, 600 on app.db and any -wal/-shm/-journal sidecars, each owned by the app user; an absent sidecar says nothing about its future mode
 ```
 
-For LiteFS (`20202`) or an enabled Litestream metrics/MCP listener, prove network isolation from an untrusted vantage. Run it first from an authorized peer against the private URL (a response is the positive control), then from an untrusted network against the same public address and port:
+On the authoring host, without opening any socket, these three checks ran in exposed and fixed states.
+
+- **Bundle scan.** It ran with a generated JWT-shaped placeholder, not a real token, typed at its hidden prompt.
+  - A bundle carrying the placeholder printed `token-literal exit: 0` and `jwt-shape exit: 0`.
+  - A clean bundle printed `1` for both.
+  - With none of the named directories present, the block refused to scan.
+- **Git inventory.** It was run in three throwaway repositories.
+  - With `app.db` committed before an `app.db*` ignore rule was added, `git check-ignore -v` listed the sidecars but not the tracked `app.db`. `git ls-files` printed `app.db`, and `git log` printed its commit.
+  - After `git rm --cached`, `git log` still printed both commits touching it.
+  - With the rule in place and the file never committed, only the rule matches printed.
+- **`stat` check.** A connection was held open while `stat` ran: in WAL mode, and separately with a write transaction in rollback-journal mode.
+  - Under umask `022` the directory was `755`, and `app.db`, `app.db-wal` and `app.db-shm` were `644`.
+  - Under umask `077` they were `700` and `600`.
+  - With a write transaction held open in rollback-journal mode, `app.db-journal` was `644` under umask `022` and `600` under `077`, the same as `app.db`.
+  - Each was owned by the one account that ran the test. Ownership by a separate app user was not exercised, because no second account was available.
+
+For LiteFS (`20202`) or an enabled Litestream metrics/MCP listener (REASONED: this opens listeners, which the authoring host forbids without an isolated network namespace, and none was available), prove network isolation from an untrusted vantage. Run it first from an authorized peer against the private URL (a response is the positive control), then from an untrusted network against the same public address and port:
 
 ```bash
 (
@@ -18313,7 +18330,7 @@ For LiteFS (`20202`) or an enabled Litestream metrics/MCP listener, prove networ
 )
 ```
 
-Any HTTP response from the untrusted vantage is a reachable listener (the finding); a timeout, DNS, or TLS error, or a failed authorized control, is inconclusive, so corroborate with the bind address and firewall. For Turso, prove the HTTP database rejects anonymous queries. Load a valid token from the secret store into `TURSO_AUTH_TOKEN`:
+Any HTTP response from the untrusted vantage is a reachable listener (the finding); a timeout, DNS, or TLS error, or a failed authorized control, is inconclusive, so corroborate with the bind address and firewall. For Turso (REASONED: this outbound check needs a Turso database and token, and none was available to the authoring environment), prove the HTTP database rejects anonymous queries. Load a valid token from the secret store into `TURSO_AUTH_TOKEN`:
 
 ```bash
 (
