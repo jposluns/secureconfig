@@ -127,6 +127,7 @@
 ## Dashboards and admin consoles
 
 - [admin-uis](https://raw.githubusercontent.com/jposluns/secureconfig/main/admin-uis.md): phpMyAdmin, pgAdmin, mongo-express, Grafana, Prometheus
+- [observability-components](https://raw.githubusercontent.com/jposluns/secureconfig/main/observability-components.md): node_exporter, Alertmanager, Pushgateway, Jaeger, Loki: unauthenticated by default; never public
 - [devops-uis](https://raw.githubusercontent.com/jposluns/secureconfig/main/devops-uis.md): Portainer, Coolify, Dokploy, Nginx Proxy Manager, Vaultwarden, Kubernetes Dashboard, Jenkins, Gitea, Uptime Kuma, Docker API: never public
 - [bi-dashboards](https://raw.githubusercontent.com/jposluns/secureconfig/main/bi-dashboards.md): Metabase, Superset, Redash: never public; least-privilege database user
 
