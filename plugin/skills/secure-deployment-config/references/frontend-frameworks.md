@@ -1,10 +1,10 @@
 # Full-stack JS frameworks: SvelteKit, Nuxt, Vite
 
-SvelteKit, Nuxt, and Vite-based apps built by AI assistants inherit the same traps as [nextjs.md](nextjs.md): a server bind that can default wide open (SvelteKit's Node adapter binds `0.0.0.0`, though Vite's dev server defaults to `localhost`), a proxy that has to be explicitly trusted before secure cookies and correct origins work, and a public-env prefix that ships anything given it straight to the browser. Each framework also has more than one server entry point (endpoints, server routes, load functions), and a check placed in only one of them leaves the others open, exactly as with Next.js layouts versus Server Actions.
+SvelteKit, Nuxt, and Vite-based apps built by AI assistants inherit the same traps as [nextjs.md](nextjs.md): a server bind that can default wide open (SvelteKit's Node adapter binds `0.0.0.0` as of adapter-node 5.5.7, though Vite's dev server defaults to `localhost` as of Vite 8.3.1), a proxy that has to be explicitly trusted before secure cookies and correct origins work, and a public-env prefix that ships anything given it straight to the browser. Each framework also has more than one server entry point (endpoints, server routes, load functions), and a check placed in only one of them leaves the others open, exactly as with Next.js layouts versus Server Actions.
 
 ## SvelteKit (`adapter-node`)
 
-The built server "will accept connections on `0.0.0.0` using port 3000" by default; override with `HOST` and `PORT`:
+The built server "will accept connections on `0.0.0.0` using port 3000" by default (the `0.0.0.0` host as of adapter-node 5.5.7); override with `HOST` and `PORT`:
 
 ```bash
 HOST=127.0.0.1 PORT=3000 node build
@@ -38,7 +38,7 @@ export default defineEventHandler((event) => {
 
 Both are development tooling, not a production server: the `vite preview` docs say plainly "do not use this as a production server as it's not designed for it." Deploy the built `dist/` behind a real server, CDN, or your platform's hosting per [paas.md](paas.md) instead.
 
-`server.host` defaults to `'localhost'`; setting it to `true` or `0.0.0.0` makes the dev server listen on all addresses, including the LAN, which is fine for testing from a phone on a trusted network but should not be left on elsewhere. `server.allowedHosts` defaults to `[]`, which still auto-permits localhost, `.localhost`, and IP addresses; setting it to `true` disables the check entirely, and the docs warn this "allows any website to send requests to your dev server and download your source code and content" (DNS rebinding). Prefer an explicit hostname allowlist over `true`.
+`server.host` defaults to `'localhost'` (as of Vite 8.3.1); setting it to `true` or `0.0.0.0` makes the dev server listen on all addresses, including the LAN, which is fine for testing from a phone on a trusted network but should not be left on elsewhere. `server.allowedHosts` defaults to `[]`, which still auto-permits localhost, `.localhost`, and IP addresses; setting it to `true` disables the check entirely, and the docs warn this "allows any website to send requests to your dev server and download your source code and content" (DNS rebinding). Prefer an explicit hostname allowlist over `true`.
 
 ## Verify
 

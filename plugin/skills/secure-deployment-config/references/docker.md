@@ -2,7 +2,7 @@
 
 Containers are where accidental exposure happens most. Two Docker behaviours cause it:
 
-1. `ports: - "3000:3000"` (or `-p 3000:3000`) publishes on every host address, `0.0.0.0` and `[::]`.
+1. `ports: - "3000:3000"` (or `-p 3000:3000`) publishes on every host address, `0.0.0.0` and `[::]`, at the time of writing.
 2. On Linux, Docker programs iptables/nftables directly, so published ports are reachable **even when UFW or firewalld says the port is blocked**. A `ufw deny 3000` rule does not protect a published container port.
 
 ## 1. Publish nothing except the TLS proxy
