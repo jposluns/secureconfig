@@ -8,10 +8,10 @@ command -- is doing the load-bearing work. This gate catches a guide that carrie
 reasoned Verify step but that no DEMONSTRATION backlog row (in TODO.md or DONE.md)
 tracks, so the intent to actually demonstrate it does not silently fall off the plan.
 
-This is the reasoned-row gate. It is ADVISORY-first: the default mode prints every gap
-and always exits 0, so it can never turn the offline suite red while the ratchet is
-being seeded. `--strict` is the shape a future, Architect-gated blocking wire would
-use; it is not wired into tools/run_all_checks.sh here.
+This is the reasoned-row gate. It is BLOCKING: tools/run_all_checks.sh runs it with
+`--strict` (promoted by maintainer ruling on 2026-09-24), which exits 1 when a reasoned
+guide has no demonstration row and is not grandfathered. Without `--strict` it only
+reports, and always exits 0.
 
 WHAT COUNTS AS A GUIDE. Every top-level `*.md` in the repository root, scanned
 non-recursively, EXCEPT the meta-file exclude set (CONTRIBUTING.md, SECURITY.md,
@@ -64,9 +64,9 @@ cause a non-zero `--strict` exit. This mirrors check_pinned_citations.py's ratch
 absent baseline file is treated as empty, so the ratchet starts unseeded and seeding it
 is a deliberate `--write-baseline` step a human takes once.
 
-KNOWN LIMITATIONS (advisory scope). This is a tracking aid over the corpus's own
-"reasoned"/"demonstrate" convention, not a CommonMark-conformant Markdown parser, and it
-runs advisory. Guide and backlog text is split into lines on line feeds only (read_text() has
+KNOWN LIMITATIONS. This is a tracking aid over the corpus's own
+"reasoned"/"demonstrate" convention, not a CommonMark-conformant Markdown parser.
+Guide and backlog text is split into lines on line feeds only (read_text() has
 already normalized CRLF and CR), so a Unicode line or paragraph separator inside a
 paragraph cannot fake a heading; and fences come from the shared tools/_markdown.py, whose
 closing fence accepts only trailing spaces or tabs. One known edge remains, a disclosed

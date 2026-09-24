@@ -1,26 +1,5 @@
 # Grandfathered baseline for tools/check_reasoned_rows.py (the reasoned-row gate).
-# These guides carried a reasoned Verify step without a demonstration backlog row when the gate was added
-# (2026-09-22, operator-directed baseline-ratchet). They are pre-existing rule-5 tracking debt, not new
-# gaps: the gate reports them as grandfathered and does not fail on them. A future --strict promotion
-# (Architect sign-off) fails only on a NEW reasoned guide not listed here. To retire an entry, add its
-# demonstration backlog row to TODO.md (or DONE.md) and delete the line.
-elasticsearch.md
-firebase-supabase.md
-gradio.md
-jupyter.md
-kafka.md
-litellm.md
-memcached.md
-minio.md
-mongodb.md
-mosquitto.md
-mysql.md
-neo4j.md
-object-storage.md
-ollama.md
-open-webui.md
-pocketbase.md
-postgresql.md
-rabbitmq.md
-realtime-voice-infra.md
-redis.md
+# EMPTY since 2026-09-24: the 20 guides grandfathered here when the gate was added (2026-09-22) each have
+# a demonstration backlog row in TODO.md (rows 1.87 to 1.106), and the suite runs the gate with --strict.
+# A guide listed here is reported as grandfathered and does not fail the gate, so adding an entry is a
+# deliberate, reviewed exception; the normal fix for a new gap is a "Demonstrate ... <guide>" row in TODO.md.

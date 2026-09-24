@@ -9,6 +9,10 @@ can check `VERSION` against GitHub: the suite is deliberately offline so that no
 turn the build red, and a pull request number is only knowable from outside. Keeping `VERSION` in step
 with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-09-24
+
+- Made the reasoned-row gate blocking and tracked its 20 grandfathered guides (#273). `tools/run_all_checks.sh` now runs `tools/check_reasoned_rows.py --strict` as part of the required suite, so a guide that marks a Verify step reasoned without a demonstration backlog row in `TODO.md` or `DONE.md` fails the build, and a failing self-test fails closed. `TODO.md` gains rows 1.87 to 1.106, one demonstration row for each of the 20 guides that were grandfathered in `tools/reasoned_row_baseline.txt`, which is now empty. The demonstrations themselves remain blocked on a container runtime. Also removed a stray double blank line from this file and the stale guide count from the plugin's `SKILL.md`.
+
 ## 2026-09-23
 
 - Hardened the reasoned-row gate's parsing (#272). `tools/check_reasoned_rows.py` now splits guide and backlog text into lines on `\n` only, so a U+2028 or U+2029 inside a paragraph no longer fakes a heading, and its backlog filename match now also treats `+`, `~` and a non-ASCII letter, digit or other numeric character beside a basename as part of a longer filename, so `archive+redis.md`, `redis.md~` or a basename touching a non-ASCII letter no longer counts as tracking `redis.md`, while quotes of any kind, dashes, brackets and `*` around it still do. Underscore emphasis is still not credited, because without code-span parsing it cannot be told apart from underscores inside a filename. The shared `tools/_markdown.py` closes a fence only when spaces or tabs follow the closing run, so a non-breaking space no longer closes it (CommonMark). Regression cases 18 to 21 were added. The corpus result is unchanged (53 reasoned guides, 20 grandfathered, 0 new), and every gate that uses `tools/_markdown.py` gives identical output before and after. A fence opened inside a list item is still not closed at the item boundary, which remains a disclosed limit.
@@ -486,7 +490,6 @@ with the merged pull request is therefore an authoring obligation, not an enforc
   the build script it describes (#25). A new guide touches five wiring surfaces, and this was the
   fifth and the only one nothing checked, so the record of what generates `site/llms-full.txt`
   could fall out of step with the script that generates it while every other surface stayed green.
-
 
 ### Changed
 
