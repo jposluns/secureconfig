@@ -44,7 +44,7 @@ The admin UI is on port `81`; the proxy itself is on `80`/`443`. Port `81` is ne
 
 ## Gitea
 
-- It listens on `HTTP_ADDR = 0.0.0.0`, `HTTP_PORT = 3000` by default; set `HTTP_ADDR = 127.0.0.1` behind a proxy, or `PROTOCOL = https` with `CERT_FILE` and `KEY_FILE` to terminate TLS itself.
+- It listens on `HTTP_ADDR = 0.0.0.0` (as of v1.27.3), `HTTP_PORT = 3000` by default; set `HTTP_ADDR = 127.0.0.1` behind a proxy, or `PROTOCOL = https` with `CERT_FILE` and `KEY_FILE` to terminate TLS itself.
 - In `[service]`, `DISABLE_REGISTRATION = true` (default `false`) and, for a private forge, `REQUIRE_SIGNIN_VIEW = true` (default `false`).
 - Users enrol TOTP or a WebAuthn key under Settings > Security; `TWO_FACTOR_AUTH = enforced` in `[security]` (Gitea 1.24 and later) requires it. With MFA on, Git over HTTP uses an access token instead of the password, and tokens bypass MFA, so scope them and revoke unused ones ([machine-auth.md](machine-auth.md)).
 
