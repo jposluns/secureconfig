@@ -1,0 +1,6 @@
+# Allowlist for tools/check_exposure_index.py: guide/port pairs that match a port pattern but are not
+# listeners this corpus documents. One `<guide> <port>` pair per line, with the reason after `#`.
+# The gate fails on an entry that no longer matches any mention, so remove a line when its text goes.
+minio.md 7373  # outbound: MinIO connects to an external KMS server here (MINIO_KMS_SERVER; KES appears at minio.md:191); not a MinIO listener
+mongodb.md 5696  # outbound: MongoDB connects to an external KMIP server on this port; not a MongoDB listener
+vector-databases.md 63330  # illustrative number in a grep caveat (a grep for 6333 also matches 63330), not a listener
