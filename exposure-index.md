@@ -27,8 +27,8 @@ one of them is the application's.
 Rows are ordered by their first port number or the start of a range. Related ports may share a row, and ranges can overlap other entries.
 
 The Default credential column records what the cited guides say a fresh install ships with: a
-well-known account, an empty or placeholder password, or no authentication at all. It reports the
-guides, not the vendors. "not stated" means the cited guides are silent, which is not the same as
+well-known account, an empty or placeholder password, no authentication at all, or a secure default
+such as a generated token. It reports the guides, not the vendors. "not stated" means the cited guides are silent, which is not the same as
 safe, and "varies by service; see the guides" means the row covers services whose defaults differ.
 Open the guide before relying on either, because defaults change between releases.
 
@@ -59,7 +59,7 @@ Open the guide before relying on either, because defaults change between release
 | 3306 | MySQL and MariaDB | Varies by install method; MariaDB 10.4+ local root via Unix socket | [mysql.md](mysql.md), [cloud-firewalls.md](cloud-firewalls.md) |
 | 3389 | RDP, mentioned only as an omitted inventory check in the cloud-firewall guide | not stated | [cloud-firewalls.md](cloud-firewalls.md) |
 | 3478 | coturn STUN/TURN over UDP and TCP | Stock example config: anonymous TURN allocation (Docker image ships `lt-cred-mech` on) | [realtime-voice-infra.md](realtime-voice-infra.md) |
-| 4000 | LiteLLM proxy | Refuses to start without a master key or with `sk-1234`; UI user `admin` | [litellm.md](litellm.md) |
+| 4000 | LiteLLM proxy | At the time of writing, refuses to start without a master key or with `sk-1234`; older or overridden deployments can run without authentication; UI user `admin` | [litellm.md](litellm.md) |
 | 4180 | oauth2-proxy | not stated | [fronting-auth.md](fronting-auth.md) |
 | 4200 | Prefect server | No default authentication | [workflow-orchestrators.md](workflow-orchestrators.md) |
 | 4222 | NATS client connections | No authentication configured by default | [nats.md](nats.md) |
@@ -68,7 +68,7 @@ Open the guide before relying on either, because defaults change between release
 | 4442, 4443 | Selenium Grid event bus in distributed mode, which Nodes use to register and which the Router's basic auth does not cover | Grid ships with no authentication; Router basic auth does not cover the bus | [headless-browser-services.md](headless-browser-services.md) |
 | 4444 | Selenium Grid Router, Hub, or Standalone, plus the Grid web UI on the same port, with no authentication by default | No authentication by default; Router basic-auth credentials unset | [headless-browser-services.md](headless-browser-services.md) |
 | 5000 | Redash, MLflow tracking server, or a .NET Kestrel default | varies by service; see the guides | [bi-dashboards.md](bi-dashboards.md), [mlflow.md](mlflow.md), [dotnet.md](dotnet.md) |
-| 5001 | Dify backend API, in the guide's in-container request example | not stated | [agent-builders.md](agent-builders.md) |
+| 5001 | Dify backend API, in the guide's in-container request example | Dify install: `INIT_PASSWORD` is empty by default, so `/install` admin setup is open until claimed | [agent-builders.md](agent-builders.md) |
 | 5003 | Dify's plugin daemon debugging port, published by the supplied Compose configuration unless you remove or restrict that mapping | not stated | [agent-builders.md](agent-builders.md) |
 | 5349 | coturn TLS listener; DTLS is opt-in since 4.17.0, and this port number does not prove encryption is mandatory | Stock example config: anonymous TURN allocation | [realtime-voice-infra.md](realtime-voice-infra.md) |
 | 5432 | PostgreSQL, and pgvector on the same port; the Supabase self-hosted Supavisor pooler also publishes it | varies by service; see the guides | [postgresql.md](postgresql.md), [vector-databases.md](vector-databases.md), [cloud-firewalls.md](cloud-firewalls.md), [supabase-self-hosted.md](supabase-self-hosted.md) |
@@ -85,10 +85,10 @@ Open the guide before relying on either, because defaults change between release
 | 6060 | A Go service's pprof and expvar diagnostics listener, bound to loopback in the guide's example | not stated | [go.md](go.md) |
 | 6080 | noVNC web interface in a GPU desktop template example; an example port, not a platform-wide default | Template-dependent; may default to weak or empty password | [gpu-clouds.md](gpu-clouds.md) |
 | 6222 | NATS cluster routes, a separate listener with its own authentication and TLS | not stated | [nats.md](nats.md) |
-| 6333, 6334, 6335 | Qdrant REST, gRPC, and internal cluster gRPC | Not secure by default; 6335 never protected by API key | [vector-databases.md](vector-databases.md) |
+| 6333, 6334, 6335 | Qdrant REST, gRPC, and internal cluster gRPC | Not secure by default; 6335 is never protected by an API key through v1.17.x, and on v1.18.0 and later only with `service.enforce_internal_auth`, which is off by default | [vector-databases.md](vector-databases.md) |
 | 6362 | Neo4j backup | not stated | [neo4j.md](neo4j.md) |
 | 6379 | Redis, Valkey, or the Ray head node | varies by service; see the guides | [redis.md](redis.md), [ray.md](ray.md), [cloud-firewalls.md](cloud-firewalls.md) |
-| 6432 | PgBouncer, whose client-side TLS is disabled by default | Default `auth_type` is `md5`; `pgbouncer` user passwordless over Unix socket | [connection-poolers.md](connection-poolers.md), [postgresql.md](postgresql.md) |
+| 6432 | PgBouncer, whose client-side TLS is disabled by default | Default `auth_type` is `md5`; `pgbouncer` user passwordless over the Unix socket for a client running as the pooler's Unix UID | [connection-poolers.md](connection-poolers.md), [postgresql.md](postgresql.md) |
 | 6443 | The Kubernetes API server on a self-managed cluster. Managed providers usually serve it on 443 instead, so its absence here proves nothing | not stated | [kubernetes.md](kubernetes.md) |
 | 6543 | The Supabase self-hosted Supavisor transaction pooler, a direct database connection published beside 5432 | Shipped demo `POSTGRES_PASSWORD` | [supabase-self-hosted.md](supabase-self-hosted.md) |
 | 6789 | Metrics port mentioned only in the realtime voice guide's Verify inventory; service attribution and default status are not established there | not stated | [realtime-voice-infra.md](realtime-voice-infra.md) |
@@ -115,7 +115,7 @@ Open the guide before relying on either, because defaults change between release
 | 8093 | The GitLab Runner interactive session server, its documented example listen address, which exists only when `[session_server]` is configured | not stated | [self-hosted-ci-runners.md](self-hosted-ci-runners.md) |
 | 8107 | Typesense peering service, which should be restricted to cluster members | not stated | [search-engines.md](search-engines.md) |
 | 8108 | Typesense API, which binds all interfaces by default | Operator bootstrap key required at startup; no keyless mode | [search-engines.md](search-engines.md) |
-| 8123 | ClickHouse HTTP, plaintext | Base config: `default` user, empty password, any address | [clickhouse.md](clickhouse.md) |
+| 8123 | ClickHouse HTTP, plaintext | Base config: `default` user, empty password, any address; packaging can change it | [clickhouse.md](clickhouse.md) |
 | 8188 | ComfyUI | No built-in login | [image-gen-uis.md](image-gen-uis.md) |
 | 8200 | HashiCorp Vault API, and its UI at `/ui` on the same listener when `ui = true`; TLS is assumed by default, and `sys/health` and `sys/seal-status` answer unauthenticated | Initial root token: unlimited, no expiry; health/seal-status unauthenticated | [vault.md](vault.md) |
 | 8201 | HashiCorp Vault cluster port, for server-to-server request forwarding and Raft over mutually authenticated TLS; a peer surface, never a client endpoint | not stated | [vault.md](vault.md) |
@@ -137,7 +137,7 @@ Open the guide before relying on either, because defaults change between release
 | 9000 | ClickHouse native TCP (plaintext), MinIO's S3 API, PHP-FPM, TGI's Prometheus listener, or Portainer's legacy HTTP port; Keycloak's management port serving `/health` and `/metrics`, authentik's HTTP port, QuestDB's web console, REST, and SQL endpoints whose Basic-auth keys are unset by default, or the Sentry self-hosted web and API, published here by the bundled nginx | varies by service; see the guides | [clickhouse.md](clickhouse.md), [minio.md](minio.md), [php.md](php.md), [model-servers.md](model-servers.md), [devops-uis.md](devops-uis.md), [self-hosted-idp.md](self-hosted-idp.md), [time-series-metrics-stores.md](time-series-metrics-stores.md), [self-hosted-error-trackers.md](self-hosted-error-trackers.md) |
 | 9001 | MinIO's web console (the `--console-address` / `MINIO_CONSOLE_ADDRESS` port, conventionally 9001) | `minioadmin`/`minioadmin` when root variables unset | [minio.md](minio.md) |
 | 9003 | QuestDB minimal HTTP health and metrics server, which follows the HTTP authentication policy you set (unauthenticated when `http.user` is unset) | Unauthenticated while `http.user` is unset | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
-| 9004, 9005, 9010 | ClickHouse MySQL compatibility, PostgreSQL compatibility, and interserver replica traffic over HTTPS (the HTTP interserver port 9009 is listed separately) | varies by service; see the guides | [clickhouse.md](clickhouse.md) |
+| 9004, 9005, 9010 | ClickHouse MySQL compatibility, PostgreSQL compatibility, and interserver replica traffic over HTTPS (the HTTP interserver port 9009 is listed separately) | Base config: `default` user, empty password, any address; packaging can change it | [clickhouse.md](clickhouse.md) |
 | 9009 | QuestDB InfluxDB line protocol (TCP), which accepts unauthenticated writes unless `line.tcp.auth.db.path` is set; also ClickHouse interserver replica traffic over HTTP | varies by service; see the guides | [time-series-metrics-stores.md](time-series-metrics-stores.md), [clickhouse.md](clickhouse.md) |
 | 9090 | InvokeAI, and the Prometheus server, which listens on `0.0.0.0:9090` by default with no authentication | No authentication by default (Prometheus; InvokeAI single-user mode) | [image-gen-uis.md](image-gen-uis.md), [admin-uis.md](admin-uis.md) |
 | 9091 | Milvus WebUI, or Authelia | varies by service; see the guides | [vector-databases.md](vector-databases.md), [fronting-auth.md](fronting-auth.md) |
@@ -149,7 +149,7 @@ Open the guide before relying on either, because defaults change between release
 | 9252 | The GitLab Runner Prometheus metrics endpoint, served with no built-in authorization, which exists only when a metrics `listen_address` is configured | No built-in authorization | [self-hosted-ci-runners.md](self-hosted-ci-runners.md) |
 | 9292 | Puma standalone, whose default bind is all interfaces; and the Flux notification-controller webhook receiver, in-cluster behind the `webhook-receiver` Service | varies by service; see the guides | [ruby.md](ruby.md), [gitops-controllers.md](gitops-controllers.md) |
 | 9300 to 9400 | Elasticsearch transport default range; authentik's unauthenticated Prometheus metrics on 9300 | varies by service; see the guides | [elasticsearch.md](elasticsearch.md), [self-hosted-idp.md](self-hosted-idp.md) |
-| 9440 | ClickHouse native TCP over TLS | not stated | [clickhouse.md](clickhouse.md) |
+| 9440 | ClickHouse native TCP over TLS | Base config: `default` user, empty password, any address; packaging can change it | [clickhouse.md](clickhouse.md) |
 | 9443 | Portainer HTTPS UI, authentik's HTTPS port | varies by service; see the guides | [devops-uis.md](devops-uis.md), [self-hosted-idp.md](self-hosted-idp.md) |
 | 9641 | coturn Prometheus metrics, disabled by default; when enabled, it binds a wildcard address and serves without authentication | Off by default; when enabled, no authentication | [realtime-voice-infra.md](realtime-voice-infra.md) |
 | 9898 | Pgpool-II's PCP administration channel, which has its own credential file | not stated | [connection-poolers.md](connection-poolers.md) |
@@ -167,9 +167,9 @@ Open the guide before relying on either, because defaults change between release
 | 15671 | RabbitMQ management UI over TLS, as noted in the guide's listener inventory | `guest`/`guest`, usable only from localhost | [rabbitmq.md](rabbitmq.md) |
 | 15672 | RabbitMQ management UI | `guest`/`guest`, usable only from localhost | [rabbitmq.md](rabbitmq.md) |
 | 16379 | Redis Cluster's node-to-node bus (`cluster-port 16379` in the guide's example), which is opt-in and needs its own restriction | No AUTH gate; data-port password does not apply | [redis.md](redis.md) |
-| 18123 | Helicone Compose ClickHouse HTTP publication: host port 18123 maps to container port 8123; it also falls inside the Ray worker range | not stated | [llm-observability.md](llm-observability.md) |
+| 18123 | Helicone Compose ClickHouse HTTP publication: host port 18123 maps to container port 8123; it also falls inside the Ray worker range | Compose example storage credentials, to rotate; not behind the dashboard login | [llm-observability.md](llm-observability.md) |
 | 19000 | Helicone Compose backing-service publication: host port 19000 maps to container port 9000, but the guide does not explicitly attribute this mapping to a service; it also falls inside the Ray worker range | not stated | [llm-observability.md](llm-observability.md) |
-| 19530 | Milvus gRPC | not stated | [vector-databases.md](vector-databases.md) |
+| 19530 | Milvus gRPC | Built-in `root`/`Milvus` once `common.security.authorizationEnabled` is set | [vector-databases.md](vector-databases.md) |
 | 20202 | LiteFS HTTP replication API, including database export/import and administrative operations | not stated | [sqlite.md](sqlite.md) |
 | 25672 | RabbitMQ inter-node and CLI Erlang distribution (default, the AMQP port plus 20000); by default the Erlang cookie is its only credential and grants full control of the node | not stated | [rabbitmq.md](rabbitmq.md) |
 | 26379 | Redis Sentinel's separate listener; its shipped configuration disables protected mode and supplies no active authentication rule | Shipped config: protected mode off, no active authentication rule | [redis.md](redis.md) |
@@ -181,7 +181,7 @@ Open the guide before relying on either, because defaults change between release
 | 50000 to 60000/UDP | LiveKit media sockets outside development mode, allocated during active calls | not stated | [realtime-voice-infra.md](realtime-voice-infra.md) |
 | 50051 | Weaviate gRPC | Anonymous access enabled by default | [vector-databases.md](vector-databases.md) |
 | 51820/UDP | WireGuard, in the configured example here. The port is chosen, not assigned | No username or password; key pairs only | [tunnels.md](tunnels.md) |
-| 54388 | Helicone Compose PostgreSQL publication: host port 54388 maps to container port 5432 | not stated | [llm-observability.md](llm-observability.md) |
+| 54388 | Helicone Compose PostgreSQL publication: host port 54388 maps to container port 5432 | Compose example storage credentials, to rotate; not behind the dashboard login | [llm-observability.md](llm-observability.md) |
 | 55679 | OpenTelemetry Collector zPages diagnostic extension, when enabled | not stated | [llm-observability.md](llm-observability.md) |
 | 57800 | Keycloak clustered cache failure detection; TLS is on by default for TCP stacks | not stated | [self-hosted-idp.md](self-hosted-idp.md) |
 

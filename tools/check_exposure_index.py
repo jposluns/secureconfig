@@ -50,9 +50,10 @@ ranges (`9300 to 9400`, `8000-8010`). A single port, or a range covering at most
 (Ray's worker range, coturn's relay range) maps them only for the guides its own row cites,
 because otherwise it would silently cover every high port in the corpus.
 
-ROW SHAPE. Every row of the table has four cells (Port, May be, Default credential, Documented
-in), and the Default credential cell is never empty: "not stated" is the value when the cited
-guides are silent, so a row cannot lose the column without the gate noticing.
+ROW SHAPE. The separator row directly under the header has four cells of dashes. Every other row
+has four cells (Port, May be, Default credential, Documented in), a non-empty Port cell, and a
+non-empty Default credential cell: "not stated" is the value when the cited guides are silent,
+so a row cannot lose the column without the gate noticing.
 
 ALLOWLIST. tools/exposure_index_allowlist.txt lists `<guide> <port>  # reason` pairs that match a
 pattern but are not listeners this corpus documents (an outbound destination, an illustrative
@@ -133,16 +134,20 @@ def parse_index(root: Path):
     explicit, wide_cites, in_table, found, malformed = set(), {}, False, False, []
     for ln, line in enumerate(lines, 1):
         if line.startswith(TABLE_HEADER):
-            in_table, found = True, True
+            in_table, found, header_ln = True, True, ln
             continue
         if not in_table:
             continue
         if not line.startswith("|"):
             break
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        if set(cells[0]) <= set("- "):
-            continue  # the separator row
-        if len(cells) != COLUMNS:
+        if ln == header_ln + 1:  # the separator row: a real one, never a row that merely looks blank
+            if len(cells) != COLUMNS or not all(re.fullmatch(r":?-+:?", c) for c in cells):
+                malformed.append((ln, "---", f"is not a {COLUMNS}-cell separator row"))
+            continue
+        if not cells[0]:
+            malformed.append((ln, "(blank)", "has an empty Port cell"))
+        elif len(cells) != COLUMNS:
             malformed.append((ln, cells[0], f"has {len(cells)} cells; the table has {COLUMNS}"))
         elif not cells[2]:
             malformed.append((ln, cells[0], "has an empty Default credential cell; write `not stated` "

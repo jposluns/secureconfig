@@ -37,7 +37,8 @@ Allowlist: A1 an allowlisted pair passes; A2 a stale entry fails; A3 a redundant
 Other: O1 meta files are not scanned; O2 a missing index table fails closed with exit 2; O3 a port
   above 65535 and O4 port 0 are not mentions.
 Row shape: R1 a three-cell row fails; R2 an empty Default credential cell fails; R3 the old
-  three-column header fails closed with exit 2.
+  three-column header fails closed with exit 2; R4 an empty Port cell fails; R5 a three-cell
+  separator row fails; R6 a blank-port three-cell row fails.
 """
 import shutil
 import subprocess
@@ -200,8 +201,18 @@ def main() -> int:
           rc == 1 and "row `7777` has an empty Default credential cell" in out)
     rc, out = run(guide("port 9090"), index=INDEX.replace("| Default credential ", "", 1))
     check(f"R3: the old three-column header fails closed (rc={rc}, out={out!r})", rc == 2)
+    rc, out = run(guide("port 9090"), index=INDEX + "|  | Blank port | not stated | [a.md](a.md) |\n")
+    check(f"R4: an empty Port cell fails (rc={rc}, out={out!r})",
+          rc == 1 and "has an empty Port cell" in out)
+    rc, out = run(guide("port 9090"),
+                  index=INDEX.replace("| --- | --- | --- | --- |", "| --- | --- | --- |", 1))
+    check(f"R5: a three-cell separator row fails (rc={rc}, out={out!r})",
+          rc == 1 and "is not a 4-cell separator row" in out)
+    rc, out = run(guide("port 9090"), index=INDEX + "|  | Three cells | [a.md](a.md) |\n")
+    check(f"R6: a blank-port three-cell row fails (rc={rc}, out={out!r})",
+          rc == 1 and "has an empty Port cell" in out)
 
-    total = len(DETECT) + len(PRECISE) + 7 + 3 + 4 + 3
+    total = len(DETECT) + len(PRECISE) + 7 + 3 + 4 + 6
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")
