@@ -11,6 +11,7 @@ with the merged pull request is therefore an authoring obligation, not an enforc
 
 ## 2026-09-24
 
+- Download-probe guard (#297), row 1.122. `sqlite.md`'s download probe named a literal `app.example.com`, so an unsubstituted paste probed that host. It now takes the HTTPS origin and a static path prefix on a `set -- PASTE_WHOLE_BLOCK` line inside a subshell, as the guide's listener and Turso blocks do, and drives its probes from positional parameters rather than named loop variables. It refuses to probe on a missing marker, a wrong value count, an empty or `REPLACE_WITH_` value, a non-HTTPS origin, an origin other than `https://` with a host and an optional numeric `:port` (one trailing `/` is dropped), or a prefix without a leading `/` or containing `//`, `?`, `#`, whitespace or a control character. The probe stays REASONED (row 2.37).
 - Guarded secret reads, batch 1 (#298): six `read -s` prompts in four guides now meet rule 7's guarded-read exception.
   - Each block turns off tracing and allexport (`set +x +a`) before the read and clears the variable with `unset -n` then `unset -v`. If either fails, as it does for a readonly name, the block refuses with exit 2. The four reads that lacked `|| exit 2` now have it.
   - `code-server.md`: the session-cookie probe now rejects any control character in the cookie, not only a carriage return.
