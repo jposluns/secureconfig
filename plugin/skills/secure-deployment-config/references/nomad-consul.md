@@ -176,14 +176,15 @@ with `200` is exposed. With ACLs on and `default_policy = "deny"`, `/v1/agent/se
 looks the same before bootstrap, so fixed needs two more checks. First, `consul acl bootstrap` must
 fail with an error that includes "ACL bootstrap no longer allowed"; if it prints a token instead,
 keep it as your own. Second, with a management token in `CONSUL_HTTP_TOKEN`, `consul acl token read
--accessor-id 00000000-0000-0000-0000-000000000002` (the anonymous token) must list no policies,
+-accessor-id 00000000-0000-0000-0000-000000000002` (the anonymous token; set `CONSUL_HTTP_TOKEN`
+the same way, in a subshell around this command) must list no policies,
 roles, or service, node or templated identities, and no agent may have a default token, set in
 `acl.tokens.default` or through the agent's token API: a request without a token uses it instead of
 the anonymous token. On the loopback run, a default token holding key write, set through the
 agent's token API on a deny-policy agent, made the block print `200` on `/v1/acl/token/self` and a
 `403` on `/v1/agent/self` without the anonymous-token message, while a key-value write without a
-token succeeded. Set
-`CONSUL_HTTP_TOKEN` the same way, in a subshell around the command. A connection failure prints curl's error and exit code, and says nothing about ACLs. Any other
+token succeeded. A `200` on `/v1/acl/token/self` without a token is how the block shows such a default
+token. A connection failure prints curl's error and exit code, and says nothing about ACLs. Any other
 status or message is inconclusive: a redirect (for example from a trailing slash, or from HTTP to
 HTTPS), a proxy's own response, or a certificate error once TLS is on says nothing about the
 server's ACLs; run the block from a host that trusts the cluster's CA.
@@ -257,7 +258,7 @@ give the host's public address. A "connected" on a port you did not mean to expo
 
 ## Sources (checked September 2026)
 
-- Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds and `raw_exec`): https://github.com/hashicorp/nomad/blob/v2.0.7/command/agent/config.go
+- Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`): https://github.com/hashicorp/nomad/blob/v2.0.7/command/agent/config.go
 - Nomad 2.0.7 UI default: https://github.com/hashicorp/nomad/blob/v2.0.7/nomad/structs/config/ui.go
 - Nomad 2.0.7 TLS settings: https://github.com/hashicorp/nomad/blob/v2.0.7/nomad/structs/config/tls.go
 - Nomad 2.0.7 `raw_exec` driver (default off, no isolation): https://github.com/hashicorp/nomad/blob/v2.0.7/drivers/rawexec/driver.go

@@ -357,12 +357,14 @@ configuration unchanged apart from addresses and paths, with the API on 127.0.0.
 listener on 127.0.0.1:8201, a private test CA, a file audit device, and the section 2 and section 7
 policies and AppRole role with `127.0.0.1/32` as the CIDR. Each block ran as printed, with only its
 placeholders substituted, except where a step says otherwise. Exposed states ran in further runs of
-the same binary on the same addresses: one with both anonymous-access settings `true` throughout, one
-with `tls_disable = true` on the listener (a health check only), and one with the section 3
-configuration unchanged apart from addresses and paths; the first and third ran the policies, roles
-or delivery policy under test without their limits. What these runs do
+the same binary: one with both anonymous-access settings `true` throughout, one with `tls_disable =
+true` on the listener (a health check only), one with the section 3 configuration unchanged apart
+from addresses and paths, and a follow-up run with that configuration, then stopped for a
+health-output check, then with one added listener stanza on 127.0.0.2:8200 (which also bound
+127.0.0.2:8201). The first, third and follow-up runs exercised the policies, roles or delivery policy
+under test without their limits. What these runs do
 not show is marked **REASONED** where it occurs, with the reason: HA behavior (no multi-node cluster
-was set up for these runs), a second independent audit device (none was configured), the recipient's
+was set up for these runs), a second audit device in a separate failure domain (the host has no second network), the recipient's
 own validation (it belongs to the receiving application), a wildcard bind (the host forbids binding
 every interface), `ss` run as root (the host has no `sudo`), and real network paths and firewalls (the
 host has no second network); backlog row 1.114 and VAULT-LIVE-1 below track
@@ -406,7 +408,7 @@ and read the example AppRole:
           sudo ss -tlnp
           vault status -format=json
           curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-            --cacert "$2" -w 'http=%{http_code}\n' "$1/v1/sys/health"
+            --cacert "$2" -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/v1/sys/health"
           vault audit list -detailed
           vault token lookup
           vault token lookup -format=json
@@ -437,8 +439,8 @@ Interpret the checks separately; the block's final exit status does not summariz
   returned codes. A healthy response is a connectivity control, not proof of hardening.
   See [status](https://developer.hashicorp.com/vault/docs/commands/status) and the
   [health API](https://developer.hashicorp.com/vault/api-docs/system/health).
-- **Audit configuration and delivery (demonstrated for one file device and an empty list; two
-  independent devices REASONED, since none was configured):** an empty audit list means requests are served
+- **Audit configuration and delivery (demonstrated for an empty list and for one and two file devices; a
+  second device in a separate failure domain REASONED, since the host has no second network):** an empty audit list means requests are served
   unlogged. The fixed configuration lists the intended independent devices. Correlate the successful
   non-root JSON token lookup's `request_id` with `request.id` in the collected audit entries;
   the default table output omits the request ID. Check delivery to both destinations while both are
@@ -479,7 +481,12 @@ any audit device was enabled the audit list printed `No audit devices are enable
 revocation the root token's lookup succeeded with policy `root` and `ttl` `0s`. With `tls_disable =
 true` on the listener, a plaintext health request was answered (`501`, uninitialized) and an HTTPS
 request failed. A `payments` role written without limits or bounds read back with
-`secret_id_num_uses` `0`, `secret_id_ttl` `0`, no CIDRs, `token_num_uses` `0` and zero TTLs.
+`secret_id_num_uses` `0`, `secret_id_ttl` `0`, no CIDRs, `token_num_uses` `0` and zero TTLs. In a
+follow-up run, the health request printed `http=200 exit=0 err=` on the healthy node and `http=000
+exit=7 err=Failed to connect ...` with the server stopped; with two file audit devices, one request's
+`request_id` appeared twice in each file; and with a second listener stanza on 127.0.0.2:8200, the
+socket table also showed `127.0.0.2:8200` and `127.0.0.2:8201`, an unintended listener with its own
+cluster port, because `cluster_address` defaults to one port above `address`.
 
 **Application ACLs and authenticated monitoring (demonstrated on loopback):** for API authentication, provision an
 owner-readable header file containing the selected identity's `X-Vault-Token` header through a
@@ -649,7 +656,8 @@ another test:
   returned `200` before read 101 got `403`; with `token_num_uses=0`, all 101 reads returned `200`. With
   short test durations (`token_ttl=10s`, `token_explicit_max_ttl=30s`), a token renewed every 8 seconds
   got `403` on a read at about 43 seconds, after the 30-second ceiling, while the same schedule without
-  an explicit ceiling kept a token working. With `token_ttl=10s`, a read at about 15 seconds got `403`,
+  an explicit ceiling kept a token working. A role with `token_type=batch` issued an `hvb.` token and a
+  role with no TTL a `lease_duration` of `2764800`, the exposed halves of the type and lease checks. With `token_ttl=10s`, a read at about 15 seconds got `403`,
   while a token from a role with no token TTL (the default lifetime) got `200`.
 
 The discriminators come from the
@@ -684,12 +692,12 @@ are findings; their credential-bearing output is discarded.
           if vault write -f auth/approle/role/payments/secret-id > /dev/null; then
             echo "FINDING: unwrapped issuance succeeded"
           else
-            echo "Check that Vault rejected missing wrapping; other failures are inconclusive"
+            echo "Refused; this counts only if the sixty-second request below succeeds"
           fi
           if vault write -wrap-ttl=61s -f auth/approle/role/payments/secret-id > /dev/null; then
             echo "FINDING: issuance above the wrapping TTL ceiling succeeded"
           else
-            echo "Check that Vault rejected the wrapping TTL; other failures are inconclusive"
+            echo "Refused; this counts only if the sixty-second request below succeeds"
           fi
           vault write -wrap-ttl=60s -f auth/approle/role/payments/secret-id
           ;;
@@ -706,7 +714,9 @@ with `403` `permission denied`, which does not name the wrapping setting, so the
 what separates a wrapping refusal from a missing permission; the sixty-second request returned
 `wrapping_token_ttl` `1m` and `wrapping_token_creation_path` `auth/approle/role/payments/secret-id`. With a delivery policy that sets
 neither wrapping TTL, the same kind of identity's unwrapped request returned the SecretID fields and a
-sixty-one-second request succeeded: the exposed comparison.
+sixty-one-second request succeeded: the exposed comparison. In the follow-up run, the block printed
+`Refused; this counts only if the sixty-second request below succeeds` for each refusal in the fixed
+state, and both `FINDING` lines in the exposed state.
 See [required wrapping TTLs](https://developer.hashicorp.com/vault/docs/concepts/policies#required-response-wrapping-ttls)
 and [wrapping requests](https://developer.hashicorp.com/vault/docs/concepts/response-wrapping).
 
@@ -841,7 +851,7 @@ See [production firewall guidance](https://developer.hashicorp.com/vault/docs/co
 
 | Backlog ID | Status | Required demonstration |
 | --- | --- | --- |
-| VAULT-LIVE-1 | OPEN - REASONED parts only; backlog row 1.114 | In an authorized isolated Vault deployment, demonstrate what a single loopback node cannot: HA standby behavior (the `429`, `474` and `530` health and status codes, and the monitoring checks' redirects and local-only handlers), a second independent audit device and delivery to both destinations, a wildcard bind and `ss` run as root, recipient-side rejection of an unexpected creation path, and the external isolation probe from real permitted and forbidden sources against 8200 and 8201. Record the Vault version and edition, effective settings, requests, errors, and matched positive controls without credentials. |
+| VAULT-LIVE-1 | OPEN - REASONED parts only; backlog row 1.114 | In an authorized isolated Vault deployment, demonstrate what a single loopback node cannot: HA standby behavior (the `429`, `474` and `530` health and status codes, and the monitoring checks' redirects and local-only handlers), a second audit device in a separate failure domain with delivery to both destinations, a wildcard bind and `ss` run as root, recipient-side rejection of an unexpected creation path, and the external isolation probe from real permitted and forbidden sources against 8200 and 8201. Record the Vault version and edition, effective settings, requests, errors, and matched positive controls without credentials. |
 
 ## Sources (checked September 2026)
 
