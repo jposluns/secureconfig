@@ -12,9 +12,9 @@ with the merged pull request is therefore an authoring obligation, not an enforc
 ## 2026-09-24
 
 - `CONTRIBUTING.md` (#296), carrying the maintainer's rulings of 2026-09-24.
-  - Rule 5 now requires two things. A review brief for a demonstrated step states the exposed run, the fixed run and what each observed. Adding or changing a demonstration run means rereading the guide's run-provenance sentence. Both lines were proposed by guardrails.
-  - Rule 7 now allows one exception to its no-named-variable rule. `read` cannot target the positional parameters, so a key read with `read -r -s` may sit in a single subshell-local variable, if tracing is off, the variable is cleared first with a fail-closed guard, and it is never exported. A secret the reader already holds in an environment variable is not covered.
-  - Row 1.126 tracks checking the 17 existing `read -s` sites against those guards.
+  - Rule 5 now requires two things. A review brief for a demonstrated step states the exposed run, the fixed run and what each observed. Adding a demonstration run means rereading the guide's run-provenance sentence. Both lines were proposed by guardrails.
+  - Rule 7 now allows one exception to its no-named-variable rule. `read` cannot target the positional parameters, so a key read with `read -r -s` may sit in a single subshell-local variable, if tracing and allexport are off (`set +x +a`), the variable is cleared first (`unset -n` then `unset -v`, failing closed), and it is never exported. A secret the reader already holds in an environment variable is not covered.
+  - Row 1.126 tracks checking the 15 existing `read -s` invocations in nine guides against those guards.
 - Follow-ups (#295), non-blocking notes carried from #291 to #294's final reviews.
   - `sqlite.md`: the LiteFS/Litestream mark names what opens the listeners.
   - `TODO.md`: row 2.37 matches each need to its check, and row 1.123 states the rule 7 remedy.
