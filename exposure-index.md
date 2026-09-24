@@ -27,8 +27,9 @@ one of them is the application's.
 Rows are ordered by their first port number or the start of a range. Related ports may share a row, and ranges can overlap other entries.
 
 The Default credential column records what the cited guides say a fresh install ships with: a
-well-known account, an empty or placeholder password, no authentication at all, or a secure default
-such as a generated token. It reports the guides, not the vendors. "not stated" means the cited guides are silent, which is not the same as
+well-known account, an empty or placeholder password, no authentication at all, a secure default
+such as a generated token, or another posture the guide states, such as a shared secret or a listener
+that sits outside the login. It reports the guides, not the vendors. "not stated" means the cited guides are silent, which is not the same as
 safe, and "varies by service; see the guides" means the row covers services whose defaults differ.
 Open the guide before relying on either, because defaults change between releases.
 
@@ -59,7 +60,7 @@ Open the guide before relying on either, because defaults change between release
 | 3306 | MySQL and MariaDB | Varies by install method; MariaDB 10.4+ local root via Unix socket | [mysql.md](mysql.md), [cloud-firewalls.md](cloud-firewalls.md) |
 | 3389 | RDP, mentioned only as an omitted inventory check in the cloud-firewall guide | not stated | [cloud-firewalls.md](cloud-firewalls.md) |
 | 3478 | coturn STUN/TURN over UDP and TCP | Stock example config: anonymous TURN allocation (Docker image ships `lt-cred-mech` on) | [realtime-voice-infra.md](realtime-voice-infra.md) |
-| 4000 | LiteLLM proxy | At the time of writing, refuses to start without a master key or with `sk-1234`; older or overridden deployments can run without authentication; UI user `admin` | [litellm.md](litellm.md) |
+| 4000 | LiteLLM proxy | At the time of writing, refuses to start without a master key or with `sk-1234`; older or overridden deployments can run without authentication; UI user `admin`, and with `UI_PASSWORD` unset the master key logs in | [litellm.md](litellm.md) |
 | 4180 | oauth2-proxy | not stated | [fronting-auth.md](fronting-auth.md) |
 | 4200 | Prefect server | No default authentication | [workflow-orchestrators.md](workflow-orchestrators.md) |
 | 4222 | NATS client connections | No authentication configured by default | [nats.md](nats.md) |
@@ -122,7 +123,7 @@ Open the guide before relying on either, because defaults change between release
 | 8222 | NATS monitoring endpoints | No login of its own | [nats.md](nats.md) |
 | 8233 | Temporal Web UI as started by `temporal server start-dev`, which is the context this corpus documents | not stated | [workflow-orchestrators.md](workflow-orchestrators.md) |
 | 8265 | Ray dashboard | No login unless token auth enabled (off by default) | [ray.md](ray.md) |
-| 8400, 8401 | VictoriaMetrics cluster native RPC channels, separate from vmstorage's HTTP maintenance and metrics listener | Basic authentication disabled by default | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
+| 8400, 8401 | VictoriaMetrics cluster native RPC channels, separate from vmstorage's HTTP maintenance and metrics listener | No authentication by default | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
 | 8404 | HAProxy HTTPS stats listener in the configured example; a chosen port, and stats are disabled unless configured | Stats disabled unless configured; enabling authenticates nothing on its own | [haproxy.md](haproxy.md) |
 | 8428 | VictoriaMetrics single-node HTTP API, UI, and ingest, with `-httpAuth.username`/`-httpAuth.password` Basic auth disabled by default | Basic auth disabled by default | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
 | 8432 | Mem0 Compose PostgreSQL publication: host port 8432 maps to container port 5432 | not stated | [ai-infra-services.md](ai-infra-services.md) |
@@ -168,12 +169,12 @@ Open the guide before relying on either, because defaults change between release
 | 15672 | RabbitMQ management UI | `guest`/`guest`, usable only from localhost | [rabbitmq.md](rabbitmq.md) |
 | 16379 | Redis Cluster's node-to-node bus (`cluster-port 16379` in the guide's example), which is opt-in and needs its own restriction | No AUTH gate; data-port password does not apply | [redis.md](redis.md) |
 | 18123 | Helicone Compose ClickHouse HTTP publication: host port 18123 maps to container port 8123; it also falls inside the Ray worker range | Published independently of the dashboard login; the guide says to rotate the Compose example storage credentials | [llm-observability.md](llm-observability.md) |
-| 19000 | Helicone Compose backing-service publication: host port 19000 maps to container port 9000, but the guide does not explicitly attribute this mapping to a service; it also falls inside the Ray worker range | not stated | [llm-observability.md](llm-observability.md) |
+| 19000 | Helicone Compose backing-service publication: host port 19000 maps to container port 9000, but the guide does not explicitly attribute this mapping to a service; it also falls inside the Ray worker range | Published independently of the dashboard login | [llm-observability.md](llm-observability.md) |
 | 19530 | Milvus gRPC | Authentication must be enabled with `common.security.authorizationEnabled`; once on, built-in `root`/`Milvus` | [vector-databases.md](vector-databases.md) |
 | 20202 | LiteFS HTTP replication API, including database export/import and administrative operations | not stated | [sqlite.md](sqlite.md) |
 | 25672 | RabbitMQ inter-node and CLI Erlang distribution (default, the AMQP port plus 20000); by default the Erlang cookie is its only credential and grants full control of the node | The Erlang cookie, a shared secret; cookie plus reachability can give full broker control | [rabbitmq.md](rabbitmq.md) |
 | 26379 | Redis Sentinel's separate listener; its shipped configuration disables protected mode and supplies no active authentication rule | Shipped config: protected mode off, no active authentication rule | [redis.md](redis.md) |
-| 27017 | MongoDB | not stated | [mongodb.md](mongodb.md), [cloud-firewalls.md](cloud-firewalls.md) |
+| 27017 | MongoDB | Authorization must be enabled (`authorization: enabled`); until the first user exists, the localhost exception lets a local client create it | [mongodb.md](mongodb.md), [cloud-firewalls.md](cloud-firewalls.md) |
 | 30000 to 32767 | Kubernetes NodePort range over TCP and UDP; SGLang on 30000 | varies by service; see the guides | [kubernetes.md](kubernetes.md), [model-servers.md](model-servers.md) |
 | 33060 | MySQL X Protocol, a separate listener whose bind is not controlled by bind_address; MariaDB does not implement it | not stated | [mysql.md](mysql.md) |
 | 35672 to 35682 | RabbitMQ remote CLI tools' own Erlang distribution-port range (default); the guide says to restrict the actual range to the necessary peers | The Erlang cookie, a shared secret granting node and CLI access | [rabbitmq.md](rabbitmq.md) |

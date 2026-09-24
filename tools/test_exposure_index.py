@@ -40,7 +40,10 @@ Row shape: R1 a three-cell row fails; R2 an empty Default credential cell fails;
   three-column header fails closed with exit 2; R4 an empty Port cell fails; R5 a three-cell
   separator row fails; R6 a blank-port three-cell row fails; R7 a row opening `||` (a blank Port
   cell) fails; R8 a separator with a fifth cell fails; R9 a Port cell with no number and R10 a
-  second separator row mid-table fail.
+  second separator row mid-table fail; R11 a digit inside other text (`version9090`) is not a port
+  and maps nothing; R12 a number above 65535 fails; R13 a header with an extra column fails
+  closed; R14 a missing separator fails; R15 an indented row fails and later rows are still
+  checked; R16 a version label is not a Port cell.
 """
 import shutil
 import subprocess
@@ -220,14 +223,35 @@ def main() -> int:
                   index=INDEX.replace("| --- | --- | --- | --- |", "| --- | --- | --- | --- ||", 1))
     check(f"R8: a separator row with a fifth cell fails (rc={rc}, out={out!r})",
           rc == 1 and "is not a 4-cell separator row" in out)
+    bad_port = "has a Port cell that is not a list of ports or ranges"
     rc, out = run(guide("port 9090"), index=INDEX + "| TBD | Unknown | not stated | [a.md](a.md) |\n")
     check(f"R9: a Port cell with no number fails (rc={rc}, out={out!r})",
-          rc == 1 and "has no port number in its Port cell" in out)
+          rc == 1 and bad_port in out)
     rc, out = run(guide("port 9090"), index=INDEX + "| --- | --- | --- | --- |\n")
     check(f"R10: a second separator row mid-table fails (rc={rc}, out={out!r})",
-          rc == 1 and "has no port number in its Port cell" in out)
+          rc == 1 and bad_port in out)
+    rc, out = run(guide("port 9090"), index=INDEX.replace("| 9090 |", "| version9090 |", 1))
+    check(f"R11: a digit inside other text is not a port, and maps nothing (rc={rc}, out={out!r})",
+          rc == 1 and bad_port in out and "names port 9090" in out)
+    rc, out = run(guide("port 9090"),
+                  index=INDEX + "| 99999 | Too high | not stated | [a.md](a.md) |\n")
+    check(f"R12: a number above 65535 in the Port cell fails (rc={rc}, out={out!r})",
+          rc == 1 and bad_port in out)
+    rc, out = run(guide("port 9090"),
+                  index=INDEX.replace("| Documented in |", "| Documented in | EXTRA |", 1))
+    check(f"R13: a header with an extra column fails closed (rc={rc}, out={out!r})",
+          rc == 2)
+    rc, out = run(guide("port 9090"), index=INDEX.replace("| --- | --- | --- | --- |\n", "", 1))
+    check(f"R14: a header with no separator row fails (rc={rc}, out={out!r})",
+          rc == 1 and "is not a 4-cell separator row" in out)
+    rc, out = run(guide("port 9090"),
+                  index=INDEX + " | 7777 | Indented |  | [a.md](a.md) |\n| 7778 | Three | [a.md](a.md) |\n")
+    check(f"R15: an indented row fails, and rows after it are still checked (rc={rc}, out={out!r})",
+          rc == 1 and "is indented" in out and "row `7778`" in out)
+    rc, out = run(guide("port 9090"), index=INDEX + "| v2 | x | not stated | [a.md](a.md) |\n")
+    check(f"R16: a version label is not a Port cell (rc={rc}, out={out!r})", rc == 1 and bad_port in out)
 
-    total = len(DETECT) + len(PRECISE) + 7 + 3 + 4 + 10
+    total = len(DETECT) + len(PRECISE) + 7 + 3 + 4 + 16
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")

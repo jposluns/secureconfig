@@ -50,10 +50,16 @@ ranges (`9300 to 9400`, `8000-8010`). A single port, or a range covering at most
 (Ray's worker range, coturn's relay range) maps them only for the guides its own row cites,
 because otherwise it would silently cover every high port in the corpus.
 
-ROW SHAPE. The separator row directly under the header has four cells of dashes. Every other row
-has four cells (Port, May be, Default credential, Documented in), a Port cell that names at least
-one port number, and a non-empty Default credential cell: "not stated" is the value when the cited guides are silent,
-so a row cannot lose the column without the gate noticing.
+ROW SHAPE. The header line must appear exactly, and exactly `| --- | --- | --- | --- |` must follow
+it. Every table line after that must be `| Port | May be | Default credential | Documented in |`
+in form: four non-empty cells, one space inside each pipe, nothing outside, and no indentation.
+The Port cell must be a comma-separated list of ports or ranges (`N`, `N to N`, `N-N`, or an en
+dash, each optionally `/TCP` or `/UDP`), every number from 1 to 65535 and every range ascending.
+"not stated" is the credential value when the cited guides are silent. A table line that breaks
+the grammar fails the gate and maps nothing, so no row can drop the column or hide a port. The
+table ends at the first line that does not begin with a pipe, after any indentation; an
+indented pipe line is reported, not treated as the end. A second table later in the file is not
+read.
 
 ALLOWLIST. tools/exposure_index_allowlist.txt lists `<guide> <port>  # reason` pairs that match a
 pattern but are not listeners this corpus documents (an outbound destination, an illustrative
@@ -62,7 +68,7 @@ guide) or REDUNDANT (the mention remains but the index now maps it), so the list
 the text or the gap it excuses.
 
 Exit status: 0 when every mention is mapped or allowlisted, every allowlist entry is still
-needed, and every index row is well formed; 1 otherwise; 2 when the index table cannot be
+needed, and every index row is well formed; 1 otherwise; 2 when the exact header line cannot be
 found. Everything is offline and reads files as UTF-8. tools/test_exposure_index.py drives this
 script against throwaway trees.
 """
@@ -79,6 +85,12 @@ INDEX = "exposure-index.md"
 ALLOWLIST = Path("tools/exposure_index_allowlist.txt")
 TABLE_HEADER = "| Port | May be | Default credential | Documented in |"
 COLUMNS = 4  # every data row has exactly this many cells
+CELL_NAMES = ("Port", "May be", "Default credential", "Documented in")
+SEPARATOR = "| --- | --- | --- | --- |"
+_CELL = r"([^|\s](?:[^|]*[^|\s])?)"  # non-empty, no pipe, no surrounding whitespace
+ROW = re.compile(r"\| " + r" \| ".join([_CELL] * COLUMNS) + r" \|")
+_PORT_ITEM = r"\d{1,5}(?:(?: to |-|\N{EN DASH})\d{1,5})?(?:/(?:TCP|UDP))?"
+PORT_CELL = re.compile(_PORT_ITEM + r"(?:, " + _PORT_ITEM + r")*")
 WIDE = 101  # a range covering more ports than this maps them only for the guides its row cites
 
 RANGE = re.compile(r"(\d+)\s*(?:to|-|\N{EN DASH})\s*(\d+)")
@@ -120,53 +132,82 @@ PATTERNS = {
 }
 
 
+def row_problem(line: str) -> str:
+    """Name what is wrong with a table line that does not match ROW."""
+    if line != line.lstrip():
+        return "is indented; write table rows flush left"
+    body = line.strip()
+    body = body[1:] if body.startswith("|") else body  # one outer pipe per side, so `||` keeps
+    body = body[:-1] if body.endswith("|") else body  # its empty cell and is counted
+    cells = [c.strip() for c in body.split("|")]
+    if not cells[0]:
+        return "has an empty Port cell"
+    if len(cells) != COLUMNS:
+        return f"has {len(cells)} cells; the table has {COLUMNS}"
+    for name, cell in zip(CELL_NAMES, cells):
+        if not cell:
+            if name == "Default credential":
+                return (
+                    "has an empty Default credential cell; write `not stated` when the cited guides are silent")
+            return f"has an empty {name} cell"
+    return ("is not in the table's `| a | b | c | d |` form "
+            "(one space inside each pipe, nothing outside)")
+
+
+def port_cell_ok(cell: str) -> bool:
+    """True iff the Port cell is a list of ports or ranges, every number 1 to 65535, ranges ascending."""
+    if not PORT_CELL.fullmatch(cell):
+        return False
+    for item in cell.split(", "):
+        nums = [int(n) for n in re.findall(r"\d+", item)]
+        if any(not 1 <= n <= 65535 for n in nums) or nums != sorted(nums):
+            return False
+    return True
+
+
 def parse_index(root: Path):
     """Return (explicit_ports, wide_cites, malformed) from the index table, or None if it is missing.
 
     explicit_ports maps a port for every guide; wide_cites[port] is the set of guides a wide
-    range maps that port for; malformed lists (line, first cell, problem) for a bad separator row
-    and for each row without four cells, a port number in its Port cell, or a Default credential.
+    range maps that port for; malformed lists (line, label, problem) for a missing or wrong
+    separator row and for every table line that breaks the row grammar (see ROW SHAPE). A
+    malformed row maps nothing.
     """
     try:
         lines = (root / INDEX).read_text(encoding="utf-8").split("\n")
     except OSError:
         return None
-    explicit, wide_cites, in_table, found, malformed = set(), {}, False, False, []
-    for ln, line in enumerate(lines, 1):
-        if line.startswith(TABLE_HEADER):
-            in_table, found, header_ln = True, True, ln
+    if TABLE_HEADER not in lines:
+        return None
+    start = lines.index(TABLE_HEADER) + 1
+    explicit, wide_cites, malformed = set(), {}, []
+    if start >= len(lines) or lines[start] != SEPARATOR:
+        malformed.append((start + 1, "---", f"is not a {COLUMNS}-cell separator row `{SEPARATOR}`"))
+    else:
+        start += 1
+    for ln, line in enumerate(lines[start:], start + 1):
+        if not line.lstrip().startswith("|"):
+            break  # the table ends at the first line that is not a table line
+        m = ROW.fullmatch(line)
+        if not m:
+            label = line.strip().strip("|").split("|")[0].strip() or "(blank)"
+            malformed.append((ln, label, row_problem(line)))
             continue
-        if not in_table:
+        port, docs = m.group(1), m.group(4)
+        if not port_cell_ok(port):
+            malformed.append(
+                (ln, port, "has a Port cell that is not a list of ports or ranges from 1 to 65535"))
             continue
-        if not line.startswith("|"):
-            break
-        body = line.strip()
-        body = body[1:] if body.startswith("|") else body  # one outer pipe per side, so `||` keeps
-        body = body[:-1] if body.endswith("|") else body  # its empty cell and is counted
-        cells = [c.strip() for c in body.split("|")]
-        if ln == header_ln + 1:  # the separator row: a real one, never a row that merely looks blank
-            if len(cells) != COLUMNS or not all(re.fullmatch(r":?-+:?", c) for c in cells):
-                malformed.append((ln, "---", f"is not a {COLUMNS}-cell separator row"))
-            continue
-        if not cells[0]:
-            malformed.append((ln, "(blank)", "has an empty Port cell"))
-        elif not re.search(r"\d", cells[0]):
-            malformed.append((ln, cells[0], "has no port number in its Port cell"))
-        elif len(cells) != COLUMNS:
-            malformed.append((ln, cells[0], f"has {len(cells)} cells; the table has {COLUMNS}"))
-        elif not cells[2]:
-            malformed.append((ln, cells[0], "has an empty Default credential cell; write `not stated` "
-                              "when the cited guides are silent"))
-        cited = set(re.findall(r"\]\(([^)#]+\.md)(?:#[^)]*)?\)", cells[-1]))
-        for a, b in RANGE.findall(cells[0]):
-            lo, hi = int(a), int(b)
+        cited = set(re.findall(r"\]\(([^)#]+\.md)(?:#[^)]*)?\)", docs))
+        for lo_s, hi_s in RANGE.findall(port):
+            lo, hi = int(lo_s), int(hi_s)
             if hi - lo + 1 > WIDE:
                 for p in range(lo, hi + 1):
                     wide_cites.setdefault(p, set()).update(cited)
             else:
                 explicit.update(range(lo, hi + 1))
-        explicit.update(int(n) for n in re.findall(r"\d+", RANGE.sub("", cells[0])))
-    return (explicit, wide_cites, malformed) if found else None
+        explicit.update(int(n) for n in re.findall(r"\d+", RANGE.sub("", port)))
+    return explicit, wide_cites, malformed
 
 
 def guides(root: Path):
