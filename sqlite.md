@@ -42,12 +42,26 @@ The bundle scan, the git inventory and the `stat` check were demonstrated on the
 # REASONED: needs a served application, which opens a listener; the authoring host forbids that without an isolated network namespace, and none was available.
 # The database and its sidecars must not be downloadable. The positive control must answer first, or the 404s
 # are inconclusive (a timeout, NXDOMAIN, or an environment proxy otherwise reads like a false pass).
-curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -o /dev/null \
-  -w 'control http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' https://app.example.com/
-for f in app.db app.db-wal app.db-shm app.db-journal; do
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_APP_ORIGIN' '/'   # the second value is a static path prefix to probe as well, such as '/static'; '/' probes the root only
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 2 ] || { echo "exactly one origin and one path prefix required; not probing"; exit 2; }
+  case "$1" in ""|*REPLACE_WITH_*) echo "substitute the HTTPS application origin; not probing"; exit 2 ;; esac
+  case "$1" in https://?*) ;; *) echo "HTTPS origin required; not probing"; exit 2 ;; esac
+  case "$2" in ""|*REPLACE_WITH_*) echo "substitute the static path prefix, or '/' for the root only; not probing"; exit 2 ;; esac
+  case "$2" in /*) ;; *) echo "the path prefix must start with /; not probing"; exit 2 ;; esac
+  case "${2%/}" in "") set -- "${1%/}" ;; *) set -- "${1%/}" "${1%/}${2%/}" ;; esac
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -o /dev/null \
-    -w "$f http=%{http_code} exit=%{exitcode} err=%{errormsg}\n" "https://app.example.com/$f"
-done   # 404 or the app's catch-all, never 200/206; repeat with the static path prefix your app actually serves
+    -w 'control http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/"
+  for b in "$@"; do
+    printf 'under %s/\n' "$b"
+    for f in app.db app.db-wal app.db-shm app.db-journal; do
+      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -o /dev/null \
+        -w "$f http=%{http_code} exit=%{exitcode} err=%{errormsg}\n" "$b/$f"
+    done   # 404 or the app's catch-all, never 200/206; repeat with the static path prefix your app actually serves
+  done
+)
 ```
 
 Scan built client bundles for a leaked Turso/libSQL token, keeping the token off argv and shell history:
