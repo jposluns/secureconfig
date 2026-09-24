@@ -43,7 +43,10 @@ Row shape: R1 a three-cell row fails; R2 an empty Default credential cell fails;
   second separator row mid-table fail; R11 a digit inside other text (`version9090`) is not a port
   and maps nothing; R12 a number above 65535 fails; R13 a header with an extra column fails
   closed; R14 a missing separator fails; R15 an indented row fails and later rows are still
-  checked; R16 a version label is not a Port cell.
+  checked; R16 a version label is not a Port cell; R17 a descending range fails; R18 a row without
+  a leading pipe fails and later rows are still checked; R19 an escaped pipe is content and the row
+  maps; R20 a comment-only and R21 a zero-width credential cell count as empty; R22 prose directly
+  under the table is a table row and fails.
 """
 import shutil
 import subprocess
@@ -250,8 +253,30 @@ def main() -> int:
           rc == 1 and "is indented" in out and "row `7778`" in out)
     rc, out = run(guide("port 9090"), index=INDEX + "| v2 | x | not stated | [a.md](a.md) |\n")
     check(f"R16: a version label is not a Port cell (rc={rc}, out={out!r})", rc == 1 and bad_port in out)
+    rc, out = run(guide("port 9090"),
+                  index=INDEX + "| 9400 to 9300 | Descending | not stated | [a.md](a.md) |\n")
+    check(f"R17: a descending range fails (rc={rc}, out={out!r})", rc == 1 and bad_port in out)
+    rc, out = run(guide("port 9090"),
+                  index=INDEX + "60001 | No leading pipe | not stated | [a.md](a.md) |\n"
+                  "| 60002 | Bad row |  | [a.md](a.md) |\n")
+    check(f"R18: a row without a leading pipe fails, and rows after it are checked (rc={rc}, out={out!r})",
+          rc == 1 and "does not start with" in out
+          and "row `60002` has an empty Default credential cell" in out)
+    rc, out = run(guide("It listens on port 7777."),
+                  index=INDEX + "| 7777 | A \\| B | not stated | [a.md](a.md) |\n")
+    check(f"R19: an escaped pipe is cell content, and the row maps (rc={rc}, out={out!r})", rc == 0)
+    rc, out = run(guide("port 9090"), index=INDEX + "| 7777 | Hidden | <!-- --> | [a.md](a.md) |\n")
+    check(f"R20: a comment-only credential cell is empty (rc={rc}, out={out!r})",
+          rc == 1 and "has an empty Default credential cell" in out)
+    rc, out = run(guide("port 9090"),
+                  index=INDEX + "| 7777 | Hidden | \N{ZERO WIDTH SPACE} | [a.md](a.md) |\n")
+    check(f"R21: a zero-width credential cell is empty (rc={rc}, out={out!r})",
+          rc == 1 and "has an empty Default credential cell" in out)
+    rc, out = run(guide("port 9090"), index=INDEX + "See the guides for more.\n")
+    check(f"R22: prose directly under the table is a table row and fails (rc={rc}, out={out!r})",
+          rc == 1 and "does not start with" in out)
 
-    total = len(DETECT) + len(PRECISE) + 7 + 3 + 4 + 16
+    total = len(DETECT) + len(PRECISE) + 7 + 3 + 4 + 22
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")

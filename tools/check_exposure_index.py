@@ -51,15 +51,16 @@ ranges (`9300 to 9400`, `8000-8010`). A single port, or a range covering at most
 because otherwise it would silently cover every high port in the corpus.
 
 ROW SHAPE. The header line must appear exactly, and exactly `| --- | --- | --- | --- |` must follow
-it. Every table line after that must be `| Port | May be | Default credential | Documented in |`
-in form: four non-empty cells, one space inside each pipe, nothing outside, and no indentation.
-The Port cell must be a comma-separated list of ports or ranges (`N`, `N to N`, `N-N`, or an en
-dash, each optionally `/TCP` or `/UDP`), every number from 1 to 65535 and every range ascending.
-"not stated" is the credential value when the cited guides are silent. A table line that breaks
-the grammar fails the gate and maps nothing, so no row can drop the column or hide a port. The
-table ends at the first line that does not begin with a pipe, after any indentation; an
-indented pipe line is reported, not treated as the end. A second table later in the file is not
-read.
+it. As in GitHub-flavored Markdown, the table then runs until the first blank line, so every
+non-blank line after the separator is a table row and must be in the table's form: flush left,
+starting `| ` and ending ` |`, four cells split on unescaped pipes (a backslash-escaped pipe
+is content), one space inside each pipe, and visible text in every cell (an HTML comment,
+`&nbsp;` or a zero-width character does not count). The Port cell must be a comma-separated
+list of ports or ranges (`N`,
+`N to N`, `N-N`, or an en dash, each optionally `/TCP` or `/UDP`), every number from 1 to 65535
+and every range ascending. "not stated" is the credential value when the cited guides are
+silent. A row that breaks this fails the gate and maps nothing. A second table later in the file
+is not read.
 
 ALLOWLIST. tools/exposure_index_allowlist.txt lists `<guide> <port>  # reason` pairs that match a
 pattern but are not listeners this corpus documents (an outbound destination, an illustrative
@@ -74,6 +75,7 @@ script against throwaway trees.
 """
 import re
 import sys
+import unicodedata
 from pathlib import Path
 
 sys.dont_write_bytecode = True
@@ -87,8 +89,8 @@ TABLE_HEADER = "| Port | May be | Default credential | Documented in |"
 COLUMNS = 4  # every data row has exactly this many cells
 CELL_NAMES = ("Port", "May be", "Default credential", "Documented in")
 SEPARATOR = "| --- | --- | --- | --- |"
-_CELL = r"([^|\s](?:[^|]*[^|\s])?)"  # non-empty, no pipe, no surrounding whitespace
-ROW = re.compile(r"\| " + r" \| ".join([_CELL] * COLUMNS) + r" \|")
+_UNESCAPED_PIPE = re.compile(r"(?<!\\)\|")  # GFM: `\|` inside a cell is content, not a boundary
+_INVISIBLE = re.compile(r"<!--.*?-->|&(?:nbsp|#160|#x[aA]0|ZeroWidthSpace|#8203|#x200[bB]);")
 _PORT_ITEM = r"\d{1,5}(?:(?: to |-|\N{EN DASH})\d{1,5})?(?:/(?:TCP|UDP))?"
 PORT_CELL = re.compile(_PORT_ITEM + r"(?:, " + _PORT_ITEM + r")*")
 WIDE = 101  # a range covering more ports than this maps them only for the guides its row cites
@@ -132,26 +134,42 @@ PATTERNS = {
 }
 
 
-def row_problem(line: str) -> str:
-    """Name what is wrong with a table line that does not match ROW."""
-    if line != line.lstrip():
-        return "is indented; write table rows flush left"
+def split_row(line: str) -> list:
+    """Cells of a table line: one outer pipe per side, then a split on unescaped pipes."""
     body = line.strip()
     body = body[1:] if body.startswith("|") else body  # one outer pipe per side, so `||` keeps
-    body = body[:-1] if body.endswith("|") else body  # its empty cell and is counted
-    cells = [c.strip() for c in body.split("|")]
-    if not cells[0]:
+    body = body[:-1] if body.endswith("|") and not body.endswith("\\|") else body  # its empty cell
+    return [c.strip() for c in _UNESCAPED_PIPE.split(body)]
+
+
+def visible(cell: str) -> bool:
+    """True iff the cell renders some text: comments, blank entities and format characters do not count."""
+    text = _INVISIBLE.sub("", cell)
+    return any(not ch.isspace() and unicodedata.category(ch) not in ("Cc", "Cf", "Zs", "Zl", "Zp")
+               for ch in text)
+
+
+def row_problem(line: str):
+    """Name what is wrong with a table line, or return None when it is in the table's form."""
+    if line != line.lstrip():
+        return "is indented; write table rows flush left"
+    cells = split_row(line)
+    if not visible(cells[0]):
         return "has an empty Port cell"
+    if not (line.startswith("| ") and line.endswith(" |")):
+        return ("does not start with `| ` and end with ` |`; every line up to the blank line after the "
+                "table is a table row")
     if len(cells) != COLUMNS:
         return f"has {len(cells)} cells; the table has {COLUMNS}"
     for name, cell in zip(CELL_NAMES, cells):
-        if not cell:
+        if not visible(cell):
             if name == "Default credential":
                 return (
                     "has an empty Default credential cell; write `not stated` when the cited guides are silent")
             return f"has an empty {name} cell"
-    return ("is not in the table's `| a | b | c | d |` form "
-            "(one space inside each pipe, nothing outside)")
+    if " | ".join(cells) != line[2:-2]:
+        return "is not in the table's `| a | b | c | d |` form (one space inside each pipe)"
+    return None
 
 
 def port_cell_ok(cell: str) -> bool:
@@ -186,14 +204,13 @@ def parse_index(root: Path):
     else:
         start += 1
     for ln, line in enumerate(lines[start:], start + 1):
-        if not line.lstrip().startswith("|"):
-            break  # the table ends at the first line that is not a table line
-        m = ROW.fullmatch(line)
-        if not m:
-            label = line.strip().strip("|").split("|")[0].strip() or "(blank)"
-            malformed.append((ln, label, row_problem(line)))
+        if not line.strip():
+            break  # as in GFM, the table runs until a blank line
+        problem = row_problem(line)
+        if problem:
+            malformed.append((ln, split_row(line)[0] or "(blank)", problem))
             continue
-        port, docs = m.group(1), m.group(4)
+        port, docs = split_row(line)[0], split_row(line)[3]
         if not port_cell_ok(port):
             malformed.append(
                 (ln, port, "has a Port cell that is not a list of ports or ranges from 1 to 65535"))

@@ -78,7 +78,7 @@ Open the guide before relying on either, because defaults change between release
 | 5601 | Kibana, which defaults to HTTP on `localhost:5601` with `server.ssl.enabled: false` (its Docker image changes the host default to `0.0.0.0`), and OpenSearch Dashboards, whose 3.8.0 sample configuration also uses localhost and port 5601 with server TLS disabled | not stated | [elasticsearch.md](elasticsearch.md) |
 | 5671, 5672 | AMQP over TLS, and AMQP plaintext | `guest`/`guest`, usable only from localhost | [rabbitmq.md](rabbitmq.md) |
 | 5678 | n8n | Owner account set up on first run; unclaimed instance open to first visitor | [n8n.md](n8n.md) |
-| 5766 | coturn telnet CLI, disabled by default and bound to loopback when enabled | not stated | [realtime-voice-infra.md](realtime-voice-infra.md) |
+| 5766 | coturn telnet CLI, disabled by default and bound to loopback when enabled | Off by default; loopback when enabled; authenticated by `cli-password`, separately from the web admin | [realtime-voice-infra.md](realtime-voice-infra.md) |
 | 5900, 7900 | VNC and noVNC in the Selenium Docker browser images, started by default with the vendor example password `secret` | VNC on by default; vendor example password `secret` | [headless-browser-services.md](headless-browser-services.md) |
 | 5901 | VNC in a GPU desktop template example; an example port, not a platform-wide default | Template-dependent; may default to weak or empty password | [gpu-clouds.md](gpu-clouds.md) |
 | 6001, 6002 | Coolify real-time updates and terminal | not stated | [devops-uis.md](devops-uis.md) |
@@ -153,7 +153,7 @@ Open the guide before relying on either, because defaults change between release
 | 9440 | ClickHouse native TCP over TLS | Base config: `default` user with an empty password, allowed to connect from any address; packaging can change it | [clickhouse.md](clickhouse.md) |
 | 9443 | Portainer HTTPS UI, authentik's HTTPS port | varies by service; see the guides | [devops-uis.md](devops-uis.md), [self-hosted-idp.md](self-hosted-idp.md) |
 | 9641 | coturn Prometheus metrics, disabled by default; when enabled, it binds a wildcard address and serves without authentication | Off by default; when enabled, no authentication | [realtime-voice-infra.md](realtime-voice-infra.md) |
-| 9898 | Pgpool-II's PCP administration channel, which has its own credential file | not stated | [connection-poolers.md](connection-poolers.md) |
+| 9898 | Pgpool-II's PCP administration channel, which has its own credential file | Its own credential file, `pcp.conf`, separate from database credentials | [connection-poolers.md](connection-poolers.md) |
 | 9999 | Pgpool-II | `enable_pool_hba` off by default: Pgpool authenticates nobody itself | [connection-poolers.md](connection-poolers.md), [postgresql.md](postgresql.md) |
 | 10001 | Ray Client server, which executes code | Unauthenticated code execution unless token auth enabled (off by default) | [ray.md](ray.md) |
 | 10002 to 19999 | Ray worker ports, allocated across this whole range by default, plus several randomized ports. Anything in this range on a Ray node may be a worker rather than the service the row below suggests | Ray token authentication (2.52.0 and later) is disabled by default as of 2.58.0 | [ray.md](ray.md) |
@@ -174,7 +174,7 @@ Open the guide before relying on either, because defaults change between release
 | 20202 | LiteFS HTTP replication API, including database export/import and administrative operations | not stated | [sqlite.md](sqlite.md) |
 | 25672 | RabbitMQ inter-node and CLI Erlang distribution (default, the AMQP port plus 20000); by default the Erlang cookie is its only credential and grants full control of the node | The Erlang cookie, a shared secret; cookie plus reachability can give full broker control | [rabbitmq.md](rabbitmq.md) |
 | 26379 | Redis Sentinel's separate listener; its shipped configuration disables protected mode and supplies no active authentication rule | Shipped config: protected mode off, no active authentication rule | [redis.md](redis.md) |
-| 27017 | MongoDB | Authorization must be enabled (`authorization: enabled`); until the first user exists, the localhost exception lets a local client create it | [mongodb.md](mongodb.md), [cloud-firewalls.md](cloud-firewalls.md) |
+| 27017 | MongoDB | Authorization must be enabled (`authorization: enabled`); on an installation with no existing users or roles, the localhost exception lets a local client create the first administrator | [mongodb.md](mongodb.md), [cloud-firewalls.md](cloud-firewalls.md) |
 | 30000 to 32767 | Kubernetes NodePort range over TCP and UDP; SGLang on 30000 | varies by service; see the guides | [kubernetes.md](kubernetes.md), [model-servers.md](model-servers.md) |
 | 33060 | MySQL X Protocol, a separate listener whose bind is not controlled by bind_address; MariaDB does not implement it | not stated | [mysql.md](mysql.md) |
 | 35672 to 35682 | RabbitMQ remote CLI tools' own Erlang distribution-port range (default); the guide says to restrict the actual range to the necessary peers | The Erlang cookie, a shared secret granting node and CLI access | [rabbitmq.md](rabbitmq.md) |
