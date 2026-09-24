@@ -140,6 +140,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert REPLACE_
   set +x +a
   { unset -n tok && unset -v tok; } 2>/dev/null ||
     { echo 'a readonly tok is set in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   IFS= read -r -s -p 'Argo CD bearer token: ' tok < /dev/tty || exit 2; echo
   case "$tok" in ''|*[[:cntrl:]]*) echo 'supply the token; not probing'; exit 2 ;; esac
   printf 'Authorization: Bearer %s\n' "$tok" \
@@ -174,6 +175,7 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
   set +x +a
   { unset -n hmac sig && unset -v hmac sig; } 2>/dev/null ||
     { echo 'a readonly hmac or sig is set in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   IFS= read -r -s -p 'receiver HMAC secret: ' hmac < /dev/tty || exit 2; echo
   [ -n "$hmac" ] || { echo 'supply the HMAC secret; not probing'; exit 2; }
   body='{"ref":"refs/heads/main"}'
