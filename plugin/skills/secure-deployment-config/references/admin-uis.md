@@ -24,7 +24,7 @@ These control only the web login; MongoDB credentials go in `ME_CONFIG_MONGODB_U
 ```ini
 [server]
 protocol  = https
-# bind loopback (Grafana's default http_addr is empty = all interfaces); reach it via a tunnel or proxy
+# bind loopback (Grafana's default http_addr is empty as of v13.2.2, which means all interfaces); reach it via a tunnel or proxy
 http_addr = 127.0.0.1
 cert_file = /etc/grafana/grafana.crt
 cert_key  = /etc/grafana/grafana.key
@@ -32,7 +32,7 @@ cert_key  = /etc/grafana/grafana.key
 
 ## Prometheus
 
-No authentication at all by default, and it listens on `0.0.0.0:9090` by default. Give it a web configuration file and bind it to loopback, starting with `--web.listen-address=127.0.0.1:9090 --web.config.file=web.yml`:
+No authentication at all by default, and it listens on `0.0.0.0:9090` by default (as of v3.14.0). Give it a web configuration file and bind it to loopback, starting with `--web.listen-address=127.0.0.1:9090 --web.config.file=web.yml`:
 
 ```yaml
 basic_auth_users:
