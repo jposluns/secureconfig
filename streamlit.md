@@ -133,11 +133,11 @@ Then check the application gate in a browser, using the same scheme, hostname, p
 
 On the loopback runs, with `server.address` set to `127.0.0.1`, `ss` showed Streamlit only on `127.0.0.1:8501`. With the address unset, `streamlit config show` lists it as unset, and Streamlit 1.64.0's source binds the IPv6 wildcard `::` in that case when `socket.has_ipv6` holds (`_get_bind_address` in `web/server/starlette/starlette_server.py`). That bind is REASONED, because the host forbids listening on every interface. The runs used Caddy and oauth2-proxy on `127.0.0.1:8443`, with TLS files from a private test CA that curl trusted through `CURL_CA_BUNDLE`, and a headless Chrome 154 with an SPKI exception for the test certificate's key.
 
-The Keycloak realm was served over plain HTTP on loopback. Section 2's example uses an HTTPS metadata URL, as a real provider should. The realm had four users, and three of them carried an `hd` claim from a user-attribute mapper standing in for Google's:
+The Keycloak realm was served over plain HTTP on loopback. Section 2's example uses an HTTPS metadata URL, as a real provider should. The realm had four users, and three of them had an `hd` user attribute, which a user-attribute mapper standing in for Google's maps to an `hd` claim:
 - an allowed user in `example.com` with a verified email and TOTP required;
 - a verified user in another domain;
 - an `example.com` user whose email was not verified;
-- a verified `example.com` user with no `hd` claim, standing in for a consumer account.
+- a verified `example.com` user with no `hd` user attribute, standing in for a consumer account without the claim.
 
 What each run observed:
 
@@ -158,7 +158,7 @@ What each run observed:
 - **Native `st.login` with section 2's gate** (the guide's code, with only the final `Hello` line replaced by the canary):
   - The anonymous index returned `200` by design, and the anonymous browser was sent to the provider's sign-in page.
   - The allowed user rendered the canary after enrolling and then entering TOTP codes; a wrong code kept them at the one-time-code prompt.
-  - The user in another domain, and the user with no `hd` claim, saw "This account is not authorized for this app."
+  - The user in another domain, and the user with no `hd` attribute, saw "This account is not authorized for this app."
   - The unverified user saw "This account's email is not verified."
   - None of those three saw the canary.
 - **Native `st.login` exposed states:**
