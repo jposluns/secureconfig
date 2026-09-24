@@ -91,6 +91,7 @@
         "llm-observability.md",
         "workflow-orchestrators.md",
         "admin-uis.md",
+        "observability-components.md",
         "devops-uis.md",
         "cors.md",
         "headers.md",
@@ -115,6 +116,7 @@
       "sources": [
         "README.md",
         "admin-uis.md",
+        "observability-components.md",
         "agent-builders.md",
         "ai-infra-services.md",
         "apache.md",
