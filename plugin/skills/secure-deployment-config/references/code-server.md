@@ -79,6 +79,7 @@ ss -tlnp   # expect 8080 on loopback or a private address; then probe the public
   set +x +a
   { unset -n code_server_cookie && unset -v code_server_cookie; } 2>/dev/null ||
     { echo 'cannot initialize cookie input; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   IFS= read -r -s -p 'Cookie value (name=value; name=value), then Enter: ' code_server_cookie < /dev/tty || exit 2
   printf '\n'
   case "$code_server_cookie" in

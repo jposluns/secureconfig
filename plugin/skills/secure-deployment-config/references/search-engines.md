@@ -49,6 +49,7 @@ Verification status: the checks below were demonstrated on loopback against the 
   { unset -n audit_role audit_key audit_expected audit_reply &&
     unset -v audit_role audit_key audit_expected audit_reply; } 2>/dev/null ||
     { echo 'A readonly audit_* variable is set in this shell'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'A readonly IFS is set in this shell'; exit 2; }
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_ORIGIN' \
     'POST' '/indexes/movies/search' '{"q":"ninja"}' \
     'Authorization: Bearer ' '401' '200'

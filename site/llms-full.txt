@@ -2794,7 +2794,7 @@ Many self-hosted apps (internal tools, dashboards, webhook receivers) ship with 
 
 ## 1. The pattern
 
-1. **Bind the app to loopback**, `127.0.0.1`, never `0.0.0.0` or `::`. Bind the auth service so only the fronting proxy reaches it too: loopback when it shares the host, or a private container network with no published port when it does not (oauth2-proxy's `--http-address` defaults to `127.0.0.1:4180`; Authelia's `server.address` defaults to all interfaces, `tcp://:9091`, so restrict it), never a public interface. If the app also answers directly, the login page in front of it is decorative.
+1. **Bind the app to loopback**, `127.0.0.1`, never `0.0.0.0` or `::`. Bind the auth service so only the fronting proxy reaches it too: loopback when it shares the host, or a private container network with no published port when it does not (oauth2-proxy's `--http-address` defaults to `127.0.0.1:4180` as of v7.15.4; Authelia's `server.address` defaults to `tcp://:9091` as of v4.39.28, which is all interfaces, so restrict it), never a public interface. If the app also answers directly, the login page in front of it is decorative.
 2. **A proxy authenticates first**: oauth2-proxy, Authelia, or Pomerium checks the session before the request reaches the app; an unauthenticated request never gets there.
 3. **The proxy passes identity in a header and the app reads that header** instead of running its own login. The header must be one the proxy sets on every request from its own verified response, so the proxy overwrites any value a client sent: nginx `X-User`/`X-Email` in the example below, oauth2-proxy's `X-Auth-Request-User` carried through Traefik, Authelia's `Remote-User`. The app must never read a header the proxy does not set, because nginx and Traefik forward the client's other headers unchanged.
 4. **The app must trust only the exact header the proxy sets, and reject any other.** Network isolation, only the proxy can reach the app, stops a direct client from setting the header; but a client can also send a header *through* the proxy, and the proxy overwrites only the one header it sets while forwarding the rest, so the app must read that one header and no other. The managed-cloud version of this same bypass risk is in [cloud-identity-proxies.md](cloud-identity-proxies.md).
@@ -3512,7 +3512,7 @@ request_body {
 
 ## 5. The admin API
 
-Caddy runs a local admin API, by default on `localhost:2019`, that requires no credentials: anything that can reach it replaces the whole configuration with `POST /load`, edits it path by path under `/config/`, or stops the server with `POST /stop`. Its Host and Origin header checks block a browser on another site, but they are not process isolation, so the endpoint's safety rests on the loopback bind. Never publish it: do not reverse-proxy a route to `:2019`, and never move it to a public address.
+Caddy runs a local admin API, by default on `localhost:2019` (as of v2.11.4), that requires no credentials: anything that can reach it replaces the whole configuration with `POST /load`, edits it path by path under `/config/`, or stops the server with `POST /stop`. Its Host and Origin header checks block a browser on another site, but they are not process isolation, so the endpoint's safety rests on the loopback bind. Never publish it: do not reverse-proxy a route to `:2019`, and never move it to a public address.
 
 On a host where untrusted workloads share the machine, loopback is not enough, because any local process can reach `127.0.0.1:2019`. Bind the endpoint to a permissioned Unix socket instead, in the same global options block from section 1 (a Caddyfile has only one), so only processes that can open the socket file reconfigure Caddy:
 
@@ -3733,6 +3733,7 @@ sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
   set +x +a                                     # never trace or export the credential read below
   { unset -n pw && unset -v pw; } 2>/dev/null ||
     { echo 'a readonly pw is set in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
   shift
@@ -3781,6 +3782,7 @@ rejected at TLS, a trusted one admitted with `--cert`/`--key`, server verificati
   set +x +a
   { unset -n sp && unset -v sp; } 2>/dev/null ||
     { echo 'a readonly sp is set in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
   shift
@@ -4296,7 +4298,7 @@ export SSL_CERT_FILE=/path/ca.crt        # httpx and the ssl module
 
 ## 5. Do not quick-share files with `http.server`
 
-`python -m http.server` is a common quick-share suggestion, and it is the wrong one on any reachable host. By default it binds every interface, and it serves the current directory: source, `.env`, private keys, and database dumps are all downloadable by anyone who can reach the port. It also follows symbolic links, so a link in that directory hands out files from outside it, and the Python docs mark the module as not suitable for production. If you have no alternative, bind loopback and serve a directory that holds only what you mean to share:
+`python -m http.server` is a common quick-share suggestion, and it is the wrong one on any reachable host. By default it binds every interface (as of Python 3.14.4), and it serves the current directory: source, `.env`, private keys, and database dumps are all downloadable by anyone who can reach the port. It also follows symbolic links, so a link in that directory hands out files from outside it, and the Python docs mark the module as not suitable for production. If you have no alternative, bind loopback and serve a directory that holds only what you mean to share:
 
 ```bash
 cd /path/to/a/directory/with/nothing/private || exit
@@ -4337,7 +4339,7 @@ ss -tlnp   # every listener: loopback for a same-host reverse proxy, or the plat
 
 Containers are where accidental exposure happens most. Two Docker behaviours cause it:
 
-1. `ports: - "3000:3000"` (or `-p 3000:3000`) publishes on every host address, `0.0.0.0` and `[::]`.
+1. `ports: - "3000:3000"` (or `-p 3000:3000`) publishes on every host address, `0.0.0.0` and `[::]`, at the time of writing.
 2. On Linux, Docker programs iptables/nftables directly, so published ports are reachable **even when UFW or firewalld says the port is blocked**. A `ufw deny 3000` rule does not protect a published container port.
 
 ## 1. Publish nothing except the TLS proxy
@@ -4933,6 +4935,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert REPLACE_
   set +x +a
   { unset -n tok && unset -v tok; } 2>/dev/null ||
     { echo 'a readonly tok is set in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   IFS= read -r -s -p 'Argo CD bearer token: ' tok < /dev/tty || exit 2; echo
   case "$tok" in ''|*[[:cntrl:]]*) echo 'supply the token; not probing'; exit 2 ;; esac
   printf 'Authorization: Bearer %s\n' "$tok" \
@@ -4967,6 +4970,7 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
   set +x +a
   { unset -n hmac sig && unset -v hmac sig; } 2>/dev/null ||
     { echo 'a readonly hmac or sig is set in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   IFS= read -r -s -p 'receiver HMAC secret: ' hmac < /dev/tty || exit 2; echo
   [ -n "$hmac" ] || { echo 'supply the HMAC secret; not probing'; exit 2; }
   body='{"ref":"refs/heads/main"}'
@@ -5284,11 +5288,11 @@ Version boundary: GitHub.com documentation checked 18 September 2026, with REST 
 
 # Full-stack JS frameworks: SvelteKit, Nuxt, Vite
 
-SvelteKit, Nuxt, and Vite-based apps built by AI assistants inherit the same traps as [nextjs.md](nextjs.md): a server bind that can default wide open (SvelteKit's Node adapter binds `0.0.0.0`, though Vite's dev server defaults to `localhost`), a proxy that has to be explicitly trusted before secure cookies and correct origins work, and a public-env prefix that ships anything given it straight to the browser. Each framework also has more than one server entry point (endpoints, server routes, load functions), and a check placed in only one of them leaves the others open, exactly as with Next.js layouts versus Server Actions.
+SvelteKit, Nuxt, and Vite-based apps built by AI assistants inherit the same traps as [nextjs.md](nextjs.md): a server bind that can default wide open (SvelteKit's Node adapter binds `0.0.0.0` as of adapter-node 5.5.7, though Vite's dev server defaults to `localhost` as of Vite 8.3.1), a proxy that has to be explicitly trusted before secure cookies and correct origins work, and a public-env prefix that ships anything given it straight to the browser. Each framework also has more than one server entry point (endpoints, server routes, load functions), and a check placed in only one of them leaves the others open, exactly as with Next.js layouts versus Server Actions.
 
 ## SvelteKit (`adapter-node`)
 
-The built server "will accept connections on `0.0.0.0` using port 3000" by default; override with `HOST` and `PORT`:
+The built server "will accept connections on `0.0.0.0` using port 3000" by default (the `0.0.0.0` host as of adapter-node 5.5.7); override with `HOST` and `PORT`:
 
 ```bash
 HOST=127.0.0.1 PORT=3000 node build
@@ -5322,7 +5326,7 @@ export default defineEventHandler((event) => {
 
 Both are development tooling, not a production server: the `vite preview` docs say plainly "do not use this as a production server as it's not designed for it." Deploy the built `dist/` behind a real server, CDN, or your platform's hosting per [paas.md](paas.md) instead.
 
-`server.host` defaults to `'localhost'`; setting it to `true` or `0.0.0.0` makes the dev server listen on all addresses, including the LAN, which is fine for testing from a phone on a trusted network but should not be left on elsewhere. `server.allowedHosts` defaults to `[]`, which still auto-permits localhost, `.localhost`, and IP addresses; setting it to `true` disables the check entirely, and the docs warn this "allows any website to send requests to your dev server and download your source code and content" (DNS rebinding). Prefer an explicit hostname allowlist over `true`.
+`server.host` defaults to `'localhost'` (as of Vite 8.3.1); setting it to `true` or `0.0.0.0` makes the dev server listen on all addresses, including the LAN, which is fine for testing from a phone on a trusted network but should not be left on elsewhere. `server.allowedHosts` defaults to `[]`, which still auto-permits localhost, `.localhost`, and IP addresses; setting it to `true` disables the check entirely, and the docs warn this "allows any website to send requests to your dev server and download your source code and content" (DNS rebinding). Prefer an explicit hostname allowlist over `true`.
 
 ## Verify
 
@@ -5534,7 +5538,7 @@ A Next.js app has many entry points: pages, layouts, Route Handlers (`app/**/rou
 
 ## 1. Bind privately; TLS comes from the platform or the proxy
 
-On Vercel and similar platforms the platform terminates TLS; nothing to configure ([paas.md](paas.md)). Self-hosted, `next start` listens on every interface on port 3000 by default (it passes no hostname to Node's `listen`, which binds `::` where IPv6 is available and `0.0.0.0` otherwise; its `-H` option's help text still says `(default: 0.0.0.0)`); bind to loopback and put a reverse proxy in front, which the Next.js self-hosting guide itself recommends, with TLS and headers per [nodejs.md](nodejs.md), [nginx.md](nginx.md), or [caddy.md](caddy.md).
+On Vercel and similar platforms the platform terminates TLS; nothing to configure ([paas.md](paas.md)). Self-hosted, `next start` listens on every interface on port 3000 by default (as of v16.3.6 its `--port` defaults to 3000 and it passes no hostname to Node's `listen`, which binds `::` where IPv6 is available and `0.0.0.0` otherwise; its `-H` option's help text still says `(default: 0.0.0.0)`); bind to loopback and put a reverse proxy in front, which the Next.js self-hosting guide itself recommends, with TLS and headers per [nodejs.md](nodejs.md), [nginx.md](nginx.md), or [caddy.md](caddy.md).
 
 ```bash
 next build && next start -H 127.0.0.1 -p 3000    # or PORT=3000; PORT cannot be set in .env
@@ -18071,6 +18075,7 @@ Verification status: the checks below were demonstrated on loopback against the 
   { unset -n audit_role audit_key audit_expected audit_reply &&
     unset -v audit_role audit_key audit_expected audit_reply; } 2>/dev/null ||
     { echo 'A readonly audit_* variable is set in this shell'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'A readonly IFS is set in this shell'; exit 2; }
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_ORIGIN' \
     'POST' '/indexes/movies/search' '{"q":"ninja"}' \
     'Authorization: Bearer ' '401' '200'
@@ -18810,6 +18815,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w '
   set -o pipefail
   { unset -n probe_jwt && unset -v probe_jwt; } 2>/dev/null ||
     { echo 'a readonly probe_jwt is set in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   set -- PASTE_WHOLE_BLOCK 'http://127.0.0.1:8000' 'REPLACE_WITH_NAMESPACE' 'REPLACE_WITH_DATABASE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
   shift
@@ -20876,7 +20882,7 @@ Key values in these JSON bodies are credentials. Supply them through a protected
 
 ## 3. Bind privately and add TLS in front
 
-Run the proxy on loopback (or a private container network) and publish it only through a TLS layer: [caddy.md](caddy.md)/[nginx.md](nginx.md) with a certificate from [free-certificates.md](free-certificates.md), or [cloudflare.md](cloudflare.md)/[tailscale.md](tailscale.md) for no-open-port setups. The proxy's `--host` defaults to `0.0.0.0`, so bind it explicitly: `litellm --host 127.0.0.1 --port 4000 --config config.yaml`. The Verify check below confirms it is on loopback. Bearer keys over plain HTTP are compromised on first use. For human access to the LiteLLM admin UI, add MFA at the fronting layer ([mfa.md](mfa.md)).
+Run the proxy on loopback (or a private container network) and publish it only through a TLS layer: [caddy.md](caddy.md)/[nginx.md](nginx.md) with a certificate from [free-certificates.md](free-certificates.md), or [cloudflare.md](cloudflare.md)/[tailscale.md](tailscale.md) for no-open-port setups. The proxy's `--host` defaults to `0.0.0.0` (as of v1.102.1), so bind it explicitly: `litellm --host 127.0.0.1 --port 4000 --config config.yaml`. The Verify check below confirms it is on loopback. Bearer keys over plain HTTP are compromised on first use. For human access to the LiteLLM admin UI, add MFA at the fronting layer ([mfa.md](mfa.md)).
 
 At the time of writing, LiteLLM's `allowed_ips` filtering is an Enterprise feature. Where it is unavailable, filter ingress independently with the firewall, private network, or fronting proxy; a configured but unavailable feature is not an access boundary. See [IP address filtering](https://docs.litellm.ai/docs/proxy/ip_address).
 
@@ -21850,7 +21856,7 @@ Source-checked on 2026-09-18 against Streamlit 1.64.0, the current release at th
 
 # n8n: binding, TLS, and MFA
 
-n8n includes user management (complete the owner setup on first run), but its network defaults deserve attention: `N8N_LISTEN_ADDRESS` defaults to `::`, which listens on **all interfaces**, on port `5678` over plain HTTP.
+n8n includes user management (complete the owner setup on first run), but its network defaults deserve attention: `N8N_LISTEN_ADDRESS` defaults to `::` (as of n8n 2.40.6), which listens on **all interfaces**, on port `5678` over plain HTTP.
 
 ## 1. Bind privately
 
@@ -22037,6 +22043,7 @@ ss -tlnp   # expect 8080 on loopback or a private address; then probe the public
   set +x +a
   { unset -n code_server_cookie && unset -v code_server_cookie; } 2>/dev/null ||
     { echo 'cannot initialize cookie input; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   IFS= read -r -s -p 'Cookie value (name=value; name=value), then Enter: ' code_server_cookie < /dev/tty || exit 2
   printf '\n'
   case "$code_server_cookie" in
@@ -24284,7 +24291,7 @@ Once the account exists the variable only holds an admin password in plaintext f
 your environment files.
 
 Phoenix binds broadly by default: the HTTP UI/REST/OTLP server on `0.0.0.0:6006` and a SEPARATE gRPC OTLP
-server on `[::]:4317` that does not follow the HTTP host setting, and the vendor Compose also publishes its
+server on `[::]:4317` that does not follow the HTTP host setting (both as of Phoenix 20.16.0), and the vendor Compose also publishes its
 PostgreSQL, so bind or publish both protocols deliberately and keep the database off host interfaces.
 
 Enabling auth on a running instance stops trace collection and blocks all API access until API keys exist, so
@@ -24831,7 +24838,7 @@ These control only the web login; MongoDB credentials go in `ME_CONFIG_MONGODB_U
 ```ini
 [server]
 protocol  = https
-# bind loopback (Grafana's default http_addr is empty = all interfaces); reach it via a tunnel or proxy
+# bind loopback (Grafana's default http_addr is empty as of v13.2.2, which means all interfaces); reach it via a tunnel or proxy
 http_addr = 127.0.0.1
 cert_file = /etc/grafana/grafana.crt
 cert_key  = /etc/grafana/grafana.key
@@ -24839,7 +24846,7 @@ cert_key  = /etc/grafana/grafana.key
 
 ## Prometheus
 
-No authentication at all by default, and it listens on `0.0.0.0:9090` by default. Give it a web configuration file and bind it to loopback, starting with `--web.listen-address=127.0.0.1:9090 --web.config.file=web.yml`:
+No authentication at all by default, and it listens on `0.0.0.0:9090` by default (as of v3.14.0). Give it a web configuration file and bind it to loopback, starting with `--web.listen-address=127.0.0.1:9090 --web.config.file=web.yml`:
 
 ```yaml
 basic_auth_users:
@@ -25289,7 +25296,7 @@ The admin UI is on port `81`; the proxy itself is on `80`/`443`. Port `81` is ne
 
 ## Gitea
 
-- It listens on `HTTP_ADDR = 0.0.0.0`, `HTTP_PORT = 3000` by default; set `HTTP_ADDR = 127.0.0.1` behind a proxy, or `PROTOCOL = https` with `CERT_FILE` and `KEY_FILE` to terminate TLS itself.
+- It listens on `HTTP_ADDR = 0.0.0.0` (as of v1.27.3), `HTTP_PORT = 3000` by default; set `HTTP_ADDR = 127.0.0.1` behind a proxy, or `PROTOCOL = https` with `CERT_FILE` and `KEY_FILE` to terminate TLS itself.
 - In `[service]`, `DISABLE_REGISTRATION = true` (default `false`) and, for a private forge, `REQUIRE_SIGNIN_VIEW = true` (default `false`).
 - Users enrol TOTP or a WebAuthn key under Settings > Security; `TWO_FACTOR_AUTH = enforced` in `[security]` (Gitea 1.24 and later) requires it. With MFA on, Git over HTTP uses an access token instead of the password, and tokens bypass MFA, so scope them and revoke unused ones ([machine-auth.md](machine-auth.md)).
 
