@@ -57,7 +57,7 @@ Open the guide before relying on either, because defaults change between release
 | 3001 | AnythingLLM, or Uptime Kuma | varies by service; see the guides | [chat-uis.md](chat-uis.md), [devops-uis.md](devops-uis.md) |
 | 3080 | LibreChat | First registered account becomes admin | [agent-builders.md](agent-builders.md) |
 | 3100 | Grafana Loki's HTTP API, on every interface by default; `auth_enabled` is tenancy, not authentication | No built-in authentication; any `X-Scope-OrgID` value is accepted | [observability-components.md](observability-components.md) |
-| 3128 | Proxmox VE's `spiceproxy` (SPICE console proxy), on every address by default | Proxmox VE logins; `root@pam` can always log in | [server-admin-panels.md](server-admin-panels.md) |
+| 3128 | Proxmox VE's `spiceproxy` (SPICE console proxy), on every address by default | not stated | [server-admin-panels.md](server-admin-panels.md) |
 | 3210 | LobeChat | Registration allowlist `AUTH_ALLOWED_EMAILS` empty by default: any email registers | [chat-uis.md](chat-uis.md) |
 | 3306 | MySQL and MariaDB | Varies by install method; MariaDB 10.4+ local root via Unix socket | [mysql.md](mysql.md), [cloud-firewalls.md](cloud-firewalls.md) |
 | 3389 | RDP, mentioned only as an omitted inventory check in the cloud-firewall guide | not stated | [cloud-firewalls.md](cloud-firewalls.md) |

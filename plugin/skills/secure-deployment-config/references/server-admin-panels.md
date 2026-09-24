@@ -94,7 +94,7 @@ separated privileges by default, and cannot reach the VM or node consoles.
 ## Verify
 
 Two checks here were demonstrated: the Webmin configuration check, whose parser was compared with
-Webmin 2.670's own on sixteen test files, and the TCP reachability probe, which is the block demonstrated
+Webmin 2.670's own on twenty test files, and the TCP reachability probe, which is the block demonstrated
 on loopback in [low-code-builders.md](low-code-builders.md) with this guide's ports. Everything else
 is reasoned: the authoring host runs neither Cockpit's
 systemd socket nor Proxmox VE, and it forbids binding every interface, so no default bind was observed.
@@ -116,8 +116,8 @@ On a Webmin host, check the configuration miniserv reads when it starts. The blo
 with a copy of miniserv's own `read_config_file` (a line starting with `#` is a comment, spaces around
 the name and the value are trimmed, and the last occurrence of a setting wins), then applies
 miniserv's rules: `bind=*`, `bind=0`, `bind=0.0.0.0`, `bind=::`, or an empty or missing `bind=` means
-every address (the block treats any value made only of zeros, dots and colons, and any numeric IPv4 spelling of
-0.0.0.0 such as `0x0`, the same way);
+every address (the block treats any value made only of zeros, dots and colons the same way, and flags any other
+value that is not a plain IPv4 or IPv6 address, such as `0x0` or `::ffff:0:0`, for checking with `ss`);
 `sockets=` adds listeners; a `listen=` value other than empty or `0` opens the UDP discovery socket;
 and an empty `allow=` lets every client address try to log in, except those a `deny=` list refuses. It describes the file, not the running process:
 `ss` above is the authority for what is listening now, and a change takes effect at
@@ -134,7 +134,7 @@ and an empty `allow=` lets every client address try to log in, except those a `d
   { [ -f "$1" ] && [ -r "$1" ]; } || { echo "cannot read $1 as a regular file (try sudo); not checked"; exit; }
   command -v perl >/dev/null || { echo "perl is not installed here; not checking"; exit; }
   # shellcheck disable=SC2016  # the single-quoted Perl program is meant to expand its own variables
-  perl -MSocket -e '
+  perl -e '
     open(CONF, "<", $ARGV[0]) || exit 2;
     while (<CONF>) {
       s/\r|\n//g;
@@ -147,10 +147,10 @@ and an empty `allow=` lets every client address try to log in, except those a `d
     }
     close(CONF);
     $bind = $rv{"bind"}; $bind = "" if ($bind eq "*" || $bind =~ /^[0.:]+$/);
-    if ($bind =~ /^(0[xX][0-9a-fA-F]*|[0-9]+)(\.(0[xX][0-9a-fA-F]*|[0-9]+)){0,3}$/) {
-      $n = Socket::inet_aton($bind); $bind = "" if (defined($n) && $n eq "\0\0\0\0");
-    }
-    print $bind ? "bind=$bind\n" : "NO effective bind=: every address\n";
+    $o = "(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])";
+    if ($bind eq "") { print "NO effective bind=: every address\n"; }
+    elsif ($bind =~ /^$o\.$o\.$o\.$o$/ || ($bind =~ /^[0-9A-Fa-f:]+$/ && $bind =~ /:.*:/ && $bind !~ /^[0:]*:[fF]{4}:/)) { print "bind=$bind\n"; }
+    else { print "bind=$bind: not a plain IPv4 or IPv6 address; check with ss what miniserv binds\n"; }
     print "sockets=$rv{sockets}: extra listeners, possibly on every address; check ss\n" if ($rv{"sockets"} =~ /\S/);
     print $rv{"listen"} ? "listen=$rv{listen}: UDP discovery socket on every IPv4 address\n" : "no UDP discovery socket\n";
     @allow = split(/\s+/, $rv{"allow"});
@@ -167,10 +167,11 @@ and an empty `allow=` lets every client address try to log in, except those a `d
 Exposed: "NO effective bind=", a `listen=` line and "NO allow=". Fixed: a management address on
 `bind=`, "no UDP discovery socket" and only your management networks on `allow=`; the block prints
 the lists as written, so check each entry. A `sockets=` line means more listeners; check each with
-`ss`. This was demonstrated on sixteen test files: the loopback run's configuration, its exposed
+`ss`. This was demonstrated on twenty test files: the loopback run's configuration, its exposed
 variant, a repeated `bind=` whose last value is `*`, `bind=0.0.0.0`, `bind=::`,
-`bind=0:0:0:0:0:0:0:0`, `bind=0x0`, `bind=0x00000000`, `bind=0x0a000005` and `bind=cafe` (the last two
-printed as written, the name without a lookup), spaced settings, commented settings, `bind=0` with `listen=0` and an empty
+`bind=0:0:0:0:0:0:0:0`, `bind=2001:db8::5` (printed as a plain address), `bind=0x0`, `bind=0x00000000`, `bind=0x0a000005`,
+`bind=010.0.0.5`, `bind=cafe`, `bind=0 10.0.0.5` and `bind=::ffff:0:0` (all seven flagged as not a plain
+address), spaced settings, commented settings, `bind=0` with `listen=0` and an empty
 `allow=`, an empty `allow=` with `deny=127.0.0.1`, CRLF line endings with `sockets=*:10001`, and a line
 without `=`. On each, the copy's parsed values matched Webmin 2.670's own `read_config_file` run on
 the same file, and the block printed the outcomes above; it reported an unreadable path as not
