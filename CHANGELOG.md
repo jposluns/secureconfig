@@ -12,7 +12,7 @@ with the merged pull request is therefore an authoring obligation, not an enforc
 ## 2026-09-24
 
 - `CONTRIBUTING.md` (#299), carrying two further maintainer rulings of 2026-09-24.
-  - Rule 7 now allows a second, narrow exception. A tool that accepts a secret outside argv only through its environment, such as natscli (`NATS_PASSWORD`), `nomad` (`NOMAD_TOKEN`) or `surreal start` (`SURREAL_PASS`), may receive it as a one-command prefix assignment, never through `export`, and only where the tool offers no stdin or file input for it. The rule states that while the command runs, its environment is readable by the same user through `/proc/<pid>/environ`.
+  - Rule 7 now allows a second, narrow exception. A tool that accepts a secret outside argv only through its environment, such as natscli (`NATS_PASSWORD`), `nomad` (`NOMAD_TOKEN`) or `surreal start` (`SURREAL_PASS`), may receive it as a one-command prefix assignment, never through `export`, and for a tool that takes the secret only from its environment (no stdin input for it). The rule states that while the command runs, its environment is readable by the same user through `/proc/<pid>/environ`.
   - Rule 5 now says "Adding a Verify run", the ruling's wording, where #296 had "Adding a demonstration run".
 - `CONTRIBUTING.md` (#296), carrying the maintainer's rulings of 2026-09-24.
   - Rule 5 now requires two things. A review brief for a demonstrated step states the exposed run, the fixed run and what each observed. Adding a demonstration run means rereading the guide's run-provenance sentence. Both lines were proposed by guardrails.
