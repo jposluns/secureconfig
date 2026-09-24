@@ -149,7 +149,7 @@ same account and by root.
 )
 ```
 
-All of these outcomes were observed with this block and these commands, on agents listening on test
+All of these outcomes were observed with the curl probe block and these commands, on agents listening on test
 ports. In a cluster whose server had ACLs on and was bootstrapped, a client agent configured with
 `acl { enabled = false }` answered the first two paths with the ACLs-on results and `/v1/agent/self`
 with `200`, while the server answered it with `403`. Before bootstrap, the probe already printed the
@@ -158,7 +158,7 @@ printed a management token and the second failed with `Unexpected response code:
 already done ...)`. `nomad acl policy info anonymous` reported `404 (ACL policy not found)`, observed
 with the token exported in a subshell, the form this guide used before #306. After an
 `anonymous` policy granting only `submit-job` was applied, the probe's results did not change, an
-anonymous job registration returned `200`, and `nomad acl policy info anonymous` showed the policy.
+anonymous job registration returned `200`, and `nomad acl policy info anonymous`, run the same earlier way, showed the policy.
 With ACLs off, an anonymous job registration also returned `200`; with ACLs on and no `anonymous`
 policy, it returned `403`.
 

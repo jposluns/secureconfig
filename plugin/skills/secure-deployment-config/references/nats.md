@@ -770,18 +770,18 @@ The first publish is the allowed control. The subsequent operations deliberately
   case "$3" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the key path'; exit 2 ;; esac
   case "$4" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the CA path'; exit 2 ;; esac
   case "$1" in *[!A-Za-z0-9.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
-  { unset -n v f && unset -v v f; } 2>/dev/null || { echo 'cannot clear v or f in this shell; not probing'; exit 2; }
-  for v in ${!NATS_@}; do
-    unset "$v" || { echo "cannot clear ambient $v; not probing"; exit 2; }
+  { unset -n v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA &&
+    unset -v v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA; } 2>/dev/null ||
+    { echo 'cannot clear the variables this block uses; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
+  for v in "${!NATS_@}"; do
+    { unset -n "$v" && unset -v "$v"; } 2>/dev/null || { echo "cannot clear ambient $v; not probing"; exit 2; }
   done
-  { unset -n pw NATS_PASSWORD && unset -v pw NATS_PASSWORD; } 2>/dev/null ||
-    { echo 'cannot clear pw or NATS_PASSWORD in this shell; not probing'; exit 2; }
   for f in "$2" "$3" "$4"; do
     [ -r "$f" ] || { echo 'a TLS fixture is unreadable; not probing'; exit 2; }
   done
   export NATS_CERT="$2" NATS_KEY="$3" NATS_CA="$4"
   srv="nats://$1:4222"
-  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   IFS= read -r -s -t 60 -p 'order-svc password: ' pw < /dev/tty || { echo 'password input failed'; exit 2; }
   printf '\n'
   case "$pw" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'supply a real password'; exit 2 ;; esac
@@ -832,18 +832,18 @@ Terminal 1 is self-contained and reads its password inside the guarded subshell.
   case "$3" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the key path'; exit 2 ;; esac
   case "$4" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the CA path'; exit 2 ;; esac
   case "$1" in *[!A-Za-z0-9.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
-  { unset -n v f && unset -v v f; } 2>/dev/null || { echo 'cannot clear v or f in this shell; not probing'; exit 2; }
-  for v in ${!NATS_@}; do
-    unset "$v" || { echo "cannot clear ambient $v; not probing"; exit 2; }
+  { unset -n v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA &&
+    unset -v v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA; } 2>/dev/null ||
+    { echo 'cannot clear the variables this block uses; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
+  for v in "${!NATS_@}"; do
+    { unset -n "$v" && unset -v "$v"; } 2>/dev/null || { echo "cannot clear ambient $v; not probing"; exit 2; }
   done
   for f in "$2" "$3" "$4"; do
     [ -r "$f" ] || { echo 'a TLS fixture is unreadable; not probing'; exit 2; }
   done
   export NATS_CERT="$2" NATS_KEY="$3" NATS_CA="$4"
   srv="nats://$1:4222"
-  { unset -n pw NATS_PASSWORD && unset -v pw NATS_PASSWORD; } 2>/dev/null ||
-    { echo 'cannot clear pw or NATS_PASSWORD in this shell; not probing'; exit 2; }
-  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   IFS= read -r -s -t 60 -p 'order-consumer password: ' pw < /dev/tty || { echo 'password input failed'; exit 2; }
   printf '\n'
   case "$pw" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'supply a real password'; exit 2 ;; esac
@@ -866,18 +866,18 @@ Terminal 2 independently establishes its target, TLS configuration, and credenti
   case "$3" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the key path'; exit 2 ;; esac
   case "$4" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the CA path'; exit 2 ;; esac
   case "$1" in *[!A-Za-z0-9.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
-  { unset -n v f && unset -v v f; } 2>/dev/null || { echo 'cannot clear v or f in this shell; not probing'; exit 2; }
-  for v in ${!NATS_@}; do
-    unset "$v" || { echo "cannot clear ambient $v; not probing"; exit 2; }
+  { unset -n v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA &&
+    unset -v v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA; } 2>/dev/null ||
+    { echo 'cannot clear the variables this block uses; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
+  for v in "${!NATS_@}"; do
+    { unset -n "$v" && unset -v "$v"; } 2>/dev/null || { echo "cannot clear ambient $v; not probing"; exit 2; }
   done
   for f in "$2" "$3" "$4"; do
     [ -r "$f" ] || { echo 'a TLS fixture is unreadable; not probing'; exit 2; }
   done
   export NATS_CERT="$2" NATS_KEY="$3" NATS_CA="$4"
   srv="nats://$1:4222"
-  { unset -n pw NATS_PASSWORD && unset -v pw NATS_PASSWORD; } 2>/dev/null ||
-    { echo 'cannot clear pw or NATS_PASSWORD in this shell; not probing'; exit 2; }
-  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   IFS= read -r -s -t 60 -p 'order-svc password: ' pw < /dev/tty || { echo 'password input failed'; exit 2; }
   printf '\n'
   case "$pw" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'supply a real password'; exit 2 ;; esac
@@ -908,18 +908,18 @@ The following self-contained request block is also used by V4 and V5. Its last t
   case "$6" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the request subject'; exit 2 ;; esac
   case "$7" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the request body'; exit 2 ;; esac
   case "$1" in *[!A-Za-z0-9.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
-  { unset -n v f && unset -v v f; } 2>/dev/null || { echo 'cannot clear v or f in this shell; not probing'; exit 2; }
-  for v in ${!NATS_@}; do
-    unset "$v" || { echo "cannot clear ambient $v; not probing"; exit 2; }
+  { unset -n v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA &&
+    unset -v v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA; } 2>/dev/null ||
+    { echo 'cannot clear the variables this block uses; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
+  for v in "${!NATS_@}"; do
+    { unset -n "$v" && unset -v "$v"; } 2>/dev/null || { echo "cannot clear ambient $v; not probing"; exit 2; }
   done
   for f in "$2" "$3" "$4"; do
     [ -r "$f" ] || { echo 'a TLS fixture is unreadable; not probing'; exit 2; }
   done
   export NATS_CERT="$2" NATS_KEY="$3" NATS_CA="$4"
   srv="nats://$1:4222"
-  { unset -n pw NATS_PASSWORD && unset -v pw NATS_PASSWORD; } 2>/dev/null ||
-    { echo 'cannot clear pw or NATS_PASSWORD in this shell; not probing'; exit 2; }
-  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   IFS= read -r -s -t 60 -p "$5 password: " pw < /dev/tty || { echo 'password input failed'; exit 2; }
   printf '\n'
   case "$pw" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'supply a real password'; exit 2 ;; esac
