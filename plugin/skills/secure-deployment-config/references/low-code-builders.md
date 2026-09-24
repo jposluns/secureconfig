@@ -130,7 +130,7 @@ Docker's NAT may have no host socket at all, so absence from `ss` is not proof o
 
 ```bash
 sudo ss -tlnp   # 8080 (NocoDB; Appsmith dev Compose), 80/443 (Baserow, Windmill Caddy), 10000 and 4000 (Budibase), 8000 and 25 (Windmill): loopback or private only
-docker ps --format '{{.Names}}\t{{.Ports}}'   # every "0.0.0.0:" or ":::" publication listens on every host address: reachable from outside unless a firewall rule (for example in DOCKER-USER) filters it
+docker ps --format '{{.Names}}\t{{.Ports}}'   # every "0.0.0.0:" or "[::]:" (":::" before Docker CLI 28) publication accepts connections on every host address: reachable from outside unless a firewall rule (for example in DOCKER-USER) filters it
 ```
 
 Exposed, the reasoned expectation is a wildcard address, on the host or in a Docker publication, for any
@@ -277,10 +277,13 @@ the control does not connect. Substitute both inside the single quotes.
   shift
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
   case "$1" in *REPLACE_WITH_*|"") echo "substitute one IP address on the set -- line above; not probing"; exit ;; esac
-  case "$1" in 0.0.0.0|::) echo "$1 reaches this host itself; give the service's public address; not probing"; exit ;; esac
+  case "$1" in 0.0.0.0) echo "$1 reaches this host itself; give the service's public address; not probing"; exit ;; esac
   ipv4='^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])[.]){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$'
   case "$1" in
-    *:*:*) case "$1" in *[!0-9A-Fa-f.:]*) echo "$1 is not an IPv6 address; not probing"; exit ;; esac ;;
+    *:*:*)
+      case "$1" in *[!0-9A-Fa-f.:]*) echo "$1 is not an IPv6 address; not probing"; exit ;; esac
+      case "$1" in *.*) echo "give the IPv4 address itself rather than $1; not probing"; exit ;; esac
+      case "$1" in *[!0:]*) ;; *) echo "$1 reaches this host itself; give the service's public address; not probing"; exit ;; esac ;;
     *) [[ $1 =~ $ipv4 ]] || { echo "give one IPv4 address (four numbers, 0 to 255, joined by dots) or one IPv6 address, with no host name, port or brackets; not probing"; exit; } ;;
   esac
   case "$2" in *[!0-9]*|"") echo "substitute a known-open control port on the set -- line above; not probing"; exit ;; esac
@@ -315,9 +318,11 @@ out" for a port whose accept queue was full (standing in for a filtered one) and
 closed port, and it stopped when the control was closed. It refused to run for the host names
 `localhost`, `cafe.be`, `fe01`, `db1` and `face`, for `1.2.3.4.5`, `999.1.1.1`, `01.2.3.4` and
 `1.2.3`, for `1.2.3.4:22`, `[::1]` and `[::1]:22`, for a leading space, for control ports `0` and
-`65536`, for `0.0.0.0` and `::` (which reach the probing host itself), and on a machine without
-`timeout`. A value with two or more colons, made only of hex digits, dots and colons, is passed on
-as IPv6, so a port appended without brackets changes the address: `2001:db8::1:22` is still a valid
+`65536`, and on a machine without `timeout`. It refuses `0.0.0.0` and any IPv6 value made only of
+zeros and colons (measured: `::`, `::0`, `0::`, `0000::`, `0:0:0:0:0:0:0:0`), because those reach
+the probing host itself, and any IPv6 value containing a dot (measured: `::ffff:0.0.0.0`,
+`::ffff:127.0.0.1`, `::0.0.0.0`), asking for the IPv4 address instead. Any other value with two or
+more colons, made only of hex digits and colons, is passed on as IPv6, so a port appended without brackets changes the address: `2001:db8::1:22` is still a valid
 address and was probed as that different address, while `2001:db8::1:10000` and `dead::beef::` are
 not, and each failed the name lookup at the control and stopped. A "connected" on a port you did not
 mean to publish is the finding.
@@ -334,6 +339,7 @@ mean to publish is the finding.
 - NocoDB 2026.09.0 container start scripts: https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/docker/start.sh and https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/docker/start-litestream.sh
 - Docker `docker exec` environment: https://docs.docker.com/reference/cli/docker/container/exec/
 - Docker packet filtering (`DOCKER-USER`): https://docs.docker.com/engine/network/firewall-iptables/
+- Docker CLI port display (`[::]:` from v28.0.0, `:::` in v27.0.1): https://github.com/docker/cli/blob/v28.0.0/cli/command/formatter/container.go and https://github.com/docker/cli/blob/v27.0.1/cli/command/formatter/container.go
 - NocoDB 2026.09.0 README (Docker example JWT secret, binaries note): https://github.com/nocodb/nocodb/blob/2026.09.0/README.md
 - NocoDB 2026.09.0 sample environment without an encryption key: https://github.com/nocodb/nocodb/blob/2026.09.0/docker-compose/examples/external-postgres-and-redis/docker.env
 - Node.js v22 `server.listen` with an omitted host: https://github.com/nodejs/node/blob/v22.22.1/doc/api/net.md
