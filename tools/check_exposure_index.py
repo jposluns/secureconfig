@@ -50,15 +50,20 @@ ranges (`9300 to 9400`, `8000-8010`). A single port, or a range covering at most
 (Ray's worker range, coturn's relay range) maps them only for the guides its own row cites,
 because otherwise it would silently cover every high port in the corpus.
 
+ROW SHAPE. Every row of the table has four cells (Port, May be, Default credential, Documented
+in), and the Default credential cell is never empty: "not stated" is the value when the cited
+guides are silent, so a row cannot lose the column without the gate noticing.
+
 ALLOWLIST. tools/exposure_index_allowlist.txt lists `<guide> <port>  # reason` pairs that match a
 pattern but are not listeners this corpus documents (an outbound destination, an illustrative
 number). An entry fails the gate when it is STALE (no mention of that port remains in that
 guide) or REDUNDANT (the mention remains but the index now maps it), so the list cannot outlive
 the text or the gap it excuses.
 
-Exit status: 0 when every mention is mapped or allowlisted and every allowlist entry is still
-needed; 1 otherwise; 2 when the index table cannot be found. Everything is offline and reads
-files as UTF-8. tools/test_exposure_index.py drives this script against throwaway trees.
+Exit status: 0 when every mention is mapped or allowlisted, every allowlist entry is still
+needed, and every index row is well formed; 1 otherwise; 2 when the index table cannot be
+found. Everything is offline and reads files as UTF-8. tools/test_exposure_index.py drives this
+script against throwaway trees.
 """
 import re
 import sys
@@ -71,7 +76,8 @@ from check_reasoned_rows import META_EXCLUDE  # noqa: E402  one definition of "n
 
 INDEX = "exposure-index.md"
 ALLOWLIST = Path("tools/exposure_index_allowlist.txt")
-TABLE_HEADER = "| Port | May be | Documented in |"
+TABLE_HEADER = "| Port | May be | Default credential | Documented in |"
+COLUMNS = 4  # every data row has exactly this many cells
 WIDE = 101  # a range covering more ports than this maps them only for the guides its row cites
 
 RANGE = re.compile(r"(\d+)\s*(?:to|-|\N{EN DASH})\s*(\d+)")
@@ -114,17 +120,18 @@ PATTERNS = {
 
 
 def parse_index(root: Path):
-    """Return (explicit_ports, wide_cites) from the index table, or None if it is missing.
+    """Return (explicit_ports, wide_cites, malformed) from the index table, or None if it is missing.
 
     explicit_ports maps a port for every guide; wide_cites[port] is the set of guides a wide
-    range maps that port for.
+    range maps that port for; malformed lists (line, first cell, problem) for each row that is
+    not four cells with a filled Default credential cell.
     """
     try:
         lines = (root / INDEX).read_text(encoding="utf-8").split("\n")
     except OSError:
         return None
-    explicit, wide_cites, in_table, found = set(), {}, False, False
-    for line in lines:
+    explicit, wide_cites, in_table, found, malformed = set(), {}, False, False, []
+    for ln, line in enumerate(lines, 1):
         if line.startswith(TABLE_HEADER):
             in_table, found = True, True
             continue
@@ -135,6 +142,11 @@ def parse_index(root: Path):
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
         if set(cells[0]) <= set("- "):
             continue  # the separator row
+        if len(cells) != COLUMNS:
+            malformed.append((ln, cells[0], f"has {len(cells)} cells; the table has {COLUMNS}"))
+        elif not cells[2]:
+            malformed.append((ln, cells[0], "has an empty Default credential cell; write `not stated` "
+                              "when the cited guides are silent"))
         cited = set(re.findall(r"\]\(([^)#]+\.md)(?:#[^)]*)?\)", cells[-1]))
         for a, b in RANGE.findall(cells[0]):
             lo, hi = int(a), int(b)
@@ -144,7 +156,7 @@ def parse_index(root: Path):
             else:
                 explicit.update(range(lo, hi + 1))
         explicit.update(int(n) for n in re.findall(r"\d+", RANGE.sub("", cells[0])))
-    return (explicit, wide_cites) if found else None
+    return (explicit, wide_cites, malformed) if found else None
 
 
 def guides(root: Path):
@@ -197,7 +209,7 @@ def main() -> int:
     if parsed is None:
         print(f"error: the `{TABLE_HEADER}` table was not found in {INDEX}; fail-closed")
         return 2
-    explicit, wide_cites = parsed
+    explicit, wide_cites, malformed = parsed
     allow = load_allowlist(root)
     used, mapped_mentions, gaps = set(), set(), []
     for path in guides(root):
@@ -222,9 +234,11 @@ def main() -> int:
             print(f"EXPOSURE-INDEX: stale allowlist entry `{name} {port}` ({where}) matches no "
                   f"mention; remove it")
     pairs = len({(n, p) for n, _, p in gaps})
-    if gaps or unneeded:
+    for ln, first, problem in malformed:
+        print(f"EXPOSURE-INDEX: {INDEX}:{ln} row `{first}` {problem}")
+    if gaps or unneeded or malformed:
         print(f"FAIL: {pairs} unmapped guide/port pair(s), {len(unneeded)} allowlist entr(y/ies) "
-              f"no longer needed")
+              f"no longer needed, {len(malformed)} malformed index row(s)")
         return 1
     print(f"PASS: every port mention in the guides is mapped by {INDEX} or allowlisted "
           f"({len(allow)} allowlisted)")

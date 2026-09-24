@@ -36,6 +36,8 @@ Allowlist: A1 an allowlisted pair passes; A2 a stale entry fails; A3 a redundant
   now mapped) fails as redundant.
 Other: O1 meta files are not scanned; O2 a missing index table fails closed with exit 2; O3 a port
   above 65535 and O4 port 0 are not mentions.
+Row shape: R1 a three-cell row fails; R2 an empty Default credential cell fails; R3 the old
+  three-column header fails closed with exit 2.
 """
 import shutil
 import subprocess
@@ -44,12 +46,13 @@ import tempfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-INDEX = ("# Exposure index\n\n| Port | May be | Documented in |\n| --- | --- | --- |\n"
-         "| 80, 443 | Proxy | [a.md](a.md) |\n"
-         "| 8000-8010 | A narrow range | [a.md](a.md) |\n"
-         "| 9090 | Prometheus | [a.md](a.md) |\n"
-         "| 10000 to 10100 | A 101-port range | [a.md](a.md) |\n"
-         "| 20000 to 20101 | A 102-port worker range | [ray.md](ray.md#ports) |\n")
+INDEX = ("# Exposure index\n\n| Port | May be | Default credential | Documented in |\n"
+         "| --- | --- | --- | --- |\n"
+         "| 80, 443 | Proxy | not stated | [a.md](a.md) |\n"
+         "| 8000-8010 | A narrow range | not stated | [a.md](a.md) |\n"
+         "| 9090 | Prometheus | No authentication by default | [a.md](a.md) |\n"
+         "| 10000 to 10100 | A 101-port range | not stated | [a.md](a.md) |\n"
+         "| 20000 to 20101 | A 102-port worker range | not stated | [ray.md](ray.md#ports) |\n")
 
 
 def run(files, allow=None, index=INDEX):
@@ -167,7 +170,7 @@ def main() -> int:
     rc, out = run(guide("It listens on ports 80,443 by default."))
     check(f"M6: a compact plural list of mapped ports passes (rc={rc}, out={out!r})", rc == 0)
     rc, out = run({"b.md": "# B\n\nThe API uses port 30005.\n"},
-                  index=INDEX + "| 30000\N{EN DASH}30010 | An en-dash range | [a.md](a.md) |\n")
+                  index=INDEX + "| 30000\N{EN DASH}30010 | An en-dash range | not stated | [a.md](a.md) |\n")
     check(f"M7: an en-dash index range maps its ports (rc={rc}, out={out!r})", rc == 0)
 
     rc, out = run(guide("It connects out to port 7777."), allow="a.md 7777  # outbound\n")
@@ -189,7 +192,16 @@ def main() -> int:
     rc, out = run(guide("It listens on port 0 until configured."))
     check(f"O4: port 0 is not a port mention (rc={rc}, out={out!r})", rc == 0)
 
-    total = len(DETECT) + len(PRECISE) + 7 + 3 + 4
+    rc, out = run(guide("port 9090"), index=INDEX + "| 7777 | Three cells | [a.md](a.md) |\n")
+    check(f"R1: a row without the Default credential cell fails (rc={rc}, out={out!r})",
+          rc == 1 and "row `7777` has 3 cells" in out)
+    rc, out = run(guide("port 9090"), index=INDEX + "| 7777 | Empty cell |  | [a.md](a.md) |\n")
+    check(f"R2: an empty Default credential cell fails (rc={rc}, out={out!r})",
+          rc == 1 and "row `7777` has an empty Default credential cell" in out)
+    rc, out = run(guide("port 9090"), index=INDEX.replace("| Default credential ", "", 1))
+    check(f"R3: the old three-column header fails closed (rc={rc}, out={out!r})", rc == 2)
+
+    total = len(DETECT) + len(PRECISE) + 7 + 3 + 4 + 3
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")

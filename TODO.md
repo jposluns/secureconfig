@@ -104,7 +104,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.104 | `rabbitmq.md`: demonstrate the Verify steps the guide marks reasoned, against a live deployment in both the exposed and fixed states. Grandfathered in the reasoned-row baseline until 2026-09-24; blocked on a container runtime, which the authoring host lacks. (M, M) | `[gap]` |
 | 1.105 | `realtime-voice-infra.md`: demonstrate the Verify steps the guide marks reasoned, against a live deployment in both the exposed and fixed states. Grandfathered in the reasoned-row baseline until 2026-09-24; blocked on a container runtime, which the authoring host lacks. (M, M) | `[gap]` |
 | 1.106 | `redis.md`: demonstrate the Verify steps the guide marks reasoned, against a live deployment in both the exposed and fixed states. Grandfathered in the reasoned-row baseline until 2026-09-24; blocked on a container runtime, which the authoring host lacks. (M, M) | `[gap]` |
-| 1.107 | `exposure-index.md`: finish the port-to-guide index proposed in the 2026-09-11 audit. Add a default-credential column, correct the stale note on its 9090 row, which says the Prometheus guide does not state the number although `admin-uis.md` states the `0.0.0.0:9090` default, and add a deterministic gate in `tools/` that fails when a guide names a listening port the index does not map. Offline work; needs no live demonstration. (M, M) | `[gap]` |
 ## Priority 3: Add missing content
 
 Gaps from the same audit, one row per missing guide. A gap raised by more than one family is
