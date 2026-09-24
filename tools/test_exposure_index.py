@@ -13,17 +13,23 @@ check (deleting each shape in turn) confirmed that every shape is needed by at l
   literal "https://[2001:db8::1]:7777"; D8 userinfo URL; D9 "TCP 7777"; D10 "7777/tcp";
   D11 "--http-port=7777" (a flag, caught by the key shape); D12 "-p 7777:9090" (host side); D13 "-p 9090:7777" (container side);
   D14 Compose "- 7777:9090"; D15 "listen 7777 ssl;"; D16 "EXPOSE 9090 7777" (not the first port);
-  D17 "containerPort: 7777"; D18 "KEY_PORT=7777"; D19 an unmapped port inside a fenced code block.
+  D17 "containerPort: 7777"; D18 "KEY_PORT=7777"; D19 an unmapped port inside a fenced code block;
+  D20 a compact plural list "ports 80,7777"; D21 a backticked range after "port" in the clause;
+  D22 a quoted "-p \"7777:9090\""; D23 "-p [::]:9090:7777"; D24 a Compose IPv6 "- \"[::]:9090:7777\"";
+  D25 lowercase "tcp 7777"; D26 "7777/TCP"; D27 "bind 7777"; D28 "localhost:7777"; D29 a slash list
+  "ports 80/7777"; D30 an en-dash range "ports 7000-7777" (written with an en dash).
 Precision: N1 "TCP 192.168.1.1"; N2 "TCP 7777.2"; N3 "--support=2026" and "--export 2024";
   N4 "transport: 2026" and "report: 2024"; N5 "- 10:30 UTC"; N6 "port 80,000"; N7 versions,
-  years and counts in prose.
+  years and counts in prose; N8 a backticked range with no "port" in the clause; N9 "EXPOSE 999999"
+  and N10 "EXPOSE 7777.2" (malformed tokens yield nothing).
 Mapping: M1 a mapped port passes; M2 a narrow range maps for every guide; M3 a 101-port range maps
   for every guide; M4 a 102-port range maps only for its cited guide (ray.md passes, b.md fails);
-  M5 a cited link with an anchor still counts as cited.
+  M5 a cited link with an anchor still counts as cited; M6 a compact plural list of mapped ports;
+  M7 an index range written with an en dash maps its ports.
 Allowlist: A1 an allowlisted pair passes; A2 a stale entry fails; A3 a redundant entry (the port is
   now mapped) fails as redundant.
 Other: O1 meta files are not scanned; O2 a missing index table fails closed with exit 2; O3 a port
-  outside 1-65535 is not a mention.
+  above 65535 and O4 port 0 are not mentions.
 """
 import shutil
 import subprocess
@@ -83,6 +89,17 @@ DETECT = [
     ("D17", "```yaml\ncontainerPort: 7777\n```", 7777),
     ("D18", "```sh\nKEY_PORT=7777 ./serve\n```", 7777),
     ("D19", "```sh\nserve --bind 127.0.0.1:7777\n```", 7777),
+    ("D20", "It listens on ports 80,7777.", 7777),
+    ("D21", "The CLI uses its own distribution-port range, by default `7700` through `7777`.", 7777),
+    ("D22", "```sh\ndocker run -p \"7777:9090\" img\n```", 7777),
+    ("D23", "```sh\ndocker run -p [::]:9090:7777 img\n```", 7777),
+    ("D24", "```yaml\nports:\n  - \"[::]:9090:7777\"\n```", 7777),
+    ("D25", "Open it on tcp 7777 only.", 7777),
+    ("D26", "Open 7777/TCP only on the private interface.", 7777),
+    ("D27", "```haproxy\nbind 7777\n```", 7777),
+    ("D28", "Browse to localhost:7777 to reach it.", 7777),
+    ("D29", "It listens on ports 80/7777.", 7777),
+    ("D30", "It listens on ports 7000\N{EN DASH}7777.", 7777),
 ]
 PRECISE = [
     ("N1", "The gateway is TCP 192.168.1.1 on the LAN."),
@@ -92,6 +109,9 @@ PRECISE = [
     ("N5", "- 10:30 UTC stand-up"),
     ("N6", "It handles port 80,000 rows a day."),
     ("N7", "Version 3.12, released in 2026, handles 5000 requests."),
+    ("N8", "See pages `10` to `20` of the manual."),
+    ("N9", "```dockerfile\nEXPOSE 999999\n```"),
+    ("N10", "```dockerfile\nEXPOSE 7777.2\n```"),
 ]
 
 
@@ -124,6 +144,11 @@ def main() -> int:
           rc == 1 and "b.md:3 names port 20101" in out and "ray.md" not in out)
     rc, out = run({"ray.md": "# Ray\n\nWorkers use port 20050.\n"})
     check(f"M5: a cited link with an anchor counts as cited (rc={rc}, out={out!r})", rc == 0)
+    rc, out = run(guide("It listens on ports 80,443 by default."))
+    check(f"M6: a compact plural list of mapped ports passes (rc={rc}, out={out!r})", rc == 0)
+    rc, out = run({"b.md": "# B\n\nThe API uses port 30005.\n"},
+                  index=INDEX + "| 30000\N{EN DASH}30010 | An en-dash range | [a.md](a.md) |\n")
+    check(f"M7: an en-dash index range maps its ports (rc={rc}, out={out!r})", rc == 0)
 
     rc, out = run(guide("It connects out to port 7777."), allow="a.md 7777  # outbound\n")
     check(f"A1: an allowlisted pair passes (rc={rc}, out={out!r})", rc == 0 and "1 allowlisted" in out)
@@ -141,8 +166,10 @@ def main() -> int:
     check(f"O2: a missing index table fails closed (rc={rc}, out={out!r})", rc == 2)
     rc, out = run(guide("It listens on port 99999."))
     check(f"O3: a number above 65535 is not a port (rc={rc}, out={out!r})", rc == 0)
+    rc, out = run(guide("It listens on port 0 until configured."))
+    check(f"O4: port 0 is not a port mention (rc={rc}, out={out!r})", rc == 0)
 
-    total = len(DETECT) + len(PRECISE) + 5 + 3 + 3
+    total = len(DETECT) + len(PRECISE) + 7 + 3 + 4
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")

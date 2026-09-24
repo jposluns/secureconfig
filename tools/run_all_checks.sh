@@ -679,9 +679,9 @@ else
 fi
 echo "== every port a guide names is mapped by the exposure index =="
 # tools/check_exposure_index.py: a guide that documents a listener exposure-index.md never maps leaves a
-# reader holding a scan result with nothing to search on. Nine high-precision port shapes, code blocks
-# included; tools/exposure_index_allowlist.txt excuses non-listener matches with a reason, and a stale
-# entry fails. Self-test first so what runs is the shipped checker; a failing self-test fails closed.
+# reader holding a scan result with nothing to search on. A fixed set of port shapes (listed in the
+# checker's docstring), code blocks included; tools/exposure_index_allowlist.txt excuses non-listener
+# matches with a reason, and a stale or redundant entry fails. Self-test first so what runs is the shipped checker; a failing self-test fails closed.
 ei_st="$(python3 -I -B tools/test_exposure_index.py 2>&1)"
 if [ $? -eq 0 ] && ! printf '%s\n' "$ei_st" | grep -q '^  FAIL  '; then
   ok "exposure-index self-test"

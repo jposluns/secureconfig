@@ -27963,7 +27963,7 @@ Rows are ordered by their first port number or the start of a range. Related por
 | 27017 | MongoDB | [mongodb.md](mongodb.md), [cloud-firewalls.md](cloud-firewalls.md) |
 | 30000 to 32767 | Kubernetes NodePort range over TCP and UDP; SGLang on 30000 | [kubernetes.md](kubernetes.md), [model-servers.md](model-servers.md) |
 | 33060 | MySQL X Protocol, a separate listener whose bind is not controlled by bind_address; MariaDB does not implement it | [mysql.md](mysql.md) |
-| 35672 to 35682 | RabbitMQ remote CLI tools' own Erlang distribution-port range (default); allow it only from authorized CLI hosts | [rabbitmq.md](rabbitmq.md) |
+| 35672 to 35682 | RabbitMQ remote CLI tools' own Erlang distribution-port range (default); the guide says to restrict the actual range to the necessary peers | [rabbitmq.md](rabbitmq.md) |
 | 49152 to 65535 | coturn relay endpoints, allocated on demand; this range overlaps the LiveKit media range and other entries | [realtime-voice-infra.md](realtime-voice-infra.md) |
 | 50000 to 60000/UDP | LiveKit media sockets outside development mode, allocated during active calls | [realtime-voice-infra.md](realtime-voice-infra.md) |
 | 50051 | Weaviate gRPC | [vector-databases.md](vector-databases.md) |
