@@ -24795,8 +24795,10 @@ There are two fixes, and you can use both:
   under `server`, and advise `RequireAndVerifyClientCert` for the strictest setting:
 
   ```yaml
+  # Overlay on a working single-binary config (keep your storage and schema_config).
   common:
     instance_addr: 127.0.0.1   # the address the rings advertise; it must match the gRPC bind
+    replication_factor: 1      # one instance; the default is 3
     ring:
       kvstore:
         store: inmemory        # single binary: no memberlist gossip listener
@@ -24812,20 +24814,24 @@ There are two fixes, and you can use both:
 
   On the loopback run, a client with a certificate from that CA got `200`. A client without one was
   refused in the handshake (curl exit 56, `tlsv13 alert certificate required`), with or without a tenant
-  header. Plain HTTP got `400`. With exactly this shape (HTTP mTLS; gRPC, `instance_addr` and an
-  `inmemory` ring on 127.0.0.1), a push with a client certificate returned `204` and a query returned
-  the pushed line with `200`, and Loki held no listener but its HTTP and gRPC ports. `instance_addr`
-  matters: the rings advertise it and internal traffic dials it, so if it resolves to a routable address
-  while gRPC listens on loopback, ingestion breaks (inferred from the source, not run here). Keep gRPC
-  off the network: left at its default it listens on every interface in plaintext. With `memberlist` as
-  the ring store, the same run opened a gossip listener (TCP only) on `memberlist.bind_addr`; bind that
-  privately, or set `memberlist.tls-enabled`, if you need it. Do not add `grpc_tls_config` to a single
+  header. Plain HTTP got `400`. With these keys and filesystem storage, and with HTTP bound to 127.0.0.1
+  rather than a private address, a push with a client certificate returned `204`, a query returned the
+  pushed line with `200`, and Loki held no listener but its HTTP and gRPC ports. `instance_addr` matters
+  because Loki copies it into the ingester, distributor and query-frontend addresses its components dial
+  (`config_wrapper.go`); if it resolves to a routable address while gRPC listens on loopback, ingestion
+  breaks (inferred from that source, not run here). `replication_factor` defaults to 3 (`common.go`),
+  more ingesters than one instance has. Keep gRPC off the network: left at its default it listens on
+  every interface in plaintext. A second run with `memberlist` as the ring store opened a gossip
+  listener (TCP only) on `memberlist.bind_addr`; bind that privately, and if peers cross hosts also set
+  `memberlist.tls-enabled` (not demonstrated here, and not a substitute for the private bind). Then
+  check with the `ss` step below that nothing listens on 7946. Do not add `grpc_tls_config` to a single
   binary on its own: on the loopback run, `RequireAndVerifyClientCert` there made a push with a valid
   client certificate return `500` and queries hang, and Loki logged `error reading server preface`,
-  because its own components call that gRPC server in plaintext. A deployment whose components talk gRPC
-  across hosts needs TLS on every component's gRPC client as well; that was not demonstrated here, so
-  take it from the Loki configuration reference for your version. mTLS does not set `X-Scope-OrgID`, so
-  your agent or proxy still does.
+  which indicates that its own components call that gRPC server in plaintext (inferred from the logged
+  error, so the warning extends to other `client_auth_type` values). A deployment whose components talk
+  gRPC across hosts needs TLS on every component's gRPC client as well; that was not demonstrated here,
+  so take it from the Loki configuration reference for your version. mTLS does not set `X-Scope-OrgID`,
+  so your agent or proxy still does.
 - **An authenticating proxy that owns the tenant header.** The vendor's nginx example sets
   `proxy_set_header X-Scope-OrgID $remote_user;` so that "nginx overwrites any tenant header sent by the
   client". Keep Loki itself reachable only from that proxy. See [nginx.md](nginx.md) and
@@ -24928,6 +24934,8 @@ channel only. The password can still reach shell history or `set -x` output.
 - Loki v3.7.8 authentication (no built-in auth, tenancy header, mTLS, nginx tenant header): https://github.com/grafana/loki/blob/v3.7.8/docs/sources/operations/authentication.md
 - Loki v3.7.8 HTTP API (`/config`, `/flush`, `/ingester/shutdown`, deletion): https://github.com/grafana/loki/blob/v3.7.8/docs/sources/reference/loki-http-api.md
 - Loki v3.7.8 `auth.enabled` default and port 3100: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go
+- Loki v3.7.8 common config (`common.replication-factor` default 3): https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/common/common.go
+- Loki v3.7.8 config wrapper (`common.instance_addr` copied into component addresses): https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/config_wrapper.go
 - Loki v3.7.8 sample local configuration: https://github.com/grafana/loki/blob/v3.7.8/cmd/loki/loki-local-config.yaml
 - dskit as pinned by Loki v3.7.8 (gRPC 9095, empty listen addresses): https://github.com/grafana/dskit/blob/8d1c6d34bb5a/server/server.go
 - dskit memberlist transport (port 7946, bind default 0.0.0.0, `memberlist.tls-enabled`): https://github.com/grafana/dskit/blob/8d1c6d34bb5a/kv/memberlist/tcp_transport.go
