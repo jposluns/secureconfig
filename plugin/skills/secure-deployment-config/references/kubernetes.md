@@ -87,18 +87,23 @@ Gateway API defines no authentication filter; each implementation adds its own. 
 # option." -i reads it from stdin instead. Envoy Gateway's example uses -b; this does not.
 (
   set +x +a
-  { unset -n PASSWORD && unset -v PASSWORD; } 2>/dev/null ||
-    { echo 'cannot clear PASSWORD in this shell; not creating the secret'; exit 2; }
+  { unset -n PASSWORD confirm && unset -v PASSWORD confirm; } 2>/dev/null ||
+    { echo 'cannot clear PASSWORD or confirm in this shell; not creating the secret'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not creating the secret'; exit 2; }
   IFS= read -r -s -p 'basic auth password: ' PASSWORD < /dev/tty || exit 2
   echo
+  IFS= read -r -s -p 'again, to confirm: ' confirm < /dev/tty || exit 2
+  echo
+  [ -n "$PASSWORD" ] || { echo 'no password supplied; not creating the secret'; exit 2; }
+  [ "$PASSWORD" = "$confirm" ] || { echo 'the two entries differ; not creating the secret'; exit 2; }
   printf '%s' "$PASSWORD" | htpasswd -cis .htpasswd admin
-  # -i does no verification, so a mistyped or mis-consumed value is written silently. Check it
-  # before the secret is created. Paste the block by itself: the shell reads the whole subshell
-  # before `read` runs. Without bracketed paste, `read` takes the NEXT LINE of input, so a line pasted
-  # after the closing `)` becomes the password and every command after that still succeeds; with
-  # bracketed paste, that line instead runs as a command once the block finishes.
-  printf '%s' "$PASSWORD" | htpasswd -vi .htpasswd admin
+  # -i does no verification, so the block asks twice and refuses a mismatch; `-vi` below then
+  # confirms the file holds that value, and the secret is created only if it does. Paste the block by
+  # itself: the shell reads the whole subshell before either `read` runs. Without bracketed paste,
+  # lines pasted after the closing `)` feed the two prompts instead, and the block refuses unless both
+  # are identical; with bracketed paste, they run as commands once the block finishes.
+  printf '%s' "$PASSWORD" | htpasswd -vi .htpasswd admin ||
+    { echo 'htpasswd could not verify the file; not creating the secret'; exit 2; }
   kubectl create secret generic app-basic-auth --from-file=.htpasswd
 )
 ```
