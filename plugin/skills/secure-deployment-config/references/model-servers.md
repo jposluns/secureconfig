@@ -33,7 +33,7 @@ The launcher reference lists `--api-key` (env `API_KEY`) without describing it. 
 
 ## SGLang
 
-`python -m sglang.launch_server` listens on `127.0.0.1:30000` by default (as of v0.5.20; `--host`, `--port`); keep that bind. `--api-key` sets the key the OpenAI-compatible endpoints require, and `--admin-api-key` separately protects administrative endpoints (weight updates, cache flush, `/server_info`), which then require `Authorization: Bearer <admin key>`:
+`python -m sglang.launch_server` listens on `127.0.0.1:30000` by default (`--host`, `--port`; values as of v0.5.20); keep that bind. `--api-key` sets the key the OpenAI-compatible endpoints require, and `--admin-api-key` separately protects administrative endpoints (weight updates, cache flush, `/server_info`), which then require `Authorization: Bearer <admin key>`:
 
 ```bash
 python -m sglang.launch_server --model-path REPLACE_WITH_MODEL_PATH --api-key "${SGLANG_API_KEY:?set a non-empty API key}" --admin-api-key "${SGLANG_ADMIN_KEY:?set a non-empty admin key}"
