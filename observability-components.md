@@ -108,8 +108,8 @@ That covers OTLP on 4317 and 4318, Jaeger gRPC and Thrift HTTP on 14250 and 1426
 UDP on 6831 and 6832, Zipkin on 9411, remote sampling on 5778 and 5779, health on 13133, expvar on
 27777, zpages on 27778, and self-metrics on 8888 (the loopback run showed each of them, UDP included,
 on 127.0.0.1). The docs explain that `JAEGER_LISTEN_HOST` is "useful when running Jaeger in a container
-and it needs to be `0.0.0.0`", so in a container every one of these listens on every interface, and a
-published port reaches it.
+and it needs to be `0.0.0.0`", and the project's v2.21.0 Dockerfile sets `ENV JAEGER_LISTEN_HOST=0.0.0.0`,
+so in the official image every one of these listens on every interface and a published port reaches it.
 
 The query service is the exception. The all-in-one file does not set `jaeger_query` endpoints, and the
 code default is `":" + port`. That makes the UI and query API `:16686` and query gRPC `:16685`, both on
@@ -188,13 +188,8 @@ There are two fixes, and you can use both:
   ```yaml
   server:
     http_listen_address: 10.0.0.6
-    grpc_listen_address: 10.0.0.6
+    grpc_listen_address: 127.0.0.1   # single binary: Loki's own components call this port
     http_tls_config:
-      cert_file: /etc/loki/tls/server.crt
-      key_file: /etc/loki/tls/server.key
-      client_auth_type: RequireAndVerifyClientCert
-      client_ca_file: /etc/loki/tls/clients-ca.crt
-    grpc_tls_config:   # "accepts the same options for the gRPC server"
       cert_file: /etc/loki/tls/server.crt
       key_file: /etc/loki/tls/server.key
       client_auth_type: RequireAndVerifyClientCert
@@ -203,9 +198,14 @@ There are two fixes, and you can use both:
 
   On the loopback run, a client with a certificate from that CA got `200`. A client without one was
   refused in the handshake (curl exit 56, `tlsv13 alert certificate required`), with or without a tenant
-  header. Plain HTTP got `400`. With both blocks and both listeners on 127.0.0.1, the gRPC port refused
-  a TLS client without a certificate (`tlsv13 alert certificate required`) and rejected plaintext HTTP/2.
-  Configure gRPC too: an HTTP-only fix leaves 9095 on every interface in plaintext. mTLS does not set
+  header. Plain HTTP got `400`. With exactly this shape (HTTP mTLS, gRPC on 127.0.0.1), a push with a
+  client certificate returned `204` and a query returned the pushed line with `200`. Keep gRPC off the
+  network: left at its default it listens on every interface in plaintext. Do not simply add
+  `grpc_tls_config` with `RequireAndVerifyClientCert` to a single binary: on the loopback run that made
+  a push with a valid client certificate return `500` and queries hang, because Loki's own components
+  call its gRPC server without a client certificate. A multi-process deployment whose components talk
+  gRPC across hosts needs matching client TLS settings on every component; that was not demonstrated
+  here, so take it from the Loki configuration reference for your version. mTLS does not set
   `X-Scope-OrgID`, so your agent or proxy still does.
 - **An authenticating proxy that owns the tenant header.** The vendor's nginx example sets
   `proxy_set_header X-Scope-OrgID $remote_user;` so that "nginx overwrites any tenant header sent by the
@@ -302,6 +302,7 @@ channel only. The password can still reach shell history or `set -x` output.
 - Jaeger v2.21.0 all-in-one configuration: https://github.com/jaegertracing/jaeger/blob/v2.21.0/cmd/jaeger/internal/all-in-one.yaml
 - Jaeger v2.21.0 query defaults and MCP (`PortToHostPort`, `ai.mcp`): https://github.com/jaegertracing/jaeger/blob/v2.21.0/cmd/jaeger/internal/extension/jaegerquery/internal/flags.go
 - Jaeger v2.21.0 ports: https://github.com/jaegertracing/jaeger/blob/v2.21.0/ports/ports.go
+- Jaeger v2.21.0 Dockerfile (`ENV JAEGER_LISTEN_HOST=0.0.0.0`): https://github.com/jaegertracing/jaeger/blob/v2.21.0/cmd/jaeger/Dockerfile
 - Jaeger v2.21.0 release notes (v1 HTTP endpoints removed): https://github.com/jaegertracing/jaeger/releases/tag/v2.21.0
 - OpenTelemetry Collector configtls v1.66.0, as pinned by Jaeger v2.21.0 (`cert_file`, `key_file`): https://github.com/open-telemetry/opentelemetry-collector/blob/cd3455cf3a7f672208140b1ebb1581c542b2b0ed/config/configtls/README.md
 - OpenTelemetry Collector contrib v0.160.0 basicauth extension (`htpasswd`, `authenticator`): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/v0.160.0/extension/basicauthextension/README.md
