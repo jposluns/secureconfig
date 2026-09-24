@@ -94,7 +94,7 @@ For a plain `RayCluster`, the containers are at `spec.headGroupSpec.template.spe
 
 ```bash
 ss -tlnp   # read every listener; 127.0.0.1:8265 (or the tailnet IP), never 0.0.0.0 or *
-ss -tlnp   # read every listener; per the source, 10001 shows the node's private address plus a loopback listener, but 6379 can show every
+ss -tlnp   # read every listener; per the source, 10001 shows the node IP address (private in step 2's layout) plus a loopback listener, but 6379 can show every
            # interface (see step 2), so only the network boundary keeps it private
 ss -tlnp   # if you run Ray Serve, keep 8000 (HTTP proxy) private too, and 9000 (gRPC) when configured
 # from another network, checking that each externally facing Ray port (8265 dashboard, 6379 head, 10001
