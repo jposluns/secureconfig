@@ -126,3 +126,4 @@ ss -tlnp   # read every listener; 8080: only a loopback address unless you delib
 - WireGuard Cryptokey Routing (`AllowedIPs` on send and receive): https://www.wireguard.com/
 - frp TLS (`transport.tls.enable` default from v0.50.0, `transport.tls.force`, cert/key/CA roles): https://gofrp.org/en/docs/features/common/network/network-tls/
 - nftables manual (forward/input hooks, verdicts, and rule counters): https://netfilter.org/projects/nftables/manpage.html
+- frps `bindAddr` default `0.0.0.0`, and an empty `proxyBindAddr` takes `bindAddr` (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/pkg/config/v1/server.go#L110-L114

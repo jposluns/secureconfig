@@ -975,6 +975,7 @@ ss -tlnp   # read every listener; 8080: only a loopback address unless you delib
 - WireGuard Cryptokey Routing (`AllowedIPs` on send and receive): https://www.wireguard.com/
 - frp TLS (`transport.tls.enable` default from v0.50.0, `transport.tls.force`, cert/key/CA roles): https://gofrp.org/en/docs/features/common/network/network-tls/
 - nftables manual (forward/input hooks, verdicts, and rule counters): https://netfilter.org/projects/nftables/manpage.html
+- frps `bindAddr` default `0.0.0.0`, and an empty `proxyBindAddr` takes `bindAddr` (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/pkg/config/v1/server.go#L110-L114
 
 ======================================================================
 ==> authentication.md
@@ -14606,6 +14607,8 @@ No existing Kafka live-demonstration row was found in the reviewed backlog. This
 - Producer performance CLI options and metrics, tagged 4.3.0: https://github.com/apache/kafka/blob/4.3.0/tools/src/main/java/org/apache/kafka/tools/ProducerPerformance.java
 - OpenSSL s_client certificate and hostname verification: https://docs.openssl.org/3.5/man1/openssl-s_client/
 - OpenSSL file-based private-key passphrases: https://docs.openssl.org/3.5/man1/openssl-passphrase-options/
+- Kafka `LISTENERS_DEFAULT = "PLAINTEXT://:9092"` (pinned tag 4.3.1): https://github.com/apache/kafka/blob/4.3.1/server/src/main/java/org/apache/kafka/network/SocketServerConfigs.java#L64
+- Kafka defines the `listeners` config with that default (pinned tag 4.3.1): https://github.com/apache/kafka/blob/4.3.1/server/src/main/java/org/apache/kafka/network/SocketServerConfigs.java#L156
 
 ======================================================================
 ==> clickhouse.md
@@ -21264,6 +21267,7 @@ For text-generation-webui, ask the API edge for the model list without a key. Th
 - text-generation-webui, flag definitions and defaults (modules/shared.py): https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py
 - text-generation-webui, API bind and key checks (modules/api/script.py): https://github.com/oobabooga/text-generation-webui/blob/619a2b8ee4b7e48541a9be5c07e04cd31b91b44f/modules/api/script.py
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
+- SGLang `host` and `port` field defaults, `127.0.0.1` and `30000` (pinned tag v0.5.20; that the `--host`/`--port` flags use these fields rests on the server-arguments docs above): https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/arg_groups/fields/serving.py#L72-L73
 
 ======================================================================
 ==> gradio.md
@@ -23074,6 +23078,8 @@ An authenticated user without permission on a resource gets `403`; a missing or 
 - MLflow REST API, Search Experiments (`POST 2.0/mlflow/experiments/search`): https://mlflow.org/docs/latest/api_reference/rest-api.html
 - Docker, port publishing (loopback publishing): https://docs.docker.com/engine/network/port-publishing/
 - curl manual (`--connect-timeout` bounds the connection phase only; the `time_connect`, `exitcode`, and `errormsg` write-out variables, the last two added in curl 7.75.0): https://curl.se/docs/manpage.html
+- MLflow `--host` option, default `127.0.0.1`, and `--port`, default `5000`, which the `MLFLOW_HOST` and `MLFLOW_PORT` environment variables override (pinned tag v3.16.1): https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/utils/cli_args.py#L162-L180
+- MLflow's tracking-server command, `def server`, takes those `--host` and `--port` options (pinned tag v3.16.1): https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L369-L541
 
 ======================================================================
 ==> agent-builders.md
@@ -24021,6 +24027,7 @@ curl -q -sI https://imagegen.example.com/                # via the proxy: TLS, a
 - InvokeAI Multi-User Administrator Guide: https://invoke.ai/features/multi-user-mode/admin-guide/
 - Fooocus repository README (`--listen`, `--share`, auth.json): https://github.com/lllyasviel/Fooocus
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
+- ComfyUI `--listen` default `127.0.0.1`, and `0.0.0.0,::` when given without a value (pinned tag v0.37.0): https://github.com/Comfy-Org/ComfyUI/blob/v0.37.0/comfy/cli_args.py#L63
 
 ======================================================================
 ==> chat-uis.md
