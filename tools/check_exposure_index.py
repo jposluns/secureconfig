@@ -89,9 +89,10 @@ PATTERNS = {
     "prose_ports": re.compile(r"(?i)\bports\s+" + EMPH + N1 + LEND + EMPH
                               + r"((?:(?:,\s*|" + SEP + r")(?:and\s+|or\s+)?" + EMPH + r"\d{1,5}" + LEND
                               + EMPH + r")*)"),
-    # a backticked numeric range in prose, after "port" earlier in the same clause
+    # a backticked numeric range in prose, after "port" earlier in the same clause (the word, or a
+    # `_port`/`-port`/camel-case `Port` identifier, as in the key shape; not "report" or "support")
     # ("distribution-port range, by default `35672` through `35682`"), so "pages `10` to `20`" is not one
-    "tick_range": re.compile(r"(?i)\bport[^.;]*?`(\d{2,5})`\s*(?:to|through|-|\N{EN DASH})\s*`(\d{2,5})`"),
+    "tick_range": re.compile(r"(?:(?<![A-Za-z])(?i:port)|(?<=[a-z])Port)(?i:[^.;]*?)`(\d{2,5})`\s*(?:to|through|-|\N{EN DASH})\s*`(\d{2,5})`"),
     "hostport": re.compile(
         r"(?:\b(?:0\.0\.0\.0|127(?:\.\d{1,3}){3}|localhost)|\[[0-9A-Fa-f:.]*\]|://(?:[^@/\s]+@)?[A-Za-z0-9.\-_${}]+):"
         + N + END),
