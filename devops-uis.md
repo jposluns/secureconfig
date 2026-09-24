@@ -169,3 +169,4 @@ From outside the network, every panel URL is unreachable or shows a login; a pag
 - Docker Registry deployment (default authentication, TLS requirement): https://distribution.github.io/distribution/about/deploying/
 - Filebrowser: https://github.com/filebrowser/filebrowser
 - Node-RED securing the runtime (adminAuth, credentialSecret): https://nodered.org/docs/user-guide/runtime/securing-node-red
+- Gitea `HTTP_ADDR` default `0.0.0.0` (pinned tag v1.27.3): https://github.com/go-gitea/gitea/blob/v1.27.3/modules/setting/server.go#L121

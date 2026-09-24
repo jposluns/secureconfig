@@ -72,3 +72,5 @@ Behind a reverse proxy, confirm cookies still carry `Secure` and redirects use a
 - Nuxt server directory structure: https://nuxt.com/docs/4.x/directory-structure/server
 - Vite server options (`server.host`, `server.allowedHosts`): https://vite.dev/config/server-options
 - Vite CLI (`vite preview`): https://vite.dev/guide/cli
+- Vite resolves an unset `server.host` to `'localhost'` (pinned tag v8.3.1): https://github.com/vitejs/vite/blob/v8.3.1/packages/vite/src/node/utils.ts#L1010-L1016
+- SvelteKit adapter-node `host = env('HOST', '0.0.0.0')` (pinned tag @sveltejs/adapter-node@5.5.7): https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/index.js#L11

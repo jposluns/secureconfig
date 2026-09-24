@@ -85,3 +85,6 @@ Run these from a second network against each panel's real hostname; a 200 that r
 - Prometheus basic auth and TLS guides: https://prometheus.io/docs/guides/basic-auth/ and https://prometheus.io/docs/guides/tls-encryption/
 - phpMyAdmin documentation: https://www.phpmyadmin.net/docs/ and pgAdmin documentation: https://www.pgadmin.org/docs/
 - Adminer, database management in a single PHP file (login uses the database server's own credentials): https://www.adminer.org/
+- Prometheus `--web.listen-address` default `0.0.0.0:9090` (pinned tag v3.14.0): https://github.com/prometheus/prometheus/blob/v3.14.0/cmd/prometheus/main.go#L424-L425
+- Grafana default `http_addr` is empty (pinned tag v13.2.2): https://github.com/grafana/grafana/blob/v13.2.2/conf/defaults.ini#L50
+- Grafana joins an empty `http_addr` with the port and calls `net.Listen("tcp", ...)`, which binds every interface (pinned tag v13.2.2): https://github.com/grafana/grafana/blob/v13.2.2/pkg/api/http_server.go#L467-L469

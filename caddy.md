@@ -180,3 +180,4 @@ ls -l /run/caddy/admin.sock          # if you bound it to a unix socket: it exis
 - Caddy command-line signals (SIGUSR1 reload conditions): https://caddyserver.com/docs/command-line#signals
 - Let's Encrypt ending expiration-notification emails (2025): https://letsencrypt.org/2025/01/22/ending-expiration-emails/
 - Request matchers (path, wildcards, multiple paths): https://caddyserver.com/docs/caddyfile/matchers
+- Caddy admin API default `DefaultAdminListen = "localhost:2019"` (pinned tag v2.11.4): https://github.com/caddyserver/caddy/blob/v2.11.4/admin.go#L1433
