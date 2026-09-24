@@ -25,7 +25,11 @@ A tailnet ([tailscale.md](tailscale.md)) is the other clean option: the dashboar
 
 ## 2. Network isolation is the primary boundary
 
-Ray expects "a controlled, isolated network" between all its components. Beyond `8265`, the head node listens on `6379` (the GCS cluster-metadata server), `10001` (Ray Client), and every node opens worker ports `10002` to `19999` by default plus several randomized ports. Put every node of a cluster in one private network or security group that admits only the cluster's own members ([cloud-firewalls.md](cloud-firewalls.md), [host.md](host.md), [kubernetes.md](kubernetes.md)), and expose nothing from that group to the internet. The Ray Client port in particular is a remote code execution endpoint by design; use Ray Jobs over the forwarded dashboard port instead of publishing `10001`.
+Ray expects "a controlled, isolated network" between all its components. Beyond `8265`, the head node listens on `6379` (the GCS cluster-metadata server), `10001` (Ray Client), and every node opens worker ports `10002` to `19999` by default plus several randomized ports. Do not rely on Ray's bind addresses to keep these private.
+- In Ray 2.58.0's source, the core gRPC servers (the GCS, the raylet, the object manager and every worker) listen on every interface whenever the node's address is anything other than `127.0.0.1`, `::1` or `localhost` ([`grpc_server.cc`](https://github.com/ray-project/ray/blob/ray-2.58.0/src/ray/rpc/grpc_server.cc#L67-L68), [`network_util.h`](https://github.com/ray-project/ray/blob/ray-2.58.0/src/ray/util/network_util.h#L111-L113)). On an ordinary cluster with a private node address, `6379` therefore listens on all interfaces.
+- Ray Serve replicas open an inter-deployment gRPC server on `[::]` with an OS-chosen port ([`replica.py`](https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/serve/_private/replica.py#L1778)).
+
+Those two points are read from the source and were not run. In one loopback run with `--node-ip-address=127.0.0.1`, the GCS still listened on `*:6379`, and the cause was not established. Put every node of a cluster in one private network or security group that admits only the cluster's own members ([cloud-firewalls.md](cloud-firewalls.md), [host.md](host.md), [kubernetes.md](kubernetes.md)), and expose nothing from that group to the internet. The Ray Client port in particular is a remote code execution endpoint by design; use Ray Jobs over the forwarded dashboard port instead of publishing `10001`.
 
 Ray does not isolate jobs from each other. Workloads that must not see each other's data or credentials go on separate clusters.
 
@@ -90,7 +94,8 @@ For a plain `RayCluster`, the containers are at `spec.headGroupSpec.template.spe
 
 ```bash
 ss -tlnp   # read every listener; 127.0.0.1:8265 (or the tailnet IP), never 0.0.0.0 or *
-ss -tlnp   # read every listener; 6379/10001: private interface only
+ss -tlnp   # read every listener; 10001 should show the node's private address, but 6379 can show every
+           # interface (see step 2), so only the network boundary keeps it private
 ss -tlnp   # if you run Ray Serve, keep 8000 (HTTP proxy) private too, and 9000 (gRPC) when configured
 # from another network, checking that each externally facing Ray port (8265 dashboard, 6379 head, 10001
 # Client, plus 8000 if Ray Serve is deployed) is unreachable from outside: the first three execute arbitrary code with no cluster authentication, and the Serve proxy answers any caller because token auth (step 3) does not cover it, so every one of these origins must stay off untrusted networks whatever else fronts them. The pass is that
@@ -128,7 +133,7 @@ ray job submit --address http://127.0.0.1:8265 -- python -c "print(1)"   # must 
 # certificate-name mismatch), which must fail verification; a local configuration error is inconclusive.
 ```
 
-Service behaviour is not demonstrated here: the authoring environment has no Ray cluster, auth token, or gRPC-TLS fixture. The `ss` listener check runs locally, but the external-reachability probe, the token-authentication positive and negative controls, and the gRPC-TLS health-check are **REASONED**, written to be run against a live cluster in both the exposed and fixed states, tracked as RAY-LIVE-1 (`TODO.md` row 2.40).
+Service behaviour is not demonstrated here. A loopback run of Ray 2.58.0 was stopped at startup because its GCS listened on every interface, which the authoring host forbids, and no isolated network namespace was available to contain it. The `ss` listener check runs locally, but the external-reachability probe, the token-authentication positive and negative controls, and the gRPC-TLS health-check are **REASONED**, written to be run against a live cluster in both the exposed and fixed states, tracked as RAY-LIVE-1 (`TODO.md` row 2.40).
 
 ## Common mistakes
 
