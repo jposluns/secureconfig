@@ -4532,16 +4532,22 @@ Gateway API defines no authentication filter; each implementation adds its own. 
 # read it. Apache's own page says of it: "This option should be used with extreme care,
 # since the password is clearly visible on the command line. For script use see the -i
 # option." -i reads it from stdin instead. Envoy Gateway's example uses -b; this does not.
-read -rs -p 'basic auth password: ' PASSWORD
-echo
-printf '%s' "$PASSWORD" | htpasswd -cis .htpasswd admin
-# -i does no verification, so a mistyped or mis-consumed value is written silently. Check it
-# before the secret is created: `read` takes the NEXT LINE of input, so pasting this whole
-# block into a shell without bracketed paste feeds it the following line instead of your
-# password, and every command after that still succeeds.
-printf '%s' "$PASSWORD" | htpasswd -vi .htpasswd admin
-unset PASSWORD
-kubectl create secret generic app-basic-auth --from-file=.htpasswd
+(
+  set +x +a
+  { unset -n PASSWORD && unset -v PASSWORD; } 2>/dev/null ||
+    { echo 'cannot clear PASSWORD in this shell; not creating the secret'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not creating the secret'; exit 2; }
+  IFS= read -r -s -p 'basic auth password: ' PASSWORD < /dev/tty || exit 2
+  echo
+  printf '%s' "$PASSWORD" | htpasswd -cis .htpasswd admin
+  # -i does no verification, so a mistyped or mis-consumed value is written silently. Check it
+  # before the secret is created. Paste the block by itself: the shell reads the whole subshell
+  # before `read` runs. Without bracketed paste, `read` takes the NEXT LINE of input, so a line pasted
+  # after the closing `)` becomes the password and every command after that still succeeds; with
+  # bracketed paste, that line instead runs as a command once the block finishes.
+  printf '%s' "$PASSWORD" | htpasswd -vi .htpasswd admin
+  kubectl create secret generic app-basic-auth --from-file=.htpasswd
+)
 ```
 
 `-s` is SHA-1, which Apache describes as "insecure by today's standards", and it is not a
@@ -17640,13 +17646,13 @@ Inventory 4222, 8222, and every enabled peer or protocol listener, including 622
 
 The CLI reads saved contexts and environment settings before defaults. Each block clears inherited `NATS_*` settings and uses `--no-context`. This prevents a supposedly anonymous check from silently inheriting a token, user, seed, credentials file, or proxy setting. A fully clean `env -i` launch is another way to isolate ambient settings, but required credentials must still be supplied deliberately.
 
-Paste the whole subshell after substituting all four values. These probes accept a DNS hostname or IPv4 address, without a scheme, port, or embedded credentials. TLS paths and passwords are exported inside the guarded subshell, not passed as command arguments. Environment secrets still require a trusted local execution account.
+Paste the whole subshell after substituting all four values. These probes accept a DNS hostname or IPv4 address, without a scheme, port, or embedded credentials. TLS paths and the username are exported inside the guarded subshell. The password is read from the terminal and never exported or passed as a command argument: natscli v0.4.0 offers no stdin input for it and binds `--password` to `NATS_PASSWORD`, so each `nats` command that needs it receives it as a one-command `NATS_PASSWORD="$pw"` prefix assignment. That moves the password out of argv, not out of reach: it can remain readable through `/proc/<pid>/environ` by the same user and by root while that `nats` command, or the `timeout` that runs it, is running. Environment secrets still require a trusted local execution account.
 
 The first publish is the allowed control. The subsequent operations deliberately test missing credentials, a wrong password, a missing client certificate, and forbidden publish/subscribe subjects. Inspect each command's diagnostics; the block's final exit status is not a combined verdict.
 
 ```bash
 (
-  set +x
+  set +x +a
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NATS_HOST' 'REPLACE_WITH_CLIENT_CERT_FILE' 'REPLACE_WITH_CLIENT_KEY_FILE' 'REPLACE_WITH_CA_FILE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
   shift
@@ -17656,8 +17662,12 @@ The first publish is the allowed control. The subsequent operations deliberately
   case "$3" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the key path'; exit 2 ;; esac
   case "$4" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the CA path'; exit 2 ;; esac
   case "$1" in *[!A-Za-z0-9.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
-  for v in ${!NATS_@}; do
-    unset "$v" || { echo "cannot clear ambient $v; not probing"; exit 2; }
+  { unset -n v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA &&
+    unset -v v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA; } 2>/dev/null ||
+    { echo 'cannot clear the variables this block uses; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
+  for v in "${!NATS_@}"; do
+    { unset -n "$v" && unset -v "$v"; } 2>/dev/null || { echo "cannot clear ambient $v; not probing"; exit 2; }
   done
   for f in "$2" "$3" "$4"; do
     [ -r "$f" ] || { echo 'a TLS fixture is unreadable; not probing'; exit 2; }
@@ -17667,21 +17677,19 @@ The first publish is the allowed control. The subsequent operations deliberately
   IFS= read -r -s -t 60 -p 'order-svc password: ' pw < /dev/tty || { echo 'password input failed'; exit 2; }
   printf '\n'
   case "$pw" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'supply a real password'; exit 2 ;; esac
-  export NATS_USER=order-svc NATS_PASSWORD="$pw" || { echo 'credential export failed'; exit 2; }
+  export NATS_USER=order-svc || { echo 'credential export failed'; exit 2; }
   [ "$NATS_USER" = order-svc ] || { echo 'username mismatch'; exit 2; }
-  [ "$NATS_PASSWORD" = "$pw" ] || { echo 'password mismatch'; exit 2; }
   opts=(--no-context --server "$srv" --timeout 3s --inbox-prefix _INBOX.order-svc)
-  timeout 10s nats "${opts[@]}" pub orders.created hi || { echo 'positive control failed; stop'; exit 1; }
-  unset NATS_USER NATS_PASSWORD
+  NATS_PASSWORD="$pw" timeout 10s nats "${opts[@]}" pub orders.created hi || { echo 'positive control failed; stop'; exit 1; }
+  unset NATS_USER
   timeout 10s nats "${opts[@]}" pub orders.created hi
-  export NATS_USER=order-svc NATS_PASSWORD="wrong-$pw"
-  timeout 10s nats "${opts[@]}" pub orders.created hi
-  export NATS_PASSWORD="$pw"
+  export NATS_USER=order-svc
+  NATS_PASSWORD="wrong-$pw" timeout 10s nats "${opts[@]}" pub orders.created hi
   unset NATS_CERT NATS_KEY
-  timeout 10s nats "${opts[@]}" pub orders.created hi
+  NATS_PASSWORD="$pw" timeout 10s nats "${opts[@]}" pub orders.created hi
   export NATS_CERT="$2" NATS_KEY="$3"
-  timeout 10s nats "${opts[@]}" pub billing.charge hi
-  timeout 6s nats "${opts[@]}" sub 'billing.>' --count 1
+  NATS_PASSWORD="$pw" timeout 10s nats "${opts[@]}" pub billing.charge hi
+  NATS_PASSWORD="$pw" timeout 6s nats "${opts[@]}" sub 'billing.>' --count 1
 )
 ```
 
@@ -17706,7 +17714,7 @@ Terminal 1 is self-contained and reads its password inside the guarded subshell.
 
 ```bash
 (
-  set +x
+  set +x +a
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NATS_HOST' 'REPLACE_WITH_CONSUMER_CERT_FILE' 'REPLACE_WITH_CONSUMER_KEY_FILE' 'REPLACE_WITH_CA_FILE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
   shift
@@ -17716,8 +17724,12 @@ Terminal 1 is self-contained and reads its password inside the guarded subshell.
   case "$3" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the key path'; exit 2 ;; esac
   case "$4" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the CA path'; exit 2 ;; esac
   case "$1" in *[!A-Za-z0-9.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
-  for v in ${!NATS_@}; do
-    unset "$v" || { echo "cannot clear ambient $v; not probing"; exit 2; }
+  { unset -n v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA &&
+    unset -v v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA; } 2>/dev/null ||
+    { echo 'cannot clear the variables this block uses; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
+  for v in "${!NATS_@}"; do
+    { unset -n "$v" && unset -v "$v"; } 2>/dev/null || { echo "cannot clear ambient $v; not probing"; exit 2; }
   done
   for f in "$2" "$3" "$4"; do
     [ -r "$f" ] || { echo 'a TLS fixture is unreadable; not probing'; exit 2; }
@@ -17727,8 +17739,8 @@ Terminal 1 is self-contained and reads its password inside the guarded subshell.
   IFS= read -r -s -t 60 -p 'order-consumer password: ' pw < /dev/tty || { echo 'password input failed'; exit 2; }
   printf '\n'
   case "$pw" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'supply a real password'; exit 2 ;; esac
-  export NATS_USER=order-consumer NATS_PASSWORD="$pw" || { echo 'credential export failed'; exit 2; }
-  timeout 45s nats --no-context --server "$srv" --timeout 3s sub 'orders.>' --count 1
+  export NATS_USER=order-consumer || { echo 'credential export failed'; exit 2; }
+  NATS_PASSWORD="$pw" timeout 45s nats --no-context --server "$srv" --timeout 3s sub 'orders.>' --count 1
 )
 ```
 
@@ -17736,7 +17748,7 @@ Terminal 2 independently establishes its target, TLS configuration, and credenti
 
 ```bash
 (
-  set +x
+  set +x +a
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NATS_HOST' 'REPLACE_WITH_CLIENT_CERT_FILE' 'REPLACE_WITH_CLIENT_KEY_FILE' 'REPLACE_WITH_CA_FILE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
   shift
@@ -17746,8 +17758,12 @@ Terminal 2 independently establishes its target, TLS configuration, and credenti
   case "$3" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the key path'; exit 2 ;; esac
   case "$4" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the CA path'; exit 2 ;; esac
   case "$1" in *[!A-Za-z0-9.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
-  for v in ${!NATS_@}; do
-    unset "$v" || { echo "cannot clear ambient $v; not probing"; exit 2; }
+  { unset -n v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA &&
+    unset -v v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA; } 2>/dev/null ||
+    { echo 'cannot clear the variables this block uses; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
+  for v in "${!NATS_@}"; do
+    { unset -n "$v" && unset -v "$v"; } 2>/dev/null || { echo "cannot clear ambient $v; not probing"; exit 2; }
   done
   for f in "$2" "$3" "$4"; do
     [ -r "$f" ] || { echo 'a TLS fixture is unreadable; not probing'; exit 2; }
@@ -17757,10 +17773,10 @@ Terminal 2 independently establishes its target, TLS configuration, and credenti
   IFS= read -r -s -t 60 -p 'order-svc password: ' pw < /dev/tty || { echo 'password input failed'; exit 2; }
   printf '\n'
   case "$pw" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'supply a real password'; exit 2 ;; esac
-  export NATS_USER=order-svc NATS_PASSWORD="$pw" || { echo 'credential export failed'; exit 2; }
-  marker="marker-$(date +%s%N)-$RANDOM"
+  export NATS_USER=order-svc || { echo 'credential export failed'; exit 2; }
+  marker="marker-$(date +%s%N)"
   printf 'Expected delivery: %s\n' "$marker"
-  timeout 10s nats --no-context --server "$srv" --timeout 3s \
+  NATS_PASSWORD="$pw" timeout 10s nats --no-context --server "$srv" --timeout 3s \
     --inbox-prefix _INBOX.order-svc pub orders.created "$marker"
 )
 ```
@@ -17771,7 +17787,7 @@ The following self-contained request block is also used by V4 and V5. Its last t
 
 ```bash
 (
-  set +x
+  set +x +a
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NATS_HOST' 'REPLACE_WITH_CLIENT_CERT_FILE' 'REPLACE_WITH_CLIENT_KEY_FILE' 'REPLACE_WITH_CA_FILE' 'order-svc' 'orders.lookup' '{}'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
   shift
@@ -17784,8 +17800,12 @@ The following self-contained request block is also used by V4 and V5. Its last t
   case "$6" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the request subject'; exit 2 ;; esac
   case "$7" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the request body'; exit 2 ;; esac
   case "$1" in *[!A-Za-z0-9.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
-  for v in ${!NATS_@}; do
-    unset "$v" || { echo "cannot clear ambient $v; not probing"; exit 2; }
+  { unset -n v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA &&
+    unset -v v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA; } 2>/dev/null ||
+    { echo 'cannot clear the variables this block uses; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
+  for v in "${!NATS_@}"; do
+    { unset -n "$v" && unset -v "$v"; } 2>/dev/null || { echo "cannot clear ambient $v; not probing"; exit 2; }
   done
   for f in "$2" "$3" "$4"; do
     [ -r "$f" ] || { echo 'a TLS fixture is unreadable; not probing'; exit 2; }
@@ -17795,8 +17815,8 @@ The following self-contained request block is also used by V4 and V5. Its last t
   IFS= read -r -s -t 60 -p "$5 password: " pw < /dev/tty || { echo 'password input failed'; exit 2; }
   printf '\n'
   case "$pw" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'supply a real password'; exit 2 ;; esac
-  export NATS_USER="$5" NATS_PASSWORD="$pw" || { echo 'credential export failed'; exit 2; }
-  timeout 10s nats --no-context --server "$srv" --timeout 3s \
+  export NATS_USER="$5" || { echo 'credential export failed'; exit 2; }
+  NATS_PASSWORD="$pw" timeout 10s nats --no-context --server "$srv" --timeout 3s \
     --inbox-prefix "_INBOX.$5" request "$6" "$7"
 )
 ```
@@ -18731,18 +18751,26 @@ carried over.
 `surreal start` takes `--user`/`-u` and `--pass`/`-p` (also `SURREAL_USER`/`SURREAL_PASS`) to set
 "the initial database root user, applied only if no other root user exists": they initialize that user when
 none exists, and do not disable authentication or rotate an existing root password. Pass the password through
-the environment or a prompt, never argv (which reaches `ps` and shell history):
+the environment, never argv (which reaches `ps` and shell history). `surreal start` has no stdin input for it
+(checked at v3.2.4), so the block prompts for it and hands it to that one command as a prefix assignment,
+never exported:
 
 ```bash
 (
-  set +x
-  IFS= read -r -s -p 'Initial root password: ' SURREAL_PASS || exit 2
+  set +x +a
+  { unset -n pw SURREAL_USER SURREAL_PASS && unset -v pw SURREAL_USER SURREAL_PASS; } 2>/dev/null ||
+    { echo 'cannot clear pw, SURREAL_USER or SURREAL_PASS in this shell; not starting'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not starting'; exit 2; }
+  IFS= read -r -s -p 'Initial root password: ' pw < /dev/tty || exit 2
   printf '\n'
-  [ -n "$SURREAL_PASS" ] || exit 2
-  export SURREAL_PASS
-  SURREAL_USER=root surreal start rocksdb:/data/mydb.db --bind 127.0.0.1:8000
+  [ -n "$pw" ] || exit 2
+  SURREAL_USER=root SURREAL_PASS="$pw" surreal start rocksdb:/data/mydb.db --bind 127.0.0.1:8000
 )
 ```
+
+This moves the password out of argv, not out of reach: it stays readable through `/proc/<pid>/environ` by
+the same user and by root for the server's whole lifetime, as it does through the environment of any
+process that inherits it. Treat it as exposed to that account and to root while the server runs.
 
 The `--unauthenticated` flag (`SURREAL_UNAUTHENTICATED`) allows unauthenticated access instead; a
 guest connecting under it gets permissions equivalent to the `OWNER` role. Do not run it, or carry it
@@ -18864,6 +18892,7 @@ TLS terminates with normal validation (a trusted CA for private PKI); never use 
 ## Sources (checked September 2026)
 
 - SurrealDB CLI, `surreal start`: https://surrealdb.com/docs/reference/cli/surrealdb-cli/commands/start
+- SurrealDB 3.2.4 `surreal start` root password: `--password`/`--pass`/`-p` or `SURREAL_PASS`, with no stdin form (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/cli/start.rs#L148-L162
 - SurrealDB CLI, `surreal sql`: https://surrealdb.com/docs/reference/cli/surrealdb-cli/commands/sql
 - SurrealDB security overview: https://surrealdb.com/docs/learn/security
 - SurrealDB authentication overview: https://surrealdb.com/docs/learn/security/authentication/overview
@@ -28106,25 +28135,43 @@ an agent whose own
 in the default namespace and reading the agent only, and they look the same before bootstrap, so
 fixed needs two more checks on a server. First, `nomad acl bootstrap` must fail with an error that includes "ACL
 bootstrap already done"; if it prints a management token instead, the cluster was claimable until
-that moment, so keep the token as your own. Second, with a management token in `NOMAD_TOKEN`,
+that moment, so keep the token as your own. Second, with a management token,
 `nomad acl policy info anonymous` must report `404 (ACL policy not found)`: the anonymous token takes
-its rights from the policy named `anonymous`. Set the token without leaving it in shell history, and only for
-the one command, by running it in a subshell (`read -rs` shows no prompt), for example
-`( read -rs NOMAD_TOKEN && export NOMAD_TOKEN && nomad acl policy info anonymous )`; while it runs,
-an exported variable can be read from `/proc` by the same account and by root. A connection failure prints curl's error and exit code, and says nothing about ACLs. Any other
+its rights from the policy named `anonymous`. The block after the next paragraph runs it. A connection failure prints curl's error and exit code, and says nothing about ACLs. Any other
 status or message is inconclusive: a redirect (for example from a trailing slash, or from HTTP to
 HTTPS), a proxy's own response, or a certificate error once TLS is on says nothing about the
-server's ACLs; run the block from a host that trusts the cluster's CA.
+server's ACLs; run the curl block above from a host that trusts the cluster's CA.
 
-All of these outcomes were observed with this block and these commands, on agents listening on test
+`nomad` takes the token from `-token`, which puts it in argv, or from `NOMAD_TOKEN`, and has no stdin
+input for it (checked at v2.0.7). The block prompts for the token, so it stays out of shell history,
+and hands it to the one `nomad` command as a prefix assignment, never exported. That moves the token
+out of argv, not out of reach: while `nomad` runs, it can be read from `/proc/<pid>/environ` by the
+same account and by root.
+
+```bash
+(
+  set +x +a
+  { unset -n tok NOMAD_TOKEN && unset -v tok NOMAD_TOKEN; } 2>/dev/null ||
+    { echo 'cannot clear tok or NOMAD_TOKEN in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
+  IFS= read -r -s -p 'Nomad management token (input hidden): ' tok < /dev/tty ||
+    { echo 'token input failed; not probing'; exit 2; }
+  printf '\n'
+  [ -n "$tok" ] || { echo 'no token supplied; not probing'; exit 2; }
+  NOMAD_TOKEN="$tok" nomad acl policy info anonymous
+)
+```
+
+All of these outcomes were observed with the curl probe block and these commands, on agents listening on test
 ports. In a cluster whose server had ACLs on and was bootstrapped, a client agent configured with
 `acl { enabled = false }` answered the first two paths with the ACLs-on results and `/v1/agent/self`
 with `200`, while the server answered it with `403`. Before bootstrap, the probe already printed the
 ACLs-on results; the first `nomad acl bootstrap`
 printed a management token and the second failed with `Unexpected response code: 400 (ACL bootstrap
-already done ...)`. `nomad acl policy info anonymous` reported `404 (ACL policy not found)`. After an
+already done ...)`. `nomad acl policy info anonymous` reported `404 (ACL policy not found)`, observed
+with the token exported in a subshell, the form this guide used before #306. After an
 `anonymous` policy granting only `submit-job` was applied, the probe's results did not change, an
-anonymous job registration returned `200`, and `nomad acl policy info anonymous` showed the policy.
+anonymous job registration returned `200`, and `nomad acl policy info anonymous`, run in the same earlier form, showed the policy.
 With ACLs off, an anonymous job registration also returned `200`; with ACLs on and no `anonymous`
 policy, it returned `403`.
 
@@ -28252,6 +28299,7 @@ give the host's public address. A "connected" on a port you did not mean to expo
 - Nomad 2.0.7 ACL resolution when disabled: https://github.com/hashicorp/nomad/blob/v2.0.7/nomad/auth/auth.go and https://github.com/hashicorp/nomad/blob/v2.0.7/acl/acl.go
 - Nomad 2.0.7 anonymous token (its rights come from the policy named `anonymous`): https://github.com/hashicorp/nomad/blob/v2.0.7/nomad/structs/acl.go
 - Nomad 2.0.7 ACL bootstrap: https://github.com/hashicorp/nomad/blob/v2.0.7/nomad/acl_endpoint.go
+- Nomad 2.0.7 CLI token input: `-token` (`command/meta.go` L96, L170-L171) or `NOMAD_TOKEN` (`api/api.go` L388-L389), with no stdin form: https://github.com/hashicorp/nomad/blob/v2.0.7/command/meta.go#L96 and https://github.com/hashicorp/nomad/blob/v2.0.7/api/api.go#L388-L389
 - Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`): https://github.com/hashicorp/consul/blob/v2.0.4/agent/config/default.go
 - Consul 2.0.4 configuration builder (listener addresses, ACL default, script checks and their warning, UI): https://github.com/hashicorp/consul/blob/v2.0.4/agent/config/builder.go
 - Consul 2.0.4 ACL resolution when disabled: https://github.com/hashicorp/consul/blob/v2.0.4/agent/consul/acl.go
