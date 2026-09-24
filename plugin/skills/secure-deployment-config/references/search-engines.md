@@ -119,8 +119,9 @@ request when the calling shell held a readonly `audit_role`. On loopback, with a
 reported its environment, the block exited `2` with `A readonly audit_* variable is set in this shell` for
 a readonly `audit_role` or `audit_expected`; kept both key roles for a nameref named `audit_role`; and kept
 the prompted key out of curl's environment for an inherited `set -a`, an exported `audit_key`, a nameref
-`audit_key` and `declare -i audit_key`. It still assumes an ordinary interactive shell: no functions or aliases shadowing
-any builtin or command the block uses (including `unset`, `read`, `printf` and `curl`), no builtins disabled with `enable -n`, no `hash -p` entries, no inherited
+`audit_key` and `declare -i audit_key`. It still assumes an ordinary interactive shell: no aliases defined (an alias on a
+reserved word such as `if` brought back the false pass with no request sent), no functions shadowing any
+builtin or command the block uses (including `unset`, `read`, `printf` and `curl`), no builtins disabled with `enable -n`, no `hash -p` entries, no inherited
 DEBUG trap under `set -T`, and a paste at the prompt rather than inside a function. On the loopback runs, keyless Meilisearch returned the fixture to an anonymous search with `200`, so the
 authentication row printed `FAIL: unexpected HTTP status`: the exposed state. With a master key set, the
 same row got `401` `missing_authorization_header` anonymously and `200` with the fixture on the Default
@@ -177,7 +178,7 @@ reason. Behind Caddy v2.11.4 (the release tarball, its SHA-256 equal to GitHub's
 terminating TLS in front of Meilisearch's plaintext backend on `127.0.0.1:7700`, the paired block's
 authentication row got `401` anonymously and `200` on the search key through the proxy. Behind the same
 proxy, keyless Meilisearch made the block print `FAIL: unexpected HTTP status` on an anonymous `200`, the
-exposed state, and Typesense with its plaintext backend on `127.0.0.1:8108` gave `401` then `200`.
+exposed state, and Typesense with its plaintext backend on `127.0.0.1:8108` gave `401` anonymously then `200` on a collection-scoped search key.
 
 **REASONED (no client bundle in this review):** grep the client bundle and repository history for the
 admin/master/bootstrap key; it should never appear outside the server-side secret store.
