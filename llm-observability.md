@@ -58,7 +58,7 @@ Once the account exists the variable only holds an admin password in plaintext f
 your environment files.
 
 Phoenix binds broadly by default: the HTTP UI/REST/OTLP server on `0.0.0.0:6006` and a SEPARATE gRPC OTLP
-server on `[::]:4317` that does not follow the HTTP host setting, and the vendor Compose also publishes its
+server on `[::]:4317` that does not follow the HTTP host setting (both as of Phoenix 20.16.0), and the vendor Compose also publishes its
 PostgreSQL, so bind or publish both protocols deliberately and keep the database off host interfaces.
 
 Enabling auth on a running instance stops trace collection and blocks all API access until API keys exist, so

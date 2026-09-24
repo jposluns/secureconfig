@@ -1,6 +1,6 @@
 # n8n: binding, TLS, and MFA
 
-n8n includes user management (complete the owner setup on first run), but its network defaults deserve attention: `N8N_LISTEN_ADDRESS` defaults to `::`, which listens on **all interfaces**, on port `5678` over plain HTTP.
+n8n includes user management (complete the owner setup on first run), but its network defaults deserve attention: `N8N_LISTEN_ADDRESS` defaults to `::` (as of n8n 2.40.6), which listens on **all interfaces**, on port `5678` over plain HTTP.
 
 ## 1. Bind privately
 
