@@ -134,11 +134,14 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert REPLACE_
   -w '\nanon http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
   'https://argocd.example.com/api/v1/applications'
 # token from `argocd account generate-token` (or a login session); read it without echo, pass via stdin.
-# Run in a subshell with tracing OFF so an inherited `set -x` cannot echo the token (read -s and the stdin
-# header do not suppress shell tracing).
+# Run in a subshell with tracing and allexport OFF, so an inherited `set -x` cannot echo the token and an
+# inherited `set -a` cannot export it (read -s and the stdin header prevent neither).
 (
-  set +x
-  IFS= read -r -s -p 'Argo CD bearer token: ' tok < /dev/tty; echo
+  set +x +a
+  { unset -n tok && unset -v tok; } 2>/dev/null ||
+    { echo 'a readonly tok is set in this shell; not probing'; exit 2; }
+  IFS= read -r -s -p 'Argo CD bearer token: ' tok < /dev/tty || exit 2; echo
+  case "$tok" in ''|*[[:cntrl:]]*) echo 'supply the token; not probing'; exit 2 ;; esac
   printf 'Authorization: Bearer %s\n' "$tok" \
     | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert REPLACE_WITH_YOUR_CA_FILE \
         -H @- -w '\nauth http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
@@ -167,16 +170,20 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
 ```bash
 # Reasoned, not demonstrated (no live Flux; backlog row 2.28). Read the HMAC key without echo. openssl takes
 # the key as an argument, so keep tracing off; on a shared host compute the HMAC from a language binding.
-set +x
-IFS= read -r -s -p 'receiver HMAC secret: ' hmac < /dev/tty; echo
-body='{"ref":"refs/heads/main"}'
-sig=$(printf '%s' "$body" | openssl dgst -sha256 -hmac "$hmac" -r | cut -d' ' -f1)
-url='https://flux-webhook.example.com/hook/REPLACE_WITH_PATH'
-printf '%s' "$body" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-  -X POST --data-binary @- -w '\nno-sig http=%{http_code}\n' "$url"          # expect rejected
-printf '%s' "$body" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-  -X POST --data-binary @- -H "X-Signature: sha256=$sig" -w '\nsigned http=%{http_code}\n' "$url"  # expect accepted
-unset hmac sig
+(
+  set +x +a
+  { unset -n hmac sig && unset -v hmac sig; } 2>/dev/null ||
+    { echo 'a readonly hmac or sig is set in this shell; not probing'; exit 2; }
+  IFS= read -r -s -p 'receiver HMAC secret: ' hmac < /dev/tty || exit 2; echo
+  [ -n "$hmac" ] || { echo 'supply the HMAC secret; not probing'; exit 2; }
+  body='{"ref":"refs/heads/main"}'
+  sig=$(printf '%s' "$body" | openssl dgst -sha256 -hmac "$hmac" -r | cut -d' ' -f1)
+  url='https://flux-webhook.example.com/hook/REPLACE_WITH_PATH'
+  printf '%s' "$body" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -X POST --data-binary @- -w '\nno-sig http=%{http_code}\n' "$url"          # expect rejected
+  printf '%s' "$body" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -X POST --data-binary @- -H "X-Signature: sha256=$sig" -w '\nsigned http=%{http_code}\n' "$url"  # expect accepted
+)
 ```
 
 Read the receiver's status without printing the default table, full status, condition messages, or
