@@ -76,7 +76,9 @@ default both "listen on the wildcard address and accept connections from both IP
 recommended" on clustered systems, whose nodes need each other's `pveproxy`. The same file takes
 `ALLOW_FROM`, `DENY_FROM` and `POLICY`; the default policy is `allow`, under which a client that
 matches neither list is allowed, so an `ALLOW_FROM` list restricts nothing until you also set
-`DENY_FROM="all"` (the vendor's example) or `POLICY="deny"`. The Proxmox VE firewall "is
+`DENY_FROM="all"` (the vendor's example) or `POLICY="deny"`. Set one or the other, not both: under
+`POLICY="deny"` a client that matches both lists is denied, so adding `DENY_FROM="all"` refuses
+everyone. `LISTEN_IP` binds `spiceproxy` as well as `pveproxy`. The Proxmox VE firewall "is
 completely disabled by default"; when you enable it, allow 8006, 22 and 3128 from management addresses
 only.
 
@@ -92,7 +94,7 @@ separated privileges by default, and cannot reach the VM or node consoles.
 ## Verify
 
 Two checks here were demonstrated: the Webmin configuration check, whose parser was compared with
-Webmin 2.670's own on twelve test files, and the TCP reachability probe, which is the block demonstrated
+Webmin 2.670's own on sixteen test files, and the TCP reachability probe, which is the block demonstrated
 on loopback in [low-code-builders.md](low-code-builders.md) with this guide's ports. Everything else
 is reasoned: the authoring host runs neither Cockpit's
 systemd socket nor Proxmox VE, and it forbids binding every interface, so no default bind was observed.
@@ -107,13 +109,15 @@ sudo ss -ulnp   # Webmin's discovery socket on UDP 10000 (Usermin 20000) should 
 
 Exposed, the reasoned expectation is a wildcard address (`*:`, `0.0.0.0:` or `[::]:`) on those ports;
 fixed means a management address only. On a Proxmox VE cluster, where the vendor advises against
-`LISTEN_IP`, 8006 keeps its wildcard bind; there the fixed state is the access lists and firewall below.
+`LISTEN_IP`, 8006 and 3128 keep their wildcard binds; there the fixed state is the access lists and
+firewall below.
 
 On a Webmin host, check the configuration miniserv reads when it starts. The block parses the file
 with a copy of miniserv's own `read_config_file` (a line starting with `#` is a comment, spaces around
 the name and the value are trimmed, and the last occurrence of a setting wins), then applies
 miniserv's rules: `bind=*`, `bind=0`, `bind=0.0.0.0`, `bind=::`, or an empty or missing `bind=` means
-every address (the block treats any value made only of zeros, dots and colons the same way);
+every address (the block treats any value made only of zeros, dots and colons, and any numeric IPv4 spelling of
+0.0.0.0 such as `0x0`, the same way);
 `sockets=` adds listeners; a `listen=` value other than empty or `0` opens the UDP discovery socket;
 and an empty `allow=` lets every client address try to log in, except those a `deny=` list refuses. It describes the file, not the running process:
 `ss` above is the authority for what is listening now, and a change takes effect at
@@ -130,7 +134,7 @@ and an empty `allow=` lets every client address try to log in, except those a `d
   { [ -f "$1" ] && [ -r "$1" ]; } || { echo "cannot read $1 as a regular file (try sudo); not checked"; exit; }
   command -v perl >/dev/null || { echo "perl is not installed here; not checking"; exit; }
   # shellcheck disable=SC2016  # the single-quoted Perl program is meant to expand its own variables
-  perl -e '
+  perl -MSocket -e '
     open(CONF, "<", $ARGV[0]) || exit 2;
     while (<CONF>) {
       s/\r|\n//g;
@@ -143,6 +147,9 @@ and an empty `allow=` lets every client address try to log in, except those a `d
     }
     close(CONF);
     $bind = $rv{"bind"}; $bind = "" if ($bind eq "*" || $bind =~ /^[0.:]+$/);
+    if ($bind =~ /^(0[xX][0-9a-fA-F]*|[0-9]+)(\.(0[xX][0-9a-fA-F]*|[0-9]+)){0,3}$/) {
+      $n = Socket::inet_aton($bind); $bind = "" if (defined($n) && $n eq "\0\0\0\0");
+    }
     print $bind ? "bind=$bind\n" : "NO effective bind=: every address\n";
     print "sockets=$rv{sockets}: extra listeners, possibly on every address; check ss\n" if ($rv{"sockets"} =~ /\S/);
     print $rv{"listen"} ? "listen=$rv{listen}: UDP discovery socket on every IPv4 address\n" : "no UDP discovery socket\n";
@@ -160,9 +167,10 @@ and an empty `allow=` lets every client address try to log in, except those a `d
 Exposed: "NO effective bind=", a `listen=` line and "NO allow=". Fixed: a management address on
 `bind=`, "no UDP discovery socket" and only your management networks on `allow=`; the block prints
 the lists as written, so check each entry. A `sockets=` line means more listeners; check each with
-`ss`. This was demonstrated on twelve test files: the loopback run's configuration, its exposed
+`ss`. This was demonstrated on sixteen test files: the loopback run's configuration, its exposed
 variant, a repeated `bind=` whose last value is `*`, `bind=0.0.0.0`, `bind=::`,
-`bind=0:0:0:0:0:0:0:0`, spaced settings, commented settings, `bind=0` with `listen=0` and an empty
+`bind=0:0:0:0:0:0:0:0`, `bind=0x0`, `bind=0x00000000`, `bind=0x0a000005` and `bind=cafe` (the last two
+printed as written, the name without a lookup), spaced settings, commented settings, `bind=0` with `listen=0` and an empty
 `allow=`, an empty `allow=` with `deny=127.0.0.1`, CRLF line endings with `sockets=*:10001`, and a line
 without `=`. On each, the copy's parsed values matched Webmin 2.670's own `read_config_file` run on
 the same file, and the block printed the outcomes above; it reported an unreadable path as not
@@ -176,9 +184,11 @@ On a Proxmox VE node, reasoned: `grep -E '^(LISTEN_IP|ALLOW_FROM|DENY_FROM|POLIC
 prints nothing on a default install (or reports that the file does not exist), which means the
 wildcard bind and the `allow` policy. Fixed is `LISTEN_IP` set to a management address on a single
 node, or `ALLOW_FROM` with your management networks together with `DENY_FROM="all"` or
-`POLICY="deny"`; an `ALLOW_FROM` line alone is not fixed, because under the `allow` policy a client
+`POLICY="deny"` (one of the two, not both); an `ALLOW_FROM` line alone is not fixed, because under the `allow` policy a client
 that matches neither list is allowed (the access table in the vendor's `pveproxy` documentation).
-`pve-firewall status` prints whether the firewall is enabled and running. In the web interface, check
+`pve-firewall status` prints whether the firewall is enabled and running. Exposed is disabled, the
+default; fixed is enabled and running, with rules that allow 8006, 22 and 3128 only from management
+addresses, which you confirm in the datacenter and node firewall rules in the web interface. In the web interface, check
 that every administrative user, `root@pam` included, has a second factor.
 
 Finally, from a host that should not have access, try a TCP connection to each panel port. The block

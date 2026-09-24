@@ -27470,7 +27470,9 @@ default both "listen on the wildcard address and accept connections from both IP
 recommended" on clustered systems, whose nodes need each other's `pveproxy`. The same file takes
 `ALLOW_FROM`, `DENY_FROM` and `POLICY`; the default policy is `allow`, under which a client that
 matches neither list is allowed, so an `ALLOW_FROM` list restricts nothing until you also set
-`DENY_FROM="all"` (the vendor's example) or `POLICY="deny"`. The Proxmox VE firewall "is
+`DENY_FROM="all"` (the vendor's example) or `POLICY="deny"`. Set one or the other, not both: under
+`POLICY="deny"` a client that matches both lists is denied, so adding `DENY_FROM="all"` refuses
+everyone. `LISTEN_IP` binds `spiceproxy` as well as `pveproxy`. The Proxmox VE firewall "is
 completely disabled by default"; when you enable it, allow 8006, 22 and 3128 from management addresses
 only.
 
@@ -27486,7 +27488,7 @@ separated privileges by default, and cannot reach the VM or node consoles.
 ## Verify
 
 Two checks here were demonstrated: the Webmin configuration check, whose parser was compared with
-Webmin 2.670's own on twelve test files, and the TCP reachability probe, which is the block demonstrated
+Webmin 2.670's own on sixteen test files, and the TCP reachability probe, which is the block demonstrated
 on loopback in [low-code-builders.md](low-code-builders.md) with this guide's ports. Everything else
 is reasoned: the authoring host runs neither Cockpit's
 systemd socket nor Proxmox VE, and it forbids binding every interface, so no default bind was observed.
@@ -27501,13 +27503,15 @@ sudo ss -ulnp   # Webmin's discovery socket on UDP 10000 (Usermin 20000) should 
 
 Exposed, the reasoned expectation is a wildcard address (`*:`, `0.0.0.0:` or `[::]:`) on those ports;
 fixed means a management address only. On a Proxmox VE cluster, where the vendor advises against
-`LISTEN_IP`, 8006 keeps its wildcard bind; there the fixed state is the access lists and firewall below.
+`LISTEN_IP`, 8006 and 3128 keep their wildcard binds; there the fixed state is the access lists and
+firewall below.
 
 On a Webmin host, check the configuration miniserv reads when it starts. The block parses the file
 with a copy of miniserv's own `read_config_file` (a line starting with `#` is a comment, spaces around
 the name and the value are trimmed, and the last occurrence of a setting wins), then applies
 miniserv's rules: `bind=*`, `bind=0`, `bind=0.0.0.0`, `bind=::`, or an empty or missing `bind=` means
-every address (the block treats any value made only of zeros, dots and colons the same way);
+every address (the block treats any value made only of zeros, dots and colons, and any numeric IPv4 spelling of
+0.0.0.0 such as `0x0`, the same way);
 `sockets=` adds listeners; a `listen=` value other than empty or `0` opens the UDP discovery socket;
 and an empty `allow=` lets every client address try to log in, except those a `deny=` list refuses. It describes the file, not the running process:
 `ss` above is the authority for what is listening now, and a change takes effect at
@@ -27524,7 +27528,7 @@ and an empty `allow=` lets every client address try to log in, except those a `d
   { [ -f "$1" ] && [ -r "$1" ]; } || { echo "cannot read $1 as a regular file (try sudo); not checked"; exit; }
   command -v perl >/dev/null || { echo "perl is not installed here; not checking"; exit; }
   # shellcheck disable=SC2016  # the single-quoted Perl program is meant to expand its own variables
-  perl -e '
+  perl -MSocket -e '
     open(CONF, "<", $ARGV[0]) || exit 2;
     while (<CONF>) {
       s/\r|\n//g;
@@ -27537,6 +27541,9 @@ and an empty `allow=` lets every client address try to log in, except those a `d
     }
     close(CONF);
     $bind = $rv{"bind"}; $bind = "" if ($bind eq "*" || $bind =~ /^[0.:]+$/);
+    if ($bind =~ /^(0[xX][0-9a-fA-F]*|[0-9]+)(\.(0[xX][0-9a-fA-F]*|[0-9]+)){0,3}$/) {
+      $n = Socket::inet_aton($bind); $bind = "" if (defined($n) && $n eq "\0\0\0\0");
+    }
     print $bind ? "bind=$bind\n" : "NO effective bind=: every address\n";
     print "sockets=$rv{sockets}: extra listeners, possibly on every address; check ss\n" if ($rv{"sockets"} =~ /\S/);
     print $rv{"listen"} ? "listen=$rv{listen}: UDP discovery socket on every IPv4 address\n" : "no UDP discovery socket\n";
@@ -27554,9 +27561,10 @@ and an empty `allow=` lets every client address try to log in, except those a `d
 Exposed: "NO effective bind=", a `listen=` line and "NO allow=". Fixed: a management address on
 `bind=`, "no UDP discovery socket" and only your management networks on `allow=`; the block prints
 the lists as written, so check each entry. A `sockets=` line means more listeners; check each with
-`ss`. This was demonstrated on twelve test files: the loopback run's configuration, its exposed
+`ss`. This was demonstrated on sixteen test files: the loopback run's configuration, its exposed
 variant, a repeated `bind=` whose last value is `*`, `bind=0.0.0.0`, `bind=::`,
-`bind=0:0:0:0:0:0:0:0`, spaced settings, commented settings, `bind=0` with `listen=0` and an empty
+`bind=0:0:0:0:0:0:0:0`, `bind=0x0`, `bind=0x00000000`, `bind=0x0a000005` and `bind=cafe` (the last two
+printed as written, the name without a lookup), spaced settings, commented settings, `bind=0` with `listen=0` and an empty
 `allow=`, an empty `allow=` with `deny=127.0.0.1`, CRLF line endings with `sockets=*:10001`, and a line
 without `=`. On each, the copy's parsed values matched Webmin 2.670's own `read_config_file` run on
 the same file, and the block printed the outcomes above; it reported an unreadable path as not
@@ -27570,9 +27578,11 @@ On a Proxmox VE node, reasoned: `grep -E '^(LISTEN_IP|ALLOW_FROM|DENY_FROM|POLIC
 prints nothing on a default install (or reports that the file does not exist), which means the
 wildcard bind and the `allow` policy. Fixed is `LISTEN_IP` set to a management address on a single
 node, or `ALLOW_FROM` with your management networks together with `DENY_FROM="all"` or
-`POLICY="deny"`; an `ALLOW_FROM` line alone is not fixed, because under the `allow` policy a client
+`POLICY="deny"` (one of the two, not both); an `ALLOW_FROM` line alone is not fixed, because under the `allow` policy a client
 that matches neither list is allowed (the access table in the vendor's `pveproxy` documentation).
-`pve-firewall status` prints whether the firewall is enabled and running. In the web interface, check
+`pve-firewall status` prints whether the firewall is enabled and running. Exposed is disabled, the
+default; fixed is enabled and running, with rules that allow 8006, 22 and 3128 only from management
+addresses, which you confirm in the datacenter and node firewall rules in the web interface. In the web interface, check
 that every administrative user, `root@pam` included, has a second factor.
 
 Finally, from a host that should not have access, try a TCP connection to each panel port. The block
@@ -28946,7 +28956,7 @@ Open the guide before relying on either, because defaults change between release
 | 9898 | Pgpool-II's PCP administration channel, which has its own credential file | Its own credential file, `pcp.conf`, separate from database credentials | [connection-poolers.md](connection-poolers.md) |
 | 9999 | Pgpool-II | `enable_pool_hba` off by default: Pgpool authenticates nobody itself | [connection-poolers.md](connection-poolers.md), [postgresql.md](postgresql.md) |
 | 10000 | Budibase's nginx proxy (`MAIN_PORT` in the sample `.env`), which forwards `/db/` to CouchDB; and Webmin's miniserv (HTTPS), on every address by default | Sample `.env` sets `JWT_SECRET` to `testsecret` and CouchDB `budibase`/`budibase`; admin init is open until the first user exists. Webmin: the host's root password logs in with every module | [low-code-builders.md](low-code-builders.md), [server-admin-panels.md](server-admin-panels.md) |
-| 10000/UDP | Webmin's server discovery socket (`listen=10000`), on every IPv4 address | A listener that sits outside the login, so other servers can find this one | [server-admin-panels.md](server-admin-panels.md) |
+| 10000/UDP | Webmin's server discovery socket (`listen=10000`), on every IPv4 address | not stated; the guide says it lets other Webmin servers find this one | [server-admin-panels.md](server-admin-panels.md) |
 | 10001 | Ray Client server, which executes code | Unauthenticated code execution unless token auth enabled (off by default) | [ray.md](ray.md) |
 | 10002 to 19999 | Ray worker ports, allocated across this whole range by default, plus several randomized ports. Anything in this range on a Ray node may be a worker rather than the service the row below suggests | Ray token authentication (2.52.0 and later) is disabled by default as of 2.58.0 | [ray.md](ray.md) |
 | 10250 | The Kubernetes kubelet API, which runs commands in containers. It also falls inside the Ray worker range above | Flag-configured: anonymous auth on; file-configured (kubeadm, managed): off | [kubernetes.md](kubernetes.md) |
@@ -28966,7 +28976,7 @@ Open the guide before relying on either, because defaults change between release
 | 19000 | Helicone Compose backing-service publication: host port 19000 maps to container port 9000, but the guide does not explicitly attribute this mapping to a service; it also falls inside the Ray worker range | Published independently of the dashboard login | [llm-observability.md](llm-observability.md) |
 | 19530 | Milvus gRPC | Authentication must be enabled with `common.security.authorizationEnabled`; once on, built-in `root`/`Milvus` | [vector-databases.md](vector-databases.md) |
 | 20000 | Usermin, Webmin's panel for ordinary users, on every address by default | not stated | [server-admin-panels.md](server-admin-panels.md) |
-| 20000/UDP | Usermin's server discovery socket (`listen=20000`), on every IPv4 address | A listener that sits outside the login, so other servers can find this one | [server-admin-panels.md](server-admin-panels.md) |
+| 20000/UDP | Usermin's server discovery socket (`listen=20000`), on every IPv4 address | not stated; the guide says it lets other Webmin servers find this one | [server-admin-panels.md](server-admin-panels.md) |
 | 20202 | LiteFS HTTP replication API, including database export/import and administrative operations | not stated | [sqlite.md](sqlite.md) |
 | 25672 | RabbitMQ inter-node and CLI Erlang distribution (default, the AMQP port plus 20000); by default the Erlang cookie is its only credential and grants full control of the node | The Erlang cookie, a shared secret; cookie plus reachability can give full broker control | [rabbitmq.md](rabbitmq.md) |
 | 26379 | Redis Sentinel's separate listener; its shipped configuration disables protected mode and supplies no active authentication rule | Shipped config: protected mode off, no active authentication rule | [redis.md](redis.md) |
