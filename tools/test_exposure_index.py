@@ -49,7 +49,9 @@ Row shape: R1 a three-cell row fails; R2 an empty Default credential cell fails;
   under the table is a table row and fails; R23-R25 an entity (`&nbsp;`, `&NonBreakingSpace;`) or
   raw HTML in a cell fails; R26 an empty link is an empty cell; R27 a non-ASCII character in a
   cell fails; R28 a no-break-space line does not end the table; R29 a heading directly under the
-  table is a malformed row.
+  table is a malformed row; R30-R34 an empty link with a parenthesized target, escaped backticks,
+  math, double-backtick code and an image each fail the cell grammar; R35 HTML-like text inside
+  single-backtick code is content and the row maps; R36 a leading zero in a Port cell fails.
 """
 import shutil
 import subprocess
@@ -235,7 +237,7 @@ def main() -> int:
           rc == 1 and bad_port in out)
     rc, out = run(guide("port 9090"), index=INDEX + "| --- | --- | --- | --- |\n")
     check(f"R10: a second separator row mid-table fails (rc={rc}, out={out!r})",
-          rc == 1 and "row `---` has an empty Port cell" in out)
+          rc == 1 and "row `---` has" in out)
     rc, out = run(guide("port 9090"), index=INDEX.replace("| 9090 |", "| version9090 |", 1))
     check(f"R11: a digit inside other text is not a port, and maps nothing (rc={rc}, out={out!r})",
           rc == 1 and bad_port in out and "names port 9090" in out)
@@ -269,26 +271,26 @@ def main() -> int:
                   index=INDEX + "| 7777 | A \\| B | not stated | [a.md](a.md) |\n")
     check(f"R19: an escaped pipe is cell content, and the row maps (rc={rc}, out={out!r})", rc == 0)
     rc, out = run(guide("port 9090"), index=INDEX + "| 7777 | Hidden | <!-- --> | [a.md](a.md) |\n")
-    check(f"R20: a comment-only credential cell is empty (rc={rc}, out={out!r})",
-          rc == 1 and "has an empty Default credential cell" in out)
+    check(f"R20: a comment-only credential cell fails (rc={rc}, out={out!r})",
+          rc == 1 and "outside the table's cell grammar" in out)
     rc, out = run(guide("port 9090"),
                   index=INDEX + "| 7777 | Hidden | \N{ZERO WIDTH SPACE} | [a.md](a.md) |\n")
-    check(f"R21: a zero-width credential cell is empty (rc={rc}, out={out!r})",
-          rc == 1 and "has an empty Default credential cell" in out)
+    check(f"R21: a zero-width credential cell fails (rc={rc}, out={out!r})",
+          rc == 1 and "outside the table's cell grammar" in out)
     rc, out = run(guide("port 9090"), index=INDEX + "See the guides for more.\n")
     check(f"R22: prose directly under the table is a table row and fails (rc={rc}, out={out!r})",
           rc == 1 and "does not start with" in out)
-    entity = "has raw HTML or a character entity"
+    entity = "outside the table's cell grammar"
     for cid, cell in (("R23", "&nbsp;"), ("R24", "&NonBreakingSpace;"), ("R25", "<span></span>")):
         rc, out = run(guide("port 9090"), index=INDEX + f"| 7777 | Svc | {cell} | [a.md](a.md) |\n")
         check(f"{cid}: {cell!r} in a cell fails (rc={rc}, out={out!r})", rc == 1 and entity in out)
     rc, out = run(guide("port 9090"), index=INDEX + "| 7777 | Svc | not stated | [](a.md) |\n")
-    check(f"R26: an empty link is an empty cell (rc={rc}, out={out!r})",
-          rc == 1 and "has an empty Documented in cell" in out)
+    check(f"R26: an empty link fails (rc={rc}, out={out!r})",
+          rc == 1 and "outside the table's cell grammar" in out)
     rc, out = run(guide("port 9090"),
                   index=INDEX + "| 7777 | Svc | not\N{ZERO WIDTH SPACE} stated | [a.md](a.md) |\n")
     check(f"R27: a non-ASCII character in a cell fails (rc={rc}, out={out!r})",
-          rc == 1 and "outside printable ASCII" in out)
+          rc == 1 and "outside the table's cell grammar" in out)
     rc, out = run(guide("port 9090"),
                   index=INDEX + "\N{NO-BREAK SPACE}\n| 99999 | Bad port | not stated | [a.md](a.md) |\n")
     check(f"R28: a no-break-space line does not end the table (rc={rc}, out={out!r})",
@@ -296,8 +298,18 @@ def main() -> int:
     rc, out = run(guide("port 9090"), index=INDEX + "## Heading\n")
     check(f"R29: a heading directly under the table is a malformed row (rc={rc}, out={out!r})",
           rc == 1 and "does not start with" in out)
+    for cid, cell in (("R30", "[](a(b).md)"), ("R31", "[](\\`)&nbsp;[](\\`)"), ("R32", "$\\phantom{x}$"),
+                      ("R33", "``a < b``"), ("R34", "![x](a.md)")):
+        rc, out = run(guide("port 9090"), index=INDEX + f"| 7777 | Svc | {cell} | [a.md](a.md) |\n")
+        check(f"{cid}: {cell!r} in a cell fails (rc={rc}, out={out!r})", rc == 1 and "outside the table's cell grammar" in out)
+    rc, out = run(guide("It listens on port 7777."),
+                  index=INDEX + "| 7777 | Svc | `<none>` and `a&amp;b` | [a.md](a.md) |\n")
+    check(f"R35: HTML-like text inside single-backtick code is content, and maps (rc={rc}, out={out!r})",
+          rc == 0)
+    rc, out = run(guide("port 9090"), index=INDEX + "| 00443 | Zero | not stated | [a.md](a.md) |\n")
+    check(f"R36: a leading zero in the Port cell fails (rc={rc}, out={out!r})", rc == 1 and bad_port in out)
 
-    total = len(DETECT) + len(PRECISE) + 7 + 3 + 4 + 29
+    total = len(DETECT) + len(PRECISE) + 7 + 3 + 4 + 36
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")

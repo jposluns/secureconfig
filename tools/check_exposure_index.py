@@ -54,15 +54,15 @@ ROW SHAPE. The header line must appear exactly, and exactly `| --- | --- | --- |
 it. The table then runs until the first blank line (spaces and tabs only). That is stricter than
 GFM, which also ends a table at another block such as a heading: here such a line is a malformed
 row, so every line between the separator and the blank line is checked. Each of those lines must
-be flush left, start `| ` and end ` |`, and have four cells split on unescaped pipes (a
-backslash-escaped pipe is content), with one space inside each pipe. Each cell must carry a letter
-or digit outside any link destination, stay within printable ASCII (an en dash is allowed in the
-Port cell), and hold no raw HTML or character entity outside a code span: a positive rule, not a
-model of what a renderer shows. The Port cell must be a comma-separated list of ports or ranges
-(`N`, `N to N`, `N-N`, or an en dash, each optionally `/TCP` or `/UDP`), every number from 1 to
-65535 and every range ascending. "not stated" is the credential value when the cited guides are
-silent. A row that breaks this fails the gate and maps nothing. A second table later in the file
-is not read.
+be flush left, start `| ` and end ` |`, and have four cells split on unescaped pipes, with one
+space inside each pipe. Cells are held to a whitelist rather than to a model of rendering: every
+cell but Port may contain only printable ASCII text that opens no other construct, single-backtick
+code spans, `[text](target)` links with text and a simple target, and an escaped pipe, and must
+carry a letter or digit outside link targets (cell_problem has the detail). The Port cell must
+be a comma-separated list of ports or ranges (`N`, `N to N`, `N-N`, or an en dash, each
+optionally `/TCP` or `/UDP`), every number from 1 to 65535 with no leading zero and every range
+ascending. "not stated" is the credential value when the cited guides are silent. A row that
+breaks this fails the gate and maps nothing. A second table later in the file is not read.
 
 ALLOWLIST. tools/exposure_index_allowlist.txt lists `<guide> <port>  # reason` pairs that match a
 pattern but are not listeners this corpus documents (an outbound destination, an illustrative
@@ -91,10 +91,15 @@ COLUMNS = 4  # every data row has exactly this many cells
 CELL_NAMES = ("Port", "May be", "Default credential", "Documented in")
 SEPARATOR = "| --- | --- | --- | --- |"
 _UNESCAPED_PIPE = re.compile(r"(?<!\\)\|")  # GFM: `\|` inside a cell is content, not a boundary
-_CODE_SPAN = re.compile(r"`[^`]*`")
+# The whitelist a non-Port cell is built from: single-backtick code, links with text and a simple
+# target, an escaped pipe, and plain ASCII text that cannot open any other construct.
+_CODE = r"`[^`\\]+`"
+_LINK = r"\[[^\[\]`\\<>&$]*[A-Za-z0-9][^\[\]`\\<>&$]*\]\([A-Za-z0-9._/#:?=%+-]+\)"
+_PLAIN = r"[A-Za-z0-9 .,;:'\"()/+*=?!%_@~^#{}-]"
+CELL_TEXT = re.compile(rf"(?:{_CODE}|{_LINK}|\\\||(?!!\[){_PLAIN})+")
 _LINK_DEST = re.compile(r"\]\([^)]*\)")
-_ENTITY = re.compile(r"&[#A-Za-z0-9]+;")
-_PORT_ITEM = r"\d{1,5}(?:(?: to |-|\N{EN DASH})\d{1,5})?(?:/(?:TCP|UDP))?"
+_NUM = r"[1-9]\d{0,4}"  # no leading zeros
+_PORT_ITEM = _NUM + r"(?:(?: to |-|\N{EN DASH})" + _NUM + r")?(?:/(?:TCP|UDP))?"
 PORT_CELL = re.compile(_PORT_ITEM + r"(?:, " + _PORT_ITEM + r")*")
 WIDE = 101  # a range covering more ports than this maps them only for the guides its row cites
 
@@ -148,20 +153,26 @@ def split_row(line: str) -> list:
 def cell_problem(name: str, cell: str):
     """Name what is wrong with one cell's content, or return None.
 
-    The rule is positive rather than a model of rendering: a cell must carry a letter or digit
-    outside any link destination, stay within printable ASCII (an en dash is allowed in the Port
-    cell, for ranges), and hold no raw HTML or character entity outside a code span. Every row of
-    the current table already meets it.
+    This is a whitelist, not a model of what a renderer shows. A non-Port cell may contain only
+    printable ASCII text that opens no other construct (no `<`, `&`, `$`, bracket, backtick or
+    backslash), single-backtick code spans, links written `[text](target)` with a letter or digit
+    in the text and a target of letters, digits and `._/#:?=%+-`, and an escaped pipe; and it must
+    carry a letter or digit outside link targets. Anything else (HTML, entities, math, images,
+    empty or reference links, multi-backtick code, other escapes) is rejected rather than
+    interpreted. The Port cell has its own grammar (port_cell_ok). Every row of the current table
+    already meets this.
     """
-    if not re.search(r"[A-Za-z0-9]", _LINK_DEST.sub("]", cell)):
+    if not cell:
         if name == "Default credential":
             return "has an empty Default credential cell; write `not stated` when the cited guides are silent"
         return f"has an empty {name} cell"
-    if any(not (" " <= ch <= "~" or (name == "Port" and ch == "\N{EN DASH}")) for ch in cell):
-        return f"has a character outside printable ASCII in its {name} cell"
-    outside_code = _CODE_SPAN.sub("", cell)
-    if "<" in outside_code or _ENTITY.search(outside_code):
-        return f"has raw HTML or a character entity in its {name} cell"
+    if name == "Port":
+        return None
+    if not CELL_TEXT.fullmatch(cell):
+        return (f"has content outside the table's cell grammar in its {name} cell (allowed: printable "
+                "ASCII text, single-backtick code, [text](target) links, and an escaped pipe)")
+    if not re.search(r"[A-Za-z0-9]", _LINK_DEST.sub("]", cell)):
+        return f"has no letter or digit in its {name} cell"
     return None
 
 
