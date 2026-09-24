@@ -21697,7 +21697,7 @@ Then check the application gate in a browser, using the same scheme, hostname, p
 
 On the loopback runs, with `server.address` set to `127.0.0.1`, `ss` showed Streamlit only on `127.0.0.1:8501`. With the address unset, `streamlit config show` lists it as unset, and Streamlit 1.64.0's source binds the IPv6 wildcard `::` in that case when `socket.has_ipv6` holds (`_get_bind_address` in `web/server/starlette/starlette_server.py`). That bind is REASONED, because the host forbids listening on every interface. The runs used Caddy and oauth2-proxy on `127.0.0.1:8443`, with TLS files from a private test CA that curl trusted through `CURL_CA_BUNDLE`, and a headless Chrome 154 with an SPKI exception for the test certificate's key.
 
-The Keycloak realm was served over plain HTTP on loopback. Section 2's example uses an HTTPS metadata URL, as a real provider should. The realm had four users, and three of them carried an `hd` claim from a user-attribute mapper standing in for Google's:
+The Keycloak realm was served over plain HTTP on loopback. Section 2's example uses an HTTPS metadata URL, as a real provider should. The realm had four users, and three of them had an `hd` user attribute, which a user-attribute mapper standing in for Google's maps to an `hd` claim:
 - an allowed user in `example.com` with a verified email and TOTP required;
 - a verified user in another domain;
 - an `example.com` user whose email was not verified;
