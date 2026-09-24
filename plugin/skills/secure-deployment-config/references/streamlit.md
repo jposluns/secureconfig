@@ -137,7 +137,7 @@ The Keycloak realm was served over plain HTTP on loopback. Section 2's example u
 - an allowed user in `example.com` with a verified email and TOTP required;
 - a verified user in another domain;
 - an `example.com` user whose email was not verified;
-- a verified `example.com` user with no `hd` claim, standing in for a consumer account.
+- a verified `example.com` user with no `hd` user attribute, standing in for a consumer account without the claim.
 
 What each run observed:
 
@@ -158,7 +158,7 @@ What each run observed:
 - **Native `st.login` with section 2's gate** (the guide's code, with only the final `Hello` line replaced by the canary):
   - The anonymous index returned `200` by design, and the anonymous browser was sent to the provider's sign-in page.
   - The allowed user rendered the canary after enrolling and then entering TOTP codes; a wrong code kept them at the one-time-code prompt.
-  - The user in another domain, and the user with no `hd` claim, saw "This account is not authorized for this app."
+  - The user in another domain, and the user with no `hd` attribute, saw "This account is not authorized for this app."
   - The unverified user saw "This account's email is not verified."
   - None of those three saw the canary.
 - **Native `st.login` exposed states:**

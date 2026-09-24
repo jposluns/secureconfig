@@ -18114,8 +18114,8 @@ the prompted key out of curl's environment for an inherited `set -a`, an exporte
 uses, reserved words such as `if` included (an alias on `if` brought back the false pass with no request
 sent, while the stock `ls`, `grep` and `ll` aliases left the result unchanged; `alias` lists what is
 defined), no functions shadowing any builtin or command the block uses (including `unset`, `read`, `printf`
-and `curl`), curl on `PATH` (with curl missing, a `command_not_found_handle` function that printed the
-expected status brought back the false pass), no builtins disabled with `enable -n`, no `hash -p` entries, no inherited
+and `curl`), curl on `PATH` (with curl missing, a `command_not_found_handle` function that printed a newline
+and the expected status brought back the false pass), no builtins disabled with `enable -n`, no `hash -p` entries, no inherited
 DEBUG trap under `set -T`, and a paste at the prompt rather than inside a function. On the loopback runs, keyless Meilisearch returned the fixture to an anonymous search with `200`, so the
 authentication row printed `FAIL: unexpected HTTP status`: the exposed state. With a master key set, the
 same row got `401` `missing_authorization_header` anonymously and `200` with the fixture on the Default
@@ -21701,7 +21701,7 @@ The Keycloak realm was served over plain HTTP on loopback. Section 2's example u
 - an allowed user in `example.com` with a verified email and TOTP required;
 - a verified user in another domain;
 - an `example.com` user whose email was not verified;
-- a verified `example.com` user with no `hd` claim, standing in for a consumer account.
+- a verified `example.com` user with no `hd` user attribute, standing in for a consumer account without the claim.
 
 What each run observed:
 
@@ -21722,7 +21722,7 @@ What each run observed:
 - **Native `st.login` with section 2's gate** (the guide's code, with only the final `Hello` line replaced by the canary):
   - The anonymous index returned `200` by design, and the anonymous browser was sent to the provider's sign-in page.
   - The allowed user rendered the canary after enrolling and then entering TOTP codes; a wrong code kept them at the one-time-code prompt.
-  - The user in another domain, and the user with no `hd` claim, saw "This account is not authorized for this app."
+  - The user in another domain, and the user with no `hd` attribute, saw "This account is not authorized for this app."
   - The unverified user saw "This account's email is not verified."
   - None of those three saw the canary.
 - **Native `st.login` exposed states:**
