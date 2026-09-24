@@ -131,6 +131,7 @@
 - [devops-uis](https://raw.githubusercontent.com/jposluns/secureconfig/main/devops-uis.md): Portainer, Coolify, Dokploy, Nginx Proxy Manager, Vaultwarden, Kubernetes Dashboard, Jenkins, Gitea, Uptime Kuma, Docker API: never public
 - [bi-dashboards](https://raw.githubusercontent.com/jposluns/secureconfig/main/bi-dashboards.md): Metabase, Superset, Redash: never public; least-privilege database user
 - [low-code-builders](https://raw.githubusercontent.com/jposluns/secureconfig/main/low-code-builders.md): NocoDB, Baserow, Appsmith, Budibase, Windmill: first-run admin, open signup, sample secrets
+- [server-admin-panels](https://raw.githubusercontent.com/jposluns/secureconfig/main/server-admin-panels.md): Cockpit, Webmin, Proxmox VE: root-level host panels on every address, no default second factor
 
 ## Web application controls
 
