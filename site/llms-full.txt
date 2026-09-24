@@ -27299,6 +27299,7 @@ the control does not connect. Substitute both inside the single quotes.
     *) [[ $1 =~ $ipv4 ]] || { echo "give one IPv4 address (four numbers, 0 to 255, joined by dots) or one IPv6 address, with no host name, port or brackets; not probing"; exit; } ;;
   esac
   case "$2" in *[!0-9]*|"") echo "substitute a known-open control port on the set -- line above; not probing"; exit ;; esac
+  { [ "$2" -ge 1 ] && [ "$2" -le 65535 ]; } 2>/dev/null || { echo "the control port must be 1 to 65535; not probing"; exit; }
   command -v timeout >/dev/null || { echo "timeout is not installed here; not probing"; exit; }
   # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
   err=$(LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$2" 2>&1) ||
@@ -27328,10 +27329,11 @@ is matched in English. On loopback it printed "connected" for the control and an
 out" for a port whose accept queue was full (standing in for a filtered one) and "refused" for a
 closed port, and it stopped when the control was closed. It refused to run for the host names
 `localhost`, `cafe.be`, `fe01`, `db1` and `face`, for `1.2.3.4.5`, `999.1.1.1`, `01.2.3.4` and
-`1.2.3`, for an address with a port, a bracketed address or a leading space, and on a machine without
-`timeout`. A value with two or more colons is passed on as IPv6; an invalid one, `dead::beef::`,
-failed the name lookup at the control and stopped. A "connected" on a port you did not mean to
-publish is the finding.
+`1.2.3`, for `1.2.3.4:22`, `[::1]` and `[::1]:22`, for a leading space, for control ports `0` and
+`65536`, and on a machine without `timeout`. A value with two or more colons, made only of hex
+digits, dots and colons, is passed on as IPv6, so an IPv6 address with a port appended and no
+brackets is probed as a different address; an invalid one, `dead::beef::`, failed the name lookup
+at the control and stopped. A "connected" on a port you did not mean to publish is the finding.
 
 ## Sources (checked September 2026)
 
