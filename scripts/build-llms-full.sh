@@ -21,7 +21,7 @@ files=(
   gradio.md streamlit.md n8n.md code-server.md self-hosted-error-trackers.md
   vector-databases.md mcp-servers.md mcp-clients.md ray.md mlflow.md agent-builders.md ai-infra-services.md realtime-voice-infra.md
   image-gen-uis.md chat-uis.md llm-observability.md workflow-orchestrators.md
-  admin-uis.md observability-components.md devops-uis.md cors.md headers.md firebase-supabase.md supabase-self-hosted.md web-exposure.md realtime-webhooks.md transactional-email-posture.md bi-dashboards.md pocketbase.md headless-browser-services.md headless-cms-instant-api.md exposure-index.md common-mistakes.md
+  admin-uis.md observability-components.md devops-uis.md cors.md headers.md firebase-supabase.md supabase-self-hosted.md web-exposure.md realtime-webhooks.md transactional-email-posture.md bi-dashboards.md low-code-builders.md pocketbase.md headless-browser-services.md headless-cms-instant-api.md exposure-index.md common-mistakes.md
 )
 
 # Say what we build from, so the gate that records it does not have to work it out. This
