@@ -178,6 +178,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 | Guide | Covers |
 |---|---|
 | [admin-uis.md](admin-uis.md) | phpMyAdmin, pgAdmin, mongo-express, Grafana, Prometheus: never public |
+| [observability-components.md](observability-components.md) | node_exporter, Alertmanager, Pushgateway, Jaeger, Loki: unauthenticated by default; never public |
 | [devops-uis.md](devops-uis.md) | Portainer, Coolify, Dokploy, Nginx Proxy Manager, Vaultwarden, Kubernetes Dashboard, Jenkins, Gitea, Uptime Kuma, Docker API: never public |
 | [bi-dashboards.md](bi-dashboards.md) | Metabase, Superset, Redash: never public; least-privilege database user |
 
