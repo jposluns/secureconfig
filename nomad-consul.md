@@ -17,13 +17,14 @@ listens on every address. The UI is enabled by default, at `/ui/` on the API por
 binds 127.0.0.1 on Linux, except `-dev-connect`, which binds `0.0.0.0`.
 
 ACLs are disabled by default, and with ACLs off every request is allowed, including job registration.
-A job is code: on a Linux client running as root, the `exec` driver runs a job's commands as `nobody`
-in a chroot, and `raw_exec`, which runs commands with no isolation, is off by default but turned on by
+A job is code: on a Linux client running as root, the `exec` driver runs a job's commands in a chroot
+as the task's `user`, `nobody` when the task sets none (by default the client refuses `root` for
+`exec`), and `raw_exec`, which runs commands with no isolation, is off by default but turned on by
 `-dev`. Remote exec into running tasks is enabled by default (`disable_remote_exec = false`). TLS for
 HTTP and RPC is off by default, and gossip is unencrypted until you set `encrypt`.
 
-Set `bind_addr` (or `addresses.http`) to a private or management address, and turn ACLs on in every
-agent's configuration:
+Set `bind_addr` to a private or management address (setting only `addresses.http` leaves RPC and
+Serf on `bind_addr`), and turn ACLs on in every agent's configuration:
 
 ```hcl
 acl {
@@ -32,7 +33,8 @@ acl {
 ```
 
 Then run `nomad acl bootstrap` at once, before the API is reachable. `PUT /v1/acl/bootstrap` needs no
-token and works once: the first caller after ACLs are enabled receives the global management token.
+token and works once, until an operator writes the `acl-bootstrap-reset` file in the data directory:
+the first caller after ACLs are enabled receives the global management token.
 Turn on TLS for HTTP and RPC (the `tls` block's `http` and `rpc` settings) and set a gossip `encrypt`
 key.
 
@@ -57,7 +59,8 @@ acl {
 }
 ```
 
-Then run `consul acl bootstrap`; `PUT /v1/acl/bootstrap` needs no token and works once. Script checks
+Then run `consul acl bootstrap`; `PUT /v1/acl/bootstrap` needs no token and works once, until an
+operator writes the `acl-bootstrap-reset` file. Script checks
 run commands on the agent. `enable_script_checks` is off by default, and Consul's own startup warning
 calls enabling it without ACLs and without `allow_write_http_from` "DANGEROUS"; it only warns. Use
 `enable_local_script_checks` instead if you need them. `consul exec` is off by default
@@ -83,8 +86,8 @@ sudo ss -ulnp   # Serf gossip on UDP 4648 (Nomad) and 8301, 8302 (Consul); Consu
 
 Exposed, the reasoned expectation is a wildcard address (`*:`, `0.0.0.0:` or `[::]:`) on the API
 ports, 4646 and 8500; fixed means a private or management address. On the loopback run, the agents
-listened on TCP for all three Nomad ports and all three enabled Consul ports, and on UDP for the Serf
-ports.
+listened on TCP on Nomad's 4646, 4647 and 4648 and Consul's 8500, 8300 and 8301 (the runs turned off
+Consul's DNS, Serf WAN and gRPC), and on UDP on the two Serf ports.
 
 For Nomad, send two requests without a token. Substitute the API URL (for example
 `http://10.0.0.5:4646`) inside the single quotes, and paste the whole block.
@@ -109,11 +112,17 @@ For Nomad, send two requests without a token. Substitute the API URL (for exampl
 Exposed (ACLs off): `/v1/acl/token/self` returns `200` with `"AccessorID":"acls-disabled"`, and
 `/v1/jobs` returns `200`. Fixed (ACLs on): `/v1/acl/token/self` returns `200` with
 `"AccessorID":"anonymous"`, and `/v1/jobs` returns `403` `Permission denied`. A connection failure
-prints curl's error and exit code, and says nothing about ACLs. All three outcomes were observed with
+prints curl's error and exit code, and says nothing about ACLs. Any other status or message is inconclusive: a redirect (for example from a trailing slash, or
+from HTTP to HTTPS), a proxy's own response, or a certificate error once TLS is on says nothing
+about the server's ACLs; run the block from a host that trusts the cluster's CA. All three outcomes were observed with
 this block; on the same runs, an anonymous job registration returned `200` with ACLs off and `403`
 with ACLs on, and an anonymous `PUT /v1/acl/bootstrap` succeeded once and then returned `400` "ACL
 bootstrap already done". A `403` on `/v1/jobs` also depends on no permissive `anonymous` policy
-having been written.
+having been written. The probe looks the same before and after bootstrap, so fixed also needs the
+bootstrap done: on a server, `nomad acl bootstrap` must fail with an error that includes the API's "ACL bootstrap already
+done". If
+it prints a management token instead, the cluster was claimable until that moment; keep the token as
+your own.
 
 For Consul, send two requests without a token. Substitute the HTTP API URL (for example
 `http://10.0.0.5:8500`) inside the single quotes, and paste the whole block.
@@ -139,7 +148,12 @@ Exposed with ACLs off: `/v1/acl/token/self` returns `401` `ACL support disabled`
 `/v1/agent/self` returns `200`. Exposed with ACLs on and the default `allow` policy:
 `/v1/acl/token/self` returns `403` `token does not exist: ACL not found`, and `/v1/agent/self`
 still returns `200`. Fixed (ACLs on, `default_policy = "deny"`): `/v1/agent/self` returns `403`
-`Permission denied: anonymous token lacks permission`. All of these were observed with this block,
+`Permission denied: anonymous token lacks permission`. That `403` covers `agent:read` only: it also
+needs the anonymous token to hold no policy or role, so check the anonymous token in the ACL token
+list, and the bootstrap done: `consul acl bootstrap` must fail with an error that includes the API's "ACL bootstrap no
+longer allowed" (if it prints a token instead, keep it as your own). Any other status or message is inconclusive: a redirect (for example from a trailing slash, or
+from HTTP to HTTPS), a proxy's own response, or a certificate error once TLS is on says nothing
+about the server's ACLs; run the block from a host that trusts the cluster's CA. All of these were observed with this block,
 and on the same runs an anonymous key-value write succeeded in both exposed states and was refused
 with `403` in the fixed one, and an anonymous `PUT /v1/acl/bootstrap` succeeded once and was then
 refused. With script checks at their default, registering a script check through the API was refused
