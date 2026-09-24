@@ -158,7 +158,7 @@ printed a management token and the second failed with `Unexpected response code:
 already done ...)`. `nomad acl policy info anonymous` reported `404 (ACL policy not found)`, observed
 with the token exported in a subshell, the form this guide used before #306. After an
 `anonymous` policy granting only `submit-job` was applied, the probe's results did not change, an
-anonymous job registration returned `200`, and `nomad acl policy info anonymous`, run the same earlier way, showed the policy.
+anonymous job registration returned `200`, and `nomad acl policy info anonymous`, run in the same earlier form, showed the policy.
 With ACLs off, an anonymous job registration also returned `200`; with ACLs on and no `anonymous`
 policy, it returned `403`.
 
