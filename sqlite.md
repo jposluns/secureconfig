@@ -103,7 +103,7 @@ On the authoring host, without opening any socket, these three checks ran in exp
   - With a write transaction held open in rollback-journal mode, `app.db-journal` was `644` under umask `022` and `600` under `077`, the same as `app.db`.
   - Each was owned by the one account that ran the test. Ownership by a separate app user was not exercised, because no second account was available.
 
-For LiteFS (`20202`) or an enabled Litestream metrics/MCP listener (REASONED: this opens listeners, which the authoring host forbids without an isolated network namespace, and none was available), prove network isolation from an untrusted vantage. Run it first from an authorized peer against the private URL (a response is the positive control), then from an untrusted network against the same public address and port:
+For LiteFS (`20202`) or an enabled Litestream metrics/MCP listener (REASONED: needs a running LiteFS or Litestream, which opens listeners; the authoring host forbids that without an isolated network namespace, and none was available), prove network isolation from an untrusted vantage. Run it first from an authorized peer against the private URL (a response is the positive control), then from an untrusted network against the same public address and port:
 
 ```bash
 (

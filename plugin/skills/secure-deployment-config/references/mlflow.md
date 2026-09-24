@@ -1,6 +1,6 @@
 # MLflow tracking server: no authentication by default
 
-`mlflow server` serves the tracking UI and REST API at `http://127.0.0.1:5000`, which performs no authentication: anyone who can reach the port can read, alter, and delete experiments, runs, registered models, and (with artifact proxying on) the artifacts themselves. Authentication is opt-in through a separate app, and the server has no dedicated TLS flags (though `mlflow server --uvicorn-opts` can forward `--ssl-keyfile`/`--ssl-certfile` to the default Uvicorn server); MLflow's tracking-server documentation recommends a reverse proxy or VPN for both.
+`mlflow server` serves the tracking UI and REST API at `http://127.0.0.1:5000` (unless `MLFLOW_HOST` or `MLFLOW_PORT` is set) and performs no authentication: anyone who can reach the port can read, alter, and delete experiments, runs, registered models, and (with artifact proxying on) the artifacts themselves. Authentication is opt-in through a separate app, and the server has no dedicated TLS flags (though `mlflow server --uvicorn-opts` can forward `--ssl-keyfile`/`--ssl-certfile` to the default Uvicorn server); MLflow's tracking-server documentation recommends a reverse proxy or VPN for both.
 
 ## 1. Bind privately
 
