@@ -40,7 +40,7 @@ Review outbound requests too. Meilisearch v1.8 through v1.34.0 need upgrading fo
 
 ## Verify
 
-Verification status: the checks below were demonstrated on loopback against the Meilisearch v1.53.2 release binary (its SHA-256 matched the digest GitHub publishes for the asset) and the Typesense 30.2 server (its MD5 matched the one in the release tarball), each with native TLS on 127.0.0.1 from a private test CA that curl trusted through `CURL_CA_BUNDLE`, and every address set before start. The blocks ran as printed with only their `set --` values substituted, and keys were fed to the prompts on stdin. What those runs do not show is marked **REASONED** where it occurs, with its reason; backlog row 1.117 tracks it. Use Bash and curl 7.75.0 or later; never add `-k`. Substitute your actual HTTPS origin inside the single quotes, without a trailing slash. Run each row of the matrix below through this paired-request block, changing the method, path, JSON body, header prefix, and expected statuses on its `set --` line, and enter credentials at the prompts rather than in the command. Both requests use exactly the same origin, method, path, and body; inspect the engine JSON as well as the status, since a proxy login page, redirect, missing resource, or transport failure does not establish engine authorization.
+Verification status: the checks below were demonstrated on loopback against the Meilisearch v1.53.2 release binary (its SHA-256 matched the digest GitHub publishes for the asset) and the Typesense 30.2 server (its MD5 matched the one in the release tarball), each with native TLS on 127.0.0.1, or behind a Caddy TLS proxy for the proxy checks, with certificates from a private test CA that curl trusted through `CURL_CA_BUNDLE`, and every address set before start. The blocks ran as printed with only their `set --` values substituted, and keys were fed to the prompts on stdin. What those runs do not show is marked **REASONED** where it occurs, with its reason; backlog row 1.117 tracks it. Use Bash and curl 7.75.0 or later; never add `-k`. Substitute your actual HTTPS origin inside the single quotes, without a trailing slash. Run each row of the matrix below through this paired-request block, changing the method, path, JSON body, header prefix, and expected statuses on its `set --` line, and enter credentials at the prompts rather than in the command. Both requests use exactly the same origin, method, path, and body; inspect the engine JSON as well as the status, since a proxy login page, redirect, missing resource, or transport failure does not establish engine authorization.
 
 ```bash
 (
@@ -120,7 +120,7 @@ reported its environment, the block exited `2` with `A readonly audit_* variable
 a readonly `audit_role` or `audit_expected`; kept both key roles for a nameref named `audit_role`; and kept
 the prompted key out of curl's environment for an inherited `set -a`, an exported `audit_key`, a nameref
 `audit_key` and `declare -i audit_key`. It still assumes an ordinary interactive shell: no functions or aliases shadowing
-`read`, `printf` or `curl`, no builtins disabled with `enable -n`, no `hash -p` entries, no inherited
+any builtin or command the block uses (including `unset`, `read`, `printf` and `curl`), no builtins disabled with `enable -n`, no `hash -p` entries, no inherited
 DEBUG trap under `set -T`, and a paste at the prompt rather than inside a function. On the loopback runs, keyless Meilisearch returned the fixture to an anonymous search with `200`, so the
 authentication row printed `FAIL: unexpected HTTP status`: the exposed state. With a master key set, the
 same row got `401` `missing_authorization_header` anonymously and `200` with the fixture on the Default
@@ -175,7 +175,9 @@ shape; against 127.0.0.2, where nothing listens, each port's `Connection refused
 and the block ended with exit `2`, the refused shape. A real external vantage is REASONED for the same
 reason. Behind Caddy v2.11.4 (the release tarball, its SHA-256 equal to GitHub's published digest) on `127.0.0.1:8443` with `bind 127.0.0.1`, `auto_https off`, the admin API off and TLS files from the test CA,
 terminating TLS in front of Meilisearch's plaintext backend on `127.0.0.1:7700`, the paired block's
-authentication row got `401` anonymously and `200` on the search key through the proxy.
+authentication row got `401` anonymously and `200` on the search key through the proxy. Behind the same
+proxy, keyless Meilisearch made the block print `FAIL: unexpected HTTP status` on an anonymous `200`, the
+exposed state, and Typesense with its plaintext backend on `127.0.0.1:8108` gave `401` then `200`.
 
 **REASONED (no client bundle in this review):** grep the client bundle and repository history for the
 admin/master/bootstrap key; it should never appear outside the server-side secret store.

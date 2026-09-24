@@ -110,7 +110,7 @@ Run the service under a dedicated unprivileged OS account with access only to th
 
 ## Verify
 
-The service outcomes below were **demonstrated on loopback** against Datasette 0.65.5 (with datasette-auth-passwords 1.1.1 and datasette-write 0.4) and sqlite-web 0.8.1, installed from PyPI into a virtual environment, with every server on 127.0.0.1 and, for the HTTPS blocks, native TLS from a private test CA that curl trusted through `CURL_CA_BUNDLE`. Blocks B and C ran as printed with only their placeholders substituted. What those runs do not show is marked **REASONED** where it occurs, with its reason; backlog row 1.118 tracks it.
+The service outcomes below were **demonstrated on loopback** against Datasette 0.65.5 (with datasette-auth-passwords 1.1.1 and datasette-write 0.4) and sqlite-web 0.8.1, installed from PyPI into a virtual environment, with every server on 127.0.0.1 and, for the HTTPS blocks, native TLS or a Caddy TLS proxy with certificates from a private test CA that curl trusted through `CURL_CA_BUNDLE`. Blocks B and C ran as printed with only their placeholders substituted. What those runs do not show is marked **REASONED** where it occurs, with its reason; backlog row 1.118 tracks it.
 
 Use Bash with real, unshadowed builtins and curl 7.75.0 or newer. Paste whole subshells and substitute inside the single quotes. A literal apostrophe requires proper shell escaping; do not simply paste it between those quotes. Use URLs without embedded credentials or signed tokens. Every curl begins with `-q -g`, disables environment proxies, and reports the error text. Do not add `-k` or redirect-following.
 
