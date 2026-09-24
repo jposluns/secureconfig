@@ -119,15 +119,17 @@ sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
 # but the exposed-vs-fixed responses were not. Backlog row 1.80 tracks running it live. A transport, TLS, or
 # DNS error is inconclusive, never a pass.
 (
-  set +x                                        # never trace the credential read below
+  set +x +a                                     # never trace or export the credential read below
+  { unset -n pw && unset -v pw; } 2>/dev/null ||
+    { echo 'a readonly pw is set in this shell; not probing'; exit 2; }
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
   case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the host; not probing'; exit 2 ;; esac
-  IFS= read -r -s -p 'admin password: ' pw < /dev/tty; echo
-  [ -n "$pw" ] || { echo 'supply the admin password; not probing'; exit 2; }
-  esc=$pw; esc=${esc//\\/\\\\}; esc=${esc//\"/\\\"}   # escape \ and " so curl --config parsing keeps the exact password
+  IFS= read -r -s -p 'admin password: ' pw < /dev/tty || exit 2; echo
+  case "$pw" in ''|*[[:cntrl:]]*) echo 'supply the admin password; not probing'; exit 2 ;; esac
+  pw=${pw//\\/\\\\}; pw=${pw//\"/\\\"}   # escape \ and " so curl --config parsing keeps the exact password
   base=(-sS --noproxy '*' --connect-timeout 5 --max-time 30)
   # 1) HTTP must redirect to HTTPS.
   curl -q -g "${base[@]}" -D - -o /dev/null -w 'redirect http=%{http_code}\n' "http://$1/"   # expect 301 + https Location
@@ -135,7 +137,7 @@ sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
   #    expected success. The password reaches curl through stdin config (curl --config -), never argv.
   curl -q -g "${base[@]}" -o /dev/null -w 'no-creds http=%{http_code}\n' "https://$1/"
   printf 'user = "admin:%s"\n' 'definitely-wrong' | curl -q -g "${base[@]}" --config - -o /dev/null -w 'bad-creds http=%{http_code}\n' "https://$1/"
-  printf 'user = "admin:%s"\n' "$esc"             | curl -q -g "${base[@]}" --config - -o /dev/null -w 'valid http=%{http_code}\n' "https://$1/"
+  printf 'user = "admin:%s"\n' "$pw"              | curl -q -g "${base[@]}" --config - -o /dev/null -w 'valid http=%{http_code}\n' "https://$1/"
   # 3) Body-size guard, BOTH cases with valid creds so a 401 cannot masquerade as the result. Payloads live in
   #    a private temp dir removed on exit.
   tmp=$(mktemp -d) || { echo 'no tempdir; not probing'; exit 2; }
@@ -143,7 +145,7 @@ sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
   head -c 1M /dev/zero > "$tmp/under.bin"  || { echo 'payload write failed'; exit 2; }
   head -c 11M /dev/zero > "$tmp/over.bin" || { echo 'payload write failed'; exit 2; }
   for f in under over; do
-    printf 'user = "admin:%s"\n' "$esc" | curl -q -g "${base[@]}" --config - --data-binary @"$tmp/$f.bin" \
+    printf 'user = "admin:%s"\n' "$pw" | curl -q -g "${base[@]}" --config - --data-binary @"$tmp/$f.bin" \
       -o /dev/null -w "$f http=%{http_code}\n" "https://$1/"
   done
   # under: the app's success, not 413; over: 413. req.body_size reads the advertised Content-Length, which curl
@@ -165,7 +167,9 @@ rejected at TLS, a trusted one admitted with `--cert`/`--key`, server verificati
 
 ```bash
 (
-  set +x
+  set +x +a
+  { unset -n sp && unset -v sp; } 2>/dev/null ||
+    { echo 'a readonly sp is set in this shell; not probing'; exit 2; }
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
   shift
@@ -175,7 +179,8 @@ rejected at TLS, a trusted one admitted with `--cert`/`--key`, server verificati
   # Stats listener (run on the HAProxy machine; --resolve keeps the certificate hostname while connecting to
   # the loopback bind): no credentials must be refused; valid credentials return the statistics.
   curl -q -g "${base[@]}" --resolve "$1:8404:127.0.0.1" -o /dev/null -w 'stats no-creds=%{http_code}\n' "https://$1:8404/stats"
-  IFS= read -r -s -p 'stats admin password: ' sp < /dev/tty; echo
+  IFS= read -r -s -p 'stats admin password: ' sp < /dev/tty || exit 2; echo
+  case "$sp" in ''|*[[:cntrl:]]*) echo 'supply the stats password; not probing'; exit 2 ;; esac
   sp=${sp//\\/\\\\}; sp=${sp//\"/\\\"}
   printf 'user = "admin:%s"\n' "$sp" | curl -q -g "${base[@]}" --resolve "$1:8404:127.0.0.1" --config - -o /dev/null -w 'stats auth=%{http_code}\n' "https://$1:8404/stats"
   # mTLS, only if `bind ... verify required`: no cert and an untrusted cert must be rejected at TLS; a trusted

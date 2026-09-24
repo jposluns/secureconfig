@@ -76,12 +76,13 @@ ss -tlnp   # expect 8080 on loopback or a private address; then probe the public
     -w '\nunauth http=%{http_code} url=%{url_effective} exit=%{exitcode} err=%{errormsg}\n' "$1"
   # 2) Authenticated positive control: paste a cookie from a valid browser session; it enters via stdin
   #    (curl --header @-), never argv. The authenticated response must contain the editor.
-  set +x
-  unset code_server_cookie || { echo 'cannot initialize cookie input; not probing'; exit 2; }
+  set +x +a
+  { unset -n code_server_cookie && unset -v code_server_cookie; } 2>/dev/null ||
+    { echo 'cannot initialize cookie input; not probing'; exit 2; }
   IFS= read -r -s -p 'Cookie value (name=value; name=value), then Enter: ' code_server_cookie < /dev/tty || exit 2
   printf '\n'
   case "$code_server_cookie" in
-    ''|*REPLACE_WITH_*|*$'\r'*) echo 'a valid session cookie is required; not probing'; exit 2 ;;
+    ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'a valid session cookie is required; not probing'; exit 2 ;;
   esac
   printf 'Cookie: %s\n' "$code_server_cookie" |
     curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
