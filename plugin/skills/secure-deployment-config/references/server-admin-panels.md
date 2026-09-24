@@ -62,10 +62,11 @@ record a two-factor bypass through basic authentication (CVE-2026-42210, CVE-202
 listed under "Webmin prior to 2.641", so run a current release.
 
 The installer sets `blockhost_failures=5` and `blockhost_time=60`, so a host is blocked for 60 seconds
-after five failed logins; per-user blocking is not set. That is a rate limit, not a lockout. On the
-loopback run, with HTTP basic authentication, five wrong passwords did not block the host, and the right
-password still logged in afterwards; the block was not observed for basic authentication. Keep the
-network allow list as the real control.
+after five failed logins; per-user blocking is not set. That is a rate limit, not a lockout. Failed
+HTTP basic-authentication logins are counted only when `passdelay` is set, which the installer also
+writes (`passdelay=1`). On the loopback run with those settings, the fifth wrong password was delayed
+past a five-second client timeout by miniserv's growing failure delay, and the right password was then
+refused with `403` "Access denied for 127.0.0.1". Keep the network allow list as the real control.
 
 ## Proxmox VE
 
@@ -73,7 +74,9 @@ network allow list as the real control.
 default both "listen on the wildcard address and accept connections from both IPv4 and IPv6 clients".
 `LISTEN_IP` in `/etc/default/pveproxy` restricts the bind, but the vendor warns that it is "not
 recommended" on clustered systems, whose nodes need each other's `pveproxy`. The same file takes
-`ALLOW_FROM`, `DENY_FROM` and `POLICY` lists; the default policy is `allow`. The Proxmox VE firewall "is
+`ALLOW_FROM`, `DENY_FROM` and `POLICY`; the default policy is `allow`, under which a client that
+matches neither list is allowed, so an `ALLOW_FROM` list restricts nothing until you also set
+`DENY_FROM="all"` (the vendor's example) or `POLICY="deny"`. The Proxmox VE firewall "is
 completely disabled by default"; when you enable it, allow 8006, 22 and 3128 from management addresses
 only.
 
@@ -89,7 +92,7 @@ separated privileges by default, and cannot reach the VM or node consoles.
 ## Verify
 
 Two checks here were demonstrated: the Webmin configuration check, whose parser was compared with
-Webmin 2.670's own on eight test files, and the TCP reachability probe, which is the block demonstrated
+Webmin 2.670's own on twelve test files, and the TCP reachability probe, which is the block demonstrated
 on loopback in [low-code-builders.md](low-code-builders.md) with this guide's ports. Everything else
 is reasoned: the authoring host runs neither Cockpit's
 systemd socket nor Proxmox VE, and it forbids binding every interface, so no default bind was observed.
@@ -103,14 +106,16 @@ sudo ss -ulnp   # Webmin's discovery socket on UDP 10000 (Usermin 20000) should 
 ```
 
 Exposed, the reasoned expectation is a wildcard address (`*:`, `0.0.0.0:` or `[::]:`) on those ports;
-fixed means a management address only.
+fixed means a management address only. On a Proxmox VE cluster, where the vendor advises against
+`LISTEN_IP`, 8006 keeps its wildcard bind; there the fixed state is the access lists and firewall below.
 
 On a Webmin host, check the configuration miniserv reads when it starts. The block parses the file
 with a copy of miniserv's own `read_config_file` (a line starting with `#` is a comment, spaces around
 the name and the value are trimmed, and the last occurrence of a setting wins), then applies
-miniserv's rules: `bind=*`, `bind=0`, or an empty or missing `bind=` means every address; `sockets=`
-adds listeners; a `listen=` value other than empty or `0` opens the UDP discovery socket; and an empty
-`allow=` lets every client address try to log in. It describes the file, not the running process:
+miniserv's rules: `bind=*`, `bind=0`, `bind=0.0.0.0`, `bind=::`, or an empty or missing `bind=` means
+every address (the block treats any value made only of zeros, dots and colons the same way);
+`sockets=` adds listeners; a `listen=` value other than empty or `0` opens the UDP discovery socket;
+and an empty `allow=` lets every client address try to log in, except those a `deny=` list refuses. It describes the file, not the running process:
 `ss` above is the authority for what is listening now, and a change takes effect at
 `/etc/webmin/restart`. Substitute the file path inside the single quotes (the package default is
 `/etc/webmin/miniserv.conf`), and paste the whole block.
@@ -137,12 +142,14 @@ adds listeners; a `listen=` value other than empty or `0` opens the UDP discover
       $rv{$name} = $val;
     }
     close(CONF);
-    $bind = $rv{"bind"}; $bind = "" if ($bind eq "*");
+    $bind = $rv{"bind"}; $bind = "" if ($bind eq "*" || $bind =~ /^[0.:]+$/);
     print $bind ? "bind=$bind\n" : "NO effective bind=: every address\n";
     print "sockets=$rv{sockets}: extra listeners, possibly on every address; check ss\n" if ($rv{"sockets"} =~ /\S/);
     print $rv{"listen"} ? "listen=$rv{listen}: UDP discovery socket on every IPv4 address\n" : "no UDP discovery socket\n";
     @allow = split(/\s+/, $rv{"allow"});
-    print @allow ? "allow=@allow\n" : "NO allow=: any client address may try to log in\n";
+    @deny = split(/\s+/, $rv{"deny"});
+    print "deny=@deny\n" if (@deny);
+    print @allow ? "allow=@allow\n" : @deny ? "NO allow=: any client address not on deny= may try to log in\n" : "NO allow=: any client address may try to log in\n";
     print "sudo=$rv{sudo}: Unix users whom sudo permits can log in as root\n" if ($rv{"sudo"});
     exit 0;
   ' "$1"
@@ -151,20 +158,26 @@ adds listeners; a `listen=` value other than empty or `0` opens the UDP discover
 ```
 
 Exposed: "NO effective bind=", a `listen=` line and "NO allow=". Fixed: a management address on
-`bind=`, "no UDP discovery socket" and your networks on `allow=`. A `sockets=` line means more
-listeners; check each with `ss`. This was demonstrated on eight test files: the loopback run's
-configuration, its exposed variant, a repeated `bind=` whose last value is `*`, spaced settings,
-commented settings, `bind=0` with `listen=0` and an empty `allow=`, CRLF line endings with
-`sockets=*:10001`, and a line without `=`. On each, the copy's parsed values matched Webmin 2.670's
-own `read_config_file` run on the same file, and the block printed the outcomes above; it reported
-an unreadable path as not checked.
+`bind=`, "no UDP discovery socket" and only your management networks on `allow=`; the block prints
+the lists as written, so check each entry. A `sockets=` line means more listeners; check each with
+`ss`. This was demonstrated on twelve test files: the loopback run's configuration, its exposed
+variant, a repeated `bind=` whose last value is `*`, `bind=0.0.0.0`, `bind=::`,
+`bind=0:0:0:0:0:0:0:0`, spaced settings, commented settings, `bind=0` with `listen=0` and an empty
+`allow=`, an empty `allow=` with `deny=127.0.0.1`, CRLF line endings with `sockets=*:10001`, and a line
+without `=`. On each, the copy's parsed values matched Webmin 2.670's own `read_config_file` run on
+the same file, and the block printed the outcomes above; it reported an unreadable path as not
+checked.
 
 On a Cockpit host, reasoned: `systemctl cat cockpit.socket` shows the effective listeners; exposed is a
 bare `ListenStream=9090`, fixed is the drop-in's empty `ListenStream=` followed by an address and port.
 `sudo cat /etc/cockpit/disallowed-users` should list `root`; a missing file lets root log in.
 
 On a Proxmox VE node, reasoned: `grep -E '^(LISTEN_IP|ALLOW_FROM|DENY_FROM|POLICY)=' /etc/default/pveproxy`
-prints nothing on a default install, which means the wildcard bind and the `allow` policy;
+prints nothing on a default install (or reports that the file does not exist), which means the
+wildcard bind and the `allow` policy. Fixed is `LISTEN_IP` set to a management address on a single
+node, or `ALLOW_FROM` with your management networks together with `DENY_FROM="all"` or
+`POLICY="deny"`; an `ALLOW_FROM` line alone is not fixed, because under the `allow` policy a client
+that matches neither list is allowed (the access table in the vendor's `pveproxy` documentation).
 `pve-firewall status` prints whether the firewall is enabled and running. In the web interface, check
 that every administrative user, `root@pam` included, has a second factor.
 
@@ -233,10 +246,10 @@ give the server's public address. A "connected" on a port you did not mean to ex
 - Cockpit 368 privileges: https://github.com/cockpit-project/cockpit/blob/368/doc/modules/guide/pages/privileges.adoc
 - Cockpit 368 PAM stack and root deny list: https://github.com/cockpit-project/cockpit/blob/368/tools/cockpit.pam and https://github.com/cockpit-project/cockpit/blob/368/tools/cockpit.spec
 - systemd v262 socket unit reference (bare port): https://github.com/systemd/systemd/blob/v262/man/systemd.socket.xml
-- Webmin 2.670 installer (`listen=`, `blockhost_*`, certificate): https://github.com/webmin/webmin/blob/2.670/setup.sh
+- Webmin 2.670 installer (`listen=`, `blockhost_*`, `passdelay=1`, certificate): https://github.com/webmin/webmin/blob/2.670/setup.sh
 - Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket): https://github.com/webmin/webmin/blob/2.670/miniserv.pl
 - Webmin 2.670 deb and RPM package builders (`crypt=x`, `ssl=1`, `sudo=1`): https://github.com/webmin/webmin/blob/2.670/makedebian.pl and https://github.com/webmin/webmin/blob/2.670/makerpm.pl
-- Webmin 2.670 sudo login, configuration parser (`read_config_file`) and allow and deny lists: https://github.com/webmin/webmin/blob/2.670/miniserv-lib.pl
+- Webmin 2.670 sudo login, configuration parser (`read_config_file`), allow and deny lists, and basic-authentication failure counting (`passdelay`): https://github.com/webmin/webmin/blob/2.670/miniserv-lib.pl
 - Webmin 2.670 Command Shell default ACL: https://github.com/webmin/webmin/blob/2.670/shell/defaultacl
 - Webmin 2.670 two-factor providers: https://github.com/webmin/webmin/blob/2.670/webmin/twofactor-funcs-lib.pl
 - Webmin documentation (configuration, security advisories): https://github.com/webmin/webmin.com/blob/8ceae26c5a074053905cbcc6c0053be573633f3a/content/docs/Modules/webmin-configuration.md and https://github.com/webmin/webmin.com/blob/8ceae26c5a074053905cbcc6c0053be573633f3a/content/security.md
