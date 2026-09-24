@@ -104,7 +104,7 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.104 | `rabbitmq.md`: demonstrate the Verify steps the guide marks reasoned, against a live deployment in both the exposed and fixed states. Grandfathered in the reasoned-row baseline until 2026-09-24; blocked on a container runtime, which the authoring host lacks. (M, M) | `[gap]` |
 | 1.105 | `realtime-voice-infra.md`: demonstrate the Verify steps the guide marks reasoned, against a live deployment in both the exposed and fixed states. Grandfathered in the reasoned-row baseline until 2026-09-24; blocked on a container runtime, which the authoring host lacks. (M, M) | `[gap]` |
 | 1.106 | `redis.md`: demonstrate the Verify steps the guide marks reasoned, against a live deployment in both the exposed and fixed states. Grandfathered in the reasoned-row baseline until 2026-09-24; blocked on a container runtime, which the authoring host lacks. (M, M) | `[gap]` |
-| 1.107 | `exposure-index.md`: finish the port-to-guide index proposed in the 2026-09-11 audit. Add a default-credential column, have `admin-uis.md` state Prometheus's 9090 default (the index maps 9090 but notes the guide omits the number), and add a deterministic gate in `tools/` that fails when a guide names a listening port the index does not map. Offline work; needs no live demonstration. (M, M) | `[gap]` |
+| 1.107 | `exposure-index.md`: finish the port-to-guide index proposed in the 2026-09-11 audit. Add a default-credential column, correct the stale note on its 9090 row, which says the Prometheus guide does not state the number although `admin-uis.md` states the `0.0.0.0:9090` default, and add a deterministic gate in `tools/` that fails when a guide names a listening port the index does not map. Offline work; needs no live demonstration. (M, M) | `[gap]` |
 ## Priority 3: Add missing content
 
 Gaps from the same audit, one row per missing guide. A gap raised by more than one family is
@@ -112,10 +112,10 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 2.44 | New guide: self-hosted observability components beyond the Prometheus server (Prometheus exporters such as node_exporter, Alertmanager, Pushgateway, Jaeger, Loki). The corpus covers only the Prometheus server (`admin-uis.md`); these components have no coverage. Found by the 2026-09-24 coverage triage (0 corpus hits); vendor defaults not yet checked at source, so re-rate severity after that check. (M, M) | `[gap]` |
+| 2.44 | New guide: self-hosted observability components beyond the Prometheus server (Prometheus exporters such as node_exporter, Alertmanager, Pushgateway, Jaeger, Loki). The corpus covers the Prometheus server in `admin-uis.md`, which mentions exporters and Alertmanager only in passing; none of these components has dedicated coverage. Found by the 2026-09-24 coverage triage; vendor defaults not yet checked at source, so re-rate severity after that check. (M, M) | `[gap]` |
 | 2.45 | New guide: low-code internal-tool builders (NocoDB, Baserow, Appsmith, Budibase, Windmill), which typically connect directly to a production database. Found by the 2026-09-24 coverage triage (0 corpus hits); vendor defaults not yet checked at source, so re-rate severity after that check. (M, L) | `[gap]` |
 | 2.46 | New guide: server administration panels (Cockpit, Webmin, Proxmox VE), which grant root-level control of the host. Found by the 2026-09-24 coverage triage (0 corpus hits); vendor defaults not yet checked at source, so re-rate severity after that check. (M, M) | `[gap]` |
-| 2.47 | New guide: HashiCorp Nomad and Consul (the scheduler and service-mesh APIs and UIs). Consul has only passing mentions in the corpus and Nomad none. Found by the 2026-09-24 coverage triage; vendor defaults not yet checked at source, so re-rate severity after that check. (M, M) | `[gap]` |
+| 2.47 | New guide: HashiCorp Nomad and Consul (the scheduler and service-mesh APIs and UIs). Neither is mentioned anywhere in the corpus. Found by the 2026-09-24 coverage triage; vendor defaults not yet checked at source, so re-rate severity after that check. (M, M) | `[gap]` |
 
 ## Priority 4: Tooling and process
 
