@@ -1,6 +1,6 @@
 # Apache Kafka: SASL_SSL listeners, SCRAM credentials, and ACLs
 
-Kafka's broker defaults are `listeners=PLAINTEXT://:9092`, `security.inter.broker.protocol=PLAINTEXT`, and no authorizer, so anyone who reaches port 9092 can read every topic, produce to it, and create or delete topics with no credential and no encryption. Property names below come from the Kafka 4.x documentation (KRaft mode).
+Kafka's broker defaults are `listeners=PLAINTEXT://:9092` (as of Kafka 4.3.1), `security.inter.broker.protocol=PLAINTEXT`, and no authorizer, so anyone who reaches port 9092 can read every topic, produce to it, and create or delete topics with no credential and no encryption. Property names below come from the Kafka 4.x documentation (KRaft mode).
 
 The examples below target Kafka 4.3. Kafka 4.0 and later support KRaft only; the ZooKeeper authorizer note applies to legacy 3.9 deployments. Replace example addresses, certificate subjects, and secrets before deployment.
 
