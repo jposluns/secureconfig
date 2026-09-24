@@ -79,7 +79,7 @@ export SSL_CERT_FILE=/path/ca.crt        # httpx and the ssl module
 
 ## 5. Do not quick-share files with `http.server`
 
-`python -m http.server` is a common quick-share suggestion, and it is the wrong one on any reachable host. By default it binds every interface, and it serves the current directory: source, `.env`, private keys, and database dumps are all downloadable by anyone who can reach the port. It also follows symbolic links, so a link in that directory hands out files from outside it, and the Python docs mark the module as not suitable for production. If you have no alternative, bind loopback and serve a directory that holds only what you mean to share:
+`python -m http.server` is a common quick-share suggestion, and it is the wrong one on any reachable host. By default it binds every interface (as of Python 3.14.4), and it serves the current directory: source, `.env`, private keys, and database dumps are all downloadable by anyone who can reach the port. It also follows symbolic links, so a link in that directory hands out files from outside it, and the Python docs mark the module as not suitable for production. If you have no alternative, bind loopback and serve a directory that holds only what you mean to share:
 
 ```bash
 cd /path/to/a/directory/with/nothing/private || exit
