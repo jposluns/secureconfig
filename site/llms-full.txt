@@ -13801,7 +13801,7 @@ The explicit `$SYS/#` subscription should receive broker telemetry in the expose
 
 # Apache Kafka: SASL_SSL listeners, SCRAM credentials, and ACLs
 
-Kafka's broker defaults are `listeners=PLAINTEXT://:9092`, `security.inter.broker.protocol=PLAINTEXT`, and no authorizer, so anyone who reaches port 9092 can read every topic, produce to it, and create or delete topics with no credential and no encryption. Property names below come from the Kafka 4.x documentation (KRaft mode).
+Kafka's broker defaults are `listeners=PLAINTEXT://:9092` (as of Kafka 4.3.1), `security.inter.broker.protocol=PLAINTEXT`, and no authorizer, so anyone who reaches port 9092 can read every topic, produce to it, and create or delete topics with no credential and no encryption. Property names below come from the Kafka 4.x documentation (KRaft mode).
 
 The examples below target Kafka 4.3. Kafka 4.0 and later support KRaft only; the ZooKeeper authorizer note applies to legacy 3.9 deployments. Replace example addresses, certificate subjects, and secrets before deployment.
 
@@ -21205,7 +21205,7 @@ The launcher reference lists `--api-key` (env `API_KEY`) without describing it. 
 
 ## SGLang
 
-`python -m sglang.launch_server` listens on `127.0.0.1:30000` by default (`--host`, `--port`); keep that bind. `--api-key` sets the key the OpenAI-compatible endpoints require, and `--admin-api-key` separately protects administrative endpoints (weight updates, cache flush, `/server_info`), which then require `Authorization: Bearer <admin key>`:
+`python -m sglang.launch_server` listens on `127.0.0.1:30000` by default (`--host`, `--port`; values as of v0.5.20); keep that bind. `--api-key` sets the key the OpenAI-compatible endpoints require, and `--admin-api-key` separately protects administrative endpoints (weight updates, cache flush, `/server_info`), which then require `Authorization: Bearer <admin key>`:
 
 ```bash
 python -m sglang.launch_server --model-path REPLACE_WITH_MODEL_PATH --api-key "${SGLANG_API_KEY:?set a non-empty API key}" --admin-api-key "${SGLANG_ADMIN_KEY:?set a non-empty admin key}"
@@ -22989,7 +22989,7 @@ Service behaviour is not demonstrated here. A watcher stopped each of four loopb
 
 # MLflow tracking server: no authentication by default
 
-`mlflow server` serves the tracking UI and REST API at `http://127.0.0.1:5000` (unless `MLFLOW_HOST` or `MLFLOW_PORT` is set) and performs no authentication: anyone who can reach the port can read, alter, and delete experiments, runs, registered models, and (with artifact proxying on) the artifacts themselves. Authentication is opt-in through a separate app, and the server has no dedicated TLS flags (though `mlflow server --uvicorn-opts` can forward `--ssl-keyfile`/`--ssl-certfile` to the default Uvicorn server); MLflow's tracking-server documentation recommends a reverse proxy or VPN for both.
+`mlflow server` serves the tracking UI and REST API at `http://127.0.0.1:5000` (as of v3.16.1, unless `MLFLOW_HOST` or `MLFLOW_PORT` is set) and performs no authentication: anyone who can reach the port can read, alter, and delete experiments, runs, registered models, and (with artifact proxying on) the artifacts themselves. Authentication is opt-in through a separate app, and the server has no dedicated TLS flags (though `mlflow server --uvicorn-opts` can forward `--ssl-keyfile`/`--ssl-certfile` to the default Uvicorn server); MLflow's tracking-server documentation recommends a reverse proxy or VPN for both.
 
 ## 1. Bind privately
 
@@ -24000,7 +24000,7 @@ If you run any of these in a container, do not stop at the network boundary: a c
 
 ## ComfyUI
 
-`--listen` with no argument binds to `0.0.0.0,::` (every IPv4 and IPv6 interface); given an address it binds only there. The default with the flag absent is `127.0.0.1`, and the default port is `8188`. There is no built-in login: the server accepts any workflow from anyone who can reach it.
+`--listen` with no argument binds to `0.0.0.0,::` (every IPv4 and IPv6 interface); given an address it binds only there. The default with the flag absent is `127.0.0.1`, and the default port is `8188` (both as of v0.37.0). There is no built-in login: the server accepts any workflow from anyone who can reach it.
 
 Custom nodes are the bigger risk. They run as plain Python with the same privileges as the server process; ComfyUI's own security update warns that `eval`/`exec` calls in a node are "direct attack vectors" for remote code execution. ComfyUI-Manager (the default node installer) had its own unauthenticated-RCE advisory, CVE-2025-67303 (GHSA-95pq-hr8p-f5g7): an unprotected alternate channel left the manager's data and configuration directories insufficiently protected by ComfyUI's web API access control, letting an attacker upload arbitrary files for full system compromise with no credentials at all. The fix spans both projects and needs both minimums together: ComfyUI v0.3.76 or later (adds the protected-directory API the fix depends on) and ComfyUI-Manager v3.38 or later (contains the fix itself). Keep both at or above those versions, and only install nodes you trust regardless.
 
@@ -24092,7 +24092,7 @@ curl -q -sI https://imagegen.example.com/                # via the proxy: TLS, a
 - InvokeAI Multi-User Administrator Guide: https://invoke.ai/features/multi-user-mode/admin-guide/
 - Fooocus repository README (`--listen`, `--share`, auth.json): https://github.com/lllyasviel/Fooocus
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
-- ComfyUI `--listen` default `127.0.0.1`, and `0.0.0.0,::` when given without a value (pinned tag v0.37.0): https://github.com/Comfy-Org/ComfyUI/blob/v0.37.0/comfy/cli_args.py#L63
+- ComfyUI `--listen` default `127.0.0.1`, `0.0.0.0,::` when given without a value, and `--port` default `8188` (pinned tag v0.37.0): https://github.com/Comfy-Org/ComfyUI/blob/v0.37.0/comfy/cli_args.py#L63-L64
 
 ======================================================================
 ==> chat-uis.md
