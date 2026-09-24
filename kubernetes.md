@@ -85,16 +85,21 @@ Gateway API defines no authentication filter; each implementation adds its own. 
 # read it. Apache's own page says of it: "This option should be used with extreme care,
 # since the password is clearly visible on the command line. For script use see the -i
 # option." -i reads it from stdin instead. Envoy Gateway's example uses -b; this does not.
-read -rs -p 'basic auth password: ' PASSWORD
-echo
-printf '%s' "$PASSWORD" | htpasswd -cis .htpasswd admin
-# -i does no verification, so a mistyped or mis-consumed value is written silently. Check it
-# before the secret is created: `read` takes the NEXT LINE of input, so pasting this whole
-# block into a shell without bracketed paste feeds it the following line instead of your
-# password, and every command after that still succeeds.
-printf '%s' "$PASSWORD" | htpasswd -vi .htpasswd admin
-unset PASSWORD
-kubectl create secret generic app-basic-auth --from-file=.htpasswd
+(
+  set +x +a
+  { unset -n PASSWORD && unset -v PASSWORD; } 2>/dev/null ||
+    { echo 'cannot clear PASSWORD in this shell; not creating the secret'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not creating the secret'; exit 2; }
+  IFS= read -r -s -p 'basic auth password: ' PASSWORD < /dev/tty || exit 2
+  echo
+  printf '%s' "$PASSWORD" | htpasswd -cis .htpasswd admin
+  # -i does no verification, so a mistyped or mis-consumed value is written silently. Check it
+  # before the secret is created. Paste the block by itself: the shell reads the whole subshell
+  # before `read` runs, but `read` takes the NEXT LINE of input, so a line pasted after the closing
+  # `)` becomes the password, and every command after that still succeeds.
+  printf '%s' "$PASSWORD" | htpasswd -vi .htpasswd admin
+  kubectl create secret generic app-basic-auth --from-file=.htpasswd
+)
 ```
 
 `-s` is SHA-1, which Apache describes as "insecure by today's standards", and it is not a

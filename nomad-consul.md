@@ -122,15 +122,32 @@ an agent whose own
 in the default namespace and reading the agent only, and they look the same before bootstrap, so
 fixed needs two more checks on a server. First, `nomad acl bootstrap` must fail with an error that includes "ACL
 bootstrap already done"; if it prints a management token instead, the cluster was claimable until
-that moment, so keep the token as your own. Second, with a management token in `NOMAD_TOKEN`,
+that moment, so keep the token as your own. Second, with a management token,
 `nomad acl policy info anonymous` must report `404 (ACL policy not found)`: the anonymous token takes
-its rights from the policy named `anonymous`. Set the token without leaving it in shell history, and only for
-the one command, by running it in a subshell (`read -rs` shows no prompt), for example
-`( read -rs NOMAD_TOKEN && export NOMAD_TOKEN && nomad acl policy info anonymous )`; while it runs,
-an exported variable can be read from `/proc` by the same account and by root. A connection failure prints curl's error and exit code, and says nothing about ACLs. Any other
+its rights from the policy named `anonymous`. The block after the next paragraph runs it. A connection failure prints curl's error and exit code, and says nothing about ACLs. Any other
 status or message is inconclusive: a redirect (for example from a trailing slash, or from HTTP to
 HTTPS), a proxy's own response, or a certificate error once TLS is on says nothing about the
-server's ACLs; run the block from a host that trusts the cluster's CA.
+server's ACLs; run the curl block above from a host that trusts the cluster's CA.
+
+`nomad` takes the token from `-token`, which puts it in argv, or from `NOMAD_TOKEN`, and has no stdin
+input for it (checked at v2.0.7). The block prompts for the token, so it stays out of shell history,
+and hands it to the one `nomad` command as a prefix assignment, never exported. That moves the token
+out of argv, not out of reach: while `nomad` runs, it can be read from `/proc/<pid>/environ` by the
+same account and by root.
+
+```bash
+(
+  set +x +a
+  { unset -n tok NOMAD_TOKEN && unset -v tok NOMAD_TOKEN; } 2>/dev/null ||
+    { echo 'cannot clear tok or NOMAD_TOKEN in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
+  IFS= read -r -s -p 'Nomad management token (input hidden): ' tok < /dev/tty ||
+    { echo 'token input failed; not probing'; exit 2; }
+  printf '\n'
+  [ -n "$tok" ] || { echo 'no token supplied; not probing'; exit 2; }
+  NOMAD_TOKEN="$tok" nomad acl policy info anonymous
+)
+```
 
 All of these outcomes were observed with this block and these commands, on agents listening on test
 ports. In a cluster whose server had ACLs on and was bootstrapped, a client agent configured with
@@ -138,7 +155,8 @@ ports. In a cluster whose server had ACLs on and was bootstrapped, a client agen
 with `200`, while the server answered it with `403`. Before bootstrap, the probe already printed the
 ACLs-on results; the first `nomad acl bootstrap`
 printed a management token and the second failed with `Unexpected response code: 400 (ACL bootstrap
-already done ...)`. `nomad acl policy info anonymous` reported `404 (ACL policy not found)`. After an
+already done ...)`. `nomad acl policy info anonymous` reported `404 (ACL policy not found)`, observed
+with the token exported in a subshell, the form this guide used before #306. After an
 `anonymous` policy granting only `submit-job` was applied, the probe's results did not change, an
 anonymous job registration returned `200`, and `nomad acl policy info anonymous` showed the policy.
 With ACLs off, an anonymous job registration also returned `200`; with ACLs on and no `anonymous`
@@ -268,6 +286,7 @@ give the host's public address. A "connected" on a port you did not mean to expo
 - Nomad 2.0.7 ACL resolution when disabled: https://github.com/hashicorp/nomad/blob/v2.0.7/nomad/auth/auth.go and https://github.com/hashicorp/nomad/blob/v2.0.7/acl/acl.go
 - Nomad 2.0.7 anonymous token (its rights come from the policy named `anonymous`): https://github.com/hashicorp/nomad/blob/v2.0.7/nomad/structs/acl.go
 - Nomad 2.0.7 ACL bootstrap: https://github.com/hashicorp/nomad/blob/v2.0.7/nomad/acl_endpoint.go
+- Nomad 2.0.7 CLI token input: `-token` (`command/meta.go` L96, L170-L171) or `NOMAD_TOKEN` (`api/api.go` L388-L389), with no stdin form: https://github.com/hashicorp/nomad/blob/v2.0.7/command/meta.go#L96 and https://github.com/hashicorp/nomad/blob/v2.0.7/api/api.go#L388-L389
 - Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`): https://github.com/hashicorp/consul/blob/v2.0.4/agent/config/default.go
 - Consul 2.0.4 configuration builder (listener addresses, ACL default, script checks and their warning, UI): https://github.com/hashicorp/consul/blob/v2.0.4/agent/config/builder.go
 - Consul 2.0.4 ACL resolution when disabled: https://github.com/hashicorp/consul/blob/v2.0.4/agent/consul/acl.go
