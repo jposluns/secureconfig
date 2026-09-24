@@ -754,13 +754,13 @@ Inventory 4222, 8222, and every enabled peer or protocol listener, including 622
 
 The CLI reads saved contexts and environment settings before defaults. Each block clears inherited `NATS_*` settings and uses `--no-context`. This prevents a supposedly anonymous check from silently inheriting a token, user, seed, credentials file, or proxy setting. A fully clean `env -i` launch is another way to isolate ambient settings, but required credentials must still be supplied deliberately.
 
-Paste the whole subshell after substituting all four values. These probes accept a DNS hostname or IPv4 address, without a scheme, port, or embedded credentials. TLS paths and passwords are exported inside the guarded subshell, not passed as command arguments. Environment secrets still require a trusted local execution account.
+Paste the whole subshell after substituting all four values. These probes accept a DNS hostname or IPv4 address, without a scheme, port, or embedded credentials. TLS paths and the username are exported inside the guarded subshell. The password is read from the terminal and never exported or passed as a command argument: natscli v0.4.0 offers no stdin input for it and binds `--password` to `NATS_PASSWORD`, so each `nats` command that needs it receives it as a one-command `NATS_PASSWORD="$pw"` prefix assignment. That moves the password out of argv, not out of reach: it can remain readable through `/proc/<pid>/environ` by the same user and by root while that `nats` command, or the `timeout` that runs it, is running. Environment secrets still require a trusted local execution account.
 
 The first publish is the allowed control. The subsequent operations deliberately test missing credentials, a wrong password, a missing client certificate, and forbidden publish/subscribe subjects. Inspect each command's diagnostics; the block's final exit status is not a combined verdict.
 
 ```bash
 (
-  set +x
+  set +x +a
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NATS_HOST' 'REPLACE_WITH_CLIENT_CERT_FILE' 'REPLACE_WITH_CLIENT_KEY_FILE' 'REPLACE_WITH_CA_FILE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
   shift
@@ -770,32 +770,34 @@ The first publish is the allowed control. The subsequent operations deliberately
   case "$3" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the key path'; exit 2 ;; esac
   case "$4" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the CA path'; exit 2 ;; esac
   case "$1" in *[!A-Za-z0-9.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
+  { unset -n v f && unset -v v f; } 2>/dev/null || { echo 'cannot clear v or f in this shell; not probing'; exit 2; }
   for v in ${!NATS_@}; do
     unset "$v" || { echo "cannot clear ambient $v; not probing"; exit 2; }
   done
+  { unset -n pw NATS_PASSWORD && unset -v pw NATS_PASSWORD; } 2>/dev/null ||
+    { echo 'cannot clear pw or NATS_PASSWORD in this shell; not probing'; exit 2; }
   for f in "$2" "$3" "$4"; do
     [ -r "$f" ] || { echo 'a TLS fixture is unreadable; not probing'; exit 2; }
   done
   export NATS_CERT="$2" NATS_KEY="$3" NATS_CA="$4"
   srv="nats://$1:4222"
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   IFS= read -r -s -t 60 -p 'order-svc password: ' pw < /dev/tty || { echo 'password input failed'; exit 2; }
   printf '\n'
   case "$pw" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'supply a real password'; exit 2 ;; esac
-  export NATS_USER=order-svc NATS_PASSWORD="$pw" || { echo 'credential export failed'; exit 2; }
+  export NATS_USER=order-svc || { echo 'credential export failed'; exit 2; }
   [ "$NATS_USER" = order-svc ] || { echo 'username mismatch'; exit 2; }
-  [ "$NATS_PASSWORD" = "$pw" ] || { echo 'password mismatch'; exit 2; }
   opts=(--no-context --server "$srv" --timeout 3s --inbox-prefix _INBOX.order-svc)
-  timeout 10s nats "${opts[@]}" pub orders.created hi || { echo 'positive control failed; stop'; exit 1; }
-  unset NATS_USER NATS_PASSWORD
+  NATS_PASSWORD="$pw" timeout 10s nats "${opts[@]}" pub orders.created hi || { echo 'positive control failed; stop'; exit 1; }
+  unset NATS_USER
   timeout 10s nats "${opts[@]}" pub orders.created hi
-  export NATS_USER=order-svc NATS_PASSWORD="wrong-$pw"
-  timeout 10s nats "${opts[@]}" pub orders.created hi
-  export NATS_PASSWORD="$pw"
+  export NATS_USER=order-svc
+  NATS_PASSWORD="wrong-$pw" timeout 10s nats "${opts[@]}" pub orders.created hi
   unset NATS_CERT NATS_KEY
-  timeout 10s nats "${opts[@]}" pub orders.created hi
+  NATS_PASSWORD="$pw" timeout 10s nats "${opts[@]}" pub orders.created hi
   export NATS_CERT="$2" NATS_KEY="$3"
-  timeout 10s nats "${opts[@]}" pub billing.charge hi
-  timeout 6s nats "${opts[@]}" sub 'billing.>' --count 1
+  NATS_PASSWORD="$pw" timeout 10s nats "${opts[@]}" pub billing.charge hi
+  NATS_PASSWORD="$pw" timeout 6s nats "${opts[@]}" sub 'billing.>' --count 1
 )
 ```
 
@@ -820,7 +822,7 @@ Terminal 1 is self-contained and reads its password inside the guarded subshell.
 
 ```bash
 (
-  set +x
+  set +x +a
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NATS_HOST' 'REPLACE_WITH_CONSUMER_CERT_FILE' 'REPLACE_WITH_CONSUMER_KEY_FILE' 'REPLACE_WITH_CA_FILE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
   shift
@@ -830,6 +832,7 @@ Terminal 1 is self-contained and reads its password inside the guarded subshell.
   case "$3" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the key path'; exit 2 ;; esac
   case "$4" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the CA path'; exit 2 ;; esac
   case "$1" in *[!A-Za-z0-9.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
+  { unset -n v f && unset -v v f; } 2>/dev/null || { echo 'cannot clear v or f in this shell; not probing'; exit 2; }
   for v in ${!NATS_@}; do
     unset "$v" || { echo "cannot clear ambient $v; not probing"; exit 2; }
   done
@@ -838,11 +841,14 @@ Terminal 1 is self-contained and reads its password inside the guarded subshell.
   done
   export NATS_CERT="$2" NATS_KEY="$3" NATS_CA="$4"
   srv="nats://$1:4222"
+  { unset -n pw NATS_PASSWORD && unset -v pw NATS_PASSWORD; } 2>/dev/null ||
+    { echo 'cannot clear pw or NATS_PASSWORD in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   IFS= read -r -s -t 60 -p 'order-consumer password: ' pw < /dev/tty || { echo 'password input failed'; exit 2; }
   printf '\n'
   case "$pw" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'supply a real password'; exit 2 ;; esac
-  export NATS_USER=order-consumer NATS_PASSWORD="$pw" || { echo 'credential export failed'; exit 2; }
-  timeout 45s nats --no-context --server "$srv" --timeout 3s sub 'orders.>' --count 1
+  export NATS_USER=order-consumer || { echo 'credential export failed'; exit 2; }
+  NATS_PASSWORD="$pw" timeout 45s nats --no-context --server "$srv" --timeout 3s sub 'orders.>' --count 1
 )
 ```
 
@@ -850,7 +856,7 @@ Terminal 2 independently establishes its target, TLS configuration, and credenti
 
 ```bash
 (
-  set +x
+  set +x +a
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NATS_HOST' 'REPLACE_WITH_CLIENT_CERT_FILE' 'REPLACE_WITH_CLIENT_KEY_FILE' 'REPLACE_WITH_CA_FILE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
   shift
@@ -860,6 +866,7 @@ Terminal 2 independently establishes its target, TLS configuration, and credenti
   case "$3" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the key path'; exit 2 ;; esac
   case "$4" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the CA path'; exit 2 ;; esac
   case "$1" in *[!A-Za-z0-9.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
+  { unset -n v f && unset -v v f; } 2>/dev/null || { echo 'cannot clear v or f in this shell; not probing'; exit 2; }
   for v in ${!NATS_@}; do
     unset "$v" || { echo "cannot clear ambient $v; not probing"; exit 2; }
   done
@@ -868,13 +875,16 @@ Terminal 2 independently establishes its target, TLS configuration, and credenti
   done
   export NATS_CERT="$2" NATS_KEY="$3" NATS_CA="$4"
   srv="nats://$1:4222"
+  { unset -n pw NATS_PASSWORD && unset -v pw NATS_PASSWORD; } 2>/dev/null ||
+    { echo 'cannot clear pw or NATS_PASSWORD in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   IFS= read -r -s -t 60 -p 'order-svc password: ' pw < /dev/tty || { echo 'password input failed'; exit 2; }
   printf '\n'
   case "$pw" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'supply a real password'; exit 2 ;; esac
-  export NATS_USER=order-svc NATS_PASSWORD="$pw" || { echo 'credential export failed'; exit 2; }
+  export NATS_USER=order-svc || { echo 'credential export failed'; exit 2; }
   marker="marker-$(date +%s%N)-$RANDOM"
   printf 'Expected delivery: %s\n' "$marker"
-  timeout 10s nats --no-context --server "$srv" --timeout 3s \
+  NATS_PASSWORD="$pw" timeout 10s nats --no-context --server "$srv" --timeout 3s \
     --inbox-prefix _INBOX.order-svc pub orders.created "$marker"
 )
 ```
@@ -885,7 +895,7 @@ The following self-contained request block is also used by V4 and V5. Its last t
 
 ```bash
 (
-  set +x
+  set +x +a
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NATS_HOST' 'REPLACE_WITH_CLIENT_CERT_FILE' 'REPLACE_WITH_CLIENT_KEY_FILE' 'REPLACE_WITH_CA_FILE' 'order-svc' 'orders.lookup' '{}'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
   shift
@@ -898,6 +908,7 @@ The following self-contained request block is also used by V4 and V5. Its last t
   case "$6" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the request subject'; exit 2 ;; esac
   case "$7" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the request body'; exit 2 ;; esac
   case "$1" in *[!A-Za-z0-9.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
+  { unset -n v f && unset -v v f; } 2>/dev/null || { echo 'cannot clear v or f in this shell; not probing'; exit 2; }
   for v in ${!NATS_@}; do
     unset "$v" || { echo "cannot clear ambient $v; not probing"; exit 2; }
   done
@@ -906,11 +917,14 @@ The following self-contained request block is also used by V4 and V5. Its last t
   done
   export NATS_CERT="$2" NATS_KEY="$3" NATS_CA="$4"
   srv="nats://$1:4222"
+  { unset -n pw NATS_PASSWORD && unset -v pw NATS_PASSWORD; } 2>/dev/null ||
+    { echo 'cannot clear pw or NATS_PASSWORD in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   IFS= read -r -s -t 60 -p "$5 password: " pw < /dev/tty || { echo 'password input failed'; exit 2; }
   printf '\n'
   case "$pw" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'supply a real password'; exit 2 ;; esac
-  export NATS_USER="$5" NATS_PASSWORD="$pw" || { echo 'credential export failed'; exit 2; }
-  timeout 10s nats --no-context --server "$srv" --timeout 3s \
+  export NATS_USER="$5" || { echo 'credential export failed'; exit 2; }
+  NATS_PASSWORD="$pw" timeout 10s nats --no-context --server "$srv" --timeout 3s \
     --inbox-prefix "_INBOX.$5" request "$6" "$7"
 )
 ```
