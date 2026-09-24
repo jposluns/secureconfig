@@ -119,9 +119,12 @@ request when the calling shell held a readonly `audit_role`. On loopback, with a
 reported its environment, the block exited `2` with `A readonly audit_* variable is set in this shell` for
 a readonly `audit_role` or `audit_expected`; kept both key roles for a nameref named `audit_role`; and kept
 the prompted key out of curl's environment for an inherited `set -a`, an exported `audit_key`, a nameref
-`audit_key` and `declare -i audit_key`. It still assumes an ordinary interactive shell: no aliases defined (an alias on a
-reserved word such as `if` brought back the false pass with no request sent), no functions shadowing any
-builtin or command the block uses (including `unset`, `read`, `printf` and `curl`), no builtins disabled with `enable -n`, no `hash -p` entries, no inherited
+`audit_key` and `declare -i audit_key`. It still assumes an ordinary interactive shell: no alias on any word the block
+uses, reserved words such as `if` included (an alias on `if` brought back the false pass with no request
+sent, while the stock `ls`, `grep` and `ll` aliases left the result unchanged; `alias` lists what is
+defined), no functions shadowing any builtin or command the block uses (including `unset`, `read`, `printf`
+and `curl`), curl on `PATH` with no `command_not_found_handle` function (with curl missing, such a
+function brought back the false pass), no builtins disabled with `enable -n`, no `hash -p` entries, no inherited
 DEBUG trap under `set -T`, and a paste at the prompt rather than inside a function. On the loopback runs, keyless Meilisearch returned the fixture to an anonymous search with `200`, so the
 authentication row printed `FAIL: unexpected HTTP status`: the exposed state. With a master key set, the
 same row got `401` `missing_authorization_header` anonymously and `200` with the fixture on the Default
