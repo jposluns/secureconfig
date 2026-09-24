@@ -2,7 +2,7 @@
 
 Containers are where accidental exposure happens most. Two Docker behaviours cause it:
 
-1. `ports: - "3000:3000"` (or `-p 3000:3000`) publishes on `0.0.0.0`, every interface.
+1. `ports: - "3000:3000"` (or `-p 3000:3000`) publishes on every host address, `0.0.0.0` and `[::]`.
 2. On Linux, Docker programs iptables/nftables directly, so published ports are reachable **even when UFW or firewalld says the port is blocked**. A `ufw deny 3000` rule does not protect a published container port.
 
 ## 1. Publish nothing except the TLS proxy
@@ -81,7 +81,7 @@ Caddy obtains and renews the certificate automatically ([free-certificates.md](f
 ## 4. Verify
 
 ```bash
-docker compose ps                     # project-scoped: only the proxy shows a published (0.0.0.0 or a host IP) binding; review every container on the host, IPv6 included
+docker compose ps                     # project-scoped: only the proxy shows a published (0.0.0.0/[::] or a host IP) binding; review every container on the host, IPv6 included
 ss -tulnp                             # host sockets (TCP and UDP); socket visibility varies by Docker version and config, so a socket listing alone does not prove reachability
 curl -q -sI http://app.example.com/      # expect a redirect to https://
 curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' https://app.example.com/api  # unauthenticated: expect 401 or 403, never 200 (then confirm an authorized request succeeds)
@@ -95,3 +95,4 @@ Test from a second machine on a different network where possible; the UFW bypass
 - Docker with iptables, for the `DOCKER-USER` chain (processed before Docker's own rules; matches container addresses after DNAT): https://docs.docker.com/engine/network/firewall-iptables/
 - Docker Engine 28.0 release notes, for the published-port and loopback-mapping hardening: https://docs.docker.com/engine/release-notes/28/
 - Compose networking: https://docs.docker.com/compose/how-tos/networking/
+- Docker port publishing (with no host address, "the Docker daemon publishes ports to all host addresses (0.0.0.0 and [::])"): https://docs.docker.com/engine/network/port-publishing/
