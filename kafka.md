@@ -827,3 +827,5 @@ No existing Kafka live-demonstration row was found in the reviewed backlog. This
 - Producer performance CLI options and metrics, tagged 4.3.0: https://github.com/apache/kafka/blob/4.3.0/tools/src/main/java/org/apache/kafka/tools/ProducerPerformance.java
 - OpenSSL s_client certificate and hostname verification: https://docs.openssl.org/3.5/man1/openssl-s_client/
 - OpenSSL file-based private-key passphrases: https://docs.openssl.org/3.5/man1/openssl-passphrase-options/
+- Kafka `LISTENERS_DEFAULT = "PLAINTEXT://:9092"` (pinned tag 4.3.1): https://github.com/apache/kafka/blob/4.3.1/server/src/main/java/org/apache/kafka/network/SocketServerConfigs.java#L64
+- Kafka defines the `listeners` config with that default (pinned tag 4.3.1): https://github.com/apache/kafka/blob/4.3.1/server/src/main/java/org/apache/kafka/network/SocketServerConfigs.java#L156
