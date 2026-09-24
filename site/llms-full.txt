@@ -27684,7 +27684,7 @@ register a job, which is code the cluster runs, and anyone who reaches Consul's 
 write the catalog and the key-value store. Keep both APIs on private or management addresses
 ([cloud-firewalls.md](cloud-firewalls.md), [host.md](host.md), [tunnels.md](tunnels.md)), turn ACLs
 on with a deny default, and bootstrap them before the API is reachable. Versions checked: Nomad
-2.0.7 and Consul 2.0.4, Community Edition; Enterprise namespaces and partitions are not covered.
+2.0.7 and Consul 2.0.4, Community Edition; Consul Enterprise namespaces and admin partitions are not covered.
 
 ## Nomad
 
@@ -27736,6 +27736,7 @@ acl {
 }
 ```
 
+Put the same block on every agent, servers and clients: each agent applies its own ACL settings.
 Then run `consul acl bootstrap`; `PUT /v1/acl/bootstrap` needs no token and works once, until an
 operator writes the `acl-bootstrap-reset` file. Script checks
 run commands on the agent. `enable_script_checks` is off by default, and Consul's own startup warning
@@ -27790,16 +27791,18 @@ For Nomad, send three requests without a token, to every agent's API, servers an
 Exposed (ACLs off): `/v1/acl/token/self` returns `200` with `"AccessorID":"acls-disabled"`, and
 `/v1/jobs` and `/v1/agent/self` return `200`. With ACLs on, `/v1/acl/token/self` returns `200` with
 `"AccessorID":"anonymous"`, and `/v1/jobs` and `/v1/agent/self` return `403` `Permission denied`.
-The first two paths are answered by the servers, so only `/v1/agent/self` shows an agent whose own
+The first two paths are answered by the servers, so of these three paths only `/v1/agent/self` shows
+an agent whose own
 `acl.enabled` is off; any agent that answers it with `200` is exposed. Those `403`s cover listing jobs
 in the default namespace and reading the agent only, and they look the same before bootstrap, so
 fixed needs two more checks on a server. First, `nomad acl bootstrap` must fail with an error that includes "ACL
 bootstrap already done"; if it prints a management token instead, the cluster was claimable until
 that moment, so keep the token as your own. Second, with a management token in `NOMAD_TOKEN`,
 `nomad acl policy info anonymous` must report `404 (ACL policy not found)`: the anonymous token takes
-its rights from the policy named `anonymous`. Set the token without leaving it in shell history, for
-example with `read -rs NOMAD_TOKEN && export NOMAD_TOKEN`, and `unset NOMAD_TOKEN` afterwards; an
-exported variable can be read from `/proc` by the same account and by root. A connection failure prints curl's error and exit code, and says nothing about ACLs. Any other
+its rights from the policy named `anonymous`. Set the token without leaving it in shell history, and only for
+these commands, by running them in a subshell, for example
+`( read -rs NOMAD_TOKEN && export NOMAD_TOKEN && nomad acl policy info anonymous )`; while it runs,
+an exported variable can be read from `/proc` by the same account and by root. A connection failure prints curl's error and exit code, and says nothing about ACLs. Any other
 status or message is inconclusive: a redirect (for example from a trailing slash, or from HTTP to
 HTTPS), a proxy's own response, or a certificate error once TLS is on says nothing about the
 server's ACLs; run the block from a host that trusts the cluster's CA.
@@ -27816,7 +27819,7 @@ anonymous job registration returned `200`, and `nomad acl policy info anonymous`
 With ACLs off, an anonymous job registration also returned `200`; with ACLs on and no `anonymous`
 policy, it returned `403`.
 
-For Consul, send two requests without a token. Substitute the HTTP API URL (for example
+For Consul, send two requests without a token, to every agent's HTTP API, servers and clients. Substitute the HTTP API URL (for example
 `http://10.0.0.5:8500`) inside the single quotes, and paste the whole block.
 
 ```bash
@@ -27839,19 +27842,24 @@ For Consul, send two requests without a token. Substitute the HTTP API URL (for 
 Exposed with ACLs off: `/v1/acl/token/self` returns `401` `ACL support disabled`, and
 `/v1/agent/self` returns `200`. Exposed with ACLs on and the default `allow` policy:
 `/v1/acl/token/self` returns `403` `token does not exist: ACL not found`, and `/v1/agent/self` still
-returns `200`. With ACLs on and `default_policy = "deny"`, `/v1/agent/self` returns `403`
+returns `200`. Each agent applies its own ACL settings, so any agent that answers `/v1/agent/self`
+with `200` is exposed. With ACLs on and `default_policy = "deny"`, `/v1/agent/self` returns `403`
 `Permission denied: anonymous token lacks permission`, but that `403` covers `agent:read` only, and it
 looks the same before bootstrap, so fixed needs two more checks. First, `consul acl bootstrap` must
 fail with an error that includes "ACL bootstrap no longer allowed"; if it prints a token instead,
 keep it as your own. Second, with a management token in `CONSUL_HTTP_TOKEN`, `consul acl token read
 -accessor-id 00000000-0000-0000-0000-000000000002` (the anonymous token) must list no policies,
-roles, or service, node or templated identities. Set and unset `CONSUL_HTTP_TOKEN` the same way. A connection failure prints curl's error and exit code, and says nothing about ACLs. Any other
+roles, or service, node or templated identities. Set `CONSUL_HTTP_TOKEN` the same way, in a subshell around the command. A connection failure prints curl's error and exit code, and says nothing about ACLs. Any other
 status or message is inconclusive: a redirect (for example from a trailing slash, or from HTTP to
 HTTPS), a proxy's own response, or a certificate error once TLS is on says nothing about the
 server's ACLs; run the block from a host that trusts the cluster's CA.
 
 All of these outcomes were observed with this block and these commands, on agents listening on test
-ports. Before bootstrap, the probe already printed the deny-policy results; the first `consul acl
+ports. With a bootstrapped server on the deny policy and a client agent with ACLs off, the block
+printed the deny results against the server, and `401` `ACL support disabled` and `200` against the
+client; with the server on the `allow` policy and the client on `deny`, it printed `200` on
+`/v1/agent/self` against the server and the deny results against the client. Before bootstrap, the
+probe already printed the deny-policy results; the first `consul acl
 bootstrap` printed a token and the second failed with `Unexpected response code: 403 (Permission
 denied: ACL bootstrap no longer allowed ...)`; the anonymous token's read listed none of those
 sections. On the same runs an anonymous key-value write succeeded in both exposed states and was
