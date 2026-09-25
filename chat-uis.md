@@ -56,24 +56,28 @@ The block refuses to run when `~/.config/lobechat/secrets.env` already exists in
   case "$1|$2" in *REPLACE_WITH_*) echo 'substitute the client ID inside the quotes on the set -- line; not starting'; exit 2 ;; esac
   { [ -n "$1" ] && [ -n "$2" ]; } || { echo 'empty value on the set -- line; not starting'; exit 2; }
   case "$1$2" in *[[:space:][:cntrl:]]*) echo 'whitespace or a control character on the set -- line; not starting'; exit 2 ;; esac
-  [ "$(grep -Eacx 'KEY_VAULTS_SECRET=[A-Za-z0-9+/]{43}=' "$HOME/.config/lobechat/secrets.env")" = 1 ] ||
-    { echo 'need exactly one generated KEY_VAULTS_SECRET line in ~/.config/lobechat/secrets.env; not starting'; exit 2; }
-  [ "$(grep -Eacx 'AUTH_SECRET=[A-Za-z0-9+/]{43}=' "$HOME/.config/lobechat/secrets.env")" = 1 ] ||
-    { echo 'need exactly one generated AUTH_SECRET line in ~/.config/lobechat/secrets.env; not starting'; exit 2; }
-  [ "$(grep -Eacx 'AUTH_GOOGLE_SECRET=[^[:cntrl:]]+' "$HOME/.config/lobechat/secrets.env")" = 1 ] ||
-    { echo 'need exactly one AUTH_GOOGLE_SECRET line in ~/.config/lobechat/secrets.env; not starting'; exit 2; }
-  grep -Eavqx 'KEY_VAULTS_SECRET=[A-Za-z0-9+/]{43}=|AUTH_SECRET=[A-Za-z0-9+/]{43}=|AUTH_GOOGLE_SECRET=[^[:cntrl:]]+' "$HOME/.config/lobechat/secrets.env"
-  case "$?" in
-    1) ;;
-    0) echo 'a line in ~/.config/lobechat/secrets.env is not one of the three secret lines; not starting'; exit 2 ;;
-    *) echo 'cannot check ~/.config/lobechat/secrets.env; not starting'; exit 2 ;;
-  esac
-  grep -aq 'REPLACE_WITH_' "$HOME/.config/lobechat/secrets.env"
-  case "$?" in
-    1) ;;
-    0) echo 'a placeholder is still in ~/.config/lobechat/secrets.env; not starting'; exit 2 ;;
-    *) echo 'cannot check ~/.config/lobechat/secrets.env; not starting'; exit 2 ;;
-  esac
+  f="$HOME/.config/lobechat/secrets.env"
+  { [ -f "$f" ] && [ ! -L "$f" ]; } ||
+    { echo 'need ~/.config/lobechat/secrets.env to be a regular file (it is missing, a symlink or another kind of file); not starting'; exit 2; }
+  if grep -Eavqx -- 'KEY_VAULTS_SECRET=[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/]{43}=|AUTH_SECRET=[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/]{43}=|AUTH_GOOGLE_SECRET=[^[:cntrl:]]+' "$f"; then
+    echo 'a line in ~/.config/lobechat/secrets.env is not one of the three secret lines; not starting'; exit 2
+  else
+    rc=$?; [ "$rc" -eq 1 ] || { echo 'could not check ~/.config/lobechat/secrets.env; not starting'; exit 2; }
+  fi
+  if grep -aq -- 'REPLACE_WITH_' "$f"; then
+    echo 'a placeholder is still in ~/.config/lobechat/secrets.env; not starting'; exit 2
+  else
+    rc=$?; [ "$rc" -eq 1 ] || { echo 'could not check ~/.config/lobechat/secrets.env; not starting'; exit 2; }
+  fi
+  c=$(grep -Eacx -- 'KEY_VAULTS_SECRET=[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/]{43}=' "$f") || c=
+  [ "$c" = 1 ] ||
+    { echo 'need exactly one generated KEY_VAULTS_SECRET line in ~/.config/lobechat/secrets.env, or could not check it; not starting'; exit 2; }
+  c=$(grep -Eacx -- 'AUTH_SECRET=[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/]{43}=' "$f") || c=
+  [ "$c" = 1 ] ||
+    { echo 'need exactly one generated AUTH_SECRET line in ~/.config/lobechat/secrets.env, or could not check it; not starting'; exit 2; }
+  c=$(grep -Eacx -- 'AUTH_GOOGLE_SECRET=[^[:cntrl:]]+' "$f") || c=
+  [ "$c" = 1 ] ||
+    { echo 'need exactly one AUTH_GOOGLE_SECRET line in ~/.config/lobechat/secrets.env, or could not check it; not starting'; exit 2; }
   docker run -d -p 127.0.0.1:3210:3210 \
     --env-file "$HOME/.config/lobechat/secrets.env" \
     -e AUTH_DISABLE_EMAIL_PASSWORD=1 \
@@ -84,7 +88,7 @@ The block refuses to run when `~/.config/lobechat/secrets.env` already exists in
 )
 ```
 
-The block refuses the placeholder, an empty value, and whitespace or a control character on the `set --` line. It reads the file as text (`grep -a`, so a NUL byte cannot hide a line) and refuses to start unless the file holds exactly one line for each generated value and exactly one client secret line, no other line and no placeholder, and it refuses as well when `grep` cannot read the file: at v27.5.1 an env-file line holding only a name takes its value from the CLI's own environment, which would bring back the channel the file replaces. A key of another shape from an existing deployment needs the matching pattern relaxed. This moves the secrets out of argv, not out of reach. Docker hands them to the container as environment variables, so anyone who can use the Docker socket can read them back with `docker inspect`, which returns the container's configuration with its `Env` list, for as long as the container exists, running or stopped; and the same user as the container's process, or root, can read them from that process's `/proc/<pid>/environ` for its whole lifetime. Socket access is root-equivalent already ([container-hardening.md](container-hardening.md)); grant it to nobody you would not trust with these keys. `-e NAME` with no value would keep them out of argv as well, but only under rule 7's guarded one-command prefix assignment, never an `export`, and the values would then sit in the CLI's own environment too. Neither form erases a value already recorded in shell history, tracing or a log.
+The block refuses the placeholder, an empty value, and whitespace or a control character on the `set --` line. It checks first that `~/.config/lobechat/secrets.env` is a regular file and not a symlink, so a FIFO in its place can neither block the check nor be read by it. It then reads the file as text (`grep -a`: without `-a`, a NUL could make a malformed line look valid to grep) and refuses to start unless the file holds exactly one line for each generated value and exactly one client secret line, no other line and no placeholder: at v27.5.1 an env-file line holding only a name takes its value from the CLI's own environment, which would bring back the channel the file replaces. It uses a count only from a `grep` that succeeded, says that it could not check when `grep` cannot read the file, and gives the same result in a shell that has `set -e` on. The patterns spell out their ASCII character sets rather than ranges such as `A-Z`, whose meaning can depend on the locale. A key of another shape from an existing deployment needs the matching pattern relaxed. This moves the secrets out of argv, not out of reach. Docker hands them to the container as environment variables, so anyone who can use the Docker socket can read them back with `docker inspect`, which returns the container's configuration with its `Env` list, for as long as the container exists, running or stopped; and the same user as the container's process, or root, can read them from that process's `/proc/<pid>/environ` for its whole lifetime. Socket access is root-equivalent already ([container-hardening.md](container-hardening.md)); grant it to nobody you would not trust with these keys. `-e NAME` with no value would keep them out of argv as well, but only under rule 7's guarded one-command prefix assignment, never an `export`, and the values would then sit in the CLI's own environment too. Neither form erases a value already recorded in shell history, tracing or a log.
 
 MFA: enforce it at whichever SSO provider you list in `AUTH_SSO_PROVIDERS`; LobeChat's own login has no second factor of its own.
 
