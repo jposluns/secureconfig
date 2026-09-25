@@ -310,6 +310,7 @@ For SearxNG, for LangServe relying entirely on its proxy, or for any service you
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' '' ''
   # $3 is the same harmless JSON body as checks 5 and 7 (keep the empty quotes if none is needed).
   # $4 is a credential header: leave it EMPTY for the anonymous run, put a WRONG credential for the
@@ -328,17 +329,19 @@ For SearxNG, for LangServe relying entirely on its proxy, or for any service you
     http://*|https://*) ;;
     *) echo "use an http:// or https:// URL; not probing"; exit ;;
   esac
-  if [ -n "$3" ] && [ -n "$4" ]; then
-    set -- -H 'Content-Type: application/json' --data-binary "$3" -H "$4" -X "$2" "$1"
-  elif [ -n "$3" ]; then
-    set -- -H 'Content-Type: application/json' --data-binary "$3" -X "$2" "$1"
-  elif [ -n "$4" ]; then
-    set -- -H "$4" -X "$2" "$1"
+  case "$4" in
+    *[[:cntrl:]]*) echo "put the credential header on one line; not probing"; exit ;;
+  esac
+  # Body options, if any, go after the four values. The credential header ($4) reaches curl on stdin
+  # (--header @-), never in its argv, where ps and /proc/<pid>/cmdline would show it.
+  if [ -n "$3" ]; then set -- "$@" -H 'Content-Type: application/json' --data-binary "$3"; fi
+  if [ -n "$4" ]; then
+    printf '%s\n' "$4" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --header @- \
+      -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "${@:5}" -X "$2" "$1"
   else
-    set -- -X "$2" "$1"
+    curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+      -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "${@:5}" -X "$2" "$1"
   fi
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$@"
 )
 ```
 
@@ -374,13 +377,14 @@ The header below is reader-supplied. For a configured bearer-token proxy it is `
     https://*) ;;
     *) echo "use a https:// URL; not probing"; exit ;;
   esac
-  if [ -n "$3" ]; then
-    set -- -H 'Content-Type: application/json' --data-binary "$3" -H "$4" -X "$2" "$1"
-  else
-    set -- -H "$4" -X "$2" "$1"
-  fi
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$@"
+  case "$4" in
+    *[[:cntrl:]]*) echo "put the credential header on one line; not probing"; exit ;;
+  esac
+  # Body options, if any, go after the four values. The credential header ($4) reaches curl on stdin
+  # (--header @-), never in its argv, where ps and /proc/<pid>/cmdline would show it.
+  if [ -n "$3" ]; then set -- "$@" -H 'Content-Type: application/json' --data-binary "$3"; fi
+  printf '%s\n' "$4" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --header @- \
+    -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "${@:5}" -X "$2" "$1"
 )
 ```
 
