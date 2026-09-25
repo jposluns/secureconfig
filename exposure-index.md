@@ -133,7 +133,7 @@ Open the guide before relying on either, because defaults change between release
 | 8188 | ComfyUI | No built-in login | [image-gen-uis.md](image-gen-uis.md) |
 | 8200 | HashiCorp Vault API, and its UI at `/ui` on the same listener when `ui = true`; TLS is assumed by default, and `sys/health` and `sys/seal-status` answer unauthenticated | Initial root token: unlimited, no expiry; health/seal-status unauthenticated | [vault.md](vault.md) |
 | 8201 | HashiCorp Vault cluster port, for server-to-server request forwarding and Raft over mutually authenticated TLS; a peer surface, never a client endpoint | not stated | [vault.md](vault.md) |
-| 8222 | NATS monitoring endpoints, off unless configured; the official images' bundled configuration, with their default command, enables them on every address | No login of its own | [nats.md](nats.md) |
+| 8222 | NATS monitoring endpoints, off unless configured; the official images' bundled configuration, with their default command, enables them on `0.0.0.0` | No login of its own | [nats.md](nats.md) |
 | 8233 | Temporal Web UI as started by `temporal server start-dev`, which is the context this corpus documents | not stated | [workflow-orchestrators.md](workflow-orchestrators.md) |
 | 8265 | Ray dashboard | No login unless token auth enabled (off by default) | [ray.md](ray.md) |
 | 8300 | Consul server RPC, on `bind_addr` (every address by default); also Weaviate's Raft, on a non-empty `CLUSTER_BIND_ADDR`, else its advertised address | not stated | [nomad-consul.md](nomad-consul.md), [vector-databases.md](vector-databases.md) |
