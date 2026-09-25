@@ -17,6 +17,15 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **P3, trap clearing: option A.** Every block that holds a secret clears `trap - DEBUG RETURN ERR`,
+  positional-parameter blocks included, and rule 7's fifth condition is reworded to match (#340, row 1.134). The
+  same day the maintainer ruled on #340's scope: the two `ai-infra-services.md` credential blocks it touched move
+  their header from curl's argv to stdin in #340 itself, and secret-bearing blocks that a trap line cannot fix
+  (secrets already in the reader's environment, exports, and secrets on command lines) are recorded as row 1.135
+  and handled in per-block pull requests, argv breaches first (the `nextjs.md` `curl -b` cookie and
+  `SESSION_SECRET` in grep's argv); each remaining block is judged on its own: prompt for the secret, read it from
+  a file, or state it as an assumption.
+
 - **Ship the 86th guide (`ai-infra-services.md`, #60) with Verify checks 2 to 7 marked reasoned,
   tracked by backlog row 2.24.** The rule 5 this pull request tightened says a service that runs in a
   container on ordinary hardware is not impractical to stand up, and two QA families called the mark's
