@@ -45,7 +45,7 @@ Keep the three secrets, `KEY_VAULTS_SECRET`, `AUTH_SECRET` and the Google OAuth 
 )
 ```
 
-The block refuses to run when `~/.config/lobechat/secrets.env` already exists in any form, a dangling symlink included, before it prompts or generates anything, so a rerun cannot replace a `KEY_VAULTS_SECRET` that already encrypts data; `set -C` refuses the overwrite as well if the file appears in between. For a deployment that already has these values, put its existing values in such a file instead of generating new ones. `umask 077` creates the directory mode `0700` and the file mode `0600`. The block writes nothing unless both generated values are 44 base64 characters and the prompted secret is non-empty, is not the placeholder and holds no control character, which is what stops a pasted newline from adding a second variable to the file. The generated values pass only through the subshell's positional parameters and the builtin `printf`, and the client secret through one variable local to the subshell, never a command line; the block clears inherited traps first because a DEBUG, RETURN or ERR trap from your shell could otherwise read them. A write failure can leave a partial file: delete it before running the block again, and the launch block below refuses to start on it. The file holds the secrets in plaintext at rest, readable by that account, by root and by any backup that copies it, so keep it and its backups out of source control ([secrets.md](secrets.md)). Start LobeChat from the file, with only non-secret values on its command line. Substitute your Google OAuth client ID and the addresses or domains allowed to register inside the single quotes on the `set --` line:
+The block refuses to run when `~/.config/lobechat/secrets.env` already exists in any form, a dangling symlink included, before it prompts or generates anything, so a rerun cannot replace a `KEY_VAULTS_SECRET` that already encrypts data. `set -C` adds overwrite protection for an existing regular file only, not for every kind of target, and the existence check runs before the write rather than atomically with it, so both hold only in directories that no other account can write to or replace: `$HOME`, `~/.config` and the owner-only directory the block creates. For a deployment that already has these values, put its existing values in such a file instead of generating new ones. `umask 077` creates the directory mode `0700` and the file mode `0600`. The block writes nothing unless both generated values are 44 base64 characters and the prompted secret is non-empty, is not the placeholder and holds no control character. `read` stops at the first newline, so a newline cannot enter the value; the check refuses a carriage return or any other control character. Paste the secret alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run. The generated values pass only through the subshell's positional parameters and the builtin `printf`, and the client secret through one variable local to the subshell, never a command line; the block clears inherited traps first because a DEBUG, RETURN or ERR trap from your shell could otherwise read them. A write failure can leave a partial file. The launch block below refuses the shapes it can detect, a generated value that is not 44 base64 characters, a missing or duplicated line, or any other line, but a client secret cut short still looks like a valid value and cannot be detected, so delete a file left by a failed run and create it again rather than starting on it. The file holds the secrets in plaintext at rest, readable by that account, by root and by any backup that copies it, so keep it and its backups out of source control ([secrets.md](secrets.md)). Start LobeChat from the file, with only non-secret values on its command line. Substitute your Google OAuth client ID and the addresses or domains allowed to register inside the single quotes on the `set --` line:
 
 ```bash
 (
@@ -56,18 +56,24 @@ The block refuses to run when `~/.config/lobechat/secrets.env` already exists in
   case "$1|$2" in *REPLACE_WITH_*) echo 'substitute the client ID inside the quotes on the set -- line; not starting'; exit 2 ;; esac
   { [ -n "$1" ] && [ -n "$2" ]; } || { echo 'empty value on the set -- line; not starting'; exit 2; }
   case "$1$2" in *[[:space:][:cntrl:]]*) echo 'whitespace or a control character on the set -- line; not starting'; exit 2 ;; esac
-  grep -Eqx 'KEY_VAULTS_SECRET=[A-Za-z0-9+/]{43}=' "$HOME/.config/lobechat/secrets.env" ||
-    { echo 'no generated KEY_VAULTS_SECRET line in ~/.config/lobechat/secrets.env; not starting'; exit 2; }
-  grep -Eqx 'AUTH_SECRET=[A-Za-z0-9+/]{43}=' "$HOME/.config/lobechat/secrets.env" ||
-    { echo 'no generated AUTH_SECRET line in ~/.config/lobechat/secrets.env; not starting'; exit 2; }
-  grep -Eqx 'AUTH_GOOGLE_SECRET=[^[:cntrl:]]+' "$HOME/.config/lobechat/secrets.env" ||
-    { echo 'no AUTH_GOOGLE_SECRET line in ~/.config/lobechat/secrets.env; not starting'; exit 2; }
-  if grep -Evqx 'KEY_VAULTS_SECRET=[A-Za-z0-9+/]{43}=|AUTH_SECRET=[A-Za-z0-9+/]{43}=|AUTH_GOOGLE_SECRET=[^[:cntrl:]]+' "$HOME/.config/lobechat/secrets.env"; then
-    echo 'a line in ~/.config/lobechat/secrets.env is not one of the three secret lines; not starting'; exit 2
-  fi
-  if grep -q 'REPLACE_WITH_' "$HOME/.config/lobechat/secrets.env"; then
-    echo 'a placeholder is still in ~/.config/lobechat/secrets.env; not starting'; exit 2
-  fi
+  [ "$(grep -Eacx 'KEY_VAULTS_SECRET=[A-Za-z0-9+/]{43}=' "$HOME/.config/lobechat/secrets.env")" = 1 ] ||
+    { echo 'need exactly one generated KEY_VAULTS_SECRET line in ~/.config/lobechat/secrets.env; not starting'; exit 2; }
+  [ "$(grep -Eacx 'AUTH_SECRET=[A-Za-z0-9+/]{43}=' "$HOME/.config/lobechat/secrets.env")" = 1 ] ||
+    { echo 'need exactly one generated AUTH_SECRET line in ~/.config/lobechat/secrets.env; not starting'; exit 2; }
+  [ "$(grep -Eacx 'AUTH_GOOGLE_SECRET=[^[:cntrl:]]+' "$HOME/.config/lobechat/secrets.env")" = 1 ] ||
+    { echo 'need exactly one AUTH_GOOGLE_SECRET line in ~/.config/lobechat/secrets.env; not starting'; exit 2; }
+  grep -Eavqx 'KEY_VAULTS_SECRET=[A-Za-z0-9+/]{43}=|AUTH_SECRET=[A-Za-z0-9+/]{43}=|AUTH_GOOGLE_SECRET=[^[:cntrl:]]+' "$HOME/.config/lobechat/secrets.env"
+  case "$?" in
+    1) ;;
+    0) echo 'a line in ~/.config/lobechat/secrets.env is not one of the three secret lines; not starting'; exit 2 ;;
+    *) echo 'cannot check ~/.config/lobechat/secrets.env; not starting'; exit 2 ;;
+  esac
+  grep -aq 'REPLACE_WITH_' "$HOME/.config/lobechat/secrets.env"
+  case "$?" in
+    1) ;;
+    0) echo 'a placeholder is still in ~/.config/lobechat/secrets.env; not starting'; exit 2 ;;
+    *) echo 'cannot check ~/.config/lobechat/secrets.env; not starting'; exit 2 ;;
+  esac
   docker run -d -p 127.0.0.1:3210:3210 \
     --env-file "$HOME/.config/lobechat/secrets.env" \
     -e AUTH_DISABLE_EMAIL_PASSWORD=1 \
@@ -78,7 +84,7 @@ The block refuses to run when `~/.config/lobechat/secrets.env` already exists in
 )
 ```
 
-The block refuses the placeholder, an empty value, and whitespace or a control character on the `set --` line. It refuses to start unless the file holds both generated values and a client secret line, no other line and no placeholder: at v27.5.1 an env-file line holding only a name takes its value from the CLI's own environment, which would bring back the channel the file replaces. A key of another shape from an existing deployment needs the matching pattern relaxed. This moves the secrets out of argv, not out of reach. Docker hands them to the container as environment variables, so anyone who can use the Docker socket can read them back with `docker inspect`, which returns the container's configuration with its `Env` list, for as long as the container exists, running or stopped; and the same user as the container's process, or root, can read them from that process's `/proc/<pid>/environ` for its whole lifetime. Socket access is root-equivalent already ([container-hardening.md](container-hardening.md)); grant it to nobody you would not trust with these keys. `-e NAME` with no value would keep them out of argv as well, but only under rule 7's guarded one-command prefix assignment, never an `export`, and the values would then sit in the CLI's own environment too. Neither form erases a value already recorded in shell history, tracing or a log.
+The block refuses the placeholder, an empty value, and whitespace or a control character on the `set --` line. It reads the file as text (`grep -a`, so a NUL byte cannot hide a line) and refuses to start unless the file holds exactly one line for each generated value and exactly one client secret line, no other line and no placeholder, and it refuses as well when `grep` cannot read the file: at v27.5.1 an env-file line holding only a name takes its value from the CLI's own environment, which would bring back the channel the file replaces. A key of another shape from an existing deployment needs the matching pattern relaxed. This moves the secrets out of argv, not out of reach. Docker hands them to the container as environment variables, so anyone who can use the Docker socket can read them back with `docker inspect`, which returns the container's configuration with its `Env` list, for as long as the container exists, running or stopped; and the same user as the container's process, or root, can read them from that process's `/proc/<pid>/environ` for its whole lifetime. Socket access is root-equivalent already ([container-hardening.md](container-hardening.md)); grant it to nobody you would not trust with these keys. `-e NAME` with no value would keep them out of argv as well, but only under rule 7's guarded one-command prefix assignment, never an `export`, and the values would then sit in the CLI's own environment too. Neither form erases a value already recorded in shell history, tracing or a log.
 
 MFA: enforce it at whichever SSO provider you list in `AUTH_SSO_PROVIDERS`; LobeChat's own login has no second factor of its own.
 
