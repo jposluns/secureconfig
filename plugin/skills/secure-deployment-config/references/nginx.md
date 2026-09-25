@@ -131,6 +131,7 @@ curl -q -s -o /dev/null -w '%{http_code}\n' --max-time 10 https://example.com/  
   # ps and /proc/<pid>/cmdline on a shared host. Paste the whole parenthesised
   # block, including its set -- line. (The TLS-floor and size-prep steps sit
   # inside the same block only so the password is entered once.)
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PASSWORD'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift

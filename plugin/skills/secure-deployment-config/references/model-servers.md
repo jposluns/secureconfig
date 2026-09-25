@@ -89,6 +89,7 @@ ss -tlnp   # every listener; 8080/8000/8001/8002/3000/80/9000/30000/5000/7860/12
 (
   # Feed the API key to curl on stdin (curl --header @-), never in argv:
   # -H "Authorization: Bearer KEY" is readable in ps / /proc/<pid>/cmdline.
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_API_KEY'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
