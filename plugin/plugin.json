@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "secureconfig",
-  "version": "1.0.347",
+  "version": "1.0.348",
   "description": "Deployment-exposure guides for services AI-assisted projects commonly run: TLS, authentication, MFA, secrets, and network exposure, each line traced to a vendor page.",
   "author": { "name": "Jeff Posluns", "url": "https://secureconfig.ai" },
   "homepage": "https://secureconfig.ai",
