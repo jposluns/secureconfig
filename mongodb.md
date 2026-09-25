@@ -16,6 +16,8 @@ security:
   authorization: enabled
 ```
 
+The official Docker images (7.0, 8.0 and 8.3 at the pinned commit) do not start from those defaults. For the `mongod` command, its default, the entrypoint adds `--bind_ip_all` whenever neither the arguments nor the configuration file sets a bind address (`bindIp` or `bindIpAll`), and adds `--auth` only when both `MONGO_INITDB_ROOT_USERNAME` and `MONGO_INITDB_ROOT_PASSWORD` (or their `_FILE` forms) are set. A container started without both credentials, and without an authorization setting in its arguments or configuration file, therefore listens on every address with authorization off. Supply both credentials or mount this configuration, and publish only to host loopback or a private network.
+
 Restart the package-managed service, then use the localhost exception to create the first administrator. Connect from the server itself with `mongosh`, keeping the listener on loopback until TLS is active. The exception applies to an installation without existing users or roles; it is not an administrative recovery mechanism. See [enable access control](https://www.mongodb.com/docs/manual/tutorial/enable-authentication/).
 
 ```javascript
@@ -651,6 +653,7 @@ QE requires a new encrypted collection created with an `encryptedFields` definit
 
 ## Sources (checked September 2026)
 
+- Official MongoDB Docker image entrypoint: arguments starting with `-` run `mongod`; for `mongod`, both `MONGO_INITDB_ROOT_*` credentials (read by `file_env`, so `_FILE` works) add `--auth`, and with no bind in the arguments or configuration file `--bind_ip_all` is added; `CMD ["mongod"]` (7.0, 8.0 and 8.3 alike; pinned commit 0a29f3374c7fa7c38cfe280363b754f898e0a5eb): https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/docker-entrypoint.sh#L4-L6, https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/docker-entrypoint.sh#L247-L262, https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/docker-entrypoint.sh#L402-L413 and https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/Dockerfile#L122-L125
 - MongoDB security checklist and Community authentication support: https://www.mongodb.com/docs/manual/administration/security-checklist/
 - MongoDB release lifecycle schedule: https://www.mongodb.com/legal/support-policy/lifecycles
 - Enable access control and bootstrap the administrator: https://www.mongodb.com/docs/manual/tutorial/enable-authentication/
