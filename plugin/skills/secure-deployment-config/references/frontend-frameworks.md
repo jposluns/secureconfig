@@ -47,12 +47,17 @@ curl -q -si https://app.example.com/api/private | head -1   # 401 with no sessio
 ls build dist .output 2>/dev/null                          # confirm which output directory your build actually produced
 # Search the built client output for the literal secret value with a fixed-string match. The secret is prompted
 # (input hidden) and reaches grep on stdin (-f - reads the patterns from stdin), never grep's argv; -l prints only
-# file names, so a finding does not echo the secret. Exit 1 is the goal, exit 2 means a listed directory did not
-# exist, and grep's own errors are left visible. Paste this subshell by itself: without bracketed paste, a line
-# pasted after its closing ) becomes the search value instead, and its clean result then means nothing.
+# file names, so a finding does not echo the secret. Only the output directories that exist are searched (a project
+# builds one of them), and the block refuses when none exists. grep's exit status is read separately, so an inherited
+# `set -e` cannot abort on a clean result: 0 is a finding, 1 is clean, anything else is an error, with grep's own
+# diagnostics left visible. Paste this subshell by itself: without bracketed paste, a line pasted after its closing )
+# becomes the search value instead, and its clean result then means nothing.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a
+  set --
+  for d in build dist .output; do [ -d "$d" ] && set -- "$@" "$d"; done
+  [ "$#" -gt 0 ] || { echo 'inconclusive: no build, dist or .output directory here; run the build first'; exit 2; }
   { unset -n client_secret && unset -v client_secret; } 2>/dev/null ||
     { echo 'cannot initialize secret input; not scanning'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not scanning'; exit 2; }
@@ -61,7 +66,12 @@ ls build dist .output 2>/dev/null                          # confirm which outpu
   case "$client_secret" in
     ''|*[[:cntrl:]]*) echo 'the full secret value is required; not scanning'; exit 2 ;;
   esac
-  printf '%s\n' "$client_secret" | grep -rlF -f - -- build dist .output; echo "exit: $?"
+  if printf '%s\n' "$client_secret" | grep -rlF -f - -- "$@"; then rc=0; else rc=$?; fi
+  case "$rc" in
+    0) echo "FINDING: the secret is in the built client output" ;;
+    1) echo "clean: secret not found in $*" ;;
+    *) echo "error: grep exited $rc, result inconclusive" ;;
+  esac
 )
 curl -q -si https://app.example.com/ -H "Host: evil.example.com" | head -1   # a spoofed Host is not trusted
 ```
