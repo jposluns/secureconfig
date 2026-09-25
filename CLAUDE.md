@@ -78,11 +78,17 @@ faces the internet, so an invented flag or a stale default is a security defect,
 ## Gates
 
 `tools/run_all_checks.sh` is the whole-corpus gate suite and the required status check on `main`
-(check context `gates`). Every gate in it is deterministic and offline, so nothing outside this
-repository can turn the build red. Run it before pushing.
+(check context `gates`). Every gate in it is deterministic and offline: no gate reaches the
+network, so no outside service can change a gate's answer. The `gates` job that runs it is not
+offline. Before the suite starts, `.github/workflows/checks.yml` fetches its pinned actions, Python
+and a SHA-256-verified shellcheck, so an outage at GitHub or in those downloads can fail the check
+with no change in this repository. Run the suite before pushing. A local run lints with whatever
+shellcheck is on PATH and skips the lint, without failing, when none is installed; CI installs the
+pinned version and asserts it before the suite runs, so a local green predicts CI only when the
+shell-block gate's pass line names that version.
 
-The weekly lychee workflow sweeps external links and stays advisory, because a vendor outage must
-never block a merge.
+The weekly lychee workflow sweeps external links and stays advisory, because a third-party site
+that is down or refuses automated clients must never block a merge.
 
 ## Generated files
 

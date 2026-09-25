@@ -73,13 +73,17 @@ the message says so. The recorded cases skip alongside it so the suite really do
 THE VERSION IS PINNED IN CI, AND REPORTED HERE. `ubuntu-latest` floats the shellcheck it ships and
 default rule sets change between releases: in #231 the runner's older shellcheck raised an SC2015 on
 a correct `[ -f ] && [ -r ] || { ...; exit; }` guard that this gate's local 0.11.0 does not, so a green local
-run reddened only in CI after push. The `Checks` workflow now installs a SHA-256-verified shellcheck
-0.11.0 before running the suite, the same determinism reason its Python pin carries. The pin lives in
-the workflow, not in this gate: the gate still reads `shellcheck` from PATH and stays offline, so
-nothing inside the suite fetches anything, and the version is still printed so a corpus that reddens
-without changing is one log line from its explanation. Vendoring a multi-megabyte binary in a
-documentation repository is still declined; the accepted tradeoff, already made for the Python pin,
-is that a release-asset outage can fail the job.
+run reddened only in CI after push. The `Checks` workflow installs a SHA-256-verified shellcheck at
+the version its `SHELLCHECK_VERSION` names and, since row 3.17, asserts before the suite runs that a
+bare `shellcheck` resolves to that binary and reports that version; #255 only printed the version,
+and nothing compared it with anything. The pin lives in the workflow, not in this gate: the gate
+still reads `shellcheck` from PATH and stays offline, so nothing inside the suite fetches anything,
+and the pass line names the version AND the path that ran, so a corpus that reddens without changing
+is one log line from its explanation and a CI log shows that the installed binary is what linted. A
+local run is not held to the pin: it lints with whatever shellcheck is on PATH and skips when none is
+installed, so a local green predicts CI only when its pass line names the pinned version. Vendoring
+a multi-megabyte binary in a documentation repository is still declined; the accepted tradeoff,
+already made for the Python pin, is that a release-asset outage can fail the job.
 
 BASH PARSES EVERY BLOCK, separately from shellcheck. The pass line has always said the blocks
 parse, and until now that rested on shellcheck, which a guide can silence: a reviewer put
@@ -180,7 +184,8 @@ def main() -> int:  # noqa: C901
         return 1
     paths = [p for p in paths if p.parent == root]
 
-    have_shellcheck = shutil.which("shellcheck") is not None
+    where = shutil.which("shellcheck")
+    have_shellcheck = where is not None
     version = shellcheck_version() if have_shellcheck else ""
     tmp = Path(tempfile.mkdtemp())
     index = {}
@@ -273,7 +278,7 @@ def main() -> int:  # noqa: C901
               f"guides went unlinted")
         return 0
     print(f"  ok    {n_blocks} bash blocks in {n_files} guides parse and pass "
-          f"shellcheck {version}")
+          f"shellcheck {version} at {where}")
     return 0
 
 
