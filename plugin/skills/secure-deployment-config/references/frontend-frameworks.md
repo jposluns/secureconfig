@@ -4,7 +4,7 @@ SvelteKit, Nuxt, and Vite-based apps built by AI assistants inherit the same tra
 
 ## SvelteKit (`adapter-node`)
 
-The built server "will accept connections on `0.0.0.0` using port 3000" by default (host and port as of adapter-node 5.5.7; the port default applies only when `SOCKET_PATH` is unset); override with `HOST` and `PORT`:
+The built server "will accept connections on `0.0.0.0` using port 3000" by default (host and port as of adapter-node 5.5.7; the port default applies only when `SOCKET_PATH` is unset or empty, and none of this applies when systemd socket activation hands the process a socket); override with `HOST` and `PORT`:
 
 ```bash
 HOST=127.0.0.1 PORT=3000 node build
@@ -73,4 +73,4 @@ Behind a reverse proxy, confirm cookies still carry `Secure` and redirects use a
 - Vite server options (`server.host`, `server.allowedHosts`): https://vite.dev/config/server-options
 - Vite CLI (`vite preview`): https://vite.dev/guide/cli
 - Vite resolves an unset `server.host` to `'localhost'` (pinned tag v8.3.1): https://github.com/vitejs/vite/blob/v8.3.1/packages/vite/src/node/utils.ts#L1010-L1016
-- SvelteKit adapter-node `host = env('HOST', '0.0.0.0')` and `port = env('PORT', !path && '3000')` (pinned tag @sveltejs/adapter-node@5.5.7): https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/index.js#L11-L12
+- SvelteKit adapter-node `host = env('HOST', '0.0.0.0')` and `port = env('PORT', !path && '3000')`, with `path = env('SOCKET_PATH', false)`, where `env()` returns a variable's value whenever it is present, even empty, and the socket-activation branch that listens on the passed descriptor instead (pinned tag @sveltejs/adapter-node@5.5.7): https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/index.js#L10-L12, https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/env.js#L46-L50 and https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/index.js#L57-L60

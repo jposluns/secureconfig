@@ -5315,7 +5315,7 @@ SvelteKit, Nuxt, and Vite-based apps built by AI assistants inherit the same tra
 
 ## SvelteKit (`adapter-node`)
 
-The built server "will accept connections on `0.0.0.0` using port 3000" by default (host and port as of adapter-node 5.5.7; the port default applies only when `SOCKET_PATH` is unset); override with `HOST` and `PORT`:
+The built server "will accept connections on `0.0.0.0` using port 3000" by default (host and port as of adapter-node 5.5.7; the port default applies only when `SOCKET_PATH` is unset or empty, and none of this applies when systemd socket activation hands the process a socket); override with `HOST` and `PORT`:
 
 ```bash
 HOST=127.0.0.1 PORT=3000 node build
@@ -5384,7 +5384,7 @@ Behind a reverse proxy, confirm cookies still carry `Secure` and redirects use a
 - Vite server options (`server.host`, `server.allowedHosts`): https://vite.dev/config/server-options
 - Vite CLI (`vite preview`): https://vite.dev/guide/cli
 - Vite resolves an unset `server.host` to `'localhost'` (pinned tag v8.3.1): https://github.com/vitejs/vite/blob/v8.3.1/packages/vite/src/node/utils.ts#L1010-L1016
-- SvelteKit adapter-node `host = env('HOST', '0.0.0.0')` and `port = env('PORT', !path && '3000')` (pinned tag @sveltejs/adapter-node@5.5.7): https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/index.js#L11-L12
+- SvelteKit adapter-node `host = env('HOST', '0.0.0.0')` and `port = env('PORT', !path && '3000')`, with `path = env('SOCKET_PATH', false)`, where `env()` returns a variable's value whenever it is present, even empty, and the socket-activation branch that listens on the passed descriptor instead (pinned tag @sveltejs/adapter-node@5.5.7): https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/index.js#L10-L12, https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/env.js#L46-L50 and https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/index.js#L57-L60
 
 ======================================================================
 ==> container-hardening.md
@@ -8561,8 +8561,8 @@ A comment in `pgbouncer.ini` must start its own line. The vendor is explicit: "T
 [pgbouncer]
 ; The application-facing address. Never * unless this is genuinely public.
 ; Unset is the default (as of 1.26.0), and it means Unix socket connections
-; only, unless systemd socket activation passes sockets in: then the .socket
-; unit's ListenStream= lines decide, and listen_addr is ignored.
+; only, unless a build with systemd support is started by socket activation:
+; then the .socket unit's ListenStream= lines decide, and listen_addr is ignored.
 listen_addr = 10.0.0.5
 listen_port = 6432
 unix_socket_dir = /var/run/postgresql
@@ -8898,7 +8898,7 @@ Put the human paths to the host behind MFA per [mfa.md](mfa.md).
 ## Sources (checked September 2026)
 
 - PgBouncer configuration, including the ini comment rule, `listen_addr`, `listen_port`, `client_tls_sslmode`, `server_tls_sslmode`, `auth_type`, `auth_file`, `auth_query`, `admin_users`, `stats_users`, `application_name_add_host`, and the `[databases]` `user` key: https://www.pgbouncer.org/config.html
-- PgBouncer `listen_addr` default `""`, and the socket-activation path that ignores it (pinned tag pgbouncer_1_26_0): https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/src/main.c#L292 and https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/src/pooler.c#L495-L498
+- PgBouncer `listen_addr` default `""`, and the socket-activation path that ignores it (pinned tag pgbouncer_1_26_0): https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/src/main.c#L292 and https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/src/pooler.c#L495-L498, with `sd_listen_fds()` defined as `(0)` in builds without systemd support: https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/include/bouncer.h#L54-L62
 - PgBouncer usage, the admin console and its `SHOW` commands, including who `auth_type=any` admits and the passwordless Unix-socket login: https://www.pgbouncer.org/usage.html
 - PgBouncer changelog, for CVE-2026-6664, CVE-2026-6665, CVE-2026-6666 and CVE-2026-6667, all fixed in 1.25.2: https://www.pgbouncer.org/changelog.html
 - PgBouncer features and pooling modes: https://www.pgbouncer.org/features.html
