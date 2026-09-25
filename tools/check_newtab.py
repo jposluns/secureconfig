@@ -24,6 +24,8 @@ pages); this gate reads the same files the site drift gates already cover.
 
 Exit 0 clean, 1 on any finding, 2 on a missing/unreadable required input (fail-closed).
 """
+# LOCAL PATCH (secureconfig, 2026-09-25): main() takes the coverage roots from AIQT_NEWTAB_ROOTS, and this
+# repository scans site/ only. Modified from AIQT Guardrails ad60d25 under the Apache License 2.0; see .aiqt/PIN.
 import sys
 from html.parser import HTMLParser
 from pathlib import Path

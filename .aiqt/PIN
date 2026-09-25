@@ -27,7 +27,8 @@
 #   CLAUDE.md and AGENTS.md (byte-identical to each other). Their AIQT sections are adapted, with changes,
 #   from upstream aiqt-barebones.md at the commit above; the repository-specific sections are secureconfig's.
 #
-# Licence: everything listed above is AIQT Guardrails material under the Apache License 2.0 (.aiqt/LICENSE,
+# Licence: the vendored files above, and the AIQT sections of CLAUDE.md and AGENTS.md, are AIQT Guardrails
+#   material under the Apache License 2.0 (.aiqt/LICENSE,
 #   .aiqt/NOTICE). This pin was re-pinned on 2026-09-25 because the earlier pin predates the pack's move to
 #   Apache-2.0 (at upstream eeba6d1). The rest of this repository is CC0; README, CONTRIBUTING, SECURITY and
 #   CLAUDE.md/AGENTS.md name this exception. The local patch carries a "LOCAL PATCH" notice in the file
@@ -37,7 +38,8 @@
 #   tools/check_newtab.py  main() takes its coverage roots from AIQT_NEWTAB_ROOTS, outside the self-test (space-separated; unset or
 #     empty keeps upstream's "site opf/site"), because opf/site/ exists only in the upstream repository and
 #     upstream treats each root as required. tools/run_all_checks.sh sets AIQT_NEWTAB_ROOTS=site. Reported
-#     upstream on 2026-09-25; drop the patch when upstream makes the roots configurable.
+#     upstream on 2026-09-25; drop the patch when upstream makes the roots configurable. The patch adds a
+#     notice under the module docstring and six lines at the top of main().
 #   The two earlier local patches (AIQT_SITE_HOST in tools/_gen_common.py and tools/check_site.py) are
 #   upstream at the commit above and are no longer needed. tools/run_all_checks.sh still sets
 #   AIQT_SITE_HOST=secureconfig.ai, which the upstream code now reads.
@@ -46,4 +48,5 @@
 #   .claude/settings.json  <- python3 tools/gen_aiqt_settings.py
 #
 # To upgrade: re-copy the vendored paths at the new ref, bump Commit/Version/Vendored above,
-# re-apply the local patch, re-run tools/gen_aiqt_settings.py, then run tools/run_all_checks.sh.
+# re-apply the local patch, run tools/gen_aiqt_settings.py --check (it reports SKIP while .claude/settings.json is
+# absent; do not run it without --check until row 3.6 activates the hooks), then run tools/run_all_checks.sh.
