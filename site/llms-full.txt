@@ -5705,29 +5705,68 @@ ss -tlnp   # read every listener; 3000 on 127.0.0.1 only when self-hosted. ss sh
 # alone. --noproxy so no client proxy answers. Save each body and confirm it carries NO protected payload:
 curl -q -sS --noproxy '*' -o admin-nocookie.txt -w 'http=%{http_code} loc=%{redirect_url}\n' https://app.example.com/api/admin   # 3xx to /login, or 401/403; admin-nocookie.txt must hold no admin data
 curl -q -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redirect_url}\n' https://app.example.com/dashboard    # 3xx with loc=/login, or a 200 redirect shell; dash-nocookie.txt must NOT contain dashboard content (a streamed redirect saves a shell, not the login page)
-# POSITIVE controls, so a denial above is the auth check firing and not a route broken for everyone. Set
-# VALID_COOKIE to a real, freshly issued cookie VALUE and COOKIE_NAME to its name - this guide's example uses
-# `session`, Better Auth uses `better-auth.session_token` (or `__Secure-better-auth.session_token` with
-# secure cookies). Test the admin route with an admin AND a non-admin cookie (authorization, not only
-# authentication), and confirm each success body is the real protected content, not a login page:
-if [ -z "${VALID_COOKIE:-}" ] || [ -z "${COOKIE_NAME:-}" ]; then
-  echo "inconclusive: set COOKIE_NAME and VALID_COOKIE first"
-else
-  curl -q -sS --noproxy '*' -o dash-auth.txt  -w 'http=%{http_code}\n' -b "$COOKIE_NAME=$VALID_COOKIE" https://app.example.com/dashboard   # expect 200; dash-auth.txt is the dashboard, not /login
-  curl -q -sS --noproxy '*' -o admin-auth.txt -w 'http=%{http_code}\n' -b "$COOKIE_NAME=$VALID_COOKIE" https://app.example.com/api/admin    # admin cookie: 200; a non-admin cookie here must be 403 or a /login redirect
-fi
+# POSITIVE controls, so a denial above is the auth check firing and not a route broken for everyone. Put the
+# cookie's NAME on the set -- line - this guide's example uses `session`, Better Auth uses
+# `better-auth.session_token` (or `__Secure-better-auth.session_token` with secure cookies) - and paste a
+# real, freshly issued cookie VALUE at each hidden prompt. Test the admin route with an admin AND a non-admin
+# cookie (authorization, not only authentication), and confirm each success body is the real protected
+# content, not a login page. Each cookie reaches curl on stdin (--header @-), never argv; that closes the argv
+# channel only, not shell history, tracing, or your own account's view of the process. Paste this subshell by
+# itself: without bracketed paste, lines pasted after its closing ) are read as the cookies instead.
+(
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  set +x +a
+  set -- PASTE_WHOLE_BLOCK 'session'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
+  case "$1" in
+    ''|*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-]*) echo 'the set -- line takes the cookie NAME only (letters, digits, . _ -); not probing'; exit 2 ;;
+  esac
+  { unset -n cookie_value && unset -v cookie_value; } 2>/dev/null ||
+    { echo 'cannot initialize cookie input; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
+  IFS= read -r -s -p 'ADMIN session cookie VALUE (input hidden), then Enter: ' cookie_value < /dev/tty || exit 2
+  printf '\n'
+  case "$cookie_value" in
+    ''|*[[:cntrl:]]*) echo 'a valid admin session cookie value is required; not probing'; exit 2 ;;
+  esac
+  printf 'Cookie: %s=%s\n' "$1" "$cookie_value" |
+    curl -q -sS --noproxy '*' -o dash-auth.txt  -w 'http=%{http_code}\n' --header @- https://app.example.com/dashboard   # expect 200; dash-auth.txt is the dashboard, not /login
+  printf 'Cookie: %s=%s\n' "$1" "$cookie_value" |
+    curl -q -sS --noproxy '*' -o admin-auth.txt -w 'http=%{http_code}\n' --header @- https://app.example.com/api/admin    # admin cookie: 200
+  IFS= read -r -s -p 'NON-ADMIN session cookie VALUE (input hidden), then Enter: ' cookie_value < /dev/tty || exit 2
+  printf '\n'
+  case "$cookie_value" in
+    ''|*[[:cntrl:]]*) echo 'a valid non-admin session cookie value is required; not probing'; exit 2 ;;
+  esac
+  printf 'Cookie: %s=%s\n' "$1" "$cookie_value" |
+    curl -q -sS --noproxy '*' -o admin-nonadmin.txt -w 'http=%{http_code} loc=%{redirect_url}\n' --header @- https://app.example.com/api/admin   # a non-admin cookie here must be 403 or a /login redirect, and admin-nonadmin.txt must hold no admin data; this means nothing unless the admin run got 200
+)
 # Secret scan of the client bundle: search the FULL secret (not a prefix), require the build to exist, and
-# read grep's exit status separately (run inline under set -e, a clean grep's exit 1 would abort the block):
-if [ -z "${SESSION_SECRET:-}" ] || [ ! -d .next/static ]; then
-  echo "inconclusive: set SESSION_SECRET and run next build first"
-else
-  if grep -rIF -- "$SESSION_SECRET" .next/static; then rc=0; else rc=$?; fi
+# read grep's exit status separately (run inline under set -e, a clean grep's exit 1 would abort the block).
+# Paste the session-signing secret at the hidden prompt; it reaches grep on stdin (-f - reads the patterns
+# from stdin), never argv, with the same limits as above. Paste this subshell by itself too: without
+# bracketed paste, a line pasted after its closing ) is searched for instead, and its clean result then means nothing.
+(
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  set +x +a
+  { unset -n session_secret && unset -v session_secret; } 2>/dev/null ||
+    { echo 'cannot initialize secret input; not scanning'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not scanning'; exit 2; }
+  [ -d .next/static ] || { echo 'inconclusive: run next build first'; exit 2; }
+  IFS= read -r -s -p 'SESSION_SECRET value (input hidden), then Enter: ' session_secret < /dev/tty || exit 2
+  printf '\n'
+  case "$session_secret" in
+    ''|*[[:cntrl:]]*) echo 'inconclusive: the full secret is required; not scanning'; exit 2 ;;
+  esac
+  if printf '%s\n' "$session_secret" | grep -rIlF -f - -- .next/static; then rc=0; else rc=$?; fi
   case "$rc" in
     0) echo "FINDING: the secret is in the browser bundle" ;;
     1) echo "clean: secret not found in the bundle" ;;
     *) echo "error: grep exited $rc, result inconclusive" ;;
   esac
-fi
+)
 # a clean grep is evidence not proof (a bundler can split or encode a value); scan for your other secrets too.
 # Server Action authorization: create a FRESH disposable record before EACH attempt (an authorized mutation
 # changes the precondition - after a delete, a replay would 'not find' the record and look refused when it
@@ -5760,6 +5799,7 @@ fi
 - Node.js `server.listen()` without a host binds the unspecified IPv6 address `::` when available, otherwise `0.0.0.0`: https://github.com/nodejs/node/blob/v22.22.1/doc/api/net.md
 - Commander 12.1.0 (the version Next.js v16.3.6 pins): an option that takes a value is `undefined` unless specified on the command line: https://github.com/tj/commander.js/blob/v12.1.0/Readme.md#L203-L205
 - Next.js v16.3.6 pins `commander` at `12.1.0` (pinned tag v16.3.6): https://github.com/vercel/next.js/blob/v16.3.6/packages/next/package.json#L246
+- curl `--header @-` (header lines read from stdin): https://curl.se/docs/manpage.html#-H ; GNU grep `-f -` ("When file is '-', read patterns from standard input"), `-l` ("print the name of each input file from which output would normally have been printed") and its exit status (0 if a line is selected, 1 if none, 2 on error): https://www.gnu.org/software/grep/manual/html_node/Matching-Control.html , https://www.gnu.org/software/grep/manual/html_node/General-Output-Control.html and https://www.gnu.org/software/grep/manual/html_node/Exit-Status.html
 
 ======================================================================
 ==> go.md
@@ -12318,7 +12358,7 @@ Identity policies and anonymous bucket policies are separate controls. Review bo
 
 Authentication does not establish an appropriate authorization boundary. With role-policy mapping, every authentication request using the provider's `RoleArn` receives the configured policies. Assigning a broad policy therefore spreads that access across the identities using that role. Source: [AIStor OIDC access management](https://docs.min.io/aistor/administration/iam/access/oidc-access/).
 
-For an already configured OIDC provider, choose exactly one mapping method. Remove the other method's explicit settings from both the environment and stored configuration; configuring both `role_policy` and `claim_name` is an error. Apply consistent settings across nodes and restart AIStor. Source: [AIStor OIDC identity management](https://docs.min.io/aistor/administration/iam/identity/oidc-identity/).
+For an already configured OIDC provider, choose exactly one mapping method. Remove the other method's explicit settings from both the environment and stored configuration; configuring both `role_policy` and `claim_name` is an error. Apply consistent settings across nodes and restart AIStor. The examples below set the default configuration. For a named configuration, append `_` followed by its case-sensitive name to each variable (for example `MINIO_IDENTITY_OPENID_ROLE_POLICY_PARTNERS` for a configuration named `PARTNERS`). When that configuration uses role-policy mapping, have clients supply its `RoleArn` in their STS request. Claim mapping can serve only one OIDC provider per deployment; every other provider must use role-policy mapping. Sources: [AIStor OIDC identity management](https://docs.min.io/aistor/administration/iam/identity/oidc-identity/), [OpenID settings](https://docs.min.io/aistor/reference/aistor-server/settings/iam/openid/) (multiple configurations), and [OIDC access management](https://docs.min.io/aistor/administration/iam/access/oidc-access/).
 
 Use role-policy mapping only when every identity admitted through that role should receive the section 4 application's access:
 
@@ -12334,13 +12374,13 @@ Alternatively, select claim mapping when identities need different policies:
 MINIO_IDENTITY_OPENID_CLAIM_NAME="policy"
 ```
 
-Configure the IdP to issue `"policy": "app-bucket"` only for identities entitled to that policy; other identities receive their own existing, narrowly scoped policy names. Treat this claim as an authorization decision controlled by the IdP administrator. A user without an assigned policy has no access. Sources: [AIStor OpenID settings](https://docs.min.io/aistor/reference/aistor-server/settings/iam/openid/), [OIDC identity management](https://docs.min.io/aistor/administration/iam/identity/oidc-identity/), and [OIDC access management](https://docs.min.io/aistor/administration/iam/access/oidc-access/).
+Configure the IdP to issue `"policy": "app-bucket"` only for identities entitled to that policy; other identities receive their own existing, narrowly scoped policy names. Treat this claim as an authorization decision controlled by the IdP administrator. An identity whose token maps to no policy gains no identity-based access; an anonymous bucket policy (sections 3 and 4) still grants its access to anyone. Sources: [AIStor OpenID settings](https://docs.min.io/aistor/reference/aistor-server/settings/iam/openid/), [OIDC identity management](https://docs.min.io/aistor/administration/iam/identity/oidc-identity/), and [OIDC access management](https://docs.min.io/aistor/administration/iam/access/oidc-access/).
 
 Do not describe a short `MINIO_STS_DURATION` as a universal maximum. `AssumeRoleWithWebIdentity` accepts explicit `DurationSeconds` values from 900 through 31536000 seconds (365 days); with a usable JWT expiry, an explicit duration takes precedence over that expiry. `MINIO_STS_DURATION` is a default, not this ceiling. AIStor separately documents the native `sts:DurationSeconds` policy condition for restricting WebIdentity credential duration. Sources: [AssumeRoleWithWebIdentity](https://docs.min.io/aistor/developers/security-token-service/assumerolewithwebidentity/), [STS settings](https://docs.min.io/aistor/reference/aistor-server/settings/iam/sts/), and [access-management condition keys](https://docs.min.io/aistor/administration/iam/access/).
 
 ### 4.2. Shorten presigned URLs and cap signature age
 
-A presigned download URL contains access credentials: possession permits its authorized download even when the bucket is private. Generate it with the scoped `app` identity and a short expiry. Save the output in a new file inside an owner-only directory, and share the URL through a protected channel:
+A presigned download URL contains access credentials: possession permits its authorized download even when the bucket is private. Generate it with the scoped `app` identity and a short expiry; if the `app` alias does not exist yet, import it from the section 4 access key with the stdin form in section 8 (`mc alias import app < /path/to/REPLACE_WITH_APP_ALIAS.json`). Save the output in a new file inside an owner-only directory, and share the URL through a protected channel:
 
 ```bash
 (
