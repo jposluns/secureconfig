@@ -95,13 +95,15 @@ So the model is deliberately tiny, declared PER PAGE, and everything outside it 
     one accounted for the same way as `style=`, because the `<svg><title>` blind spot hides a handler
     exactly as it hides a style attribute; `script-src` is hash-only and no hash covers an attribute,
     so a browser refuses the handler silently. The literal count reads every tag (`<` and an ASCII
-    letter, to its `>`) as HTML's tokenizer does and counts each attribute NAME there that begins
-    with `on`, ASCII case-insensitively, with a value or valueless, followed by `=`, `/`, `>` or a
-    space (`onclick`, `onclick/`, `on-click="x"`), and subtracts the same count taken over the
-    hash-pinned block bodies. Text outside a tag (`only`, `on duty`, `one = two`) and a name that
-    merely contains `on` (`data-onload`) are not counted. A `<`-and-letter inside a comment is read
-    as a tag here though a browser reads it as text, so an `on*` name there is a false positive that
-    fails closed;
+    letter, to its `>`, quoted values honoured) roughly as HTML's tokenizer reads a tag in its data
+    state, and counts each attribute NAME there that begins with `on`, ASCII case-insensitively,
+    with a value or valueless, followed by `=`, `/`, `>` or a space (`onclick`, `onclick/`,
+    `on-click="x"`), and subtracts the same count taken over the hash-pinned block bodies. It is NOT
+    the tokenizer: it has no comment, CDATA, declaration or raw-text state, so fake markup inside
+    inert text (`<!-- <b title=" -->`) made it read a tag a browser never sees and swallow a real
+    handler after it as a quoted value, while html.parser missed that handler inside SVG `<title>`,
+    and both counts were 0 (round 3 of #352). That accounting is kept as defense in depth; what now
+    closes the hole is REFUSED CONTEXTS, below, none of which asks html.parser anything;
   - exactly one `<meta charset="utf-8">` and no other charset declaration per page, because this
     always decodes UTF-8 and a page declaring something else would be decoded, and hashed, differently
     by a browser that has no transport charset to override it;
@@ -110,6 +112,35 @@ So the model is deliberately tiny, declared PER PAGE, and everything outside it 
   - no NUL byte, which a browser's tokenizer turns into U+FFFD before hashing and this would not.
 
 Any of those fails with a message naming the page and saying it outgrew the gate.
+
+REFUSED CONTEXTS (round 3 of #352). The gate no longer relies on html.parser and a browser agreeing
+about where markup starts. Each rule reads the page with the hash-pinned `<style>`/`<script>` bodies
+blanked (each body is located right after a bare opening tag of its kind; one that cannot be located
+is left in place, which only adds findings), and each is a finding with its own message:
+
+  1. every match of VALUED_HANDLER, `(?i)(?<![\\w-])on[\\w-]*\\s*=`, anywhere, whatever the
+     context: a page `on*` handler with a value, or text this gate cannot tell from one
+     (`one = two` in prose, `onclick=` in a comment or an attribute value). A valueless handler
+     has no `=` and is left to the structural and literal checks above, which rules 2 and 3 keep
+     sound. `data-onload=` does not
+     match. The real pages have no match outside their pinned bodies;
+  2. inert text holding a `<`, where the literal scan and a browser can disagree: a comment (from
+     `<!--` to the first `-->` after it, so `<!-->` and `--!>` never end one early here), a CDATA
+     section (to the first `]]>`), and a `<!` or `<?` declaration other than the leading
+     `<!doctype html>` (to the first `>`); and a `textarea`, `title`, `xmp`, `noscript`,
+     `plaintext`, `noembed`, `noframes` or `iframe` element, in any case, whose first `<` after its
+     start tag does not begin its own end tag. A comment or a `<title>` holding plain text passes;
+  3. inside inline foreign content, the elements where html.parser and the HTML spec diverge: any
+     `<math>` element at all, and inside `<svg>` any `title`, `desc`, `foreignObject`, `style` or
+     `script` element, in any case. Every `<svg` start tag deepens the SVG context, self-closing
+     or not, and `</svg` leaves it, so the region read as SVG is never smaller than a browser's.
+     The real inline SVGs hold only `svg`, `circle`, `path` and `rect`.
+
+Rules 2 and 3 are conservative, not exact: they refuse inert text a browser would render harmlessly,
+and SVG a browser would draw, because the point is that nothing outside them has to be modelled.
+Once rule 2 holds, no comment, CDATA section, declaration or raw-text element outside the pinned
+bodies holds a `<`, so no fake tag can open inside inert text and swallow real markup after it,
+which is what the tag reading in rule 3 and the literal accounting assume.
 
 THE ONE POLICY, UNDER `/*`. `site/404.html` is served as the body for any unmatched request path, and
 Cloudflare matches `_headers` rules against the REQUESTED URL, so a CSP set (or detached) under any
@@ -170,14 +201,26 @@ KINDS = (("script", ("script-src-elem", "script-src", "default-src")),
          ("style", ("style-src-elem", "style-src", "default-src")))
 OPENER = re.compile(r"<(style|script)\b", re.I)
 STYLE_ATTR = re.compile(r"\bstyle\s*=", re.I)
-# P5: the literal handler accounting reads every tag the way HTML's tokenizer does, not the way
-# html.parser does. A tag opens at `<` and an ASCII letter and runs to its `>`; an attribute NAME is
-# any run of characters other than whitespace, `/`, `>` (and `=` after the first), with or without
-# a value, quoted or not. So a valueless `onclick`, `onclick/`, `on-click` and `onload` in a tag all
-# count, and text outside a tag ("only", "on duty") never does. See the docstring.
+# P5: the literal handler accounting reads a tag roughly as HTML's tokenizer reads one IN THE DATA
+# STATE, not the way html.parser does. A tag opens at `<` and an ASCII letter and runs to its `>`; an
+# attribute NAME is any run of characters other than whitespace, `/`, `>` (and `=` after the first),
+# with or without a value, quoted or not. So a valueless `onclick`, `onclick/`, `on-click` and
+# `onload` in a tag all count, and text outside a tag ("only", "on duty") never does. It knows no
+# other tokenizer state, which is why the contexts below are refused rather than read. See the
+# docstring.
 TAG_OPEN = re.compile(r"<[A-Za-z][^\t\n\f />]*")
 TAG_ATTR = re.compile(r"[\t\n\f /]*([^\t\n\f />][^\t\n\f />=]*)"
                       r"(?:[\t\n\f ]*=[\t\n\f ]*(?:\"[^\"]*\"?|'[^']*'?|[^\t\n\f >]*))?")
+TAG_CLOSE = re.compile(r"[\t\n\f /]*>?")
+# Round 3 of #352: rules that do not depend on html.parser and a browser agreeing. See REFUSED
+# CONTEXTS in the docstring.
+VALUED_HANDLER = re.compile(r"(?i)(?<![\w-])on[\w-]*\s*=")
+LEADING_DOCTYPE = re.compile(r"\ufeff?<!doctype html>", re.I)
+MARKUP_DECL = re.compile(r"<(!--|!\[CDATA\[|!|\?)")
+INERT = ("textarea", "title", "xmp", "noscript", "plaintext", "noembed", "noframes", "iframe")
+INERT_OPEN = re.compile(r"<(" + "|".join(INERT) + r")(?=[\t\n\f />])", re.I)
+ANY_TAG = re.compile(r"<(/?)([A-Za-z][^\t\n\f />]*)")
+SVG_DIVERGENT = ("title", "desc", "foreignobject", "style", "script")
 CHARSET = re.compile(r"charset\s*=", re.I)
 META_UTF8 = '<meta charset="utf-8">'
 CSP = "content-security-policy"
@@ -292,8 +335,11 @@ def normalized(data: bytes) -> str:
 def literal_on_attrs(text):
     """How many attribute names in tag context in `text` begin with `on`, ASCII case-insensitively.
 
-    Each tag is read from its `<` to its `>` as HTML's tokenizer reads it (TAG_OPEN, TAG_ATTR), and
-    scanning resumes after the tag, so a `<` inside a quoted value opens nothing.
+    Each tag is read from its `<` to its `>` as HTML's tokenizer reads a tag in the data state
+    (TAG_OPEN, TAG_ATTR), and scanning resumes after the tag, so a `<` inside a quoted value opens
+    nothing. It is NOT equivalent to the tokenizer: it has no comment, CDATA, declaration or raw-text
+    state, so a fake `<b title="` inside inert text would make it swallow a real tag after it. It is
+    defense in depth; unmodelled_contexts() refuses every page where that can happen.
     """
     count, pos = 0, 0
     while tag := TAG_OPEN.search(text, pos):
@@ -303,6 +349,102 @@ def literal_on_attrs(text):
             if attr.group(1)[:2].lower() == "on":
                 count += 1
     return count
+
+
+def line_of(text, index):
+    return text.count("\n", 0, index) + 1
+
+
+def tag_end(text, pos):
+    """The index just past the tag whose name ends at `pos`, read as literal_on_attrs() reads one."""
+    while attr := TAG_ATTR.match(text, pos):
+        pos = attr.end()
+    return TAG_CLOSE.match(text, pos).end()
+
+
+def outside_blocks(html, page):
+    """`html` with the body of each parsed `<style>`/`<script>` blanked to its newlines alone.
+
+    A body is located right after a bare opening tag of its kind, in any case; one that cannot be
+    located is left in place, so a later rule reads more text, never less, and fails closed.
+    """
+    for tag in ("style", "script"):
+        opener = re.compile(f"<{tag}>", re.I)
+        pos = 0
+        for body in page.bodies(tag):
+            for m in opener.finditer(html, pos):
+                if html.startswith(body, m.end()):
+                    html = html[:m.end()] + "\n" * body.count("\n") + html[m.end() + len(body):]
+                    pos = m.end()
+                    break
+    return html
+
+
+def valued_handlers(path, text):
+    """Rule 1 of REFUSED CONTEXTS: every `on...=` outside the pinned blocks, whatever its context."""
+    return [f"{path}:{line_of(text, m.start())} contains `{m.group().strip()}` outside the "
+            f"hash-pinned blocks, which is an on* handler attribute or text this gate cannot tell "
+            f"from one, since it reads no HTML context; script-src is hash-only and no hash covers "
+            f"an attribute, so a browser refuses a handler silently. Move the behaviour into the "
+            f"inline <script>, or reword the text"
+            for m in VALUED_HANDLER.finditer(text)]
+
+
+def unmodelled_contexts(path, text):
+    """Rule 2 of REFUSED CONTEXTS: inert text holding a `<`, where the literal scan and a browser
+    can disagree about where markup starts."""
+    out = []
+    lead = LEADING_DOCTYPE.match(text)
+    for m in MARKUP_DECL.finditer(text, lead.end() if lead else 0):
+        kind, start = m.group(1), m.end()
+        if kind == "!--":
+            end, what = text.find("-->", start), "a comment"
+        elif kind == "![CDATA[":
+            end, what = text.find("]]>", start), "a CDATA section"
+        else:
+            end, what = text.find(">", start), f"a <{kind} declaration"
+        if "<" in text[start:end if end >= 0 else len(text)]:
+            out.append(f"{path}:{line_of(text, m.start())} has {what} whose text contains `<`. A "
+                       f"browser reads that text as inert, while this gate's literal scan may read "
+                       f"a tag there and swallow real markup after it, so it is outside the gate's "
+                       f"model; take the `<` out or write it as &lt;")
+    for m in INERT_OPEN.finditer(text):
+        name = m.group(1).lower()
+        content = tag_end(text, m.end())
+        nxt = text.find("<", content)
+        if nxt >= 0 and not re.match(rf"</{name}[\t\n\f />]", text[nxt:], re.I):
+            out.append(f"{path}:{line_of(text, m.start())} has a <{name}> whose content contains `<` "
+                       f"before its </{name}>. A browser reads that content as raw text (or, in "
+                       f"foreign content, as markup), and html.parser and this gate's literal scan "
+                       f"may each read it another way, so it is outside the gate's model; write the "
+                       f"`<` as &lt;")
+    return out
+
+
+def foreign_divergences(path, text):
+    """Rule 3 of REFUSED CONTEXTS: foreign-content elements html.parser reads as HTML.
+
+    Every `<svg` start tag deepens the SVG context, self-closing or not (an unquoted value can end
+    in `/`), and `</svg` leaves it, so the region read as SVG here is never smaller than a browser's.
+    """
+    out, depth, pos = [], 0, 0
+    while m := ANY_TAG.search(text, pos):
+        pos = tag_end(text, m.end())
+        closing, name = m.group(1), m.group(2).lower()
+        if name == "svg":
+            depth = max(0, depth - 1) if closing else depth + 1
+        elif closing:
+            continue
+        elif name == "math":
+            out.append(f"{path}:{line_of(text, m.start())} has a <math> element. html.parser reads "
+                       f"MathML as HTML, and a browser's foreign-content rules there (text and HTML "
+                       f"integration points) differ, so it is outside the gate's model")
+        elif depth and name in SVG_DIVERGENT:
+            out.append(f"{path}:{line_of(text, m.start())} has a <{m.group(2)}> inside an inline "
+                       f"<svg>. html.parser reads it as an HTML element (a <title> as RCDATA, a "
+                       f"<style> or <script> as a block) where a browser reads SVG foreign content, "
+                       f"so it is outside the gate's model")
+    return out
 
 
 def parse_page(html):
@@ -365,6 +507,12 @@ def simple_enough(path, page, html, shape):
                 out.append(f"the <{tag}> at {path}:{line} carries attributes ({', '.join(names)}), "
                            f"and whether a browser runs an element with them depends on rules this "
                            f"gate does not model; keep it bare or extend the gate deliberately")
+    # REFUSED CONTEXTS (round 3 of #352): none of these asks html.parser anything, so a page where
+    # the parser and a browser disagree cannot hide a handler from all of them at once.
+    outside = outside_blocks(html, page)
+    out += valued_handlers(path, outside)
+    out += unmodelled_contexts(path, outside)
+    out += foreign_divergences(path, outside)
     # A literal `style=` the parser never reported is the same blind spot as an unreported element:
     # html.parser swallows <title> content as RCDATA, so an attribute smuggled through <svg><title>
     # was invisible while a browser applies it and CSP-checks it.
