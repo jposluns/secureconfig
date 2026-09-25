@@ -5721,7 +5721,7 @@ curl -q -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redi
   shift
   [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
   case "$1" in
-    ''|*[![:alnum:]._-]*) echo 'the set -- line takes the cookie NAME only (letters, digits, . _ -); not probing'; exit 2 ;;
+    ''|*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-]*) echo 'the set -- line takes the cookie NAME only (letters, digits, . _ -); not probing'; exit 2 ;;
   esac
   { unset -n cookie_value && unset -v cookie_value; } 2>/dev/null ||
     { echo 'cannot initialize cookie input; not probing'; exit 2; }
@@ -5741,13 +5741,13 @@ curl -q -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redi
     ''|*[[:cntrl:]]*) echo 'a valid non-admin session cookie value is required; not probing'; exit 2 ;;
   esac
   printf 'Cookie: %s=%s\n' "$1" "$cookie_value" |
-    curl -q -sS --noproxy '*' -o admin-nonadmin.txt -w 'http=%{http_code} loc=%{redirect_url}\n' --header @- https://app.example.com/api/admin   # a non-admin cookie here must be 403 or a /login redirect; this means nothing unless the admin run got 200
+    curl -q -sS --noproxy '*' -o admin-nonadmin.txt -w 'http=%{http_code} loc=%{redirect_url}\n' --header @- https://app.example.com/api/admin   # a non-admin cookie here must be 403 or a /login redirect, and admin-nonadmin.txt must hold no admin data; this means nothing unless the admin run got 200
 )
 # Secret scan of the client bundle: search the FULL secret (not a prefix), require the build to exist, and
 # read grep's exit status separately (run inline under set -e, a clean grep's exit 1 would abort the block).
 # Paste the session-signing secret at the hidden prompt; it reaches grep on stdin (-f - reads the patterns
 # from stdin), never argv, with the same limits as above. Paste this subshell by itself too: without
-# bracketed paste, a line pasted after its closing ) is searched for instead, and a clean result is then false.
+# bracketed paste, a line pasted after its closing ) is searched for instead, and its clean result then means nothing.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a
@@ -5755,7 +5755,7 @@ curl -q -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redi
     { echo 'cannot initialize secret input; not scanning'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not scanning'; exit 2; }
   [ -d .next/static ] || { echo 'inconclusive: run next build first'; exit 2; }
-  IFS= read -r -s -p 'session-signing secret (input hidden), then Enter: ' session_secret < /dev/tty || exit 2
+  IFS= read -r -s -p 'SESSION_SECRET value (input hidden), then Enter: ' session_secret < /dev/tty || exit 2
   printf '\n'
   case "$session_secret" in
     ''|*[[:cntrl:]]*) echo 'inconclusive: the full secret is required; not scanning'; exit 2 ;;
@@ -5799,6 +5799,7 @@ curl -q -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redi
 - Node.js `server.listen()` without a host binds the unspecified IPv6 address `::` when available, otherwise `0.0.0.0`: https://github.com/nodejs/node/blob/v22.22.1/doc/api/net.md
 - Commander 12.1.0 (the version Next.js v16.3.6 pins): an option that takes a value is `undefined` unless specified on the command line: https://github.com/tj/commander.js/blob/v12.1.0/Readme.md#L203-L205
 - Next.js v16.3.6 pins `commander` at `12.1.0` (pinned tag v16.3.6): https://github.com/vercel/next.js/blob/v16.3.6/packages/next/package.json#L246
+- curl `--header @-` (header lines read from stdin): https://curl.se/docs/manpage.html#-H ; GNU grep `-f -` ("When file is '-', read patterns from standard input"), `-l` ("print the name of each input file from which output would normally have been printed") and its exit status (0 if a line is selected, 1 if none, 2 on error): https://www.gnu.org/software/grep/manual/html_node/Matching-Control.html , https://www.gnu.org/software/grep/manual/html_node/General-Output-Control.html and https://www.gnu.org/software/grep/manual/html_node/Exit-Status.html
 
 ======================================================================
 ==> go.md
