@@ -209,7 +209,7 @@ Open the guide before relying on either, because defaults change between release
 | 35672 to 35682 | RabbitMQ remote CLI tools' own Erlang distribution-port range (default); the guide says to restrict the actual range to the necessary peers | The Erlang cookie, a shared secret granting node and CLI access | [rabbitmq.md](rabbitmq.md) |
 | 49152 to 65535 | coturn relay endpoints, allocated on demand; this range overlaps the LiveKit media range and other entries | not stated | [realtime-voice-infra.md](realtime-voice-infra.md) |
 | 50000 to 60000/UDP | LiveKit media sockets outside development mode, allocated during active calls | not stated | [realtime-voice-infra.md](realtime-voice-infra.md) |
-| 50051 | Weaviate gRPC | Anonymous access enabled by default | [vector-databases.md](vector-databases.md) |
+| 50051 | Weaviate gRPC, on every local address whatever `--host` says | Anonymous access enabled by default | [vector-databases.md](vector-databases.md) |
 | 51820/UDP | WireGuard, in the configured example here. The port is chosen, not assigned | No username or password; key pairs only | [tunnels.md](tunnels.md) |
 | 54388 | Helicone Compose PostgreSQL publication: host port 54388 maps to container port 5432 | Published independently of the dashboard login; the guide says to rotate the Compose example storage credentials | [llm-observability.md](llm-observability.md) |
 | 55679 | OpenTelemetry Collector zPages diagnostic extension, when enabled | Collector ships with no security until configured | [llm-observability.md](llm-observability.md) |
