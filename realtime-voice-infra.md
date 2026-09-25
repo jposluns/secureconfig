@@ -90,7 +90,7 @@ Unverified until checked in your deployment: the default service state and effec
 
 ## Verify
 
-Every probe below is reasoned, not demonstrated: the authoring environment has no container runtime, so the outcomes are derived from the cited vendor sources rather than observed, and backlog row 2.34 tracks demonstrating them against live instances in the exposed and fixed states. A redirect, a `404`, a timeout, or a TLS error is inconclusive, never proof of the fixed state; every negative check needs a working positive control.
+Every probe below is reasoned, not demonstrated: the authoring environment has no container runtime, so the outcomes are derived from the cited vendor sources rather than observed, and backlog row 1.105 tracks demonstrating them against live instances in the exposed and fixed states. A redirect, a `404`, a timeout, or a TLS error is inconclusive, never proof of the fixed state; every negative check needs a working positive control.
 
 ```bash
 sudo ss -tlnp    # Read the bind address per port, do not just confirm the port. LiveKit signaling 7880
