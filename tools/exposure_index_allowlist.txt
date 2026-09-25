@@ -1,18 +1,15 @@
 # Allowlist for tools/check_exposure_index.py: guide/port pairs that match a port pattern but are not
 # listeners that guide documents (an outbound destination, an illustrative number, a test rig, a
-# pointer to another guide, a container port behind a remapped publication), whether the mention is
+# pointer to another guide), whether the mention is
 # unmapped or uncited. One `<guide> <port>` pair per line, with the reason after `#`.
 # The gate fails on an entry that no longer matches any mention, so remove a line when its text goes.
 README.md 80  # README pointer: step 2 names the ports a public certificate host must expose and links free-certificates.md, which the 80, 443 row cites; not a listener
 README.md 443  # README pointer: the same step 2 sentence as README.md 80; not a listener
-ai-infra-services.md 9001  # container port behind a remapped publication: Onyx development Compose MinIO `9005:9001`; host port 9005 is on the 9004, 9005, 9010 row, which cites this guide
 apache.md 9000  # illustrative number: the IPv6 address [2001:db8:80::1]:9000 in a comment on why a grep for :80 or :443 misleads; not a listener
 clickhouse.md 443  # outbound: the HTTPS fixture URLs in the url() allow-list test; not a ClickHouse listener
 common-mistakes.md 3000  # illustrative number: the `ufw deny 3000` and `-p 3000:3000` example in the Docker item, which links docker.md (cited on row 3000)
 egress-metadata.md 443  # outbound: the destination port of the NetworkPolicy egress rule; not a listener
 litellm.md 5432  # outbound: LiteLLM's DATABASE_URL connection to its PostgreSQL; the database listener is postgresql.md's
-llm-observability.md 5432  # container port behind a remapped publication: Helicone Compose `54388:5432`; host port 54388 has its own row citing this guide
-llm-observability.md 8123  # container port behind a remapped publication: Helicone Compose `18123:8123`; host port 18123 has its own row citing this guide
 low-code-builders.md 22  # test input: `1.2.3.4:22` and `[::1]:22` are host values the probe guard refuses; not a listener
 mcp-clients.md 3000  # illustrative number: the redirect URI in an illustrative DCR request body, not a live capture; not a listener the guide documents
 minio.md 7373  # outbound: MinIO connects to an external KMS server here (MINIO_KMS_SERVER; KES appears at minio.md:191); not a MinIO listener
