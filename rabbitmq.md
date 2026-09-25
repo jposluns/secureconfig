@@ -1,6 +1,6 @@
 # RabbitMQ: users, TLS listener, and the guest account
 
-RabbitMQ's default `guest`/`guest` account can only connect from localhost, which protects fresh installs exactly until someone "fixes" it. The documented recommendation is to create real users and delete `guest` or change its password.
+RabbitMQ's default `guest`/`guest` account can only connect from localhost, which protects fresh installs exactly until someone "fixes" it. The official Docker image ships that fix: its `/etc/rabbitmq/conf.d/10-defaults.conf` sets `loopback_users.guest = false`, so in a container from that image the default `guest`/`guest` administrator, wherever it exists, can log in from any address that reaches the broker. The documented recommendation is to create real users and delete `guest` or change its password.
 
 The settings below were checked against the current RabbitMQ 4.3 documentation in September 2026. These controls are available in open source RabbitMQ; no commercial edition is required. The export command specifically requires a current `rabbitmqadmin` v2, not v1.
 
@@ -50,7 +50,7 @@ Retain `ops` for administration and use `observer` for monitoring. Tags do not g
 
 Monitoring and policymaker are separate extensions of management access. Resource listings remain limited to vhosts with a permission entry. Review existing observer grants on other vhosts as well. See [management roles](https://www.rabbitmq.com/docs/management) and [tag replacement](https://www.rabbitmq.com/docs/man/rabbitmqctl.8).
 
-Do not loosen the guest account's localhost restriction. Exported definitions contain password hashes and hashing metadata; keep exports access-restricted and out of images and version control ([secrets.md](secrets.md)). Definitions imports are privileged provisioning input: a stale or untrusted file can introduce accounts, grants, policies, or plugin parameters.
+Do not loosen the guest account's localhost restriction; in a container from the official image, where `10-defaults.conf` has already loosened it, delete `guest` as above. Exported definitions contain password hashes and hashing metadata; keep exports access-restricted and out of images and version control ([secrets.md](secrets.md)). Definitions imports are privileged provisioning input: a stale or untrusted file can introduce accounts, grants, policies, or plugin parameters.
 
 For boot provisioning, use a reviewed local file in `rabbitmq.conf`:
 
@@ -125,7 +125,7 @@ management.ssl.certfile = /etc/rabbitmq/tls/management.pem
 management.ssl.keyfile = /etc/rabbitmq/tls/management.key
 ```
 
-Start or restart the node through your deployment's service manager with this configuration in place BEFORE enabling the plugin. `rabbitmq.conf` changes require a node restart; editing the file alone does not update a running node. The plugin reads the effective listener configuration when it starts. Enabling it on a running broker starts it immediately; without listener restrictions, HTTP listens on all interfaces at port `15672`. See [configuration application](https://www.rabbitmq.com/docs/configure#when-will-configuration-file-changes-be-applied) and [plugin activation](https://www.rabbitmq.com/docs/plugins#different-ways-to-enable-plugins).
+Start or restart the node through your deployment's service manager with this configuration in place BEFORE enabling the plugin. `rabbitmq.conf` changes require a node restart; editing the file alone does not update a running node. The plugin reads the effective listener configuration when it starts. Enabling it on a running broker starts it immediately; without listener restrictions, HTTP listens on all interfaces at port `15672` (as of v4.3.6 the plugin starts a plain HTTP listener on 15672 whenever no management listener is configured). See [configuration application](https://www.rabbitmq.com/docs/configure#when-will-configuration-file-changes-be-applied) and [plugin activation](https://www.rabbitmq.com/docs/plugins#different-ways-to-enable-plugins).
 
 Only after that start/restart succeeds, enable the plugin if it is not already enabled:
 
@@ -141,7 +141,7 @@ Standard internal-user HTTP authentication uses RabbitMQ credentials. Use the ob
 
 ## 4. epmd and the Erlang distribution port
 
-Two more listeners exist beyond AMQP and management: epmd, the Erlang Port Mapper Daemon, defaults to `4369`; the distribution listener defaults to `25672`, derived from `RABBITMQ_NODE_PORT` plus 20000. The latter carries clustering and CLI traffic. Pin its private IPv4 address and port in `rabbitmq.conf`:
+Two more listeners exist beyond AMQP and management: epmd, the Erlang Port Mapper Daemon, defaults to `4369`; the distribution listener defaults to `25672`, derived from `RABBITMQ_NODE_PORT` plus 20000 (as of v4.3.6, unless a non-empty `RABBITMQ_DIST_PORT`, or its unprefixed form `DIST_PORT`, sets it). The latter carries clustering and CLI traffic. Pin its private IPv4 address and port in `rabbitmq.conf`:
 
 ```ini
 distribution.listener.interface = REPLACE_WITH_BROKER_PRIVATE_IP
@@ -157,7 +157,7 @@ export ERL_EPMD_ADDRESS='REPLACE_WITH_BROKER_PRIVATE_IP'
 
 Changing `ERL_EPMD_ADDRESS` requires stopping both RabbitMQ and epmd before starting them with the new environment. Restarting RabbitMQ alone is insufficient. Socket-activated epmd instead needs its `epmd.socket` binding configured. epmd implicitly retains loopback access. Use a private address reachable by cluster peers; loopback-only distribution suits a single node with local CLI access.
 
-Bindings do not replace firewall rules. Allow these ports only from cluster peers and authorized CLI hosts; do not publish them publicly in Compose port mappings. Remote CLI tools also use their own distribution-port range, by default `35672` through `35682`; restrict the actual range to the necessary peers. See [networking and epmd lifecycle](https://www.rabbitmq.com/docs/networking).
+Bindings do not replace firewall rules. Allow these ports only from cluster peers and authorized CLI hosts; do not publish them publicly in Compose port mappings. Remote CLI tools also use their own distribution-port range, by default `35672` through `35682` (as of v4.3.6, from `RABBITMQ_CTL_DIST_PORT_MIN` through ten above it unless `RABBITMQ_CTL_DIST_PORT_MAX` is set, where an empty value counts as unset and `rabbitmq-env.conf` can set either in its unprefixed form); restrict the actual range to the necessary peers. See [networking and epmd lifecycle](https://www.rabbitmq.com/docs/networking).
 
 The Erlang cookie is a shared secret granting powerful node and CLI access. On typical Unix installations the server uses `/var/lib/rabbitmq/.erlang.cookie`, and CLI users use `$HOME/.erlang.cookie`. Keep matching copies owner-only, normally mode `600`, with a long random value supplied through secret management. Keep it out of images and Compose files, and never pass its value through command-line arguments. Cookie possession plus distribution reachability can give full broker control. See [CLI authentication](https://www.rabbitmq.com/docs/cli).
 
@@ -604,6 +604,11 @@ The write pattern gates publishing and the read pattern gates the routing keys a
 - RabbitMQ HTTP API authentication and endpoints: https://www.rabbitmq.com/docs/http-api-reference
 - RabbitMQ TLS, peer verification, certificate usage, and verification depth: https://www.rabbitmq.com/docs/ssl
 - RabbitMQ networking, epmd lifecycle, private bindings, and distribution ports: https://www.rabbitmq.com/docs/networking
+- RabbitMQ management plugin default port 15672 and the plain HTTP listener it starts when no management listener is configured (pinned tag v4.3.6): https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L22, https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L65-L71, https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L151-L154 and https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L178-L186
+- RabbitMQ Erlang distribution port: `RABBITMQ_NODE_PORT` (default 5672) plus 20000 unless `RABBITMQ_DIST_PORT` is set, with each `RABBITMQ_*` variable falling back to its unprefixed form and an empty value treated as unset (pinned tag v4.3.6): https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit_common/src/rabbit_env.erl#L1206-L1233 and https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit_common/src/rabbit_env.erl#L2008-L2025
+- RabbitMQ CLI distribution port range `RABBITMQ_CTL_DIST_PORT_MIN` (default 35672) to `RABBITMQ_CTL_DIST_PORT_MAX` (default ten above it), each empty-as-unset and falling back to the unprefixed `CTL_DIST_PORT_MIN`/`CTL_DIST_PORT_MAX` (pinned tag v4.3.6): https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit/scripts/rabbitmq-env#L143-L146
+- RabbitMQ `default_user`/`default_pass` guest/guest with the administrator tag, and `loopback_users` [guest] (pinned tag v4.3.6): https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit/Makefile#L33-L38
+- Official RabbitMQ 4.3 Docker image: `10-defaults.conf` sets `loopback_users.guest = false`, and both variants copy it into `/etc/rabbitmq/conf.d/` (pinned commit 76efb370838e36e4b120e252e75cf0dac70a7d55): https://github.com/docker-library/rabbitmq/blob/76efb370838e36e4b120e252e75cf0dac70a7d55/4.3/ubuntu/10-defaults.conf#L8, https://github.com/docker-library/rabbitmq/blob/76efb370838e36e4b120e252e75cf0dac70a7d55/4.3/ubuntu/Dockerfile#L321, https://github.com/docker-library/rabbitmq/blob/76efb370838e36e4b120e252e75cf0dac70a7d55/4.3/alpine/10-defaults.conf#L8 and https://github.com/docker-library/rabbitmq/blob/76efb370838e36e4b120e252e75cf0dac70a7d55/4.3/alpine/Dockerfile#L327
 - RabbitMQ diagnostics, remote node selection, and authenticated ping: https://www.rabbitmq.com/docs/man/rabbitmq-diagnostics.8
 - RabbitMQ CLI authentication and Erlang cookie handling: https://www.rabbitmq.com/docs/cli
 - RabbitMQ definitions imports, sensitive exports, and export transformations: https://www.rabbitmq.com/docs/definitions
