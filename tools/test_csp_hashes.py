@@ -63,6 +63,13 @@ prose, `data-onload`). Three earlier cases changed: the round-2 integration-poin
 the SVG refusal; the prose guard, which sat inside `<svg><title>` and carried `on = off`, moved to the
 page's own `<title>` and a `<p>` without the `=`; and `data-onload` inside `<svg><title>`, once a
 pass, is now refused as an SVG `<title>`, with a new pass case for `data-onload` in the body.
+
+Round 4 of #352 found that a malformed end tag (`</ x </svg>`, `</1`, `</` and a tab, `</!`) is a
+bogus comment to a browser and not to html.parser, so it hid an `</svg>` from a browser and let a
+pinned stylesheet or script, wrapped in `<svg>`, carry a live `<a onclick>`. Its cases, counted with
+the row 3.18 cases, repin every reproduction so that only the new rule can refuse it: the sixteen
+stylesheet combinations (two pages, two handler forms, four prefixes), the script-wrapping variant
+in both forms, `</` in the pinned script itself, and each malformed spelling in page text.
 """
 import base64
 import contextlib
@@ -777,6 +784,36 @@ for page_name, base in (("index.html", PAGE), ("404.html", PAGE_404)):
     scope_case(f"#352 r3 a <noscript> and a <textarea> holding plain text on {page_name} pass",
                page={page_name: base.replace(
                    "</body>", "<noscript>on duty</noscript><textarea>one, on</textarea>\n</body>", 1)})
+
+# Round 4 of #352 (codex finding): a malformed end tag (`</` and no letter) is a bogus comment to a
+# browser and not to html.parser, so `</ x </svg>` hid an </svg> from a browser and closed the SVG
+# region here, and a stylesheet or script wrapped in that <svg> became SVG content holding a live
+# <a onclick> while this gate hashed it as the pinned block. Every reproduction, repinned so only
+# the new rule can refuse it, on both pages; then the rule alone, in page text.
+MALFORMED = "has a malformed end tag"
+BOGUS_PREFIXES = (("space and letter", "</ x </svg>"), ("digit", "</1 </svg>"),
+                  ("tab", "</\t</svg>"), ("bang", "</! </svg>"))
+for page_name, base in (("index.html", PAGE), ("404.html", PAGE_404)):
+    for prefix_name, prefix in BOGUS_PREFIXES:
+        for form, handler in HANDLER_FORMS:
+            wrapped = base.replace("<style>", f"<svg>{prefix}<style>\n/* <a {handler}>x</a> */\n", 1
+                                   ).replace("</style>", "</style></svg>", 1)
+            scope_case(f"#352 r4 stylesheet wrapped after {prefix_name} bogus comment, {form}, on "
+                       f"{page_name}", expected=MALFORMED, page={page_name: wrapped},
+                       headers=repinned(wrapped, "style", base_page=base))
+    for what, fragment in (("</>", "</>"), ("</ and a space", "</ p>"), ("</ and a digit", "</1>"),
+                           ("</!", "</!x>"), ("</ and a tab", "</\tp>")):
+        scope_case(f"#352 r4 rule 4: {what} in page text on {page_name}", expected=MALFORMED,
+                   page={page_name: base.replace("</body>", f"<p>a{fragment}b</p>\n</body>", 1)})
+for form, handler in HANDLER_FORMS:
+    wrapped = PAGE.replace("<script>", f"<svg></ x </svg><script>\n// <a {handler}>x</a>\n", 1
+                           ).replace("</script>", "</script></svg>", 1)
+    scope_case(f"#352 r4 script wrapped after a bogus comment, {form}, on index.html",
+               expected=MALFORMED, page=wrapped, headers=repinned(wrapped, "script"))
+scope_case("#352 r4 rule 4: `</` inside the pinned index script, repinned", expected=MALFORMED,
+           page=PAGE.replace("(function () {", "(function () {\n  var s = '</ x';", 1),
+           headers=repinned(PAGE.replace("(function () {", "(function () {\n  var s = '</ x';", 1),
+                            "script"))
 
 
 def file_link(d):

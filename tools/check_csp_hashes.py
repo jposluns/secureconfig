@@ -113,17 +113,18 @@ So the model is deliberately tiny, declared PER PAGE, and everything outside it 
 
 Any of those fails with a message naming the page and saying it outgrew the gate.
 
-REFUSED CONTEXTS (round 3 of #352). The gate no longer relies on html.parser and a browser agreeing
-about where markup starts. Each rule reads the page with the hash-pinned `<style>`/`<script>` bodies
-blanked (each body is located right after a bare opening tag of its kind; one that cannot be located
-is left in place, which only adds findings), and each is a finding with its own message:
+REFUSED CONTEXTS (rounds 3 and 4 of #352). The gate no longer relies on html.parser and a browser
+agreeing about where markup starts. Rules 1 to 3 read the page with the hash-pinned
+`<style>`/`<script>` bodies blanked (each body is located right after a bare opening tag of its
+kind; one that cannot be located is left in place, which only adds findings); rule 4 reads the
+whole page, pinned bodies included. Each is a finding with its own message:
 
   1. every match of VALUED_HANDLER, `(?i)(?<![\\w-])on[\\w-]*\\s*=`, anywhere, whatever the
      context: a page `on*` handler with a value, or text this gate cannot tell from one
      (`one = two` in prose, `onclick=` in a comment or an attribute value). A valueless handler
-     has no `=` and is left to the structural and literal checks above, which rules 2 and 3 keep
-     sound. `data-onload=` does not
-     match. The real pages have no match outside their pinned bodies;
+     has no `=` and is left to the structural and literal checks above, which rules 2 to 4 keep
+     sound. `data-onload=` does not match. The real pages have no match outside their pinned
+     bodies;
   2. inert text holding a `<`, where the literal scan and a browser can disagree: a comment (from
      `<!--` to the first `-->` after it, so `<!-->` and `--!>` never end one early here), a CDATA
      section (to the first `]]>`), and a `<!` or `<?` declaration other than the leading
@@ -133,14 +134,24 @@ is left in place, which only adds findings), and each is a finding with its own 
   3. inside inline foreign content, the elements where html.parser and the HTML spec diverge: any
      `<math>` element at all, and inside `<svg>` any `title`, `desc`, `foreignObject`, `style` or
      `script` element, in any case. Every `<svg` start tag deepens the SVG context, self-closing
-     or not, and `</svg` leaves it, so the region read as SVG is never smaller than a browser's.
-     The real inline SVGs hold only `svg`, `circle`, `path` and `rect`.
+     or not, and every `</svg` read as a tag leaves it. That tracks a browser's SVG region only
+     while every `</svg` read here is one a browser reads as an end tag too, which rules 2 and 4
+     exist to keep true; round 4 found `</ x </svg>`, which a browser reads as one bogus comment,
+     so its `</svg>` closed the region here and not there. The real inline SVGs hold only `svg`,
+     `circle`, `path` and `rect`;
+  4. anywhere on the page, pinned bodies included, a `</` not followed by an ASCII letter (`</>`,
+     `</ `, `</1`, `</!`, `</` and a tab). A browser reads one as a bogus comment running to the
+     next `>`, html.parser does not, and the text it swallows can hold an `</svg>` or the end of
+     a pinned block, so the SVG region and the pinned text would differ from a browser's. The
+     real pages, pinned bodies included, contain none.
 
-Rules 2 and 3 are conservative, not exact: they refuse inert text a browser would render harmlessly,
+Rules 2 to 4 are conservative, not exact: they refuse inert text a browser would render harmlessly,
 and SVG a browser would draw, because the point is that nothing outside them has to be modelled.
-Once rule 2 holds, no comment, CDATA section, declaration or raw-text element outside the pinned
-bodies holds a `<`, so no fake tag can open inside inert text and swallow real markup after it,
-which is what the tag reading in rule 3 and the literal accounting assume.
+Once rules 2 and 4 hold, no comment, CDATA section, declaration, bogus comment or raw-text element
+outside the pinned bodies holds a `<`, and no malformed end tag exists anywhere, so no fake tag can
+open inside inert text and swallow real markup after it, which is what the tag reading in rule 3
+and the literal accounting assume. That is the premise, stated rather than proven; each round that
+has broken it has added a rule here.
 
 THE ONE POLICY, UNDER `/*`. `site/404.html` is served as the body for any unmatched request path, and
 Cloudflare matches `_headers` rules against the REQUESTED URL, so a CSP set (or detached) under any
@@ -221,6 +232,7 @@ INERT = ("textarea", "title", "xmp", "noscript", "plaintext", "noembed", "nofram
 INERT_OPEN = re.compile(r"<(" + "|".join(INERT) + r")(?=[\t\n\f />])", re.I)
 ANY_TAG = re.compile(r"<(/?)([A-Za-z][^\t\n\f />]*)")
 SVG_DIVERGENT = ("title", "desc", "foreignobject", "style", "script")
+MALFORMED_END = re.compile(r"</(?![A-Za-z])")
 CHARSET = re.compile(r"charset\s*=", re.I)
 META_UTF8 = '<meta charset="utf-8">'
 CSP = "content-security-policy"
@@ -421,11 +433,22 @@ def unmodelled_contexts(path, text):
     return out
 
 
+def malformed_end_tags(path, html):
+    """Rule 4 of REFUSED CONTEXTS: `</` without a letter after it, anywhere, pinned bodies included."""
+    return [f"{path}:{line_of(html, m.start())} has a malformed end tag, `</` not followed by an "
+            f"ASCII letter. A browser reads it as a bogus comment running to the next `>`, and "
+            f"html.parser does not, so the text it swallows (an </svg>, or the end of a pinned "
+            f"block) is read differently here and there; it is outside the gate's model, even "
+            f"inside a pinned <style> or <script>"
+            for m in MALFORMED_END.finditer(html)]
+
+
 def foreign_divergences(path, text):
     """Rule 3 of REFUSED CONTEXTS: foreign-content elements html.parser reads as HTML.
 
     Every `<svg` start tag deepens the SVG context, self-closing or not (an unquoted value can end
-    in `/`), and `</svg` leaves it, so the region read as SVG here is never smaller than a browser's.
+    in `/`), and every `</svg` read as a tag leaves it. That matches a browser only while rules 2
+    and 4 hold; see rule 3 in the docstring.
     """
     out, depth, pos = [], 0, 0
     while m := ANY_TAG.search(text, pos):
@@ -513,6 +536,7 @@ def simple_enough(path, page, html, shape):
     out += valued_handlers(path, outside)
     out += unmodelled_contexts(path, outside)
     out += foreign_divergences(path, outside)
+    out += malformed_end_tags(path, html)
     # A literal `style=` the parser never reported is the same blind spot as an unreported element:
     # html.parser swallows <title> content as RCDATA, so an attribute smuggled through <svg><title>
     # was invisible while a browser applies it and CSP-checks it.
