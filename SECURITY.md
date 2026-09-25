@@ -1,7 +1,8 @@
 # Security policy
 
 secureconfig publishes deployment-exposure hardening guides, all dedicated to the public domain
-under CC0. The guides are documentation; the code that ships is the Agent Plugin under `plugin/` and
+under CC0 (the AIQT Guardrails material listed in `.aiqt/PIN` is Apache-2.0). The guides are
+documentation; the code that ships is the Agent Plugin under `plugin/` and
 the helper scripts under `tools/` and `scripts/`.
 
 ## Reporting a vulnerability
