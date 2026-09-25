@@ -310,6 +310,7 @@ For SearxNG, for LangServe relying entirely on its proxy, or for any service you
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' '' ''
   # $3 is the same harmless JSON body as checks 5 and 7 (keep the empty quotes if none is needed).
   # $4 is a credential header: leave it EMPTY for the anonymous run, put a WRONG credential for the
@@ -328,17 +329,19 @@ For SearxNG, for LangServe relying entirely on its proxy, or for any service you
     http://*|https://*) ;;
     *) echo "use an http:// or https:// URL; not probing"; exit ;;
   esac
-  if [ -n "$3" ] && [ -n "$4" ]; then
-    set -- -H 'Content-Type: application/json' --data-binary "$3" -H "$4" -X "$2" "$1"
-  elif [ -n "$3" ]; then
-    set -- -H 'Content-Type: application/json' --data-binary "$3" -X "$2" "$1"
-  elif [ -n "$4" ]; then
-    set -- -H "$4" -X "$2" "$1"
+  case "$4" in
+    *[[:cntrl:]]*) echo "put the credential header on one line; not probing"; exit ;;
+  esac
+  # Body options, if any, go after the four values. The credential header ($4) reaches curl on stdin
+  # (--header @-), never in its argv, where ps and /proc/<pid>/cmdline would show it.
+  if [ -n "$3" ]; then set -- "$@" -H 'Content-Type: application/json' --data-binary "$3"; fi
+  if [ -n "$4" ]; then
+    printf '%s\n' "$4" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --header @- \
+      -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "${@:5}" -X "$2" "$1"
   else
-    set -- -X "$2" "$1"
+    curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+      -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "${@:5}" -X "$2" "$1"
   fi
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$@"
 )
 ```
 
@@ -354,10 +357,11 @@ Mem0 and Onyx ship authentication on, but the verified record does not establish
 
 **Reasoned, not demonstrated** (no container runtime in the authoring environment; row 2.24 tracks demonstrating it). Repeat the capability request through the HTTPS ingress with valid credentials. Keep its method, path, and body the same as the anonymous test, allowing only the expected upstream-to-ingress URL change. The credential shapes this check needs are documented in Sources: Mem0 accepts a JWT or an `X-API-Key`, Onyx uses its email and password session, LocalAI and Text Embeddings Inference take their configured key, and a guide that cannot show this check succeeding has not established that the restriction left a working service behind.
 
-The header below is reader-supplied. For a configured bearer-token proxy it is `Authorization: Bearer` followed by the token. Mem0 accepts its native per-user key through `X-API-Key`, or a JWT through `Authorization: Bearer`. Other native credential transports are **unverified in the supplied record**. Where ingress and application require separate credentials, add both headers inside the guarded curl command using the deployed authentication design.
+The header below is reader-supplied. For a configured bearer-token proxy it is `Authorization: Bearer` followed by the token. Mem0 accepts its native per-user key through `X-API-Key`, or a JWT through `Authorization: Bearer`. Other native credential transports are **unverified in the supplied record**. Where ingress and application require separate credentials, send both headers on curl's stdin: `--header @-` reads one header per line, so pipe both lines to it under the same control-character guard, and never pass a credential header with `-H`, which puts it in curl's argv.
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' '' 'REPLACE_WITH_HEADER_NAME: REPLACE_WITH_CREDENTIAL'
   # $3 is the same harmless JSON body as the anonymous check. Keep the empty quotes if none is needed.
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
@@ -373,13 +377,14 @@ The header below is reader-supplied. For a configured bearer-token proxy it is `
     https://*) ;;
     *) echo "use a https:// URL; not probing"; exit ;;
   esac
-  if [ -n "$3" ]; then
-    set -- -H 'Content-Type: application/json' --data-binary "$3" -H "$4" -X "$2" "$1"
-  else
-    set -- -H "$4" -X "$2" "$1"
-  fi
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$@"
+  case "$4" in
+    *[[:cntrl:]]*) echo "put the credential header on one line; not probing"; exit ;;
+  esac
+  # Body options, if any, go after the four values. The credential header ($4) reaches curl on stdin
+  # (--header @-), never in its argv, where ps and /proc/<pid>/cmdline would show it.
+  if [ -n "$3" ]; then set -- "$@" -H 'Content-Type: application/json' --data-binary "$3"; fi
+  printf '%s\n' "$4" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --header @- \
+    -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "${@:5}" -X "$2" "$1"
 )
 ```
 
