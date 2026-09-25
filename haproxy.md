@@ -119,7 +119,7 @@ sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
 # but the exposed-vs-fixed responses were not. Backlog row 1.80 tracks running it live. A transport, TLS, or
 # DNS error is inconclusive, never a pass.
 (
-  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function or alias named like a command below
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a                                     # never trace or export the credential read below
   { unset -n pw && unset -v pw; } 2>/dev/null ||
     { echo 'a readonly pw is set in this shell; not probing'; exit 2; }
@@ -169,7 +169,7 @@ rejected at TLS, a trusted one admitted with `--cert`/`--key`, server verificati
 
 ```bash
 (
-  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function or alias named like a command below
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a
   { unset -n sp && unset -v sp; } 2>/dev/null ||
     { echo 'a readonly sp is set in this shell; not probing'; exit 2; }

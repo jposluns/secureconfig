@@ -137,7 +137,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert REPLACE_
 # Run in a subshell with tracing and allexport OFF, so an inherited `set -x` cannot echo the token and an
 # inherited `set -a` cannot export it (read -s and the stdin header prevent neither).
 (
-  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function or alias named like a command below
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a
   { unset -n tok && unset -v tok; } 2>/dev/null ||
     { echo 'a readonly tok is set in this shell; not probing'; exit 2; }
@@ -173,7 +173,7 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
 # Reasoned, not demonstrated (no live Flux; backlog row 2.28). Read the HMAC key without echo. openssl takes
 # the key as an argument, so keep tracing off; on a shared host compute the HMAC from a language binding.
 (
-  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function or alias named like a command below
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a
   { unset -n hmac sig && unset -v hmac sig; } 2>/dev/null ||
     { echo 'a readonly hmac or sig is set in this shell; not probing'; exit 2; }
