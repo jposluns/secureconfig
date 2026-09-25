@@ -43,8 +43,8 @@ from a local demo, on anything reachable beyond your own machine.
 
 ## 2. Bind privately
 
-`--bind`/`-b` (`SURREAL_BIND`) sets the listening address and defaults to `127.0.0.1:8000`, loopback
-only. Widen it deliberately, and only to a private address, for example `--bind 10.0.0.5:8000`; never
+`--bind`/`-b` (`SURREAL_BIND`) sets the listening address and defaults to `127.0.0.1:8000` (as of v3.2.4),
+loopback only. Widen it deliberately, and only to a private address, for example `--bind 10.0.0.5:8000`; never
 bind an unauthenticated or root-only instance to `0.0.0.0`. SurrealDB's own security guidance says
 that if the database should only be reachable by other internal services, "expose SurrealDB
 exclusively to the internal network instead of deploying the service with a publicly addressable
@@ -160,6 +160,7 @@ TLS terminates with normal validation (a trusted CA for private PKI); never use 
 - SurrealDB CLI, `surreal start`: https://surrealdb.com/docs/reference/cli/surrealdb-cli/commands/start
 - SurrealDB 3.2.4 `surreal start` root password: `--password`/`--pass`/`-p` or `SURREAL_PASS`, with no stdin form (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/cli/start.rs#L148-L162
 - SurrealDB 3.2.4 `--unauthenticated` flag, bound to `SURREAL_UNAUTHENTICATED` (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/dbs/mod.rs#L47-L50
+- SurrealDB 3.2.4 `--bind`/`-b` (`SURREAL_BIND`) default `127.0.0.1:8000` (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/cli/start.rs#L177-L180
 - SurrealDB CLI, `surreal sql`: https://surrealdb.com/docs/reference/cli/surrealdb-cli/commands/sql
 - SurrealDB security overview: https://surrealdb.com/docs/learn/security
 - SurrealDB authentication overview: https://surrealdb.com/docs/learn/security/authentication/overview
