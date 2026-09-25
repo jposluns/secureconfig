@@ -47,6 +47,9 @@ vLLM's server requires an API key when one is set: at both pinned commits `--api
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -eC +x +a
   umask 077
+  if [ -e "$HOME/.config/vllm/server.yaml" ] || [ -L "$HOME/.config/vllm/server.yaml" ]; then
+    echo 'server.yaml already exists in ~/.config/vllm; nothing written'; exit 2
+  fi
   set -- "$(openssl rand -hex 32)"
   [ "${#1}" -eq 64 ] || { echo 'key generation failed; nothing written'; exit 2; }
   case "$1" in *[!0123456789abcdef]*) echo 'key generation failed; nothing written'; exit 2 ;; esac
@@ -56,7 +59,7 @@ vLLM's server requires an API key when one is set: at both pinned commits `--api
 )
 ```
 
-The block writes nothing unless the generated key is 64 hex characters. `umask 077` creates the directory mode `0700` and the file mode `0600`, and `set -C` refuses to overwrite an existing file, so a rerun cannot replace a key your clients already hold. The key passes only through the subshell's positional parameters and the builtin `printf`, never a command line; the block clears inherited traps first because a DEBUG, RETURN or ERR trap from your shell could otherwise read it, and it assumes a clean shell. Start the server with only non-secret values on its command line, and do not add `--api-key` there, which would put the value back in argv:
+The block refuses, before it generates a key, when `server.yaml` already exists in any form (a regular file, a FIFO, or a symlink, dangling or not), so a rerun cannot replace a key your clients already hold and the key cannot be written into something other than a new file. It writes nothing unless the generated key is 64 hex characters. `umask 077` creates the directory mode `0700` and the file mode `0600`, and `set -C` still refuses to overwrite an existing file. The key passes only through the subshell's positional parameters and the builtin `printf`, never a command line; the block clears inherited traps first because a DEBUG, RETURN or ERR trap from your shell could otherwise read it, and it assumes a clean shell. Start the server with only non-secret values on its command line, and do not add `--api-key` there, which would put the value back in argv:
 
 ```bash
 (
@@ -149,6 +152,9 @@ All three are secrets, and none belongs on the command line, where `ps` and `/pr
   [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value, inside the quotes; nothing written'; exit 2; }
   case "$1" in ""|*REPLACE_WITH_*) echo 'substitute a user name inside the quotes on the set -- line above; nothing written'; exit 2 ;; esac
   case "$1" in *[!A-Za-z0-9._-]*) echo 'use only letters, digits, dot, underscore or hyphen in the user name; nothing written'; exit 2 ;; esac
+  if [ -e "$HOME/.config/text-generation-webui/gradio-auth" ] || [ -L "$HOME/.config/text-generation-webui/gradio-auth" ]; then
+    echo 'gradio-auth already exists in ~/.config/text-generation-webui; nothing written'; exit 2
+  fi
   set -- "$1" "$(openssl rand -hex 16)"
   [ "${#2}" -eq 32 ] || { echo 'password generation failed; nothing written'; exit 2; }
   case "$2" in *[!0123456789abcdef]*) echo 'password generation failed; nothing written'; exit 2 ;; esac
@@ -158,7 +164,7 @@ All three are secrets, and none belongs on the command line, where `ps` and `/pr
 )
 ```
 
-`umask 077` creates the directory mode `0700` and the file mode `0600`, `set -C` refuses to overwrite an existing file, and the block writes nothing unless the generated password is 32 hex characters. The password passes only through the subshell's positional parameters and the builtin `printf`; the block clears inherited traps first and assumes a clean shell. Read the password from the file once into your password manager. The file holds it in plaintext at rest, readable by that account and by root, so keep it and its backups out of source control.
+The block refuses, before it generates a password, when `gradio-auth` already exists in any form (a regular file, a FIFO, or a symlink, dangling or not). `umask 077` creates the directory mode `0700` and the file mode `0600`, `set -C` still refuses to overwrite an existing file, and the block writes nothing unless the generated password is 32 hex characters. The password passes only through the subshell's positional parameters and the builtin `printf`; the block clears inherited traps first and assumes a clean shell. Read the password from the file once into your password manager. The file holds it in plaintext at rest, readable by that account and by root, so keep it and its backups out of source control.
 
 The API keys have no file flag and no environment input at the pinned sources: the API reads them only from the parsed arguments. The pinned `modules/shared.py` does read further flags from `CMD_FLAGS.txt` in the user-data directory, and it splices them into Python's own argument list inside the process, so keys placed there stay out of `/proc/<pid>/cmdline`. Do not use the checkout's own `user_data/CMD_FLAGS.txt` for them: at the pinned commit it is a tracked file (it ships with three comment lines), so a key written there is a change to a tracked file that `git diff` prints and `git stash` copies into the repository, and the update wizard in `one_click.py` runs `git merge --autostash` (stashing the change) and offers `git reset --hard` (discarding it). This was read from the code, not run. Point `--user-data-dir` at a private directory outside the checkout instead, readable only by the account that runs text-generation-webui; it then stands in for the whole `user_data` directory (the model, LoRA and cache directories, among others, default under it), so copy across the models and settings you use. Write generated keys into a new `CMD_FLAGS.txt` there, as that account, substituting the directory's absolute path inside the quotes on the `set --` line (a path with spaces stays one value there):
 
