@@ -86,6 +86,7 @@ Gateway API defines no authentication filter; each implementation adds its own. 
 # since the password is clearly visible on the command line. For script use see the -i
 # option." -i reads it from stdin instead. Envoy Gateway's example uses -b; this does not.
 (
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a
   { unset -n PASSWORD confirm && unset -v PASSWORD confirm; } 2>/dev/null ||
     { echo 'cannot clear PASSWORD or confirm in this shell; not creating the secret'; exit 2; }
