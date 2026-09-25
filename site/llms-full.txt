@@ -853,7 +853,7 @@ All three expose a private host to the internet without a public IP, the same jo
 
 ## frp
 
-`frps` (the server) listens for client connections on `bindPort`, default `7000`. Authentication is token-based by default: set the identical `auth.token` in `frps.toml` and every `frpc.toml`, since "client needs to set the same value to pass authentication":
+`frps` (the server) listens for client connections on `bindPort`, default `7000` (as of v0.71.0). Authentication is token-based by default: set the identical `auth.token` in `frps.toml` and every `frpc.toml`, since "client needs to set the same value to pass authentication":
 
 ```toml
 # frps.toml
@@ -975,7 +975,7 @@ ss -tlnp   # read every listener; 8080: only a loopback address unless you delib
 - WireGuard Cryptokey Routing (`AllowedIPs` on send and receive): https://www.wireguard.com/
 - frp TLS (`transport.tls.enable` default from v0.50.0, `transport.tls.force`, cert/key/CA roles): https://gofrp.org/en/docs/features/common/network/network-tls/
 - nftables manual (forward/input hooks, verdicts, and rule counters): https://netfilter.org/projects/nftables/manpage.html
-- frps `bindAddr` default `0.0.0.0`, and an empty `proxyBindAddr` takes `bindAddr` (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/pkg/config/v1/server.go#L110-L114
+- frps `bindAddr` default `0.0.0.0` and `bindPort` default `7000`, and an empty `proxyBindAddr` takes `bindAddr` (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/pkg/config/v1/server.go#L110-L114
 - frps TCP proxies listen on `proxyBindAddr` (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/tcp.go#L76
 - frps UDP proxies listen on `proxyBindAddr` (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/udp.go#L92
 - frps HTTP and HTTPS vhost listeners bind `proxyBindAddr` (L303 and L334), sharing the main listener only when `bindAddr` equals `proxyBindAddr` (L229-L235) (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L303
@@ -18806,8 +18806,12 @@ from a local demo, on anything reachable beyond your own machine.
 
 ## 2. Bind privately
 
-`--bind`/`-b` (`SURREAL_BIND`) sets the listening address and defaults to `127.0.0.1:8000`, loopback
-only. Widen it deliberately, and only to a private address, for example `--bind 10.0.0.5:8000`; never
+`--bind`/`-b` (`SURREAL_BIND`) sets the listening address and defaults to `127.0.0.1:8000` (as of v3.2.4),
+loopback only. The images built from the repository's `docker/Dockerfile` do not keep that default: each of its
+runtime stages sets `SURREAL_BIND=0.0.0.0:8000` and none sets a `CMD`, so a container run with `start` and no
+`--bind` of its own listens on every IPv4 interface inside the container. That is safe only while the host side
+stays private: publish it on host loopback (`127.0.0.1:8000:8000`) or attach it to a private network only. On a
+host, widen the bind deliberately, and only to a private address, for example `--bind 10.0.0.5:8000`; never
 bind an unauthenticated or root-only instance to `0.0.0.0`. SurrealDB's own security guidance says
 that if the database should only be reachable by other internal services, "expose SurrealDB
 exclusively to the internal network instead of deploying the service with a publicly addressable
@@ -18867,7 +18871,7 @@ access cannot bypass that gateway.
 # REASONED, not demonstrated here: no SurrealDB runtime in the authoring environment; backlog row 1.82 tracks
 # running it live. A redirect, missing database, disabled route, proxy rejection, TLS or transport failure is
 # inconclusive, never a pass.
-ss -tlnp   # inventory: 8000 on loopback or a private address, never 0.0.0.0
+ss -tlnp   # inventory, on the host: 8000 on loopback or a private address, never 0.0.0.0
 # guard-conventions: allow fixed loopback health URL http://127.0.0.1:8000/health; no reader-substituted target
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'health=%{http_code}\n' http://127.0.0.1:8000/health   # process up (not an auth check)
 # Auth discrimination: INFO FOR DB; with no credentials vs with a valid system-user JWT, same NS/DB and
@@ -18923,6 +18927,8 @@ TLS terminates with normal validation (a trusted CA for private PKI); never use 
 - SurrealDB CLI, `surreal start`: https://surrealdb.com/docs/reference/cli/surrealdb-cli/commands/start
 - SurrealDB 3.2.4 `surreal start` root password: `--password`/`--pass`/`-p` or `SURREAL_PASS`, with no stdin form (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/cli/start.rs#L148-L162
 - SurrealDB 3.2.4 `--unauthenticated` flag, bound to `SURREAL_UNAUTHENTICATED` (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/dbs/mod.rs#L47-L50
+- SurrealDB 3.2.4 `--bind`/`-b` (`SURREAL_BIND`) default `127.0.0.1:8000` (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/cli/start.rs#L177-L180
+- SurrealDB `docker/Dockerfile` sets `ENV SURREAL_BIND="0.0.0.0:8000"` in each runtime stage (L78, L104, L139, L165), each followed by `ENTRYPOINT ["/surreal"]` with no `CMD`, shown here for the `prod-ci` stage (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/docker/Dockerfile#L104
 - SurrealDB CLI, `surreal sql`: https://surrealdb.com/docs/reference/cli/surrealdb-cli/commands/sql
 - SurrealDB security overview: https://surrealdb.com/docs/learn/security
 - SurrealDB authentication overview: https://surrealdb.com/docs/learn/security/authentication/overview
@@ -24686,8 +24692,10 @@ Codec Server independently of the UI and the frontend, because an exposed Codec 
 
 ## Flower (for Celery)
 
-Flower binds every interface by default (`--address` is empty, meaning all interfaces; `--port` defaults to
-5555) with authentication disabled unless you configure it. When no authentication is configured its HTTP API
+Flower binds every interface by default (as of v2.2.0, `--address` is empty, meaning all interfaces, and `--port`
+defaults to 5555, unless `--unix_socket` names a socket path or a `flowerconfig.py` in the working directory, which
+it loads without being asked, sets them) with authentication disabled unless you configure it. When no
+authentication is configured its HTTP API
 is disabled unless you set `FLOWER_UNAUTHENTICATED_API=true`, so keep that unset and never read an API
 rejection as proof the dashboard itself is protected. `--basic-auth="user1:password1,user2:password2"`
 turns on HTTP Basic Auth with a comma-separated credential list; OAuth 2.0 login against Google, GitHub,
@@ -24876,6 +24884,7 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
 - Temporal, CLI server reference (default frontend gRPC port 7233, Web UI port 8233): https://docs.temporal.io/cli/command-reference/server
 - Flower, configuration (`--address`, `--port` 5555 default, `--basic-auth`, `--auth_provider`, `--oauth2_key`,
   `--oauth2_secret`, `--oauth2_redirect_uri`, `--auth`): https://flower.readthedocs.io/en/latest/config.html
+- Flower `port` default 5555, `address` default `''` and the `unix_socket` branch, and the implicit `flowerconfig.py` load from the working directory (pinned tag v2.2.0), with Tornado's `bind_sockets` treating an empty address as all interfaces (pinned tag v6.5.10): https://github.com/mher/flower/blob/v2.2.0/flower/options.py#L7-L15, https://github.com/mher/flower/blob/v2.2.0/flower/options.py#L56-L57, https://github.com/mher/flower/blob/v2.2.0/flower/command.py#L81-L91, https://github.com/mher/flower/blob/v2.2.0/flower/app.py#L71-L76 and https://github.com/tornadoweb/tornado/blob/v6.5.10/tornado/netutil.py#L72-L73
 - Argo Workflows, [auth modes](https://argo-workflows.readthedocs.io/en/release-3.7/argo-server-auth-mode/),
   [server flags and default port 2746](https://argo-workflows.readthedocs.io/en/release-3.7/cli/argo_server/),
   [TLS](https://argo-workflows.readthedocs.io/en/release-3.7/tls/),
