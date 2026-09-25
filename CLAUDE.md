@@ -2,7 +2,8 @@
 
 This repository operates under the AIQT Guardrails standard. The pack is vendored and pinned; see
 `.aiqt/PIN` for the upstream commit, the vendored paths, and the local patches to re-apply on
-upgrade. This file and `AGENTS.md` are one adapter in two files, kept byte-identical by the gate
+upgrade. Its AIQT sections are adapted, with changes, from the pack's `aiqt-barebones.md` (Apache
+License 2.0, see `.aiqt/LICENSE`). This file and `AGENTS.md` are one adapter in two files, kept byte-identical by the gate
 suite.
 
 ## The priority ordering
@@ -66,7 +67,8 @@ blocked upstream.
 
 secureconfig publishes deployment-exposure guides: TLS, authentication, MFA, secret handling, and
 network exposure for services that AI-assisted projects commonly run. Everything is public domain
-under CC0. The scope boundary and the requirements for a guide live in `CONTRIBUTING.md` and they
+under CC0, except the AIQT Guardrails material listed in `.aiqt/PIN`, which is Apache-2.0. The
+scope boundary and the requirements for a guide live in `CONTRIBUTING.md` and they
 bind: verified syntax with a linked vendor source, the standard structure, honesty where a tool has
 no native control, and working links.
 

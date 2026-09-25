@@ -32,9 +32,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _walk import walk_files  # noqa: E402  fail-closed tree walk (os.walk, not rglob)
 
 EN, EM = "–", "—"
-# The site host comes from AIQT_SITE_HOST (default aiqt.ai) so a consuming site's absolute self-links
-# classify as internal and are resolved instead of skipped as external. LOCAL PATCH, see .aiqt/PIN.
-_SITE_HOST = os.environ.get("AIQT_SITE_HOST", "aiqt.ai").lower()
+# Site host from AIQT_SITE_HOST (default, and empty-value fallback, aiqt.ai; lowercased), so a
+# non-aiqt.ai adopter can vendor the pack unpatched. Unchanged when the variable is unset or empty.
+_SITE_HOST = (os.environ.get("AIQT_SITE_HOST", "aiqt.ai") or "aiqt.ai").lower()
 SITE_HOSTS = {_SITE_HOST, "www." + _SITE_HOST}
 
 # Tags that never take an end tag; never pushed on the open-tag stack.
@@ -267,29 +267,110 @@ def _self_test():
     named = logo_findings([("keep.html", good), ("keep2.html", good), ("drift.html", bad)])
     if not (len(named) == 1 and named[0].startswith("drift.html")):
         failures.append("outlier naming: expected drift.html named, got {}".format(named))
+    # AIQT_SITE_HOST derives SITE_HOSTS at import, so probe it in a child process under each env value.
+    # Unset/empty -> default aiqt.ai (unchanged from today); a set host -> that host and its www.; the
+    # env host is lowercased; a no-dot host derives its own exact pair.
+    import subprocess
+    tools_dir = str(Path(__file__).resolve().parent)
+    probe = ("import sys; sys.path.insert(0, {!r}); import check_site; "
+             "print(' '.join(sorted(check_site.SITE_HOSTS)))".format(tools_dir))
+
+    def hosts_under(env_val):
+        env = dict(os.environ)
+        if env_val is None:
+            env.pop("AIQT_SITE_HOST", None)
+        else:
+            env["AIQT_SITE_HOST"] = env_val
+        out = subprocess.run([sys.executable, "-I", "-c", probe], capture_output=True, text=True,
+                             env=env, check=True)
+        return set(out.stdout.split())
+
+    host_cases = [
+        ("unset -> default aiqt.ai", None, {"aiqt.ai", "www.aiqt.ai"}),
+        ("empty -> fallback aiqt.ai", "", {"aiqt.ai", "www.aiqt.ai"}),
+        ("set host -> host + www.", "example.test", {"example.test", "www.example.test"}),
+        ("host lowercased", "EXAMPLE.TEST", {"example.test", "www.example.test"}),
+        ("no-dot host derives its own pair", "localhost", {"localhost", "www.localhost"}),
+    ]
+    for label, env_val, want in host_cases:
+        got = hosts_under(env_val)
+        if got != want:
+            failures.append("SITE_HOSTS {}: expected {} got {}".format(label, sorted(want), sorted(got)))
+
+    # Coverage-root integration: _scan_root treats opf/site as its own link-containment boundary, so a
+    # nested draft page's relative link resolves within opf/site (clean) while a dangling one is a finding;
+    # main() skips absent roots (both absent -> clean pass). Output captured so it does not leak here.
+    import tempfile
+    import contextlib
+    import io
+
+    def quiet(fn, *a):
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            return fn(*a)
+    with tempfile.TemporaryDirectory() as d:
+        r = Path(d)
+        draft = r / "opf" / "site" / "draft"
+        draft.mkdir(parents=True)
+        (r / "opf" / "site" / "index.html").write_text(
+            "<!doctype html><title>t</title><nav></nav>", encoding="utf-8")
+        (draft / "disclosure.html").write_text("<!doctype html><title>t</title><p>d</p>", encoding="utf-8")
+        (draft / "manifest.html").write_text(
+            '<!doctype html><title>t</title><nav><a href="./disclosure">D</a></nav>', encoding="utf-8")
+        if quiet(_scan_root, r, "opf/site") != 0:
+            failures.append("coverage: a clean opf/site tree with relative links did not pass")
+        (draft / "broken.html").write_text(
+            '<!doctype html><title>t</title><a href="./nope">x</a>', encoding="utf-8")
+        if quiet(_scan_root, r, "opf/site") != 1:
+            failures.append("coverage: a dangling relative link under opf/site/draft was not caught")
+    with tempfile.TemporaryDirectory() as d2:
+        if quiet(run, Path(d2)) != 0:
+            failures.append("coverage: neither root present did not pass clean")
+
     if failures:
         print("SELF-TEST FAIL:")
         for x in failures:
             print("  - " + x)
         return 1
-    print("PASS: check_site logo-consistency self-test ({} cases)".format(len(cases)))
+    print("PASS: check_site self-test ({} logo cases + {} SITE_HOSTS env cases + coverage-root legs)".format(
+        len(cases), len(host_cases)))
     return 0
 
 
-def main():
-    root = Path(__file__).resolve().parents[1]
-    site = root / "site"
-    if not site.is_dir():
-        print("PASS: no site/ directory")
+# Coverage roots: site/ (aiqt.ai) and opf/site/ (opfiles.ai: the served site pages). Matching this gate's
+# existing site/ idiom, each root is OPTIONAL: an absent root is skipped (not fail-closed), so a vendored
+# pack with neither still passes; a present root is scanned, and an unreadable present root fails closed.
+# Each root is its own link-containment boundary, so a page's relative links (./manifest, ./disclosure)
+# resolve within opf/site and never escape.
+COVERAGE_ROOTS = ("site", "opf/site")
+
+
+def run(root):
+    """Scan every present coverage root under `root`. Return the worst per-root exit code; roots are
+    optional (absent is skipped), a present root is scanned, and an unreadable present root fails closed."""
+    present = [sub for sub in COVERAGE_ROOTS if (root / sub).is_dir()]
+    if not present:
+        print("PASS: no site/ or opf/site/ directory")
         return 0
+    worst = 0
+    for sub in present:
+        worst = max(worst, _scan_root(root, sub))
+    return worst
+
+
+def main():
+    return run(Path(__file__).resolve().parents[1])
+
+
+def _scan_root(root, subdir):
+    site = root / subdir
     site_root = site.resolve()
     docs, ids_by_path, findings = [], {}, []
     try:
         html_files = sorted(walk_files(site, suffixes={".html"}))
     except OSError as exc:
-        # an unreadable directory under site/ is a read error, not a clean skip: fail closed (exit 2)
+        # an unreadable directory under the root is a read error, not a clean skip: fail closed (exit 2)
         # so the site gate never reports clean without having scanned an unreadable subtree.
-        print("error: cannot scan site/ ({}); fail-closed".format(exc), file=sys.stderr)
+        print("error: cannot scan {}/ ({}); fail-closed".format(subdir, exc), file=sys.stderr)
         return 2
     for f in html_files:
         rel = f.relative_to(root)
@@ -358,11 +439,12 @@ def main():
     # must stay byte-identical on every page that carries it; an outlier is drift.
     findings.extend(logo_findings([(str(rel), text) for _f, rel, text, _p in docs]))
     if findings:
-        print("FAIL: {} site-integrity issue(s)".format(len(findings)))
+        print("FAIL: {} {}/ site-integrity issue(s)".format(len(findings), subdir))
         for finding in sorted(set(findings)):
             print("  " + finding)
         return 1
-    print("PASS: site dashes, links, anchors, titles, unique ids, and tag structure all check out")
+    print("PASS: {}/ dashes, links, anchors, titles, unique ids, and tag structure all check out"
+          .format(subdir))
     return 0
 
 
