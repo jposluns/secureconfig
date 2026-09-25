@@ -14,12 +14,18 @@ served under the same CSP and its blocks would otherwise go unverified: that omi
 pinned but unchecked) is the failure this list closes.
 
 THE REST OF `site/` (row 3.18, the maintainer's 2026-09-25 ruling). The same refusal extends past
-HTML, with every suffix matched in any case. An `.xhtml` or `.xht` (the two suffixes Python's
-mimetypes table maps to application/xhtml+xml) is refused outright, even as a directory name,
-because a browser parses XHTML as XML and runs its scripts, and the html.parser model above does not
-hold there. An `.svgz` is refused because it is gzip bytes this gate cannot read as text, and a
-browser renders one only when the host serves it gzip-encoded, which the tree cannot show. Every
-`.svg` is inspected, as SVG DOCUMENTS says. The walk is over lstat and never follows a link: ANY
+HTML, with every suffix matched in any case. A suffix is the text from the LAST dot of the whole
+entry name, so a dotfile is its own suffix (a file named `.svg` is an SVG, one named `.html` an
+unlisted page), where pathlib would give it none; and any file or directory name ending with a dot
+is refused, because which type a host serves it as, and whether it strips the dot, is not modelled.
+An `.xhtml` or `.xht` (the two suffixes Python's mimetypes table maps to application/xhtml+xml) is
+refused outright, even as a directory name, because a browser parses XHTML as XML and runs its
+scripts, and the html.parser model above does not hold there. An `.svgz` is refused because it is
+gzip bytes this gate cannot read as text, and a browser renders one only when the host serves it
+gzip-encoded, which the tree cannot show. A `.gz`, `.br` or `.zst` is refused the same way, even as a
+directory name, because this gate cannot read it and a host serving precompressed files can answer
+a request for the uncompressed name (`probe.svg` for `probe.svg.gz`) with it. Every `.svg` is
+inspected, as SVG DOCUMENTS says. The walk is over lstat and never follows a link: ANY
 symbolic link under `site/`, and `site/` itself if it is one, is refused, because a linked directory
 is never walked and a dangling link never read, so what the host serves through one would go
 unchecked. A FIFO or device is refused unread. A metadata read or a directory listing that fails is
@@ -34,7 +40,8 @@ parser, with namespace processing on, and it fails on:
   - any element whose local name is `script` in any case and in any namespace (`<svg:script>`, an
     XHTML `<script>` inside `<foreignObject>`, one under a prefix undeclared back to no namespace);
   - any attribute whose local name starts with `on` in any case and in any namespace, however the
-    `=` is spaced or quoted, because expat reads the attribute structurally;
+    `=` is spaced or quoted, because expat reads the attribute structurally (XML has no valueless
+    attribute, so one is a parse failure, below);
   - any attribute VALUE that is a `javascript:` URL (P5), on ANY attribute, not only `href` and
     `xlink:href`, because `<animate>`, `<set>` and their kin write an attribute from `to`, `from`,
     `by` and the `;`-separated `values` list. So every `;`-separated segment of every value is
@@ -85,11 +92,16 @@ So the model is deliberately tiny, declared PER PAGE, and everything outside it 
     hides an attribute too: `<title>` content is RCDATA, so a `style=` smuggled through `<svg><title>`
     was invisible here and applied in a browser;
   - no `on*` attribute on any element (P5), reported structurally with its line, and every literal
-    `on...=` text accounted for the same way as `style=`, because the `<svg><title>` blind spot hides
-    a handler exactly as it hides a style attribute; `script-src` is hash-only and no hash covers an
-    attribute, so a browser refuses the handler silently. Any attribute name starting with `on` counts,
-    and so does any literal `on<word>=` text outside a block, so prose such as `one = two` in a page
-    is a false positive that fails closed;
+    one accounted for the same way as `style=`, because the `<svg><title>` blind spot hides a handler
+    exactly as it hides a style attribute; `script-src` is hash-only and no hash covers an attribute,
+    so a browser refuses the handler silently. The literal count reads every tag (`<` and an ASCII
+    letter, to its `>`) as HTML's tokenizer does and counts each attribute NAME there that begins
+    with `on`, ASCII case-insensitively, with a value or valueless, followed by `=`, `/`, `>` or a
+    space (`onclick`, `onclick/`, `on-click="x"`), and subtracts the same count taken over the
+    hash-pinned block bodies. Text outside a tag (`only`, `on duty`, `one = two`) and a name that
+    merely contains `on` (`data-onload`) are not counted. A `<`-and-letter inside a comment is read
+    as a tag here though a browser reads it as text, so an `on*` name there is a false positive that
+    fails closed;
   - exactly one `<meta charset="utf-8">` and no other charset declaration per page, because this
     always decodes UTF-8 and a page declaring something else would be decoded, and hashed, differently
     by a browser that has no transport charset to override it;
@@ -114,7 +126,8 @@ checked (P5 named SVG URLs and page `on*` attributes, not page URLs). The SVG ch
 rule, not a sanitizer: a `<use>` or `<image>` reference to another document and `<foreignObject>`
 itself are unchecked, nothing referenced is ever fetched, a `javascript:` URL is recognised by its
 scheme alone (a `data:` or `blob:` URL passes), and XML types other than XHTML and SVG (`.xml`,
-`.xsl`) are neither refused nor inspected. A STALE pin (a hash left in a gate-selected directive
+`.xsl`) are neither refused nor inspected. Compression is recognised by suffix only (`.svgz`, `.gz`,
+`.br`, `.zst`), not by content, so gzip bytes under any other name are an uninspected regular file. A STALE pin (a hash left in a gate-selected directive
 after its block was edited or deleted) IS rejected as an orphan (row 3.15); it is not a fail-open,
 but dead allowlist entries otherwise accumulate in site/_headers.
 
@@ -157,9 +170,14 @@ KINDS = (("script", ("script-src-elem", "script-src", "default-src")),
          ("style", ("style-src-elem", "style-src", "default-src")))
 OPENER = re.compile(r"<(style|script)\b", re.I)
 STYLE_ATTR = re.compile(r"\bstyle\s*=", re.I)
-# P5: a literal handler attribute, `on<word>=`, not preceded by a word character or a hyphen, so
-# `data-onload=` is not one and `x.onclick=` inside a script body is (and is accounted for there).
-ON_ATTR = re.compile(r"(?<![\w-])on\w*\s*=", re.I)
+# P5: the literal handler accounting reads every tag the way HTML's tokenizer does, not the way
+# html.parser does. A tag opens at `<` and an ASCII letter and runs to its `>`; an attribute NAME is
+# any run of characters other than whitespace, `/`, `>` (and `=` after the first), with or without
+# a value, quoted or not. So a valueless `onclick`, `onclick/`, `on-click` and `onload` in a tag all
+# count, and text outside a tag ("only", "on duty") never does. See the docstring.
+TAG_OPEN = re.compile(r"<[A-Za-z][^\t\n\f />]*")
+TAG_ATTR = re.compile(r"[\t\n\f /]*([^\t\n\f />][^\t\n\f />=]*)"
+                      r"(?:[\t\n\f ]*=[\t\n\f ]*(?:\"[^\"]*\"?|'[^']*'?|[^\t\n\f >]*))?")
 CHARSET = re.compile(r"charset\s*=", re.I)
 META_UTF8 = '<meta charset="utf-8">'
 CSP = "content-security-policy"
@@ -169,9 +187,24 @@ ALGORITHMS = (("sha256", hashlib.sha256), ("sha384", hashlib.sha384), ("sha512",
 # `site/` in the docstring.
 XHTML_WHY = ("is XHTML, which a browser parses as XML and whose scripts it runs under the site's /* "
              "CSP; this gate models HTML pages and SVG documents, not XHTML, so it is refused")
+COMPRESSED_WHY = ("is compressed, which this gate cannot read as text, and a host that serves "
+                  "precompressed files can answer a request for the uncompressed name with it, "
+                  "which the tree cannot show; ship the document uncompressed")
 REFUSED = {".xhtml": XHTML_WHY, ".xht": XHTML_WHY,
            ".svgz": ("is compressed SVG, which this gate cannot read as text and a browser renders "
-                     "only when the host serves it gzip-encoded; ship it as a plain .svg")}
+                     "only when the host serves it gzip-encoded; ship it as a plain .svg"),
+           ".gz": COMPRESSED_WHY, ".br": COMPRESSED_WHY, ".zst": COMPRESSED_WHY}
+TRAILING_DOT_WHY = ("ends with a dot, and which type a host serves such a name as, and whether it "
+                    "strips the dot first, is outside this gate's site model, so it is refused")
+
+
+def name_suffix(name):
+    """The lower-cased text from the LAST dot of a file name, or "" when it has no dot.
+
+    Unlike pathlib's suffix, a dotfile is its own suffix, so a file named `.svg` is an SVG and a file
+    named `.xhtml` is XHTML. A name ending with a dot is refused before this is asked.
+    """
+    return name[name.rindex("."):].lower() if "." in name else ""
 # P5: every ASCII control character and space, removed from a URL before its scheme is read. A
 # superset of what a browser's URL parser strips; see SVG DOCUMENTS in the docstring.
 URL_NOISE = re.compile(r"[\x00-\x20\x7f]")
@@ -256,6 +289,22 @@ def normalized(data: bytes) -> str:
     return data.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
 
 
+def literal_on_attrs(text):
+    """How many attribute names in tag context in `text` begin with `on`, ASCII case-insensitively.
+
+    Each tag is read from its `<` to its `>` as HTML's tokenizer reads it (TAG_OPEN, TAG_ATTR), and
+    scanning resumes after the tag, so a `<` inside a quoted value opens nothing.
+    """
+    count, pos = 0, 0
+    while tag := TAG_OPEN.search(text, pos):
+        pos = tag.end()
+        while attr := TAG_ATTR.match(text, pos):
+            pos = attr.end()
+            if attr.group(1)[:2].lower() == "on":
+                count += 1
+    return count
+
+
 def parse_page(html):
     """Parsed inline blocks and style attributes. Lenient by design; simple_enough refuses."""
     p = Inline()
@@ -328,13 +377,13 @@ def simple_enough(path, page, html, shape):
     # The same accounting for an event-handler attribute (P5): a handler smuggled through
     # <svg><title> is invisible to html.parser and wired up by a browser, which then refuses it under
     # the hash-only script-src, silently.
-    in_body = sum(len(ON_ATTR.findall(b)) for tag in ("style", "script") for b in page.bodies(tag))
-    total = len(ON_ATTR.findall(html))
+    in_body = sum(literal_on_attrs(b) for tag in ("style", "script") for b in page.bodies(tag))
+    total = literal_on_attrs(html)
     if total != len(page.on_attrs) + in_body:
-        out.append(f"the page {path} contains {total} literal `on...=` texts and this gate accounts "
-                   f"for {len(page.on_attrs) + in_body} on* handler attributes; one the parser did "
-                   f"not report, such as one inside <svg> or <title>, is still wired up by a browser "
-                   f"and refused by the hash-only script-src")
+        out.append(f"the page {path} contains {total} literal on* attribute names in tags and this "
+                   f"gate accounts for {len(page.on_attrs) + in_body} on* handler attributes; one "
+                   f"the parser did not report, such as one inside <svg> or <title>, is still wired "
+                   f"up by a browser and refused by the hash-only script-src")
     for script in page.bodies("script"):
         if "<!--" in script:
             out.append(f"the inline <script> in {path} contains `<!--`, which opens HTML's script-data "
@@ -488,7 +537,10 @@ def inspect_site(root, pages):
                             f"never read, so what the host serves through one would be unchecked; "
                             f"replace it with the real file or directory")
             continue
-        suffix = path.suffix.lower()
+        if path.name.endswith("."):
+            findings.append(f"{display} {TRAILING_DOT_WHY}")
+            continue
+        suffix = name_suffix(path.name)
         if suffix in REFUSED:
             findings.append(f"{display} {REFUSED[suffix]}")
             continue
