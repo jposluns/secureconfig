@@ -44,7 +44,10 @@ from a local demo, on anything reachable beyond your own machine.
 ## 2. Bind privately
 
 `--bind`/`-b` (`SURREAL_BIND`) sets the listening address and defaults to `127.0.0.1:8000` (as of v3.2.4),
-loopback only. Widen it deliberately, and only to a private address, for example `--bind 10.0.0.5:8000`; never
+loopback only. The images built from the repository's `docker/Dockerfile` do not keep that default: each of its
+runtime stages sets `SURREAL_BIND=0.0.0.0:8000`, so a bare container listens on every interface; publish it only on
+host loopback (`127.0.0.1:8000:8000`) or on a private network. Widen the bind deliberately, and only to a private
+address, for example `--bind 10.0.0.5:8000`; never
 bind an unauthenticated or root-only instance to `0.0.0.0`. SurrealDB's own security guidance says
 that if the database should only be reachable by other internal services, "expose SurrealDB
 exclusively to the internal network instead of deploying the service with a publicly addressable
@@ -161,6 +164,7 @@ TLS terminates with normal validation (a trusted CA for private PKI); never use 
 - SurrealDB 3.2.4 `surreal start` root password: `--password`/`--pass`/`-p` or `SURREAL_PASS`, with no stdin form (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/cli/start.rs#L148-L162
 - SurrealDB 3.2.4 `--unauthenticated` flag, bound to `SURREAL_UNAUTHENTICATED` (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/dbs/mod.rs#L47-L50
 - SurrealDB 3.2.4 `--bind`/`-b` (`SURREAL_BIND`) default `127.0.0.1:8000` (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/cli/start.rs#L177-L180
+- SurrealDB `docker/Dockerfile` sets `ENV SURREAL_BIND="0.0.0.0:8000"` in each runtime stage (L78, L104, L139, L165), shown here for the production stage (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/docker/Dockerfile#L104
 - SurrealDB CLI, `surreal sql`: https://surrealdb.com/docs/reference/cli/surrealdb-cli/commands/sql
 - SurrealDB security overview: https://surrealdb.com/docs/learn/security
 - SurrealDB authentication overview: https://surrealdb.com/docs/learn/security/authentication/overview
