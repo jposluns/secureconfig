@@ -12,7 +12,7 @@ Meilisearch supports native HTTPS with `--ssl-cert-path` and `--ssl-key-path`; t
 
 ## Typesense
 
-Typesense requires a bootstrap key at startup, set with the `--api-key` server parameter (a required parameter; the server will not start without it); that key has "admin permissions on all endpoints and data." Use the bootstrap key to create a separately revocable operational key through the `/keys` API, then use that operational key for routine administration; rotate the operational key through the API, while the bootstrap key remains a startup credential supplied through `TYPESENSE_API_KEY` or a protected configuration file rather than command-line arguments. Typesense listens on `0.0.0.0:8108` by default (`--api-address`/`--api-port`), so for a same-host proxy set `--api-address=127.0.0.1 --api-port=8108`; its separate peering service defaults to port `8107`, so select a private peering address and restrict it to cluster members ([cloud-firewalls.md](cloud-firewalls.md)).
+Typesense requires a bootstrap key at startup, set with the `--api-key` server parameter (a required parameter; the server will not start without it); that key has "admin permissions on all endpoints and data." Use the bootstrap key to create a separately revocable operational key through the `/keys` API, then use that operational key for routine administration; rotate the operational key through the API, while the bootstrap key remains a startup credential supplied through `TYPESENSE_API_KEY` or a protected configuration file rather than command-line arguments. Typesense listens on `0.0.0.0:8108` by default (as of v30.2; `--api-address`/`--api-port`), so for a same-host proxy set `--api-address=127.0.0.1 --api-port=8108`; its separate peering service defaults to port `8107`, so select a private peering address and restrict it to cluster members ([cloud-firewalls.md](cloud-firewalls.md)).
 
 Create a parent search-only key through the same `/keys` endpoint:
 
@@ -201,6 +201,7 @@ Version scope: Typesense 30.2; Meilisearch current unversioned documentation che
 - Meilisearch master API keys (MEILI_MASTER_KEY, the four default API keys): https://www.meilisearch.com/docs/resources/self_hosting/security/master_api_keys
 - Typesense data access control (bootstrap api-key, /keys, actions, collections, filter_by, include_fields/exclude_fields, expires_at): https://typesense.org/docs/guide/data-access-control.html
 - Typesense 30.2 server configuration (api-key required, api-address default 0.0.0.0, api-port 8108, peering-port 8107, ssl-certificate): https://typesense.org/docs/30.2/api/server-configuration.html
+- Typesense `api-address` default `0.0.0.0`, `api-port` default 8108 and `peering-port` default 8107 (pinned tag v30.2): https://github.com/typesense/typesense/blob/v30.2/src/typesense_server_utils.cpp#L81-L85
 - Typesense 30.2 API keys (parent search-only key, scoped-key derivation, description): https://typesense.org/docs/30.2/api/api-keys.html
 - Typesense 30.2 collections (collection creation and schema fields): https://typesense.org/docs/30.2/api/collections.html
 - Typesense v30.2 authorization failure (401): https://raw.githubusercontent.com/typesense/typesense/v30.2/src/http_server.cpp
