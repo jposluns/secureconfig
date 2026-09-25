@@ -61,6 +61,7 @@ For APIs and machine clients, create a **service token** in the Zero Trust dashb
 (
   # Feed the service-token headers to curl on stdin (curl --header @-), never in
   # argv: the Client-Secret in -H is readable in ps / /proc/<pid>/cmdline.
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLIENT_ID' 'REPLACE_WITH_CLIENT_SECRET'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift

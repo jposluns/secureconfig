@@ -247,6 +247,7 @@ Use a valid virtual key whose `allowed_routes` includes `/v1/models`. Substitute
 # on a placeholder. (The key you substitute on the set -- line does enter your shell history, so use a
 # short-lived key or clear that history line afterward.)
 (
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VIRTUAL_KEY'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 1; }
   shift
