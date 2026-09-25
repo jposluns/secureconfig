@@ -51,6 +51,18 @@ old `on<word>=` accounting let through inside `<title>`, with prose and `data-on
 case per character an XML attribute can carry to URL_NOISE (tab, LF, CR, DEL, space), so dropping
 any one of them turns the suite red, which dropping CR once did not; and dotfile (`.svg`),
 trailing-dot and compressed (`.gz`, `.br`, `.zst`) names, which pathlib's suffix let escape.
+
+Round 3 of #352 found fake markup inside inert text (`<!-- <b title=" -->`, CDATA, a bogus
+`<!thing>` or `<?thing>`, and text crossing a `textarea`, `title`, `noscript` or `xmp` boundary)
+making the literal scan swallow a real handler inside SVG `<title>`, which html.parser missed too.
+Its cases, on both pages, are counted with the row 3.18 cases: every reproduction with a valued and
+a valueless handler, each refusal rule alone (the context-free valued-handler scan, inert text
+holding a `<`, and `<math>` or an SVG `title`, `desc`, `foreignObject`, `style` or `script`), and
+false-positive guards (plain text in a comment, `<title>`, `<noscript>` and `<textarea>`, on-words in
+prose, `data-onload`). Three earlier cases changed: the round-2 integration-point cases now expect
+the SVG refusal; the prose guard, which sat inside `<svg><title>` and carried `on = off`, moved to the
+page's own `<title>` and a `<p>` without the `=`; and `data-onload` inside `<svg><title>`, once a
+pass, is now refused as an SVG `<title>`, with a new pass case for `data-onload` in the body.
 """
 import base64
 import contextlib
@@ -661,24 +673,110 @@ HIDDEN_HANDLERS = (("valueless onclick", "<div onclick>x</div>"),
                    ("hyphenated on-click", '<div on-click="x">x</div>'))
 INTEGRATION_POINTS = (("title", "<title>t{}</title>"), ("desc", "<desc>d{}</desc>"),
                       ("foreignObject", "<foreignObject>{}</foreignObject>"))
+# Round 3 of #352 refuses every one of those integration points inside <svg> outright, so each case
+# now expects that refusal rather than the literal-accounting message; each is still refused.
+SVG_REFUSAL = "inside an inline <svg>"
 for page_name, base in (("index.html", PAGE), ("404.html", PAGE_404)):
     for point, wrapper in INTEGRATION_POINTS:
         for form, fragment in HIDDEN_HANDLERS:
-            scope_case(f"P5 {form} inside <svg><{point}> on {page_name}", expected="on* handler",
+            scope_case(f"P5 {form} inside <svg><{point}> on {page_name}", expected=SVG_REFUSAL,
                        page={page_name: base.replace(
                            "</svg>", wrapper.format(fragment) + "\n    </svg>", 1)})
+    # Round 3 of #352 changed these two: the prose once sat inside <svg><title>, now refused, and
+    # carried `on = off` and `one = two`, which the context-free scan now refuses as text it cannot
+    # tell from a handler (a case below). The prose moves to the page's own <title> and a <p>.
     scope_case(f"P5 prose on-words on {page_name} are not handlers",
-               page={page_name: base.replace(
-                   "</svg>", "<title>only one on duty, on-call; on = off</title>\n    </svg>", 1)
-                   .replace("</body>", "<p>only one on duty, on-call; one = two, on</p>\n</body>", 1)})
-    scope_case(f"P5 data-onload inside <svg><title> on {page_name} is not a handler",
+               page={page_name: re.sub(r"<title>[^<]*</title>",
+                                       "<title>only one on duty, on-call; one, on</title>", base,
+                                       count=1)
+                   .replace("</body>", "<p>only one on duty, on-call; online, on</p>\n</body>", 1)})
+    scope_case(f"P5 data-onload inside <svg><title> on {page_name} is refused as SVG <title>",
+               expected=SVG_REFUSAL,
                page={page_name: base.replace(
                    "</svg>", '<title>t<div data-onload="x" data-on>x</div></title>\n    </svg>', 1)})
+    scope_case(f"P5 data-onload on {page_name} is not a handler",
+               page={page_name: base.replace(
+                   "</body>", '<div data-onload="x" data-on>x</div>\n</body>', 1)})
 ONTAG_JS_PAGE = PAGE.replace("(function () {", '(function () {\n  var tpl = "<b onclick>x</b>";', 1)
 scope_case("P5 a handler-bearing tag in a JavaScript string is script text, repinned",
            page=ONTAG_JS_PAGE, headers=repinned(ONTAG_JS_PAGE, "script"))
 scope_case("P5 a handler-bearing tag in a page comment fails closed", expected="on* handler",
            page=PAGE.replace("</body>", "<!-- <b onclick> -->\n</body>", 1))
+
+# Round 3 of #352 (codex finding): fake markup inside inert text made literal_on_attrs() read a tag
+# that a browser never sees and swallow a real handler after it as a quoted value, while html.parser
+# missed the handler inside SVG <title>, so both counts were 0. Three rules that ask html.parser
+# nothing now refuse it: (1) a context-free scan for a valued `on...=` outside the pinned blocks,
+# (2) inert text holding a `<`, and (3) the foreign-content elements html.parser reads as HTML.
+ON_TEXT = "outside the hash-pinned blocks"
+CROSSINGS = (("comment", '<!-- <b title=" -->', "has a comment whose text"),
+             ("CDATA section", '<![CDATA[ <b title=" ]]>', "has a CDATA section whose text"),
+             ("bogus declaration", '<!thing <b title=">', "has a <! declaration whose text"),
+             ("bogus processing instruction", '<?thing <b title=">', "has a <? declaration whose text"),
+             ("textarea crossing", '<textarea><b title="</textarea>', "has a <textarea> whose content"),
+             ("title crossing", '<title><b title="</title>', "has a <title> whose content"),
+             ("noscript crossing", '<noscript><b title="</noscript>', "has a <noscript> whose content"),
+             ("xmp crossing", '<xmp><b title="</xmp>', "has a <xmp> whose content"))
+HANDLER_FORMS = (("valued", "onclick=alert(1)"), ("valueless", "onclick"))
+for page_name, base in (("index.html", PAGE), ("404.html", PAGE_404)):
+    # The reproduction exactly as filed, before the first </svg>, then each crossing before </body>.
+    for form, handler in HANDLER_FORMS:
+        scope_case(f"#352 r3 codex reproduction, {form}, on {page_name}",
+                   expected="has a comment whose text",
+                   page={page_name: base.replace(
+                       "</svg>", f'<!-- <b title=" -->\n<title><div {handler}>x</div></title>\n'
+                                 f'<!-- " -->\n</svg>', 1)})
+        for what, opener, expected in CROSSINGS:
+            scope_case(f"#352 r3 {what} swallowing a {form} handler on {page_name}",
+                       expected=expected,
+                       page={page_name: base.replace(
+                           "</body>", f"{opener}\n<svg><title><div {handler}>x</div></title></svg>\n"
+                                      f'<!-- " -->\n</body>', 1)})
+    # Rule 1 alone: text a browser does not wire up, but which this gate cannot tell from a handler.
+    for what, fragment in (("in prose", "<p>x onclick=alert(1)</p>"),
+                           ("as prose `one = two`", "<p>one = two</p>"),
+                           ("in a comment without a <", "<!-- onclick=x -->"),
+                           ("in an attribute value", '<p title="a ONLOAD = b">x</p>'),
+                           ("hyphenated, in prose", '<p>on-click="x"</p>')):
+        scope_case(f"#352 r3 rule 1: handler-like text {what} on {page_name}", expected=ON_TEXT,
+                   page={page_name: base.replace("</body>", fragment + "\n</body>", 1)})
+    # Rule 2 alone: inert text holding a `<`, no handler anywhere.
+    for what, fragment, expected in (
+            ("comment", "<!-- a <b> c -->", "has a comment whose text"),
+            ("CDATA section", "<![CDATA[ a <b> c ]]>", "has a CDATA section whose text"),
+            ("declaration", "<!thing a <b>", "has a <! declaration whose text"),
+            ("processing instruction", "<?thing a <b>", "has a <? declaration whose text"),
+            ("second doctype", "<!doctype <b>", "has a <! declaration whose text")) + tuple(
+            (f"<{el}>", f"<{el.upper() if el == 'iframe' else el}>a <b>c</{el}>",
+             f"has a <{el}> whose content") for el in (
+                "textarea", "title", "xmp", "noscript", "plaintext", "noembed", "noframes",
+                "iframe")):
+        scope_case(f"#352 r3 rule 2: {what} holding a < on {page_name}", expected=expected,
+                   page={page_name: base.replace("</body>", fragment + "\n</body>", 1)})
+    # Rule 3 alone: plain-text divergent elements inside the real inline <svg>, and <math>.
+    for element in ("title", "TITLE", "desc", "foreignObject", "FOREIGNOBJECT", "style", "Script"):
+        scope_case(f"#352 r3 rule 3: <{element}> inside the inline <svg> on {page_name}",
+                   expected=SVG_REFUSAL,
+                   page={page_name: base.replace(
+                       "</svg>", f"<{element}>plain</{element}>\n    </svg>", 1)})
+    scope_case(f"#352 r3 rule 3: <desc> in a nested <svg> after an inner </svg> on {page_name}",
+               expected=SVG_REFUSAL,
+               page={page_name: base.replace(
+                   "</svg>", "<svg><path/></svg><desc>plain</desc>\n    </svg>", 1)})
+    for element in ("math", "MATH"):
+        scope_case(f"#352 r3 rule 3: <{element}> on {page_name}", expected="has a <math> element",
+                   page={page_name: base.replace(
+                       "</body>", f"<{element}><mi>x</mi></{element}>\n</body>", 1)})
+    # False-positive guards: plain inert text passes, and a <title> element outside <svg> passes.
+    scope_case(f"#352 r3 a comment holding plain on-word text on {page_name} passes",
+               page={page_name: base.replace(
+                   "</body>", "<!-- only one on duty; see _headers -->\n</body>", 1)})
+    scope_case(f"#352 r3 a <title> holding plain text on {page_name} passes",
+               page={page_name: re.sub(r"<title>[^<]*</title>", "<title>Only one, on call</title>",
+                                       base, count=1)})
+    scope_case(f"#352 r3 a <noscript> and a <textarea> holding plain text on {page_name} pass",
+               page={page_name: base.replace(
+                   "</body>", "<noscript>on duty</noscript><textarea>one, on</textarea>\n</body>", 1)})
 
 
 def file_link(d):
