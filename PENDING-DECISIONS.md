@@ -53,6 +53,18 @@ both. The suite was silent.
 **Recommendation: A**, folded into the same change as P1's gate if P1 is answered B, since both
 parse the same rows.
 
+### P3. Should blocks that hold a secret only in positional parameters clear inherited traps too?
+
+**Raised** 2026-09-25, by the #310 review.
+
+#310 makes every guarded-read block clear `trap - DEBUG RETURN ERR` before its read, per the maintainer's rulings of 2026-09-24. Blocks that take a secret on a `set --` line and never `read` it, such as `traefik.md:133`, `litellm.md:250` and `gpu-clouds.md:52`, clear no traps, and an inherited DEBUG trap under `set -T` can read `"$1"` there. The rulings covered guarded-read blocks only.
+
+- **A. Extend the trap clear to every block that handles a secret** (recommended), and word rule 7's fifth condition to cover positional-parameter blocks. It is one line per block, and the harness from #310 can test it.
+- **B. State it as an assumption** for positional-parameter blocks, as rule 7 already does for hostile traps and shadowing functions.
+- **C. Leave as is.**
+
+Tracked as backlog row 1.134. No other work depends on it.
+
 ## Struck
 
 Nothing yet.
