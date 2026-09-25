@@ -124,7 +124,6 @@ marked, and those are the ones worth taking first.
 | 3.19 | Weekly lychee sweep: fail only on dead links (404s); list redirects without failing the job (maintainer ruling, 2026-09-25). (L, S) | `[gap]` |
 | 3.20 | Verify-marking convention: every Verify step states explicitly whether it was demonstrated or reasoned, enforced corpus-wide (maintainer ruling, 2026-09-25). (M, L) | `[gap]` |
 | 3.21 | An offline gate that fails any workflow `uses:` not pinned to a full commit SHA with a `# vX.Y.Z` release comment, so the floating tags row 3.17 removed cannot return unnoticed. The profile in `DECISIONS.md` (pattern 2) predicts that a check which can be a required gate without reaching the network should be one; that is a prediction, not a ruling. (L, S) | `[gap]` |
-| 3.22 | Pin CI's Python to an exact 3.14.x release and assert `python3 --version` before the gate suite, as row 3.17 did for shellcheck, because `python-version: "3.14"` accepts any 3.14 patch release and a patch release can change `html.parser` behaviour a gate depends on (from the #348 review). (L, S) | `[gap]` |
 
 ## Decisions
 
