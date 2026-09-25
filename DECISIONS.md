@@ -69,6 +69,143 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   already did. The scope question said the ai-infra blocks' `-H "$4"` puts the header in curl's argv, breaking
   rule 7.
 
+- **Rule 7's trap scope and hostile-shell limits, 2026-09-24: the ERR trap is included, and two limits are stated
+  as assumptions.** Blocks clear `trap - DEBUG RETURN ERR`, and rule 7 requires all three. Review of #309 showed
+  that an inherited ERR trap under `set -E` reads the secret when a command fails, and the author reproduced it.
+  The two limits are an inherited `shopt -s extdebug`, under which a DEBUG trap can skip the `trap -` line, and
+  inherited functions named like the block's commands, which run inside the subshell and see the secret. Rule 7
+  and the guides name both and say to run the block from a clean shell (`bash --norc`). To be carried in the
+  rule 7 pull request after #309. No reasoning was recorded beyond that evidence.
+
+- **Rule 7's IFS guard and DEBUG trap (row 1.133), 2026-09-24: both required.** Rule 7's guarded-read exception
+  gains a clause requiring the readonly-IFS refusal (`{ unset -n IFS; } 2>/dev/null || refuse`) before the read;
+  every block then current already complied (#301, #303, #306). Every guarded block also gets `trap - DEBUG RETURN`
+  at the top of its subshell, and rule 7 requires it. The author reproduced the leak, a DEBUG trap that saw the
+  secret, and the fix, under which nothing printed. About 15 blocks, each to be tested with the harness. To be
+  carried in one CONTRIBUTING-plus-guides pull request after #309. No reasoning was recorded beyond that evidence.
+
+- **Rule 7's environment exception covers a tool with no stdin input, 2026-09-24.** Before the ruling, a check of
+  pinned sources found that natscli is not environment-only (a context JSON `password` field, `--password=file://`
+  after v0.3.2, and a fisk `@argfile`); that surreal's `--pass` is environment-only, but the root user can instead
+  be defined in an `--import-file`; and that nomad v2.0.7 is environment-only, with no stdin or file form, and
+  `nomad login` does not save the token. The option chosen, "No-stdin framing": the exception covers a tool that
+  offers no stdin input for the secret, makes no claim that the environment is the tool's only non-argv input, and
+  states no file preference. Tools are named only where verified at a tag. The `nats.md`, `nomad-consul.md` and
+  `surrealdb.md` conversions proceed with the prefix form plus its guard, carried in #299 round 4. No reasoning
+  was recorded.
+
+- **Rule 7's prefix assignment needs a guard, 2026-09-24.** Bash prints "readonly variable" for a prefix assignment
+  to a readonly variable, then runs the tool with the inherited value, so a probe silently tests the reader's
+  credential. Before the prefix form, the block clears the name in the subshell (`unset -n` then `unset -v`) and
+  fails closed if that fails. Carried in #299 round 3. No reasoning was recorded beyond that evidence.
+
+- **Exposure-index citations for a product that a row's "May be" cell does not name, 2026-09-24: add the product
+  to that cell.** Only names are added. Carried in #300 round 2. No reasoning was recorded.
+
+- **Rule 7 and tools that take the secret only from the environment (decision D1), 2026-09-24: a one-command
+  prefix assignment.** The question named natscli (`NATS_PASSWORD`), `nomad` (`NOMAD_TOKEN`) and `surreal start`
+  (`SURREAL_PASS`), while amended rule 7 says "never exported". The ruling allows `TOOL_VAR="$v" tool ...`, never
+  `export`, with the caveat that the process's `/proc/<pid>/environ` is readable by the same user. To land in a
+  CONTRIBUTING pull request, followed by the `nats.md` blocks, the `nomad-consul.md` example and the `surrealdb.md`
+  block. The guard and premise rulings above refined it the same day. No reasoning was recorded beyond the
+  question's point that argv would be worse.
+
+- **A QA stopping rule, 2026-09-24: adopted as policy.** Once a pull request converges to SHIP from both families,
+  non-blocking notes carry forward to the next pull request or a `TODO.md` row. Blocking findings, and in-scope
+  issues the round itself caused, are still fixed first. No reasoning was recorded.
+
+- **Two CONTRIBUTING lines on demonstrated steps, 2026-09-24: adopt both.** Every QA brief states an exposed run,
+  a fixed run and the observation for each demonstrated step. Adding a Verify run means rereading the guide's
+  run-provenance sentence. To land in a CONTRIBUTING pull request. No reasoning was recorded.
+
+- **Rule 7 and named-variable keys, 2026-09-24: amend rule 7.** It allows one subshell-local variable read with
+  `read -r -s`, guarded: `set +x`, unset first, never exported. Blocks that take the secret from the environment,
+  such as `sqlite.md`'s `TURSO_AUTH_TOKEN` (row 1.123), are converted. To land in the same CONTRIBUTING pull
+  request as the two lines above. *Reasoning:* `read` cannot target positional parameters, so this is the only way
+  to read the key.
+
+- **Exposure-index citations, 2026-09-24: a one-off pass.** A single content pull request adds the roughly 60
+  missing guide citations to the port rows. An advisory report of uncited pairs is optional. No reasoning was
+  recorded.
+
+- **Six pending questions closed as overtaken by later work, 2026-09-24,** each verified against the repository
+  first: the CSP-hash orphan pins (row 3.15, raised 2026-09-15), because row 3.15 is in `DONE.md`; the `ss | grep`
+  sweep (2026-09-15), because no guide still filters `ss` through grep; the `mcp-servers.md` re-pin (2026-09-17),
+  because the guide cites MCP 2026-07-28 throughout; the `-u` credential-quoting sweep (2026-09-17), because
+  `check_guard_conventions.py` enforces it and no guide has the pattern; the Argo Workflows section (2026-09-18),
+  because it is present in `workflow-orchestrators.md`; and a grammar question on #277, because #277 merged. The
+  maintainer had directed the `mcp-servers.md` re-pin to go ahead; #221 carried it and added rows 1.83 and 1.84 for
+  follow-up.
+
+- **No listener-opening demonstrations until isolation exists, 2026-09-24.** No demonstration opens a listener
+  until a loopback-only network namespace or equivalent isolation exists on the authoring host. An earlier ruling
+  the same day, after a Ray wildcard-bind incident, added a sourced reasoned note to `ray.md` (#290). The remaining
+  demonstration rows stay reasoned (2.31 to 2.35, 2.37, 2.40 to 2.43, and debt rows 1.108, 1.112, 1.114, 1.117,
+  1.118 and 1.121), and work continues on the non-listener backlog. The revert path is a maintainer ruling once
+  isolation exists. No reasoning was recorded.
+
+- **The pinned-citation gate (#254), 2026-09-21: ship it advisory, with disclosure.** #254 merges as it stands; the
+  docstring of `tools/check_pinned_citations.py` discloses obfuscated-Markdown and exotic evasions as a
+  review obligation, matching the `check_shell_blocks` and guard-conventions precedent, and one CONTRIBUTING line
+  may name that obligation. Because `main` had moved past the branch's `VERSION`, the branch was re-versioned above
+  `main` before merge, for version monotonicity. No reasoning was recorded.
+
+- **CONTRIBUTING rule 5 gains an environment-capability carve-out, 2026-09-19 (#229).** Option (C), codify the
+  deviation: an all-reasoned service guide is permitted when the authoring environment genuinely cannot stand the
+  service up, tracked by a backlog row, and it is never presented as verified. #229 ships reasoned with debt, and
+  the amendment and the "un demonstrated" typo fix are folded into it, so that the guide and the authorizing rule
+  land atomically, with no window in which the guide is live against the unamended rule. The amendment legitimizes
+  #227 and #228 retroactively, with no revert. #229's squash commit message names only the `redis.md` change;
+  `CHANGELOG.md` records the amendment. No reasoning was recorded for the carve-out itself.
+
+- **Row 3.14 and `--strict-guards`, 2026-09-19: no general lexical auto-gate, and fix the false positive (#225).**
+  Row 3.14 is recorded as won't-implement as a general lexical auto-gate, and `_strict_if_guards` stops flagging a
+  probe already covered by an effective C2 sentinel guard (the `mosquitto.md` false positive); `--strict-guards`
+  stays the opt-in manual audit tool. The first fix over-suppressed, skipping a probe that uses `$1` under a `case`
+  that guards `$2`, so the maintainer chose to build bounded subject-operand matching into the strict rule only,
+  leaving the main C2 output byte-identical. Round 2 left two contrived under-flags that the corpus does not
+  contain, and the maintainer chose ship-and-disclose: those two, and function-parameter rebinding, are listed in
+  the gate's KNOWN REMAINING BYPASSES. Row 3.14 closed in #225. The stated reason for leaving the general gate
+  unimplemented is that there are no corpus true positives to gain and it would need value flow plus a
+  sentinel-identification contract; no other reasoning was recorded.
+
+- **No `Co-Authored-By` trailer in this repository's git commits, 2026-09-19.** Option (a), effective immediately.
+  The attribution line in a GitHub pull request body is unaffected: it is not a git commit trailer, and `cmtidn`, a
+  git-command hook, does not scan it. *Reasoning:* it keeps the pending activation of the AIQT hooks (row 3.6) from
+  denying commits on `cmtidn`.
+
+- **The C2 guard-conventions rule, 2026-09-18: fix the findings, then enforce (#220).** The first ruling was to
+  work the roughly 31 probe-outside-guard findings across about nine guides down in staged pull requests, to keep
+  the required gate at `--no-c2` until the corpus is clean, to revisit enforcing C2 only then, and to queue this
+  after the credential-in-argv sweep. Later the same day the maintainer chose option A, the full sweep in one pull
+  request: #220 fixed the recognizer to inspect every `case`-pattern alternative, waived standalone
+  placeholder-free probes, guarded the three real placeholder-reaching defects (in `mcp-servers.md` and
+  `model-servers.md`) and removed `--no-c2`. C2 has been enforced on `main` since #220 shipped on 2026-09-19. No
+  reasoning was recorded.
+
+- **Credentials in curl's argv, 2026-09-18: a gate rule and a corpus sweep in one pull request (#217).** Option A:
+  `check_guard_conventions.py` gains a rule that flags, inside a fenced bash block, a credential placeholder
+  (`-u <user>:REPLACE_WITH_*`) and the broader credential-in-argv class (tokens and signed URLs carrying a
+  substituted secret in curl's argv), and the corpus is swept to safe handling (single quotes, stdin or a config
+  file) as fix plus recurrence guard. The `pocketbase.md` HEAD-asserts-content and `fronting-auth.md`
+  timeout-conclusion items are separate probe-quality observations, outside the rule's scope. When the new gate
+  revealed the true scope, the maintainer ruled "Full sweep now": every real-credential locus, beyond the guides
+  first named, is rewritten to stdin (`--config -` or `--header @-`) in #217, superseding the argv-mitigation notes
+  some guides carried, and dummy negative controls that are not real secrets (in `litellm.md`, `ollama.md` and
+  `mlflow.md`) are waived with `# guard-conventions: allow <reason>`. The rule and the sweep are coupled, since any
+  unwaived locus turns the gate red. No reasoning was recorded.
+
+- **An Argo Workflows section in `workflow-orchestrators.md`, 2026-09-18 (#218).** Option A: a separate follow-up
+  pull request adds the section, covering the auth-mode boundary (`--auth-mode=client` is the default since v3.0,
+  and `server` mode gives clients unauthenticated access under the server's Kubernetes identity), port 2746,
+  service account scoping, SSO and RBAC, and a matched `/api/v1/workflows` probe, and the guide's title names six
+  tools. It is audited by two families like any guide change. No reasoning was recorded.
+
+- **The guard-conventions gate (row 3.11), 2026-09-14: the narrow, zero-false-positive gate.** Option (a):
+  keep C1-MISSING-Q, narrow C1-MISSING-G to unglobbed `[` or `{` URLs, register the gate with `--no-c2`, open a
+  tracked row for reworking C2, and fix the two real missing-`-q` defects in a split pull request. Implementation
+  was to proceed with independent verifiers. C2 was enforced later (#220, above). No reasoning was recorded.
+
 - **Ship the 86th guide (`ai-infra-services.md`, #60) with Verify checks 2 to 7 marked reasoned,
   tracked by backlog row 2.24.** The rule 5 this pull request tightened says a service that runs in a
   container on ordinary hardware is not impractical to stand up, and two QA families called the mark's
