@@ -770,8 +770,10 @@ fi
 
 echo "== AIQT baseline =="
 # The vendored gates derive the repo root from their own location, so they operate on this tree.
-# AIQT_SITE_HOST retargets the upstream helper, which hardcodes aiqt.ai; see .aiqt/PIN.
+# AIQT_SITE_HOST retargets the upstream helpers from their aiqt.ai default; AIQT_NEWTAB_ROOTS limits the
+# new-tab gate to this repository's site/ (a local patch; upstream also requires opf/site/). See .aiqt/PIN.
 export AIQT_SITE_HOST=secureconfig.ai
+export AIQT_NEWTAB_ROOTS=site
 for gate in check_site check_no_dashes check_newtab; do
   if out=$(python3 "tools/${gate}.py" 2>&1); then
     ok "${gate}"
