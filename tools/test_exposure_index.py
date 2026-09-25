@@ -24,7 +24,8 @@ check (deleting each shape in turn) confirmed that every shape is needed by at l
   D38-D39 a backticked range after a camel-case or `_port` identifier; D40-D41 capitalized "To" and
   "THROUGH" separators in a backticked range; D42-D45 a backticked pair: the host side in prose,
   the container side in a table cell with an IPv4 bind host and after a bracketed IPv6 bind host
-  with `/udp`, and an equal two-digit pair `77:77`.
+  with `/udp`, and an equal two-digit pair `77:77`; D46 a pair in a span padded with one space
+  on each side, which CommonMark strips.
 Precision: N1 "TCP 192.168.1.1"; N2 "TCP 7777.2"; N3 "--support=2026" and "--export 2024";
   N4 "transport: 2026" and "report: 2024"; N5 "- 10:30 UTC"; N6 "port 7,777" (an
   unmapped number, so only the thousands rule passes it); N7 versions,
@@ -32,7 +33,7 @@ Precision: N1 "TCP 192.168.1.1"; N2 "TCP 7777.2"; N3 "--support=2026" and "--exp
   and N10 "EXPOSE 7777.2" (malformed tokens yield nothing); N11 "report" is not the word "port";
   N12 a decimal list item "7777.5"; N13 a dotted "1.7777/tcp" is not a port; N14 a backticked time
   `10:30`, N15 a ratio `70:30`, N16 a bare IPv6 literal and N17 a `file:line:column` reference in
-  backticks are not pairs.
+  backticks are not pairs; N18 a single-backtick pair inside a double-backtick span is not one.
 Mapping: M1 a mapped port passes; M2 a narrow range and M3 a 101-port range map for their cited
   guide; M4 a 102-port range maps only for its cited guide (ray.md passes, b.md fails as unmapped);
   M5 a cited link with an anchor still counts as cited; M6 a compact plural list of mapped ports;
@@ -155,6 +156,7 @@ DETECT = [
     ("D43", "| Svc | `127.0.0.1:9090:7777` | every interface |", 7777),
     ("D44", "It publishes `[::]:9090:7777/udp` by default.", 7777),
     ("D45", "It publishes `77:77` on every interface.", 77),
+    ("D46", "It publishes ` 7777:9090 ` with padding inside the span.", 7777),
 ]
 PRECISE = [
     ("N1", "The gateway is TCP 192.168.1.1 on the LAN."),
@@ -174,6 +176,7 @@ PRECISE = [
     ("N15", "Traffic splits `70:30` between the pools."),
     ("N16", "The ULA `fd00::7777:7778` is private."),
     ("N17", "The trace points at `server.py:7777:12`."),
+    ("N18", "The literal is ``prefix `7777:9090` suffix`` in one span."),
 ]
 
 
@@ -203,7 +206,8 @@ def main() -> int:
     rc, out = run({"ray.md": "# Ray\n\nWorkers use port 20101.\n",
                    "b.md": "# B\n\nThe proxy uses port 20101.\n"})
     check(f"M4: a 102-port range maps only for its cited guide (rc={rc}, out={out!r})",
-          rc == 1 and "b.md:3 names port 20101" in out and "ray.md" not in out)
+          rc == 1 and "b.md:3 names port 20101" in out and "ray.md" not in out
+          and "does not map" in out and "lists on no row" not in out)
     rc, out = run({"ray.md": "# Ray\n\nWorkers use port 20050.\n"})
     check(f"M5: a cited link with an anchor counts as cited (rc={rc}, out={out!r})", rc == 0)
     rc, out = run(guide("It listens on ports 80,443 by default."))

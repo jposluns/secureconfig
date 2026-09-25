@@ -52,7 +52,7 @@ added later, has edges of its own, measured when it was added: an equal two-digi
 UID:GID pair alone in a code span (`12:12`, `1000:1000`) reads as a pair and fails closed (none
 present); an unequal two-digit mapping (`80:22`) is skipped with the times it resembles (none
 present); and a pair inside a longer code span, such as a `kubectl port-forward` argument, is not
-seen (one present, whose ports other shapes see).
+seen (four present, whose ports other shapes see).
 A broader net (any `word:N`, or any bare four- or five-digit number) was measured when this gate
 was written and found to be mostly years, sizes, counts and versions, so it is not used.
 
@@ -159,9 +159,6 @@ PATTERNS = {
     "compose": re.compile(
         r"""^\s*-\s*["']?""" + HOSTPFX + r"(\d{2,5}):(\d{2,5})" + END
         + r"""(?=(?:/(?:tcp|udp))?["']?\s*(?:$|#))"""),
-    # a code span holding only a `[host:]H:C` pair (`8888:8080`, `127.0.0.1:8888:8080`); mentions()
-    # drops two unequal two-digit sides, which read as a time, duration or ratio (`10:30`, `70:30`)
-    "tick_mapping": re.compile(r"`" + HOSTPFX + r"(\d{2,5}):(\d{2,5})(?:/(?i:tcp|udp))?`"),
     "listen": re.compile(r"(?i)^\s*(?:listen|bind)\s+(?:\[?[\w.:*]*\]?:)?" + N + END),
     "expose": re.compile(r"^\s*EXPOSE\s+(.+)$"),
     "port_key": re.compile(
@@ -333,6 +330,16 @@ def guides(root: Path):
             yield path
 
 
+# The backticked pair shape. A code span is found by CommonMark's rule: a run of backticks closed
+# by the next run of the same length; one space of padding on each side is stripped when both are
+# present and the content is not all spaces. The span counts only when its whole content is a
+# `[host:]H:C` pair (`8888:8080`, `127.0.0.1:8888:8080`, `[::]:9090:7777/udp`), so a pair inside a
+# longer span, or a single-backtick pair nested in a double-backtick span, is not one. Two unequal
+# two-digit sides read as a time, duration or ratio (`10:30`, `70:30`) and are dropped.
+CODE_SPAN_RUN = re.compile(r"(?<!`)(`+)(?!`)(.+?)(?<!`)\1(?!`)")
+TICK_PAIR = re.compile(HOSTPFX + r"(\d{2,5}):(\d{2,5})(?:/(?i:tcp|udp))?")
+
+
 def mentions(path: Path):
     """Yield (line_number, port) for every port-shaped mention in a guide, code included."""
     fences = Fences()
@@ -344,9 +351,6 @@ def mentions(path: Path):
             for m in rx.finditer(line):
                 if name in ("prose_port", "prose_ports"):
                     nums = [m.group(1)] + re.findall(r"\d{1,5}", m.group(2) or "")
-                elif name == "tick_mapping":
-                    host, cont = m.group(1), m.group(2)
-                    nums = [] if len(host) == len(cont) == 2 and host != cont else [host, cont]
                 elif name in ("publish", "compose", "tick_range"):
                     nums = [m.group(1), m.group(2)]
                 elif name == "expose":
@@ -358,6 +362,18 @@ def mentions(path: Path):
                     if 1 <= int(n) <= 65535 and int(n) not in seen:
                         seen.add(int(n))
                         yield ln, int(n)
+        for span in CODE_SPAN_RUN.finditer(line):
+            body = span.group(2)
+            if len(body) > 2 and body[0] == body[-1] == " " and body.strip(" "):
+                body = body[1:-1]
+            pair = TICK_PAIR.fullmatch(body)
+            if not pair:
+                continue
+            host, cont = pair.group(1), pair.group(2)
+            for n in ([] if len(host) == len(cont) == 2 and host != cont else [host, cont]):
+                if 1 <= int(n) <= 65535 and int(n) not in seen:
+                    seen.add(int(n))
+                    yield ln, int(n)
 
 
 def load_allowlist(root: Path):
