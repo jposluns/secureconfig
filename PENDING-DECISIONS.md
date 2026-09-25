@@ -65,6 +65,18 @@ parse the same rows.
 
 Tracked as backlog row 1.134. No other work depends on it.
 
+### P4. Should a container port behind a remapped publication be cited in the exposure index, or allowlisted?
+
+**Raised** 2026-09-25, by the #311 review.
+
+The index treats these inconsistently. #300 added "SearxNG's container port" to row 8080, since SearxNG publishes `8888:8080`. #311 allowlisted three others instead, `ai-infra-services.md 9001` (Onyx `9005:9001`) and `llm-observability.md` 5432 and 8123 (Helicone `54388:5432`, `18123:8123`), each with a reason naming the host-port row that cites the guide.
+
+- **A. Cite container ports too** (recommended): a scan from inside the container network or a pod sees the container port, so a reader who looks it up should reach the guide. The three allowlist entries become citations, with the product named in "May be".
+- **B. Allowlist container ports consistently**, and move SearxNG's 8080 mention to the allowlist.
+- **C. Leave as is.**
+
+No other work depends on it.
+
 ## Struck
 
 Nothing yet.
