@@ -91,8 +91,8 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   `nomad login` does not save the token. The option chosen, "No-stdin framing": the exception covers a tool that
   offers no stdin input for the secret, makes no claim that the environment is the tool's only non-argv input, and
   states no file preference. Tools are named only where verified at a tag. The `nats.md`, `nomad-consul.md` and
-  `surrealdb.md` conversions proceed with the prefix form plus its guard, carried in #299 round 4. No reasoning
-  was recorded.
+  `surrealdb.md` conversions proceed with the prefix form plus its guard, as a follow-up after the CONTRIBUTING
+  pull request (#299), whose round 4 carries this framing. No reasoning was recorded.
 
 - **Rule 7's prefix assignment needs a guard, 2026-09-24.** Bash prints "readonly variable" for a prefix assignment
   to a readonly variable, then runs the tool with the inherited value, so a probe silently tests the reader's
@@ -139,16 +139,18 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 - **No listener-opening demonstrations until isolation exists, 2026-09-24.** No demonstration opens a listener
   until a loopback-only network namespace or equivalent isolation exists on the authoring host. An earlier ruling
-  the same day, after a Ray wildcard-bind incident, added a sourced reasoned note to `ray.md` (#290). The remaining
+  the same day required a sourced reasoned note in `ray.md`, carried in #290. The remaining
   demonstration rows stay reasoned (2.31 to 2.35, 2.37, 2.40 to 2.43, and debt rows 1.108, 1.112, 1.114, 1.117,
   1.118 and 1.121), and work continues on the non-listener backlog. The revert path is a maintainer ruling once
-  isolation exists. No reasoning was recorded.
+  isolation exists. The recorded basis is that the ruling adopts an already-endorsed guardrail against
+  listener-opening demonstrations; no other reasoning was recorded.
 
 - **The pinned-citation gate (#254), 2026-09-21: ship it advisory, with disclosure.** #254 merges as it stands; the
   docstring of `tools/check_pinned_citations.py` discloses obfuscated-Markdown and exotic evasions as a
   review obligation, matching the `check_shell_blocks` and guard-conventions precedent, and one CONTRIBUTING line
   may name that obligation. Because `main` had moved past the branch's `VERSION`, the branch was re-versioned above
-  `main` before merge, for version monotonicity. No reasoning was recorded.
+  `main` before merge, for version monotonicity. No additional reasoning was recorded for choosing advisory
+  enforcement with disclosure.
 
 - **CONTRIBUTING rule 5 gains an environment-capability carve-out, 2026-09-19 (#229).** Option (C), codify the
   deviation: an all-reasoned service guide is permitted when the authoring environment genuinely cannot stand the
@@ -156,7 +158,8 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   the amendment and the "un demonstrated" typo fix are folded into it, so that the guide and the authorizing rule
   land atomically, with no window in which the guide is live against the unamended rule. The amendment legitimizes
   #227 and #228 retroactively, with no revert. #229's squash commit message names only the `redis.md` change;
-  `CHANGELOG.md` records the amendment. No reasoning was recorded for the carve-out itself.
+  `CHANGELOG.md` records the amendment. *Reasoning (as the chosen option put it):* accept that the authoring
+  environment cannot stand these services up, and codify the carve-out "so the reviewer/gate bar matches reality".
 
 - **Row 3.14 and `--strict-guards`, 2026-09-19: no general lexical auto-gate, and fix the false positive (#225).**
   Row 3.14 is recorded as won't-implement as a general lexical auto-gate, and `_strict_if_guards` stops flagging a
@@ -167,7 +170,8 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   contain, and the maintainer chose ship-and-disclose: those two, and function-parameter rebinding, are listed in
   the gate's KNOWN REMAINING BYPASSES. Row 3.14 closed in #225. The stated reason for leaving the general gate
   unimplemented is that there are no corpus true positives to gain and it would need value flow plus a
-  sentinel-identification contract; no other reasoning was recorded.
+  sentinel-identification contract. The two remaining under-flags were disclosed rather than chased, the same
+  fix-common, disclose-tail posture as #220, because the strict lexical tail is unbounded, as row 3.14 concluded.
 
 - **No `Co-Authored-By` trailer in this repository's git commits, 2026-09-19.** Option (a), effective immediately.
   The attribution line in a GitHub pull request body is unaffected: it is not a git commit trailer, and `cmtidn`, a
