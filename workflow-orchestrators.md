@@ -27,10 +27,10 @@ narrowly scoped credentials.
 
 ## Dagster (OSS)
 
-The open-source `dagster-webserver` (default `127.0.0.1` on port 3000 as of 1.13.24, whether run directly or by
-`dagster dev`; `DAGSTER_WEBSERVER_HOST` and `DAGSTER_WEBSERVER_PORT` set them as `--host` and `--port` do, and with
-neither port setting it moves to a free port when 3000 is taken; the official Helm chart always passes
-`-h 0.0.0.0`, on the Service port, 80 by default, behind a Service of type `ClusterIP` by default) ships no
+The open-source `dagster-webserver` (as of 1.13.24, run directly or by `dagster dev`, it binds `127.0.0.1` on port
+3000 unless a flag or an environment variable sets the host or port, and with no port set either way it moves to a
+free port when 3000 is taken; the official Helm chart always passes `-h 0.0.0.0`, on the Service port, 80 by
+default, behind a Service of type `ClusterIP` by default) ships no
 built-in login or access control: the inspected open-source webserver applies no authenticating middleware.
 Put it entirely behind an identity-aware fronting layer ([fronting-auth.md](fronting-auth.md)) or your own
 reverse proxy with its own authentication ([nginx.md](nginx.md), [caddy.md](caddy.md)) plus MFA
@@ -282,7 +282,7 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
   taking precedence and causing 401): https://docs.prefect.io/v3/advanced/security-settings
 - Prefect, self-hosted server (default port 4200): https://docs.prefect.io/v3/how-to-guides/self-hosted/server-cli
 - Dagster, webserver and UI (default local port, no documented built-in auth): https://docs.dagster.io/guides/operate/webserver
-- Dagster webserver `DEFAULT_WEBSERVER_HOST` "127.0.0.1" and port 3000 with the free-port fallback, `dagster dev` forwarding `--host` only when one is given, its `auto_envvar_prefix="DAGSTER_WEBSERVER"`, and the Helm chart's webserver command, which hardcodes `-h 0.0.0.0` and takes the port from `dagsterWebserver.service.port` (80 by default, Service type `ClusterIP` by default) (pinned tag 1.13.24): https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L41-L42, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L306-L311, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster/dagster/_cli/dev.py#L251-L252, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L351, https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_deployment-webserver.tpl#L86-L90, https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_helpers.tpl#L55 and https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/values.yaml#L54-L58
+- Dagster webserver `DEFAULT_WEBSERVER_HOST` "127.0.0.1" and port 3000 with the free-port fallback, `dagster dev` forwarding `--host` only when one is given, its environment-variable routes (`DAGSTER_WEBSERVER_*` through `auto_envvar_prefix`, legacy `DAGIT_*` copied onto them, and the `dagster` CLI's own `DAGSTER_CLI_*` prefix for `dagster dev`), and the Helm chart's webserver command, which hardcodes `-h 0.0.0.0` and takes the port from `dagsterWebserver.service.port` (80 by default, Service type `ClusterIP` by default) (pinned tag 1.13.24): https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L41-L42, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L306-L311, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster/dagster/_cli/dev.py#L251-L252, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L339-L351, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster/dagster/_cli/__init__.py#L45-L50, https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_deployment-webserver.tpl#L86-L90, https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_helpers.tpl#L55 and https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/values.yaml#L54-L58
 - Apache Airflow, security overview: https://airflow.apache.org/docs/apache-airflow/stable/security/
 - Apache Airflow, auth manager selection (`[core] auth_manager`, `airflow config get-value core auth_manager`): https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/auth-manager/index.html
 - Apache Airflow FAB provider, API authentication (`[fab] auth_backends`, independent of the auth manager): https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/api-authentication.html
