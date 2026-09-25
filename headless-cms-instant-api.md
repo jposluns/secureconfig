@@ -144,7 +144,7 @@ that PostgREST serves an OpenAPI description at the root path whose contents fol
 role's privileges by default, so a broad anonymous role also broadens what an unauthenticated caller
 can enumerate. Set `jwt-secret` (`PGRST_JWT_SECRET`) to a cryptographically random value of at least 32
 characters; if a token is sent while it is unset, the request fails with `PGRST300` (HTTP 500). The
-server binds to every IPv4 interface by default (`server-host` defaults to `!4`, on port 3000), so set
+server binds to every IPv4 interface by default (`server-host` defaults to `!4`, on port 3000, as of v16.4), so set
 `server-host` to `127.0.0.1` for a host-local deployment or keep the port off the public interface;
 the optional admin server (`admin-server-port`) defaults to that same host (an `admin-server-host` can override it), so account for it too.
 PostgREST terminates no TLS itself; front it per [nginx.md](nginx.md) or [caddy.md](caddy.md).
@@ -314,6 +314,7 @@ Version boundary at the time of writing: Strapi 5 documentation; current Directu
 - Hasura securing the GraphQL endpoint: https://hasura.io/docs/2.0/deployment/securing-graphql-endpoint/
 - Hasura GraphQL Engine flags reference (SERVER_HOST, ENABLE_CONSOLE, ENABLED_APIS, DEV_MODE, UNAUTHORIZED_ROLE): https://hasura.io/docs/2.0/deployment/graphql-engine-flags/reference/
 - PostgREST configuration reference (db-anon-role, db-schemas, server-host, jwt-secret): https://postgrest.org/en/stable/references/configuration.html
+- PostgREST `server-host` default `!4` (L556), `server-port` default 3000 (L386), and `admin-server-host` falling back to `server-host` (L357-L360) (pinned tag v16.4): https://github.com/PostgREST/postgrest/blob/v16.4/src/library/PostgREST/Config.hs#L556
 - PostgREST authentication and roles: https://postgrest.org/en/stable/references/auth.html
 - PostgREST error codes (PGRST300 to PGRST303): https://postgrest.org/en/stable/references/errors.html
 - PostgREST OpenAPI output at the root path: https://postgrest.org/en/stable/references/api/openapi.html
