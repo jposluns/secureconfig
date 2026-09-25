@@ -126,17 +126,18 @@ With `--unix_socket` set to a filesystem path, Flower v2.2.0 passes Tornado a fi
 file: each start deletes any socket left at that path, creates a new one and applies that mode, so a `chmod` of the
 socket is undone at the next start. On Linux, connecting needs write permission on the socket and search permission
 on every directory in its path, so the socket's mode lets any unprivileged local account that can search the
-directory connect (a process whose effective `CAP_DAC_OVERRIDE` or `CAP_DAC_READ_SEARCH` applies to the directories,
-as root's does on the host, bypasses the search check; inside a user namespace, a capability applies only to files
-whose owner and group are mapped there).
-Put the socket in a directory of its own, owned by Flower's user, with a group that only the proxy uses and mode
-`0750`, and with no ACL entry that grants anyone else search. Set that owner, group and mode in whatever creates the
-directory, because files under `/run` are cleared at boot and systemd's `RuntimeDirectory=` creates its directory
-with mode `0755` unless `RuntimeDirectoryMode=` sets another. When the proxy runs in another container and shares
-the directory through a volume, permissions are checked against numeric IDs, not names, after any user-namespace
-or idmapped-mount mapping, so the proxy's process must hold the directory's group, as the kernel sees it, as its
-primary or a supplementary group. Use a filesystem path, never an abstract socket name (one beginning with a NUL
-byte): Tornado applies no mode to such a name, and on Linux file permissions have no meaning for abstract sockets.
+directory connect (a process whose effective `CAP_DAC_OVERRIDE` or `CAP_DAC_READ_SEARCH` applies to the directories
+bypasses the search check: root on the host does, and so does root in a container that shares the host's user
+namespace, since Docker's default capabilities include `CAP_DAC_OVERRIDE`; inside a separate user namespace, a
+capability applies only to files whose owner and group are mapped there). Put the socket in a directory of its own,
+owned by Flower's user, with a group that only the proxy uses and mode `0750`, and with no ACL entry that grants
+anyone else search. Set that owner, group and mode in whatever creates the directory, because files under `/run` are
+cleared at boot and systemd's `RuntimeDirectory=` creates its directory with mode `0755` unless
+`RuntimeDirectoryMode=` sets another. When the proxy runs in another container and shares the directory through a
+volume, permissions are checked against numeric IDs, not names, after any user-namespace or idmapped-mount mapping,
+so the proxy's process must hold the directory's group, as the kernel sees it, as its primary or a supplementary
+group. Use a filesystem path, never an abstract socket name (one beginning with a NUL byte): Tornado applies no mode
+to such a name, and on Linux file permissions have no meaning for abstract sockets.
 
 ## Argo Workflows
 
@@ -164,7 +165,8 @@ exposed API into cluster compromise.
 
 ## Verify
 
-These probes are reasoned, not demonstrated: the authoring environment has no container runtime, so no live
+These probes are reasoned, not demonstrated, except the Flower unix-socket directory checks recorded after the
+block: the authoring environment has no container runtime, so no live
 orchestrator was stood up in its exposed or fixed state. Each names its expected exposed and fixed result so it
 discriminates against a live instance; backlog row 2.34 tracks demonstrating them across all six tools. The
 `*.internal` hostnames are examples for a reachable vantage (you have not isolated the port yet, or you are on
@@ -233,13 +235,16 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
   -w '\nflower-api http=%{http_code} exit=%{exitcode}\n' http://flower.internal:5555/api/workers
 
-# Flower on a unix socket: reasoned, not demonstrated; this authoring environment has no Flower install and opens
-# no listeners, unix sockets included (row 2.34 tracks the demonstration). Expect the directory to grant nothing to
-# "other" (750, or 2750 with setgid), owned by Flower's user and the proxy-only group, compared by number (%u:%g)
-# from inside each container that uses it; the socket shows 777 by design. The mode bits do not show named ACL
-# entries, so getfacl (from the acl package) should list only the user::, group:: and other:: entries; a named
-# user: or group: entry whose effective permissions include x (getfacl prints #effective: where mask:: limits an
-# entry) is a finding. Recheck after each reboot and deployment change. Substitute your socket's directory and path.
+# Flower on a unix socket. The directory checks were demonstrated (recorded after this block); the socket line is
+# reasoned, not demonstrated: this authoring environment has no Flower install, and the authoring host forbids
+# opening listeners, unix sockets included (row 2.34 tracks the demonstration). Expect the directory to grant
+# nothing to "other" (750, or 2750 with setgid), owned by Flower's user and the proxy-only group, compared by number
+# (%u:%g) from inside each container that uses it; the socket shows 777 by design. The mode bits do not show named
+# ACL entries, so getfacl (from the acl package) should list only the user::, group:: and other:: access entries.
+# Any named user: or group: entry whose own permissions include x is a finding, even where getfacl prints
+# #effective: without x, because a later chmod of the directory resets mask:: to its group bits. default: entries
+# set the ACL of files created inside, not access to the directory. Recheck after each reboot and deployment
+# change. Substitute your socket's directory and path.
 stat -c '%a %U:%G %u:%g %n' /run/flower /run/flower/flower.sock
 getfacl -p /run/flower
 
@@ -288,6 +293,19 @@ A DAG list, flow run, task graph, repository, or worker pool that renders withou
 is a Temporal Service that answers `temporal workflow list` with no claim behind it, since the UI login does not
 cover the frontend gRPC path.
 
+The Flower unix-socket directory checks were demonstrated on the authoring host, on tmpfs, with directories only:
+no socket was created and no Flower process ran.
+
+- `stat -c '%a %U:%G %u:%g %n'` printed `755` for a directory created with mode `0755` and `750` for one created
+  with `0750`; `getfacl -p` on the `0750` directory listed only `user::rwx`, `group::r-x` and `other::---`.
+- After `setfacl -m u:nobody:--x` on the `0750` directory, `stat` still printed `750`. Only the trailing `+` in
+  `ls -ld` and getfacl's `user:nobody:--x` line showed the named entry.
+- After `setfacl -m m::r--`, getfacl printed `user:nobody:--x` with `#effective:---`. A later `chmod 0750` reset
+  `mask::` to `r-x`, so the entry's `x` applied again.
+
+Not run: whether an account outside the proxy's group is refused at the directory, and the socket's `777` after
+each Flower start.
+
 ## Common mistakes
 
 - Assuming Airflow's Simple Auth Manager, meant for development, is acceptable in production because it
@@ -327,7 +345,7 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
 - Flower, configuration (`--address`, `--port` 5555 default, `--basic-auth`, `--auth_provider`, `--oauth2_key`,
   `--oauth2_secret`, `--oauth2_redirect_uri`, `--auth`): https://flower.readthedocs.io/en/latest/config.html
 - Flower `port` default 5555, `address` default `''` and the `unix_socket` branch, the `FLOWER_` environment variables, and the implicit `flowerconfig.py` load from the working directory (pinned tag v2.2.0), with Tornado's `bind_sockets` treating an empty address as all interfaces (pinned tag v6.5.10): https://github.com/mher/flower/blob/v2.2.0/flower/options.py#L7-L15, https://github.com/mher/flower/blob/v2.2.0/flower/options.py#L56-L57, https://github.com/mher/flower/blob/v2.2.0/flower/command.py#L39-L91, https://github.com/mher/flower/blob/v2.2.0/flower/app.py#L71-L76 and https://github.com/tornadoweb/tornado/blob/v6.5.10/tornado/netutil.py#L72-L73
-- Flower `--unix_socket` passes the fixed mode `0o777` (pinned tag v2.2.0); Tornado's `bind_unix_socket` removes an existing socket at a filesystem path, binds, then applies that mode, and binds a name with a leading NUL with no mode (pinned tag v6.5.10); on Linux, connecting to a stream socket needs write permission on it, and file permissions have no meaning for abstract sockets; path lookup needs search permission on each directory, `CAP_DAC_OVERRIDE` overrides permission checks and `CAP_DAC_READ_SEARCH` grants search on directories; in a user namespace, file permission checks compare IDs mapped back to the initial namespace, and a capability applies only to a file whose owner and group are mapped there; an idmapped mount changes ownership for that mount only; `RuntimeDirectoryMode=` defaults to `0755` (systemd v257); files under `/run` must be cleared at the beginning of the boot process (FHS 3.0); named ACL entries grant access only up to the mask, and `getfacl` marks a limited entry `#effective:`; `stat -c` format sequences: https://github.com/mher/flower/blob/v2.2.0/flower/app.py#L85-L89, https://github.com/tornadoweb/tornado/blob/v6.5.10/tornado/netutil.py#L215-L228, https://man7.org/linux/man-pages/man7/unix.7.html, https://man7.org/linux/man-pages/man7/path_resolution.7.html, https://man7.org/linux/man-pages/man7/user_namespaces.7.html, https://www.kernel.org/doc/html/latest/filesystems/idmappings.html, https://github.com/systemd/systemd/blob/v257/man/systemd.exec.xml#L1630-L1640, https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch03s15.html, https://man7.org/linux/man-pages/man5/acl.5.html, https://man7.org/linux/man-pages/man1/getfacl.1.html and https://man7.org/linux/man-pages/man1/stat.1.html
+- Flower `--unix_socket` passes the fixed mode `0o777` (pinned tag v2.2.0); Tornado's `bind_unix_socket` removes an existing socket at a filesystem path, binds, then applies that mode, and binds a name with a leading NUL with no mode (pinned tag v6.5.10); on Linux, connecting to a stream socket needs write permission on it, and file permissions have no meaning for abstract sockets; path lookup needs search permission on each directory, `CAP_DAC_OVERRIDE` overrides permission checks and `CAP_DAC_READ_SEARCH` grants search on directories; in a user namespace, file permission checks compare IDs mapped back to the initial namespace, and a capability applies only to a file whose owner and group are mapped there; Docker's default capability set includes `CAP_DAC_OVERRIDE` (moby docker-v29.8.1); an idmapped mount changes ownership for that mount only; `RuntimeDirectoryMode=` defaults to `0755` (systemd v257); files under `/run` must be cleared at the beginning of the boot process (FHS 3.0); named ACL entries grant access only up to the mask, and `getfacl` marks a limited entry `#effective:`; `stat -c` format sequences: https://github.com/mher/flower/blob/v2.2.0/flower/app.py#L85-L89, https://github.com/tornadoweb/tornado/blob/v6.5.10/tornado/netutil.py#L215-L228, https://man7.org/linux/man-pages/man7/unix.7.html, https://man7.org/linux/man-pages/man7/path_resolution.7.html, https://man7.org/linux/man-pages/man7/user_namespaces.7.html, https://www.kernel.org/doc/html/latest/filesystems/idmappings.html, https://github.com/moby/moby/blob/docker-v29.8.1/daemon/pkg/oci/caps/defaults.go#L4-L7, https://github.com/systemd/systemd/blob/v257/man/systemd.exec.xml#L1630-L1640, https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch03s15.html, https://man7.org/linux/man-pages/man5/acl.5.html, https://man7.org/linux/man-pages/man1/getfacl.1.html and https://man7.org/linux/man-pages/man1/stat.1.html
 - Argo Workflows, [auth modes](https://argo-workflows.readthedocs.io/en/release-3.7/argo-server-auth-mode/),
   [server flags and default port 2746](https://argo-workflows.readthedocs.io/en/release-3.7/cli/argo_server/),
   [TLS](https://argo-workflows.readthedocs.io/en/release-3.7/tls/),
