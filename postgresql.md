@@ -25,6 +25,8 @@ A true result means the reload signal was sent; it does not establish that repla
 
 Changing `listen_addresses` requires a server restart through the deployment's service manager. Confirm the resulting listeners with the guarded `ss` check under Verify. The historical version boundaries above are documented in the [PostgreSQL 12](https://www.postgresql.org/docs/12/release-12.html) and [PostgreSQL 14](https://www.postgresql.org/docs/14/release-14.html) release notes.
 
+The official Docker images (PostgreSQL 14 through 19, Debian and Alpine, at the pinned commit) start wider. Their build sets `listen_addresses = '*'` in the sample configuration that a new data directory is initialized from, and when the entrypoint initializes a new data directory it appends `host all all all` with `POSTGRES_HOST_AUTH_METHOD` to `pg_hba.conf`; that method defaults to the server's `password_encryption` setting. The entrypoint refuses to initialize without `POSTGRES_PASSWORD` unless `POSTGRES_HOST_AUTH_METHOD=trust`, and `trust` lets any address that reaches the port connect without a password. Publish the port only to host loopback or a private network, and never set `trust`.
+
 ## 2. Require TLS per connection in pg_hba.conf
 
 `host` matches both TLS and non-TLS TCP connections; it does not require encryption. `hostssl` matches only TLS. Use `hostssl` with `scram-sha-256` for the intended remote application connections:
@@ -592,6 +594,7 @@ WHERE error IS NOT NULL OR NOT applied;
 
 ## Sources (checked September 2026)
 
+- Official PostgreSQL Docker image: the build's `listen_addresses = '*'` edit to postgresql.conf.sample, `CMD ["postgres"]`, and the entrypoint's init-only password check and `host all all all $POSTGRES_HOST_AUTH_METHOD` line, which defaults to `password_encryption` (every Dockerfile from 14 to 19, Debian and Alpine, carries the edit; shown for 19/bookworm; pinned commit d588a44673ea9d123c1acb1a6924de10a27fc315): https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/Dockerfile#L183-L184, https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/Dockerfile#L223-L224, https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/docker-entrypoint.sh#L105-L138, https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/docker-entrypoint.sh#L268-L286 and https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/docker-entrypoint.sh#L347-L355
 - Secure TCP/IP connections with SSL and TLS file reload behaviour: https://www.postgresql.org/docs/current/ssl-tcp.html
 - Connections and authentication settings: https://www.postgresql.org/docs/current/runtime-config-connection.html
 - HBA matching, reload behaviour, and client certificate options: https://www.postgresql.org/docs/current/auth-pg-hba-conf.html
