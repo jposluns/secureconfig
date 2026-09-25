@@ -3737,7 +3737,7 @@ sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
 # but the exposed-vs-fixed responses were not. Backlog row 1.80 tracks running it live. A transport, TLS, or
 # DNS error is inconclusive, never a pass.
 (
-  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function named like a command below
+  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function or alias named like a command below
   set +x +a                                     # never trace or export the credential read below
   { unset -n pw && unset -v pw; } 2>/dev/null ||
     { echo 'a readonly pw is set in this shell; not probing'; exit 2; }
@@ -3787,7 +3787,7 @@ rejected at TLS, a trusted one admitted with `--cert`/`--key`, server verificati
 
 ```bash
 (
-  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function named like a command below
+  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function or alias named like a command below
   set +x +a
   { unset -n sp && unset -v sp; } 2>/dev/null ||
     { echo 'a readonly sp is set in this shell; not probing'; exit 2; }
@@ -4535,7 +4535,7 @@ Gateway API defines no authentication filter; each implementation adds its own. 
 # since the password is clearly visible on the command line. For script use see the -i
 # option." -i reads it from stdin instead. Envoy Gateway's example uses -b; this does not.
 (
-  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function named like a command below
+  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function or alias named like a command below
   set +x +a
   { unset -n PASSWORD confirm && unset -v PASSWORD confirm; } 2>/dev/null ||
     { echo 'cannot clear PASSWORD or confirm in this shell; not creating the secret'; exit 2; }
@@ -4953,7 +4953,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert REPLACE_
 # Run in a subshell with tracing and allexport OFF, so an inherited `set -x` cannot echo the token and an
 # inherited `set -a` cannot export it (read -s and the stdin header prevent neither).
 (
-  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function named like a command below
+  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function or alias named like a command below
   set +x +a
   { unset -n tok && unset -v tok; } 2>/dev/null ||
     { echo 'a readonly tok is set in this shell; not probing'; exit 2; }
@@ -4989,7 +4989,7 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
 # Reasoned, not demonstrated (no live Flux; backlog row 2.28). Read the HMAC key without echo. openssl takes
 # the key as an argument, so keep tracing off; on a shared host compute the HMAC from a language binding.
 (
-  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function named like a command below
+  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function or alias named like a command below
   set +x +a
   { unset -n hmac sig && unset -v hmac sig; } 2>/dev/null ||
     { echo 'a readonly hmac or sig is set in this shell; not probing'; exit 2; }
@@ -17662,7 +17662,7 @@ The first publish is the allowed control. The subsequent operations deliberately
 
 ```bash
 (
-  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function named like a command below
+  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function or alias named like a command below
   set +x +a
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NATS_HOST' 'REPLACE_WITH_CLIENT_CERT_FILE' 'REPLACE_WITH_CLIENT_KEY_FILE' 'REPLACE_WITH_CA_FILE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
@@ -17725,7 +17725,7 @@ Terminal 1 is self-contained and reads its password inside the guarded subshell.
 
 ```bash
 (
-  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function named like a command below
+  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function or alias named like a command below
   set +x +a
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NATS_HOST' 'REPLACE_WITH_CONSUMER_CERT_FILE' 'REPLACE_WITH_CONSUMER_KEY_FILE' 'REPLACE_WITH_CA_FILE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
@@ -17760,7 +17760,7 @@ Terminal 2 independently establishes its target, TLS configuration, and credenti
 
 ```bash
 (
-  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function named like a command below
+  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function or alias named like a command below
   set +x +a
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NATS_HOST' 'REPLACE_WITH_CLIENT_CERT_FILE' 'REPLACE_WITH_CLIENT_KEY_FILE' 'REPLACE_WITH_CA_FILE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
@@ -17800,7 +17800,7 @@ The following self-contained request block is also used by V4 and V5. Its last t
 
 ```bash
 (
-  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function named like a command below
+  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function or alias named like a command below
   set +x +a
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NATS_HOST' 'REPLACE_WITH_CLIENT_CERT_FILE' 'REPLACE_WITH_CLIENT_KEY_FILE' 'REPLACE_WITH_CA_FILE' 'order-svc' 'orders.lookup' '{}'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
@@ -18111,7 +18111,7 @@ Verification status: the checks below were demonstrated on loopback against the 
 
 ```bash
 (
-  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function named like a command below
+  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function or alias named like a command below
   set +x +a
   set -o pipefail
   { unset -n audit_role audit_key audit_expected audit_reply &&
@@ -18369,7 +18369,7 @@ Scan built client bundles for a leaked Turso/libSQL token, keeping the token off
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
-  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function named like a command below
+  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function or alias named like a command below
   set +x +a                             # never trace or export the token read below
   { unset -n tok && unset -v tok; } 2>/dev/null ||
     { echo 'a readonly tok is set in this shell; not scanning'; exit 2; }
@@ -18445,7 +18445,7 @@ Any HTTP response from the untrusted vantage is a reachable listener (the findin
 
 ```bash
 (
-  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function named like a command below
+  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function or alias named like a command below
   set +x +a
   { unset -n turso_tok && unset -v turso_tok; } 2>/dev/null ||
     { echo "a readonly turso_tok is set in this shell; not probing"; exit 2; }
@@ -18774,7 +18774,7 @@ never exported:
 
 ```bash
 (
-  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function named like a command below
+  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function or alias named like a command below
   set +x +a
   { unset -n pw SURREAL_USER SURREAL_PASS && unset -v pw SURREAL_USER SURREAL_PASS; } 2>/dev/null ||
     { echo 'cannot clear pw, SURREAL_USER or SURREAL_PASS in this shell; not starting'; exit 2; }
@@ -18868,7 +18868,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w '
 # endpoint. Substitute inside the quotes and paste the whole block; run first against the direct origin, then
 # the actual HTTPS endpoint.
 (
-  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function named like a command below
+  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function or alias named like a command below
   set +x +a
   set -o pipefail
   { unset -n probe_jwt && unset -v probe_jwt; } 2>/dev/null ||
@@ -22100,7 +22100,7 @@ ss -tlnp   # expect 8080 on loopback or a private address; then probe the public
     -w '\nunauth http=%{http_code} url=%{url_effective} exit=%{exitcode} err=%{errormsg}\n' "$1"
   # 2) Authenticated positive control: paste a cookie from a valid browser session; it enters via stdin
   #    (curl --header @-), never argv. The authenticated response must contain the editor.
-  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function named like a command below
+  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function or alias named like a command below
   set +x +a
   { unset -n code_server_cookie && unset -v code_server_cookie; } 2>/dev/null ||
     { echo 'cannot initialize cookie input; not probing'; exit 2; }
@@ -28175,7 +28175,7 @@ same account and by root.
 
 ```bash
 (
-  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function named like a command below
+  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function or alias named like a command below
   set +x +a
   { unset -n tok NOMAD_TOKEN && unset -v tok NOMAD_TOKEN; } 2>/dev/null ||
     { echo 'cannot clear tok or NOMAD_TOKEN in this shell; not probing'; exit 2; }
