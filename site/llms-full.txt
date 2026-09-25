@@ -21369,11 +21369,14 @@ Self-hosted model servers follow the [ollama.md](ollama.md) pattern: exposing on
   umask 077
   mkdir -p -- "$HOME/.config/llama-server"
   chmod 700 -- "$HOME/.config/llama-server"
+  if [ -e "$HOME/.config/llama-server/api-keys" ] || [ -L "$HOME/.config/llama-server/api-keys" ]; then
+    echo 'api-keys already exists in ~/.config/llama-server; nothing written'; exit 2
+  fi
   openssl rand -hex 32 > "$HOME/.config/llama-server/api-keys"
 )
 ```
 
-`umask 077` applies before anything is written, so the directory is created mode `0700` and the file mode `0600`, and `set -C` refuses to overwrite an existing file, so running the block again cannot replace a key your clients already hold. If `openssl` fails, the block leaves an empty file behind: delete it before running the block again, and the launch block below refuses to start on it. The key goes from `openssl` straight into the file, so it never passes through a shell variable or a command line. Add one line per further client key; at the pinned commit a line that begins with `#` is a comment. Clients running as that account on this host can read the same file; give remote clients their copy through your secret store ([secrets.md](secrets.md)). The file holds the key in plaintext at rest, readable by that account, by root, and by any backup that copies it, so keep it and its backups out of source control.
+`umask 077` applies before anything is written, so the directory is created mode `0700` and the file mode `0600`. The block makes the directory mode `0700` first and then refuses when `api-keys` already exists in any form (a regular file, a FIFO, or a symlink, dangling or not), so running the block again cannot replace a key your clients already hold; `set -C` also refuses an existing regular file, and the explicit check handles the other forms. As with the other writers in this guide, these checks hold only in owner-only directories no other account can replace. If `openssl` fails, the block leaves an empty file behind: delete it before running the block again, and the launch block below refuses to start on it. The key goes from `openssl` straight into the file, so it never passes through a shell variable or a command line. Add one line per further client key; at the pinned commit a line that begins with `#` is a comment. Clients running as that account on this host can read the same file; give remote clients their copy through your secret store ([secrets.md](secrets.md)). The file holds the key in plaintext at rest, readable by that account, by root, and by any backup that copies it, so keep it and its backups out of source control.
 
 Start the server from the file:
 
@@ -21416,7 +21419,7 @@ vLLM's server requires an API key when one is set: at both pinned commits `--api
 )
 ```
 
-The block makes the directory mode `0700` first, then refuses, before it generates a key, when `server.yaml` already exists in any form (a regular file, a FIFO, or a symlink, dangling or not), so a rerun cannot replace a key your clients already hold. It writes nothing unless the generated key is 64 hex characters. `umask 077` creates the directory mode `0700` and the file mode `0600`, and `set -C` still refuses to overwrite an existing regular file. These checks run before the write, not atomically with it, so they hold only while no other account can replace the directory or any directory above it: run the block in owner-only directories you control, such as your own home directory, never under a path another account can write to. The key passes only through the subshell's positional parameters and the builtin `printf`, never a command line; the block clears inherited traps first because a DEBUG, RETURN or ERR trap from your shell could otherwise read it, and it assumes a clean shell. Start the server with only non-secret values on its command line, and do not add `--api-key` there, which would put the value back in argv:
+The block makes the directory mode `0700` first, then refuses, before it generates a key, when `server.yaml` already exists in any form (a regular file, a FIFO, or a symlink, dangling or not), so a rerun cannot replace a key your clients already hold. It writes nothing unless the generated key is 64 hex characters. `umask 077` creates the directory mode `0700` and the file mode `0600`, and `set -C` still refuses to overwrite an existing regular file. These checks run before the write, not atomically with it, so they hold only while no other account can replace the directory or any directory above it: run the block in owner-only directories you control, such as your own home directory, never under a path another account can write to. The key passes only through the subshell's positional parameters and the builtin `printf`, never a command line; the block clears inherited traps first because a DEBUG, RETURN or ERR trap from your shell could otherwise read it, and it assumes a clean shell. Start the server with only non-secret values on its command line, substituting your model inside the quotes, and do not add `--api-key` there, which would put the value back in argv:
 
 ```bash
 (
@@ -21424,7 +21427,7 @@ The block makes the directory mode `0700` first, then refuses, before it generat
     { echo 'cannot clear VLLM_API_KEY or VLLM_USE_RUST_FRONTEND in this shell; not starting'; exit 2; }
   grep -Eq '^api-key: "[0-9a-f]{64}"$' "$HOME/.config/vllm/server.yaml" ||
     { echo 'no generated api-key line in ~/.config/vllm/server.yaml; not starting'; exit 2; }
-  vllm serve REPLACE_WITH_MODEL --host 127.0.0.1 --config "$HOME/.config/vllm/server.yaml"
+  vllm serve 'REPLACE_WITH_MODEL' --host 127.0.0.1 --config "$HOME/.config/vllm/server.yaml"
 )
 ```
 
@@ -21434,12 +21437,12 @@ The key does not cover the whole server. vLLM's own security page states that it
 
 ## Hugging Face Text Generation Inference (TGI)
 
-`text-generation-launcher` listens on `0.0.0.0:3000` by default (as of v3.3.7; `--hostname`, env `HOSTNAME`; `--port`, env `PORT`). The image built from the repository's main `Dockerfile` sets `PORT=80`, so a bare container listens on port 80 instead, and on every interface: Docker sets `HOSTNAME` to the container's hostname (by default its short ID), which is not an IP address, and the router then falls back to `0.0.0.0`. Bind it to loopback, or publish nothing from the container network except the proxy:
+`text-generation-launcher` listens on `0.0.0.0:3000` by default (as of v3.3.7; `--hostname`, env `HOSTNAME`; `--port`, env `PORT`). The image built from the repository's main `Dockerfile` sets `PORT=80`, so a bare container listens on port 80 instead, and on every interface: Docker sets `HOSTNAME` to the container's hostname (by default its short ID), which is not an IP address, and the router then falls back to `0.0.0.0`. Bind it to loopback (substitute your model ID inside the quotes in the block below), or publish nothing from the container network except the proxy:
 
 Lifecycle note, as of September 2026: the TGI repository is in maintenance mode and was archived on 2026-03-21 (read-only). Hugging Face recommends vLLM, SGLang, or local engines such as llama.cpp going forward. A server that no longer receives fixes belongs behind the same controls as any other, and on a migration list.
 
 ```bash
-text-generation-launcher --model-id REPLACE_WITH_MODEL_ID --hostname 127.0.0.1 --port 3000
+text-generation-launcher --model-id 'REPLACE_WITH_MODEL_ID' --hostname 127.0.0.1 --port 3000
 ```
 
 The launcher reference lists `--api-key` (env `API_KEY`) without describing it. At v3.3.7 the launcher takes that value from the flag or from `API_KEY` and then starts the router with it as a `--api-key` argument, so however you supply it, the key is readable through the router process's `ps` and `/proc/<pid>/cmdline` by other local accounts while TGI runs; no launcher input avoids that, and passing it through the environment does not help. TGI's native key is a control for network clients, not for other users of the host: run it where no account you do not trust can list its processes, and enforce the bearer check at the proxy. The router source shows what it does: when set, requests to the standard inference `base_routes` must carry a matching `Authorization: Bearer <key>` header or receive 401, while the health, info, and metrics routes stay unauthenticated. Builds that enable the KServe (`/v2/...`) endpoints register them outside that key middleware, `/v1/models` sits outside it too, and the Vertex feature route configured through `AIP_PREDICT_ROUTE` is registered after the auth layer as well, so those paths are unauthenticated; allowlist the routes you use and enforce the bearer check at the proxy. Treat it as a second layer and enforce the bearer check at the proxy too (pattern in [ollama.md](ollama.md)). The launcher has no TLS option, so front TGI per [nginx.md](nginx.md)/[caddy.md](caddy.md). The Prometheus listener (`--prometheus-port`, default 9000) is unauthenticated as well; keep it private.
@@ -21453,20 +21456,23 @@ The launcher reference lists `--api-key` (env `API_KEY`) without describing it. 
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -eC +x +a
   umask 077
+  mkdir -p -- "$HOME/.config/sglang"
+  chmod 700 -- "$HOME/.config/sglang"
+  if [ -e "$HOME/.config/sglang/server.yaml" ] || [ -L "$HOME/.config/sglang/server.yaml" ]; then
+    echo 'server.yaml already exists in ~/.config/sglang; nothing written'; exit 2
+  fi
   set -- "$(openssl rand -hex 32)" "$(openssl rand -hex 32)"
   [ "${#1}" -eq 64 ] || { echo 'key generation failed; nothing written'; exit 2; }
   [ "${#2}" -eq 64 ] || { echo 'key generation failed; nothing written'; exit 2; }
   case "$1$2" in *[!0123456789abcdef]*) echo 'key generation failed; nothing written'; exit 2 ;; esac
-  mkdir -p -- "$HOME/.config/sglang"
-  chmod 700 -- "$HOME/.config/sglang"
   printf 'api-key: "%s"\nadmin-api-key: "%s"\n' "$1" "$2" > "$HOME/.config/sglang/server.yaml"
 )
 ```
 
-The block writes nothing unless both generated keys are 64 hex characters, because SGLang serves ordinary requests whenever the API key is empty, even when `--admin-api-key` is set, so an empty value would leave the OpenAI-compatible endpoints open. `umask 077` creates the directory mode `0700` and the file mode `0600`, and `set -C` refuses to overwrite an existing file, so a rerun cannot replace keys your clients already hold. The keys pass only through the subshell's positional parameters and the builtin `printf`, never a command line; the block clears inherited traps first because a DEBUG, RETURN or ERR trap from your shell could otherwise read them, and it assumes a clean shell. Start the server with only non-secret values on its command line, and do not add `--api-key` or `--admin-api-key` there, which would put the values back in argv:
+The block writes nothing unless both generated keys are 64 hex characters, because SGLang serves ordinary requests whenever the API key is empty, even when `--admin-api-key` is set, so an empty value would leave the OpenAI-compatible endpoints open. `umask 077` creates the directory mode `0700` and the file mode `0600`. The block makes the directory mode `0700` first and then refuses, before it generates a key, when `server.yaml` already exists in any form (a regular file, a FIFO, or a symlink, dangling or not), so a rerun cannot replace keys your clients already hold; `set -C` also refuses an existing regular file, and the explicit check handles the other forms. These checks hold only in owner-only directories no other account can replace. The keys pass only through the subshell's positional parameters and the builtin `printf`, never a command line; the block clears inherited traps first because a DEBUG, RETURN or ERR trap from your shell could otherwise read them, and it assumes a clean shell. Start the server with only non-secret values on its command line, substituting your model path inside the quotes, and do not add `--api-key` or `--admin-api-key` there, which would put the values back in argv:
 
 ```bash
-python -m sglang.launch_server --model-path REPLACE_WITH_MODEL_PATH --config "$HOME/.config/sglang/server.yaml"
+python -m sglang.launch_server --model-path 'REPLACE_WITH_MODEL_PATH' --config "$HOME/.config/sglang/server.yaml"
 ```
 
 Clients read the API key from the file's `api-key` line; give the admin key only to the operators who use the administrative endpoints. SGLang turns the file's values into an internal argument list before parsing them; that list lives inside the Python process, not in the kernel's `/proc/<pid>/cmdline`, so the keys stay out of `ps`. They remain in process memory and in the file (plaintext at rest, readable by that account and by root, so keep it and its backups out of source control), and SGLang itself hands them out. At v0.5.20 the launch path logs `server_args=` with every resolved field, both keys included, at INFO level, and `/server_info` (and its deprecated alias `/get_server_info`) returns the same fields plus `launch_command`, the argument list with the file's values merged in, to any request the ordinary API key authorizes, because it carries no admin auth level. This was read in the pinned source (cited in Sources), not run. So a holder of the API key can read the admin key. Either give the API key only to clients you would also trust with the administrative endpoints, or, if other clients must hold it, have the reverse proxy allow only the routes those clients need (which excludes `/server_info` and `/get_server_info`) and refuse every other route, the same allowlist the vLLM section prescribes; either way, protect the startup log.
@@ -21525,7 +21531,7 @@ All three are secrets, and none belongs on the command line, where `ps` and `/pr
 
 The `set --` line opens with a marker the block checks, so a paste that drops that line is refused rather than run on your shell's own arguments. The block makes the directory mode `0700` first, then refuses, before it generates a password, when `gradio-auth` already exists in any form (a regular file, a FIFO, or a symlink, dangling or not); as with the vLLM block, that holds only in owner-only directories no other account can replace. `umask 077` creates the directory mode `0700` and the file mode `0600`, `set -C` still refuses to overwrite an existing regular file, and the block writes nothing unless the generated password is 32 hex characters. The password passes only through the subshell's positional parameters and the builtin `printf`; the block clears inherited traps first and assumes a clean shell. Read the password from the file once into your password manager. The file holds it in plaintext at rest, readable by that account and by root, so keep it and its backups out of source control.
 
-The API keys have no file flag and no environment input at the pinned sources: the API reads them only from the parsed arguments. The pinned `modules/shared.py` does read further flags from `CMD_FLAGS.txt` in the user-data directory, and it splices them into Python's own argument list inside the process, so keys placed there stay out of `/proc/<pid>/cmdline`. Do not use the checkout's own `user_data/CMD_FLAGS.txt` for them: at the pinned commit it is a tracked file (it ships with three comment lines), so a key written there is a change to a tracked file that `git diff` prints and `git stash` copies into the repository, and the update wizard in `one_click.py` runs `git merge --autostash` (stashing the change) and offers `git reset --hard` (discarding it). This was read from the code, not run. Point `--user-data-dir` at a private directory outside the checkout instead, readable only by the account that runs text-generation-webui; it then stands in for the whole `user_data` directory (the model, LoRA and cache directories, among others, default under it), so copy across the models and settings you use. Write generated keys into a new `CMD_FLAGS.txt` there, as that account, substituting the directory's absolute path inside the quotes on the `set --` line (a path with spaces stays one value there):
+The API keys have no file flag and no environment input at the pinned sources: the API reads them only from the parsed arguments. The pinned `modules/shared.py` does read further flags from `CMD_FLAGS.txt` in the user-data directory, and it splices them into Python's own argument list inside the process, so keys placed there stay out of `/proc/<pid>/cmdline`. Do not use the checkout's own `user_data/CMD_FLAGS.txt` for them: at the pinned commit it is a tracked file (it ships with three comment lines), so a key written there is a change to a tracked file that `git diff` prints and `git stash` copies into the repository, and the update wizard in `one_click.py` runs `git merge --autostash` (stashing the change) and offers `git reset --hard` (discarding it). This was read from the code, not run. Point `--user-data-dir` at a private directory outside the checkout instead, readable only by the account that runs text-generation-webui; it then stands in for the whole `user_data` directory (the model, LoRA and cache directories, among others, default under it), so copy across the models and settings you use. Write generated keys into a new `CMD_FLAGS.txt` there, as that account, substituting the directory's absolute path inside the quotes on the `set --` line (a path with spaces stays one value there). Write each `'` in the path as `'\''`; an unescaped one leaves the quotes unbalanced, and bash stops with a syntax error, or when pasted interactively waits at its `>` continuation prompt, before running anything:
 
 ```bash
 (
@@ -21609,8 +21615,8 @@ pgrep -c -f -- '(^| )--((admin-)?api-key|admin-key|gradio-auth|http-restricted-a
   printf 'Authorization: Bearer %s\n' "$1" | curl -q -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' -H @- https://models.example.com/v1/models   # positive control: 200 with a model list, printed
 )
 (
-  set -- REPLACE_WITH_A_REAL_SERVED_MODEL
-  case "$1" in ""|*REPLACE_WITH_*) echo 'substitute a real served model name on the set -- line above; not probing'; exit 2 ;; esac
+  set -- 'REPLACE_WITH_A_REAL_SERVED_MODEL'
+  case "$1" in ""|*REPLACE_WITH_*) echo 'substitute a real served model name inside the quotes on the set -- line above; not probing'; exit 2 ;; esac
   curl -q -sS --noproxy '*' -D - -o invocations-body.txt -w 'http=%{http_code}\n' -X POST -H 'Content-Type: application/json' \
     -d "{\"model\":\"$1\",\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}]}" https://models.example.com/invocations
 )
