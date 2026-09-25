@@ -41,8 +41,8 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   3.19). No reasoning was given beyond the option chosen.
 
 - **The vendored AIQT files' licence.** The guides stay CC0. The AIQT Guardrails material the repository vendors
-  or adapts is Apache-2.0: the pack's LICENSE and NOTICE are vendored into `.aiqt/`, and each CC0 statement names
-  the exception (#343). Review found that the earlier pin predated the pack's move to Apache-2.0, so the maintainer
+  or adapts, as `.aiqt/PIN` lists it, is Apache-2.0: the pack's LICENSE and NOTICE are vendored into `.aiqt/`, and
+  the CC0 statements in README, CONTRIBUTING, SECURITY and CLAUDE.md/AGENTS.md name the exception (#343). Review found that the earlier pin predated the pack's move to Apache-2.0, so the maintainer
   ruled to re-pin to an Apache-era commit, rather than grant Apache-2.0 to the pinned versions or label them CC
   BY-SA 4.0. The maintainer first asked whether relicensing the repository to Apache-2.0 would be easier; the
   answer given was that it would put redistribution conditions on configuration readers copy, and that earlier
