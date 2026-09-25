@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.144**, **2.48**, **3.25**, **4.12**.
+Next ids: **1.145**, **2.48**, **3.25**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -115,6 +115,7 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.138 | `realtime-voice-infra.md`: the key-rotation test never shows how the rotated token is presented, and the obvious forms put a live bearer token in argv. Show it sent as a header on stdin (`--header @-`) to the existing `/rtc/validate` probe, once LiveKit v1.13.7 is confirmed to accept the token that way on that route and to answer old and new tokens distinguishably (from the #353 plan, maintainer ruling 2026-09-25). (L, S) | `[gap]` |
 | 1.139 | `realtime-voice-infra.md`: `turnserver.conf` holds the TURN password in plaintext. Document the hashed-key alternative and whether `turnadmin`'s key derivation takes the password in argv at coturn 4.18.0 (from the #353 plan, maintainer ruling 2026-09-25). (L, S) | `[gap]` |
 | 1.140 | `realtime-voice-infra.md`: evaluate a TURN allocation client that takes the password outside argv (stdin, a file or the environment), verified at a pinned tag, to replace `turnutils_uclient -w` in the allocation test, as CONTRIBUTING rule 7's third exception asks (from #354, maintainer ruling 2026-09-25). (L, S) | `[gap]` |
+| 1.144 | CONTRIBUTING rule 7's `read` exception and every block that uses it (`search-engines.md`, the model block, among them): `read -r` takes only the first line of a paste, so a secret pasted with a newline leaves every later line for the reader's shell to run. Add one warning sentence to the rule (paste the secret alone) and apply it to every read-exception block (from the #356 review, maintainer ruling 2026-09-25). (L, M) | `[gap]` |
 ## Priority 3: Add missing content
 
 Gaps from the same audit, one row per missing guide. A gap raised by more than one family is
