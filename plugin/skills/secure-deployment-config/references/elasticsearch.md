@@ -668,7 +668,7 @@ ss -tlnp 'sport = :9200'
 ss -tlnp 'sport = :9300'
 ```
 
-These use `ss`'s own port filter, avoiding accidental PID matches. For Elasticsearch, HTTP defaults to the range `9200-9300` and transport to `9300-9400`; each binds an available port. Inspect the actual ports used by either product. Expect loopback or deliberate private listeners, except inside an official Docker container, whose bundled `network.host: 0.0.0.0` makes wildcard listeners the default there unless it was overridden; check instead that those ports are neither published nor reachable from other containers. An unexpected public or wildcard listener is a finding to review against the network controls; no output is inconclusive until the running process and its actual ports are located.
+These use `ss`'s own port filter, avoiding accidental PID matches. For Elasticsearch, HTTP defaults to the range `9200-9300` and transport to `9300-9400`; each binds an available port. Inspect the actual ports used by either product. Expect loopback or deliberate private listeners. The exception is an official Docker container on a bridge or user-defined network (not host networking): its bundled `network.host: 0.0.0.0` makes wildcard listeners inside the container the default unless it was overridden, so check instead that 9200 is reachable only from intended clients and 9300 only from cluster peers. With host networking, a wildcard listener is a finding like any other. An unexpected public or wildcard listener is a finding to review against the network controls; no output is inconclusive until the running process and its actual ports are located.
 
 ### Residual-control checks
 
