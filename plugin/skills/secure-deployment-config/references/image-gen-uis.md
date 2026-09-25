@@ -47,23 +47,32 @@ The block refuses to run when `~/.config/stable-diffusion-webui/gradio-auth` alr
     { echo 'cannot clear COMMANDLINE_ARGS in this shell; not starting'; exit 2; }
   { unset -n GRADIO_SERVER_NAME && unset -v GRADIO_SERVER_NAME; } 2>/dev/null ||
     { echo 'cannot clear GRADIO_SERVER_NAME in this shell; not starting'; exit 2; }
-  grep -Eaqx '[A-Za-z0-9_.-]+:[0-9a-f]{64}' "$HOME/.config/stable-diffusion-webui/gradio-auth" ||
-    { echo 'no user:password line in ~/.config/stable-diffusion-webui/gradio-auth; not starting'; exit 2; }
-  grep -Eavqx '[A-Za-z0-9_.-]+:[0-9a-f]{64}' "$HOME/.config/stable-diffusion-webui/gradio-auth"
-  case "$?" in
-    1) ;;
-    0) echo 'a line in ~/.config/stable-diffusion-webui/gradio-auth is not a user name and a 64-hex password; not starting'; exit 2 ;;
-    *) echo 'cannot check ~/.config/stable-diffusion-webui/gradio-auth; not starting'; exit 2 ;;
-  esac
+  f="$HOME/.config/stable-diffusion-webui/gradio-auth"
+  { [ -f "$f" ] && [ ! -L "$f" ]; } ||
+    { echo 'need ~/.config/stable-diffusion-webui/gradio-auth to be a regular file (it is missing, a symlink or another kind of file); not starting'; exit 2; }
+  if grep -Eavqx -- '[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.-]+:[0123456789abcdef]{64}' "$f"; then
+    echo 'a line in ~/.config/stable-diffusion-webui/gradio-auth is not a user name and a 64-hex password; not starting'; exit 2
+  else
+    rc=$?; [ "$rc" -eq 1 ] || { echo 'could not check ~/.config/stable-diffusion-webui/gradio-auth; not starting'; exit 2; }
+  fi
+  if grep -Eaqx -- '[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.-]+:[0123456789abcdef]{64}' "$f"; then :; else
+    rc=$?; [ "$rc" -eq 1 ] || { echo 'could not check ~/.config/stable-diffusion-webui/gradio-auth; not starting'; exit 2; }
+    echo 'no user:password line in ~/.config/stable-diffusion-webui/gradio-auth; not starting'; exit 2
+  fi
+  if awk -F: 'seen[$1]++ { found = 1; exit } END { exit !found }' "$f"; then
+    echo 'a user name is on more than one line in ~/.config/stable-diffusion-webui/gradio-auth; not starting'; exit 2
+  else
+    rc=$?; [ "$rc" -eq 1 ] || { echo 'could not check ~/.config/stable-diffusion-webui/gradio-auth; not starting'; exit 2; }
+  fi
   python launch.py --server-name 127.0.0.1 --port 7860 --gradio-auth-path "$HOME/.config/stable-diffusion-webui/gradio-auth"
 )
 ```
 
-Of the login, only the path is on the command line, and only the path appears in the startup line. The block clears `COMMANDLINE_ARGS` first and refuses to start when it cannot (a readonly name in your shell), so an inherited value can add neither `--listen`, `--share` nor a `--gradio-auth` or `--api-auth` password; put any other flag you need on the command line itself. It passes `--server-name 127.0.0.1` explicitly because the loopback default is not the WebUI's own: at v1.10.1, without `--listen` or `--server-name` the WebUI hands Gradio no server name, and Gradio 3.41.2 then binds to `GRADIO_SERVER_NAME` from the environment, falling back to `127.0.0.1` only when it is unset, so an inherited `GRADIO_SERVER_NAME=0.0.0.0` would bind every interface. The block also clears `GRADIO_SERVER_NAME` with the same fail-closed guard. If you start through `webui.sh` instead, keep every credential out of `COMMANDLINE_ARGS` in `webui-user.sh`. The block reads the file as text (`grep -a`, so a NUL byte cannot hide a second entry inside a line) and refuses a file with no login line, or with any line that is not a user name and a 64-hex password, the shape the block above writes, and it refuses as well when `grep` cannot read the file; if you set a password of your own, relax that pattern, but never let a line with an empty password through. The password stays in the file and in the WebUI's memory, readable by that account and by root, and moving it out of argv does not erase a value already in shell history or a log.
+Of the login, only the path is on the command line, and only the path appears in the startup line. The block clears `COMMANDLINE_ARGS` first and refuses to start when it cannot (a readonly name in your shell), so an inherited value can add neither `--listen`, `--share` nor a `--gradio-auth` or `--api-auth` password; put any other flag you need on the command line itself. It passes `--server-name 127.0.0.1` explicitly because the loopback default is not the WebUI's own: at v1.10.1, without `--listen` or `--server-name` the WebUI hands Gradio no server name, and Gradio 3.41.2 then binds to `GRADIO_SERVER_NAME` from the environment, falling back to `127.0.0.1` only when it is unset, so an inherited `GRADIO_SERVER_NAME=0.0.0.0` would bind every interface. The block also clears `GRADIO_SERVER_NAME` with the same fail-closed guard. If you start through `webui.sh` instead, keep every credential out of `COMMANDLINE_ARGS` in `webui-user.sh`. The block checks first that the file is a regular file and not a symlink, so a FIFO in its place can neither block the check nor be read by it. It then reads the file as text (`grep -a`: without `-a`, a NUL could make a malformed line look valid to grep) and refuses a file with no login line, with any line that is not a user name and a 64-hex password, the shape the block above writes, or with the same user name on two lines, which would give one user two passwords. The patterns spell out their ASCII character sets rather than ranges such as `a-f`, whose meaning can depend on the locale, and the duplicate check compares names byte for byte. When `grep` or `awk` cannot read the file, the block says that it could not check and refuses, and it gives the same result in a shell that has `set -e` on. If you set a password of your own, relax that pattern, but never let a line with an empty password through. The password stays in the file and in the WebUI's memory, readable by that account and by root, and moving it out of argv does not erase a value already in shell history or a log.
 
 Read from the code, not run: at v1.10.1 the WebUI serves `GET /internal/sysinfo` and `GET /internal/sysinfo-download`, which return its system-information report, and that report carries `COMMANDLINE_ARGS` from the environment unredacted, alongside the process's argv. The argv listing hides an element only when it equals the `--gradio-auth` or `--api-auth` value exactly, so the single-token form `--gradio-auth=user:pass` is not hidden, and a password in `COMMANDLINE_ARGS` appears verbatim in the environment section. The two routes are registered with no dependency, and at the Gradio release v1.10.1 pins (3.41.2) the login is checked per route rather than by middleware, so by that reading they answer without a login even when the Gradio login is on. Nobody has yet observed this on a running instance; backlog row 1.143 tracks confirming it. Do three things regardless: use `--gradio-auth-path`, which puts only a path in the report; never put a credential in `COMMANDLINE_ARGS`; and have the reverse proxy refuse every path that begins `/internal/sysinfo`, which covers `/internal/sysinfo-download` too, since the report still carries the rest of the argv and environment.
 
-Even with `--gradio-auth-path` set, put TLS in front; the login alone only gates plaintext HTTP. `--server-name` sets an explicit hostname if you bind somewhere other than the default.
+Even with `--gradio-auth-path` set, put TLS in front; the login alone only gates plaintext HTTP. `--server-name` sets the address the WebUI binds to; the block's `--server-name 127.0.0.1` is that bind address, so change it only when you mean to serve another interface.
 
 ## InvokeAI
 
