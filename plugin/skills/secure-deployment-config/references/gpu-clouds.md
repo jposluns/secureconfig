@@ -49,6 +49,7 @@ ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not
 (
   # Feed the token to curl on stdin (curl --header @-), never in argv:
   # -H "Authorization: token TOKEN" is readable in ps / /proc/<pid>/cmdline.
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_JUPYTER_TOKEN'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -65,6 +66,7 @@ ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not
 # credential 200 returning app data is a finding; a 401 is only conclusive alongside a direct 200. The
 # guard refuses while a placeholder remains; repeat for each mapped port.
 (
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'https://REPLACE_WITH_POD_ID-REPLACE_WITH_PORT.proxy.runpod.net/REPLACE_WITH_PROTECTED_PATH' 'REPLACE_WITH_TOKEN'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift

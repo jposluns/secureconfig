@@ -282,6 +282,7 @@ The password reaches curl on stdin, not argv. Substitute inside the quotes, and 
 
 ```bash
 (
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_URL' 'REPLACE_WITH_USER' 'REPLACE_WITH_PASSWORD'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift

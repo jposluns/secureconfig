@@ -454,6 +454,7 @@ the console project, not a guessed `/console` UI path.
 
 ```bash
 (
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'https://REPLACE_WITH_CONSOLE_API_ORIGIN' 'REPLACE_WITH_PROTECTED_SIGNUP_JSON'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift

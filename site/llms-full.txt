@@ -710,6 +710,7 @@ For APIs and machine clients, create a **service token** in the Zero Trust dashb
 (
   # Feed the service-token headers to curl on stdin (curl --header @-), never in
   # argv: the Client-Secret in -H is readable in ps / /proc/<pid>/cmdline.
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLIENT_ID' 'REPLACE_WITH_CLIENT_SECRET'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -3253,6 +3254,7 @@ curl -q -s -o /dev/null -w '%{http_code}\n' --max-time 10 https://example.com/  
   # ps and /proc/<pid>/cmdline on a shared host. Paste the whole parenthesised
   # block, including its set -- line. (The TLS-floor and size-prep steps sit
   # inside the same block only so the password is entered once.)
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PASSWORD'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -3559,6 +3561,7 @@ head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
 (
   # curl reads the admin password from a config stream on stdin (--config -),
   # never argv (-u admin:PASSWORD is readable in ps / /proc/<pid>/cmdline).
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PASSWORD'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -3981,6 +3984,7 @@ head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
 (
   # curl reads the admin password from a config stream on stdin (--config -),
   # never argv (-u admin:PASSWORD is readable in ps / /proc/<pid>/cmdline).
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PASSWORD'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -7748,6 +7752,7 @@ ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not
 (
   # Feed the token to curl on stdin (curl --header @-), never in argv:
   # -H "Authorization: token TOKEN" is readable in ps / /proc/<pid>/cmdline.
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_JUPYTER_TOKEN'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -7764,6 +7769,7 @@ ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not
 # credential 200 returning app data is a finding; a 401 is only conclusive alongside a direct 200. The
 # guard refuses while a placeholder remains; repeat for each mapped port.
 (
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'https://REPLACE_WITH_POD_ID-REPLACE_WITH_PORT.proxy.runpod.net/REPLACE_WITH_PROTECTED_PATH' 'REPLACE_WITH_TOKEN'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -12620,6 +12626,7 @@ Paste whole Bash blocks. Substitute inside the single quotes; values containing 
 
 ```bash
 (
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PRESIGNED_URL'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -21110,6 +21117,7 @@ Use a valid virtual key whose `allowed_routes` includes `/v1/models`. Substitute
 # on a placeholder. (The key you substitute on the set -- line does enter your shell history, so use a
 # short-lived key or clear that history line afterward.)
 (
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VIRTUAL_KEY'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 1; }
   shift
@@ -21370,6 +21378,7 @@ ss -tlnp   # every listener; 8080/8000/8001/8002/3000/80/9000/30000/5000/7860/12
 (
   # Feed the API key to curl on stdin (curl --header @-), never in argv:
   # -H "Authorization: Bearer KEY" is readable in ps / /proc/<pid>/cmdline.
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_API_KEY'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -22035,6 +22044,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
 # it returns the workflow JSON (the positive control). The key is fed on stdin (-H @-), so it stays out
 # of curl's argv; the one on the set -- line still enters shell history, so use a short-lived key and clear it.
 (
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_N8N_API_KEY'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 1; }
   shift
@@ -22458,6 +22468,7 @@ Keep the existing client-API key check, hardened, against the frontend hostname 
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_FRONTEND_HOSTNAME' 'REPLACE_WITH_LONG_RANDOM_VALUE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -23166,6 +23177,7 @@ admin_password = REPLACE_WITH_LONG_RANDOM_VALUE
 
 ```bash
 (
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CURRENT_ADMIN_PASSWORD' 'REPLACE_WITH_LONG_RANDOM_VALUE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -23227,6 +23239,7 @@ ss -tlnp   # read every listener; 5000: 127.0.0.1 only
 (
   # Each credential reaches curl on stdin via a config file (curl --config -), never
   # argv; -u user:password is world-readable in /proc/<pid>/cmdline on a shared host.
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ADMIN_PASSWORD' 'REPLACE_WITH_LOWPERM_USER' 'REPLACE_WITH_LOWPERM_PASSWORD' 'REPLACE_WITH_A_REAL_EXPERIMENT_ID'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -23442,6 +23455,7 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 # app_unavailable instead means the app is unavailable or misconfigured (the token identifies the app),
 # not that the endpoint is open. WITH a valid app key, 200 returning the app's parameters JSON.
 (
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DIFY_APP_KEY'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -23863,6 +23877,7 @@ The header below is reader-supplied. For a configured bearer-token proxy it is `
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' '' 'REPLACE_WITH_HEADER_NAME: REPLACE_WITH_CREDENTIAL'
   # $3 is the same harmless JSON body as the anonymous check. Keep the empty quotes if none is needed.
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
@@ -24519,6 +24534,7 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 # confirm untrusted clients cannot reach that backend. The key reaches curl on stdin via a config file (curl --config -), so it stays out
 # of argv and /proc/<pid>/cmdline; still prefer a short-lived project key.
 (
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PUBLIC_KEY' 'REPLACE_WITH_SECRET_KEY'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -25339,6 +25355,7 @@ The password reaches curl on stdin, not argv. Substitute inside the quotes, and 
 
 ```bash
 (
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_URL' 'REPLACE_WITH_USER' 'REPLACE_WITH_PASSWORD'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -26769,6 +26786,7 @@ identify the main worker's policy.
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BASE_URL' 'REPLACE_WITH_A_FUNCTION_NAME' 'REPLACE_WITH_CURRENT_ANON_JWT'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
@@ -28898,6 +28916,7 @@ the console project, not a guessed `/console` UI path.
 
 ```bash
 (
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'https://REPLACE_WITH_CONSOLE_API_ORIGIN' 'REPLACE_WITH_PROTECTED_SIGNUP_JSON'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
