@@ -7692,7 +7692,7 @@ curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w '%{ht
 #   one over IPv6 too, since IPv4 may be blocked while IPv6 is not). Quote the bracketed literal, -q first
 #   then -g. AWS:
 #     T6=$(curl -q -g -sf --noproxy '*' --connect-timeout 5 --max-time 5 -X PUT -H 'X-aws-ec2-metadata-token-ttl-seconds: 60' 'http://[fd00:ec2::254]/latest/api/token'); t6_rc=$?; echo "PUT6 exit: $t6_rc"
-#     if [ "$t6_rc" -eq 0 ] && [ -n "$T6" ]; then curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'aws6=%{http_code} time_connect=%{time_connect}\n' -H "X-aws-ec2-metadata-token: $T6" 'http://[fd00:ec2::254]/latest/meta-data/'; else echo "no usable IPv6 token (PUT6 exit $t6_rc): inconclusive"; fi
+#     if [ "$t6_rc" -eq 0 ] && [ -n "$T6" ]; then printf 'X-aws-ec2-metadata-token: %s\n' "$T6" | curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'aws6=%{http_code} time_connect=%{time_connect}\n' -H @- 'http://[fd00:ec2::254]/latest/meta-data/'; else echo "no usable IPv6 token (PUT6 exit $t6_rc): inconclusive"; fi
 #   GCP: curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'gcp6=%{http_code} time_connect=%{time_connect}\n' -H 'Metadata-Flavor: Google' 'http://[fd20:ce::254]/computeMetadata/v1/instance/'
 #   Any HTTP response (including 401) means the IPv6 endpoint is reachable; read time_connect as below.
 # Run these BEFORE applying the block too (the positive control): they should reach metadata then, so a
