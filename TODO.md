@@ -125,7 +125,7 @@ marked, and those are the ones worth taking first.
 | 3.17 | CI hardening, from the retroactive review of #255 (2026-09-25): pin `actions/checkout`, `actions/setup-python` and `lycheeverse/lychee-action` to full commit SHAs; record where the shellcheck SHA-256 came from; assert the installed shellcheck version in CI instead of printing it; and correct the workflow's "so local == CI" comment, because the local gate checks no version and passes (SKIP) without shellcheck. Also surface that the `gates` job downloads from the network although the gate suite itself is offline. (M, S) | `[gap]` |
 | 3.18 | CSP-hash gate: refuse any `.xhtml` under `site/`, and scan SVG documents, failing on `<script>` or an `on*` handler (maintainer ruling, 2026-09-25). (L, S) | `[gap]` |
 | 3.19 | Weekly lychee sweep: fail only on dead links (404s); list redirects without failing the job (maintainer ruling, 2026-09-25). (L, S) | `[gap]` |
-| 3.20 | Verify-marking convention: every Verify step states explicitly whether it was demonstrated or reasoned, enforced corpus-wide by a gate (maintainer ruling, 2026-09-25). (M, L) | `[gap]` |
+| 3.20 | Verify-marking convention: every Verify step states explicitly whether it was demonstrated or reasoned, enforced corpus-wide (maintainer ruling, 2026-09-25). (M, L) | `[gap]` |
 
 ## Decisions
 
