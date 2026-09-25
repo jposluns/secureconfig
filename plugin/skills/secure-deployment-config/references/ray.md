@@ -4,7 +4,7 @@ Ray's own security page is blunt: if you expose the Ray Dashboard, Ray Jobs, or 
 
 ## 1. Keep the dashboard on loopback
 
-`ray start --dashboard-host` defaults to localhost, and `--dashboard-port` defaults to `8265`. Leave both alone and say so explicitly, because most tutorials and container entrypoints override the host to make the UI reachable:
+`ray start --dashboard-host` defaults to localhost (as of Ray 2.58.0, the first address `localhost` resolves to, IPv4 before IPv6, else `127.0.0.1`), and `--dashboard-port` defaults to `8265`. Leave both alone and say so explicitly, because most tutorials and container entrypoints override the host to make the UI reachable:
 
 ```bash
 ray start --head --dashboard-host 127.0.0.1 --dashboard-port 8265
@@ -165,6 +165,7 @@ Service behaviour is not demonstrated here. A watcher stopped each of four loopb
 - Ray base image user and passwordless sudo (pinned tag): https://raw.githubusercontent.com/ray-project/ray/ray-2.58.0/docker/base-deps/Dockerfile
 - Ray core gRPC server bind address (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/src/ray/rpc/grpc_server.cc#L67-L68
 - Ray `IsLocalhost` (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/src/ray/util/network_util.h#L111-L113
+- Ray `ray start` `--dashboard-host` default `get_localhost_ip()` and `--dashboard-port` default `DEFAULT_DASHBOARD_PORT` (8265), with `GetLocalhostIP()` resolving `localhost` as IPv4 first, then IPv6, else `127.0.0.1` (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/scripts/scripts.py#L601-L617, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/ray_constants.py#L185 and https://github.com/ray-project/ray/blob/ray-2.58.0/src/ray/util/network_util.cc#L257-L278
 - Ray Serve replica inter-deployment gRPC server (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/serve/_private/replica.py#L1778
 - Ray Client server listeners, `--host` address plus loopback (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/util/client/server/server.py#L799-L801
 - Ray Client proxier listeners, `--host` address plus loopback (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/util/client/server/proxier.py#L929-L931
