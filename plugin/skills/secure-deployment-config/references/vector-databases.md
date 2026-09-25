@@ -14,6 +14,11 @@ Each server listens on plain TCP; publish only a reverse proxy ([nginx.md](nginx
 | Chroma | 8000 |
 | pgvector | 5432 (it is PostgreSQL) |
 
+Two of these bind every IPv4 interface by default in their official images (as of Qdrant v1.19.1 and Chroma 1.5.9):
+
+- **Qdrant**'s compiled-in configuration sets `service.host: 0.0.0.0`. It then merges `config/config`, `config/$RUN_MODE` (`RUN_MODE` defaults to `development`) and `config/local` from the working directory, then `--config-path`, then `QDRANT__`-prefixed environment variables. The repository's `config/development.yaml` narrows the host to `127.0.0.1`, so a binary started from a checkout listens on loopback; the official image sets `RUN_MODE=production`, whose `config/production.yaml` keeps `0.0.0.0`.
+- **Chroma**'s `chroma run` without a config file binds `localhost`, its `--host` default. Given a config file, it binds the file's `listen_address`, or `0.0.0.0` when the file sets none, after merging `CHROMA_`-prefixed environment variables. The official `chromadb/chroma` image runs `chroma run /config.yaml` with a file that sets only `persist_path`, so the container listens on `0.0.0.0:8000`.
+
 ## 2. Qdrant: API key and TLS
 
 Per the Qdrant security page, "all self-deployed Qdrant instances are not secure" by default and connections are unencrypted. Set an API key in the config file or through the environment, and add a read-only key for query-only clients:
@@ -176,6 +181,7 @@ None of the checks above tests isolation between tenants. Where one embeddings t
 ## Sources (checked September 2026)
 
 - Qdrant security (API key, read-only key, `api-key` header, TLS keys, ports, default insecurity): https://qdrant.tech/documentation/security/
+- Qdrant compiled-in defaults and overlay order (`service.host`, `http_port`, `grpc_port`; `config/config`, `config/$RUN_MODE` defaulting to `development`, `config/local`, `--config-path`, `QDRANT__` variables), the development and production overlays, and the image's `RUN_MODE=production` (pinned tag v1.19.1): https://github.com/qdrant/qdrant/blob/v1.19.1/src/settings.rs#L22, https://github.com/qdrant/qdrant/blob/v1.19.1/src/settings.rs#L292-L329, https://github.com/qdrant/qdrant/blob/v1.19.1/config/config.yaml#L330-L334, https://github.com/qdrant/qdrant/blob/v1.19.1/config/development.yaml#L13-L15, https://github.com/qdrant/qdrant/blob/v1.19.1/config/production.yaml#L3-L5 and https://github.com/qdrant/qdrant/blob/v1.19.1/Dockerfile#L225-L234
 - Weaviate authentication (anonymous access, API key, OIDC variables): https://docs.weaviate.io/deploy/configuration/authentication
 - Weaviate authorization (admin list, RBAC availability): https://docs.weaviate.io/deploy/configuration/authorization and RBAC configuration (`AUTHORIZATION_RBAC_ENABLED`, `AUTHORIZATION_RBAC_ROOT_USERS`): https://docs.weaviate.io/deploy/configuration/configuring-rbac
 - Weaviate environment variables (`AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED` default, `GRPC_PORT` default): https://docs.weaviate.io/deploy/configuration/env-vars
@@ -183,6 +189,7 @@ None of the checks above tests isolation between tenants. Where one embeddings t
 - Milvus authentication (`common.security.authorizationEnabled`, default `root`/`Milvus`, `update_password`): https://milvus.io/docs/authenticate.md
 - Milvus TLS (`tls.*` paths, `common.security.tlsMode`, RESTful port note): https://milvus.io/docs/tls.md ; standalone install (ports 19530 and 9091): https://milvus.io/docs/install_standalone-docker.md
 - Chroma migration notes (v1.0.0 removal of built-in authentication; 2024 auth overhaul variables): https://docs.trychroma.com/docs/overview/migration ; client-server mode (`chroma run --path`, port 8000): https://docs.trychroma.com/docs/run-chroma/client-server
+- Chroma `chroma run`: the `--host` default `localhost` applied only without a config file, the config-file branch, the `listen_address` and `port` defaults `0.0.0.0` and 8000, `CHROMA_` variables merged when a file is loaded, the server's bind of `listen_address:port`, and the release image (`rust/Dockerfile` target `cli`, `chroma run /config.yaml` from `docker_single_node.yaml`) (pinned tag 1.5.9): https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L39-L45, https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L60-L73, https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L114-L134, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L140-L146, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L176-L179, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L216-L229, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/server.rs#L415-L417, https://github.com/chroma-core/chroma/blob/1.5.9/rust/Dockerfile#L85-L93, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/sample_configs/docker_single_node.yaml and https://github.com/chroma-core/chroma/blob/1.5.9/.github/workflows/_build_release_container.yml#L101-L106
 - pgvector (`CREATE EXTENSION vector`, PostgreSQL 13 and later): https://github.com/pgvector/pgvector
 - PostgreSQL row security policies (a superuser and a `BYPASSRLS` role always bypass; the table owner bypasses unless the table has `FORCE ROW LEVEL SECURITY`): https://www.postgresql.org/docs/current/ddl-rowsecurity.html
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
