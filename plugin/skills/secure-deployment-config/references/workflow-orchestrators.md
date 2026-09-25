@@ -103,8 +103,10 @@ Codec Server independently of the UI and the frontend, because an exposed Codec 
 
 ## Flower (for Celery)
 
-Flower binds every interface by default (`--address` is empty, meaning all interfaces; `--port` defaults to
-5555) with authentication disabled unless you configure it. When no authentication is configured its HTTP API
+Flower binds every interface by default (as of v2.2.0, `--address` is empty, meaning all interfaces, and `--port`
+defaults to 5555, unless `--unix_socket` names a socket path or a `flowerconfig.py` in the working directory, which
+it loads without being asked, sets them) with authentication disabled unless you configure it. When no
+authentication is configured its HTTP API
 is disabled unless you set `FLOWER_UNAUTHENTICATED_API=true`, so keep that unset and never read an API
 rejection as proof the dashboard itself is protected. `--basic-auth="user1:password1,user2:password2"`
 turns on HTTP Basic Auth with a comma-separated credential list; OAuth 2.0 login against Google, GitHub,
@@ -293,6 +295,7 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
 - Temporal, CLI server reference (default frontend gRPC port 7233, Web UI port 8233): https://docs.temporal.io/cli/command-reference/server
 - Flower, configuration (`--address`, `--port` 5555 default, `--basic-auth`, `--auth_provider`, `--oauth2_key`,
   `--oauth2_secret`, `--oauth2_redirect_uri`, `--auth`): https://flower.readthedocs.io/en/latest/config.html
+- Flower `port` default 5555, `address` default `''` and the `unix_socket` branch, and the implicit `flowerconfig.py` load from the working directory (pinned tag v2.2.0), with Tornado's `bind_sockets` treating an empty address as all interfaces (pinned tag v6.5.10): https://github.com/mher/flower/blob/v2.2.0/flower/options.py#L7-L15, https://github.com/mher/flower/blob/v2.2.0/flower/options.py#L56-L57, https://github.com/mher/flower/blob/v2.2.0/flower/command.py#L81-L91, https://github.com/mher/flower/blob/v2.2.0/flower/app.py#L71-L76 and https://github.com/tornadoweb/tornado/blob/v6.5.10/tornado/netutil.py#L72-L73
 - Argo Workflows, [auth modes](https://argo-workflows.readthedocs.io/en/release-3.7/argo-server-auth-mode/),
   [server flags and default port 2746](https://argo-workflows.readthedocs.io/en/release-3.7/cli/argo_server/),
   [TLS](https://argo-workflows.readthedocs.io/en/release-3.7/tls/),
