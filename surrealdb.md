@@ -17,6 +17,7 @@ never exported:
 
 ```bash
 (
+  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited extdebug, no function named like a command below
   set +x +a
   { unset -n pw SURREAL_USER SURREAL_PASS && unset -v pw SURREAL_USER SURREAL_PASS; } 2>/dev/null ||
     { echo 'cannot clear pw, SURREAL_USER or SURREAL_PASS in this shell; not starting'; exit 2; }
@@ -110,6 +111,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w '
 # endpoint. Substitute inside the quotes and paste the whole block; run first against the direct origin, then
 # the actual HTTPS endpoint.
 (
+  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited extdebug, no function named like a command below
   set +x +a
   set -o pipefail
   { unset -n probe_jwt && unset -v probe_jwt; } 2>/dev/null ||
