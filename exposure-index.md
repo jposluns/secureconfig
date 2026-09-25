@@ -49,6 +49,7 @@ Open the guide before relying on either, because defaults change between release
 | 1880 | Node-RED editor and admin API, which have no authentication by default | No authentication by default | [devops-uis.md](devops-uis.md) |
 | 1883 | MQTT, plaintext | Mosquitto 2.0+: no-listener mode anonymous on loopback; explicit listener rejects unauthenticated | [mosquitto.md](mosquitto.md) |
 | 2019 | Caddy admin API, which requires no credentials and defaults to localhost | No credentials required | [caddy.md](caddy.md) |
+| 2112 | Weaviate's Prometheus metrics and tenant-activity listener, on every local address when Prometheus monitoring is enabled | not stated | [vector-databases.md](vector-databases.md) |
 | 2375 | Docker API, plaintext and unauthenticated | Unauthenticated; anyone reaching the socket controls the host | [devops-uis.md](devops-uis.md) |
 | 2376 | Docker API over TLS. The port is a convention, not proof of client-certificate authentication: `--tls` and `--tlsverify` are different settings | No client-certificate check without `--tlsverify` | [devops-uis.md](devops-uis.md), [docker.md](docker.md) |
 | 2379, 2380 | etcd client and peer ports on a Kubernetes control-plane node. Every Secret in the cluster is here, unencrypted unless encryption at rest is configured | not stated | [kubernetes.md](kubernetes.md) |
@@ -90,7 +91,7 @@ Open the guide before relying on either, because defaults change between release
 | 5901 | VNC in a GPU desktop template example; an example port, not a platform-wide default | Template-dependent; may default to weak or empty password | [gpu-clouds.md](gpu-clouds.md) |
 | 6001, 6002 | Coolify real-time updates and terminal | not stated | [devops-uis.md](devops-uis.md) |
 | 6006 | Arize Phoenix | Auth disabled by default; when enabled, `admin@localhost`/`admin` | [llm-observability.md](llm-observability.md) |
-| 6060 | A Go service's pprof and expvar diagnostics listener, bound to loopback in the guide's example | not stated | [go.md](go.md) |
+| 6060 | A Go service's pprof and expvar diagnostics listener, bound to loopback in the guide's example; also Weaviate's debug listener, on every local address unless `GO_PROFILING_DISABLE` is set, answering 404 until debug endpoints are enabled | not stated | [go.md](go.md), [vector-databases.md](vector-databases.md) |
 | 6080 | noVNC web interface in a GPU desktop template example; an example port, not a platform-wide default | Template-dependent; may default to weak or empty password | [gpu-clouds.md](gpu-clouds.md) |
 | 6222 | NATS cluster routes, a separate listener with its own authentication and TLS | not stated | [nats.md](nats.md) |
 | 6333, 6334, 6335 | Qdrant REST, gRPC, and internal cluster gRPC | Not secure by default; 6335 is never protected by an API key through v1.17.x, and on v1.18.0 and later only with `service.enforce_internal_auth`, which is off by default | [vector-databases.md](vector-databases.md) |
