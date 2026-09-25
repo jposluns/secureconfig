@@ -21,7 +21,7 @@ vLLM's server supports requiring an API key; check `vllm serve --help` on your i
 
 ## Hugging Face Text Generation Inference (TGI)
 
-`text-generation-launcher` listens on `0.0.0.0:3000` by default (as of v3.3.7; `--hostname`, env `HOSTNAME`; `--port`, env `PORT`). The official image sets `PORT=80`, so a bare container listens on port 80 instead, and on every interface: Docker sets `HOSTNAME` to the container's hostname (by default its short ID), which is not an IP address, and the router then falls back to `0.0.0.0`. Bind it to loopback, or publish nothing from the container network except the proxy:
+`text-generation-launcher` listens on `0.0.0.0:3000` by default (as of v3.3.7; `--hostname`, env `HOSTNAME`; `--port`, env `PORT`). The image built from the repository's main `Dockerfile` sets `PORT=80`, so a bare container listens on port 80 instead, and on every interface: Docker sets `HOSTNAME` to the container's hostname (by default its short ID), which is not an IP address, and the router then falls back to `0.0.0.0`. Bind it to loopback, or publish nothing from the container network except the proxy:
 
 Lifecycle note, as of September 2026: the TGI repository is in maintenance mode and was archived on 2026-03-21 (read-only). Hugging Face recommends vLLM, SGLang, or local engines such as llama.cpp going forward. A server that no longer receives fixes belongs behind the same controls as any other, and on a migration list.
 
@@ -82,7 +82,7 @@ One proxy detail is specific to this API: unless `--listen` (or `--public-api`) 
 ## Verify
 
 ```bash
-ss -tlnp   # every listener; 8080/8000/8001/8002/3000/9000/30000/5000/7860/1234. ss shows only a
+ss -tlnp   # every listener; 8080/8000/8001/8002/3000/80/9000/30000/5000/7860/1234. ss shows only a
            # namespace-local BIND, not a host firewall, a cloud security group, or Docker -p NAT
            # publication. From another host, probe EACH backend listener's own host and port (adapt the
            # subshell below, which shows the technique for one endpoint) and confirm each is refused
