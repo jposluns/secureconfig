@@ -14,6 +14,18 @@ The first account created during setup becomes the admin account, so an instance
 network before you finish the setup wizard lets whoever gets there first claim admin. Complete
 setup before the instance is reachable from anywhere but you.
 
+Metabase binds a wildcard address by default (as of v0.63.18). It reads each `MB_` setting
+from a `.lein-env` file in the working directory (and a `.boot-env` classpath resource), then the
+environment, then JVM options such as `-Dmb.jetty.host`, each overriding the one before. The jar
+leaves Jetty's host unset unless the last of those layers to set `MB_JETTY_HOST` gives it a non-blank
+value (an empty value in a later layer masks an address in an earlier one), and Jetty binds the
+wildcard address when no host is set; the official image's entrypoint instead exports
+`MB_JETTY_HOST=0.0.0.0`, every IPv4 address, whenever the variable is unset or empty. The port is
+3000 unless the last layer to set `MB_JETTY_PORT` gives it a non-blank value. For a jar behind a
+local proxy set
+`MB_JETTY_HOST=127.0.0.1`, and in Docker publish only to host loopback (`127.0.0.1:3000:3000`),
+before the first start.
+
 Public links and public embeds are enabled by default and let admins share a question, dashboard,
 or document with anyone holding the URL; visitors get view-only results with no login. Metabase's
 own docs warn that the public link URL is recoverable from a public embed, so an embed is not a
@@ -47,6 +59,11 @@ For a manual deployment set a strong, instance-specific `REDASH_COOKIE_SECRET` a
 `REDASH_SECRET_KEY` (the latter encrypts stored data-source credentials), keep them out of version
 control, and never reuse them across instances. Front it the same as the other tools here rather than
 relying on anything Redash provides natively.
+
+Redash's `server` command, which the official image runs by default, binds gunicorn to
+`REDASH_GUNICORN_BIND`, or to `[::]:5000`, the IPv6 wildcard (which may also accept IPv4 on a dual-stack host), when that variable is unset or empty
+(as of v26.9.0). Behind a local proxy set `REDASH_GUNICORN_BIND=127.0.0.1:5000`; in Docker, publish
+only to host loopback.
 
 ## Verify
 
@@ -97,10 +114,12 @@ connection string or the tool's own login is not enough.
 - Metabase setting up Metabase (first account is admin): https://www.metabase.com/docs/latest/configuring-metabase/setting-up-metabase
 - Metabase public links and embeds: https://www.metabase.com/docs/latest/embedding/public-links
 - Metabase data permissions (row and column security is Pro/Enterprise): https://www.metabase.com/docs/latest/permissions/data
+- Metabase Jetty host and port (`:mb-jetty-port` default "3000", no host default, blank values treated as unset, nil values dropped from the Jetty options), ring-jetty-adapter 1.15.3 passing the host to `setHost`, Jetty 12.1.13 binding the wildcard address for a null host, environ 1.2.0 merging `.lein-env`, `.boot-env`, the environment and JVM properties in that order, keeping empty values, so the last layer to set a key wins, and the image entrypoint's `MB_JETTY_HOST=0.0.0.0` default (pinned tags v0.63.18, ring 1.15.3, jetty-12.1.13, environ 1.2.0): https://github.com/metabase/metabase/blob/v0.63.18/src/metabase/config/core.clj#L54, https://github.com/metabase/metabase/blob/v0.63.18/src/metabase/config/core.clj#L76-L88, https://github.com/metabase/metabase/blob/v0.63.18/src/metabase/server/instance.clj#L36-L41, https://github.com/metabase/metabase/blob/v0.63.18/deps.edn#L79, https://github.com/weavejester/environ/blob/1.2.0/environ/src/environ/core.cljc#L32-L43, https://github.com/weavejester/environ/blob/1.2.0/environ/src/environ/core.cljc#L64-L79, https://github.com/metabase/metabase/blob/v0.63.18/deps.edn#L164, https://github.com/metabase/metabase/blob/v0.63.18/deps.edn#L195, https://github.com/ring-clojure/ring/blob/1.15.3/ring-jetty-adapter/src/ring/adapter/jetty.clj#L202-L207, https://github.com/jetty/jetty.project/blob/jetty-12.1.13/jetty-core/jetty-server/src/main/java/org/eclipse/jetty/server/ServerConnector.java#L338, https://github.com/metabase/metabase/blob/v0.63.18/bin/docker/run_metabase.sh#L2-L5 and https://github.com/metabase/metabase/blob/v0.63.18/Dockerfile#L66-L69
 - Superset security: https://superset.apache.org/admin-docs/security/
 - Superset docker-compose.yml (production warning): https://github.com/apache/superset/blob/3d01094d231712e3470eb625be3f9925aeaeadb5/docker-compose.yml
 - Redash help center: https://redash.io/help/
 - Redash setting up a Redash instance: https://redash.io/help/open-source/setup/
+- Redash `server` binding gunicorn to `${REDASH_GUNICORN_BIND:-[::]:5000}`, and the image's default `server` command (pinned tag v26.9.0): https://github.com/getredash/redash/blob/v26.9.0/bin/docker-entrypoint#L49-L50 and https://github.com/getredash/redash/blob/v26.9.0/Dockerfile#L133-L134
 - Redash secret keys (cookie signing, data-source-credential encryption, do not reuse across instances or commit): https://redash.io/help/open-source/admin-guide/secrets/
 - Metabase database users, roles, and privileges (a dedicated least-privilege read-only account): https://www.metabase.com/docs/latest/databases/users-roles-privileges
 - Docker port publishing (a published container port is served through NAT/forwarding rules, so the host may show no matching listener): https://docs.docker.com/engine/network/port-publishing/
