@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.138**, **2.48**, **3.23**, **4.12**.
+Next ids: **1.140**, **2.48**, **3.25**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -42,7 +42,7 @@ many.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 1.135 | Secret-bearing blocks that a trap line cannot fix, found by the #340 review, on the maintainer's 2026-09-25 ruling: fix per block, argv breaches first. Argv: `realtime-voice-infra.md:132` (`turnutils_uclient -w` password), `chat-uis.md:20` and `image-gen-uis.md:24` (secrets in launch arguments), `realtime-voice-infra.md:138` (`lk token create --api-key`/`--api-secret`, which carry real keys in a real rotation test). Environment-held: `realtime-webhooks.md` (`AUDIT_COOKIE`, `AUDIT_WEBHOOK_SECRET`), `litellm.md` (the exported and ambient master key), `secrets.md:18` (`TOKEN`), `minio.md:11` and `mlflow.md:25` (exports), `headless-cms-instant-api.md` (`CMS_PROBE_HEADER`). Also `ray.md:125` (a prefix assignment without rule 7's guard), `egress-metadata.md` (the commented IMDSv2 token recipes keep the token in a shell variable) and `low-code-builders.md` (`NC_CONNECTION_ENCRYPT_KEY` tested in a container shell). For each, prompt for the secret, read it from a file, or state the assumption. (H, M) | `[gap]` |
+| 1.135 | Secret-bearing blocks that a trap line cannot fix, found by the #340 review, on the maintainer's 2026-09-25 ruling: fix per block, argv breaches first. Argv: `chat-uis.md:20` and `image-gen-uis.md:24` (secrets in launch arguments). Environment-held: `realtime-webhooks.md` (`AUDIT_COOKIE`, `AUDIT_WEBHOOK_SECRET`), `litellm.md` (the exported and ambient master key), `secrets.md:18` (`TOKEN`), `minio.md:11` and `mlflow.md:25` (exports), `headless-cms-instant-api.md` (`CMS_PROBE_HEADER`). Also `ray.md:125` (a prefix assignment without rule 7's guard), `egress-metadata.md` (the commented IMDSv2 token recipes keep the token in a shell variable) and `low-code-builders.md` (`NC_CONNECTION_ENCRYPT_KEY` tested in a container shell). For each, prompt for the secret, read it from a file, or state the assumption. (H, M) | `[gap]` |
 | 1.137 | `model-servers.md`, remaining credentials on command lines, found while closing row 1.135's llama.cpp and SGLang items: vLLM's key flag (the guide pins no flag; `VLLM_API_KEY` is declared in `vllm/envs.py` at both pinned commits, `dee37d89` and `8c1557a7`, but its consumer and any `--config` file input were not verified), Triton's `--http-restricted-api` and `--grpc-restricted-protocol` shared secrets inside the flag value (no other input verified), and text-generation-webui's `--gradio-auth user:password`, `--api-key KEY` and `--admin-key` (line 105 already names `--gradio-auth-path FILE`; whether `user_data/CMD_FLAGS.txt` is read in-process at the pinned `shared.py` was not verified). Also inherited `LLAMA_ARG_*` variables, which can rebind llama-server the way `SURREAL_*` rebinds SurrealDB (`surrealdb.md` refuses them). For each: cite the non-argv inputs at the pinned sources, or say plainly that none exists, and add the `/proc/<pid>/environ` sentence to any environment recipe. (M, S) | `[gap]` |
 
 ## Priority 2: Deepen existing guides
@@ -110,6 +110,8 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.104 | `rabbitmq.md`: demonstrate the Verify steps the guide marks reasoned, against a live deployment in both the exposed and fixed states. Grandfathered in the reasoned-row baseline until 2026-09-24; blocked on a container runtime, which the authoring host lacks. (M, M) | `[gap]` |
 | 1.105 | `realtime-voice-infra.md`: demonstrate the Verify steps the guide marks reasoned, against a live deployment in both the exposed and fixed states. Grandfathered in the reasoned-row baseline until 2026-09-24; blocked on a container runtime, which the authoring host lacks. (M, M) | `[gap]` |
 | 1.106 | `redis.md`: demonstrate the Verify steps the guide marks reasoned, against a live deployment in both the exposed and fixed states. Grandfathered in the reasoned-row baseline until 2026-09-24; blocked on a container runtime, which the authoring host lacks. (M, M) | `[gap]` |
+| 1.138 | `realtime-voice-infra.md`: the key-rotation test never shows how the rotated token is presented, and the obvious forms put a live bearer token in argv. Show it sent as a header on stdin (`--header @-`) to the existing `/rtc/validate` probe, once LiveKit v1.13.7 is confirmed to accept the token that way on that route and to answer old and new tokens distinguishably (from the #353 plan, maintainer ruling 2026-09-25). (L, S) | `[gap]` |
+| 1.139 | `realtime-voice-infra.md`: `turnserver.conf` holds the TURN password in plaintext. Document the hashed-key alternative and whether `turnadmin`'s key derivation takes the password in argv at coturn 4.18.0 (from the #353 plan, maintainer ruling 2026-09-25). (L, S) | `[gap]` |
 ## Priority 3: Add missing content
 
 Gaps from the same audit, one row per missing guide. A gap raised by more than one family is
@@ -126,6 +128,8 @@ marked, and those are the ones worth taking first.
 | 3.19 | Weekly lychee sweep: fail only on dead links (404s); list redirects without failing the job (maintainer ruling, 2026-09-25). (L, S) | `[gap]` |
 | 3.20 | Verify-marking convention: every Verify step states explicitly whether it was demonstrated or reasoned, enforced corpus-wide (maintainer ruling, 2026-09-25). (M, L) | `[gap]` |
 | 3.21 | An offline gate that fails any workflow `uses:` not pinned to a full commit SHA with a `# vX.Y.Z` release comment, so the floating tags row 3.17 removed cannot return unnoticed. The profile in `DECISIONS.md` (pattern 2) predicts that a check which can be a required gate without reaching the network should be one; that is a prediction, not a ruling. (L, S) | `[gap]` |
+| 3.23 | Shell-block gate: flag known secret-taking flags of non-curl tools in guide blocks (for example `lk --api-secret`, `turnutils_uclient -w`), which no gate sees today because `PROBE_CMDS` lists network probes only (from the #353 plan, maintainer ruling 2026-09-25). (L, S) | `[gap]` |
+| 3.24 | Gate suite: print a notice when the local `python3` release differs from CI's pinned `PYTHON_VERSION` in `checks.yml`, since `html.parser` behaviour can differ between releases and a local green then predicts CI less well (from the #351 review, maintainer ruling 2026-09-25). (L, S) | `[gap]` |
 
 ## Decisions
 
