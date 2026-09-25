@@ -24157,20 +24157,72 @@ sudo ss -aunp    # should be on loopback (behind the proxy); RTC 7881 and coturn
 )
 ```
 
-The **decisive** LiveKit check is a key-rotation test that discriminates the exposed state, because an unauthenticated `/rtc/validate` returns `401` whether or not the dev key is still in use. Mint a correctly scoped token signed with the old (`devkey`/`secret`, or a retired real) secret with a JWT tool or `livekit-cli`, confirm it is *accepted* on an isolated development fixture, then confirm the *same token is rejected* against the deployment after its key is rotated, while a token signed with the new key is accepted. An expired or wrong-room token is an invalid rotation test, and the isolated fixture is what keeps the dev secret off the public instance. Separately probe the metrics and debug routes (and any `debug_handler.port`) and the embedded TURN sockets from an untrusted network; a healthy `/` proves none of them protected.
+The **decisive** LiveKit check is a key-rotation test that discriminates the exposed state, because an unauthenticated `/rtc/validate` returns `401` whether or not the dev key is still in use. Mint a correctly scoped token signed with the old (`devkey`/`secret`, or a retired real) secret with `livekit-cli` (the guarded block below) or a JWT tool that takes the signing secret from stdin, an owner-only file or its environment, never from its command line, confirm it is *accepted* on an isolated development fixture, then confirm the *same token is rejected* against the deployment after its key is rotated, while a token signed with the new key is accepted. An expired or wrong-room token is an invalid rotation test, and the isolated fixture is what keeps the dev secret off the public instance. Separately probe the metrics and debug routes (and any `debug_handler.port`) and the embedded TURN sockets from an untrusted network; a healthy `/` proves none of them protected.
 
-For coturn, the discriminator is a TURN **Allocate** exchange, not an HTTP request. Send a well-formed Allocate requesting UDP relay with no credentials: an allocation containing a relayed address means anonymous allocation is open, while an authentication challenge with no allocation means it is closed (the required positive control is a valid-credential allocation, because the initial `401` also occurs during a successful authenticated exchange). Closing anonymous allocation is not the whole fix: authenticated, request `CreatePermission`/`ChannelBind` for an owned RFC 1918 or `169.254.169.254` test peer and confirm a `403` with no traffic reaching it, across the denied ranges and both address families (a plain allocation failure or timeout is not evidence of peer policy). coturn ships `turnutils_uclient` for the allocation test; run it against an isolated, plaintext-enabled authentication fixture (the hardened deployment may set `no-udp`, and you must never re-open public plaintext to get a positive control). It needs a peer address via `-e`: point it at an owned permitted peer here, or at a denied internal address to test peer policy (expect refusal):
+For coturn, the discriminator is a TURN **Allocate** exchange, not an HTTP request. Send a well-formed Allocate requesting UDP relay with no credentials: an allocation containing a relayed address means anonymous allocation is open, while an authentication challenge with no allocation means it is closed (the required positive control is a valid-credential allocation, because the initial `401` also occurs during a successful authenticated exchange). Closing anonymous allocation is not the whole fix: authenticated, request `CreatePermission`/`ChannelBind` for an owned RFC 1918 or `169.254.169.254` test peer and confirm a `403` with no traffic reaching it, across the denied ranges and both address families (a plain allocation failure or timeout is not evidence of peer policy). coturn ships `turnutils_uclient` for the allocation test; run it against an isolated, plaintext-enabled authentication fixture (the hardened deployment may set `no-udp`, and you must never re-open public plaintext to get a positive control). It needs a peer address via `-e`: point it at an owned permitted peer here, or at a denied internal address to test peer policy (expect refusal).
+
+`turnutils_uclient` takes the TURN password only on its command line, as `-w`: coturn 4.18.0 gives it no stdin, file or environment input for the password, and `-W`, which takes a REST-API shared secret instead, is also an argument. The block below prompts for the password, which keeps it out of shell history, but that is not an argv fix. While the credentialed run lasts, the password is in that process's argv, readable by every local account through `ps` and `/proc/<pid>/cmdline`, and an observer can keep a copy. Bound the exposure instead:
+
+- Create a throwaway user on the isolated fixture for this test only, and remove it afterwards. Never use a production credential.
+- Never use `-W` with a deployment's `static-auth-secret`: that would put the secret that mints every credential into argv.
+- Do not add `-h`, which makes the client hang on indefinitely after the last sent packet, and keeps the password in its argv for as long as it does.
+- Run the block from a host with no untrusted local users.
+
+Read the verbose output, not the exit status: the anonymous run must show a `401` challenge and no relayed address, and the credentialed run, the positive control, must show a relayed address. Substitute the test user, the peer and the TURN host inside the single quotes, and paste the whole block. It assumes a clean shell (CONTRIBUTING rule 7).
 
 ```bash
-# Anonymous allocation must be REFUSED once auth is on; the credentialed run is the positive control.
-turnutils_uclient -v -e REPLACE_WITH_OWNED_PEER_IP REPLACE_WITH_TURN_HOST                                  # no creds: expect no allocation (401)
-turnutils_uclient -v -u REPLACE_WITH_USER -w REPLACE_WITH_PASSWORD -e REPLACE_WITH_OWNED_PEER_IP REPLACE_WITH_TURN_HOST  # expect an allocation
+(
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  set +x +a
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_TEST_USER' 'REPLACE_WITH_OWNED_PEER_IP' 'REPLACE_WITH_TURN_HOST'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
+  case "|$1|$2|$3|" in
+    *REPLACE_WITH_*|*'||'*|*'|-'*|*[[:cntrl:]]*)
+      echo "substitute the test user, peer and TURN host on the set -- line above (no empty value, none starting with -); not probing"; exit 2 ;;
+  esac
+  { unset -n pw && unset -v pw; } 2>/dev/null || { echo 'cannot clear pw in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
+  echo '--- no credentials: expect a 401 challenge and NO relayed address'
+  turnutils_uclient -v -e "$2" "$3"
+  IFS= read -r -s -p 'Throwaway test password (input hidden; it WILL be in argv while the next command runs): ' pw < /dev/tty ||
+    { echo 'password input failed; not probing'; exit 2; }
+  printf '\n'
+  case "$pw" in
+    ""|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'empty password, placeholder or control character; not probing'; exit 2 ;;
+  esac
+  echo '--- throwaway credentials (the positive control): expect a relayed address'
+  turnutils_uclient -v -u "$1" -w "$pw" -e "$2" "$3"
+)
 ```
 
-For the LiveKit rotation test, mint an old-key token with `livekit-cli` and confirm the deployment rejects it after the key is rotated, while a token minted with the new key is accepted:
+For the LiveKit rotation test, mint each token with `livekit-cli` (`lk`). `lk` takes the API key and secret from `--api-key` and `--api-secret`, which put them in argv, or from `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET`, and has no stdin input for them (checked at livekit-cli v2.18.2). A saved project (`lk project add`) is a file input, but it keeps a plaintext copy of the secret in `~/.livekit/cli-config.yaml` until removed, the opposite of what a rotation is for. `lk` uses the environment pair unless `--project` or `--subdomain` is given, ahead of a `livekit.toml` in the working directory and any saved default project, so run the block with neither flag.
+
+The block prompts for the secret, so it stays out of shell history, and hands it and the key to the one `lk` command as a prefix assignment, never exported. That moves the secret out of argv, not out of reach: while `lk` runs, the same account and root can read it from `/proc/<pid>/environ`. Run the block once with the old key and once with the new. For the public development pair the key is `devkey` and the secret typed at the prompt is `secret`. Each printed token is a bearer credential for its grants until it expires, so keep `--valid-for` short and treat the terminal output as a secret. Keep the old-key token: the same token must be accepted on the isolated development fixture and rejected by the deployment after rotation, and the new-key token must be accepted. Substitute the key inside the single quotes, and paste the whole block. It assumes a clean shell (CONTRIBUTING rule 7).
 
 ```bash
-lk token create --api-key devkey --api-secret secret --join --room test --identity probe --valid-for 5m
+(
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  set +x +a
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_API_KEY'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not minting"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not minting"; exit 2; }
+  case "$1" in
+    *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the old or the new API key on the set -- line above; not minting"; exit 2 ;;
+  esac
+  { unset -n sec LIVEKIT_API_KEY LIVEKIT_API_SECRET && unset -v sec LIVEKIT_API_KEY LIVEKIT_API_SECRET; } 2>/dev/null ||
+    { echo 'cannot clear sec, LIVEKIT_API_KEY or LIVEKIT_API_SECRET in this shell; not minting'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not minting'; exit 2; }
+  IFS= read -r -s -p 'API secret for that key (input hidden): ' sec < /dev/tty ||
+    { echo 'secret input failed; not minting'; exit 2; }
+  printf '\n'
+  case "$sec" in
+    ""|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'empty secret, placeholder or control character; not minting'; exit 2 ;;
+  esac
+  LIVEKIT_API_KEY="$1" LIVEKIT_API_SECRET="$sec" lk token create --join --room test --identity probe --valid-for 5m
+)
 ```
 
 Verify TLS separately, and require verification to be fatal so a diagnostic tool does not continue past a bad certificate:
@@ -24202,13 +24254,17 @@ That proves the certificate and handshake only, not TURN authentication, peer po
 - LiveKit sample config (uncommented `key1: secret1` / `key2: secret2`; embedded-TURN, metrics, and debug settings): https://raw.githubusercontent.com/livekit/livekit/v1.13.7/config-sample.yaml
 - LiveKit tokens and grants (HS256 JWT, room and admin grants, permissive defaults): https://docs.livekit.io/frontends/reference/tokens-grants/
 - LiveKit self-hosting deployment (TLS terminates at a proxy; `wss://`): https://docs.livekit.io/transport/self-hosting/deployment/
-- livekit-cli / `lk` (the `lk token create` command in the Verify rotation test): https://github.com/livekit/livekit-cli
+- livekit-cli v2.18.2 credential inputs (`--api-key`/`--api-secret` with `LIVEKIT_API_KEY`/`LIVEKIT_API_SECRET` as their environment sources, lines 124-133; `resolveProject` precedence, `--project` and `--subdomain` ahead of the environment pair, lines 328-434; no stdin input): https://raw.githubusercontent.com/livekit/livekit-cli/v2.18.2/cmd/lk/utils.go
 - coturn example configuration (anonymous default, `allow-loopback-peers`, `no-multicast-peers`, `no-tcp`/`no-udp`, `cli`/`web-admin` defaults, `cert`/`pkey`, `tls-listening-port`): https://raw.githubusercontent.com/coturn/coturn/4.18.0/examples/etc/turnserver.conf
 - coturn option reference (credential modes, `use-auth-secret`, `secure-stun`, `server-relay`, CLI and web-admin auth, `prometheus-address` and its wildcard default, `unauthorized-ratelimit`, relay port range): https://raw.githubusercontent.com/coturn/coturn/4.18.0/README.turnserver
 - coturn 4.17.0 release notes (DTLS listeners now opt-in, started only with `--dtls`): https://github.com/coturn/coturn/releases/tag/4.17.0
 - coturn 4.18.0 release notes (`--no-cli` retired): https://github.com/coturn/coturn/releases/tag/4.18.0
 - coturn peer-address classification and policy (loopback, link-local, RFC 1918, multicast handling): https://raw.githubusercontent.com/coturn/coturn/4.18.0/src/server/ns_turn_server.c
 - curl manual (the `exitcode` and `errormsg` write-out variables in the Verify probe, both added in curl 7.75.0): https://curl.se/docs/manpage.html
+- livekit-cli v2.18.2 `lk token create` (`--join`, `--room`, `--identity`, `--valid-for`; resolves credentials without requiring a URL, line 410; no stdin read): https://raw.githubusercontent.com/livekit/livekit-cli/v2.18.2/cmd/lk/token.go
+- livekit-cli v2.18.2 saved project credentials (`api_secret` in `~/.livekit/cli-config.yaml`, lines 42 and 206, written `0600`, line 192): https://raw.githubusercontent.com/livekit/livekit-cli/v2.18.2/pkg/config/config.go
+- coturn 4.18.0 `turnutils_uclient` option parser (`-w` and `-W` copy `optarg`, lines 380-381 and 456-458; no stdin, file or environment input for the password): https://raw.githubusercontent.com/coturn/coturn/4.18.0/src/apps/uclient/mainuclient.c
+- coturn 4.18.0 `turnutils_uclient` options (`-h` hangs on indefinitely after the last sent packet, line 95): https://raw.githubusercontent.com/coturn/coturn/4.18.0/README.turnutils
 
 ======================================================================
 ==> image-gen-uis.md
