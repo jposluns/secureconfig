@@ -7123,7 +7123,7 @@ For Laravel 12.x, repeat the body probe against a controlled route that raises a
 
 # Ruby on Rails and Puma: TLS and authentication
 
-Puma's default bind is `tcp://[::]:9292` (or `tcp://0.0.0.0:9292` without IPv6): every interface, plain HTTP. Rails encrypts its session cookie but still sends it in clear unless HTTPS is enforced. Preferred layout: bind Puma to loopback and terminate TLS in a reverse proxy ([nginx.md](nginx.md), [caddy.md](caddy.md), [apache.md](apache.md)) or behind [cloudflare.md](cloudflare.md), with a certificate from [free-certificates.md](free-certificates.md). Puma can also terminate TLS itself, shown below.
+Puma's default bind is `tcp://[::]:9292` when the host has a non-loopback IPv6 address, otherwise `tcp://0.0.0.0:9292` (as of v8.0.2): every interface, plain HTTP. Rails encrypts its session cookie but still sends it in clear unless HTTPS is enforced. Preferred layout: bind Puma to loopback and terminate TLS in a reverse proxy ([nginx.md](nginx.md), [caddy.md](caddy.md), [apache.md](apache.md)) or behind [cloudflare.md](cloudflare.md), with a certificate from [free-certificates.md](free-certificates.md). Puma can also terminate TLS itself, shown below.
 
 ## 1. Bind Puma privately
 
@@ -7231,7 +7231,8 @@ git ls-files config/master.key                                   # prints nothin
 
 - Puma README (binding): https://github.com/puma/puma/blob/aef89221e4d729c3133c723844382331ba3bbbd9/README.md
 - Puma DSL (`bind`, `ssl_bind`, default bind): https://github.com/puma/puma/blob/d70de8b4e926f1f5fa0269dc46cdfadf52562628/lib/puma/dsl.rb
-- Puma configuration defaults (`tcp://[::]:9292`): https://github.com/puma/puma/blob/0daa1a174ae8cc9ab2dd54d4fa09c74ff787bbb9/lib/puma/configuration.rb
+- Puma default TCP port `9292` (`tcp_port: 9292`, L174) and default bind host (L369-L384): `::` when a non-loopback IPv6 interface exists, else `0.0.0.0` (pinned tag v8.0.2): https://github.com/puma/puma/blob/v8.0.2/lib/puma/configuration.rb#L369-L384
+- Puma `UNSPECIFIED_IPV4 = "0.0.0.0"` and `UNSPECIFIED_IPV6 = "::"` (pinned tag v8.0.2): https://github.com/puma/puma/blob/v8.0.2/lib/puma/const.rb#L214-L215
 - Rails configuring guide (`force_ssl`, `assume_ssl`, `ssl_options`, `hosts`, `session_store`, `cookies_same_site_protection`, `require_master_key`): https://guides.rubyonrails.org/configuring.html
 - Action Pack 7.1 changelog (`ActionDispatch::AssumeSSL`): https://github.com/rails/rails/blob/ffcbf6f205363f8c2fb3e9834bc86690dd59f1cb/actionpack/CHANGELOG.md
 - `ActionDispatch::RemoteIp` (trusted proxies, spoofing warning): https://api.rubyonrails.org/classes/ActionDispatch/RemoteIp.html
@@ -21722,7 +21723,7 @@ This row carries the original checks and the new controls together. Configuratio
 
 # Streamlit: TLS and authentication
 
-Streamlit apps have no access control unless you add it, and `streamlit run` listens on all interfaces on port `8501` by default (`server.address` unset, `server.port` `8501`). Decide both layers before exposing an app.
+Streamlit apps have no access control unless you add it, and `streamlit run` listens on all interfaces on port `8501` by default (as of 1.64.0: `server.address` unset, which falls back to `0.0.0.0` and tries `::` first when Python supports IPv6, falling back to `0.0.0.0` if IPv6 is unavailable; `server.port` `8501`, and when that port is busy and was not set explicitly, Streamlit tries up to 100 following ports). Decide both layers before exposing an app.
 
 ## 1. TLS
 
@@ -21732,6 +21733,7 @@ Preferred: keep Streamlit on loopback and terminate TLS in a reverse proxy or tu
 # .streamlit/config.toml
 [server]
 address = "127.0.0.1"
+port = 8501   # set explicitly: an unset port moves to 8502 and up when 8501 is busy, past the proxy and these checks
 ```
 
 Point the proxy at `127.0.0.1:8501` and forward the WebSocket upgrade Streamlit depends on, applying the proxy's authentication to the upgrade as well as to ordinary requests (a separately unprotected WebSocket location bypasses the boundary) and preserving the browser's `Origin` header. For nginx, inside the authenticated `location /` block:
@@ -21853,7 +21855,7 @@ ss -tlnp   # listeners on the origin host; 8501 must be 127.0.0.1 behind a proxy
 
 Then check the application gate in a browser, using the same scheme, hostname, port, and protected page for every comparison. In a fresh profile with no session an anonymous visitor must not see protected content or reach a protected operation; an allowed user who completes the provider's MFA must; and a valid identity outside the allowlist (for the `hd` check, a consumer account) must be denied with nothing rendered. Visit every protected page directly, including administrative ones. A login page, a blank page, or a broken websocket is not a positive control. In an isolated test deployment only, place `st.write("SECURECONFIG_AUTH_CANARY")` after the gate, disable the applicable authentication boundary, and confirm the anonymous visit then reveals the canary; restore protection afterward, and never disable authentication on a public deployment. For a fronting proxy, confirm an unauthenticated websocket upgrade is also denied and that an authenticated browser can establish it.
 
-On the loopback runs, with `server.address` set to `127.0.0.1`, `ss` showed Streamlit only on `127.0.0.1:8501`. With the address unset, `streamlit config show` lists it as unset, and Streamlit 1.64.0's source binds the IPv6 wildcard `::` in that case when `socket.has_ipv6` holds (`_get_bind_address` in `web/server/starlette/starlette_server.py`). That bind is REASONED, because the host forbids listening on every interface. The runs used Caddy and oauth2-proxy on `127.0.0.1:8443`, with TLS files from a private test CA that curl trusted through `CURL_CA_BUNDLE`, and a headless Chrome 154 with an SPKI exception for the test certificate's key.
+On the loopback runs, with `server.address` set to `127.0.0.1`, `ss` showed Streamlit only on `127.0.0.1:8501`. With the address unset, `streamlit config show` lists it as unset, and Streamlit 1.64.0's source tries the IPv6 wildcard `::` first in that case when `socket.has_ipv6` holds, retrying `0.0.0.0` if IPv6 is unavailable (`_get_bind_address` and `_bind_server_socket` in `web/server/starlette/starlette_server.py`). That bind is REASONED, because the host forbids listening on every interface. The runs used Caddy and oauth2-proxy on `127.0.0.1:8443`, with TLS files from a private test CA that curl trusted through `CURL_CA_BUNDLE`, and a headless Chrome 154 with an SPKI exception for the test certificate's key.
 
 The Keycloak realm was served over plain HTTP on loopback. Section 2's example uses an HTTPS metadata URL, as a real provider should. The realm had four users, and three of them had an `hd` user attribute, which a user-attribute mapper, standing in for Google's, maps to an `hd` claim:
 - an allowed user in `example.com` with a verified email and TOTP required;
@@ -21898,6 +21900,10 @@ REASONED, and tracked in backlog row 1.121:
 Source-checked on 2026-09-18 against Streamlit 1.64.0, the current release at the time of writing; `server.address` defaults to unset (all interfaces) and `server.port` to `8501`, and the explicit loopback setting above is required for the fronting-proxy pattern. `st.login()` has been available since the 1.42.0 series.
 
 - config.toml reference (server.address, server.sslCertFile, server.sslKeyFile, and the production warning): https://docs.streamlit.io/develop/api-reference/configuration/config.toml
+- Streamlit `server.address` default unset and `server.port` default `8501` (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/config.py#L1016-L1036
+- Streamlit's unset address falls back to `DEFAULT_SERVER_ADDRESS` `0.0.0.0` and is tried as `::` when `socket.has_ipv6` (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L80-L98
+- Streamlit retries `0.0.0.0` when binding `::` fails with an IPv6-unavailable error (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L139-L160
+- Streamlit's port search: `configured_port + attempt` for up to `MAX_PORT_SEARCH_RETRIES` (100) retries after the configured port, exiting instead on a busy (`EADDRINUSE`) or permission-denied (`EACCES`) port that was set explicitly (a value from `config.toml` counts; `config.py` `is_manually_set`) (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L363-L400
 - Authentication concepts (st.login, st.logout, st.user, [auth] keys, default scope, stated limitations): https://docs.streamlit.io/develop/concepts/connections/authentication
 - st.user API reference (claims copied from the ID token, `st.user.email`): https://docs.streamlit.io/develop/api-reference/user/st.user
 - Streamlit release notes (1.64.0 current; st.login since the 1.42.0 series): https://docs.streamlit.io/develop/quick-reference/release-notes
