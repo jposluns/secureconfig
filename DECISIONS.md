@@ -17,6 +17,41 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **A `TODO.md` row-format gate (ratings and unique ids required), 2026-09-24: declined for now,** on the ground
+  that operational tooling will be standardized by the OPF standard. On 2026-09-25 the maintainer applied the same
+  ground to
+  P1 (the id series), deferring it, and ruled P2 (gating row shape) covered; both are struck in
+  `PENDING-DECISIONS.md`. The option chosen for P1 and P2 read: "Treat both as overtaken by the OPF
+  standardization ruling"; no other reasoning was given.
+
+- **Flower's unix socket.** The maintainer, on Flower creating its socket with mode `0777`: "this is the type of
+  thing that could be easily changed. we should advise checking permissions and adjusting to optimal." So the
+  guide advises how to check and tighten the permissions that govern access, rather than only stating the
+  default (#339).
+
+- **Verify marking: a corpus convention.** Every Verify step states explicitly whether it was demonstrated or
+  reasoned, and the convention is enforced corpus-wide (row 3.20). This overrode my recommendation, which was
+  per-guide judgement with demonstration-debt rows. No reasoning was given beyond the option's text: "Require every
+  Verify step to state demonstrated or reasoned explicitly, enforced corpus-wide."
+
+- **The CSP-hash gate's scope:** refuse any `.xhtml` under `site/`, and scan SVG documents, failing on `<script>`
+  or an `on*` handler (row 3.18). No reasoning was given beyond the option chosen.
+
+- **The weekly lychee sweep:** fail only on dead links (404s). Redirects are listed but do not fail the job (row
+  3.19). No reasoning was given beyond the option chosen.
+
+- **The vendored AIQT files' licence.** The guides stay CC0. The AIQT Guardrails material the repository vendors or
+  adapts, as `.aiqt/PIN` lists it, is Apache-2.0: the pack's LICENSE and NOTICE are vendored into `.aiqt/`, and the
+  CC0 statements in README, CONTRIBUTING, SECURITY and CLAUDE.md/AGENTS.md name the exception (#343). Review found
+  that the earlier pin predated the pack's move to Apache-2.0, so the maintainer ruled to re-pin to an Apache-era
+  commit, rather than grant Apache-2.0 to the pinned versions or label them CC BY-SA 4.0. The maintainer first asked
+  whether relicensing the repository to Apache-2.0 would be easier; the answer given was that it would put
+  redistribution conditions on configuration readers copy, and that earlier releases stay CC0 regardless. They then
+  chose to keep CC0 with the exception. No other reasoning was given.
+
+- **A retroactive full-panel review of #255 and #256:** run it against their current text. This overrode my
+  recommendation, which was to close it without one. No reasoning was given. Its findings are rows 1.136 and 3.17.
+
 - **P4, container ports: option A.** A container port behind a remapped publication is cited in the exposure index
   like any other mention, not allowlisted (#341). *Reasoning (as the chosen option put it):* "a scan from inside
   the container network or a pod sees the container port, so a reader who looks it up should reach the guide."
@@ -245,3 +280,8 @@ Every pattern below cites a ruling recorded above in this file. A pattern whose 
   was overruled toward more rigour, after queue order the same day, which is pattern 4 holding
   twice. The correction stands and is now evidenced rather than inferred: where the choice is
   between a cheaper path and a more thorough one, predict the more thorough one.
+- Verify marking and the retroactive review, both on 2026-09-25. I recommended per-guide judgement for Verify
+  marking; the ruling was a corpus-wide, enforced convention, which is pattern 2 (enforcement over advice)
+  outweighing pattern 1 (per-case judgement). I recommended closing a retroactive review of two merged pull
+  requests without one; the ruling was to run it, and it found defects in both (rows 1.136 and 3.17). Both are
+  pattern 4 again: where the choice is between a cheaper path and a more thorough one, predict the more thorough one.
