@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # Whole-corpus gate suite for secureconfig.
 #
-# Every gate here is deterministic and offline: nothing reaches the network, so
-# a vendor outage or a rate limit can never block a pull request. External link
-# rot is caught separately by the weekly lychee sweep, which stays advisory for
-# that reason.
+# Every gate here is deterministic and offline: no gate reaches the network, so no
+# vendor outage or rate limit can change a gate's answer. The CI job that runs this
+# suite is not offline: .github/workflows/checks.yml fetches its pinned actions,
+# Python and shellcheck before the suite starts, and an outage there can fail the
+# job. External link rot is caught separately by the weekly lychee sweep, which
+# stays advisory so that a site being down cannot block a merge.
 #
 # Usage: tools/run_all_checks.sh   (runs from any directory)
 set -uo pipefail
@@ -419,7 +421,8 @@ echo "== every fenced bash block is shell =="
 if shellblocks=$(python3 tools/check_shell_blocks.py 2>&1); then
   printf '%s\n' "$shellblocks"
   # A gate that exits 0 while printing findings would otherwise read as a pass. A SKIP line
-  # is not a finding: shellcheck may not be installed, which the gate says plainly.
+  # is not a finding: shellcheck may not be installed locally, which the gate says plainly.
+  # CI installs and asserts the pinned shellcheck before this runs, so it never skips there.
   if grep -q '^  FAIL  ' <<< "$shellblocks"; then
     bad "check_shell_blocks.py printed findings but exited 0"
   fi

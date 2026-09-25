@@ -362,8 +362,9 @@ def main() -> int:
         finally:
             shutil.rmtree(stub, ignore_errors=True)
 
-        # The reported version has to be the one that ran, since it is the gate's whole
-        # explanation for a corpus that reddens without changing.
+        # The reported version and path have to be those of the shellcheck that ran, since they
+        # are the gate's whole explanation for a corpus that reddens without changing, and the
+        # path is what shows a CI run linted with the binary the workflow installed and asserted.
         stub = Path(tempfile.mkdtemp())
         try:
             (stub / "shellcheck").write_text(
@@ -372,8 +373,10 @@ def main() -> int:
                 'esac; done\nexit 1\n', encoding="utf-8")
             (stub / "shellcheck").chmod(0o755)
             rc, out = run_against("echo ok", path_prefix=str(stub))
-            if rc or "1.2.3-testing" not in out:
-                failures.append(f"the pass line does not report the version that ran: {out!r}")
+            want = "shellcheck 1.2.3-testing at " + str(stub / "shellcheck")
+            if rc or want not in out:
+                failures.append(f"the pass line does not report the version and path that ran: "
+                                f"{out!r}")
         finally:
             shutil.rmtree(stub, ignore_errors=True)
 
