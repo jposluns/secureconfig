@@ -17,6 +17,10 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **P4, container ports: option A.** A container port behind a remapped publication is cited in the exposure index
+  like any other mention, not allowlisted (#341). *Reasoning (as the chosen option put it):* "a scan from inside
+  the container network or a pod sees the container port, so a reader who looks it up should reach the guide."
+
 - **P3, trap clearing: option A.** Every block that holds a secret clears `trap - DEBUG RETURN ERR`,
   positional-parameter blocks included, and rule 7's fifth condition is reworded to match (#340, row 1.134). The
   same day the maintainer ruled on #340's scope: the two `ai-infra-services.md` credential blocks it touched move
