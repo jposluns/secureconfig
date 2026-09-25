@@ -76,7 +76,7 @@ ss -tlnp   # expect 8080 on loopback or a private address; then probe the public
     -w '\nunauth http=%{http_code} url=%{url_effective} exit=%{exitcode} err=%{errormsg}\n' "$1"
   # 2) Authenticated positive control: paste a cookie from a valid browser session; it enters via stdin
   #    (curl --header @-), never argv. The authenticated response must contain the editor.
-  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function named like a command below
+  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function or alias named like a command below
   set +x +a
   { unset -n code_server_cookie && unset -v code_server_cookie; } 2>/dev/null ||
     { echo 'cannot initialize cookie input; not probing'; exit 2; }
