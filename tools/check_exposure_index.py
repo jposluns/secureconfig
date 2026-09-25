@@ -26,6 +26,13 @@ names the number, one to five digits count; elsewhere two to five do:
     where both sides count: the host side is what a scan sees, the container side is what the
     index rows cite; a Compose-style `- H:C` must end its line, so a bullet such as
     "- 10:30 UTC" is not a mapping;
+  - a backticked published pair in prose or a table cell, the code span holding only `H:C` with
+    the same optional bind host and an optional `/tcp` or `/udp` (`8888:8080`,
+    `127.0.0.1:8888:8080`), both sides counting as for a published mapping; when both sides have
+    exactly two digits they must be equal, so `80:80` is a pair while a clock time, duration or
+    ratio (`10:30`, `45:30`, `70:30`) is not, and since only an IPv4 or bracketed IPv6 host may
+    precede the pair, a bare IPv6 literal or a `file:line:column` reference (`fd00::10:20`,
+    `app.py:120:45`) is not one either;
   - a line-initial `listen` or `bind` directive (`listen 443 ssl;`, `bind *:443`);
   - a Dockerfile `EXPOSE`, every whole port token on the line (`EXPOSE 80 443/tcp`); a malformed
     token (`999999`, `7777.2`) yields nothing;
@@ -40,15 +47,24 @@ separator is read as a port ("port 5432, 10 connections" reads 10) and a YAML li
 a Compose-like key reads as mappings, and "EXPOSE 80 443/udp 8080/sctp" reads 8080 through the
 TCP/UDP shape, all failing closed; "TCP 9000-9010" or "9000-9010/tcp" reads only one end of the
 range; and three forms are not seen at all: an EXPOSE range ("EXPOSE 8080-8090"), an unspaced
-"-p8080:80", and a port split from its "port" word by a hard line wrap.
+"-p8080:80", and a port split from its "port" word by a hard line wrap. The backticked pair,
+added later, has edges of its own, measured when it was added: an equal two-digit time or a
+UID:GID pair alone in a code span (`12:12`, `1000:1000`) reads as a pair and fails closed (none
+present); an unequal two-digit mapping (`80:22`) is skipped with the times it resembles (none
+present); and a pair inside a longer code span, such as a `kubectl port-forward` argument, is not
+seen (one present, whose ports other shapes see).
 A broader net (any `word:N`, or any bare four- or five-digit number) was measured when this gate
 was written and found to be mostly years, sizes, counts and versions, so it is not used.
 
 WHAT COUNTS AS MAPPED. The index table's first column lists single ports, comma lists and
-ranges (`9300 to 9400`, `8000-8010`). A single port, or a range covering at most 101 ports
-(counting both ends), maps its ports for every guide. A range covering more than 101 ports
-(Ray's worker range, coturn's relay range) maps them only for the guides its own row cites,
-because otherwise it would silently cover every high port in the corpus.
+ranges (`9300 to 9400`, `8000-8010`). A row maps its ports only for the guides it cites, so a
+mention is mapped when a row listing that port cites the mentioning guide. When the index lists
+the port as a single port or in a range covering at most 101 ports (counting both ends), but no
+row listing it cites the guide, the mention is UNCITED: a reader who looks the port up is never
+sent to that guide, and the fix is to cite it on the row. A port that only a range covering more
+than 101 ports lists (Ray's worker range, coturn's relay range) is not mapped at all for a guide
+that range's row does not cite, because such a range would otherwise cover every high port in
+the corpus; the fix there is a row of its own.
 
 ROW SHAPE. The page must open with a `# ` heading (so no front matter), and the header line must
 appear exactly once, flush left, with a blank line directly above it and no `<`, `$` or
@@ -70,12 +86,12 @@ the Documented in cell outside code spans. "not stated" is the credential value 
 guides are silent. A row that breaks this fails the gate and maps nothing.
 
 ALLOWLIST. tools/exposure_index_allowlist.txt lists `<guide> <port>  # reason` pairs that match a
-pattern but are not listeners this corpus documents (an outbound destination, an illustrative
-number). An entry fails the gate when it is STALE (no mention of that port remains in that
-guide) or REDUNDANT (the mention remains but the index now maps it), so the list cannot outlive
-the text or the gap it excuses.
+pattern but are not listeners that guide documents (an outbound destination, an illustrative
+number), whether the mention is unmapped or uncited. An entry fails the gate when it is STALE (no
+mention of that port remains in that guide) or REDUNDANT (the mention remains but the index now
+maps it for that guide), so the list cannot outlive the text or the gap it excuses.
 
-Exit status: 0 when every mention is mapped or allowlisted, every allowlist entry is still
+Exit status: 0 when every mention is mapped for its guide or allowlisted, every entry is still
 needed, and every index row is well formed; 1 otherwise; 2 when the exact header line cannot be
 found. Everything is offline and reads files as UTF-8. tools/test_exposure_index.py drives this
 script against throwaway trees.
@@ -143,6 +159,9 @@ PATTERNS = {
     "compose": re.compile(
         r"""^\s*-\s*["']?""" + HOSTPFX + r"(\d{2,5}):(\d{2,5})" + END
         + r"""(?=(?:/(?:tcp|udp))?["']?\s*(?:$|#))"""),
+    # a code span holding only a `[host:]H:C` pair (`8888:8080`, `127.0.0.1:8888:8080`); mentions()
+    # drops two unequal two-digit sides, which read as a time, duration or ratio (`10:30`, `70:30`)
+    "tick_mapping": re.compile(r"`" + HOSTPFX + r"(\d{2,5}):(\d{2,5})(?:/(?i:tcp|udp))?`"),
     "listen": re.compile(r"(?i)^\s*(?:listen|bind)\s+(?:\[?[\w.:*]*\]?:)?" + N + END),
     "expose": re.compile(r"^\s*EXPOSE\s+(.+)$"),
     "port_key": re.compile(
@@ -230,10 +249,11 @@ def port_cell_ok(cell: str) -> bool:
 
 
 def parse_index(root: Path):
-    """Return (explicit_ports, wide_cites, malformed) from the index table, or None if it is missing.
+    """Return (explicit_cites, wide_cites, malformed) from the index table, or None if it is missing.
 
-    explicit_ports maps a port for every guide; wide_cites[port] is the set of guides a wide
-    range maps that port for; malformed lists (line, label, problem) for a page that does not
+    explicit_cites[port] is the set of guides cited by the rows that list the port singly or in a
+    range of at most WIDE ports; wide_cites[port] is the same for the wider ranges (see WHAT
+    COUNTS AS MAPPED); malformed lists (line, label, problem) for a page that does not
     open with a `# ` heading, a missing blank line above the header, `<`, `$` or a fence marker
     above it, a repeated header, a missing or wrong separator row, and every table line that
     breaks the row grammar (see ROW SHAPE). A malformed row maps nothing.
@@ -246,7 +266,7 @@ def parse_index(root: Path):
         return None
     header = lines.index(TABLE_HEADER)
     start = header + 1
-    explicit, wide_cites, malformed = set(), {}, []
+    explicit, wide_cites, malformed = {}, {}, []
     # The table must be the one GitHub renders. Rather than model which containers above it could
     # swallow it (a list item, a blockquote, an HTML block, a fence opened inside a list item), the
     # page above the header is held to a whitelist: it opens with a `# ` heading (so no front
@@ -300,8 +320,10 @@ def parse_index(root: Path):
                 for p in range(lo, hi + 1):
                     wide_cites.setdefault(p, set()).update(cited)
             else:
-                explicit.update(range(lo, hi + 1))
-        explicit.update(int(n) for n in re.findall(r"\d+", RANGE.sub("", port)))
+                for p in range(lo, hi + 1):
+                    explicit.setdefault(p, set()).update(cited)
+        for n in re.findall(r"\d+", RANGE.sub("", port)):
+            explicit.setdefault(int(n), set()).update(cited)
     return explicit, wide_cites, malformed
 
 
@@ -322,6 +344,9 @@ def mentions(path: Path):
             for m in rx.finditer(line):
                 if name in ("prose_port", "prose_ports"):
                     nums = [m.group(1)] + re.findall(r"\d{1,5}", m.group(2) or "")
+                elif name == "tick_mapping":
+                    host, cont = m.group(1), m.group(2)
+                    nums = [] if len(host) == len(cont) == 2 and host != cont else [host, cont]
                 elif name in ("publish", "compose", "tick_range"):
                     nums = [m.group(1), m.group(2)]
                 elif name == "expose":
@@ -357,37 +382,43 @@ def main() -> int:
         return 2
     explicit, wide_cites, malformed = parsed
     allow = load_allowlist(root)
-    used, mapped_mentions, gaps = set(), set(), []
+    used, mapped_mentions, gaps, uncited = set(), set(), [], []
     for path in guides(root):
         for ln, port in mentions(path):
-            if port in explicit or path.name in wide_cites.get(port, ()):
+            if path.name in explicit.get(port, ()) or path.name in wide_cites.get(port, ()):
                 mapped_mentions.add((path.name, port))
                 continue
             if (path.name, port) in allow:
                 used.add((path.name, port))
                 continue
-            gaps.append((path.name, ln, port))
+            # listed singly or in a narrow range, but on no row that cites this guide: uncited
+            (uncited if port in explicit else gaps).append((path.name, ln, port))
     unneeded = sorted(set(allow) - used)
     for name, ln, port in gaps:
         print(f"EXPOSURE-INDEX: {name}:{ln} names port {port}, which {INDEX} does not map "
               f"(add a row, or allowlist it with a reason in {ALLOWLIST})")
+    for name, ln, port in uncited:
+        print(f"EXPOSURE-INDEX: {name}:{ln} names port {port}, which {INDEX} lists on no row that "
+              f"cites {name} (cite it on the row, or allowlist it with a reason in {ALLOWLIST})")
     for name, port in unneeded:
         where = f"{ALLOWLIST}:{allow[(name, port)]}"
         if (name, port) in mapped_mentions:
             print(f"EXPOSURE-INDEX: redundant allowlist entry `{name} {port}` ({where}): {INDEX} "
-                  f"now maps it; remove the entry")
+                  f"now maps it for that guide; remove the entry")
         else:
             print(f"EXPOSURE-INDEX: stale allowlist entry `{name} {port}` ({where}) matches no "
                   f"mention; remove it")
     pairs = len({(n, p) for n, _, p in gaps})
+    uncited_pairs = len({(n, p) for n, _, p in uncited})
     for ln, first, problem in malformed:
         print(f"EXPOSURE-INDEX: {INDEX}:{ln} row `{first}` {problem}")
-    if gaps or unneeded or malformed:
-        print(f"FAIL: {pairs} unmapped guide/port pair(s), {len(unneeded)} allowlist entr(y/ies) "
-              f"no longer needed, {len(malformed)} malformed index row(s)")
+    if gaps or uncited or unneeded or malformed:
+        print(f"FAIL: {pairs} unmapped guide/port pair(s), {uncited_pairs} uncited guide/port "
+              f"pair(s), {len(unneeded)} allowlist entr(y/ies) no longer needed, {len(malformed)} "
+              f"malformed index row(s)")
         return 1
-    print(f"PASS: every port mention in the guides is mapped by {INDEX} or allowlisted "
-          f"({len(allow)} allowlisted)")
+    print(f"PASS: every port mention in the guides is mapped by a row of {INDEX} that cites its "
+          f"guide, or allowlisted ({len(allow)} allowlisted)")
     return 0
 
 

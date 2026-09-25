@@ -3,8 +3,9 @@
 
 Every case builds a temporary tree (its own tools/, an exposure-index.md and guides) and runs the
 real gate as a subprocess, so the gate's root resolution is exercised end to end. The fixture
-index maps 80, 443, 9090, the narrow range 8000-8010, a 101-port range 10000 to 10100 (the most
-that still maps for every guide) and a 102-port range 20000 to 20101 cited only by ray.md.
+index lists 80, 443, 9090, the narrow range 8000-8010 and a 101-port range 10000 to 10100 (the
+widest range whose uncited mentions are reported as uncited rather than unmapped), all cited by
+a.md, and a 102-port range 20000 to 20101 cited only by ray.md.
 
 Detection: at least one case per port shape, each naming an unmapped port 7777 (or 7). A mutation
 check (deleting each shape in turn) confirmed that every shape is needed by at least one case:
@@ -21,17 +22,26 @@ check (deleting each shape in turn) confirmed that every shape is needed by at l
   host on a published mapping "-p 10.0.0.5:7777:9090"; D32 "bind *:7777"; D33 a backticked
   "TCP `7777`"; D34-D36 the "or", "through" and hyphen list separators; D37 "127.0.0.2:7777";
   D38-D39 a backticked range after a camel-case or `_port` identifier; D40-D41 capitalized "To" and
-  "THROUGH" separators in a backticked range.
+  "THROUGH" separators in a backticked range; D42-D45 a backticked pair: the host side in prose,
+  the container side in a table cell with an IPv4 bind host and after a bracketed IPv6 bind host
+  with `/udp`, and an equal two-digit pair `77:77`.
 Precision: N1 "TCP 192.168.1.1"; N2 "TCP 7777.2"; N3 "--support=2026" and "--export 2024";
   N4 "transport: 2026" and "report: 2024"; N5 "- 10:30 UTC"; N6 "port 7,777" (an
   unmapped number, so only the thousands rule passes it); N7 versions,
   years and counts in prose; N8 a backticked range with no "port" in the clause; N9 "EXPOSE 999999"
   and N10 "EXPOSE 7777.2" (malformed tokens yield nothing); N11 "report" is not the word "port";
-  N12 a decimal list item "7777.5"; N13 a dotted "1.7777/tcp" is not a port.
-Mapping: M1 a mapped port passes; M2 a narrow range maps for every guide; M3 a 101-port range maps
-  for every guide; M4 a 102-port range maps only for its cited guide (ray.md passes, b.md fails);
+  N12 a decimal list item "7777.5"; N13 a dotted "1.7777/tcp" is not a port; N14 a backticked time
+  `10:30`, N15 a ratio `70:30`, N16 a bare IPv6 literal and N17 a `file:line:column` reference in
+  backticks are not pairs.
+Mapping: M1 a mapped port passes; M2 a narrow range and M3 a 101-port range map for their cited
+  guide; M4 a 102-port range maps only for its cited guide (ray.md passes, b.md fails as unmapped);
   M5 a cited link with an anchor still counts as cited; M6 a compact plural list of mapped ports;
   M7 an index range written with an en dash maps its ports.
+Citation: C1 a mention of a listed port on no row that cites the guide fails as uncited; C2 the
+  same pair allowlisted passes; C3 the same pair cited on its row passes; C4 an uncited mention in
+  a 101-port range is uncited, not unmapped as in M4; C5 a port on two rows maps for the guides
+  either row cites; C6 both sides of a backticked pair are checked per guide; C7 an allowlist entry
+  for a pair its row now cites fails as redundant.
 Allowlist: A1 an allowlisted pair passes; A2 a stale entry fails; A3 a redundant entry (the port is
   now mapped) fails as redundant.
 Other: O1 meta files are not scanned; O2 a missing index table fails closed with exit 2; O3 a port
@@ -141,6 +151,10 @@ DETECT = [
     ("D39", "The rtc_port range is `7700` to `7777`.", 7777),
     ("D40", "The port range is `7700` To `7777`.", 7777),
     ("D41", "The port range is `7700` THROUGH `7777`.", 7777),
+    ("D42", "The Compose file publishes `7777:9090` on every interface.", 7777),
+    ("D43", "| Svc | `127.0.0.1:9090:7777` | every interface |", 7777),
+    ("D44", "It publishes `[::]:9090:7777/udp` by default.", 7777),
+    ("D45", "It publishes `77:77` on every interface.", 77),
 ]
 PRECISE = [
     ("N1", "The gateway is TCP 192.168.1.1 on the LAN."),
@@ -156,6 +170,10 @@ PRECISE = [
     ("N11", "The report covers years `2020` to `2026`."),
     ("N12", "It listens on ports 80,7777.5 in the release notes."),
     ("N13", "See section 1.7777/tcp of the spec."),
+    ("N14", "The job runs at `10:30` each day."),
+    ("N15", "Traffic splits `70:30` between the pools."),
+    ("N16", "The ULA `fd00::7777:7778` is private."),
+    ("N17", "The trace points at `server.py:7777:12`."),
 ]
 
 
@@ -178,10 +196,10 @@ def main() -> int:
 
     rc, out = run(guide("It listens on port 9090 and port 443."))
     check(f"M1: mapped ports pass (rc={rc}, out={out!r})", rc == 0)
-    rc, out = run({"b.md": "# B\n\nThe API uses port 8005.\n"})
-    check(f"M2: a narrow range maps for every guide (rc={rc}, out={out!r})", rc == 0)
-    rc, out = run({"b.md": "# B\n\nThe worker uses port 10100.\n"})
-    check(f"M3: a 101-port range maps for every guide (rc={rc}, out={out!r})", rc == 0)
+    rc, out = run(guide("The API uses port 8005."))
+    check(f"M2: a narrow range maps for its cited guide (rc={rc}, out={out!r})", rc == 0)
+    rc, out = run(guide("The worker uses port 10100."))
+    check(f"M3: a 101-port range maps for its cited guide (rc={rc}, out={out!r})", rc == 0)
     rc, out = run({"ray.md": "# Ray\n\nWorkers use port 20101.\n",
                    "b.md": "# B\n\nThe proxy uses port 20101.\n"})
     check(f"M4: a 102-port range maps only for its cited guide (rc={rc}, out={out!r})",
@@ -191,7 +209,7 @@ def main() -> int:
     rc, out = run(guide("It listens on ports 80,443 by default."))
     check(f"M6: a compact plural list of mapped ports passes (rc={rc}, out={out!r})", rc == 0)
     rc, out = run({"b.md": "# B\n\nThe API uses port 30005.\n"},
-                  index=INDEX + "| 30000\N{EN DASH}30010 | An en-dash range | not stated | [a.md](a.md) |\n")
+                  index=INDEX + "| 30000\N{EN DASH}30010 | An en-dash range | not stated | [b.md](b.md) |\n")
     check(f"M7: an en-dash index range maps its ports (rc={rc}, out={out!r})", rc == 0)
 
     rc, out = run(guide("It connects out to port 7777."), allow="a.md 7777  # outbound\n")
@@ -202,6 +220,32 @@ def main() -> int:
     rc, out = run(guide("It listens on port 9090."), allow="a.md 9090  # example\n")
     check(f"A3: a redundant entry fails as redundant (rc={rc}, out={out!r})",
           rc == 1 and "redundant allowlist entry `a.md 9090`" in out)
+
+    b9090 = {"b.md": "# B\n\nThe API uses port 9090.\n"}
+    cites_b = INDEX.replace("| No authentication by default | [a.md](a.md) |",
+                            "| No authentication by default | [a.md](a.md), [b.md](b.md) |", 1)
+    rc, out = run(b9090)
+    check(f"C1: an uncited mention of a listed port fails as uncited (rc={rc}, out={out!r})",
+          rc == 1 and "b.md:3 names port 9090, which exposure-index.md lists on no row that cites b.md"
+          in out and "1 uncited guide/port pair(s)" in out)
+    rc, out = run(b9090, allow="b.md 9090  # illustrative\n")
+    check(f"C2: the same uncited pair allowlisted passes (rc={rc}, out={out!r})",
+          rc == 0 and "1 allowlisted" in out)
+    rc, out = run(b9090, index=cites_b)
+    check(f"C3: the same pair cited on its row passes (rc={rc}, out={out!r})", rc == 0)
+    rc, out = run({"b.md": "# B\n\nThe worker uses port 10100.\n"})
+    check(f"C4: an uncited mention in a 101-port range is uncited, not unmapped (rc={rc}, out={out!r})",
+          rc == 1 and "b.md:3 names port 10100, which exposure-index.md lists on no row that cites b.md"
+          in out and "does not map" not in out)
+    rc, out = run(b9090, index=INDEX + "| 9090, 9091 | Another | not stated | [b.md](b.md) |\n")
+    check(f"C5: a port on two rows maps for the guides either row cites (rc={rc}, out={out!r})", rc == 0)
+    rc, out = run({"b.md": "# B\n\nIt publishes `8005:9090` on every interface.\n"})
+    check(f"C6: both sides of a backticked pair are checked per guide (rc={rc}, out={out!r})",
+          rc == 1 and "names port 8005, which" in out and "names port 9090, which" in out
+          and "2 uncited guide/port pair(s)" in out)
+    rc, out = run(b9090, allow="b.md 9090  # illustrative\n", index=cites_b)
+    check(f"C7: an allowlist entry for a pair its row now cites is redundant (rc={rc}, out={out!r})",
+          rc == 1 and "redundant allowlist entry `b.md 9090`" in out)
 
     rc, out = run({"CONTRIBUTING.md": "# Contributing\n\nUse port 7777 in examples.\n",
                    "a.md": "# A\n\nport 9090\n"})
@@ -365,7 +409,7 @@ def main() -> int:
     check(f"R55: a math block opened above the table fails (rc={rc}, out={out!r})",
           rc == 1 and "puts `$` above the table" in out)
 
-    total = len(DETECT) + len(PRECISE) + 7 + 3 + 4 + 55
+    total = len(DETECT) + len(PRECISE) + 7 + 7 + 3 + 4 + 55
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")
