@@ -22,8 +22,8 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   words were "Draft the CONTRIBUTING PR now". The question's framing was coturn's `turnutils_uclient`, reported to
   take the TURN password only as `-w` and the TURN REST secret only as `-W` at coturn 4.18.0
   (`src/apps/uclient/mainuclient.c`, with no getenv, getpass, stdin or fopen path for either), and #353, which
-  discloses that exposure in `realtime-voice-infra.md` rather than removing it. The clause's terms, among them, are
-  those of #354 as merged: pinned-source proof that no non-argv input exists, a preferred alternative where one
+  discloses that exposure in `realtime-voice-infra.md` rather than removing it. The clause's terms are those of
+  #354 as merged, among them: pinned-source proof that no non-argv input exists, a preferred alternative where one
   exists, a guarded hidden prompt, disclosure of process-lifetime argv exposure, and a throwaway or short-lived
   credential on a host with no untrusted local account. No reasoning was given beyond the question's framing. On
   2026-09-25T17:41Z, asked whether `realtime-voice-infra.md` should be brought into line with the clause in this
