@@ -24768,14 +24768,18 @@ the command line where they are readable in the process list ([secrets.md](secre
 ([mfa.md](mfa.md)), and bind `--address=127.0.0.1` behind a proxy rather than relying on Basic Auth as the only
 control.
 
-With `--unix_socket`, Flower v2.2.0 sets the socket file's mode to `0777` each time it starts, deleting any socket
-left at that path and creating a new one, and it has no option to change the mode. On Linux, connecting to the
-socket needs write permission on it and search permission on every directory in its path, so the socket's mode
-admits every local account that can reach the directory, and a `chmod` of the socket is undone at the next start.
-Put the socket in a directory of its own that only Flower's user and the proxy's group can search (for example
-owned by the Flower user, group the proxy's, mode `0750`), check the directory's permissions after each deployment
-change, and tighten them if anyone else can search it. Some other systems ignore socket-file permissions entirely,
-so the directory is the control there too.
+With `--unix_socket` set to a filesystem path, Flower v2.2.0 passes Tornado a fixed mode, `0o777`, for the socket
+file: each start deletes any socket left at that path, creates a new one and applies that mode, so a `chmod` of the
+socket is undone at the next start. On Linux, connecting needs write permission on the socket and search permission
+on every directory in its path, so the socket's mode lets any unprivileged local account that can search the
+directory connect (root, and a process with `CAP_DAC_OVERRIDE` or `CAP_DAC_READ_SEARCH`, can reach it regardless).
+Put the socket in a directory of its own, owned by Flower's user, with a group that only the proxy uses and mode
+`0750`, and with no ACL entry that grants anyone else search. Set that owner, group and mode in whatever creates the
+directory, because files under `/run` are cleared at boot and systemd's `RuntimeDirectory=` creates its directory
+with mode `0755` unless `RuntimeDirectoryMode=` sets another. When the proxy runs in another container and shares
+the directory through a volume, permissions are checked against numeric IDs, not names, so the proxy's group ID
+must be the directory's group ID. Use a filesystem path, never an abstract socket name (one beginning with a NUL
+byte): Tornado applies no mode to such a name, and on Linux file permissions have no meaning for abstract sockets.
 
 ## Argo Workflows
 
@@ -24872,10 +24876,13 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
   -w '\nflower-api http=%{http_code} exit=%{exitcode}\n' http://flower.internal:5555/api/workers
 
-# Flower on a unix socket: reasoned, not demonstrated; this authoring environment has no Flower install. The
-# directory holding the socket must not grant search (x) to "other", and its group should be the proxy's; the
-# socket itself shows 777 by design. Substitute your socket's directory and path.
+# Flower on a unix socket: reasoned, not demonstrated; this authoring environment has no Flower install. Expect
+# the directory to show 750 with Flower's user and the proxy-only group; the socket shows 777 by design. The mode
+# bits omit ACLs, so getfacl (from the acl package) should list only user::, group:: and other:: entries, with
+# other::---; a named user: or group: entry with x lets that account reach the socket. Recheck after each reboot
+# and deployment change. Substitute your socket's directory and path.
 stat -c '%a %U:%G %n' /run/flower /run/flower/flower.sock
+getfacl -p /run/flower
 
 # Argo: reasoned, not demonstrated; this authoring environment has no container runtime or Kubernetes test
 # deployment. Server mode: an anonymous HTTP 200 containing a workflow list, even empty, is the finding,
@@ -24961,7 +24968,7 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
 - Flower, configuration (`--address`, `--port` 5555 default, `--basic-auth`, `--auth_provider`, `--oauth2_key`,
   `--oauth2_secret`, `--oauth2_redirect_uri`, `--auth`): https://flower.readthedocs.io/en/latest/config.html
 - Flower `port` default 5555, `address` default `''` and the `unix_socket` branch, the `FLOWER_` environment variables, and the implicit `flowerconfig.py` load from the working directory (pinned tag v2.2.0), with Tornado's `bind_sockets` treating an empty address as all interfaces (pinned tag v6.5.10): https://github.com/mher/flower/blob/v2.2.0/flower/options.py#L7-L15, https://github.com/mher/flower/blob/v2.2.0/flower/options.py#L56-L57, https://github.com/mher/flower/blob/v2.2.0/flower/command.py#L39-L91, https://github.com/mher/flower/blob/v2.2.0/flower/app.py#L71-L76 and https://github.com/tornadoweb/tornado/blob/v6.5.10/tornado/netutil.py#L72-L73
-- Flower `--unix_socket` sets the socket's mode to `0o777` (pinned tag v2.2.0); Tornado's `bind_unix_socket` removes an existing socket at the path, binds, then applies that mode (pinned tag v6.5.10); on Linux, connecting to a stream socket needs write permission on it, some systems ignore socket permissions, and path lookup needs search permission on each directory: https://github.com/mher/flower/blob/v2.2.0/flower/app.py#L85-L89, https://github.com/tornadoweb/tornado/blob/v6.5.10/tornado/netutil.py#L215-L226, https://man7.org/linux/man-pages/man7/unix.7.html and https://man7.org/linux/man-pages/man7/path_resolution.7.html
+- Flower `--unix_socket` passes the fixed mode `0o777` (pinned tag v2.2.0); Tornado's `bind_unix_socket` removes an existing socket at a filesystem path, binds, then applies that mode, and binds a name with a leading NUL with no mode (pinned tag v6.5.10); on Linux, connecting to a stream socket needs write permission on it and file permissions have no meaning for abstract sockets, path lookup needs search permission on each directory, and `CAP_DAC_OVERRIDE` and `CAP_DAC_READ_SEARCH` override those checks; `RuntimeDirectoryMode=` defaults to `0755` (systemd v257); files under `/run` must be cleared at the beginning of the boot process (FHS 3.0); ACL entries beyond the mode bits: https://github.com/mher/flower/blob/v2.2.0/flower/app.py#L85-L89, https://github.com/tornadoweb/tornado/blob/v6.5.10/tornado/netutil.py#L215-L228, https://man7.org/linux/man-pages/man7/unix.7.html, https://man7.org/linux/man-pages/man7/path_resolution.7.html, https://github.com/systemd/systemd/blob/v257/man/systemd.exec.xml#L1630-L1640, https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch03s15.html and https://man7.org/linux/man-pages/man5/acl.5.html
 - Argo Workflows, [auth modes](https://argo-workflows.readthedocs.io/en/release-3.7/argo-server-auth-mode/),
   [server flags and default port 2746](https://argo-workflows.readthedocs.io/en/release-3.7/cli/argo_server/),
   [TLS](https://argo-workflows.readthedocs.io/en/release-3.7/tls/),
