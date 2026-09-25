@@ -18080,7 +18080,7 @@ Meilisearch supports native HTTPS with `--ssl-cert-path` and `--ssl-key-path`; t
 
 ## Typesense
 
-Typesense requires a bootstrap key at startup, set with the `--api-key` server parameter (a required parameter; the server will not start without it); that key has "admin permissions on all endpoints and data." Use the bootstrap key to create a separately revocable operational key through the `/keys` API, then use that operational key for routine administration; rotate the operational key through the API, while the bootstrap key remains a startup credential supplied through `TYPESENSE_API_KEY` or a protected configuration file rather than command-line arguments. Typesense listens on `0.0.0.0:8108` by default (`--api-address`/`--api-port`), so for a same-host proxy set `--api-address=127.0.0.1 --api-port=8108`; its separate peering service defaults to port `8107`, so select a private peering address and restrict it to cluster members ([cloud-firewalls.md](cloud-firewalls.md)).
+Typesense requires a bootstrap key at startup, set with the `--api-key` server parameter (a required parameter; the server will not start without it); that key has "admin permissions on all endpoints and data." Use the bootstrap key to create a separately revocable operational key through the `/keys` API, then use that operational key for routine administration; rotate the operational key through the API, while the bootstrap key remains a startup credential supplied through `TYPESENSE_API_KEY` or a protected configuration file rather than command-line arguments. Typesense listens on `0.0.0.0:8108` by default (as of v30.2; `--api-address`/`--api-port`), so for a same-host proxy set `--api-address=127.0.0.1 --api-port=8108`; its separate peering service defaults to port `8107`, so select a private peering address and restrict it to cluster members ([cloud-firewalls.md](cloud-firewalls.md)).
 
 Create a parent search-only key through the same `/keys` endpoint:
 
@@ -18269,6 +18269,7 @@ Version scope: Typesense 30.2; Meilisearch current unversioned documentation che
 - Meilisearch master API keys (MEILI_MASTER_KEY, the four default API keys): https://www.meilisearch.com/docs/resources/self_hosting/security/master_api_keys
 - Typesense data access control (bootstrap api-key, /keys, actions, collections, filter_by, include_fields/exclude_fields, expires_at): https://typesense.org/docs/guide/data-access-control.html
 - Typesense 30.2 server configuration (api-key required, api-address default 0.0.0.0, api-port 8108, peering-port 8107, ssl-certificate): https://typesense.org/docs/30.2/api/server-configuration.html
+- Typesense `api-address` default `0.0.0.0`, `api-port` default 8108 and `peering-port` default 8107 (pinned tag v30.2): https://github.com/typesense/typesense/blob/v30.2/src/typesense_server_utils.cpp#L81-L85
 - Typesense 30.2 API keys (parent search-only key, scoped-key derivation, description): https://typesense.org/docs/30.2/api/api-keys.html
 - Typesense 30.2 collections (collection creation and schema fields): https://typesense.org/docs/30.2/api/collections.html
 - Typesense v30.2 authorization failure (401): https://raw.githubusercontent.com/typesense/typesense/v30.2/src/http_server.cpp
@@ -21251,7 +21252,7 @@ vLLM's server supports requiring an API key; check `vllm serve --help` on your i
 
 ## Hugging Face Text Generation Inference (TGI)
 
-`text-generation-launcher` listens on `0.0.0.0:3000` by default (`--hostname`, env `HOSTNAME`; `--port`, env `PORT`), so a bare TGI container answers on every interface. Bind it to loopback, or publish nothing from the container network except the proxy:
+`text-generation-launcher` listens on `0.0.0.0:3000` by default (as of v3.3.7; `--hostname`, env `HOSTNAME`; `--port`, env `PORT`), so a bare TGI container answers on every interface. Bind it to loopback, or publish nothing from the container network except the proxy:
 
 Lifecycle note, as of September 2026: the TGI repository is in maintenance mode and was archived on 2026-03-21 (read-only). Hugging Face recommends vLLM, SGLang, or local engines such as llama.cpp going forward. A server that no longer receives fixes belongs behind the same controls as any other, and on a migration list.
 
@@ -21371,6 +21372,7 @@ For text-generation-webui, ask the API edge for the model list without a key. Th
 - vLLM server socket bind (the launcher builds `(args.host or "", port)`, so an unset host binds every IPv4 interface, and renders the empty host as `0.0.0.0` in the startup log; checked 2026-09-14): https://github.com/vllm-project/vllm/blob/8c1557a79c539ffe82d004d2a0c8d7b5e71159ce/vllm/entrypoints/launchers/launcher.py
 - vLLM security, API key authentication limitations (protected prefixes, unprotected `/invocations` and profiler routes): https://docs.vllm.ai/en/latest/usage/security/
 - TGI launcher arguments (--hostname, --port, --api-key, --prometheus-port): https://huggingface.co/docs/text-generation-inference/reference/launcher
+- TGI launcher `hostname` default `0.0.0.0` and `port` default 3000, each also read from the environment (pinned tag v3.3.7, the last release before the repository was archived): https://github.com/huggingface/text-generation-inference/blob/v3.3.7/launcher/src/main.rs#L769-L774
 - TGI router source (what --api-key enforces): https://github.com/huggingface/text-generation-inference/blob/24ee40d143d8d046039f12f76940a85886cbe152/router/src/server.rs
 - TGI repository (maintenance-mode notice, archived 2026-03-21): https://github.com/huggingface/text-generation-inference
 - SGLang server arguments (--host, --port, --api-key, --admin-api-key, SSL flags; docs.sglang.ai redirects here): https://docs.sglang.io/docs/advanced_features/server_arguments
@@ -21853,7 +21855,7 @@ ss -tlnp   # listeners on the origin host; 8501 must be 127.0.0.1 behind a proxy
 
 Then check the application gate in a browser, using the same scheme, hostname, port, and protected page for every comparison. In a fresh profile with no session an anonymous visitor must not see protected content or reach a protected operation; an allowed user who completes the provider's MFA must; and a valid identity outside the allowlist (for the `hd` check, a consumer account) must be denied with nothing rendered. Visit every protected page directly, including administrative ones. A login page, a blank page, or a broken websocket is not a positive control. In an isolated test deployment only, place `st.write("SECURECONFIG_AUTH_CANARY")` after the gate, disable the applicable authentication boundary, and confirm the anonymous visit then reveals the canary; restore protection afterward, and never disable authentication on a public deployment. For a fronting proxy, confirm an unauthenticated websocket upgrade is also denied and that an authenticated browser can establish it.
 
-On the loopback runs, with `server.address` set to `127.0.0.1`, `ss` showed Streamlit only on `127.0.0.1:8501`. With the address unset, `streamlit config show` lists it as unset, and Streamlit 1.64.0's source binds the IPv6 wildcard `::` in that case when `socket.has_ipv6` holds (`_get_bind_address` in `web/server/starlette/starlette_server.py`). That bind is REASONED, because the host forbids listening on every interface. The runs used Caddy and oauth2-proxy on `127.0.0.1:8443`, with TLS files from a private test CA that curl trusted through `CURL_CA_BUNDLE`, and a headless Chrome 154 with an SPKI exception for the test certificate's key.
+On the loopback runs, with `server.address` set to `127.0.0.1`, `ss` showed Streamlit only on `127.0.0.1:8501`. With the address unset, `streamlit config show` lists it as unset, and Streamlit 1.64.0's source tries the IPv6 wildcard `::` first in that case when `socket.has_ipv6` holds, retrying `0.0.0.0` if IPv6 is unavailable (`_get_bind_address` and `_bind_server_socket` in `web/server/starlette/starlette_server.py`). That bind is REASONED, because the host forbids listening on every interface. The runs used Caddy and oauth2-proxy on `127.0.0.1:8443`, with TLS files from a private test CA that curl trusted through `CURL_CA_BUNDLE`, and a headless Chrome 154 with an SPKI exception for the test certificate's key.
 
 The Keycloak realm was served over plain HTTP on loopback. Section 2's example uses an HTTPS metadata URL, as a real provider should. The realm had four users, and three of them had an `hd` user attribute, which a user-attribute mapper, standing in for Google's, maps to an `hd` claim:
 - an allowed user in `example.com` with a verified email and TOTP required;
@@ -21899,8 +21901,9 @@ Source-checked on 2026-09-18 against Streamlit 1.64.0, the current release at th
 
 - config.toml reference (server.address, server.sslCertFile, server.sslKeyFile, and the production warning): https://docs.streamlit.io/develop/api-reference/configuration/config.toml
 - Streamlit `server.address` default unset and `server.port` default `8501` (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/config.py#L1016-L1036
-- Streamlit's unset address falls back to `DEFAULT_SERVER_ADDRESS` `0.0.0.0` and is tried as `::` when `socket.has_ipv6` (L80-L98), retrying `0.0.0.0` on an IPv6-unavailable error (L139-L160) (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L80-L98
-- Streamlit's port search: `configured_port + attempt` for up to `MAX_PORT_SEARCH_RETRIES` (100) retries after the configured port, exiting instead when a busy or reserved port was set explicitly (a value from `config.toml` counts; `config.py` `is_manually_set`) (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L363-L400
+- Streamlit's unset address falls back to `DEFAULT_SERVER_ADDRESS` `0.0.0.0` and is tried as `::` when `socket.has_ipv6` (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L80-L98
+- Streamlit retries `0.0.0.0` when binding `::` fails with an IPv6-unavailable error (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L139-L160
+- Streamlit's port search: `configured_port + attempt` for up to `MAX_PORT_SEARCH_RETRIES` (100) retries after the configured port, exiting instead on a busy (`EADDRINUSE`) or permission-denied (`EACCES`) port that was set explicitly (a value from `config.toml` counts; `config.py` `is_manually_set`) (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L363-L400
 - Authentication concepts (st.login, st.logout, st.user, [auth] keys, default scope, stated limitations): https://docs.streamlit.io/develop/concepts/connections/authentication
 - st.user API reference (claims copied from the ID token, `st.user.email`): https://docs.streamlit.io/develop/api-reference/user/st.user
 - Streamlit release notes (1.64.0 current; st.login since the 1.42.0 series): https://docs.streamlit.io/develop/quick-reference/release-notes
@@ -29269,7 +29272,7 @@ that PostgREST serves an OpenAPI description at the root path whose contents fol
 role's privileges by default, so a broad anonymous role also broadens what an unauthenticated caller
 can enumerate. Set `jwt-secret` (`PGRST_JWT_SECRET`) to a cryptographically random value of at least 32
 characters; if a token is sent while it is unset, the request fails with `PGRST300` (HTTP 500). The
-server binds to every IPv4 interface by default (`server-host` defaults to `!4`, on port 3000), so set
+server binds to every IPv4 interface by default (`server-host` defaults to `!4`, on port 3000, as of v16.4), so set
 `server-host` to `127.0.0.1` for a host-local deployment or keep the port off the public interface;
 the optional admin server (`admin-server-port`) defaults to that same host (an `admin-server-host` can override it), so account for it too.
 PostgREST terminates no TLS itself; front it per [nginx.md](nginx.md) or [caddy.md](caddy.md).
@@ -29439,6 +29442,7 @@ Version boundary at the time of writing: Strapi 5 documentation; current Directu
 - Hasura securing the GraphQL endpoint: https://hasura.io/docs/2.0/deployment/securing-graphql-endpoint/
 - Hasura GraphQL Engine flags reference (SERVER_HOST, ENABLE_CONSOLE, ENABLED_APIS, DEV_MODE, UNAUTHORIZED_ROLE): https://hasura.io/docs/2.0/deployment/graphql-engine-flags/reference/
 - PostgREST configuration reference (db-anon-role, db-schemas, server-host, jwt-secret): https://postgrest.org/en/stable/references/configuration.html
+- PostgREST `server-host` default `!4` (L556), `server-port` default 3000 (L386), and `admin-server-host` falling back to `server-host` (L357-L360) (pinned tag v16.4): https://github.com/PostgREST/postgrest/blob/v16.4/src/library/PostgREST/Config.hs#L556
 - PostgREST authentication and roles: https://postgrest.org/en/stable/references/auth.html
 - PostgREST error codes (PGRST300 to PGRST303): https://postgrest.org/en/stable/references/errors.html
 - PostgREST OpenAPI output at the root path: https://postgrest.org/en/stable/references/api/openapi.html
