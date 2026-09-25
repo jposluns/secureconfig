@@ -27321,13 +27321,13 @@ The first account created during setup becomes the admin account, so an instance
 network before you finish the setup wizard lets whoever gets there first claim admin. Complete
 setup before the instance is reachable from anywhere but you.
 
-Metabase listens on every local address by default (as of v0.63.18). It reads each `MB_` setting
+Metabase binds a wildcard address by default (as of v0.63.18). It reads each `MB_` setting
 from a `.lein-env` file in the working directory (and a `.boot-env` classpath resource), then the
 environment, then JVM options such as `-Dmb.jetty.host`, each overriding the one before. The jar
 leaves Jetty's host unset unless one of those holds a non-blank `MB_JETTY_HOST`, and Jetty binds the
-wildcard address when no host is set; the official image's entrypoint goes further and exports
-`MB_JETTY_HOST=0.0.0.0` whenever the variable is unset or empty. The port is 3000 unless one of
-those layers sets `MB_JETTY_PORT`. For a jar behind a local proxy set
+wildcard address when no host is set; the official image's entrypoint instead exports
+`MB_JETTY_HOST=0.0.0.0`, every IPv4 address, whenever the variable is unset or empty. The port is
+3000 unless one of those layers sets a non-blank `MB_JETTY_PORT`. For a jar behind a local proxy set
 `MB_JETTY_HOST=127.0.0.1`, and in Docker publish only to host loopback (`127.0.0.1:3000:3000`),
 before the first start.
 
@@ -27366,7 +27366,7 @@ control, and never reuse them across instances. Front it the same as the other t
 relying on anything Redash provides natively.
 
 Redash's `server` command, which the official image runs by default, binds gunicorn to
-`REDASH_GUNICORN_BIND`, or to `[::]:5000`, the IPv6 wildcard, when that variable is unset or empty
+`REDASH_GUNICORN_BIND`, or to `[::]:5000`, the IPv6 wildcard (which may also accept IPv4 on a dual-stack host), when that variable is unset or empty
 (as of v26.9.0). Behind a local proxy set `REDASH_GUNICORN_BIND=127.0.0.1:5000`; in Docker, publish
 only to host loopback.
 
