@@ -90,9 +90,9 @@ permissions (grant upload, import, update and delete separately from read). Dire
 default; leave it off unless required, and note that its registration flow returns an empty `204` regardless of
 outcome, so a response alone is not proof an account was rejected. GraphQL introspection is enabled by default
 (`GRAPHQL_INTROSPECTION=true`); set it to `false` when schema discovery is unnecessary, reviewing GraphQL under
-the same roles and policies as REST. Directus defaults to `HOST=0.0.0.0` on port `8055` (as of v12.4.1,
-unless `UNIX_SOCKET_PATH` is non-empty) and serves the Data Studio (`/` redirects to `/admin`); on a bare host set
-`HOST=127.0.0.1`, in Docker publish
+the same roles and policies as REST. Directus listens on `HOST`, default `0.0.0.0`, and port `8055` (defaults as
+of v12.4.1; a `UNIX_SOCKET_PATH` naming a socket path replaces both) and serves the Data Studio (`/` redirects to
+`/admin`); on a bare host set `HOST=127.0.0.1`, in Docker publish
 `127.0.0.1:8055:8055` or use an unpublished private network, and protect administration after bootstrap
 (disabling `SERVE_APP` hides the Studio but does not replace API authorization). Directus serves no TLS itself,
 so terminate it in front per [nginx.md](nginx.md) or [caddy.md](caddy.md) and [fronting-auth.md](fronting-auth.md).
@@ -311,7 +311,7 @@ Version boundary at the time of writing: Strapi 5 documentation; current Directu
 - Strapi middlewares (public static file serving via koa-static): https://docs.strapi.io/cms/configurations/middlewares
 - Strapi Media Library (upload providers): https://docs.strapi.io/cms/features/media-library
 - Directus configuration, first admin user (ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_TOKEN; PORT default 8055): https://directus.com/docs/configuration/general
-- Directus `HOST` default `0.0.0.0` and `PORT` default 8055, and the branch that replaces them when `UNIX_SOCKET_PATH` is non-empty (pinned tag v12.4.1): https://github.com/directus/directus/blob/v12.4.1/packages/env/src/constants/defaults.ts#L9-L10 and https://github.com/directus/directus/blob/v12.4.1/api/src/server.ts#L169-L182
+- Directus `HOST` default `0.0.0.0` and `PORT` default 8055, and the branch that replaces them when `UNIX_SOCKET_PATH` names a socket path (pinned tag v12.4.1): https://github.com/directus/directus/blob/v12.4.1/packages/env/src/constants/defaults.ts#L9-L10 and https://github.com/directus/directus/blob/v12.4.1/api/src/server.ts#L169-L182
 - Directus access control (public permissions off by default): https://directus.com/docs/guides/auth/access-control
 - Hasura securing the GraphQL endpoint: https://hasura.io/docs/2.0/deployment/securing-graphql-endpoint/
 - Hasura GraphQL Engine flags reference (SERVER_HOST, ENABLE_CONSOLE, ENABLED_APIS, DEV_MODE, UNAUTHORIZED_ROLE): https://hasura.io/docs/2.0/deployment/graphql-engine-flags/reference/
