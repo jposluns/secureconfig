@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Cases for check_csp_hashes.py, one per defect a reviewer demonstrated against it.
 
-Five rounds are recorded, and the arc matters more than any single case. Round 1 broke a
+Six rounds are recorded, and the arc matters more than any single case. Round 1 broke a
 regular-expression reader and the gate moved to `html.parser`. Rounds 2, 3 and 4 then spent
 themselves teaching that parser about HTML: `src` on a style, foreign content, integration points,
 MathML, inert script types. Round 3 found that a round-2 fix was BACKWARDS and that the case written
@@ -11,7 +11,7 @@ escape states it misreads. Round 5 found three wrong pages that satisfied every 
 the worst of which had this gate printing the hash of the EMPTY STRING in its own failure message and
 going green once an author pinned what it asked for.
 
-Round 6 (this one) generalized the gate from one hard-coded page to a KNOWN LIST of pages, because
+Round 6 generalized the gate from one hard-coded page to a KNOWN LIST of pages, because
 `site/404.html` shipped a `<style>` pinned in the shared `/*` CSP that the gate never read, so editing
 it would leave the gate green while a browser refused the style. The cases below now run against BOTH
 real pages; the ones that reconstruct the CSP carry every page's pin, and the header-topology cases
@@ -28,31 +28,57 @@ Two kinds of case appear here. Most modify the page and assert the gate FAILS. T
 page, repin the CSP to the hash a browser would actually compute, and assert it PASSES; those hold a
 closed defect closed, because reintroducing the old behaviour moves the computed hash and the case
 goes red. `body_hash` computes that pin independently of the gate.
+
+Row 3.18 (the maintainer's 2026-09-25 ruling) extended the gate past HTML pages to the rest of
+`site/`: an `.xhtml`, `.xht` or `.svgz` is refused, a symbolic link or non-regular entry is refused,
+and every `.svg` is inspected and fails on a `<script>` element or an `on*` attribute, failing closed
+on anything it cannot read, decode or parse. The same day's P5 ruling ("all three") added, each as
+its own refusal with its own cases: a `javascript:` URL in any SVG attribute, an href or an
+animation's `to`, `from`, `by` or `values` alike; an SVG `<style>` element or `style=` attribute; and
+an `on*` attribute on an HTML page, structural and literal, mirroring the `style=` accounting. These
+cases are counted separately from the six review rounds, because they record a scope extension
+rather than a defect a reviewer demonstrated. The harness now writes the real `site/favicon.svg`
+into every run, so every case, old and new, also proves the real favicon passes; `extra_files` may
+name subdirectories and carry bytes; `setup` makes the entries that are not plain files (links, a
+FIFO, a missing or regular site root). Injected I/O errors exercise the traversal's failure handling
+independently of the account's permissions, since a `chmod` fixture is a no-op for root. Passing
+boundary cases document what the rulings do not ask this gate to police (references, `data:` URLs,
+presentation attributes, text that merely looks like a URL or a handler).
 """
 import base64
+import contextlib
+import gzip
 import hashlib
+import io
+import os
 import re
 import shutil
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 TOOLS = Path(__file__).resolve().parent
 ROOT = TOOLS.parent
 PAGE = (ROOT / "site" / "index.html").read_bytes().decode("utf-8")
 PAGE_404 = (ROOT / "site" / "404.html").read_bytes().decode("utf-8")
 HEADERS = (ROOT / "site" / "_headers").read_text(encoding="utf-8")
+FAVICON = (ROOT / "site" / "favicon.svg").read_bytes()
 
 
-def run_against(page=None, headers=None, extra_files=None, gate=None):
-    """Run the real gate against a copy of the site. Returns (exit, full output).
+def run_against(page=None, headers=None, extra_files=None, gate=None, setup=None):
+    """Run the real gate against a copy of the site. Returns (exit, stdout and stderr).
 
     `page` is None (both real pages), a str (an index.html override, so every pre-round-6 case is
     byte-identical), or a dict {"index.html"/"404.html": text} overriding those pages; an unknown key
-    RAISES, so a typo cannot silently test a pristine corpus. `extra_files` writes extra files under
-    site/ (for the unlisted-page case). `gate` is an (old, new) pair applied to the gate SOURCE (for
-    the config-guard case).
+    RAISES, so a typo cannot silently test a pristine corpus. The real `site/favicon.svg` is written
+    into every run. `extra_files` writes extra files under site/, in subdirectories as named, as
+    text (written as UTF-8) or bytes (written as given). `gate` is an (old, new) pair applied to the
+    gate SOURCE (for the config-guard case); it RAISES if `old` no longer matches, so a refactor
+    cannot turn a mutation case into a run of the pristine gate. `setup` is called with the copy's
+    root, for entries that are not plain files (a link, a FIFO, a replaced site/). A gate that hangs
+    (on a FIFO it should never open) is reported as exit 124 rather than hanging the suite.
     """
     d = Path(tempfile.mkdtemp())
     try:
@@ -60,6 +86,8 @@ def run_against(page=None, headers=None, extra_files=None, gate=None):
         (d / "site").mkdir()
         src = (TOOLS / "check_csp_hashes.py").read_text(encoding="utf-8")
         if gate is not None:
+            if gate[0] not in src:
+                raise AssertionError(f"gate mutation {gate[0]!r} no longer matches the source")
             src = src.replace(gate[0], gate[1])
         (d / "tools" / "check_csp_hashes.py").write_text(src, encoding="utf-8")
         pages = {"index.html": PAGE, "404.html": PAGE_404}
@@ -73,13 +101,21 @@ def run_against(page=None, headers=None, extra_files=None, gate=None):
         # Bytes, not text: the newline cases are only cases if the bytes survive the write.
         for name, text in pages.items():
             (d / "site" / name).write_bytes(text.encode("utf-8"))
-        for name, text in (extra_files or {}).items():
-            (d / "site" / name).write_bytes(text.encode("utf-8"))
+        (d / "site" / "favicon.svg").write_bytes(FAVICON)
+        for name, content in (extra_files or {}).items():
+            target = d / "site" / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(content if isinstance(content, bytes) else content.encode("utf-8"))
         (d / "site" / "_headers").write_text(
             headers if headers is not None else HEADERS, encoding="utf-8")
-        r = subprocess.run([sys.executable, "tools/check_csp_hashes.py"], cwd=d,
-                           capture_output=True, text=True)
-        return r.returncode, r.stdout.strip()
+        if setup is not None:
+            setup(d)
+        try:
+            r = subprocess.run([sys.executable, "-B", "tools/check_csp_hashes.py"], cwd=d,
+                               capture_output=True, text=True, timeout=20)
+        except subprocess.TimeoutExpired:
+            return 124, "the gate timed out"
+        return r.returncode, (r.stdout + r.stderr).strip()
     finally:
         shutil.rmtree(d, ignore_errors=True)
 
@@ -351,24 +387,325 @@ EXTRA_ARGS = {
                          '<style>a{color:red}</style>\n'}},
 }
 
+# Row 3.18 and P5 cases, appended to CASES below and carried by run_against arguments. Each is a
+# document, a filesystem entry, a page or a parser input the gate must refuse or must pass.
+LEGACY_CASE_COUNT = len(CASES)
+SCOPE_CASES = []
+# The gate's result lines, matched at a line start because run_against strips the first line's indent.
+FAIL_LINE = re.compile(r"^\s*FAIL  ", re.M)
+OK_LINE = re.compile(r"^\s*ok    ", re.M)
+
+
+def scope_case(desc, content=None, expected=None, name="assets/probe.svg", setup=None, page=None,
+               headers=None):
+    """Record one row 3.18 or P5 case: a must-fail if `expected` names the finding, a must-pass if None.
+
+    `content` is written under site/ at `name`; `page` and `headers` are run_against's overrides,
+    for the P5 page cases; `setup` makes an entry that is not a plain file.
+    """
+    desc = "row 3.18: " + desc
+    if desc in EXTRA_ARGS:
+        raise KeyError(f"duplicate row 3.18 case {desc!r}")
+    args = {}
+    if content is not None:
+        args["extra_files"] = {name: content}
+    if setup is not None:
+        args["setup"] = setup
+    SCOPE_CASES.append((desc, page, headers, expected is not None, expected))
+    EXTRA_ARGS[desc] = args
+
+
+def svg(body="", attrs=""):
+    """A minimal SVG with the SVG, a second SVG-bound, a foreign, the XHTML and the XLink prefixes."""
+    return ('<svg xmlns="http://www.w3.org/2000/svg" xmlns:s="http://www.w3.org/2000/svg" '
+            'xmlns:x="urn:test" xmlns:h="http://www.w3.org/1999/xhtml" '
+            'xmlns:xl="http://www.w3.org/1999/xlink"' + (" " + attrs if attrs else "") + ">"
+            + body + "</svg>")
+
+
+XHTML_DOC = ('<?xml version="1.0" encoding="UTF-8"?>\n<html xmlns="http://www.w3.org/1999/xhtml">'
+             '<head><title>t</title></head><body><p>hi</p></body></html>\n')
+
+# Refused suffixes, in every case, in a subdirectory, and even as a directory name.
+for suffix in (".xhtml", ".xht"):
+    for spelling in (suffix, suffix.upper(), suffix.title()):
+        scope_case("refuse " + spelling, XHTML_DOC, "is XHTML", name="nested/probe" + spelling)
+for spelling in (".svgz", ".SVGZ", ".Svgz"):
+    scope_case("refuse " + spelling, gzip.compress(FAVICON, mtime=0), "compressed SVG",
+               name="nested/probe" + spelling)
+scope_case("refuse a directory named .XHTML", expected="is XHTML",
+           setup=lambda d: (d / "site" / "docs.XHTML").mkdir())
+
+# Clean SVG documents, in every case of the suffix and nested.
+for spelling in (".svg", ".SVG", ".SvG"):
+    scope_case("clean " + spelling, svg("<path/>"), name="deep/nested/probe" + spelling)
+scope_case("the real favicon as a second copy", FAVICON, name="img/logo.svg")
+scope_case("unqualified SVG root", "<svg><path/></svg>")
+scope_case("prefixed SVG root", '<s:svg xmlns:s="http://www.w3.org/2000/svg"><s:path/></s:svg>')
+scope_case("XML declaration", '<?xml version="1.0"?>' + svg())
+scope_case("UTF-8 declaration", '<?xml version="1.0" encoding="UTF-8"?>' + svg())
+scope_case("lowercase encoding declaration", '<?xml version="1.0" encoding="utf-8"?>' + svg())
+scope_case("UTF-8 BOM", b"\xef\xbb\xbf" + svg().encode("utf-8"))
+scope_case("CRLF line endings", svg("\r\n<path/>\r\n"))
+scope_case("Unicode text", svg("<text>caf" + chr(233) + "</text>"))
+scope_case("comments are text",
+           svg("<!-- <script/> <style/> onload='x' style='y' href='javascript:z' -->"))
+scope_case("CDATA is text", svg("<![CDATA[<script/> <style/> onload='x' javascript:z]]>"))
+scope_case("escaped markup is text",
+           svg("<text>&lt;script/&gt; &lt;style/&gt; onload= style= javascript:</text>"))
+scope_case("ordinary attributes", svg('<path data-onload="x" stroke="red" opacity="1"/>'))
+scope_case("presentation attributes are not style",
+           svg('<path fill="red" stroke="#fff" stroke-width="1.8" class="icon" id="styled"/>'))
+scope_case("names and prose containing on that are not handlers",
+           svg('<g id="button" class="icon-on"><title>on = duty, on-call</title></g>'))
+scope_case("a non-SVG root is not itself refused",
+           '<html xmlns="http://www.w3.org/1999/xhtml"><p>x</p></html>')
+scope_case("unrelated regular file", b"\xff\xfe", name="assets/data.bin")
+scope_case("empty directory", setup=lambda d: (d / "site" / "empty").mkdir())
+
+# Script elements: any case, any namespace, any body, anywhere.
+for tag in ("script", "SCRIPT", "ScRiPt", "s:script", "x:ScRiPt", "h:script"):
+    scope_case("script " + tag, svg(f"<{tag}/>"), "script element")
+scope_case("nonempty script", svg("<script>alert(1)</script>"), "script element")
+scope_case("external script", svg('<script href="other.js"/>'), "script element")
+scope_case("script in unqualified subtree", svg('<g xmlns=""><script/></g>'), "script element")
+scope_case("script in foreignObject", svg("<foreignObject><h:script/></foreignObject>"),
+           "script element")
+scope_case("script under a non-SVG root",
+           '<html xmlns="http://www.w3.org/1999/xhtml"><script/></html>', "script element")
+scope_case("script in .SVG", svg("<script/>"), "script element", name="deep/probe.SVG")
+scope_case("script finding names the file", svg("<script/>"), "site/assets/probe.svg:1:")
+
+# Handler attributes: any case, any namespace, any spacing, even empty.
+for attr in ("onload", "ONCLICK", "oNbegin", "x:OnLoad", "on", "once"):
+    scope_case("handler " + attr, svg(attrs=attr + '="x"'), "on* handler")
+for space in (" ", "\t", "\n", "\r\n"):
+    scope_case("handler whitespace " + repr(space), svg(f"<g onload{space}={space}'x'/>"),
+               "on* handler")
+scope_case("empty handler", svg('<g onload=""/>'), "on* handler")
+scope_case("handler in foreignObject", svg('<foreignObject><h:p onclick="x"/></foreignObject>'),
+           "on* handler")
+scope_case("handler finding names the element line", svg("\n<g\n onload='x'/>"),
+           "site/assets/probe.svg:2:")
+
+# Fail closed: what cannot be decoded, parsed or modelled is a finding.
+for desc, document in (("empty", ""), ("unclosed", "<svg>"), ("mismatched close", "<svg><g></svg>"),
+                       ("trailing junk", "<svg/>junk"), ("multiple roots", "<svg/><svg/>"),
+                       ("unbound prefix", "<svg><x:script/></svg>"),
+                       ("duplicate attributes", '<svg onload="a" onload="b"/>'),
+                       ("unquoted attribute", "<svg onload=x/>"),
+                       ("unknown entity", "<svg>&unknown;</svg>"), ("NUL", "<svg>\x00</svg>")):
+    scope_case("malformed " + desc, document, "cannot inspect SVG")
+scope_case("invalid UTF-8", b"<svg>\xff</svg>", "cannot read SVG as UTF-8")
+scope_case("UTF-16 bytes", "<svg/>".encode("utf-16"), "cannot read SVG as UTF-8")
+scope_case("non-UTF-8 declaration", '<?xml version="1.0" encoding="ISO-8859-1"?><svg/>',
+           "encoding declaration names 'ISO-8859-1'")
+scope_case("XML 1.1 declaration", '<?xml version="1.1"?><svg/>', "models XML 1.0")
+for desc, document in (
+        ("bare DTD", "<!DOCTYPE svg><svg/>"),
+        ("internal entity", '<!DOCTYPE svg [<!ENTITY e "&#60;script/&#62;">]><svg>&e;</svg>'),
+        ("attribute default", '<!DOCTYPE svg [<!ATTLIST svg onload CDATA "x">]><svg/>'),
+        ("external DTD", '<!DOCTYPE svg SYSTEM "https://example.com/a.dtd"><svg/>'),
+        ("local external DTD", '<!DOCTYPE svg SYSTEM "file:///missing.dtd"><svg/>')):
+    scope_case(desc, document, "document type declarations")
+scope_case("stylesheet processing instruction",
+           '<?xml-stylesheet href="other.xsl" type="text/xsl"?>' + svg(), "processing instructions")
+scope_case("other processing instruction", svg("<?custom x?>"), "processing instructions")
+
+# P5 (1): a javascript: URL, in an href, an xlink:href, and set by animation, however spelled.
+for desc, document in (
+        ("href", svg('<a href="javascript:alert(1)"/>')),
+        ("upper-case scheme", svg('<a href="JAVASCRIPT:alert(1)"/>')),
+        ("mixed-case scheme", svg('<a href="JavaScript:alert(1)"/>')),
+        ("upper-case HREF attribute", svg('<a HREF="javascript:alert(1)"/>')),
+        ("xlink href", svg('<a xl:href="javascript:alert(1)"/>')),
+        ("leading spaces", svg('<a href="   javascript:alert(1)"/>')),
+        ("leading newline reference", svg('<a href="&#10;javascript:alert(1)"/>')),
+        ("tab reference inside the scheme", svg('<a href="java&#9;script:alert(1)"/>')),
+        ("newline reference inside the scheme", svg('<a href="java&#10;script:alert(1)"/>')),
+        ("literal newline inside the scheme, a space to XML, refused as the superset",
+         svg('<a href="java\nscript:alert(1)"/>')),
+        ("entity-encoded scheme letter", svg('<a href="java&#x73;cript:alert(1)"/>')),
+        ("entity-encoded colon", svg('<a href="javascript&#58;alert(1)"/>')),
+        ("image href", svg('<image href="javascript:alert(1)"/>')),
+        ("use href", svg('<use href="javascript:alert(1)"/>')),
+        ("set to", svg('<a href="#x"><set attributeName="href" to="javascript:alert(1)"/></a>')),
+        ("animate to", svg('<animate attributeName="href" to="javascript:alert(1)"/>')),
+        ("animate to on xlink:href",
+         svg('<animate attributeName="xlink:href" to="javascript:alert(1)"/>')),
+        ("animate from", svg('<animate attributeName="href" from="javascript:alert(1)" to="#x"/>')),
+        ("animate by", svg('<animate attributeName="href" by="javascript:alert(1)"/>')),
+        ("animate values, first entry",
+         svg('<animate attributeName="href" values="javascript:alert(1);#x"/>')),
+        ("animate values, later entry",
+         svg('<animate attributeName="href" values="#x; javascript:alert(1)"/>')),
+        ("javascript URL in foreignObject",
+         svg('<foreignObject><h:a href="javascript:alert(1)"/></foreignObject>')),
+        ("javascript URL in an unrelated attribute, refused as the superset",
+         svg('<g data-x="javascript:alert(1)"/>'))):
+    scope_case("P5 javascript: " + desc, document, "javascript: URL")
+scope_case("P5 javascript: finding names the element line", svg('\n<a\n href="javascript:x"/>'),
+           "site/assets/probe.svg:2:")
+
+# P5 (2): inline style, as an element or an attribute, in any case and namespace.
+for tag in ("style", "STYLE", "StYlE", "s:style", "x:style", "h:style"):
+    scope_case("P5 style element " + tag, svg(f"<{tag}>path{{fill:red}}</{tag}>"), "style element")
+scope_case("P5 empty style element", svg("<style/>"), "style element")
+scope_case("P5 style element in foreignObject",
+           svg("<foreignObject><h:style>p{}</h:style></foreignObject>"), "style element")
+for attr in ("style", "STYLE", "Style", "x:style", "h:style"):
+    scope_case("P5 style attribute " + attr, svg(f'<path {attr}="fill:red"/>'), "style attribute")
+scope_case("P5 empty style attribute", svg('<path style=""/>'), "style attribute")
+scope_case("P5 style attribute on the root", svg(attrs='style="fill:red"'), "style attribute")
+scope_case("P5 style attribute in foreignObject",
+           svg('<foreignObject><h:p style="x"/></foreignObject>'), "style attribute")
+scope_case("P5 style finding names the element line", svg("\n<g\n style='x'/>"),
+           "site/assets/probe.svg:2:")
+
+# Passing boundary cases: what the rulings do not ask this gate to police, stated in the docstring.
+scope_case("a URL in text content is text", svg("<text>javascript:alert(1)</text>"))
+scope_case("javascript in a URL's path is not its scheme",
+           svg('<a href="https://example.com/javascript:x"/>'))
+scope_case("a relative href named javascript", svg('<a href="javascript.svg"/>'))
+scope_case("a scheme that merely ends in javascript", svg('<a href="not-javascript:x"/>'))
+scope_case("an animation to a fragment",
+           svg('<animate attributeName="href" values="#a;#b" to="#c" from="#d"/>'))
+scope_case("attribute names containing style", svg('<g data-style="x" class="lifestyle"/>'))
+scope_case("plain foreignObject", svg("<foreignObject><h:p>text</h:p></foreignObject>"))
+for href in ("#local", "other.svg#id", "https://example.com/a.svg#id", "//example.com/a.svg#id",
+             "data:image/svg+xml,example"):
+    scope_case("use reference " + href, svg(f'<use href="{href}"/>'))
+scope_case("external xlink use outside scope", svg('<use xl:href="https://example.com/a.svg#id"/>'))
+
+# Unlisted HTML, nested, still refused by the new walk with the old message.
+for suffix in (".html", ".HTML", ".HtM"):
+    scope_case("nested unlisted HTML " + suffix, "<!doctype html>", "not in this gate's page list",
+               name="deep/probe" + suffix)
+
+# P5 (3): an on* handler attribute on an HTML page, structural and literal, on both pages.
+ONJS_PAGE = PAGE.replace("(function () {", "(function () {\n  document.body.onload = null;", 1)
+ONCSS_PAGE = PAGE.replace(":root", "/* onclick= here is stylesheet text */\n    :root", 1)
+scope_case("P5 page handler on index's body", expected="on* handler",
+           page=PAGE.replace("<body", '<body onload="init()"', 1))
+scope_case("P5 upper-case page handler on the 404 page names the page", expected="site/404.html",
+           page={"404.html": PAGE_404.replace("<body", "<body ONCLICK=go", 1)})
+scope_case("P5 valueless page handler", expected="on* handler",
+           page=PAGE.replace("<body", "<body onclick", 1))
+scope_case("P5 page handler with a spaced =", expected="on* handler",
+           page=PAGE.replace("<body", "<body onload = 'x'", 1))
+scope_case("P5 page handler on the inline <svg>", expected="on* handler",
+           page=PAGE.replace("<svg ", '<svg onload="x" ', 1))
+scope_case("P5 page handler on the 404 page's inline <svg>", expected="on* handler",
+           page={"404.html": PAGE_404.replace("<svg ", '<svg onclick="x" ', 1)})
+scope_case("P5 page handler smuggled through <svg><title>", expected="on* handler",
+           page=PAGE.replace("</svg>", '<title>t<div onclick="x">x</div></title>\n    </svg>', 1))
+scope_case("P5 handler text inside the index script is text, repinned",
+           page=ONJS_PAGE, headers=repinned(ONJS_PAGE, "script"))
+scope_case("P5 handler text inside the index stylesheet is text, repinned",
+           page=ONCSS_PAGE, headers=repinned(ONCSS_PAGE, "style"))
+scope_case("P5 data-onload= on a page is not a handler",
+           page=PAGE.replace("<body", '<body data-onload="x"', 1))
+
+
+def file_link(d):
+    (d / "site" / "linked.svg").symlink_to("favicon.svg")
+
+
+def listed_page_link(d):
+    (d / "site" / "index.html").rename(d / "saved-index")
+    (d / "site" / "index.html").symlink_to("../saved-index")
+
+
+def directory_link(d):
+    (d / "outside").mkdir()
+    (d / "outside" / "hidden.xhtml").write_text(XHTML_DOC, encoding="utf-8")
+    (d / "site" / "linked").symlink_to(d / "outside", target_is_directory=True)
+
+
+def root_link(d):
+    (d / "site").rename(d / "actual-site")
+    (d / "site").symlink_to("actual-site", target_is_directory=True)
+
+
+def missing_root(d):
+    shutil.rmtree(d / "site")
+
+
+def regular_root(d):
+    shutil.rmtree(d / "site")
+    (d / "site").write_bytes(b"")
+
+
+for desc, setup in (("file symlink", file_link), ("listed HTML page symlink", listed_page_link),
+                    ("external directory symlink", directory_link), ("site root symlink", root_link),
+                    ("dangling symlink", lambda d: (d / "site" / "missing.svg").symlink_to("absent")),
+                    ("symlink loop", lambda d: (d / "site" / "loop").symlink_to("loop"))):
+    scope_case(desc, expected="is a symbolic link", setup=setup)
+scope_case("FIFO named .svg, never opened", expected="not a regular file",
+           setup=lambda d: os.mkfifo(d / "site" / "pipe.svg"))
+scope_case("missing site root", expected="cannot inspect site entry", setup=missing_root)
+scope_case("regular file as site root", expected="is not a directory", setup=regular_root)
+
+CASES += tuple(SCOPE_CASES)
+
+
+def io_failure_cases():
+    """Run the gate in-process with one Path method made to raise, and require a FAIL for each.
+
+    These inject the OSError directly, so they hold whether or not the account can be denied by the
+    filesystem (a chmod fixture is a no-op for root). They exercise the real tree read-only.
+    """
+    source = (TOOLS / "check_csp_hashes.py").read_text(encoding="utf-8")
+    ns = {"__name__": "csp_gate_under_test", "__file__": str(TOOLS / "check_csp_hashes.py")}
+    exec(compile(source, ns["__file__"], "exec"), ns)
+    failures = []
+    cases = (("read_bytes", ROOT / "site" / "favicon.svg", "cannot read SVG as UTF-8"),
+             ("iterdir", ROOT / "site", "cannot enumerate site directory"),
+             ("lstat", ROOT / "site" / "favicon.svg", "cannot inspect site entry"))
+    for method, target, expected in cases:
+        original = getattr(Path, method)
+
+        def fail_target(self, *args, _orig=original, _target=target, **kwargs):
+            if self == _target:
+                raise PermissionError("injected permission denial")
+            return _orig(self, *args, **kwargs)
+
+        output = io.StringIO()
+        with patch.object(Path, method, fail_target), contextlib.redirect_stdout(output):
+            rc = ns["main"]()
+        text = output.getvalue()
+        display = str(target.relative_to(ROOT))
+        if rc != 1 or expected not in text or display not in text or "  FAIL  " not in text:
+            failures.append(f"row 3.18: an injected {method} failure did not fail closed: "
+                            f"rc={rc}, {text!r}")
+    return failures, len(cases)
+
 
 def main() -> int:
-    failures = []
+    failures, io_case_count = io_failure_cases()
     for desc, page, headers, must_fail, expected in CASES:
         rc, out = run_against(page, headers, **EXTRA_ARGS.get(desc, {}))
-        if bool(rc) != must_fail:
+        if rc != (1 if must_fail else 0):
             want = "fail" if must_fail else "pass"
             failures.append(f"{desc}: expected the gate to {want}, it did not ({out!r})")
         elif expected is not None and expected not in out:
             failures.append(
                 f"{desc}: the gate's exit status was right but its message was not. "
                 f"Expected it to contain {expected!r}. It said: {out!r}")
+        if "Traceback (most recent call last):" in out:
+            failures.append(f"{desc}: the gate crashed: {out!r}")
+        if not must_fail and (FAIL_LINE.search(out) or not OK_LINE.search(out)):
+            failures.append(f"{desc}: a pass must print one ok line and no FAIL line: {out!r}")
+        if must_fail and not FAIL_LINE.search(out):
+            failures.append(f"{desc}: a refusal must print a FAIL line: {out!r}")
 
     # The repinned cases only mean something if their repin actually moved the hash.
     for page, tag, base, desc in ((COMMENT_PAGE, "style", PAGE, "the <!-- in stylesheet text"),
                                   (STRING_PAGE, "script", PAGE, "the <style> in a JavaScript string"),
                                   (CRLF_PAGE, "style", PAGE, "the CRLF"),
-                                  (E404, "style", PAGE_404, "the 404 stylesheet edit")):
+                                  (E404, "style", PAGE_404, "the 404 stylesheet edit"),
+                                  (ONJS_PAGE, "script", PAGE, "the handler text in the index script"),
+                                  (ONCSS_PAGE, "style", PAGE, "the handler text in the index stylesheet")):
         if body_hash(page, tag) == body_hash(base, tag):
             failures.append(
                 f"{desc} case no longer discriminates: the edit did not change the raw "
@@ -387,6 +724,28 @@ def main() -> int:
             failures.append(f"the style= finding does not name the right line on 404: <body> is on "
                             f"line {want}. It said: {out!r}")
 
+    # P5: the on* finding names its line too, on each page it can fire on.
+    rc, out = run_against(PAGE.replace("<body", '<body onload="x"', 1))
+    want = PAGE[:PAGE.index("<body")].count("\n") + 1
+    if f"site/index.html:{want}" not in out:
+        failures.append(f"the on* finding does not name the right line on index: <body> is on "
+                        f"line {want}. It said: {out!r}")
+    if "<body" in PAGE_404:
+        rc, out = run_against({"404.html": PAGE_404.replace("<body", '<body onload="x"', 1)})
+        want = PAGE_404[:PAGE_404.index("<body")].count("\n") + 1
+        if f"site/404.html:{want}" not in out:
+            failures.append(f"the on* finding does not name the right line on 404: <body> is on "
+                            f"line {want}. It said: {out!r}")
+
+    # Row 3.18: every pass case above would also pass a gate that never looked at an SVG, so prove
+    # the inspection ran: the happy path counts the real favicon, and a second SVG raises the count.
+    rc, out = run_against()
+    if rc != 0 or "1 SVG document(s)" not in out:
+        failures.append(f"row 3.18: the happy path did not report inspecting the one real SVG: {out!r}")
+    rc, out = run_against(extra_files={"img/logo.svg": FAVICON})
+    if rc != 0 or "2 SVG document(s)" not in out:
+        failures.append(f"row 3.18: a second SVG under site/img/ was not counted: {out!r}")
+
     # Relocating index's script onto the 404 page must fail BOTH pages in the model phase.
     rc, out = run_against({"index.html": NOSCRIPT_INDEX, "404.html": SCRIPT_ON_404})
     if "site/index.html" not in out or "site/404.html" not in out:
@@ -396,7 +755,9 @@ def main() -> int:
         for f in failures:
             print(f"  FAIL  {f}")
         return 1
-    print(f"  ok    {len(CASES)} recorded cases for the CSP hash gate, across six review rounds")
+    print(f"  ok    {LEGACY_CASE_COUNT} recorded cases for the CSP hash gate across six review rounds, "
+          f"{len(SCOPE_CASES)} row 3.18 and P5 document, page and filesystem cases, and "
+          f"{io_case_count} injected I/O failures")
     return 0
 
 

@@ -17,6 +17,17 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **P5, the CSP-hash gate's neighbours: all three.** Beyond row 3.18's `<script>` and `on*` handlers in an SVG,
+  the gate also refuses a `javascript:` URL in an SVG, including one set by `<animate>` or `<set>`; an inline
+  `<style>` or `style=` in an SVG; and an `on*` attribute on an HTML page, each as its own refusal with its own
+  cases (#352). Ruled 2026-09-25T15:42Z. *Reasoning:* the maintainer stated none beyond the ruling's text, "All
+  three." The question was put directly from the row 3.18 plan, with options A (extend the gate to all three),
+  B (the two SVG cases only, and a separate row for page `on*` attributes) and C (leave all three to the CSP,
+  which blocks them in the browser), recommending A, and was ruled the same day, so it never appeared in
+  `PENDING-DECISIONS.md`. Refusing a `javascript:` URL in any attribute rather than only `href`, with control
+  characters and spaces removed before the scheme is read, is an implementation choice under the gate's
+  refuse-what-it-cannot-model principle, not part of the ruling.
+
 - **A `TODO.md` row-format gate (ratings and unique ids required), 2026-09-24: declined for now,** on the ground
   that operational tooling will be standardized by the OPF standard. On 2026-09-25 the maintainer applied the same
   ground to
