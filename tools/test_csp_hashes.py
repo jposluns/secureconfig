@@ -44,6 +44,13 @@ FIFO, a missing or regular site root). Injected I/O errors exercise the traversa
 independently of the account's permissions, since a `chmod` fixture is a no-op for root. Passing
 boundary cases document what the rulings do not ask this gate to police (references, `data:` URLs,
 presentation attributes, text that merely looks like a URL or a handler).
+
+Round 2 of the #352 review added three sets, counted with the row 3.18 cases: valueless,
+slash-terminated and hyphenated page handlers at each SVG integration point on both pages, which the
+old `on<word>=` accounting let through inside `<title>`, with prose and `data-onload` guards; a
+case per character an XML attribute can carry to URL_NOISE (tab, LF, CR, DEL, space), so dropping
+any one of them turns the suite red, which dropping CR once did not; and dotfile (`.svg`),
+trailing-dot and compressed (`.gz`, `.br`, `.zst`) names, which pathlib's suffix let escape.
 """
 import base64
 import contextlib
@@ -546,6 +553,18 @@ for desc, document in (
     scope_case("P5 javascript: " + desc, document, "javascript: URL")
 scope_case("P5 javascript: finding names the element line", svg('\n<a\n href="javascript:x"/>'),
            "site/assets/probe.svg:2:")
+# Round 2 of #352 (codex finding 2): with CR dropped from URL_NOISE every case above still passed.
+# Each character an XML 1.0 attribute value can carry to URL_NOISE (tab, LF, CR by reference, and
+# space, DEL) now has a case inside the scheme, in an href, an xlink:href, an animation's values and
+# a set's to; XML forbids the other C0 controls, so expat refuses them before URL_NOISE is asked.
+for ref in ("&#13;", "&#xd;", "&#10;", "&#9;", "&#x7f;"):
+    url = f"java{ref}script:alert(1)"
+    for where, document in (
+            ("href", svg(f'<a href="{url}"/>')), ("xlink:href", svg(f'<a xl:href="{url}"/>')),
+            ("animate values", svg(f'<animate attributeName="href" values="#x;{url}"/>')),
+            ("set to", svg(f'<a href="#x"><set attributeName="href" to="{url}"/></a>'))):
+        scope_case(f"P5 javascript: {ref} inside the scheme, in {where}", document,
+                   "javascript: URL")
 
 # P5 (2): inline style, as an element or an attribute, in any case and namespace.
 for tag in ("style", "STYLE", "StYlE", "s:style", "x:style", "h:style"):
@@ -582,6 +601,33 @@ for suffix in (".html", ".HTML", ".HtM"):
     scope_case("nested unlisted HTML " + suffix, "<!doctype html>", "not in this gate's page list",
                name="deep/probe" + suffix)
 
+# Round 2 of #352 (claude finding 2): pathlib gives a dotfile no suffix, so a file named exactly
+# `.svg` escaped every rule. The suffix is now the text from the last dot of the whole name.
+scope_case("dotfile .svg carrying a script", svg("<script/>"), "script element", name="deep/.svg")
+scope_case("dotfile .SVG carrying a handler", svg(attrs='onload="x"'), "on* handler", name=".SVG")
+scope_case("clean dotfile .svg is inspected and passes", svg("<path/>"), name="deep/.svg")
+for dotfile, expected, content in ((".xhtml", "is XHTML", XHTML_DOC), (".xht", "is XHTML", XHTML_DOC),
+                                   (".svgz", "compressed SVG", gzip.compress(FAVICON, mtime=0)),
+                                   (".html", "not in this gate's page list", "<!doctype html>"),
+                                   (".htm", "not in this gate's page list", "<!doctype html>")):
+    scope_case("dotfile " + dotfile, content, expected, name="deep/" + dotfile)
+scope_case("an unrelated dotfile is not inspected", "", name=".nojekyll")
+# A name ending with a dot, file or directory, is refused: pathlib gives `probe.svg.` the suffix ".".
+TRAILING_DOT = "ends with a dot"
+for name in ("probe.svg.", "probe.xhtml.", "probe.html.", "probe."):
+    scope_case("trailing-dot file " + name, svg("<script/>"), TRAILING_DOT, name="deep/" + name)
+scope_case("trailing-dot directory", expected=TRAILING_DOT,
+           setup=lambda d: (d / "site" / "docs.").mkdir())
+# Compressed forms are refused as .svgz is, since a host serving precompressed files can answer a
+# request for the inner name with one.
+COMPRESSED = "is compressed, which this gate cannot read"
+for name in ("probe.svg.gz", "probe.html.br", "probe.svg.zst", "probe.SVG.GZ", "probe.Br",
+             ".gz", ".zst"):
+    scope_case("compressed " + name, gzip.compress(FAVICON, mtime=0), COMPRESSED,
+               name="deep/" + name)
+scope_case("a directory named assets.gz", expected=COMPRESSED,
+           setup=lambda d: (d / "site" / "assets.gz").mkdir())
+
 # P5 (3): an on* handler attribute on an HTML page, structural and literal, on both pages.
 ONJS_PAGE = PAGE.replace("(function () {", "(function () {\n  document.body.onload = null;", 1)
 ONCSS_PAGE = PAGE.replace(":root", "/* onclick= here is stylesheet text */\n    :root", 1)
@@ -605,6 +651,34 @@ scope_case("P5 handler text inside the index stylesheet is text, repinned",
            page=ONCSS_PAGE, headers=repinned(ONCSS_PAGE, "style"))
 scope_case("P5 data-onload= on a page is not a handler",
            page=PAGE.replace("<body", '<body data-onload="x"', 1))
+
+# Round 2 of #352 (codex finding 1): the literal accounting once required `on<word>=`, so a
+# valueless, slash-terminated or hyphenated handler name hidden at an SVG integration point passed.
+# Each form, at each integration point, on both pages.
+HIDDEN_HANDLERS = (("valueless onclick", "<div onclick>x</div>"),
+                   ("valueless onload after another attribute", "<div hidden onload>x</div>"),
+                   ("slash-terminated onclick", "<div onclick/>x"),
+                   ("hyphenated on-click", '<div on-click="x">x</div>'))
+INTEGRATION_POINTS = (("title", "<title>t{}</title>"), ("desc", "<desc>d{}</desc>"),
+                      ("foreignObject", "<foreignObject>{}</foreignObject>"))
+for page_name, base in (("index.html", PAGE), ("404.html", PAGE_404)):
+    for point, wrapper in INTEGRATION_POINTS:
+        for form, fragment in HIDDEN_HANDLERS:
+            scope_case(f"P5 {form} inside <svg><{point}> on {page_name}", expected="on* handler",
+                       page={page_name: base.replace(
+                           "</svg>", wrapper.format(fragment) + "\n    </svg>", 1)})
+    scope_case(f"P5 prose on-words on {page_name} are not handlers",
+               page={page_name: base.replace(
+                   "</svg>", "<title>only one on duty, on-call; on = off</title>\n    </svg>", 1)
+                   .replace("</body>", "<p>only one on duty, on-call; one = two, on</p>\n</body>", 1)})
+    scope_case(f"P5 data-onload inside <svg><title> on {page_name} is not a handler",
+               page={page_name: base.replace(
+                   "</svg>", '<title>t<div data-onload="x" data-on>x</div></title>\n    </svg>', 1)})
+ONTAG_JS_PAGE = PAGE.replace("(function () {", '(function () {\n  var tpl = "<b onclick>x</b>";', 1)
+scope_case("P5 a handler-bearing tag in a JavaScript string is script text, repinned",
+           page=ONTAG_JS_PAGE, headers=repinned(ONTAG_JS_PAGE, "script"))
+scope_case("P5 a handler-bearing tag in a page comment fails closed", expected="on* handler",
+           page=PAGE.replace("</body>", "<!-- <b onclick> -->\n</body>", 1))
 
 
 def file_link(d):
@@ -705,7 +779,8 @@ def main() -> int:
                                   (CRLF_PAGE, "style", PAGE, "the CRLF"),
                                   (E404, "style", PAGE_404, "the 404 stylesheet edit"),
                                   (ONJS_PAGE, "script", PAGE, "the handler text in the index script"),
-                                  (ONCSS_PAGE, "style", PAGE, "the handler text in the index stylesheet")):
+                                  (ONCSS_PAGE, "style", PAGE, "the handler text in the index stylesheet"),
+                                  (ONTAG_JS_PAGE, "script", PAGE, "the handler tag in the index script")):
         if body_hash(page, tag) == body_hash(base, tag):
             failures.append(
                 f"{desc} case no longer discriminates: the edit did not change the raw "
@@ -745,6 +820,9 @@ def main() -> int:
     rc, out = run_against(extra_files={"img/logo.svg": FAVICON})
     if rc != 0 or "2 SVG document(s)" not in out:
         failures.append(f"row 3.18: a second SVG under site/img/ was not counted: {out!r}")
+    rc, out = run_against(extra_files={"img/.svg": FAVICON})
+    if rc != 0 or "2 SVG document(s)" not in out:
+        failures.append(f"row 3.18: a dotfile named .svg was not counted as an SVG: {out!r}")
 
     # Relocating index's script onto the 404 page must fail BOTH pages in the model phase.
     rc, out = run_against({"index.html": NOSCRIPT_INDEX, "404.html": SCRIPT_ON_404})
