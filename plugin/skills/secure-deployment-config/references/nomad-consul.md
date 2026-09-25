@@ -137,7 +137,7 @@ same account and by root.
 
 ```bash
 (
-  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited extdebug, no function named like a command below
+  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited DEBUG trap or extdebug, no function named like a command below
   set +x +a
   { unset -n tok NOMAD_TOKEN && unset -v tok NOMAD_TOKEN; } 2>/dev/null ||
     { echo 'cannot clear tok or NOMAD_TOKEN in this shell; not probing'; exit 2; }
