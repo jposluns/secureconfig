@@ -1,6 +1,6 @@
 # RabbitMQ: users, TLS listener, and the guest account
 
-RabbitMQ's default `guest`/`guest` account can only connect from localhost, which protects fresh installs exactly until someone "fixes" it. The official Docker image ships that fix: its `/etc/rabbitmq/conf.d/10-defaults.conf` sets `loopback_users.guest = false`, so in a container from that image the default `guest`/`guest` administrator, wherever it exists, can log in from any address that reaches the broker. The documented recommendation is to create real users and delete `guest` or change its password.
+RabbitMQ's default `guest`/`guest` account can only connect from localhost, which protects fresh installs exactly until someone "fixes" it. The official Docker image ships that fix: its `/etc/rabbitmq/conf.d/10-defaults.conf` sets `loopback_users.guest = false`, so in a container from that image as shipped (a later configuration layer can set it back) the default `guest`/`guest` administrator, wherever it exists, can log in from any address that reaches the broker. The documented recommendation is to create real users and delete `guest` or change its password.
 
 The settings below were checked against the current RabbitMQ 4.3 documentation in September 2026. These controls are available in open source RabbitMQ; no commercial edition is required. The export command specifically requires a current `rabbitmqadmin` v2, not v1.
 
@@ -141,7 +141,7 @@ Standard internal-user HTTP authentication uses RabbitMQ credentials. Use the ob
 
 ## 4. epmd and the Erlang distribution port
 
-Two more listeners exist beyond AMQP and management: epmd, the Erlang Port Mapper Daemon, defaults to `4369`; the distribution listener defaults to `25672`, derived from `RABBITMQ_NODE_PORT` plus 20000 (as of v4.3.6, unless a non-empty `RABBITMQ_DIST_PORT`, or its unprefixed form `DIST_PORT`, sets it). The latter carries clustering and CLI traffic. Pin its private IPv4 address and port in `rabbitmq.conf`:
+Two more listeners exist beyond AMQP and management: epmd, the Erlang Port Mapper Daemon, defaults to `4369`; the distribution listener defaults to `25672`, derived from `RABBITMQ_NODE_PORT` plus 20000 (as of v4.3.6), a default that the environment (a non-empty `RABBITMQ_DIST_PORT`, or its unprefixed form `DIST_PORT`) or the configuration (the `distribution.listener.port_range` keys set below) can replace. The latter carries clustering and CLI traffic. Pin its private IPv4 address and port in `rabbitmq.conf`:
 
 ```ini
 distribution.listener.interface = REPLACE_WITH_BROKER_PRIVATE_IP
