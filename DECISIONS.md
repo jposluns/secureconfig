@@ -40,12 +40,13 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 - **The weekly lychee sweep:** fail only on dead links (404s). Redirects are listed but do not fail the job (row
   3.19). No reasoning was given beyond the option chosen.
 
-- **The vendored AIQT files' licence.** The guides stay CC0. The AIQT files vendored under `.aiqt/` and in
-  `tools/` are Apache-2.0: guardrails' LICENSE and NOTICE are vendored beside them, and each CC0 statement names
-  the exception (#343). The maintainer first asked whether relicensing the repository to Apache-2.0 would be
-  easier; the answer given was that it would put redistribution conditions on configuration readers copy, and
-  that earlier releases stay CC0 regardless. They then chose to keep CC0 with the exception. No other reasoning was
-  given.
+- **The vendored AIQT files' licence.** The guides stay CC0. The AIQT Guardrails material the repository vendors
+  or adapts is Apache-2.0: the pack's LICENSE and NOTICE are vendored into `.aiqt/`, and each CC0 statement names
+  the exception (#343). Review found that the earlier pin predated the pack's move to Apache-2.0, so the maintainer
+  ruled to re-pin to an Apache-era commit, rather than grant Apache-2.0 to the pinned versions or label them CC
+  BY-SA 4.0. The maintainer first asked whether relicensing the repository to Apache-2.0 would be easier; the
+  answer given was that it would put redistribution conditions on configuration readers copy, and that earlier
+  releases stay CC0 regardless. They then chose to keep CC0 with the exception. No other reasoning was given.
 
 - **A retroactive full-panel review of #255 and #256:** run it against their current text. This overrode my
   recommendation, which was to close it without one. No reasoning was given. Its findings are rows 1.136 and 3.17.
