@@ -17,8 +17,9 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
-- **A `TODO.md` row-format gate (ratings and unique ids required), 2026-09-24: declined for now.** The maintainer:
-  "operational tooling will be standardized by the OPF standard." On 2026-09-25 they applied the same ground to
+- **A `TODO.md` row-format gate (ratings and unique ids required), 2026-09-24: declined for now,** on the ground
+  that operational tooling will be standardized by the OPF standard. On 2026-09-25 the maintainer applied the same
+  ground to
   P1 (the id series), deferring it, and ruled P2 (gating row shape) covered; both are struck in
   `PENDING-DECISIONS.md`. The option chosen for P1 and P2 read: "Treat both as overtaken by the OPF
   standardization ruling"; no other reasoning was given.
@@ -38,6 +39,13 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 - **The weekly lychee sweep:** fail only on dead links (404s). Redirects are listed but do not fail the job (row
   3.19). No reasoning was given beyond the option chosen.
+
+- **The vendored AIQT files' licence.** The guides stay CC0. The AIQT files vendored under `.aiqt/` and in
+  `tools/` are Apache-2.0: guardrails' LICENSE and NOTICE are vendored beside them, and each CC0 statement names
+  the exception (#343). The maintainer first asked whether relicensing the repository to Apache-2.0 would be
+  easier; the answer given was that it would put redistribution conditions on configuration readers copy, and
+  that earlier releases stay CC0 regardless. They then chose to keep CC0 with the exception. No other reasoning was
+  given.
 
 - **A retroactive full-panel review of #255 and #256:** run it against their current text. This overrode my
   recommendation, which was to close it without one. No reasoning was given. Its findings are rows 1.136 and 3.17.
