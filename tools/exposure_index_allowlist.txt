@@ -1,5 +1,7 @@
 # Allowlist for tools/check_exposure_index.py: guide/port pairs that match a port pattern but are not
-# listeners this corpus documents. One `<guide> <port>` pair per line, with the reason after `#`.
+# listeners that guide documents (an outbound destination, an illustrative number, a test rig, a
+# pointer to another guide, a container port behind a remapped publication), whether the mention is
+# unmapped or uncited. One `<guide> <port>` pair per line, with the reason after `#`.
 # The gate fails on an entry that no longer matches any mention, so remove a line when its text goes.
 README.md 80  # README pointer: step 2 names the ports a public certificate host must expose and links free-certificates.md, which the 80, 443 row cites; not a listener
 README.md 443  # README pointer: the same step 2 sentence as README.md 80; not a listener
