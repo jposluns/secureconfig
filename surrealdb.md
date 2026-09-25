@@ -46,7 +46,7 @@ from a local demo, on anything reachable beyond your own machine.
 `--bind`/`-b` (`SURREAL_BIND`) sets the listening address and defaults to `127.0.0.1:8000` (as of v3.2.4),
 loopback only. The images built from the repository's `docker/Dockerfile` do not keep that default: each of its
 runtime stages sets `SURREAL_BIND=0.0.0.0:8000` and none sets a `CMD`, so a container run with `start` and no
-`--bind` of its own listens on every IPv4 interface inside the container. That is safe only while the host side
+`--bind` or `SURREAL_BIND` of its own listens on every IPv4 interface inside the container. That is safe only while the host side
 stays private: publish it on host loopback (`127.0.0.1:8000:8000`) or attach it to a private network only. On a
 host, widen the bind deliberately, and only to a private address, for example `--bind 10.0.0.5:8000`; never
 bind an unauthenticated or root-only instance to `0.0.0.0`. SurrealDB's own security guidance says
