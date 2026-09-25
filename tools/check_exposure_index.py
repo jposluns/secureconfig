@@ -330,14 +330,54 @@ def guides(root: Path):
             yield path
 
 
-# The backticked pair shape. A code span is found by CommonMark's rule: a run of backticks closed
-# by the next run of the same length; one space of padding on each side is stripped when both are
-# present and the content is not all spaces. The span counts only when its whole content is a
-# `[host:]H:C` pair (`8888:8080`, `127.0.0.1:8888:8080`, `[::]:9090:7777/udp`), so a pair inside a
-# longer span, or a single-backtick pair nested in a double-backtick span, is not one. Two unequal
-# two-digit sides read as a time, duration or ratio (`10:30`, `70:30`) and are dropped.
-CODE_SPAN_RUN = re.compile(r"(?<!`)(`+)(?!`)(.+?)(?<!`)\1(?!`)")
+# The backticked pair shape. A span counts only when its whole content is a `[host:]H:C` pair
+# (`8888:8080`, `127.0.0.1:8888:8080`, `[::]:9090:7777/udp`), so a pair inside a longer span, or a
+# single-backtick pair nested in a double-backtick span, is not one. Two unequal two-digit sides
+# read as a time, duration or ratio (`10:30`, `70:30`) and are dropped.
 TICK_PAIR = re.compile(HOSTPFX + r"(\d{2,5}):(\d{2,5})(?:/(?i:tcp|udp))?")
+
+
+def code_spans(line):
+    """Yield the content of each CommonMark code span on one line.
+
+    Outside a span a backslash escapes the next character, so an escaped backtick is literal; a
+    backtick run then opens a span that the next run of exactly the same length closes, and inside
+    a span a backslash is literal. A run with no closing run is literal. One space of padding on
+    each side is stripped when both are present and the content is not all spaces. Raw HTML and
+    autolinks, which take precedence over a span in CommonMark, are not modelled; when this was
+    written, the result matched markdown-it on every backticked line outside fences in the guides.
+    """
+    i, n = 0, len(line)
+    while i < n:
+        if line[i] == "\\":
+            i += 2
+            continue
+        if line[i] != "`":
+            i += 1
+            continue
+        j = i
+        while j < n and line[j] == "`":
+            j += 1
+        run, k, close = j - i, j, -1
+        while k < n:
+            if line[k] == "`":
+                m = k
+                while m < n and line[m] == "`":
+                    m += 1
+                if m - k == run:
+                    close = k
+                    break
+                k = m
+            else:
+                k += 1
+        if close < 0:
+            i = j
+            continue
+        body = line[j:close]
+        if len(body) > 2 and body[0] == body[-1] == " " and body.strip(" "):
+            body = body[1:-1]
+        yield body
+        i = close + run
 
 
 def mentions(path: Path):
@@ -362,10 +402,7 @@ def mentions(path: Path):
                     if 1 <= int(n) <= 65535 and int(n) not in seen:
                         seen.add(int(n))
                         yield ln, int(n)
-        for span in CODE_SPAN_RUN.finditer(line):
-            body = span.group(2)
-            if len(body) > 2 and body[0] == body[-1] == " " and body.strip(" "):
-                body = body[1:-1]
+        for body in code_spans(line):
             pair = TICK_PAIR.fullmatch(body)
             if not pair:
                 continue
