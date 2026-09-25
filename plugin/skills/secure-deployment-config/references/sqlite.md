@@ -79,6 +79,7 @@ Scan built client bundles for a leaked Turso/libSQL token, keeping the token off
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
+  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited extdebug, no function named like a command below
   set +x +a                             # never trace or export the token read below
   { unset -n tok && unset -v tok; } 2>/dev/null ||
     { echo 'a readonly tok is set in this shell; not scanning'; exit 2; }
@@ -154,6 +155,7 @@ Any HTTP response from the untrusted vantage is a reachable listener (the findin
 
 ```bash
 (
+  trap - DEBUG RETURN ERR  # assumes a clean shell: no inherited extdebug, no function named like a command below
   set +x +a
   { unset -n turso_tok && unset -v turso_tok; } 2>/dev/null ||
     { echo "a readonly turso_tok is set in this shell; not probing"; exit 2; }
