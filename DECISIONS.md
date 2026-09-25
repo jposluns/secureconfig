@@ -17,6 +17,19 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Rule 7 gains a clause for a tool with no non-argv input for a secret, 2026-09-25T16:49Z: draft it now (#354).**
+  On the question whether rule 7 should get a clause for a tool that takes a secret only in argv, the maintainer's
+  words were "Draft the CONTRIBUTING PR now". The question's framing was coturn's `turnutils_uclient`, reported to
+  take the TURN password only as `-w` and the TURN REST secret only as `-W` at coturn 4.18.0
+  (`src/apps/uclient/mainuclient.c`, with no getenv, getpass, stdin or fopen path for either), and #353, which
+  discloses that exposure in `realtime-voice-infra.md` rather than removing it. The clause's terms are those of
+  #354 as merged, among them: pinned-source proof that no non-argv input exists, a preferred alternative where one
+  exists, a guarded hidden prompt, disclosure of process-lifetime argv exposure, and a throwaway or short-lived
+  credential on a host with no untrusted local account. No reasoning was given beyond the question's framing. On
+  2026-09-25T17:41Z, asked whether `realtime-voice-infra.md` should be brought into line with the clause in this
+  same pull request, the maintainer chose "In #354 (Recommended)"; row 1.140 tracks evaluating a TURN client that
+  takes the password outside argv.
+
 - **P5, the CSP-hash gate's neighbours: all three.** Beyond row 3.18's `<script>` and `on*` handlers in an SVG,
   the gate also refuses a `javascript:` URL in an SVG, including one set by `<animate>` or `<set>`; an inline
   `<style>` or `style=` in an SVG; and an `on*` attribute on an HTML page, each as its own refusal with its own
