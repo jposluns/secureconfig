@@ -21,7 +21,7 @@ vLLM's server supports requiring an API key; check `vllm serve --help` on your i
 
 ## Hugging Face Text Generation Inference (TGI)
 
-`text-generation-launcher` listens on `0.0.0.0:3000` by default (as of v3.3.7; `--hostname`, env `HOSTNAME`; `--port`, env `PORT`), so a bare TGI container answers on every interface. Bind it to loopback, or publish nothing from the container network except the proxy:
+`text-generation-launcher` listens on `0.0.0.0:3000` by default (as of v3.3.7; `--hostname`, env `HOSTNAME`; `--port`, env `PORT`). The official image sets `PORT=80`, so a bare container listens on port 80 instead, and on every interface: Docker sets `HOSTNAME` to the container's hostname (by default its short ID), which is not an IP address, and the router then falls back to `0.0.0.0`. Bind it to loopback, or publish nothing from the container network except the proxy:
 
 Lifecycle note, as of September 2026: the TGI repository is in maintenance mode and was archived on 2026-03-21 (read-only). Hugging Face recommends vLLM, SGLang, or local engines such as llama.cpp going forward. A server that no longer receives fixes belongs behind the same controls as any other, and on a migration list.
 
@@ -142,6 +142,8 @@ For text-generation-webui, ask the API edge for the model list without a key. Th
 - vLLM security, API key authentication limitations (protected prefixes, unprotected `/invocations` and profiler routes): https://docs.vllm.ai/en/latest/usage/security/
 - TGI launcher arguments (--hostname, --port, --api-key, --prometheus-port): https://huggingface.co/docs/text-generation-inference/reference/launcher
 - TGI launcher `hostname` default `0.0.0.0` and `port` default 3000, each also read from the environment (pinned tag v3.3.7, the last release before the repository was archived): https://github.com/huggingface/text-generation-inference/blob/v3.3.7/launcher/src/main.rs#L769-L774
+- TGI official image `ENV ... PORT=80` (pinned tag v3.3.7): https://github.com/huggingface/text-generation-inference/blob/v3.3.7/Dockerfile#L147-L149
+- TGI router: a `--hostname` that does not parse as an IP address logs "Invalid hostname, defaulting to 0.0.0.0" and binds `0.0.0.0` (pinned tag v3.3.7): https://github.com/huggingface/text-generation-inference/blob/v3.3.7/router/src/server.rs#L1906-L1910
 - TGI router source (what --api-key enforces): https://github.com/huggingface/text-generation-inference/blob/24ee40d143d8d046039f12f76940a85886cbe152/router/src/server.rs
 - TGI repository (maintenance-mode notice, archived 2026-03-21): https://github.com/huggingface/text-generation-inference
 - SGLang server arguments (--host, --port, --api-key, --admin-api-key, SSL flags; docs.sglang.ai redirects here): https://docs.sglang.io/docs/advanced_features/server_arguments
