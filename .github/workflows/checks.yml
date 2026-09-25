@@ -9,36 +9,79 @@ permissions:
   contents: read
 
 jobs:
+  # The gate suite this job runs is offline: no gate in tools/run_all_checks.sh reaches the
+  # network. This job is not. Before the suite starts, the runner fetches the repository and the
+  # two pinned actions below, setup-python installs Python 3.14, and the shellcheck step
+  # downloads a release asset, so an outage at GitHub or in any of those downloads can fail this
+  # required check with no change in the repository. That is the tradeoff accepted for these pins:
+  # the actions are pinned by commit SHA, shellcheck by version and SHA-256, and Python only to its
+  # 3.14 series (neither its patch release nor the runner image is fixed), and a failure here is loud.
   gates:
     runs-on: ubuntu-latest
+    env:
+      # The one place the shellcheck version is written. The install step reads both values and
+      # the assertion step checks the installed binary against the version, so bump the two
+      # together; a version with a stale digest fails at sha256sum before anything is extracted.
+      # The digest is the SHA-256 GitHub publishes for the release asset
+      # shellcheck-v0.11.0.linux.x86_64.tar.xz on koalaman/shellcheck's v0.11.0 release
+      # (the asset's digest field in the releases API), and on 2026-09-25 the downloaded
+      # asset hashed to the same value. It covers the uploaded bytes; it is not a signature from
+      # the shellcheck maintainer. #255 committed this value without recording where it came from.
+      SHELLCHECK_VERSION: "0.11.0"
+      SHELLCHECK_SHA256: "8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198"
     steps:
-      - uses: actions/checkout@v4
+      # Actions are pinned to full commit SHAs, because a tag is a pointer its owner can move. The
+      # trailing comment names the release each SHA was taken from; bump the two together.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
         with:
           fetch-depth: 0   # the changelog-coverage gate reads the merge history
+          # No gate pushes or fetches, so the token is not left in .git/config for later steps.
+          persist-credentials: false
       # The gate suite parses HTML with html.parser, whose rawtext edge behaviour has shifted
-      # across Python releases, while `ubuntu-latest` floats its system Python. Pin it so a
-      # runner image update cannot change what a gate computes.
-      - uses: actions/setup-python@v5
+      # across Python releases, while `ubuntu-latest` floats its system Python. Constrain it to the
+      # 3.14 series so a runner image update cannot move it to another minor version; a 3.14 patch
+      # release can still change it (row 3.22 tracks pinning and asserting the exact release).
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
         with:
           python-version: "3.14"
-      # shellcheck also floats on `ubuntu-latest`, and its default rule set changes between
-      # releases: in #231 the runner's older shellcheck raised SC2015 on a correct
-      # `[ -f ] && [ -r ] || { ...; exit; }` guard that the gate's local 0.11.0 does not, so a green
-      # local run reddened only in CI after push. Pin shellcheck to the version the gate is
-      # developed against, so local == CI. Same determinism reason as the Python pin above.
-      # The download is verified by SHA-256; a release-asset outage failing the job is the
-      # tradeoff already accepted for setup-python, and the gate itself stays offline.
-      - name: Pin shellcheck to 0.11.0
+      # shellcheck also floats on `ubuntu-latest`, which ships its own, and its default rule set
+      # changes between releases: in #231 the runner's older shellcheck raised SC2015 on a correct
+      # `[ -f ] && [ -r ] || { ...; exit; }` guard that 0.11.0 does not, so a green local run
+      # reddened only in CI after push. CI therefore installs the pinned release and, in the next
+      # step, asserts that a bare `shellcheck` is that binary at that version before the suite
+      # runs. Local runs are NOT held to the pin: tools/check_shell_blocks.py lints with whatever
+      # shellcheck is on PATH, names its version and path in the pass line, and prints a SKIP and
+      # passes when none is installed. A green local run therefore predicts CI only when its pass
+      # line names the pinned version. CI never runs the suite against any other.
+      - name: Install the pinned shellcheck
         run: |
           set -euo pipefail
-          ver=0.11.0
-          sha=8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198
-          url="https://github.com/koalaman/shellcheck/releases/download/v${ver}/shellcheck-v${ver}.linux.x86_64.tar.xz"
-          curl -fsSL --retry 3 --retry-all-errors -o shellcheck.tar.xz "$url"
-          echo "${sha}  shellcheck.tar.xz" | sha256sum -c -
-          tar xf shellcheck.tar.xz
-          sudo install -m0755 "shellcheck-v${ver}/shellcheck" /usr/local/bin/shellcheck
-          rm -rf shellcheck.tar.xz "shellcheck-v${ver}"
-          shellcheck --version
+          ver="$SHELLCHECK_VERSION"
+          sha="$SHELLCHECK_SHA256"
+          url="https://github.com/koalaman/shellcheck/releases/download/v$ver/shellcheck-v$ver.linux.x86_64.tar.xz"
+          dl="$(mktemp -d "$RUNNER_TEMP/shellcheck.XXXXXX")"
+          trap 'rm -rf -- "$dl"' EXIT
+          curl -fsSL --retry 3 --retry-all-errors -o "$dl/shellcheck.tar.xz" "$url"
+          echo "$sha  $dl/shellcheck.tar.xz" | sha256sum -c -
+          tar xf "$dl/shellcheck.tar.xz" -C "$dl"
+          sudo install -m0755 "$dl/shellcheck-v$ver/shellcheck" /usr/local/bin/shellcheck
+      # Asserted, not printed. #255 printed `shellcheck --version` and nothing compared it with
+      # anything, so the runner's own shellcheck could have linted silently. Exact match on the
+      # whole `version:` field: a missing, duplicated or different field fails, and so does a
+      # `--version` that exits non-zero.
+      - name: Assert the pinned shellcheck is the one on PATH
+        run: |
+          set -euo pipefail
+          resolved="$(command -v shellcheck || true)"
+          if [ "$resolved" != /usr/local/bin/shellcheck ]; then
+            echo "::error::shellcheck resolves to '$resolved', not /usr/local/bin/shellcheck"
+            exit 1
+          fi
+          got="$(shellcheck --version | sed -n '/^version:/p')"
+          if [ "$got" != "version: $SHELLCHECK_VERSION" ]; then
+            echo "::error::unexpected shellcheck version fields: '$got', not exactly 'version: $SHELLCHECK_VERSION'"
+            exit 1
+          fi
+          echo "shellcheck $SHELLCHECK_VERSION at $resolved"
       - name: Run the gate suite
         run: tools/run_all_checks.sh
