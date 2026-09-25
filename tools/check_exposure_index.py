@@ -338,14 +338,17 @@ TICK_PAIR = re.compile(HOSTPFX + r"(\d{2,5}):(\d{2,5})(?:/(?i:tcp|udp))?")
 
 
 def code_spans(line):
-    """Yield the content of each CommonMark code span on one line.
+    """Yield the content of each code span on one line, by CommonMark's backtick and escape rules.
 
     Outside a span a backslash escapes the next character, so an escaped backtick is literal; a
     backtick run then opens a span that the next run of exactly the same length closes, and inside
     a span a backslash is literal. A run with no closing run is literal. One space of padding on
-    each side is stripped when both are present and the content is not all spaces. Raw HTML and
-    autolinks, which take precedence over a span in CommonMark, are not modelled; when this was
-    written, the result matched markdown-it on every backticked line outside fences in the guides.
+    each side is stripped when both are present and the content is not all spaces. Only backtick
+    runs and backslash escapes are modelled: text that CommonMark reads as a link destination or
+    title, raw HTML or an autolink, a span continuing across a line break, and a GFM table row
+    split into cells before its spans are read can all be read differently here. When this was
+    written, the result matched markdown-it on every backticked line outside fences in the guides,
+    none of which uses those constructs around a pair.
     """
     i, n = 0, len(line)
     while i < n:
