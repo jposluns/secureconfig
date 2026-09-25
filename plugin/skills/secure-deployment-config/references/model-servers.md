@@ -16,7 +16,7 @@ Self-hosted model servers follow the [ollama.md](ollama.md) pattern: exposing on
 )
 ```
 
-`umask 077` applies before anything is written, so the directory is created mode `0700` and the file mode `0600`, and `set -C` refuses to overwrite an existing file, so running the block again cannot replace a key your clients already hold. If `openssl` fails, the block leaves an empty file behind: delete it before running the block again, and the launch block below refuses to start on it. The key goes from `openssl` straight into the file, so it never passes through a shell variable or a command line. Add one line per further client key. Clients on this host can read the same file; give remote clients their copy through your secret store ([secrets.md](secrets.md)). The file holds the key in plaintext at rest, readable by that account, by root, and by any backup that copies it, so keep it and its backups out of source control.
+`umask 077` applies before anything is written, so the directory is created mode `0700` and the file mode `0600`, and `set -C` refuses to overwrite an existing file, so running the block again cannot replace a key your clients already hold. If `openssl` fails, the block leaves an empty file behind: delete it before running the block again, and the launch block below refuses to start on it. The key goes from `openssl` straight into the file, so it never passes through a shell variable or a command line. Add one line per further client key; at the pinned commit a line that begins with `#` is a comment. Clients running as that account on this host can read the same file; give remote clients their copy through your secret store ([secrets.md](secrets.md)). The file holds the key in plaintext at rest, readable by that account, by root, and by any backup that copies it, so keep it and its backups out of source control.
 
 Start the server from the file:
 
@@ -24,15 +24,15 @@ Start the server from the file:
 (
   { unset -n LLAMA_API_KEY LLAMA_ARG_API_KEY_FILE && unset -v LLAMA_API_KEY LLAMA_ARG_API_KEY_FILE; } 2>/dev/null ||
     { echo 'cannot clear LLAMA_API_KEY or LLAMA_ARG_API_KEY_FILE in this shell; not starting'; exit 2; }
-  grep -q '[^[:space:]]' "$HOME/.config/llama-server/api-keys" ||
-    { echo 'no key in ~/.config/llama-server/api-keys; not starting'; exit 2; }
+  grep -q '^[^#[:space:]]' "$HOME/.config/llama-server/api-keys" ||
+    { echo 'no key line in ~/.config/llama-server/api-keys; not starting'; exit 2; }
   llama-server -m model.gguf --api-key-file "$HOME/.config/llama-server/api-keys"
 )
 ```
 
 The pinned README also lists `LLAMA_API_KEY` as an environment input for `--api-key` and `LLAMA_ARG_API_KEY_FILE` for `--api-key-file`. The block clears both names first and refuses to start when it cannot (a readonly name in your shell), so an inherited value can neither become a key nor point the server at a different file. A key passed through `LLAMA_API_KEY` would stay out of argv but remain readable through `/proc/<pid>/environ` by the same account and by root for the server's whole lifetime; the file avoids that channel.
 
-The block refuses a file with no non-blank line, but it cannot tell a real key from other text, and what llama-server does with a file whose only lines are blank was not checked at the pinned commit. Confirm the key is enforced by probing the llama.cpp backend DIRECTLY on its own host and port from the trusted network (not through the proxy, which returns its own 401/200 regardless): a no-key request must be refused there and a keyed request accepted.
+The block refuses a file with no line that starts with a key character, so a file of blank lines and `#` comments alone is refused, but it cannot tell a real key from other text, and what llama-server does with a file that holds no key line was not checked at the pinned commit. Confirm the key is enforced by probing the llama.cpp backend DIRECTLY on its own host and port from the trusted network (not through the proxy, which returns its own 401/200 regardless): a no-key request must be refused there and a keyed request accepted.
 
 Native TLS exists when the binary is built with OpenSSL (`-DLLAMA_OPENSSL=ON`): `--ssl-key-file` and `--ssl-cert-file` take PEM files ([self-signed.md](self-signed.md) or [free-certificates.md](free-certificates.md)). A reverse proxy per [nginx.md](nginx.md)/[caddy.md](caddy.md) is the alternative when your build lacks SSL support.
 
@@ -54,7 +54,7 @@ The launcher reference lists `--api-key` (env `API_KEY`) without describing it. 
 
 ## SGLang
 
-`python -m sglang.launch_server` listens on `127.0.0.1:30000` by default (`--host`, `--port`; values as of v0.5.20); keep that bind. `--api-key` sets the key the OpenAI-compatible endpoints require, and `--admin-api-key` separately protects administrative endpoints (weight updates, cache flush, `/server_info`), which then require `Authorization: Bearer <admin key>`. Do not put either value on the command line: there it is readable through `ps` and `/proc/<pid>/cmdline` by other local accounts for the server's whole lifetime. At v0.5.20, `--config` reads the server options from a YAML file instead, and the pinned sources document no stdin or environment input for either key, so put both keys in a file that only the account running SGLang can read. Create it once, as that account:
+`python -m sglang.launch_server` listens on `127.0.0.1:30000` by default (`--host`, `--port`; values as of v0.5.20); keep that bind. `--api-key` sets the key the OpenAI-compatible endpoints require, and `--admin-api-key` separately protects administrative endpoints (at v0.5.20, the weight-update endpoints and `/flush_cache` among them, but not `/server_info`; see below), which then require `Authorization: Bearer <admin key>`. Do not put either value on the command line: there it is readable through `ps` and `/proc/<pid>/cmdline` by other local accounts for the server's whole lifetime. At v0.5.20, `--config` reads the server options from a YAML file instead, and the pinned sources document no stdin or environment input for either key, so put both keys in a file that only the account running SGLang can read. Create it once, as that account:
 
 ```bash
 (
@@ -64,6 +64,7 @@ The launcher reference lists `--api-key` (env `API_KEY`) without describing it. 
   set -- "$(openssl rand -hex 32)" "$(openssl rand -hex 32)"
   [ "${#1}" -eq 64 ] || { echo 'key generation failed; nothing written'; exit 2; }
   [ "${#2}" -eq 64 ] || { echo 'key generation failed; nothing written'; exit 2; }
+  case "$1$2" in *[!0123456789abcdef]*) echo 'key generation failed; nothing written'; exit 2 ;; esac
   mkdir -p -- "$HOME/.config/sglang"
   chmod 700 -- "$HOME/.config/sglang"
   printf 'api-key: "%s"\nadmin-api-key: "%s"\n' "$1" "$2" > "$HOME/.config/sglang/server.yaml"
@@ -76,7 +77,7 @@ The block writes nothing unless both generated keys are 64 hex characters, becau
 python -m sglang.launch_server --model-path REPLACE_WITH_MODEL_PATH --config "$HOME/.config/sglang/server.yaml"
 ```
 
-Clients read the API key from the file's `api-key` line; give the admin key only to the operators who use the administrative endpoints. SGLang turns the file's values into an internal argument list before parsing them; that list lives inside the Python process, not in the kernel's `/proc/<pid>/cmdline`, so the keys stay out of `ps`. They remain in process memory and in the file (plaintext at rest, readable by that account and by root, so keep it and its backups out of source control), and in anything that prints the server's configuration, so protect the startup log and any diagnostic that echoes it.
+Clients read the API key from the file's `api-key` line; give the admin key only to the operators who use the administrative endpoints. SGLang turns the file's values into an internal argument list before parsing them; that list lives inside the Python process, not in the kernel's `/proc/<pid>/cmdline`, so the keys stay out of `ps`. They remain in process memory and in the file (plaintext at rest, readable by that account and by root, so keep it and its backups out of source control), and SGLang itself hands them out. At v0.5.20 the launch path logs `server_args=` with every resolved field, both keys included, at INFO level, and `/server_info` (and its deprecated alias `/get_server_info`) returns the same fields plus `launch_command`, the argument list with the file's values merged in, to any request the ordinary API key authorizes, because it carries no admin auth level. This was read in the pinned source (cited in Sources), not run. So a holder of the API key can read the admin key: give the API key only to clients you would also trust with the administrative endpoints, protect the startup log, and refuse `/server_info` and `/get_server_info` at the reverse proxy for every other client.
 
 Native TLS exists: `--ssl-keyfile` and `--ssl-certfile` take PEM files ([self-signed.md](self-signed.md) or [free-certificates.md](free-certificates.md)), `--ssl-ca-certs` names a CA bundle, and `--enable-ssl-refresh` hot-reloads renewed certificates. A reverse proxy remains the simpler choice when you already run one.
 
@@ -123,8 +124,9 @@ ss -tlnp   # every listener; 8080/8000/8001/8002/3000/80/9000/30000/5000/7860/12
            # namespace-local BIND, not a host firewall, a cloud security group, or Docker -p NAT
            # publication. From another host, probe EACH backend listener's own host and port (adapt the
            # subshell below, which shows the technique for one endpoint) and confirm each is refused
-pgrep -c -f -- '--(admin-)?api-key( |=)'   # 0 means no --api-key or --admin-api-key value on any command line on this host;
-                                          # 1 or more means a key is in argv. It does not see --admin-key or Triton's restricted-API values
+pgrep -c -f -- '(^| )--(admin-)?api-key( |=)'   # counts visible command lines with an --api-key or --admin-api-key argument;
+                                                # 0 means none was seen right now, and any match needs a look. It does not
+                                                # see --admin-key, --gradio-auth or Triton's restricted-API values
 (
   # Feed the API key to curl on stdin (curl --header @-), never in argv:
   # -H "Authorization: Bearer KEY" is readable in ps / /proc/<pid>/cmdline.
@@ -157,7 +159,7 @@ pgrep -c -f -- '--(admin-)?api-key( |=)'   # 0 means no --api-key or --admin-api
                                                         # denial. Treat anything ambiguous as inconclusive
 ```
 
-The `pgrep` line counts processes whose full command line carries an `--api-key` or `--admin-api-key` value, which covers llama-server, SGLang, vLLM and the TGI router; it prints a count and never a key, and it excludes itself. It was demonstrated on the authoring host against a stub process that opened no listener: a stub started with `--api-key DUMMY_NOT_A_SECRET` in its arguments counted, and the same stub started with `--api-key-file` counted `0`, so the line tells the old launch form from the new one. No model server was run for it. A `hidepid` proc mount limits the count to your own processes, and a process that has scrubbed its own arguments is not seen.
+The `pgrep` line counts processes whose visible command line has an argument that is `--api-key` or `--admin-api-key` followed by a space or `=`, the form llama-server, SGLang and the TGI router take a key in (and vLLM, if your version's key flag is `--api-key`); it prints a count and never a key, and it excludes itself. A count is a lead, not proof: an empty value, or an argument of unrelated text that contains ` --api-key `, matches too, and `0` means only that no visible process matched at that moment. It was demonstrated on the authoring host against a stub process that opened no listener: a stub started with `--api-key DUMMY_NOT_A_SECRET` in its arguments counted, and the same stub started with `--api-key-file` counted `0`, so the line tells the old launch form from the new one; with the pattern above (procps-ng 4.0.4), `--admin-api-key=DUMMY_NOT_A_SECRET` and an empty `--api-key=` counted `1`, and `notes--api-key x` counted `0`. No model server was run for it. A `hidepid` proc mount limits the count to your own processes, and a process that has scrubbed its own arguments is not seen.
 
 For text-generation-webui, ask the API edge for the model list without a key. This step is reasoned, not demonstrated: the authoring environment has no container runtime to stand up a live instance, so the expected `401` is derived from the bearer-token check in `modules/api/script.py` (cited in Sources), not observed, and backlog row 1.50 tracks demonstrating the exposed and protected states. The block prints the `exitcode` and `errormsg` write-out variables, which need curl 7.75.0 or newer. A `200` with a model list means the API is open to anyone; a `401` means the key is enforced. A transfer error is inconclusive: a TLS failure (`exit=35` or `exit=60`) in particular means something did answer, since the API serves plain HTTP unless `--ssl-keyfile`/`--ssl-certfile` are set, so read the `exit` and `err` fields, fix any DNS, TLS, or client cause, and confirm the API listener's own address and port directly from the intended vantage. A `400` carrying `Invalid host header` is the API rejecting the forwarded `Host` (see the reverse-proxy note above), not an authentication result, and a rejection page from your proxy proves only the proxy.
 
@@ -207,4 +209,5 @@ For text-generation-webui, ask the API edge for the model list without a key. Th
 - SGLang `--config` ("Read CLI options from a config file. Must be a YAML file with configuration options."; pinned tag v0.5.20): https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/server_args.py#L397-L399
 - SGLang configuration loader (`yaml.safe_load`, a `.yaml` or `.yml` suffix required, each key turned into the option `--<key>` and the values merged into the argument list before parsing; pinned tag v0.5.20): https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/utils/server_args_config_parser.py#L118-L187
 - SGLang environment registry, checked for an API-key or admin-key entry and found to carry none (pinned tag v0.5.20): https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/environ.py
+- SGLang key exposure at v0.5.20 (read in source, not run): the `api_key` and `admin_api_key` fields (https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/arg_groups/fields/serving.py#L155-L162), `resolved_dict` over every field and `_launch_command` joined from the merged argument list (https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/server_args.py#L311-L325 and #L736), the INFO log of `server_args=` (https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/entrypoints/engine.py#L1109), `/server_info` with no `auth_level` decorator (https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/entrypoints/http_server.py#L818-L850) and a normal endpoint requiring only the API key (https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/utils/auth.py#L145-L151)
 - TGI launcher: `api_key` is `#[clap(long, env)]`, and the launcher pushes `--api-key` and the value into the router's arguments (pinned tag v3.3.7): https://github.com/huggingface/text-generation-inference/blob/v3.3.7/launcher/src/main.rs
