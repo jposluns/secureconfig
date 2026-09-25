@@ -2,40 +2,48 @@
 #
 # Upstream:  https://github.com/jposluns/guardrails
 # Ref:       main
-# Commit:    8ab5b9ae37cdf4f8bcdb0a73934cb5a58b2aea87
-# Version:   1.0.0 (.aiqt/manifest.toml release-version)
-# Vendored:  2026-09-09
+# Commit:    ad60d25af5a00aa95b64635f891d7c867ab6c9ff
+# Version:   1.0.5 (.aiqt/manifest.toml release-version)
+# Vendored:  2026-09-25 (re-pinned from 8ab5b9ae37cdf4f8bcdb0a73934cb5a58b2aea87, vendored 2026-09-09)
 #
-# Vendored byte-identical from upstream at the commit above:
+# Vendored byte-identical from upstream at the commit above, except the one local patch below:
 #   .aiqt/hooks/hooks.json            <- plugin/aiqt-guardrails-hooks/hooks/hooks.json
 #   .aiqt/hooks/scripts/aiqt_hooks.py <- plugin/aiqt-guardrails-hooks/hooks/scripts/aiqt_hooks.py
 #   tools/_walk.py                    <- tools/_walk.py
 #   tools/_standards.py               <- tools/_standards.py
-#   tools/_gen_common.py              <- tools/_gen_common.py   (LOCAL PATCH, see below)
-#   tools/check_site.py               <- tools/check_site.py   (LOCAL PATCH, see below)
+#   tools/_gen_common.py              <- tools/_gen_common.py
+#   tools/check_site.py               <- tools/check_site.py
 #   tools/check_no_dashes.py          <- tools/check_no_dashes.py
-#   tools/check_newtab.py             <- tools/check_newtab.py
+#   tools/check_newtab.py             <- tools/check_newtab.py   (LOCAL PATCH, see below)
 #   .aiqt/core/rules/trust-continue-by-default.md
 #                                     <- .aiqt/core/rules/trust-continue-by-default.md
-#     The "Continue by default" rule, corpus-id cntdef. Byte-identical at the pinned commit and at
-#     upstream main as of 2026-09-13, so vendoring it needs no pin bump. CLAUDE.md and AGENTS.md
-#     point at it rather than paraphrasing it.
+#     The "Continue by default" rule, corpus-id cntdef. CLAUDE.md and AGENTS.md point at it rather than
+#     paraphrasing it.
+#   .aiqt/LICENSE                     <- LICENSE
+#   .aiqt/NOTICE                      <- NOTICE
+#     Vendored on guardrails' advice until the pack ships both files inside its own vendored surface.
 #
-# LOCAL PATCHES to re-apply on upgrade:
-#   tools/_gen_common.py  is_external_url() reads the site host from the AIQT_SITE_HOST
-#     environment variable, defaulting to the upstream "aiqt.ai". This repo sets
-#     AIQT_SITE_HOST=secureconfig.ai in tools/run_all_checks.sh. UPSTREAMED: guardrails accepted
-#     this on 2026-09-13 and is applying it as their own change, lowercasing the host in both files
-#     and adding an empty-string fallback so an empty AIQT_SITE_HOST cannot make every dotted host
-#     resolve internal. It is folded into their first digest-verifiable release, REL-1, which is the
-#     release row 3.7 waits on. Drop this patch when we re-pin to that tag.
-#   tools/check_site.py   SITE_HOSTS is derived from AIQT_SITE_HOST (default aiqt.ai) instead of the
-#     hardcoded {"aiqt.ai", "www.aiqt.ai"}, so absolute https://secureconfig.ai/... self-links in
-#     site/index.html are classified internal and resolved. UPSTREAMED with the `_gen_common.py`
-#     patch above, same release. Drop both together at REL-1.
+# Adapted, not vendored:
+#   CLAUDE.md and AGENTS.md (byte-identical to each other). Their AIQT sections are adapted, with changes,
+#   from upstream aiqt-barebones.md at the commit above; the repository-specific sections are secureconfig's.
+#
+# Licence: everything listed above is AIQT Guardrails material under the Apache License 2.0 (.aiqt/LICENSE,
+#   .aiqt/NOTICE). This pin was re-pinned on 2026-09-25 because the earlier pin predates the pack's move to
+#   Apache-2.0 (at upstream eeba6d1). The rest of this repository is CC0; README, CONTRIBUTING, SECURITY and
+#   CLAUDE.md/AGENTS.md name this exception. The local patch carries a "LOCAL PATCH" notice in the file
+#   (Apache-2.0 section 4(b)).
+#
+# LOCAL PATCH to re-apply on upgrade:
+#   tools/check_newtab.py  main() takes its coverage roots from AIQT_NEWTAB_ROOTS, outside the self-test (space-separated; unset or
+#     empty keeps upstream's "site opf/site"), because opf/site/ exists only in the upstream repository and
+#     upstream treats each root as required. tools/run_all_checks.sh sets AIQT_NEWTAB_ROOTS=site. Reported
+#     upstream on 2026-09-25; drop the patch when upstream makes the roots configurable.
+#   The two earlier local patches (AIQT_SITE_HOST in tools/_gen_common.py and tools/check_site.py) are
+#   upstream at the commit above and are no longer needed. tools/run_all_checks.sh still sets
+#   AIQT_SITE_HOST=secureconfig.ai, which the upstream code now reads.
 #
 # Generated from the vendored files, do not hand-edit:
 #   .claude/settings.json  <- python3 tools/gen_aiqt_settings.py
 #
 # To upgrade: re-copy the vendored paths at the new ref, bump Commit/Version/Vendored above,
-# re-apply the local patches, re-run tools/gen_aiqt_settings.py, then run tools/run_all_checks.sh.
+# re-apply the local patch, re-run tools/gen_aiqt_settings.py, then run tools/run_all_checks.sh.

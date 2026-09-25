@@ -230,4 +230,4 @@ Scope: deployment exposure, including TLS, human and machine authentication, MFA
 
 ## Licence
 
-Everything in this repository (the guides, the configuration samples, and the site) is dedicated to the public domain under [CC0 1.0 Universal](LICENSE). Copy and reuse it freely; no attribution is required.
+Everything in this repository (the guides, the configuration samples, and the site) is dedicated to the public domain under [CC0 1.0 Universal](LICENSE). Copy and reuse it freely; no attribution is required. The one exception is the AIQT Guardrails material that [`.aiqt/PIN`](https://github.com/jposluns/secureconfig/blob/main/.aiqt/PIN) lists (the files vendored under `.aiqt/` and `tools/`, and the AIQT sections adapted into `CLAUDE.md` and `AGENTS.md`), which is licensed under the Apache License 2.0 (see [`.aiqt/LICENSE`](https://github.com/jposluns/secureconfig/blob/main/.aiqt/LICENSE) and [`.aiqt/NOTICE`](https://github.com/jposluns/secureconfig/blob/main/.aiqt/NOTICE)).
