@@ -1,6 +1,6 @@
 # Streamlit: TLS and authentication
 
-Streamlit apps have no access control unless you add it, and `streamlit run` listens on all interfaces on port `8501` by default (`server.address` unset, `server.port` `8501`). Decide both layers before exposing an app.
+Streamlit apps have no access control unless you add it, and `streamlit run` listens on all interfaces on port `8501` by default (as of 1.64.0: `server.address` unset, which falls back to `0.0.0.0` and binds `::` when Python supports IPv6; `server.port` `8501`, and when that port is busy and was not set explicitly, Streamlit tries up to 100 following ports). Decide both layers before exposing an app.
 
 ## 1. TLS
 
@@ -176,6 +176,9 @@ REASONED, and tracked in backlog row 1.121:
 Source-checked on 2026-09-18 against Streamlit 1.64.0, the current release at the time of writing; `server.address` defaults to unset (all interfaces) and `server.port` to `8501`, and the explicit loopback setting above is required for the fronting-proxy pattern. `st.login()` has been available since the 1.42.0 series.
 
 - config.toml reference (server.address, server.sslCertFile, server.sslKeyFile, and the production warning): https://docs.streamlit.io/develop/api-reference/configuration/config.toml
+- Streamlit `server.address` default unset and `server.port` default `8501` (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/config.py#L1016-L1036
+- Streamlit's unset address falls back to `DEFAULT_SERVER_ADDRESS` `0.0.0.0` and is bound as `::` when `socket.has_ipv6` (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L80-L98
+- Streamlit's port search: `configured_port + attempt` for up to `MAX_PORT_SEARCH_RETRIES` (100) attempts, exiting instead when `server.port` was set explicitly (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L363-L400
 - Authentication concepts (st.login, st.logout, st.user, [auth] keys, default scope, stated limitations): https://docs.streamlit.io/develop/concepts/connections/authentication
 - st.user API reference (claims copied from the ID token, `st.user.email`): https://docs.streamlit.io/develop/api-reference/user/st.user
 - Streamlit release notes (1.64.0 current; st.login since the 1.42.0 series): https://docs.streamlit.io/develop/quick-reference/release-notes

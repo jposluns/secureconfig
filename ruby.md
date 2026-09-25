@@ -1,6 +1,6 @@
 # Ruby on Rails and Puma: TLS and authentication
 
-Puma's default bind is `tcp://[::]:9292` (or `tcp://0.0.0.0:9292` without IPv6): every interface, plain HTTP. Rails encrypts its session cookie but still sends it in clear unless HTTPS is enforced. Preferred layout: bind Puma to loopback and terminate TLS in a reverse proxy ([nginx.md](nginx.md), [caddy.md](caddy.md), [apache.md](apache.md)) or behind [cloudflare.md](cloudflare.md), with a certificate from [free-certificates.md](free-certificates.md). Puma can also terminate TLS itself, shown below.
+Puma's default bind is `tcp://[::]:9292` when the host has a non-loopback IPv6 address, otherwise `tcp://0.0.0.0:9292` (as of v8.0.2): every interface, plain HTTP. Rails encrypts its session cookie but still sends it in clear unless HTTPS is enforced. Preferred layout: bind Puma to loopback and terminate TLS in a reverse proxy ([nginx.md](nginx.md), [caddy.md](caddy.md), [apache.md](apache.md)) or behind [cloudflare.md](cloudflare.md), with a certificate from [free-certificates.md](free-certificates.md). Puma can also terminate TLS itself, shown below.
 
 ## 1. Bind Puma privately
 
@@ -108,7 +108,8 @@ git ls-files config/master.key                                   # prints nothin
 
 - Puma README (binding): https://github.com/puma/puma/blob/aef89221e4d729c3133c723844382331ba3bbbd9/README.md
 - Puma DSL (`bind`, `ssl_bind`, default bind): https://github.com/puma/puma/blob/d70de8b4e926f1f5fa0269dc46cdfadf52562628/lib/puma/dsl.rb
-- Puma configuration defaults (`tcp://[::]:9292`): https://github.com/puma/puma/blob/0daa1a174ae8cc9ab2dd54d4fa09c74ff787bbb9/lib/puma/configuration.rb
+- Puma default TCP port `9292` (`tcp_port: 9292`, L174) and default bind host (L369-L384): `::` when a non-loopback IPv6 interface exists, else `0.0.0.0` (pinned tag v8.0.2): https://github.com/puma/puma/blob/v8.0.2/lib/puma/configuration.rb#L369-L384
+- Puma `UNSPECIFIED_IPV4 = "0.0.0.0"` and `UNSPECIFIED_IPV6 = "::"` (pinned tag v8.0.2): https://github.com/puma/puma/blob/v8.0.2/lib/puma/const.rb#L214-L215
 - Rails configuring guide (`force_ssl`, `assume_ssl`, `ssl_options`, `hosts`, `session_store`, `cookies_same_site_protection`, `require_master_key`): https://guides.rubyonrails.org/configuring.html
 - Action Pack 7.1 changelog (`ActionDispatch::AssumeSSL`): https://github.com/rails/rails/blob/ffcbf6f205363f8c2fb3e9834bc86690dd59f1cb/actionpack/CHANGELOG.md
 - `ActionDispatch::RemoteIp` (trusted proxies, spoofing warning): https://api.rubyonrails.org/classes/ActionDispatch/RemoteIp.html
