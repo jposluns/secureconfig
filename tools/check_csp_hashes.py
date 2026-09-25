@@ -103,7 +103,8 @@ So the model is deliberately tiny, declared PER PAGE, and everything outside it 
     inert text (`<!-- <b title=" -->`) made it read a tag a browser never sees and swallow a real
     handler after it as a quoted value, while html.parser missed that handler inside SVG `<title>`,
     and both counts were 0 (round 3 of #352). That accounting is kept as defense in depth; what now
-    closes the hole is REFUSED CONTEXTS, below, none of which asks html.parser anything;
+    closes the hole is the ELEMENT ALLOWLIST, with REFUSED CONTEXTS behind it, below, none of
+    which asks html.parser anything;
   - exactly one `<meta charset="utf-8">` and no other charset declaration per page, because this
     always decodes UTF-8 and a page declaring something else would be decoded, and hashed, differently
     by a browser that has no transport charset to override it;
@@ -140,10 +141,14 @@ whole page, pinned bodies included. Each is a finding with its own message:
      so its `</svg>` closed the region here and not there. The real inline SVGs hold only `svg`,
      `circle`, `path` and `rect`;
   4. anywhere on the page, pinned bodies included, a `</` not followed by an ASCII letter (`</>`,
-     `</ `, `</1`, `</!`, `</` and a tab). A browser reads one as a bogus comment running to the
-     next `>`, html.parser does not, and the text it swallows can hold an `</svg>` or the end of
-     a pinned block, so the SVG region and the pinned text would differ from a browser's. The
-     real pages, pinned bodies included, contain none.
+     `</ `, `</1`, `</!`, `</` and a tab). Not every one is a bogus comment to a browser: `</>` is
+     dropped, `</` at the end of the input is text, and inside script or style data a malformed
+     ending is text. Everywhere else `</` and a non-letter opens a bogus comment running to the
+     next `>`, which html.parser does not model, and the text it swallows can hold an `</svg>` or
+     the end of a pinned block, so the SVG region and the pinned text would differ from a
+     browser's. The refusal is conservative: it refuses the harmless spellings too, because
+     telling them apart needs the context this gate does not model. The real pages, pinned
+     bodies included, contain none.
 
 Rules 2 to 4 are conservative, not exact: they refuse inert text a browser would render harmlessly,
 and SVG a browser would draw, because the point is that nothing outside them has to be modelled.
@@ -151,7 +156,19 @@ Once rules 2 and 4 hold, no comment, CDATA section, declaration, bogus comment o
 outside the pinned bodies holds a `<`, and no malformed end tag exists anywhere, so no fake tag can
 open inside inert text and swallow real markup after it, which is what the tag reading in rule 3
 and the literal accounting assume. That is the premise, stated rather than proven; each round that
-has broken it has added a rule here.
+has broken it has added a rule here, which is why rules 1 to 4 are now defense in depth behind the
+allowlist below.
+
+ELEMENT ALLOWLIST (round 5 of #352). Refusing divergent contexts one at a time did not close the
+class: a `<frameset>` around the pinned stylesheet made a browser drop the `<style>` and build a
+`<frame onload>` from what html.parser hashed as its body, and `<select><style><input><a onclick>`
+did the same through select parsing. So every tag name on a page, start or end, compared ASCII
+case-insensitively, must be in PAGE_ELEMENTS, which lists exactly the elements the real pages use
+today (inline SVG children included). The names are read context-free: every `<` or `</` followed by
+an ASCII letter anywhere in the page text, pinned bodies, comments and attribute values included,
+so a name html.parser reads as text inside a block it misplaced is still checked. An unlisted name
+is a finding, "element <x> is not in the page allowlist", even where a browser would read it as
+text; that is the conservative direction. Extending the list is a reviewed change to the gate.
 
 THE ONE POLICY, UNDER `/*`. `site/404.html` is served as the body for any unmatched request path, and
 Cloudflare matches `_headers` rules against the REQUESTED URL, so a CSP set (or detached) under any
@@ -233,6 +250,17 @@ INERT_OPEN = re.compile(r"<(" + "|".join(INERT) + r")(?=[\t\n\f />])", re.I)
 ANY_TAG = re.compile(r"<(/?)([A-Za-z][^\t\n\f />]*)")
 SVG_DIVERGENT = ("title", "desc", "foreignobject", "style", "script")
 MALFORMED_END = re.compile(r"</(?![A-Za-z])")
+# Round 5 of #352: the ELEMENT ALLOWLIST. Exactly the tag names the real site/index.html and
+# site/404.html use today, inline SVG children included, read context-free over the whole page. Adding
+# site content that needs another element means extending this list in a reviewed change, and only
+# with an element whose parsing html.parser and a browser agree on; see ELEMENT ALLOWLIST in the
+# docstring.
+PAGE_ELEMENTS = frozenset((
+    "html", "head", "meta", "title", "link", "style", "body", "div", "header", "nav", "main",
+    "footer", "h1", "h2", "h3", "p", "a", "span", "code", "pre", "button", "ol", "li", "script",
+    "svg", "circle", "path", "rect"))
+TAG_NAME = re.compile(r"</?([A-Za-z][^\t\n\f />]*)")
+ASCII_LOWER = str.maketrans("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz")
 CHARSET = re.compile(r"charset\s*=", re.I)
 META_UTF8 = '<meta charset="utf-8">'
 CSP = "content-security-policy"
@@ -433,12 +461,30 @@ def unmodelled_contexts(path, text):
     return out
 
 
+def unlisted_elements(path, html):
+    """ELEMENT ALLOWLIST: every `<` or `</` and an ASCII letter anywhere in the page, pinned bodies and
+    attribute values included, names an element that must be in PAGE_ELEMENTS."""
+    out, seen = [], set()
+    for m in TAG_NAME.finditer(html):
+        name = m.group(1).translate(ASCII_LOWER)
+        if name not in PAGE_ELEMENTS and name not in seen:
+            seen.add(name)
+            out.append(f"{path}:{line_of(html, m.start())}: element <{name}> is not in the page "
+                       f"allowlist. This gate knows how html.parser and a browser parse only the "
+                       f"elements the site already uses; another one (a <frameset>, a <select>) can "
+                       f"change what a browser makes of a pinned block, so extending the list is a "
+                       f"reviewed change to the gate, not a page edit")
+    return out
+
+
 def malformed_end_tags(path, html):
     """Rule 4 of REFUSED CONTEXTS: `</` without a letter after it, anywhere, pinned bodies included."""
     return [f"{path}:{line_of(html, m.start())} has a malformed end tag, `</` not followed by an "
-            f"ASCII letter. A browser reads it as a bogus comment running to the next `>`, and "
-            f"html.parser does not, so the text it swallows (an </svg>, or the end of a pinned "
-            f"block) is read differently here and there; it is outside the gate's model, even "
+            f"ASCII letter. Outside script and style data a browser reads most such sequences as "
+            f"a bogus comment running to the next `>` (`</>` is dropped, and `</` at the end of "
+            f"input is text), and html.parser does not, so the text one swallows (an </svg>, or "
+            f"the end of a pinned block) is read differently here and there. Telling the harmless "
+            f"ones apart needs context this gate does not model, so it refuses every one, even "
             f"inside a pinned <style> or <script>"
             for m in MALFORMED_END.finditer(html)]
 
@@ -537,6 +583,7 @@ def simple_enough(path, page, html, shape):
     out += unmodelled_contexts(path, outside)
     out += foreign_divergences(path, outside)
     out += malformed_end_tags(path, html)
+    out += unlisted_elements(path, html)
     # A literal `style=` the parser never reported is the same blind spot as an unreported element:
     # html.parser swallows <title> content as RCDATA, so an attribute smuggled through <svg><title>
     # was invisible while a browser applies it and CSP-checks it.

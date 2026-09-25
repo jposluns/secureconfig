@@ -70,6 +70,17 @@ pinned stylesheet or script, wrapped in `<svg>`, carry a live `<a onclick>`. Its
 the row 3.18 cases, repin every reproduction so that only the new rule can refuse it: the sixteen
 stylesheet combinations (two pages, two handler forms, four prefixes), the script-wrapping variant
 in both forms, `</` in the pinned script itself, and each malformed spelling in page text.
+
+Round 5 of #352 found `<frameset>` and `<select>` wrapping the pinned stylesheet so that a browser
+built a `<frame onload>` or `<a onclick>` from what html.parser hashed as the block, and the model
+changed: every tag name on a page must be in an allowlist of the elements the real pages use. Its
+cases, counted with the row 3.18 cases, are both reproductions in both handler forms on both pages
+(repinned so only the allowlist can refuse them), a refusal per disallowed element, mixed case, a
+lone end tag, a name inside a comment and one inside the pinned script, and a pass for allowed
+elements in any case, and, so that rule 2 stays tested behind the allowlist, each inert context
+holding only an allowlisted `<p>`. Two earlier cases changed: the `<noscript>`/`<textarea>` plain-text guard, once
+a pass, is now refused by the allowlist, and the handler-bearing tag in the pinned script string is
+an `<a>` rather than a `<b>`, so that it still passes.
 """
 import base64
 import contextlib
@@ -704,7 +715,8 @@ for page_name, base in (("index.html", PAGE), ("404.html", PAGE_404)):
     scope_case(f"P5 data-onload on {page_name} is not a handler",
                page={page_name: base.replace(
                    "</body>", '<div data-onload="x" data-on>x</div>\n</body>', 1)})
-ONTAG_JS_PAGE = PAGE.replace("(function () {", '(function () {\n  var tpl = "<b onclick>x</b>";', 1)
+# Round 5 of #352: `<b>` is not in the page allowlist, so the string now carries an `<a>`.
+ONTAG_JS_PAGE = PAGE.replace("(function () {", '(function () {\n  var tpl = "<a onclick>x</a>";', 1)
 scope_case("P5 a handler-bearing tag in a JavaScript string is script text, repinned",
            page=ONTAG_JS_PAGE, headers=repinned(ONTAG_JS_PAGE, "script"))
 scope_case("P5 a handler-bearing tag in a page comment fails closed", expected="on* handler",
@@ -781,7 +793,9 @@ for page_name, base in (("index.html", PAGE), ("404.html", PAGE_404)):
     scope_case(f"#352 r3 a <title> holding plain text on {page_name} passes",
                page={page_name: re.sub(r"<title>[^<]*</title>", "<title>Only one, on call</title>",
                                        base, count=1)})
-    scope_case(f"#352 r3 a <noscript> and a <textarea> holding plain text on {page_name} pass",
+    # Round 5 of #352: once a pass, now refused, since neither element is in the page allowlist.
+    scope_case(f"#352 r3 a <noscript> and a <textarea> holding plain text on {page_name}, refused "
+               f"by the allowlist", expected="element <noscript> is not in the page allowlist",
                page={page_name: base.replace(
                    "</body>", "<noscript>on duty</noscript><textarea>one, on</textarea>\n</body>", 1)})
 
@@ -814,6 +828,59 @@ scope_case("#352 r4 rule 4: `</` inside the pinned index script, repinned", expe
            page=PAGE.replace("(function () {", "(function () {\n  var s = '</ x';", 1),
            headers=repinned(PAGE.replace("(function () {", "(function () {\n  var s = '</ x';", 1),
                             "script"))
+
+# Round 5 of #352 (codex finding): a <frameset> around the pinned stylesheet made a browser drop the
+# <style> and build a <frame onload> from what html.parser hashed as its body, and
+# <select><style><input><a onclick> did the same through select parsing; every rule above passed.
+# The gate now allows only the elements the real pages use. Each reproduction is repinned to the
+# text html.parser hashes, so only the allowlist can refuse it.
+ALLOWLIST = "is not in the page allowlist"
+for page_name, base in (("index.html", PAGE), ("404.html", PAGE_404)):
+    for form, attr in (("valued", 'onload="window.__qa352=1"'), ("valueless", "onload")):
+        wrapped = base.replace("<style>", f"<frameset><style>\n<frame {attr}>\n", 1
+                               ).replace("</style>", "</style></frameset>", 1)
+        scope_case(f"#352 r5 frameset around the stylesheet, {form} <frame onload>, on {page_name}",
+                   expected="element <frameset> " + ALLOWLIST, page={page_name: wrapped},
+                   headers=repinned(wrapped, "style", base_page=base))
+    for form, handler in HANDLER_FORMS:
+        wrapped = base.replace("<style>", f"<select><style>\n<input><a {handler}>\n", 1
+                               ).replace("</style>", "</style></select>", 1)
+        scope_case(f"#352 r5 select around the stylesheet, {form} <a onclick>, on {page_name}",
+                   expected="element <select> " + ALLOWLIST, page={page_name: wrapped},
+                   headers=repinned(wrapped, "style", base_page=base))
+    for element in ("frameset", "frame", "select", "template", "math", "iframe", "object", "embed",
+                    "noscript", "textarea", "xmp", "plaintext", "noembed", "noframes",
+                    "foreignObject", "desc", "input", "b", "table", "form", "image", "isindex"):
+        scope_case(f"#352 r5 allowlist: <{element}> on {page_name}",
+                   expected=f"element <{element.lower()}> " + ALLOWLIST,
+                   page={page_name: base.replace("</body>", f"<{element}></{element}>\n</body>", 1)})
+    scope_case(f"#352 r5 allowlist: mixed-case <FrameSet> on {page_name}",
+               expected="element <frameset> " + ALLOWLIST,
+               page={page_name: base.replace("</body>", "<FrameSet>\n</body>", 1)})
+    scope_case(f"#352 r5 allowlist: an end tag alone, </select>, on {page_name}",
+               expected="element <select> " + ALLOWLIST,
+               page={page_name: base.replace("</body>", "</select>\n</body>", 1)})
+    scope_case(f"#352 r5 allowlist: <frameset> inside a comment on {page_name}, read context-free",
+               expected="element <frameset> " + ALLOWLIST,
+               page={page_name: base.replace("</body>", "<!-- <frameset> -->\n</body>", 1)})
+    scope_case(f"#352 r5 allowed elements in any case on {page_name} pass",
+               page={page_name: base.replace(
+                   "</body>", "<P>x <SPAN>y</SPAN> <Code>z</Code></P>\n</body>", 1)})
+    # Rule 2 behind the allowlist: each inert context holding only an allowlisted name, so the
+    # allowlist passes it and rule 2 alone refuses it.
+    for what, fragment, expected in (
+            ("comment", "<!-- a <p> c -->", "has a comment whose text"),
+            ("CDATA section", "<![CDATA[ a <p> c ]]>", "has a CDATA section whose text"),
+            ("declaration", "<!thing a <p>", "has a <! declaration whose text"),
+            ("processing instruction", "<?thing a <p>", "has a <? declaration whose text"),
+            ("<title>", "<title>a <p>c</title>", "has a <title> whose content")):
+        scope_case(f"#352 r5 rule 2 alone: {what} holding an allowlisted <p> on {page_name}",
+                   expected=expected,
+                   page={page_name: base.replace("</body>", fragment + "\n</body>", 1)})
+FRAMESET_JS_PAGE = PAGE.replace("(function () {", '(function () {\n  var tpl = "<frameset>";', 1)
+scope_case("#352 r5 allowlist: <frameset> inside the pinned index script, repinned",
+           expected="element <frameset> " + ALLOWLIST, page=FRAMESET_JS_PAGE,
+           headers=repinned(FRAMESET_JS_PAGE, "script"))
 
 
 def file_link(d):
