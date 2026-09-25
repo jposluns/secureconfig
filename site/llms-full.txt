@@ -18072,7 +18072,7 @@ Both back RAG pipelines and site search. Meilisearch ships a keyless development
 
 ## Meilisearch
 
-Meilisearch runs in two modes. In development mode it answers without a key by default, but development mode can still be protected by launching with `MEILI_MASTER_KEY` set; production mode requires it, together with `--env production`. Either way the master key (at least 16 bytes) is the credential everything else derives from. For a binary running beside its reverse proxy, set `MEILI_HTTP_ADDR=127.0.0.1:7700`; the binary's default is `localhost:7700` (as of v1.53.2), but the official Docker image sets `MEILI_HTTP_ADDR=0.0.0.0:7700`, so with a host-side proxy publish the container port only on host loopback (`127.0.0.1:7700:7700`), and with a containerized proxy use a private container network without publishing the engine port.
+Meilisearch runs in two modes. In development mode it answers without a key by default, but development mode can still be protected by launching with `MEILI_MASTER_KEY` set; production mode requires it, together with `--env production`. Either way the master key (at least 16 bytes) is the credential everything else derives from. For a binary running beside its reverse proxy, set `MEILI_HTTP_ADDR=127.0.0.1:7700`; the binary's default is `localhost:7700` (as of v1.53.2, unless a `config.toml` in its working directory, which it reads without being asked, sets `http_addr`), but the official Docker image sets `MEILI_HTTP_ADDR=0.0.0.0:7700`, so with a host-side proxy publish the container port only on host loopback (`127.0.0.1:7700:7700`), and with a containerized proxy use a private container network without publishing the engine port.
 
 At the time of writing, Meilisearch's master-key documentation describes four default API keys (a Default Search API Key, a Default Admin API Key with full access except key management, a Default Read-Only Admin API Key, and a Default Chat API Key); the inventory and permissions are version-dependent, so check `GET /keys` on your deployed release. It also supports scoped API keys you create yourself and tenant tokens: server-generated JWTs derived from an API key for per-end-user search restrictions, so set a short `exp` explicitly (no later than the parent key's expiry) rather than assuming they are short-lived. Expose the Default Search API Key only when every searchable index and document it permits is public; for confidential data, issue an index-restricted search key or a server-generated tenant token with enforced search rules, and keep the token's signing key server-side. Never put an admin key, the read-only admin key, or the master key in front-end code.
 
@@ -18277,7 +18277,7 @@ Version scope: Typesense 30.2; Meilisearch current unversioned documentation che
 - Typesense backups (snapshot API, not the live data directory): https://typesense.org/docs/guide/backups.html
 - Typesense 30.2 remote embeddings (outbound requests with provider credentials): https://typesense.org/docs/30.2/api/vector-search.html
 - Meilisearch configuration reference (MEILI_HTTP_ADDR default localhost:7700; MEILI_EXPERIMENTAL_ALLOWED_IP_NETWORKS): https://www.meilisearch.com/docs/resources/self_hosting/configuration/reference
-- Meilisearch `DEFAULT_HTTP_ADDR` "localhost:7700" and the `--http-addr` / `MEILI_HTTP_ADDR` option that defaults to it (pinned tag v1.53.2): https://github.com/meilisearch/meilisearch/blob/v1.53.2/crates/meilisearch/src/option.rs#L97 and https://github.com/meilisearch/meilisearch/blob/v1.53.2/crates/meilisearch/src/option.rs#L221-L223
+- Meilisearch `DEFAULT_HTTP_ADDR` "localhost:7700" and the `--http-addr` / `MEILI_HTTP_ADDR` option that defaults to it, and the implicit `./config.toml` read whose values yield to the environment and the command line (pinned tag v1.53.2): https://github.com/meilisearch/meilisearch/blob/v1.53.2/crates/meilisearch/src/option.rs#L95-L97, https://github.com/meilisearch/meilisearch/blob/v1.53.2/crates/meilisearch/src/option.rs#L221-L223 and https://github.com/meilisearch/meilisearch/blob/v1.53.2/crates/meilisearch/src/option.rs#L534-L560
 - Meilisearch v1.53.2 Dockerfile (image sets MEILI_HTTP_ADDR=0.0.0.0:7700): https://raw.githubusercontent.com/meilisearch/meilisearch/v1.53.2/Dockerfile
 - Meilisearch native TLS (--ssl-cert-path, --ssl-key-path): https://www.meilisearch.com/docs/resources/self_hosting/security/http2_ssl
 - Meilisearch tenant-token payload (exp is optional): https://www.meilisearch.com/docs/capabilities/security/advanced/tenant_token_payload
@@ -29221,9 +29221,9 @@ permissions (grant upload, import, update and delete separately from read). Dire
 default; leave it off unless required, and note that its registration flow returns an empty `204` regardless of
 outcome, so a response alone is not proof an account was rejected. GraphQL introspection is enabled by default
 (`GRAPHQL_INTROSPECTION=true`); set it to `false` when schema discovery is unnecessary, reviewing GraphQL under
-the same roles and policies as REST. Directus defaults to `HOST=0.0.0.0` on port `8055` (as of v12.4.1,
-unless `UNIX_SOCKET_PATH` is non-empty) and serves the Data Studio (`/` redirects to `/admin`); on a bare host set
-`HOST=127.0.0.1`, in Docker publish
+the same roles and policies as REST. Directus listens on `HOST`, default `0.0.0.0`, and port `8055` (defaults as
+of v12.4.1; a `UNIX_SOCKET_PATH` naming a socket path replaces both) and serves the Data Studio (`/` redirects to
+`/admin`); on a bare host set `HOST=127.0.0.1`, in Docker publish
 `127.0.0.1:8055:8055` or use an unpublished private network, and protect administration after bootstrap
 (disabling `SERVE_APP` hides the Studio but does not replace API authorization). Directus serves no TLS itself,
 so terminate it in front per [nginx.md](nginx.md) or [caddy.md](caddy.md) and [fronting-auth.md](fronting-auth.md).
@@ -29442,7 +29442,7 @@ Version boundary at the time of writing: Strapi 5 documentation; current Directu
 - Strapi middlewares (public static file serving via koa-static): https://docs.strapi.io/cms/configurations/middlewares
 - Strapi Media Library (upload providers): https://docs.strapi.io/cms/features/media-library
 - Directus configuration, first admin user (ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_TOKEN; PORT default 8055): https://directus.com/docs/configuration/general
-- Directus `HOST` default `0.0.0.0` and `PORT` default 8055, and the branch that replaces them when `UNIX_SOCKET_PATH` is non-empty (pinned tag v12.4.1): https://github.com/directus/directus/blob/v12.4.1/packages/env/src/constants/defaults.ts#L9-L10 and https://github.com/directus/directus/blob/v12.4.1/api/src/server.ts#L169-L182
+- Directus `HOST` default `0.0.0.0` and `PORT` default 8055, and the branch that replaces them when `UNIX_SOCKET_PATH` names a socket path (pinned tag v12.4.1): https://github.com/directus/directus/blob/v12.4.1/packages/env/src/constants/defaults.ts#L9-L10 and https://github.com/directus/directus/blob/v12.4.1/api/src/server.ts#L169-L182
 - Directus access control (public permissions off by default): https://directus.com/docs/guides/auth/access-control
 - Hasura securing the GraphQL endpoint: https://hasura.io/docs/2.0/deployment/securing-graphql-endpoint/
 - Hasura GraphQL Engine flags reference (SERVER_HOST, ENABLE_CONSOLE, ENABLED_APIS, DEV_MODE, UNAUTHORIZED_ROLE): https://hasura.io/docs/2.0/deployment/graphql-engine-flags/reference/
