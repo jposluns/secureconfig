@@ -44,8 +44,9 @@ jobs:
           persist-credentials: false
       # The gate suite parses HTML with html.parser, whose rawtext edge behaviour has shifted
       # across Python releases, while `ubuntu-latest` floats its system Python. Pin the exact release,
-      # and assert it below, so neither a runner image update nor a new patch release can change what
-      # a gate computes without a reviewed bump.
+      # and assert it below, so neither a runner image update nor a new patch release can change which
+      # Python the gates run under without a reviewed bump. The image's other tools (bash, grep, diff,
+      # git) still float with it.
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -92,7 +93,10 @@ jobs:
       - name: Assert the pinned Python is the one on PATH
         run: |
           set -euo pipefail
-          got="$(python3 --version 2>&1)"
+          if ! got="$(python3 --version 2>&1)"; then
+            echo "::error::python3 --version failed: '$got'"
+            exit 1
+          fi
           if [ "$got" != "Python $PYTHON_VERSION" ]; then
             echo "::error::python3 reports '$got', not exactly 'Python $PYTHON_VERSION'"
             exit 1
