@@ -14,7 +14,9 @@ A comment in `pgbouncer.ini` must start its own line. The vendor is explicit: "T
 ; /etc/pgbouncer/pgbouncer.ini
 [pgbouncer]
 ; The application-facing address. Never * unless this is genuinely public.
-; Unset is the default, and it means Unix socket connections only.
+; Unset is the default (as of 1.26.0), and it means Unix socket connections
+; only, unless systemd socket activation passes sockets in: then the .socket
+; unit's ListenStream= lines decide, and listen_addr is ignored.
 listen_addr = 10.0.0.5
 listen_port = 6432
 unix_socket_dir = /var/run/postgresql
@@ -350,6 +352,7 @@ Put the human paths to the host behind MFA per [mfa.md](mfa.md).
 ## Sources (checked September 2026)
 
 - PgBouncer configuration, including the ini comment rule, `listen_addr`, `listen_port`, `client_tls_sslmode`, `server_tls_sslmode`, `auth_type`, `auth_file`, `auth_query`, `admin_users`, `stats_users`, `application_name_add_host`, and the `[databases]` `user` key: https://www.pgbouncer.org/config.html
+- PgBouncer `listen_addr` default `""`, and the socket-activation path that ignores it (pinned tag pgbouncer_1_26_0): https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/src/main.c#L292 and https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/src/pooler.c#L495-L498
 - PgBouncer usage, the admin console and its `SHOW` commands, including who `auth_type=any` admits and the passwordless Unix-socket login: https://www.pgbouncer.org/usage.html
 - PgBouncer changelog, for CVE-2026-6664, CVE-2026-6665, CVE-2026-6666 and CVE-2026-6667, all fixed in 1.25.2: https://www.pgbouncer.org/changelog.html
 - PgBouncer features and pooling modes: https://www.pgbouncer.org/features.html
