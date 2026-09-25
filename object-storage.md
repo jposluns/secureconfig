@@ -497,6 +497,7 @@ Use the same bucket and object in both arguments, with the correct regional endp
 
 ```bash
 (
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 's3://REPLACE_WITH_BUCKET/model.safetensors' 'https://REPLACE_WITH_BUCKET.s3.REPLACE_WITH_REGION.amazonaws.com/model.safetensors'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -553,6 +554,7 @@ The signed URL stays out of curl's process arguments because the shell's builtin
 
 ```bash
 (
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_FIXTURE_URL'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
