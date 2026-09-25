@@ -24,13 +24,15 @@ Start the server from the file:
 (
   { unset -n LLAMA_API_KEY LLAMA_ARG_API_KEY_FILE && unset -v LLAMA_API_KEY LLAMA_ARG_API_KEY_FILE; } 2>/dev/null ||
     { echo 'cannot clear LLAMA_API_KEY or LLAMA_ARG_API_KEY_FILE in this shell; not starting'; exit 2; }
+  set -- "${!LLAMA_ARG_@}"
+  [ "$#" -eq 0 ] || { printf 'LLAMA_ARG_* variables set in this shell:'; printf ' %s' "$@"; printf '; unset them first; not starting\n'; exit 2; }
   grep -q '^[^#[:space:]]' "$HOME/.config/llama-server/api-keys" ||
     { echo 'no key line in ~/.config/llama-server/api-keys; not starting'; exit 2; }
   llama-server -m model.gguf --api-key-file "$HOME/.config/llama-server/api-keys"
 )
 ```
 
-The pinned README also lists `LLAMA_API_KEY` as an environment input for `--api-key` and `LLAMA_ARG_API_KEY_FILE` for `--api-key-file`. The block clears both names first and refuses to start when it cannot (a readonly name in your shell), so an inherited value can neither become a key nor point the server at a different file. A key passed through `LLAMA_API_KEY` would stay out of argv but remain readable through `/proc/<pid>/environ` by the same account and by root for the server's whole lifetime; the file avoids that channel.
+The pinned README also lists `LLAMA_API_KEY` as an environment input for `--api-key` and `LLAMA_ARG_API_KEY_FILE` for `--api-key-file`. The block clears both names first and refuses to start when it cannot (a readonly name in your shell), so an inherited value can neither become a key nor point the server at a different file. It then refuses to start while any other `LLAMA_ARG_*` variable is set in the calling shell, naming each: the pinned README gives most llama-server options an `LLAMA_ARG_*` environment input, `LLAMA_ARG_HOST` for `--host` among them, so an inherited one would start the server differently from what the block shows, on another interface included. Unset them, or start from a clean shell. A key passed through `LLAMA_API_KEY` would stay out of argv but remain readable through `/proc/<pid>/environ` by the same account and by root for the server's whole lifetime; the file avoids that channel.
 
 The block refuses a file with no line that starts with a key character, so a file of blank lines and `#` comments alone is refused, but it cannot tell a real key from other text, and what llama-server does with a file that holds no key line was not checked at the pinned commit. Confirm the key is enforced by probing the llama.cpp backend DIRECTLY on its own host and port from the trusted network (not through the proxy, which returns its own 401/200 regardless): a no-key request must be refused there and a keyed request accepted.
 
@@ -38,7 +40,37 @@ Native TLS exists when the binary is built with OpenSSL (`-DLLAMA_OPENSSL=ON`): 
 
 ## vLLM (OpenAI-compatible server)
 
-vLLM's server supports requiring an API key; check `vllm serve --help` on your installed version for the current option name (the docs at https://docs.vllm.ai/ document it; this guide avoids pinning the flag because vLLM's CLI moves quickly). The key does not cover the whole server. vLLM's own security page states that it authenticates only the `/v1`, `/v2`, and `/inference` path prefixes, and lists `/invocations`, the SageMaker-compatible route, as requiring no key while reaching the same inference capability as the protected `/v1` routes; the profiler routes `/start_profile` and `/stop_profile` are likewise unauthenticated, and a plugin route outside those prefixes is unauthenticated unless the plugin enforces its own check. vLLM says plainly not to rely on the key alone. Allowlist only the routes your application needs at the proxy and refuse everything else there, `/invocations` included, rather than assuming the key covers the surface. vLLM binds every interface by default: `vllm serve` leaves `--host` unset, which listens on `0.0.0.0` (the startup log shows `http://0.0.0.0:8000`), so pass `--host 127.0.0.1` to keep it on loopback. vLLM can terminate TLS natively (`--ssl-keyfile`, `--ssl-certfile`, and `--ssl-ca-certs`, passed through to uvicorn), but fronting it with a TLS proxy or tunnel is the recommended pattern; either way keep the server itself on loopback or a private network.
+vLLM's server requires an API key when one is set: at both pinned commits `--api-key` sets it, and when that flag is unset the server falls back to the `VLLM_API_KEY` environment variable. Flags move between vLLM releases, so confirm `--api-key` and `--config` in `vllm serve --help` on your installed version. Do not put the key on the command line, where `ps` and `/proc/<pid>/cmdline` show it to other local accounts for the server's whole lifetime. At the pinned commits `--config` reads the server options from a YAML file inside the process, so put the key in a file only the account running vLLM can read. Create it once, as that account:
+
+```bash
+(
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  set -eC +x +a
+  umask 077
+  set -- "$(openssl rand -hex 32)"
+  [ "${#1}" -eq 64 ] || { echo 'key generation failed; nothing written'; exit 2; }
+  case "$1" in *[!0123456789abcdef]*) echo 'key generation failed; nothing written'; exit 2 ;; esac
+  mkdir -p -- "$HOME/.config/vllm"
+  chmod 700 -- "$HOME/.config/vllm"
+  printf 'api-key: "%s"\n' "$1" > "$HOME/.config/vllm/server.yaml"
+)
+```
+
+The block writes nothing unless the generated key is 64 hex characters. `umask 077` creates the directory mode `0700` and the file mode `0600`, and `set -C` refuses to overwrite an existing file, so a rerun cannot replace a key your clients already hold. The key passes only through the subshell's positional parameters and the builtin `printf`, never a command line; the block clears inherited traps first because a DEBUG, RETURN or ERR trap from your shell could otherwise read it, and it assumes a clean shell. Start the server with only non-secret values on its command line, and do not add `--api-key` there, which would put the value back in argv:
+
+```bash
+(
+  { unset -n VLLM_API_KEY VLLM_USE_RUST_FRONTEND && unset -v VLLM_API_KEY VLLM_USE_RUST_FRONTEND; } 2>/dev/null ||
+    { echo 'cannot clear VLLM_API_KEY or VLLM_USE_RUST_FRONTEND in this shell; not starting'; exit 2; }
+  grep -Eq '^api-key: "[0-9a-f]{64}"$' "$HOME/.config/vllm/server.yaml" ||
+    { echo 'no generated api-key line in ~/.config/vllm/server.yaml; not starting'; exit 2; }
+  vllm serve REPLACE_WITH_MODEL --host 127.0.0.1 --config "$HOME/.config/vllm/server.yaml"
+)
+```
+
+The launch block clears `VLLM_API_KEY` first and refuses to start when it cannot (a readonly name in your shell), so an inherited value cannot stand in for the key, and it refuses a file with no generated `api-key` line. It clears `VLLM_USE_RUST_FRONTEND` the same way, because with that opt-in set the pinned server starts a Rust frontend process and hands it the parsed arguments, the key included, as a JSON `--args-json` value on that process's command line. Keep `--config` and the path as two words: the pinned parser expands the file only when `--config` is an argument of its own, and it accepts `--config=FILE` without reading the file, so that server would start with no key. `--host 127.0.0.1` stays on the command line because it is not secret. vLLM merges the file's values into its argument list inside the Python process, and API server processes it starts receive their arguments through Python's `spawn` pipe rather than a command line, so the key stays out of `/proc/<pid>/cmdline` and `ps`. The HTTP server's startup log prints the non-default arguments with `api_key` redacted, but `vllm serve --grpc` logs its whole argument set unredacted, the key included, so protect that log if you use `--grpc`. The key remains in process memory and in the file (plaintext at rest, readable by that account and by root, so keep it and its backups out of source control). Clients read the key from the file's `api-key` line; give remote clients their copy through your secret store ([secrets.md](secrets.md)). A key passed through `VLLM_API_KEY` would stay out of argv but remain readable through `/proc/<pid>/environ` by the same account and by root for the server's whole lifetime, and in any process that inherits it; the file avoids that channel. This was read in the pinned source (cited in Sources). The pinned parser class was also run on its own, outside vLLM, with vLLM's logger stubbed and a minimal `serve` parser in place of vLLM's own: with `--config FILE` it turned the generated file's `api-key` line into a one-element key list, and with `--config=FILE` it left the key unset. No vLLM server was run.
+
+The key does not cover the whole server. vLLM's own security page states that it authenticates only the `/v1`, `/v2`, and `/inference` path prefixes, and lists `/invocations`, the SageMaker-compatible route, as requiring no key while reaching the same inference capability as the protected `/v1` routes; the profiler routes `/start_profile` and `/stop_profile` are likewise unauthenticated, and a plugin route outside those prefixes is unauthenticated unless the plugin enforces its own check. vLLM says plainly not to rely on the key alone. Allowlist only the routes your application needs at the proxy and refuse everything else there, `/invocations` included, rather than assuming the key covers the surface. vLLM binds every interface by default: `vllm serve` leaves `--host` unset, which listens on `0.0.0.0` (the startup log shows `http://0.0.0.0:8000`), so pass `--host 127.0.0.1` to keep it on loopback. vLLM can terminate TLS natively (`--ssl-keyfile`, `--ssl-certfile`, and `--ssl-ca-certs`, passed through to uvicorn), but fronting it with a TLS proxy or tunnel is the recommended pattern; either way keep the server itself on loopback or a private network.
 
 ## Hugging Face Text Generation Inference (TGI)
 
@@ -89,7 +121,7 @@ Native TLS exists: `--ssl-keyfile` and `--ssl-certfile` take PEM files ([self-si
 tritonserver --model-repository=/models --http-address=127.0.0.1 --grpc-address=127.0.0.1 --metrics-address=127.0.0.1
 ```
 
-`--allow-http` and `--allow-grpc` default to true; NVIDIA recommends setting either to false when not required, and `--allow-metrics` switches off the metrics listener. For gRPC, `--grpc-use-ssl` with `--grpc-server-cert` and `--grpc-server-key` enables a TLS channel, and `--grpc-use-ssl-mutual` requires client certificates. HTTP has no TLS option; the proxy provides it. `--http-restricted-api` and `--grpc-restricted-protocol` fence the model-control APIs behind a shared-secret header, a useful second layer but not a substitute for the gateway. Builds with cloud endpoints add conditional listeners beyond these three: `AIP_MODE=PREDICTION` enables a Vertex AI endpoint (its port is `AIP_HTTP_PORT`, otherwise 8080), and a SageMaker endpoint may also be present, so disable the ones you do not use or add them to the bind inventory and the checks below.
+`--allow-http` and `--allow-grpc` default to true; NVIDIA recommends setting either to false when not required, and `--allow-metrics` switches off the metrics listener. For gRPC, `--grpc-use-ssl` with `--grpc-server-cert` and `--grpc-server-key` enables a TLS channel, and `--grpc-use-ssl-mutual` requires client certificates. HTTP has no TLS option; the proxy provides it. `--http-restricted-api` and `--grpc-restricted-protocol` fence the API groups you name (model-repository control, and inference too if you list it) behind a shared-secret header, a useful second layer against network clients but not a substitute for the gateway. The secret is part of the flag's value (`--http-restricted-api=<API_1>,<API_2>:<restricted-key>=<restricted-value>`), and `tritonserver` has no other input for it. Traced at the pinned source commit: `tritonserver` parses its options with `getopt_long` over argv, the two options hand their value straight to the restricted-feature parser, the parser opens no option or response file and reads nothing from stdin, and every environment variable read under `src/` has a non-secret name (the `AIP_*` and `SAGEMAKER_*` endpoint settings, the `OTEL_BSP_*` tracing settings, a gRPC response-delay setting and test-backend names). So the value sits in argv, readable through `ps` and `/proc/<pid>/cmdline` by other local accounts for the server's whole lifetime; quoting does not change that, and no `tritonserver` launch form avoids it. Under an orchestrator the same value also sits in the workload definition (a Kubernetes pod spec's `args`, for example) for everyone who can read it. A server's shared secret is neither throwaway nor short-lived, so it is no secret from other accounts on the host: do not rely on it as a control against them. Enforce authorization at the reverse proxy or gateway in front of Triton, which is the control, and treat the restricted-API value only as a check against network clients that reach Triton past it; rotate the value whenever an account you do not trust could have read it. If you do not load and unload models at run time, leave `--model-control-mode` at its default, `none`, under which the model-control API returns an error for load and unload requests, whatever the secret. Builds with cloud endpoints add conditional listeners beyond these three: `AIP_MODE=PREDICTION` enables a Vertex AI endpoint (its port is `AIP_HTTP_PORT`, otherwise 8080), and a SageMaker endpoint may also be present, so disable the ones you do not use or add them to the bind inventory and the checks below.
 
 ## LM Studio (local server)
 
@@ -103,8 +135,66 @@ One process, two surfaces: the Gradio UI (default `127.0.0.1:7860`) and, when st
 
 Auth is per surface, and neither control covers the other:
 
-- UI: `--gradio-auth user:password` (or `--gradio-auth-path FILE` with `user:password` lines) turns on a Gradio login form. It does nothing for the API.
-- API: `--api-key KEY` requires `Authorization: Bearer KEY` on the OpenAI-compatible routes such as `/v1/models` and `/v1/chat/completions`; the Anthropic-compatible `/v1/messages` route reads the same key from an `x-api-key` header instead. `--admin-key` guards the admin endpoints (model load and unload) and falls back to the `--api-key` value when unset; an admin key alone does not protect the ordinary routes. Without `--api-key`, the API answers anyone who can reach the port, even when the UI has a Gradio login in front of it. Starting the API logs the configured `--api-key` (and any distinct `--admin-key`) to stdout and the service log verbatim, so protect that output and rotate the key after any disclosure.
+- UI: `--gradio-auth-path FILE` turns on a Gradio login form from the `user:password` entries in the file; `--gradio-auth user:password` takes the same entries on the command line, where they do not belong (below). Neither does anything for the API.
+- API: `--api-key KEY` requires `Authorization: Bearer KEY` on the OpenAI-compatible routes such as `/v1/models` and `/v1/chat/completions`; the Anthropic-compatible `/v1/messages` route reads the same key from an `x-api-key` header instead. `--admin-key` guards the admin endpoints (model load and unload) and falls back to the `--api-key` value when unset; an admin key alone does not protect the ordinary routes. Without `--api-key`, the API answers anyone who can reach the port, even when the UI has a Gradio login in front of it. At the pinned commits, starting the API logs the configured `--api-key` (and any distinct `--admin-key`) in plaintext at INFO level to stdout and the service log, so protect that output as you protect the key file below (owner-only, out of source control and out of shared log collection) and rotate the key after any disclosure.
+
+All three are secrets, and none belongs on the command line, where `ps` and `/proc/<pid>/cmdline` show it to other local accounts for the server's whole lifetime; quoting does not change that. Put the login in the `--gradio-auth-path` file. At the pinned `server.py` the loader reads `user:password` entries separated by commas or line breaks, strips the whitespace around each, and splits each entry at every `:`, so neither the user name nor the password may contain `:` or `,`. The block below allows only letters, digits, dot, underscore and hyphen in the user name and generates a hex password. Create the file once, as the account that runs text-generation-webui:
+
+```bash
+(
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  set -eC +x +a
+  umask 077
+  set -- REPLACE_WITH_UI_USER
+  case "$1" in ""|*REPLACE_WITH_*) echo 'substitute a user name on the set -- line above; nothing written'; exit 2 ;; esac
+  case "$1" in *[!A-Za-z0-9._-]*) echo 'use only letters, digits, dot, underscore or hyphen in the user name; nothing written'; exit 2 ;; esac
+  set -- "$1" "$(openssl rand -hex 16)"
+  [ "${#2}" -eq 32 ] || { echo 'password generation failed; nothing written'; exit 2; }
+  case "$2" in *[!0123456789abcdef]*) echo 'password generation failed; nothing written'; exit 2 ;; esac
+  mkdir -p -- "$HOME/.config/text-generation-webui"
+  chmod 700 -- "$HOME/.config/text-generation-webui"
+  printf '%s:%s\n' "$1" "$2" > "$HOME/.config/text-generation-webui/gradio-auth"
+)
+```
+
+`umask 077` creates the directory mode `0700` and the file mode `0600`, `set -C` refuses to overwrite an existing file, and the block writes nothing unless the generated password is 32 hex characters. The password passes only through the subshell's positional parameters and the builtin `printf`; the block clears inherited traps first and assumes a clean shell. Read the password from the file once into your password manager. The file holds it in plaintext at rest, readable by that account and by root, so keep it and its backups out of source control.
+
+The API keys have no file flag and no environment input at the pinned sources: the API reads them only from the parsed arguments. The pinned `modules/shared.py` does read further flags from `CMD_FLAGS.txt` in the user-data directory, and it splices them into Python's own argument list inside the process, so keys placed there stay out of `/proc/<pid>/cmdline`. Do not use the checkout's own `user_data/CMD_FLAGS.txt` for them: at the pinned commit it is a tracked file (it ships with three comment lines), so a key written there is a change to a tracked file that `git diff` prints and `git stash` copies into the repository, and the update wizard in `one_click.py` runs `git merge --autostash` (stashing the change) and offers `git reset --hard` (discarding it). This was read from the code, not run. Point `--user-data-dir` at a private directory outside the checkout instead, readable only by the account that runs text-generation-webui; it then stands in for the whole `user_data` directory (the model, LoRA and cache directories, among others, default under it), so copy across the models and settings you use. Append generated keys to that directory's `CMD_FLAGS.txt`, as that account, with the directory's absolute path on the `set --` line:
+
+```bash
+(
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  set -eC +x +a
+  umask 077
+  set -- REPLACE_WITH_PRIVATE_USER_DATA_DIR
+  case "$1" in ""|*REPLACE_WITH_*) echo 'substitute the private user-data directory on the set -- line above; nothing written'; exit 2 ;; esac
+  case "$1" in /*) ;; *) echo 'give the user-data directory as an absolute path; nothing written'; exit 2 ;; esac
+  mkdir -p -- "$1"
+  chmod 700 -- "$1"
+  cd -- "$1"
+  if [ -e CMD_FLAGS.txt ] || [ -L CMD_FLAGS.txt ]; then
+    { [ -f CMD_FLAGS.txt ] && [ ! -L CMD_FLAGS.txt ] && [ -O CMD_FLAGS.txt ]; } ||
+      { echo 'CMD_FLAGS.txt is not a regular file you own; nothing written'; exit 2; }
+    if grep -v '^[[:space:]]*#' CMD_FLAGS.txt | grep -Eq -e '--(api-key|admin-key)'; then
+      echo 'CMD_FLAGS.txt already names a key; nothing written'; exit 2
+    fi
+    chmod 600 -- CMD_FLAGS.txt
+  fi
+  set -- "$(openssl rand -hex 32)" "$(openssl rand -hex 32)"
+  [ "${#1}" -eq 64 ] || { echo 'key generation failed; nothing written'; exit 2; }
+  [ "${#2}" -eq 64 ] || { echo 'key generation failed; nothing written'; exit 2; }
+  case "$1$2" in *[!0123456789abcdef]*) echo 'key generation failed; nothing written'; exit 2 ;; esac
+  printf -- '--api-key %s\n--admin-key %s\n' "$1" "$2" >> CMD_FLAGS.txt
+)
+```
+
+The block refuses a relative path, a `CMD_FLAGS.txt` that is a symlink or not a regular file you own, and one whose non-comment lines already name a key. It makes the directory mode `0700` and an existing file mode `0600` before writing, and writes nothing unless both keys are 64 hex characters. The keys pass only through the subshell's positional parameters and the builtin `printf`. Start `server.py` from the installation directory with only non-secret values on its command line:
+
+```bash
+python server.py --user-data-dir REPLACE_WITH_PRIVATE_USER_DATA_DIR --api --gradio-auth-path "$HOME/.config/text-generation-webui/gradio-auth"
+```
+
+The one-click `start_*` scripts work too, since `server.py` reads the file itself, but never pass a key to them as an argument: at the pinned `one_click.py` the launcher puts its own arguments on `server.py`'s command line, so a key given there lands in argv again. Clients read the API key from the file's `--api-key` line; give the admin key only to the operators who load and unload models. The keys remain in process memory, in the file, and in the startup log (above). The pinned `modules/shared.py`, imported with `--user-data-dir` pointing at a directory the block had written, parsed both keys from `CMD_FLAGS.txt` while the process's `/proc/self/cmdline` held neither; the launcher and API behaviour above was read in the pinned source (cited in Sources), and no text-generation-webui server was run.
 
 `--api --nowebui` runs the API alone, the right shape for a server where the UI has no business existing. `--ssl-keyfile` and `--ssl-certfile` give both surfaces TLS, but the better pattern is the usual one: keep both ports on loopback and front them with a reverse proxy that terminates TLS and enforces auth (`--subpath` exists for serving the UI under a proxy path). Without TLS, the Gradio login submits credentials in the clear.
 
@@ -113,7 +203,7 @@ One proxy detail is specific to this API: unless `--listen` (or `--public-api`) 
 ## The pattern, whatever the server
 
 1. Bind to `127.0.0.1` (or a private container network); confirm with `ss -tlnp`.
-2. Require a per-client API key at the server where supported, or at the proxy otherwise (bearer-token check per [ollama.md](ollama.md)); generate keys per [authentication.md](authentication.md). Keep the key off the server's command line, child processes included: use stdin where the server offers it, otherwise a file the server reads itself, created owner-only, or the guarded one-command prefix assignment of CONTRIBUTING rule 7, which leaves the key readable through `/proc/<pid>/environ` for the server's lifetime.
+2. Require a per-client API key at the server where supported, or at the proxy otherwise (bearer-token check per [ollama.md](ollama.md)); generate keys per [authentication.md](authentication.md). Keep the key off the server's command line, child processes included: use stdin where the server offers it, otherwise a file the server reads itself, created owner-only, or the guarded one-command prefix assignment of CONTRIBUTING rule 7, which leaves the key readable through `/proc/<pid>/environ` for the server's lifetime. Where the server takes the secret only in argv (the TGI router's key, Triton's restricted-API value), its native check is a control against network clients, not against other local accounts; enforce auth at the proxy.
 3. TLS in front: [caddy.md](caddy.md), [nginx.md](nginx.md), [cloudflare.md](cloudflare.md), or [tailscale.md](tailscale.md).
 4. Human-facing UIs on top of these servers ([open-webui.md](open-webui.md)) carry their own login and MFA ([mfa.md](mfa.md)).
 
@@ -124,9 +214,12 @@ ss -tlnp   # every listener; 8080/8000/8001/8002/3000/80/9000/30000/5000/7860/12
            # namespace-local BIND, not a host firewall, a cloud security group, or Docker -p NAT
            # publication. From another host, probe EACH backend listener's own host and port (adapt the
            # subshell below, which shows the technique for one endpoint) and confirm each is refused
-pgrep -c -f -- '(^| )--(admin-)?api-key( |=)'   # counts visible command lines with an --api-key or --admin-api-key argument;
-                                                # 0 means none was seen right now, and any match needs a look. It does not
-                                                # see --admin-key, --gradio-auth or Triton's restricted-API values
+pgrep -c -f -- '(^| )--((admin-)?api-key|admin-key|gradio-auth|http-restricted-api|grpc-restricted-protocol)( |=)'
+           # counts visible command lines carrying one of those secret-bearing arguments; 0 means none was seen
+           # right now, and any match needs a look. Triton's restricted-API secrets have no input outside the
+           # flag value, so a match is expected while you use them. It does not see a key in a file the server
+           # reads, in a server's environment (VLLM_API_KEY, LLAMA_API_KEY), inside another argument's value
+           # (vLLM's Rust-frontend --args-json), or on a flag the pattern does not name
 (
   # Feed the API key to curl on stdin (curl --header @-), never in argv:
   # -H "Authorization: Bearer KEY" is readable in ps / /proc/<pid>/cmdline.
@@ -159,7 +252,7 @@ pgrep -c -f -- '(^| )--(admin-)?api-key( |=)'   # counts visible command lines w
                                                         # denial. Treat anything ambiguous as inconclusive
 ```
 
-The `pgrep` line counts processes whose visible command line has an argument that is `--api-key` or `--admin-api-key` followed by a space or `=`, the form llama-server, SGLang and the TGI router take a key in (and vLLM, if your version's key flag is `--api-key`); it prints a count and never a key, and it excludes itself. A count is a lead, not proof: an empty value, or an argument of unrelated text that contains ` --api-key `, matches too, and `0` means only that no visible process matched at that moment. It was demonstrated on the authoring host against a stub process that opened no listener: a stub started with `--api-key DUMMY_NOT_A_SECRET` in its arguments counted, and the same stub started with `--api-key-file` counted `0`, so the line tells the old launch form from the new one; with the pattern above (procps-ng 4.0.4), `--admin-api-key=DUMMY_NOT_A_SECRET` and an empty `--api-key=` counted `1`, and `notes--api-key x` counted `0`. No model server was run for it. A `hidepid` proc mount limits the count to your own processes, and a process that has scrubbed its own arguments is not seen.
+The `pgrep` line counts processes whose visible command line has an argument that is `--api-key`, `--admin-api-key`, `--admin-key`, `--gradio-auth`, `--http-restricted-api` or `--grpc-restricted-protocol` followed by a space or `=`, the forms in which llama-server, vLLM, SGLang, the TGI router, text-generation-webui and Triton take a secret on the command line; it prints a count and never a key, and it excludes itself. A count is a lead, not proof: an empty value, or an argument of unrelated text that contains ` --api-key `, matches too, and `0` means only that no visible process matched at that moment. It was demonstrated on the authoring host against stub processes that opened no listener (`python3` sleeping with the test arguments, procps-ng 4.0.4): `--api-key DUMMY_NOT_A_SECRET`, `--admin-key DUMMY_NOT_A_SECRET`, `--admin-api-key=DUMMY_NOT_A_SECRET`, `--gradio-auth u:DUMMY_NOT_A_SECRET`, `--http-restricted-api=model-repository:admin-key=DUMMY_NOT_A_SECRET`, `--grpc-restricted-protocol=model-repository:admin-key=DUMMY_NOT_A_SECRET` and an empty `--api-key=` each counted `1`, while `--api-key-file /x`, `--gradio-auth-path /x`, `--config /x`, `notes--api-key x`, `--admin-keys x`, `--http-restricted-api-x y` and `--args-json '{"api_key":["DUMMY_NOT_A_SECRET"]}'` each counted `0`, so the line tells the file-based launch forms from the argv ones, and it misses a key inside a JSON argument. No model server was run for it. A `hidepid` proc mount limits the count to your own processes, and a process that has scrubbed its own arguments is not seen.
 
 For text-generation-webui, ask the API edge for the model list without a key. This step is reasoned, not demonstrated: the authoring environment has no container runtime to stand up a live instance, so the expected `401` is derived from the bearer-token check in `modules/api/script.py` (cited in Sources), not observed, and backlog row 1.50 tracks demonstrating the exposed and protected states. The block prints the `exitcode` and `errormsg` write-out variables, which need curl 7.75.0 or newer. A `200` with a model list means the API is open to anyone; a `401` means the key is enforced. A transfer error is inconclusive: a TLS failure (`exit=35` or `exit=60`) in particular means something did answer, since the API serves plain HTTP unless `--ssl-keyfile`/`--ssl-certfile` are set, so read the `exit` and `err` fields, fix any DNS, TLS, or client cause, and confirm the API listener's own address and port directly from the intended vantage. A `400` carrying `Invalid host header` is the API rejecting the forwarded `Host` (see the reverse-proxy note above), not an authentication result, and a rejection page from your proxy proves only the proxy.
 
@@ -179,11 +272,16 @@ For text-generation-webui, ask the API edge for the model list without a key. Th
 
 ## Sources (checked September 2026)
 
-- llama.cpp server README (defaults, `--api-key` and its `LLAMA_API_KEY` environment input, `--api-key-file` ("path to file containing API keys, one per line") and its `LLAMA_ARG_API_KEY_FILE` environment input, SSL flags): https://github.com/ggml-org/llama.cpp/blob/e0dff58475bc9ed68eedcb265ee998f2fcabb3b1/tools/server/README.md
+- llama.cpp server README (defaults, `--api-key` and its `LLAMA_API_KEY` environment input, `--api-key-file` ("path to file containing API keys, one per line") and its `LLAMA_ARG_API_KEY_FILE` environment input, the `LLAMA_ARG_*` environment inputs most options carry, `LLAMA_ARG_HOST` for `--host` among them, SSL flags): https://github.com/ggml-org/llama.cpp/blob/e0dff58475bc9ed68eedcb265ee998f2fcabb3b1/tools/server/README.md
 - vLLM documentation: https://docs.vllm.ai/
 - vLLM server host default (`FrontendArgs.host` defaults to `None`; checked 2026-09-14): https://github.com/vllm-project/vllm/blob/dee37d89115db4c94a820a79a78a7828e141c910/vllm/entrypoints/launchers/cli_args.py
 - vLLM server socket bind (the launcher builds `(args.host or "", port)`, so an unset host binds every IPv4 interface, and renders the empty host as `0.0.0.0` in the startup log; checked 2026-09-14): https://github.com/vllm-project/vllm/blob/8c1557a79c539ffe82d004d2a0c8d7b5e71159ce/vllm/entrypoints/launchers/launcher.py
 - vLLM security, API key authentication limitations (protected prefixes, unprotected `/invocations` and profiler routes): https://docs.vllm.ai/en/latest/usage/security/
+- vLLM `--api-key` (`FrontendArgs.api_key`, a list of keys; read in source, not run): https://github.com/vllm-project/vllm/blob/dee37d89115db4c94a820a79a78a7828e141c910/vllm/entrypoints/launchers/cli_args.py#L304 and https://github.com/vllm-project/vllm/blob/8c1557a79c539ffe82d004d2a0c8d7b5e71159ce/vllm/entrypoints/launchers/cli_args.py#L296
+- vLLM `VLLM_API_KEY`, declared in `envs.py` (https://github.com/vllm-project/vllm/blob/dee37d89115db4c94a820a79a78a7828e141c910/vllm/envs.py#L803, https://github.com/vllm-project/vllm/blob/8c1557a79c539ffe82d004d2a0c8d7b5e71159ce/vllm/envs.py#L801) and read as the fallback when `--api-key` is unset, the CLI taking precedence (identical at both commits): https://github.com/vllm-project/vllm/blob/dee37d89115db4c94a820a79a78a7828e141c910/vllm/entrypoints/serve/middleware/register.py#L32-L36
+- vLLM `--config` YAML loader (expanded only when `--config` is its own argument, `.yaml` or `.yml` required, `yaml.safe_load`, each key turned into the option `--<key>` and merged into the in-process argument list before parsing): https://github.com/vllm-project/vllm/blob/dee37d89115db4c94a820a79a78a7828e141c910/vllm/utils/argparse_utils.py#L329-L330, #L517-L548, #L585-L596 and #L621-L622
+- vLLM startup log of non-default arguments with `api_key` redacted (https://github.com/vllm-project/vllm/blob/dee37d89115db4c94a820a79a78a7828e141c910/vllm/entrypoints/serve/utils/api_utils.py#L271-L286), and the unredacted `--grpc` argument log: https://github.com/vllm-project/vllm/blob/dee37d89115db4c94a820a79a78a7828e141c910/vllm/entrypoints/launchers/grpc_server.py#L64
+- vLLM API server processes started through `multiprocessing` `spawn`, arguments pickled rather than on a command line (https://github.com/vllm-project/vllm/blob/dee37d89115db4c94a820a79a78a7828e141c910/vllm/v1/utils.py#L210-L246), and the opt-in Rust frontend, started only when `VLLM_USE_RUST_FRONTEND` is set, which receives the non-default arguments, `api_key` included, as `--args-json` on its command line: https://github.com/vllm-project/vllm/blob/dee37d89115db4c94a820a79a78a7828e141c910/vllm/v1/utils.py#L384-L411 and https://github.com/vllm-project/vllm/blob/dee37d89115db4c94a820a79a78a7828e141c910/vllm/entrypoints/cli/serve.py#L63-L64
 - TGI launcher arguments (--hostname, --port, --api-key, --prometheus-port): https://huggingface.co/docs/text-generation-inference/reference/launcher
 - TGI launcher `hostname` default `0.0.0.0` and `port` default 3000, each also read from the environment (pinned tag v3.3.7, the last release before the repository was archived): https://github.com/huggingface/text-generation-inference/blob/v3.3.7/launcher/src/main.rs#L769-L774
 - TGI image built from the repository's main `Dockerfile`, `ENV ... PORT=80` (pinned tag v3.3.7): https://github.com/huggingface/text-generation-inference/blob/v3.3.7/Dockerfile#L147-L149
@@ -195,6 +293,9 @@ For text-generation-webui, ask the API edge for the model list without a key. Th
 - Triton quickstart (default listeners on 8000, 8001, 8002): https://github.com/triton-inference-server/server/blob/0194c3da9ddeeff07547f46aa058cf88acb51893/docs/getting_started/quickstart.md
 - Triton inference protocols (gRPC SSL flags, restricted APIs): https://github.com/triton-inference-server/server/blob/c29bbe17eac256bbcd8fea47cde2f219d2be37cf/docs/customization_guide/inference_protocols.md
 - Triton command line parser (address and port flags with defaults): https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc
+- Triton `--http-restricted-api` and `--grpc-restricted-protocol`, parsed from argv by `getopt_long` only (traced at 546a787 across `src/`: the option definitions, the parse loop and the two cases handing `optarg` to `ParseRestrictedFeatureOption`, no option or response file, and every `getenv`/`GetEnvironmentVariableOrDefault` under `src/` reading a non-secret name): https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L508-L516, #L632-L640, #L1329-L1330 and #L1420-L1423
+- Triton restricted API groups, `inference` among them: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/restricted_features.h#L54-L57 and https://github.com/triton-inference-server/server/blob/c29bbe17eac256bbcd8fea47cde2f219d2be37cf/docs/customization_guide/inference_protocols.md#L153-L196
+- Triton model control mode `NONE`, the default, returning an error for load and unload requests: https://github.com/triton-inference-server/server/blob/c29bbe17eac256bbcd8fea47cde2f219d2be37cf/docs/user_guide/model_management.md#L35-L45
 - LM Studio local server: https://lmstudio.ai/docs/developer/core/server
 - LM Studio serve on local network: https://lmstudio.ai/docs/developer/core/server/serve-on-network
 - LM Studio server settings: https://lmstudio.ai/docs/developer/core/server/settings
@@ -203,7 +304,12 @@ For text-generation-webui, ask the API edge for the model list without a key. Th
 - text-generation-webui README, command-line flags: https://github.com/oobabooga/text-generation-webui#command-line-flags
 - text-generation-webui, OpenAI-compatible API documentation: https://github.com/oobabooga/text-generation-webui/blob/ceade2eb1ba3f84518076270df2240b6bbb01da0/docs/12%20-%20OpenAI%20API.md
 - text-generation-webui, flag definitions and defaults (modules/shared.py): https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py
+- text-generation-webui, `--user-data-dir` and the in-process `CMD_FLAGS.txt` loader (lines whose first non-space character is `#` skipped, the rest split as shell words and spliced into Python's `sys.argv` before parsing): https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py#L50 and #L221-L236, with the directory resolved at https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/paths.py#L5-L21
+- text-generation-webui, `user_data/CMD_FLAGS.txt` shipped as a tracked file of three comment lines: https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/user_data/CMD_FLAGS.txt
+- text-generation-webui one-click launcher (its own arguments put on `server.py`'s command line, the update wizard's `git merge --autostash` and `git reset --hard`; read in source, not run): https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/one_click.py#L24, #L396, #L485-L486, #L504 and #L527
+- text-generation-webui `--gradio-auth-path` loader (entries split at commas and line breaks, whitespace stripped, each split at every `:`): https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/server.py#L90-L95
 - text-generation-webui, API bind and key checks (modules/api/script.py): https://github.com/oobabooga/text-generation-webui/blob/619a2b8ee4b7e48541a9be5c07e04cd31b91b44f/modules/api/script.py
+- text-generation-webui, the API key and a distinct admin key logged in plaintext at INFO at startup: https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/api/script.py#L594-L597 and https://github.com/oobabooga/text-generation-webui/blob/619a2b8ee4b7e48541a9be5c07e04cd31b91b44f/modules/api/script.py#L599-L602
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
 - SGLang `host` and `port` field defaults, `127.0.0.1` and `30000` (pinned tag v0.5.20; that the `--host`/`--port` flags use these fields rests on the server-arguments docs above): https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/arg_groups/fields/serving.py#L72-L73
 - SGLang `--config` ("Read CLI options from a config file. Must be a YAML file with configuration options."; pinned tag v0.5.20): https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/server_args.py#L397-L399
