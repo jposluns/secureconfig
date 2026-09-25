@@ -671,7 +671,7 @@ QE requires a new encrypted collection created with an `encryptedFields` definit
 - Configure TLS and client-certificate validation: https://www.mongodb.com/docs/manual/tutorial/configure-ssl/
 - Internal membership authentication and certificate requirements: https://www.mongodb.com/docs/manual/core/security-internal-authentication/
 - Configure x.509 membership authentication: https://www.mongodb.com/docs/manual/tutorial/configure-x509-member-authentication/
-- Keyfile setup, permissions, and existing-cluster transition: https://www.mongodb.com/docs/manual/tutorial/enforce-keyfile-access-control-in-existing-replica-set/
+- Keyfile setup, permissions, existing-cluster transition, and "Enforcing internal authentication also enforces user access control": https://www.mongodb.com/docs/manual/tutorial/enforce-keyfile-access-control-in-existing-replica-set/
 - Register and authenticate x.509 client identities: https://www.mongodb.com/docs/manual/tutorial/configure-x509-client-authentication/
 - x.509 certificate requirements and client/member separation: https://www.mongodb.com/docs/manual/core/security-x.509/
 - mongosh connection, TLS, authentication, and password-prompt options: https://www.mongodb.com/docs/mongodb-shell/reference/options/

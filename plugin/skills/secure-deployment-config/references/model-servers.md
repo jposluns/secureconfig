@@ -142,7 +142,7 @@ For text-generation-webui, ask the API edge for the model list without a key. Th
 - vLLM security, API key authentication limitations (protected prefixes, unprotected `/invocations` and profiler routes): https://docs.vllm.ai/en/latest/usage/security/
 - TGI launcher arguments (--hostname, --port, --api-key, --prometheus-port): https://huggingface.co/docs/text-generation-inference/reference/launcher
 - TGI launcher `hostname` default `0.0.0.0` and `port` default 3000, each also read from the environment (pinned tag v3.3.7, the last release before the repository was archived): https://github.com/huggingface/text-generation-inference/blob/v3.3.7/launcher/src/main.rs#L769-L774
-- TGI official image `ENV ... PORT=80` (pinned tag v3.3.7): https://github.com/huggingface/text-generation-inference/blob/v3.3.7/Dockerfile#L147-L149
+- TGI image built from the repository's main `Dockerfile`, `ENV ... PORT=80` (pinned tag v3.3.7): https://github.com/huggingface/text-generation-inference/blob/v3.3.7/Dockerfile#L147-L149
 - TGI router: a `--hostname` that does not parse as an IP address logs "Invalid hostname, defaulting to 0.0.0.0" and binds `0.0.0.0` (pinned tag v3.3.7): https://github.com/huggingface/text-generation-inference/blob/v3.3.7/router/src/server.rs#L1906-L1910
 - TGI router source (what --api-key enforces): https://github.com/huggingface/text-generation-inference/blob/24ee40d143d8d046039f12f76940a85886cbe152/router/src/server.rs
 - TGI repository (maintenance-mode notice, archived 2026-03-21): https://github.com/huggingface/text-generation-inference
