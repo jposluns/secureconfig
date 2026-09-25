@@ -126,8 +126,8 @@ uses, reserved words such as `if` included (an alias on `if` brought back the fa
 sent, while the stock `ls`, `grep` and `ll` aliases left the result unchanged; `alias` lists what is
 defined), no functions shadowing any builtin or command the block uses (including `unset`, `read`, `printf`
 and `curl`), curl on `PATH` (with curl missing, a `command_not_found_handle` function that printed a newline
-and the expected status brought back the false pass), no builtins disabled with `enable -n`, no `hash -p` entries, no inherited
-DEBUG trap under `set -T`, and a paste at the prompt rather than inside a function. On the loopback runs, keyless Meilisearch returned the fixture to an anonymous search with `200`, so the
+and the expected status brought back the false pass), no builtins disabled with `enable -n`, no `hash -p` entries, no hostile inherited
+DEBUG trap (the block clears DEBUG, RETURN and ERR traps with `trap - DEBUG RETURN ERR`, but an inherited DEBUG trap under `set -T` still runs once before that line, and under `shopt -s extdebug` can skip it), and a paste at the prompt rather than inside a function. On the loopback runs, keyless Meilisearch returned the fixture to an anonymous search with `200`, so the
 authentication row printed `FAIL: unexpected HTTP status`: the exposed state. With a master key set, the
 same row got `401` `missing_authorization_header` anonymously and `200` with the fixture on the Default
 Search API Key, and `GET /keys` listed the four default keys named above; the write row got `403`
