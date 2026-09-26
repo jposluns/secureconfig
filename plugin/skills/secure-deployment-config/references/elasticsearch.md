@@ -29,12 +29,8 @@ For Basic authentication, the value is base64 of `username:password`; base64 is 
    curl -q -g -sS --fail-with-body --noproxy '*' \
      --cacert /path/http_ca.crt --header @/path/admin.header \
      --header 'Content-Type: application/json' --request PUT \
-     --data-binary @- https://search.example.com:9200/_security/role/app_reader <<'JSON'  # bracket-ranges: allow a JSON request body, not a pattern
-   {
-     "cluster": ["manage_own_api_key"],
-     "indices": [{"names": ["app-data"], "privileges": ["read"]}]
-   }
-   JSON
+     https://search.example.com:9200/_security/role/app_reader \
+     --data-binary '{ "cluster": ["manage_own_api_key"], "indices": [{"names": ["app-data"], "privileges": ["read"]}] }'  # bracket-ranges: allow a JSON request body, not a pattern
    ```
 
 2. Create `/path/es-app-user.json` with the following structure. Replace the password placeholder inside that protected file with a unique random password before submitting it. The [native-user API](https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-security-put-user) accepts the password in the JSON request body.
@@ -59,18 +55,8 @@ For Basic authentication, the value is base64 of `username:password`; base64 is 
      --cacert /path/http_ca.crt --header @/path/app-user.header \
      --header 'Content-Type: application/json' --request POST \
      --output /path/es-app-key-response.json \
-     --data-binary @- https://search.example.com:9200/_security/api_key <<'JSON'  # bracket-ranges: allow a JSON request body, not a pattern
-   {
-     "name": "app-reader",
-     "expiration": "1d",
-     "role_descriptors": {
-       "app_read": {
-         "cluster": [],
-         "indices": [{"names": ["app-data"], "privileges": ["read"]}]
-       }
-     }
-   }
-   JSON
+     https://search.example.com:9200/_security/api_key \
+     --data-binary '{ "name": "app-reader", "expiration": "1d", "role_descriptors": { "app_read": { "cluster": [], "indices": [{"names": ["app-data"], "privileges": ["read"]}] } } }'  # bracket-ranges: allow a JSON request body, not a pattern
    )
    ```
 
@@ -176,13 +162,8 @@ The controls below are provided by **free Apache-2.0 OpenSearch Security**, with
    curl -q -g -sS --fail-with-body --noproxy '*' \
      --cacert /path/production-ca.pem --header @/path/admin.header \
      --header 'Content-Type: application/json' --request PUT \
-     --data-binary @- https://search.example.com:9200/_plugins/_security/api/roles/app_reader <<'JSON'  # bracket-ranges: allow a JSON request body, not a pattern
-   {
-     "cluster_permissions": [],
-     "index_permissions": [{"index_patterns": ["app-data"], "allowed_actions": ["read"]}],
-     "tenant_permissions": []
-   }
-   JSON
+     https://search.example.com:9200/_plugins/_security/api/roles/app_reader \
+     --data-binary '{ "cluster_permissions": [], "index_permissions": [{"index_patterns": ["app-data"], "allowed_actions": ["read"]}], "tenant_permissions": [] }'  # bracket-ranges: allow a JSON request body, not a pattern
    ```
 
 2. Prepare `/path/os-app-user.json` as a protected request-body file. Replace its password placeholder before submitting:
@@ -241,14 +222,8 @@ The controls below are provided by **free Apache-2.0 OpenSearch Security**, with
      --cacert /path/production-ca.pem --header @/path/admin.header \
      --header 'Content-Type: application/json' --request POST \
      --output /path/os-app-key-response.json \
-     --data-binary @- https://search.example.com:9200/_plugins/_security/api/apitokens <<'JSON'  # bracket-ranges: allow a JSON request body, not a pattern
-   {
-     "name": "app-reader",
-     "cluster_permissions": [],
-     "index_permissions": [{"index_pattern": ["app-data"], "allowed_actions": ["read"]}],
-     "duration_seconds": 86400
-   }
-   JSON
+     https://search.example.com:9200/_plugins/_security/api/apitokens \
+     --data-binary '{ "name": "app-reader", "cluster_permissions": [], "index_permissions": [{"index_pattern": ["app-data"], "allowed_actions": ["read"]}], "duration_seconds": 86400 }'  # bracket-ranges: allow a JSON request body, not a pattern
    )
    ```
 

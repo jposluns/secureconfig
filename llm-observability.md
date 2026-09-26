@@ -195,10 +195,9 @@ anonymously (the probe prints the `exitcode` and `errormsg` write-out variables,
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 1; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the host on the set -- line above; not probing"; exit 1 ;;
-    # bracket-ranges: allow a label in curl's -w output, not a pattern
-    *) curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-         -w '\n[unauth-read] http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-         "https://$1/v1/projects" ;;
+    *) curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 "https://$1/v1/projects" \
+         -w '\n[unauth-read] http=%{http_code} exit=%{exitcode} err=%{errormsg}\n'  # bracket-ranges: allow a label in curl's -w output, not a pattern
+       ;;
   esac
 )
 ```

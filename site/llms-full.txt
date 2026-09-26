@@ -5550,8 +5550,7 @@ DBIP=$(kubectl get svc db -o jsonpath='{.spec.clusterIP}')
 # kubectl assigns the container name (the pod name) BEFORE applying the override and the override's name
 # then survives, so keep them matching to avoid confusion. Build the override per pod:
 probe_override() {
-  # bracket-ranges: allow a JSON override for kubectl run, not a pattern
-  printf '%s' '{"spec":{"securityContext":{"runAsNonRoot":true,"runAsUser":10001,"runAsGroup":10001,"seccompProfile":{"type":"RuntimeDefault"}},"containers":[{"name":"'"$1"'","image":"busybox:1.36","securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}},"command":["nc","-z","-w","3","'"$DBIP"'","5432"]}]}}'
+  printf '%s' '{"spec":{"securityContext":{"runAsNonRoot":true,"runAsUser":10001,"runAsGroup":10001,"seccompProfile":{"type":"RuntimeDefault"}},"containers":[{"name":"'"$1"'","image":"busybox:1.36","securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}},"command":["nc","-z","-w","3","'"$DBIP"'","5432"]}]}}'  # bracket-ranges: allow a JSON override for kubectl run, not a pattern
 }
 
 kubectl run probe-permitted --rm -it --restart=Never --image=busybox:1.36 --labels=role=app \
@@ -11326,12 +11325,8 @@ For Basic authentication, the value is base64 of `username:password`; base64 is 
    curl -q -g -sS --fail-with-body --noproxy '*' \
      --cacert /path/http_ca.crt --header @/path/admin.header \
      --header 'Content-Type: application/json' --request PUT \
-     --data-binary @- https://search.example.com:9200/_security/role/app_reader <<'JSON'  # bracket-ranges: allow a JSON request body, not a pattern
-   {
-     "cluster": ["manage_own_api_key"],
-     "indices": [{"names": ["app-data"], "privileges": ["read"]}]
-   }
-   JSON
+     https://search.example.com:9200/_security/role/app_reader \
+     --data-binary '{ "cluster": ["manage_own_api_key"], "indices": [{"names": ["app-data"], "privileges": ["read"]}] }'  # bracket-ranges: allow a JSON request body, not a pattern
    ```
 
 2. Create `/path/es-app-user.json` with the following structure. Replace the password placeholder inside that protected file with a unique random password before submitting it. The [native-user API](https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-security-put-user) accepts the password in the JSON request body.
@@ -11356,18 +11351,8 @@ For Basic authentication, the value is base64 of `username:password`; base64 is 
      --cacert /path/http_ca.crt --header @/path/app-user.header \
      --header 'Content-Type: application/json' --request POST \
      --output /path/es-app-key-response.json \
-     --data-binary @- https://search.example.com:9200/_security/api_key <<'JSON'  # bracket-ranges: allow a JSON request body, not a pattern
-   {
-     "name": "app-reader",
-     "expiration": "1d",
-     "role_descriptors": {
-       "app_read": {
-         "cluster": [],
-         "indices": [{"names": ["app-data"], "privileges": ["read"]}]
-       }
-     }
-   }
-   JSON
+     https://search.example.com:9200/_security/api_key \
+     --data-binary '{ "name": "app-reader", "expiration": "1d", "role_descriptors": { "app_read": { "cluster": [], "indices": [{"names": ["app-data"], "privileges": ["read"]}] } } }'  # bracket-ranges: allow a JSON request body, not a pattern
    )
    ```
 
@@ -11473,13 +11458,8 @@ The controls below are provided by **free Apache-2.0 OpenSearch Security**, with
    curl -q -g -sS --fail-with-body --noproxy '*' \
      --cacert /path/production-ca.pem --header @/path/admin.header \
      --header 'Content-Type: application/json' --request PUT \
-     --data-binary @- https://search.example.com:9200/_plugins/_security/api/roles/app_reader <<'JSON'  # bracket-ranges: allow a JSON request body, not a pattern
-   {
-     "cluster_permissions": [],
-     "index_permissions": [{"index_patterns": ["app-data"], "allowed_actions": ["read"]}],
-     "tenant_permissions": []
-   }
-   JSON
+     https://search.example.com:9200/_plugins/_security/api/roles/app_reader \
+     --data-binary '{ "cluster_permissions": [], "index_permissions": [{"index_patterns": ["app-data"], "allowed_actions": ["read"]}], "tenant_permissions": [] }'  # bracket-ranges: allow a JSON request body, not a pattern
    ```
 
 2. Prepare `/path/os-app-user.json` as a protected request-body file. Replace its password placeholder before submitting:
@@ -11538,14 +11518,8 @@ The controls below are provided by **free Apache-2.0 OpenSearch Security**, with
      --cacert /path/production-ca.pem --header @/path/admin.header \
      --header 'Content-Type: application/json' --request POST \
      --output /path/os-app-key-response.json \
-     --data-binary @- https://search.example.com:9200/_plugins/_security/api/apitokens <<'JSON'  # bracket-ranges: allow a JSON request body, not a pattern
-   {
-     "name": "app-reader",
-     "cluster_permissions": [],
-     "index_permissions": [{"index_pattern": ["app-data"], "allowed_actions": ["read"]}],
-     "duration_seconds": 86400
-   }
-   JSON
+     https://search.example.com:9200/_plugins/_security/api/apitokens \
+     --data-binary '{ "name": "app-reader", "cluster_permissions": [], "index_permissions": [{"index_pattern": ["app-data"], "allowed_actions": ["read"]}], "duration_seconds": 86400 }'  # bracket-ranges: allow a JSON request body, not a pattern
    )
    ```
 
@@ -25024,10 +24998,9 @@ anonymously (the probe prints the `exitcode` and `errormsg` write-out variables,
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 1; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the host on the set -- line above; not probing"; exit 1 ;;
-    # bracket-ranges: allow a label in curl's -w output, not a pattern
-    *) curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-         -w '\n[unauth-read] http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-         "https://$1/v1/projects" ;;
+    *) curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 "https://$1/v1/projects" \
+         -w '\n[unauth-read] http=%{http_code} exit=%{exitcode} err=%{errormsg}\n'  # bracket-ranges: allow a label in curl's -w output, not a pattern
+       ;;
   esac
 )
 ```
@@ -27641,12 +27614,12 @@ def request(mode):
                     "\nX-GitHub-Delivery: " + str(uuid.uuid4()) + "\n").encode()
     print(mode.upper(), flush=True)
     result = subprocess.run(
-        ["curl", "-q", "-g", "-sS", "-i", "--noproxy", "*",
+        ("curl", "-q", "-g", "-sS", "-i", "--noproxy", "*",
          "--connect-timeout", "5", "--max-time", "10",
          "-H", "Content-Type: application/json", "-H", "@-",
          "--data-binary", "@" + sys.argv[2],
          "-w", "\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n",
-         sys.argv[1]], input=headers, check=False)
+         sys.argv[1]), input=headers, check=False)
     if result.returncode:
         raise SystemExit("Transport failure: inconclusive")
 
