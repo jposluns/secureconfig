@@ -9,7 +9,7 @@ entry point does: choosing which files to read, loading tools/bracket_ranges_all
 line, the exit status, and failing closed on an unreadable guide, an unlistable directory, an
 unreadable allowlist, or a corpus with no bash block in it.
 
-Four direct quote-removal checks and ten joining checks pin the context-free transformations.
+Four direct quote-removal checks and seventeen joining checks pin the context-free transformations.
 
 The REGRESSIONS groups preserve the reported bypasses and nearby variants, with their original
 in-block waiver attempts where present. Rounds 1 and 2 beat the joined-line lexing; round 3 beat the
@@ -22,6 +22,7 @@ preceding-marker counterpart produced zero. Round 4 found escaped and quoted clo
 hiding a live range. Round 5 found buried quoted closes and quote removal shifting a leading
 negation; the development fuzzer then found six unset-variable shifts of a literal close.
 Round 6 found continuations and quoted newlines; the widened fuzzer supplied 1143 more fixtures.
+Round 8 covers even quote counts and leading literal closes across heredoc newlines.
 Each reported bypass is at least one finding now: a range and an unclosed `[`
 are findings on their own physical line whatever surrounds them, a waiver lives only in
 tools/bracket_ranges_allow.txt keyed by the exact line, and the old in-block marker is itself a
@@ -31,6 +32,7 @@ The OVER-FLAGGED group asserts the cost of failing closed on inputs a shell pars
 so the docstring's list stays honest, and the NOT SEEN group asserts what the gate still does
 not read at all, so closing one of those is loud too.
 """
+import itertools
 import os
 import re
 import shlex
@@ -145,12 +147,12 @@ CASES = (
      doc('case "$1" in *[!\\]\\]a-z]*) exit 2 ;; esac'), 1, 'a-z'),
     ('round 4: a range in the ordinary reading is still a finding',
      doc('case "$1" in *[!a-z\\]abc]*) exit 2 ;; esac'), 1, 'a-z'),
-    ('escaped close with a closed range-free alternative',
-     doc('case "$1" in *[!\\]abc]*) exit 2 ;; esac'), 0, None),
-    ('single-quoted close with a closed range-free alternative',
-     doc('case "$1" in *[!\']\'abc]*) exit 2 ;; esac'), 0, None),
-    ('double-quoted close with a closed range-free alternative',
-     doc('case "$1" in *[!"]"abc]*) exit 2 ;; esac'), 0, None),
+    ('over-flagged: escaped close with a closed range-free alternative',
+     doc('case "$1" in *[!\\]abc]*) exit 2 ;; esac'), 1, None),
+    ('over-flagged: single-quoted close with a closed range-free alternative',
+     doc('case "$1" in *[!\']\'abc]*) exit 2 ;; esac'), 1, None),
+    ('over-flagged: double-quoted close with a closed range-free alternative',
+     doc('case "$1" in *[!"]"abc]*) exit 2 ;; esac'), 1, None),
     ('escaped close with an unclosed alternative',
      doc('pattern=[!\\]'), 1, UNCLOSED),
     ('single-quoted close with an unclosed alternative',
@@ -182,10 +184,10 @@ CASES = (
     ("a set split by a backslash-newline in a case pattern",
      doc('case "$1" in *[!A-Za-\\\nz0-9.-]*) exit 2 ;; esac'), 1, UNCLOSED),
     ("a set split by a backslash-newline in [[ =~ ]]",
-     doc('[[ "$t" =~ ^[0-9a-\\\nf]+$ ]] || exit 2'), 1, UNCLOSED),
+     doc('[[ "$t" =~ ^[0-9a-\\\nf]+$ ]] || exit 2'), 3, UNCLOSED),
     ("the surrealdb JWT check split after A-Za-, the round-1 reproduction",
      doc('  [[ "$probe_jwt" =~ ^[A-Za-\\\nz0-9_.-]+$ ]] || { echo ' + "'missing or malformed "
-         "JWT; not probing'; exit 2; }"), 1, "guide.md:6:"),
+         "JWT; not probing'; exit 2; }"), 3, "guide.md:6:"),
     ("a set split across three lines", doc('grep -E "[A-\\\nZa-\\\nz]" f'), 1, "guide.md:6:"),
     ("a set split by a backslash-newline in a script written through a quoted here-document",
      doc("cat > check.sh <<'EOF'\ngrep -qE \"^[a-\\\nz]+$\" name.txt\nEOF"), 1, "guide.md:7:"),
@@ -314,10 +316,10 @@ CASES += (
      doc('case "${1#https://}" in *:*[!0123456789]*) exit 2 ;; esac'), 0, None),
     ("an IPv6 literal in a URL", doc("curl -q -g -sS 'https://[2001:db8::1]:8443/'"), 0, None),
     ("a range in a yaml block", doc("pattern: '^[a-z]+$'", fence="```yaml"), 0, None),
-    ("an empty pair in jq is not a bracket expression", doc("jq -r '.[] | .name' f.json"), 0,
+    ("over-flagged: an empty pair in jq is not a bracket expression", doc("jq -r '.[] | .name' f.json"), 1,
      None),
-    ("a regex [!] that no later bracket closes is the one-character set it is",
-     doc("grep -E '[!]' f"), 0, None),
+    ("over-flagged: a regex [!] that no later bracket closes is the one-character set it is",
+     doc("grep -E '[!]' f"), 1, None),
     ("a class whose atom never closes on its line is read as ordinary characters",
      doc("grep -E '[[:alpha]' f"), 0, None),
     ("a fake equivalence atom with a space inside is read as ordinary characters",
@@ -355,12 +357,12 @@ CASES += (
      doc("grep -qE '^\\w+$' f"), 0, None),
     ("not seen: a sh, shell or zsh fence is not a bash fence and is not read",
      doc(GREP, fence="```sh"), 0, None),
-    ("not seen: a [ standing as its own word is the test command even inside regex text",
-     doc("re='^ [ a-z]+$'\n[[ ' é' =~ $re ]]"), 0, None),
+    ("a test-shaped opener without a standalone close is scanned",
+     doc("re='^ [ a-z]+$'\n[[ ' é' =~ $re ]]"), 1, None),
     ("not seen: brackets built by escapes hold no literal bracket",
      doc("re=$'" + BS + "x5bA-Za-z" + BS + "x5d'\n[[ é =~ $re ]]"), 0, None),
-    ("not seen: a hyphen built by an escape holds no literal range",
-     doc("re=$'^[a" + BS + "x2dz]+$'\n[[ é =~ $re ]]"), 0, None),
+    ("an escaped hyphen retains a conservative unclosed alternative",
+     doc("re=$'^[a" + BS + "x2dz]+$'\n[[ é =~ $re ]]"), 1, None),
     ("not seen: a range assembled from variables holds no literal X-Y in its brackets",
      doc("lo='a-'\nhi=z\nre=" + Q + "^[$lo$hi]+$" + Q + "\n[[ é =~ $re ]]"), 0, None),
 )
@@ -407,12 +409,12 @@ CASES += (
      doc('case "$1" in *["x]y"]-z]*) exit 2 ;; esac'), 1, ']-z'),
     ('no quote means no reading beyond the ordinary close',
      doc('re=[x]a-z]'), 0, None),
-    ('over-flagged: an unmatched quote enables a terminal spanning reading',
-     doc('re=[x]a-z]"'), 1, 'a-z'),
-    ('quoted range-free members with a final close stay clean',
-     doc('case "$1" in *["x]y"abc]*) exit 2 ;; esac'), 0, None),
+    ('a quote after an unambiguous closed prefix needs no span',
+     doc('re=[x]a-z]"'), 0, None),
+    ('over-flagged: quoted range-free members retain an open alternative',
+     doc('case "$1" in *["x]y"abc]*) exit 2 ;; esac'), 1, None),
     ('over-flagged: quotes between two subscripts reach a line-final close',
-     doc('digest = ("0" if digest[0] != "0" else "1") + digest[1:]'), 1, 'opens a bracket expression'),
+     doc('digest = ("0" if digest[0] != "0" else "1") + digest[1:]'), 2, 'opens a bracket expression'),
     ('over-flagged: a range outside an earlier quote-affected set',
      doc('printf "%s\\n" \'["key"] a-z [abc]\''), 1, 'a-z'),
 )
@@ -426,8 +428,8 @@ JOIN_CASES = (
     (['re=[x]\\', 'a-z]'], 0, 're=[x]a-z]'),
     (['re=[!"x]y', 'middle', '"a-z]'], 0, 're=[!"x]y\nmiddle\n"a-z]'),
     (["re=[!'x]y", '', "'a-z]"], 0, "re=[!'x]y\n\n'a-z]"),
-    (['re=[x]\\', 'y', 'outside=a-z]'], 0, 're=[x]y'),
-    (['re=[x]', 'outside=a-z]'], 0, None),
+    (['re=[x]\\', 'y', 'outside=a-z]'], 0, 're=[x]y\noutside=a-z]'),
+    (['re=[x]', 'outside=a-z]'], 0, 're=[x]\noutside=a-z]'),
     (['re=[x]\\'], 0, 're=[x]\\'),
 )
 
@@ -440,6 +442,85 @@ JOIN_CASES += (
     (['re=[x"\'"y\'', ']'], 0, 're=[x"\'"y\'\n]'),
     (['re=[x\'"\'y"', ']'], 0, 're=[x\'"\'y"\n]'),
 )
+
+# REGRESSIONS, ROUND 8: parity is not closure; literal closes survive newlines.
+CASES += (
+    ('round 8: even ANSI-C quote count',
+     doc('case "$1" in *[!$\'x]y\\\'z\n\'a-z]*) exit 1 ;; esac'), 1, 'a-z'),
+    ('round 8: even mixed quote count',
+     doc('case "$1" in *[!\'a"b\'"x]y\n"a-z]*) exit 1 ;; esac'), 1, 'a-z'),
+    ('round 8: negative literal close with balanced quotes',
+     doc('re=$(cat <<\'EOF\'\n[^]a""\'\'\n-z]\nEOF\n)\n[[ $1 =~ $re ]]'), 1, 'guide.md:7:'),
+    ('round 8: negative literal close without quotes',
+     doc("re=$(cat <<'EOF'\n[^]a\n-z]\nEOF\n)\n[[ $1 =~ $re ]]"), 1, 'guide.md:7:'),
+    ('round 8: positive literal close with balanced quotes',
+     doc('re=$(cat <<\'EOF\'\n[]a""\'\'\n-z]\nEOF\n)\n[[ $1 =~ $re ]]'), 1, 'guide.md:7:'),
+    ('round 8: positive literal close without quotes',
+     doc("re=$(cat <<'EOF'\n[]a\n-z]\nEOF\n)\n[[ $1 =~ $re ]]"), 1, 'guide.md:7:'),
+    ('round 8: glob literal close with balanced quotes',
+     doc('re=$(cat <<\'EOF\'\n[!]a""\'\'\n-z]\nEOF\n)\n[[ $1 =~ $re ]]'), 1, 'guide.md:7:'),
+    ('round 8: glob literal close without quotes',
+     doc("re=$(cat <<'EOF'\n[!]a\n-z]\nEOF\n)\n[[ $1 =~ $re ]]"), 1, 'guide.md:7:'),
+    ('round 8: quote-free bracket before independent ambiguous opener',
+     doc('a=[x]; re=[^]a\n-z]'), 1, 'guide.md:6:'),
+    ('round 8: block bound excludes a later fenced range tail',
+     doc("re=[!$'x]y\\'z") + doc("echo a-z]"), 1, UNCLOSED),
+)
+
+JOIN_CASES += (
+    (['case "$1" in *[!$\'x]y\\\'z', "'a-z]*) exit 1 ;; esac"], 0, 'case "$1" in *[!$\'x]y\\\'z\n\'a-z]*) exit 1 ;; esac'),
+    (['case "$1" in *[!\'a"b\'"x]y', '"a-z]*) exit 1 ;; esac'], 0, 'case "$1" in *[!\'a"b\'"x]y\n"a-z]*) exit 1 ;; esac'),
+    (['[^]a', 'middle', '-z]'], 0, '[^]a\nmiddle\n-z]'),
+    (['[]a', '-z]'], 0, '[]a\n-z]'),
+    (['[!]a', '-z]'], 0, '[!]a\n-z]'),
+    (['re=[x]', 'a-z]'], 0, 're=[x]\na-z]'),
+    (["re=[!$'x]y\\'z"], 0, "re=[!$'x]y\\'z"),
+)
+
+# The exact 1472 emitted round-8 exploratory misses, factored into Cartesian sets.
+# A string in a column enumerates alternatives for that one character, not a substring.
+R8_MISS_COLUMNS = (
+    ('[', '\n', ' !"$\'.:=[\\^a', '-', 'xz', ' !-.:=^axz', ']'),
+    ('[', '\n', ' !"$\'.:=[\\^a', '-', 'xz', ']'),
+    ('[', '\n', ' !"$\'.:=[\\^axz', ' ^', '-', 'xz', ']'),
+    ('[', '\n', ' !"$\'.:=\\^a', '-', 'xz', '"$\'\\', ']'),
+    ('[', '\n', ' !"$\'.:=\\^axz', '!"$\'.:=[\\a', '-', 'xz', ']'),
+    ('[', '\n', '-', 'xz', ' !"$\'-.:=\\^axz', ']'),
+    ('[', '\n', '-', 'xz', ' !"$\'.:=[\\^axz', ' -axz', ']'),
+    ('[', '\n', '-', 'xz', ' !"$\'.:=\\^axz', '!"$\'.:=\\^', ']'),
+    ('[', '\n', '-', 'xz', '[', '[', ']'),
+    ('[', '\n', '-', 'xz', ']'),
+    ('[', '\n', '[', '-', 'xz', '[', ']'),
+    ('[', '\n ', '!"$\'.:=[\\^axz', '\n', '-', 'xz', ']'),
+    ('[', '\n ', '!"$\'.:=\\^a', '-', 'xz', '\n', ']'),
+    ('[', '\n ', '-', 'xz', '\n', ' !"$\'-.:=\\^axz', ']'),
+    ('[', '\n ', '-', 'xz', '\n', ']'),
+    ('[', '\n ', '-', 'xz', '\n !"$\'.:=\\^axz', '\n', ']'),
+    ('[', '\n [', '\n', ' !"$\'.:=[\\^a', '-', 'xz', ']'),
+    ('[', '\n [', '\n', '-', 'xz', ' !"$\'-.:=\\^axz', ']'),
+    ('[', '\n [', '\n', '-', 'xz', ']'),
+    ('[', '\n [', '\n ', '\n', '-', 'xz', ']'),
+    ('[', '\n [', '\n ', '-', 'xz', '\n', ']'),
+    ('[', ' ', '-', 'xz', ']', '\n', ']'),
+)
+R8_MISSES = sorted({"".join(chars) for columns in R8_MISS_COLUMNS
+                    for chars in itertools.product(*columns)})
+assert len(R8_MISSES) == 1472
+CASES += tuple(("round 8 fuzz heredoc: " + repr(pattern),
+                doc("re=$(cat <<'EOF'\n" + pattern + "\nEOF\n)"), None, None)
+               for pattern in R8_MISSES)
+CASES += tuple(("round 8 fuzz single-word test: " + repr(pattern),
+                doc("re=$(cat <<'EOF'\n" + pattern + "\nEOF\n)"), 1, None)
+               for pattern in ("[ -z ]\n]", "[ -x ]\n]", "[ a-z ]\n]"))
+CASES += (
+    ("not seen: a complete test-word shape inside regex data",
+     doc("re='^ [ a-z x ] +$'"), 0, None),
+)
+
+# All 17 one-character lists before grep's separate two-dot alternative.
+CASES += tuple(("round 8 terminal list: " + repr(c),
+                doc("re=$(cat <<'EOF'\n[" + c + "]\n..\n]\nEOF\n)"), None, None)
+               for c in "'\"\\]^!az-x$ \n[:=.")
 
 QUOTE_CASES = (
     ('[""^]a-z]', '[^]a-z]'),
@@ -502,14 +583,14 @@ CASES += (
      doc('re=["xy\\\ntext'), 1, 'opens a bracket expression that nothing closes'),
     ('a later opener retains its own line',
      doc('re=[x]\\\nother=[a-z]'), 2, 'guide.md:7:'),
-    ('joining ends at a balanced line',
+    ('joining retains uncertainty past a balanced line',
      doc('re=[x]\\\ny\nother=a-z]'), 1, 'guide.md:6:'),
-    ('over-flagged unrelated next-line range',
-     doc("re=[x] # a single quote '\necho a-z]"), 1, 'guide.md:6:'),
+    ('a comment quote cannot reopen an unambiguous closed prefix',
+     doc("re=[x] # a single quote '\necho a-z]"), 0, None),
     ('range with newline endpoint',
      doc('re=[!"x]y\n"-z]'), 1, '\\n-z'),
     ('joining cannot cross a fence',
-     doc("re=[x] # '") + doc("echo a-z]"), 1, "guide.md:6:"),
+     doc("re=[x'y]") + doc("echo a-z]"), 1, UNCLOSED),
 )
 
 # Every counterexample emitted by the first widened exploratory run.

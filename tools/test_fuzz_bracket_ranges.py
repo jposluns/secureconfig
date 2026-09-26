@@ -57,7 +57,10 @@ class FuzzerTests(unittest.TestCase):
         with patch.object(fuzz, "scan_path", observe):
             result = fuzz.check_batch([pattern[1:-1]], "en_US.utf8", ["regex"])["regex"]
         self.assertEqual((result["live"], result["flagged"], result["missed"]), (1, 1, []))
-        self.assertEqual(seen, ["```bash\nre=" + shlex.quote(pattern) + "\n```\n"])
+        self.assertEqual(seen, ["```bash\n" + source + "\n```\n"
+                                for source in fuzz.candidate_sources(pattern, "regex")])
+        self.assertEqual(len(seen), 2)
+        self.assertIn("<<'BRACKET_FUZZ_EOF'", seen[1])
 
     def test_grep_newline_fragments_keep_candidate_identity(self):
         words = ["a-z", "^a-z", "]\n[a-z", "a\n-z", "az", "[:x:]", ":x:", ":x:", "a-z]\n[a-z"]
@@ -121,6 +124,51 @@ class FuzzerTests(unittest.TestCase):
         with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as exc:
             self.cli("--max-length", "0", "--allow-empty", "--locale", "C.utf8")
         self.assertEqual(exc.exception.code, 2)
+
+    def test_multiline_scaffolds_reach_review_probes(self):
+        ansi = "!$'x]y\\'z\n'a-z"
+        mixed = "!'a\"b'\"x]y\n\"a-z"
+        self.assertIn(ansi, fuzz.multiline_words("z"))
+        self.assertIn(mixed, fuzz.multiline_words(""))
+        for prefix in ("^]a\"\"''", "]a\"\"''", "!]a", "]a", "^]a"):
+            self.assertIn(prefix + "\n-z", fuzz.multiline_words(""))
+        for word in ("$", "\\", "'", '\"'):
+            self.assertTrue(all(word in candidate for candidate in fuzz.multiline_words(word)))
+
+    def test_heredoc_detection_is_required(self):
+        scan = fuzz.scan_path
+
+        def omit_heredoc(path):
+            if "BRACKET_FUZZ_EOF" in path.read_text():
+                return [], 1, 0
+            return scan(path)
+
+        with patch.object(fuzz, "scan_path", omit_heredoc):
+            result = fuzz.check_batch(["^]a\"\"''\n-z"], "en_US.utf8", ["regex"])["regex"]
+        self.assertEqual((result["live"], result["flagged"], len(result["missed"])), (1, 0, 1))
+
+    def test_single_word_test_shapes_in_heredocs(self):
+        result = fuzz.check_batch([" -z ]\n", " -x ]\n", " a-z ]\n"],
+                                  "en_US.utf8", ["grep"])["grep"]
+        self.assertEqual((result["parsed"], result["live"], result["flagged"],
+                          result["missed"]), (3, 3, 3, []))
+
+    def test_literal_sources_preserve_pattern_bytes(self):
+        for insertion in ("", *fuzz.ALPHABET):
+            for word in fuzz.multiline_words(insertion):
+                pattern = "[" + word + "]"
+                for source in fuzz.candidate_sources(pattern, "regex"):
+                    result = fuzz.shell(source + '\nprintf "%s" "$re"\n')
+                    self.assertEqual((result.returncode, result.stderr, result.stdout),
+                                     (0, "", pattern))
+
+    def test_multiline_resume_order(self):
+        ordinary = [word for batch in fuzz.batches(1, 7) for word in batch]
+        expected = ordinary + [candidate for word in ordinary
+                               for candidate in fuzz.multiline_words(word)]
+        for skip in (0, 1, 17, 18, 19, len(expected) - 1):
+            actual = [word for batch in fuzz.selected_batches(1, 1, 7, skip) for word in batch]
+            self.assertEqual(actual, expected[skip:])
 
     def test_batch_and_resume_enumeration(self):
         expected = ["".join(word) for length in range(3)

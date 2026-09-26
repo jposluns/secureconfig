@@ -1,205 +1,109 @@
 #!/usr/bin/env python3
-r"""Flag bracket ranges in fenced bash blocks: outside the C locale a range can match non-ASCII.
+r"""Flag bracket ranges in fenced bash blocks.
 
-WHY THIS EXISTS. A guard such as `case "$1" in *[!A-Za-z0-9.-]*) exit 2 ;; esac` or
-`[[ "$t" =~ ^[A-Za-z0-9_.-]+$ ]]` reads as an ASCII accept list, and whether it is one depends on
-the tool, the locale and a shell option. The #356 review found `é` matching both `[A-Za-z]` and
-`[0-9a-f]` in GNU grep under en_US.UTF-8. Reproduced on 2026-09-26 with GNU grep 3.12, GNU sed 4.9,
-gawk 5.3, dash, bash 5.3.9 and glibc's en_US.utf8, C.utf8 and C locales:
+WHY THIS EXISTS. Outside the C locale, ranges can match non-ASCII letters and digits. GNU
+grep, GNU sed and Bash [[ =~ ]] accept non-ASCII samples with ASCII-looking ranges under
+en_US.utf8. Bash case does so with globasciiranges disabled. Spell out the intended ASCII set,
+for example [ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789]. An accept-list
+POSIX class needs a C locale covering the whole check; a reject-list class can safely refuse
+the locale's wider set. This gate does not interpret LC_ALL or classes.
 
-  - Under en_US.utf8, `grep -E` and `sed -E` matched é, É, ß, a fullwidth e, the Kelvin sign
-    U+212A and the long s U+017F with `[A-Za-z]`, and é, a superscript two and the Arabic-Indic
-    digit three with `[0-9a-f]`. `[0-9]` on its own matched none of the samples in either tool.
-  - Under en_US.utf8, bash `[[ =~ ]]`, which hands the pattern to the C library, accepted every
-    one of those samples with `^[A-Za-z0-9_.-]+$`, and accepted the superscript two and the
-    Arabic-Indic three with `^[0-9]+$`. No shell option changes this.
-  - bash `case` was ASCII only while `globasciiranges` was on, which bash 5.x sets by default
-    and a build or a `shopt -u` can turn off; with it off, `*[!A-Za-z0-9.-]*` let every sample
-    through. dash's `case` and gawk were ASCII only in every locale tried.
-  - Under C.utf8 and C, every range was ASCII only. A POSIX class is not a fix by itself:
-    `[[:alnum:]]` matched é, ß and the Arabic-Indic three under C.utf8 as well.
+THREAT MODEL. The gate targets locale-dependent ranges an author writes by accident in
+accept-list validators. It is hardened against the constructed bypasses found in review,
+bounded by the alphabet, lengths, source scaffolds, engines, locales and probe character
+covered by the fuzzer. It is not a general Bash analyser or a defence against arbitrary
+runtime assembly. Known residual classes include bracket-free tr ranges, POSIX classes and \w,
+runtime assembly, complete test-command-shaped data, non-bash fences and fence-extraction
+limits. Exact-line waivers also leave later edits to a spanning reading dependent on human
+review.
 
-A reader pastes these blocks into whatever locale their terminal has, so a guard that refuses a
-non-ASCII value only in some locales does not refuse it.
+THE MODEL. The scanner reads every fenced bash block selected by check_shell_blocks.blocks_of
+in guides, README.md, controls-reference.md and CONTRIBUTING.md. It does no shell lexing.
+Ordinary bracket parsing recognizes leading ^, literal leading ], ranges, and bounded POSIX
+atoms. A glob ! is an ordinary member except before a leading literal ]. Quotes, comments and
+heredoc bodies receive the same treatment. A backslash never hides an opener.
 
-THE MODEL. Every physical line of every fenced bash block of a guide, README.md,
-controls-reference.md or CONTRIBUTING.md (the same blocks the shell-block gate lints, from
-`check_shell_blocks.blocks_of`) is scanned for its own openers, here-document bodies included. The gate does
-no bash lexing at all: no quotes, no comments, no here-documents, no expansions and no command
-separators. Three earlier versions of this gate lexed bash, first to join lines and then only to
-decide whether an in-block waiver comment was real, and adversarial review found a new way around
-the lexing each time; round 3 alone found an escaped space making a data `#` read as a comment, a
-trailing backslash dropping an open quote, a partly recognized here-document delimiter ending a
-body early, a fake POSIX atom swallowing a validator between two printf arguments, and quoting
-inside a parameter-removal pattern misread as closing the expansion. This version removes the
-attack surface instead of patching it again: a waiver decision reads nothing in the block,
-because waivers do not live in blocks at all.
+Every physical line keeps its own opener scan, including heredoc bodies. Quote parity is never
+evidence of closure. A quote-free, escape-free ordinary closed prefix settles the lexical
+reading; quotes after that prefix cannot reopen it. Leading literal closes (`[]`, `[^]`,
+`[!]`), trailing backslashes, quotes or backslashes before the ordinary close, and unclosed
+lists retain an alternative to the end of the same block. A list closing at physical end of
+line and a negated list followed by a dot also retain that alternative because byte and
+character matching can differ. Only backslash-newline is removed. No shell quote state, escape
+decoding or expansion is computed. Quote removal and ordinary and anywhere-range readings
+reach the last close in the span. Each spanning opener retains an unclosed finding even
+without a literal range. Findings and waivers belong to the opener's physical line; changing
+later lines does not invalidate its key. Review the entire span on every edit. The
+test-command exemption requires a standalone closing test word on the same physical line; a
+bare one-word literal test is scanned too.
 
-On each physical line, the basic readings flag two conditions:
+For an additional single-line reading, the region ends at the last close on that line. Quotes
+or backslashes enable removal of both, and of dollars immediately before quotes. Ordinary
+parsing and every interior X-Y are checked after removal. Dollars inside the ordinary list,
+empty atom spellings [::], [==], [..], and literal-opener atoms [.[.], [=[=] enable this broad
+reading too. Adjacent negated lists are findings because they can consume bytes under C and
+characters under UTF-8. Terminal quote-affected closes retain the existing unclosed
+alternatives. Each opener produces at most one finding; the ordinary close bounds the outer
+scan.
 
-  - A bracket expression holding a range (`X-Y`, hyphen neither first nor last). POSIX rules
-    apply within the line: a leading `^` negates, a `]` first in the list is a literal and can
-    start a range (`[]-z]`, `[^]-z]`), `[:class:]`, `[=x=]` and `[.x.]` are single items, and a
-    glob's `!` is an ordinary character, so `[!0-9]` still holds 0-9 and a `]` right after `[!`
-    is a literal whenever a later `]` on the line closes the expression. An atom counts as one
-    item only when its interior is the plain name or character those forms carry (letters and
-    digits, or any one character that is not `[`): round 3 built `[[:` and `:]]` out of two
-    printf arguments and an unconstrained scan swallowed the live validator between them, so
-    anything else is read as ordinary characters, and a range inside it is still seen. A `[]`
-    or `[^]` that no later `]` on the line closes is the empty pair of a JSON, jq or JMESPath
-    expression in this reading; the spanning alternatives still apply. A backslash does not hide a
-    bracket: the shell removes an unquoted `\` before the tool sees `[`, so `grep -E \[0-9] f`
-    holds a live range, and a quoted `\[` is flagged too rather than guessed about.
-  - A "[" that nothing on its own physical line closes. Earlier physical closes may be
-    literal members, so the additional spanning reading below is necessary as well.
+SETTLEMENT. The narrower span trigger is sound for the lexical reading because a literal,
+quote-free closed prefix already contains its closing bracket; later quotes cannot remove that
+source character. Leading-literal-close alternatives are explicitly excluded from settlement.
+Quotes or escapes inside the prefix make closure uncertain and keep the alternative through
+the block, regardless of even quote counts. Expansion remains outside this proof. Complete
+lists before continuations, quoted data, JSON arrays, comments, subscripts and unrelated
+following commands can therefore be over-flagged.
 
-For every opener considered, the additional region ends at the LAST "]" on its physical
-line. A quote or backslash in that region enables deletion of both quotes, backslashes and
-dollar signs immediately before quotes. Both the ordinary parser and every three-character
-X-Y in the stripped interior are checked, including past earlier closes. The ordinary physical
-close still bounds the outer scan, and each opener gets at most one finding.
+THE ALLOWLIST. tools/bracket_ranges_allow.txt holds <guide-file> TAB <exact extracted physical
+line> TAB <reason>. No in-block waiver is accepted. One entry is consumed per flagged
+occurrence and covers every finding attributed to that line, including spanning readings.
+Duplicate entries require duplicate occurrences. Malformed entries, empty reasons, stale
+entries and retired in-guide markers fail the gate. Moving unchanged text within a guide still
+matches; changing its text or guide does not. A false positive involving range-free validator
+arguments needs a reason distinguishing it from a real range.
 
-Every physical line keeps its own opener scan. The additional reading joins following lines
-within the same block while the accumulated text ends in a backslash or has odd single-quote or
-double-quote counts. Two additional, context-free parity readings delete the three-character
-sequences `"'"` and `'"'` separately before counting; this catches mixed quoting whose raw
-counts are both even. Only backslash-newline is removed; other newlines remain. No shell quote
-state, escape decoding or expansion is computed. The quote-affected region runs to the last
-close in that joined text, or its end if no close exists. Quote removal, the ordinary bracket
-parse and the anywhere-range reading apply there too, including newline endpoints. Every
-spanning reading also retains an unclosed alternative, even if a close looks complete: the wider
-oracle found locale differences in multiline grep patterns without a range. Findings and
-allowlist keys use the opener's physical line. Each later physical line is still scanned
-independently. This deliberately over-flags complete lists before continuations, quoted data,
-comments and unrelated following commands.
+Against qa/360-r7, the broad quote-presence rule adds 228 unwaived findings. Settling
+quote-free closed prefixes reduces the final delta to 21 added findings on 19 lines and one
+removed false positive. The added lines are egress-metadata.md:154; elasticsearch.md:33, :59,
+:166, :188, :226 and :319; kubernetes.md:21; mcp-clients.md:101; model-servers.md:260;
+rabbitmq.md:377 and :382; realtime-webhooks.md:124 and :135; and
+self-hosted-ci-runners.md:118, :119, :120, :155 and :174. The removed finding is
+container-hardening.md:112. Fourteen new waiver entries cover 15 expressions; existing entries
+cover six additional expressions. The corpus has 0 unwaived findings in 411 bash blocks across
+99 guides, with 38 consumed entries covering 48 expressions. These are false positives,
+including the range-free RabbitMQ broker validators; they are not all non-validator text.
 
-Adjacent negated lists using either ^ or ! are also findings: they can consume separate bytes
-under C but require separate characters under UTF-8. This deliberately includes non-range locale
-effects and over-flags such lists in non-pattern data. A span trigger at block end keeps the
-unclosed alternative even when no next line exists.
+The deterministic suite has 2875 cases (2829 ordinary, 25 allowlist, 4 quote-removal and 17
+joining), 2868 checked behaviours, 7 disclosed blind spots and 11 entry-point runs. The
+separate development fuzzer has 17 regression tests. All 15 independent round-8 mutations fail
+their relevant suite. The fixed corpus includes the 1143 earlier exploratory misses and all
+1476 round-8 exploratory misses and 3 targeted misses. Seventeen terminal-list variants
+include the 4 terminal exploratory misses. Both quote guards agree with their original
+predicates on 776 values under each of C and en_US.utf8, with ordinary and readonly
+quote-variable names, including diagnostics and exit status. Literal quote alternatives have
+separate bracket-free case arms and assign no quote variables.
 
-Empty POSIX-atom spellings [::], [==] and [..] also enable the broad reading; Bash's live
-[[..]-z] and [[..]-x] forms require it. This may flag empty-atom data.
+The complete development run uses C and en_US.utf8, 16 workers, lengths 0 through 6 over 17
+characters, and seven multiline scaffolds with insertions of lengths 0 through 4 over the same
+alphabet: 26,267,354 candidates per engine. Glob: 7,078,038 parsed, 281,235 live and flagged,
+0 missed; grep -E: 15,770,551 parsed, 329,154 live and flagged, 0 missed; Bash regex:
+22,361,038 parsed, 659,537 live and flagged, 0 missed. The sample is é; every live regex
+candidate must be detected in both its quoted assignment and, when multiline, its quoted
+heredoc source. Coverage is bounded by these inputs.
 
-The broad reading also covers the literal-opener atoms [.[.] and [=[=]; [[.[.]-z] is live in all
-three engines.
+The development fuzzer is excluded from offline gates because its collation locale may be
+unavailable. It checks differences in either direction for the sample é; this includes some
+non-range locale effects. Regex patterns are scanned as literal shell assignments and, for
+multiline patterns, quoted heredoc bodies. Glob patterns retain their original source. Every
+engine needs live candidates unless --allow-empty is explicit; startup canaries always require
+both locale directions and detection.
 
-The development fuzzer also found six glob counterexamples such as `[$a]-z]`: an unset variable
-exposes a leading literal `]`. A dollar inside the ordinary list therefore enables the same broad
-readings. A dollar after that list, such as a regex end anchor, does not enable them by itself.
-The terminal fallback below applies too. This covers shifts of literal closes, not general
-expansion or runtime-assembled ranges.
-
-The single-line range readings do not subsume every old unclosed-alternative finding. The final
-close still gets that finding when a backslash or quote immediately precedes it, or when a quote immediately
-follows it and the same quote occurs inside the region. A quote-affected final close at physical
-end of line also gets an unclosed reading, including a close buried in longer quoted text.
-This terminal fallback is separate from range detection; earlier closes never need adjacency
-tests. With no close on the line, the existing unclosed-bracket finding always stands.
-
-Shell text, comments and here-document bodies are all read the same way: a regex stored in a
-variable, a `case` alternative on its own line, a script written to a file through a
-here-document and a commented-out probe are validators too. The gate does not ask which tool
-reads the pattern. A JSON array holding a hyphenated string, `["app-data"]`, reads as a range as
-well and takes an allowlist entry; a rule that skipped it would also skip a regex that happened
-to start with a quote.
-
-THE FIX is a spelled-out set, which means the same thing in every locale, tool and shell:
-`[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]`. `model-servers.md` already
-carried `[!0123456789abcdef]` from #350 and #355. A POSIX class in an accept list is sound only
-under an explicit `LC_ALL=C` that covers the whole check, since `[[:alnum:]]` accepts non-ASCII
-letters under C.utf8. A class in a reject list, such as refusing the locale's control or
-whitespace characters, is sound in any locale, because a wider class only refuses more. This gate
-does not read POSIX classes or `LC_ALL`: a class needs no waiver, and a range under `LC_ALL=C`
-still does.
-
-THE ALLOWLIST. A finding in non-validator text (a display filter, a JSON request body or a
-format label) is waived in tools/bracket_ranges_allow.txt, never in the guide. Earlier
-versions took a trailing `bracket-ranges: allow` comment in the block, and deciding whether that
-comment was real is exactly the lexing this version removes, so a guide line still carrying that
-marker (a `#`, then optional blanks, then `bracket-ranges:`) is itself a finding, anywhere in the
-file. Each allowlist entry is one line
-
-    <guide-file> TAB <exact physical line text> TAB <reason>
-
-and a line starting with `#` is a comment. A finding is waived only when its guide's file name
-and its line's exact text both match an entry, the whole line as the block extraction yields it
-(the opening fence's own indentation removed, nothing else changed), never a substring, so an
-entry cannot quietly keep covering a line that grew a second command or a second range; an entry
-waives every finding attributed to that opener line, including its spanning readings.
-Each flagged occurrence of a line consumes one entry, so a duplicate entry is legal exactly while
-the same text genuinely occurs that many times, and every entry left unconsumed at the end of a
-repository scan is a finding ("stale allowlist entry"): an edit cannot leave a dead waiver
-behind. An entry with fewer than three fields, an empty guide, an empty text or an empty reason
-is a finding. The guide name is read up to the first TAB and the reason back from the last, so
-the text may itself hold a TAB; a reason may not.
-
-WHAT THIS IS NOT. A shell parser, and not proof that a guard is correct. The model is
-deliberately conservative: everything in the first list below is over-flagging that fails
-closed, listed honestly; what the gate still does not see at all is in the second. Each is a
-recorded case in tools/test_bracket_ranges.py so that a change is loud.
-The deterministic suite has 1365 cases (1326 ordinary, 25 allowlist, 4 quote-removal and 10
-joining), 1357 checked behaviours, 8 disclosed blind spots and 11 entry-point runs. The separate
-development fuzzer has 12 regression tests. All 36 independent single-rule mutations fail their
-relevant suite.
-The development-only fuzzer enumerated lengths 0 through 6 over 17 characters on 16 workers,
-25,646,167 candidates per engine under C and en_US.utf8. Glob parsed 6,921,280, with 131,774
-live and flagged; grep -E parsed 15,513,205, with 328,352 live and flagged; Bash regex parsed
-21,794,627, with 429,945 live and flagged. Each engine has 0 remaining misses. The complete glob
-enumeration was rerun after fixing two empty-atom misses. The final atom additions were also
-replayed over all 35,320 affected candidates within this bound on every engine: glob had 11 live
-and flagged, grep and regex had 0 live, with 0 misses. This targeted replay permits empty
-selections; the complete engine runs do not. The evidence is bounded by the alphabet, length and
-probe character, not proof for arbitrary Bash. The longer [[.[.]-z] case has separate live
-regressions.
-The fuzzer is intentionally absent from the offline gates, since the collation locale may be
-missing. Its live predicate includes either direction of change and is broader than ranges:
-for example, a dot following a negated set can distinguish UTF-8 characters from C-locale bytes.
-The fixed regression corpus includes all 1143 misses emitted by the exploratory widened runs.
-
-  Over-flagged, by design (restructure the line, spell the set out, or allowlist the line):
-  - A multi-line data list, a JSON array or Python list whose `[` closes on a later line, is an
-    unclosed-bracket finding on the line of the `[`. Keep such a list on one line, use a
-    bracket-free shape (a Python tuple, a split string), or allowlist the opening line.
-  - A quoted literal `\[a-z\]`, an array subscript `a[i-1]` in an expansion or in arithmetic,
-    and a slice `[1:-1]` are flagged: the gate does not know a backslash is quoted or a context
-    is arithmetic, and guessing was what the lexing models got wrong.
-  - A malformed atom, `[[:alpha]` with no closing `:]` on its line, is read as ordinary
-    characters rather than an atom, so `alpha` contributes no range but a live range beside it
-    is still seen.
-  - Quote-affected regions can span separate expressions and physical lines. Raw parity and
-    the two quote-island deletion readings can extend through unrelated commands. Every
-    spanning opener retains an unclosed alternative, even for a complete, range-free set.
-    Against qa/360-r6, this adds 16 findings on 15 corpus lines: cloud-firewalls.md:22,
-    container-hardening.md:112, haproxy.md:150 and :198, llm-observability.md:174, low-code-
-    builders.md:286, neo4j.md:454 and :460, nomad-consul.md:242, object-storage.md:517,
-    postgresql.md:240, rabbitmq.md:584, server-admin-panels.md:218, and sqlite.md:175 and :180.
-    Ten non-validator occurrences get specific waivers, the rabbitmqctl topic-permission
-    arguments among them. Five flagged lines are rewritten without changing their predicates:
-    three diagnostic messages lose an apostrophe, as does the matching message a few lines above
-    each, and two literal quote members use variables inside their probe subshells. The corpus
-    has 0 unwaived findings in 411 bash blocks across 99 guides, with 25 consumed entries
-    covering 28 expressions.
-  - An allowlist entry waives its whole line: one of two ranges on a line cannot be waived
-    alone. Changing its text or guide breaks its entry, but moving unchanged text within the
-    same guide does not. Neither does changing surrounding lines: a continued printf argument
-    can become a grep validator while its exact line remains waived. Review the context on
-    every edit, including the rest of a joined span; the key binds opener text and guide, not
-    location, following lines or interpretation.
-
-  Still not seen:
-  - Ranges with no brackets: `tr -dc 'A-Za-z0-9'`.
-  - POSIX classes and `\w`, although they are locale dependent too.
-  - A `[` or `[[` standing as its own word before whitespace is read as the test command, even
-    when it sits inside a regex or other data: `re='^ [ a-z]+$'` carries a live range into
-    glibc's regcomp and is not flagged.
-  - A range assembled at runtime, where no literal `X-Y` sits between a literal `[` and `]` in
-    the source: endpoints spliced from variables (`lo='a-'; hi=z; re="^[$lo$hi]+$"`), brackets
-    built by escapes (`$'\x5bA-Za-z\x5d'`, `$'^[a\x2dz]+$'`), and their combinations. These are
-    the bracketed siblings of the `tr` case: a lexical gate that does not expand words cannot
-    see them, and rule 5's tracing obligation is what covers them.
-  - Fence extraction has exactly the limits `check_shell_blocks.blocks_of` discloses, and a
-    fence whose info string is not bash (`sh`, `zsh`) is not read.
+RESIDUALS. tr can take ranges without brackets. Classes and \w can depend on locale without a
+literal range. Variables or escaped brackets can assemble syntax at runtime. Data shaped like
+a complete test command, for example re='^ [ a-z x ] +$', can still take the test-word
+exemption. Non-bash fences are not scanned, and extraction inherits
+check_shell_blocks.blocks_of limits. The seven blind-spot fixtures record these boundaries;
+they do not claim arbitrary shell coverage.
 """
 import re
 import sys
@@ -219,7 +123,7 @@ ALLOWLIST = "bracket_ranges_allow.txt"
 # The retired in-block waiver marker. A guide line holding one is a finding, wherever it sits:
 # deciding whether such a comment is real is the lexing this gate no longer does.
 MARKERISH_RE = re.compile(r"#[ \t]*bracket-ranges:")
-# A `[` or `[[` after one of these and before whitespace is the test command.
+# A test-word opener needs these boundaries and a standalone close on the same line.
 TEST_BEFORE = " \t;&|(!"
 # The interior an atom may carry and still count as one item: a class name, an equivalence
 # class or a collating symbol. Anything longer or stranger is scanned as ordinary characters.
@@ -348,8 +252,8 @@ def _adjacent_negated(text, i):
 
 def bracket_hits(text, span=None):
     """Yield one description per bracket expression in one line's text holding a range, and per
-    `[` left open at the end of the line. Optional span extends the quote-affected region;
-    stripped ordinary and anywhere-range readings supplement the ordinary parse. Terminal
+    `[` left open at the end of the line. Optional span is text or a callable returning
+    a span for each opener; stripped ordinary and anywhere-range readings supplement the ordinary parse. Terminal
     unclosed alternatives remain conservative. Only the ordinary close bounds the outer scan.
     A backslash before `[` never hides an opener."""
     i, n = 0, len(text)
@@ -358,14 +262,22 @@ def bracket_hits(text, span=None):
             i += 1
             continue
         word_end = i + 2 if text.startswith("[[", i) else i + 1
-        if (i == 0 or text[i - 1] in TEST_BEFORE) and (word_end == n or text[word_end] in " \t"):
-            i = word_end
-            continue
+        if (i == 0 or text[i - 1] in TEST_BEFORE) and word_end < n and text[word_end] in " \t":
+            closing = "]]" if word_end == i + 2 else "]"
+            end = re.search(r"(?<!\S)" + re.escape(closing) + r"(?=$|[\s;&|)])", text[word_end:])
+            if end is not None:
+                operands = text[word_end:word_end + end.start()]
+                # A bare one-word test is not a validator. Scan its literal argument so
+                # heredoc patterns such as [ -z ] do not inherit this exemption.
+                if len(operands.split()) > 1 or any(c in operands for c in "'\"\\$"):
+                    i = word_end
+                    continue
         close, ranges = _parse_bracket(text, i)
-        extended = text if span is None else span
+        reading = span(i) if callable(span) else span
+        extended = text if reading is None else reading
         last = extended.rfind("]", i + 1)
         region = extended[i:last + 1] if last >= 0 else extended[i:]
-        affected = span is not None or any(c in region for c in ("'", '"', chr(92)))
+        affected = reading is not None or any(c in region for c in ("'", '"', chr(92)))
         # The exhaustive glob check found unset variables exposing a leading literal close:
         # [$a]-z] becomes []-z]. A dollar inside the ordinary list gets the broad reading too.
         affected |= "$" in text[i:close + 1 if close is not None else n]
@@ -381,7 +293,7 @@ def bracket_hits(text, span=None):
             ranges = list(dict.fromkeys(ranges + stripped_ranges + anywhere))
         # Preserve terminal unclosed alternatives from round 5, including a buried quoted
         # close at physical end of line. The range readings above need no adjacency rule.
-        unclosed = close is None or span is not None or (
+        unclosed = close is None or reading is not None or (
             affected and last >= 0 and (
                 _ambiguous_close(extended, i, last) or not extended[last + 1:].strip()))
         if ranges and close is not None:
@@ -459,29 +371,36 @@ class Allowlist:
 
 
 def _may_span(text):
-    """Raw parity plus two context-free quote-island deletion readings.
+    """Settle only the lexical closed prefix; retain every ambiguous alternative.
 
-    Mixed quoting can have even raw counts while a quote remains open. Deleting either
-    quoted-quote spelling before counting adds a conservative reading without quote state.
+    Leading literal closes are never settled by the empty-pair fallback. The dot rule
+    preserves the fuzzer's non-range byte/character counterexamples. Expansion is not parsed.
     """
-    readings = (text, text.replace("\"'\"", ""), text.replace("'\"'", ""))
-    return text.endswith("\\") or any(
-        r.count("'") % 2 or r.count('"') % 2 for r in readings)
+    if text.endswith("\\") or text.startswith(("[]", "[^]", "[!]")):
+        return True
+    close, _ = _parse_bracket(text, 0)
+    if close is not None and not text[close + 1:].strip():
+        return True
+    if close is not None and text.startswith("[^") and text[close + 1:].startswith("."):
+        return True
+    return close is None or any(c in text[:close] for c in "'\"\\")
 
 
-def joined_reading(lines, idx):
-    """Extend by raw quote parity or a trailing backslash, bounded by this block.
+def joined_reading(lines, idx, opener=None):
+    """Keep unresolved alternatives within this block; remove backslash-newline only.
 
-    Count both quote characters independently in _may_span readings, without lexing.
-    Remove only backslash-newline; preserve other newlines, including blank lines.
+    No later quote count proves closure, so these alternatives stay open to block end.
+    Calling per opener prevents a quote in a preceding command from tainting a plain set.
     """
-    text, end = lines[idx], idx
-    while _may_span(text):
-        if end + 1 == len(lines):
-            break
-        end += 1
-        text = (text[:-1] if text.endswith("\\") else text + "\n") + lines[end]
-    return text if end > idx or _may_span(text) else None
+    text = lines[idx]
+    if opener is None:
+        opener = text.find("[")
+    if opener < 0 or not _may_span(text[opener:]):
+        return None
+    for tail in lines[idx + 1:]:
+        text = (text[:-1] if text.endswith("\\") else text + "\n") + tail
+    return text
+
 
 def scan_blocks(name, blocks, allow):
     """Scan one guide's bash blocks, one physical line at a time, against `allow`.
@@ -495,7 +414,7 @@ def scan_blocks(name, blocks, allow):
         n_blocks += 1
         lines = body.split("\n")
         for idx, raw in enumerate(lines):
-            hits = list(bracket_hits(raw, joined_reading(lines, idx)))
+            hits = list(bracket_hits(raw, lambda i: joined_reading(lines, idx, i)))
             if not hits:
                 continue
             if allow.take(name, raw):

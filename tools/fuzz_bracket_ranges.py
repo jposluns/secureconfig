@@ -2,7 +2,7 @@
 r"""Development-only differential check; deliberately absent from run_all_checks.sh.
 
 Run: TMPDIR=/path/to/writable/scratch python3 tools/fuzz_bracket_ranges.py \
-    --max-length 6 --jobs 16 --engines glob grep regex
+    --max-length 6 --multiline-length 4 --jobs 16 --engines glob grep regex
 Requires bash, GNU grep and a UTF-8 locale with non-ASCII range collation, normally
 en_US.utf8. Startup canaries require both locale directions and gate detection; they reject
 C.utf8 when it cannot distinguish the samples from C. --allow-empty permits a zero-live
@@ -28,9 +28,14 @@ variable to [[ $1 =~ $re ]]. Their parsed count includes only patterns valid in 
 locales. Regression fixtures separately cover shell quote removal in assignments.
 
 Each live candidate is written to a real fenced bash block and scanned with scan_path.
-Regex engines use a shell-quoted literal assignment; source glob candidates retain their
+Regex engines scan both a shell-quoted literal assignment and, for multiline patterns,
+a quoted heredoc body. Source glob candidates retain their
 original physical newlines and continuations. The alphabet preserves the original 12
 characters and adds newline, [, :, = and ., for 17 distinct characters.
+--multiline-length N also inserts every word of lengths 0 through N over that same alphabet,
+including $ and backslash, into seven fixed multiline scaffolds. These reach ANSI-C escaped
+quotes, mixed quotes, and leading literal closes on the first physical line. A live pattern
+is flagged only if every source form is detected. Resume indices include both families.
 
 A live pattern's match result for é differs between C and UTF-8 in either direction.
 This predicate also includes locale effects beyond ranges, such as byte-versus-character
@@ -194,6 +199,30 @@ def grep_batch(words, locale):
     return parsed, live
 
 
+def candidate_sources(pattern, engine):
+    """Scan the source spelling that the oracle evaluates, including literal heredocs."""
+    if engine == "glob":
+        return ['case "$1" in *' + pattern + '*) :;; esac']
+    sources = ["re=" + shlex.quote(pattern)]
+    if "\n" in pattern:
+        sources.append("re=$(cat <<'BRACKET_FUZZ_EOF'\n" + pattern
+                       + "\nBRACKET_FUZZ_EOF\n)")
+    return sources
+
+
+def multiline_words(word):
+    """Long quote and leading-close scaffolds with an exhaustively varied insertion."""
+    return (
+        "!$'x]y\\'" + word + "\n'a-z",
+        "!'a\"b'\"x]y" + word + "\n\"a-z",
+        "^]a\"\"''" + word + "\n-z",
+        "]a\"\"''" + word + "\n-z",
+        "!]a" + word + "\n-z",
+        "]a" + word + "\n-z",
+        "^]a" + word + "\n-z",
+    )
+
+
 def check_batch(words, locale, engines):
     results = {}
     for engine in engines:
@@ -204,10 +233,12 @@ def check_batch(words, locale, engines):
             path = Path(directory) / "candidate.md"
             for index in sorted(live):
                 pattern = "[" + words[index] + "]"
-                source = ('case "$1" in *' + pattern + '*) :;; esac'
-                          if engine == "glob" else "re=" + shlex.quote(pattern))
-                path.write_text("```bash\n" + source + "\n```\n", encoding="utf-8")
-                if not scan_path(path)[0]:
+                missed_source = False
+                for source in candidate_sources(pattern, engine):
+                    path.write_text("```bash\n" + source + "\n```\n", encoding="utf-8")
+                    if not scan_path(path)[0]:
+                        missed_source = True
+                if missed_source:
                     missed.append(pattern)
         results[engine] = dict(generated=len(words), parsed=parsed, live=len(live),
                                flagged=len(live) - len(missed), missed=missed)
@@ -226,9 +257,25 @@ def batches(max_length, size, skip=0):
             yield ["".join(word) for word in words]
 
 
+def selected_batches(max_length, multiline_length, size, skip=0):
+    """Resume over one stable order: ordinary candidates, then multiline scaffolds."""
+    ordinary = sum(len(ALPHABET) ** n for n in range(max_length + 1))
+    if skip < ordinary:
+        yield from batches(max_length, size, skip)
+    skip = max(0, skip - ordinary)
+    if multiline_length is not None:
+        words = (candidate for batch in batches(multiline_length, size)
+                 for word in batch for candidate in multiline_words(word))
+        words = itertools.islice(words, skip, None)
+        while batch := list(itertools.islice(words, size)):
+            yield batch
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--max-length", type=int, default=6)
+    parser.add_argument("--multiline-length", type=int,
+                        help="also insert lengths 0 through N into seven multiline scaffolds")
     parser.add_argument("--start-index", type=int, default=0,
                         help="resume a contiguous suffix; add the preceding prefix counts")
     parser.add_argument("--batch-size", type=int, default=4096)
@@ -239,7 +286,8 @@ def main():
     parser.add_argument("--allow-empty", action="store_true",
                         help="allow a selected suffix with zero live candidates on an engine")
     args = parser.parse_args()
-    if args.max_length < 0 or args.jobs < 1 or args.batch_size < 1:
+    if (args.max_length < 0 or args.jobs < 1 or args.batch_size < 1
+            or (args.multiline_length is not None and args.multiline_length < 0)):
         parser.error("length must be nonnegative; jobs and batch size must be positive")
     # No vacuous all-green result when the available UTF-8 locale collates like C.
     for engine in args.engines:
@@ -254,9 +302,12 @@ def main():
     totals = {engine: dict(generated=0, parsed=0, live=0, flagged=0, missed=0)
               for engine in args.engines}
     expected = sum(len(ALPHABET) ** n for n in range(args.max_length + 1))
+    if args.multiline_length is not None:
+        expected += 7 * sum(len(ALPHABET) ** n for n in range(args.multiline_length + 1))
     if not 0 <= args.start_index < expected:
         parser.error("start index must identify a generated candidate")
-    source = iter(batches(args.max_length, args.batch_size, args.start_index))
+    source = iter(selected_batches(args.max_length, args.multiline_length,
+                                   args.batch_size, args.start_index))
     with ThreadPoolExecutor(max_workers=args.jobs) as pool:
         pending = deque()
         for _ in range(2 * args.jobs):
@@ -280,6 +331,7 @@ def main():
     assert all(result["generated"] == expected for result in totals.values()), totals
     print(json.dumps(dict(locale=args.locale, max_length=args.max_length,
                           start_index=args.start_index, alphabet=ALPHABET,
+                          multiline_length=args.multiline_length,
                           allow_empty=args.allow_empty, results=totals)), flush=True)
     empty = [engine for engine, result in totals.items() if result["live"] == 0]
     if empty and not args.allow_empty:

@@ -236,9 +236,9 @@ The fourth value selects `tls`, `wrong`, `scram`, `plaintext`, or an interactive
   case "$2" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute every placeholder; not probing"; exit 1 ;;
   esac
-  single_quote="'"
   case "$2" in
-    *[[:space:]]*|*"$single_quote"*|*\\*) echo "use a CA path without whitespace, quotes or backslashes; not probing"; exit 1 ;;
+    *"'"*) echo "use a CA path without whitespace, quotes or backslashes; not probing"; exit 1 ;;
+    *[[:space:]]*|*\\*) echo "use a CA path without whitespace, quotes or backslashes; not probing"; exit 1 ;;
   esac
   case "$3" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_]*) echo "supply a simple role name; not probing"; exit 1 ;;

@@ -6,7 +6,9 @@
 # The gate fails on an entry no flagged line consumes (a stale allowlist entry) and on an
 # empty reason, so remove an entry when its line changes; it also fails on the retired
 # in-block waiver comment, so a waiver never lives in a guide. A validator never belongs
-# here: it takes a spelled-out set (CONTRIBUTING.md rule 8).
+# here for a real range: it takes a spelled-out set (CONTRIBUTING.md rule 8).
+# A false positive spanning separate, range-free validator arguments may be waived with
+# that distinction stated explicitly; review the entire opener span on every edit.
 elasticsearch.md	  --data-binary '{ "cluster": ["manage_own_api_key"], "indices": [{"names": ["app-data"], "privileges": ["read"]}] }'	a JSON request body for the Elasticsearch PUT /_security/role/app_reader role request: role, index and privilege names, not a pattern
 elasticsearch.md	  --data-binary '{ "name": "app-reader", "expiration": "1d", "role_descriptors": { "app_read": { "cluster": [], "indices": [{"names": ["app-data"], "privileges": ["read"]}] } } }'	a JSON request body for the Elasticsearch scoped-API-key call: an empty cluster list, index and privilege names, not a pattern
 elasticsearch.md	  --data-binary '{ "cluster_permissions": [], "index_permissions": [{"index_patterns": ["app-data"], "allowed_actions": ["read"]}], "tenant_permissions": [] }'	a JSON request body for the OpenSearch role: empty permission lists, index-pattern and action names, not a pattern a tool compiles
@@ -23,7 +25,6 @@ vault.md	  capabilities = ["read"]	a Vault HCL capability list containing the li
 vault.md	  capabilities = ["create", "update"]	a Vault HCL capability list containing the literal permissions create and update, not a pattern
 realtime-webhooks.md	        digest = ("0" if digest[0] != "0" else "1") + digest[1:]	Python indexing and slicing deliberately corrupt a probe HMAC, not an accept-list validator
 cloud-firewalls.md	  --query "SecurityGroupRules[].{Group:GroupId,Egress:IsEgress,Proto:IpProtocol,From:FromPort,To:ToPort,V4:CidrIpv4,V6:CidrIpv6,Prefix:PrefixListId,SG:ReferencedGroupInfo.GroupId}" \	JMESPath projection of security-group rule fields for a display table, not a bracket-pattern validator
-container-hardening.md	kubectl exec app -- sh -c 'id; grep -E "NoNewPrivs|Seccomp|CapEff|CapBnd" /proc/1/status'   # expect uid!=0, NoNewPrivs:1, Seccomp:2 (a filter is active, not 0=unconfined), and CapEff+CapBnd 0000000000000000 (drop:[ALL] clears the effective AND bounding sets; CapEff alone is not enough). Assumes the container's own PID namespace; with shareProcessNamespace PID 1 is the pause container, so pick the app PID	comment explaining the literal Kubernetes drop:[ALL] capability list; the command's grep is a display filter with no bracket range
 haproxy.md	    printf 'user = "admin:%s"\n' "$pw" | curl -q -g "${base[@]}" --config - --data-binary @"$tmp/$f.bin" \	Bash base[@] array expansion supplies curl arguments for the body-size probe, not a bracket pattern
 haproxy.md	      curl -q -g "${base[@]}" --cert "$crt" --key "$key" \	Bash base[@] array expansion supplies curl arguments for the client-certificate probe, not a bracket pattern
 llm-observability.md	  -w 'otlp no-auth=%{http_code} exit=%{exitcode}\n' -H 'Content-Type: application/json' -d '{"resourceSpans":[]}' \	empty resourceSpans JSON array in the unauthenticated OTLP request body, not a validator
@@ -31,4 +32,18 @@ neo4j.md	        --data '{"statements":[{"statement":"RETURN 1 AS ok"}]}' \	JSON
 neo4j.md	        --data '{"statements":[{"statement":"RETURN 1 AS ok"}]}' \	JSON statements array for the authenticated legacy transaction probe; a separate occurrence consumes this second entry
 sqlite.md	    --data '{"requests":[{"type":"execute","stmt":{"sql":"SELECT 1"}},{"type":"close"}]}' \	JSON requests array for the anonymous SQL pipeline probe, not a validator
 sqlite.md	      --data '{"requests":[{"type":"execute","stmt":{"sql":"SELECT 1"}},{"type":"close"}]}' \	JSON requests array for the authorized SQL pipeline probe, not a validator
-rabbitmq.md	  '^tenant1[.][abcdefghijklmnopqrstuvwxyz0123456789_-]+$' \	rabbitmqctl topic-permission regex arguments, spelled-out ASCII sets passed literally to the broker; the continued line joins two quoted arguments, so the quote-affected reading sees _-] across them, which is not a validator in this shell
+rabbitmq.md	  '^tenant1[.][abcdefghijklmnopqrstuvwxyz0123456789_-]+$' \	rabbitmqctl topic-permission regex arguments, spelled-out ASCII sets passed literally to the broker; the continued line joins two quoted arguments, so the quote-affected reading sees _-] across them, which is not a range in either broker validator
+egress-metadata.md	  --query 'Reservations[].Instances[].MetadataOptions'	JMESPath projections list EC2 metadata options; no bracket pattern is evaluated
+elasticsearch.md	{"users":["app_reader"],"backend_roles":[],"hosts":[]}	OpenSearch role-mapping JSON arrays for users, backend roles and hosts; not bracket patterns
+elasticsearch.md	[	OpenSearch audit JSON Patch array in a quoted heredoc; not a bracket pattern
+kubernetes.md	kubectl get gatewayclass eg -o jsonpath='{.status.conditions[?(@.type=="Accepted")].status}'   # True	JSONPath predicate selecting the Accepted GatewayClass condition; not a bracket pattern
+mcp-clients.md	  if env LC_ALL=C grep -D skip -RlaiE '"refresh_token"[[:space:]]*:[[:space:]]*"[^"]|refresh_token=[[:print:]]+|Bearer[[:space:]]+[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._~+/-]{20,}' -- "$1/"; then	C-scoped token search uses POSIX classes and spelled-out sets; the quote-containing reject list is followed by separate alternatives, not an open range
+model-servers.md	    -d "{\"model\":\"$1\",\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}]}" https://models.example.com/invocations	JSON messages array in the MLflow invocation request; not a bracket pattern
+rabbitmq.md	findings = []	Python empty findings list in an audit script; not a bracket pattern
+self-hosted-ci-runners.md	gh api -X GET --paginate -H 'X-GitHub-Api-Version: 2026-03-10' /orgs/REPLACE_WITH_ORG/actions/runner-groups --jq '.runner_groups[] | {id, name, visibility, allows_public_repositories, inherited, restricted_to_workflows, selected_workflows}'	jq runner-group projection for display; not a bracket pattern
+self-hosted-ci-runners.md	gh api -X GET --paginate -H 'X-GitHub-Api-Version: 2026-03-10' /orgs/REPLACE_WITH_ORG/actions/runner-groups/REPLACE_WITH_GROUP_ID/repositories --jq '.repositories[] | {id, full_name, visibility}'	jq repository projection for display; not a bracket pattern
+self-hosted-ci-runners.md	gh api -X GET --paginate -H 'X-GitHub-Api-Version: 2026-03-10' /repos/REPLACE_WITH_OWNER/REPLACE_WITH_REPO/actions/runners --jq '.runners[] | {id, name, status}'	jq runner projection for display; not a bracket pattern
+self-hosted-ci-runners.md	gh api --paginate -H 'X-GitHub-Api-Version: 2026-03-10' /repos/REPLACE_WITH_OWNER/REPLACE_WITH_REPO/actions/runs/REPLACE_WITH_RUN_ID/jobs --jq '.jobs[] | {id, status, conclusion, runner_id, runner_group_id}'	jq workflow-job projection for display; not a bracket pattern
+self-hosted-ci-runners.md	for index, runner in enumerate(config.get("runners", [])):	Python empty-list fallback while inspecting runner configuration; not a bracket pattern
+rabbitmq.md	host, other_vhost = sys.argv[1:]	Python argv slice in the broker audit script; not a bracket pattern
+realtime-webhooks.md	provider = sys.argv[3]	Python argv subscript selects the webhook provider; not a bracket pattern

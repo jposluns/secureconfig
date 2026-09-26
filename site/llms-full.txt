@@ -8208,9 +8208,9 @@ The fourth value selects `tls`, `wrong`, `scram`, `plaintext`, or an interactive
   case "$2" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute every placeholder; not probing"; exit 1 ;;
   esac
-  single_quote="'"
   case "$2" in
-    *[[:space:]]*|*"$single_quote"*|*\\*) echo "use a CA path without whitespace, quotes or backslashes; not probing"; exit 1 ;;
+    *"'"*) echo "use a CA path without whitespace, quotes or backslashes; not probing"; exit 1 ;;
+    *[[:space:]]*|*\\*) echo "use a CA path without whitespace, quotes or backslashes; not probing"; exit 1 ;;
   esac
   case "$3" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_]*) echo "supply a simple role name; not probing"; exit 1 ;;
@@ -16833,9 +16833,9 @@ Use the same bucket and object in both arguments, with the correct regional endp
           # First prove the object exists and is readable WITH authorization.
           # S3 also returns 403 for an object you cannot list. presign signs a GET.
           set -- "$2" "$(aws s3 presign "$1" --expires-in 60)"
-          double_quote='"'
           case "$2" in
-            *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[[:cntrl:]]*|*"$double_quote"*|*\\*)
+            *'"'*) echo "signing failed or returned an unsafe URL; not probing" ;;
+            *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[[:cntrl:]]*|*\\*)
               echo "signing failed or returned an unsafe URL; not probing" ;;
             https://*)
               # The URL is a credential. The builtin printf feeds curl on stdin, never argv.

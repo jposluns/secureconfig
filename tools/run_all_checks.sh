@@ -483,7 +483,7 @@ else
 fi
 
 echo "== the bracket-range gate still catches what it claims =="
-# Eight of these cases assert what the gate does NOT catch, so the file cannot quietly start
+# Seven of these cases assert what the gate does NOT catch, so the file cannot quietly start
 # claiming that coverage.
 if bracket_range_tests=$(python3 tools/test_bracket_ranges.py 2>&1); then
   printf '%s\n' "$bracket_range_tests"
@@ -500,6 +500,9 @@ else
   bad "test_bracket_ranges.py exited non-zero without reporting a result"
   printf '%s\n' "$bracket_range_tests" | sed 's/^/          /'
 fi
+
+echo "== literal quote guards preserve diagnostics and status =="
+python3 tools/test_quote_guards.py || fail=1
 
 echo "== the convention gates still catch what review found =="
 # The two gates above were broken repeatedly across rounds of cross-family review, and
