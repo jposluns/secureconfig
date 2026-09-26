@@ -2,11 +2,11 @@
 """Refuse authoring placeholders in tracked Markdown and the root VERSION.
 
 Scan raw text, including comments, quotations and code blocks. Generated site/ and
-plugin/ trees are excluded. There were no existing matches in the tracked corpus
-when this gate was added, so there are no exemptions. Matching the literal PR
-marker also catches its parenthesized form. An id's suffix does not excuse it.
+plugin/ trees are excluded. There are no exemptions. Match standalone PR, id and
+version markers, plus the case-sensitive stale completion phrase. Ids have a
+single digit and optionally a hyphen followed by one uppercase ASCII word.
 
-Git supplies the tracked set; the shared fail-closed walker supplies files on disk.
+Git supplies the tracked set; read only the selected paths directly.
 Missing tracked inputs, unreadable files and invalid UTF-8 are errors, not passes.
 No network or third-party Python modules are used.
 """
@@ -16,10 +16,14 @@ import subprocess
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _walk import walk_files  # noqa: E402
-
-PLACEHOLDER = re.compile(r"#NNN|[0-9]\.NEW[\w.-]*|1\.0\.NNN")
+# Do not match a prefix of a longer token or an unsupported id suffix.
+# A sentence-ending dot is punctuation; a dot followed by a word extends an id.
+PLACEHOLDER = re.compile(
+    r"(?<!\w)#NNN(?!\w)"
+    r"|(?<![\w.])[0-9]\.NEW(?:-[A-Z]+)?(?![\w-]|\.\w)"
+    r"|(?<!\w)[0-9]+\.[0-9]+\.NNN(?!\w)"
+    r"|Done in this draft"
+)
 MARKDOWN = {".md", ".markdown", ".mdc"}
 GENERATED = {"site", "plugin"}
 
@@ -40,23 +44,16 @@ def main():
         }
         if Path("VERSION") not in wanted:
             raise ValueError("VERSION is not tracked")
-        seen = set()
-        for path in sorted(walk_files(root, skip_dirs={".git"})):
-            relative = path.relative_to(root)
-            if relative not in wanted:
-                continue
+        for relative in sorted(wanted):
+            path = root / relative
             if path.is_symlink():
                 raise ValueError(f"{relative}: tracked input is a symbolic link")
-            seen.add(relative)
             for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
                 for match in PLACEHOLDER.finditer(line):
                     findings.append(
                         f"{relative}:{number}:{match.start() + 1}: "
                         f"leftover authoring placeholder {match.group()!r}"
                     )
-        missing = wanted - seen
-        if missing:
-            raise ValueError("missing tracked inputs: " + ", ".join(map(str, sorted(missing))))
     except (OSError, UnicodeError, ValueError, subprocess.SubprocessError) as exc:
         print(f"  FAIL  cannot scan authoring placeholders: {exc}")
         return 2
@@ -64,7 +61,7 @@ def main():
         for finding in findings:
             print(f"  FAIL  {finding}")
         return 1
-    print(f"  ok    no authoring placeholders in {len(seen)} tracked Markdown/VERSION files")
+    print(f"  ok    no authoring placeholders in {len(wanted)} tracked Markdown/VERSION files")
     return 0
 
 

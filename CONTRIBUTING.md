@@ -57,7 +57,11 @@ gate existed.
 Before merging, replace draft PR, backlog-id and version placeholders with their assigned
 values. The offline gate `tools/check_no_placeholders.py` checks tracked Markdown and
 `VERSION`, including comments and code blocks, excluding the generated `site/` and
-`plugin/` trees. It checks for leftover markers, not whether an assigned number is correct.
+`plugin/` trees. It reads only selected tracked inputs and fails closed if one is missing or
+unreadable. Markers must stand alone: backlog ids allow an optional hyphen and one uppercase
+word, and version markers allow any numeric major and minor components. The gate also rejects
+stale draft completion phrasing; record integrated work as "Done" with its assigned PR.
+It checks for leftover markers, not whether an assigned number is correct.
 
 ## Licence
 
