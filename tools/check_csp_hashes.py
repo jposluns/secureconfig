@@ -142,14 +142,15 @@ whole page, pinned bodies included. Each is a finding with its own message:
      `circle`, `path` and `rect`;
   4. anywhere on the page, pinned bodies included, a `</` not followed by an ASCII letter (`</>`,
      `</ `, `</1`, `</!`, `</` and a tab). Not every one is a bogus comment to a browser: `</>` is
-     dropped, `</` at the end of the input is text, and inside script or style data, RCDATA such as
-     `<title>`, or a quoted attribute value a malformed ending is text. In the tokenizer's data state
-     `</` and a non-letter opens a bogus comment running to the next `>`, which html.parser does not
-     model, and the text it swallows can hold an `</svg>` or
-     the end of a pinned block, so the SVG region and the pinned text would differ from a
-     browser's. The refusal is conservative: it refuses the harmless spellings too, because
-     telling them apart needs the context this gate does not model. The real pages, pinned
-     bodies included, contain none.
+     dropped in the data state, `</` at the end of the input is text, and inside script or style
+     data, RCDATA such as `<title>`, or an attribute value a malformed ending is text. In the
+     tokenizer's data state `</` and a non-letter opens a bogus comment running to the next `>`,
+     which this gate's literal tag reading does not model (html.parser, at the Python this runs on,
+     does, but it reads a `<style>` or `<script>` inside `<svg>` as raw text where a browser still
+     reads markup), and the text it swallows can hold an `</svg>` or the end of a pinned block, so
+     the SVG region and the pinned text would differ from a browser's. The refusal is conservative:
+     it refuses the harmless spellings too, because telling them apart needs the context this gate
+     does not model. The real pages, pinned bodies included, contain none.
 
 Rules 2 to 4 are conservative, not exact: they refuse inert text a browser would render harmlessly,
 and SVG a browser would draw, because the point is that nothing outside them has to be modelled.
@@ -484,7 +485,8 @@ def malformed_end_tags(path, html):
             f"ASCII letter. In the tokenizer's data state a browser reads most such sequences as "
             f"a bogus comment running to the next `>` (`</>` is dropped, `</` at the end of input "
             f"is text, and inside script or style data, RCDATA or an attribute value it stays "
-            f"text), and html.parser does not, so the text one swallows (an </svg>, or "
+            f"text), and this gate's literal tag reading does not, so the text one swallows "
+            f"(an </svg>, or "
             f"the end of a pinned block) is read differently here and there. Telling the harmless "
             f"ones apart needs context this gate does not model, so it refuses every one, even "
             f"inside a pinned <style> or <script>"
