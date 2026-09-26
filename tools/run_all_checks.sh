@@ -770,6 +770,9 @@ if workflow_pins=$(python3 tools/check_workflow_pins.py 2>&1); then
   # A gate that exits 0 while printing findings would otherwise read as a pass.
   if grep -q '^  FAIL  ' <<< "$workflow_pins"; then
     bad "check_workflow_pins.py printed findings but exited 0"
+  elif ! grep -qE '^  ok    [0-9]+ uses: lines across [0-9]+ files ' <<< "$workflow_pins"; then
+    # An exit 0 counts only with the gate's ok line, which it prints only after checking something.
+    bad "check_workflow_pins.py exited 0 without printing its ok line"
   fi
 elif grep -qE '^Traceback \(most recent call last\):|^[A-Za-z_.]+Error: ' <<< "$workflow_pins"; then
   bad "check_workflow_pins.py crashed; the workflow pins are unverified"
@@ -790,6 +793,8 @@ if workflow_pin_tests=$(python3 tools/test_workflow_pins.py 2>&1); then
   printf '%s\n' "$workflow_pin_tests"
   if grep -q '^  FAIL  ' <<< "$workflow_pin_tests"; then
     bad "test_workflow_pins.py printed findings but exited 0"
+  elif ! grep -qE '^  ok    [0-9]+ recorded cases for the workflow-pin gate' <<< "$workflow_pin_tests"; then
+    bad "test_workflow_pins.py exited 0 without printing its ok line"
   fi
 elif grep -qE '^Traceback \(most recent call last\):|^[A-Za-z_.]+Error: ' <<< "$workflow_pin_tests"; then
   bad "test_workflow_pins.py crashed; the workflow-pin gate is unverified"

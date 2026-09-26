@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Cases for check_workflow_pins.py, one per check the gate makes, each run against the real gate.
+r"""Cases for check_workflow_pins.py, one per check the gate makes, each run against the real gate.
 
-The gate is new, so no reviewer has broken it yet, and these cases are not a record of past rounds
-the way the CSP and gensrc files are. They are the answer to the question a reviewer will ask
-first: which of the gate's checks can be deleted with the suite still green? The answer should be
-none. Every check has at least one case here that fails when the check is removed, and the plan for
-row 3.21 lists the mutation behind each.
+Most of these cases were written before any reviewer had broken the gate, so they are not a record
+of past rounds the way the CSP and gensrc files are. They are the answer to the question a reviewer
+will ask first: which of the gate's checks can be deleted with the suite still green? The answer
+should be none. Every check has at least one case here that fails when the check is removed, and
+the plan for row 3.21 lists the mutation behind each check of the first round.
 
 Three kinds of case appear. Most mutate a workflow and assert the gate FAILS with a message naming
 the defect, because an exit code cannot tell a diagnosis from a refusal for the wrong reason. Some
@@ -15,9 +15,21 @@ workflow); the others guard against a false alarm: a `run: |` block full of shel
 read past, a commented-out step is a comment, and the word in a step name is text. A gate that
 alarms on those would be switched off, which is worse than no gate.
 
+Round 2 of review found 2 shapes that the line reader accepted, and each refusal added for them is
+listed here with the mutation that kills it. Deleting the backslash refusal in `flow_end` lets a
+double-quoted escape spell `uses` inside a flow collection, as `{"u\x73es": ...}` does, and FAILS
+every flow-collection escape case: 9 spellings, each in a step, a reusable-workflow job and a
+composite action. Replacing the bracket match there with a bare `openers.pop()` lets `[a}` close,
+and FAILS the 3 mismatched-bracket cases. The same 9 spellings as block-context quoted keys were
+already refused, by the key-shape check in `parse_line`; their cases pin that, and fail only when
+both the backslash test and the `KEY` match there are removed, since either one alone refuses a
+backslash. The PASS case with a backslash in a single-quoted flow value, and the escaped quote in
+a double-quoted name, keep the new refusal to double-quoted scalars inside a flow collection.
+
 The mutations start from the real `checks.yml` wherever they can, so the cases move with the file.
 Where a case needs a shape the real files do not have, it writes a small extra workflow beside them.
 """
+import codecs
 import re
 import shutil
 import subprocess
@@ -101,6 +113,35 @@ def run_against(files=None, no_workflows=False, gate=None):
 CO = "actions/checkout"
 REUSE_HEAD = "name: t\non: push\njobs:\n  call:\n"
 LOCAL_ACTION = ".github/actions/setup/action.yml"
+PROBE_ACTION = "tools/probe/action.yml"
+REUSE_REF = "octo-org/example/.github/workflows/ci.yml@main"
+
+# `uses` with one letter written in each escape family YAML's double-quoted style has for it (\x,
+# \u and \U), for each of its 3 distinct letters: 9 spellings. One that stopped decoding to `uses`
+# would test nothing, so the file refuses to run instead.
+FAMILIES = ("\\x{:02x}", "\\u{:04x}", "\\U{:08x}")
+ESCAPED = tuple("uses"[:k] + f.format(ord("uses"[k])) + "uses"[k + 1:]
+                for k in range(3) for f in FAMILIES)
+if any(codecs.decode(w, "unicode_escape") != "uses" for w in ESCAPED):
+    print("  FAIL  an escaped spelling in ESCAPED no longer decodes to uses; fix it")
+    sys.exit(1)
+FLOW_ESC = "backslash escape inside a flow collection"
+KEY_ESC = "cannot read as a plain name"
+# Each spelling in a step, a reusable-workflow job and a composite action, as a key inside a flow
+# mapping and as a block key.
+ESCAPE_CASES = tuple(case for w in ESCAPED for case in (
+    (f"the escaped key {w} in a flow mapping step", steps(f'- {{"{w}": {CO}@v4}}'), True,
+     FLOW_ESC),
+    (f"the escaped key {w} in a flow mapping reusable-workflow job",
+     {X: "name: t\non: push\njobs:\n  call: {" + f'"{w}": {REUSE_REF}' + "}\n"}, True, FLOW_ESC),
+    (f"the escaped key {w} in a flow mapping composite-action step",
+     {PROBE_ACTION: action(f'- {{"{w}": {CO}@v4}}')}, True, FLOW_ESC),
+    (f"the escaped key {w} as a block key in a step", steps(f'- "{w}": {CO}@v4'), True, KEY_ESC),
+    (f"the escaped key {w} as a block key in a reusable-workflow job",
+     {X: REUSE_HEAD + f'    "{w}": {REUSE_REF}\n'}, True, KEY_ESC),
+    (f"the escaped key {w} as a block key in a composite-action step",
+     {PROBE_ACTION: action(f'- "{w}": {CO}@v4')}, True, KEY_ESC),
+))
 
 # (description, files, must_fail, expected substring)
 CASES = (
@@ -126,6 +167,8 @@ CASES = (
      steps('- name: "say \\"hi\\" # not a comment"', "  run: true"), False, "ok"),
     ("a flow mapping with a bracket inside a quoted value",
      steps("- run: true", '  env: {A: "x]y"}'), False, "ok"),
+    ("a backslash in a single-quoted flow value, which has no escapes",
+     steps("- run: true", "  env: {A: 'x\\y'}"), False, "ok"),
     ("a remote reusable workflow pinned with its release named",
      {X: REUSE_HEAD + f"    uses: octo-org/example/.github/workflows/ci.yml@{SHA}  # v1.2.3\n"},
      False, "ok"),
@@ -268,6 +311,13 @@ CASES = (
      steps(f'- name: "x #" uses: {CO}@v4'), True, "text follows a quoted scalar"),
     ("a # glued to a closing quote, which is text and not a comment",
      steps(f'- name: "x"# uses: {CO}@v4'), True, "text follows a quoted scalar"),
+    ("a flow sequence closed by a brace", steps("- run: true", "  env: [a}"), True,
+     "does not match the bracket"),
+    ("a flow mapping closed by a bracket", steps("- run: true", "  env: {a: b]"), True,
+     "does not match the bracket"),
+    ("flow collections nested and closed out of order",
+     steps("- run: true", "  env: [{a: b]}"), True, "does not match the bracket"),
+    *ESCAPE_CASES,
     ("a comment opened inside a flow collection, which leaves it unclosed",
      steps("- run: true", "  env: [a # b]"), True, "runs past the end of its line"),
     ("the word uses in capitals inside a quoted value",

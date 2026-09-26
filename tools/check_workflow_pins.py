@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check that every `uses:` in the workflows, and in any action.yml they can call, is pinned to a commit.
+r"""Check that every `uses:` in the workflows, and in any action.yml they can call, is pinned to a commit.
 
 WHY: a tag or branch is a pointer its owner can move, so `uses: actions/checkout@v4` runs whatever
 that pointer names on the day of the run. Row 3.17 (#348) replaced every floating tag in
@@ -36,23 +36,32 @@ block scalar's content must be one of:
   - blank, or a comment;
   - `[- ...]key: value`, where the key is plain (`[A-Za-z0-9_][A-Za-z0-9_.-]*`) or a quoted
     string of that shape with no backslash, and the value is empty, a block scalar header, a plain
-    scalar, a quoted scalar closed on the same line, or a flow collection closed on the same line;
+    scalar, a quoted scalar closed on the same line, or a flow collection closed on the same line
+    with each bracket closed by its own kind;
   - `- value`, with the same value forms.
 
 Everything else is refused as outside the model: a tab outside a block scalar, an anchor (`&`), an
 alias (`*`), a tag (`!`), a merge key, an explicit key (`?`), a directive, a second document marker,
-a quoted scalar or flow collection that runs past the end of its line, a plain scalar that continues
-onto a more indented line, a block scalar with an explicit indentation indicator, and a control or
-Unicode line-separator character that one YAML version treats as a line break and another does not.
+a quoted scalar or flow collection that runs past the end of its line, a flow collection closed by
+the wrong kind of bracket (`[a}`), a double-quoted scalar carrying a backslash inside a flow
+collection, a plain scalar that continues onto a more indented line, a block scalar with an
+explicit indentation indicator, and a control or Unicode line-separator character that one YAML
+version treats as a line break and another does not.
 CRLF line endings are read as LF; a lone CR is refused.
 
 `uses` is then held to a stricter rule. A key spelled `uses` in any case other than exactly `uses`,
 a quoted key containing the word, the word inside a quoted scalar, a flow collection or a block
 scalar's content, and a `uses:` whose value is empty, quoted, a block scalar or a flow collection are
 all refused. A quoted or flow `uses` is either a key GitHub reads as `uses` or text that looks like
-one, and this gate refuses both rather than tell them apart. The word in a plain scalar or a comment
-line is text and is not refused, because a plain scalar cannot carry a nested key (a `: ` inside one
-is refused) and a comment line is nothing to YAML.
+one, and this gate refuses both rather than tell them apart. An escape spells the key without the
+word: YAML reads `"u\x73es"`, `"\u0075ses"`, `"us\U00000065s"` and every other escape of those
+letters as `uses`. So a quoted key in block context must have the plain key shape, which has no
+backslash, and inside a flow collection every double-quoted scalar carrying a backslash is refused,
+key or value, rather than decide which it is. A single-quoted scalar has no escapes, and a
+double-quoted scalar in block context is a key only when a `:` follows it, which the key rule above
+covers; any other text after it is refused. The word in a plain scalar or a comment line is text
+and is not refused, because a plain scalar cannot carry a nested key (a `: ` inside one is refused)
+and a comment line is nothing to YAML.
 
 WHY READING PAST BLOCK SCALARS IS SAFE. The workflows carry `run: |` and `args: >-` blocks of
 shell. Those lines are scalar content, not keys, so the gate reads past them, and the only fail-open
@@ -136,7 +145,7 @@ def trailing_comment(rest, what):
 
 def flow_end(s):
     """Index just past the flow collection opening at s[0], refusing what the model excludes."""
-    depth, i, at_start = 0, 0, True
+    openers, i, at_start = [], 0, True
     while i < len(s):
         ch = s[i]
         if at_start and ch in "\"'":
@@ -144,13 +153,21 @@ def flow_end(s):
             if j is None:
                 raise OutsideModel("a quoted scalar inside a flow collection runs past the end of "
                                    "its line")
+            # An escape spells a key the word check never sees: YAML reads "u\x73es" as `uses`.
+            if ch == '"' and "\\" in s[i:j]:
+                raise OutsideModel("a double-quoted scalar with a backslash escape inside a flow "
+                                   "collection, which can spell a key this gate cannot read")
             i, at_start = j + 1, False
             continue
         if ch in "[{":
-            depth, at_start = depth + 1, True
+            openers.append(ch)
+            at_start = True
         elif ch in "]}":
-            depth, at_start = depth - 1, False
-            if depth == 0:
+            if openers.pop() != {"]": "[", "}": "{"}[ch]:
+                raise OutsideModel(f"a flow collection closed by {ch!r}, which does not match "
+                                   f"the bracket that opened it")
+            at_start = False
+            if not openers:
                 return i + 1
         elif ch in ",:":
             at_start = True
