@@ -65,11 +65,13 @@ page's own `<title>` and a `<p>` without the `=`; and `data-onload` inside `<svg
 pass, is now refused as an SVG `<title>`, with a new pass case for `data-onload` in the body.
 
 Round 4 of #352 found that a malformed end tag (`</ x </svg>`, `</1`, `</` and a tab, `</!`) is a
-bogus comment to a browser and not to html.parser, so it hid an `</svg>` from a browser and let a
-pinned stylesheet or script, wrapped in `<svg>`, carry a live `<a onclick>`. Its cases, counted with
-the row 3.18 cases, repin every reproduction so that only the new rule can refuse it: the sixteen
-stylesheet combinations (two pages, two handler forms, four prefixes), the script-wrapping variant
-in both forms, `</` in the pinned script itself, and each malformed spelling in page text.
+bogus comment to a browser, which this gate's literal tag reading does not model (html.parser, at the
+Python this runs on, does, but it reads a `<style>` or `<script>` inside `<svg>` as raw text where a
+browser still reads markup), so it hid an `</svg>` from a browser and let a pinned stylesheet or
+script, wrapped in `<svg>`, carry a live `<a onclick>`. Its cases, counted with the row 3.18 cases,
+repin every reproduction so that only the new rule can refuse it: the sixteen stylesheet combinations
+(two pages, two handler forms, four prefixes), the script-wrapping variant in both forms, `</` in the
+pinned script itself, and each malformed spelling in page text.
 
 Round 5 of #352 found `<frameset>` and `<select>` wrapping the pinned stylesheet so that a browser
 built a `<frame onload>` or `<a onclick>` from what html.parser hashed as the block, and the model
@@ -800,10 +802,12 @@ for page_name, base in (("index.html", PAGE), ("404.html", PAGE_404)):
                    "</body>", "<noscript>on duty</noscript><textarea>one, on</textarea>\n</body>", 1)})
 
 # Round 4 of #352 (codex finding): a malformed end tag (`</` and no letter) is a bogus comment to a
-# browser and not to html.parser, so `</ x </svg>` hid an </svg> from a browser and closed the SVG
-# region here, and a stylesheet or script wrapped in that <svg> became SVG content holding a live
-# <a onclick> while this gate hashed it as the pinned block. Every reproduction, repinned so only
-# the new rule can refuse it, on both pages; then the rule alone, in page text.
+# browser, which this gate's literal tag reading does not model (html.parser, at the Python this runs
+# on, does, but it reads a <style> or <script> inside <svg> as raw text where a browser still reads
+# markup), so `</ x </svg>` hid an </svg> from a browser and closed the SVG region here, and a
+# stylesheet or script wrapped in that <svg> became SVG content holding a live <a onclick> while this
+# gate hashed it as the pinned block. Every reproduction, repinned so only the new rule can refuse
+# it, on both pages; then the rule alone, in page text.
 MALFORMED = "has a malformed end tag"
 BOGUS_PREFIXES = (("space and letter", "</ x </svg>"), ("digit", "</1 </svg>"),
                   ("tab", "</\t</svg>"), ("bang", "</! </svg>"))
