@@ -455,6 +455,11 @@ except (OSError, UnicodeError) as exc:
     notice(f"Python version comparison unavailable: cannot read {workflow}: {exc}")
 else:
     pattern = r'[ \t]*PYTHON_VERSION: "([0-9]+\.[0-9]+\.[0-9]+)"[ \t]*'
+    # Threat model (maintainer ruling, 2026-09-26, after #360's ruling (B)): this advisory notice guards
+    # against ACCIDENTAL edits to checks.yml, not adversarial YAML. It is a stdlib text scan, not a YAML
+    # parser, so a pin-looking line inside a block scalar with no real pin, a \u-escaped key, aliases or a
+    # multi-document file can still mislead it. Such states are out of scope; a real missing pin also
+    # breaks setup-python's `${{ env.PYTHON_VERSION }}` reference loudly in CI.
     # Count every PYTHON_VERSION token except references (env.PYTHON_VERSION, $PYTHON_VERSION,
     # ${PYTHON_VERSION}), so a second pin in any YAML form (quoted, spaced, flow mapping) is seen.
     keys = re.findall(r'(?<![.$\w])(?<!\$\{)PYTHON_VERSION(?!\w)', "\n".join(lines))
