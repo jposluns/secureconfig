@@ -13,8 +13,9 @@ site-wiring gates for that reason; see `not_a_guide()` in `tools/run_all_checks.
 
 ## Open
 
-Nothing is open. P3 and P4 were ruled on 2026-09-25 and are recorded in `DECISIONS.md`; P1 and P2 are
-struck below.
+Nothing is open. P3, P4 and P5 were ruled on 2026-09-25 and are recorded in `DECISIONS.md` (P5 was put to the
+maintainer directly from the row 3.18 plan and ruled the same day, so it was never listed here; the id is taken);
+P1 and P2 are struck below.
 
 ## Struck
 
