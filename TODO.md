@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.175**, **2.48**, **3.27**, **4.12**.
+Next ids: **1.175**, **2.48**, **3.28**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -137,7 +137,7 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 3.20 | Verify-marking convention: every Verify step states explicitly whether it was demonstrated or reasoned, enforced corpus-wide (maintainer ruling, 2026-09-25). (M, L) | `[gap]` |
+| 3.27 | Migrate the grandfathered Verify fences guide by guide: attach canonical DEMONSTRATED or REASONED declarations with audited scope and provenance, retain rule 5 demonstration debt, and remove matching entries from tools/verify_marking_baseline.txt. Never invent evidence or a missing prerequisite to clear the gate. (M, L) | `[gap]` |
 
 ## Decisions
 

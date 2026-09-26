@@ -70,6 +70,7 @@ def run(files, todo="", done="", baseline=None, flags=()):
         (d / "tools").mkdir()
         shutil.copy(TOOL, d / "tools" / "check_reasoned_rows.py")
         shutil.copy(TOOL.parent / "_markdown.py", d / "tools" / "_markdown.py")
+        shutil.copy(TOOL.parent / "_verify_sections.py", d / "tools" / "_verify_sections.py")
         for name, body in files.items():
             (d / name).write_text(body, encoding="utf-8")
         (d / "TODO.md").write_text(todo, encoding="utf-8")
