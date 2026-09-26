@@ -222,26 +222,30 @@ never as the fixed state. Substitute your own host for the `example.com` placeho
   esac
   printf '%s\n' 'AUTHORIZED CONTROL (must return the canary):'
   if [ -z "$2" ]; then
-    curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-      -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-      --header @- "$1" <<< "$CMS_PROBE_HEADER" || exit 2
+    printf '%s\n' "$CMS_PROBE_HEADER" |
+      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+        -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+        --header @- "$1" || exit 2
   else
-    curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-      -H 'Content-Type: application/json' --data-raw "$2" \
-      -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-      --header @- "$1" <<< "$CMS_PROBE_HEADER" || exit 2
+    printf '%s\n' "$CMS_PROBE_HEADER" |
+      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+        -H 'Content-Type: application/json' --data-raw "$2" \
+        -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+        --header @- "$1" || exit 2
   fi
   unset -v CMS_PROBE_HEADER
   printf '%s\n' 'NEGATIVE (anonymous when the negative-header prompt was empty):'
   if [ -z "$2" ]; then
-    curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-      -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-      --header @- "$1" <<< "${CMS_NEGATIVE_HEADER-}" || exit 2
+    printf '%s\n' "${CMS_NEGATIVE_HEADER-}" |
+      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+        -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+        --header @- "$1" || exit 2
   else
-    curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-      -H 'Content-Type: application/json' --data-raw "$2" \
-      -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-      --header @- "$1" <<< "${CMS_NEGATIVE_HEADER-}" || exit 2
+    printf '%s\n' "${CMS_NEGATIVE_HEADER-}" |
+      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+        -H 'Content-Type: application/json' --data-raw "$2" \
+        -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+        --header @- "$1" || exit 2
   fi
   unset -v CMS_NEGATIVE_HEADER
   printf '%s\n' 'Requests done; compare both bodies. Exit 0 is not a security verdict.'
