@@ -21,7 +21,8 @@ Keep the three secrets, `KEY_VAULTS_SECRET`, `AUTH_SECRET` and the Google OAuth 
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set -eC +x +a
+  set +x +a +e
+  set -eC
   umask 077
   if [ -e "$HOME/.config/lobechat/secrets.env" ] || [ -L "$HOME/.config/lobechat/secrets.env" ]; then
     echo 'a secrets.env already exists in ~/.config/lobechat; nothing written'; exit 2

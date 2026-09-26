@@ -54,7 +54,7 @@ ls build dist .output 2>/dev/null                          # confirm which outpu
 # becomes the search value instead, and its clean result then means nothing.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
+  set +x +a +e
   set --
   for d in build dist .output; do [ -d "$d" ] && set -- "$@" "$d"; done
   [ "$#" -gt 0 ] || { echo 'inconclusive: no build, dist or .output directory here; run the build first'; exit 2; }
