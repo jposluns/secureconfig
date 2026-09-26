@@ -13,6 +13,58 @@ block is pinned. An `.html` or `.htm` (any case) under `site/` that is NOT in `P
 served under the same CSP and its blocks would otherwise go unverified: that omission (site/404.html shipped
 pinned but unchecked) is the failure this list closes.
 
+THE REST OF `site/` (row 3.18, the maintainer's 2026-09-25 ruling). The same refusal extends past
+HTML, with every suffix matched in any case. A suffix is the text from the LAST dot of the whole
+entry name, so a dotfile is its own suffix (a file named `.svg` is an SVG, one named `.html` an
+unlisted page), where pathlib would give it none; and any file or directory name ending with a dot
+is refused, because which type a host serves it as, and whether it strips the dot, is not modelled.
+An `.xhtml` or `.xht` (the two suffixes Python's mimetypes table maps to application/xhtml+xml) is
+refused outright, even as a directory name, because a browser parses XHTML as XML and runs its
+scripts, and the html.parser model above does not hold there. An `.svgz` is refused because it is
+gzip bytes this gate cannot read as text, and a browser renders one only when the host serves it
+gzip-encoded, which the tree cannot show. A `.gz`, `.br` or `.zst` is refused the same way, even as a
+directory name, because this gate cannot read it and a host serving precompressed files can answer
+a request for the uncompressed name (`probe.svg` for `probe.svg.gz`) with it. Every `.svg` is
+inspected, as SVG DOCUMENTS says. The walk is over lstat and never follows a link: ANY
+symbolic link under `site/`, and `site/` itself if it is one, is refused, because a linked directory
+is never walked and a dangling link never read, so what the host serves through one would go
+unchecked. A FIFO or device is refused unread. A metadata read or a directory listing that fails is
+a finding, never a silent skip. Other regular files (`.txt`, `_headers`) are not inspected; this is a
+suffix-based document gate, not content sniffing.
+
+SVG DOCUMENTS (row 3.18, and the maintainer's P5 ruling of the same day, "all three"). An SVG is not
+hashed: the ruling is that it carries no script, no handler, no `javascript:` URL and no inline style
+at all. The file is decoded strictly as UTF-8 and parsed with expat, the standard library's XML
+parser, with namespace processing on, and it fails on:
+
+  - any element whose local name is `script` in any case and in any namespace (`<svg:script>`, an
+    XHTML `<script>` inside `<foreignObject>`, one under a prefix undeclared back to no namespace);
+  - any attribute whose local name starts with `on` in any case and in any namespace, however the
+    `=` is spaced or quoted, because expat reads the attribute structurally (XML has no valueless
+    attribute, so one is a parse failure, below);
+  - any attribute VALUE that is a `javascript:` URL (P5), on ANY attribute, not only `href` and
+    `xlink:href`, because `<animate>`, `<set>` and their kin write an attribute from `to`, `from`,
+    `by` and the `;`-separated `values` list. So every `;`-separated segment of every value is
+    checked, with every ASCII control character and space removed first and the scheme matched
+    case-insensitively. That is a superset of what a browser's URL parser strips (leading and
+    trailing C0 controls and spaces, and every tab and newline), so a `javascript:` a browser would
+    run is never missed, and a value a browser would not run may be refused. expat decodes character
+    references before the check, as a browser does, so `java&#x73;cript:` is `javascript:` here too.
+    A URL in text content is text and passes;
+  - any element whose local name is `style`, and any attribute whose local name is `style` (P5),
+    in any case and in any namespace: the site's `style-src` carries page hashes only, a hash pins
+    a page's block, and this gate models no SVG block, so an SVG stylesheet is refused by a browser
+    applying the /* CSP and cannot be pinned by this gate either way. Presentation attributes
+    (`fill=`, `stroke=`) are not style and pass; the favicon uses them.
+
+It fails closed: a file that cannot be read, is not UTF-8, declares another encoding or another XML
+version (expat given a str ignores both, so they are checked by hand), is not well-formed, carries
+a processing instruction such as `<?xml-stylesheet?>`, or carries a `<!DOCTYPE>` (whose entities
+and attribute defaults can add an element or attribute the text does not show; it is refused before
+any entity can expand) is a finding. A comment, a CDATA section and escaped text are text, not
+elements, and pass. An upper-case `<SCRIPT>`, which XML would not treat as a script, and any
+attribute at all starting with `on`, are refused: the model stays small.
+
 IT REFUSES WHAT IT CANNOT MODEL, WHICH IS THE WHOLE DESIGN. Four rounds were spent teaching this gate
 about HTML: `src` on a style, foreign content in `<svg>`, HTML integration points, MathML, inert
 script types. Each round closed the case in front of it and the next round found another divergence
@@ -39,6 +91,20 @@ So the model is deliberately tiny, declared PER PAGE, and everything outside it 
   - every literal `style=` accounted for the same way, because the blind spot that hides an element
     hides an attribute too: `<title>` content is RCDATA, so a `style=` smuggled through `<svg><title>`
     was invisible here and applied in a browser;
+  - no `on*` attribute on any element (P5), reported structurally with its line, and every literal
+    one accounted for the same way as `style=`, because the `<svg><title>` blind spot hides a handler
+    exactly as it hides a style attribute; `script-src` is hash-only and no hash covers an attribute,
+    so a browser refuses the handler silently. The literal count reads every tag (`<` and an ASCII
+    letter, to its `>`, quoted values honoured) roughly as HTML's tokenizer reads a tag in its data
+    state, and counts each attribute NAME there that begins with `on`, ASCII case-insensitively,
+    with a value or valueless, followed by `=`, `/`, `>` or a space (`onclick`, `onclick/`,
+    `on-click="x"`), and subtracts the same count taken over the hash-pinned block bodies. It is NOT
+    the tokenizer: it has no comment, CDATA, declaration or raw-text state, so fake markup inside
+    inert text (`<!-- <b title=" -->`) made it read a tag a browser never sees and swallow a real
+    handler after it as a quoted value, while html.parser missed that handler inside SVG `<title>`,
+    and both counts were 0 (round 3 of #352). That accounting is kept as defense in depth; what now
+    closes the hole is the ELEMENT ALLOWLIST, with REFUSED CONTEXTS behind it, below, none of
+    which asks html.parser anything;
   - exactly one `<meta charset="utf-8">` and no other charset declaration per page, because this
     always decodes UTF-8 and a page declaring something else would be decoded, and hashed, differently
     by a browser that has no transport charset to override it;
@@ -47,6 +113,64 @@ So the model is deliberately tiny, declared PER PAGE, and everything outside it 
   - no NUL byte, which a browser's tokenizer turns into U+FFFD before hashing and this would not.
 
 Any of those fails with a message naming the page and saying it outgrew the gate.
+
+REFUSED CONTEXTS (rounds 3 and 4 of #352). The gate no longer relies on html.parser and a browser
+agreeing about where markup starts. Rules 1 to 3 read the page with the hash-pinned
+`<style>`/`<script>` bodies blanked (each body is located right after a bare opening tag of its
+kind; one that cannot be located is left in place, which only adds findings); rule 4 reads the
+whole page, pinned bodies included. Each is a finding with its own message:
+
+  1. every match of VALUED_HANDLER, `(?i)(?<![\\w-])on[\\w-]*\\s*=`, anywhere, whatever the
+     context: a page `on*` handler with a value, or text this gate cannot tell from one
+     (`one = two` in prose, `onclick=` in a comment or an attribute value). A valueless handler
+     has no `=` and is left to the structural and literal checks above, which rules 2 to 4 keep
+     sound. `data-onload=` does not match. The real pages have no match outside their pinned
+     bodies;
+  2. inert text holding a `<`, where the literal scan and a browser can disagree: a comment (from
+     `<!--` to the first `-->` after it, so `<!-->` and `--!>` never end one early here), a CDATA
+     section (to the first `]]>`), and a `<!` or `<?` declaration other than the leading
+     `<!doctype html>` (to the first `>`); and a `textarea`, `title`, `xmp`, `noscript`,
+     `plaintext`, `noembed`, `noframes` or `iframe` element, in any case, whose first `<` after its
+     start tag does not begin its own end tag. A comment or a `<title>` holding plain text passes;
+  3. inside inline foreign content, the elements where html.parser and the HTML spec diverge: any
+     `<math>` element at all, and inside `<svg>` any `title`, `desc`, `foreignObject`, `style` or
+     `script` element, in any case. Every `<svg` start tag deepens the SVG context, self-closing
+     or not, and every `</svg` read as a tag leaves it. That tracks a browser's SVG region only
+     while every `</svg` read here is one a browser reads as an end tag too, which rules 2 and 4
+     exist to keep true; round 4 found `</ x </svg>`, which a browser reads as one bogus comment,
+     so its `</svg>` closed the region here and not there. The real inline SVGs hold only `svg`,
+     `circle`, `path` and `rect`;
+  4. anywhere on the page, pinned bodies included, a `</` not followed by an ASCII letter (`</>`,
+     `</ `, `</1`, `</!`, `</` and a tab). Not every one is a bogus comment to a browser: `</>` is
+     dropped in the data state, `</` at the end of the input is text, and inside script or style
+     data, RCDATA such as `<title>`, or an attribute value a malformed ending is text. In the
+     tokenizer's data state `</` and a non-letter opens a bogus comment running to the next `>`,
+     which this gate's literal tag reading does not model (html.parser, at the Python this runs on,
+     does, but it reads a `<style>` or `<script>` inside `<svg>` as raw text where a browser still
+     reads markup), and the text it swallows can hold an `</svg>` or the end of a pinned block, so
+     the SVG region and the pinned text would differ from a browser's. The refusal is conservative:
+     it refuses the harmless spellings too, because telling them apart needs the context this gate
+     does not model. The real pages, pinned bodies included, contain none.
+
+Rules 2 to 4 are conservative, not exact: they refuse inert text a browser would render harmlessly,
+and SVG a browser would draw, because the point is that nothing outside them has to be modelled.
+Once rules 2 and 4 hold, no comment, CDATA section, declaration, bogus comment or raw-text element
+outside the pinned bodies holds a `<`, and no malformed end tag exists anywhere, so no fake tag can
+open inside inert text and swallow real markup after it, which is what the tag reading in rule 3
+and the literal accounting assume. That is the premise, stated rather than proven; each round that
+has broken it has added a rule here, which is why rules 1 to 4 are now defense in depth behind the
+allowlist below.
+
+ELEMENT ALLOWLIST (round 5 of #352). Refusing divergent contexts one at a time did not close the
+class: a `<frameset>` around the pinned stylesheet made a browser drop the `<style>` and build a
+`<frame onload>` from what html.parser hashed as its body, and `<select><style><input><a onclick>`
+did the same through select parsing. So every tag name on a page, start or end, compared ASCII
+case-insensitively, must be in PAGE_ELEMENTS, which lists exactly the elements the real pages use
+today (inline SVG children included). The names are read context-free: every `<` or `</` followed by
+an ASCII letter anywhere in the page text, pinned bodies, comments and attribute values included,
+so a name html.parser reads as text inside a block it misplaced is still checked. An unlisted name
+is a finding, "element <x> is not in the page allowlist", even where a browser would read it as
+text; that is the conservative direction. Extending the list is a reviewed change to the gate.
 
 THE ONE POLICY, UNDER `/*`. `site/404.html` is served as the body for any unmatched request path, and
 Cloudflare matches `_headers` rules against the REQUESTED URL, so a CSP set (or detached) under any
@@ -58,9 +182,14 @@ it would leave every other host uncovered), and refuses any other rule that sets
 carrying only unrelated headers is fine).
 
 WHAT IT STILL DOES NOT COVER, stated rather than left to be found: a document embedded with `srcdoc`
-inherits a page's CSP, and nothing here looks inside one; and a directory SYMLINKED under `site/` is not descended
-into, so pages reached only through one are not scanned. A STALE pin (a hash left in a gate-selected directive
-after its block was edited or deleted) IS now rejected as an orphan (row 3.15); it is not a fail-open,
+inherits a page's CSP, and nothing here looks inside one; a `javascript:` URL on an HTML page is not
+checked (P5 named SVG URLs and page `on*` attributes, not page URLs). The SVG check is a structural
+rule, not a sanitizer: a `<use>` or `<image>` reference to another document and `<foreignObject>`
+itself are unchecked, nothing referenced is ever fetched, a `javascript:` URL is recognised by its
+scheme alone (a `data:` or `blob:` URL passes), and XML types other than XHTML and SVG (`.xml`,
+`.xsl`) are neither refused nor inspected. Compression is recognised by suffix only (`.svgz`, `.gz`,
+`.br`, `.zst`), not by content, so gzip bytes under any other name are an uninspected regular file. A STALE pin (a hash left in a gate-selected directive
+after its block was edited or deleted) IS rejected as an orphan (row 3.15); it is not a fail-open,
 but dead allowlist entries otherwise accumulate in site/_headers.
 
 WHAT IT HASHES: each file's bytes, decoded, with CRLF and lone CR normalized to LF, because HTML's
@@ -84,9 +213,11 @@ blocked by the browser and no gate here says so.
 import base64
 import hashlib
 import re
+import stat
 import sys
 from html.parser import HTMLParser
 from pathlib import Path
+from xml.parsers import expat
 
 # (page path, declared inline-block shape). Every count is 0 or 1; a page with two blocks of a kind
 # needs a gate that can tell them apart, which is a deliberate model change, not a dict edit. Every
@@ -100,27 +231,88 @@ KINDS = (("script", ("script-src-elem", "script-src", "default-src")),
          ("style", ("style-src-elem", "style-src", "default-src")))
 OPENER = re.compile(r"<(style|script)\b", re.I)
 STYLE_ATTR = re.compile(r"\bstyle\s*=", re.I)
+# P5: the literal handler accounting reads a tag roughly as HTML's tokenizer reads one IN THE DATA
+# STATE, not the way html.parser does. A tag opens at `<` and an ASCII letter and runs to its `>`; an
+# attribute NAME is any run of characters other than whitespace, `/`, `>` (and `=` after the first),
+# with or without a value, quoted or not. So a valueless `onclick`, `onclick/`, `on-click` and
+# `onload` in a tag all count, and text outside a tag ("only", "on duty") never does. It knows no
+# other tokenizer state, which is why the contexts below are refused rather than read. See the
+# docstring.
+TAG_OPEN = re.compile(r"<[A-Za-z][^\t\n\f />]*")
+TAG_ATTR = re.compile(r"[\t\n\f /]*([^\t\n\f />][^\t\n\f />=]*)"
+                      r"(?:[\t\n\f ]*=[\t\n\f ]*(?:\"[^\"]*\"?|'[^']*'?|[^\t\n\f >]*))?")
+TAG_CLOSE = re.compile(r"[\t\n\f /]*>?")
+# Round 3 of #352: rules that do not depend on html.parser and a browser agreeing. See REFUSED
+# CONTEXTS in the docstring.
+VALUED_HANDLER = re.compile(r"(?i)(?<![\w-])on[\w-]*\s*=")
+LEADING_DOCTYPE = re.compile(r"\ufeff?<!doctype html>", re.I)
+MARKUP_DECL = re.compile(r"<(!--|!\[CDATA\[|!|\?)")
+INERT = ("textarea", "title", "xmp", "noscript", "plaintext", "noembed", "noframes", "iframe")
+INERT_OPEN = re.compile(r"<(" + "|".join(INERT) + r")(?=[\t\n\f />])", re.I)
+ANY_TAG = re.compile(r"<(/?)([A-Za-z][^\t\n\f />]*)")
+SVG_DIVERGENT = ("title", "desc", "foreignobject", "style", "script")
+MALFORMED_END = re.compile(r"</(?![A-Za-z])")
+# Round 5 of #352: the ELEMENT ALLOWLIST. Exactly the tag names the real site/index.html and
+# site/404.html use today, inline SVG children included, read context-free over the whole page. Adding
+# site content that needs another element means extending this list in a reviewed change, and only
+# with an element whose parsing html.parser and a browser agree on; see ELEMENT ALLOWLIST in the
+# docstring.
+PAGE_ELEMENTS = frozenset((
+    "html", "head", "meta", "title", "link", "style", "body", "div", "header", "nav", "main",
+    "footer", "h1", "h2", "h3", "p", "a", "span", "code", "pre", "button", "ol", "li", "script",
+    "svg", "circle", "path", "rect"))
+TAG_NAME = re.compile(r"</?([A-Za-z][^\t\n\f />]*)")
+ASCII_LOWER = str.maketrans("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz")
 CHARSET = re.compile(r"charset\s*=", re.I)
 META_UTF8 = '<meta charset="utf-8">'
 CSP = "content-security-policy"
 # CSP3 allows sha256, sha384 and sha512, and matches the algorithm name case-insensitively.
 ALGORITHMS = (("sha256", hashlib.sha256), ("sha384", hashlib.sha384), ("sha512", hashlib.sha512))
+# Row 3.18: suffixes refused under site/ in any case, with the reason a reader sees. See THE REST OF
+# `site/` in the docstring.
+XHTML_WHY = ("is XHTML, which a browser parses as XML and whose scripts it runs under the site's /* "
+             "CSP; this gate models HTML pages and SVG documents, not XHTML, so it is refused")
+COMPRESSED_WHY = ("is compressed, which this gate cannot read as text, and a host that serves "
+                  "precompressed files can answer a request for the uncompressed name with it, "
+                  "which the tree cannot show; ship the document uncompressed")
+REFUSED = {".xhtml": XHTML_WHY, ".xht": XHTML_WHY,
+           ".svgz": ("is compressed SVG, which this gate cannot read as text and a browser renders "
+                     "only when the host serves it gzip-encoded; ship it as a plain .svg"),
+           ".gz": COMPRESSED_WHY, ".br": COMPRESSED_WHY, ".zst": COMPRESSED_WHY}
+TRAILING_DOT_WHY = ("ends with a dot, and which type a host serves such a name as, and whether it "
+                    "strips the dot first, is outside this gate's site model, so it is refused")
+
+
+def name_suffix(name):
+    """The lower-cased text from the LAST dot of a file name, or "" when it has no dot.
+
+    Unlike pathlib's suffix, a dotfile is its own suffix, so a file named `.svg` is an SVG and a file
+    named `.xhtml` is XHTML. A name ending with a dot is refused before this is asked.
+    """
+    return name[name.rindex("."):].lower() if "." in name else ""
+# P5: every ASCII control character and space, removed from a URL before its scheme is read. A
+# superset of what a browser's URL parser strips; see SVG DOCUMENTS in the docstring.
+URL_NOISE = re.compile(r"[\x00-\x20\x7f]")
 
 
 class Inline(HTMLParser):
-    """Collect the text of every <script> and <style>, and any style= attribute."""
+    """Collect the text of every <script> and <style>, any style= attribute and any on* attribute."""
 
     def __init__(self):
         super().__init__(convert_charrefs=False)
         self.blocks = {"script": [], "style": []}
         self.attrs = {"script": [], "style": []}
         self.style_attrs = []
+        self.on_attrs = []
         self.self_closing = []
         self._open = None
 
     def handle_starttag(self, tag, attrs):
         if any(k.lower() == "style" for k, _ in attrs):
             self.style_attrs.append((tag, self.getpos()[0]))
+        for k, _ in attrs:
+            if k.lower().startswith("on"):
+                self.on_attrs.append((tag, k.lower(), self.getpos()[0]))
         if tag in ("script", "style"):
             self._open = tag
             self.blocks[tag].append([])
@@ -180,6 +372,152 @@ def is_hash_pin(token):
 def normalized(data: bytes) -> str:
     """The page as a browser's tokenizer sees it. See WHAT IT HASHES in the docstring."""
     return data.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
+
+
+def literal_on_attrs(text):
+    """How many attribute names in tag context in `text` begin with `on`, ASCII case-insensitively.
+
+    Each tag is read from its `<` to its `>` as HTML's tokenizer reads a tag in the data state
+    (TAG_OPEN, TAG_ATTR), and scanning resumes after the tag, so a `<` inside a quoted value opens
+    nothing. It is NOT equivalent to the tokenizer: it has no comment, CDATA, declaration or raw-text
+    state, so a fake `<b title="` inside inert text would make it swallow a real tag after it. It is
+    defense in depth; unmodelled_contexts() refuses every page where that can happen.
+    """
+    count, pos = 0, 0
+    while tag := TAG_OPEN.search(text, pos):
+        pos = tag.end()
+        while attr := TAG_ATTR.match(text, pos):
+            pos = attr.end()
+            if attr.group(1)[:2].lower() == "on":
+                count += 1
+    return count
+
+
+def line_of(text, index):
+    return text.count("\n", 0, index) + 1
+
+
+def tag_end(text, pos):
+    """The index just past the tag whose name ends at `pos`, read as literal_on_attrs() reads one."""
+    while attr := TAG_ATTR.match(text, pos):
+        pos = attr.end()
+    return TAG_CLOSE.match(text, pos).end()
+
+
+def outside_blocks(html, page):
+    """`html` with the body of each parsed `<style>`/`<script>` blanked to its newlines alone.
+
+    A body is located right after a bare opening tag of its kind, in any case; one that cannot be
+    located is left in place, so a later rule reads more text, never less, and fails closed.
+    """
+    for tag in ("style", "script"):
+        opener = re.compile(f"<{tag}>", re.I)
+        pos = 0
+        for body in page.bodies(tag):
+            for m in opener.finditer(html, pos):
+                if html.startswith(body, m.end()):
+                    html = html[:m.end()] + "\n" * body.count("\n") + html[m.end() + len(body):]
+                    pos = m.end()
+                    break
+    return html
+
+
+def valued_handlers(path, text):
+    """Rule 1 of REFUSED CONTEXTS: every `on...=` outside the pinned blocks, whatever its context."""
+    return [f"{path}:{line_of(text, m.start())} contains `{m.group().strip()}` outside the "
+            f"hash-pinned blocks, which is an on* handler attribute or text this gate cannot tell "
+            f"from one, since it reads no HTML context; script-src is hash-only and no hash covers "
+            f"an attribute, so a browser refuses a handler silently. Move the behaviour into the "
+            f"inline <script>, or reword the text"
+            for m in VALUED_HANDLER.finditer(text)]
+
+
+def unmodelled_contexts(path, text):
+    """Rule 2 of REFUSED CONTEXTS: inert text holding a `<`, where the literal scan and a browser
+    can disagree about where markup starts."""
+    out = []
+    lead = LEADING_DOCTYPE.match(text)
+    for m in MARKUP_DECL.finditer(text, lead.end() if lead else 0):
+        kind, start = m.group(1), m.end()
+        if kind == "!--":
+            end, what = text.find("-->", start), "a comment"
+        elif kind == "![CDATA[":
+            end, what = text.find("]]>", start), "a CDATA section"
+        else:
+            end, what = text.find(">", start), f"a <{kind} declaration"
+        if "<" in text[start:end if end >= 0 else len(text)]:
+            out.append(f"{path}:{line_of(text, m.start())} has {what} whose text contains `<`. A "
+                       f"browser reads that text as inert, while this gate's literal scan may read "
+                       f"a tag there and swallow real markup after it, so it is outside the gate's "
+                       f"model; take the `<` out or write it as &lt;")
+    for m in INERT_OPEN.finditer(text):
+        name = m.group(1).lower()
+        content = tag_end(text, m.end())
+        nxt = text.find("<", content)
+        if nxt >= 0 and not re.match(rf"</{name}[\t\n\f />]", text[nxt:], re.I):
+            out.append(f"{path}:{line_of(text, m.start())} has a <{name}> whose content contains `<` "
+                       f"before its </{name}>. A browser reads that content as raw text (or, in "
+                       f"foreign content, as markup), and html.parser and this gate's literal scan "
+                       f"may each read it another way, so it is outside the gate's model; write the "
+                       f"`<` as &lt;")
+    return out
+
+
+def unlisted_elements(path, html):
+    """ELEMENT ALLOWLIST: every `<` or `</` and an ASCII letter anywhere in the page, pinned bodies and
+    attribute values included, names an element that must be in PAGE_ELEMENTS."""
+    out, seen = [], set()
+    for m in TAG_NAME.finditer(html):
+        name = m.group(1).translate(ASCII_LOWER)
+        if name not in PAGE_ELEMENTS and name not in seen:
+            seen.add(name)
+            out.append(f"{path}:{line_of(html, m.start())}: element <{name}> is not in the page "
+                       f"allowlist. This gate knows how html.parser and a browser parse only the "
+                       f"elements the site already uses; another one (a <frameset>, a <select>) can "
+                       f"change what a browser makes of a pinned block, so extending the list is a "
+                       f"reviewed change to the gate, not a page edit")
+    return out
+
+
+def malformed_end_tags(path, html):
+    """Rule 4 of REFUSED CONTEXTS: `</` without a letter after it, anywhere, pinned bodies included."""
+    return [f"{path}:{line_of(html, m.start())} has a malformed end tag, `</` not followed by an "
+            f"ASCII letter. In the tokenizer's data state a browser reads most such sequences as "
+            f"a bogus comment running to the next `>` (`</>` is dropped, `</` at the end of input "
+            f"is text, and inside script or style data, RCDATA or an attribute value it stays "
+            f"text), and this gate's literal tag reading does not, so the text one swallows "
+            f"(an </svg>, or "
+            f"the end of a pinned block) is read differently here and there. Telling the harmless "
+            f"ones apart needs context this gate does not model, so it refuses every one, even "
+            f"inside a pinned <style> or <script>"
+            for m in MALFORMED_END.finditer(html)]
+
+
+def foreign_divergences(path, text):
+    """Rule 3 of REFUSED CONTEXTS: foreign-content elements html.parser reads as HTML.
+
+    Every `<svg` start tag deepens the SVG context, self-closing or not (an unquoted value can end
+    in `/`), and every `</svg` read as a tag leaves it. That matches a browser only while rules 2
+    and 4 hold; see rule 3 in the docstring.
+    """
+    out, depth, pos = [], 0, 0
+    while m := ANY_TAG.search(text, pos):
+        pos = tag_end(text, m.end())
+        closing, name = m.group(1), m.group(2).lower()
+        if name == "svg":
+            depth = max(0, depth - 1) if closing else depth + 1
+        elif closing:
+            continue
+        elif name == "math":
+            out.append(f"{path}:{line_of(text, m.start())} has a <math> element. html.parser reads "
+                       f"MathML as HTML, and a browser's foreign-content rules there (text and HTML "
+                       f"integration points) differ, so it is outside the gate's model")
+        elif depth and name in SVG_DIVERGENT:
+            out.append(f"{path}:{line_of(text, m.start())} has a <{m.group(2)}> inside an inline "
+                       f"<svg>. html.parser reads it as an HTML element (a <title> as RCDATA, a "
+                       f"<style> or <script> as a block) where a browser reads SVG foreign content, "
+                       f"so it is outside the gate's model")
+    return out
 
 
 def parse_page(html):
@@ -242,6 +580,14 @@ def simple_enough(path, page, html, shape):
                 out.append(f"the <{tag}> at {path}:{line} carries attributes ({', '.join(names)}), "
                            f"and whether a browser runs an element with them depends on rules this "
                            f"gate does not model; keep it bare or extend the gate deliberately")
+    # REFUSED CONTEXTS (round 3 of #352): none of these asks html.parser anything, so a page where
+    # the parser and a browser disagree cannot hide a handler from all of them at once.
+    outside = outside_blocks(html, page)
+    out += valued_handlers(path, outside)
+    out += unmodelled_contexts(path, outside)
+    out += foreign_divergences(path, outside)
+    out += malformed_end_tags(path, html)
+    out += unlisted_elements(path, html)
     # A literal `style=` the parser never reported is the same blind spot as an unreported element:
     # html.parser swallows <title> content as RCDATA, so an attribute smuggled through <svg><title>
     # was invisible while a browser applies it and CSP-checks it.
@@ -251,6 +597,16 @@ def simple_enough(path, page, html, shape):
         out.append(f"the page {path} contains literal `style=` text this gate cannot account for; a "
                    f"style attribute the parser did not report, such as one inside <svg> or <title>, "
                    f"is still applied and still CSP-checked by a browser")
+    # The same accounting for an event-handler attribute (P5): a handler smuggled through
+    # <svg><title> is invisible to html.parser and wired up by a browser, which then refuses it under
+    # the hash-only script-src, silently.
+    in_body = sum(literal_on_attrs(b) for tag in ("style", "script") for b in page.bodies(tag))
+    total = literal_on_attrs(html)
+    if total != len(page.on_attrs) + in_body:
+        out.append(f"the page {path} contains {total} literal on* attribute names in tags and this "
+                   f"gate accounts for {len(page.on_attrs) + in_body} on* handler attributes; one "
+                   f"the parser did not report, such as one inside <svg> or <title>, is still wired "
+                   f"up by a browser and refused by the hash-only script-src")
     for script in page.bodies("script"):
         if "<!--" in script:
             out.append(f"the inline <script> in {path} contains `<!--`, which opens HTML's script-data "
@@ -293,6 +649,151 @@ def all_rule_blocks(headers_text):
     return out
 
 
+class SVGModelError(ValueError):
+    """An XML construct outside the SVG model. See SVG DOCUMENTS in the docstring."""
+
+
+def local_name(name):
+    """An expat name without its `namespace|` prefix, lower-cased for a case-insensitive match."""
+    return name.rsplit("|", 1)[-1].lower()
+
+
+def is_javascript_url(value):
+    """True when any `;`-separated segment of an attribute value is a javascript: URL (P5).
+
+    Every ASCII control character and space is removed first, a superset of the URL parser's
+    stripping, and the scheme is matched case-insensitively. See SVG DOCUMENTS in the docstring.
+    """
+    return any(URL_NOISE.sub("", segment).lower().startswith("javascript:")
+               for segment in value.split(";"))
+
+
+def check_svg(path, display):
+    """Reasons this SVG document is outside what the gate allows. See SVG DOCUMENTS.
+
+    The bytes are decoded strictly as UTF-8 and handed to expat as str, which makes expat ignore
+    the encoding and version the declaration names; both are therefore checked by hand, because a
+    browser honours them and would decode, and run, other text than the text inspected here.
+    """
+    try:
+        text = path.read_bytes().decode("utf-8")
+    except (OSError, UnicodeError) as exc:
+        return [f"{display}: cannot read SVG as UTF-8: {exc}; a document this gate cannot decode "
+                f"is one it cannot prove carries no script"]
+    parser = expat.ParserCreate(namespace_separator="|")
+    findings = []
+
+    def refuse(message):
+        raise SVGModelError(message)
+
+    def start_element(name, attrs):
+        where = f"{display}:{parser.CurrentLineNumber}"
+        local = local_name(name)
+        if local == "script":
+            findings.append(f"{where}: SVG contains a script element (<{name}>), and an SVG "
+                            f"document under {SITE} must carry no script (row 3.18)")
+        elif local == "style":
+            findings.append(f"{where}: SVG contains a style element (<{name}>), and an SVG "
+                            f"document under {SITE} must carry no inline style: the site's "
+                            f"style-src pins page blocks by hash and covers no SVG (P5)")
+        for attr in sorted(attrs):
+            local = local_name(attr)
+            if local.startswith("on"):
+                findings.append(f"{where}: SVG contains an on* handler attribute ({attr}), and an "
+                                f"SVG document under {SITE} must carry none (row 3.18)")
+            elif local == "style":
+                findings.append(f"{where}: SVG contains a style attribute ({attr}) on <{name}>, "
+                                f"and an SVG document under {SITE} must carry no inline style: the "
+                                f"site's style-src pins page blocks by hash and covers no SVG (P5)")
+            if is_javascript_url(attrs[attr]):
+                findings.append(f"{where}: SVG carries a javascript: URL in {attr} on <{name}>, "
+                                f"and an SVG document under {SITE} must carry none, whether in an "
+                                f"href or in an animation's to, from, by or values (P5)")
+
+    def xml_declaration(version, encoding, standalone):
+        if version != "1.0":
+            refuse(f"the XML declaration names version {version!r} and this gate models XML 1.0")
+        if encoding is not None and encoding.lower() != "utf-8":
+            refuse(f"the XML encoding declaration names {encoding!r}, and this gate reads SVG as "
+                   f"UTF-8 only")
+
+    parser.StartElementHandler = start_element
+    parser.XmlDeclHandler = xml_declaration
+    parser.StartDoctypeDeclHandler = lambda *args: refuse(
+        "SVG document type declarations are outside this gate's model: a DTD's entities and "
+        "attribute defaults can add an element or attribute the text does not show")
+    parser.ProcessingInstructionHandler = lambda target, data: refuse(
+        f"SVG processing instructions are outside this gate's model: <?{target}?> asks a browser "
+        f"to apply a stylesheet or transform this gate does not read")
+    # Unreachable while every DTD is refused above; kept so a later relaxation cannot fetch.
+    parser.ExternalEntityRefHandler = lambda *args: refuse(
+        "SVG external entities are outside this gate's model")
+    try:
+        parser.Parse(text, True)
+    except (expat.ExpatError, SVGModelError) as exc:
+        findings.append(f"{display}:{parser.CurrentLineNumber}: cannot inspect SVG: {exc}; a "
+                        f"document this gate cannot parse is one it cannot prove carries no script")
+    return findings
+
+
+def inspect_site(root, pages):
+    """(findings, SVG documents inspected) over every entry under site/, following no link.
+
+    Iterative, over lstat, so a link is seen as a link and never followed, and a metadata read or a
+    directory listing that fails is a finding rather than a silent skip. See THE REST OF `site/`.
+    """
+    listed = {root / path for path, _ in pages}
+    site = root / SITE
+    findings, inspected, pending = [], 0, [site]
+    while pending:
+        path = pending.pop()
+        display = path.relative_to(root)
+        try:
+            mode = path.lstat().st_mode
+        except OSError as exc:
+            findings.append(f"{display}: cannot inspect site entry: {exc}; an entry this gate "
+                            f"cannot see may be a page or document it would refuse")
+            continue
+        if stat.S_ISLNK(mode):
+            findings.append(f"{display} is a symbolic link, and symlinks are outside this gate's "
+                            f"site model: a linked directory is never walked and a dangling link "
+                            f"never read, so what the host serves through one would be unchecked; "
+                            f"replace it with the real file or directory")
+            continue
+        if path.name.endswith("."):
+            findings.append(f"{display} {TRAILING_DOT_WHY}")
+            continue
+        suffix = name_suffix(path.name)
+        if suffix in REFUSED:
+            findings.append(f"{display} {REFUSED[suffix]}")
+            continue
+        if stat.S_ISDIR(mode):
+            try:
+                children = sorted(path.iterdir(), reverse=True)
+            except OSError as exc:
+                findings.append(f"{display}: cannot enumerate site directory: {exc}; a directory "
+                                f"this gate cannot list may hold a page or document it would refuse")
+                continue
+            pending.extend(children)
+            continue
+        if path == site:
+            findings.append(f"{display} is not a directory, and this gate's site model needs one")
+            continue
+        if not stat.S_ISREG(mode):
+            findings.append(f"{display} is not a regular file, and non-regular entries (a FIFO, a "
+                            f"device) are outside this gate's site model; a read could block or "
+                            f"return anything")
+            continue
+        if suffix in (".html", ".htm") and path not in listed:
+            findings.append(f"{display} is served under the site's /* CSP but is not in "
+                            f"this gate's page list; add it with its inline-block shape, or this gate "
+                            f"cannot prove its blocks are pinned")
+        elif suffix == ".svg":
+            inspected += 1
+            findings += check_svg(path, display)
+    return sorted(findings), inspected
+
+
 def main() -> int:
     root = Path(__file__).resolve().parents[1]
 
@@ -302,14 +803,10 @@ def main() -> int:
             print(f"  FAIL  {why}")
         return 1
 
-    listed = {root / path for path, _ in PAGES}
-    strays = sorted(p for p in (root / SITE).rglob("*")
-                    if p.is_file() and p.suffix.lower() in (".html", ".htm") and p not in listed)
-    if strays:
-        for p in strays:
-            print(f"  FAIL  {p.relative_to(root)} is served under the site's /* CSP but is not in "
-                  f"this gate's page list; add it with its inline-block shape, or this gate cannot "
-                  f"prove its blocks are pinned")
+    documents, inspected = inspect_site(root, PAGES)
+    if documents:
+        for why in documents:
+            print(f"  FAIL  {why}")
         return 1
 
     reasons, parsed = [], {}
@@ -417,6 +914,12 @@ def main() -> int:
                 f"element's text, never an attribute, so it needs the rule moved into the stylesheet, "
                 f"or a style-src-attr directive carrying 'unsafe-hashes' and the attribute's own "
                 f"hash, which this gate does not check")
+        for tag, name, line in sorted(set(page.on_attrs)):
+            findings.append(
+                f"<{tag}> at {path}:{line} carries an on* handler attribute ({name}). A CSP hash "
+                f"covers an element's text, never an attribute, and script-src here is hash-only, so "
+                f"a browser refuses the handler silently; move the behaviour into the inline "
+                f"<script> and repin it (P5)")
 
     # Orphan pins (row 3.15): a hash left in a gate-selected directive that no listed block uses.
     # Not a fail-open (an orphan cannot make a real block go unhashed), but a stale pin is dead
@@ -439,7 +942,8 @@ def main() -> int:
             print(f"  FAIL  {f}")
         return 1
     print(f"  ok    {verified} inline blocks across {len(PAGES)} pages are pinned by hash in the "
-          f"{HEADERS} CSP")
+          f"{HEADERS} CSP with no on* handler, and {inspected} SVG document(s) under {SITE} carry "
+          f"no <script>, on* handler, javascript: URL or inline style")
     return 0
 
 
