@@ -40,13 +40,14 @@ If a receiver fetches payload URLs or forwards webhooks to user-selected destina
 
 ## Verify
 
-These checks are reasoned, not demonstrated: no endpoint, WebSocket client, or event fixtures were supplied, so backlog row 2.35 tracks demonstrating them. Use Bash and curl 7.75.0 or newer. Substitute inside the single quotes and paste each complete block; a value containing an apostrophe needs proper shell escaping. Supply `AUDIT_COOKIE` through a protected environment as the complete Cookie header value, without the `Cookie:` prefix.
+These checks are reasoned, not demonstrated: no endpoint, WebSocket client, or event fixtures were supplied, so backlog row 2.35 tracks demonstrating them. Use Bash and curl 7.75.0 or newer. Substitute inside the single quotes and paste each complete block; a value containing an apostrophe needs proper shell escaping. Each secret-bearing block assumes a clean shell. Enter the complete Cookie header value at the hidden prompt, without the `Cookie:` prefix; do not export `AUDIT_COOKIE`. The block clears inherited attributes before reading, keeps the cookie in an unexported subshell variable, sends headers through curl stdin, and unsets the variable on exit. This avoids putting the new input in history, argv or the environment; it does not hide process memory from the same account or root, or erase an earlier export.
 
 Run the first block with `ws` only for endpoints that require a session cookie during the handshake, and with `sse` for cookie-authenticated SSE endpoints. For WebSocket endpoints authenticated solely by a first-message token, use the application-client checks below: a cookie-free `101` is expected and does not by itself establish application authentication. Each negative uses the same URL and deployment as its successful control, and a failed positive control invalidates the comparison. For the handshake, require `101` with a valid cookie and allowed Origin, then a rejection (`401`/`403`, or a login redirect behind an identity-aware proxy, never `101`) without the cookie and for each invalid-Origin case. For SSE, require `200` with `text/event-stream` and the expected protected event with the cookie, then a rejection or login redirect without it. A login page, `404`, unrelated `403`, or server error proves nothing about the intended control, and a timeout alone is inconclusive (an observed `101` or protected event still counts even if curl then times out on the open stream).
 
 ```bash
 (
-  set +x
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  set +x +a +e
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_ENDPOINT' 'REPLACE_WITH_ALLOWED_HTTPS_ORIGIN' 'ws'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block'; exit 2; }
   shift
@@ -57,8 +58,15 @@ Run the first block with `ws` only for endpoints that require a session cookie d
   case "$1" in https://?*) ;; *) echo 'HTTPS endpoint required'; exit 2 ;; esac
   case "$2" in https://?*) ;; *) echo 'HTTPS Origin required'; exit 2 ;; esac
   case "$3" in ws|sse) ;; *) echo 'choose ws or sse'; exit 2 ;; esac
-  case "${AUDIT_COOKIE-}" in
-    ''|*REPLACE_WITH_*|*$'\r'*|*$'\n'*) echo 'load a valid Cookie header value into AUDIT_COOKIE'; exit 2 ;;
+  { unset -n AUDIT_COOKIE && unset -v AUDIT_COOKIE; } 2>/dev/null ||
+    { echo 'cannot clear AUDIT_COOKIE in this shell'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell'; exit 2; }
+  trap 'unset -v AUDIT_COOKIE' EXIT
+  printf 'Cookie header value (input hidden): '
+  IFS= read -r -s AUDIT_COOKIE || { printf '\n'; echo 'no secret read'; exit 2; }
+  printf '\n'
+  case "$AUDIT_COOKIE" in
+    ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'empty secret, placeholder or control character'; exit 2 ;;
   esac
   probe() {
     if curl -q -g -sS -i -N --http1.1 --noproxy '*' \
@@ -95,11 +103,12 @@ Run the first block with `ws` only for endpoints that require a session cookie d
 
 First-message-token and default-credential authentication need the application's real WebSocket client and message schema, so they stay reasoned until fixtures and an endpoint are available. Against the same endpoint, first demonstrate a valid token and an authorized protected operation, then repeat with no token, an invalid token, an expired token, and a protected operation attempted before authentication; require explicit rejection or an observed authentication-deadline close with no protected data or side effect (silence alone is inconclusive), test channel authorization by first demonstrating the operation on the target channel with an authorized user's token, then repeating the same operation on the same channel and endpoint with a valid token belonging to an unauthorized user, requiring authorization rejection with no protected data or side effect, and verify revocation on an already-open connection. For each installed component with documented default credentials, pair a successful legitimate login with the same request using the defaults, which must fail; do not infer this from a no-credential request, and do not invent a universal default username or password.
 
-For the webhook route, use an isolated test endpoint and a fresh, valid JSON event fixture that produces an observable effect. Export its endpoint secret as `AUDIT_WEBHOOK_SECRET`, and for GitHub also export the fixture's event type as `AUDIT_GITHUB_EVENT`; these are probe inputs, not vendor configuration. The wrong-signature and unsigned requests must be rejected by signature validation with no effect, the correctly signed request must reach the handler and produce the effect, and its repetition must produce no second effect (a success acknowledgement for an already-processed event is fine). For this Stripe probe, confirm that the isolated receiver uses a 300-second tolerance and that the sender and receiver clocks are synchronized; the harness backdates the stale request by 600 seconds, so that request must fail timestamp validation. Confirm the rejecting component in the application logs; transport errors and timeouts are inconclusive. These endpoint outcomes are reasoned, not demonstrated here.
+For the webhook route, use an isolated test endpoint and a fresh, valid JSON event fixture that produces an observable effect. Enter its endpoint secret at the hidden prompt, and for GitHub export only the fixture's non-secret event type as `AUDIT_GITHUB_EVENT`; these are probe inputs, not vendor configuration. This block assumes a clean shell. It reads `AUDIT_WEBHOOK_SECRET` into an unexported subshell variable and unsets it on exit; Python reads the secret bytes from a pipe on file descriptor 3 and closes that descriptor before starting curl. Neither the secret nor the signed headers enter argv or the environment. The secret remains readable in process memory by the same account and root, and a previously exported value is not erased. The wrong-signature and unsigned requests must be rejected by signature validation with no effect, the correctly signed request must reach the handler and produce the effect, and its repetition must produce no second effect (a success acknowledgement for an already-processed event is fine). For this Stripe probe, confirm that the isolated receiver uses a 300-second tolerance and that the sender and receiver clocks are synchronized; the harness backdates the stale request by 600 seconds, so that request must fail timestamp validation. Confirm the rejecting component in the application logs; transport errors and timeouts are inconclusive. These endpoint outcomes are reasoned, not demonstrated here.
 
 ```bash
 (
-  set +x
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  set +x +a +e
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_WEBHOOK_URL' 'REPLACE_WITH_RAW_BODY_FILE' 'github'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block'; exit 2; }
   shift
@@ -110,17 +119,25 @@ For the webhook route, use an isolated test endpoint and a fresh, valid JSON eve
   case "$1" in https://?*) ;; *) echo 'HTTPS required'; exit 2 ;; esac
   if [ -f "$2" ] && [ -r "$2" ]; then :; else echo 'readable raw-body file required'; exit 2; fi
   case "$3" in github|stripe) ;; *) echo 'choose github or stripe'; exit 2 ;; esac
-  case "${AUDIT_WEBHOOK_SECRET-}" in
-    ''|*REPLACE_WITH_*) echo 'export the test endpoint secret as AUDIT_WEBHOOK_SECRET'; exit 2 ;;
+  { unset -n AUDIT_WEBHOOK_SECRET && unset -v AUDIT_WEBHOOK_SECRET; } 2>/dev/null ||
+    { echo 'cannot clear AUDIT_WEBHOOK_SECRET in this shell'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell'; exit 2; }
+  trap 'unset -v AUDIT_WEBHOOK_SECRET' EXIT
+  printf 'Webhook endpoint secret (input hidden): '
+  IFS= read -r -s AUDIT_WEBHOOK_SECRET || { printf '\n'; echo 'no secret read'; exit 2; }
+  printf '\n'
+  case "$AUDIT_WEBHOOK_SECRET" in
+    ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'empty secret, placeholder or control character'; exit 2 ;;
   esac
-  python3 - "$1" "$2" "$3" <<'PY'
+  python3 - "$1" "$2" "$3" 3< <(printf '%s' "$AUDIT_WEBHOOK_SECRET") <<'PY'
 import hashlib, hmac, os, pathlib, subprocess, sys, time, uuid
 
 body = pathlib.Path(sys.argv[2]).read_bytes()
-if not os.environ.get("AUDIT_WEBHOOK_SECRET"):
-    print("Export AUDIT_WEBHOOK_SECRET before running; skipped")
+with os.fdopen(3, "rb") as secret_input:
+    secret = secret_input.read()
+if not secret:
+    print("No webhook secret received; skipped")
     raise SystemExit(2)
-secret = os.environ["AUDIT_WEBHOOK_SECRET"].encode()
 provider = sys.argv[3]
 if provider == "github" and (not os.environ.get("AUDIT_GITHUB_EVENT") or
         any(c in os.environ["AUDIT_GITHUB_EVENT"] for c in "\r\n")):
@@ -208,3 +225,4 @@ Scope and revisions: browser behavior follows RFC 6455 and the HTML and Fetch li
 - Caddy server timeouts: https://caddyserver.com/docs/caddyfile/options#timeouts
 - nginx `proxy_read_timeout`: https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout
 - curl manual (`--connect-to`, `--noproxy`, write-out variables require 7.75.0+): https://curl.se/docs/manpage.html
+- Python `os.fdopen`, for reading and closing the secret pipe: https://docs.python.org/3/library/os.html#os.fdopen
