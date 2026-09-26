@@ -437,6 +437,55 @@ else
   printf '%s\n' "$shellblocks" | sed 's/^/          /'
 fi
 
+echo "== local Python release matches CI =="
+# Advisory like the shellcheck SKIP above: html.parser can change between releases.
+# Never set fail here, including when the workflow or the interpreter cannot be read.
+if ! python3 - <<'PY'
+import re
+import sys
+from pathlib import Path
+
+def notice(message):
+    print(f"  SKIP  {message}")
+
+workflow = Path(".github/workflows/checks.yml")
+try:
+    lines = workflow.read_text(encoding="utf-8").splitlines()
+except (OSError, UnicodeError) as exc:
+    notice(f"Python version comparison unavailable: cannot read {workflow}: {exc}")
+else:
+    pins = [line for line in lines if re.match(r'^[ \t]*PYTHON_VERSION:', line)]
+    pattern = r'[ \t]*PYTHON_VERSION: "([0-9]+\.[0-9]+\.[0-9]+)"[ \t]*'
+    match = re.fullmatch(pattern, pins[0]) if len(pins) == 1 else None
+    if match is None:
+        notice('Python version comparison unavailable: expected exactly one '
+               'PYTHON_VERSION: "X.Y.Z" line in .github/workflows/checks.yml '
+               f'(found {len(pins)} candidate lines)')
+    else:
+        pinned = match.group(1)
+        running = sys.version.split()[0]
+        if running == pinned:
+            print(f"  ok    python3 {running} matches CI's pinned PYTHON_VERSION")
+        else:
+            notice(f"python3 {running} differs from CI's pinned PYTHON_VERSION {pinned}; "
+                   "html.parser behaviour may differ, so a local green predicts CI less well")
+PY
+then
+  printf '  SKIP  Python version comparison unavailable: python3 did not complete\n'
+fi
+
+echo "== the Python-version notice still reports without failing =="
+if python_notice_tests=$(python3 tools/test_python_version_notice.py 2>&1); then
+  printf '%s\n' "$python_notice_tests"
+  if grep -q '^  FAIL  ' <<< "$python_notice_tests" ||
+     ! grep -qE '^  ok    [0-9]+ recorded cases for the Python-version notice$' <<< "$python_notice_tests"; then
+    bad "test_python_version_notice.py did not report a clean self-test"
+  fi
+else
+  bad "test_python_version_notice.py failed"
+  printf '%s\n' "$python_notice_tests"
+fi
+
 echo "== the shell-block gate still catches what it claims =="
 # Two of these cases assert what the gate does NOT catch, which are the very defects that
 # prompted it. They are recorded so the file cannot quietly start claiming that coverage.
