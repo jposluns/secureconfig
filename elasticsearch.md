@@ -29,7 +29,7 @@ For Basic authentication, the value is base64 of `username:password`; base64 is 
    curl -q -g -sS --fail-with-body --noproxy '*' \
      --cacert /path/http_ca.crt --header @/path/admin.header \
      --header 'Content-Type: application/json' --request PUT \
-     --data-binary @- https://search.example.com:9200/_security/role/app_reader <<'JSON'
+     --data-binary @- https://search.example.com:9200/_security/role/app_reader <<'JSON'  # bracket-ranges: allow a JSON request body, not a pattern
    {
      "cluster": ["manage_own_api_key"],
      "indices": [{"names": ["app-data"], "privileges": ["read"]}]
@@ -59,7 +59,7 @@ For Basic authentication, the value is base64 of `username:password`; base64 is 
      --cacert /path/http_ca.crt --header @/path/app-user.header \
      --header 'Content-Type: application/json' --request POST \
      --output /path/es-app-key-response.json \
-     --data-binary @- https://search.example.com:9200/_security/api_key <<'JSON'
+     --data-binary @- https://search.example.com:9200/_security/api_key <<'JSON'  # bracket-ranges: allow a JSON request body, not a pattern
    {
      "name": "app-reader",
      "expiration": "1d",
@@ -176,7 +176,7 @@ The controls below are provided by **free Apache-2.0 OpenSearch Security**, with
    curl -q -g -sS --fail-with-body --noproxy '*' \
      --cacert /path/production-ca.pem --header @/path/admin.header \
      --header 'Content-Type: application/json' --request PUT \
-     --data-binary @- https://search.example.com:9200/_plugins/_security/api/roles/app_reader <<'JSON'
+     --data-binary @- https://search.example.com:9200/_plugins/_security/api/roles/app_reader <<'JSON'  # bracket-ranges: allow a JSON request body, not a pattern
    {
      "cluster_permissions": [],
      "index_permissions": [{"index_patterns": ["app-data"], "allowed_actions": ["read"]}],
@@ -241,7 +241,7 @@ The controls below are provided by **free Apache-2.0 OpenSearch Security**, with
      --cacert /path/production-ca.pem --header @/path/admin.header \
      --header 'Content-Type: application/json' --request POST \
      --output /path/os-app-key-response.json \
-     --data-binary @- https://search.example.com:9200/_plugins/_security/api/apitokens <<'JSON'
+     --data-binary @- https://search.example.com:9200/_plugins/_security/api/apitokens <<'JSON'  # bracket-ranges: allow a JSON request body, not a pattern
    {
      "name": "app-reader",
      "cluster_permissions": [],
@@ -552,7 +552,7 @@ The expected distinctions are:
   [ -n "$1" ] || { echo "host required; not probing"; exit 1; }
   [ -r "$2" ] || { echo "readable CA file required; not probing"; exit 1; }
   [ -n "$3" ] || { echo "port required; not probing"; exit 1; }
-  case "$3" in *[!0-9]*) echo "HTTP port must be numeric"; exit 1 ;; esac
+  case "$3" in *[!0123456789]*) echo "HTTP port must be numeric"; exit 1 ;; esac
 
   # Reasoned: no target cluster or container runtime. Anonymous root probe.
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
@@ -635,7 +635,7 @@ The expected distinctions are:
   # Requires python3. Generate and record a fresh harmless marker for each run.
   set -- "$1" "$2" "$3" "$(python3 -c 'import uuid; print(uuid.uuid4().hex)')"
   case "$4" in
-    ""|*[!0-9a-f]*) echo "marker generation failed; not probing"; exit 1 ;;
+    ""|*[!0123456789abcdef]*) echo "marker generation failed; not probing"; exit 1 ;;
   esac
   [ "${#4}" -eq 32 ] || { echo "invalid marker; not probing"; exit 1; }
   printf 'audit body marker=%s\n' "$4"
@@ -687,8 +687,8 @@ For the REST request tables below, save each JSON body in a protected file. Run 
   case "$1|$2|$3|$4|$5|$6|$7" in
     *REPLACE_WITH_*|*example.com*) echo "substitute your deployment; not probing"; exit 1 ;;
   esac
-  case "$1" in ""|*[!A-Za-z0-9.-]*) echo "use a DNS hostname or IPv4 address; not probing"; exit 1 ;; esac
-  case "$3" in ""|*[!0-9]*) echo "numeric port required; not probing"; exit 1 ;; esac
+  case "$1" in ""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "use a DNS hostname or IPv4 address; not probing"; exit 1 ;; esac
+  case "$3" in ""|*[!0123456789]*) echo "numeric port required; not probing"; exit 1 ;; esac
   [ "$3" -ge 1 ] && [ "$3" -le 65535 ] || exit 1
   [ -r "$2" ] && [ -r "$4" ] && [ -r "$7" ] || { echo "readable CA, header, and body files required"; exit 1; }
   case "$5" in GET|POST|PUT) ;; *) echo "unsupported method; not probing"; exit 1 ;; esac
@@ -841,8 +841,8 @@ In an isolated exposed fixture, record an HTTP login page or redirect on the act
   shift
   [ "$#" -eq 3 ] || { echo "set UI host, CA file, and port; not probing"; exit 1; }
   case "$1|$2|$3" in *REPLACE_WITH_*|*example.com*) echo "substitute your UI deployment"; exit 1 ;; esac
-  case "$1" in ""|*[!A-Za-z0-9.-]*) echo "use a DNS hostname or IPv4 address"; exit 1 ;; esac
-  case "$3" in ""|*[!0-9]*) echo "numeric UI port required"; exit 1 ;; esac
+  case "$1" in ""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "use a DNS hostname or IPv4 address"; exit 1 ;; esac
+  case "$3" in ""|*[!0123456789]*) echo "numeric UI port required"; exit 1 ;; esac
   [ "$3" -ge 1 ] && [ "$3" -le 65535 ] || exit 1
   [ -r "$2" ] || { echo "readable UI CA file required"; exit 1; }
   # REASONED: no running UI, deployed certificates, or network test paths.
@@ -867,7 +867,7 @@ On the UI host, inspect the actual listener:
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
   shift
   [ "$#" -eq 1 ] || { echo "set exactly one UI port; not probing"; exit 1; }
-  case "$1" in ""|*[!0-9]*) echo "substitute the numeric UI port"; exit 1 ;; esac
+  case "$1" in ""|*[!0123456789]*) echo "substitute the numeric UI port"; exit 1 ;; esac
   [ "$1" -ge 1 ] && [ "$1" -le 65535 ] || exit 1
   # REASONED: no access to the target UI host. Run on that host.
   ss -tlnp "sport = :$1"

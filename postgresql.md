@@ -240,13 +240,13 @@ The fourth value selects `tls`, `wrong`, `scram`, `plaintext`, or an interactive
     *[[:space:]]*|*"'"*|*\\*) echo "use a CA path without whitespace, quotes or backslashes; not probing"; exit 1 ;;
   esac
   case "$3" in
-    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[!a-zA-Z0-9_]*) echo "supply a simple role name; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_]*) echo "supply a simple role name; not probing"; exit 1 ;;
   esac
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute every placeholder; not probing"; exit 1 ;;
     *)
       case "$1" in
-        *[!a-zA-Z0-9.:-]*) echo "use a single hostname or IP address; not probing"; exit 1 ;;
+        *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.:-]*) echo "use a single hostname or IP address; not probing"; exit 1 ;;
       esac
       [ -f "$2" ] || { echo "CA file is missing; not probing"; exit 1; }
       [ -r "$2" ] || { echo "CA file is unreadable; not probing"; exit 1; }

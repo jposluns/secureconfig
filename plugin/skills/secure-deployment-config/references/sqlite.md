@@ -52,7 +52,7 @@ The bundle scan, the git inventory and the `stat` check were demonstrated on the
   case "${1#https://}" in ""|/*|:*) echo "the origin needs a host after https://; not probing"; exit 2 ;; esac
   set -- "${1%/}" "$2"   # one trailing / is tolerated and dropped
   case "${1#https://}" in */*|*'?'*|*'#'*|*@*|*[[:space:][:cntrl:]]*) echo "the origin must be https://host or https://host:port, with no path, query, fragment, userinfo or whitespace; not probing"; exit 2 ;; esac
-  case "${1#https://}" in *:|*:*[!0-9]*) echo "the origin port must be digits after a single colon; not probing"; exit 2 ;; esac
+  case "${1#https://}" in *:|*:*[!0123456789]*) echo "the origin port must be digits after a single colon; not probing"; exit 2 ;; esac
   case "$2" in ""|*REPLACE_WITH_*) echo "substitute the static path prefix, or '/' for the root only; not probing"; exit 2 ;; esac
   case "$2" in /*) ;; *) echo "the path prefix must start with /; not probing"; exit 2 ;; esac
   case "$2" in *//*) echo "the path prefix must not contain //; not probing"; exit 2 ;; esac
@@ -96,7 +96,7 @@ Scan built client bundles for a leaked Turso/libSQL token, keeping the token off
   echo
   [ -n "$tok" ] || { echo 'no token supplied; not scanning'; exit 2; }
   printf '%s\n' "$tok" | grep -rnF -f - -- "$@"; echo "token-literal exit: $? (1 is the goal: not found; 0 means the token is in the bundle)"
-  grep -rnE 'eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}' -- "$@"; echo "jwt-shape exit: $? (1 is the goal; 0 means a JWT-shaped string needs explaining)"
+  grep -rnE 'eyJ[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-]{10,}\.[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-]{10,}' -- "$@"; echo "jwt-shape exit: $? (1 is the goal; 0 means a JWT-shaped string needs explaining)"
 )
 ```
 

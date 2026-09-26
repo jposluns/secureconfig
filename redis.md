@@ -324,7 +324,7 @@ For the **REASONED** section 12 network comparison, no live bus endpoint or auth
     *REPLACE_WITH_*|"") echo "substitute the host; not probing"; exit 1 ;;
   esac
   case "$2" in
-    *[!0-9]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
+    *[!0123456789]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
   esac
   [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 1; }
   if nc -vz -w 5 "$1" "$2"; then
@@ -373,7 +373,7 @@ From an allowed client location, probe that same primary endpoint. Substitute a 
     *REPLACE_WITH_*|"") echo "substitute the host; not probing"; exit 1 ;;
   esac
   case "$2" in
-    *[!0-9]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
+    *[!0123456789]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
   esac
   [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 1; }
   unset REDISCLI_AUTH || exit 1
@@ -425,7 +425,7 @@ These OpenSSL probes require TLS 1.2 to be enabled on the test endpoint and GNU 
     *REPLACE_WITH_*|"") echo "substitute the host; not probing"; exit 1 ;;
   esac
   case "$2" in
-    *[!0-9]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
+    *[!0123456789]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
   esac
   [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 1; }
   case "$3" in
@@ -519,7 +519,7 @@ Replace the example identity consistently with the identity issued to intended H
     *REPLACE_WITH_*|"") echo "substitute the host; not probing"; exit 1 ;;
   esac
   case "$2" in
-    *[!0-9]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
+    *[!0123456789]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
   esac
   [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 1; }
   case "$3" in

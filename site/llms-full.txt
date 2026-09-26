@@ -5550,6 +5550,7 @@ DBIP=$(kubectl get svc db -o jsonpath='{.spec.clusterIP}')
 # kubectl assigns the container name (the pod name) BEFORE applying the override and the override's name
 # then survives, so keep them matching to avoid confusion. Build the override per pod:
 probe_override() {
+  # bracket-ranges: allow a JSON override for kubectl run, not a pattern
   printf '%s' '{"spec":{"securityContext":{"runAsNonRoot":true,"runAsUser":10001,"runAsGroup":10001,"seccompProfile":{"type":"RuntimeDefault"}},"containers":[{"name":"'"$1"'","image":"busybox:1.36","securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}},"command":["nc","-z","-w","3","'"$DBIP"'","5432"]}]}}'
 }
 
@@ -8212,13 +8213,13 @@ The fourth value selects `tls`, `wrong`, `scram`, `plaintext`, or an interactive
     *[[:space:]]*|*"'"*|*\\*) echo "use a CA path without whitespace, quotes or backslashes; not probing"; exit 1 ;;
   esac
   case "$3" in
-    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[!a-zA-Z0-9_]*) echo "supply a simple role name; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_]*) echo "supply a simple role name; not probing"; exit 1 ;;
   esac
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute every placeholder; not probing"; exit 1 ;;
     *)
       case "$1" in
-        *[!a-zA-Z0-9.:-]*) echo "use a single hostname or IP address; not probing"; exit 1 ;;
+        *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.:-]*) echo "use a single hostname or IP address; not probing"; exit 1 ;;
       esac
       [ -f "$2" ] || { echo "CA file is missing; not probing"; exit 1; }
       [ -r "$2" ] || { echo "CA file is unreadable; not probing"; exit 1; }
@@ -10796,7 +10797,7 @@ For the **REASONED** section 12 network comparison, no live bus endpoint or auth
     *REPLACE_WITH_*|"") echo "substitute the host; not probing"; exit 1 ;;
   esac
   case "$2" in
-    *[!0-9]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
+    *[!0123456789]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
   esac
   [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 1; }
   if nc -vz -w 5 "$1" "$2"; then
@@ -10845,7 +10846,7 @@ From an allowed client location, probe that same primary endpoint. Substitute a 
     *REPLACE_WITH_*|"") echo "substitute the host; not probing"; exit 1 ;;
   esac
   case "$2" in
-    *[!0-9]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
+    *[!0123456789]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
   esac
   [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 1; }
   unset REDISCLI_AUTH || exit 1
@@ -10897,7 +10898,7 @@ These OpenSSL probes require TLS 1.2 to be enabled on the test endpoint and GNU 
     *REPLACE_WITH_*|"") echo "substitute the host; not probing"; exit 1 ;;
   esac
   case "$2" in
-    *[!0-9]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
+    *[!0123456789]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
   esac
   [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 1; }
   case "$3" in
@@ -10991,7 +10992,7 @@ Replace the example identity consistently with the identity issued to intended H
     *REPLACE_WITH_*|"") echo "substitute the host; not probing"; exit 1 ;;
   esac
   case "$2" in
-    *[!0-9]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
+    *[!0123456789]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
   esac
   [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 1; }
   case "$3" in
@@ -11325,7 +11326,7 @@ For Basic authentication, the value is base64 of `username:password`; base64 is 
    curl -q -g -sS --fail-with-body --noproxy '*' \
      --cacert /path/http_ca.crt --header @/path/admin.header \
      --header 'Content-Type: application/json' --request PUT \
-     --data-binary @- https://search.example.com:9200/_security/role/app_reader <<'JSON'
+     --data-binary @- https://search.example.com:9200/_security/role/app_reader <<'JSON'  # bracket-ranges: allow a JSON request body, not a pattern
    {
      "cluster": ["manage_own_api_key"],
      "indices": [{"names": ["app-data"], "privileges": ["read"]}]
@@ -11355,7 +11356,7 @@ For Basic authentication, the value is base64 of `username:password`; base64 is 
      --cacert /path/http_ca.crt --header @/path/app-user.header \
      --header 'Content-Type: application/json' --request POST \
      --output /path/es-app-key-response.json \
-     --data-binary @- https://search.example.com:9200/_security/api_key <<'JSON'
+     --data-binary @- https://search.example.com:9200/_security/api_key <<'JSON'  # bracket-ranges: allow a JSON request body, not a pattern
    {
      "name": "app-reader",
      "expiration": "1d",
@@ -11472,7 +11473,7 @@ The controls below are provided by **free Apache-2.0 OpenSearch Security**, with
    curl -q -g -sS --fail-with-body --noproxy '*' \
      --cacert /path/production-ca.pem --header @/path/admin.header \
      --header 'Content-Type: application/json' --request PUT \
-     --data-binary @- https://search.example.com:9200/_plugins/_security/api/roles/app_reader <<'JSON'
+     --data-binary @- https://search.example.com:9200/_plugins/_security/api/roles/app_reader <<'JSON'  # bracket-ranges: allow a JSON request body, not a pattern
    {
      "cluster_permissions": [],
      "index_permissions": [{"index_patterns": ["app-data"], "allowed_actions": ["read"]}],
@@ -11537,7 +11538,7 @@ The controls below are provided by **free Apache-2.0 OpenSearch Security**, with
      --cacert /path/production-ca.pem --header @/path/admin.header \
      --header 'Content-Type: application/json' --request POST \
      --output /path/os-app-key-response.json \
-     --data-binary @- https://search.example.com:9200/_plugins/_security/api/apitokens <<'JSON'
+     --data-binary @- https://search.example.com:9200/_plugins/_security/api/apitokens <<'JSON'  # bracket-ranges: allow a JSON request body, not a pattern
    {
      "name": "app-reader",
      "cluster_permissions": [],
@@ -11848,7 +11849,7 @@ The expected distinctions are:
   [ -n "$1" ] || { echo "host required; not probing"; exit 1; }
   [ -r "$2" ] || { echo "readable CA file required; not probing"; exit 1; }
   [ -n "$3" ] || { echo "port required; not probing"; exit 1; }
-  case "$3" in *[!0-9]*) echo "HTTP port must be numeric"; exit 1 ;; esac
+  case "$3" in *[!0123456789]*) echo "HTTP port must be numeric"; exit 1 ;; esac
 
   # Reasoned: no target cluster or container runtime. Anonymous root probe.
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
@@ -11931,7 +11932,7 @@ The expected distinctions are:
   # Requires python3. Generate and record a fresh harmless marker for each run.
   set -- "$1" "$2" "$3" "$(python3 -c 'import uuid; print(uuid.uuid4().hex)')"
   case "$4" in
-    ""|*[!0-9a-f]*) echo "marker generation failed; not probing"; exit 1 ;;
+    ""|*[!0123456789abcdef]*) echo "marker generation failed; not probing"; exit 1 ;;
   esac
   [ "${#4}" -eq 32 ] || { echo "invalid marker; not probing"; exit 1; }
   printf 'audit body marker=%s\n' "$4"
@@ -11983,8 +11984,8 @@ For the REST request tables below, save each JSON body in a protected file. Run 
   case "$1|$2|$3|$4|$5|$6|$7" in
     *REPLACE_WITH_*|*example.com*) echo "substitute your deployment; not probing"; exit 1 ;;
   esac
-  case "$1" in ""|*[!A-Za-z0-9.-]*) echo "use a DNS hostname or IPv4 address; not probing"; exit 1 ;; esac
-  case "$3" in ""|*[!0-9]*) echo "numeric port required; not probing"; exit 1 ;; esac
+  case "$1" in ""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "use a DNS hostname or IPv4 address; not probing"; exit 1 ;; esac
+  case "$3" in ""|*[!0123456789]*) echo "numeric port required; not probing"; exit 1 ;; esac
   [ "$3" -ge 1 ] && [ "$3" -le 65535 ] || exit 1
   [ -r "$2" ] && [ -r "$4" ] && [ -r "$7" ] || { echo "readable CA, header, and body files required"; exit 1; }
   case "$5" in GET|POST|PUT) ;; *) echo "unsupported method; not probing"; exit 1 ;; esac
@@ -12137,8 +12138,8 @@ In an isolated exposed fixture, record an HTTP login page or redirect on the act
   shift
   [ "$#" -eq 3 ] || { echo "set UI host, CA file, and port; not probing"; exit 1; }
   case "$1|$2|$3" in *REPLACE_WITH_*|*example.com*) echo "substitute your UI deployment"; exit 1 ;; esac
-  case "$1" in ""|*[!A-Za-z0-9.-]*) echo "use a DNS hostname or IPv4 address"; exit 1 ;; esac
-  case "$3" in ""|*[!0-9]*) echo "numeric UI port required"; exit 1 ;; esac
+  case "$1" in ""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "use a DNS hostname or IPv4 address"; exit 1 ;; esac
+  case "$3" in ""|*[!0123456789]*) echo "numeric UI port required"; exit 1 ;; esac
   [ "$3" -ge 1 ] && [ "$3" -le 65535 ] || exit 1
   [ -r "$2" ] || { echo "readable UI CA file required"; exit 1; }
   # REASONED: no running UI, deployed certificates, or network test paths.
@@ -12163,7 +12164,7 @@ On the UI host, inspect the actual listener:
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
   shift
   [ "$#" -eq 1 ] || { echo "set exactly one UI port; not probing"; exit 1; }
-  case "$1" in ""|*[!0-9]*) echo "substitute the numeric UI port"; exit 1 ;; esac
+  case "$1" in ""|*[!0123456789]*) echo "substitute the numeric UI port"; exit 1 ;; esac
   [ "$1" -ge 1 ] && [ "$1" -le 65535 ] || exit 1
   # REASONED: no access to the target UI host. Run on that host.
   ss -tlnp "sport = :$1"
@@ -13392,8 +13393,8 @@ Topic permissions are broker records managed with `rabbitmqctl`, not entries in 
 ```bash
 sudo rabbitmqctl set_topic_permissions -p 'app-prod' 'app' \
   'app.shared.topic' \
-  '^tenant1[.][a-z0-9_-]+$' \
-  '^tenant1[.][a-z0-9_-]+$'
+  '^tenant1[.][abcdefghijklmnopqrstuvwxyz0123456789_-]+$' \
+  '^tenant1[.][abcdefghijklmnopqrstuvwxyz0123456789_-]+$'
 ```
 
 The write pattern gates publishing and the read pattern gates the routing keys a binding may use; both are regular expressions, not AMQP topic wildcards, so this example admits exact `tenant1.<name>` keys and excludes `#` and `*` subscriptions. Consumers still read from their queues under ordinary queue permissions, so topic authorization does not filter messages already sitting in an accessible queue, nor does it remove existing broad bindings: audit current bindings and queue grants, and reconnect clients after changing them. Topic authorization checks routing keys only on a direct publish to the topic exchange; if the section 1 resource grant lets the application declare its own exchanges, it can bind one to the shared exchange and route a disallowed key through it without the topic write check, because a resource-name grant does not distinguish an exchange from a queue, so for strong tenant isolation the administrator must own every route into the shared exchange: deny the application configure permission so it cannot declare a relay exchange, and scope its read grant so it matches no exchange at all (for example a queue-only naming scheme such as `^app[.]q[.]`), because binding any readable exchange into the shared exchange needs only the write grant the application already holds for publishing; the administrator provisions its queues, exchanges, and bindings. Clearing a topic permission returns that exchange to the unrestricted default; it is not a deny rule. Other authorization backends enforce their own topic rules. See the [topic authorization reference](https://www.rabbitmq.com/docs/access-control#topic-authorisation) and the [rabbitmqctl command reference](https://www.rabbitmq.com/docs/man/rabbitmqctl.8).
@@ -16120,7 +16121,7 @@ Paste each complete block, including its parentheses, marker, and count checks. 
       echo "replace the PID; not probing"; exit 1 ;;
     *)
       case "$1" in
-        *[!0-9]*|0) echo "supply a positive numeric PID; not probing"; exit 1 ;;
+        *[!0123456789]*|0) echo "supply a positive numeric PID; not probing"; exit 1 ;;
         *)
           memcached -V
           memcached -h
@@ -17787,7 +17788,7 @@ The first publish is the allowed control. The subsequent operations deliberately
   case "$2" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the certificate path'; exit 2 ;; esac
   case "$3" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the key path'; exit 2 ;; esac
   case "$4" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the CA path'; exit 2 ;; esac
-  case "$1" in *[!A-Za-z0-9.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
+  case "$1" in *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
   { unset -n v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA &&
     unset -v v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA; } 2>/dev/null ||
     { echo 'cannot clear the variables this block uses; not probing'; exit 2; }
@@ -17850,7 +17851,7 @@ Terminal 1 is self-contained and reads its password inside the guarded subshell.
   case "$2" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the certificate path'; exit 2 ;; esac
   case "$3" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the key path'; exit 2 ;; esac
   case "$4" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the CA path'; exit 2 ;; esac
-  case "$1" in *[!A-Za-z0-9.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
+  case "$1" in *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
   { unset -n v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA &&
     unset -v v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA; } 2>/dev/null ||
     { echo 'cannot clear the variables this block uses; not probing'; exit 2; }
@@ -17885,7 +17886,7 @@ Terminal 2 independently establishes its target, TLS configuration, and credenti
   case "$2" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the certificate path'; exit 2 ;; esac
   case "$3" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the key path'; exit 2 ;; esac
   case "$4" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the CA path'; exit 2 ;; esac
-  case "$1" in *[!A-Za-z0-9.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
+  case "$1" in *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
   { unset -n v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA &&
     unset -v v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA; } 2>/dev/null ||
     { echo 'cannot clear the variables this block uses; not probing'; exit 2; }
@@ -17928,7 +17929,7 @@ The following self-contained request block is also used by V4 and V5. Its last t
   case "$5" in order-svc|orders-provisioner|sys-admin) ;; *) echo 'select a listed test identity'; exit 2 ;; esac
   case "$6" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the request subject'; exit 2 ;; esac
   case "$7" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the request body'; exit 2 ;; esac
-  case "$1" in *[!A-Za-z0-9.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
+  case "$1" in *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
   { unset -n v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA &&
     unset -v v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA; } 2>/dev/null ||
     { echo 'cannot clear the variables this block uses; not probing'; exit 2; }
@@ -18049,7 +18050,7 @@ First complete the listener inventory in V1. Run this whole block from the inten
   shift
   [ "$#" -eq 1 ] || { echo 'provide exactly 1 value; not probing'; exit 2; }
   case "$1" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the monitor host'; exit 2 ;; esac
-  case "$1" in *[!A-Za-z0-9.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
+  case "$1" in *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
   for endpoint in varz 'connz?subs=true&auth=true' routez jsz; do
     curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
       -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
@@ -18462,7 +18463,7 @@ The bundle scan, the git inventory and the `stat` check were demonstrated on the
   case "${1#https://}" in ""|/*|:*) echo "the origin needs a host after https://; not probing"; exit 2 ;; esac
   set -- "${1%/}" "$2"   # one trailing / is tolerated and dropped
   case "${1#https://}" in */*|*'?'*|*'#'*|*@*|*[[:space:][:cntrl:]]*) echo "the origin must be https://host or https://host:port, with no path, query, fragment, userinfo or whitespace; not probing"; exit 2 ;; esac
-  case "${1#https://}" in *:|*:*[!0-9]*) echo "the origin port must be digits after a single colon; not probing"; exit 2 ;; esac
+  case "${1#https://}" in *:|*:*[!0123456789]*) echo "the origin port must be digits after a single colon; not probing"; exit 2 ;; esac
   case "$2" in ""|*REPLACE_WITH_*) echo "substitute the static path prefix, or '/' for the root only; not probing"; exit 2 ;; esac
   case "$2" in /*) ;; *) echo "the path prefix must start with /; not probing"; exit 2 ;; esac
   case "$2" in *//*) echo "the path prefix must not contain //; not probing"; exit 2 ;; esac
@@ -18506,7 +18507,7 @@ Scan built client bundles for a leaked Turso/libSQL token, keeping the token off
   echo
   [ -n "$tok" ] || { echo 'no token supplied; not scanning'; exit 2; }
   printf '%s\n' "$tok" | grep -rnF -f - -- "$@"; echo "token-literal exit: $? (1 is the goal: not found; 0 means the token is in the bundle)"
-  grep -rnE 'eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}' -- "$@"; echo "jwt-shape exit: $? (1 is the goal; 0 means a JWT-shaped string needs explaining)"
+  grep -rnE 'eyJ[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-]{10,}\.[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-]{10,}' -- "$@"; echo "jwt-shape exit: $? (1 is the goal; 0 means a JWT-shaped string needs explaining)"
 )
 ```
 
@@ -19012,7 +19013,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w '
   curl -q -g "$@" </dev/null || exit 1
   IFS= read -r -s -p 'Short-lived system-user JWT: ' probe_jwt || exit 2
   printf '\n'
-  [[ "$probe_jwt" =~ ^[A-Za-z0-9_.-]+$ ]] || { echo 'missing or malformed JWT; not probing'; exit 2; }
+  [[ "$probe_jwt" =~ ^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.-]+$ ]] || { echo 'missing or malformed JWT; not probing'; exit 2; }
   echo AUTHENTICATED
   printf 'Authorization: Bearer %s\n' "$probe_jwt" | curl -q -g "$@" --header @- || exit 1
 )
@@ -21425,7 +21426,7 @@ The block makes the directory mode `0700` first, then refuses, before it generat
 (
   { unset -n VLLM_API_KEY VLLM_USE_RUST_FRONTEND && unset -v VLLM_API_KEY VLLM_USE_RUST_FRONTEND; } 2>/dev/null ||
     { echo 'cannot clear VLLM_API_KEY or VLLM_USE_RUST_FRONTEND in this shell; not starting'; exit 2; }
-  grep -Eq '^api-key: "[0-9a-f]{64}"$' "$HOME/.config/vllm/server.yaml" ||
+  grep -Eq '^api-key: "[0123456789abcdef]{64}"$' "$HOME/.config/vllm/server.yaml" ||
     { echo 'no generated api-key line in ~/.config/vllm/server.yaml; not starting'; exit 2; }
   vllm serve 'REPLACE_WITH_MODEL' --host 127.0.0.1 --config "$HOME/.config/vllm/server.yaml"
 )
@@ -21516,7 +21517,7 @@ All three are secrets, and none belongs on the command line, where `ps` and `/pr
   shift
   [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value, inside the quotes; nothing written'; exit 2; }
   case "$1" in ""|*REPLACE_WITH_*) echo 'substitute a user name inside the quotes on the set -- line above; nothing written'; exit 2 ;; esac
-  case "$1" in *[!A-Za-z0-9._-]*) echo 'use only letters, digits, dot, underscore or hyphen in the user name; nothing written'; exit 2 ;; esac
+  case "$1" in *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-]*) echo 'use only letters, digits, dot, underscore or hyphen in the user name; nothing written'; exit 2 ;; esac
   mkdir -p -- "$HOME/.config/text-generation-webui"
   chmod 700 -- "$HOME/.config/text-generation-webui"
   if [ -e "$HOME/.config/text-generation-webui/gradio-auth" ] || [ -L "$HOME/.config/text-generation-webui/gradio-auth" ]; then
@@ -22387,7 +22388,7 @@ ss -tlnp   # expect 8080 on loopback or a private address; then probe the public
   esac
   [ -n "$2" ] || { echo 'a public IP is required; not probing'; exit 2; }
   case "$3" in
-    ''|*[!0-9]*) echo 'a numeric published port is required; not probing'; exit 2 ;;
+    ''|*[!0123456789]*) echo 'a numeric published port is required; not probing'; exit 2 ;;
   esac
   # bracket an IPv6 literal in REPLACE_WITH_PUBLIC_IP. Any HTTP response (incl 401/403) = a finding;
   # http=000 is not a pass (a certificate, timeout, or local error is inconclusive). Never add -k.
@@ -23145,7 +23146,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
        *REPLACE_WITH_*|"") echo "substitute the client's config/log directory inside the quotes above; not probing"; exit ;;
      esac
      [ -d "$1" ] || { echo "not a directory: $1; not probing"; exit; }
-     if env LC_ALL=C grep -D skip -RlaiE '"refresh_token"[[:space:]]*:[[:space:]]*"[^"]|refresh_token=[ -~]+|Bearer[[:space:]]+[A-Za-z0-9._~+/-]{20,}' -- "$1/"; then
+     if env LC_ALL=C grep -D skip -RlaiE '"refresh_token"[[:space:]]*:[[:space:]]*"[^"]|refresh_token=[[:print:]]+|Bearer[[:space:]]+[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._~+/-]{20,}' -- "$1/"; then
        echo "FOUND: the file(s) listed above hold a token value in cleartext; move it to a protected credential store"
      else
        case $? in
@@ -24656,7 +24657,7 @@ Keep the three secrets, `KEY_VAULTS_SECRET`, `AUTH_SECRET` and the Google OAuth 
   set -- "$(openssl rand -base64 32)" "$(openssl rand -base64 32)"
   [ "${#1}" -eq 44 ] || { echo 'key generation failed; nothing written'; exit 2; }
   [ "${#2}" -eq 44 ] || { echo 'key generation failed; nothing written'; exit 2; }
-  case "$1$2" in *[!A-Za-z0-9+/=]*) echo 'key generation failed; nothing written'; exit 2 ;; esac
+  case "$1$2" in *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=]*) echo 'key generation failed; nothing written'; exit 2 ;; esac
   mkdir -p -- "$HOME/.config/lobechat"
   chmod 700 -- "$HOME/.config/lobechat"
   printf 'KEY_VAULTS_SECRET=%s\nAUTH_SECRET=%s\nAUTH_GOOGLE_SECRET=%s\n' "$1" "$2" "$gsec" > "$HOME/.config/lobechat/secrets.env"
@@ -25023,6 +25024,7 @@ anonymously (the probe prints the `exitcode` and `errormsg` write-out variables,
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 1; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the host on the set -- line above; not probing"; exit 1 ;;
+    # bracket-ranges: allow a label in curl's -w output, not a pattern
     *) curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
          -w '\n[unauth-read] http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
          "https://$1/v1/projects" ;;
@@ -28139,7 +28141,7 @@ single quotes (a path containing an apostrophe needs other quoting), and paste t
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not checking"; exit; }
   case "$1" in *REPLACE_WITH_*|"") echo "substitute your file on the set -- line above; not checking"; exit ;; esac
   { [ -f "$1" ] && [ -r "$1" ]; } || { echo "cannot read $1 as a regular file; not checked"; exit; }
-  grep -n -E '(^|[^A-Za-z0-9_])(testsecret|budibase|abcd|changeme|569a1821-0a93-45e8-87ab-eb857f20a010)([^A-Za-z0-9_]|$)' -- "$1"
+  grep -n -E '(^|[^ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_])(testsecret|budibase|abcd|changeme|569a1821-0a93-45e8-87ab-eb857f20a010)([^ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_]|$)' -- "$1"
   case "$?" in
     0) echo "FOUND vendor sample tokens: inspect each line above; replace every secret still set to one" ;;
     1) echo "no vendor sample tokens found" ;;
@@ -28268,15 +28270,15 @@ the control does not connect. Substitute both inside the single quotes.
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
   case "$1" in *REPLACE_WITH_*|"") echo "substitute one IP address on the set -- line above; not probing"; exit ;; esac
   case "$1" in 0.0.0.0) echo "$1 reaches this host itself; give the service's public address; not probing"; exit ;; esac
-  ipv4='^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])[.]){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$'
+  ipv4='^((25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])[.]){3}(25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])$'
   case "$1" in
     *:*:*)
-      case "$1" in *[!0-9A-Fa-f.:]*) echo "$1 is not an IPv6 address; not probing"; exit ;; esac
+      case "$1" in *[!0123456789ABCDEFabcdef.:]*) echo "$1 is not an IPv6 address; not probing"; exit ;; esac
       case "$1" in *.*) echo "give the IPv4 address itself rather than $1; not probing"; exit ;; esac
       case "$1" in *[!0:]*) ;; *) echo "$1 is all zeros (this host itself, or not an address); give the service's public address; not probing"; exit ;; esac ;;
     *) [[ $1 =~ $ipv4 ]] || { echo "give one IPv4 address (four numbers, 0 to 255, joined by dots) or one IPv6 address, with no host name, port or brackets; not probing"; exit; } ;;
   esac
-  case "$2" in *[!0-9]*|"") echo "substitute a known-open control port on the set -- line above; not probing"; exit ;; esac
+  case "$2" in *[!0123456789]*|"") echo "substitute a known-open control port on the set -- line above; not probing"; exit ;; esac
   { [ "$2" -ge 1 ] && [ "$2" -le 65535 ]; } 2>/dev/null || { echo "the control port must be 1 to 65535; not probing"; exit; }
   command -v timeout >/dev/null || { echo "timeout is not installed here; not probing"; exit; }
   # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
@@ -28577,15 +28579,15 @@ control, and stops if the control does not connect. Substitute both inside the s
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
   case "$1" in *REPLACE_WITH_*|"") echo "substitute one IP address on the set -- line above; not probing"; exit ;; esac
   case "$1" in 0.0.0.0) echo "$1 reaches this host itself; give the service's public address; not probing"; exit ;; esac
-  ipv4='^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])[.]){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$'
+  ipv4='^((25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])[.]){3}(25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])$'
   case "$1" in
     *:*:*)
-      case "$1" in *[!0-9A-Fa-f.:]*) echo "$1 is not an IPv6 address; not probing"; exit ;; esac
+      case "$1" in *[!0123456789ABCDEFabcdef.:]*) echo "$1 is not an IPv6 address; not probing"; exit ;; esac
       case "$1" in *.*) echo "give the IPv4 address itself rather than $1; not probing"; exit ;; esac
       case "$1" in *[!0:]*) ;; *) echo "$1 is all zeros (this host itself, or not an address); give the service's public address; not probing"; exit ;; esac ;;
     *) [[ $1 =~ $ipv4 ]] || { echo "give one IPv4 address (four numbers, 0 to 255, joined by dots) or one IPv6 address, with no host name, port or brackets; not probing"; exit; } ;;
   esac
-  case "$2" in *[!0-9]*|"") echo "substitute a known-open control port on the set -- line above; not probing"; exit ;; esac
+  case "$2" in *[!0123456789]*|"") echo "substitute a known-open control port on the set -- line above; not probing"; exit ;; esac
   { [ "$2" -ge 1 ] && [ "$2" -le 65535 ]; } 2>/dev/null || { echo "the control port must be 1 to 65535; not probing"; exit; }
   command -v timeout >/dev/null || { echo "timeout is not installed here; not probing"; exit; }
   # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
@@ -28883,15 +28885,15 @@ and stops if the control does not connect. Substitute both inside the single quo
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
   case "$1" in *REPLACE_WITH_*|"") echo "substitute one IP address on the set -- line above; not probing"; exit ;; esac
   case "$1" in 0.0.0.0) echo "$1 reaches this host itself; give the service's public address; not probing"; exit ;; esac
-  ipv4='^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])[.]){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$'
+  ipv4='^((25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])[.]){3}(25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])$'
   case "$1" in
     *:*:*)
-      case "$1" in *[!0-9A-Fa-f.:]*) echo "$1 is not an IPv6 address; not probing"; exit ;; esac
+      case "$1" in *[!0123456789ABCDEFabcdef.:]*) echo "$1 is not an IPv6 address; not probing"; exit ;; esac
       case "$1" in *.*) echo "give the IPv4 address itself rather than $1; not probing"; exit ;; esac
       case "$1" in *[!0:]*) ;; *) echo "$1 is all zeros (this host itself, or not an address); give the service's public address; not probing"; exit ;; esac ;;
     *) [[ $1 =~ $ipv4 ]] || { echo "give one IPv4 address (four numbers, 0 to 255, joined by dots) or one IPv6 address, with no host name, port or brackets; not probing"; exit; } ;;
   esac
-  case "$2" in *[!0-9]*|"") echo "substitute a known-open control port on the set -- line above; not probing"; exit ;; esac
+  case "$2" in *[!0123456789]*|"") echo "substitute a known-open control port on the set -- line above; not probing"; exit ;; esac
   { [ "$2" -ge 1 ] && [ "$2" -le 65535 ]; } 2>/dev/null || { echo "the control port must be 1 to 65535; not probing"; exit; }
   command -v timeout >/dev/null || { echo "timeout is not installed here; not probing"; exit; }
   # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell

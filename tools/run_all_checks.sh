@@ -456,6 +456,48 @@ else
   printf '%s\n' "$shellblock_tests" | sed 's/^/          /'
 fi
 
+echo "== no bracket range in a fenced bash block works as a validator =="
+# Outside the C locale GNU grep, GNU sed and bash [[ =~ ]] let a range such as [A-Za-z] or
+# [0-9a-f] match non-ASCII letters and digits, so a guard written with one accepts values it
+# claims to refuse; bash case is ASCII only while globasciiranges is on. The #356 review found
+# it and the row 3.25 sweep found 87 more. Every range needs a spelled-out set or a
+# `# bracket-ranges: allow <reason>` marker; the gate's docstring lists what it misses.
+if bracket_ranges=$(python3 tools/check_bracket_ranges.py 2>&1); then
+  printf '%s\n' "$bracket_ranges"
+  # A gate that exits 0 while printing findings would otherwise read as a pass.
+  if grep -q '^  FAIL  ' <<< "$bracket_ranges"; then
+    bad "check_bracket_ranges.py printed findings but exited 0"
+  fi
+elif grep -qE '^Traceback \(most recent call last\):|^[A-Za-z_.]+Error: ' <<< "$bracket_ranges"; then
+  bad "check_bracket_ranges.py crashed; the bracket ranges are unchecked"
+  printf '%s\n' "$bracket_ranges" | sed 's/^/          /'
+elif grep -q '^  FAIL  ' <<< "$bracket_ranges"; then
+  printf '%s\n' "$bracket_ranges"
+  fail=1
+else
+  bad "check_bracket_ranges.py exited non-zero without reporting a gate result"
+  printf '%s\n' "$bracket_ranges" | sed 's/^/          /'
+fi
+
+echo "== the bracket-range gate still catches what it claims =="
+# Five of these cases assert what the gate does NOT catch, so the file cannot quietly start
+# claiming that coverage.
+if bracket_range_tests=$(python3 tools/test_bracket_ranges.py 2>&1); then
+  printf '%s\n' "$bracket_range_tests"
+  if grep -q '^  FAIL  ' <<< "$bracket_range_tests"; then
+    bad "test_bracket_ranges.py printed findings but exited 0"
+  fi
+elif grep -qE '^Traceback \(most recent call last\):|^[A-Za-z_.]+Error: ' <<< "$bracket_range_tests"; then
+  bad "test_bracket_ranges.py crashed; the bracket-range gate is unverified"
+  printf '%s\n' "$bracket_range_tests" | sed 's/^/          /'
+elif grep -q '^  FAIL  ' <<< "$bracket_range_tests"; then
+  printf '%s\n' "$bracket_range_tests"
+  fail=1
+else
+  bad "test_bracket_ranges.py exited non-zero without reporting a result"
+  printf '%s\n' "$bracket_range_tests" | sed 's/^/          /'
+fi
+
 echo "== the convention gates still catch what review found =="
 # The two gates above were broken repeatedly across rounds of cross-family review, and
 # several of those rounds broke something an earlier round had fixed. Each case in this
