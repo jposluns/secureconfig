@@ -9,7 +9,7 @@ entry point does: choosing which files to read, loading tools/bracket_ranges_all
 line, the exit status, and failing closed on an unreadable guide, an unlistable directory, an
 unreadable allowlist, or a corpus with no bash block in it.
 
-Four direct quote-removal checks pin the context-free transformation as well.
+Four direct quote-removal checks and ten joining checks pin the context-free transformations.
 
 The REGRESSIONS groups preserve the reported bypasses and nearby variants, with their original
 in-block waiver attempts where present. Rounds 1 and 2 beat the joined-line lexing; round 3 beat the
@@ -21,6 +21,7 @@ the round-2 trailing-marker `codex r2-1` case already produced two findings in r
 preceding-marker counterpart produced zero. Round 4 found escaped and quoted closing brackets
 hiding a live range. Round 5 found buried quoted closes and quote removal shifting a leading
 negation; the development fuzzer then found six unset-variable shifts of a literal close.
+Round 6 found continuations and quoted newlines; the widened fuzzer supplied 1143 more fixtures.
 Each reported bypass is at least one finding now: a range and an unclosed `[`
 are findings on their own physical line whatever surrounds them, a waiver lives only in
 tools/bracket_ranges_allow.txt keyed by the exact line, and the old in-block marker is itself a
@@ -32,6 +33,7 @@ not read at all, so closing one of those is loud too.
 """
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -84,7 +86,7 @@ def findings(text, allow=None):
         shutil.rmtree(d, ignore_errors=True)
 
 
-# (description, guide text, exact number of findings, substring one finding must contain or None)
+# (description, guide text, exact findings or None for at least one, required substring or None)
 CASES = (
     # CAUGHT. Validators in the shapes this corpus uses, and the places a range hides.
     ("a case accept list for a host name",
@@ -405,8 +407,8 @@ CASES += (
      doc('case "$1" in *["x]y"]-z]*) exit 2 ;; esac'), 1, ']-z'),
     ('no quote means no reading beyond the ordinary close',
      doc('re=[x]a-z]'), 0, None),
-    ('a quote after the last close does not affect the region',
-     doc('re=[x]a-z]"'), 0, None),
+    ('over-flagged: an unmatched quote enables a terminal spanning reading',
+     doc('re=[x]a-z]"'), 1, 'a-z'),
     ('quoted range-free members with a final close stay clean',
      doc('case "$1" in *["x]y"abc]*) exit 2 ;; esac'), 0, None),
     ('over-flagged: quotes between two subscripts reach a line-final close',
@@ -418,6 +420,25 @@ CASES += (
 CASES += (
     ("quote removal restores collating atoms for the ordinary parser",
      doc("re=[[.'a'.]-[.'z'.]]"), 2, "[.a.]-[.z.]"),
+)
+
+JOIN_CASES = (
+    (['re=[x]\\', 'a-z]'], 0, 're=[x]a-z]'),
+    (['re=[!"x]y', 'middle', '"a-z]'], 0, 're=[!"x]y\nmiddle\n"a-z]'),
+    (["re=[!'x]y", '', "'a-z]"], 0, "re=[!'x]y\n\n'a-z]"),
+    (['re=[x]\\', 'y', 'outside=a-z]'], 0, 're=[x]y'),
+    (['re=[x]', 'outside=a-z]'], 0, None),
+    (['re=[x]\\'], 0, 're=[x]\\'),
+)
+
+JOIN_CASES += (
+    (['re=\'[]\'"\'"\'-z', "]'"], 0, 're=\'[]\'"\'"\'-z\n]\''),
+    (['re="[]"\'"\'"-z', ']"'], 0, 're="[]"\'"\'"-z\n]"'),
+)
+
+JOIN_CASES += (
+    (['re=[x"\'"y\'', ']'], 0, 're=[x"\'"y\'\n]'),
+    (['re=[x\'"\'y"', ']'], 0, 're=[x\'"\'y"\n]'),
 )
 
 QUOTE_CASES = (
@@ -448,6 +469,335 @@ CASES += (
      doc('case "$1" in *[!\'x]y\'a-z]*) exit 2 ;; esac'), 1, "a-z"),
     ("claude round 5: *[!$'x]y'a-z]*",
      doc('case "$1" in *[!$\'x]y\'a-z]*) exit 2 ;; esac'), 1, "a-z"),
+)
+
+
+# REGRESSIONS, ROUND 6: physical continuations and quoted newlines.
+CASES += (
+    ('round 6: continued buried close',
+     doc('case "$1" in *[!"x]y"\\\na-z]*) exit 1 ;; esac'), 1, 'guide.md:6:'),
+    ('round 6: empty quotes grep',
+     doc('re=[""^]\\\na-z]\nprintf "%s\\n" "$1" | grep -qE "$re"'), 1, 'guide.md:6:'),
+    ('round 6: empty quotes regex',
+     doc('re=[""^]\\\na-z]\n[[ $1 =~ $re ]]'), 1, 'guide.md:6:'),
+    ('round 6: quoted class',
+     doc('re=\'^\'[[:\'digit\':]\\\na-z]\'$\'\nprintf \'%s\\n\' é | grep -qE "$re"'), 1, 'guide.md:6:'),
+    ('round 6: quoted equivalence',
+     doc('re=\'^\'[[=\'x\'=]\\\na-z]\'$\'\nprintf \'%s\\n\' é | grep -qE "$re"'), 1, 'guide.md:6:'),
+    ('round 6: quoted collating',
+     doc('re=\'^\'[[.\'x\'.]\\\na-z]\'$\'\nprintf \'%s\\n\' é | grep -qE "$re"'), 1, 'guide.md:6:'),
+    ('round 6: quoted newline',
+     doc('case "$1" in *[!"x]y\n"a-z]*) exit 1 ;; esac'), 1, 'guide.md:6:'),
+    ('round 6: nested opener',
+     doc('case "$1" in *[![["x]y"\\\na-z]*) exit 1 ;; esac'), 1, 'guide.md:6:'),
+    ('round 6: heredoc',
+     doc('bash <<\'EOF\'\nset -- é\nshopt -u globasciiranges\ncase "$1" in *[!"x]y"\\\na-z]*) exit 1 ;; esac\nEOF'), 1, 'guide.md:9:'),
+    ('continued endpoints',
+     doc('re=[""^]a\\\n-\\\nz]'), 1, 'a-z'),
+    ('quoted member across three lines',
+     doc('re=[!"x]y\nmiddle\n"a-z]'), 1, 'a-z'),
+    ('single-quoted member across three lines',
+     doc("re=[!'x]y\nmiddle\n'a-z]"), 1, 'a-z'),
+    ('unclosed stripped spanning list',
+     doc('re=["xy\\\ntext'), 1, 'opens a bracket expression that nothing closes'),
+    ('a later opener retains its own line',
+     doc('re=[x]\\\nother=[a-z]'), 2, 'guide.md:7:'),
+    ('joining ends at a balanced line',
+     doc('re=[x]\\\ny\nother=a-z]'), 1, 'guide.md:6:'),
+    ('over-flagged unrelated next-line range',
+     doc("re=[x] # a single quote '\necho a-z]"), 1, 'guide.md:6:'),
+    ('range with newline endpoint',
+     doc('re=[!"x]y\n"-z]'), 1, '\\n-z'),
+    ('joining cannot cross a fence',
+     doc("re=[x] # '") + doc("echo a-z]"), 1, "guide.md:6:"),
+)
+
+# Every counterexample emitted by the first widened exploratory run.
+# Regex engines receive literal text, represented by a quoted shell assignment.
+FUZZ_CASES = {'grep': ['[^]].\n]',
+          '[^^].\n]',
+          '[^!].\n]',
+          '[^a].\n]',
+          '[^z].\n]',
+          '[^-].\n]',
+          '[^x].\n]',
+          '[^$].\n]',
+          '[^ ].\n]',
+          '[^[].\n]',
+          '[^:].\n]',
+          '[^=].\n]',
+          '[^.].\n]'],
+ 'regex': ['[]-z\n]',
+           '[]-x\n]',
+           '[]\n-z]',
+           '[]\n-x]',
+           '[]\\-z\n]',
+           '[]\\-x\n]',
+           '[]^-z\n]',
+           '[]^-x\n]',
+           '[]^\n-z]',
+           '[]^\n-x]',
+           '[]!-z\n]',
+           '[]!-x\n]',
+           '[]!\n-z]',
+           '[]!\n-x]',
+           '[]a-z\n]',
+           '[]a-x\n]',
+           '[]a\n-z]',
+           '[]a\n-x]',
+           '[]z\n-z]',
+           '[]z\n-x]',
+           '[]-z^\n]',
+           '[]-z!\n]',
+           '[]-za\n]',
+           '[]-zz\n]',
+           '[]-zx\n]',
+           '[]-z$\n]',
+           '[]-z \n]',
+           "[]-z\n']",
+           '[]-z\n"]',
+           '[]-z\n\\]',
+           '[]-z\n^]',
+           '[]-z\n!]',
+           '[]-z\na]',
+           '[]-z\nz]',
+           '[]-z\n-]',
+           '[]-z\nx]',
+           '[]-z\n$]',
+           '[]-z\n ]',
+           '[]-z\n\n]',
+           '[]-z\n[]',
+           '[]-z\n:]',
+           '[]-z\n=]',
+           '[]-z\n.]',
+           '[]-z:\n]',
+           '[]-z=\n]',
+           '[]-z.\n]',
+           '[]-x^\n]',
+           '[]-x!\n]',
+           '[]-xa\n]',
+           '[]-xz\n]',
+           '[]-xx\n]',
+           '[]-x$\n]',
+           '[]-x \n]',
+           "[]-x\n']",
+           '[]-x\n"]',
+           '[]-x\n\\]',
+           '[]-x\n^]',
+           '[]-x\n!]',
+           '[]-x\na]',
+           '[]-x\nz]',
+           '[]-x\n-]',
+           '[]-x\nx]',
+           '[]-x\n$]',
+           '[]-x\n ]',
+           '[]-x\n\n]',
+           '[]-x\n[]',
+           '[]-x\n:]',
+           '[]-x\n=]',
+           '[]-x\n.]',
+           '[]-x:\n]',
+           '[]-x=\n]',
+           '[]-x.\n]',
+           '[]x\n-z]',
+           '[]x\n-x]',
+           '[]$-z\n]',
+           '[]$-x\n]',
+           '[]$\n-z]',
+           '[]$\n-x]',
+           '[] -z\n]',
+           '[] -x\n]',
+           '[] \n-z]',
+           '[] \n-x]',
+           "[]\n'-z]",
+           "[]\n'-x]",
+           '[]\n"-z]',
+           '[]\n"-x]',
+           '[]\n\\-z]',
+           '[]\n\\-x]',
+           '[]\n^-z]',
+           '[]\n^-x]',
+           '[]\n!-z]',
+           '[]\n!-x]',
+           '[]\na-z]',
+           '[]\na-x]',
+           "[]\n-z']",
+           '[]\n-z"]',
+           '[]\n-z\\]',
+           '[]\n-z^]',
+           '[]\n-z!]',
+           '[]\n-za]',
+           '[]\n-zz]',
+           '[]\n-z-]',
+           '[]\n-zx]',
+           '[]\n-z$]',
+           '[]\n-z ]',
+           '[]\n-z\n]',
+           '[]\n-z[]',
+           '[]\n-z:]',
+           '[]\n-z=]',
+           '[]\n-z.]',
+           "[]\n-x']",
+           '[]\n-x"]',
+           '[]\n-x\\]',
+           '[]\n-x^]',
+           '[]\n-x!]',
+           '[]\n-xa]',
+           '[]\n-xz]',
+           '[]\n-x-]',
+           '[]\n-xx]',
+           '[]\n-x$]',
+           '[]\n-x ]',
+           '[]\n-x\n]',
+           '[]\n-x[]',
+           '[]\n-x:]',
+           '[]\n-x=]',
+           '[]\n-x.]',
+           '[]\n$-z]',
+           '[]\n$-x]',
+           '[]\n -z]',
+           '[]\n -x]',
+           '[]\n\n-z]',
+           '[]\n\n-x]',
+           '[]\n[-z]',
+           '[]\n[-x]',
+           '[]\n:-z]',
+           '[]\n:-x]',
+           '[]\n=-z]',
+           '[]\n=-x]',
+           '[]\n.-z]',
+           '[]\n.-x]',
+           '[]:-z\n]',
+           '[]:-x\n]',
+           '[]:\n-z]',
+           '[]:\n-x]',
+           '[]=-z\n]',
+           '[]=-x\n]',
+           '[]=\n-z]',
+           '[]=\n-x]',
+           '[].-z\n]',
+           '[].-x\n]',
+           '[].\n-z]',
+           '[].\n-x]',
+           '[^]-z\n]',
+           '[^]-x\n]',
+           '[^]\n-z]',
+           '[^]\n-x]',
+           "[]'-z\n]",
+           "[]'-x\n]",
+           "[]'\n-z]",
+           "[]'\n-x]",
+           "[]-z'\n]",
+           "[]-x'\n]"]}
+CASES += tuple((f'fuzz multiline {engine}: {pattern!r}',
+                doc('re=' + shlex.quote(pattern)), None, 'guide.md:6:')
+               for engine, patterns in FUZZ_CASES.items() for pattern in patterns)
+
+CASES += (("over-flagged: a continuation enables the broad range reading",
+           doc('re=[x]\\\na-z]'), 1, "holds the range a-z"),)
+
+# Exact adjacent-list counterexamples emitted by the widened oracle.
+ADJACENT_MISSES = (('grep', '[^"]', '^', ']^!az-x$ [:=.'),
+ ('regex', '[^"]', '^', ']^!az-x$ [:=.'),
+ ('grep', '[^\\]', '^', ']^!az-x$ [:=.'),
+ ('regex', '[^\\]', '^', ']^!az-x$ [:=.'),
+ ('glob', '[^]]', '^', ']^!az-x$[:=.'),
+ ('glob', '[^]]', '!', ']^!az-x$[:=.'),
+ ('grep', '[^]]', '^', ']^!az-x$ [:=.'),
+ ('regex', '[^]]', '^', ']^!az-x$ [:=.'),
+ ('glob', '[^^]', '^', ']^!az-x$[:=.'),
+ ('glob', '[^^]', '!', ']^!az-x$[:=.'),
+ ('grep', '[^^]', '^', ']^!az-x$ [:=.'),
+ ('regex', '[^^]', '^', ']^!az-x$ [:=.'),
+ ('glob', '[^!]', '^', ']^!az-x$[:=.'),
+ ('glob', '[^!]', '!', ']^!az-x$[:=.'),
+ ('grep', '[^!]', '^', ']^!az-x$ [:=.'),
+ ('regex', '[^!]', '^', ']^!az-x$ [:=.'),
+ ('glob', '[^a]', '^', ']^!az-x$[:=.'),
+ ('glob', '[^a]', '!', ']^!az-x$[:=.'),
+ ('grep', '[^a]', '^', ']^!az-x$ [:=.'),
+ ('regex', '[^a]', '^', ']^!az-x$ [:=.'),
+ ('glob', '[^z]', '^', ']^!az-x$[:=.'),
+ ('glob', '[^z]', '!', ']^!az-x$[:=.'),
+ ('grep', '[^z]', '^', ']^!az-x$ [:=.'),
+ ('regex', '[^z]', '^', ']^!az-x$ [:=.'),
+ ('glob', '[^-]', '^', ']^!az-x$[:=.'),
+ ('glob', '[^-]', '!', ']^!az-x$[:=.'),
+ ('grep', '[^-]', '^', ']^!az-x$ [:=.'),
+ ('regex', '[^-]', '^', ']^!az-x$ [:=.'),
+ ('glob', '[^x]', '^', ']^!az-x$[:=.'),
+ ('glob', '[^x]', '!', ']^!az-x$[:=.'),
+ ('grep', '[^x]', '^', ']^!az-x$ [:=.'),
+ ('regex', '[^x]', '^', ']^!az-x$ [:=.'),
+ ('glob', '[^$]', '^', ']^!az-x$[:=.'),
+ ('glob', '[^$]', '!', ']^!az-x$[:=.'),
+ ('grep', '[^$]', '^', ']^!az-x$ [:=.'),
+ ('regex', '[^$]', '^', ']^!az-x$ [:=.'),
+ ('grep', '[^ ]', '^', ']^!az-x$ [:=.'),
+ ('regex', '[^ ]', '^', ']^!az-x$ [:=.'),
+ ('glob', '[^[]', '^', ']^!az-x$[:=.'),
+ ('glob', '[^[]', '!', ']^!az-x$[:=.'),
+ ('grep', '[^[]', '^', ']^!az-x$ [:=.'),
+ ('regex', '[^[]', '^', ']^!az-x$ [:=.'),
+ ('glob', '[^:]', '^', ']^!az-x$[:=.'),
+ ('glob', '[^:]', '!', ']^!az-x$[:=.'),
+ ('grep', '[^:]', '^', ']^!az-x$ [:=.'),
+ ('regex', '[^:]', '^', ']^!az-x$ [:=.'),
+ ('glob', '[^=]', '^', ']^!az-x$[:=.'),
+ ('glob', '[^=]', '!', ']^!az-x$[:=.'),
+ ('grep', '[^=]', '^', ']^!az-x$ [:=.'),
+ ('regex', '[^=]', '^', ']^!az-x$ [:=.'),
+ ('glob', '[^.]', '^', ']^!az-x$[:=.'),
+ ('glob', '[^.]', '!', ']^!az-x$[:=.'),
+ ('grep', '[^.]', '^', ']^!az-x$ [:=.'),
+ ('regex', '[^.]', '^', ']^!az-x$ [:=.'),
+ ('glob', '[!]]', '^', ']^!az-x$[:=.'),
+ ('glob', '[!]]', '!', ']^!az-x$[:=.'),
+ ('glob', '[!^]', '^', ']^!az-x$[:=.'),
+ ('glob', '[!^]', '!', ']^!az-x$[:=.'),
+ ('glob', '[!!]', '^', ']^!az-x$[:=.'),
+ ('glob', '[!!]', '!', ']^!az-x$[:=.'),
+ ('glob', '[!a]', '^', ']^!az-x$[:=.'),
+ ('glob', '[!a]', '!', ']^!az-x$[:=.'),
+ ('glob', '[!z]', '^', ']^!az-x$[:=.'),
+ ('glob', '[!z]', '!', ']^!az-x$[:=.'),
+ ('glob', '[!-]', '^', ']^!az-x$[:=.'),
+ ('glob', '[!-]', '!', ']^!az-x$[:=.'),
+ ('glob', '[!x]', '^', ']^!az-x$[:=.'),
+ ('glob', '[!x]', '!', ']^!az-x$[:=.'),
+ ('glob', '[!$]', '^', ']^!az-x$[:=.'),
+ ('glob', '[!$]', '!', ']^!az-x$[:=.'),
+ ('glob', '[![]', '^', ']^!az-x$[:=.'),
+ ('glob', '[![]', '!', ']^!az-x$[:=.'),
+ ('glob', '[!:]', '^', ']^!az-x$[:=.'),
+ ('glob', '[!:]', '!', ']^!az-x$[:=.'),
+ ('glob', '[!=]', '^', ']^!az-x$[:=.'),
+ ('glob', '[!=]', '!', ']^!az-x$[:=.'),
+ ('glob', '[!.]', '^', ']^!az-x$[:=.'),
+ ('glob', '[!.]', '!', ']^!az-x$[:=.'))
+CASES += tuple((f'fuzz adjacent {engine}: {first + second!r}',
+                doc('case "$1" in *' + first + second + '*) :;; esac'
+                    if engine == 'glob' else 're=' + shlex.quote(first + second)),
+                None, 'adjacent negated bracket lists')
+               for engine, first, negation, members in ADJACENT_MISSES
+               for member in members for second in ('[' + negation + member + ']',))
+
+CASES += (
+    ('empty atom broad reading: [..]-z',
+     doc('case "$1" in *[[..]-z]*) :;; esac'), 1, '-z'),
+    ('empty atom broad reading: [..]-x',
+     doc('case "$1" in *[[..]-x]*) :;; esac'), 1, '-x'),
+    ('empty atom broad reading: [==]-z',
+     doc('case "$1" in *[[==]-z]*) :;; esac'), 1, '-z'),
+    ('empty atom broad reading: [::]-z',
+     doc('case "$1" in *[[::]-z]*) :;; esac'), 1, '-z'),
+)
+
+CASES += (
+    ('claude round 6: a literal opener in a collating atom',
+     doc("re='[[.[.]-z]'"), 1, '-z'),
+    ('literal opener in an equivalence atom: conservative reading',
+     doc("re='[[=[=]-z]'"), 1, '-z'),
 )
 
 # (description, guide text, allowlist text, exact findings, substring or None)
@@ -497,6 +847,19 @@ ALLOW_CASES = (
      doc("grep -E '^[a-z]+$'\tf"), entry("grep -E '^[a-z]+$'\tf"), 0, None),
     ("an entry for a non-bash fence is stale, since that fence is not read",
      doc("pattern: '^[a-z]+$'", fence="```yaml"), entry("pattern: '^[a-z]+$'"), 1, STALE),
+)
+
+
+ALLOW_CASES += (
+    ('a spanning finding is waived by its opener',
+     doc('re=[""^]\\\na-z]'),
+     'guide.md\tre=[""^]\\\tnot a validator', 0, None),
+    ('a continuation-line waiver does not cover its opener',
+     doc('re=[""^]\\\na-z]'),
+     'guide.md\ta-z]\tnot a validator', 2, 'stale allowlist entry'),
+    ('joined text cannot be an allowlist key',
+     doc('re=[""^]\\\na-z]'),
+     'guide.md\tre=[""^]a-z]\tnot a validator', 2, 'stale allowlist entry'),
 )
 
 
@@ -628,7 +991,7 @@ def main() -> int:
     failures = []
     for desc, text, want, expected in CASES:
         found = findings(text)
-        if len(found) != want:
+        if (not found if want is None else len(found) != want):
             failures.append(f"{desc}: expected {want} finding(s), got {len(found)}: {found!r}")
         elif expected is not None and not any(expected in f for f in found):
             failures.append(f"{desc}: no finding contains {expected!r}: {found!r}")
@@ -642,13 +1005,17 @@ def main() -> int:
         actual = gate._strip_quotes(raw)
         if actual != expected:
             failures.append(f"quote removal: {raw!r}: expected {expected!r}, got {actual!r}")
+    for lines, idx, expected in JOIN_CASES:
+        actual = gate.joined_reading(lines, idx)
+        if actual != expected:
+            failures.append(f"joined reading: {lines!r}: expected {expected!r}, got {actual!r}")
     more, runs = entry_point_failures()
     failures += more
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")
         return 1
-    n = len(CASES) + len(ALLOW_CASES) + len(QUOTE_CASES)
+    n = len(CASES) + len(ALLOW_CASES) + len(QUOTE_CASES) + len(JOIN_CASES)
     unseen = sum(1 for c in CASES if c[0].startswith("not seen:"))
     print(f"  ok    {n} recorded cases and {runs} entry-point runs for the bracket-ranges "
           f"gate: {n - unseen} behaviours checked, {unseen} disclosed blind spots still "

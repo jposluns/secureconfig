@@ -2,9 +2,11 @@
 r"""Development-only differential check; deliberately absent from run_all_checks.sh.
 
 Run: TMPDIR=/path/to/writable/scratch python3 tools/fuzz_bracket_ranges.py \
-    --max-length 7 --jobs 8 --engines glob grep regex
+    --max-length 6 --jobs 16 --engines glob grep regex
 Requires bash, GNU grep and a UTF-8 locale with non-ASCII range collation, normally
-en_US.utf8. The startup canary refuses C.utf8 when it cannot distinguish [a-z] from C.
+en_US.utf8. Startup canaries require both locale directions and gate detection; they reject
+C.utf8 when it cannot distinguish the samples from C. --allow-empty permits a zero-live
+selection on any engine but never disables those canaries.
 Every string of lengths 0 through N over ALPHABET is generated, without sampling.
 For a resumed suffix, --start-index requires retaining and adding the preceding prefix counts;
 the printed counts cover only the selected suffix.
@@ -13,17 +15,28 @@ Glob sources use case "$1" in *[...]*), with globasciiranges disabled. Bash eval
 parses each independent function definition. Every accepted definition is also sent
 unchanged to a separate bash -n process; its successful exit is mandatory before
 counting that batch. This batches syntax checks without approximating Bash's parser.
+Arithmetic-expansion failures are excluded from parsed counts.
 Each accepted function runs against é under C and the selected UTF-8 locale.
 
 grep and regex use the bare bracket text literally, without shell quote removal.
-grep batches independent patterns as ^ID:.*([text]).*$ against ID:é lines; IDs cannot
-cross-match. GNU grep reports invalid-pattern line numbers; remove those and retry,
-separately in each locale. regex passes the same literal text through a shell
+grep splits literal newlines into pattern alternatives, wrapping each fragment as
+^ID:.*(fragment).*$ against ID:é lines so IDs cannot cross-match. Invalid fragments reject
+their whole candidate. Indexed diagnostics map back to candidate IDs; unindexed diagnostics
+are bisected and confirmed with a direct unwrapped grep invocation, separately per locale.
+regex passes the same literal text through a shell
 variable to [[ $1 =~ $re ]]. Their parsed count includes only patterns valid in both
 locales. Regression fixtures separately cover shell quote removal in assignments.
 
-A live pattern matches é under UTF-8 but not C. "flagged" counts live patterns the
-gate flags; all misses are printed as JSON, and any miss fails the run. Results are
+Each live candidate is written to a real fenced bash block and scanned with scan_path.
+Regex engines use a shell-quoted literal assignment; source glob candidates retain their
+original physical newlines and continuations. The alphabet preserves the original 12
+characters and adds newline, [, :, = and ., for 17 distinct characters.
+
+A live pattern's match result for é differs between C and UTF-8 in either direction.
+This predicate also includes locale effects beyond ranges, such as byte-versus-character
+matching by a dot following a negated set. "flagged" counts live patterns the
+gate flags; all misses are printed as JSON, and any miss fails the run.
+Zero live candidates on any engine also fail unless --allow-empty was explicit. Results are
 bounded evidence for this alphabet and length, not proof for arbitrary Bash.
 """
 import argparse
@@ -37,9 +50,9 @@ import shlex
 import subprocess
 import tempfile
 
-from check_bracket_ranges import bracket_hits
+from check_bracket_ranges import scan_path
 
-ALPHABET = "'\"\\]^!az-x$ "
+ALPHABET = '\'"\\]^!az-x$ \n[:=.'
 SAMPLE = "é"
 
 
@@ -56,9 +69,10 @@ def glob_batch(words, locale):
         "shopt -u globasciiranges; parsed=0",
         "exec 3> >(bash --noprofile --norc -n); checker=$!",
         'check() { src=$2; if eval "$src" 2>/dev/null; then '
-        'printf "%s\\n" "$src" >&3; ((parsed+=1)); '
-        'LC_ALL=C; probe é; c=$?; LC_ALL=' + shlex.quote(locale)
-        + '; probe é; u=$?; if ((u==0 && c==1)); then echo L "$1"; fi; fi; }',
+        'printf "%s\\n" "$src" >&3; '
+        'LC_ALL=C; probe é 2>/dev/null; c=$?; LC_ALL=' + shlex.quote(locale)
+        + '; probe é 2>/dev/null; u=$?; if ((c<2 && u<2)); then ((parsed+=1)); '
+        'if ((u!=c)); then echo L "$1"; fi; fi; fi; }',
     ]
     for index, word in enumerate(words):
         source = ('probe() { case "$1" in *[' + word
@@ -91,7 +105,7 @@ def regex_batch(words, locale):
         'check() { re=$2; LC_ALL=C; [[ é =~ $re ]] 2>/dev/null; c=$?; LC_ALL='
         + shlex.quote(locale) + '; [[ é =~ $re ]] 2>/dev/null; u=$?; '
         'if ((c<2 && u<2)); then ((parsed+=1)); '
-        'if ((u==0 && c==1)); then echo L "$1"; fi; fi; }',
+        'if ((u!=c)); then echo L "$1"; fi; fi; }',
     ]
     for index, word in enumerate(words):
         lines.append(f"check {index} " + shlex.quote("[" + word + "]"))
@@ -104,7 +118,10 @@ def grep_locale(words, locale, directory):
     path = directory / "patterns"
     data = "".join(f"{i}:{SAMPLE}\n" for i in active)
     while active:
-        path.write_text("".join(f"^{i}:.*([{words[i]}]).*$\n" for i in active),
+        # grep treats a newline as a pattern separator. Wrap every fragment with its
+        # candidate ID, and map diagnostics back to the owner of that physical line.
+        fragments = [(i, part) for i in active for part in ("[" + words[i] + "]").split("\n")]
+        path.write_text("".join(f"^{i}:.*({part}).*$\n" for i, part in fragments),
                         encoding="utf-8")
         result = subprocess.run(
             ["grep", "-E", "-f", str(path)], input=data, text=True,
@@ -118,21 +135,43 @@ def grep_locale(words, locale, directory):
             matches = {int(line.split(":", 1)[0]) for line in result.stdout.splitlines()}
             return set(active), matches
         # GNU grep identifies every rejected expression by its pattern-file line.
-        bad = set()
+        bad, unindexed = set(), False
         prefix = "grep: " + str(path) + ":"
         for line in result.stderr.splitlines():
             if not line.startswith(prefix):
-                raise RuntimeError(("unexpected grep error", line))
+                unindexed = True
+                continue
             number, separator, _ = line[len(prefix):].partition(":")
             if not separator or not number.isdecimal():
                 raise RuntimeError(("unindexed grep error", line))
             position = int(number) - 1
-            if not 0 <= position < len(active):
+            if not 0 <= position < len(fragments):
                 raise RuntimeError(("bad grep error index", line))
-            bad.add(position)
+            bad.add(fragments[position][0])
         if not bad:
-            raise RuntimeError(("grep failed without indexed errors", result.stderr))
-        active = [value for i, value in enumerate(active) if i not in bad]
+            if not unindexed or result.returncode != 2:
+                raise RuntimeError(("grep failed without indexed errors", result.stderr))
+            if len(active) == 1:
+                # Confirm the rejected candidate with the unwrapped, direct oracle.
+                direct = subprocess.run(
+                    ["grep", "-E", "--", "[" + words[active[0]] + "]"],
+                    input=SAMPLE + "\n", text=True, capture_output=True,
+                    env={"PATH": os.environ["PATH"], "LC_ALL": locale}, check=False)
+                if direct.returncode != 2:
+                    raise RuntimeError(("inconsistent grep rejection", direct))
+                return set(), set()
+            # Some GNU grep diagnostics omit line numbers (for example [:x:]).
+            # Bisect to attribute those failures without dropping valid neighbours.
+            valid, matches = set(), set()
+            middle = len(active) // 2
+            for group in (active[:middle], active[middle:]):
+                good, hit = grep_locale([words[i] for i in group], locale, directory)
+                valid.update(group[i] for i in good)
+                matches.update(group[i] for i in hit)
+            return valid, matches
+        if not bad.intersection(active):
+            raise RuntimeError(("grep diagnostics removed no candidate", result.stderr))
+        active = [value for value in active if value not in bad]
     return set(), set()
 
 
@@ -141,7 +180,7 @@ def _grep_batch(words, locale):
         c_valid, c_matches = grep_locale(words, "C", Path(directory))
         u_valid, u_matches = grep_locale(words, locale, Path(directory))
     valid = c_valid & u_valid
-    return len(valid), (u_matches - c_matches) & valid
+    return len(valid), (u_matches ^ c_matches) & valid
 
 
 def grep_batch(words, locale):
@@ -161,12 +200,15 @@ def check_batch(words, locale, engines):
         parsed, live = {"glob": glob_batch, "grep": grep_batch,
                         "regex": regex_batch}[engine](words, locale)
         missed = []
-        for index in sorted(live):
-            pattern = "[" + words[index] + "]"
-            source = ('case "$1" in *' + pattern + '*) :;; esac'
-                      if engine == "glob" else "re=" + pattern)
-            if not list(bracket_hits(source)):
-                missed.append(pattern)
+        with tempfile.TemporaryDirectory(prefix="bracket-scan-") as directory:
+            path = Path(directory) / "candidate.md"
+            for index in sorted(live):
+                pattern = "[" + words[index] + "]"
+                source = ('case "$1" in *' + pattern + '*) :;; esac'
+                          if engine == "glob" else "re=" + shlex.quote(pattern))
+                path.write_text("```bash\n" + source + "\n```\n", encoding="utf-8")
+                if not scan_path(path)[0]:
+                    missed.append(pattern)
         results[engine] = dict(generated=len(words), parsed=parsed, live=len(live),
                                flagged=len(live) - len(missed), missed=missed)
     return results
@@ -186,22 +228,26 @@ def batches(max_length, size, skip=0):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--max-length", type=int, default=7)
+    parser.add_argument("--max-length", type=int, default=6)
     parser.add_argument("--start-index", type=int, default=0,
                         help="resume a contiguous suffix; add the preceding prefix counts")
     parser.add_argument("--batch-size", type=int, default=4096)
-    parser.add_argument("--jobs", type=int, default=8)
+    parser.add_argument("--jobs", type=int, default=16)
     parser.add_argument("--locale", default="en_US.utf8")
     parser.add_argument("--engines", nargs="+", choices=("glob", "grep", "regex"),
-                        default=["glob", "grep"])
+                        default=["glob", "grep", "regex"])
+    parser.add_argument("--allow-empty", action="store_true",
+                        help="allow a selected suffix with zero live candidates on an engine")
     args = parser.parse_args()
     if args.max_length < 0 or args.jobs < 1 or args.batch_size < 1:
         parser.error("length must be nonnegative; jobs and batch size must be positive")
     # No vacuous all-green result when the available UTF-8 locale collates like C.
     for engine in args.engines:
-        result = check_batch(["a-z"], args.locale, [engine])[engine]
-        if result["parsed"] != 1 or result["live"] != 1:
-            parser.error(f"{engine}: locale {args.locale!r} failed the live [a-z] canary")
+        samples = ["a-z", "!a-z" if engine == "glob" else "^a-z"]
+        result = check_batch(samples, args.locale, [engine])[engine]
+        if (result["parsed"] != 2 or result["live"] != 2
+                or result["flagged"] != 2 or result["missed"]):
+            parser.error(f"{engine}: locale {args.locale!r} failed the bidirectional live/detection canary")
         control = check_batch(["^a"], args.locale, [engine])[engine]
         if control["parsed"] != 1 or control["live"] != 0:
             parser.error(f"{engine}: bare negated-set canary changed matching semantics")
@@ -233,8 +279,14 @@ def main():
     expected -= args.start_index
     assert all(result["generated"] == expected for result in totals.values()), totals
     print(json.dumps(dict(locale=args.locale, max_length=args.max_length,
-                          start_index=args.start_index, alphabet=ALPHABET, results=totals)), flush=True)
-    return int(any(result["missed"] for result in totals.values()))
+                          start_index=args.start_index, alphabet=ALPHABET,
+                          allow_empty=args.allow_empty, results=totals)), flush=True)
+    empty = [engine for engine, result in totals.items() if result["live"] == 0]
+    if empty and not args.allow_empty:
+        print("zero live candidates: " + ", ".join(empty) + "; use --allow-empty to opt in",
+              flush=True)
+    return int(any(result["missed"] for result in totals.values())
+               or (bool(empty) and not args.allow_empty))
 
 
 if __name__ == "__main__":

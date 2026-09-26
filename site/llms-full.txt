@@ -8208,8 +8208,9 @@ The fourth value selects `tls`, `wrong`, `scram`, `plaintext`, or an interactive
   case "$2" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute every placeholder; not probing"; exit 1 ;;
   esac
+  single_quote="'"
   case "$2" in
-    *[[:space:]]*|*"'"*|*\\*) echo "use a CA path without whitespace, quotes or backslashes; not probing"; exit 1 ;;
+    *[[:space:]]*|*"$single_quote"*|*\\*) echo "use a CA path without whitespace, quotes or backslashes; not probing"; exit 1 ;;
   esac
   case "$3" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_]*) echo "supply a simple role name; not probing"; exit 1 ;;
@@ -16832,8 +16833,9 @@ Use the same bucket and object in both arguments, with the correct regional endp
           # First prove the object exists and is readable WITH authorization.
           # S3 also returns 403 for an object you cannot list. presign signs a GET.
           set -- "$2" "$(aws s3 presign "$1" --expires-in 60)"
+          double_quote='"'
           case "$2" in
-            *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[[:cntrl:]]*|*'"'*|*\\*)
+            *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[[:cntrl:]]*|*"$double_quote"*|*\\*)
               echo "signing failed or returned an unsafe URL; not probing" ;;
             https://*)
               # The URL is a credential. The builtin printf feeds curl on stdin, never argv.
@@ -28242,13 +28244,13 @@ the control does not connect. Substitute both inside the single quotes.
   shift
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
   case "$1" in *REPLACE_WITH_*|"") echo "substitute one IP address on the set -- line above; not probing"; exit ;; esac
-  case "$1" in 0.0.0.0) echo "$1 reaches this host itself; give the service's public address; not probing"; exit ;; esac
+  case "$1" in 0.0.0.0) echo "$1 reaches this host itself; give the public address of the service; not probing"; exit ;; esac
   ipv4='^((25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])[.]){3}(25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])$'
   case "$1" in
     *:*:*)
       case "$1" in *[!0123456789ABCDEFabcdef.:]*) echo "$1 is not an IPv6 address; not probing"; exit ;; esac
       case "$1" in *.*) echo "give the IPv4 address itself rather than $1; not probing"; exit ;; esac
-      case "$1" in *[!0:]*) ;; *) echo "$1 is all zeros (this host itself, or not an address); give the service's public address; not probing"; exit ;; esac ;;
+      case "$1" in *[!0:]*) ;; *) echo "$1 is all zeros (this host itself, or not an address); give the public address of the service; not probing"; exit ;; esac ;;
     *) [[ $1 =~ $ipv4 ]] || { echo "give one IPv4 address (four numbers, 0 to 255, joined by dots) or one IPv6 address, with no host name, port or brackets; not probing"; exit; } ;;
   esac
   case "$2" in *[!0123456789]*|"") echo "substitute a known-open control port on the set -- line above; not probing"; exit ;; esac
@@ -28551,13 +28553,13 @@ control, and stops if the control does not connect. Substitute both inside the s
   shift
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
   case "$1" in *REPLACE_WITH_*|"") echo "substitute one IP address on the set -- line above; not probing"; exit ;; esac
-  case "$1" in 0.0.0.0) echo "$1 reaches this host itself; give the service's public address; not probing"; exit ;; esac
+  case "$1" in 0.0.0.0) echo "$1 reaches this host itself; give the public address of the service; not probing"; exit ;; esac
   ipv4='^((25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])[.]){3}(25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])$'
   case "$1" in
     *:*:*)
       case "$1" in *[!0123456789ABCDEFabcdef.:]*) echo "$1 is not an IPv6 address; not probing"; exit ;; esac
       case "$1" in *.*) echo "give the IPv4 address itself rather than $1; not probing"; exit ;; esac
-      case "$1" in *[!0:]*) ;; *) echo "$1 is all zeros (this host itself, or not an address); give the service's public address; not probing"; exit ;; esac ;;
+      case "$1" in *[!0:]*) ;; *) echo "$1 is all zeros (this host itself, or not an address); give the public address of the service; not probing"; exit ;; esac ;;
     *) [[ $1 =~ $ipv4 ]] || { echo "give one IPv4 address (four numbers, 0 to 255, joined by dots) or one IPv6 address, with no host name, port or brackets; not probing"; exit; } ;;
   esac
   case "$2" in *[!0123456789]*|"") echo "substitute a known-open control port on the set -- line above; not probing"; exit ;; esac
@@ -28857,13 +28859,13 @@ and stops if the control does not connect. Substitute both inside the single quo
   shift
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
   case "$1" in *REPLACE_WITH_*|"") echo "substitute one IP address on the set -- line above; not probing"; exit ;; esac
-  case "$1" in 0.0.0.0) echo "$1 reaches this host itself; give the service's public address; not probing"; exit ;; esac
+  case "$1" in 0.0.0.0) echo "$1 reaches this host itself; give the public address of the service; not probing"; exit ;; esac
   ipv4='^((25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])[.]){3}(25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])$'
   case "$1" in
     *:*:*)
       case "$1" in *[!0123456789ABCDEFabcdef.:]*) echo "$1 is not an IPv6 address; not probing"; exit ;; esac
       case "$1" in *.*) echo "give the IPv4 address itself rather than $1; not probing"; exit ;; esac
-      case "$1" in *[!0:]*) ;; *) echo "$1 is all zeros (this host itself, or not an address); give the service's public address; not probing"; exit ;; esac ;;
+      case "$1" in *[!0:]*) ;; *) echo "$1 is all zeros (this host itself, or not an address); give the public address of the service; not probing"; exit ;; esac ;;
     *) [[ $1 =~ $ipv4 ]] || { echo "give one IPv4 address (four numbers, 0 to 255, joined by dots) or one IPv6 address, with no host name, port or brackets; not probing"; exit; } ;;
   esac
   case "$2" in *[!0123456789]*|"") echo "substitute a known-open control port on the set -- line above; not probing"; exit ;; esac

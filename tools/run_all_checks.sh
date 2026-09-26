@@ -462,7 +462,7 @@ echo "== no bracket range in a fenced bash block works as a validator =="
 # claims to refuse; bash case is ASCII only while globasciiranges is on. The #356 review found
 # it and the row 3.25 sweep found 87 more. Every range needs a spelled-out set or a
 # tools/bracket_ranges_allow.txt entry for a non-validator. Quote-affected regions run to the
-# last close on their physical line and may span separate expressions; the docstring lists
+# last close in a conservative joined reading and may span physical lines; the docstring lists
 # this over-flagging and the remaining misses. The locale-dependent development fuzzer is
 # deliberately not part of these deterministic offline gates.
 if bracket_ranges=$(python3 tools/check_bracket_ranges.py 2>&1); then
