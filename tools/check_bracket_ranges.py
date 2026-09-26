@@ -32,7 +32,7 @@ character matching can differ. Only backslash-newline is removed. No shell quote
 decoding or expansion is computed. Quote removal and ordinary and anywhere-range readings
 reach the last close in the span. Each spanning opener retains an unclosed finding even
 without a literal range. Findings belong to the opener's physical line; waivers bind the entire
-physical source span, so changing a later line invalidates the waiver. The
+physical source span and enclosing block, so changing either invalidates the waiver. The
 test-command exemption requires a standalone closing test word on the same physical line; a
 bare one-word literal test is scanned too.
 
@@ -53,18 +53,23 @@ the block, regardless of even quote counts. Expansion remains outside this proof
 lists before continuations, quoted data, JSON arrays, comments, subscripts and unrelated
 following commands can therefore be over-flagged.
 
-THE ALLOWLIST. tools/bracket_ranges_allow.txt holds three TAB-separated fields:
-<guide-file> TAB sha256:<64 lowercase hex digits> TAB <reason>. Hash the UTF-8 encoding of the
-exact extracted physical line, or, when any scanned opener on that line retains a spanning
-reading, all original physical lines from that line through the end of the Bash block. Join
-these lines with LF and add no trailing LF. Preserve backslashes, whitespace and physical
-newlines after fence indentation removal; do not hash joined or quote-stripped readings.
+THE ALLOWLIST. tools/bracket_ranges_allow.txt holds four TAB-separated fields:
+<guide-file> TAB sha256:<span digest> TAB sha256:<block digest> TAB <reason>.
+Each digest is 64 lowercase hex digits. Hash UTF-8 of the extracted, newline-normalized
+text: blocks_of converts CRLF and bare CR to LF and removes fence indentation. The span
+is the opener line, or, when any opener on that line retains a spanning reading, all lines
+from it through block end. Join span lines with LF and add no trailing LF. The block digest
+hashes the whole body returned by blocks_of, excluding fence lines. Preserve backslashes
+and remaining whitespace; do not hash joined or quote-stripped readings. These are not
+raw-file byte digests: a change only from LF to CRLF or bare CR keeps the waiver.
 One entry consumes one flagged opener-line occurrence and covers its findings. Independent
 later openers still need their own entries. Duplicate occurrences require duplicate entries.
 No in-block waiver is accepted. Malformed digests, empty reasons, stale entries and retired
-in-guide markers fail the gate. Moving the complete unchanged span within the same guide still
-matches; changing any line in it or its guide does not. Context before the span is not bound
-and still needs review. Range-free validator false positives need a distinguishing reason.
+in-guide markers fail the gate. Moving a span to a different block body or editing any
+extracted line of its enclosing block makes the entry stale, including lines before or after
+the span. Absolute line numbers are not bound: edits elsewhere in the guide and movement
+of a whole unchanged block within it keep the waiver. Range-free validator false positives
+need a distinguishing reason.
 
 Against qa/360-r7, the broad quote-presence rule adds 228 unwaived findings. Settling
 quote-free closed prefixes reduces the final delta to 21 added findings on 19 lines and one
@@ -77,15 +82,16 @@ cover six additional expressions. The corpus has 0 unwaived findings in 411 bash
 99 guides, with 38 consumed entries covering 48 expressions. These are false positives,
 including the range-free RabbitMQ broker validators; they are not all non-validator text.
 
-Against qa/360-r8, the corpus delta is 0 added and 0 removed findings, with no new findings.
-All 38 migrated entries bind their intended spans; 605 individual physical-line edits each
-invalidate the corresponding waiver and leave a stale entry. Run test_bracket_ranges.py with
---show-waivers to print every matched location, digest and exact span.
+Against qa/360-r9, the corpus delta is 0 added and 0 removed findings, with no new findings.
+All 38 migrated entries bind their intended spans and blocks; 1239 individual block-line
+edits each invalidate the corresponding waiver and leave a stale entry. Run
+test_bracket_ranges.py --show-waivers to print every matched location, digests and extracted span.
 
-The deterministic suite has 2886 cases (2830 ordinary, 35 allowlist, 4 quote-removal and 17
-joining), 2878 checked behaviours, 8 disclosed blind spots and 11 entry-point runs. The
-separate development fuzzer has 17 regression tests. Both waiver mutations, binding only the
-opener and skipping stale detection, fail the suite. The fixed corpus includes the 1143 earlier
+The deterministic suite has 2892 cases (2830 ordinary, 41 allowlist, 4 quote-removal and 17
+joining), 2884 checked behaviours, 8 disclosed blind spots and 17 entry-point runs. The
+separate development fuzzer has 17 regression tests. Mutations removing block binding, using
+a partial block, accepting legacy entries or malformed block digests, preserving raw line endings, binding only
+the opener or skipping stale detection fail the suite. The fixed corpus includes the 1143 earlier
 exploratory misses and all 1476 round-8 exploratory misses and 3 targeted misses. Seventeen
 terminal-list variants include the 4 terminal exploratory misses. Both quote guards agree with
 their original predicates on 776 values under each of C and en_US.utf8, with ordinary and
@@ -130,7 +136,7 @@ from check_shell_blocks import SKIP_DIRS, blocks_of  # noqa: E402  one definitio
 # the shapes new guides are built from, and controls-reference.md, which site/llms.txt lists.
 NOT_A_GUIDE = frozenset(("CLAUDE.md", "AGENTS.md", "CHANGELOG.md", "README.sources.md", "TODO.md",
                          "DONE.md", "DECISIONS.md", "PENDING-DECISIONS.md", "SECURITY.md"))
-# The waivers live here, one `<guide> TAB sha256:<span digest> TAB <reason>` per line.
+# The waivers live here, one `<guide> TAB sha256:<span digest> TAB sha256:<block digest> TAB <reason>` per line.
 ALLOWLIST = "bracket_ranges_allow.txt"
 # The retired in-block waiver marker. A guide line holding one is a finding, wherever it sits:
 # deciding whether such a comment is real is the lexing this gate no longer does.
@@ -145,8 +151,8 @@ HINT = ("outside the C locale a bracket range can match non-ASCII letters and di
         "it with globasciiranges off), so a validator written with one accepts values it claims "
         "to refuse. Spell the set out, as in "
         "[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789]. Where the range is "
-        "not a validator, add a '<guide> TAB sha256:<span digest> TAB <reason>' entry to "
-        "tools/bracket_ranges_allow.txt; the entry binds the complete physical source span, "
+        "not a validator, add a '<guide> TAB sha256:<span digest> TAB sha256:<block digest> TAB <reason>' entry to "
+        "tools/bracket_ranges_allow.txt; the entry binds the extracted span and enclosing block, "
         "as documented in tools/check_bracket_ranges.py.")
 
 
@@ -331,7 +337,7 @@ class Allowlist:
 
     `findings` holds what loading itself flagged (a malformed entry, an empty field); `take`
     consumes one entry for one flagged occurrence of a source span; `stale` names every entry nothing
-    consumed, so an entry cannot outlive the span it was written for.
+    consumed, so an entry cannot outlive the span and block it was written for.
     """
 
     def __init__(self):
@@ -351,28 +357,33 @@ class Allowlist:
                 continue
             parts = raw.split("\t")
             guide = parts[0]
-            text = "\t".join(parts[1:-1])
-            reason = parts[-1] if len(parts) > 1 else ""
-            if len(parts) != 3 or not guide.strip() or not text:
-                allow.findings.append(f"{where}:{lineno}: malformed allowlist entry: three "
-                                      f"TAB-separated fields, guide, SHA-256 span, reason")
+            if len(parts) != 4 or not guide.strip() or not all(parts[1:3]):
+                allow.findings.append(f"{where}:{lineno}: malformed allowlist entry: four "
+                                      f"TAB-separated fields: guide, SHA-256 span, "
+                                      f"SHA-256 block, reason")
                 continue
+            _, text, block, reason = parts
             if re.fullmatch(r"sha256:[0-9a-f]{64}", text) is None:
                 allow.findings.append(f"{where}:{lineno}: malformed allowlist span: "
+                                      f"expected sha256: followed by 64 lowercase hex digits")
+                continue
+            if re.fullmatch(r"sha256:[0-9a-f]{64}", block) is None:
+                allow.findings.append(f"{where}:{lineno}: malformed allowlist block: "
                                       f"expected sha256: followed by 64 lowercase hex digits")
                 continue
             if not reason.strip():
                 allow.findings.append(f"{where}:{lineno}: allowlist entry with an empty "
                                       f"reason: say why the line is not a validator")
                 continue
-            allow._avail.setdefault((guide, text), []).append((lineno, where))
+            allow._avail.setdefault((guide, text, block), []).append((lineno, where))
             allow.n_entries += 1
         return allow
 
-    def take(self, guide, text):
-        """Consume one entry for one flagged occurrence of `text` in `guide`, if one is left."""
+    def take(self, guide, text, block):
+        """Consume one entry for a flagged `text` in its extracted `block` and `guide`."""
         digest = "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
-        left = self._avail.get((guide, digest))
+        block_digest = "sha256:" + hashlib.sha256(block.encode("utf-8")).hexdigest()
+        left = self._avail.get((guide, digest, block_digest))
         if not left:
             return False
         left.pop(0)
@@ -381,9 +392,10 @@ class Allowlist:
     def stale(self):
         """One finding per entry that no flagged span consumed."""
         out = []
-        for (guide, _), left in self._avail.items():
+        for (guide, _, _), left in self._avail.items():
             out.extend((lineno, f"{where}:{lineno}: stale allowlist entry: no flagged span of "
-                                f"{guide} matches its exact text") for lineno, where in left)
+                                f"{guide} matches its extracted span and enclosing block")
+                       for lineno, where in left)
         return [msg for _, msg in sorted(out)]
 
 
@@ -442,10 +454,10 @@ def scan_blocks(name, blocks, allow):
             hits = list(bracket_hits(raw, reading))
             if not hits:
                 continue
-            # Bind original physical bytes, including removed backslash-newlines.
+            # Bind extracted, newline-normalized text, retaining backslash-newlines.
             # A spanning reading currently extends through the end of its Bash block.
             key = "\n".join(lines[idx:]) if spans else raw
-            if allow.take(name, key):
+            if allow.take(name, key, body):
                 n_waived += len(hits)
                 continue
             findings.extend(f"{name}:{start + idx}: {what} and no allowlist entry covers its "
@@ -459,7 +471,7 @@ def scan_path(path, allow=None):
     file it cannot read. With no allowlist given, nothing is waived."""
     allow = Allowlist() if allow is None else allow
     findings = [f"{path.name}:{lineno}: in-guide bracket-ranges marker: waivers live in "
-                f"tools/{ALLOWLIST}, keyed by the guide and the complete physical span"
+                f"tools/{ALLOWLIST}, keyed by the guide, complete physical span and enclosing block"
                 for lineno, raw in enumerate(path.read_text(encoding="utf-8").split("\n"), 1)
                 if MARKERISH_RE.search(raw)]
     found, n_blocks, n_waived = scan_blocks(path.name, list(blocks_of(path)), allow)

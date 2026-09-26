@@ -25,8 +25,8 @@ Round 6 found continuations and quoted newlines; the widened fuzzer supplied 114
 Round 8 covers even quote counts and leading literal closes across heredoc newlines.
 Except for the disclosed NOT SEEN cases, each reported bypass is a finding. Ranges and unclosed
 `[` are findings on their own physical line whatever surrounds them. Waivers live only in
-tools/bracket_ranges_allow.txt, bound to the complete physical span; the old in-block marker is
-itself a finding wherever it sits in a guide.
+tools/bracket_ranges_allow.txt, bound to the complete physical span and enclosing extracted
+block; the old in-block marker is itself a finding wherever it sits in a guide.
 
 The OVER-FLAGGED group asserts the cost of failing closed on inputs a shell parser would accept,
 so the docstring's list stays honest, and the NOT SEEN group asserts what the gate still does
@@ -65,9 +65,11 @@ def doc(block, fence="```bash"):
     return "# T\n\n## Verify\n\n" + fence + "\n" + block + "\n" + close + "\n"
 
 
-def entry(text, guide="guide.md", reason="not a validator"):
-    """One allowlist entry binding the complete physical source `text` in `guide`."""
-    return guide + "\tsha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest() + "\t" + reason
+def entry(text, guide="guide.md", reason="not a validator", block=None):
+    """Bind extracted, newline-normalized span and block text in `guide`."""
+    block = text if block is None else block
+    return "\t".join((guide, "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest(),
+                      "sha256:" + hashlib.sha256(block.encode("utf-8")).hexdigest(), reason))
 
 
 def findings(text, allow=None):
@@ -886,20 +888,30 @@ CASES += (
      doc("re='[[=[=]-z]'"), 1, '-z'),
 )
 
+LABEL = "  '[a-z]'"
+PRINTED = "printf '%s\\n' " + BS + "\n" + LABEL
+VALIDATOR = "set -- é\nprintf '%s\\n' \"$1\" | grep -qxE " + BS + "\n" + LABEL
+
 # (description, guide text, allowlist text, exact findings, substring or None)
 ALLOW_CASES = (
     ("an entry waives its exact line", doc(GREP), entry(GREP), 0, None),
-    ("moving unchanged text within the same guide keeps its waiver",
-     doc("echo moved\n" + GREP), entry(GREP), 0, None),
-    ("changing the preceding command keeps the same line's waiver: review the context",
-     doc("printf '%s\\n' é | grep -qxE \\\n  '[a-z]'"),
-     entry("  '[a-z]'", reason="originally a continued printf label; now unsafe"), 0, None),
+    ("adding a line before the span stales its waiver",
+     doc("echo moved\n" + GREP), entry(GREP), 2, STALE),
+    ("changing the preceding command stales a printed label's waiver",
+     doc(VALIDATOR), entry(LABEL, block=PRINTED), 2, STALE),
+    ("editing prose outside the block keeps its waiver",
+     "Extra prose\n\n" + doc(GREP), entry(GREP), 0, None),
+    ("editing another block keeps its waiver",
+     doc("echo changed elsewhere") + doc(GREP), entry(GREP), 0, None),
+    ("editing a line after a nonspanning finding stales its waiver",
+     doc(GREP + "\necho changed"), entry(GREP, block=GREP + "\necho original"), 2, STALE),
     ("one entry waives every finding on its one line",
      doc('case "$1" in *[!a-z]*|*[!0-9]*) exit 2 ;; esac'),
      entry('case "$1" in *[!a-z]*|*[!0-9]*) exit 2 ;; esac'), 0, None),
     ("an unclosed bracket's line can be waived",
      doc("python3 - <<'EOS'\nargs = [" + Q + "curl" + Q + ",\n    " + Q + "-sS" + Q + "]\nEOS"),
-     entry("args = [" + Q + "curl" + Q + ",\n    " + Q + "-sS" + Q + "]\nEOS"), 0, None),
+     entry("args = [" + Q + "curl" + Q + ",\n    " + Q + "-sS" + Q + "]\nEOS",
+           block="python3 - <<'EOS'\nargs = [" + Q + "curl" + Q + ",\n    " + Q + "-sS" + Q + "]\nEOS"), 0, None),
     ("the whole line must match, not a substring: a line that grew a second command",
      doc(GREP + "; rm -f g"), entry(GREP), 2, STALE),
     ("the whole line must match: leading whitespace counts",
@@ -915,14 +927,16 @@ ALLOW_CASES = (
      doc(GREP), "guide.md\t" + GREP, 2, "malformed allowlist entry"),
     ("an entry with one field is malformed",
      doc(GREP), "guide.md", 2, "malformed allowlist entry"),
-    ("an entry with an empty line text is malformed",
-     doc(GREP), "guide.md\t\tr", 2, "malformed allowlist entry"),
+    ("an entry with an empty span digest is malformed",
+     doc(GREP), "guide.md\t\tsha256:" + "0" * 64 + "\tr",
+     2, "malformed allowlist entry"),
     ("comment and blank lines in the allowlist are skipped",
      doc(GREP), "# c\n\n" + entry(GREP), 0, None),
     ("two occurrences of one line consume two entries",
-     doc(GREP + "\n" + GREP), entry(GREP) + "\n" + entry(GREP), 0, None),
+     doc(GREP + "\n" + GREP), entry(GREP, block=GREP + "\n" + GREP) + "\n"
+     + entry(GREP, block=GREP + "\n" + GREP), 0, None),
     ("one entry does not cover a second occurrence of its line",
-     doc(GREP + "\n" + GREP), entry(GREP), 1, "guide.md:7:"),
+     doc(GREP + "\n" + GREP), entry(GREP, block=GREP + "\n" + GREP), 1, "guide.md:7:"),
     ("a duplicate entry beyond the real occurrences is stale",
      doc(GREP), entry(GREP) + "\n" + entry(GREP), 1, "allow.txt:2: " + STALE),
     ("an entry does not silence the in-guide marker finding on its line",
@@ -941,9 +955,9 @@ ALLOW_CASES += (
     ("a spanning finding needs every original physical line",
      doc(SPAN), entry(SPAN), 0, None),
     ("an opener-only waiver is stale",
-     doc(SPAN), entry(SPAN.split("\n")[0]), 2, STALE),
+     doc(SPAN), entry(SPAN.split("\n")[0], block=SPAN), 2, STALE),
     ("a continuation-line waiver does not cover its opener",
-     doc(SPAN), entry("a-z]"), 2, STALE),
+     doc(SPAN), entry("a-z]", block=SPAN), 2, STALE),
     ("removing a physical continuation changes the key",
      doc(SPAN), entry('re=[""^]a-z]'), 2, STALE),
     ("a changed continuation tail leaves its full-span waiver stale",
@@ -955,16 +969,28 @@ ALLOW_CASES += (
      doc("[\na-z]"), entry(r"[\na-z]"), 2, STALE),
     ("a span digest preserves a literal backslash-n",
      doc(r"re='[a-z]\n'"), entry(r"re='[a-z]\n'"), 0, None),
-    ("a bare number is not a span digest", doc(GREP), "guide.md\t42\treason", 2,
-     "malformed allowlist span"),
-    ("invalid digest text is refused", doc(GREP), 'guide.md\tsha256:xyz\treason', 2,
-     "malformed allowlist span"),
+    ("a bare number is not a span digest", doc(GREP),
+     "\t".join(["guide.md", "42", entry(GREP).split("\t")[2], "reason"]),
+     2, "malformed allowlist span"),
+    ("invalid digest text is refused", doc(GREP),
+     "\t".join(["guide.md", "sha256:xyz", entry(GREP).split("\t")[2], "reason"]),
+     2, "malformed allowlist span"),
     ("a raw TAB inside a span field is malformed", doc(GREP),
-     'guide.md\tbad\ttext\treason', 2, "malformed allowlist entry"),
+     'guide.md\tbad\ttext\tblock\treason', 2, "malformed allowlist entry"),
     ("an appended physical line invalidates a spanning waiver",
      doc("[\na-z]\necho changed"), entry("[\na-z]"), 2, STALE),
     ("an independent later opener still needs its own waiver",
      doc("[\na-z]\nre='[0-9]'"), entry("[\na-z]\nre='[0-9]'"), 1, "0-9"),
+)
+
+ALLOW_CASES += (
+    ("an entry without a block digest is malformed", doc(GREP),
+     "\t".join(entry(GREP).split("\t")[:2] + ["reason"]), 2, "malformed allowlist entry"),
+    ("an empty block digest is malformed", doc(GREP),
+     "\t".join(entry(GREP).split("\t")[:2] + ["", "reason"]), 2, "malformed allowlist entry"),
+    ("an invalid block digest is refused", doc(GREP),
+     "\t".join(entry(GREP).split("\t")[:2] + ["sha256:xyz", "reason"]),
+     2, "malformed allowlist block"),
 )
 
 
@@ -1039,6 +1065,29 @@ def entry_point_failures():
     if rc != 1 or ALLOW + ":1: " + STALE not in out:
         failures.append(f"a stale allowlist entry did not fail the gate: {out!r}")
 
+    # The unchanged label moves from output data into another block's validator.
+    waiver = entry(LABEL, block=PRINTED)
+    before = doc(PRINTED) + doc(VALIDATOR.replace(LABEL, "  '[abcdefghijklmnopqrstuvwxyz]'"))
+    after = doc("printf '%s\\n' label") + doc(VALIDATOR)
+    for guide, want in ((before, 0), (after, 1)):
+        runs += 1
+        rc, out = run_repo((("guide.md", guide), (ALLOW, waiver)))
+        if rc != want or (want and (STALE not in out or "source span" not in out)):
+            failures.append(f"moving a printed label to a validator: "
+                            f"expected {want}, got {rc}: {out!r}")
+
+    # Use bytes through the shipped entry point, not an in-memory scan_blocks call.
+    # Extraction normalizes CRLF and bare CR to LF for both span and block digests.
+    block = "echo context\n" + SPAN
+    for newline in (b"\r\n", b"\r"):
+        for changed in (False, True):
+            runs += 1
+            text = doc(block.replace("context", "changed") if changed else block)
+            raw = text.encode("utf-8").replace(b"\n", newline)
+            rc, out = run_repo((("guide.md", raw), (ALLOW, entry(SPAN, block=block))))
+            if rc != int(changed) or (changed and STALE not in out):
+                failures.append(f"normalized {newline!r}, changed={changed}: {rc}: {out!r}")
+
     # Repository documents and subdirectories are not guides.
     runs += 1
     rc, out = run_repo((("a.md", clean), ("CHANGELOG.md", doc(GREP)),
@@ -1093,17 +1142,17 @@ def entry_point_failures():
 
 
 def corpus_waiver_failures():
-    """Every checked-in waiver matches a real span; editing any physical line invalidates it."""
+    """Every waiver matches its span and block; editing any block line invalidates it."""
     root = TOOLS.parent
     allow_path = TOOLS / gate.ALLOWLIST
     allow = gate.Allowlist.load(allow_path)
     failures, consumed = list(allow.findings), []
     take = allow.take
 
-    def record(name, span):
-        matched = take(name, span)
+    def record(name, span, body):
+        matched = take(name, span, body)
         if matched:
-            consumed.append((name, span))
+            consumed.append((name, span, body))
         return matched
 
     allow.take = record
@@ -1118,15 +1167,17 @@ def corpus_waiver_failures():
         return failures, len(consumed), 0
     edits = 0
     occurrences = {}
-    for name, span in consumed:
+    for name, span, bound_body in consumed:
         physical = span.split("\n")
         locations = []
         for block_index, (_, body) in enumerate(blocks[name]):
+            if body != bound_body:
+                continue
             lines = body.split("\n")
             locations.extend((block_index, i) for i in range(len(lines))
                              if lines[i:i + len(physical)] == physical)
-        occurrence = occurrences.get((name, span), 0)
-        occurrences[name, span] = occurrence + 1
+        occurrence = occurrences.get((name, span, bound_body), 0)
+        occurrences[name, span, bound_body] = occurrence + 1
         if occurrence >= len(locations):
             failures.append(f"{name}: waiver has no exact physical occurrence")
             continue
@@ -1135,15 +1186,16 @@ def corpus_waiver_failures():
         if "--show-waivers" in sys.argv:
             first = start + opener
             print(f"  waiver {name}:{first}-{first + len(physical) - 1} "
-                  f"sha256:{hashlib.sha256(span.encode('utf-8')).hexdigest()}")
+                  f"span=sha256:{hashlib.sha256(span.encode('utf-8')).hexdigest()} "
+                  f"block=sha256:{hashlib.sha256(body.encode('utf-8')).hexdigest()}")
             print(json.dumps(span, ensure_ascii=False))
 
         def matching_keys(candidate):
             audit = gate.Allowlist()
             keys = []
 
-            def record_key(guide, text):
-                if (guide, text) == (name, span):
+            def record_key(guide, text, block):
+                if (guide, text, block) == (name, span, bound_body):
                     keys.append(text)
                 return False
 
@@ -1151,24 +1203,25 @@ def corpus_waiver_failures():
             gate.scan_blocks(name, [(start, candidate)], audit)
             return len(keys)
 
-        original_matches = matching_keys(body)
-        for offset in range(len(physical)):
+        if not matching_keys(body):
+            failures.append(f"{name}: original span and block key was not offered")
+        for offset in range(len(body.split("\n"))):
             lines = body.split("\n")
-            lines[opener + offset] += " # changed waiver span"
+            lines[offset] += " # changed waiver block"
             edits += 1
             # Removing a finding also invalidates its old waiver. The exact key must
             # disappear even if there is no replacement finding on the edited line.
             changed = "\n".join(lines)
-            if matching_keys(changed) != original_matches - 1:
-                failures.append(f"{name}: edit to span line {offset + 1} kept its waiver")
+            if matching_keys(changed) != 0:
+                failures.append(f"{name}: edit to block line {offset + 1} kept its waiver")
             isolated = Path(tempfile.mkdtemp())
             try:
                 one = isolated / "allow.txt"
-                one.write_text(entry(span, guide=name), encoding="utf-8")
+                one.write_text(entry(span, guide=name, block=bound_body), encoding="utf-8")
                 check = gate.Allowlist.load(one)
                 gate.scan_blocks(name, [(start, changed)], check)
                 if len(check.stale()) != 1:
-                    failures.append(f"{name}: edit to span line {offset + 1} was not stale")
+                    failures.append(f"{name}: edit to block line {offset + 1} was not stale")
             finally:
                 shutil.rmtree(isolated)
     return failures, len(consumed), edits
@@ -1209,8 +1262,8 @@ def main() -> int:
     print(f"  ok    {n} recorded cases and {runs} entry-point runs for the bracket-ranges "
           f"gate: {n - unseen} behaviours checked, {unseen} disclosed blind spots still "
           f"open")
-    print(f"  ok    {bindings} corpus waiver bindings; {edits} physical-line edits "
-          f"each invalidate their span and leave a stale entry")
+    print(f"  ok    {bindings} corpus waiver bindings; {edits} block-line edits "
+          f"each invalidate their waiver and leave a stale entry")
     return 0
 
 

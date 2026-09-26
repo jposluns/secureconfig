@@ -1,48 +1,52 @@
 # Waivers for tools/check_bracket_ranges.py, one entry per flagged opener occurrence.
-# Three TAB-separated fields: <guide-file> TAB sha256:<64 lowercase hex digits> TAB <reason>.
-# Hash UTF-8 of the exact extracted physical line, or, if any scanned opener on that line
-# retains a spanning reading, all original lines from that line through Bash block end.
-# Join those lines with LF, no extra trailing LF; retain backslashes and whitespace after
-# fence indentation removal. Hash original source, not joined or quote-stripped readings.
+# Four TAB-separated fields: <guide-file> TAB sha256:<span digest> TAB sha256:<block digest> TAB <reason>.
+# Each digest is 64 lowercase hex digits. Hash UTF-8 of extracted, newline-normalized text:
+# blocks_of converts CRLF and bare CR to LF and removes fence indentation, excluding fences.
+# The span is the opener line or, if any opener on it retains a spanning reading, all lines
+# from it through block end. Join with LF, no added trailing LF. Hash the whole extracted
+# block body separately. Preserve backslashes and remaining whitespace, not joined readings.
+# These are not raw-file byte digests; LF-to-CRLF or bare-CR changes alone keep the waiver.
+# Edits to any extracted block line or moving the span to a different block body stale it.
+# Absolute line numbers are not bound; edits elsewhere in the guide keep the waiver.
 # One entry covers all findings on its opener line; later openers need their own entries.
 # Duplicate occurrences consume duplicate entries. Changed spans leave stale entries.
 # A real validator range is never waived; spell out its set (CONTRIBUTING.md rule 8).
 # False positives involving range-free validators need an explicit distinguishing reason.
-elasticsearch.md	sha256:0112e72d3a43678f74ecb71758361c284a03951888f4f1b26bf80d737e3c1f4f	a JSON request body for the Elasticsearch PUT /_security/role/app_reader role request: role, index and privilege names, not a pattern
-elasticsearch.md	sha256:88105c49e90d340797b438320bfbfb5ed118b76f96231cdeedaf0482a3cb70fa	a JSON request body for the Elasticsearch scoped-API-key call: an empty cluster list, index and privilege names, not a pattern
-elasticsearch.md	sha256:3cda9665c2279bfc22ba1d1c2822c9e99f040524f3807a335c2c2fef941e62df	a JSON request body for the OpenSearch role: empty permission lists, index-pattern and action names, not a pattern a tool compiles
-elasticsearch.md	sha256:d6590f5f8469236d7dca2564b77bf9076cd09836ae03069c1bfa40cd1eeb7500	a JSON request body for the OpenSearch service-account token: empty permission lists, index-pattern and action names, not a pattern a tool compiles
-container-hardening.md	sha256:db1b5d5b800e05c3d193cd62ba7ece2196830c9bdc9d17a94002779804f6e699	a JSON override for kubectl run: securityContext fields, a capability drop list and a nc command array, not a pattern
-llm-observability.md	sha256:f9d9e208d89f7caf139ea4fc0de0719545b0cc324ee99b0fd292e408df98872d	a label in curl's -w output format, printed verbatim, not a pattern
-lighttpd.md	sha256:fffa6091a7e4b208a02695659c71405a9b1dc62b13b71cc22ba85e3c480d23e6	a comment illustrating a lighttpd host-key lookup, not a validator
-nomad-consul.md	sha256:f5f7bdd4750b00ed08c09d5e73d38da66393e65672bad403826d3110956ae806	a grep display filter extracting AccessorID or an error from a probe response, not an accept-list validator
-realtime-webhooks.md	sha256:9402afdc80de580bc4953ec45f72afb6ea9b714a3b39425ce5614dd811109fa0	a Python environment lookup followed by encode(), not a bracket pattern
-realtime-webhooks.md	sha256:46d6cc4f74ea134fe1c6033ba428b675e3aa9943858b266328f8caad6757208c	a Python environment lookup in a literal CR/LF rejection check, not a bracket pattern
-realtime-webhooks.md	sha256:d434e70d92bdf7a235a13887056612283f23f37703b3231da6407adfc4552173	a Python environment lookup used to construct a request header, not a bracket pattern
-self-hosted-idp.md	sha256:89ee8a584321641f522d860a7adb95346dc81841979e3be5f6de2a46ab2eae16	a Python JSON dictionary lookup printing the issuer field, not a bracket pattern
-vault.md	sha256:d59fb0b0fce2d534697024566c25939cf6eb6fbe699161de319457046ec833a7	a Vault HCL capability list containing the literal permission read, not a pattern
-vault.md	sha256:7f34912b19627b48bbc628f01b72ac1db3d35a68b592d33f399d63e261de3ec1	a Vault HCL capability list containing the literal permissions create and update, not a pattern
-realtime-webhooks.md	sha256:95a4b5fe440cd3fa461ae46d577147ac7feb0a6fda97735cd8d3f451d21a5cad	Python indexing and slicing deliberately corrupt a probe HMAC, not an accept-list validator
-cloud-firewalls.md	sha256:bb7e8223a25bc8fc111e8e20d91e24bbaf657e7ec64c2897462ffcce467d39ef	JMESPath projection of security-group rule fields for a display table, not a bracket-pattern validator
-haproxy.md	sha256:997213ded0f05707d5ef92499ad02b5acff59f6a81d14ccb3d8ecc985cc3e272	Bash base[@] array expansion supplies curl arguments for the body-size probe, not a bracket pattern
-haproxy.md	sha256:14346890c0da3098f9d547e00ec97c2b970cb039220a8e136b3641e5dd6b5652	Bash base[@] array expansion supplies curl arguments for the client-certificate probe, not a bracket pattern
-llm-observability.md	sha256:6abf8d1bcfd63209268ad3bf497153d401d943b1cd4ee2214f4be586b4b2c184	empty resourceSpans JSON array in the unauthenticated OTLP request body, not a validator
-neo4j.md	sha256:9789e2d461e9f04b0b1bddfc97f9a63922ba75525d90e577b0659815e3c49e79	JSON statements array for the unauthenticated legacy transaction probe, not a validator
-neo4j.md	sha256:9404bdeda0a7285f4a7e1ce6c73614563b291d51cef3f1ef7d189c3839d1a57e	JSON statements array for the authenticated legacy transaction probe; a separate occurrence consumes this second entry
-sqlite.md	sha256:88b0b1b89b1799814c761f14acc1ba5b1df7f309e5710b6729a3e248c7b84497	JSON requests array for the anonymous SQL pipeline probe, not a validator
-sqlite.md	sha256:884720f4feb88b813fc7a013f9fe412a7cb362e28b46aafed3167ab85e873d2d	JSON requests array for the authorized SQL pipeline probe, not a validator
-rabbitmq.md	sha256:167d571eb0e2dcfc65500ba388e4f0c52384a053ed389ecdeeb10bf24f19edc9	rabbitmqctl topic-permission regex arguments, spelled-out ASCII sets passed literally to the broker; the continued line joins two quoted arguments, so the quote-affected reading sees _-] across them, which is not a range in either broker validator
-egress-metadata.md	sha256:ebda754607add7ac7654223c36b6aada8ec34c197f50853a25d9186d2c2eab7c	JMESPath projections list EC2 metadata options; no bracket pattern is evaluated
-elasticsearch.md	sha256:497d8e9e41cc4205a57cb598e1139b1e1e46c6b1fdceb953e20f4925c330bebb	OpenSearch role-mapping JSON arrays for users, backend roles and hosts; not bracket patterns
-elasticsearch.md	sha256:62165a5a3d5628d1b7a218e4337e62c964c35e3e97e7c29f7372b3c3aae21956	OpenSearch audit JSON Patch array in a quoted heredoc; not a bracket pattern
-kubernetes.md	sha256:a9d47062c6ddf81e0722217fc88ff7ce96e62c27312aabebd6c9e634c9b06074	JSONPath predicate selecting the Accepted GatewayClass condition; not a bracket pattern
-mcp-clients.md	sha256:3db5ec3e3b7b7680898669e66ec9d8cd56d20767f3a06561f6dfc09caa41220c	C-scoped token search uses POSIX classes and spelled-out sets; the quote-containing reject list is followed by separate alternatives, not an open range
-model-servers.md	sha256:c5ffe40a5cc8af912a288300098cd586ad00e2f073629338591c705ec2305234	JSON messages array in the MLflow invocation request; not a bracket pattern
-rabbitmq.md	sha256:842bbb87a11d7dbf5c653a9f4ec35b6da1ca62e5d34ab5b304d114b90154ff63	Python empty findings list in an audit script; not a bracket pattern
-self-hosted-ci-runners.md	sha256:9ecf2608173590282b865b61049d48d5b390f66b419445551cdfcee888ad0075	jq runner-group projection for display; not a bracket pattern
-self-hosted-ci-runners.md	sha256:e804863a01b42520d87e101fddc0b0824c06b705bc1f4983c90bb9ec7ff4921c	jq repository projection for display; not a bracket pattern
-self-hosted-ci-runners.md	sha256:ac75db7561d82f757dd6802790b55cc89ea1b5b91d6e45340e0ac087f1d2ab81	jq runner projection for display; not a bracket pattern
-self-hosted-ci-runners.md	sha256:6dc30ca39cdc089141717b2cbcacc54bdc83e5dff0593d88a4cd232394fecc9f	jq workflow-job projection for display; not a bracket pattern
-self-hosted-ci-runners.md	sha256:c321a9702082a372d37cc08e941d829678d941e45ab0927fd4faf92510d0873d	Python empty-list fallback while inspecting runner configuration; not a bracket pattern
-rabbitmq.md	sha256:b657bb080bb86ce12ae38d53b8b1d0a54a81695a5a61d7f2f430d6e7d73ad035	Python argv slice in the broker audit script; not a bracket pattern
-realtime-webhooks.md	sha256:d1d8238a3a6dcb8705027baf15621ecb5f48ed9070f697edf5cf5579b8c33a00	Python argv subscript selects the webhook provider; not a bracket pattern
+elasticsearch.md	sha256:0112e72d3a43678f74ecb71758361c284a03951888f4f1b26bf80d737e3c1f4f	sha256:f03cfce4d25709c139815f3ed23e9f38bee6928589743fc9d86b24ed62c3117a	a JSON request body for the Elasticsearch PUT /_security/role/app_reader role request: role, index and privilege names, not a pattern
+elasticsearch.md	sha256:88105c49e90d340797b438320bfbfb5ed118b76f96231cdeedaf0482a3cb70fa	sha256:a93adeadf7a2378a1b0a288109a6ab09a689b90fb92362bbe59a16d05a2caff9	a JSON request body for the Elasticsearch scoped-API-key call: an empty cluster list, index and privilege names, not a pattern
+elasticsearch.md	sha256:3cda9665c2279bfc22ba1d1c2822c9e99f040524f3807a335c2c2fef941e62df	sha256:5c9d82617e595985005a89af0ceb748484710a52ce8eb98bd872381a63d4a0f4	a JSON request body for the OpenSearch role: empty permission lists, index-pattern and action names, not a pattern a tool compiles
+elasticsearch.md	sha256:d6590f5f8469236d7dca2564b77bf9076cd09836ae03069c1bfa40cd1eeb7500	sha256:01cb18df80b1996b7adee35e5591f6f7eeac197ed0bdb5d3e14d9bf4ff5245b0	a JSON request body for the OpenSearch service-account token: empty permission lists, index-pattern and action names, not a pattern a tool compiles
+container-hardening.md	sha256:db1b5d5b800e05c3d193cd62ba7ece2196830c9bdc9d17a94002779804f6e699	sha256:cf9dceb6d291328d2720cbb98c5f5b9a85b5f2109d94e7a8899e392926518e43	a JSON override for kubectl run: securityContext fields, a capability drop list and a nc command array, not a pattern
+llm-observability.md	sha256:f9d9e208d89f7caf139ea4fc0de0719545b0cc324ee99b0fd292e408df98872d	sha256:3b798bbed3ac93f0f863da80fd1ab4d2dc268583d1b8524d3a19f95e783ba604	a label in curl's -w output format, printed verbatim, not a pattern
+lighttpd.md	sha256:fffa6091a7e4b208a02695659c71405a9b1dc62b13b71cc22ba85e3c480d23e6	sha256:ad732310d1708eac547285e20c8c4db293bfa580841d0b158567b373891f156c	a comment illustrating a lighttpd host-key lookup, not a validator
+nomad-consul.md	sha256:f5f7bdd4750b00ed08c09d5e73d38da66393e65672bad403826d3110956ae806	sha256:7f2fc5446871de1e252d366a5bb0eac7cd6eabd4a7582bfa54ae9948a0c925d0	a grep display filter extracting AccessorID or an error from a probe response, not an accept-list validator
+realtime-webhooks.md	sha256:9402afdc80de580bc4953ec45f72afb6ea9b714a3b39425ce5614dd811109fa0	sha256:99bd44f4b63c7e744df39d8f945c0a9648755472979e8983194836817d42e877	a Python environment lookup followed by encode(), not a bracket pattern
+realtime-webhooks.md	sha256:46d6cc4f74ea134fe1c6033ba428b675e3aa9943858b266328f8caad6757208c	sha256:99bd44f4b63c7e744df39d8f945c0a9648755472979e8983194836817d42e877	a Python environment lookup in a literal CR/LF rejection check, not a bracket pattern
+realtime-webhooks.md	sha256:d434e70d92bdf7a235a13887056612283f23f37703b3231da6407adfc4552173	sha256:99bd44f4b63c7e744df39d8f945c0a9648755472979e8983194836817d42e877	a Python environment lookup used to construct a request header, not a bracket pattern
+self-hosted-idp.md	sha256:89ee8a584321641f522d860a7adb95346dc81841979e3be5f6de2a46ab2eae16	sha256:274b5dae413498ca3f7e60b8daba7d94a75149990797fd8fb2fcfacef7b6e1ac	a Python JSON dictionary lookup printing the issuer field, not a bracket pattern
+vault.md	sha256:d59fb0b0fce2d534697024566c25939cf6eb6fbe699161de319457046ec833a7	sha256:a8bb4bd72210a5966d4c20e03c976dc56f443ea9a5e74ff29f964ef7f14c6ae2	a Vault HCL capability list containing the literal permission read, not a pattern
+vault.md	sha256:7f34912b19627b48bbc628f01b72ac1db3d35a68b592d33f399d63e261de3ec1	sha256:e434c98799d8d3ff1758ea1267ac1e948292783531e34d8d3c108734b27e0ca2	a Vault HCL capability list containing the literal permissions create and update, not a pattern
+realtime-webhooks.md	sha256:95a4b5fe440cd3fa461ae46d577147ac7feb0a6fda97735cd8d3f451d21a5cad	sha256:99bd44f4b63c7e744df39d8f945c0a9648755472979e8983194836817d42e877	Python indexing and slicing deliberately corrupt a probe HMAC, not an accept-list validator
+cloud-firewalls.md	sha256:bb7e8223a25bc8fc111e8e20d91e24bbaf657e7ec64c2897462ffcce467d39ef	sha256:4d51e034383b321eb9287503034e8f090ecd36d945d435b2c0408faebc70792a	JMESPath projection of security-group rule fields for a display table, not a bracket-pattern validator
+haproxy.md	sha256:997213ded0f05707d5ef92499ad02b5acff59f6a81d14ccb3d8ecc985cc3e272	sha256:b21d23b3a08854834d8c99f745255b717027a600386df8ebb52d5791e56d1e8a	Bash base[@] array expansion supplies curl arguments for the body-size probe, not a bracket pattern
+haproxy.md	sha256:14346890c0da3098f9d547e00ec97c2b970cb039220a8e136b3641e5dd6b5652	sha256:d0154edf65844c8f6c1aaaee1ced21bc179dd9e79083011db903b727af58a4ac	Bash base[@] array expansion supplies curl arguments for the client-certificate probe, not a bracket pattern
+llm-observability.md	sha256:6abf8d1bcfd63209268ad3bf497153d401d943b1cd4ee2214f4be586b4b2c184	sha256:8e010fdb5f92855187a9f7ca74a88e3be470172eb5368c629ef17f27d28b7ba7	empty resourceSpans JSON array in the unauthenticated OTLP request body, not a validator
+neo4j.md	sha256:9789e2d461e9f04b0b1bddfc97f9a63922ba75525d90e577b0659815e3c49e79	sha256:1ad9c297d8b964d4a661d4bdd14419d849bb11a8017bc400764e8b14c7a1deea	JSON statements array for the unauthenticated legacy transaction probe, not a validator
+neo4j.md	sha256:9404bdeda0a7285f4a7e1ce6c73614563b291d51cef3f1ef7d189c3839d1a57e	sha256:1ad9c297d8b964d4a661d4bdd14419d849bb11a8017bc400764e8b14c7a1deea	JSON statements array for the authenticated legacy transaction probe; a separate occurrence consumes this second entry
+sqlite.md	sha256:88b0b1b89b1799814c761f14acc1ba5b1df7f309e5710b6729a3e248c7b84497	sha256:90486191d50b43e776fd03fc4da6f36fe63f08015525d514207d65d0fe2b1bc4	JSON requests array for the anonymous SQL pipeline probe, not a validator
+sqlite.md	sha256:884720f4feb88b813fc7a013f9fe412a7cb362e28b46aafed3167ab85e873d2d	sha256:90486191d50b43e776fd03fc4da6f36fe63f08015525d514207d65d0fe2b1bc4	JSON requests array for the authorized SQL pipeline probe, not a validator
+rabbitmq.md	sha256:167d571eb0e2dcfc65500ba388e4f0c52384a053ed389ecdeeb10bf24f19edc9	sha256:7145e5bb6fbf56d9c6d20446995c81aaeb068237f45eab4c03a20a1bde4f2f0c	rabbitmqctl topic-permission regex arguments, spelled-out ASCII sets passed literally to the broker; the continued line joins two quoted arguments, so the quote-affected reading sees _-] across them, which is not a range in either broker validator
+egress-metadata.md	sha256:ebda754607add7ac7654223c36b6aada8ec34c197f50853a25d9186d2c2eab7c	sha256:6d6daf14d98e61b8441072c37c6e6f582d5eb9a60176a865e06b0b61fa74b076	JMESPath projections list EC2 metadata options; no bracket pattern is evaluated
+elasticsearch.md	sha256:497d8e9e41cc4205a57cb598e1139b1e1e46c6b1fdceb953e20f4925c330bebb	sha256:e02b38aaa4487042f7d9079f7d232529f2dec3cbe1bf52473236df112e459d4b	OpenSearch role-mapping JSON arrays for users, backend roles and hosts; not bracket patterns
+elasticsearch.md	sha256:62165a5a3d5628d1b7a218e4337e62c964c35e3e97e7c29f7372b3c3aae21956	sha256:53e3340b75b33ec9ee548b2ce7165421c9fde738c29c310607d013d077767c06	OpenSearch audit JSON Patch array in a quoted heredoc; not a bracket pattern
+kubernetes.md	sha256:a9d47062c6ddf81e0722217fc88ff7ce96e62c27312aabebd6c9e634c9b06074	sha256:a9d47062c6ddf81e0722217fc88ff7ce96e62c27312aabebd6c9e634c9b06074	JSONPath predicate selecting the Accepted GatewayClass condition; not a bracket pattern
+mcp-clients.md	sha256:3db5ec3e3b7b7680898669e66ec9d8cd56d20767f3a06561f6dfc09caa41220c	sha256:8ab4c1f263bba842e8e9074f7b3ee0e38f48965d56be1d111cbebaf3da9542ff	C-scoped token search uses POSIX classes and spelled-out sets; the quote-containing reject list is followed by separate alternatives, not an open range
+model-servers.md	sha256:c5ffe40a5cc8af912a288300098cd586ad00e2f073629338591c705ec2305234	sha256:337d7982b526c6d7daa9f2d77b16ca08e7269dfaa8b4fc475dd2622ce2dea0cd	JSON messages array in the MLflow invocation request; not a bracket pattern
+rabbitmq.md	sha256:842bbb87a11d7dbf5c653a9f4ec35b6da1ca62e5d34ab5b304d114b90154ff63	sha256:fc52782734d8f3bb44381d38e2ac69f01593d217a83fd135d132a84b9a9b2c96	Python empty findings list in an audit script; not a bracket pattern
+self-hosted-ci-runners.md	sha256:9ecf2608173590282b865b61049d48d5b390f66b419445551cdfcee888ad0075	sha256:9ecf2608173590282b865b61049d48d5b390f66b419445551cdfcee888ad0075	jq runner-group projection for display; not a bracket pattern
+self-hosted-ci-runners.md	sha256:e804863a01b42520d87e101fddc0b0824c06b705bc1f4983c90bb9ec7ff4921c	sha256:9ecf2608173590282b865b61049d48d5b390f66b419445551cdfcee888ad0075	jq repository projection for display; not a bracket pattern
+self-hosted-ci-runners.md	sha256:ac75db7561d82f757dd6802790b55cc89ea1b5b91d6e45340e0ac087f1d2ab81	sha256:9ecf2608173590282b865b61049d48d5b390f66b419445551cdfcee888ad0075	jq runner projection for display; not a bracket pattern
+self-hosted-ci-runners.md	sha256:6dc30ca39cdc089141717b2cbcacc54bdc83e5dff0593d88a4cd232394fecc9f	sha256:6dc30ca39cdc089141717b2cbcacc54bdc83e5dff0593d88a4cd232394fecc9f	jq workflow-job projection for display; not a bracket pattern
+self-hosted-ci-runners.md	sha256:c321a9702082a372d37cc08e941d829678d941e45ab0927fd4faf92510d0873d	sha256:46c56eeb1f209c557cb76ee4d4ccc2214ad2700fea99bf30682d0e7e80baf871	Python empty-list fallback while inspecting runner configuration; not a bracket pattern
+rabbitmq.md	sha256:b657bb080bb86ce12ae38d53b8b1d0a54a81695a5a61d7f2f430d6e7d73ad035	sha256:fc52782734d8f3bb44381d38e2ac69f01593d217a83fd135d132a84b9a9b2c96	Python argv slice in the broker audit script; not a bracket pattern
+realtime-webhooks.md	sha256:d1d8238a3a6dcb8705027baf15621ecb5f48ed9070f697edf5cf5579b8c33a00	sha256:99bd44f4b63c7e744df39d8f945c0a9648755472979e8983194836817d42e877	Python argv subscript selects the webhook provider; not a bracket pattern
