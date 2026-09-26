@@ -275,8 +275,8 @@ signature is `X-Signature: sha256=<hex HMAC of the exact body under the receiver
 bytes without it (must be rejected) and then with it (must be accepted and trigger the reconciliation):
 
 ```bash
-# Reasoned, not demonstrated (no live Flux; backlog row 2.28). Read the HMAC key without echo. openssl takes
-# the key as an argument, so keep tracing off; on a shared host compute the HMAC from a language binding.
+# Reasoned, not demonstrated (no live Flux; backlog row 2.28). Read the HMAC key without echo.
+# Python's hmac reads the key from stdin; only the non-secret request body is passed in argv.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -286,7 +286,8 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
   IFS= read -r -s -p 'receiver HMAC secret: ' hmac < /dev/tty || exit 2; echo
   [ -n "$hmac" ] || { echo 'supply the HMAC secret; not probing'; exit 2; }
   body='{"ref":"refs/heads/main"}'
-  sig=$(set -o pipefail; printf '%s' "$body" | openssl dgst -sha256 -hmac "$hmac" -r | cut -d' ' -f1) ||
+  sig=$(set -o pipefail; printf '%s' "$hmac" | python3 -c \
+    'import hmac, sys; print(hmac.new(sys.stdin.buffer.read(), sys.argv[1].encode(), "sha256").hexdigest())' "$body") ||
     { echo 'signature generation failed; not probing'; exit 2; }
   [ -n "$sig" ] || { echo 'signature generation failed; not probing'; exit 2; }
   url='https://flux-webhook.example.com/hook/REPLACE_WITH_PATH'
@@ -307,6 +308,8 @@ a bare reachability probe of your own public address, whose pass is nothing answ
 need the guarded-subshell form so an unsubstituted address cannot time out and read as closed.
 
 ## Sources (checked September 2026)
+
+- Python HMAC calculation and binary stdin: https://docs.python.org/3/library/hmac.html and https://docs.python.org/3/library/sys.html#sys.stdin
 
 Argo CD source claims below were checked offline at v3.5.3, commit
 `c9c369efcc5b2a0bd720803f8d14a1c3eaddf579`. Retained readthedocs links provide operational guidance;

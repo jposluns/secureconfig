@@ -158,6 +158,7 @@ Read the verbose output, not the exit status: the anonymous run must show a `401
     ""|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'empty password, placeholder or control character; not probing'; exit 2 ;;
   esac
   echo '--- throwaway credentials (the positive control): expect a relayed address'
+  # guard-conventions: allow argv-only TURN password at coturn 4.18.0; prompted throwaway credential on a trusted host under the rule 7 restrictions above
   turnutils_uclient -v -u "$1" -w "$pw" -e "$2" "$3"
 )
 ```
