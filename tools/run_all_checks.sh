@@ -759,6 +759,54 @@ else
   printf '%s\n' "$csp_tests" | sed 's/^/          /'
 fi
 
+echo "== workflow actions are pinned to full commit SHAs =="
+# Row 3.17 (#348) pinned every workflow `uses:` to a full commit SHA with a `# vX.Y.Z` comment naming
+# the release, and nothing held it there: the next `@v4` would have merged green. This fails a tag, a
+# branch, a short or uppercase SHA, a missing or malformed release comment, and a Docker action not
+# pinned by digest, in the workflows and in every action.yml. It reads the files line by line and
+# refuses any YAML construct it does not model rather than guess; its docstring says why that is sound.
+if workflow_pins=$(python3 tools/check_workflow_pins.py 2>&1); then
+  printf '%s\n' "$workflow_pins"
+  # A gate that exits 0 while printing findings would otherwise read as a pass.
+  if grep -q '^  FAIL  ' <<< "$workflow_pins"; then
+    bad "check_workflow_pins.py printed findings but exited 0"
+  elif ! grep -qE '^  ok    [0-9]+ uses: lines across [0-9]+ files ' <<< "$workflow_pins"; then
+    # An exit 0 counts only with the gate's ok line, which it prints only after checking something.
+    bad "check_workflow_pins.py exited 0 without printing its ok line"
+  fi
+elif grep -qE '^Traceback \(most recent call last\):|^[A-Za-z_.]+Error: ' <<< "$workflow_pins"; then
+  bad "check_workflow_pins.py crashed; the workflow pins are unverified"
+  printf '%s\n' "$workflow_pins" | sed 's/^/          /'
+elif grep -q '^  FAIL  ' <<< "$workflow_pins"; then
+  printf '%s\n' "$workflow_pins"
+  fail=1
+else
+  bad "check_workflow_pins.py exited non-zero without reporting a gate result"
+  printf '%s\n' "$workflow_pins" | sed 's/^/          /'
+fi
+
+echo "== the workflow-pin gate still catches what it claims =="
+# Every check in the gate has a case here that fails when the check is removed. Some cases assert a
+# PASS instead, because a gate that alarms on them would be switched off: a `run: |` block of shell
+# punctuation, a commented-out step, and the word `uses` in a step name among them.
+if workflow_pin_tests=$(python3 tools/test_workflow_pins.py 2>&1); then
+  printf '%s\n' "$workflow_pin_tests"
+  if grep -q '^  FAIL  ' <<< "$workflow_pin_tests"; then
+    bad "test_workflow_pins.py printed findings but exited 0"
+  elif ! grep -qE '^  ok    [0-9]+ recorded cases for the workflow-pin gate' <<< "$workflow_pin_tests"; then
+    bad "test_workflow_pins.py exited 0 without printing its ok line"
+  fi
+elif grep -qE '^Traceback \(most recent call last\):|^[A-Za-z_.]+Error: ' <<< "$workflow_pin_tests"; then
+  bad "test_workflow_pins.py crashed; the workflow-pin gate is unverified"
+  printf '%s\n' "$workflow_pin_tests" | sed 's/^/          /'
+elif grep -q '^  FAIL  ' <<< "$workflow_pin_tests"; then
+  printf '%s\n' "$workflow_pin_tests"
+  fail=1
+else
+  bad "test_workflow_pins.py exited non-zero without reporting a result"
+  printf '%s\n' "$workflow_pin_tests" | sed 's/^/          /'
+fi
+
 echo "== the advisory citation sweep still imports =="
 # NOT a gate on the citations themselves: report_citation_drift.py reaches the network and can
 # never run in this suite. But it imports SOURCES_RE, headings and section_body from

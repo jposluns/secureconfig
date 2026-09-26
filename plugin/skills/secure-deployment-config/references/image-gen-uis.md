@@ -25,7 +25,8 @@ Do not put a credential on the command line or in `COMMANDLINE_ARGS`. `--gradio-
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set -eC +x +a
+  set +x +a +e
+  set -eC
   umask 077
   if [ -e "$HOME/.config/stable-diffusion-webui/gradio-auth" ] || [ -L "$HOME/.config/stable-diffusion-webui/gradio-auth" ]; then
     echo 'a gradio-auth file already exists in ~/.config/stable-diffusion-webui; nothing written'; exit 2
