@@ -220,7 +220,7 @@ or query policies. `GET /config` exposes configuration; `/metrics` and `/debug/p
 registered by default. These routes have no tenant-auth wrapper. When the ingester runs,
 `GET` or `POST /flush` and `GET` or `POST /ingester/shutdown` call maintenance handlers without
 that wrapper; `/ingester/prepare_shutdown` also accepts `POST`, `GET` and `DELETE`.
-When the compactor runs with `retention_enabled: true`, `/loki/api/v1/delete` accepts
+When the compactor runs outside its worker mode (which returns before these routes are registered) with `retention_enabled: true`, `/loki/api/v1/delete` accepts
 `PUT`/`POST` to request deletion, `GET` to list requests and `DELETE` to cancel one.
 Those deletion routes do have tenant-header and deletion tenant-policy middleware; availability
 does not mean unconditional deletion. The supplied subset lacks those policy and handler
@@ -400,7 +400,7 @@ channel only. The password can still reach shell history or `set -x` output.
 - Loki v3.7.8 query frontend middleware and routes: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1307-L1378
 - Loki v3.7.8 config route: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L533-L540
 - Loki v3.7.8 ingester gRPC services and maintenance routes: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L751-L790
-- Loki v3.7.8 conditional deletion routes and middleware: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1935-L1952
+- Loki v3.7.8 conditional deletion routes and middleware (compactor worker mode returns first): https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1866-L1869 ; https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1935-L1952
 - Loki v3.7.8 worker connection inputs: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L571-L580
 - Loki v3.7.8 common ring propagation to ingester: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/config_wrapper.go#L193-L248
 - Loki v3.7.8 ingester clients receive ring configuration: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L373-L390
@@ -410,7 +410,7 @@ channel only. The password can still reach shell history or `set -x` output.
 - dskit pinned TLS YAML fields: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L69-L78
 - dskit pinned wildcard listener construction: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L309-L332
 - dskit pinned server TLS and client-auth construction: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L357-L395
-- dskit pinned default gRPC interceptor chain: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L443-L468
+- dskit pinned default gRPC interceptor chain: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L433-L468
 - dskit pinned metrics and pprof routes: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L577-L583
 - dskit pinned HTTP-over-gRPC bridge: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L673-L681
 - dskit pinned HTTP tenant propagation: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/middleware/http_auth.go#L13-L23
