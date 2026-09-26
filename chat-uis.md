@@ -16,17 +16,79 @@ Keep it on loopback regardless of which mode you choose, and put the proxy's own
 
 `KEY_VAULTS_SECRET` is the key that encrypts stored provider credentials (AES-GCM); generate it with `openssl rand -base64 32`, and once set, never change it, or previously encrypted data becomes unreadable. LobeHub's own basic-variables page describes it loosely as "a password to access the LobeHub service", but its own warning on the same entry says the key is used to encrypt sensitive data: treat it as the encryption key, not the deployment's login gate. Real per-user login comes from LobeChat's Better Auth service: `AUTH_SECRET` (required, generated the same way) signs sessions, `AUTH_SSO_PROVIDERS` lists enabled SSO providers (for example `google,github,microsoft`) alongside the matching provider credentials each one needs (for example `AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET`), and `AUTH_DISABLE_EMAIL_PASSWORD=1` forces SSO-only login, hiding the password form entirely. `AUTH_ALLOWED_EMAILS` restricts registration to specific addresses or domains, but it defaults to empty, which allows every email through, so set it explicitly rather than relying on federation alone to gate access.
 
+Keep the three secrets, `KEY_VAULTS_SECRET`, `AUTH_SECRET` and the Google OAuth client secret, off the `docker run` command line: a value given as `-e NAME=value` is in the docker CLI's argv, where `ps` and `/proc/<pid>/cmdline` show it to other local accounts while that command runs, and quoting does not change that. At docker/cli v27.5.1, `--env-file` reads environment variables from a file, through a loader that opens the named path and has no `-` stdin form, and `-e NAME` with no value takes the value from the CLI's own environment. Docker Compose's `env_file` reads a file of variables for a service through its own loader in compose-go (v2.4.7, the version Docker Compose v2.32.4 pins). A Compose `secrets` entry puts a value in a file under `/run/secrets/` instead: a file-sourced secret is bind-mounted read-only, and an environment-sourced one is copied into the container, mode `0444` by default, rather than mounted. That only helps if something reads the file into these variables, and LobeHub documents them as environment variables only; a search of its v2.2.16 tree finds no `KEY_VAULTS_SECRET_FILE`, `AUTH_SECRET_FILE` or `AUTH_GOOGLE_SECRET_FILE`. Use the `--env-file` file: `KEY_VAULTS_SECRET` must stay the same for the life of the data it encrypts, so it needs a durable home anyway, and a file keeps the values out of the CLI's own environment too. Create it once, as the account that runs `docker`. The block prompts for the Google client secret without echo, under CONTRIBUTING rule 7's `read` exception, and assumes a clean shell:
+
 ```bash
-docker run -d -p 127.0.0.1:3210:3210 \
-  -e KEY_VAULTS_SECRET=REPLACE_WITH_LONG_RANDOM_VALUE \
-  -e AUTH_SECRET=REPLACE_WITH_LONG_RANDOM_VALUE \
-  -e AUTH_DISABLE_EMAIL_PASSWORD=1 \
-  -e AUTH_SSO_PROVIDERS=google \
-  -e AUTH_GOOGLE_ID=REPLACE_WITH_GOOGLE_OAUTH_CLIENT_ID \
-  -e AUTH_GOOGLE_SECRET=REPLACE_WITH_GOOGLE_OAUTH_CLIENT_SECRET \
-  -e AUTH_ALLOWED_EMAILS=admin@example.com,example.com \
-  lobehub/lobe-chat
+(
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  set -eC +x +a
+  umask 077
+  if [ -e "$HOME/.config/lobechat/secrets.env" ] || [ -L "$HOME/.config/lobechat/secrets.env" ]; then
+    echo 'a secrets.env already exists in ~/.config/lobechat; nothing written'; exit 2
+  fi
+  { unset -n gsec && unset -v gsec; } 2>/dev/null ||
+    { echo 'cannot clear gsec in this shell; nothing written'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; nothing written'; exit 2; }
+  printf 'Google OAuth client secret (input hidden): '
+  IFS= read -r -s gsec || { printf '\n'; echo 'no client secret read; nothing written'; exit 2; }
+  printf '\n'
+  case "$gsec" in
+    ""|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'empty client secret, placeholder or control character; nothing written'; exit 2 ;;
+  esac
+  set -- "$(openssl rand -base64 32)" "$(openssl rand -base64 32)"
+  [ "${#1}" -eq 44 ] || { echo 'key generation failed; nothing written'; exit 2; }
+  [ "${#2}" -eq 44 ] || { echo 'key generation failed; nothing written'; exit 2; }
+  case "$1$2" in *[!A-Za-z0-9+/=]*) echo 'key generation failed; nothing written'; exit 2 ;; esac
+  mkdir -p -- "$HOME/.config/lobechat"
+  chmod 700 -- "$HOME/.config/lobechat"
+  printf 'KEY_VAULTS_SECRET=%s\nAUTH_SECRET=%s\nAUTH_GOOGLE_SECRET=%s\n' "$1" "$2" "$gsec" > "$HOME/.config/lobechat/secrets.env"
+)
 ```
+
+The block refuses to run when `~/.config/lobechat/secrets.env` already exists in any form, a dangling symlink included, before it prompts or generates anything, so a rerun cannot replace a `KEY_VAULTS_SECRET` that already encrypts data. `set -C` adds overwrite protection for an existing regular file only, not for every kind of target, and the existence check runs before the write rather than atomically with it, so both hold only in directories that no other account can write to or replace: `$HOME`, `~/.config` and the owner-only directory the block creates. For a deployment that already has these values, put its existing values in such a file instead of generating new ones. `umask 077` creates the directory mode `0700` and the file mode `0600`, unless the directory, or the parent it is created in, carries a default ACL: new files inherit that ACL in place of the umask, and `chmod 700` on the directory does not remove it. Check with `getfacl` before running the block; backlog row 1.141 tracks making the block refuse that case. The block writes nothing unless both generated values are 44 base64 characters and the prompted secret is non-empty, is not the placeholder and holds no control character. `read` stops at the first newline, so a newline cannot enter the value; the check refuses a carriage return or any other control character. Paste the secret alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run. The generated values pass only through the subshell's positional parameters and the builtin `printf`, and the client secret through one variable local to the subshell, never a command line; the block clears inherited traps first because a DEBUG, RETURN or ERR trap from your shell could otherwise read them. A write failure can leave a partial file. The launch block below refuses the shapes it can detect, a generated value that is not 44 base64 characters, a missing or duplicated line, or any other line, but a client secret cut short still looks like a valid value and cannot be detected, so delete a file left by a failed run and create it again rather than starting on it. The file holds the secrets in plaintext at rest, readable by that account, by root and by any backup that copies it, so keep it and its backups out of source control ([secrets.md](secrets.md)). Start LobeChat from the file, with only non-secret values on its command line. Substitute your Google OAuth client ID and the addresses or domains allowed to register inside the single quotes on the `set --` line:
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_GOOGLE_OAUTH_CLIENT_ID' 'admin@example.com,example.com'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not starting'; exit 2; }
+  shift
+  [ "$#" -eq 2 ] || { echo 'the set -- line needs exactly 2 values; not starting'; exit 2; }
+  case "$1|$2" in *REPLACE_WITH_*) echo 'substitute the client ID inside the quotes on the set -- line; not starting'; exit 2 ;; esac
+  { [ -n "$1" ] && [ -n "$2" ]; } || { echo 'empty value on the set -- line; not starting'; exit 2; }
+  case "$1$2" in *[[:space:][:cntrl:]]*) echo 'whitespace or a control character on the set -- line; not starting'; exit 2 ;; esac
+  f="$HOME/.config/lobechat/secrets.env"
+  { [ -f "$f" ] && [ ! -L "$f" ]; } ||
+    { echo 'need ~/.config/lobechat/secrets.env to be a regular file (it is missing, a symlink or another kind of file); not starting'; exit 2; }
+  if grep -Eavqx -- 'KEY_VAULTS_SECRET=[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/]{43}=|AUTH_SECRET=[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/]{43}=|AUTH_GOOGLE_SECRET=[^[:cntrl:]]+' "$f"; then
+    echo 'a line in ~/.config/lobechat/secrets.env is not one of the three secret lines; not starting'; exit 2
+  else
+    rc=$?; [ "$rc" -eq 1 ] || { echo 'could not check ~/.config/lobechat/secrets.env; not starting'; exit 2; }
+  fi
+  if grep -aq -- 'REPLACE_WITH_' "$f"; then
+    echo 'a placeholder is still in ~/.config/lobechat/secrets.env; not starting'; exit 2
+  else
+    rc=$?; [ "$rc" -eq 1 ] || { echo 'could not check ~/.config/lobechat/secrets.env; not starting'; exit 2; }
+  fi
+  c=$(grep -Eacx -- 'KEY_VAULTS_SECRET=[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/]{43}=' "$f") || c=
+  [ "$c" = 1 ] ||
+    { echo 'need exactly one generated KEY_VAULTS_SECRET line in ~/.config/lobechat/secrets.env, or could not check it; not starting'; exit 2; }
+  c=$(grep -Eacx -- 'AUTH_SECRET=[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/]{43}=' "$f") || c=
+  [ "$c" = 1 ] ||
+    { echo 'need exactly one generated AUTH_SECRET line in ~/.config/lobechat/secrets.env, or could not check it; not starting'; exit 2; }
+  c=$(grep -Eacx -- 'AUTH_GOOGLE_SECRET=[^[:cntrl:]]+' "$f") || c=
+  [ "$c" = 1 ] ||
+    { echo 'need exactly one AUTH_GOOGLE_SECRET line in ~/.config/lobechat/secrets.env, or could not check it; not starting'; exit 2; }
+  docker run -d -p 127.0.0.1:3210:3210 \
+    --env-file "$HOME/.config/lobechat/secrets.env" \
+    -e AUTH_DISABLE_EMAIL_PASSWORD=1 \
+    -e AUTH_SSO_PROVIDERS=google \
+    -e "AUTH_GOOGLE_ID=$1" \
+    -e "AUTH_ALLOWED_EMAILS=$2" \
+    lobehub/lobe-chat
+)
+```
+
+The block refuses the placeholder, an empty value, and whitespace or a control character on the `set --` line. It checks first that `~/.config/lobechat/secrets.env` is a regular file and not a symlink, so a FIFO in its place can neither block the check nor be read by it. It then reads the file as text (`grep -a`: without `-a`, a NUL could make a malformed line look valid to grep) and refuses to start unless the file holds exactly one line for each generated value and exactly one client secret line, no other line and no placeholder: at v27.5.1 an env-file line holding only a name takes its value from the CLI's own environment, which would bring back the channel the file replaces. It uses a count only from a `grep` that succeeded, says that it could not check when `grep` cannot read the file, and gives the same result in a shell that has `set -e` on. The patterns for the two generated values spell out their ASCII character sets rather than ranges such as `A-Z`, whose meaning can depend on the locale. The client secret pattern, `[^[:cntrl:]]+`, is the exception and depends on the locale: it refuses only control characters, and the locale decides which characters are control characters, as it does for the other `[:cntrl:]` checks, in the block that creates the file and on the `set --` line. A key of another shape from an existing deployment needs the matching pattern relaxed. This moves the secrets out of argv, not out of reach. Docker hands them to the container as environment variables, so anyone who can use the Docker socket can read them back with `docker inspect`, which returns the container's configuration with its `Env` list, for as long as the container exists, running or stopped; and the same user as the container's process, or root, can read them from that process's `/proc/<pid>/environ` for its whole lifetime. Socket access is root-equivalent already ([container-hardening.md](container-hardening.md)); grant it to nobody you would not trust with these keys. `-e NAME` with no value would keep them out of argv as well, but only under rule 7's guarded one-command prefix assignment, never an `export`, and the values would then sit in the CLI's own environment too. Neither form erases a value already recorded in shell history, tracing or a log.
 
 MFA: enforce it at whichever SSO provider you list in `AUTH_SSO_PROVIDERS`; LobeChat's own login has no second factor of its own.
 
@@ -115,12 +177,24 @@ For a multi-user chat or RAG deployment (AnythingLLM workspaces, or a shared ass
 - Treating AnythingLLM's single instance password as equivalent to per-user accounts; it grants full admin to whoever has it.
 - Running OpenHands with a shared, long-lived API key exposed on the same network as untrusted users.
 - Rotating LobeChat's `KEY_VAULTS_SECRET` after data has been encrypted with it, which makes that data unreadable.
+- Passing `KEY_VAULTS_SECRET`, `AUTH_SECRET` or `AUTH_GOOGLE_SECRET` as `-e NAME=value`, which puts the value in the docker CLI's argv for other local accounts to read while the command runs.
 
 ## Sources (checked September 2026)
 
 - AnythingLLM security and access documentation: https://docs.anythingllm.com/features/security-and-access
 - LobeHub environment variables (KEY_VAULTS_SECRET): https://lobehub.com/only-ai/markdown/docs/en/self-hosting/environment-variables/basic
 - LobeHub authentication service environment variables (Better Auth): https://lobehub.com/only-ai/markdown/docs/en/self-hosting/environment-variables/auth
+- LobeHub `KEY_VAULTS_SECRET` callout, "This key is used to encrypt sensitive data." (pinned tag v2.2.16): https://github.com/lobehub/lobehub/blob/v2.2.16/docs/self-hosting/environment-variables/basic.mdx#L22-L32
+- LobeHub `AUTH_SECRET` generated with `openssl rand -base64 32`, and `AUTH_GOOGLE_SECRET` as the "Client Secret of the Google OAuth application." (pinned tag v2.2.16): https://github.com/lobehub/lobehub/blob/v2.2.16/docs/self-hosting/environment-variables/auth.mdx
+- Docker `container run` reference, `--env-file` ("Read in a file of environment variables"; pinned tag v27.5.1): https://github.com/docker/cli/blob/v27.5.1/docs/reference/commandline/container_run.md
+- Docker `container run` reference, `--env VAR` with no value, which "checks the value the variable has in your local environment and passes it to the container" (pinned tag v27.5.1): https://github.com/docker/cli/blob/v27.5.1/docs/reference/commandline/container_run.md#L626-L640 and the `-e` validator's `os.LookupEnv`: https://github.com/docker/cli/blob/v27.5.1/opts/env.go#L18-L31
+- Docker CLI env-file loading through `kvfile.Parse`, with `-e` parsed after the file "to allow override" (pinned tag v27.5.1): https://github.com/docker/cli/blob/v27.5.1/opts/parse.go#L19-L39
+- Docker CLI key/value file parser, which opens the named path (`os.Open(filename)`) with no `-` stdin form, and looks up a line that holds only a name in the CLI's environment (pinned tag v27.5.1): https://github.com/docker/cli/blob/v27.5.1/pkg/kvfile/kvfile.go#L54-L69 and https://github.com/docker/cli/blob/v27.5.1/pkg/kvfile/kvfile.go#L121-L126
+- Docker Compose pins compose-go v2.4.7 (pinned tag v2.32.4): https://github.com/docker/compose/blob/v2.32.4/go.mod#L5-L18
+- compose-go service `env_file` resolution ("parses env_files set for services to resolve the actual environment map for services"; pinned tag v2.4.7): https://github.com/compose-spec/compose-go/blob/v2.4.7/types/project.go#L631-L664
+- Docker Compose file-sourced secrets bind-mounted read-only under `/run/secrets/`, environment-sourced ones skipped there (pinned tag v2.32.4): https://github.com/docker/compose/blob/v2.32.4/pkg/compose/create.go#L1029-L1084
+- Docker Compose environment-sourced secrets copied into the container under `/run/secrets/`, mode `0444` by default (pinned tag v2.32.4): https://github.com/docker/compose/blob/v2.32.4/pkg/compose/secrets.go#L31-L61 and https://github.com/docker/compose/blob/v2.32.4/pkg/compose/secrets.go#L101
+- Moby container inspect returns `Config: ctr.Config`, whose `Env []string` holds the environment (pinned tag v27.5.1): https://github.com/moby/moby/blob/v27.5.1/daemon/inspect.go#L107-L110 and https://github.com/moby/moby/blob/v27.5.1/api/types/container/config.go#L55
 - Chainlit authentication overview: https://docs.chainlit.io/authentication/overview
 - Chainlit password authentication (`@cl.password_auth_callback` signature and example): https://docs.chainlit.io/authentication/password
 - Python `hmac.compare_digest`, for what it does and does not conceal: https://docs.python.org/3/library/hmac.html

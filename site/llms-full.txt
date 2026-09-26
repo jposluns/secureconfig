@@ -24466,13 +24466,62 @@ Front it with a TLS proxy that adds login before anything reaches port 8188. If 
 
 ## AUTOMATIC1111 Stable Diffusion WebUI
 
-`--listen` launches gradio bound to `0.0.0.0` (default `False`, i.e. loopback); `--port` defaults to `7860`. `--gradio-auth user:pass` (comma-delimited for multiple users) or `--gradio-auth-path /path/to/file` requires a login before the UI loads; `--api-auth` does the same for the API. `--share` registers a public `*.gradio.live` relay URL, documented as intended for Colab, not a deployment mechanism, and it bypasses your network boundary entirely. `--enable-insecure-extension-access` reopens the extensions tab regardless of other flags and should stay off on anything reachable beyond loopback.
+`--listen` launches gradio bound to `0.0.0.0` (default `False`, i.e. loopback unless `GRADIO_SERVER_NAME` is set, below); `--port` defaults to `7860`. `--gradio-auth-path FILE` (a file of `user:password` entries, comma-delimited within a line or one per line, at v1.10.1) or `--gradio-auth user:pass` (comma-delimited for multiple users) requires a login before the UI loads; `--api-auth user:pass` does the same for the API. Both `user:pass` forms put the password in the launcher's argv, so use the file for the UI login, below; the API credential's other inputs are not yet traced (backlog row 1.142). The UI forms split each entry once, at its first `:`, so a UI password may contain `:`; `--api-auth` splits each entry at every `:`, so an API password containing `:` makes startup fail. No form allows a `,` in a password, since it separates entries. `--share` registers a public `*.gradio.live` relay URL, documented as intended for Colab, not a deployment mechanism, and it bypasses your network boundary entirely. `--enable-insecure-extension-access` reopens the extensions tab regardless of other flags and should stay off on anything reachable beyond loopback.
+
+Do not put a credential on the command line or in `COMMANDLINE_ARGS`. `--gradio-auth user:pass` sits in argv, where `ps` and `/proc/<pid>/cmdline` show it to other local accounts for the UI's whole lifetime, and quoting does not change that. `COMMANDLINE_ARGS` in the environment is the other way in: at import the WebUI appends its contents to `sys.argv`, and the value stays readable through `/proc/<pid>/environ` by the same account and by root; `webui.sh` sets it from `webui-user.sh`. At startup, v1.10.1's launcher prints `Launching Web UI with arguments:` followed by `shlex.join(sys.argv[1:])`, and `sys.argv` already includes `COMMANDLINE_ARGS` by then, so every `--gradio-auth` and `--api-auth` password, from the command line or from `COMMANDLINE_ARGS`, is echoed in clear text to stdout, and from there into the terminal, `docker logs`, the journal or any log that captures it. `--gradio-auth-path` puts only the path in that line: the WebUI reads the file itself, and at the pinned tag its only reader is the credential loader, which prints nothing. That echo is the reason to use the file, and the reason never to put a credential in `COMMANDLINE_ARGS`. The pinned sources document no stdin input for the login. Create the file once, as the account that runs the WebUI; the block assumes a clean shell:
 
 ```bash
-python launch.py --port 7860 --gradio-auth "admin:REPLACE_WITH_LONG_RANDOM_VALUE"
+(
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  set -eC +x +a
+  umask 077
+  if [ -e "$HOME/.config/stable-diffusion-webui/gradio-auth" ] || [ -L "$HOME/.config/stable-diffusion-webui/gradio-auth" ]; then
+    echo 'a gradio-auth file already exists in ~/.config/stable-diffusion-webui; nothing written'; exit 2
+  fi
+  set -- "$(openssl rand -hex 32)"
+  [ "${#1}" -eq 64 ] || { echo 'password generation failed; nothing written'; exit 2; }
+  case "$1" in *[!0123456789abcdef]*) echo 'password generation failed; nothing written'; exit 2 ;; esac
+  mkdir -p -- "$HOME/.config/stable-diffusion-webui"
+  chmod 700 -- "$HOME/.config/stable-diffusion-webui"
+  printf 'admin:%s\n' "$1" > "$HOME/.config/stable-diffusion-webui/gradio-auth"
+)
 ```
 
-Even with `--gradio-auth` set, put TLS in front; the flag alone only gates plaintext HTTP. `--server-name` sets an explicit hostname if you bind somewhere other than the default.
+The block refuses to run when `~/.config/stable-diffusion-webui/gradio-auth` already exists in any form, a dangling symlink included, before it generates anything. `set -C` adds overwrite protection for an existing regular file only, not for every kind of target, and the existence check runs before the write rather than atomically with it, so both hold only in directories that no other account can write to or replace: `$HOME`, `~/.config` and the owner-only directory the block creates. `umask 077` creates the directory mode `0700` and the file mode `0600`, unless the directory, or the parent it is created in, carries a default ACL: new files inherit that ACL in place of the umask, and `chmod 700` on the directory does not remove it. Check with `getfacl` before running the block; backlog row 1.141 tracks making the block refuse that case. The block writes nothing unless the generated password is 64 hex characters, because at v1.10.1 the reader splits each entry once on `:`, so a line of `admin:` would be the user `admin` with an empty password; hex holds no comma or colon for the file format to split on. The password passes only through the subshell's positional parameters and the builtin `printf`, never a command line, and the block clears inherited traps first because a DEBUG, RETURN or ERR trap from your shell could otherwise read it. Read the password back from the file privately when you need it: it is plaintext at rest, readable by that account, by root and by any backup that copies it, so keep it and its backups out of source control ([secrets.md](secrets.md)). A further user is another `user:password` line. Start the WebUI from the file:
+
+```bash
+(
+  { unset -n COMMANDLINE_ARGS && unset -v COMMANDLINE_ARGS; } 2>/dev/null ||
+    { echo 'cannot clear COMMANDLINE_ARGS in this shell; not starting'; exit 2; }
+  { unset -n GRADIO_SERVER_NAME && unset -v GRADIO_SERVER_NAME; } 2>/dev/null ||
+    { echo 'cannot clear GRADIO_SERVER_NAME in this shell; not starting'; exit 2; }
+  f="$HOME/.config/stable-diffusion-webui/gradio-auth"
+  { [ -f "$f" ] && [ ! -L "$f" ]; } ||
+    { echo 'need ~/.config/stable-diffusion-webui/gradio-auth to be a regular file (it is missing, a symlink or another kind of file); not starting'; exit 2; }
+  if grep -Eavqx -- '[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.-]+:[0123456789abcdef]{64}' "$f"; then
+    echo 'a line in ~/.config/stable-diffusion-webui/gradio-auth is not a user name and a 64-hex password; not starting'; exit 2
+  else
+    rc=$?; [ "$rc" -eq 1 ] || { echo 'could not check ~/.config/stable-diffusion-webui/gradio-auth; not starting'; exit 2; }
+  fi
+  if grep -Eaqx -- '[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.-]+:[0123456789abcdef]{64}' "$f"; then :; else
+    rc=$?; [ "$rc" -eq 1 ] || { echo 'could not check ~/.config/stable-diffusion-webui/gradio-auth; not starting'; exit 2; }
+    echo 'no user:password line in ~/.config/stable-diffusion-webui/gradio-auth; not starting'; exit 2
+  fi
+  d=$(awk -F: 'seen[$1]++ { dup = 1 } END { if (dup) print "duplicate"; else if (NR > 0) print "ok" }' "$f") || d=
+  case "$d" in
+    ok) ;;
+    duplicate) echo 'a user name is on more than one line in ~/.config/stable-diffusion-webui/gradio-auth; not starting'; exit 2 ;;
+    *) echo 'could not check ~/.config/stable-diffusion-webui/gradio-auth; not starting'; exit 2 ;;
+  esac
+  python launch.py --server-name 127.0.0.1 --port 7860 --gradio-auth-path "$HOME/.config/stable-diffusion-webui/gradio-auth"
+)
+```
+
+Of the login, only the path is on the command line, and only the path appears in the startup line. The block clears `COMMANDLINE_ARGS` first and refuses to start when it cannot (a readonly name in your shell), so an inherited value can add neither `--listen`, `--share` nor a `--gradio-auth` or `--api-auth` password; put any other flag you need on the command line itself. It passes `--server-name 127.0.0.1` explicitly because the loopback default is not the WebUI's own: at v1.10.1, without `--listen` or `--server-name` the WebUI hands Gradio no server name, and Gradio 3.41.2 then binds to `GRADIO_SERVER_NAME` from the environment, falling back to `127.0.0.1` only when it is unset, so an inherited `GRADIO_SERVER_NAME=0.0.0.0` would bind every interface. The block also clears `GRADIO_SERVER_NAME` with the same fail-closed guard. If you start through `webui.sh` instead, keep every credential out of `COMMANDLINE_ARGS` in `webui-user.sh`. The block checks first that the file is a regular file and not a symlink, so a FIFO in its place can neither block the check nor be read by it. It then reads the file as text (`grep -a`: without `-a`, a NUL could make a malformed line look valid to grep) and refuses a file with no login line, with any line that is not a user name and a 64-hex password, the shape the block above writes, or with the same user name on two lines, because Gradio 3.41.2 keeps the logins in a dictionary keyed by user name, so only the last password given for that user would work. The patterns spell out their ASCII character sets rather than ranges such as `a-f`, whose meaning can depend on the locale, and the duplicate check compares names byte for byte. That check passes only when `awk` exits 0 and prints `ok`, which its program does only after reading at least one line and finding no user name twice, so an exit status alone never counts as a pass. When `grep` or `awk` cannot read the file, the block says that it could not check and refuses, and it gives the same result in a shell that has `set -e` on. If you set a password of your own, relax that pattern, but never let a line with an empty password through. The password stays in the file and in the WebUI's memory, readable by that account and by root, and moving it out of argv does not erase a value already in shell history or a log.
+
+Read from the code, not run: at v1.10.1 the WebUI serves `GET /internal/sysinfo` and `GET /internal/sysinfo-download`, which return its system-information report, and that report carries `COMMANDLINE_ARGS` from the environment unredacted, alongside the process's argv. The argv listing hides an element only when it equals the `--gradio-auth` or `--api-auth` value exactly, so the single-token form `--gradio-auth=user:pass` is not hidden, and a password in `COMMANDLINE_ARGS` appears verbatim in the environment section. The two routes are registered with no dependency, and at the Gradio release v1.10.1 pins (3.41.2) the login is checked per route rather than by middleware, so by that reading they answer without a login even when the Gradio login is on. Nobody has yet observed this on a running instance; backlog row 1.143 tracks confirming it. Do three things regardless: use `--gradio-auth-path`, which puts only a path in the report; never put a credential in `COMMANDLINE_ARGS`; and have the reverse proxy refuse every path that begins `/internal/sysinfo`, which covers `/internal/sysinfo-download` too, since the report still carries the rest of the argv and environment.
+
+Even with `--gradio-auth-path` set, put TLS in front; the login alone only gates plaintext HTTP. `--server-name` sets the address the WebUI binds to; the block's `--server-name 127.0.0.1` is that bind address, so change it only when you mean to serve another interface.
 
 ## InvokeAI
 
@@ -24532,7 +24581,8 @@ curl -q -sI https://imagegen.example.com/                # via the proxy: TLS, a
 - Adding `--listen`/`host: 0.0.0.0` "just to test from my phone" and forgetting it is still set a week later.
 - Treating `--share` (Stable Diffusion WebUI, Fooocus) as a deployment option instead of a short-lived demo link.
 - Installing a custom node or extension without reading it, on the assumption that "it's just a UI".
-- Relying on `--gradio-auth` or Fooocus's `auth.json` alone: single-factor credentials over plain HTTP still leak on the wire without a TLS proxy in front.
+- Relying on the Gradio login (`--gradio-auth-path`) or Fooocus's `auth.json` alone: single-factor credentials over plain HTTP still leak on the wire without a TLS proxy in front.
+- Passing `--gradio-auth user:pass` on the command line, where other local accounts can read the password through `ps` for as long as the UI runs and the launcher prints it at startup; or in `COMMANDLINE_ARGS`, where it is held in the environment, readable by the same account and by root, printed at startup the same way, and returned by `/internal/sysinfo` (read from the code, not run).
 - Assuming InvokeAI's multi-user mode is on by default; the base install has no login at all, so loopback binding still carries the whole burden.
 
 ## Sources (checked September 2026)
@@ -24542,6 +24592,20 @@ curl -q -sI https://imagegen.example.com/                # via the proxy: TLS, a
 - ComfyUI 2025 Jan Security Update (custom node code-execution risk): https://blog.comfy.org/p/comfyui-2025-jan-security-update
 - ComfyUI-Manager security advisory, CVE-2025-67303, GHSA-95pq-hr8p-f5g7 (both minimum versions): https://github.com/Comfy-Org/ComfyUI-Manager/security/advisories/GHSA-95pq-hr8p-f5g7
 - AUTOMATIC1111 Command Line Arguments and Settings wiki: https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Command-Line-Arguments-and-Settings
+- AUTOMATIC1111 `--gradio-auth-path` ("set gradio authentication file path"), `--gradio-auth`, `--api-auth` and `--server-name` definitions (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L87-L113
+- AUTOMATIC1111 credential reader: opens `cmd_opts.gradio_auth_path`, splits each line on `,` and each entry once on `:` (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/initialize_util.py#L114-L139
+- AUTOMATIC1111 passes the credential list to Gradio as `auth=` (`list(initialize_util.get_gradio_auth_creds()) or None`; pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/webui.py#L70-L90
+- AUTOMATIC1111 `--api-auth` parsing, `auth.split(":")` into a user and a password for each `,`-separated entry (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/api/api.py#L199-L205
+- AUTOMATIC1111 appends `COMMANDLINE_ARGS` from the environment to `sys.argv` (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/paths_internal.py#L12-L13
+- AUTOMATIC1111 launcher prints `shlex.join(sys.argv[1:])` at startup (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/launch_utils.py#L463-L464
+- AUTOMATIC1111 `webui.sh` sources `webui-user.sh` (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/webui.sh#L18-L23
+- AUTOMATIC1111 system-information report: `COMMANDLINE_ARGS` on the environment whitelist, the unredacted environment dump, and the exact-value argv redaction (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/sysinfo.py#L33 and https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/sysinfo.py#L130-L148
+- AUTOMATIC1111 `/internal/sysinfo` and `/internal/sysinfo-download` routes, registered with no dependency (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/ui.py#L1223-L1232
+- AUTOMATIC1111 pins Gradio 3.41.2 and adds only GZip and CORS middleware (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/requirements_versions.txt#L11 and https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/initialize_util.py#L192-L214
+- AUTOMATIC1111 `gradio_server_name()`: `--server-name`, else `0.0.0.0` with `--listen`, else `None` (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/initialize_util.py#L10-L15
+- Gradio 3.41.2 default bind, `LOCALHOST_NAME = os.getenv("GRADIO_SERVER_NAME", "127.0.0.1")` and `server_name = server_name or LOCALHOST_NAME` (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/networking.py#L28 and https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/networking.py#L120
+- Gradio 3.41.2 checks the login per route, with `dependencies=[Depends(login_check)]` (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/routes.py#L193-L305
+- Gradio 3.41.2 turns a list `auth` into a dictionary keyed by user name, so a later password for the same user name replaces an earlier one (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/routes.py#L128-L133
 - InvokeAI YAML Config (host/port defaults): https://invoke.ai/configuration/invokeai-yaml/
 - InvokeAI Multi-User Administrator Guide: https://invoke.ai/features/multi-user-mode/admin-guide/
 - Fooocus repository README (`--listen`, `--share`, auth.json): https://github.com/lllyasviel/Fooocus
@@ -24570,17 +24634,79 @@ Keep it on loopback regardless of which mode you choose, and put the proxy's own
 
 `KEY_VAULTS_SECRET` is the key that encrypts stored provider credentials (AES-GCM); generate it with `openssl rand -base64 32`, and once set, never change it, or previously encrypted data becomes unreadable. LobeHub's own basic-variables page describes it loosely as "a password to access the LobeHub service", but its own warning on the same entry says the key is used to encrypt sensitive data: treat it as the encryption key, not the deployment's login gate. Real per-user login comes from LobeChat's Better Auth service: `AUTH_SECRET` (required, generated the same way) signs sessions, `AUTH_SSO_PROVIDERS` lists enabled SSO providers (for example `google,github,microsoft`) alongside the matching provider credentials each one needs (for example `AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET`), and `AUTH_DISABLE_EMAIL_PASSWORD=1` forces SSO-only login, hiding the password form entirely. `AUTH_ALLOWED_EMAILS` restricts registration to specific addresses or domains, but it defaults to empty, which allows every email through, so set it explicitly rather than relying on federation alone to gate access.
 
+Keep the three secrets, `KEY_VAULTS_SECRET`, `AUTH_SECRET` and the Google OAuth client secret, off the `docker run` command line: a value given as `-e NAME=value` is in the docker CLI's argv, where `ps` and `/proc/<pid>/cmdline` show it to other local accounts while that command runs, and quoting does not change that. At docker/cli v27.5.1, `--env-file` reads environment variables from a file, through a loader that opens the named path and has no `-` stdin form, and `-e NAME` with no value takes the value from the CLI's own environment. Docker Compose's `env_file` reads a file of variables for a service through its own loader in compose-go (v2.4.7, the version Docker Compose v2.32.4 pins). A Compose `secrets` entry puts a value in a file under `/run/secrets/` instead: a file-sourced secret is bind-mounted read-only, and an environment-sourced one is copied into the container, mode `0444` by default, rather than mounted. That only helps if something reads the file into these variables, and LobeHub documents them as environment variables only; a search of its v2.2.16 tree finds no `KEY_VAULTS_SECRET_FILE`, `AUTH_SECRET_FILE` or `AUTH_GOOGLE_SECRET_FILE`. Use the `--env-file` file: `KEY_VAULTS_SECRET` must stay the same for the life of the data it encrypts, so it needs a durable home anyway, and a file keeps the values out of the CLI's own environment too. Create it once, as the account that runs `docker`. The block prompts for the Google client secret without echo, under CONTRIBUTING rule 7's `read` exception, and assumes a clean shell:
+
 ```bash
-docker run -d -p 127.0.0.1:3210:3210 \
-  -e KEY_VAULTS_SECRET=REPLACE_WITH_LONG_RANDOM_VALUE \
-  -e AUTH_SECRET=REPLACE_WITH_LONG_RANDOM_VALUE \
-  -e AUTH_DISABLE_EMAIL_PASSWORD=1 \
-  -e AUTH_SSO_PROVIDERS=google \
-  -e AUTH_GOOGLE_ID=REPLACE_WITH_GOOGLE_OAUTH_CLIENT_ID \
-  -e AUTH_GOOGLE_SECRET=REPLACE_WITH_GOOGLE_OAUTH_CLIENT_SECRET \
-  -e AUTH_ALLOWED_EMAILS=admin@example.com,example.com \
-  lobehub/lobe-chat
+(
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  set -eC +x +a
+  umask 077
+  if [ -e "$HOME/.config/lobechat/secrets.env" ] || [ -L "$HOME/.config/lobechat/secrets.env" ]; then
+    echo 'a secrets.env already exists in ~/.config/lobechat; nothing written'; exit 2
+  fi
+  { unset -n gsec && unset -v gsec; } 2>/dev/null ||
+    { echo 'cannot clear gsec in this shell; nothing written'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; nothing written'; exit 2; }
+  printf 'Google OAuth client secret (input hidden): '
+  IFS= read -r -s gsec || { printf '\n'; echo 'no client secret read; nothing written'; exit 2; }
+  printf '\n'
+  case "$gsec" in
+    ""|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'empty client secret, placeholder or control character; nothing written'; exit 2 ;;
+  esac
+  set -- "$(openssl rand -base64 32)" "$(openssl rand -base64 32)"
+  [ "${#1}" -eq 44 ] || { echo 'key generation failed; nothing written'; exit 2; }
+  [ "${#2}" -eq 44 ] || { echo 'key generation failed; nothing written'; exit 2; }
+  case "$1$2" in *[!A-Za-z0-9+/=]*) echo 'key generation failed; nothing written'; exit 2 ;; esac
+  mkdir -p -- "$HOME/.config/lobechat"
+  chmod 700 -- "$HOME/.config/lobechat"
+  printf 'KEY_VAULTS_SECRET=%s\nAUTH_SECRET=%s\nAUTH_GOOGLE_SECRET=%s\n' "$1" "$2" "$gsec" > "$HOME/.config/lobechat/secrets.env"
+)
 ```
+
+The block refuses to run when `~/.config/lobechat/secrets.env` already exists in any form, a dangling symlink included, before it prompts or generates anything, so a rerun cannot replace a `KEY_VAULTS_SECRET` that already encrypts data. `set -C` adds overwrite protection for an existing regular file only, not for every kind of target, and the existence check runs before the write rather than atomically with it, so both hold only in directories that no other account can write to or replace: `$HOME`, `~/.config` and the owner-only directory the block creates. For a deployment that already has these values, put its existing values in such a file instead of generating new ones. `umask 077` creates the directory mode `0700` and the file mode `0600`, unless the directory, or the parent it is created in, carries a default ACL: new files inherit that ACL in place of the umask, and `chmod 700` on the directory does not remove it. Check with `getfacl` before running the block; backlog row 1.141 tracks making the block refuse that case. The block writes nothing unless both generated values are 44 base64 characters and the prompted secret is non-empty, is not the placeholder and holds no control character. `read` stops at the first newline, so a newline cannot enter the value; the check refuses a carriage return or any other control character. Paste the secret alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run. The generated values pass only through the subshell's positional parameters and the builtin `printf`, and the client secret through one variable local to the subshell, never a command line; the block clears inherited traps first because a DEBUG, RETURN or ERR trap from your shell could otherwise read them. A write failure can leave a partial file. The launch block below refuses the shapes it can detect, a generated value that is not 44 base64 characters, a missing or duplicated line, or any other line, but a client secret cut short still looks like a valid value and cannot be detected, so delete a file left by a failed run and create it again rather than starting on it. The file holds the secrets in plaintext at rest, readable by that account, by root and by any backup that copies it, so keep it and its backups out of source control ([secrets.md](secrets.md)). Start LobeChat from the file, with only non-secret values on its command line. Substitute your Google OAuth client ID and the addresses or domains allowed to register inside the single quotes on the `set --` line:
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_GOOGLE_OAUTH_CLIENT_ID' 'admin@example.com,example.com'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not starting'; exit 2; }
+  shift
+  [ "$#" -eq 2 ] || { echo 'the set -- line needs exactly 2 values; not starting'; exit 2; }
+  case "$1|$2" in *REPLACE_WITH_*) echo 'substitute the client ID inside the quotes on the set -- line; not starting'; exit 2 ;; esac
+  { [ -n "$1" ] && [ -n "$2" ]; } || { echo 'empty value on the set -- line; not starting'; exit 2; }
+  case "$1$2" in *[[:space:][:cntrl:]]*) echo 'whitespace or a control character on the set -- line; not starting'; exit 2 ;; esac
+  f="$HOME/.config/lobechat/secrets.env"
+  { [ -f "$f" ] && [ ! -L "$f" ]; } ||
+    { echo 'need ~/.config/lobechat/secrets.env to be a regular file (it is missing, a symlink or another kind of file); not starting'; exit 2; }
+  if grep -Eavqx -- 'KEY_VAULTS_SECRET=[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/]{43}=|AUTH_SECRET=[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/]{43}=|AUTH_GOOGLE_SECRET=[^[:cntrl:]]+' "$f"; then
+    echo 'a line in ~/.config/lobechat/secrets.env is not one of the three secret lines; not starting'; exit 2
+  else
+    rc=$?; [ "$rc" -eq 1 ] || { echo 'could not check ~/.config/lobechat/secrets.env; not starting'; exit 2; }
+  fi
+  if grep -aq -- 'REPLACE_WITH_' "$f"; then
+    echo 'a placeholder is still in ~/.config/lobechat/secrets.env; not starting'; exit 2
+  else
+    rc=$?; [ "$rc" -eq 1 ] || { echo 'could not check ~/.config/lobechat/secrets.env; not starting'; exit 2; }
+  fi
+  c=$(grep -Eacx -- 'KEY_VAULTS_SECRET=[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/]{43}=' "$f") || c=
+  [ "$c" = 1 ] ||
+    { echo 'need exactly one generated KEY_VAULTS_SECRET line in ~/.config/lobechat/secrets.env, or could not check it; not starting'; exit 2; }
+  c=$(grep -Eacx -- 'AUTH_SECRET=[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/]{43}=' "$f") || c=
+  [ "$c" = 1 ] ||
+    { echo 'need exactly one generated AUTH_SECRET line in ~/.config/lobechat/secrets.env, or could not check it; not starting'; exit 2; }
+  c=$(grep -Eacx -- 'AUTH_GOOGLE_SECRET=[^[:cntrl:]]+' "$f") || c=
+  [ "$c" = 1 ] ||
+    { echo 'need exactly one AUTH_GOOGLE_SECRET line in ~/.config/lobechat/secrets.env, or could not check it; not starting'; exit 2; }
+  docker run -d -p 127.0.0.1:3210:3210 \
+    --env-file "$HOME/.config/lobechat/secrets.env" \
+    -e AUTH_DISABLE_EMAIL_PASSWORD=1 \
+    -e AUTH_SSO_PROVIDERS=google \
+    -e "AUTH_GOOGLE_ID=$1" \
+    -e "AUTH_ALLOWED_EMAILS=$2" \
+    lobehub/lobe-chat
+)
+```
+
+The block refuses the placeholder, an empty value, and whitespace or a control character on the `set --` line. It checks first that `~/.config/lobechat/secrets.env` is a regular file and not a symlink, so a FIFO in its place can neither block the check nor be read by it. It then reads the file as text (`grep -a`: without `-a`, a NUL could make a malformed line look valid to grep) and refuses to start unless the file holds exactly one line for each generated value and exactly one client secret line, no other line and no placeholder: at v27.5.1 an env-file line holding only a name takes its value from the CLI's own environment, which would bring back the channel the file replaces. It uses a count only from a `grep` that succeeded, says that it could not check when `grep` cannot read the file, and gives the same result in a shell that has `set -e` on. The patterns for the two generated values spell out their ASCII character sets rather than ranges such as `A-Z`, whose meaning can depend on the locale. The client secret pattern, `[^[:cntrl:]]+`, is the exception and depends on the locale: it refuses only control characters, and the locale decides which characters are control characters, as it does for the other `[:cntrl:]` checks, in the block that creates the file and on the `set --` line. A key of another shape from an existing deployment needs the matching pattern relaxed. This moves the secrets out of argv, not out of reach. Docker hands them to the container as environment variables, so anyone who can use the Docker socket can read them back with `docker inspect`, which returns the container's configuration with its `Env` list, for as long as the container exists, running or stopped; and the same user as the container's process, or root, can read them from that process's `/proc/<pid>/environ` for its whole lifetime. Socket access is root-equivalent already ([container-hardening.md](container-hardening.md)); grant it to nobody you would not trust with these keys. `-e NAME` with no value would keep them out of argv as well, but only under rule 7's guarded one-command prefix assignment, never an `export`, and the values would then sit in the CLI's own environment too. Neither form erases a value already recorded in shell history, tracing or a log.
 
 MFA: enforce it at whichever SSO provider you list in `AUTH_SSO_PROVIDERS`; LobeChat's own login has no second factor of its own.
 
@@ -24669,12 +24795,24 @@ For a multi-user chat or RAG deployment (AnythingLLM workspaces, or a shared ass
 - Treating AnythingLLM's single instance password as equivalent to per-user accounts; it grants full admin to whoever has it.
 - Running OpenHands with a shared, long-lived API key exposed on the same network as untrusted users.
 - Rotating LobeChat's `KEY_VAULTS_SECRET` after data has been encrypted with it, which makes that data unreadable.
+- Passing `KEY_VAULTS_SECRET`, `AUTH_SECRET` or `AUTH_GOOGLE_SECRET` as `-e NAME=value`, which puts the value in the docker CLI's argv for other local accounts to read while the command runs.
 
 ## Sources (checked September 2026)
 
 - AnythingLLM security and access documentation: https://docs.anythingllm.com/features/security-and-access
 - LobeHub environment variables (KEY_VAULTS_SECRET): https://lobehub.com/only-ai/markdown/docs/en/self-hosting/environment-variables/basic
 - LobeHub authentication service environment variables (Better Auth): https://lobehub.com/only-ai/markdown/docs/en/self-hosting/environment-variables/auth
+- LobeHub `KEY_VAULTS_SECRET` callout, "This key is used to encrypt sensitive data." (pinned tag v2.2.16): https://github.com/lobehub/lobehub/blob/v2.2.16/docs/self-hosting/environment-variables/basic.mdx#L22-L32
+- LobeHub `AUTH_SECRET` generated with `openssl rand -base64 32`, and `AUTH_GOOGLE_SECRET` as the "Client Secret of the Google OAuth application." (pinned tag v2.2.16): https://github.com/lobehub/lobehub/blob/v2.2.16/docs/self-hosting/environment-variables/auth.mdx
+- Docker `container run` reference, `--env-file` ("Read in a file of environment variables"; pinned tag v27.5.1): https://github.com/docker/cli/blob/v27.5.1/docs/reference/commandline/container_run.md
+- Docker `container run` reference, `--env VAR` with no value, which "checks the value the variable has in your local environment and passes it to the container" (pinned tag v27.5.1): https://github.com/docker/cli/blob/v27.5.1/docs/reference/commandline/container_run.md#L626-L640 and the `-e` validator's `os.LookupEnv`: https://github.com/docker/cli/blob/v27.5.1/opts/env.go#L18-L31
+- Docker CLI env-file loading through `kvfile.Parse`, with `-e` parsed after the file "to allow override" (pinned tag v27.5.1): https://github.com/docker/cli/blob/v27.5.1/opts/parse.go#L19-L39
+- Docker CLI key/value file parser, which opens the named path (`os.Open(filename)`) with no `-` stdin form, and looks up a line that holds only a name in the CLI's environment (pinned tag v27.5.1): https://github.com/docker/cli/blob/v27.5.1/pkg/kvfile/kvfile.go#L54-L69 and https://github.com/docker/cli/blob/v27.5.1/pkg/kvfile/kvfile.go#L121-L126
+- Docker Compose pins compose-go v2.4.7 (pinned tag v2.32.4): https://github.com/docker/compose/blob/v2.32.4/go.mod#L5-L18
+- compose-go service `env_file` resolution ("parses env_files set for services to resolve the actual environment map for services"; pinned tag v2.4.7): https://github.com/compose-spec/compose-go/blob/v2.4.7/types/project.go#L631-L664
+- Docker Compose file-sourced secrets bind-mounted read-only under `/run/secrets/`, environment-sourced ones skipped there (pinned tag v2.32.4): https://github.com/docker/compose/blob/v2.32.4/pkg/compose/create.go#L1029-L1084
+- Docker Compose environment-sourced secrets copied into the container under `/run/secrets/`, mode `0444` by default (pinned tag v2.32.4): https://github.com/docker/compose/blob/v2.32.4/pkg/compose/secrets.go#L31-L61 and https://github.com/docker/compose/blob/v2.32.4/pkg/compose/secrets.go#L101
+- Moby container inspect returns `Config: ctr.Config`, whose `Env []string` holds the environment (pinned tag v27.5.1): https://github.com/moby/moby/blob/v27.5.1/daemon/inspect.go#L107-L110 and https://github.com/moby/moby/blob/v27.5.1/api/types/container/config.go#L55
 - Chainlit authentication overview: https://docs.chainlit.io/authentication/overview
 - Chainlit password authentication (`@cl.password_auth_callback` signature and example): https://docs.chainlit.io/authentication/password
 - Python `hmac.compare_digest`, for what it does and does not conceal: https://docs.python.org/3/library/hmac.html
