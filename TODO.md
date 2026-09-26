@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.145**, **2.48**, **3.25**, **4.12**.
+Next ids: **1.148**, **2.48**, **3.25**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -116,6 +116,7 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.140 | `realtime-voice-infra.md`: evaluate a TURN allocation client that takes the password outside argv (stdin, a file or the environment), verified at a pinned tag, to replace `turnutils_uclient -w` in the allocation test, as CONTRIBUTING rule 7's third exception asks (from #354, maintainer ruling 2026-09-25). (L, S) | `[gap]` |
 | 1.141 | Create-once key writers (`model-servers.md`'s llama.cpp, SGLang, vLLM and text-generation-webui blocks, and the LobeChat and Stable Diffusion WebUI writers in `chat-uis.md` and `image-gen-uis.md`): a default ACL on the target directory is inherited by new files and defeats `umask 077`, so a key file can be group-readable while the guide says `0600`. Refuse a directory carrying a default ACL (`getfacl`) and assert the file's mode after the write, verifying setfacl/getfacl behaviour first (from the #355 review, maintainer ruling 2026-09-25). (L, S) | `[gap]` |
 | 1.144 | CONTRIBUTING rule 7's `read` exception and every block that uses it (among them `search-engines.md`, which CONTRIBUTING names as the model block): `read -r` takes only the first line of a paste, so a secret pasted with a newline leaves every later line for the reader's shell to run. Add one warning sentence to the rule (paste the secret alone) and apply it to every read-exception block (from the #356 review, maintainer ruling 2026-09-25). (L, M) | `[gap]` |
+| 1.147 | Demonstrate the REASONED Fooocus entries in `image-gen-uis.md` Verify (#359): on an isolated host or network namespace, run Fooocus v2.5.5 with a bare `--listen` and then with `--listen 127.0.0.1 --port 7865`, and the upstream container image published as `7865:7865` and then as `127.0.0.1:7865:7865`, reading `ss -tlnp` and running the probe loop from another host in each state; also confirm that an inherited `GRADIO_SERVER_PORT` moves the UI when no `--port` is passed and not when `--port 7865` is, and that an unreadable `auth.json` starts the UI with no login. They ship reasoned because the authoring host forbids opening a listener until an isolated network namespace exists. Opened by #359 under CONTRIBUTING rule 5; the maintainer has not ruled on it. (M, M) | `[gap]` |
 ## Priority 3: Add missing content
 
 Gaps from the same audit, one row per missing guide. A gap raised by more than one family is
