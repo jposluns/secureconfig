@@ -712,8 +712,11 @@ else
 fi
 
 echo "== site CSP pins every inline block by hash =="
-# The CSP in site/_headers names the sha256 of each inline <script> and <style> in
-# site/index.html, so an edited block cannot ship with a stale hash: the browser would then
+# The CSP in site/_headers names the sha256 of each inline <script> and <style> in every page
+# tools/check_csp_hashes.py lists (the same gate refuses an on* handler on a page, refuses XHTML,
+# compressed SVG and symbolic links under site/, and fails any SVG carrying a <script>, an on*
+# handler, a javascript: URL or inline style; rows 3.18 and P5), so an edited block cannot ship
+# with a stale hash: the browser would then
 # refuse to run the script, or refuse to apply the stylesheet and render the page unstyled.
 # Both are silent in a diff and obvious to a visitor. This check used to live here as an
 # embedded Python heredoc and covered only script-src, while style-src carried
