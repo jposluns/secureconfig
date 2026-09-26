@@ -1,0 +1,111 @@
+{
+  "404": {
+    "total": 1,
+    "excludes": 0,
+    "unknown": 0,
+    "unsupported": 0,
+    "detailed_stats": true,
+    "error_map": {"fixture.md":[{"url":"https://example.com/dead","status":{"text":"404 Not Found","code":404}}]},
+    "timeout_map": {},
+    "success_map": {},
+    "redirect_map": {}
+  },
+  "410": {
+    "total": 1,
+    "excludes": 0,
+    "unknown": 0,
+    "unsupported": 0,
+    "detailed_stats": true,
+    "error_map": {"fixture.md":[{"url":"https://example.com/dead","status":{"text":"410 Gone","code":410}}]},
+    "timeout_map": {},
+    "success_map": {},
+    "redirect_map": {}
+  },
+  "advisory": {
+    "total": 3,
+    "excludes": 0,
+    "unknown": 0,
+    "unsupported": 0,
+    "detailed_stats": true,
+    "error_map": {},
+    "timeout_map": {"fixture.md":[{"url":"https://example.com/slow","status":{"text":"Timeout","details":"Request timed out"}}]},
+    "success_map": {"fixture.md":[{"url":"https://example.com/moved","status":{"text":"301 Moved Permanently","code":301}},{"url":"https://example.com/blocked","status":{"text":"403 Forbidden","code":403}}]},
+    "redirect_map": {"fixture.md":[{"origin":"https://example.com/moved","redirects":[{"url":"https://example.com/final","code":301}]}]}
+  },
+  "malformed": "{",
+  "zero": {
+    "total": 0,
+    "excludes": 0,
+    "unknown": 0,
+    "unsupported": 0,
+    "detailed_stats": true,
+    "error_map": {},
+    "timeout_map": {},
+    "success_map": {},
+    "redirect_map": {}
+  },
+  "missing": {
+    "total": 3,
+    "excludes": 0,
+    "unknown": 0,
+    "unsupported": 0,
+    "detailed_stats": true,
+    "timeout_map": {"fixture.md":[{"url":"https://example.com/slow","status":{"text":"Timeout","details":"Request timed out"}}]},
+    "success_map": {"fixture.md":[{"url":"https://example.com/moved","status":{"text":"301 Moved Permanently","code":301}},{"url":"https://example.com/blocked","status":{"text":"403 Forbidden","code":403}}]},
+    "redirect_map": {"fixture.md":[{"origin":"https://example.com/moved","redirects":[{"url":"https://example.com/final","code":301}]}]}
+  },
+  "no_details": {
+    "total": 3,
+    "excludes": 0,
+    "unknown": 0,
+    "unsupported": 0,
+    "detailed_stats": false,
+    "error_map": {},
+    "timeout_map": {"fixture.md":[{"url":"https://example.com/slow","status":{"text":"Timeout","details":"Request timed out"}}]},
+    "success_map": {"fixture.md":[{"url":"https://example.com/moved","status":{"text":"301 Moved Permanently","code":301}},{"url":"https://example.com/blocked","status":{"text":"403 Forbidden","code":403}}]},
+    "redirect_map": {"fixture.md":[{"origin":"https://example.com/moved","redirects":[{"url":"https://example.com/final","code":301}]}]}
+  },
+  "bad_map": {
+    "total": 3,
+    "excludes": 0,
+    "unknown": 0,
+    "unsupported": 0,
+    "detailed_stats": true,
+    "error_map": [],
+    "timeout_map": {"fixture.md":[{"url":"https://example.com/slow","status":{"text":"Timeout","details":"Request timed out"}}]},
+    "success_map": {"fixture.md":[{"url":"https://example.com/moved","status":{"text":"301 Moved Permanently","code":301}},{"url":"https://example.com/blocked","status":{"text":"403 Forbidden","code":403}}]},
+    "redirect_map": {"fixture.md":[{"origin":"https://example.com/moved","redirects":[{"url":"https://example.com/final","code":301}]}]}
+  },
+  "missing_status": {
+    "total": 3,
+    "excludes": 0,
+    "unknown": 0,
+    "unsupported": 0,
+    "detailed_stats": true,
+    "error_map": {},
+    "timeout_map": {"fixture.md":[{"url":"https://example.com/slow","status":{"text":"Timeout","details":"Request timed out"}}]},
+    "success_map": {"fixture.md":[{"url":"https://example.com/moved"},{"url":"https://example.com/blocked","status":{"text":"403 Forbidden","code":403}}]},
+    "redirect_map": {"fixture.md":[{"origin":"https://example.com/moved","redirects":[{"url":"https://example.com/final","code":301}]}]}
+  },
+  "missing_redirects": {
+    "total": 3,
+    "excludes": 0,
+    "unknown": 0,
+    "unsupported": 0,
+    "detailed_stats": true,
+    "error_map": {},
+    "timeout_map": {"fixture.md":[{"url":"https://example.com/slow","status":{"text":"Timeout","details":"Request timed out"}}]},
+    "success_map": {"fixture.md":[{"url":"https://example.com/moved","status":{"text":"301 Moved Permanently","code":301}},{"url":"https://example.com/blocked","status":{"text":"403 Forbidden","code":403}}]}
+  },
+  "bad_redirect": {
+    "total": 3,
+    "excludes": 0,
+    "unknown": 0,
+    "unsupported": 0,
+    "detailed_stats": true,
+    "error_map": {},
+    "timeout_map": {"fixture.md":[{"url":"https://example.com/slow","status":{"text":"Timeout","details":"Request timed out"}}]},
+    "success_map": {"fixture.md":[{"url":"https://example.com/moved","status":{"text":"301 Moved Permanently","code":301}},{"url":"https://example.com/blocked","status":{"text":"403 Forbidden","code":403}}]},
+    "redirect_map": {"fixture.md":[{"origin":"https://example.com/moved","redirects":[{"url":"https://example.com/final"}]}]}
+  }
+}
