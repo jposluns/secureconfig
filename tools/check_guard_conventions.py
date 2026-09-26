@@ -800,6 +800,14 @@ def _credential_codes(a):
 
 # C3-TOOL-ARGV: explicit tool/flag allowlist, independent of PROBE_CMDS.
 # These flags accept credential values, including placeholders and expansions.
+# OpenSSL 3.5: password sources (including the subcommand-specific names below)
+# and enc's legacy -k password / -kfile filename:
+# https://docs.openssl.org/3.5/man1/openssl-passphrase-options/
+# https://docs.openssl.org/3.5/man1/openssl-enc/
+# https://docs.openssl.org/3.5/man1/openssl-pkcs12/
+# https://docs.openssl.org/3.5/man1/openssl-s_client/
+# https://docs.openssl.org/3.5/man1/openssl-s_server/
+# https://docs.openssl.org/3.5/man1/openssl-cmp/
 # "inline" options prompt without an attached value; "optional" options prompt
 # without a following value. A dash is stdin ONLY for documented consumers.
 _TOOL_SECRET_OPTS = {
@@ -808,12 +816,18 @@ _TOOL_SECRET_OPTS = {
     "mysql": dict.fromkeys(("-p", "--password", "--password1",
                            "--password2", "--password3"), "inline"),
     "mariadb": {"-p": "inline", "--password": "inline"},
-    "redis-cli": {"-a": "value", "--pass": "value"},
+    "redis-cli": {"-a": "value", "--pass": "value",
+                  "--cluster-from-pass": "value"},
     "mongosh": {"-p": "optional", "--password": "optional"},
     "clickhouse-client": {"--password": "optional"},
     "docker": {"-p": "stdin", "--password": "stdin"},
-    "openssl": {"-pass": "source", "-passin": "source",
-                "-passout": "source", "-hmac": "value"},
+    "openssl": {
+        **dict.fromkeys(("-pass", "-passin", "-passout", "-password",
+                         "-passcerts", "-proxy_pass", "-dpass", "-secret",
+                         "-keypass", "-newkeypass", "-otherpass", "-tls_keypass",
+                         "-srv_secret", "-srv_keypass", "-rsp_keypass"), "source"),
+        "-hmac": "value", "-k": "value",
+    },
     "kubectl": {"--token": "value"},
     "influx": {"-t": "value", "--token": "value"},
     "cypher-shell": {"-p": "value", "--password": "value"},
@@ -827,13 +841,23 @@ _TOOL_SKIP_OPTS = {
     "turnutils_uclient": "-u -e -p -r -L -d -i -k -z -l -n -m",
     "mysql": "-h --host -P --port -u --user -e --execute --ssl-ca",
     "mariadb": "-h --host -P --port -u --user -e --execute --ssl-ca",
-    "redis-cli": "-h -p -u --user --cacert --cert --key",
+    # Redis 7.4.2 parseOptions: values are not the command name.
+    # https://raw.githubusercontent.com/redis/redis/7.4.2/src/redis-cli.c
+    "redis-cli": "-h -p -s -n -r -i -d -D -u -t -X --user --cacert --cacertdir "
+                 "--cert --key --sni --tls-ciphers --tls-ciphersuites "
+                 "--pipe-timeout --show-pushes --lru-test --pattern --count "
+                 "--quoted-pattern --intrinsic-latency --rdb --functions-rdb "
+                 "--memkeys-samples --keystats-samples --cursor --top --eval "
+                 "--test_hint --test_hint_file --cluster-replicas "
+                 "--cluster-master-id --cluster-from --cluster-to "
+                 "--cluster-from-user --cluster-weight --cluster-slots "
+                 "--cluster-timeout --cluster-pipeline --cluster-threshold",
     "mongosh": "--host --port -u --username --eval --file --tlsCAFile "
                "--tlsCertificateKeyFile --authenticationDatabase "
                "--authenticationMechanism",
     "clickhouse-client": "--host --port --user --query --config-file",
     "docker": "-u --username --config -H --host --context",
-    "openssl": "-in -out -key -cert -CAfile -connect -servername -subj",
+    "openssl": "-in -out -key -cert -CAfile -connect -servername -subj -kfile",
     "kubectl": "-n --namespace --context --kubeconfig --user -o --output -f",
     "influx": "--host --host-url -o --org --org-id -c --active-config",
     "cypher-shell": "-a --address --uri -u --username -d --database -f --file",
@@ -854,8 +878,16 @@ def _tool_credential_flags(word, args):
     Deliberately bounded: unknown option ownership, most short clusters,
     secret-bearing URIs, arbitrary positional secrets, expanded option names,
     aliases, shell strings and array-built commands remain outside this rule.
-    Redis/Mosquitto short options require separate values. Other supported
-    short value options accept attached values. htpasswd handles -b clusters.
+    In particular, sudo -u, timeout -s, mysql -Bp"$PW" and
+    turnutils_uclient -vw"$PW" are unresolved; Vault non-token login methods,
+    secret assignments passed to the env binary, and OpenSSL -macopt are not
+    checked. A shell assignment prefix is distinct from an env argv value.
+    Redis/Mosquitto and OpenSSL options require separate values (or the
+    explicit equals form recognized here). Other supported short value options
+    accept attached values. htpasswd handles -b clusters.
+    Redis command data and htpasswd/mosquitto_passwd positional operands are
+    never reinterpreted as options once the first positional word is reached.
+    Redis --cluster instead permits CLI options after its operation/operands.
     OpenSSL source expansions are uncertain and flagged unless a literal
     file:/env:/fd: prefix or stdin establishes an out-of-argv input.
     """
@@ -867,9 +899,23 @@ def _tool_credential_flags(word, args):
     skip = _TOOL_SKIP_OPTS[name].split()
     flags, positional, batch = [], [], ""
     method = "token"
+    redis_cluster = False
     i = 0
     while i < len(a):
         t = a[i]
+        if name == "redis-cli" and t == "--cluster":
+            # Cluster-manager operands may precede further CLI options.
+            redis_cluster = True
+            i += 2  # the next word names the cluster operation
+            continue
+        if ((name in ("htpasswd", "mosquitto_passwd")
+             or (name == "redis-cli" and not redis_cluster))
+                and (not t.startswith("-") or t == "-")):
+            # These tools stop parsing options at the first operand. Preserve
+            # all subsequent words, including "--" and option-looking passwords
+            # or Redis command data.
+            positional.extend(a[i:])
+            break
         if t == "--":
             positional.extend(a[i + 1:])
             break
@@ -879,7 +925,8 @@ def _tool_credential_flags(word, args):
             # Do not confuse OpenSSL's single-dash long options with shorts.
             short = t[:2]
             if (len(t) > 2 and short in specs
-                    and name not in ("redis-cli", "mosquitto_pub", "mosquitto_sub")):
+                    and name not in ("redis-cli", "mosquitto_pub",
+                                     "mosquitto_sub", "openssl")):
                 opt, mode, eq, tail = short, specs[short], True, t[2:]
         if mode:
             if not eq and mode == "inline":
@@ -2980,6 +3027,100 @@ _TOOL_ARGV_CASES = [
     ("lk --api-secret ''", 0),
     ("lk --api-secret", 0),
 ]
+# Option boundaries: a leading dash belongs to the positional operand.
+_TOOL_ARGV_CASES += [
+    ('htpasswd -nb user "-s3cr3t-value"', 1),
+    ('htpasswd -nb user --', 1),
+    ('htpasswd -nb user -C', 1),
+    ('htpasswd -b file user -n', 1),
+    ('htpasswd -nb -- user --', 1),
+    ('htpasswd -b file -user -C', 1),
+    ('htpasswd -n user', 0),
+    ('htpasswd file -b', 0),
+    ('htpasswd -i file -b', 0),
+    ('htpasswd -nb user ""', 0),
+    ('mosquitto_passwd -b file user "-s3cr3t-value"', 1),
+    ('mosquitto_passwd -b file user --', 1),
+    ('mosquitto_passwd -b file user -H', 1),
+    ('mosquitto_passwd -b file -user -c', 1),
+    ('mosquitto_passwd -H sha512 -b file user --', 1),
+    ('mosquitto_passwd file -b', 0),
+    ('mosquitto_passwd -c file -b', 0),
+    ('mosquitto_passwd -b file user ""', 0),
+    ('redis-cli SET key -a', 0),
+    ('redis-cli SET --pass public-value', 0),
+    ('redis-cli SET key --pass=public-value', 0),
+    ('redis-cli -h host -p 6379 SET --pass public-value', 0),
+    ('redis-cli --user -a SET key value', 0),
+    ('redis-cli -- SET --pass public-value', 0),
+    ('redis-cli -a secret SET key -a', 1),
+    ('redis-cli --pass "$PW" SET --pass public-value', 1),
+    ('redis-cli -n 1 --pass secret GET key', 1),
+    ('redis-cli -s /run/redis.sock -a secret GET key', 1),
+    ('redis-cli -r 2 -i 1 --pass secret GET key', 1),
+    ('redis-cli -n 1 --askpass SET --pass public-value', 0),
+    ('openssl enc -k secret', 1),
+    ('openssl enc -k "$PW"', 1),
+    ('openssl enc -k -kfile', 1),
+    ('openssl enc -kfile private.txt', 0),
+    ('openssl enc -kfile "$path"', 0),
+    ('openssl enc -kfile -k', 0),
+    ('openssl enc -kfile private.txt -k secret', 1),
+    ('openssl enc -k ""', 0),
+    ('openssl enc -key key.pem', 0),
+    ('openssl enc -kfile private.txt -pass env:PW', 0),
+]
+# Redis value ownership must not hide later credentials or reparse command data.
+for _options in (
+    "-t 2", "-X tag", "-d separator", "-D separator",
+    "--sni redis.internal", "--cacertdir certs", "--tls-ciphers DEFAULT",
+    "--tls-ciphersuites TLS_AES_128_GCM_SHA256", "--pipe-timeout 10",
+    "--show-pushes no", "--lru-test 10", "--pattern key:*", "--count 10",
+    "--quoted-pattern key:*", "--intrinsic-latency 1", "--rdb dump.rdb",
+    "--functions-rdb dump.rdb", "--memkeys-samples 10", "--keystats-samples 10",
+    "--cursor 0", "--top 10", "--eval script.lua",
+    "--test_hint hint", "--test_hint_file hints.txt",
+):
+    _TOOL_ARGV_CASES.extend((
+        ("redis-cli %s -a secret" % _options, 1),
+        ("redis-cli %s SET --pass public-value" % _options, 0),
+    ))
+_TOOL_ARGV_CASES += [
+    ('redis-cli --eval script.lua key , --pass public-value', 0),
+    ('redis-cli --cluster check host:6379 -a secret', 1),
+    ('redis-cli --cluster check -a secret host:6379', 1),
+    ('redis-cli --cluster check host:6379 --askpass', 0),
+    ('redis-cli --cluster import host:6379 --cluster-from-pass secret', 1),
+    ('redis-cli --cluster import host:6379 --cluster-from-askpass', 0),
+    ('redis-cli SET --cluster --pass public-value', 0),
+]
+for _options in (
+    "--cluster-replicas 1", "--cluster-master-id node",
+    "--cluster-from host:6379", "--cluster-to node", "--cluster-from-user user",
+    "--cluster-weight node=1", "--cluster-slots 10", "--cluster-timeout 10",
+    "--cluster-pipeline 10", "--cluster-threshold 2",
+):
+    _TOOL_ARGV_CASES.extend((
+        ("redis-cli --cluster check host:6379 %s -a secret" % _options, 1),
+        ("redis-cli --cluster check host:6379 %s --askpass" % _options, 0),
+    ))
+# Each documented source option gets literal, expansion and external-input cases.
+# Keep the expectations independent of the implementation's option table.
+for _subcommand, _option in (
+    ("enc", "-pass"), ("pkey", "-passin"), ("req", "-passout"),
+    ("pkcs12", "-password"), ("pkcs12 -export", "-password"),
+    ("pkcs12 -export", "-passcerts"), ("s_client", "-proxy_pass"),
+    ("s_server", "-dpass"), ("cmp", "-secret"), ("cmp", "-keypass"),
+    ("cmp", "-newkeypass"), ("cmp", "-otherpass"), ("cmp", "-tls_keypass"),
+    ("cmp", "-srv_secret"), ("cmp", "-srv_keypass"), ("cmp", "-rsp_keypass"),
+):
+    for _source, _count in (
+        ("pass:secret", 1), ('"pass:$PW"', 1), ('"$source"', 1),
+        ("stdin", 0), ("file:private.txt", 0), ("env:PW", 0), ("fd:3", 0),
+    ):
+        _TOOL_ARGV_CASES.append(
+            ("openssl %s %s %s" % (_subcommand, _option, _source), _count))
+
 for _i, (_cmd, _count) in enumerate(_TOOL_ARGV_CASES):
     SELF_TEST_CASES.append((
         "c3-tool-%d" % _i, "~~~bash\n" + _cmd + "\n~~~\n",
