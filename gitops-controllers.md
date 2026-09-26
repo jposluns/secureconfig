@@ -45,10 +45,76 @@ certificate, and its `--insecure` flag runs the server with no TLS of its own; t
 setup where an ingress terminates trusted TLS in front and reaches the backend over a protected
 network, not for anything a client reaches directly. The client flag `argocd login --insecure` is a
 separate setting that skips certificate verification on the client side, and is unsafe against any
-real deployment. The server listens on port `8080` in the pod (its Service maps `80` and `443` to it)
-with metrics on `8083`; front it per [nginx.md](nginx.md), [caddy.md](caddy.md) and
+real deployment. At Argo CD v3.5.3 (commit `c9c369efcc5b2a0bd720803f8d14a1c3eaddf579`), the server defaults to
+`0.0.0.0:8080` in the pod (its Service maps `80` and `443` to it), with separate metrics on
+`0.0.0.0:8083`; front it per [nginx.md](nginx.md), [caddy.md](caddy.md) and
 [fronting-auth.md](fronting-auth.md). Keep `argocd-server` as a ClusterIP and do not publish the origin through a public LoadBalancer, NodePort, or alternate route; reach it only through a restricted, authenticated TLS ingress (or private administrative access), and protect the CLI/gRPC path as well as the browser/REST one, since the Service carries both on `443`. `server.insecure` in `argocd-cmd-params-cm` is the ConfigMap form of `--insecure` and defaults to `"false"`; it disables the backend's TLS, not authentication, so allow it only behind trusted TLS termination on a protected network.
 
+ClusterIP is not a pod-network access control. The v3.5.3 component inventory also includes:
+
+| Component | Listener and bind evidence | Base manifest exposure |
+| --- | --- | --- |
+| Repo-server | gRPC `0.0.0.0:8081`; HTTP metrics and health `0.0.0.0:8084` | Both container ports and Service ports |
+| Application controller | Metrics and health on port `8082`; the supplied source subset lacks the bind implementation | Container port and `argocd-metrics` Service |
+| ApplicationSet controller | Webhook `:7000`, metrics `:8080`, health probes `:8081`; empty hosts are wildcard binds | Container and Service ports `7000` and `8080`; probe port `8081` has neither declaration |
+| Notifications controller | HTTP metrics `0.0.0.0:9001` | Metrics Service and TCP liveness probe; no `containerPort` declaration |
+| Dex | Generated `web.https` (or `web.http` with TLS disabled) `0.0.0.0:5556`, `grpc.addr` `0.0.0.0:5557` and telemetry `http` `0.0.0.0:5558` | All three container and Service ports; the wrapper starts Dex only with a nonempty generated configuration |
+| Redis | Port `6379`; no bind override in the Deployment, so the address is inherited from the Redis image and not established by this source subset | Container port and Service |
+
+Repo-server's metrics/health mux and notifications' metrics handler have no authentication wrapper
+and use HTTP, so a reachable pod-network peer can request them without an Argo CD login. Repo-server
+gRPC defaults to TLS (`--disable-tls=false`), but the command documents skipping mTLS when
+`/app/config/reposerver/mtls/client-ca.crt` is absent. The base Deployment optionally mounts
+`argocd-repo-server-mtls` for that client CA, separately from `argocd-repo-server-tls` for the serving
+certificate. A serving certificate alone does not require a client identity. The RPC implementation
+and certificate fallback helper are absent from this source subset, so method-level authorization
+and certificate fallback are not verified here. Isolate repository operations and cached manifests
+from unrelated pods.
+
+Redis is not passwordless in these base manifests: the `secret-init` init container runs
+`argocd admin redis-initial-password`, and Redis receives `--requirepass` from the `auth` key of the
+`argocd-redis` Secret. This is an init container, not a separate Job. No Redis TLS is configured by
+these manifests, and Argo CD's Redis client defaults to `--redis-use-tls=false`; protect that traffic
+and Secret as well as the cached data. The password initializer's implementation and the Redis
+image's bind configuration are absent from this source subset.
+
+Dex's wrapper defaults to TLS for its HTTP endpoint. The generator replaces the `web`, `grpc` and
+`telemetry` mappings: `web.https` uses `/tmp/tls.crt` and `/tmp/tls.key`, or `web.http` is used with
+`--disable-tls`; `grpc` contains only `addr: 0.0.0.0:5557`, with no TLS or client-authentication
+settings, and telemetry uses HTTP on `0.0.0.0:5558`. HTTP TLS does not secure the gRPC listener.
+Dex's own server and handler implementations are absent from this source subset, so gRPC runtime
+authentication and method-level authorization remain unverified; the generated configuration
+provides neither TLS nor client-authentication settings for them.
+
+Server metrics on `8083` use a plain HTTP server whose `/metrics` handler is registered through
+`promhttp` with no authentication wrapper. The socket binds to `server.ListenHost`, following
+`--address` (default `0.0.0.0`), not the separate metrics host; setting `--metrics-address` does not
+restrict this socket in v3.5.3. The same mux registers `/debug/pprof/`, `/debug/pprof/cmdline`,
+`/debug/pprof/profile`, `/debug/pprof/symbol` and `/debug/pprof/trace`. Each returns `401` unless
+the file selected by `ARGOCD_ENABLE_PROFILER_FILE_PATH` (default
+`/home/argocd/params/profiler.enabled`) contains exactly `true`, with no newline. The base server
+Deployment mounts the `server.profile.enabled` key from `argocd-cmd-params-cm` at that path;
+`profiler.enabled` is the filename, not the ConfigMap key. When enabled, these pprof endpoints
+require no caller authentication: anyone who can reach `8083` can use them. This is an enable
+switch, not an identity check. Repo-server's `8084` mux also registers the same file-gated pprof
+handlers. Keep profiling disabled except during controlled diagnostics, and restrict both metrics
+listeners to authorized monitoring and diagnostic callers. API authentication protects neither.
+
+The base kustomizations include NetworkPolicies. Repo-server gRPC admits the server, application
+controller, notifications controller and ApplicationSet controller in the same namespace; Redis
+admits the server, repo-server and application controller; Dex HTTP/gRPC admits the server. These
+restrictions need an enforcing CNI. They are not a blanket isolation policy: the server policy
+allows all ingress, while the other metrics policies admit pods from every namespace, and the
+ApplicationSet policy also admits its webhook from every namespace. Replace or narrow those
+allowances to the required ingress, component and monitoring callers, per [kubernetes.md](kubernetes.md).
+NetworkPolicy allows are additive, so an additional restrictive policy does not cancel an existing
+allow-all rule. Restrict egress separately. A container-port declaration is metadata, not a firewall;
+its absence does not close a pod socket.
+
+For v3.5.3, the base command-parameters ConfigMap omits both server switches; their CLI defaults
+are false. The base RBAC ConfigMap omits `policy.default` rather than declaring a role.
+The RBAC fallback implementation is absent from this source subset; the empty-default-role advice
+below retains the vendor RBAC guidance, rather than claiming that fallback was traced here.
 Two settings decide who reaches the API without an account. Anonymous access is disabled by default
 (`users.anonymous.enabled`); keep it off, because an anonymous caller is granted whatever role
 `policy.default` names. Leave `policy.default` empty, which is its safe default in the
@@ -119,8 +185,9 @@ platform git sources that feed the privileged controllers.
 
 ## Verify
 
-Every probe below is reasoned, not demonstrated: the authoring environment has no container runtime,
-so none was stood up in its exposed and fixed states. Each names its expected exposed and fixed result
+Every probe below is REASONED, not demonstrated: the authoring environment has no container runtime;
+also, the authoring host forbids opening listeners without an isolated network namespace, and has none;
+there is no Kubernetes cluster. None was stood up in its exposed and fixed states. Each names its expected exposed and fixed result
 so it discriminates against a live install; backlog row 2.28 tracks demonstrating them. A login page, a
 redirect, a `404`, an HTML body, a TLS error, a `kubectl` `Forbidden`, or a missing-CRD error is
 inconclusive, never the fixed state.
@@ -157,10 +224,47 @@ kubectl -n argocd get secret argocd-initial-admin-secret -o name
 # Gateway routes, not only the named Service, since another Service, a NodePort, or an HTTPRoute can
 # reach the same pods.
 kubectl -n argocd get svc -o wide
+kubectl -n argocd get networkpolicy -o yaml
+kubectl -n argocd get pods -o wide
 kubectl -n flux-system get svc -o wide
 kubectl get ingress,httproute,grpcroute,tlsroute -A   # also check NodePort Services and host-network/hostPort pods
 sudo ss -tlnp    # speaks only for the node and network namespace it runs in, not the whole cluster
 ```
+
+For internal isolation, inventory actual sockets in each component's network namespace with
+`ss -tlnp`, including ports absent from container declarations. Review rendered policies and CNI
+enforcement; a NetworkPolicy object's presence alone proves neither reachability nor denial.
+The following probe is REASONED for the same missing isolation and cluster capabilities above
+(backlog row 2.28). Run it inside an authorized monitoring pod and an unrelated pod in another
+namespace, against the same actual repo-server pod IP. With the base metrics allowance, expect HTTP
+200 and Prometheus metrics from both. After narrowing the allowance, expect no HTTP response from
+the unrelated pod while the monitoring pod still receives those metrics. A timeout alone, a missing
+curl binary, or a failed positive control is inconclusive. The pinned repo-server mux and
+NetworkPolicy below supply the exposed-state basis.
+
+```bash
+(
+  set -- secureconfig-probe REPLACE_WITH_REPO_SERVER_POD_IP
+  [ "${1-}" = secureconfig-probe ] && [ "$#" -eq 2 ] || { echo 'incomplete probe; not probing'; exit 2; }
+  shift
+  case "${1-}" in
+    ''|*REPLACE_WITH*|*[!0123456789.]*) echo 'supply the actual IPv4 pod address; not probing'; exit 2 ;;
+  esac
+  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:8084/metrics"
+)
+```
+
+For server metrics, repeat the guarded pod-IP probe above with the actual server pod IP and
+port `8083`, keeping `/metrics`. This check is also REASONED for the missing isolated network
+namespace and Kubernetes cluster (TODO 2.28). Before narrowing the server's allow-all policy,
+expect HTTP 200 and Prometheus metrics without credentials from both pods; afterwards only the
+authorized monitoring pod should receive them. From that allowed pod, repeat with
+`/debug/pprof/cmdline`: expect `401` with profiling disabled, then HTTP 200 and the process command
+line when the mounted file contains exactly `true`. In an isolated demonstration, confirm that
+`true` followed by a newline returns `401` again. Keep `/metrics` as the positive control throughout;
+a failed control is inconclusive. Return profiling to disabled after the demonstration. The pinned
+metrics mux, profiler wrapper and server NetworkPolicy below distinguish these states.
 
 A bare `401` proves less than it looks: a fronting authentication proxy can return it while the
 underlying `users.anonymous.enabled` is still on, so pair the probe with an authenticated request
@@ -204,10 +308,47 @@ need the guarded-subshell form so an unsubstituted address cannot time out and r
 
 ## Sources (checked September 2026)
 
+Argo CD source claims below were checked offline at v3.5.3, commit
+`c9c369efcc5b2a0bd720803f8d14a1c3eaddf579`. Retained readthedocs links provide operational guidance;
+they were not rechecked online. Missing source implementations are identified above.
+
+- Argo CD Listener constants: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/common/common.go#L75-L92
+- Argo CD Server CLI bind, TLS and authentication defaults: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-server/commands/argocd_server.go#L307-L323
+- Argo CD Server main and metrics socket binding: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L512-L535
+- Argo CD Server metrics served separately: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L668-L677
+- Argo CD Server unauthenticated HTTP metrics mux and profiler registration: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/metrics/metrics.go#L74-L100
+- Argo CD Profiler paths and exact file-content gate: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/profile/profile.go#L11-L30
+- Argo CD Server command-parameters mount: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/server/argocd-server-deployment.yaml#L406-L408
+- Argo CD Server profiler ConfigMap key and filename: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/server/argocd-server-deployment.yaml#L475-L481
+- Argo CD Anonymous access setting: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/settings/settings.go#L1631-L1638
+- Argo CD Base command-parameters ConfigMap: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/config/argocd-cmd-params-cm.yaml#L1-L7
+- Argo CD Base RBAC ConfigMap with no default role: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/config/argocd-rbac-cm.yaml#L1-L7
+- Argo CD Server authentication ConfigMap wiring: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/server/argocd-server-deployment.yaml#L121-L126
+- Argo CD Server Service mapping: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/server/argocd-server-service.yaml#L9-L20
+- Argo CD Repo-server HTTP metrics and health mux: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-repo-server/commands/argocd_repo_server.go#L180-L212
+- Argo CD Repo-server addresses and TLS/client-CA defaults: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-repo-server/commands/argocd_repo_server.go#L257-L280
+- Argo CD Separate optional repo-server TLS and mTLS Secrets: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/repo-server/argocd-repo-server-deployment.yaml#L367-L384
+- Argo CD Application-controller metrics port and health probe: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/application-controller/argocd-application-controller-statefulset.yaml#L360-L365
+- Argo CD ApplicationSet wildcard listeners: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-applicationset-controller/commands/applicationset_controller.go#L294-L296
+- Argo CD ApplicationSet Service ports: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/applicationset-controller/argocd-applicationset-controller-service.yaml#L9-L20
+- Argo CD Notifications HTTP metrics bind and handler: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-notification/commands/argocd_notification.go#L149-L154
+- Argo CD Notifications metrics Service: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/notification/argocd-notifications-controller-metrics-service.yaml#L9-L16
+- Argo CD Dex TLS setup and conditional startup: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-dex/commands/argocd_dex.go#L82-L114
+- Argo CD Dex HTTP TLS default: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-dex/commands/argocd_dex.go#L143-L146
+- Argo CD Dex configuration generation, including wildcard binds and gRPC without TLS/client-auth settings: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/dex/config.go#L16-L152
+- Argo CD Dex declared Service ports: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/dex/argocd-dex-server-service.yaml#L9-L25
+- Argo CD Redis password initialization and required Secret: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/redis/argocd-redis-deployment.yaml#L18-L58
+- Argo CD Redis client TLS is opt-in: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/cache/cache.go#L233-L238
+- Argo CD Server allow-all ingress policy: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/server/argocd-server-network-policy.yaml#L9-L16
+- Argo CD Repo-server component selectors and metrics allowance: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/repo-server/argocd-repo-server-network-policy.yaml#L9-L35
+- Argo CD Redis component selectors: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/redis/argocd-redis-network-policy.yaml#L9-L28
+- Argo CD Dex component selectors and metrics allowance: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/dex/argocd-dex-server-network-policy.yaml#L9-L29
+- Argo CD Application-controller metrics allowance: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/application-controller/argocd-application-controller-network-policy.yaml#L9-L19
+- Argo CD ApplicationSet webhook and metrics allowance: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/applicationset-controller/argocd-applicationset-controller-network-policy.yaml#L9-L22
+- Argo CD Notifications metrics allowance: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/notification/argocd-notifications-controller-network-policy.yaml#L9-L20
 - Argo CD getting started (initial admin secret, server exposure): https://argo-cd.readthedocs.io/en/stable/getting_started/
 - Argo CD user management (disable admin, change password): https://argo-cd.readthedocs.io/en/stable/operator-manual/user-management/
 - Argo CD RBAC (anonymous access, policy.default in argocd-rbac-cm): https://argo-cd.readthedocs.io/en/stable/operator-manual/rbac/
-- Argo CD server command (ports 8080/8083, --insecure): https://argo-cd.readthedocs.io/en/stable/operator-manual/server-commands/argocd-server/
 - Argo CD ingress and TLS termination: https://argo-cd.readthedocs.io/en/stable/operator-manual/ingress/
 - Argo CD git webhook configuration (/api/webhook, shared secret): https://argo-cd.readthedocs.io/en/stable/operator-manual/webhook/
 - Argo CD AppProjects: https://argo-cd.readthedocs.io/en/stable/user-guide/projects/
@@ -216,8 +357,6 @@ need the guarded-subshell form so an unsubstituted address cannot time out and r
 - Flux v2.9 release (generic-oidc receiver introduced): https://fluxcd.io/blog/2026/06/flux-v2.9.0/
 - Flux webhook receivers guide (port 9292, webhook-receiver Service): https://fluxcd.io/flux/guides/webhook-receivers/
 - Flux multitenancy configuration (cross-namespace and service-account lockdown): https://fluxcd.io/flux/installation/configuration/multitenancy/
-- Argo CD server command parameters (`server.disable.auth`, `server.insecure` defaults in argocd-cmd-params-cm): https://argo-cd.readthedocs.io/en/stable/operator-manual/argocd-cmd-params-cm-yaml/
-- Argo CD RBAC ConfigMap (`policy.csv` `p`/`g` rules, empty `policy.default`): https://argo-cd.readthedocs.io/en/stable/operator-manual/argocd-rbac-cm-yaml/
 - Argo CD cluster RBAC and security (narrowing `argocd-manager` privileges, remote-bases/SSRF): https://argo-cd.readthedocs.io/en/stable/operator-manual/security/
 - Argo CD secret management (destination-cluster operators, repo-server/Redis exposure): https://argo-cd.readthedocs.io/en/stable/operator-manual/secret-management/
 - Flux GitHub bootstrap (`--token-auth` PAT Secret, `--read-write-key` for image automation): https://fluxcd.io/flux/installation/bootstrap/github/
