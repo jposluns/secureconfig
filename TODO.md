@@ -125,7 +125,6 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 3.18 | CSP-hash gate: refuse any `.xhtml` under `site/`, and scan SVG documents, failing on `<script>` or an `on*` handler (maintainer ruling, 2026-09-25). (L, S) | `[gap]` |
 | 3.19 | Weekly lychee sweep: fail only on dead links (404s); list redirects without failing the job (maintainer ruling, 2026-09-25). (L, S) | `[gap]` |
 | 3.20 | Verify-marking convention: every Verify step states explicitly whether it was demonstrated or reasoned, enforced corpus-wide (maintainer ruling, 2026-09-25). (M, L) | `[gap]` |
 | 3.21 | An offline gate that fails any workflow `uses:` not pinned to a full commit SHA with a `# vX.Y.Z` release comment, so the floating tags row 3.17 removed cannot return unnoticed. The profile in `DECISIONS.md` (pattern 2) predicts that a check which can be a required gate without reaching the network should be one; that is a prediction, not a ruling. (L, S) | `[gap]` |
