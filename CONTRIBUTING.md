@@ -54,6 +54,11 @@ required gate checks that every merged pull request is referenced, exempting onl
 second unrecorded merge turns the build red. Eight pull requests had gone unrecorded before that
 gate existed.
 
+Before merging, replace draft PR, backlog-id and version placeholders with their assigned
+values. The offline gate `tools/check_no_placeholders.py` checks tracked Markdown and
+`VERSION`, including comments and code blocks, excluding the generated `site/` and
+`plugin/` trees. It checks for leftover markers, not whether an assigned number is correct.
+
 ## Licence
 
 Everything here is dedicated to the public domain under [CC0 1.0](LICENSE), except the AIQT Guardrails material that [`.aiqt/PIN`](.aiqt/PIN) lists (the files vendored under `.aiqt/` and `tools/`, and the AIQT sections adapted into `CLAUDE.md` and `AGENTS.md`), which is licensed under the Apache License 2.0 (see [`.aiqt/LICENSE`](.aiqt/LICENSE) and [`.aiqt/NOTICE`](.aiqt/NOTICE)). Submitting a contribution means dedicating it under CC0, except a change to that material, which is contributed under the Apache License 2.0 (section 5), carries a `LOCAL PATCH` notice in the file, and is recorded in `.aiqt/PIN`.
