@@ -24,10 +24,16 @@ non-ASCII value only in some locales does not refuse it.
 
 THE MODEL. Every physical line of every fenced bash block of a guide, README.md,
 controls-reference.md or CONTRIBUTING.md (the same blocks the shell-block gate lints, from
-`check_shell_blocks.blocks_of`) is read on its own. Nothing is joined: not a backslash
-continuation, not a quoted string left open, not a here-document body. Two earlier versions of
-this gate modelled that joining as bash does, and adversarial review found a new way around the
-model each time; this version deliberately refuses to model it and fails closed instead.
+`check_shell_blocks.blocks_of`) is read on its own, here-document bodies included. The gate does
+no bash lexing at all: no quotes, no comments, no here-documents, no expansions and no command
+separators. Three earlier versions of this gate lexed bash, first to join lines and then only to
+decide whether an in-block waiver comment was real, and adversarial review found a new way around
+the lexing each time; round 3 alone found an escaped space making a data `#` read as a comment, a
+trailing backslash dropping an open quote, a partly recognized here-document delimiter ending a
+body early, a fake POSIX atom swallowing a validator between two printf arguments, and quoting
+inside a parameter-removal pattern misread as closing the expansion. This version removes the
+attack surface instead of patching it again: a waiver decision reads nothing in the block,
+because waivers do not live in blocks at all.
 
 On each physical line, two things are findings:
 
@@ -35,11 +41,15 @@ On each physical line, two things are findings:
     apply within the line: a leading `^` negates, a `]` first in the list is a literal and can
     start a range (`[]-z]`, `[^]-z]`), `[:class:]`, `[=x=]` and `[.x.]` are single items, and a
     glob's `!` is an ordinary character, so `[!0-9]` still holds 0-9 and a `]` right after `[!`
-    is a literal whenever a later `]` on the line closes the expression. A `[]` or `[^]` that
-    no later `]` on the line closes is the empty pair of a JSON, jq or JMESPath expression,
-    which no tool reads as a bracket expression. A backslash does not hide a bracket: the shell
-    removes an unquoted `\` before the tool sees `[`, so `grep -E \[0-9] f` holds a live range,
-    and a quoted `\[` is flagged too rather than guessed about.
+    is a literal whenever a later `]` on the line closes the expression. An atom counts as one
+    item only when its interior is the plain name or character those forms carry (letters and
+    digits, or any one character that is not `[`): round 3 built `[[:` and `:]]` out of two
+    printf arguments and an unconstrained scan swallowed the live validator between them, so
+    anything else is read as ordinary characters, and a range inside it is still seen. A `[]`
+    or `[^]` that no later `]` on the line closes is the empty pair of a JSON, jq or JMESPath
+    expression, which no tool reads as a bracket expression. A backslash does not hide a
+    bracket: the shell removes an unquoted `\` before the tool sees `[`, so `grep -E \[0-9] f`
+    holds a live range, and a quoted `\[` is flagged too rather than guessed about.
   - A `[` that nothing on its own physical line closes. A set split across lines by any means, a
     backslash continuation, a quoted newline (`re='^[A-Z` then a line `a-z]+$'`, which glibc's
     regcomp reads across the newline), or a multi-line data list, lands here by construction,
@@ -49,8 +59,8 @@ Shell text, comments and here-document bodies are all read the same way: a regex
 variable, a `case` alternative on its own line, a script written to a file through a
 here-document and a commented-out probe are validators too. The gate does not ask which tool
 reads the pattern. A JSON array holding a hyphenated string, `["app-data"]`, reads as a range as
-well and takes a marker; a rule that skipped it would also skip a regex that happened to start
-with a quote.
+well and takes an allowlist entry; a rule that skipped it would also skip a regex that happened
+to start with a quote.
 
 THE FIX is a spelled-out set, which means the same thing in every locale, tool and shell:
 `[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]`. `model-servers.md` already
@@ -58,69 +68,60 @@ carried `[!0123456789abcdef]` from #350 and #355. A POSIX class in an accept lis
 under an explicit `LC_ALL=C` that covers the whole check, since `[[:alnum:]]` accepts non-ASCII
 letters under C.utf8. A class in a reject list, such as refusing the locale's control or
 whitespace characters, is sound in any locale, because a wider class only refuses more. This gate
-does not read POSIX classes or `LC_ALL`: a class needs no marker, and a range under `LC_ALL=C`
+does not read POSIX classes or `LC_ALL`: a class needs no waiver, and a range under `LC_ALL=C`
 still does.
 
-THE MARKER. A range that is not a validator (a search pattern, a label in a format string, a
-JSON request body) carries a trailing shell comment on the same physical line
+THE ALLOWLIST. A range that is not a validator (a search pattern, a JSON request body, a label
+in a format string) is waived in tools/bracket_ranges_allow.txt, never in the guide. Earlier
+versions took a trailing `bracket-ranges: allow` comment in the block, and deciding whether that
+comment was real is exactly the lexing this version removes, so a guide line still carrying that
+marker (a `#`, then optional blanks, then `bracket-ranges:`) is itself a finding, anywhere in the
+file. Each allowlist entry is one line
 
-    ... the code with the range ...  # bracket-ranges: allow <reason>
+    <guide-file> TAB <exact physical line text> TAB <reason>
 
-and the waiver covers that one physical line and nothing else. There is no preceding-line form:
-what a marker covers is exactly what a reviewer sees beside it. A validator never takes the
-marker: it takes the spelled-out set. The marker counts only when all of these hold, and one
-that fails is itself a finding ("waiver refused"), never silently ignored:
-
-  - Its `#` is unambiguously a comment: at the start of the line, or at the start of a word,
-    outside any quote, expansion, command substitution or backtick as a fresh scan of that one
-    line reads them, and not on a line of a here-document body, where a `#` is data. When the
-    scan cannot decide, it is not a comment.
-  - Every line before it in the block was plainly resolved: none left a quote, an expansion, a
-    substitution or a backtick open at its end, none ended with a backslash right after `$`,
-    `<` or `>` (which splits a token across the break and can change what the next line means),
-    and none opened a here-document whose delimiter the gate could not read. After any of
-    those, the gate cannot trust its own reading of a later `#`, so no later marker in the
-    block counts.
-  - The reason is present and holds no `[`, so a reason cannot smuggle in the very text being
-    waived, and cannot satisfy the staleness rule by quoting a range.
-  - The code before the `#` holds no unquoted `;`, `;;`, `&&`, `||`, `|`, `|&` or `&` (a `&`
-    belonging to a redirection such as `2>&1` or `&>f` excepted): a waived line is one command,
-    so the marker cannot silently cover a second one sharing the line.
-
-A marker that is valid but covers no finding on its own line is reported as stale, so one cannot
-outlive the range it was written for.
+and a line starting with `#` is a comment. A finding is waived only when its guide's file name
+and its line's exact text both match an entry, the whole line as the block extraction yields it
+(the opening fence's own indentation removed, nothing else changed), never a substring, so an
+entry cannot quietly keep covering a line that grew a second command or a second range; an entry
+waives every finding on its one line at once, which is what a reviewer reading that line sees.
+Each flagged occurrence of a line consumes one entry, so a duplicate entry is legal exactly while
+the same text genuinely occurs that many times, and every entry left unconsumed at the end of a
+repository scan is a finding ("stale allowlist entry"): an edit cannot leave a dead waiver
+behind. An entry with fewer than three fields, an empty guide, an empty text or an empty reason
+is a finding. The guide name is read up to the first TAB and the reason back from the last, so
+the text may itself hold a TAB; a reason may not.
 
 WHAT THIS IS NOT. A shell parser, and not proof that a guard is correct. The model is
 deliberately conservative: everything in the first list below is over-flagging that fails
 closed, listed honestly; what the gate still does not see at all is in the second. Each is a
 recorded case in tools/test_bracket_ranges.py so that a change is loud.
 
-  Over-flagged, by design (restructure the line, or waive it where a waiver is legal):
+  Over-flagged, by design (restructure the line, spell the set out, or allowlist the line):
   - A multi-line data list, a JSON array or Python list whose `[` closes on a later line, is an
-    unclosed-bracket finding on the line of the `[`. Data written over several lines inside a
-    here-document cannot be waived at all, since a marker in a body is data; keep such a list
-    on one line where a waiver can sit, or use a bracket-free shape (a Python tuple, a split
-    string).
+    unclosed-bracket finding on the line of the `[`. Keep such a list on one line, use a
+    bracket-free shape (a Python tuple, a split string), or allowlist the opening line.
   - A quoted literal `\[a-z\]`, an array subscript `a[i-1]` in an expansion or in arithmetic,
     and a slice `[1:-1]` are flagged: the gate does not know a backslash is quoted or a context
-    is arithmetic, and guessing was what the joined-line model got wrong.
-  - A here-document body can never carry a valid waiver, and a body under a delimiter the gate
-    cannot read refuses every later waiver in the block. The bodies are still scanned.
-  - After a line that ends inside an open quote or expansion, or ends with a backslash right
-    after `$`, `<` or `>`, no later waiver in the block counts, even a legitimate one.
-  - A waiver on a line holding a `;`, `&&`, `|` or another separator is refused even when the
-    separator joins two commands that are both fine.
-  - A `<<` in a bare arithmetic command, `(( x = 1 << 2 ))`, is read as a here-document opener,
-    so the rest of the block becomes a body where no waiver counts; `$((1 << 2))` inside a
-    substitution is read correctly. The lines are still scanned.
-  - A bare-delimiter here-document is held open across a body line ending in a backslash, as
-    bash joins those before matching the terminator, so the gate never leaves a body earlier
-    than bash does; it may leave later, which only refuses more waivers.
+    is arithmetic, and guessing was what the lexing models got wrong.
+  - A malformed atom, `[[:alpha]` with no closing `:]` on its line, is read as ordinary
+    characters rather than an atom, so `alpha` contributes no range but a live range beside it
+    is still seen.
+  - An allowlist entry waives its whole line: one of two ranges on a line cannot be waived
+    alone, and reformatting or moving a waived line breaks its entry on purpose, since the
+    entry vouches for exactly one byte-for-byte line.
 
-  Still not seen at all:
+  Still not seen:
   - Ranges with no brackets: `tr -dc 'A-Za-z0-9'`.
   - POSIX classes and `\w`, although they are locale dependent too.
-  - A `[` or `[[` standing as its own word before whitespace is read as the test command.
+  - A `[` or `[[` standing as its own word before whitespace is read as the test command, even
+    when it sits inside a regex or other data: `re='^ [ a-z]+$'` carries a live range into
+    glibc's regcomp and is not flagged.
+  - A range assembled at runtime, where no literal `X-Y` sits between a literal `[` and `]` in
+    the source: endpoints spliced from variables (`lo='a-'; hi=z; re="^[$lo$hi]+$"`), brackets
+    built by escapes (`$'\x5bA-Za-z\x5d'`, `$'^[a\x2dz]+$'`), and their combinations. These are
+    the bracketed siblings of the `tr` case: a lexical gate that does not expand words cannot
+    see them, and rule 5's tracing obligation is what covers them.
   - Fence extraction has exactly the limits `check_shell_blocks.blocks_of` discloses, and a
     fence whose info string is not bash (`sh`, `zsh`) is not read.
 """
@@ -137,179 +138,42 @@ from check_shell_blocks import SKIP_DIRS, blocks_of  # noqa: E402  one definitio
 # the shapes new guides are built from, and controls-reference.md, which site/llms.txt lists.
 NOT_A_GUIDE = frozenset(("CLAUDE.md", "AGENTS.md", "CHANGELOG.md", "README.sources.md", "TODO.md",
                          "DONE.md", "DECISIONS.md", "PENDING-DECISIONS.md", "SECURITY.md"))
-# A marker attempt: anything that looks like the marker, valid or not, is never quietly ignored.
+# The waivers live here, one `<guide> TAB <exact line text> TAB <reason>` entry per line.
+ALLOWLIST = "bracket_ranges_allow.txt"
+# The retired in-block waiver marker. A guide line holding one is a finding, wherever it sits:
+# deciding whether such a comment is real is the lexing this gate no longer does.
 MARKERISH_RE = re.compile(r"#[ \t]*bracket-ranges:")
-# The comment must open with the marker and give a reason, as the sibling gates' waivers must.
-MARKER_RE = re.compile(r"#[ \t]*bracket-ranges:[ \t]*allow[ \t]+\S")
-# A `#` begins a comment at the start of a word, which these characters end.
-COMMENT_BEFORE = " \t;&|()"
 # A `[` or `[[` after one of these and before whitespace is the test command.
 TEST_BEFORE = " \t;&|(!"
-# The operators that end one command of a list or pipeline, longest first. A lone `&` is one
-# unless it belongs to a redirection such as `2>&1` or `&>file`.
-SEPARATORS = ("&&", "||", ";;", "|&", ";", "|", "&")
-# A here-document delimiter: single-quoted, double-quoted, backslash-quoted or bare.
-HEREDOC_WORD_RE = re.compile(r"""'([^']*)'|"([^"]*)"|(\\?)([A-Za-z0-9_.+-]+)""")
-# The contexts _lex tracks: quotes, expansions and substitutions. A `#` inside any of them is
-# not a comment, and a line ending inside one refuses every later waiver in its block.
-SQ, DQ, ANSI, BRACE, DQ_BRACE, CMDSUB, PAREN, BT = "'", '"', "$'", "${", '"${', "$(", "(", "`"
-# A backslash at the end of a line right after one of these splits a token across the break,
-# which can change what the next line means.
-GLUE_BEFORE = "$<>"
+# The interior an atom may carry and still count as one item: a class name, an equivalence
+# class or a collating symbol. Anything longer or stranger is scanned as ordinary characters.
+ATOM_RE = re.compile(r"[A-Za-z0-9]+\Z")
 HINT = ("outside the C locale a bracket range can match non-ASCII letters and digits (GNU grep, "
         "GNU sed and bash [[ =~ ]] were observed doing it under en_US.utf8, and bash case does "
         "it with globasciiranges off), so a validator written with one accepts values it claims "
         "to refuse. Spell the set out, as in "
         "[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789]. Where the range is "
-        "not a validator, put '# bracket-ranges: allow <reason>' at the end of that same "
-        "physical line; the waiver covers that line alone. See tools/check_bracket_ranges.py.")
+        "not a validator, add a '<guide> TAB <exact line text> TAB <reason>' entry to "
+        "tools/bracket_ranges_allow.txt; the entry waives that one physical line and nothing "
+        "else. See tools/check_bracket_ranges.py.")
 
 
-def _heredoc_word(line, i):
-    """The delimiter of a `<<` or `<<-` at index i: ((word_or_None, strip_tabs, quoted), next)."""
-    j = i + 2
-    strip = line[j:j + 1] == "-"
-    if strip:
-        j += 1
-    while j < len(line) and line[j] in " \t":
-        j += 1
-    m = HEREDOC_WORD_RE.match(line, j)
-    if not m:
-        # A delimiter the gate cannot read: where the body ends is unknowable.
-        return (None, strip, False), j
-    single, double, backslash, bare = m.groups()
-    word = next(g for g in (single, double, bare) if g is not None)
-    return (word, strip, bare is None or backslash == "\\"), m.end()
+def _atom(text, j, n):
+    """The close index of the `[:class:]`, `[=x=]` or `[.x.]` atom at text[j], or None.
 
-
-class Line:
-    """What one fresh scan of one physical line establishes.
-
-    `comment` is the index of the first `#` that starts a comment, or None; `sep` whether the
-    code before any comment holds a command separator; `heredocs` the (word, strip, quoted) of
-    each here-document the line opens, word None when unreadable; `dirty` a reason the line's
-    end cannot be trusted as a boundary, or None.
+    An atom counts only when its interior is the single item those forms carry: letters and
+    digits, or any one character that is not `[`. Round 3 assembled `[[:` and `:]]` from two
+    printf arguments, and an unconstrained forward search swallowed the live validator between
+    them as one atom; an interior holding a quote, a space or a `[` is not an atom here, and
+    the caller scans it as ordinary characters instead, which fails closed.
     """
-
-    __slots__ = ("comment", "sep", "heredocs", "dirty")
-
-    def __init__(self):
-        self.comment, self.sep, self.heredocs, self.dirty = None, False, [], None
-
-
-def _lex(line):
-    """Scan one physical line from a clean start. Returns a Line.
-
-    This is the only lexing the gate does, and it never crosses a line break: its answers are
-    trusted only while every prior line of the block resolved plainly, which scan_blocks
-    enforces by refusing every waiver after one that did not.
-    """
-    info, stack, i, n = Line(), [], 0, len(line)
-    while i < n:
-        c, nxt = line[i], line[i + 1:i + 2]
-        top = stack[-1] if stack else None
-        if top in (SQ, ANSI):
-            if top == ANSI and c == "\\" and nxt:
-                i += 2
-                continue
-            if c == "'":
-                stack.pop()
-            i += 1
-            continue
-        if top == BT:
-            if c == "\\" and nxt:
-                i += 2
-                continue
-            if c == "`":
-                stack.pop()
-            i += 1
-            continue
-        if c == "\\":
-            if not nxt:
-                if i and line[i - 1] in GLUE_BEFORE:
-                    info.dirty = (f"ends with a backslash right after '{line[i - 1]}', "
-                                  f"splitting a token across the break")
-                return info
-            i += 2
-            continue
-        if top in (DQ, BRACE, DQ_BRACE):
-            if c == "$" and nxt == "{":
-                stack.append(BRACE if top == BRACE else DQ_BRACE)
-                i += 2
-                continue
-            if c == "$" and nxt == "(":
-                stack.append(CMDSUB)
-                i += 2
-                continue
-            if c == "`":
-                stack.append(BT)
-                i += 1
-                continue
-            if top == DQ:
-                if c == '"':
-                    stack.pop()
-            elif c == "}":
-                stack.pop()
-            elif c == '"':
-                stack.append(DQ)
-            elif top == BRACE and c == "$" and nxt == "'":
-                stack.append(ANSI)
-                i += 2
-                continue
-            elif top == BRACE and c == "'":
-                # Within double quotes a single quote inside an expansion is literal; outside,
-                # it quotes.
-                stack.append(SQ)
-            i += 1
-            continue
-        # From here the top is None (plain code), CMDSUB or PAREN, which read alike except that
-        # a `)` closes the latter two and a comment or here-document starts only at the top.
-        if c == "$" and nxt in ("'", "{", "("):
-            stack.append(c + nxt)
-            i += 2
-            continue
-        if c in "'\"`":
-            stack.append(BT if c == "`" else c)
-            i += 1
-            continue
-        if top in (CMDSUB, PAREN):
-            if c == "(":
-                stack.append(PAREN)
-                i += 1
-                continue
-            if c == ")":
-                stack.pop()
-                i += 1
-                continue
-            op = next((s for s in SEPARATORS if line.startswith(s, i)), None)
-            if op is not None:
-                if not (op == "&" and (i and line[i - 1] in "<>" or nxt == ">")):
-                    info.sep = True
-                i += len(op)
-                continue
-            i += 1
-            continue
-        if c == "#" and (i == 0 or line[i - 1] in COMMENT_BEFORE):
-            info.comment = i
-            return info
-        if line.startswith("<<<", i):
-            i += 3
-            continue
-        if line.startswith("<<", i):
-            word, j = _heredoc_word(line, i)
-            info.heredocs.append(word)
-            i = j
-            continue
-        op = next((s for s in SEPARATORS if line.startswith(s, i)), None)
-        if op is not None:
-            if not (op == "&" and (i and line[i - 1] in "<>" or nxt == ">")):
-                info.sep = True
-            i += len(op)
-            continue
-        i += 1
-    if stack:
-        info.dirty = f"ends inside an open {stack[0]}"
-    return info
+    close = text.find(text[j + 1] + "]", j + 2, n)
+    if close == -1:
+        return None
+    interior = text[j + 2:close]
+    if ATOM_RE.fullmatch(interior) or (len(interior) == 1 and interior != "["):
+        return close
+    return None
 
 
 def _parse_list(text, j, prev):
@@ -323,23 +187,28 @@ def _parse_list(text, j, prev):
         if c == "]":
             return j, ranges
         if c == "[" and text[j + 1:j + 2] in (":", "=", "."):
-            close = text.find(text[j + 1] + "]", j + 2, n)
-            if close == -1:
-                return None, ranges
-            # A class cannot be a range endpoint; an equivalence class or collating symbol can.
-            prev = None if text[j + 1] == ":" else text[j:close + 2]
-            j = close + 2
-            continue
+            close = _atom(text, j, n)
+            if close is not None:
+                # A class cannot be a range endpoint; an equivalence or collating symbol can.
+                prev = None if text[j + 1] == ":" else text[j:close + 2]
+                j = close + 2
+                continue
+            # Not an atom: the `[` is an ordinary item, scanned like any other character, so a
+            # range hidden past a fake atom opener is still seen.
         if c == "-" and prev is not None and j + 1 < n and text[j + 1] != "]":
             k = j + 1
             if text[k] == "[" and text[k + 1:k + 2] in ("=", "."):
-                close = text.find(text[k + 1] + "]", k + 2, n)
-                if close == -1:
-                    return None, ranges
-                end, j = text[k:close + 2], close + 2
+                close = _atom(text, k, n)
+                if close is not None:
+                    end, j = text[k:close + 2], close + 2
+                else:
+                    end, j = text[k], k + 1
             elif text[k] == "[" and text[k + 1:k + 2] == ":":
-                prev, j = None, j + 1
-                continue
+                close = _atom(text, k, n)
+                if close is not None:
+                    prev, j = None, j + 1
+                    continue
+                end, j = text[k], k + 1
             else:
                 end, j = text[k], k + 1
             ranges.append(prev + "-" + end)
@@ -354,14 +223,15 @@ def _parse_bracket(text, i):
     """Parse the bracket expression opening at text[i]. Returns (close_index, ranges).
 
     POSIX rules: a leading `^` negates, a `]` first in the list is a literal and may start a
-    range, `[:class:]`, `[=x=]` and `[.x.]` are single items, and a hyphen that is neither first
-    nor last joins the items on either side of it into a range. A glob's `!` is read as an
-    ordinary character, so `[!0-9]` still holds the range 0-9 and `[!-~]`, which a regex reads
-    as the range ! to ~, is flagged; a `]` right after `[!` is read as a glob reads it, a
-    literal, whenever a later `]` on the line closes the expression. A `[]` or `[^]` that no
-    later `]` on the line closes is the empty pair of a JSON, jq or JMESPath expression, which
-    no tool reads as a bracket expression. A backslash is an ordinary character inside
-    brackets. Returns (None, ranges) when nothing closes the expression on this line.
+    range, `[:class:]`, `[=x=]` and `[.x.]` are single items when _atom recognizes them, and a
+    hyphen that is neither first nor last joins the items on either side of it into a range. A
+    glob's `!` is read as an ordinary character, so `[!0-9]` still holds the range 0-9 and
+    `[!-~]`, which a regex reads as the range ! to ~, is flagged; a `]` right after `[!` is
+    read as a glob reads it, a literal, whenever a later `]` on the line closes the expression.
+    A `[]` or `[^]` that no later `]` on the line closes is the empty pair of a JSON, jq or
+    JMESPath expression, which no tool reads as a bracket expression. A backslash is an
+    ordinary character inside brackets. Returns (None, ranges) when nothing closes the
+    expression on this line.
     """
     j = i + 1
     if text[j:j + 1] == "^":
@@ -400,108 +270,127 @@ def bracket_hits(text):
         i = close + 1
 
 
-def scan_blocks(name, blocks):
-    """Scan one guide's bash blocks, one physical line at a time.
+class Allowlist:
+    """The entries of tools/bracket_ranges_allow.txt, each consumable by one flagged line.
 
-    Returns (findings, n_blocks, n_marked). `pending` queues the here-documents whose bodies
-    the lines ahead are; `tainted` carries the reason no later waiver in the block counts, once
-    one exists; `glued` tracks a bare-delimiter body line bash would join onward, so the gate
-    never leaves a body earlier than bash does.
+    `findings` holds what loading itself flagged (a malformed entry, an empty field); `take`
+    consumes one entry for one flagged occurrence of a line; `stale` names every entry nothing
+    consumed, so an entry cannot outlive the line it was written for.
     """
-    findings, n_blocks, n_marked = [], 0, 0
+
+    def __init__(self):
+        self.findings, self.n_entries, self._avail = [], 0, {}
+
+    @classmethod
+    def load(cls, path):
+        """Read the allowlist at `path`. A missing file is an empty allowlist, which only
+        refuses more; a file that exists but cannot be read raises (OSError or
+        UnicodeDecodeError), which main turns into a failed gate rather than an empty list."""
+        allow = cls()
+        if not path.exists():
+            return allow
+        where = f"tools/{path.name}"
+        for lineno, raw in enumerate(path.read_text(encoding="utf-8").split("\n"), 1):
+            if not raw.strip() or raw.startswith("#"):
+                continue
+            parts = raw.split("\t")
+            guide = parts[0]
+            text = "\t".join(parts[1:-1])
+            reason = parts[-1] if len(parts) > 1 else ""
+            if len(parts) < 3 or not guide.strip() or not text:
+                allow.findings.append(f"{where}:{lineno}: malformed allowlist entry: three "
+                                      f"TAB-separated fields, guide, exact line text, reason")
+                continue
+            if not reason.strip():
+                allow.findings.append(f"{where}:{lineno}: allowlist entry with an empty "
+                                      f"reason: say why the line is not a validator")
+                continue
+            allow._avail.setdefault((guide, text), []).append((lineno, where))
+            allow.n_entries += 1
+        return allow
+
+    def take(self, guide, text):
+        """Consume one entry for one flagged occurrence of `text` in `guide`, if one is left."""
+        left = self._avail.get((guide, text))
+        if not left:
+            return False
+        left.pop(0)
+        return True
+
+    def stale(self):
+        """One finding per entry that no flagged line consumed."""
+        out = []
+        for (guide, _), left in self._avail.items():
+            out.extend((lineno, f"{where}:{lineno}: stale allowlist entry: no flagged line of "
+                                f"{guide} matches its exact text") for lineno, where in left)
+        return [msg for _, msg in sorted(out)]
+
+
+def scan_blocks(name, blocks, allow):
+    """Scan one guide's bash blocks, one physical line at a time, against `allow`.
+
+    Returns (findings, n_blocks, n_waived). Every physical line is read the same way, a
+    here-document body like any other; a line whose findings the allowlist covers consumes one
+    entry for that occurrence and counts toward n_waived instead.
+    """
+    findings, n_blocks, n_waived = [], 0, 0
     for start, body in blocks:
         n_blocks += 1
-        tainted, pending, glued = None, [], False
         for idx, raw in enumerate(body.split("\n")):
-            lineno = start + idx
-            in_body, info = False, None
-            if pending:
-                word, strip, quoted = pending[0]
-                if word is not None and not (not quoted and glued) \
-                        and (raw.lstrip("\t") if strip else raw) == word:
-                    pending.pop(0)
-                    glued = False
-                    # The terminator line itself is still scanned below, like every line.
-                else:
-                    if word is not None and not quoted:
-                        glued = (len(raw) - len(raw.rstrip("\\"))) % 2 == 1
-                    in_body = True
-            if not in_body:
-                info = _lex(raw)
-                pending.extend(info.heredocs)
-            # The waiver: a marker attempt is validated or refused, never quietly ignored.
-            marker = None
-            for m in MARKERISH_RE.finditer(raw):
-                marker = m
-            valid = False
-            if marker is not None:
-                p = marker.start()
-                if in_body:
-                    why = "it sits in a here-document body, where a # is data, not a comment"
-                elif tainted:
-                    why = tainted
-                elif info.comment is None or p < info.comment \
-                        or (p > info.comment and raw[p - 1] not in " \t"):
-                    why = ("its # is not clearly a comment (it sits inside a quote, an "
-                           "expansion, a substitution or a backtick, or not at the start "
-                           "of a word)")
-                elif not MARKER_RE.match(raw, p):
-                    why = "no reason follows 'allow'"
-                elif "[" in raw[p:]:
-                    why = "its reason holds a '[', which a reason must not"
-                elif info.sep:
-                    why = ("the code beside it holds a command separator, so the waiver would "
-                           "cover more than one command")
-                else:
-                    valid = True
-                if not valid:
-                    findings.append(f"{name}:{lineno}: waiver refused: {why}")
-            hits = list(bracket_hits(raw[:marker.start()] if valid else raw))
-            if valid:
-                if hits:
-                    n_marked += len(hits)
-                else:
-                    findings.append(f"{name}:{lineno}: stale bracket-ranges marker: no bracket "
-                                    f"range on its line")
-            else:
-                findings.extend(f"{name}:{lineno}: {what} and no bracket-ranges marker covers "
-                                f"it" for what in hits)
-            if not in_body and tainted is None and info.dirty is not None:
-                tainted = (f"line {lineno} {info.dirty}, so no later # in this block is "
-                           f"clearly a comment")
-    return findings, n_blocks, n_marked
+            hits = list(bracket_hits(raw))
+            if not hits:
+                continue
+            if allow.take(name, raw):
+                n_waived += len(hits)
+                continue
+            findings.extend(f"{name}:{start + idx}: {what} and no allowlist entry covers its "
+                            f"line" for what in hits)
+    return findings, n_blocks, n_waived
 
 
-def scan_path(path):
-    """Scan one guide file. Raises what blocks_of raises on a file it cannot read."""
-    return scan_blocks(path.name, list(blocks_of(path)))
+def scan_path(path, allow=None):
+    """Scan one guide file: its whole text for the retired in-block marker, and every physical
+    line of its bash blocks for ranges and unclosed brackets. Raises what blocks_of raises on a
+    file it cannot read. With no allowlist given, nothing is waived."""
+    allow = Allowlist() if allow is None else allow
+    findings = [f"{path.name}:{lineno}: in-guide bracket-ranges marker: waivers live in "
+                f"tools/{ALLOWLIST}, keyed by the guide and the exact line"
+                for lineno, raw in enumerate(path.read_text(encoding="utf-8").split("\n"), 1)
+                if MARKERISH_RE.search(raw)]
+    found, n_blocks, n_waived = scan_blocks(path.name, list(blocks_of(path)), allow)
+    return findings + found, n_blocks, n_waived
 
 
 def scan_repo(root):
-    """Scan every guide under root. Returns (findings, n_files, n_blocks, n_marked)."""
+    """Scan every guide under root against the allowlist.
+
+    Returns (findings, n_files, n_blocks, n_waived), the stale-entry findings included.
+    """
+    allow = Allowlist.load(root / "tools" / ALLOWLIST)
     paths = sorted(walk_files(root, SKIP_DIRS, suffixes={".md"}))
-    findings, n_files, n_blocks, n_marked = [], 0, 0, 0
+    findings, n_files, n_blocks, n_waived = list(allow.findings), 0, 0, 0
     for path in paths:
         if path.parent != root or path.name in NOT_A_GUIDE:
             continue
         try:
-            found, blocks_here, marked = scan_path(path)
+            found, blocks_here, waived = scan_path(path, allow)
         except Exception as exc:
             findings.append(f"{path.name}: unreadable ({exc})")
             continue
         findings.extend(found)
         n_blocks += blocks_here
-        n_marked += marked
+        n_waived += waived
         n_files += 1 if blocks_here else 0
-    return findings, n_files, n_blocks, n_marked
+    findings.extend(allow.stale())
+    return findings, n_files, n_blocks, n_waived
 
 
 def main() -> int:
     root = Path(__file__).resolve().parents[1]
     try:
-        findings, n_files, n_blocks, n_marked = scan_repo(root)
+        findings, n_files, n_blocks, n_waived = scan_repo(root)
     except Exception as exc:
-        print(f"  FAIL  could not walk the repository: {exc}")
+        print(f"  FAIL  could not scan the repository: {exc}")
         return 1
     if not findings and not n_blocks:
         # A pass over nothing is not a pass.
@@ -511,8 +400,8 @@ def main() -> int:
             print(f"  FAIL  {f}")
         print(f"  FAIL  {HINT}")
         return 1
-    print(f"  ok    no unmarked bracket range in {n_blocks} bash blocks across {n_files} "
-          f"guides ({n_marked} marked allow)")
+    print(f"  ok    no unwaived bracket range in {n_blocks} bash blocks across {n_files} "
+          f"guides ({n_waived} waived by tools/{ALLOWLIST})")
     return 0
 
 

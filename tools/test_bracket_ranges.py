@@ -1,19 +1,24 @@
 #!/usr/bin/env python3
 r"""Cases for check_bracket_ranges.py, including what it deliberately over-flags.
 
-Most cases hand one guide to the gate's own scan_path and assert the exact number of findings
-and a substring of one, so a stale marker, a refused waiver and an unmarked range are counted
-apart rather than merged into "it failed". The ENTRY POINT group builds throwaway repositories
-and runs the shipped file, for what only the entry point does: choosing which files to read, the
-pass line, the exit status, and failing closed on an unreadable guide, an unlistable directory,
-or a corpus with no bash block in it.
+Most cases hand one guide to the gate's own scan_path, with or without a throwaway allowlist,
+and assert the exact number of findings and a substring of one, so a stale allowlist entry, an
+in-guide marker and an unmarked range are counted apart rather than merged into "it failed". The
+ENTRY POINT group builds throwaway repositories and runs the shipped file, for what only the
+entry point does: choosing which files to read, loading tools/bracket_ranges_allow.txt, the pass
+line, the exit status, and failing closed on an unreadable guide, an unlistable directory, an
+unreadable allowlist, or a corpus with no bash block in it.
 
-The REGRESSIONS group pins every bypass the two adversarial review rounds found against the
-joined-line models this gate replaced. Each of those bypasses produced zero findings then; each
-is at least one finding now, by construction of the physical-line model: a range and its waiver
-must share a physical line, a `[` that its own line does not close is a finding wherever the
-closing half went, and a waiver is refused, loudly, whenever the one-line scan cannot prove its
-`#` is a comment.
+The REGRESSIONS groups pin every bypass the three adversarial review rounds found, each with its
+original in-block waiver attempt. Rounds 1 and 2 beat the joined-line lexing; round 3 beat the
+residual one-line lexing that decided whether a waiver comment was real (an escaped space before
+a data `#`, a trailing backslash dropping an open quote, a partly recognized here-document
+delimiter, a fake POSIX atom swallowing a validator, quoting inside a parameter-removal pattern,
+and only the last marker attempt on a line being validated). Each produced zero findings on the
+model it beat; each is at least one finding now, by construction: a range and an unclosed `[`
+are findings on their own physical line whatever surrounds them, a waiver lives only in
+tools/bracket_ranges_allow.txt keyed by the exact line, and the old in-block marker is itself a
+finding wherever it sits in a guide.
 
 The OVER-FLAGGED group asserts the cost of failing closed on inputs a shell parser would accept,
 so the docstring's list stays honest, and the NOT SEEN group asserts what the gate still does
@@ -34,10 +39,12 @@ import check_bracket_ranges as gate  # noqa: E402
 MARK = "# bracket-ranges: allow "
 GREP = "grep -E '^[a-z]+$' f"
 Q = chr(34)
+BS = chr(92)
 JSON_ARRAY = "[" + Q + "app-data" + Q + "]"
 UNCLOSED = "opens a bracket expression that nothing closes"
-REFUSED = "waiver refused"
-STALE = "stale bracket-ranges marker"
+MARKER = "in-guide bracket-ranges marker"
+STALE = "stale allowlist entry"
+ALLOW = "tools/bracket_ranges_allow.txt"
 
 
 def doc(block, fence="```bash"):
@@ -46,13 +53,27 @@ def doc(block, fence="```bash"):
     return "# T\n\n## Verify\n\n" + fence + "\n" + block + "\n" + close + "\n"
 
 
-def findings(text):
-    """Run the gate's scanner over one guide held in a throwaway file."""
+def entry(text, guide="guide.md", reason="not a validator"):
+    """One allowlist line waiving `text` in `guide`."""
+    return guide + "\t" + text + "\t" + reason
+
+
+def findings(text, allow=None):
+    """Run the gate's scanner over one guide held in a throwaway file, with `allow` the content
+    of a throwaway allowlist or None for an empty one, in scan_repo's finding order: what
+    loading the allowlist flagged, then the guide's findings, then the stale entries."""
     d = Path(tempfile.mkdtemp())
     try:
         p = d / "guide.md"
         p.write_text(text, encoding="utf-8")
-        return gate.scan_path(p)[0]
+        if allow is None:
+            allowlist = gate.Allowlist()
+        else:
+            a = d / "allow.txt"
+            a.write_text(allow, encoding="utf-8")
+            allowlist = gate.Allowlist.load(a)
+        found = gate.scan_path(p, allowlist)[0]
+        return list(allowlist.findings) + found + allowlist.stale()
     finally:
         shutil.rmtree(d, ignore_errors=True)
 
@@ -85,9 +106,9 @@ CASES = (
      doc('[ "${#1}" -eq 32 ] && case "$1" in *[!0-9a-f]*) exit 2 ;; esac'), 1, "[!0-9a-f]"),
     ("two ranges on one line are two findings",
      doc('case "$1" in *[!a-z]*|*[!0-9]*) exit 2 ;; esac'), 2, None),
-    ("a JSON array holding a hyphenated string takes a marker, by design",
+    ("a JSON array holding a hyphenated string takes an allowlist entry, by design",
      doc("printf '%s' '" + JSON_ARRAY + "'"), 1, "p-d"),
-    ("a range under LC_ALL=C still takes a marker", doc("LC_ALL=C " + GREP), 1, None),
+    ("a range under LC_ALL=C still takes an allowlist entry", doc("LC_ALL=C " + GREP), 1, None),
     ("a range in a comment, which a reader may uncomment",
      doc("# accepts only [A-Za-z]\necho ok"), 1, "guide.md:6:"),
     ("a commented-out probe with a validator",
@@ -131,93 +152,100 @@ CASES = (
      doc("re='^[A-Z\na-z]+$'\n[[ é =~ $re ]]"), 1, "guide.md:6:"),
     ("a case pattern spanning a real newline is caught",
      doc('case "$1" in *[!A-Z\na-z0-9]*) exit 2 ;; esac'), 1, "guide.md:6:"),
+    ("a range in a multi-line awk program string is found on its own line",
+     doc("awk '\n/^[a-z]/ { print }\n' f"), 1, "guide.md:7:"),
+)
+CASES += (
+    # THE RETIRED IN-BLOCK MARKER. Any guide line holding it is a finding, wherever it sits:
+    # in code, in a comment, in prose, in a quote or in a here-document body. The gate does not
+    # decide whether it is a real comment; that decision was the round-3 attack surface.
+    ("a marker at the end of a range's line waives nothing and is itself a finding",
+     doc(GREP + "  " + MARK + "a search pattern"), 2, MARKER),
+    ("a marker on the line above a range",
+     doc(MARK + "a search pattern\n" + GREP), 2, "guide.md:6: " + MARKER),
+    ("a marker on a clean line", doc("echo ok  " + MARK + "x"), 1, MARKER),
+    ("a marker in prose outside any block",
+     "# T\n\nSay " + MARK + "here.\n\n```bash\necho ok\n```\n", 1, "guide.md:3: " + MARKER),
+    ("a marker in a here-document body",
+     doc("cat > f <<'EOF'\n^[a-z]+$  " + MARK + "fake\nEOF"), 2, MARKER),
+    ("a marker inside a quoted string",
+     doc("grep -F '" + MARK.rstrip() + " fake' f"), 1, MARKER),
+    ("a marker with no reason is still the marker",
+     doc("echo ok  # bracket-ranges: allow"), 1, MARKER),
+    ("a marker misspelled past the colon is still the marker",
+     doc("echo ok  # bracket-ranges: allowed maybe"), 1, MARKER),
+    ("one finding per line however many marker attempts the line holds",
+     doc("printf '%s" + BS + "n' '[a-z]' '# bracket-ranges: broken' " + MARK + "label"),
+     2, MARKER),
 
-    # A WAIVER COVERS ITS OWN PHYSICAL LINE, AND ONLY A LINE THAT IS ONE COMMAND.
-    ("a marker at the end of the line covers its range", doc(GREP + "  " + MARK + "a search "
-     "pattern"), 0, None),
-    ("a marker on the line above no longer exists, and is stale there",
-     doc(MARK + "a search pattern\n" + GREP), 2, "guide.md:6: " + STALE),
-    ("a marker beside a semicolon is refused, covering neither command",
-     doc("grep -E '^[a-z]+$' a; grep -E '^[0-9]+$' b  " + MARK + "x"), 3, REFUSED),
-    ("a marker above a line with two commands is stale, covering neither",
-     doc(MARK + "x\ngrep -E '^[a-z]+$' a && grep -E '^[0-9]+$' b"), 3, STALE),
-    ("a marker beside a pipe is refused",
-     doc(GREP + " | head -n 1  " + MARK + "x"), 2, REFUSED),
-    ("a marker beside a lone ampersand is refused",
-     doc("grep -E '^[a-z]+$' a & grep -E '^[0-9]+$' b  " + MARK + "x"), 3, REFUSED),
-    ("a marker after a trailing semicolon is refused",
-     doc(GREP + ";  " + MARK + "x"), 2, REFUSED),
-    ("a marker at the end of one line does not reach the next",
-     doc(GREP.replace(" f", " a") + "  " + MARK + "x\ngrep -E '^[0-9]+$' b"), 1, "guide.md:7:"),
-    ("a redirection's ampersand refuses nothing",
-     doc(GREP + " 2>&1 >/dev/null &>/dev/null  " + MARK + "x"), 0, None),
-    ("a semicolon inside quotes refuses nothing",
-     doc("grep -E '^[a-z]+;$' f  " + MARK + "x"), 0, None),
-
-    # MARKERS THAT ARE NOT COMMENTS ARE REFUSED, LOUDLY.
-    ("a marker inside a parameter-expansion default is refused",
-     doc(GREP + " ${u:-x " + MARK.rstrip() + " fake}"), 2, REFUSED),
-    ("a marker inside a nested parameter expansion is refused",
-     doc(GREP + " ${u:-${v:-x} " + MARK.rstrip() + " fake}"), 2, REFUSED),
-    ("a marker inside a quoted string is refused",
-     doc("grep -E '^[a-z]+$ " + MARK.rstrip() + " fake' f"), 2, REFUSED),
-    ("a marker inside a command substitution is refused",
-     doc('x="$(y ' + MARK.rstrip() + ' fake)"'), 1, REFUSED),
-    ("a marker inside backticks is refused",
-     doc("x=`y " + MARK.rstrip() + " fake`"), 1, REFUSED),
-    ("a marker on a here-document body line is refused",
-     doc("cat > f <<'EOF'\n^[a-z]+$  " + MARK + "fake\nEOF"), 2, REFUSED),
-    ("a marker with no reason is refused",
-     doc(GREP + "  # bracket-ranges: allow"), 2, "no reason follows"),
-    ("a marker whose reason holds a bracket is refused",
-     doc("echo ok  " + MARK + "matches [a-z] here"), 2, REFUSED),
-    ("a marker not at the start of a word is refused",
-     doc("echo ok  # note" + MARK + "x"), 1, REFUSED),
-
-    # STALE MARKERS.
-    ("a marker over a command with no range", doc(MARK + "x\necho ok"), 1, "guide.md:6: " + STALE),
-    ("a marker on a command with no range", doc("echo ok  " + MARK + "x"), 1, STALE),
-    ("a marker with no command after it in the block",
-     doc("echo ok\n" + MARK + "x"), 1, "guide.md:7: " + STALE),
-    ("a marker directly above another marker, both stale",
-     doc(MARK + "a\n" + MARK + "b\n" + GREP), 3, "guide.md:6: " + STALE),
-    ("a plain comment between a stale marker and the range",
-     doc(MARK + "x\n# see above\n" + GREP), 2, "guide.md:6: " + STALE),
-    ("a blank line between a stale marker and the range",
-     doc(MARK + "x\n\n" + GREP), 2, "guide.md:6: " + STALE),
-    ("a marker on a here-document opener covers the opener line only, and is stale there",
-     doc("cat > f <<'EOF'  " + MARK + "x\n^[a-z]+$\nEOF"), 2, STALE),
-
-    # REGRESSIONS. Round-2 bypasses of the joined-line model, each now at least one finding.
+    # REGRESSIONS, ROUNDS 1 AND 2. The joined-line bypasses, each with its original in-block
+    # waiver attempt where it had one; every waiver attempt is now an in-guide-marker finding
+    # and every range or unclosed bracket is found on its own line.
     ("codex r2-1: a waived literal bracket before a semicolon hid the next command's validator",
      doc("printf '%s\\n' '['; re='^[a-z]+$'  " + MARK + "literal bracket\n[[ é =~ $re ]]"),
-     2, REFUSED),
-    ("codex r2-1 in the marker-above form: the marker is stale and the range found",
+     2, MARKER),
+    ("codex r2-1 in the marker-above form",
      doc(MARK + "literal bracket\nprintf '%s\\n' '['; re='^[a-z]+$'\n[[ é =~ $re ]]"),
-     2, "guide.md:6: " + STALE),
+     2, "guide.md:6: " + MARKER),
     ("codex r2-1 with an empty pair: the range after it is still found",
      doc(MARK + "literal bracket\nprintf '%s\\n' '[]'; re='^[a-z]+$'\n[[ é =~ $re ]]"),
      2, "a-z"),
-    ("codex r2-2: a parameter expansion split at the dollar sign taints the block",
+    ("codex r2-2: a parameter expansion split at the dollar sign",
      doc("re='^[a-z]+$' unused=$\\\n{u:-x " + MARK.rstrip() + " fake}\n[[ é =~ $re ]]"),
-     2, REFUSED),
-    ("codex r2-3: a here-document terminator split by a continuation never ends the body early",
+     2, MARKER),
+    ("codex r2-3: a here-document terminator split by a continuation",
      doc("re=''\ncat <<EOF  " + MARK + "JSON data\n" + JSON_ARRAY + "\nE\\\nOF\nre='^[a-z]+$'\n"
          "cat <<EOF\ndone\nEOF\n[[ é =~ $re ]]"), 3, "guide.md:11:"),
-    ("claude r2-1: an unreadable here-document delimiter refuses every later waiver",
+    ("claude r2-1: an unreadable here-document delimiter with a waiver in the body",
      doc("d=EOF\ncat > check.sh <<$d\n[[ \"$1\" =~ ^[A-Za-z0-9]+$ ]]  " + MARK + "fake\nEOF\n"
-         "sh check.sh x"), 2, REFUSED),
+         "sh check.sh x"), 2, MARKER),
     ("claude r2-2: an unquoted backslash does not hide a live bracket",
      doc("grep -cE \\[0-9] f"), 1, "0-9"),
     ("claude r2-2 with an anchored pattern",
      doc("grep -E ^\\[a-z]+$ f"), 1, "a-z"),
-    ("claude r2-3: a reason quoting a range cannot satisfy the staleness rule",
-     doc("echo ok  " + MARK + "matches [a-z] here"), 2, "guide.md:6:"),
-    ("a quote left open on an earlier line taints every later waiver in the block",
-     doc("x='\n' ; [[ é =~ ^[a-z]+$ ]] ; y=' " + MARK.rstrip() + " fake'"), 2, REFUSED),
-    ("a bare-delimiter body line ending in a backslash keeps the body open, as bash does",
-     doc("cat <<EOF\nx\\\nEOF\nre='^[a-z]+$'  " + MARK + "fake\nEOF"), 2, REFUSED),
+    ("claude r2-3: a reason quoting a range, and the quoted range is found too",
+     doc("echo ok  " + MARK + "matches [a-z] here"), 2, "a-z"),
+    ("a quote left open on an earlier line, with the waiver attempt inside it",
+     doc("x='\n' ; [[ é =~ ^[a-z]+$ ]] ; y=' " + MARK.rstrip() + " fake'"), 2, MARKER),
+    ("a bare-delimiter body line ending in a backslash, with the waiver attempt after it",
+     doc("cat <<EOF\nx\\\nEOF\nre='^[a-z]+$'  " + MARK + "fake\nEOF"), 2, MARKER),
+    ("a marker inside a parameter-expansion default",
+     doc(GREP + " ${u:-x " + MARK.rstrip() + " fake}"), 2, MARKER),
+    ("a marker inside a nested parameter expansion",
+     doc(GREP + " ${u:-${v:-x} " + MARK.rstrip() + " fake}"), 2, MARKER),
+    ("a marker inside a command substitution",
+     doc('x="$(y ' + MARK.rstrip() + ' fake)"'), 1, MARKER),
+    ("a marker inside backticks", doc("x=`y " + MARK.rstrip() + " fake`"), 1, MARKER),
+    ("a marker covering a second command on the line",
+     doc("grep -E '^[a-z]+$' a; grep -E '^[0-9]+$' b  " + MARK + "x"), 3, MARKER),
+    ("claude r2-1 variant: a marker on a here-document opener line",
+     doc("cat > f <<'EOF'  " + MARK + "x\n^[a-z]+$\nEOF"), 2, MARKER),
 
+    # REGRESSIONS, ROUND 3. The bypasses of the round-3 one-line waiver lexing, verified
+    # fail-open on that model (zero findings, the fake waiver counted as marked) and each at
+    # least one finding now. The lexing they beat no longer exists.
+    ("codex r3-1: an escaped space made a data # read as a comment",
+     doc("bash -c '[[ é =~ ^[a-z]+$ ]]' x" + BS + " " + MARK + "fake"), 2, MARKER),
+    ("codex r3-2: a trailing backslash dropped an open double quote",
+     doc('bash -c "' + BS + "\n[[ é =~ ^[a-z]+$ ]] " + MARK + "fake\n" + Q), 2, MARKER),
+    ("codex r3-3: a partly recognized here-document delimiter ended the body early",
+     doc("bash <<true" + BS + "EOF\ntrue\n[[ é =~ ^[a-z]+$ ]] " + MARK + "fake\ntrueEOF"),
+     2, MARKER),
+    ("codex r3-4: a fake POSIX atom built from two printf arguments swallowed the validator",
+     doc("printf '[[:'; re='^[a-z]+$'; printf ':]]" + BS + "n'\n[[ é =~ $re ]]"), 1, "a-z"),
+    ("codex r3-5: quoting inside a parameter-removal pattern misread as closing the expansion",
+     doc("v=x\nre='^[a-z]+$' ignored=\"${v#'}\" " + MARK + "fake'}\"\n"
+         "printf '%s" + BS + "n' \"$ignored\"\n[[ é =~ $re ]]"), 2, MARKER),
+    ("codex r3-6: only the last marker attempt on a line was validated",
+     doc("printf '%s" + BS + "n' '[a-z]' '# bracket-ranges: broken' " + MARK + "label"),
+     2, "a-z"),
+    ("claude r3-1: a bare delimiter read as a prefix (EOF for EOF!) left the body early",
+     doc("cat > check.sh <<EOF!\nx\nEOF\n[[ \"$1\" =~ ^[a-z]+$ ]]  " + MARK + "fake\nEOF!\n"
+         "bash check.sh \"$1\""), 2, MARKER),
+    ("claude r3-2: a here-document opened inside a command substitution went untracked",
+     doc("v=$(cat <<'EOF')\n[[ é =~ ^[a-z]+$ ]]  " + MARK + "fake\nEOF"), 2, MARKER),
+)
+CASES += (
     # NOT FLAGGED.
     ("the spelled-out set",
      doc('case "$1" in *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*) '
@@ -230,43 +258,20 @@ CASES = (
      doc('case "$1" in *[-_.a]*|*[_.a-]*|*[^-a]*|*[-]*) exit 2 ;; esac'), 0, None),
     ("a POSIX class on its own, which is not a range",
      doc('case "$1" in *[[:space:][:cntrl:]]*|*[[:cntrl:]]*) exit 2 ;; esac'), 0, None),
+    ("a C-scoped POSIX class, the mcp-clients.md shape",
+     doc("env LC_ALL=C grep -o '[[:print:]]' f"), 0, None),
     ("a parameter expansion holding a #",
      doc('case "${1#https://}" in *:*[!0123456789]*) exit 2 ;; esac'), 0, None),
     ("an IPv6 literal in a URL", doc("curl -q -g -sS 'https://[2001:db8::1]:8443/'"), 0, None),
     ("a range in a yaml block", doc("pattern: '^[a-z]+$'", fence="```yaml"), 0, None),
-    ("a marker on the line of a continued command's range",
-     doc("grep -E \\\n  '^[a-z]+$' f  " + MARK + "x"), 0, None),
-    ("a marker covers a bracket left open on its line",
-     doc("grep -F '[' f  " + MARK + "a literal bracket"), 0, None),
-    ("a marker at the end of a comment covers the commented-out probe beside it",
-     doc("# probe: grep -E '^[a-z]+$'  " + MARK + "a commented-out example"), 0, None),
     ("an empty pair in jq is not a bracket expression", doc("jq -r '.[] | .name' f.json"), 0,
      None),
     ("a regex [!] that no later bracket closes is the one-character set it is",
      doc("grep -E '[!]' f"), 0, None),
-    ("a here-string is not a here-document, so the marker after it counts",
-     doc("grep -E '^[a-z]+$' <<<\"$1\"  " + MARK + "x"), 0, None),
-    ("an apostrophe inside double quotes opens no quote, so the marker after it counts",
-     doc("grep -E '^[a-z]+$' \"d'nt\"  " + MARK + "x"), 0, None),
-    ("ANSI-C quoting with an escaped quote, so the marker after it counts",
-     doc("printf $'it\\'s [a-z]\\n'  " + MARK + "a printed label"), 0, None),
-    ("a closed parameter expansion, so the marker after it counts",
-     doc(GREP + " ${u:-x}  " + MARK + "x"), 0, None),
-    ("a quoted } inside a parameter expansion does not close it",
-     doc(GREP + " ${u:-'}'}  " + MARK + "x"), 0, None),
-    ("a double-quoted } inside an expansion in double quotes does not close it",
-     doc(GREP + " " + Q + "${u:-" + Q + "}" + Q + "}" + Q + "  " + MARK + "x"), 0, None),
-    ("a single quote inside an expansion in double quotes is literal",
-     doc(GREP + " " + Q + "${u:-'}" + Q + "  " + MARK + "x"), 0, None),
-    ("a closed command substitution in double quotes, so the marker after it counts",
-     doc(GREP + " " + Q + "$(cat f)" + Q + "  " + MARK + "x"), 0, None),
-    ("arithmetic in a closed substitution opens no here-document",
-     doc("echo $((1 << 2))\n" + GREP + "  " + MARK + "a search pattern"), 0, None),
-    ("a <<- terminator indented with a tab ends the here-document",
-     doc("cat > f <<-EOF\n\tplain\n\tEOF\n" + GREP + "  " + MARK + "x"), 0, None),
-    ("a here-document terminator inside a list-item fence ends the here-document",
-     "# T\n\n- step:\n\n  ```bash\n  cat > f <<'EOF'\n  plain\n  EOF\n  " + GREP + "  " + MARK
-     + "x\n  ```\n", 0, None),
+    ("a class whose atom never closes on its line is read as ordinary characters",
+     doc("grep -E '[[:alpha]' f"), 0, None),
+    ("a fake equivalence atom with a space inside is read as ordinary characters",
+     doc("grep -E '[[=a b=]]' f"), 0, None),
 
     # OVER-FLAGGED, BY DESIGN. The recorded cost of failing closed; the docstring lists these.
     ("a quoted escaped bracket is read as a bracket",
@@ -278,14 +283,10 @@ CASES = (
     ("a spelled-out set split by a continuation is an unclosed bracket",
      doc('grep -E "^[0123456789abc\\\ndef]+$" f'), 1, UNCLOSED),
     ("a multi-line Python list in a here-document is an unclosed bracket",
-     doc("python3 - <<'PY'\nargs = [" + Q + "curl" + Q + ", " + Q + "-q" + Q + ",\n    " + Q
-         + "-sS" + Q + "]\nPY"), 1, "guide.md:7:"),
-    ("a marker above a continued command is stale, and the range found",
-     doc(MARK + "x\ngrep -E \\\n  '^[a-z]+$' f"), 2, STALE),
-    ("a range in a multi-line quoted string cannot be waived after the string",
-     doc("awk '\n/^[a-z]/ { print }\n' f  " + MARK + "x"), 2, REFUSED),
-    ("a bare arithmetic command holding << is read as a here-document opener",
-     doc("(( x = 1 << 2 ))\n" + GREP + "  " + MARK + "x"), 2, REFUSED),
+     doc("python3 - <<'EOS'\nargs = [" + Q + "curl" + Q + ", " + Q + "-q" + Q + ",\n    " + Q
+         + "-sS" + Q + "]\nEOS"), 1, "guide.md:7:"),
+    ("a hyphen before a fake equivalence atom is read as a range, failing closed",
+     doc("grep -E '[a-[=xy z=]]' f"), 1, "a-["),
 
     # FENCES AND LINES.
     ("a U+2028 inside a block does not shift the line number",
@@ -304,10 +305,62 @@ CASES += (
      doc("grep -qE '^\\w+$' f"), 0, None),
     ("not seen: a sh, shell or zsh fence is not a bash fence and is not read",
      doc(GREP, fence="```sh"), 0, None),
+    ("not seen: a [ standing as its own word is the test command even inside regex text",
+     doc("re='^ [ a-z]+$'\n[[ ' é' =~ $re ]]"), 0, None),
+    ("not seen: brackets built by escapes hold no literal bracket",
+     doc("re=$'" + BS + "x5bA-Za-z" + BS + "x5d'\n[[ é =~ $re ]]"), 0, None),
+    ("not seen: a hyphen built by an escape holds no literal range",
+     doc("re=$'^[a" + BS + "x2dz]+$'\n[[ é =~ $re ]]"), 0, None),
+    ("not seen: a range assembled from variables holds no literal X-Y in its brackets",
+     doc("lo='a-'\nhi=z\nre=" + Q + "^[$lo$hi]+$" + Q + "\n[[ é =~ $re ]]"), 0, None),
+)
+
+# (description, guide text, allowlist text, exact findings, substring or None)
+ALLOW_CASES = (
+    ("an entry waives its exact line", doc(GREP), entry(GREP), 0, None),
+    ("one entry waives every finding on its one line",
+     doc('case "$1" in *[!a-z]*|*[!0-9]*) exit 2 ;; esac'),
+     entry('case "$1" in *[!a-z]*|*[!0-9]*) exit 2 ;; esac'), 0, None),
+    ("an unclosed bracket's line can be waived",
+     doc("python3 - <<'EOS'\nargs = [" + Q + "curl" + Q + ",\n    " + Q + "-sS" + Q + "]\nEOS"),
+     entry("args = [" + Q + "curl" + Q + ","), 0, None),
+    ("the whole line must match, not a substring: a line that grew a second command",
+     doc(GREP + "; rm -f g"), entry(GREP), 2, STALE),
+    ("the whole line must match: leading whitespace counts",
+     doc("  " + GREP), entry(GREP), 2, STALE),
+    ("an entry names its guide", doc(GREP), entry(GREP, guide="other.md"), 2, STALE),
+    ("an entry no flagged line consumes is stale",
+     doc("echo ok"), entry(GREP), 1, "allow.txt:1: " + STALE),
+    ("an entry matching an unflagged line is stale too",
+     doc("echo a-z"), entry("echo a-z"), 1, STALE),
+    ("an entry with an empty reason",
+     doc(GREP), "guide.md\t" + GREP + "\t", 2, "empty reason"),
+    ("an entry with two fields is malformed",
+     doc(GREP), "guide.md\t" + GREP, 2, "malformed allowlist entry"),
+    ("an entry with one field is malformed",
+     doc(GREP), "guide.md", 2, "malformed allowlist entry"),
+    ("an entry with an empty line text is malformed",
+     doc(GREP), "guide.md\t\tr", 2, "malformed allowlist entry"),
+    ("comment and blank lines in the allowlist are skipped",
+     doc(GREP), "# c\n\n" + entry(GREP), 0, None),
+    ("two occurrences of one line consume two entries",
+     doc(GREP + "\n" + GREP), entry(GREP) + "\n" + entry(GREP), 0, None),
+    ("one entry does not cover a second occurrence of its line",
+     doc(GREP + "\n" + GREP), entry(GREP), 1, "guide.md:7:"),
+    ("a duplicate entry beyond the real occurrences is stale",
+     doc(GREP), entry(GREP) + "\n" + entry(GREP), 1, "allow.txt:2: " + STALE),
+    ("an entry does not silence the in-guide marker finding on its line",
+     doc(GREP + "  " + MARK + "x"), entry(GREP + "  " + MARK + "x"), 1, MARKER),
+    ("an entry matches the line as the block extraction yields it, fence indentation removed",
+     "# T\n\n- step:\n\n  ```bash\n  " + GREP + "\n  ```\n", entry(GREP), 0, None),
+    ("a TAB inside the line text is carried by the middle field",
+     doc("grep -E '^[a-z]+$'\tf"), entry("grep -E '^[a-z]+$'\tf"), 0, None),
+    ("an entry for a non-bash fence is stale, since that fence is not read",
+     doc("pattern: '^[a-z]+$'", fence="```yaml"), entry("pattern: '^[a-z]+$'"), 1, STALE),
 )
 
 
-def run_repo(files, unreadable_dir=False):
+def run_repo(files, unreadable_dir=False, unreadable_allow=False):
     """Build a throwaway repository and run the shipped gate in it. Returns (exit, stdout)."""
     d = Path(tempfile.mkdtemp())
     try:
@@ -322,6 +375,8 @@ def run_repo(files, unreadable_dir=False):
                 p.write_bytes(body)
             else:
                 p.write_text(body, encoding="utf-8")
+        if unreadable_allow:
+            (d / "tools" / "bracket_ranges_allow.txt").chmod(0o000)
         if unreadable_dir:
             blocked = d / "blocked"
             blocked.mkdir()
@@ -333,6 +388,8 @@ def run_repo(files, unreadable_dir=False):
     finally:
         if unreadable_dir:
             (d / "blocked").chmod(0o755)
+        if unreadable_allow:
+            (d / "tools" / "bracket_ranges_allow.txt").chmod(0o644)
         shutil.rmtree(d, ignore_errors=True)
 
 
@@ -340,6 +397,7 @@ def entry_point_failures():
     """Run the shipped entry point. Returns (failures, runs)."""
     failures, runs = [], 0
     clean = doc("echo ok")
+    root_ok = os.geteuid() == 0 if hasattr(os, "geteuid") else True
 
     # Every guide and every block, not just the first of each.
     runs += 1
@@ -350,12 +408,27 @@ def entry_point_failures():
         failures.append(f"the second block of one guide and the first of another were not both "
                         f"reported: {out!r}")
 
+    # The allowlist is read from tools/bracket_ranges_allow.txt, and the pass line counts.
+    runs += 1
+    rc, out = run_repo((("a.md", clean), ("b.md", doc(GREP)),
+                        ("tools/bracket_ranges_allow.txt",
+                         entry(GREP, guide="b.md") + "\n")))
+    if rc != 0 or "in 2 bash blocks across 2 guides (1 waived by " + ALLOW + ")" not in out:
+        failures.append(f"the pass line does not count every block, guide and waived range: "
+                        f"{out!r}")
+
+    # A missing allowlist is an empty allowlist: nothing is waived.
+    runs += 1
+    rc, out = run_repo((("a.md", clean), ("b.md", doc(GREP))))
+    if rc != 1 or "b.md:6:" not in out:
+        failures.append(f"a repository without an allowlist file waived something: {out!r}")
+
+    # A stale entry fails through the entry point, naming the allowlist line.
     runs += 1
     rc, out = run_repo((("a.md", clean),
-                        ("b.md", doc(GREP + "  " + MARK + "a search pattern"))))
-    if rc != 0 or "in 2 bash blocks across 2 guides (1 marked allow)" not in out:
-        failures.append(f"the pass line does not count every block, guide and marked range: "
-                        f"{out!r}")
+                        ("tools/bracket_ranges_allow.txt", entry(GREP, guide="a.md") + "\n")))
+    if rc != 1 or ALLOW + ":1: " + STALE not in out:
+        failures.append(f"a stale allowlist entry did not fail the gate: {out!r}")
 
     # Repository documents and subdirectories are not guides.
     runs += 1
@@ -391,11 +464,21 @@ def entry_point_failures():
         failures.append(f"a finding did not print in the suite's FAIL format with the fix: "
                         f"{out!r}")
 
-    # An unlistable subtree has to fail closed. Root reads through mode 000, so it cannot test it.
-    if not (hasattr(os, "geteuid") and os.geteuid() == 0):
+    # An unreadable allowlist has to fail closed, not read as empty. Root reads through
+    # mode 000, so it cannot test this.
+    if not root_ok:
+        runs += 1
+        rc, out = run_repo((("a.md", clean),
+                            ("tools/bracket_ranges_allow.txt", entry(GREP) + "\n")),
+                           unreadable_allow=True)
+        if rc != 1 or "could not scan" not in out:
+            failures.append(f"an unreadable allowlist did not fail the gate: {out!r}")
+
+    # An unlistable subtree has to fail closed.
+    if not root_ok:
         runs += 1
         rc, out = run_repo((("a.md", clean),), unreadable_dir=True)
-        if rc != 1 or "could not walk" not in out:
+        if rc != 1 or "could not scan" not in out:
             failures.append(f"an unlistable subtree did not fail the walk: {out!r}")
     return failures, runs
 
@@ -408,15 +491,22 @@ def main() -> int:
             failures.append(f"{desc}: expected {want} finding(s), got {len(found)}: {found!r}")
         elif expected is not None and not any(expected in f for f in found):
             failures.append(f"{desc}: no finding contains {expected!r}: {found!r}")
+    for desc, text, allow, want, expected in ALLOW_CASES:
+        found = findings(text, allow)
+        if len(found) != want:
+            failures.append(f"{desc}: expected {want} finding(s), got {len(found)}: {found!r}")
+        elif expected is not None and not any(expected in f for f in found):
+            failures.append(f"{desc}: no finding contains {expected!r}: {found!r}")
     more, runs = entry_point_failures()
     failures += more
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")
         return 1
+    n = len(CASES) + len(ALLOW_CASES)
     unseen = sum(1 for c in CASES if c[0].startswith("not seen:"))
-    print(f"  ok    {len(CASES)} recorded cases and {runs} entry-point runs for the bracket-ranges "
-          f"gate: {len(CASES) - unseen} behaviours checked, {unseen} disclosed blind spots still "
+    print(f"  ok    {n} recorded cases and {runs} entry-point runs for the bracket-ranges "
+          f"gate: {n - unseen} behaviours checked, {unseen} disclosed blind spots still "
           f"open")
     return 0
 
