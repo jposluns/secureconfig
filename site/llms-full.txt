@@ -15447,15 +15447,69 @@ At the time of writing, the default minimum password length is 8 characters. `db
 
 ## 2. Bind deliberately
 
-`server.default_listen_address` supplies the host when a connector's listen address omits it. At the time of writing, `server.bolt.listen_address` defaults to `:7687`, `server.http.listen_address` to `:7474`, and `server.https.listen_address` to `:7473`. Keep the default `localhost` unless remote clients are deliberate, then prefer a specific private address over `0.0.0.0`. Changing the shared address can also expose cluster ports; Neo4j recommends explicitly binding cluster listeners to `localhost` when clustering is not in use. See [network connector configuration](https://neo4j.com/docs/operations-manual/current/configuration/connectors/).
+`server.default_listen_address` supplies the host when a connector's listen address omits it. At the time of writing, `server.bolt.listen_address` defaults to `:7687`, `server.http.listen_address` to `:7474`, and `server.https.listen_address` to `:7473`. Keep the default `localhost` unless remote clients are deliberate, then prefer a specific private address over `0.0.0.0`. See [network connector configuration](https://neo4j.com/docs/operations-manual/current/configuration/connectors/).
 
-Online backup is Enterprise-only. Its `server.backup.listen_address` defaults to `127.0.0.1:6362` at the time of writing; keep it off external interfaces. Community readers should not expect an online-backup listener. See [online backup](https://neo4j.com/docs/operations-manual/current/backup-restore/online-backup/) and the [configuration reference](https://neo4j.com/docs/operations-manual/current/configuration/configuration-settings/).
+Online backup is Enterprise-only. Its `server.backup.listen_address` defaults to the explicit `127.0.0.1:6362` at the time of writing, so changing the shared listen address does not widen this default; keep it off external interfaces. Community readers should not expect an online-backup listener. See [online backup](https://neo4j.com/docs/operations-manual/current/backup-restore/online-backup/) and the [configuration reference](https://neo4j.com/docs/operations-manual/current/configuration/configuration-settings/).
 
 Firewall per [cloud-firewalls.md](cloud-firewalls.md) or [host.md](host.md), and widen access only after TLS and authentication are configured.
 
 ```properties
 server.default_listen_address=REPLACE_WITH_PRIVATE_IP
 ```
+
+### Enterprise cluster and monitoring listeners (Neo4j 5.26)
+
+The version-5 vendor pages checked on 2026-09-26 identify themselves as **5.26 (LTS)**. The [ports page](https://neo4j.com/docs/operations-manual/5/configuration/ports/#_cluster) says Enterprise opens cluster ports even on a single server, whether or not it is in a multi-process configuration. Do not infer that a standalone Enterprise deployment has only the client and backup listeners. Discovery and routing have the conditions below.
+
+| Traffic | Listen setting and default | Advertised setting and default | Condition |
+| --- | --- | --- | --- |
+| Discovery v1 | `server.discovery.listen_address=:5000` | `server.discovery.advertised_address=:5000` | When discovery v1 runs; deprecated since 5.23. |
+| Transaction shipping and catch-up, also capable of serving backups | `server.cluster.listen_address=:6000` | `server.cluster.advertised_address=:6000` | Enterprise; also discovery v2 when selected. |
+| Raft communication | `server.cluster.raft.listen_address=:7000` | `server.cluster.raft.advertised_address=:7000` | Enterprise. |
+| Server-side routing over an additional Bolt connector | `server.routing.listen_address=:7688` | `server.routing.advertised_address=:7688` | Server-side routing enabled; `dbms.routing.enabled` defaults to `true`. |
+
+All four listen defaults inherit their host from `server.default_listen_address`, whose packaged default is `localhost`. Their advertised defaults inherit `server.default_advertised_address`, also `localhost`; advertising an address does not restrict a bind. Set advertised addresses to names or private IPs reachable by the other members, and match any changed ports. See the [configuration reference](https://neo4j.com/docs/operations-manual/5/configuration/configuration-settings/#config_server.cluster.listen_address) and [cluster settings](https://neo4j.com/docs/operations-manual/5/clustering/settings/).
+
+Discovery v2 is documented for deployment from 5.23 and uses 6000 instead of a separate 5000 listener. The 5.26 reference still defaults `dbms.cluster.discovery.version` to `V1_ONLY`; `V2_ONLY` runs only v2, while `V1_OVER_V2` and `V2_OVER_V1` run both. Do not drop 5000 from the inventory merely because the version is 5.23 or later. The selector and v2 endpoints carry introduction labels of 5.22, while the deployment instructions describe v2 from 5.23. See [the selector](https://neo4j.com/docs/operations-manual/5/configuration/configuration-settings/#config_dbms.cluster.discovery.version) and [deployment instructions](https://neo4j.com/docs/operations-manual/5/clustering/setup/deploy/#cluster-example-configure-a-three-primary-cluster).
+
+Keep cluster ports reachable only by cluster members on a private network, with a firewall allowlist even after enabling TLS. Port 6000 permits **unauthenticated database replication** by default, and a backup client can use it too. Protecting 6362 alone does not protect this data path. For a single-server deployment without clustering, explicitly retain loopback on the cluster listeners even when client connectors need a private remote bind:
+
+```properties
+# Enterprise 5.26; discovery setting applies when v1 runs.
+server.discovery.listen_address=localhost:5000
+server.cluster.listen_address=localhost:6000
+server.cluster.raft.listen_address=localhost:7000
+server.routing.listen_address=localhost:7688
+```
+
+For a cluster, use the intended private interface instead of those loopback hosts. Enable the SSL framework's **`cluster`** scope on every member: it covers discovery, transaction shipping, Raft, and server-side routing, including 7688. The policy is disabled by default, so default cluster traffic has neither TLS encryption nor TLS client-certificate authentication. The documented default `client_auth=REQUIRE` only takes effect once the policy is enabled; a database password does not secure the unauthenticated replication endpoint. See [cluster ports](https://neo4j.com/docs/operations-manual/5/configuration/ports/#_cluster) and [intra-cluster SSL configuration](https://neo4j.com/docs/operations-manual/5/security/ssl-framework/#ssl-cluster-config).
+
+Before enabling it, create `certificates/cluster`, its `trusted` and `revoked` directories, and install each member's own PKCS#8 PEM `private.key` and matching `public.crt`. Make the key readable only by the Neo4j service account. Populate each member's trust directory with the approved peer certificates or their trusted CA as described by the vendor; retain `trust_all=false`. Cluster certificates must include both **TLS Web Server Authentication** and **TLS Web Client Authentication** in Extended Key Usage, because each member authenticates as a client to its peers. Inspect each member's certificate with `openssl x509 -in public.crt -noout -text` and look for both usages under `X509v3 Extended Key Usage`. In `public.crt`, concatenate PEM certificates leaf first, then toward the root. See the [vendor certificate requirements](https://neo4j.com/docs/operations-manual/5/security/ssl-framework/#ssl-certificates).
+
+Use the same policy settings on every member, with distinct private keys and certificates:
+
+```properties
+dbms.ssl.policy.cluster.enabled=true
+dbms.ssl.policy.cluster.base_directory=certificates/cluster
+dbms.ssl.policy.cluster.private_key=private.key
+dbms.ssl.policy.cluster.public_certificate=public.crt
+dbms.ssl.policy.cluster.client_auth=REQUIRE
+```
+
+This does not enable TLS on the separate 6362 backup connector, which uses the **`backup`** scope, or replace the client-facing Bolt and HTTPS policies below. See [SSL policy defaults](https://neo4j.com/docs/operations-manual/5/security/ssl-framework/#ssl-configuration) and [backup SSL](https://neo4j.com/docs/operations-manual/5/security/ssl-framework/#ssl-backup-config).
+
+**Prometheus is separate from clustering.** Enterprise's `server.metrics.prometheus.enabled` defaults to `false`; if enabled on either a standalone server or a cluster member, `server.metrics.prometheus.endpoint` defaults to the explicit `localhost:2004`. That default does not inherit a widened shared host; an explicitly hostless `:2004` does. No Prometheus scope is listed in the SSL framework, so do not assume the cluster policy protects metrics. Keep it loopback-only or reachable only by authorized monitoring systems. Graphite's `server.metrics.graphite.server=:2003` is an outbound destination, disabled by default, not a Neo4j listener. JMX 3637 and debugging 5005 in the ports table require explicit JVM options; do not enable remote management or debugging as part of this baseline. See [Prometheus settings](https://neo4j.com/docs/operations-manual/5/configuration/configuration-settings/#config_server.metrics.prometheus.endpoint) and [monitoring ports](https://neo4j.com/docs/operations-manual/5/configuration/ports/#_graphite_monitoring).
+
+**Docker:** at the guide's pinned entrypoint commit, the default `server.default_listen_address=0.0.0.0` applies to both editions and widens all four hostless cluster listen defaults when those listeners run. It does not override explicit listener hosts, the backup default, or the Prometheus default. Enterprise additionally defaults the four cluster advertised addresses to the container hostname and their respective ports, and maps legacy `NEO4J_causal__clustering_*` advertised-address variables to the newer names. Explicit configuration overrides Docker defaults; environment configuration then overrides file values. For a real cluster, use peer-reachable private addresses and the cluster TLS policy, and restrict container-network access as well as host publication. All three Dockerfile variants declare only `EXPOSE 7474 7473 7687`; that declaration is not a listener inventory or firewall. See the [entrypoint](https://github.com/neo4j/docker-neo4j/blob/5359427c4f51d0d51cce5b048757a2c21e6f377e/docker-image-src/5/coredb/docker-entrypoint.sh#L547-L617) and [Debian Dockerfile](https://github.com/neo4j/docker-neo4j/blob/5359427c4f51d0d51cce5b048757a2c21e6f377e/docker-image-src/5/coredb/Dockerfile-debian#L53).
+
+For the single-server loopback overrides above, use these Docker environment entries. They are derived from the pinned entrypoint's translation rules: prefix `NEO4J_`, replace each setting underscore with `__`, and each dot with `_`. The entrypoint reverses that translation before writing the setting. See [the naming convention](https://github.com/neo4j/docker-neo4j/blob/5359427c4f51d0d51cce5b048757a2c21e6f377e/docker-image-src/5/coredb/docker-entrypoint.sh#L549-L555) and [the translation](https://github.com/neo4j/docker-neo4j/blob/5359427c4f51d0d51cce5b048757a2c21e6f377e/docker-image-src/5/coredb/docker-entrypoint.sh#L607).
+
+| Environment name | Value |
+| --- | --- |
+| `NEO4J_server_discovery_listen__address` | `localhost:5000` |
+| `NEO4J_server_cluster_listen__address` | `localhost:6000` |
+| `NEO4J_server_cluster_raft_listen__address` | `localhost:7000` |
+| `NEO4J_server_routing_listen__address` | `localhost:7688` |
 
 ## 3. TLS on Bolt and HTTPS, HTTP off
 
@@ -15592,7 +15646,7 @@ Enable HTTP request logging only when an HTTP/HTTPS connector is in use. It does
 
 **Service verification status: REASONED, not demonstrated.** The authoring environment has no Neo4j server, Cypher Shell, Docker, or Podman available, and no authorized running deployment was supplied. All service comparisons below require capabilities missing here. Run exposed/fixed comparisons only in disposable test deployments. Record server, edition, client, and plugin versions alongside results.
 
-Local validation of this revision: all six shell blocks passed `bash -n` and ShellCheck 0.11.0. The repository's guard scanner found no issues in the in-memory text. Guard-only checks exercised placeholder and malformed marker/count rejection in all five guarded blocks. Six configuration fragments passed basic key/value parsing and duplicate-key checks. These are local syntax checks, not Neo4j configuration validation or service verification. The whole-corpus gate suite was not run.
+Local validation of this revision: all seven shell blocks passed `bash -n` and ShellCheck 0.11.0. Guard-only checks exercised placeholder and malformed marker/count rejection in all six guarded blocks. Eight configuration fragments passed basic key/value parsing and duplicate-key checks. These are local syntax checks, not Neo4j configuration validation or service verification. Both generated bundles were rebuilt and the whole-corpus gate suite passed with ShellCheck 0.11.0; no Neo4j service was run.
 
 For each guarded block, replace the hostname inside the single quotes and paste the whole block. The blocks assume ordinary shell builtins; do not insert a literal apostrophe into the quoted substitution. A fragment pasted below the guards is unguarded.
 
@@ -15600,7 +15654,7 @@ Use `neo4j+s://` for certificate-verified routing connections or `bolt+s://` for
 
 ### Listener inventory
 
-**REASONED: requires the Neo4j service's network namespace, unavailable here.** Run this block inside that namespace. The substituted hostname identifies the deployment being inspected; it does not make `ss` inspect a remote machine.
+**REASONED: requires the Neo4j service's network namespace and, for the Enterprise comparisons, a standalone Enterprise server and an Enterprise cluster, unavailable in the authoring environment.** Run this block inside that namespace. The substituted hostname identifies the deployment being inspected; it does not make `ss` inspect a remote machine.
 
 ```bash
 (
@@ -15623,6 +15677,80 @@ Use `neo4j+s://` for certificate-verified routing connections or `bolt+s://` for
 ```
 
 Compare an exposed disposable installation with the configured state. Expect Bolt 7687 and HTTPS 7473 on the intended address after setup, with plaintext HTTP 7474 absent. If Enterprise online backup is running, confirm 6362 remains loopback-only for this baseline. This backup observation does not apply to Community. Confirm the retained listeners actually serve the positive queries below; an empty inventory is not a secure-service result. See [ports](https://neo4j.com/docs/operations-manual/current/configuration/ports/) and [online backup](https://neo4j.com/docs/operations-manual/current/backup-restore/online-backup/).
+
+**REASONED, Enterprise listener comparisons:** also read every listener for 5000 (discovery v1 only), 6000, 7000, and 7688 (server-side routing), including configured replacement ports and IPv6 bindings. In the exposed disposable state, a widened shared host can expose these even on a standalone server; in the fixed single-server state, expect loopback binds. In a cluster, expect the intended private binds and peer-reachable advertised addresses, with firewall access confined to members. Under `V2_ONLY`, do not require 5000; discovery shares 6000. Check 2004 only if Prometheus is enabled, on loopback or the explicitly restricted monitoring interface. There should be no inbound Graphite 2003 listener from enabling its exporter; investigate any JMX 3637 or debugger 5005 listener against the JVM configuration. Inspect the container's namespace as well as host publication rules for Docker. These expectations follow the [5.26 ports inventory](https://neo4j.com/docs/operations-manual/5/configuration/ports/#_cluster) and [setting defaults](https://neo4j.com/docs/operations-manual/5/configuration/configuration-settings/).
+
+### Cluster mutual TLS
+
+**REASONED, not demonstrated: the authoring host forbids opening listeners without an isolated network namespace, and has none.** A disposable Enterprise cluster and its certificates are required. These comparisons remain tracked in TODO row 1.98. A listener inventory does not prove TLS or peer authentication. The vendor's [Nmap cipher enumeration](https://neo4j.com/docs/operations-manual/5/security/ssl-framework/#ssl-cluster-config) establishes that TLS is offered, not rejection of unauthenticated peers. The OpenSSL procedure below is reasoned from the [documented cluster mutual-authentication policy](https://neo4j.com/docs/operations-manual/5/security/ssl-framework/#ssl-cluster-config); it is not a vendor-documented cluster-port check.
+
+Run from an allowed peer location against each member and every active cluster listener: 6000, 7000, 5000 when discovery v1 runs, and 7688 when server-side routing runs, or their configured replacements. Substitute the member's certificate DNS name, cluster port, and direct client Bolt TLS URI inside the quotes. The Bolt URI uses the client connector, normally 7687, not the cluster port. Install the Bolt signing CA in Cypher Shell's trust store as described above; the command assumes section 3's Bolt policy and prompts for the administrator password.
+
+Provide `ca.pem` containing the cluster server's trusted signing CA; `member.crt` and `member.key` for a trusted test member; and `untrusted.crt` and `untrusted.key` for an otherwise valid certificate signed by a different CA absent from every member's trust directory. Both certificates need the EKUs above, current validity, and matching keys. Supply each issuing chain in `member-chain.pem` or `untrusted-chain.pem`, starting with the issuing CA; for direct root issuance, use that root certificate. Keep the private keys protected and do not add the untrusted CA to the cluster's trust directory.
+
+Use OpenSSL 3 and a `timeout` command supporting `15s`. `-cert_chain` supplies the client chain, `-verify_hostname` and `-verify_return_error` enforce server verification, and `-ign_eof` keeps the client reading after stdin closes so a later TLS alert is visible. The time limit bounds that wait. See [OpenSSL s_client](https://docs.openssl.org/3.0/man1/openssl-s_client/) and [timeout](https://www.gnu.org/software/coreutils/manual/html_node/timeout-invocation.html).
+
+```bash
+(
+  set +e
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLUSTER_DNS_NAME' 'REPLACE_WITH_CLUSTER_PORT' 'REPLACE_WITH_BOLT_TLS_URI'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 3 ] || { echo "expected a DNS name, cluster port, and Bolt TLS URI; not probing"; exit 1; }
+  case "$1|$2|$3" in
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*)
+      echo "substitute all three values inside the quotes; not probing"; exit 1 ;;
+  esac
+  case "$1" in
+    ""|*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-]*) echo "supply the member's certificate DNS name; not probing"; exit 1 ;;
+  esac
+  case "$2" in
+    ""|*[!0123456789]*) echo "supply a numeric cluster port; not probing"; exit 1 ;;
+  esac
+  [ "${#2}" -le 5 ] && [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || {
+    echo "cluster port must be 1 through 65535; not probing"; exit 1;
+  }
+  case "$3" in
+    bolt+s://?*) ;;
+    *) echo "supply a direct bolt+s:// URI; not probing"; exit 1 ;;
+  esac
+  [ -r ca.pem ] && [ -r member.crt ] && [ -r member.key ] &&
+    [ -r member-chain.pem ] && [ -r untrusted.crt ] &&
+    [ -r untrusted.key ] && [ -r untrusted-chain.pem ] || {
+      echo "provide the CA, both certificates, keys, and issuing chains; not probing"; exit 1;
+    }
+  unset NEO4J_PASSWORD || { echo "cannot clear NEO4J_PASSWORD; not probing"; exit 1; }
+
+  echo "(a) No client certificate"
+  timeout 15s openssl s_client -connect "$1:$2" -servername "$1" \
+    -verify_hostname "$1" -verify_return_error -CAfile ca.pem \
+    -state -brief -ign_eof </dev/null
+  printf 'no-client exit=%s\n' "$?"
+
+  echo "(b) Certificate from an untrusted CA"
+  timeout 15s openssl s_client -connect "$1:$2" -servername "$1" \
+    -verify_hostname "$1" -verify_return_error -CAfile ca.pem \
+    -cert untrusted.crt -key untrusted.key -cert_chain untrusted-chain.pem \
+    -state -brief -ign_eof </dev/null
+  printf 'untrusted-client exit=%s\n' "$?"
+
+  echo "(c) Trusted member certificate"
+  timeout 15s openssl s_client -connect "$1:$2" -servername "$1" \
+    -verify_hostname "$1" -verify_return_error -CAfile ca.pem \
+    -cert member.crt -key member.key -cert_chain member-chain.pem \
+    -state -brief -ign_eof </dev/null
+  printf 'trusted-client exit=%s\n' "$?"
+
+  echo "(d) Cluster status: enter the administrator password at the prompt"
+  cypher-shell -a "$3" -u neo4j -d system 'SHOW SERVERS;'
+)
+```
+
+**REASONED outcomes:** in a disposable, network-isolated comparison, first enable cluster TLS with `client_auth=NONE` on every member: all three TLS probes should complete a handshake. Then use `client_auth=REQUIRE` with `trust_all=false` on every member: (a) must be rejected for lacking a client certificate, (b) for an untrusted issuer, and (c) must complete the handshake. This TLS-enabled baseline isolates the client-authentication control. Against the default TLS-disabled cluster policy, `s_client` cannot complete a TLS handshake; that failure is not evidence of peer authentication. See [policy settings and defaults](https://neo4j.com/docs/operations-manual/5/security/ssl-framework/#ssl-configuration).
+
+For (a) and (b), look for a received fatal TLS alert, such as `certificate required`, `unknown ca`, `bad certificate`, or `handshake failure`; correlate generic alerts with the member's logs to establish the certificate rejection reason. For (c), require a negotiated protocol and cipher, verified server identity, and no subsequent client-certificate rejection. `Verification: OK` alone verifies only the server; in TLS 1.3 a client can print connection details before receiving the server's rejection. Inspect the full output and correlate the member's logs if acceptance is ambiguous. Refusal, DNS failure, reset, local key-loading failure, or timeout alone proves nothing about mutual TLS. Exit 124 only reports that the wait expired, even if the handshake completed first. These probes do not speak the cluster application protocol. See [TLS client-certificate validation](https://www.rfc-editor.org/rfc/rfc8446.html#section-4.4.2.4) and [TLS alerts](https://www.rfc-editor.org/rfc/rfc8446.html#section-6.2).
+
+Run (d) in both states and after enabling the final policy on all members. The documented [`SHOW SERVERS` cluster check](https://neo4j.com/docs/operations-manual/5/clustering/setup/deploy/#cluster-example-configure-a-three-primary-cluster) must return the expected members with state `Enabled` and health `Available`. Missing or unavailable members invalidate the positive control. This checks cluster status, not every replication or routing operation; successful authorized discovery, replication, and routed-query comparisons remain part of TODO row 1.98. A closed port or failed cluster is not evidence that mutual TLS works.
 
 ### Transport, default password, and prompted bootstrap
 
@@ -15897,7 +16025,7 @@ The single row below records the outstanding service demonstration debt for this
 
 | ID | Status and completion evidence |
 |---|---|
-| NEO4J-LIVE-1 | REASONED, not demonstrated. Reproduce all Verify comparisons in disposable Community and Enterprise deployments: prompted bootstrap and process arguments; listeners, TLS, plaintext refusal, and default-password rotation; scoped graph reads and denied writes; effective privileges; procedure/UDF/LOAD denials and the separate existing local-file setting; each memory budget and default/client timeout; security events, query literal/parameter/error obfuscation, Community HTTP request logging, and the Query API and legacy transactional HTTP API anonymous/authenticated pairs; mutual TLS where configured. Requires server and client runtimes, Enterprise capability, fixtures, compatible APOC, trusted certificates, protected credentials, concurrent workloads, log/process access, and an external network vantage. Record versions, exposed/fixed outcomes, matched positive controls, and errors before replacing any REASONED label. |
+| NEO4J-LIVE-1 | REASONED, not demonstrated. Reproduce all Verify comparisons in disposable Community and Enterprise deployments: prompted bootstrap and process arguments; listeners, TLS, plaintext refusal, and default-password rotation; Enterprise standalone and cluster binds, Docker inheritance, discovery v1/v2, opt-in Prometheus, and cluster TLS rejection of untrusted peers with healthy authorized discovery, replication, and routing; scoped graph reads and denied writes; effective privileges; procedure/UDF/LOAD denials and the separate existing local-file setting; each memory budget and default/client timeout; security events, query literal/parameter/error obfuscation, Community HTTP request logging, and the Query API and legacy transactional HTTP API anonymous/authenticated pairs; mutual TLS where configured. Requires server and client runtimes, an Enterprise cluster as well as a standalone server, fixtures, compatible APOC, trusted certificates, protected credentials, concurrent workloads, log/process access, and an external network vantage. Record versions, exposed/fixed outcomes, matched positive controls, and errors before replacing any REASONED label. |
 
 ## Common mistakes
 
@@ -15916,7 +16044,17 @@ The single row below records the outstanding service demonstration debt for this
 - Ports: https://neo4j.com/docs/operations-manual/current/configuration/ports/
 - Set an initial password: https://neo4j.com/docs/operations-manual/current/configuration/set-initial-password/
 - Exact configuration settings, defaults, editions, and error-obfuscation version: https://neo4j.com/docs/operations-manual/current/configuration/configuration-settings/
-- Neo4j 5 configuration reference and error obfuscation since 5.26.21: https://neo4j.com/docs/operations-manual/5/configuration/configuration-settings/
+- Neo4j 5.26 (LTS), fetched 2026-09-26, Enterprise cluster and monitoring ports: https://neo4j.com/docs/operations-manual/5/configuration/ports/#_cluster
+- Neo4j 5.26 (LTS) cluster deployment and discovery-version conditions: https://neo4j.com/docs/operations-manual/5/clustering/setup/deploy/#cluster-example-configure-a-three-primary-cluster
+- Neo4j 5.26 (LTS) cluster settings and advertised addresses: https://neo4j.com/docs/operations-manual/5/clustering/settings/
+- OpenSSL 3 TLS probe options: https://docs.openssl.org/3.0/man1/openssl-s_client/
+- TLS 1.3 client-certificate validation and alerts: https://www.rfc-editor.org/rfc/rfc8446.html
+- Probe time limit and exit status: https://www.gnu.org/software/coreutils/manual/html_node/timeout-invocation.html
+- Neo4j 5.26 (LTS) cluster SSL policy, certificates, and mutual authentication: https://neo4j.com/docs/operations-manual/5/security/ssl-framework/#ssl-cluster-config
+- Pinned Dockerfile EXPOSE declarations, Debian: https://github.com/neo4j/docker-neo4j/blob/5359427c4f51d0d51cce5b048757a2c21e6f377e/docker-image-src/5/coredb/Dockerfile-debian#L53
+- Pinned Dockerfile EXPOSE declarations, UBI 8: https://github.com/neo4j/docker-neo4j/blob/5359427c4f51d0d51cce5b048757a2c21e6f377e/docker-image-src/5/coredb/Dockerfile-ubi8#L90
+- Pinned Dockerfile EXPOSE declarations, UBI 9: https://github.com/neo4j/docker-neo4j/blob/5359427c4f51d0d51cce5b048757a2c21e6f377e/docker-image-src/5/coredb/Dockerfile-ubi9#L89
+- Neo4j 5.26 (LTS) configuration reference, listener defaults, and error obfuscation since 5.26.21: https://neo4j.com/docs/operations-manual/5/configuration/configuration-settings/
 - Configuration changes in Neo4j 5: https://neo4j.com/docs/upgrade-migration-guide/current/version-5/changelogs/configuration-settings/
 - SSL framework and certificate-verified connection schemes: https://neo4j.com/docs/operations-manual/current/security/ssl-framework/
 - Authentication and native lockout configuration: https://neo4j.com/docs/operations-manual/current/authentication-authorization/
@@ -19119,7 +19257,17 @@ A handful of destructive and debug handlers can be gated individually with `-del
 
 ### Cluster
 
-The cluster splits the surface across ports, each with Basic authentication disabled by default: `vminsert` on `8480` takes ingestion, `vmselect` on `8481` takes queries and the UI, and `vmstorage` on `8482` exposes maintenance and metrics, with the native RPC channels on `8400` and `8401`. Each HTTP component accepts the same `-httpAuth.username` and `-httpAuth.password` flags, but one shared static credential does not separate tenants or routes, so keep every component on a private network and route external traffic through `vmauth` with per-route or per-tenant restrictions, so no component answers the internet directly.
+At v1.152.0-cluster, the open-source cluster splits HTTP across three components: `vminsert` takes ingestion on `-httpListenAddr=:8480`, `vmselect` takes queries and the UI on `:8481`, and `vmstorage` exposes maintenance and metrics on `:8482`. These are the fallback addresses when no `-httpListenAddr` is supplied. Each binds every IPv4 interface by default; `-enableTCP6` also enables IPv6. Each HTTP component accepts `-httpAuth.username` and `-httpAuth.password`, both empty by default; Basic authentication is disabled while the username is empty.
+
+On `vmstorage`, `-vminsertAddr=:8400` and `-vmselectAddr=:8401` also bind every IPv4 interface by default. These native RPC listeners have no authentication or native TLS in this open-source build. Their handshake checks a protocol identifier and negotiates compression, not a credential. A caller speaking the protocol can write arbitrary series through `8400`, or read and delete series through `8401`; the latter also exposes tenant enumeration, metric-name registration and usage-statistics reset. HTTP Basic auth, endpoint auth keys and `vmauth` do not protect these sockets. Bind `-vminsertAddr` and `-vmselectAddr` to each storage node's cluster-network IP and restrict access to trusted cluster members with firewall or network-policy rules. A private address alone is not an access control. The optional `-clusternativeListenAddr` on `vminsert` and `vmselect` is empty (disabled) by default; restrict it to the same trusted network if enabled for a multi-level cluster.
+
+The HTTP maintenance and disclosure handlers have their own keys:
+
+- On `vmstorage` (`8482`), `-snapshotAuthKey` gates `/snapshot/create`, `/snapshot/list`, `/snapshot/delete` and `/snapshot/delete_all`; `-forceMergeAuthKey` gates `/internal/force_merge`; `-forceFlushAuthKey` gates `/internal/force_flush`; and `-logNewSeriesAuthKey` gates `/internal/log_new_series`.
+- On `vmselect` (`8481`), `-deleteAuthKey` gates POSTs to `/delete/{accountID}/prometheus/api/v1/admin/tsdb/delete_series` and `/select/{accountID}/graphite/tags/delSeries`. `-search.resetCacheAuthKey` gates `/internal/resetRollupResultCache`, and `-metricNamesStatsResetAuthKey` gates `/admin/api/v1/admin/status/metric_names_stats/reset`.
+- On all three HTTP components, `-metricsAuthKey`, `-flagsAuthKey` and `-pprofAuthKey` gate `/metrics`, `/flags` and `/debug/pprof/*`, respectively.
+
+These keys default to empty. An empty endpoint key falls back to HTTP Basic auth, so the handler is unauthenticated when `-httpAuth.username` is also empty. A nonempty endpoint key requires a matching `authKey` request parameter and overrides Basic auth for that handler; it does not add a second authentication requirement or authenticate other routes. Bind every HTTP component privately and route external traffic through `vmauth` over HTTPS with per-route or per-tenant restrictions, allowing only the operations clients need.
 
 ## QuestDB
 
@@ -19148,6 +19296,36 @@ sudo ss -tlnp    # read the whole table: 8086 and loopback 8088; 8428, 8480, 848
 sudo ss -ulnp    # RPC 8400, 8401; 9000, 9003, 8812, 9009, each only on its intended private
                  # address, and no metrics or ingest port bound to a public interface
 ```
+
+**REASONED, not demonstrated:** the VictoriaMetrics cluster RPC check needs a running cluster and probe hosts inside and outside its protected network, unavailable in the authoring environment (no container runtime). Row 2.32 tracks this demonstration. The `ss` inventory above identifies local binds; it does not prove that `8400` and `8401` are unreachable from outside the cluster network. From an outside host, substitute each storage node's actual IP below and run the whole block. Repeat from a trusted cluster host as the positive control. Use any configured replacement ports too, including enabled `-clusternativeListenAddr` listeners. The pinned RPC listener and handshake sources below explain why reachability matters.
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_STORAGE_NODE_IP'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute the storage node IP; not probing"; exit 2 ;;
+  esac
+  python3 - "$1" <<'PY'
+import ipaddress
+import socket
+import sys
+
+_, host = sys.argv
+ipaddress.ip_address(host)
+for port in (8400, 8401):
+    try:
+        with socket.create_connection((host, port), timeout=5):
+            print(f"{host}:{port}: TCP REACHABLE")
+    except OSError as exc:
+        print(f"{host}:{port}: connection failed: {exc}; not proof of isolation")
+PY
+)
+```
+
+An exposed listener is expected to report `TCP REACHABLE` from outside; this is an exposure failure even if an HTTP request to that port fails, since RPC is not HTTP. In the fixed state, outside connections must be blocked while the trusted-host control still connects to both running listeners. A timeout or refusal alone is inconclusive: confirm the target, running listener and firewall or network-policy rule responsible. A `401` from `vmauth` says nothing about RPC isolation.
 
 ```bash
 # Per-target discriminator against the default plaintext listener: an exposed store returns the named
@@ -19185,7 +19363,15 @@ Run that block once per target, over `http://` against the default plaintext lis
 - InfluxDB 1.x configuration (`[http] auth-enabled` default `false`, `bind-address` `:8086`, backup RPC `127.0.0.1:8088`): https://docs.influxdata.com/influxdb/v1/administration/config/
 - InfluxDB 1.x authentication and authorization: https://docs.influxdata.com/influxdb/v1/administration/authentication_and_authorization/
 - VictoriaMetrics single-node, security recommendations (port `8428`, `-httpAuth.username`/`-httpAuth.password` Basic auth disabled by default, `-tls`/`-tlsCertFile`/`-tlsKeyFile`, `vmauth`, `-deleteAuthKey`, `-forceMergeAuthKey`, `-forceFlushAuthKey`): https://docs.victoriametrics.com/victoriametrics/
-- VictoriaMetrics cluster (`vminsert` `8480`, `vmselect` `8481`, `vmstorage` `8482`, native RPC `8400`/`8401`): https://docs.victoriametrics.com/victoriametrics/cluster-victoriametrics/
+- VictoriaMetrics v1.152.0-cluster HTTP fallback binds: [vminsert](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vminsert/main.go#L161-L167), [vmselect](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmselect/main.go#L150-L158), [vmstorage and RPC startup](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmstorage/main.go#L221-L244); [RPC address defaults and storage auth-key flags](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmstorage/main.go#L46-L68).
+- VictoriaMetrics v1.152.0-cluster TCP bind implementation and IPv4 default: [listener](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/lib/netutil/tcplistener.go#L16-L43), [network selection](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/lib/netutil/tcplistener.go#L79-L85); optional cluster-native listeners: [vminsert](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vminsert/main.go#L53-L54), [vmselect](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmselect/main.go#L77-L78).
+- VictoriaMetrics v1.152.0-cluster RPC handshake: [protocol identifiers](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/lib/handshake/handshake.go#L17-L23), [insert hello check](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/lib/handshake/handshake.go#L77-L109), [select hello check](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/lib/handshake/handshake.go#L137-L158), [compression negotiation without credentials](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/lib/handshake/handshake.go#L203-L233).
+- VictoriaMetrics v1.152.0-cluster RPC capabilities: [storage writes](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmstorage/vmstorage.go#L109-L124), [plaintext select listener](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/lib/vmselectapi/server.go#L94-L101), [RPC dispatch including deletion, registration and reset](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/lib/vmselectapi/server.go#L558-L588), [storage deletion and mutations](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmstorage/vmstorage.go#L318-L352).
+- VictoriaMetrics v1.152.0-cluster insert accept-to-write path: [listener and handshake setup](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/e4b1d55683f0da20410dc765787bd4e9b5afa0da/lib/vminsertapi/server.go#L54-L75), [accept, handshake and connection processing](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/e4b1d55683f0da20410dc765787bd4e9b5afa0da/lib/vminsertapi/server.go#L78-L144), [legacy and RPC dispatch](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/e4b1d55683f0da20410dc765787bd4e9b5afa0da/lib/vminsertapi/server.go#L172-L226), [storage write callbacks](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/e4b1d55683f0da20410dc765787bd4e9b5afa0da/lib/vminsertapi/server.go#L255-L267); [nil TLS config returns a plaintext connection](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/e4b1d55683f0da20410dc765787bd4e9b5afa0da/lib/netutil/tcplistener.go#L107-L140) (vmstorage passes nil at the RPC startup cited above).
+- VictoriaMetrics v1.152.0-cluster HTTP auth: [flags and HTTP TLS scope](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/lib/httpserver/httpserver.go#L38-L57), [metrics, flags and pprof routes](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/lib/httpserver/httpserver.go#L461-L510), [endpoint-key precedence and Basic-auth fallback](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/lib/httpserver/httpserver.go#L534-L573).
+- VictoriaMetrics v1.152.0-cluster password and auth-key defaults: [NewPassword stores an empty string](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/e4b1d55683f0da20410dc765787bd4e9b5afa0da/lib/flagutil/password.go#L21-L30), [Get reads it unchanged when no source is configured](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/e4b1d55683f0da20410dc765787bd4e9b5afa0da/lib/flagutil/password.go#L54-L68).
+- VictoriaMetrics v1.152.0-cluster maintenance: [storage handler auth routing](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmstorage/main.go#L279-L288), [merge, flush, logging and snapshots](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmstorage/main.go#L307-L420), [select cache resets](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmselect/main.go#L269-L296), [rollup-cache key](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmselect/prometheus/prometheus.go#L57-L60), [Graphite deletion](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmselect/main.go#L580-L594), [Prometheus deletion](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmselect/main.go#L867-L884).
+- VictoriaMetrics cluster security recommendations (private network, HTTPS auth proxy and endpoint allowlists): https://docs.victoriametrics.com/victoriametrics/cluster-victoriametrics/#security
 - vmauth authorization proxy: https://docs.victoriametrics.com/victoriametrics/vmauth/
 - QuestDB HTTP server (`9000`, `http.user` / `http.password` unset by default): https://questdb.com/docs/configuration/http-server/
 - QuestDB PostgreSQL wire protocol (`8812`, default `admin` / `quest`): https://questdb.com/docs/configuration/postgres-wire-protocol/
@@ -24874,9 +25060,19 @@ The image build excludes `auth.json`, so mount it read-only at `/content/app/aut
 
 ## Verify
 
+None of this guide's live Verify checks has a recorded demonstration. The missing capability is an isolated host or network namespace in which the services and their proxy may open listeners, as described for Fooocus below. Row 1.158 tracks the ComfyUI, AUTOMATIC1111, InvokeAI and proxy demonstrations; row 1.146 continues to track Fooocus.
+
+The ComfyUI (8188), AUTOMATIC1111 (7860) and InvokeAI (9090) entries in the listener inventory and external probe loop are each REASONED, not demonstrated: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none. From the cited ComfyUI v0.37.0 argument parser, AUTOMATIC1111 v1.10.1 `gradio_server_name()` and InvokeAI YAML Config reference, a host process bound to a wildcard address should appear that way in `ss` and answer the external probe with an HTTP code when the network permits it; bound to `127.0.0.1` as above, it should appear only on loopback and the external probe should report a refusal or timeout reaching your address. Confirm each service is running and answers on host loopback before interpreting an external refusal as the fixed state. These are expected outcomes from the sources, not observations.
+
+The InvokeAI `/api/v1/boards/` check is also REASONED: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none. The cited Multi-User Administrator Guide distinguishes the default single-user mode from `multiuser: true`, which requires a login. The expected pair is an unauthenticated boards response in single-user mode (the cited guide gives no status code for it; record the observed code) and the rejection shown below in multi-user mode; record both when demonstrating row 1.158.
+
+The proxy check is REASONED: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none, so no proxy or backend was run. Following [fronting-auth.md](fronting-auth.md), the expected exposed state serves the UI without proxy authentication, and the fixed state requires a login before the UI loads. Use your configured hostname in place of `imagegen.example.com`; the header request below checks the TLS connection and authentication response, and a browser check confirms the login gates the UI. Row 1.158 tracks both states.
+
 The Fooocus entries below (port 7865 in the `ss` comment and in the probe loop) are REASONED, not demonstrated: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none, so no Fooocus instance was run; row 1.146 tracks the demonstration. From the v2.5.5 sources cited below (the `--listen` default and its bare-flag constant in the argument parser, and the launch call that passes the bind and port to gradio), a Fooocus process started on the host with a bare `--listen` should show a wildcard listener on 7865 in `ss` and answer the probe from another host with an HTTP code; started as above, it should show `127.0.0.1:7865` in `ss`, and the probe should report a refusal or timeout reaching your address. The argument parse alone is demonstrated: `argparse` given that `--listen` definition (`type=str`, `default="127.0.0.1"`, `nargs="?"`, `const="0.0.0.0"`) returns `127.0.0.1` with no flag and `0.0.0.0` for a bare `--listen`. Confirm Fooocus is up and answers on the host itself before reading an external refusal as the fixed state. The `ss` expectations cover host processes only. For a container, the check is the PORTS column of `docker ps` plus the probe from another host, not `ss`, because socket visibility varies by Docker version and config (see [docker.md](docker.md#4-verify)): a container published as `7865:7865` should list the publication on every host address in the PORTS column and answer the probe with an HTTP code, and one published as `127.0.0.1:7865:7865` should list `127.0.0.1` as its only host address, with the probe reporting a refusal or timeout reaching your address. A publication with no host address binds `[::]` as well as `0.0.0.0`, so run the probe block twice, once with your public IPv4 address and once with your public IPv6 address in square brackets, each inside the quotes on the `set --` line. The block probes every port even when an earlier probe fails, so its exit status is not the verification result: read each `port=` line. Under rootful Docker's host networking nothing is published and the PORTS column is empty; the listener is in the host's network namespace, so read `ss` for it as for a host process: `127.0.0.1:7865` when fixed, or `0.0.0.0:7865` when `CMDARGS` still binds the wildcard, whether the image's default `--listen` was left in or a bridge-network `--listen 0.0.0.0` was copied over.
 
 ```bash
+# REASONED inventory and external probes: ComfyUI 8188, AUTOMATIC1111 7860, InvokeAI 9090 (row 1.158);
+# Fooocus 7865 (row 1.146). The authoring host forbids listeners without an isolated network namespace, and has none; expected outcomes and sources above.
 ss -tlnp   # host processes: read every listener; 8188/7860/9090/7865: each service on 127.0.0.1 only
 # each must be unreachable from another host. Read err, not the number: it must name a refusal or
 # timeout reaching YOUR address. An HTTP code means the port answered. A resolver failure, a local
@@ -24896,10 +25092,12 @@ ss -tlnp   # host processes: read every listener; 8188/7860/9090/7865: each serv
        done ;;
   esac
 )
+# REASONED: InvokeAI authentication; the authoring host forbids listeners without an isolated network namespace (row 1.158).
 # guard-conventions: allow probe of a fixed loopback target; no reader-substituted placeholder in this probe's argv
 curl -q -g -s --noproxy '*' -o /dev/null -w '%{http_code}\n' http://127.0.0.1:9090/api/v1/boards/
                                                        # from the host itself, InvokeAI multiuser mode: 401
                                                        # without a Bearer token, never the app itself
+# REASONED: TLS and login; the authoring host forbids listeners without an isolated network namespace (row 1.158).
 # guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sI https://imagegen.example.com/                # via the proxy: TLS, and a login prompt
                                                        # or 401 without credentials, before the UI loads
@@ -26079,8 +26277,35 @@ Loki's documentation leaves no doubt: "Grafana Loki does not come with any inclu
 layer. You must run an authenticating reverse proxy in front of your services." The HTTP listener is on
 3100 and gRPC on 9095. The listen addresses default to empty, which means every interface. The shipped
 `loki-local-config.yaml` uses gRPC 9096 and `auth_enabled: false`, so read your own file, not the
-defaults. With memberlist as the ring store, gossip listens on 7946, all interfaces by default, without
-TLS unless you set `memberlist.tls-enabled`.
+defaults.
+
+With memberlist as the ring store, Loki v3.7.8 uses dskit
+`8d1c6d34bb5a42b04caa982d68403c5a643bb742`: its TCP-only gossip transport defaults to
+`memberlist.bind-port` 7946 and `memberlist.bind-addr` 0.0.0.0 (a wildcard bind). An omitted or
+empty bind-address list selects 0.0.0.0; an empty string inside the list is invalid. TLS defaults
+to off, and gossip has no peer authentication without it. `memberlist.cluster-label` adds a label
+to outgoing messages and rejects mismatched incoming labels unless
+`memberlist.cluster-label-verification-disabled` is true. Treat that label as protection against
+accidental cluster mixing, not as a credential: a peer can send the same label. This dskit wiring
+exposes no HashiCorp memberlist `SecretKey` or keyring setting. Without TLS, a reachable peer speaking
+the protocol and matching any configured label can join the gossip cluster and submit KV updates, including ring
+tokens and instance states, subject to the codec and merge rules. Disrupted ingestion or queries are
+a consequence inferred from that state-sharing path, not demonstrated here.
+
+`memberlist.tls-enabled` enables TLS, but at this pin it does **not** require or verify incoming
+client certificates. The transport reuses dskit's `ClientConfig`: `memberlist.tls-cert-path` and
+`memberlist.tls-key-path` supply its certificate and key, while `memberlist.tls-ca-path` populates
+`RootCAs` for outgoing server verification, not `ClientCAs`. `ClientAuth` stays at Go's default
+`NoClientCert`; no memberlist setting here selects `RequireAndVerifyClientCert`. Keep
+`memberlist.tls-insecure-skip-verify` false (the default); `memberlist.tls-server-name` can set the
+expected server certificate name. TLS with these settings is not mutual peer authentication. Bind
+`memberlist.bind-addr` (YAML `memberlist.bind_addr`, a list) to the private cluster network and restrict
+access to trusted cluster peers with network controls, even with TLS enabled. If incoming client
+certificate verification is required, enforce it through a separate authenticated transport boundary.
+`memberlist.advertise-addr` and `memberlist.advertise-port` select the IP and port announced to peers,
+for example through NAT; they do not restrict the listener. Without an explicit advertise address,
+the transport derives an address from the first bind (a private IP for 0.0.0.0) and advertises its
+actual bound port. Set an explicit reachable cluster IP when that automatic choice is unsuitable.
 
 `auth_enabled: true`, the default, is multi-tenancy, not authentication. Loki requires an `X-Scope-OrgID`
 header and trusts whatever value the client sends. On the v3.7.8 loopback run with `auth_enabled: true`,
@@ -26125,8 +26350,9 @@ There are two fixes, and you can use both:
   listens on every interface in plaintext. The fix covers HTTP only: Loki has no authentication of its
   own, so loopback gRPC stays open to every local user of the host (not tested here). A second run with
   `memberlist` as the ring store opened a gossip listener (TCP only) on `memberlist.bind_addr`; bind
-  that privately, and if peers cross hosts also set `memberlist.tls-enabled` (not demonstrated here, and
-  not a substitute for the private bind). Then check with the `ss` step below: with the `inmemory` ring
+  that to the private cluster network and restrict it to trusted peers. For TLS across hosts, configure
+  `memberlist.tls-enabled` and the certificate settings above (not demonstrated here); this pin does
+  not verify incoming client certificates. Then check with the `ss` step below: with the `inmemory` ring
   nothing listens on a gossip port; with `memberlist`, its port (7946 by default, or your `bind_port`)
   appears only on the private address. Do not add `grpc_tls_config` to a single binary on its own: on
   the loopback run, `RequireAndVerifyClientCert` there made a push with a valid client certificate
@@ -26243,7 +26469,17 @@ channel only. The password can still reach shell history or `set -x` output.
 - Loki v3.7.8 config wrapper (`common.instance_addr` copied into component addresses): https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/config_wrapper.go
 - Loki v3.7.8 sample local configuration: https://github.com/grafana/loki/blob/v3.7.8/cmd/loki/loki-local-config.yaml
 - dskit as pinned by Loki v3.7.8 (gRPC 9095, empty listen addresses): https://github.com/grafana/dskit/blob/8d1c6d34bb5a/server/server.go
-- dskit memberlist transport (port 7946, bind default 0.0.0.0, `memberlist.tls-enabled`): https://github.com/grafana/dskit/blob/8d1c6d34bb5a/kv/memberlist/tcp_transport.go
+- Loki v3.7.8 dskit dependency pin: https://github.com/grafana/loki/blob/v3.7.8/go.mod#L55
+- dskit pinned transport flags (bind list, port 7946, TLS off): https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/tcp_transport.go#L41-L86
+- dskit pinned listener construction (empty list becomes 0.0.0.0, invalid address rejection, shared TLS config): https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/tcp_transport.go#L133-L197
+- dskit pinned advertise address and port selection: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/tcp_transport.go#L394-L451
+- dskit pinned cluster-label and advertise flags: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/memberlist_client.go#L229-L232
+- dskit pinned memberlist wiring (TCP transport, delegate and labels; no SecretKey or keyring configuration): https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/memberlist_client.go#L457-L520
+- dskit pinned TLS fields and defaults: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/crypto/tls/tls.go#L27-L64
+- dskit pinned TLS construction (RootCAs and certificates; ClientAuth and ClientCAs unset): https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/crypto/tls/tls.go#L86-L175
+- Go TLS ClientAuthType (NoClientCert default and RequireAndVerifyClientCert semantics): https://pkg.go.dev/crypto/tls#ClientAuthType
+- dskit pinned incoming KV updates and propagation: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/memberlist_client.go#L1383-L1470
+- dskit pinned remote-state merging and codec validation: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/memberlist_client.go#L1577-L1672
 - Go `net.Listen` (an empty host listens on all addresses): https://pkg.go.dev/net#Listen
 
 ======================================================================
@@ -30470,6 +30706,7 @@ Open the guide before relying on either, because defaults change between release
 | 1777 | OpenTelemetry Collector pprof diagnostic extension, when enabled | Collector ships with no security until configured | [llm-observability.md](llm-observability.md) |
 | 1880 | Node-RED editor and admin API, which have no authentication by default | No authentication by default | [devops-uis.md](devops-uis.md) |
 | 1883 | MQTT, plaintext (the official Mosquitto images tagged `latest`, `2`, `alpine`, `2.1-alpine` and `2.1.2-alpine`, and the `1.6-openssl` tags, accept anonymous clients on every address as shipped) | Mosquitto 2.0+: no-listener mode anonymous on loopback; explicit listener rejects unauthenticated clients unless `allow_anonymous true` is set, as the official 2.1 images set it | [mosquitto.md](mosquitto.md) |
+| 2004 | Neo4j Enterprise Prometheus metrics, disabled by default; explicit localhost bind when enabled | not stated | [neo4j.md](neo4j.md) |
 | 2019 | Caddy admin API, which requires no credentials and defaults to localhost | No credentials required | [caddy.md](caddy.md) |
 | 2112 | Weaviate's Prometheus metrics and tenant-activity listener, on every local address when Prometheus monitoring is enabled | not stated | [vector-databases.md](vector-databases.md) |
 | 2375 | Docker API, plaintext and unauthenticated | Unauthenticated; anyone reaching the socket controls the host | [devops-uis.md](devops-uis.md) |
@@ -30497,7 +30734,7 @@ Open the guide before relying on either, because defaults change between release
 | 4647 | Nomad server RPC, on every address by default | not stated | [nomad-consul.md](nomad-consul.md) |
 | 4648 | Nomad Serf gossip, on every address by default | Gossip is unencrypted until an `encrypt` key is set | [nomad-consul.md](nomad-consul.md) |
 | 4648/UDP | Nomad Serf gossip, on every address by default | Gossip is unencrypted until an `encrypt` key is set | [nomad-consul.md](nomad-consul.md) |
-| 5000 | Redash, MLflow tracking server, or a .NET Kestrel default; also text-generation-webui's OpenAI-compatible API | varies by service; see the guides | [bi-dashboards.md](bi-dashboards.md), [mlflow.md](mlflow.md), [dotnet.md](dotnet.md), [model-servers.md](model-servers.md) |
+| 5000 | Redash, MLflow tracking server, or a .NET Kestrel default; also text-generation-webui's OpenAI-compatible API and Neo4j Enterprise discovery v1 (deprecated since 5.23), whose host inherits the shared listen address | varies by service; see the guides | [bi-dashboards.md](bi-dashboards.md), [mlflow.md](mlflow.md), [dotnet.md](dotnet.md), [model-servers.md](model-servers.md), [neo4j.md](neo4j.md) |
 | 5001 | Dify backend API, in the guide's in-container request example | not stated for this port; Dify's `INIT_PASSWORD` is empty by default, so on a reachable host the first visitor to `/install` owns the instance | [agent-builders.md](agent-builders.md) |
 | 5003 | Dify's plugin daemon debugging port, published by the supplied Compose configuration unless you remove or restrict that mapping | not stated | [agent-builders.md](agent-builders.md) |
 | 5349 | coturn TLS listener; DTLS is opt-in since 4.17.0, and this port number does not prove encryption is mandatory | Stock example config: anonymous TURN allocation | [realtime-voice-infra.md](realtime-voice-infra.md) |
@@ -30512,24 +30749,26 @@ Open the guide before relying on either, because defaults change between release
 | 5778, 5779 | Jaeger v2 remote sampling, HTTP and gRPC, on localhost in the all-in-one configuration unless `JAEGER_LISTEN_HOST` is set (the official image sets `0.0.0.0`, every interface) | not stated | [observability-components.md](observability-components.md) |
 | 5900, 7900 | VNC and noVNC in the Selenium Docker browser images, started by default with the vendor example password `secret` | VNC on by default; vendor example password `secret` | [headless-browser-services.md](headless-browser-services.md) |
 | 5901 | VNC in a GPU desktop template example; an example port, not a platform-wide default | Template-dependent; may default to weak or empty password | [gpu-clouds.md](gpu-clouds.md) |
+| 6000 | Neo4j Enterprise transaction shipping, catch-up and backup-capable endpoint; also discovery v2 when selected; inherits the shared listen host even on a standalone server | Unauthenticated replication by default; cluster TLS policy disabled | [neo4j.md](neo4j.md) |
 | 6001, 6002 | Coolify real-time updates and terminal | not stated | [devops-uis.md](devops-uis.md) |
 | 6006 | Arize Phoenix | Auth disabled by default; when enabled, `admin@localhost`/`admin` | [llm-observability.md](llm-observability.md) |
 | 6060 | A Go service's pprof and expvar diagnostics listener, bound to loopback in the guide's example; also Weaviate's debug listener, on every local address unless `GO_PROFILING_DISABLE` is set to a true value, answering 404 until debug endpoints are enabled | not stated | [go.md](go.md), [vector-databases.md](vector-databases.md) |
 | 6080 | noVNC web interface in a GPU desktop template example; an example port, not a platform-wide default | Template-dependent; may default to weak or empty password | [gpu-clouds.md](gpu-clouds.md) |
 | 6222 | NATS cluster routes, a separate listener with its own authentication and TLS | Run with their default command, the official images' bundled configuration authorizes routes with a user and password published in the image source (`ruser`, `T0pS3cr3t`) | [nats.md](nats.md) |
 | 6333, 6334, 6335 | Qdrant REST, gRPC, and internal cluster gRPC | Not secure by default; 6335 is never protected by an API key through v1.17.x, and on v1.18.0 and later only with `service.enforce_internal_auth`, which is off by default | [vector-databases.md](vector-databases.md) |
-| 6362 | Neo4j backup | not stated | [neo4j.md](neo4j.md) |
+| 6362 | Neo4j Enterprise backup; cluster port 6000 can also serve backups | `127.0.0.1:6362` default bind (5.26 LTS) | [neo4j.md](neo4j.md) |
 | 6379 | Redis, Valkey, or the Ray head node (the official Redis images checked, 6.2 through 7.4 and 8.10.2, turn protected mode off; the 7.4.8 and 8.10.2 builds, run without a configuration file or arguments, bind every address with no password); also the Onyx development Compose's Redis, and a Helicone Compose backing-service host publication | varies by service; see the guides | [redis.md](redis.md), [ray.md](ray.md), [cloud-firewalls.md](cloud-firewalls.md), [ai-infra-services.md](ai-infra-services.md), [llm-observability.md](llm-observability.md) |
 | 6432 | PgBouncer, whose client-side TLS is disabled by default | Default `auth_type` is `md5`; `pgbouncer` user passwordless over the Unix socket for a client running as the pooler's Unix UID | [connection-poolers.md](connection-poolers.md), [postgresql.md](postgresql.md) |
 | 6443 | The Kubernetes API server on a self-managed cluster. Managed providers usually serve it on 443 instead, so its absence here proves nothing | not stated | [kubernetes.md](kubernetes.md) |
 | 6543 | The Supabase self-hosted Supavisor transaction pooler, a direct database connection published beside 5432 | Shipped demo `POSTGRES_PASSWORD` | [supabase-self-hosted.md](supabase-self-hosted.md) |
 | 6789 | Metrics port mentioned only in the realtime voice guide's Verify inventory; service attribution and default status are not established there | not stated | [realtime-voice-infra.md](realtime-voice-infra.md) |
 | 6831/UDP, 6832/UDP | Jaeger v2 Thrift compact and binary receivers, on localhost in the all-in-one configuration unless `JAEGER_LISTEN_HOST` is set (the official image sets `0.0.0.0`, every interface) | not stated | [observability-components.md](observability-components.md) |
-| 7000 | frp server | Empty token by default; empty-token client authenticates | [tunnels.md](tunnels.md) |
+| 7000 | frp server; also Neo4j Enterprise Raft, inheriting the shared listen host | frp: empty token by default; empty-token client authenticates. Neo4j: cluster TLS client-certificate authentication disabled until the policy is enabled | [tunnels.md](tunnels.md), [neo4j.md](neo4j.md) |
 | 7222 | NATS gateways, a separate listener with its own authentication and TLS | not stated | [nats.md](nats.md) |
 | 7233 | Temporal frontend gRPC | Default `noopAuthorizer` allows every request | [workflow-orchestrators.md](workflow-orchestrators.md) |
 | 7422 | NATS accepted leafnode connections, a separate listener with its own authentication and TLS | not stated | [nats.md](nats.md) |
 | 7473, 7474, 7687 | Neo4j HTTPS, HTTP, and Bolt | `neo4j`/`neo4j` initial credential, auth on (packaged Neo4j 5) | [neo4j.md](neo4j.md) |
+| 7688 | Neo4j Enterprise server-side routing, enabled by default and inheriting the shared listen host | Cluster TLS client-certificate authentication disabled until the policy is enabled | [neo4j.md](neo4j.md) |
 | 7700 | Meilisearch HTTP API; the binary defaults to localhost, while the official Docker image binds all interfaces | Unauthenticated until a master key is set (dev mode) | [search-engines.md](search-engines.md) |
 | 7800 | Keycloak clustered cache transport, carrying sessions and tokens; TLS is on by default for TCP stacks | not stated | [self-hosted-idp.md](self-hosted-idp.md) |
 | 7860 | Gradio, Stable Diffusion WebUI, or Langflow; also text-generation-webui's Gradio UI | varies by service; see the guides | [gradio.md](gradio.md), [image-gen-uis.md](image-gen-uis.md), [agent-builders.md](agent-builders.md), [model-servers.md](model-servers.md) |

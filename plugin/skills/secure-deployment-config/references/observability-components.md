@@ -169,8 +169,35 @@ Loki's documentation leaves no doubt: "Grafana Loki does not come with any inclu
 layer. You must run an authenticating reverse proxy in front of your services." The HTTP listener is on
 3100 and gRPC on 9095. The listen addresses default to empty, which means every interface. The shipped
 `loki-local-config.yaml` uses gRPC 9096 and `auth_enabled: false`, so read your own file, not the
-defaults. With memberlist as the ring store, gossip listens on 7946, all interfaces by default, without
-TLS unless you set `memberlist.tls-enabled`.
+defaults.
+
+With memberlist as the ring store, Loki v3.7.8 uses dskit
+`8d1c6d34bb5a42b04caa982d68403c5a643bb742`: its TCP-only gossip transport defaults to
+`memberlist.bind-port` 7946 and `memberlist.bind-addr` 0.0.0.0 (a wildcard bind). An omitted or
+empty bind-address list selects 0.0.0.0; an empty string inside the list is invalid. TLS defaults
+to off, and gossip has no peer authentication without it. `memberlist.cluster-label` adds a label
+to outgoing messages and rejects mismatched incoming labels unless
+`memberlist.cluster-label-verification-disabled` is true. Treat that label as protection against
+accidental cluster mixing, not as a credential: a peer can send the same label. This dskit wiring
+exposes no HashiCorp memberlist `SecretKey` or keyring setting. Without TLS, a reachable peer speaking
+the protocol and matching any configured label can join the gossip cluster and submit KV updates, including ring
+tokens and instance states, subject to the codec and merge rules. Disrupted ingestion or queries are
+a consequence inferred from that state-sharing path, not demonstrated here.
+
+`memberlist.tls-enabled` enables TLS, but at this pin it does **not** require or verify incoming
+client certificates. The transport reuses dskit's `ClientConfig`: `memberlist.tls-cert-path` and
+`memberlist.tls-key-path` supply its certificate and key, while `memberlist.tls-ca-path` populates
+`RootCAs` for outgoing server verification, not `ClientCAs`. `ClientAuth` stays at Go's default
+`NoClientCert`; no memberlist setting here selects `RequireAndVerifyClientCert`. Keep
+`memberlist.tls-insecure-skip-verify` false (the default); `memberlist.tls-server-name` can set the
+expected server certificate name. TLS with these settings is not mutual peer authentication. Bind
+`memberlist.bind-addr` (YAML `memberlist.bind_addr`, a list) to the private cluster network and restrict
+access to trusted cluster peers with network controls, even with TLS enabled. If incoming client
+certificate verification is required, enforce it through a separate authenticated transport boundary.
+`memberlist.advertise-addr` and `memberlist.advertise-port` select the IP and port announced to peers,
+for example through NAT; they do not restrict the listener. Without an explicit advertise address,
+the transport derives an address from the first bind (a private IP for 0.0.0.0) and advertises its
+actual bound port. Set an explicit reachable cluster IP when that automatic choice is unsuitable.
 
 `auth_enabled: true`, the default, is multi-tenancy, not authentication. Loki requires an `X-Scope-OrgID`
 header and trusts whatever value the client sends. On the v3.7.8 loopback run with `auth_enabled: true`,
@@ -215,8 +242,9 @@ There are two fixes, and you can use both:
   listens on every interface in plaintext. The fix covers HTTP only: Loki has no authentication of its
   own, so loopback gRPC stays open to every local user of the host (not tested here). A second run with
   `memberlist` as the ring store opened a gossip listener (TCP only) on `memberlist.bind_addr`; bind
-  that privately, and if peers cross hosts also set `memberlist.tls-enabled` (not demonstrated here, and
-  not a substitute for the private bind). Then check with the `ss` step below: with the `inmemory` ring
+  that to the private cluster network and restrict it to trusted peers. For TLS across hosts, configure
+  `memberlist.tls-enabled` and the certificate settings above (not demonstrated here); this pin does
+  not verify incoming client certificates. Then check with the `ss` step below: with the `inmemory` ring
   nothing listens on a gossip port; with `memberlist`, its port (7946 by default, or your `bind_port`)
   appears only on the private address. Do not add `grpc_tls_config` to a single binary on its own: on
   the loopback run, `RequireAndVerifyClientCert` there made a push with a valid client certificate
@@ -333,5 +361,15 @@ channel only. The password can still reach shell history or `set -x` output.
 - Loki v3.7.8 config wrapper (`common.instance_addr` copied into component addresses): https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/config_wrapper.go
 - Loki v3.7.8 sample local configuration: https://github.com/grafana/loki/blob/v3.7.8/cmd/loki/loki-local-config.yaml
 - dskit as pinned by Loki v3.7.8 (gRPC 9095, empty listen addresses): https://github.com/grafana/dskit/blob/8d1c6d34bb5a/server/server.go
-- dskit memberlist transport (port 7946, bind default 0.0.0.0, `memberlist.tls-enabled`): https://github.com/grafana/dskit/blob/8d1c6d34bb5a/kv/memberlist/tcp_transport.go
+- Loki v3.7.8 dskit dependency pin: https://github.com/grafana/loki/blob/v3.7.8/go.mod#L55
+- dskit pinned transport flags (bind list, port 7946, TLS off): https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/tcp_transport.go#L41-L86
+- dskit pinned listener construction (empty list becomes 0.0.0.0, invalid address rejection, shared TLS config): https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/tcp_transport.go#L133-L197
+- dskit pinned advertise address and port selection: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/tcp_transport.go#L394-L451
+- dskit pinned cluster-label and advertise flags: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/memberlist_client.go#L229-L232
+- dskit pinned memberlist wiring (TCP transport, delegate and labels; no SecretKey or keyring configuration): https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/memberlist_client.go#L457-L520
+- dskit pinned TLS fields and defaults: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/crypto/tls/tls.go#L27-L64
+- dskit pinned TLS construction (RootCAs and certificates; ClientAuth and ClientCAs unset): https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/crypto/tls/tls.go#L86-L175
+- Go TLS ClientAuthType (NoClientCert default and RequireAndVerifyClientCert semantics): https://pkg.go.dev/crypto/tls#ClientAuthType
+- dskit pinned incoming KV updates and propagation: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/memberlist_client.go#L1383-L1470
+- dskit pinned remote-state merging and codec validation: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/memberlist_client.go#L1577-L1672
 - Go `net.Listen` (an empty host listens on all addresses): https://pkg.go.dev/net#Listen
