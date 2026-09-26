@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise 120 cases through the shipped gate against real temporary git indexes."""
+"""Exercise the recorded cases through the shipped gate against real temporary git indexes."""
 import shutil
 import subprocess
 import sys
