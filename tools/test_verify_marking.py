@@ -42,11 +42,12 @@ def main():
         guide = root / "guide.md"
         baseline = root / "tools/verify_marking_baseline.txt"
 
-        def run(body, expected, name):
+        def run(body, expected, name, message=""):
             guide.write_text(body, encoding="utf-8")
             baseline.write_text("", encoding="utf-8")
             rc, out = invoke(root, "--strict")
-            check(name, rc == expected and ("0 grandfathered" in out or expected == 2))
+            check(name, rc == expected and ("0 grandfathered" in out or expected == 2)
+                  and message in out)
 
         for status in ("REASONED", "DEMONSTRATED", "reasoned", "demonstrated"):
             declaration = status + ": scope and provenance recorded here."
@@ -163,8 +164,8 @@ def main():
         run(PLAIN.replace("```", "~~~~").replace("echo ok", "# " + MARK),
             0, "tilde fence")
         run(PLAIN.replace("```sh", "````sh").replace("echo ok",
-            "# " + MARK + "\n```\n## fake").replace("\n```\n", "\n````\n", 1),
-            1, "mismatched close fails")
+            "# " + MARK + "\n```\n## fake"), 1, "short close stays in Verify",
+            "unclosed fence")
         run("# Guide\n\n## Setup\n\n````md\n## Verify\n```\n````\n",
             0, "fake heading and shorter fence")
         run(PLAIN.replace("echo ok", "# " + MARK).replace("\n", "\r\n"),
@@ -174,9 +175,113 @@ def main():
         run(PLAIN.rsplit("```", 1)[0], 1, "unclosed fence")
         run("# Guide\n\n## Verify\n\n- ```sh\n  # " + MARK
             + "\n  echo ok\n```\n", 1, "dedented list close fails")
-        run(PLAIN + "\n> unsupported quote\n", 1, "unsupported container")
+        run(PLAIN + "\n> unsupported quote\n", 1, "quoted prose does not mark fence", "new/changed/excess")
         run("# Guide\n\n## Verify\n\n- prose check\n\n| Check | Result |\n"
             "| --- | --- |\n| A | B |\n", 0, "lists tables prose not gated")
+
+        # Round-1 reproductions: strict CLI checks include the diagnostic, so a
+        # different failure cannot accidentally satisfy a regression.
+        fence = "```sh\necho ok\n```\n"
+        marked = fence.replace("echo ok", "# " + MARK + "\necho ok")
+        for indent in range(4):
+            prefix = " " * indent + "> "
+            for label, content in (("unmarked", fence), ("marked", marked)):
+                quoted = "".join(prefix + line + "\n" for line in content.splitlines())
+                run("## Verify\n\n" + quoted, 1, f"quoted {indent} {label}",
+                    "unsupported fenced blockquote")
+                run("## Setup\n\n" + quoted, 0, f"outside quote {indent} {label}")
+                run(prefix + "## Verify\n" + prefix + "\n" + quoted, 1,
+                    f"quoted Verify root {indent} {label}", "unsupported fenced blockquote")
+            run("## Verify\n\n" + prefix + "See Sources.\n", 0,
+                f"quoted prose {indent}")
+            run("## Verify\n\n" + " " * indent + fence.replace("\n", "\n" + " " * indent),
+                1, f"fence indent {indent}", "new/changed/excess")
+            run("## Verify\n\n" + " " * indent + marked.replace("\n", "\n" + " " * indent),
+                0, f"marked fence indent {indent}")
+
+        for prefix in ("    ", "\t", " \t"):
+            for content in (MARK, "DEMONSTRATED: both states observed.", "<!--", "- ```sh\n  echo ok\n  ```",
+                            "> ```sh\n> echo ok\n> ```", fence.rstrip()):
+                code = "\n".join(prefix + line for line in content.splitlines()) + "\n"
+                run("## Verify\n\n" + code, 0, f"indented code alone {prefix!r} {content}")
+                run("## Verify\n\n" + code + "\n" + fence, 1,
+                    f"code cannot mark or hide {prefix!r} {content}", "new/changed/excess")
+                run("## Verify\n\n" + code + "\n" + marked, 0,
+                    f"code before marked fence {prefix!r} {content}")
+            run("## Verify\n\n" + MARK + "\n\n" + prefix + "sample\n\n" + fence,
+                1, f"indented code blocks attachment {prefix!r}", "new/changed/excess")
+            run("## Verify\n\n" + fence + "\n" + prefix + MARK, 1,
+                f"indented following declaration {prefix!r}", "new/changed/excess")
+        run("## Verify\n\n" + MARK + "\n    continued provenance\n\n" + fence,
+            0, "indent cannot interrupt paragraph")
+        run("## Verify\n\n- item\n\n      " + MARK + "\n\n  "
+            + fence.replace("\n", "\n  "), 1, "list indented code is not prose",
+            "new/changed/excess")
+        run("## Verify\n\n-     <!--\n\n  " + fence.replace("\n", "\n  "),
+            1, "list padding starts code before HTML", "new/changed/excess")
+        run("## Verify\n\n>     <!--\n>\n> ```\n> text\n> ```\n", 1,
+            "quoted indented HTML cannot hide fence", "unsupported fenced blockquote")
+        run("## Verify\n\n>     ```\n>     sample\n>     ```\n", 0,
+            "quoted indented fence sample is code")
+
+        for suffix in ("(**DEMONSTRATED:** observed pair)",
+                       "(__DEMONSTRATED:__ observed pair)",
+                       "(**DEMONSTRATED**: observed pair)",
+                       "( DEMONSTRATED: observed pair )",
+                       "(DEMONSTRATED: recorded run (local))",
+                       ": **DEMONSTRATED:** observed pair"):
+            body = "## Verify " + suffix + "\n\n" + fence
+            run(body, 0, "complete heading suffix " + suffix, "1 marked")
+            run(body.replace("echo ok", "# " + MARK + "\necho ok"), 1,
+                "heading conflict " + suffix, "conflicting declarations")
+            check("shared heading grammar " + suffix,
+                  "echo ok" in verify_sections_text(body) and len(scan_guide(body)[0]) == 1)
+        for suffix in ("(**DEMONSTRATED:**)", "( DEMONSTRATED: )",
+                       "(DEMONSTRATED: recorded run) is false",
+                       "(DEMONSTRATED: recorded run) is false)",
+                       "(DEMONSTRATED: recorded run) (unrelated)",
+                       "(**DEMONSTRATED:** recorded run"):
+            for heading in ("## Verify ", "## Verify\n\n### Check "):
+                body = heading + suffix + "\n\n" + marked
+                message = ("needs scope and provenance" if "recorded run" not in suffix
+                           else "complete suffix")
+                run(body, 1, "bad suffix still selected " + heading + suffix, message)
+                run((heading + suffix + "\n\nprose only\n"), 0,
+                    "bad suffix without fence is outside gate " + heading + suffix)
+                check("malformed suffix retains section " + heading + suffix,
+                      "echo ok" in verify_sections_text(body) and len(scan_guide(body)[0]) == 1)
+        run("## Verify (REASONED)\n\n" + fence, 1,
+            "legacy status selects but does not mark", "new/changed/excess")
+        run("## Verify\n\n### Check (DEMONSTRATED: recorded run)\n\n" + fence,
+            0, "descendant complete suffix", "1 marked")
+
+        for heading in ("## Setup", "## Verify"):
+            expected = int(heading == "## Verify")
+            run(heading + "\n\n```sh\necho ok\n", expected,
+                "unclosed scope " + heading, "unclosed fence" if expected else "0 findings")
+            run(heading + "\n\n- ```sh\n  echo ok\noutside\n", expected,
+                "unclosed list scope " + heading,
+                "unclosed list fence" if expected else "0 findings")
+        run("## Verify\n\n" + marked + "\n## Setup\n\n```sh\nunfinished\n", 0,
+            "unclosed after Verify boundary")
+        run("## Verify\n\n> See Sources.\n" + MARK + "\n\n" + fence, 1,
+            "lazy quoted paragraph cannot mark outside fence", "new/changed/excess")
+        run("## Verify\n\n> See Sources.\n\n" + MARK + "\n\n" + fence, 0,
+            "blank ends lazy quote")
+        run("## Verify\n\n> See Sources.\n" + marked, 0,
+            "fence interrupts quote laziness")
+        run("> See Sources.\n## Verify\n\n" + fence, 1,
+            "heading interrupts quote laziness", "new/changed/excess")
+        run("## Verify\n\n> ```sh\noutside\n", 1,
+            "quote fence has no lazy continuation", "unsupported fenced blockquote")
+        run("## Setup\n\n> ```sh\n## Verify\n\n" + marked, 0,
+            "missing quote ends outside fence before Verify heading")
+        run("## Verify\n\n> > Sources.\n" + MARK + "\n\n" + fence, 1,
+            "nested quote laziness stays quoted", "new/changed/excess")
+        run("## Verify\n\n> > Sources.\n\n" + MARK + "\n\n" + fence, 0,
+            "blank ends nested lazy quote")
+        run("## Verify\n\n  > ```sh\n  > echo ok\n  > ```\n", 1,
+            "exact indented quote reproduction", "unsupported fenced blockquote")
 
     suite = (TOOLS / "run_all_checks.sh").read_text(encoding="utf-8")
     excluded = re.search(r"    (CONTRIBUTING\.md\|.*?)\) return 0", suite)[1]
