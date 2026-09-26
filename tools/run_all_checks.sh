@@ -454,7 +454,8 @@ try:
 except (OSError, UnicodeError) as exc:
     notice(f"Python version comparison unavailable: cannot read {workflow}: {exc}")
 else:
-    pins = [line for line in lines if re.match(r'^[ \t]*PYTHON_VERSION:', line)]
+    candidate = r"""^[ \t]*(?:PYTHON_VERSION|"PYTHON_VERSION"|'PYTHON_VERSION')[ \t]*:"""
+    pins = [line for line in lines if re.match(candidate, line)]
     pattern = r'[ \t]*PYTHON_VERSION: "([0-9]+\.[0-9]+\.[0-9]+)"[ \t]*'
     match = re.fullmatch(pattern, pins[0]) if len(pins) == 1 else None
     if match is None:

@@ -39,6 +39,20 @@ def main():
         ("unavailable interpreter", pin, "python3 did not complete",
          "python3() { return 127; }\n"),
     ]
+    for name, key in (
+        ("spaced key", "PYTHON_VERSION :"),
+        ("single-quoted key", "'PYTHON_VERSION':"),
+        ("double-quoted key", '"PYTHON_VERSION":'),
+        ("single-quoted spaced key", "'PYTHON_VERSION' :"),
+        ("double-quoted spaced key", '"PYTHON_VERSION" :'),
+    ):
+        for indent in ("", "  ", "        "):
+            alternate = f'{indent}{key} "{running}"\n'.encode()
+            label = f"{name}, indent={len(indent)}"
+            cases.extend([
+                (label, alternate, "found 1 candidate lines", ""),
+                (f"duplicate {label}", pin + alternate, "found 2 candidate lines", ""),
+            ])
     if exact_release:
         cases.extend([
             ("matching release", pin,
