@@ -220,7 +220,7 @@ or query policies. `GET /config` exposes configuration; `/metrics` and `/debug/p
 registered by default. These routes have no tenant-auth wrapper. When the ingester runs,
 `GET` or `POST /flush` and `GET` or `POST /ingester/shutdown` call maintenance handlers without
 that wrapper; `/ingester/prepare_shutdown` also accepts `POST`, `GET` and `DELETE`.
-When the compactor runs outside its worker mode (which returns before these routes are registered) with `retention_enabled: true`, `/loki/api/v1/delete` accepts
+When the compactor runs outside its worker mode (which returns before these routes are registered), with a TSDB or boltdb-shipper index in the schema (without one it logs that it is not starting and registers nothing, with no error) and `retention_enabled: true` (which also requires `compactor.delete-request-store`, or startup fails), `/loki/api/v1/delete` accepts
 `PUT`/`POST` to request deletion, `GET` to list requests and `DELETE` to cancel one.
 Those deletion routes do have tenant-header and deletion tenant-policy middleware; availability
 does not mean unconditional deletion. The supplied subset lacks those policy and handler
@@ -400,7 +400,7 @@ channel only. The password can still reach shell history or `set -x` output.
 - Loki v3.7.8 query frontend middleware and routes: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1307-L1378
 - Loki v3.7.8 config route: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L533-L540
 - Loki v3.7.8 ingester gRPC services and maintenance routes: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L751-L790
-- Loki v3.7.8 conditional deletion routes and middleware (compactor worker mode returns first): https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1866-L1869 ; https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1935-L1952
+- Loki v3.7.8 conditional deletion routes and middleware (compactor worker mode returns first): https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1866-L1869 ; https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1880-L1883 ; https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1899-L1908 ; https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1935-L1952
 - Loki v3.7.8 worker connection inputs: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L571-L580
 - Loki v3.7.8 common ring propagation to ingester: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/config_wrapper.go#L193-L248
 - Loki v3.7.8 ingester clients receive ring configuration: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L373-L390
