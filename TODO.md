@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.158**, **2.48**, **3.26**, **4.12**.
+Next ids: **1.160**, **2.48**, **3.26**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -104,7 +104,7 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.95 | `mongodb.md`: demonstrate the Verify steps the guide marks reasoned, against a live deployment in both the exposed and fixed states. Grandfathered in the reasoned-row baseline until 2026-09-24; blocked on a container runtime, which the authoring host lacks. (M, M) | `[gap]` |
 | 1.96 | `mosquitto.md`: demonstrate the Verify steps the guide marks reasoned, against a live deployment in both the exposed and fixed states. Grandfathered in the reasoned-row baseline until 2026-09-24; blocked on a container runtime, which the authoring host lacks. (M, M) | `[gap]` |
 | 1.97 | `mysql.md`: demonstrate the Verify steps the guide marks reasoned, against a live deployment in both the exposed and fixed states. Grandfathered in the reasoned-row baseline until 2026-09-24; blocked on a container runtime, which the authoring host lacks. (M, M) | `[gap]` |
-| 1.98 | `neo4j.md`: demonstrate the Verify steps the guide marks reasoned, against a live deployment in both the exposed and fixed states. Grandfathered in the reasoned-row baseline until 2026-09-24; blocked on a container runtime, which the authoring host lacks. (M, M) | `[gap]` |
+| 1.98 | `neo4j.md`: demonstrate the Verify steps the guide marks reasoned, against a live deployment in both the exposed and fixed states. Include Enterprise standalone and cluster listener inventories for 5000 (v1), 6000 (including discovery v2), 7000, 7688, backup 6362, and opt-in Prometheus 2004; compare packaged and Docker binds, v1 and V2_ONLY, private reachability, and cluster TLS rejection of untrusted peers with healthy authorized discovery, replication, and routing as positive controls (bind-audit records 51, 52 and 53). Grandfathered in the reasoned-row baseline until 2026-09-24; requires a container runtime and an Enterprise cluster, unavailable in the authoring environment. (M, M) | `[gap]` |
 | 1.99 | `object-storage.md`: demonstrate the Verify steps the guide marks reasoned, against a live deployment in both the exposed and fixed states. Grandfathered in the reasoned-row baseline until 2026-09-24; blocked on a container runtime, which the authoring host lacks. (M, M) | `[gap]` |
 | 1.100 | `ollama.md`: demonstrate the Verify steps the guide marks reasoned, against a live deployment in both the exposed and fixed states. Grandfathered in the reasoned-row baseline until 2026-09-24; blocked on a container runtime, which the authoring host lacks. (M, M) | `[gap]` |
 | 1.101 | `open-webui.md`: demonstrate the Verify steps the guide marks reasoned, against a live deployment in both the exposed and fixed states. Grandfathered in the reasoned-row baseline until 2026-09-24; blocked on a container runtime, which the authoring host lacks. (M, M) | `[gap]` |
