@@ -30366,9 +30366,9 @@ Agent and scraping stacks run these to drive a real browser, and that is exactly
 reaches the endpoint gets JavaScript execution inside the pages the browser opens, the profile's cookie
 jar, and a pivot from the service's own network position, including internal panels and the cloud
 metadata endpoint ([egress-metadata.md](egress-metadata.md)). An exposed browser automation port is
-usually unauthenticated code execution and credential theft, not just data. None of the four ships
-real authentication that is on by default, and none binds to a documented loopback address you can rely
-on without checking, so the headline mistake is letting the network reach the port at all. Restrict the
+usually unauthenticated code execution and credential theft, not just data. None of these command-line
+automation endpoints requires authentication by default. Inspect the actual listeners and any
+forwarders: the headline mistake is letting the network reach the port at all. Restrict the
 service's own egress as well as its inbound reach, front the listeners per
 [fronting-auth.md](fronting-auth.md), [nginx.md](nginx.md) or [caddy.md](caddy.md), keep them private
 per [docker.md](docker.md) and [tunnels.md](tunnels.md), and treat every connection URL as a secret
@@ -30376,23 +30376,47 @@ per [docker.md](docker.md) and [tunnels.md](tunnels.md), and treat every connect
 
 ## Chrome DevTools Protocol
 
-A Chrome or Chromium started with `--remote-debugging-port=9222` speaks the DevTools Protocol, and that
-endpoint has no authentication of any kind: the only control is not to let the network reach it. Recent
-Chrome binds the debugging socket to loopback, so the exposure is not usually a single flag but a
-listener put in front of it: a published container port, an SSH or socat forward, a reverse proxy, or a
-modified image. Publishing a container port cannot reach a socket that is still loopback-bound inside
-the container, so an image where `-p 9222:9222` "just works" has arranged a forward for you; read what
-actually binds the port, not only the compose file. `GET /json` and `/json/version` hand out the
-WebSocket debugger URL, and a client on that socket has `Runtime.evaluate` (arbitrary JavaScript in any
-page), the Network domain (cookies and credentials), and full control of every tab. There is no flag
-that adds a password, so keep the port on loopback and reach it over an SSH tunnel
-([tunnels.md](tunnels.md)) or a private network, and never expose it through a forward or proxy without
-an authenticating layer in front.
+A Chrome or Chromium started with `--remote-debugging-port=9222` speaks the DevTools Protocol without
+client authentication. At `154.0.8037.57` (commit
+`73c14f6228d7cd537c855007e8f88678969cc0eb`), the full browser, including `--headless`, and
+`chrome-headless-shell` bind that TCP listener only to `127.0.0.1`, trying `::1` if the IPv4 bind
+fails. Neither has a `--remote-debugging-address` switch at this version. A non-loopback DevTools
+listener therefore means a forwarder or a modified build, not an address flag on either stock binary.
+Publishing a container port cannot reach a socket that is still loopback-bound inside the container;
+inspect the process that actually binds the published port, not only the compose file.
 
-From Chrome 136 the `--remote-debugging-port` and `--remote-debugging-pipe` switches are ignored when
-they would debug the default user data directory, so a deployment passes an explicit, non-default
-`--user-data-dir`; Chrome for Testing, which automation commonly uses, is exempt and keeps the older
-behaviour. That changes how you reproduce the exposure, not whether it exists.
+For an explicit nonzero port, both try the same port on IPv6 and fail to start the listener if both
+binds fail. They do not silently choose another port when `9222` is busy. Explicit
+`--remote-debugging-port=0` requests an ephemeral port. The full browser also has a separate,
+feature-gated approval mode enabled through `chrome://inspect`: it reads the previous port from
+`DevToolsActivePort` or starts with `9222`. For a nonzero requested port, it tries IPv4 at that port,
+IPv4 at port `0`, IPv6 at the requested port, and IPv6 at port `0`, stopping at the first success.
+This mode asks for user approval; the command-line port and pipe modes take precedence over it. Inspect the actual listening address and port in
+`ss -tlnp` and the `DevTools listening on` stderr message, plus `DevToolsActivePort` when written,
+rather than assuming every debugging session uses `9222`.
+
+In command-line port mode, `GET /json` lists target WebSocket debugger URLs and `/json/version`
+returns the browser WebSocket debugger URL. A client on that socket has `Runtime.evaluate`
+(arbitrary JavaScript in pages), the Network domain (cookies and credentials), and control of tabs.
+The Host and WebSocket Origin checks are not client authentication. There is no password flag for this
+mode, so keep the port on loopback and reach it over an SSH tunnel ([tunnels.md](tunnels.md)), or use
+an authenticating proxy on a private network. Never expose an unauthenticated forward or proxy.
+Approval mode rejects the JSON discovery routes with `404`, so that status is not proof of isolation.
+
+The Chrome 136 change ignores `--remote-debugging-port` and `--remote-debugging-pipe` when they
+would debug the default user data directory. At the pinned source this check applies to
+`GOOGLE_CHROME_BRANDING` desktop builds on Windows, macOS and Linux, not normal Chromium builds
+(a test-only hook can enable it there). Use an explicit, non-default `--user-data-dir`.
+The `RemoteDebuggingAllowed` enterprise policy can disable remote debugging: the browser checks
+`prefs::kDevToolsRemoteDebuggingAllowed` before starting either command-line mode or approval mode.
+The separate headless-shell startup path has no corresponding profile or policy check.
+The existing Chrome vendor announcement says Chrome for Testing retains the older behaviour; the
+source subset reviewed here does not establish its build branding, so that exemption rests on the
+vendor announcement, not an inferred branding equivalence.
+
+`--remote-debugging-pipe` uses pipes, not a TCP listener. Supplying it alone opens no DevTools TCP
+port; supplying `--remote-debugging-port` as well can still start the independent TCP listener in
+both the browser and headless shell. Pipe access still grants browser control.
 
 ## Selenium Grid
 
@@ -30460,8 +30484,9 @@ unpublished wherever these run.
 
 ## Verify
 
-Every probe below is reasoned, not demonstrated: the authoring environment has no container runtime, so
-none was stood up in its exposed and fixed states. Each names its expected exposed and fixed result so
+Every live check below is **REASONED**, not demonstrated: the authoring host forbids opening listeners
+without an isolated network namespace, and has none. No exposed or fixed service was run.
+Each names its expected exposed and fixed result so
 it discriminates when run against a live instance; backlog row 2.26 tracks demonstrating them. Run each
 probe from an external vantage, not the service host, and run its positive control (for a token-gated
 service, an authorized request that succeeds) so a dead service or a blocked local socket is not
@@ -30476,9 +30501,19 @@ curl 7.75.0 or newer, and an IPv6 literal needs brackets in the URL.
 ss -tlnp   # read every listener; 9222/4442/4443/4444/5555/3000/5900/7900: loopback or internal only
 ```
 
+**REASONED DevTools listener check:** for the pinned stock browser and headless shell, expect only
+`127.0.0.1` or `::1` for the DevTools TCP listener. Inspect both address families and every actual
+port, including ephemeral ports, plus forwarders in the host and container network namespaces.
+Exposed, a forwarder supplies a reachable non-loopback listener; fixed, no unauthenticated external
+path remains while the local browser endpoint still answers. The pinned socket factories and HTTP
+handler below establish these expected results; row 2.26 tracks their live demonstration.
+
 For the DevTools, Grid, browserless and Playwright ports, guard the address in the block below so it
-forces a real substitution, and read the write-out. Substitute an IP literal, not a name, for the
-DevTools probe, because the endpoint rejects a forwarded `Host` that is not an address.
+forces a real substitution, and read the write-out. Replace `9222` in the curl URL with the actual
+externally forwarded port if different. For the local positive control, run the same guarded block
+inside the browser's network namespace with its actual loopback address and DevTools port.
+Substitute an IP literal, not a name, for the DevTools probe, because the endpoint rejects a forwarded
+`Host` that is not an address or localhost.
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
@@ -30494,8 +30529,10 @@ DevTools probe, because the endpoint rejects a forwarded `Host` that is not an a
 )
 ```
 
-Exposed, the DevTools probe returns a `200` JSON body containing `webSocketDebuggerUrl`, which is the
-whole compromise; a connection refused or a timeout that happened during the connect is consistent with
+**REASONED command-line DevTools port probe:** exposed through an unauthenticated forwarder, it returns
+a `200` JSON body containing `webSocketDebuggerUrl`. Fixed, the external request cannot reach that
+endpoint while the local positive control still returns it. A `404` from approval mode is not a pass.
+A connection refused or a timeout that happened during the connect is consistent with
 isolation from that vantage, not proof of the configuration. To check the other services, change the
 URL in the block's `curl` line, leaving the guard lines intact, to each port in turn:
 `http://$1:4444/status` for a Selenium Grid Router, Hub or Standalone (a `200` JSON `ready` and node
@@ -30510,9 +30547,19 @@ is already the finding. The distinguishing behaviour for each is in the cited ve
 
 ## Sources (checked September 2026)
 
+- Chromium 154.0.8037.57 browser loopback factories and approval-mode port fallback: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L69-L158
+- Browser branding/profile and policy checks; approval-mode startup: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L160-L282
+- Browser command-line pipe/port startup and precedence over approval mode: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L325-L417
+- Headless-shell loopback factory and pipe/port startup: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/headless/lib/browser/headless_devtools.cc#L31-L145
+- Headless-shell command-line port and pipe handling: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/headless/lib/browser/command_line_handler.cc#L199-L206
+- Content pipe and port switch definitions: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/public/common/content_switches.cc#L596-L607
+- Actual bound address, stderr endpoint and DevToolsActivePort output: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L267-L312
+- Host check, JSON discovery, approval-mode 404 and browser WebSocket URL: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L459-L630
+- WebSocket Origin check, approval mode and unauthenticated command-line mode: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L811-L880
+- Target WebSocket URL serialization: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L1032-L1055
 - Chrome DevTools Protocol remote debugging: https://developer.chrome.com/docs/devtools/remote-debugging/
 - Chrome DevTools Protocol domains (Runtime, Network, Page): https://chromedevtools.github.io/devtools-protocol/
-- Chrome 136 remote-debugging user-data-dir change: https://developer.chrome.com/blog/remote-debugging-port
+- Chrome 136 user-data-dir change and Chrome for Testing exemption (existing vendor citation, not re-fetched offline): https://developer.chrome.com/blog/remote-debugging-port
 - Selenium Grid CLI options (host, bind-host, username, password, https-certificate): https://www.selenium.dev/documentation/grid/configuration/cli_options/
 - Selenium Grid getting started (components, ports, distributed topology): https://www.selenium.dev/documentation/grid/getting_started/
 - Selenium Docker images env vars (SE_START_VNC, SE_VNC_PASSWORD, SE_BIND_HOST, SE_ROUTER_USERNAME): https://github.com/SeleniumHQ/docker-selenium/blob/aafe4d6136f3bb5afcd9b7cb691c624516d06e1b/ENV_VARIABLES.md
