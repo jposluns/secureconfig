@@ -138,7 +138,7 @@ Read the verbose output, not the exit status: the anonymous run must show a `401
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
+  set +x +a +e
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_TEST_USER' 'REPLACE_WITH_OWNED_PEER_IP' 'REPLACE_WITH_TURN_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
@@ -169,7 +169,7 @@ The block prompts for the secret, so it stays out of shell history, and hands it
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
+  set +x +a +e
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_API_KEY'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not minting"; exit 2; }
   shift

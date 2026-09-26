@@ -25,6 +25,19 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   `LC_ALL=C`) or marked as not a validator, in the same pull request as the
   gate that now enforces it, with no backlog row opened first. No reasoning was given beyond the
   finding.
+
+- **Rule 7's guard turns off errexit, 2026-09-26T00:27Z: "Add +e now" (#358).** The maintainer's words were
+  "Add +e now": rule 7's guard `set +x +a` gains `+e`, so that a block pasted into a shell with an inherited
+  `set -e` (a script, `bash -e`) does not stop silently at a check expected to fail. As merged, the guard reads
+  `set +x +a +e` in all 27 guarded subshells across 15 guides and runs straight after the trap line, before any
+  command that can fail; `code-server.md`'s cookie probe moves its trap line and guard above its unauthenticated
+  request, and the six create-once writers that need errexit (`chat-uis.md`, `image-gen-uis.md` and four in
+  `model-servers.md`) split `set -eC +x +a` into the guard and a `set -eC` line, which is a convention choice, not a
+  behavioural one. The same ruling added two backlog items: row 1.147, rule 6's paste marker and value count for
+  `model-servers.md`'s Verify `/invocations` probe, and, on row 1.105, that the coturn fixture's `denied-peer-ip`
+  policy must mirror the deployment's, or the peer-policy probe proves only the fixture. No reasoning was given
+  beyond the ruling's text.
+
 - **Rule 7 gains a clause for a tool with no non-argv input for a secret, 2026-09-25T16:49Z: draft it now (#354).**
   On the question whether rule 7 should get a clause for a tool that takes a secret only in argv, the maintainer's
   words were "Draft the CONTRIBUTING PR now". The question's framing was coturn's `turnutils_uclient`, reported to

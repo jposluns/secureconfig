@@ -134,11 +134,12 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert REPLACE_
   -w '\nanon http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
   'https://argocd.example.com/api/v1/applications'
 # token from `argocd account generate-token` (or a login session); read it without echo, pass via stdin.
-# Run in a subshell with tracing and allexport OFF, so an inherited `set -x` cannot echo the token and an
-# inherited `set -a` cannot export it (read -s and the stdin header prevent neither).
+# Run in a subshell with tracing, allexport and errexit OFF, so an inherited `set -x` cannot echo the token,
+# an inherited `set -a` cannot export it (read -s and the stdin header prevent neither), and an inherited
+# `set -e` cannot end the block early.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
+  set +x +a +e
   { unset -n tok && unset -v tok; } 2>/dev/null ||
     { echo 'a readonly tok is set in this shell; not probing'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
@@ -174,14 +175,16 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
 # the key as an argument, so keep tracing off; on a shared host compute the HMAC from a language binding.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
+  set +x +a +e
   { unset -n hmac sig && unset -v hmac sig; } 2>/dev/null ||
     { echo 'a readonly hmac or sig is set in this shell; not probing'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   IFS= read -r -s -p 'receiver HMAC secret: ' hmac < /dev/tty || exit 2; echo
   [ -n "$hmac" ] || { echo 'supply the HMAC secret; not probing'; exit 2; }
   body='{"ref":"refs/heads/main"}'
-  sig=$(printf '%s' "$body" | openssl dgst -sha256 -hmac "$hmac" -r | cut -d' ' -f1)
+  sig=$(set -o pipefail; printf '%s' "$body" | openssl dgst -sha256 -hmac "$hmac" -r | cut -d' ' -f1) ||
+    { echo 'signature generation failed; not probing'; exit 2; }
+  [ -n "$sig" ] || { echo 'signature generation failed; not probing'; exit 2; }
   url='https://flux-webhook.example.com/hook/REPLACE_WITH_PATH'
   printf '%s' "$body" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     -X POST --data-binary @- -w '\nno-sig http=%{http_code}\n' "$url"          # expect rejected

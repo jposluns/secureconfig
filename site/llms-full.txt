@@ -3744,7 +3744,7 @@ sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
 # DNS error is inconclusive, never a pass.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a                                     # never trace or export the credential read below
+  set +x +a +e                                  # never trace or export the credential read below
   { unset -n pw && unset -v pw; } 2>/dev/null ||
     { echo 'a readonly pw is set in this shell; not probing'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
@@ -3794,7 +3794,7 @@ rejected at TLS, a trusted one admitted with `--cert`/`--key`, server verificati
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
+  set +x +a +e
   { unset -n sp && unset -v sp; } 2>/dev/null ||
     { echo 'a readonly sp is set in this shell; not probing'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
@@ -4543,7 +4543,7 @@ Gateway API defines no authentication filter; each implementation adds its own. 
 # option." -i reads it from stdin instead. Envoy Gateway's example uses -b; this does not.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
+  set +x +a +e
   { unset -n PASSWORD confirm && unset -v PASSWORD confirm; } 2>/dev/null ||
     { echo 'cannot clear PASSWORD or confirm in this shell; not creating the secret'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not creating the secret'; exit 2; }
@@ -4553,7 +4553,9 @@ Gateway API defines no authentication filter; each implementation adds its own. 
   echo
   [ -n "$PASSWORD" ] || { echo 'no password supplied; not creating the secret'; exit 2; }
   [ "$PASSWORD" = "$confirm" ] || { echo 'the two entries differ; not creating the secret'; exit 2; }
-  printf '%s' "$PASSWORD" | htpasswd -cis .htpasswd admin
+  set -o pipefail  # so a failure anywhere in a pipeline below, not only in htpasswd, fails it
+  printf '%s' "$PASSWORD" | htpasswd -cis .htpasswd admin ||
+    { echo 'password-file creation failed; not creating the secret'; exit 2; }
   # -i does no verification, so the block asks twice and refuses a mismatch; `-vi` below then
   # confirms the file holds that value, and the secret is created only if it does. Paste the block by
   # itself: the shell reads the whole subshell before either `read` runs. Without bracketed paste,
@@ -4957,11 +4959,12 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert REPLACE_
   -w '\nanon http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
   'https://argocd.example.com/api/v1/applications'
 # token from `argocd account generate-token` (or a login session); read it without echo, pass via stdin.
-# Run in a subshell with tracing and allexport OFF, so an inherited `set -x` cannot echo the token and an
-# inherited `set -a` cannot export it (read -s and the stdin header prevent neither).
+# Run in a subshell with tracing, allexport and errexit OFF, so an inherited `set -x` cannot echo the token,
+# an inherited `set -a` cannot export it (read -s and the stdin header prevent neither), and an inherited
+# `set -e` cannot end the block early.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
+  set +x +a +e
   { unset -n tok && unset -v tok; } 2>/dev/null ||
     { echo 'a readonly tok is set in this shell; not probing'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
@@ -4997,14 +5000,16 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
 # the key as an argument, so keep tracing off; on a shared host compute the HMAC from a language binding.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
+  set +x +a +e
   { unset -n hmac sig && unset -v hmac sig; } 2>/dev/null ||
     { echo 'a readonly hmac or sig is set in this shell; not probing'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   IFS= read -r -s -p 'receiver HMAC secret: ' hmac < /dev/tty || exit 2; echo
   [ -n "$hmac" ] || { echo 'supply the HMAC secret; not probing'; exit 2; }
   body='{"ref":"refs/heads/main"}'
-  sig=$(printf '%s' "$body" | openssl dgst -sha256 -hmac "$hmac" -r | cut -d' ' -f1)
+  sig=$(set -o pipefail; printf '%s' "$body" | openssl dgst -sha256 -hmac "$hmac" -r | cut -d' ' -f1) ||
+    { echo 'signature generation failed; not probing'; exit 2; }
+  [ -n "$sig" ] || { echo 'signature generation failed; not probing'; exit 2; }
   url='https://flux-webhook.example.com/hook/REPLACE_WITH_PATH'
   printf '%s' "$body" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     -X POST --data-binary @- -w '\nno-sig http=%{http_code}\n' "$url"          # expect rejected
@@ -5372,7 +5377,7 @@ ls build dist .output 2>/dev/null                          # confirm which outpu
 # becomes the search value instead, and its clean result then means nothing.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
+  set +x +a +e
   set --
   for d in build dist .output; do [ -d "$d" ] && set -- "$@" "$d"; done
   [ "$#" -gt 0 ] || { echo 'inconclusive: no build, dist or .output directory here; run the build first'; exit 2; }
@@ -5740,7 +5745,7 @@ curl -q -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redi
 # itself: without bracketed paste, lines pasted after its closing ) are read as the cookies instead.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
+  set +x +a +e
   set -- PASTE_WHOLE_BLOCK 'session'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
   shift
@@ -5775,7 +5780,7 @@ curl -q -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redi
 # bracketed paste, a line pasted after its closing ) is searched for instead, and its clean result then means nothing.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
+  set +x +a +e
   { unset -n session_secret && unset -v session_secret; } 2>/dev/null ||
     { echo 'cannot initialize secret input; not scanning'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not scanning'; exit 2; }
@@ -17755,7 +17760,7 @@ The first publish is the allowed control. The subsequent operations deliberately
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
+  set +x +a +e
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NATS_HOST' 'REPLACE_WITH_CLIENT_CERT_FILE' 'REPLACE_WITH_CLIENT_KEY_FILE' 'REPLACE_WITH_CA_FILE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
   shift
@@ -17818,7 +17823,7 @@ Terminal 1 is self-contained and reads its password inside the guarded subshell.
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
+  set +x +a +e
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NATS_HOST' 'REPLACE_WITH_CONSUMER_CERT_FILE' 'REPLACE_WITH_CONSUMER_KEY_FILE' 'REPLACE_WITH_CA_FILE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
   shift
@@ -17853,7 +17858,7 @@ Terminal 2 independently establishes its target, TLS configuration, and credenti
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
+  set +x +a +e
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NATS_HOST' 'REPLACE_WITH_CLIENT_CERT_FILE' 'REPLACE_WITH_CLIENT_KEY_FILE' 'REPLACE_WITH_CA_FILE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
   shift
@@ -17879,7 +17884,9 @@ Terminal 2 independently establishes its target, TLS configuration, and credenti
   printf '\n'
   case "$pw" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'supply a real password'; exit 2 ;; esac
   export NATS_USER=order-svc || { echo 'credential export failed'; exit 2; }
-  marker="marker-$(date +%s%N)"
+  marker=$(date +%s%N) || { echo 'marker generation failed; not publishing'; exit 2; }
+  [ -n "$marker" ] || { echo 'marker generation failed; not publishing'; exit 2; }
+  marker="marker-$marker"
   printf 'Expected delivery: %s\n' "$marker"
   NATS_PASSWORD="$pw" timeout 10s nats --no-context --server "$srv" --timeout 3s \
     --inbox-prefix _INBOX.order-svc pub orders.created "$marker"
@@ -17893,7 +17900,7 @@ The following self-contained request block is also used by V4 and V5. Its last t
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
+  set +x +a +e
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NATS_HOST' 'REPLACE_WITH_CLIENT_CERT_FILE' 'REPLACE_WITH_CLIENT_KEY_FILE' 'REPLACE_WITH_CA_FILE' 'order-svc' 'orders.lookup' '{}'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
   shift
@@ -18207,7 +18214,7 @@ Verification status: the checks below were demonstrated on loopback against the 
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
+  set +x +a +e
   set -o pipefail
   { unset -n audit_role audit_key audit_expected audit_reply &&
     unset -v audit_role audit_key audit_expected audit_reply; } 2>/dev/null ||
@@ -18419,7 +18426,26 @@ turso db tokens create example-db --read-only --expiration 7d
 
 Litestream continuously replicates the SQLite file to S3, Google Cloud Storage, Azure Blob Storage, and other supported destinations, authenticating to S3 the same way any AWS client does, with `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` in the environment. Litestream's own S3 guide scopes the IAM policy to the one bucket and prefix it needs rather than granting broad S3 access, which limits the damage if the credential leaks. The replica bucket needs the same private-by-default posture as any other bucket: see [object-storage.md](object-storage.md) for keeping it non-public and restoring through scoped credentials rather than a public URL. Litestream's metrics listener (`addr`) and, in v0.5.0 and later, its MCP listener (`mcp-addr`) are disabled by default; leave them off unless needed, and when local access is required bind explicitly to loopback (for example `addr: "127.0.0.1:9090"`, `mcp-addr: "127.0.0.1:3001"`). The MCP server has no built-in authentication and exposes database information and restore capabilities, so reach it only through an authenticated tunnel or protected proxy, never a directly published port.
 
-LiteFS replicates a SQLite file across a cluster's nodes rather than to object storage directly; its docs note the project is pre-1.0 and recommend regular off-site backups as a separate measure, and that backup destination should get the same bucket-privacy treatment as a Litestream replica. LiteFS also runs an HTTP replication API (default port `20202`) that exposes database export/import and administrative operations; keep it reachable only by authorized cluster nodes over a private network, configure `http.addr` on the node's private interface with a consistent `lease.advertise-url`, and never publish it through an internet-facing port or proxy. The optional application proxy is a separate listener that needs the application's own TLS and authentication controls.
+LiteFS replicates a SQLite file across a cluster's nodes rather than to object storage directly; its docs note the project is pre-1.0 and recommend regular off-site backups as a separate measure, and that backup destination should get the same bucket-privacy treatment as a Litestream replica. LiteFS also runs an HTTP API for replication and administration. At v0.5.14 no route on it checks any credential: the server accepts cleartext HTTP/1 and h2c (HTTP/2 without TLS), and LiteFS's own client uses h2c only. Network reachability therefore exposes unauthenticated operations, subject to the role and database conditions below.
+
+The default `http.addr` is `:20202`, which names no host and so listens on every interface, and the example configuration in the LiteFS repository ships the same host-less value. Set the address in the configuration file; no command-line flag sets it directly. The default search order is `litefs.yml` in the working directory, then the current user's home directory when available, then `/etc/litefs.yml`; `-config PATH` instead reads the specified path. `${VAR}` environment expansion applies unless `-no-expand-env` is passed. An explicitly empty `addr` still listens on every interface, on a system-chosen port; it does not disable the API.
+
+| Route | Role and database conditions at v0.5.14 |
+| --- | --- |
+| POST `/import` | Primary only: creates a named database if absent or replaces its contents from the request body. A named request on a replica returns 503 before database creation; it is not forwarded. `DB.Import` also rejects a non-primary. |
+| GET `/export` | Primary or replica: exports an existing named local database in full, including applicable WAL pages. A missing database returns 404. |
+| POST `/stream` | Primary only, over HTTP/2 with a valid position-map body. An otherwise valid request on a replica returns 503. Without a `filter`, it can stream every database on the primary; a caller-supplied filter narrows the set, and a fresh position receives a snapshot. |
+| POST `/tx` | Primary or replica: applies a valid LTX file to an existing named local database, without forwarding or checking primary status or the caller's halt-lock ownership. Non-snapshot input must match the next transaction id and current checksum, and the file undergoes LTX validation. A missing database returns 404. |
+| POST `/halt`, DELETE `/halt` | Primary or replica: POST creates the named local database if absent and acquires its write locks with a nonzero lock id. On the primary this stalls that database's writes; on a replica it can block replication applying that database's updates. The default lock TTL is 30 seconds, with expiration checked every 5 seconds. DELETE releases the existing database's lock when its id matches. |
+| POST `/promote` | Requires an eligible candidate. An already-primary candidate returns success without a change; a candidate replica with a known primary requests handoff from it, subject to the handoff conditions below. No database name is required. |
+| POST `/handoff` | Primary only, with a connected target subscriber and a lease that supports handoff; static leases refuse it. No database name is required. |
+| GET `/info`, `/events`, `/metrics` | Primary or replica, without a named database: disclose node, cluster, and database state through information, events, and metrics. |
+
+The debug routes are also unconditional on either role and need no named database: Go's `/debug/pprof/` exposes profiling (`cmdline` returns the process command line; `profile` and `trace` run live profiles), and `/debug/vars` exposes the command line, memory statistics, and a `store` variable carrying primary status and each database's name, transaction id, and lock states. The third route, `/debug/rand`, streams deterministic pseudo-random data and checks a one-minute timeout only between writes, so a slow or non-reading client can hold a request open longer, since the server sets no write timeout. The optional `Litefs-Id` comparisons in the API reject self-connections; they do not authenticate callers.
+
+Keep each node's API reachable only by the cluster's own nodes over a private network: set `http.addr` to that node's private address and never publish port 20202 through an internet-facing port mapping or proxy. Under Consul leasing, set each node's `lease.advertise-url` to its own private API URL; if unset, it is derived as `http://` plus `lease.hostname` (falling back to the OS hostname) and the actual listening port. Under static leasing, the configured value is used as given: the primary advertises its own private API URL, while every replica's `lease.advertise-url` must point to the primary's private API URL.
+
+The upstream image bakes in no configuration file and declares no `EXPOSE`. With the default bind, LiteFS listens on every interface of its network namespace. Container reachability depends on the configured bind, network mode, connected peers, routing, firewall, and port publication: same-network peers can reach the listener without a published port, host networking uses the host's network namespace, and containers sharing a network namespace can reach its listeners. The optional application proxy (`proxy.addr`, `:8080` in the example configuration) is a separate listener: startup is attempted only when `proxy.target` is set, and `proxy.db` and `proxy.addr` must also be nonempty. It forwards requests to the application and needs the application's own TLS and authentication controls.
 
 ## Verify
 
@@ -18467,7 +18493,7 @@ Scan built client bundles for a leaked Turso/libSQL token, keeping the token off
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a                             # never trace or export the token read below
+  set +x +a +e                          # never trace or export the token read below
   { unset -n tok && unset -v tok; } 2>/dev/null ||
     { echo 'a readonly tok is set in this shell; not scanning'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not scanning'; exit 2; }
@@ -18538,12 +18564,12 @@ For LiteFS (`20202`) or an enabled Litestream metrics/MCP listener (REASONED: ne
 )
 ```
 
-Any HTTP response from the untrusted vantage is a reachable listener (the finding); a timeout, DNS, or TLS error, or a failed authorized control, is inconclusive, so corroborate with the bind address and firewall. For Turso (REASONED: this outbound check needs a Turso database and token, and none was available to the authoring environment), prove the HTTP database rejects anonymous queries. Have a valid database token from the secret store ready to paste. The block prompts for it with input hidden, never exports it, and refuses a control character, so a pasted token cannot inject a second header. This keeps the token out of curl's argv, not out of reach of the account that runs the block:
+Any HTTP response from the untrusted vantage shows that an HTTP listener answered. Confirmed direct reachability to LiteFS exposes its unauthenticated endpoints, subject to their role and state conditions above; a fronting proxy can return its own denial or expose only selected paths, so its response alone does not establish reachability to the whole LiteFS API. A timeout, DNS, or TLS error, or a failed authorized control, is inconclusive, so corroborate with the bind address, routing, proxy configuration, and firewall. For Turso (REASONED: this outbound check needs a Turso database and token, and none was available to the authoring environment), prove the HTTP database rejects anonymous queries. Have a valid database token from the secret store ready to paste. The block prompts for it with input hidden, never exports it, and refuses a control character, so a pasted token cannot inject a second header. This keeps the token out of curl's argv, not out of reach of the account that runs the block:
 
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
+  set +x +a +e
   { unset -n turso_tok && unset -v turso_tok; } 2>/dev/null ||
     { echo "a readonly turso_tok is set in this shell; not probing"; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo "a readonly IFS is set in this shell; not probing"; exit 2; }
@@ -18587,6 +18613,14 @@ Applicability checked on 2026-09-18: SQLite 3.x documentation (local file tests 
 - SQLCipher (third-party encrypted-SQLite build): https://www.zetetic.net/sqlcipher/
 - SQLite extension loading (disabled by default; enabled in the CLI): https://sqlite.org/loadext.html
 - LiteFS configuration (http.addr, lease.advertise-url, default port 20202): https://fly.io/docs/litefs/config/
+- LiteFS listener and configuration (pinned tag v0.5.14): default address, plain TCP and h2c server, h2c-only client, mount flags, environment expansion, default config search and explicit path, and example API bind: https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L32-L35, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/config.go#L57, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L76-L99, https://github.com/superfly/litefs/blob/v0.5.14/http/client.go#L32-L43, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/mount_linux.go#L76-L110, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/config.go#L219-L233, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/config.go#L288-L333, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/etc/litefs.yml#L54-L58
+- LiteFS route dispatch and reads (pinned tag v0.5.14): no credential gate, export including WAL pages, primary-only HTTP/2 stream, database enumeration and filtering, snapshots, position-map decoding, info, events, and unconditional debug routes including rand: https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L134-L268, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L320-L346, https://github.com/superfly/litefs/blob/v0.5.14/db.go#L2682-L2776, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L495-L520, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L526-L585, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L686-L699, https://github.com/superfly/litefs/blob/v0.5.14/http/http.go#L15-L43, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L271-L292, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L779-L803, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/mount_linux.go#L487-L488, https://github.com/superfly/litefs/blob/v0.5.14/store.go#L1661-L1713
+- LiteFS mutations and role checks (pinned tag v0.5.14): import handler and database method, replica primary context, local tx application and validation, per-database halt acquisition and release, expiration defaults and enforcement, and replication write locks: https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L294-L318, https://github.com/superfly/litefs/blob/v0.5.14/db.go#L2779-L2811, https://github.com/superfly/litefs/blob/v0.5.14/store.go#L139-L141, https://github.com/superfly/litefs/blob/v0.5.14/store.go#L444-L478, https://github.com/superfly/litefs/blob/v0.5.14/store.go#L1904-L1910, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L461-L493, https://github.com/superfly/litefs/blob/v0.5.14/db.go#L2387-L2448, https://github.com/superfly/litefs/blob/v0.5.14/db.go#L2452-L2609, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L348-L407, https://github.com/superfly/litefs/blob/v0.5.14/db.go#L215-L325, https://github.com/superfly/litefs/blob/v0.5.14/store.go#L39-L41, https://github.com/superfly/litefs/blob/v0.5.14/store.go#L1455-L1465, https://github.com/superfly/litefs/blob/v0.5.14/store.go#L1525-L1531
+- LiteFS leasing and handoff (pinned tag v0.5.14): promote eligibility, primary and subscriber checks, Consul URL derivation, static configuration and primary URL on replicas, replication destination, and static handoff refusal: https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L409-L459, https://github.com/superfly/litefs/blob/v0.5.14/store.go#L408-L432, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/mount_linux.go#L329-L348, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/mount_linux.go#L241-L244, https://github.com/superfly/litefs/blob/v0.5.14/lease.go#L99-L131, https://github.com/superfly/litefs/blob/v0.5.14/store.go#L1384-L1387, https://github.com/superfly/litefs/blob/v0.5.14/lease.go#L168-L170
+- LiteFS optional proxy and image (pinned tag v0.5.14): proxy startup condition and required fields, example proxy address, and Dockerfile without configuration or EXPOSE: https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/mount_linux.go#L519-L524, https://github.com/superfly/litefs/blob/v0.5.14/http/proxy_server.go#L131-L144, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/etc/litefs.yml#L60-L68, https://github.com/superfly/litefs/blob/v0.5.14/Dockerfile
+- Go standard library defaults the LiteFS listener and debug routes inherit (a host-less or empty address listens on every unicast address, with the port chosen automatically when empty; expvar serves `cmdline` and `memstats`; pprof's `cmdline` responds with the running program's command line): https://pkg.go.dev/net#Listen, https://pkg.go.dev/expvar and https://pkg.go.dev/net/http/pprof
+- Go h2c handler (ordinary HTTP/1 requests pass to the underlying handler): [NewHandler documentation](https://pkg.go.dev/github.com/golang/net/http2/h2c#NewHandler).
+- Docker container reachability: [bridge peers and publication](https://docs.docker.com/engine/network/drivers/bridge/), [host networking](https://docs.docker.com/engine/network/drivers/host/), and [shared container networking stacks](https://docs.docker.com/engine/network/#container-networks).
 - Litestream configuration (metrics addr, MCP mcp-addr): https://litestream.io/reference/config/
 - Turso SQL over HTTP (`/v2/pipeline`, bearer authentication): https://docs.turso.tech/sdk/http/reference
 
@@ -18872,7 +18906,7 @@ never exported:
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
+  set +x +a +e
   { unset -n pw SURREAL_USER SURREAL_PASS && unset -v pw SURREAL_USER SURREAL_PASS; } 2>/dev/null ||
     { echo 'cannot clear pw, SURREAL_USER or SURREAL_PASS in this shell; not starting'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not starting'; exit 2; }
@@ -18970,7 +19004,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w '
 # the actual HTTPS endpoint.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
+  set +x +a +e
   set -o pipefail
   { unset -n probe_jwt && unset -v probe_jwt; } 2>/dev/null ||
     { echo 'a readonly probe_jwt is set in this shell; not probing'; exit 2; }
@@ -21382,7 +21416,8 @@ vLLM's server requires an API key when one is set: at both pinned commits `--api
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set -eC +x +a
+  set +x +a +e
+  set -eC
   umask 077
   mkdir -p -- "$HOME/.config/vllm"
   chmod 700 -- "$HOME/.config/vllm"
@@ -21410,7 +21445,22 @@ The block makes the directory mode `0700` first, then refuses, before it generat
 
 The launch block clears `VLLM_API_KEY` first and refuses to start when it cannot (a readonly name in your shell), so an inherited value cannot stand in for the key, and it refuses a file with no generated `api-key` line. It clears `VLLM_USE_RUST_FRONTEND` the same way, because with that opt-in set the pinned server starts a Rust frontend process and hands it the non-default arguments, `api_key` included, as a JSON `--args-json` value on that process's command line. Keep `--config` and the path as two words: the pinned parser expands the file only when `--config` is an argument of its own, and it accepts `--config=FILE` without reading the file, so that server would start with no key. `--host 127.0.0.1` stays on the command line because it is not secret. vLLM merges the file's values into its argument list inside the Python process, and API server processes it starts receive their arguments through Python's `spawn` pipe rather than a command line, so the key stays out of `/proc/<pid>/cmdline` and `ps`. The HTTP server's startup log prints the non-default arguments with `api_key` redacted, but `vllm serve --grpc` logs its whole argument set unredacted, the key included, so protect that log if you use `--grpc`. The key remains in process memory and in the file (plaintext at rest, readable by that account and by root, so keep it and its backups out of source control). Clients read the key from the file's `api-key` line; give remote clients their copy through your secret store ([secrets.md](secrets.md)). A key passed through `VLLM_API_KEY` would stay out of argv but remain readable through `/proc/<pid>/environ` by the same account and by root for the server's whole lifetime, and in any process that inherits it; the file avoids that channel. This was read in the pinned source (cited in Sources). The pinned parser class was also run on its own, outside vLLM, with vLLM's logger stubbed and a minimal `serve` parser in place of vLLM's own: with `--config FILE` it turned the generated file's `api-key` line into a one-element key list, and with `--config=FILE` it left the key unset. No vLLM server was run.
 
-The key does not cover the whole server. vLLM's own security page states that it authenticates only the `/v1`, `/v2`, and `/inference` path prefixes, and lists `/invocations`, the SageMaker-compatible route, as requiring no key while reaching the same inference capability as the protected `/v1` routes; the profiler routes `/start_profile` and `/stop_profile` are likewise unauthenticated, and a plugin route outside those prefixes is unauthenticated unless the plugin enforces its own check. vLLM says plainly not to rely on the key alone. Allowlist only the routes your application needs at the proxy and refuse everything else there, `/invocations` included, rather than assuming the key covers the surface. vLLM binds every interface by default: `vllm serve` leaves `--host` unset, which listens on `0.0.0.0` (the startup log shows `http://0.0.0.0:8000`), so pass `--host 127.0.0.1` to keep it on loopback. vLLM can terminate TLS natively (`--ssl-keyfile`, `--ssl-certfile`, and `--ssl-ca-certs`, passed through to uvicorn), but fronting it with a TLS proxy or tunnel is the recommended pattern; either way keep the server itself on loopback or a private network.
+The key does not cover the whole server. vLLM's own security page states that at v0.30.0 it authenticates only the `/v1`, `/v2`, `/inference`, and `/cohere` path prefixes, and lists `/invocations`, the SageMaker-compatible route, as requiring no key while reaching the same inference capability as the protected `/v1` routes; the profiler routes `/start_profile` and `/stop_profile`, available when profiling is enabled via `--profiler-config`, are likewise unauthenticated, and a plugin route outside those prefixes is unauthenticated unless the plugin enforces its own check. vLLM says plainly not to rely on the key alone. Allowlist only the routes your application needs at the proxy and refuse everything else there, `/invocations` included, rather than assuming the key covers the surface. vLLM binds every interface by default: `vllm serve` leaves `--host` unset, which listens on `0.0.0.0` (the startup log shows `http://0.0.0.0:8000`), so pass `--host 127.0.0.1` to keep it on loopback. vLLM can terminate TLS natively (`--ssl-keyfile`, `--ssl-certfile`, and `--ssl-ca-certs`, passed through to uvicorn), but fronting it with a TLS proxy or tunnel is the recommended pattern; either way keep the server itself on loopback or a private network.
+
+### Multi-node and data-parallel deployments
+
+At v0.30.0, `--host` controls the frontend listener, not all the engine's network traffic. Multi-node deployments must run on an isolated network with firewall rules that admit internal traffic only from trusted cluster members. The HTTP API key and frontend TLS do not authenticate or encrypt the internal TCPStore, ZMQ or collective-communication channels. A private IP alone does not establish that isolation. When Ray is the backend, apply [ray.md](ray.md) as well; vLLM treats the Ray cluster as one trust domain.
+
+The listeners depend on the backend and topology:
+
+- vLLM's security page warns that PyTorch TCP initialization creates a TCPStore listening on all interfaces by default; do not infer its bind from the advertised master address. `StatelessProcessGroup.create()` explicitly binds the supplied address on rank zero when no listening socket is supplied; other stateless initialization paths can delegate to ordinary rendezvous. Multi-node multiprocessing uses `--master-addr` and `--master-port` (default port 29501). Data-parallel group initialization can allocate additional ports, and Ray V2 creates a store on port zero. vLLM creates Gloo and device-backend groups; their transport sockets depend on PyTorch and the selected backend and must be inventoried at runtime.
+- Engine clients use unauthenticated ZMQ sockets. The multiprocessing DP launch path uses a startup-scoped TCP handshake on `--data-parallel-address` and `--data-parallel-rpc-port` (default port 29550) when engines are remote or elastic expert parallelism is enabled; otherwise the handshake uses IPC. The Ray DP launch path bypasses that handshake constructor. Request/result channels use dynamic TCP ports when clients need remote engines; co-located channels normally use IPC, with an elastic expert-parallelism exception. When online DP needs a coordinator, its frontend and engine channels use IPC or dynamic TCP ports according to locality. The DP address defaults to loopback for the multiprocessing backend unless a master address is supplied; Ray uses the detected node IP. Worker message queues add a dynamic TCP listener only when remote readers exist, using vLLM's detected node IP for multiprocessing and Ray's node IP for Ray V2. `--headless` removes the HTTP frontend, not the internal channels required by that topology.
+- KV-transfer listeners are connector-specific and opt-in. The NIXL handshake defaults to `localhost`, port 5600 plus the data-parallel index, and starts when handshake metadata is supplied. Mooncake's producer functionality, including `kv_both`, starts a bootstrap server on `0.0.0.0`, port 8998, at the designated TP/PP/DP rank, and producer worker side channels use the detected node IP and dynamic ports. Consumer-only workers do not start those producer listeners. These vLLM control paths add no peer authentication; this is not an audit of the native transfer libraries. Audit the selected connector and its transfer library; there is no universal KV-transfer bind switch.
+- Optional `--grpc` replaces HTTP with an unauthenticated, unencrypted gRPC server on `--host`/`--port`, default `0.0.0.0:8000`. The security page's `--grpc-port` description does not match this release's CLI. `--data-parallel-multi-port-external-lb` also adds a health supervisor after the child servers become ready, without an API-key check, on `--host`, default port 9256 (`--data-parallel-supervisor-port`), alongside one API port per local rank. The supervisor also accepts the frontend TLS options.
+
+Set `VLLM_HOST_IP` to each node's own isolated-network IP; automatic detection can select a public-facing interface and falls back to `0.0.0.0`. Set `--data-parallel-address` to the head node's isolated-network IP and use the same `--data-parallel-rpc-port` on participating nodes. For multi-node multiprocessing, set `--master-addr` to the intended master IP too. `VLLM_PORT` is a starting point for the open-port allocator, not a firewall port range: sockets that bind port zero still receive dynamic ports. `VLLM_DP_MASTER_IP` and `VLLM_DP_MASTER_PORT` populate the environment-driven DP fallback, for example offline SPMD; they are not substitutes for the serving flags. Setting `VLLM_DP_MASTER_PORT` also reserves ten ports starting at that value in the common open-port allocator, so its effects are not confined to offline DP. NIXL has separate `VLLM_NIXL_SIDE_CHANNEL_HOST` and `VLLM_NIXL_SIDE_CHANNEL_PORT` settings; `VLLM_MOONCAKE_BOOTSTRAP_PORT` changes Mooncake's bootstrap port, not its wildcard bind.
+
+Single-GPU serving normally uses a file store and local engine IPC in this release, with a TCP-store exception for ROCm AITER custom all-reduce. This is not a guarantee that no other socket listens: vLLM still creates Gloo groups. Inventory the running processes and test the firewall on single-host deployments too.
 
 ## Hugging Face Text Generation Inference (TGI)
 
@@ -21431,7 +21481,8 @@ The launcher reference lists `--api-key` (env `API_KEY`) without describing it. 
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set -eC +x +a
+  set +x +a +e
+  set -eC
   umask 077
   mkdir -p -- "$HOME/.config/sglang"
   chmod 700 -- "$HOME/.config/sglang"
@@ -21466,6 +21517,28 @@ tritonserver --model-repository=/models --http-address=127.0.0.1 --grpc-address=
 
 `--allow-http` and `--allow-grpc` default to true; NVIDIA recommends setting either to false when not required, and `--allow-metrics` switches off the metrics listener. For gRPC, `--grpc-use-ssl` with `--grpc-server-cert` and `--grpc-server-key` enables a TLS channel, and `--grpc-use-ssl-mutual` requires client certificates. HTTP has no TLS option; the proxy provides it. `--http-restricted-api` and `--grpc-restricted-protocol` fence the API groups you name (model-repository control, and inference too if you list it) behind a shared-secret header, a useful second layer against network clients but not a substitute for the gateway. The secret is part of the flag's value (`--http-restricted-api=<API_1>,<API_2>:<restricted-key>=<restricted-value>`), and `tritonserver` has no other input for it. Traced at the pinned source commit: `tritonserver` parses its options with `getopt_long` over argv, the two options hand their value straight to the restricted-feature parser, the parser opens no option or response file and reads nothing from stdin, and every environment variable read under `src/` has a non-secret name (the `AIP_*` and `SAGEMAKER_*` endpoint settings, the `OTEL_BSP_*` tracing settings, a gRPC response-delay setting and test-backend names). So the value sits in argv, readable through `ps` and `/proc/<pid>/cmdline` by other local accounts, as well as by the same account and root, for the server's whole lifetime; quoting does not change that, and no `tritonserver` launch form avoids it. Command-line auditing on the host (auditd `EXECVE` records, for example) can also record the value and keep it after the process exits. Under an orchestrator the same value also sits in the workload definition (a Kubernetes pod spec's `args`, for example) for everyone who can read it. A server's shared secret is neither throwaway nor short-lived, so it is no secret from other accounts on the host: do not rely on it as a control against them. Enforce authorization at the reverse proxy or gateway in front of Triton, which is the control, and treat the restricted-API value only as a check against network clients that reach Triton past it; rotate the value whenever an account you do not trust could have read it, or a command-line audit record holding it could have reached one. If you do not load and unload models at run time, leave `--model-control-mode` at its default, `none`, under which the model-control API returns an error for load and unload requests, whatever the secret. Builds with cloud endpoints add conditional listeners beyond these three: `AIP_MODE=PREDICTION` enables a Vertex AI endpoint (its port is `AIP_HTTP_PORT`, otherwise 8080), and a SageMaker endpoint may also be present, so disable the ones you do not use or add them to the bind inventory and the checks below.
 
+At the pinned commit (first shipped in v2.69.0), every restricted category defaults to unrestricted: `health`, `metadata`, `inference`, `shared-memory`, `model-config`, `model-repository`, `statistics`, `trace`, and `logging`. Model control is only one part of that surface. These defaults apply when the corresponding feature is compiled in:
+
+| Category | Exposure without a restriction |
+| --- | --- |
+| `health`, `metadata`, `inference` | Server/model health and metadata, inference, and HTTP `generate`/`generate_stream` requests need no key. |
+| `logging` | Read the log settings and file path; change info/warning/error logging, verbosity, and format. A request cannot change `log_file`. |
+| `trace` | Read global or per-model settings, including, in the default `triton` mode, the trace file path; change level, rate, count, and log frequency. A request cannot change `trace_file`. Tracing starts OFF with no file path in the default `triton` mode, so enabling it through the API fails until startup supplies a path, for example `--trace-config triton,file=/var/log/triton/trace.json`. That flag leaves the level OFF; `--trace-config level=TIMESTAMPS` enables it at startup, and an unrestricted client can enable or change it later once the configuration is valid. The settings API itself is not disabled by OFF. |
+| `shared-memory` | Read system/CUDA region status. Registration, unregistration, and inference use are disabled by default (`--allow-client-shm=false`); `--allow-client-shm=true` enables them. Clients can then register system shared-memory objects or CUDA IPC handles for tensor input/output and unregister regions. CUDA also requires GPU support; the protocol documentation lists no shared memory on Windows and no CUDA shared memory on Jetson. |
+| `model-repository` | List repository models, including unloaded models. Load/reload and unload require `--model-control-mode=explicit`; `none` (default) and `poll` do not enable those API operations. Load accepts a JSON-string `config` override and inline `file:VERSION/FILE` contents (base64 over HTTP, bytes over gRPC, with `config` required); unload can include `unload_dependents=true`. |
+| `statistics`, `model-config` | Read per-model/version inference statistics and model configuration. Model control mode does not protect these reads or the repository index. Statistics require a build with statistics support. |
+
+Restrictions are per category and per protocol, not a single admin switch. Repeat a flag for disjoint groups with different keys; a category cannot appear in two groups for the same protocol. This syntax example covers all nine categories with a value held by the gateway, which must not give that administrative value to ordinary inference clients:
+
+```text
+--http-restricted-api=health,metadata,inference,shared-memory,model-config,model-repository,statistics,trace,logging:gateway-key=REPLACE_WITH_GATEWAY_VALUE
+--grpc-restricted-protocol=health,metadata,inference,shared-memory,model-config,model-repository,statistics,trace,logging:gateway-key=REPLACE_WITH_GATEWAY_VALUE
+```
+
+Replace the placeholder through your deployment's secret handling, subject to the argv exposure above. HTTP expects `gateway-key: VALUE`; gRPC expects metadata `triton-grpc-protocol-gateway-key: VALUE`, because Triton prefixes the configured key. Missing or wrong values receive HTTP 403 or gRPC `UNAVAILABLE` with a restriction message. Restricting `health` also requires the header on health probes. These rejections apply to the standard HTTP and gRPC handlers; two cloud endpoints at the pinned commit fall outside them. With the SageMaker listener enabled, a multi-model endpoint's `POST /models/{model}/invoke` runs inference with no restriction check, so gateway authorization and network isolation must cover it, or disable the SageMaker listener. The Vertex AI prediction route dispatches to other handlers named in the `X-Vertex-Ai-Triton-Redirect` request header, `metrics` among them with no restriction check, so a gateway that attaches the administrative value to Vertex prediction requests must strip or reject that header from ordinary clients.
+
+The metrics listener is separate: `GET /metrics` (also `/metrics/`) on 8002 returns Prometheus text with no authentication, and neither restricted flag covers it. Keep it private or use `--allow-metrics=false`. Keep the gateway's route allowlist narrow even when every category is restricted.
+
 ## LM Studio (local server)
 
 LM Studio's developer server is a desktop feature. The documentation addresses it at `http://localhost:1234` throughout (the port is a field in Developers Page > Server Settings), and "By default, LM Studio does not require authentication for API requests." The "Serve on Local Network" switch (or `lms server start --bind 0.0.0.0`) rebinds it to every interface; LM Studio's own note reads: "Any bind other than 127.0.0.1 exposes the server beyond localhost; we recommend enabling authentication." Leave that switch off. If another machine must reach it, first enable "Require Authentication" (LM Studio 0.4.0 or newer) and create a token under "Manage Tokens"; clients then send `Authorization: Bearer <token>`. The server settings list no TLS option, so anything beyond the local machine goes through a tailnet ([tailscale.md](tailscale.md)) or an authenticated TLS proxy, never a port-forward.
@@ -21486,7 +21559,8 @@ All three are secrets, and none belongs on the command line, where `ps` and `/pr
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set -eC +x +a
+  set +x +a +e
+  set -eC
   umask 077
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_UI_USER'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; nothing written'; exit 2; }
@@ -21513,7 +21587,8 @@ The API keys have no file flag and no environment input at the pinned sources: t
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set -eC +x +a
+  set +x +a +e
+  set -eC
   umask 077
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PRIVATE_USER_DATA_DIR'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; nothing written'; exit 2; }
@@ -21625,13 +21700,81 @@ For text-generation-webui, ask the API edge for the model list without a key. Th
 )
 ```
 
+For Triton, this read checks the `logging` restriction directly on the server host. **REASONED, not demonstrated:** no Triton server, container runtime, or GPU is available in the authoring environment; TODO row 1.152 tracks the live pair. On an isolated instance with logging support, run it before and after applying the restriction above. Before, expect HTTP 200 with settings JSON containing `log_file` and `log_verbose_level`; after, expect HTTP 403 with `This API is restricted, expecting header 'gateway-key'`. These outcomes follow from the [logging handler](https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L2031-L2149) and [restriction check](https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L4939-L4953). Use the same address and port for both runs. This command assumes Triton's HTTP listener is on loopback port 8000 and needs curl 7.75.0 or newer. A connection error, a proxy rejection, 404, or a logging-unsupported response is inconclusive; a failing request alone is not a pass. This checks only logging over HTTP, not the other categories, gRPC, or external listener isolation. The existing `pgrep` check measures argv exposure, not API authorization.
+
+```bash
+curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+  -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+  http://127.0.0.1:8000/v2/logging
+```
+
+### vLLM internal-listener isolation
+
+**REASONED, not demonstrated:** no multi-GPU or multi-node cluster is available in the authoring environment. TODO row 1.155 tracks the exposed and isolated runs. The expected distinction follows from v0.30.0's [internal-network warning and firewall guidance](https://github.com/vllm-project/vllm/blob/v0.30.0/docs/usage/security.md#L109-L138) and the listener constructors cited below. No vLLM server was run for this addition.
+
+On every node, run `sudo ss -tlnp` in the host and service network namespaces, during startup and after the engines become ready. Record each vLLM, worker and backend listener, including dynamically assigned ports; re-inventory after a restart. Check container publications and cloud firewall rules too. A private bind or an absent startup-only handshake is not proof that the remaining ports are isolated.
+
+For each endpoint intended for cross-node traffic, run this block in `remote` mode from a trusted cluster peer and then from a host outside the allowed cluster network. Substitute the actual numeric node address reachable from that vantage and the observed port inside the existing quotes on the `set --` line; use the node endpoint, not the API proxy.
+
+For a deliberately loopback-only endpoint, such as a NIXL handshake left on localhost, first run the same block in `local` mode from the listener's own network namespace, substituting its observed numeric loopback address and port. Confirm with the socket inventory that the process binds only the intended loopback addresses, and check that no container publication or forwarding rule exposes it. Then run in `remote` mode from both remote vantages against the node's non-loopback addresses and corresponding ports, including any mapped ports found in the inventory. Do not widen a bind to obtain a remote positive control. Change the mode inside its existing quotes too. The block only attempts a TCP connection and sends no application payload:
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'remote' 'REPLACE_WITH_TARGET_IP' 'REPLACE_WITH_INTERNAL_PORT'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
+  shift
+  [ "$#" -eq 3 ] || { echo 'the set -- line needs exactly 3 values; not probing'; exit 2; }
+  case "$1$2$3" in
+    *REPLACE_WITH_*) echo 'substitute the target IP and port; not probing'; exit 2 ;;
+  esac
+  python3 - "$@" <<'PYPROBE'
+import ipaddress
+import socket
+import sys
+
+try:
+    mode = sys.argv[1]
+    if mode not in ("remote", "local"):
+        raise ValueError("mode must be remote or local")
+    address = ipaddress.ip_address(sys.argv[2])
+    effective_address = getattr(address, "ipv4_mapped", None) or address
+    port = int(sys.argv[3])
+    if effective_address.is_unspecified or not 1 <= port <= 65535:
+        raise ValueError("use an observed listener address and a valid port")
+    if mode == "remote" and effective_address.is_loopback:
+        raise ValueError("remote mode needs the non-loopback node IP")
+    if mode == "local" and not effective_address.is_loopback:
+        raise ValueError("local mode needs the listener's loopback IP")
+except ValueError as exc:
+    sys.exit(f"Invalid target; not probing: {exc}")
+try:
+    with socket.create_connection((str(address), port), timeout=5):
+        print("CONNECTED: this internal listener is reachable from this host")
+except OSError as exc:
+    sys.exit(f"NO CONNECTION: {exc}; inconclusive without the paired control")
+PYPROBE
+)
+```
+
+For cross-node endpoints in an intentionally exposed test deployment, the outside probe should report `CONNECTED`. After isolation, the trusted peer must still connect while the outside probe reports `NO CONNECTION`; confirm that firewall logs or counters attribute the latter to the intended rule. For deliberately loopback-only endpoints, the positive control is `CONNECTED` from the same network namespace; both remote probes should report `NO CONNECTION`, supported by the confirmed loopback binds and absence of forwarding. A remote connection to such an endpoint exposes it; a trusted peer is not expected to connect. Where a firewall also blocks a tested path, collect its rule evidence. A negative remote result alone proves neither bind isolation nor firewall enforcement. A stopped process, changed dynamic port, wrong address, routing failure or local socket error is inconclusive. Capture the handshake while it is listening during startup. This checks TCP reachability only; verify any RDMA or other non-TCP transport separately with the selected backend's tools.
+
 ## Sources (checked September 2026)
 
 - llama.cpp server README (defaults, `--api-key` and its `LLAMA_API_KEY` environment input, `--api-key-file` ("path to file containing API keys, one per line") and its `LLAMA_ARG_API_KEY_FILE` environment input, the `LLAMA_ARG_*` environment inputs most options carry, `LLAMA_ARG_HOST` for `--host` among them, SSL flags): https://github.com/ggml-org/llama.cpp/blob/e0dff58475bc9ed68eedcb265ee998f2fcabb3b1/tools/server/README.md
 - vLLM documentation: https://docs.vllm.ai/
-- vLLM server host default (`FrontendArgs.host` defaults to `None`; checked 2026-09-14): https://github.com/vllm-project/vllm/blob/dee37d89115db4c94a820a79a78a7828e141c910/vllm/entrypoints/launchers/cli_args.py
-- vLLM server socket bind (the launcher builds `(args.host or "", port)`, so an unset host binds every IPv4 interface, and renders the empty host as `0.0.0.0` in the startup log; checked 2026-09-14): https://github.com/vllm-project/vllm/blob/8c1557a79c539ffe82d004d2a0c8d7b5e71159ce/vllm/entrypoints/launchers/launcher.py
-- vLLM security, API key authentication limitations (protected prefixes, unprotected `/invocations` and profiler routes): https://docs.vllm.ai/en/latest/usage/security/
+- vLLM v0.30.0 network isolation, TCPStore warning and Ray trust model: https://github.com/vllm-project/vllm/blob/v0.30.0/docs/usage/security.md#L3-L55, https://github.com/vllm-project/vllm/blob/v0.30.0/docs/usage/security.md#L109-L138 and https://github.com/vllm-project/vllm/blob/v0.30.0/docs/usage/security.md#L442-L538
+- vLLM v0.30.0 node-address detection, open-port allocator and unauthenticated ZMQ socket construction: https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/utils/network_utils.py#L34-L73, https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/utils/network_utils.py#L166-L247 and https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/utils/network_utils.py#L310-L368
+- vLLM v0.30.0 engine IPC/TCP addresses, handshake and DP coordinator: https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/v1/engine/utils.py#L1039-L1084, https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/v1/engine/utils.py#L1130-L1247 and https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/v1/engine/coordinator.py#L79-L97; Ray V2 dynamic store: https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/v1/executor/ray_executor_v2.py#L127-L139
+- vLLM v0.30.0 DP flags and headless deployment examples: https://github.com/vllm-project/vllm/blob/v0.30.0/docs/serving/data_parallel_deployment.md#L31-L74; headless execution: https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/entrypoints/cli/serve.py#L215-L253
+- vLLM v0.30.0 parallel configuration defaults and initialization: https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/config/parallel.py#L100-L330 and https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/config/parallel.py#L890-L960; serving address selection: https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/engine/arg_utils.py#L2310-L2336
+- vLLM v0.30.0 TCP/file rendezvous and stateless stores: https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/distributed/parallel_state.py#L1793-L1880 and https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/distributed/utils.py#L467-L506 and https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/distributed/utils.py#L634-L647; remote message-queue bind: https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/distributed/device_communicators/shm_broadcast.py#L519-L537; backend address selection: https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/v1/executor/multiproc_executor.py#L148-L169 and https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/v1/executor/ray_executor_v2.py#L327-L336
+- vLLM v0.30.0 single-GPU file-store path and Gloo group creation: https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/v1/executor/uniproc_executor.py#L77-L88, https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/utils/network_utils.py#L135-L147 and https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/distributed/parallel_state.py#L494-L508
+- vLLM v0.30.0 environment settings for node IP/ports, offline DP and connector side channels: https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/envs.py#L701-L715, https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/envs.py#L1433-L1445 and https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/envs.py#L1650-L1680
+- vLLM v0.30.0 NIXL handshake address and listener: https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/distributed/kv_transfer/kv_connector/v1/nixl/base_scheduler.py#L75-L79 and https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/distributed/kv_transfer/kv_connector/v1/nixl/base_scheduler.py#L299-L382; Mooncake bootstrap and worker listeners: https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/distributed/kv_transfer/kv_connector/v1/mooncake/mooncake_connector.py#L948-L1035 and https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/distributed/kv_transfer/kv_connector/v1/mooncake/mooncake_connector.py#L1160-L1187; producer worker activation: https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/distributed/kv_transfer/kv_connector/v1/mooncake/mooncake_connector.py#L1793-L1801; bootstrap rank selection and port: https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/distributed/kv_transfer/kv_connector/v1/mooncake/mooncake_connector.py#L2261-L2296
+- vLLM v0.30.0 gRPC selector and insecure bind: https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/entrypoints/launchers/cli_args.py#L424-L429 and https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/entrypoints/launchers/grpc_server.py#L87-L118; DP supervisor routes and bind: https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/entrypoints/launchers/dp_supervisor.py#L118-L132, https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/entrypoints/launchers/dp_supervisor.py#L220-L238 and https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/entrypoints/launchers/dp_supervisor.py#L322-L349; supervisor activation: https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/entrypoints/cli/serve.py#L85-L95 and https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/entrypoints/cli/serve.py#L145-L148
+- vLLM v0.30.0 frontend defaults (`host=None`, port 8000; unchanged, checked 2026-09-26): https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/entrypoints/launchers/cli_args.py#L256-L266
+- vLLM v0.30.0 frontend socket bind (unset host binds every IPv4 interface; unchanged, checked 2026-09-26): https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/entrypoints/launchers/launcher.py#L211-L225 and https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/entrypoints/launchers/launcher.py#L270-L288
+- vLLM v0.30.0 API key scope (including `/cohere`), unprotected `/invocations` and profiler routes: https://github.com/vllm-project/vllm/blob/v0.30.0/docs/usage/security.md#L140-L247 and https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/entrypoints/serve/middleware/authenticate.py#L11-L62
 - vLLM `--api-key` (`FrontendArgs.api_key`, a list of keys; read in source, not run): https://github.com/vllm-project/vllm/blob/dee37d89115db4c94a820a79a78a7828e141c910/vllm/entrypoints/launchers/cli_args.py#L304 and https://github.com/vllm-project/vllm/blob/8c1557a79c539ffe82d004d2a0c8d7b5e71159ce/vllm/entrypoints/launchers/cli_args.py#L296
 - vLLM `VLLM_API_KEY`, declared in `envs.py` (https://github.com/vllm-project/vllm/blob/dee37d89115db4c94a820a79a78a7828e141c910/vllm/envs.py#L803, https://github.com/vllm-project/vllm/blob/8c1557a79c539ffe82d004d2a0c8d7b5e71159ce/vllm/envs.py#L801) and read as the fallback when `--api-key` is unset, the CLI taking precedence (identical at both commits): https://github.com/vllm-project/vllm/blob/dee37d89115db4c94a820a79a78a7828e141c910/vllm/entrypoints/serve/middleware/register.py#L32-L36
 - vLLM `--config` YAML loader (expanded only when `--config` is its own argument, `.yaml` or `.yml` required, `yaml.safe_load`, each key turned into the option `--<key>` and merged into the in-process argument list before parsing): https://github.com/vllm-project/vllm/blob/dee37d89115db4c94a820a79a78a7828e141c910/vllm/utils/argparse_utils.py#L329-L330, #L517-L548, #L585-L596 and #L621-L622
@@ -21645,12 +21788,21 @@ For text-generation-webui, ask the API edge for the model list without a key. Th
 - TGI repository (maintenance-mode notice, archived 2026-03-21): https://github.com/huggingface/text-generation-inference
 - SGLang server arguments (--host, --port, --api-key, --admin-api-key, SSL flags; docs.sglang.ai redirects here): https://docs.sglang.io/docs/advanced_features/server_arguments
 - Triton secure deployment considerations: https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/customization_guide/deploy.html
-- Triton quickstart (default listeners on 8000, 8001, 8002): https://github.com/triton-inference-server/server/blob/0194c3da9ddeeff07547f46aa058cf88acb51893/docs/getting_started/quickstart.md
-- Triton inference protocols (gRPC SSL flags, restricted APIs): https://github.com/triton-inference-server/server/blob/c29bbe17eac256bbcd8fea47cde2f219d2be37cf/docs/customization_guide/inference_protocols.md
-- Triton command line parser (address and port flags with defaults): https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc
+- Triton listener defaults: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.h#L191-L219 and https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/grpc/grpc_server.h#L51-L67
+- Triton gRPC TLS flags and restricted protocols: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L558-L576 and https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L632-L640
+- Triton command line parser (HTTP address and port, restricted APIs): https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L477-L516
+- Triton cloud endpoints outside the restriction flags (commit 546a78766fb112128aa0b10a70c55f4f39c3b1df): the SageMaker multi-model invoke dispatch, which reaches inference without a restriction check, and the Vertex AI redirect header with its unrestricted `metrics` target: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/sagemaker_server.cc#L198-L225, https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/vertex_ai_server.cc#L34-L37, https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/vertex_ai_server.cc#L142-L145 and https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/vertex_ai_server.cc#L245-L272; shared-memory platform limits: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/docs/protocol/extension_shared_memory.md#L65-L68
 - Triton `--http-restricted-api` and `--grpc-restricted-protocol`, parsed from argv by `getopt_long` only (traced at 546a787 across `src/`: the option definitions, the parse loop and the two cases handing `optarg` to `ParseRestrictedFeatureOption`, no option or response file, and every `getenv`/`GetEnvironmentVariableOrDefault` under `src/` reading a non-secret name): https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L508-L516, #L632-L640, #L1329-L1330, #L1420-L1423 and #L1561-L1566
-- Triton restricted API groups, `inference` among them: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/restricted_features.h#L54-L57 and https://github.com/triton-inference-server/server/blob/c29bbe17eac256bbcd8fea47cde2f219d2be37cf/docs/customization_guide/inference_protocols.md#L153-L196
-- Triton model control mode `NONE`, the default, returning an error for load and unload requests: https://github.com/triton-inference-server/server/blob/c29bbe17eac256bbcd8fea47cde2f219d2be37cf/docs/user_guide/model_management.md#L35-L45
+- Triton category names and initially unrestricted state: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/restricted_features.h#L37-L112
+- Triton HTTP route patterns and dispatch: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L1140-L1149 and https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L4786-L4885
+- Triton dynamic logging (mutable settings, file-path disclosure, refusal to change the file path): https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L2031-L2149
+- Triton trace settings API and file-path refusal: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L1759-L2027; defaults: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.h#L180-L188; runtime updates and file-path requirement: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/tracer.cc#L221-L232 and https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/tracer.cc#L1244-L1249; startup trace flags: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L739-L750, https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L2247-L2278 and https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L2297-L2312
+- Triton client shared memory (disabled by default, opt-in flag, platform limits): https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/docs/protocol/extension_shared_memory.md#L29-L68; status and mutation handlers: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L2177-L2378
+- Triton repository index and inline load overrides: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/docs/protocol/extension_model_repository.md#L59-L90, https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/docs/protocol/extension_model_repository.md#L136-L152 and https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/docs/protocol/extension_model_repository.md#L350-L400
+- Triton model configuration and statistics reads: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L1684-L1755; generation routes use the inference restriction: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L3324-L3334
+- Triton restriction grouping/parser: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L2095-L2163; gRPC header prefix: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/grpc/grpc_server.h#L47-L49; HTTP rejection: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L4939-L4953; gRPC rejection: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/grpc/grpc_server.cc#L194-L225
+- Triton metrics path and unauthenticated Prometheus handler: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.h#L143-L157 and https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L308-L345; metrics controls: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L708-L725
+- Triton model control modes (`none` by default, repository polling under `poll`, API load/unload under `explicit`): https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L424-L434
 - LM Studio local server: https://lmstudio.ai/docs/developer/core/server
 - LM Studio serve on local network: https://lmstudio.ai/docs/developer/core/server/serve-on-network
 - LM Studio server settings: https://lmstudio.ai/docs/developer/core/server/settings
@@ -22375,6 +22527,8 @@ ss -tlnp   # expect 8080 on loopback or a private address; then probe the public
 # Auth discrimination against the SAME editor URL: a proxy 401 proves nothing, so pair an unauthenticated
 # request with an authenticated one and confirm the editor in a fresh browser session too.
 (
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  set +x +a +e
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_EDITOR_URL'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
   shift
@@ -22390,8 +22544,6 @@ ss -tlnp   # expect 8080 on loopback or a private address; then probe the public
     -w '\nunauth http=%{http_code} url=%{url_effective} exit=%{exitcode} err=%{errormsg}\n' "$1"
   # 2) Authenticated positive control: paste a cookie from a valid browser session; it enters via stdin
   #    (curl --header @-), never argv. The authenticated response must contain the editor.
-  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
   { unset -n code_server_cookie && unset -v code_server_cookie; } 2>/dev/null ||
     { echo 'cannot initialize cookie input; not probing'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
@@ -22558,7 +22710,7 @@ Each server listens on plain TCP; publish only a reverse proxy ([nginx.md](nginx
 |---|---|
 | Qdrant | 6333 (REST), 6334 (gRPC), 6335 (internal cluster gRPC, distributed mode only) |
 | Weaviate | 8080 (HTTP), 50051 (gRPC) |
-| Milvus | 19530 (gRPC), 9091 (WebUI); internal: 19529, 21123, 21124, 22125, 22222 |
+| Milvus | 19530 (gRPC), 9091 (management/metrics HTTP, optional WebUI); internal: 19529, 21123, 21124, 22125, 22222 |
 | Chroma | 8000 |
 | pgvector | 5432 (it is PostgreSQL) |
 
@@ -22636,9 +22788,11 @@ common:
 
 Clients then connect with `secure=True` and the server certificate path. TLS and authentication are independent in Milvus; enable both.
 
-Milvus's internal component servers listen beyond 19530. In v3.0.2 and v2.6.24 (the latest 3.x and 2.6 releases checked), the proxy's internal port (19529), the query node (21123), the data node (21124), the mix coordinator (22125, the `rootCoord` port) and the streaming node (22222) each bind every interface: the listener is given only the port (and the query node, data node and streaming node fall back to a random port, still on every interface, when theirs is taken), and each component's `ip` setting is the address it advertises, not a bind address. Their gRPC interceptors check only routing metadata and pass a call that carries none, so these internal APIs, which include the query node's `Search` and `Query`, check no credentials; `authorizationEnabled` is enforced on the proxy's external client APIs, not on these internal ports. Internal TLS (`common.security.internaltlsEnabled`, off by default) is one-way, as Milvus's TLS documentation says: it encrypts the traffic but does not authenticate the caller, and if a component cannot load its certificate or key it logs a warning and serves plaintext. A standalone (or embedded) Milvus runs all five components, so keep every one of these ports reachable only by the Milvus deployment itself: publish only 19530, and only as section 1 describes (to loopback, or behind a reverse proxy, tunnel or tailnet), give Milvus a network of its own rather than attaching other workloads to it, do not run the container with host networking or share its network namespace with other workloads, and confine them with a default-deny network policy (on Kubernetes) or a default-deny host firewall (for a native, embedded or single-host install too) that admits only the traffic you intend, admitting Milvus peers by source (by pod selector in a network policy, by address in a host firewall) rather than by port, so other hosts are refused on the random fallback ports as well as on these port numbers. Neither control reliably stops processes on the same machine: a local process can reach a native install over loopback and a container or pod directly at its own address, and a Kubernetes NetworkPolicy always allows traffic between a pod and the node it runs on. So keep untrusted workloads and users off every host that runs a Milvus component, Kubernetes nodes included.
+Milvus's internal component servers listen beyond 19530. In v3.0.2 and v2.6.24 (the latest 3.x and 2.6 releases checked), the proxy's internal port (19529), the query node (21123), the data node (21124), the mix coordinator (22125, the `rootCoord` port) and the streaming node (22222) each bind every interface: the listener is given only the port (and the query node, data node and streaming node fall back to a random port, still on every interface, when theirs is taken), and each component's `ip` setting is the address it advertises, not a bind address. Their gRPC interceptors check only routing metadata and pass a call that carries none, so these internal APIs, which include the query node's `Search` and `Query`, check no credentials; `authorizationEnabled` is enforced on the proxy's external client APIs, not on these internal ports. Internal TLS (`common.security.internaltlsEnabled`, off by default) is one-way, as Milvus's TLS documentation says: it encrypts the traffic but does not authenticate the caller, and if a component cannot load its certificate or key it logs a warning and serves plaintext. A standalone (or embedded) Milvus runs all five components, so keep every one of these ports reachable only by the Milvus deployment itself: publish only 19530 (with one exception for 9091, below), and only as section 1 describes (to loopback, or behind a reverse proxy, tunnel or tailnet), give Milvus a network of its own rather than attaching other workloads to it, do not run the container with host networking or share its network namespace with other workloads, and confine them with a default-deny network policy (on Kubernetes) or a default-deny host firewall (for a native, embedded or single-host install too) that admits only the traffic you intend, admitting Milvus peers by source (by pod selector in a network policy, by address in a host firewall) rather than by port, so other hosts are refused on the random fallback ports as well as on these port numbers. Neither control reliably stops processes on the same machine: a local process can reach a native install over loopback and a container or pod directly at its own address, and a Kubernetes NetworkPolicy always allows traffic between a pod and the node it runs on. So keep untrusted workloads and users off every host that runs a Milvus component, Kubernetes nodes included.
 
 Milvus's standalone `docker-compose.yml` publishes more than Milvus itself: it maps its bundled MinIO object store to the host on `9000` (S3 API) and `9001` (console) on every interface, beside the Milvus ports above, while etcd stays on the internal network. Give those two ports the same treatment as Milvus's own: loopback-map or firewall them off the public mapping, and change MinIO's default login, since authenticating Milvus does nothing for a MinIO published next to it ([minio.md](minio.md)).
+
+In v2.6.24 and v3.0.2, the management/metrics HTTP listener (9091 by default) also serves control routes that check no credentials; `common.security.authorizationEnabled` covers only the proxy's `/api/v1` routes on the same port. The routes named here are representative, not a full list. Every Milvus server process serves `/log/level`, which reads or changes the log level, and, after its components' startup calls return successfully, `/management/stop`, which stops a role running in that process. A process running the proxy adds routes that pause and resume garbage collection, suspend and resume query nodes and balancing, and transfer segments and channels, plus `/management/rootcoord/ez/backup`, which returns a named database's encryption-zone key backup (`ezk`) in its response where a cipher plugin supports it; v3.0.2 adds routes that clear queued reads and commit backfill results from a caller-supplied path. An activated mix coordinator adds its own garbage-collection, balancing, node-suspension and transfer routes, and routes that alter mutable configuration (`/management/config/alter`) and change the WAL backend. A standalone process runs both. With `proxy.http.enablePprof` at its default `true` at startup, the same listener also serves Go's `/debug/pprof/` profiling handlers. The first request to `/eventlog` that successfully creates it starts a further gRPC listener, with no authentication or TLS, on a random port on every interface of the process's network namespace. Setting `proxy.http.enableWebUI: false` before startup omits the UI but leaves every one of these controls, and setting `proxy.http.enablePprof: false` before startup leaves out the profiling handlers while the control routes are still registered. The listener binds every interface in its network namespace, with no bind-address flag, config key or environment variable. `METRICS_PORT` changes only its port: a value `strconv.Atoi` rejects (unset, empty, non-numeric, or an integer too large for it) falls back to 9091, `0` takes a random port, and any other parsed value outside 1 to 65535 makes the listen fail, which Milvus logs without stopping. The standalone Compose files at those tags publish `9091:9091`, which binds every host interface under Docker's default publishing settings (the files select v2.6.23 and v3.0.1 images respectively). Delete that mapping: the in-container `http://localhost:9091/healthz` probe does not need it, and the rule above is to publish only 19530. If an administrator on the Docker host needs the listener, the one exception is a loopback-only mapping, `127.0.0.1:9091:9091`, firewalled from everyone else. If you choose another fixed `METRICS_PORT`, set it under the `standalone` service's `environment:`, since the Compose files do not pass it through from your shell, and adjust the container port in any mapping and in the healthcheck. Retain the network and host isolation above: loopback publication does not isolate the container from same-network peers or local users; see [docker.md](docker.md) for publication and firewall caveats. How the Helm chart and the Operator expose 9091 was not checked; backlog row 1.149 tracks it.
 
 ## 5. Chroma: no native authentication since 1.0
 
@@ -22728,6 +22882,8 @@ curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code} exit=%{exitcode}
 
 For Milvus, a `MilvusClient(uri=...)` call with no `token` must fail once `authorizationEnabled` is on, and the same call with the application user's credentials must succeed.
 
+Client authentication does not cover Milvus's management listener (section 4), so probe it separately. Run the backend-port block above with `9091` on its `set --` line, from a host outside your administrators' network, against the node's real address, and read it by the rules given for 6335: any sign the connection completed is a fail. Where you kept the loopback-only mapping, run it again on the Docker host against `127.0.0.1`: a completed connection there is the positive control for that mapping. With the mapping deleted, as recommended, the positive control has two parts, both inside the container. `docker compose ps` must show the `standalone` service as `healthy`, which means its in-container `curl -f http://localhost:9091/healthz` got a non-error answer. The `ss -tulnp` inventory, run in the container's network namespace, must also show that port held by the `milvus` process, because `healthy` alone says only that something answered there: another process in the namespace could hold the port, and `/healthz` can answer before every component has registered. A failed bind is only logged and Milvus keeps running, so a refused probe from outside proves nothing on its own. With a different `METRICS_PORT`, read that port in both checks. The `/eventlog` listener has no fixed port, so find any other port the Milvus process holds in the `ss -tulnp` inventory above, run inside the container's network namespace as well, and probe those ports the same way. A port missing from the inventory was only missing when you looked: the listener is created on the first request, so repeat the inventory after anything has called `/eventlog`. These probes are reasoned, not demonstrated (no Milvus deployment or container runtime in the authoring environment); backlog row 1.149 tracks demonstrating the exposed and fixed states.
+
 None of the checks above tests isolation between tenants. Where one embeddings table serves several users or tenants under the row-level security above, prove the boundary as well as the ports: connect as the role for tenant B, run the similarity search tenant A would run, and confirm only tenant B's rows come back. For the positive control, run the same query as a role that bypasses the policy (a superuser or a role with `BYPASSRLS`; the table owner also bypasses unless the table has `FORCE ROW LEVEL SECURITY`) and confirm tenant A's rows now appear. Count rows per tenant, or drop the `LIMIT`, rather than trusting the top-k result: the nearest neighbours of tenant A's query vector can legitimately all be tenant A's rows even with the policy off, so an empty other-tenant result there does not by itself prove the policy is filtering. A query that returns another tenant's vectors under tenant B's own role is a live cross-user leak, whatever the network posture. This isolation check is reasoned, not demonstrated: the authoring environment has no live multi-tenant pgvector table to run it against; backlog row 1.71 tracks demonstrating it in the exposed and fixed states.
 
 ## Sources (checked September 2026)
@@ -22745,7 +22901,15 @@ None of the checks above tests isolation between tenants. Where one embeddings t
 - Weaviate REST `--host`/`--port` and their `HOST`/`PORT` variables, the REST listen call, the gRPC listener, started unconditionally, on `:<GRPC_PORT>` with no host field in its configuration and its 50051 default, the debug listener on `:<GO_PROFILING_PORT>` (default 6060) with its disable switch and 404 gate, the Prometheus listener on `:<port>` (2112 when enabled from the environment), and the image's `--host 0.0.0.0 --port 8080`, built by `ci/push_docker.sh` from the root `Dockerfile`'s `weaviate` target (pinned tag v1.39.6), with go-flags v1.6.1 reading `HOST` through `os.LookupEnv`, so an empty value replaces the default: https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/server.go#L89-L90, https://github.com/jessevdk/go-flags/blob/v1.6.1/option.go#L328-L343, https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/configure_api.go#L569, https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/configure_api.go#L2613-L2657, https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/handlers_debug_gate.go#L23-L33, https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L329-L336, https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L502-L509, https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/configure_api.go#L207, https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/configure_api.go#L223-L275, https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L95-L98, https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/server.go#L377, https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/configure_api.go#L1664, https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/grpc.go#L27-L33, https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/grpc/server.go#L475-L477, https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/config_handler.go#L947-L955, https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L1050-L1054, https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L2029, https://github.com/weaviate/weaviate/blob/v1.39.6/Dockerfile#L57-L63, https://github.com/weaviate/weaviate/blob/v1.39.6/ci/push_docker.sh#L5, https://github.com/weaviate/weaviate/blob/v1.39.6/ci/push_docker.sh#L114 and https://github.com/weaviate/weaviate/blob/v1.39.6/ci/push_docker.sh#L131
 - Weaviate's configuration precedence (config file, then environment, then flags), REST schemes (`--scheme`, default from the API spec's `https`) and the fatal exit when `https` has no certificate, the Prometheus port variable, the TLS listener's `--tls-host`/`TLS_HOST` falling back to `--host` and `--tls-port`/`TLS_PORT`, `--socket-path`, and its cluster listeners: gossip bind address and ports, the data port default, Raft and its RPC port defaults and bind address, the unconditional cluster init and cluster API server (pinned tag v1.39.6), with memberlist v0.5.4's `0.0.0.0:7946` default, its TCP and UDP listeners and its private advertise address: https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/server.go#L47-L53, https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/server.go#L81, https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/server.go#L149-L160, https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/server.go#L86, https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/server.go#L97-L100, https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/server.go#L303-L310, https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/embedded_spec.go#L39-L41, https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/config_handler.go#L1305-L1340, https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/config_handler.go#L1371-L1377, https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/server.go#L345-L349, https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L37-L38, https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L1898-L1914, https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L1926-L1942, https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L733-L736, https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/config_handler.go#L1333-L1336, https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/configure_api.go#L1736-L1739, https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L320-L326, https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L1617-L1627, https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L2059-L2061, https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L2145-L2188, https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/cluster/state.go#L431-L446, https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/cluster/state.go#L662-L673, https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/cluster/state.go#L695-L705, https://github.com/weaviate/weaviate/blob/v1.39.6/cluster/store.go#L591-L592, https://github.com/weaviate/weaviate/blob/v1.39.6/cluster/service.go#L152, https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/configure_api.go#L636, https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/configure_api.go#L822-L823, https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/configure_api.go#L1804, https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/clusterapi/serve.go#L47-L49, https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/clusterapi/serve.go#L140, https://github.com/weaviate/weaviate/blob/v1.39.6/go.mod#L54, https://github.com/hashicorp/memberlist/blob/v0.5.4/config.go#L302-L307, https://github.com/hashicorp/memberlist/blob/v0.5.4/net_transport.go#L96-L110 and https://github.com/hashicorp/memberlist/blob/v0.5.4/net_transport.go#L140-L160
 - Milvus authentication (`common.security.authorizationEnabled`, default `root`/`Milvus`, `update_password`): https://milvus.io/docs/authenticate.md
-- Milvus TLS (`tls.*` paths, `common.security.tlsMode`, RESTful port note): https://milvus.io/docs/tls.md ; standalone install (ports 19530 and 9091): https://milvus.io/docs/install_standalone-docker.md
+- Milvus TLS (`tls.*` paths, `common.security.tlsMode`, RESTful port note): https://milvus.io/docs/tls.md
+- Milvus management HTTP listener, v2.6.24 (commit 08c637c14373ec904dcac08e4df67279de421917): default port, direct log-level and stop handlers, conditional WebUI, mux without authentication, wildcard bind and METRICS_PORT parsing; process startup and stop callback; available flags: https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/http/server.go#L38-L40, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/http/server.go#L77-L120, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/http/server.go#L215-L260, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/cmd/roles/roles.go#L458-L459, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/cmd/roles/roles.go#L529-L544 and https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/cmd/milvus/util.go#L124-L199
+- Milvus management HTTP listener, v3.0.2 (commit 3c4448a2aee506ccd14851e742aba85f1c83188a): the same controls and listener inputs: https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/http/server.go#L37-L39, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/http/server.go#L82-L127, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/http/server.go#L230-L275, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/cmd/roles/roles.go#L500-L501, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/cmd/roles/roles.go#L575-L590 and https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/cmd/milvus/util.go#L123-L198
+- Milvus control and profiling routes on the same listener, v2.6.24 (commit 08c637c14373ec904dcac08e4df67279de421917) and v3.0.2 (commit 3c4448a2aee506ccd14851e742aba85f1c83188a): the proxy's management routes, registered with no credential check, the encryption-zone key backup among them, and the two v3.0.2 additions: https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/proxy/management.go#L42-L97, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/proxy/management.go#L594-L620, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/proxy/management.go#L42-L105, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/proxy/management.go#L198-L244, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/proxy/management.go#L427-L447 and https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/proxy/management.go#L700-L726; the mix coordinator's routes, registered on activation: https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/coordinator/restful_mgr_routes.go#L36-L74, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/coordinator/mix_coord.go#L237-L240, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/coordinator/restful_mgr_routes.go#L33-L71 and https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/coordinator/mix_coord.go#L242-L245; `authorizationEnabled` applied to the proxy's `/api/v1` group only: https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/distributed/proxy/service.go#L169-L186 and https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/distributed/proxy/service.go#L168-L185; the pprof import and its default: https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/metrics/metrics.go#L21, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/metrics/metrics.go#L21, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/util/paramtable/http_param.go#L71-L78 and https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/util/paramtable/http_param.go#L76-L83; the event-log listener: https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/eventlog/grpc.go#L113-L146 and https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/eventlog/grpc.go#L113-L146; `strconv.Atoi` range errors: https://pkg.go.dev/strconv#Atoi
+- Milvus encryption-zone key backup and event-log handler, v2.6.24 (commit 08c637c14373ec904dcac08e4df67279de421917) and v3.0.2 (commit 3c4448a2aee506ccd14851e742aba85f1c83188a): the backup refuses a database that is not an encryption zone and returns the plugin's backup otherwise: https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/rootcoord/root_coord.go#L3180-L3219, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/util/hookutil/cipher.go#L390-L401, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/rootcoord/root_coord.go#L3464-L3503 and https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/util/hookutil/cipher.go#L389-L400; the `/eventlog` handler creating the listener on request: https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/eventlog/handler.go#L50-L65 and https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/eventlog/handler.go#L48-L63; the Compose service's environment, which does not pass `METRICS_PORT`, and its healthcheck: https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/deployments/docker/standalone/docker-compose.yml#L39-L66 and https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/deployments/docker/standalone/docker-compose.yml#L39-L66
+- Milvus `/healthz` handler, v2.6.24 (commit 08c637c14373ec904dcac08e4df67279de421917) and v3.0.2 (commit 3c4448a2aee506ccd14851e742aba85f1c83188a): it answers 500 while any registered component is neither healthy nor on standby, and 200 otherwise, including before any component has registered: https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/http/healthz/healthz_handler.go#L89-L130 and https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/http/healthz/healthz_handler.go#L87-L128; curl's `--fail` exit on an HTTP error: https://curl.se/docs/manpage.html#-f; Docker's health status from the check's exit code: https://docs.docker.com/reference/dockerfile/#healthcheck
+- Milvus standalone Compose at v2.6.24 and v3.0.2: selected image tags, standalone command, localhost healthcheck, explicit publications of 19530 and 9091, and default network: https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/deployments/docker/standalone/docker-compose.yml#L39-L66 and https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/deployments/docker/standalone/docker-compose.yml#L39-L66
+- Milvus log-level handler dependency (zap v1.27.0, GET reads and PUT changes the level): https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/log/log.go#L278-L280, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/mlog/level.go#L72-L74, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/go.mod#L47, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/go.mod#L43 and https://github.com/uber-go/zap/blob/v1.27.0/http_handler.go#L69-L103
+- Docker port publication: default host binding, explicit loopback mapping, same-network and host access, direct-routing and older-engine caveats: https://docs.docker.com/engine/network/port-publishing/
 - Chroma migration notes (v1.0.0 removal of built-in authentication; 2024 auth overhaul variables): https://docs.trychroma.com/docs/overview/migration ; client-server mode (`chroma run --path`, port 8000): https://docs.trychroma.com/docs/run-chroma/client-server
 - Chroma `chroma run`: the `--host` default `localhost` applied only without a config file, the config-file branch, the `listen_address` and `port` defaults `0.0.0.0` and 8000, `CHROMA_` variables merged when a file is loaded, the server's bind of `listen_address:port`, and the release image (`rust/Dockerfile` target `cli`, `chroma run /config.yaml` from `docker_single_node.yaml`) (pinned tag 1.5.9): https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L39-L45, https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L60-L73, https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L114-L134, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L140-L146, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L176-L179, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L216-L229, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/server.rs#L415-L417, https://github.com/chroma-core/chroma/blob/1.5.9/rust/Dockerfile#L85-L93, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/sample_configs/docker_single_node.yaml and https://github.com/chroma-core/chroma/blob/1.5.9/.github/workflows/_build_release_container.yml#L101-L106
 - pgvector (`CREATE EXTENSION vector`, PostgreSQL 13 and later): https://github.com/pgvector/pgvector
@@ -23175,7 +23339,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
 # Ray: dashboard, Jobs, and Client ports execute code
 
-Ray's own security page is blunt: if you expose the Ray Dashboard, Ray Jobs, or Ray Client services, "anybody who can access the associated ports can execute arbitrary code on your Ray Cluster", explicitly by submitting a Job or connecting a Client, indirectly through the Dashboard REST API, and implicitly because Ray deserializes arbitrary Python objects with cloudpickle. Ray "doesn't implement access controls for developers interacting with a given cluster"; security and isolation "must be enforced outside of the Ray Cluster". The ports in question are the dashboard (and Jobs API) on `8265`, the Ray Client server on `10001`, and the head node port `6379`, all plain HTTP or gRPC with no login of their own unless you enable token authentication (step 3).
+Ray's own security page is blunt: if you expose the Ray Dashboard, Ray Jobs, or Ray Client services, "anybody who can access the associated ports can execute arbitrary code on your Ray Cluster", explicitly by submitting a Job or connecting a Client, indirectly through the Dashboard REST API, and implicitly because Ray deserializes arbitrary Python objects with cloudpickle. Ray "doesn't implement access controls for developers interacting with a given cluster"; security and isolation "must be enforced outside of the Ray Cluster". The head ports in question are the dashboard (and Jobs API) on `8265`, the Ray Client server on `10001`, and the head node port `6379`, all plain HTTP or gRPC with no login of their own unless you enable token authentication (step 3). The per-node agent listeners in step 2 add independent paths to job submission, logs, profiling, runtime environments and metrics.
 
 ## 1. Keep the dashboard on loopback
 
@@ -23205,6 +23369,15 @@ Ray expects "a controlled, isolated network" between all its components. Beyond 
 - Ray Serve replicas open an inter-deployment gRPC server on `[::]` with an OS-chosen port ([`replica.py`](https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/serve/_private/replica.py#L1778)).
 
 Those two points are read from the source and were not run. In each of four loopback runs with `--node-ip-address=127.0.0.1`, the GCS still listened on `*:6379`, and the cause was not established. Put every node of a cluster in one private network or security group that admits only the cluster's own members ([cloud-firewalls.md](cloud-firewalls.md), [host.md](host.md), [kubernetes.md](kubernetes.md)), and expose nothing from that group to the internet. The Ray Client port in particular is a remote code execution endpoint by design; use Ray Jobs over the forwarded dashboard port instead of publishing `10001`.
+
+Every node also runs two agent processes, the dashboard agent and the runtime env agent, and `--include-dashboard=false` stops neither: that flag only decides whether the head's dashboard process serves its API and UI (the process itself still starts, reduced to a usage-stats module), while normal head and worker startup supplies both agent commands to the raylet. Their four listeners, read from the Ray 2.58.0 source and not run, are the agent HTTP server with a default port below and three of the "several randomized ports" above. Minimal mode is selected when the optional dashboard dependencies cannot be imported, not by which install command was used: a base installation with those dependencies already present can run the full agent. In minimal mode the dashboard agent has no HTTP or gRPC server, and its reporter module and metrics exporter are absent; only the runtime env agent HTTP listener remains among these four. With the optional dependencies present, all four normally run, but disabling metrics collection skips the metrics exporter (collection is enabled by default).
+
+- The dashboard agent serves HTTP on port `52365` by default on every non-minimal head and worker (`--dashboard-agent-listen-port` changes it); this default also applies to local clusters started by `ray.init()`. It binds the effective node IP and adds a listener on resolved localhost when `is_localhost(node_ip)` is false, meaning the address is not exactly `127.0.0.1`, `::1` or `localhost`. It serves the Jobs agent API, whose `POST /api/job_agent/jobs/` runs an arbitrary entrypoint command on the cluster, with stop, delete, logs and log-tail routes beside it, and it serves the node's whole Ray log directory as static files under `/logs`, directory index included. The head dashboard's Jobs API on `8265` forwards job submission to the head node's agent, so a request straight to the head node's agent reaches the same job manager while skipping anything placed in front of `8265`. Each worker agent has its own job manager and also accepts cluster job submissions; the driver normally runs on the head, but resource requests, a label selector or `RAY_JOB_ALLOW_DRIVER_ON_WORKER_NODES=1` can allow worker placement. A network-reachable agent therefore remains a code-execution path even while step 1 keeps `8265` on loopback; direct access does not bypass the agent's own token check when enabled. Without token authentication its only filter is a heuristic that turns away browser-looking requests (a `Mozilla` User-Agent or browser-typical headers); a plain HTTP client without those browser markers passes it. With `RAY_AUTH_MODE=token` (step 3), every route on it requires the token except `/api/healthz` and `/api/local_raylet_healthz`.
+- The same agent opens a gRPC listener on an OS-assigned port by default (`--dashboard-agent-grpc-port` fixes it), on resolved localhost when the effective node address is exactly `127.0.0.1`, `::1` or `localhost`, and otherwise on the all-interfaces address, serving, among its registered services, log listing and streaming plus CPU, GPU and memory profiling services that attach profilers to processes on the node; token authentication, when enabled, adds an authentication interceptor here too.
+- The runtime env agent serves HTTP on an OS-assigned port by default (`--runtime-env-agent-port` fixes it), bound to the effective node IP, with routes that create and delete runtime environments, which is package installation on the node (step 5); its token middleware exempts no path, and without token authentication it answers any caller.
+- The non-minimal dashboard agent's reporter module, when metrics collection is enabled, serves Prometheus metrics on an OS-assigned port by default (`--metrics-export-port` fixes it). It passes resolved localhost when the effective node address is exactly `127.0.0.1`, `::1` or `localhost`, and otherwise an empty address, to a plain WSGI server with no authentication under any setting: the step 3 token never covers this endpoint, which is a separate server outside the agent's middleware. What it exposes is read-only cluster and host telemetry. Ray uses `wsgiref.simple_server.make_server` with its default `AF_INET` server: the empty address binds all IPv4 interfaces, and a resolved localhost of `::1` cannot bind that IPv4 socket. This IPv6 limitation is read from the source, not demonstrated with a Ray exporter.
+
+There is no independent bind-host setting for these listeners; their bind decisions use Ray's effective node address. `ray start` passes a supplied `--node-ip-address` through `resolve_ip_for_localhost`, which replaces `127.0.0.1`, `::1` and `localhost` with `get_node_ip_address()`; with cluster mode enabled this normally discovers a network address. Passing `--node-ip-address=127.0.0.1` therefore does not, by itself, give loopback agent binds. The `ray.init()` startup path performs the same normalization. `RAY_ENABLE_WINDOWS_OR_OSX_CLUSTER` controls whole-node address selection (disabled cluster mode selects resolved localhost), not an independent agent bind. These source paths do not establish the cause of the earlier GCS observations. Keep the network boundary and the step 3 token even when the dashboard is on loopback. For the agent gRPC listener, `GetAllInterfacesIP` selects `0.0.0.0`, or `::` when resolved localhost is IPv6, independently of the node address's family; the metrics server remains IPv4 as described above.
 
 Ray does not isolate jobs from each other. Workloads that must not see each other's data or credentials go on separate clusters.
 
@@ -23267,16 +23440,22 @@ For a plain `RayCluster`, the containers are at `spec.headGroupSpec.template.spe
 
 ## Verify
 
+**Per-node listener inventory, REASONED:** no isolated multi-node Ray cluster in the authoring environment (RAY-LIVE-1). Inventory listeners on **every head and worker**, in the network namespace where Ray runs. Use `sudo ss -tlnp` if needed to see their owning processes. Record the dashboard agent HTTP port (default 52365, or the configured `--dashboard-agent-listen-port`) and the actual dashboard agent gRPC, runtime env agent HTTP and metrics export ports from that inventory. The last three are OS-assigned by default, so repeat the inventory after a restart. Attribute each port to its agent process; do not guess from the worker-port range. In minimal mode only runtime env HTTP remains among these four; with metrics collection disabled the metrics exporter is absent. An expected listener missing without an established reason is inconclusive.
+
 ```bash
-ss -tlnp   # read every listener; 127.0.0.1:8265 (or the tailnet IP), never 0.0.0.0 or *
+ss -tlnp   # 8265: 127.0.0.1 (or the tailnet IP), never wildcard; agent gRPC and metrics can show wildcard binds (step 2)
 ss -tlnp   # read every listener; per the source, 10001 shows the node IP address (private in step 2's layout) plus a loopback listener, but 6379 can show every
            # interface (see step 2), so only the network boundary keeps it private
 ss -tlnp   # if you run Ray Serve, keep 8000 (HTTP proxy) private too, and 9000 (gRPC) when configured
-# from another network, checking that each externally facing Ray port (8265 dashboard, 6379 head, 10001
-# Client, plus 8000 if Ray Serve is deployed) is unreachable from outside: the first three execute arbitrary code with no cluster authentication, and the Serve proxy answers any caller because token auth (step 3) does not cover it, so every one of these origins must stay off untrusted networks whatever else fronts them. The pass is that
+# REASONED: no isolated multi-node Ray cluster in the authoring environment (RAY-LIVE-1).
+# From another network, repeat against every public IPv4 and IPv6 address of every head and worker
+# (enclose an IPv6 literal in square brackets). Check 8265 dashboard, 6379 head, 10001 Client and
+# 8000 if Ray Serve is deployed. The separate block below adds all four agent listeners.
+# Keep all these origins off untrusted networks, including when token authentication is enabled;
+# it does not cover Serve or metrics. The pass is that
 # no TCP connection formed: time_connect stays 0.000000 and err names a connection-level failure (refused,
 # no route, or a filtered-port connect timeout). A non-zero time_connect (even if the port then speaks gRPC
-# not HTTP, so http is 000) means the handshake completed and the port answered, which is the finding. A
+# not HTTP, so http is 000, or HTTP returns 401 or 403) means exposure, regardless of authentication. A
 # name-resolution or local socket error is inconclusive.
 (                                       # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_SERVER_PUBLIC_IP'   # replace inside the quotes, keeping them
@@ -23295,6 +23474,30 @@ ss -tlnp   # if you run Ray Serve, keep 8000 (HTTP proxy) private too, and 9000 
          -w 'port=8000 http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:8000/" || true ;;   # Ray Serve, if deployed; 9000 too when its gRPC proxy is configured
   esac
 )
+# REASONED: no isolated multi-node Ray cluster in the authoring environment (RAY-LIVE-1).
+# On EVERY head and worker, probe the default 52365 or its configured replacement first. Then run
+# this whole block again for EACH of the three actual agent ports recorded from ss above, where
+# present. Also repeat it for other inventoried listeners, including worker and Serve replica ports.
+# Use every externally routed node/container address, IPv4 and IPv6. Apply the reading rules above:
+# exposed means a completed TCP connection (even 401/403); fixed means no TCP connection formed.
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_NODE_PUBLIC_IP' '52365'   # replace inside the quotes
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute the node's public address; not probing" ;;
+    *) case "$2" in
+         *REPLACE_WITH_*|""|*[!0123456789]*) echo "supply the actual numeric listener port; not probing" ;;
+         *) if [ "${#2}" -gt 5 ] || [ "$2" -lt 1 ] || [ "$2" -gt 65535 ]; then
+              echo "port must be 1 to 65535; not probing"
+            else
+              curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
+                -w "port=$2 http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n" "http://$1:$2/" || true
+            fi ;;
+       esac ;;
+  esac
+)
 # Through the SSH tunnel of step 1, with RAY_AUTH_MODE=token on the cluster.
 # POSITIVE control first: WITH the token the submit succeeds, proving the endpoint is live and reachable:
 RAY_AUTH_MODE=token RAY_AUTH_TOKEN="$(cat ~/.ray/auth_token)" ray job submit --address http://127.0.0.1:8265 -- python -c "print(1)"   # succeeds (RAY_AUTH_MODE=token on the CLIENT makes it send the token header)
@@ -23308,7 +23511,44 @@ ray job submit --address http://127.0.0.1:8265 -- python -c "print(1)"   # must 
 # certificate-name mismatch), which must fail verification; a local configuration error is inconclusive.
 ```
 
-Service behaviour is not demonstrated here. A watcher stopped each of four loopback runs of Ray 2.58.0 on recording the GCS listening on every interface (`*:6379`), which the authoring host forbids. No isolated network namespace was available to contain the runs. The `ss` listener check runs locally, but the external-reachability probe, the token-authentication positive and negative controls, and the gRPC-TLS health-check are **REASONED**, written to be run against a live cluster in both the exposed and fixed states, tracked as RAY-LIVE-1 (`TODO.md` row 2.40).
+**Direct agent token control, REASONED:** no isolated multi-node Ray cluster in the authoring environment; tracked in RAY-LIVE-1. On every non-minimal head and worker, use a trusted path directly to that node's agent HTTP port, not the head dashboard or its proxy. Run on the node against its resolved localhost, or use a dedicated SSH forward to that agent; the step 1 forward for 8265 does not forward 52365. Substitute an origin such as `http://127.0.0.1:52365` (or its actual address and configured port), without a trailing slash. Send a token only over the trusted path.
+
+In an isolated exposed state with token mode off, select `anonymous`: a non-browser GET to `/logs/` should return 200 and the log directory index. With token mode on, first select `token` and supply the valid cluster token: expect the same access. Then select `anonymous` against that same live agent: expect 401. A connection error, 404, redirect, unexpected body or failed positive control is inconclusive; 403 is not the expected missing-token result. `/api/healthz` and `/api/local_raylet_healthz` are exempt and cannot discriminate token enforcement. These expectations follow the pinned static route and app-wide token middleware cited in Sources.
+
+This block assumes a clean Bash shell with trusted startup files. The hidden prompt and stdin header keep the token out of curl's argv and the pasted command history; they do not hide it from the account owner or root. Do not put the token in the pasted text.
+
+```bash
+(
+  trap - DEBUG RETURN ERR
+  set +x +a +e
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_TRUSTED_AGENT_ORIGIN' 'anonymous'   # replace inside the quotes; mode: anonymous or token
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute the trusted agent origin; not probing" ;;
+    *) case "$2" in
+         anonymous)
+           curl -q -g -s --noproxy '*' --connect-timeout 5 --max-time 10 \
+             -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/logs/" || true ;;
+         token)
+           { unset -n RAY_AGENT_PROBE_TOKEN && unset -v RAY_AGENT_PROBE_TOKEN; } 2>/dev/null || { echo 'cannot clear token variable; not probing'; exit 2; }
+           { unset -n IFS; } 2>/dev/null || { echo 'cannot clear IFS attributes; not probing'; exit 2; }
+           IFS= read -r -s -p 'Cluster token: ' RAY_AGENT_PROBE_TOKEN || { echo 'token read failed; not probing'; exit 2; }
+           printf '\n'
+           case "$RAY_AGENT_PROBE_TOKEN" in
+             *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo 'empty, placeholder or control character in token; not probing' ;;
+             *) printf 'Authorization: Bearer %s\n' "$RAY_AGENT_PROBE_TOKEN" |
+                  curl -q -g -s --noproxy '*' --connect-timeout 5 --max-time 10 --header @- \
+                    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/logs/" || true ;;
+           esac ;;
+         *) echo 'mode must be anonymous or token; not probing' ;;
+       esac ;;
+  esac
+)
+```
+
+Service behaviour is not demonstrated here. A watcher stopped each of four loopback runs of Ray 2.58.0 on recording the GCS listening on every interface (`*:6379`), which the authoring host forbids. No isolated network namespace was available to contain the runs, and no isolated multi-node Ray cluster is available in the authoring environment. The `ss` command was run locally in the earlier attempts; the per-node agent inventory, external-reachability probes (including all four agent listeners), direct `/logs/` token controls, dashboard job-submission controls and gRPC-TLS health-check are **REASONED**, written to be run against a live cluster in both the exposed and fixed states, tracked as RAY-LIVE-1 (`TODO.md` row 2.40).
 
 ## Common mistakes
 
@@ -23346,6 +23586,21 @@ Service behaviour is not demonstrated here. A watcher stopped each of four loopb
 - Ray Client proxier listeners, `--host` address plus loopback (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/util/client/server/proxier.py#L929-L931
 - Ray Client server started with the node IP address (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/node.py#L1572-L1575
 - Ray Client server `--host` set from that address (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/services.py#L2464-L2471
+- Ray dashboard agent HTTP listener (pinned tag): default `52365`, the `ray start` flags for the four agent ports, the node-IP-plus-loopback bind, the token middleware with its two exempt health paths and its no-op without token auth, and the browser-request heuristic: https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/ray_constants.py#L189, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/scripts/scripts.py#L618-L635, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/scripts/scripts.py#L687-L692, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/http_server_agent.py#L20-L23, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/http_server_agent.py#L54-L66, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/http_server_agent.py#L107-L113, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/authentication/http_token_authentication.py#L28-L80 and https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/optional_utils.py#L132-L209
+- Ray Jobs agent routes and the head's forwarding to them (pinned tag): submit, stop, delete, logs and log tail on the agent; the head's submission client, its head-node agent resolution and its token header: https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/job/job_agent.py#L32-L196, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/job/job_head.py#L123-L144 and https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/job/job_head.py#L267-L280
+- Ray log directory served by the agent, and its log and profiling gRPC services (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/log/log_agent.py#L245-L249, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/log/log_agent.py#L264-L307, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/log/log_agent.py#L345-L414 and https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/reporter/reporter_agent.py#L570-L638
+- Ray dashboard agent gRPC bind and token interceptor, and the minimal-install case (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/agent.py#L144-L169, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/agent.py#L182-L187 and https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/agent.py#L100-L117
+- Ray agent ports defaulting to OS-assigned, and both agents launched by the raylet regardless of `--include-dashboard` (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/node.py#L372-L377, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/node.py#L1660-L1669, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/node.py#L1768, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/services.py#L1381-L1387, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/services.py#L1862-L1883, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/services.py#L1918-L1929 and https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/services.py#L2022-L2031
+- Ray Prometheus metrics endpoint bind and its authentication-free WSGI server (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/reporter/reporter_agent.py#L504-L516 and https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/prometheus_exporter.py#L326-L334
+- Ray runtime env agent bind, routes and token middleware (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/runtime_env/agent/main.py#L218-L224 and https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/runtime_env/agent/main.py#L243-L248
+- Ray all-interfaces address (pinned tag): `get_all_interfaces_ip()` calls `GetAllInterfacesIP`, which returns `0.0.0.0`, or `::` for an IPv6 localhost: https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/includes/network_util.pxi#L103-L110 and https://github.com/ray-project/ray/blob/ray-2.58.0/src/ray/util/network_util.cc#L280-L289
+- Ray effective node address, CLI and Python localhost normalization, and whole-node cluster-mode setting (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/scripts/scripts.py#L850-L854, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/services.py#L786-L821, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/worker.py#L1835-L1836 and https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/ray_constants.py#L507-L514
+- Ray local `ray.init()` cluster agent HTTP default, inherited from `RayParams` (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/parameter.py#L165-L167 and https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/worker.py#L1884-L1912
+- Ray minimal mode dependency test, module filtering, absent reporter/exporter and runtime env agent's vendored aiohttp (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/utils.py#L1128-L1142, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/services.py#L1909-L1913, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/utils.py#L322-L351, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/agent.py#L100-L117, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/reporter/reporter_agent.py#L2099-L2101 and https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/runtime_env/agent/main.py#L23-L33
+- Ray metrics collection enabled by default and raylet propagation of its disable option (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/src/ray/common/ray_config_def.h#L618-L619 and https://github.com/ray-project/ray/blob/ray-2.58.0/src/ray/raylet/node_manager.cc#L3527-L3530
+- Ray agent-local job managers and default head placement, with resource, label-selector and worker-placement overrides (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/job/job_agent.py#L198-L203, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/job/job_manager.py#L421-L463 and https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/job/job_manager.py#L565-L609
+- Ray metrics imports the standard WSGI server (pinned tag), whose default server inherits `AF_INET` (CPython v3.11.0); this is the source basis for the IPv4-only bind and `::1` limitation: https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/prometheus_exporter.py#L10, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/prometheus_exporter.py#L326-L334, https://github.com/python/cpython/blob/v3.11.0/Lib/wsgiref/simple_server.py#L1-L160, https://github.com/python/cpython/blob/v3.11.0/Lib/http/server.py#L120-L145 and https://github.com/python/cpython/blob/v3.11.0/Lib/socketserver.py#L400-L480
+- Ray direct `/logs/` Verify discriminator: static directory index inside the agent middleware, disabled token bypass, 401 for missing credentials, valid-token access and exact health exemptions (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/log/log_agent.py#L245-L249, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/http_server_agent.py#L20-L23, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/http_server_agent.py#L102-L114 and https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/authentication/http_token_authentication.py#L28-L80
 - Kubernetes security contexts (runAsNonRoot, drop capabilities, seccomp): https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
 - KubeRay ray-cluster Helm chart values (head/worker podSecurityContext and securityContext, default {}): https://github.com/ray-project/kuberay/blob/v1.7.0/helm-chart/ray-cluster/values.yaml
 
@@ -24325,7 +24580,7 @@ Read the verbose output, not the exit status: the anonymous run must show a `401
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
+  set +x +a +e
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_TEST_USER' 'REPLACE_WITH_OWNED_PEER_IP' 'REPLACE_WITH_TURN_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
@@ -24356,7 +24611,7 @@ The block prompts for the secret, so it stays out of shell history, and hands it
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
+  set +x +a +e
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_API_KEY'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not minting"; exit 2; }
   shift
@@ -24450,7 +24705,8 @@ Do not put a credential on the command line or in `COMMANDLINE_ARGS`. `--gradio-
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set -eC +x +a
+  set +x +a +e
+  set -eC
   umask 077
   if [ -e "$HOME/.config/stable-diffusion-webui/gradio-auth" ] || [ -L "$HOME/.config/stable-diffusion-webui/gradio-auth" ]; then
     echo 'a gradio-auth file already exists in ~/.config/stable-diffusion-webui; nothing written'; exit 2
@@ -24516,7 +24772,7 @@ strict_password_checking: true
 
 ## Fooocus
 
-`--listen` exposes the UI to the network (optionally to a specific address); `--port` sets the port; `--share` registers a public `*.gradio.live` endpoint, same relay mechanism and same caution as above. Fooocus's own README states access is unauthenticated by default. Optional basic auth comes from an `auth.json` file with `user`/`pass` entries (no dedicated command-line auth flag exists); use it, but still keep the instance off any public interface.
+`--listen` with no argument binds to `0.0.0.0` (every IPv4 interface); given an address it binds only there, and with the flag absent Fooocus binds `127.0.0.1` (all as of v2.5.5). `--port` sets the port, which is `7865` by default, unless `GRADIO_SERVER_PORT` is set or 7865 is taken (below). `--share` registers a public `*.gradio.live` endpoint, same relay mechanism and same caution as above. Fooocus's own README states access is unauthenticated by default. Optional basic auth comes from an `auth.json` file with `user`/`pass` entries (no dedicated command-line auth flag exists); use it, but still keep the instance off any public interface.
 
 ```json
 [
@@ -24524,13 +24780,44 @@ strict_password_checking: true
 ]
 ```
 
-## Verify
+Fooocus reads `auth.json` by a relative name from the checkout root, the directory `launch.py` changes into, so outside a container put the file next to `launch.py`, owned by the account that runs Fooocus, with mode `0400`. `auth.py` also accepts a `hash` entry in place of `pass`: the lowercase hex SHA-256 of the password. Its `auth_list_to_dict` (`auth.py:8-16`) stores `hash` as given and turns `pass` into that same digest, and its `check_auth` (`auth.py:37-41`) compares the hex SHA-256 of the password typed at login with the stored value, so a `hash` entry keeps the plaintext password out of the file. Check for the login prompt after every start rather than trusting that the file is present. Run on its own with no server started, the v2.5.5 loader (`load_auth_data`) raised `PermissionError` for a file it could not open, because its `open()` sits outside its `try`; for a malformed file it printed `load_auth_data, e: ...` and returned no credentials; for an empty list (`[]`) it also returned none; and for a valid file it returned credentials. From the launch call, which passes a login to gradio only when the loader returned credentials, an unreadable file should stop Fooocus before the UI starts, while a malformed file or an empty list should start the UI with no login. That last step is read from the source, not observed: no Fooocus server was run.
+
+Pass the port explicitly as well as the bind. Fooocus hands gradio no port of its own: `launch.py` sets `GRADIO_SERVER_PORT` to `7865` only when that variable is not already set, so a `GRADIO_SERVER_PORT` inherited from your shell, a service unit or a container's environment moves the UI to whatever port it names. With no port passed, gradio 3.41.2 (the version Fooocus v2.5.5 pins) tries that value and then each port above it in turn, up to 100 ports by default, so a 7865 already in use moves the UI to a higher port with no error. `--port 7865` makes gradio try that port alone and fail to start if it is taken, which keeps the UI where your firewall rules and the Verify probe below expect it. `--listen 127.0.0.1` restates the default, so the launch line records the bind.
+
+Start Fooocus with `launch.py` rather than the README's `entry_with_update.py`. The updater fetches `origin` and, when the checked-out branch can fast-forward to the remote branch of the same name, moves the branch to that commit and hard-resets the working tree before it imports `launch.py`, so a version you pinned on a branch does not stay pinned. `launch.py` is the same program without that step, and it is what the upstream container image runs. Clone the pinned tag:
 
 ```bash
-ss -tlnp   # read every listener; 8188/7860/9090: each service on 127.0.0.1 only
+git clone --branch v2.5.5 https://github.com/lllyasviel/Fooocus.git
+```
+
+After preparing the environment as the README describes, start it from the pinned checkout. The block starts Fooocus only when the checkout's HEAD is exactly the `v2.5.5` tag, and `./Fooocus` keeps a `CDPATH` in your shell from moving it elsewhere. It does not check the working tree, so if the clone printed an error, delete `./Fooocus` and clone again before starting:
+
+```bash
+(
+  cd ./Fooocus || { echo 'no ./Fooocus checkout here; not starting'; exit 2; }
+  [ "$(git describe --tags --exact-match 2>/dev/null)" = v2.5.5 ] ||
+    { echo 'this is not the pinned v2.5.5 checkout; not starting'; exit 2; }
+  python launch.py --listen 127.0.0.1 --port 7865
+)
+```
+
+The upstream container image sets `ENV CMDARGS --listen` in its Dockerfile, and its `docker-compose.yml` and the `docker run` and `podman run` examples in its `docker.md` set `CMDARGS=--listen` again, so inside the container Fooocus binds `0.0.0.0`. Each of them also publishes `7865:7865` with no host address; Docker binds such a publication on every host address, `0.0.0.0` and `[::]` (this guide has not checked Podman's default). On a bridge network the wildcard inside the container is what lets a published port reach the UI, and it also lets any container on the same network reach it, with no login unless a valid `auth.json` is mounted (below). Keep the wildcard inside the container, publish to loopback only, and state the arguments: in the `docker run` and `podman run` examples, replace `-p 7865:7865` with `-p 127.0.0.1:7865:7865` and `-e CMDARGS=--listen` with `-e CMDARGS='--listen 0.0.0.0 --port 7865'`; in `docker-compose.yml`, make the `ports` entry `"127.0.0.1:7865:7865"` and the `CMDARGS` entry `CMDARGS=--listen 0.0.0.0 --port 7865`. Under host networking (`--network host`) nothing is published and the container's wildcard is the host's, so set `CMDARGS` to `--listen 127.0.0.1 --port 7865` there instead. A loopback publication is a reliable boundary only on Docker Engine 28.0 and later; see [docker.md](docker.md#1-publish-nothing-except-the-tls-proxy).
+
+Build the image from the pinned checkout and run that local build, not the GHCR image. The upstream `docker-compose.yml` names both `build: .` and `image: ghcr.io/lllyasviel/fooocus`, so Compose may run the GHCR image it pulls rather than a build of your checkout, and the `docker run` example in the upstream `docker.md` runs `ghcr.io/lllyasviel/fooocus`; this guide has not checked that image's default tag against v2.5.5. With Compose, start it with `docker compose up --build`, or add `pull_policy: build` to the service so that every `docker compose up` builds it; the service keeps `image: ghcr.io/lllyasviel/fooocus`, so Compose tags its local build `ghcr.io/lllyasviel/fooocus`, not `fooocus`. With `docker run`, build it with `docker build . -t fooocus`, as the upstream `docker.md` describes, which tags the build `fooocus`, and run `fooocus` in place of `ghcr.io/lllyasviel/fooocus`.
+
+The image build excludes `auth.json`, so mount it read-only at `/content/app/auth.json`: `-v /srv/fooocus/auth.json:/content/app/auth.json:ro` with `docker run`, or `- /srv/fooocus/auth.json:/content/app/auth.json:ro` under the service's `volumes:` in `docker-compose.yml`. Fooocus runs in the image as its unprivileged `user` account, so the host file must be owned by that account's uid and readable by no other account. Read the uid from the image you built: on the `docker build . -t fooocus` path, `docker run --rm --entrypoint id fooocus -u user` prints it; on the Compose path, run `docker compose build` and then `docker run --rm --entrypoint id ghcr.io/lllyasviel/fooocus -u user`, which reads the local build Compose tagged with that name. Then `sudo chown` the file to that uid and `sudo chmod 0400` it. Read from the source and not observed on a running server (above), an unreadable file should stop Fooocus from starting, and a malformed file or an empty list should start it with no login, so check for the login prompt. Under rootless Docker or user-namespace remapping the host-side owner differs; this guide has not checked that case.
+
+## Verify
+
+The Fooocus entries below (port 7865 in the `ss` comment and in the probe loop) are REASONED, not demonstrated: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none, so no Fooocus instance was run; row 1.146 tracks the demonstration. From the v2.5.5 sources cited below (the `--listen` default and its bare-flag constant in the argument parser, and the launch call that passes the bind and port to gradio), a Fooocus process started on the host with a bare `--listen` should show a wildcard listener on 7865 in `ss` and answer the probe from another host with an HTTP code; started as above, it should show `127.0.0.1:7865` in `ss`, and the probe should report a refusal or timeout reaching your address. The argument parse alone is demonstrated: `argparse` given that `--listen` definition (`type=str`, `default="127.0.0.1"`, `nargs="?"`, `const="0.0.0.0"`) returns `127.0.0.1` with no flag and `0.0.0.0` for a bare `--listen`. Confirm Fooocus is up and answers on the host itself before reading an external refusal as the fixed state. The `ss` expectations cover host processes only. For a container, the check is the PORTS column of `docker ps` plus the probe from another host, not `ss`, because socket visibility varies by Docker version and config (see [docker.md](docker.md#4-verify)): a container published as `7865:7865` should list the publication on every host address in the PORTS column and answer the probe with an HTTP code, and one published as `127.0.0.1:7865:7865` should list `127.0.0.1` as its only host address, with the probe reporting a refusal or timeout reaching your address. A publication with no host address binds `[::]` as well as `0.0.0.0`, so run the probe block twice, once with your public IPv4 address and once with your public IPv6 address in square brackets, each inside the quotes on the `set --` line. The block probes every port even when an earlier probe fails, so its exit status is not the verification result: read each `port=` line. Under rootful Docker's host networking nothing is published and the PORTS column is empty; the listener is in the host's network namespace, so read `ss` for it as for a host process: `127.0.0.1:7865` when fixed, or `0.0.0.0:7865` when `CMDARGS` still binds the wildcard, whether the image's default `--listen` was left in or a bridge-network `--listen 0.0.0.0` was copied over.
+
+```bash
+ss -tlnp   # host processes: read every listener; 8188/7860/9090/7865: each service on 127.0.0.1 only
 # each must be unreachable from another host. Read err, not the number: it must name a refusal or
 # timeout reaching YOUR address. An HTTP code means the port answered. A resolver failure, a local
-# socket error, or a timeout that did not come from the remote address is inconclusive.
+# socket error, or a timeout that did not come from the remote address is inconclusive. Every port is
+# probed even after one fails, so the exit status is not the result; read each port= line.
+# Run it once with your public IPv4 address, then again with your public IPv6 address in brackets.
 (                                                   # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
@@ -24538,18 +24825,18 @@ ss -tlnp   # read every listener; 8188/7860/9090: each service on 127.0.0.1 only
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
   case "$1" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
-    *) for p in 8188 7860 9090; do                              # ComfyUI, SD WebUI, InvokeAI
+    *) for p in 8188 7860 9090 7865; do                         # ComfyUI, SD WebUI, InvokeAI, Fooocus
          curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-           -w "port=$p http=%{http_code} exit=%{exitcode} err=%{errormsg}\n" "http://$1:$p/"
+           -w "port=$p http=%{http_code} exit=%{exitcode} err=%{errormsg}\n" "http://$1:$p/" || :
        done ;;
   esac
 )
 # guard-conventions: allow probe of a fixed loopback target; no reader-substituted placeholder in this probe's argv
-curl -q -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:9090/api/v1/boards/
+curl -q -g -s --noproxy '*' -o /dev/null -w '%{http_code}\n' http://127.0.0.1:9090/api/v1/boards/
                                                        # from the host itself, InvokeAI multiuser mode: 401
                                                        # without a Bearer token, never the app itself
 # guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -sI https://imagegen.example.com/                # via the proxy: TLS, and a login prompt
+curl -q -g -sI https://imagegen.example.com/                # via the proxy: TLS, and a login prompt
                                                        # or 401 without credentials, before the UI loads
 ```
 
@@ -24585,9 +24872,27 @@ curl -q -sI https://imagegen.example.com/                # via the proxy: TLS, a
 - Gradio 3.41.2 turns a list `auth` into a dictionary keyed by user name, so a later password for the same user name replaces an earlier one (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/routes.py#L128-L133
 - InvokeAI YAML Config (host/port defaults): https://invoke.ai/configuration/invokeai-yaml/
 - InvokeAI Multi-User Administrator Guide: https://invoke.ai/features/multi-user-mode/admin-guide/
-- Fooocus repository README (`--listen`, `--share`, auth.json): https://github.com/lllyasviel/Fooocus
+- Fooocus README, UI access and authentication (`--listen`, `--port`, `--share`, `auth.json`; pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/readme.md#L296-L301
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
 - ComfyUI `--listen` default `127.0.0.1`, `0.0.0.0,::` when given without a value, and `--port` default `8188` (pinned tag v0.37.0): https://github.com/Comfy-Org/ComfyUI/blob/v0.37.0/comfy/cli_args.py#L63-L64
+- Fooocus `--listen` default `127.0.0.1`, and `0.0.0.0` when given without a value (pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/ldm_patched/modules/args_parser.py#L36
+- Fooocus sets no port default of its own (`port=None`, pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/args_manager.py#L43-L47
+- Fooocus sets `GRADIO_SERVER_PORT` to `7865` only when it is unset (pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/launch.py#L13-L14
+- Fooocus passes the bind, the port and the `auth.json` login to gradio (pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/webui.py#L1120-L1128
+- Fooocus pins gradio 3.41.2 (pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/requirements_versions.txt#L13
+- gradio 3.41.2 reads `GRADIO_SERVER_PORT` as the start of its port search, 100 ports long by default (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio%403.41.2/gradio/networking.py#L24-L27
+- gradio 3.41.2 tries only the passed port, or searches upward when none is passed, and raises when none is free (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio%403.41.2/gradio/networking.py#L133-L171
+- Fooocus `entry_with_update.py` fetches `origin` and fast-forwards the checked-out branch before importing `launch.py` (pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/entry_with_update.py#L16-L46
+- Fooocus container image: `ENV CMDARGS --listen`, and the process runs as the unprivileged `user` account (pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/Dockerfile#L3 and https://github.com/lllyasviel/Fooocus/blob/v2.5.5/Dockerfile#L17-L29
+- Fooocus container entrypoint runs `launch.py` with `CMDARGS` (pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/entrypoint.sh#L33
+- Fooocus Compose file names both `build: .` and `image: ghcr.io/lllyasviel/fooocus`, publishes `7865:7865` and sets `CMDARGS=--listen` (pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/docker-compose.yml#L6-L11
+- Fooocus Docker instructions (`-p 7865:7865`, `-e CMDARGS=--listen`, a `docker run` of `ghcr.io/lllyasviel/fooocus`, building locally; pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/docker.md#L19-L78
+- Fooocus image build excludes `auth.json` (pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/.dockerignore#L53
+- Fooocus reads `auth.json` by a relative name from the checkout root that `launch.py` changes into; `auth_list_to_dict` stores a `hash` entry as given and turns a `pass` entry into its SHA-256 hex digest; the loader opens the file outside its `try` and returns no credentials for a malformed file or an empty list; and `check_auth` compares the SHA-256 hex digest of the password typed at login with the stored value (pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/constants.py#L5, https://github.com/lllyasviel/Fooocus/blob/v2.5.5/launch.py#L7-L9, https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L8-L16, https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L19-L34 and https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L37-L41
+- Docker port publishing (with no host address, "the Docker daemon publishes ports to all host addresses (0.0.0.0 and [::])"): https://docs.docker.com/engine/network/port-publishing/
+- Compose Specification, `pull_policy` (`build`: "Compose builds the image"; and "The `latest` tag is always pulled even when the `missing` pull policy is used"; pinned commit 914ec15d1fa4): https://github.com/compose-spec/compose-spec/blob/914ec15d1fa498969c0df5c1d672306db3256089/05-services.md#L1816-L1832
+- Compose Specification, a service with both `build` and `image` (Compose "follows the rules defined by the `pull_policy` attribute"; if it is missing, "Compose attempts to pull the image first and then builds from source if the image isn't found", and a built image takes the `image` name, as the example shows; pinned commit 914ec15d1fa4): https://github.com/compose-spec/compose-spec/blob/914ec15d1fa498969c0df5c1d672306db3256089/build.md#L21-L23 and https://github.com/compose-spec/compose-spec/blob/914ec15d1fa498969c0df5c1d672306db3256089/build.md#L50-L62
+- `docker compose up --build` ("Build images before starting containers"; pinned tag v2.32.4): https://github.com/docker/compose/blob/v2.32.4/cmd/compose/up.go#L147
 
 ======================================================================
 ==> chat-uis.md
@@ -24616,7 +24921,8 @@ Keep the three secrets, `KEY_VAULTS_SECRET`, `AUTH_SECRET` and the Google OAuth 
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set -eC +x +a
+  set +x +a +e
+  set -eC
   umask 077
   if [ -e "$HOME/.config/lobechat/secrets.env" ] || [ -L "$HOME/.config/lobechat/secrets.env" ]; then
     echo 'a secrets.env already exists in ~/.config/lobechat; nothing written'; exit 2
@@ -28764,7 +29070,7 @@ same account and by root.
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
+  set +x +a +e
   { unset -n tok NOMAD_TOKEN && unset -v tok NOMAD_TOKEN; } 2>/dev/null ||
     { echo 'cannot clear tok or NOMAD_TOKEN in this shell; not probing'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
@@ -30133,6 +30439,7 @@ Open the guide before relying on either, because defaults change between release
 | 5432 | PostgreSQL, and pgvector on the same port (the official images, 14 through 19 checked, initialize with `listen_addresses = '*'`, trust local-socket and loopback connections unless `POSTGRES_INITDB_ARGS` sets their methods (`--auth` or `-A`, or `--auth-local` and `--auth-host`), and apply `POSTGRES_HOST_AUTH_METHOD`, a password method by default, to other addresses); the Supabase self-hosted Supavisor pooler also publishes it; also the Onyx development Compose's PostgreSQL and the Langflow example Compose's PostgreSQL, and the Helicone Compose PostgreSQL's container port (published on host port 54388) | varies by service; see the guides | [postgresql.md](postgresql.md), [vector-databases.md](vector-databases.md), [cloud-firewalls.md](cloud-firewalls.md), [supabase-self-hosted.md](supabase-self-hosted.md), [connection-poolers.md](connection-poolers.md), [container-hardening.md](container-hardening.md), [ai-infra-services.md](ai-infra-services.md), [agent-builders.md](agent-builders.md), [llm-observability.md](llm-observability.md) |
 | 5553, 5556, 5557, 5559 | Selenium Grid distributed components: Distributor, Session Map, event bus HTTP, and New Session Queue; these listeners are not protected by the Router's basic auth | Unauthenticated listeners; Grid ships with no authentication | [headless-browser-services.md](headless-browser-services.md) |
 | 5555 | Flower, the Celery monitor, or a Selenium Grid Node | Flower: auth disabled unless configured; Selenium Node: Grid ships no auth | [workflow-orchestrators.md](workflow-orchestrators.md), [headless-browser-services.md](headless-browser-services.md) |
+| 5600 | vLLM NIXL handshake base port; adds the data-parallel index | No authentication on this listener | [model-servers.md](model-servers.md) |
 | 5601 | Kibana, which defaults to HTTP on `localhost:5601` with `server.ssl.enabled: false` (its Docker image changes the host default to `0.0.0.0`), and OpenSearch Dashboards, whose 3.8.0 sample configuration also uses localhost and port 5601 with server TLS disabled | not stated | [elasticsearch.md](elasticsearch.md) |
 | 5671, 5672 | AMQP over TLS, and AMQP plaintext | `guest`/`guest`, usable only from localhost, except in the official Docker image as shipped, which sets `loopback_users.guest = false` | [rabbitmq.md](rabbitmq.md) |
 | 5678 | n8n | Owner account set up on first run; unclaimed instance open to first visitor | [n8n.md](n8n.md) |
@@ -30161,6 +30468,7 @@ Open the guide before relying on either, because defaults change between release
 | 7700 | Meilisearch HTTP API; the binary defaults to localhost, while the official Docker image binds all interfaces | Unauthenticated until a master key is set (dev mode) | [search-engines.md](search-engines.md) |
 | 7800 | Keycloak clustered cache transport, carrying sessions and tokens; TLS is on by default for TCP stacks | not stated | [self-hosted-idp.md](self-hosted-idp.md) |
 | 7860 | Gradio, Stable Diffusion WebUI, or Langflow; also text-generation-webui's Gradio UI | varies by service; see the guides | [gradio.md](gradio.md), [image-gen-uis.md](image-gen-uis.md), [agent-builders.md](agent-builders.md), [model-servers.md](model-servers.md) |
+| 7865 | Fooocus's Gradio UI, on `127.0.0.1` by default; the upstream container image, Compose file and `docker run` example pass a bare `--listen` (`0.0.0.0`) and publish `7865:7865` with no host address | No authentication unless a valid `auth.json` is present; read from the v2.5.5 source and not observed on a running server, an unreadable file should stop startup, and a malformed file or an empty list should start the UI with no login | [image-gen-uis.md](image-gen-uis.md) |
 | 7880 | LiveKit HTTP/WebSocket signaling and API, which need a TLS proxy | Refuses to start without keys; `--dev` injects `devkey`/`secret` when the key map is empty; the upstream `config-sample.yaml` ships example pairs `key1: secret1` and `key2: secret2` | [realtime-voice-infra.md](realtime-voice-infra.md) |
 | 7881 | LiveKit ICE media TCP mux, separate from signaling | not stated | [realtime-voice-infra.md](realtime-voice-infra.md) |
 | 7882/UDP | LiveKit development-mode media mux; outside development mode the documented default is the 50000 to 60000 media range | not stated | [realtime-voice-infra.md](realtime-voice-infra.md) |
@@ -30208,6 +30516,7 @@ Open the guide before relying on either, because defaults change between release
 | 8812 | QuestDB PostgreSQL wire protocol, shipping the default credential `admin` / `quest` | `admin` / `quest` | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
 | 8883 | MQTT over TLS | Mosquitto 2.0+: explicit listener rejects unauthenticated clients | [mosquitto.md](mosquitto.md) |
 | 8888 | Jupyter, including RunPod deployments. The Vast.ai Jupyter launch mode uses 8080 instead; also Jaeger v2's self-metrics, on localhost in its all-in-one configuration unless `JAEGER_LISTEN_HOST` is set (the official image sets `0.0.0.0`, every interface); also SearxNG, the Mem0 API's host publication, and the OpenTelemetry Collector's internal metrics | Jupyter: auth on by default via generated token; Jaeger: not stated | [jupyter.md](jupyter.md), [gpu-clouds.md](gpu-clouds.md), [observability-components.md](observability-components.md), [ai-infra-services.md](ai-infra-services.md), [llm-observability.md](llm-observability.md) |
+| 8998 | vLLM Mooncake producer bootstrap server | No authentication on this listener | [model-servers.md](model-servers.md) |
 | 9000 | ClickHouse native TCP (plaintext), MinIO's S3 API, PHP-FPM, TGI's Prometheus listener, or Portainer's legacy HTTP port; Keycloak's management port serving `/health` and `/metrics`, authentik's HTTP port, QuestDB's web console, REST, and SQL endpoints whose Basic-auth keys are unset by default, or the Sentry self-hosted web and API, published here by the bundled nginx; also the Onyx development Compose's inference server, and a Helicone Compose backing-service host publication | varies by service; see the guides | [clickhouse.md](clickhouse.md), [minio.md](minio.md), [php.md](php.md), [model-servers.md](model-servers.md), [devops-uis.md](devops-uis.md), [self-hosted-idp.md](self-hosted-idp.md), [time-series-metrics-stores.md](time-series-metrics-stores.md), [self-hosted-error-trackers.md](self-hosted-error-trackers.md), [ai-infra-services.md](ai-infra-services.md), [llm-observability.md](llm-observability.md) |
 | 9001 | MinIO's web console (the `--console-address` / `MINIO_CONSOLE_ADDRESS` port, conventionally 9001); also Mosquitto WebSockets, a Helicone Compose backing-service host publication, and the Onyx development Compose MinIO console's container port (published on host port 9005 by default) | MinIO: `minioadmin`/`minioadmin` when root variables unset | [minio.md](minio.md), [mosquitto.md](mosquitto.md), [llm-observability.md](llm-observability.md), [ai-infra-services.md](ai-infra-services.md) |
 | 9003 | QuestDB minimal HTTP health and metrics server, which follows the HTTP authentication policy you set (unauthenticated when `http.user` is unset) | Unauthenticated while `http.user` is unset | [time-series-metrics-stores.md](time-series-metrics-stores.md) |
@@ -30223,6 +30532,7 @@ Open the guide before relying on either, because defaults change between release
 | 9200 to 9300 | Elasticsearch HTTP default range, binding the first free port; OpenSearch HTTP on 9200, including the Onyx development Compose's OpenSearch | varies by service; see the guides | [elasticsearch.md](elasticsearch.md), [ai-infra-services.md](ai-infra-services.md) |
 | 9222 | Chrome or Chromium DevTools Protocol remote debugging, an endpoint with no authentication whose reachability is full browser takeover | No authentication of any kind | [headless-browser-services.md](headless-browser-services.md) |
 | 9252 | The GitLab Runner Prometheus metrics endpoint, served with no built-in authorization, which exists only when a metrics `listen_address` is configured | No built-in authorization | [self-hosted-ci-runners.md](self-hosted-ci-runners.md) |
+| 9256 | vLLM optional multi-port DP health supervisor | No authentication on this listener | [model-servers.md](model-servers.md) |
 | 9292 | Puma standalone, whose default bind is all interfaces; and the Flux notification-controller webhook receiver, in-cluster behind the `webhook-receiver` Service | varies by service; see the guides | [ruby.md](ruby.md), [gitops-controllers.md](gitops-controllers.md) |
 | 9300 to 9400 | Elasticsearch transport default range (the official images set `network.host: 0.0.0.0`, so unless that is overridden transport listens on all interfaces); authentik's unauthenticated Prometheus metrics on 9300 | varies by service; see the guides | [elasticsearch.md](elasticsearch.md), [self-hosted-idp.md](self-hosted-idp.md) |
 | 9411 | Jaeger v2 Zipkin receiver, on localhost in the all-in-one configuration unless `JAEGER_LISTEN_HOST` is set (the official image sets `0.0.0.0`, every interface) | not stated | [observability-components.md](observability-components.md) |
@@ -30261,6 +30571,8 @@ Open the guide before relying on either, because defaults change between release
 | 26379 | Redis Sentinel's separate listener; its shipped configuration disables protected mode and supplies no active authentication rule | Shipped config: protected mode off, no active authentication rule | [redis.md](redis.md) |
 | 27017 | MongoDB; the official Linux images (7.0, 8.0 and 8.3 checked), run as `mongod` with no bind setting, add `--bind_ip_all`, and the Windows images' command includes it (every IPv4 address; IPv6 too only when `net.ipv6` is true) | Authorization must be enabled (`authorization: enabled`); on an installation with no existing users or roles, the localhost exception lets a local client create the first administrator; the official Linux images leave authorization off unless both `MONGO_INITDB_ROOT_*` credentials are set or the arguments or a configuration file (`--config` or `-f`) enable it (one credential alone makes the entrypoint exit), and the Windows images leave it off unless configured | [mongodb.md](mongodb.md), [cloud-firewalls.md](cloud-firewalls.md) |
 | 27777, 27778 | Jaeger v2 expvar and zpages, on localhost in the all-in-one configuration unless `JAEGER_LISTEN_HOST` is set (the official image sets `0.0.0.0`, every interface) | not stated | [observability-components.md](observability-components.md) |
+| 29501 | vLLM multi-node multiprocessing rendezvous | No authentication on this listener | [model-servers.md](model-servers.md) |
+| 29550 | vLLM remote data-parallel startup handshake | No authentication on this listener | [model-servers.md](model-servers.md) |
 | 30000 to 32767 | Kubernetes NodePort range over TCP and UDP; SGLang on 30000 | varies by service; see the guides | [kubernetes.md](kubernetes.md), [model-servers.md](model-servers.md) |
 | 33060 | MySQL X Protocol, a separate listener whose bind is not controlled by bind_address; MariaDB does not implement it; the official MySQL images leave it on every address unless configured | not stated | [mysql.md](mysql.md) |
 | 35672 to 35682 | RabbitMQ remote CLI tools' own Erlang distribution-port range (default); the guide says to restrict the actual range to the necessary peers | The Erlang cookie, a shared secret granting node and CLI access | [rabbitmq.md](rabbitmq.md) |
@@ -30268,6 +30580,7 @@ Open the guide before relying on either, because defaults change between release
 | 50000 to 60000/UDP | LiveKit media sockets outside development mode, allocated during active calls | not stated | [realtime-voice-infra.md](realtime-voice-infra.md) |
 | 50051 | Weaviate gRPC, on every local address whatever `--host` says | Anonymous access enabled by default | [vector-databases.md](vector-databases.md) |
 | 51820/UDP | WireGuard, in the configured example here. The port is chosen, not assigned | No username or password; key pairs only | [tunnels.md](tunnels.md) |
+| 52365 | Ray dashboard agent HTTP default on every non-minimal head and worker, including local ray.init() clusters; Jobs agent API executes code, and /logs serves the node log directory | Token authentication off by default; browser-request filtering is not authentication | [ray.md](ray.md) |
 | 54388 | Helicone Compose PostgreSQL publication: host port 54388 maps to container port 5432 | Published independently of the dashboard login; the guide says to rotate the Compose example storage credentials | [llm-observability.md](llm-observability.md) |
 | 55679 | OpenTelemetry Collector zPages diagnostic extension, when enabled | Collector ships with no security until configured | [llm-observability.md](llm-observability.md) |
 | 57800 | Keycloak clustered cache failure detection; TLS is on by default for TCP stacks | not stated | [self-hosted-idp.md](self-hosted-idp.md) |
