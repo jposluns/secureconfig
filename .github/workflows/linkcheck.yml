@@ -18,14 +18,19 @@ jobs:
         with:
           persist-credentials: false
       - name: Check links
+        id: lychee
+        continue-on-error: true
         uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8  # v2.9.0
         with:
-          fail: true
-          # Accepted non-2xx codes: 403 and 999 are bot-blocking responses from sites that refuse automated
-          # clients (LinkedIn answers 999); 301/302 are redirects; 429 is rate limiting. A green sweep therefore
-          # proves that every URL answered, not that every page was readable. The sweep is advisory for that reason.
+          # Only the numeric HTTP status check below decides which link results fail.
+          fail: false
+          failIfEmpty: false
+          format: json
+          output: lychee/out.json
+          # Verbose retains success_map and redirect_map, including accepted bot blocks.
           args: >-
             --no-progress
+            --verbose
             --root-dir ${{ github.workspace }}/site
             --accept 200,201,204,301,302,403,429,999
             --exclude '[<>]'
@@ -38,14 +43,81 @@ jobs:
             './site/index.html'
             './site/llms.txt'
 
-      - name: Report citations that have moved
-        # Deliberately after the link sweep. The sweep accepts 301 and 302, so a citation that
-        # has moved passes it forever while pointing at a redirect; #16 and #17 were spent
-        # cleaning that up once it had spread across 82 citations. This step names them while
-        # the redirect still says where the page went, and it FAILS the run when a citation has
-        # moved host or path, because GitHub notifies on a failed scheduled run and on nothing
-        # else. Anything softer, including a host that refuses automated clients and a URL that
-        # did not answer, is reported without failing. This workflow is not a required status
-        # check, so a red run here blocks no merge.
+      - name: Report link results and fail on dead links
         if: always()
-        run: python3 tools/report_citation_drift.py
+        env:
+          LYCHEE_OUTCOME: ${{ steps.lychee.outcome }}
+          LYCHEE_EXIT_CODE: ${{ steps.lychee.outputs.exit_code }}
+        run: |
+          python3 - <<'PY'
+          import html
+          import json
+          import os
+          from pathlib import Path
+
+          lines = [
+              "Lychee action outcome: " + os.environ.get("LYCHEE_OUTCOME", "unknown"),
+              "Lychee exit code: " + os.environ.get("LYCHEE_EXIT_CODE", "unavailable"),
+              "Only HTTP 404 and 410 fail this link check.",
+          ]
+          dead = False
+          try:
+              data = json.loads(Path("lychee/out.json").read_text(encoding="utf-8"))
+              lines.append(f"Total: {data['total']}; excluded: {data['excludes']}; "
+                           f"unknown: {data['unknown']}; unsupported: {data['unsupported']}")
+              if not data["total"] or not data["detailed_stats"]:
+                  lines.append("INCOMPLETE: no links checked or detailed results unavailable.")
+              for name in ("error_map", "timeout_map", "success_map"):
+                  for source, rows in sorted(data[name].items()):
+                      for row in sorted(rows, key=lambda item: item["url"]):
+                          status = row["status"]
+                          code = status.get("code")
+                          # Match the numeric status field, never text or digits in a URL.
+                          dead = dead or code in (404, 410)
+                          if code is None or not 200 <= code < 300:
+                              lines.append(f"{source}: {row['url']} | "
+                                           f"{json.dumps(status, ensure_ascii=True)}")
+          except (OSError, ValueError, KeyError, TypeError) as exc:
+              lines.append(f"INCOMPLETE: cannot read lychee results: {exc}")
+          report = "\n".join(lines)
+          print(report)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+              summary.write("## Link results\n\n<pre>" + html.escape(report) + "</pre>\n")
+          raise SystemExit(1 if dead else 0)
+          PY
+
+      - name: Report citations that have moved
+        # Deliberately after the link sweep. Redirects pass, so a citation that has moved
+        # can keep pointing at a redirect; #16 and #17 cleaned up 82 such citations.
+        # GitHub notifies only on a failed scheduled run. On 2026-09-25 the maintainer
+        # chose visibility over notification: list every redirect hop without failing.
+        # Read the sweep's JSON, including redirects outside Sources sections, while
+        # the redirect still says where the page went. This is not a required status
+        # check, so even a dead link here blocks no merge.
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import html
+          import json
+          import os
+          from pathlib import Path
+
+          lines = []
+          try:
+              data = json.loads(Path("lychee/out.json").read_text(encoding="utf-8"))
+              if not data["detailed_stats"]:
+                  lines.append("INCOMPLETE: redirect details unavailable.")
+              for source, chains in sorted(data["redirect_map"].items()):
+                  for chain in sorted(chains, key=lambda item: item["origin"]):
+                      previous = chain["origin"]
+                      for hop in chain["redirects"]:
+                          lines.append(f"{source}: {previous} -> {hop['url']} "
+                                       f"(HTTP {hop['code']})")
+                          previous = hop["url"]
+          except (OSError, ValueError, KeyError, TypeError) as exc:
+              lines.append(f"INCOMPLETE: cannot read redirect results: {exc}")
+          report = "\n".join(lines) or "No redirects recorded."
+          print(report)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+              summary.write("## Redirects\n\n<pre>" + html.escape(report) + "</pre>\n")
+          PY
