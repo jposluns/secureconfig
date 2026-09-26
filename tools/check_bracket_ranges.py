@@ -55,6 +55,16 @@ On each physical line, two things are findings:
     regcomp reads across the newline), or a multi-line data list, lands here by construction,
     without the gate having to know which of those it was.
 
+A close immediately preceded by a backslash or quote is ambiguous. A quote immediately after
+`]` also makes it ambiguous when that same quote occurs inside the list. Besides the ordinary
+reading, the gate reads that `]` as a member and continues to the next close, repeating at each
+ambiguous close. Either reading holding a range, or an alternative running off the physical
+line, is a finding. This is a local character test, not quote or escape lexing. Requiring an
+interior quote for the quote-after case keeps `'[0123456789]'` and "[[:digit:]]" clean: outside
+quoting does not hide the closing bracket from a regex engine, and quoting a glob's opening
+bracket makes that opener literal too. The ordinary close still bounds the outer scan, so an
+alternative cannot swallow a separate expression. There is at most one finding per opener.
+
 Shell text, comments and here-document bodies are all read the same way: a regex stored in a
 variable, a `case` alternative on its own line, a script written to a file through a
 here-document and a commented-out probe are validators too. The gate does not ask which tool
@@ -107,9 +117,17 @@ recorded case in tools/test_bracket_ranges.py so that a change is loud.
   - A malformed atom, `[[:alpha]` with no closing `:]` on its line, is read as ordinary
     characters rather than an atom, so `alpha` contributes no range but a live range beside it
     is still seen.
+  - Ambiguous closes in data, such as `["read"]`, `d["key"]` or the regex `[^"]`, can produce
+    an unclosed alternative even when the ordinary reading is harmless. On the 411-block,
+    99-guide corpus, allowing every quote-after close added 17 falsely flagged lines; requiring
+    an interior matching quote reduced that to 8. Both rules added one expression on each of
+    2 already waived lines. The narrowed rule has 14 consumed entries waiving 16 expressions;
+    the 8 new entries name non-validator uses, never locale-dependent accept lists.
   - An allowlist entry waives its whole line: one of two ranges on a line cannot be waived
-    alone, and reformatting or moving a waived line breaks its entry on purpose, since the
-    entry vouches for exactly one byte-for-byte line.
+    alone. Changing its text or guide breaks its entry, but moving unchanged text within the
+    same guide does not. Neither does changing surrounding lines: a continued printf argument
+    can become a grep validator while its exact line remains waived. Review the context on
+    every edit; the key binds text and guide, not location or interpretation.
 
   Still not seen:
   - Ranges with no brackets: `tr -dc 'A-Za-z0-9'`.
@@ -244,11 +262,24 @@ def _parse_bracket(text, i):
     return _parse_list(text, j, None)
 
 
+def _ambiguous_close(text, start, close):
+    """A local ambiguity test, with no quote state or escape decoding.
+
+    A backslash or quote immediately before `]` permits a literal-member reading. A quote
+    immediately after it does too, if that same quote occurs inside the list. Without an
+    interior quote, the latter is just outside quoting: it does not hide a regex's close,
+    and quoting a glob's opening `[` makes that opener literal too.
+    """
+    before, after = text[close - 1], text[close + 1:close + 2]
+    return before in "\\'\"" or (after in ("'", '"') and after in text[start + 1:close])
+
+
 def bracket_hits(text):
     """Yield one description per bracket expression in one line's text holding a range, and per
     `[` left open at the end of the line. A closed expression is stepped over whole, so a nested
-    `[` inside it is not reported twice. A backslash before a `[` does not hide it: unquoted,
-    the shell removes it and the tool sees a live bracket."""
+    `[` inside it is not reported twice. Ambiguous closes also admit a literal-member reading;
+    a range or an unclosed alternative is a finding for the original opener. A backslash before
+    a `[` does not hide it: unquoted, the shell removes it and the tool sees a live bracket."""
     i, n = 0, len(text)
     while i < n:
         if text[i] != "[":
@@ -259,15 +290,22 @@ def bracket_hits(text):
             i = word_end
             continue
         close, ranges = _parse_bracket(text, i)
+        first_close = close
+        # Keep the ordinary boundary for the outer scan, so a possible continuation cannot
+        # swallow another expression. One finding per opener suffices if either reading has
+        # a range. Otherwise try each ambiguous close as a literal member, without lexing.
+        while close is not None and not ranges and _ambiguous_close(text, i, close):
+            close, ranges = _parse_list(text, close + 1, "]")
         if close is None:
             yield (f"{text[i:i + 60].rstrip()} opens a bracket expression that nothing closes "
-                   f"on its physical line, so a range in it cannot be ruled out,")
-            i += 1
+                   f"on its physical line in at least one reading, so a range in it cannot "
+                   f"be ruled out,")
+            i = first_close + 1 if first_close is not None else i + 1
             continue
         if ranges:
             noun = "range" if len(ranges) == 1 else "ranges"
             yield f"{text[i:close + 1]} holds the {noun} {', '.join(ranges)}"
-        i = close + 1
+        i = first_close + 1
 
 
 class Allowlist:
@@ -331,7 +369,7 @@ def scan_blocks(name, blocks, allow):
 
     Returns (findings, n_blocks, n_waived). Every physical line is read the same way, a
     here-document body like any other; a line whose findings the allowlist covers consumes one
-    entry for that occurrence and counts toward n_waived instead.
+    entry for that occurrence; n_waived counts expressions, not entries.
     """
     findings, n_blocks, n_waived = [], 0, 0
     for start, body in blocks:
@@ -401,7 +439,7 @@ def main() -> int:
         print(f"  FAIL  {HINT}")
         return 1
     print(f"  ok    no unwaived bracket range in {n_blocks} bash blocks across {n_files} "
-          f"guides ({n_waived} waived by tools/{ALLOWLIST})")
+          f"guides ({n_waived} expressions waived by tools/{ALLOWLIST})")
     return 0
 
 

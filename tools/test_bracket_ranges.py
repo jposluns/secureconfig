@@ -9,13 +9,15 @@ entry point does: choosing which files to read, loading tools/bracket_ranges_all
 line, the exit status, and failing closed on an unreadable guide, an unlistable directory, an
 unreadable allowlist, or a corpus with no bash block in it.
 
-The REGRESSIONS groups pin every bypass the three adversarial review rounds found, each with its
-original in-block waiver attempt. Rounds 1 and 2 beat the joined-line lexing; round 3 beat the
+The REGRESSIONS groups preserve the reported bypasses and nearby variants, with their original
+in-block waiver attempts where present. Rounds 1 and 2 beat the joined-line lexing; round 3 beat the
 residual one-line lexing that decided whether a waiver comment was real (an escaped space before
 a data `#`, a trailing backslash dropping an open quote, a partly recognized here-document
 delimiter, a fake POSIX atom swallowing a validator, quoting inside a parameter-removal pattern,
-and only the last marker attempt on a line being validated). Each produced zero findings on the
-model it beat; each is at least one finding now, by construction: a range and an unclosed `[`
+and only the last marker attempt on a line being validated). Not every variant was fail-open:
+the round-2 trailing-marker `codex r2-1` case already produced two findings in round 2, while its
+preceding-marker counterpart produced zero. Round 4 found escaped and quoted closing brackets
+hiding a live range. Each reported bypass is at least one finding now: a range and an unclosed `[`
 are findings on their own physical line whatever surrounds them, a waiver lives only in
 tools/bracket_ranges_allow.txt keyed by the exact line, and the old in-block marker is itself a
 finding wherever it sits in a guide.
@@ -119,6 +121,48 @@ CASES = (
     ("a literal ] first in a negated list starts a range", doc("grep -E '[^]-z]' f"), 1, "]-z"),
     ("a literal ] first in a glob's negated list starts a range",
      doc('case "$1" in *[!]-z]*) exit 2 ;; esac'), 1, "[!]-z] holds the range ]-z"),
+
+    # REGRESSIONS, ROUND 4. Local close ambiguity, without quote or escape lexing.
+    ('round 4: escaped close hides a live range',
+     doc('case "$1" in *[!\\]a-z]*) exit 2 ;; esac'), 1, 'a-z'),
+    ('round 4: single-quoted close hides a live range',
+     doc('case "$1" in *[!\']\'a-z]*) exit 2 ;; esac'), 1, 'a-z'),
+    ('round 4: double-quoted close hides a live range',
+     doc('case "$1" in *[!"]"a-z]*) exit 2 ;; esac'), 1, 'a-z'),
+    ('round 4: escaped close starts a range',
+     doc('case "$1" in *[!\\]-z]*) exit 2 ;; esac'), 1, ']-z'),
+    ('round 4: a quote after the close can end a longer single-quoted member',
+     doc('case "$1" in *[!\'x]\'a-z]*) exit 2 ;; esac'), 1, 'a-z'),
+    ('round 4: a quote after the close can end a longer double-quoted member',
+     doc('case "$1" in *[!"x]"a-z]*) exit 2 ;; esac'), 1, 'a-z'),
+    ('round 4: successive ambiguous closes are each followed',
+     doc('case "$1" in *[!\\]\\]a-z]*) exit 2 ;; esac'), 1, 'a-z'),
+    ('round 4: a range in the ordinary reading is still a finding',
+     doc('case "$1" in *[!a-z\\]abc]*) exit 2 ;; esac'), 1, 'a-z'),
+    ('escaped close with a closed range-free alternative',
+     doc('case "$1" in *[!\\]abc]*) exit 2 ;; esac'), 0, None),
+    ('single-quoted close with a closed range-free alternative',
+     doc('case "$1" in *[!\']\'abc]*) exit 2 ;; esac'), 0, None),
+    ('double-quoted close with a closed range-free alternative',
+     doc('case "$1" in *[!"]"abc]*) exit 2 ;; esac'), 0, None),
+    ('escaped close with an unclosed alternative',
+     doc('pattern=[!\\]'), 1, UNCLOSED),
+    ('single-quoted close with an unclosed alternative',
+     doc("pattern=[!']'"), 1, UNCLOSED),
+    ('double-quoted close with an unclosed alternative',
+     doc('pattern=[!"]"'), 1, UNCLOSED),
+    ('a possible continuation does not swallow the next expression',
+     doc('case "$1" in *[!\\]abc]*|*[!0-9]*) exit 2 ;; esac'), 1, '0-9'),
+    ("an alternative spanning a separate expression preserves both openers",
+     doc("printf '%s\\n' '[\"key\"]' '[a-z]'"), 2, "a-z"),
+    ('a single-quoted spelled set needs no alternative',
+     doc("grep -E '[0123456789]' f"), 0, None),
+    ('a double-quoted POSIX class needs no alternative',
+     doc('grep -E "[[:digit:]]" f'), 0, None),
+    ('over-flagged: a quoted dictionary key has an unclosed alternative',
+     doc('python3 -c \'print(d["key"])\''), 1, UNCLOSED),
+    ('over-flagged: a literal quote in a regex has an unclosed alternative',
+     doc('grep -o \'[^"]\' f'), 1, UNCLOSED),
 
     # A SET SPLIT ACROSS LINES IS AN UNCLOSED BRACKET ON ITS OWN LINE, HOWEVER IT WAS SPLIT.
     ("a set split by a backslash-newline inside double quotes, in grep",
@@ -318,6 +362,11 @@ CASES += (
 # (description, guide text, allowlist text, exact findings, substring or None)
 ALLOW_CASES = (
     ("an entry waives its exact line", doc(GREP), entry(GREP), 0, None),
+    ("moving unchanged text within the same guide keeps its waiver",
+     doc("echo moved\n" + GREP), entry(GREP), 0, None),
+    ("changing the preceding command keeps the same line's waiver: review the context",
+     doc("printf '%s\\n' é | grep -qxE \\\n  '[a-z]'"),
+     entry("  '[a-z]'", reason="originally a continued printf label; now unsafe"), 0, None),
     ("one entry waives every finding on its one line",
      doc('case "$1" in *[!a-z]*|*[!0-9]*) exit 2 ;; esac'),
      entry('case "$1" in *[!a-z]*|*[!0-9]*) exit 2 ;; esac'), 0, None),
@@ -408,12 +457,13 @@ def entry_point_failures():
         failures.append(f"the second block of one guide and the first of another were not both "
                         f"reported: {out!r}")
 
-    # The allowlist is read from tools/bracket_ranges_allow.txt, and the pass line counts.
+    # The pass line counts expressions: one consumed entry here covers two expressions.
     runs += 1
-    rc, out = run_repo((("a.md", clean), ("b.md", doc(GREP)),
+    two = "printf '%s\\n' '[a-z]' '[0-9]'"
+    rc, out = run_repo((("a.md", clean), ("b.md", doc(two)),
                         ("tools/bracket_ranges_allow.txt",
-                         entry(GREP, guide="b.md") + "\n")))
-    if rc != 0 or "in 2 bash blocks across 2 guides (1 waived by " + ALLOW + ")" not in out:
+                         entry(two, guide="b.md") + "\n")))
+    if rc != 0 or "in 2 bash blocks across 2 guides (2 expressions waived by " + ALLOW + ")" not in out:
         failures.append(f"the pass line does not count every block, guide and waived range: "
                         f"{out!r}")
 

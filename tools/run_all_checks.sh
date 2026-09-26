@@ -461,7 +461,7 @@ echo "== no bracket range in a fenced bash block works as a validator =="
 # [0-9a-f] match non-ASCII letters and digits, so a guard written with one accepts values it
 # claims to refuse; bash case is ASCII only while globasciiranges is on. The #356 review found
 # it and the row 3.25 sweep found 87 more. Every range needs a spelled-out set or a
-# `# bracket-ranges: allow <reason>` marker; the gate's docstring lists what it misses.
+# tools/bracket_ranges_allow.txt entry for a non-validator; the docstring lists what it misses.
 if bracket_ranges=$(python3 tools/check_bracket_ranges.py 2>&1); then
   printf '%s\n' "$bracket_ranges"
   # A gate that exits 0 while printing findings would otherwise read as a pass.
@@ -480,7 +480,7 @@ else
 fi
 
 echo "== the bracket-range gate still catches what it claims =="
-# Five of these cases assert what the gate does NOT catch, so the file cannot quietly start
+# Eight of these cases assert what the gate does NOT catch, so the file cannot quietly start
 # claiming that coverage.
 if bracket_range_tests=$(python3 tools/test_bracket_ranges.py 2>&1); then
   printf '%s\n' "$bracket_range_tests"
