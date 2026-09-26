@@ -6,12 +6,18 @@ Lifecycle note, as of September 2026: the MinIO community repository on GitHub w
 
 ## 1. Set real root credentials
 
-```bash
-export MINIO_ROOT_USER="REPLACE_WITH_ADMIN_NAME"
-export MINIO_ROOT_PASSWORD="REPLACE_WITH_LONG_RANDOM_VALUE"
+Provision `/etc/minio/root-user` and `/etc/minio/root-password` through your secret manager before starting the server. Each must be a regular file owned by the server account, mode `0600`, under a directory other accounts cannot traverse, write to or replace, with no ACL granting them access. Each contains only its credential, with no whitespace or trailing newline. Keep these files and their backups out of source control.
+
+In the server's launch configuration, set only the file paths:
+
+```dotenv
+MINIO_ROOT_USER_FILE=/etc/minio/root-user
+MINIO_ROOT_PASSWORD_FILE=/etc/minio/root-password
 ```
 
-Never run with the `minioadmin`/`minioadmin` pair, which is still the built-in default when the root environment variables are unset; scanners try it constantly. Root credentials are for administration only: create per-application access keys with least-privilege policies (via the console or the `mc` client) so no app holds root ([authentication.md](authentication.md)).
+AIStor reads these files at startup. Remove `MINIO_ROOT_USER` and `MINIO_ROOT_PASSWORD` from the launch environment and any environment file: a direct value takes precedence over its `_FILE` counterpart. Start a fresh server process after changing its launch configuration. This assumes the protected files already exist and the launcher supplies these path variables; it does not create credentials or start a server. The shell and launch arguments contain only paths, while the server account and root can still read the credential files and server memory. See the vendor's [file-based settings](https://docs.min.io/aistor/reference/aistor-server/settings/#file-based-environment-variables) and [root credential file requirements](https://docs.min.io/aistor/reference/aistor-server/settings/root-credentials/).
+
+Never run with the `minioadmin`/`minioadmin` pair, which is still the built-in default when neither direct root credentials nor credential files are supplied; scanners try it constantly. Root credentials are for administration only: create per-application access keys with least-privilege policies (via the console or the `mc` client) so no app holds root ([authentication.md](authentication.md)).
 
 ## 2. Enable TLS
 
@@ -470,6 +476,7 @@ MINIO-LIVE additions (open): demonstrate OIDC role-policy and claim-policy scopi
 
 ## Sources (checked September 2026)
 
+- AIStor root credential files and file-variable precedence: https://docs.min.io/aistor/reference/aistor-server/settings/root-credentials/ and https://docs.min.io/aistor/reference/aistor-server/settings/#file-based-environment-variables
 - MinIO network encryption (certs directory, public.crt/private.key, --certs-dir): https://docs.min.io/aistor/installation/linux/network-encryption/
 - MinIO: https://www.min.io/
 - MinIO community repository (archived 2026-04-25, successor editions): https://github.com/minio/minio
