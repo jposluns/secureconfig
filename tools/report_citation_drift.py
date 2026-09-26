@@ -2,8 +2,9 @@
 """Report cited URLs that answer from a different host or path than the one cited.
 
 THIS IS NOT A GATE. It reaches the network, so it can never sit in the offline suite, where
-nothing outside the repository is allowed to turn the build red. It runs in the weekly
-advisory workflow beside the link sweep.
+nothing outside the repository is allowed to turn the build red. This is a standalone
+diagnostic with its original exit policy. The weekly workflow instead reports redirects
+from lychee JSON without failing, per the maintainer's 2026-09-25 ruling.
 
 WHAT IT IS FOR. The link sweep accepts 301 and 302, so a citation that has moved passes it
 forever while pointing at a redirect. Two pull requests, #16 and #17, were spent on exactly
@@ -15,10 +16,11 @@ WHY IT EXITS NON-ZERO ON A REAL MOVE. An earlier draft always returned 0 and pri
 report into the log of a scheduled run that is green by design. GitHub notifies on a failed
 scheduled run and on nothing else, so that report would have reached nobody, which is the
 same silence that let the original drift reach 82 citations in the first place. A host move
-or a path move now reds the weekly run, the way a hard-broken link already does through the
-sweep's own `fail: true`. This workflow is not a required status check and blocks no merge,
-so a vendor outage still cannot stop a pull request; that is what the offline gate suite is
-for. Everything softer than a move, including a host that refuses automated clients and a
+or a path move used to fail the weekly run, as a hard-broken link did through the
+sweep's former `fail: true`. This historical notification policy is retained only for
+manual runs of this diagnostic; the weekly workflow now fails only on HTTP 404 and 410.
+The offline gate suite remains independent of vendor outages. Everything softer than a move,
+including a host that refuses automated clients and a
 URL that did not answer at all, is reported without failing, because a transient network is
 not drift.
 
@@ -88,7 +90,7 @@ RESERVED_PREFIX = ("192.0.2.", "198.51.100.", "203.0.113.", "2001:db8:")
 
 # A cross-host redirect that is the vendor's own canonical answer rather than drift. This list
 # is the only way to acknowledge one: without it a consent interstitial or a vendor that always
-# redirects would red the weekly run forever, and a report that is always red is a report
+# redirects would fail standalone runs forever, and a report that is always red is a report
 # nobody reads. Each entry is (cited prefix, destination prefix) and both must match.
 #
 # End both prefixes at a `/` boundary. They are matched with `startswith`, so `https://a.com`

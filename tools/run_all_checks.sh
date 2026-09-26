@@ -871,6 +871,17 @@ else
   printf '%s\n' "$workflow_pin_tests" | sed 's/^/          /'
 fi
 
+echo "== weekly link reports fail closed on incomplete sweeps =="
+if lychee_tests=$(python3 -I -B tools/test_lychee_report.py 2>&1); then
+  printf '%s\n' "$lychee_tests"
+  if ! grep -qE '^  ok    [0-9]+ lychee fixture cases$' <<< "$lychee_tests"; then
+    bad "lychee report fixtures exited 0 without a result"
+  fi
+else
+  printf '%s\n' "$lychee_tests"
+  bad "lychee report fixtures failed"
+fi
+
 echo "== the advisory citation sweep still imports =="
 # NOT a gate on the citations themselves: report_citation_drift.py reaches the network and can
 # never run in this suite. But it imports SOURCES_RE, headings and section_body from
