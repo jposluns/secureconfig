@@ -182,7 +182,9 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
   IFS= read -r -s -p 'receiver HMAC secret: ' hmac < /dev/tty || exit 2; echo
   [ -n "$hmac" ] || { echo 'supply the HMAC secret; not probing'; exit 2; }
   body='{"ref":"refs/heads/main"}'
-  sig=$(printf '%s' "$body" | openssl dgst -sha256 -hmac "$hmac" -r | cut -d' ' -f1)
+  sig=$(set -o pipefail; printf '%s' "$body" | openssl dgst -sha256 -hmac "$hmac" -r | cut -d' ' -f1) ||
+    { echo 'signature generation failed; not probing'; exit 2; }
+  [ -n "$sig" ] || { echo 'signature generation failed; not probing'; exit 2; }
   url='https://flux-webhook.example.com/hook/REPLACE_WITH_PATH'
   printf '%s' "$body" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     -X POST --data-binary @- -w '\nno-sig http=%{http_code}\n' "$url"          # expect rejected

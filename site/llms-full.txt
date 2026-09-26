@@ -4553,7 +4553,9 @@ Gateway API defines no authentication filter; each implementation adds its own. 
   echo
   [ -n "$PASSWORD" ] || { echo 'no password supplied; not creating the secret'; exit 2; }
   [ "$PASSWORD" = "$confirm" ] || { echo 'the two entries differ; not creating the secret'; exit 2; }
-  printf '%s' "$PASSWORD" | htpasswd -cis .htpasswd admin
+  set -o pipefail  # so a failure anywhere in a pipeline below, not only in htpasswd, fails it
+  printf '%s' "$PASSWORD" | htpasswd -cis .htpasswd admin ||
+    { echo 'password-file creation failed; not creating the secret'; exit 2; }
   # -i does no verification, so the block asks twice and refuses a mismatch; `-vi` below then
   # confirms the file holds that value, and the secret is created only if it does. Paste the block by
   # itself: the shell reads the whole subshell before either `read` runs. Without bracketed paste,
@@ -5005,7 +5007,9 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
   IFS= read -r -s -p 'receiver HMAC secret: ' hmac < /dev/tty || exit 2; echo
   [ -n "$hmac" ] || { echo 'supply the HMAC secret; not probing'; exit 2; }
   body='{"ref":"refs/heads/main"}'
-  sig=$(printf '%s' "$body" | openssl dgst -sha256 -hmac "$hmac" -r | cut -d' ' -f1)
+  sig=$(set -o pipefail; printf '%s' "$body" | openssl dgst -sha256 -hmac "$hmac" -r | cut -d' ' -f1) ||
+    { echo 'signature generation failed; not probing'; exit 2; }
+  [ -n "$sig" ] || { echo 'signature generation failed; not probing'; exit 2; }
   url='https://flux-webhook.example.com/hook/REPLACE_WITH_PATH'
   printf '%s' "$body" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     -X POST --data-binary @- -w '\nno-sig http=%{http_code}\n' "$url"          # expect rejected
@@ -17903,7 +17907,9 @@ Terminal 2 independently establishes its target, TLS configuration, and credenti
   printf '\n'
   case "$pw" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'supply a real password'; exit 2 ;; esac
   export NATS_USER=order-svc || { echo 'credential export failed'; exit 2; }
-  marker="marker-$(date +%s%N)"
+  marker=$(date +%s%N) || { echo 'marker generation failed; not publishing'; exit 2; }
+  [ -n "$marker" ] || { echo 'marker generation failed; not publishing'; exit 2; }
+  marker="marker-$marker"
   printf 'Expected delivery: %s\n' "$marker"
   NATS_PASSWORD="$pw" timeout 10s nats --no-context --server "$srv" --timeout 3s \
     --inbox-prefix _INBOX.order-svc pub orders.created "$marker"

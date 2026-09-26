@@ -887,7 +887,9 @@ Terminal 2 independently establishes its target, TLS configuration, and credenti
   printf '\n'
   case "$pw" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'supply a real password'; exit 2 ;; esac
   export NATS_USER=order-svc || { echo 'credential export failed'; exit 2; }
-  marker="marker-$(date +%s%N)"
+  marker=$(date +%s%N) || { echo 'marker generation failed; not publishing'; exit 2; }
+  [ -n "$marker" ] || { echo 'marker generation failed; not publishing'; exit 2; }
+  marker="marker-$marker"
   printf 'Expected delivery: %s\n' "$marker"
   NATS_PASSWORD="$pw" timeout 10s nats --no-context --server "$srv" --timeout 3s \
     --inbox-prefix _INBOX.order-svc pub orders.created "$marker"
