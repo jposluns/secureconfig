@@ -5,6 +5,9 @@ Scan raw text, including comments, quotations and code blocks. Generated site/ a
 plugin/ trees are excluded. There are no exemptions. Match standalone PR, id and
 version markers, plus the case-sensitive stale completion phrase. Ids have a
 single digit and optionally a hyphen followed by one uppercase ASCII word.
+Token boundaries use ASCII letters and digits. An adjacent underscore is a
+boundary unless its other neighbour is an ASCII letter or digit, so Markdown
+underscore emphasis is checked while underscore-joined identifiers stay clean.
 
 Git supplies the tracked set; read only the selected paths directly.
 Missing tracked inputs, unreadable files and invalid UTF-8 are errors, not passes.
@@ -17,11 +20,14 @@ import sys
 from pathlib import Path
 
 # Do not match a prefix of a longer token or an unsupported id suffix.
-# A sentence-ending dot is punctuation; a dot followed by a word extends an id.
+# A sentence-ending dot is punctuation; a dot followed by an ASCII alphanumeric
+# extends an id. Underscores join identifiers only next to ASCII alphanumerics.
 PLACEHOLDER = re.compile(
-    r"(?<!\w)#NNN(?!\w)"
-    r"|(?<![\w.])[0-9]\.NEW(?:-[A-Z]+)?(?![\w-]|\.\w)"
-    r"|(?<!\w)[0-9]+\.[0-9]+\.NNN(?!\w)"
+    r"(?<![A-Za-z0-9])(?<![A-Za-z0-9]_)#NNN(?![A-Za-z0-9]|_[A-Za-z0-9])"
+    r"|(?<![A-Za-z0-9.])(?<![A-Za-z0-9]_)[0-9]\.NEW(?:-[A-Z]+)?"
+    r"(?![A-Za-z0-9-]|_[A-Za-z0-9]|\.[A-Za-z0-9])"
+    r"|(?<![A-Za-z0-9])(?<![A-Za-z0-9]_)[0-9]+\.[0-9]+\.NNN"
+    r"(?![A-Za-z0-9]|_[A-Za-z0-9])"
     r"|Done in this draft"
 )
 MARKDOWN = {".md", ".markdown", ".mdc"}
