@@ -31,13 +31,30 @@ are all read: a regex stored in a variable, a `case` alternative on a line of it
 written to a file through a here-document are validators too, and a commented-out probe is still
 a command a reader uncomments. The gate does not ask which tool reads the pattern. A JSON array
 holding a hyphenated string, `["app-data"]`, reads as a range as well and takes a marker; a rule
-that skipped it would also skip a regex that happened to start with a quote.
+that skipped it would also skip a regex that happened to start with a quote. A `]` first in the
+list, as in `[]-z]` or `[^]-z]`, is a literal and can start a range.
+
+Lines are joined as the shell joins them before any bracket is read. Outside single quotes and
+`$'...'`, bash removes a backslash-newline before it reads the text, so `grep -E "[A-\` followed
+by a line `Za-z]+"` is the pattern `[A-Za-z]+`, and the gate reads it so, unquoted or in double
+quotes. A here-document body is joined the same way: every backslash-newline under a bare
+delimiter, which bash removes as it writes the body, and under a quoted one as the shell that
+runs the script would join it, quotes and all. A finding names the line of its opening bracket and
+the lines it was joined from. A `[` that nothing closes before the end of its command, after
+that joining, is itself a finding, because what follows it may hold a range the gate cannot
+place, and so is one left open at a line ending in a backslash the shell kept, as single quotes
+keep a backslash-newline inside a set. One left open at any other line break of a multi-line
+string or here-document is data, such as a JSON or Python list written over several lines: a
+bracket expression does not span a real newline in grep, sed, awk or a shell word.
 
 THE FIX is a spelled-out set, which means the same thing in every locale, tool and shell:
 `[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]`. `model-servers.md` already
-carried `[!0123456789abcdef]` from #350 and #355. A POSIX class is sound only under an explicit
-`LC_ALL=C` that covers the whole check. This gate does not read `LC_ALL`: a class under it needs
-no marker, and a range under it still does.
+carried `[!0123456789abcdef]` from #350 and #355. A POSIX class in an accept list is sound only
+under an explicit `LC_ALL=C` that covers the whole check, since `[[:alnum:]]` accepts non-ASCII
+letters under C.utf8. A class in a reject list, such as refusing the locale's control or
+whitespace characters, is sound in any locale, because a wider class only refuses more. This gate
+does not read POSIX classes or `LC_ALL`: a class needs no marker, and a range under `LC_ALL=C`
+still does.
 
 THE MARKER. A range that is not a validator (a search pattern, a label in a format string, a
 JSON request body) carries a shell comment
@@ -46,13 +63,15 @@ JSON request body) carries a shell comment
 
 in the same shape as `# guard-conventions: allow` and `# unfiltered-ss: allow`, either at the
 end of the command, which covers that command, or on a comment line immediately before it,
-which covers the next command and nothing further. A command is a logical one: backslash
-continuations, a quoted string left open across lines and here-document bodies belong to the
-command that opened them, so a marker on a here-document's opening line covers its body. The
-reason is required. The marker must be a real comment, so the same text inside a quoted string
-or a here-document body does not count. A marker that covers no range is reported as stale, so
-one cannot outlive the range it was written for and go on covering whatever is written there
-next. A validator never takes the marker: it takes the spelled-out set.
+which covers the next command and nothing further. A command is a single one: `;`, `;;`, `&&`,
+`||`, `|`, `|&` and a lone `&` outside quotes end it, so in `a; b  # bracket-ranges: allow x`
+the marker covers `b` alone, and a marker on the line above `a; b` covers `a` alone. Backslash
+continuations, a quoted string left open across lines and the here-document bodies a command
+opened belong to it, so a marker on a here-document's opening line covers that body. The reason
+is required. The marker must be a real comment, so the same text inside a quoted string, a
+`${...}` expansion or a here-document body does not count. A marker that covers no range is
+reported as stale, so one cannot outlive the range it was written for and go on covering
+whatever is written there next. A validator never takes the marker: it takes the spelled-out set.
 
 WHAT THIS IS NOT. A shell parser, and not proof that a guard is correct. Known gaps, each
 recorded as a case in tools/test_bracket_ranges.py so that closing one is loud:
@@ -60,9 +79,14 @@ recorded as a case in tools/test_bracket_ranges.py so that closing one is loud:
   - Only bracket expressions are read. `tr -dc 'A-Za-z0-9'` has no brackets and is not flagged.
   - POSIX classes and `\w` are not flagged, although they are locale dependent too.
   - A `[` or `[[` standing as its own word before whitespace is read as the test command.
-  - Quote state carries across lines, but `$(...)` nesting is not modelled. A `<<` in shell
-    arithmetic is read as a here-document opener; the rest of the block is then data, where a
-    range is still reported and a marker no longer counts, which fails closed.
+  - Quotes and `${...}` nesting carry across lines, but `$(...)` nesting is not modelled. A `<<`
+    in shell arithmetic is read as a here-document opener; the rest of the block is then data,
+    where a range is still reported and a marker no longer counts, which fails closed. An
+    operator inside `[[ ]]`, `$(...)` or a `case` pattern's `|` also ends a command here, so a
+    marker covers less than it may appear to, which fails closed too.
+  - A `[` left open at a line break inside a multi-line string is read as data, so a set that
+    glibc's regcomp reads across a quoted newline, `re='^[A-Z` then a line `a-z]+$'` used in
+    `[[ =~ ]]`, is not flagged.
   - Fence extraction has exactly the limits `check_shell_blocks.blocks_of` discloses.
 """
 import re
@@ -81,11 +105,16 @@ NOT_A_GUIDE = frozenset(("CLAUDE.md", "AGENTS.md", "CHANGELOG.md", "README.sourc
 # The comment must open with the marker and give a reason, as the sibling gates' waivers must.
 MARKER_RE = re.compile(r"#[ \t]*bracket-ranges:[ \t]*allow[ \t]+\S")
 # A `#` begins a comment at the start of a word, which these characters end.
-COMMENT_BEFORE = " \t;&|()"
+COMMENT_BEFORE = " \t\n;&|()"
 # A `[` or `[[` after one of these and before whitespace is the test command.
-TEST_BEFORE = " \t;&|(!"
+TEST_BEFORE = " \t\n;&|(!"
+# The operators that end one command of a list or pipeline, longest first. A lone `&` is one
+# unless it belongs to a redirection such as `2>&1` or `&>file`.
+SEPARATORS = ("&&", "||", ";;", "|&", ";", "|", "&")
 # A here-document delimiter: single-quoted, double-quoted, backslash-quoted or bare.
-HEREDOC_WORD_RE = re.compile(r"""'([^']*)'|"([^"]*)"|\\?([A-Za-z0-9_.+-]+)""")
+HEREDOC_WORD_RE = re.compile(r"""'([^']*)'|"([^"]*)"|(\\?)([A-Za-z0-9_.+-]+)""")
+# The contexts _scan tracks: quotes, and a ${...} expansion outside or inside double quotes.
+SQ, DQ, ANSI, BRACE, DQ_BRACE = "'", '"', "$'", "${", '"${'
 HINT = ("outside the C locale a bracket range can match non-ASCII letters and digits (GNU grep, "
         "GNU sed and bash [[ =~ ]] were observed doing it under en_US.utf8, and bash case does "
         "it with globasciiranges off), so a validator written with one accepts values it claims "
@@ -96,7 +125,7 @@ HINT = ("outside the C locale a bracket range can match non-ASCII letters and di
 
 
 def _heredoc_word(line, i):
-    """The delimiter of a `<<` or `<<-` at index i: ((word, strip_tabs), next_index)."""
+    """The delimiter of a `<<` or `<<-` at index i: ((word, strip_tabs, quoted), next_index)."""
     j = i + 2
     strip = line[j:j + 1] == "-"
     if strip:
@@ -106,81 +135,192 @@ def _heredoc_word(line, i):
     m = HEREDOC_WORD_RE.match(line, j)
     if not m:
         return None, j
-    word = next(g for g in m.groups() if g is not None)
-    return (word, strip), m.end()
+    single, double, backslash, bare = m.groups()
+    word = next(g for g in (single, double, bare) if g is not None)
+    return (word, strip, bare is None or backslash == "\\"), m.end()
 
 
-def _scan(line, quote):
-    """Split one physical shell line. Returns (code, comment, quote, heredocs, continues).
+def _scan(line, stack, last):
+    """Read one physical shell line. Returns (code, seps, heredocs, comment, joins).
 
-    `quote` is the quote the previous line left open, if any, and the one returned is the quote
-    this line leaves open. A comment ends the line, so a backslash inside it continues nothing.
+    `stack` holds the quotes and `${` expansions the lines before left open, innermost last, and
+    is updated in place; `last` is the character before this line in the joined command, "" at
+    its start. `code` is the line's shell text as a list of characters, less its comment and
+    less a backslash that joins the next line to it, which the shell removes outside single
+    quotes and `$'...'`. `seps` are the offsets in `code` where the next command of a list or
+    pipeline begins, and `heredocs` the ((word, strip, quoted), offset) of each here-document
+    the line opens. A comment ends the line, so a backslash inside it joins nothing.
     """
-    heredocs, i, n = [], 0, len(line)
+    code, seps, heredocs, i, n = [], [], [], 0, len(line)
     while i < n:
-        c = line[i]
-        if quote == "'":
-            if c == "'":
-                quote = None
-            i += 1
-            continue
-        if quote is not None:
-            if c == "\\":
+        c, nxt = line[i], line[i + 1:i + 2]
+        top = stack[-1] if stack else None
+        if top in (SQ, ANSI):
+            # A backslash-newline inside either stays in the string; $'...' escapes a quote.
+            if top == ANSI and c == "\\" and nxt:
+                code.extend(line[i:i + 2])
                 i += 2
                 continue
-            if (quote == '"' and c == '"') or (quote == "$'" and c == "'"):
-                quote = None
+            if c == "'":
+                stack.pop()
+            code.append(c)
             i += 1
             continue
         if c == "\\":
+            if not nxt:
+                return code, seps, heredocs, "", True
+            code.extend(line[i:i + 2])
             i += 2
             continue
-        if c == "$" and line[i + 1:i + 2] == "'":
-            quote, i = "$'", i + 2
+        if top is not None:
+            # Inside double quotes or ${...}: no comment, operator or here-document starts.
+            if c == "$" and nxt == "{":
+                stack.append(BRACE if top == BRACE else DQ_BRACE)
+                code.extend(c + nxt)
+                i += 2
+                continue
+            if top == DQ:
+                if c == '"':
+                    stack.pop()
+            elif c == "}":
+                stack.pop()
+            elif c == '"':
+                stack.append(DQ)
+            elif top == BRACE and c == "$" and nxt == "'":
+                stack.append(ANSI)
+                code.extend(c + nxt)
+                i += 2
+                continue
+            elif top == BRACE and c == "'":
+                # Within double quotes a single quote inside ${...} is literal; outside, it quotes.
+                stack.append(SQ)
+            code.append(c)
+            i += 1
+            continue
+        if c == "$" and nxt in ("'", "{"):
+            stack.append(c + nxt)
+            code.extend(c + nxt)
+            i += 2
             continue
         if c in "'\"":
-            quote, i = c, i + 1
+            stack.append(c)
+            code.append(c)
+            i += 1
             continue
-        if c == "#" and (i == 0 or line[i - 1] in COMMENT_BEFORE):
-            return line[:i], line[i:], None, heredocs, False
+        if c == "#" and (code[-1] if code else last) in COMMENT_BEFORE:
+            return code, seps, heredocs, line[i:], False
         if line.startswith("<<<", i):
+            code.extend("<<<")
             i += 3
             continue
         if line.startswith("<<", i):
-            word, i = _heredoc_word(line, i)
+            word, j = _heredoc_word(line, i)
             if word is not None:
-                heredocs.append(word)
+                heredocs.append((word, len(code)))
+            code.extend(line[i:j])
+            i = j
             continue
+        op = next((s for s in SEPARATORS if line.startswith(s, i)), None)
+        if op == "&" and (code and code[-1] in "<>" or nxt == ">"):
+            op = None
+        if op is not None:
+            code.extend(op)
+            i += len(op)
+            seps.append(len(code))
+            continue
+        code.append(c)
         i += 1
-    trailing = len(line) - len(line.rstrip("\\"))
-    return line, "", quote, heredocs, quote is None and trailing % 2 == 1
+    return code, seps, heredocs, "", False
+
+
+class Segment:
+    """One command of a list or pipeline within a logical command.
+
+    `start` is where its text begins in the command's joined text, `bodies` holds each
+    here-document it opened as [characters, source lines, quote stack], `comments` the
+    (line, text) of each comment annotating it, and `marker` the line of a marker among them.
+    """
+
+    def __init__(self, start):
+        self.start, self.bodies, self.comments, self.marker = start, [], [], None
+
+
+class Command:
+    """A logical command: its physical lines joined as the shell joins them, in segments.
+
+    `text` holds the joined shell text and `origin` the index of the physical line each
+    character came from. A line the shell does not join to the next ends in a newline.
+    """
+
+    def __init__(self):
+        self.text, self.origin, self.segs = [], [], [Segment(0)]
+
+    def add(self, chars, idx):
+        self.text.extend(chars)
+        self.origin.extend([idx] * len(chars))
+
+    def seg_at(self, pos):
+        """The segment holding position pos of the joined text."""
+        return [s for s in self.segs if s.start <= pos][-1]
+
+    def has_code(self, k):
+        """Whether segment k holds shell text or a here-document, not only blanks."""
+        end = self.segs[k + 1].start if k + 1 < len(self.segs) else len(self.text)
+        return bool("".join(self.text[self.segs[k].start:end]).strip() or self.segs[k].bodies)
 
 
 def commands(lines):
-    """Group a block's physical lines into logical commands.
+    """Group a block's physical lines into logical commands, joining lines as the shell would.
 
-    Each command is a list of (index, code, comment, data) tuples, one per physical line, where
-    `data` marks a here-document body line, all of whose text is data.
+    A here-document body is data, all of which is read, and belongs to the segment that opened
+    it. Its lines are joined as bash joins them when it writes the body (a bare delimiter) or
+    as the shell that later runs the script joins them (a quoted one).
     """
-    out, cur, quote, pending = [], [], None, []
+    out, cmd, stack, pending, body = [], None, [], [], None
     for idx, line in enumerate(lines):
+        if cmd is None:
+            cmd = Command()
         if pending:
-            word, strip = pending[0]
-            cur.append((idx, line, "", True))
+            (word, strip, quoted), seg = pending[0]
             if (line.lstrip("\t") if strip else line) == word:
                 pending.pop(0)
-                if not pending and quote is None:
-                    out.append(cur)
-                    cur = []
+                body = None
+                if not pending and not stack:
+                    out.append(cmd)
+                    cmd = None
+                continue
+            if body is None:
+                body = [[], [], []]
+                seg.bodies.append(body)
+            if quoted:
+                joins = _scan(line, body[2], "")[4]
+            else:
+                joins = (len(line) - len(line.rstrip("\\"))) % 2 == 1
+            text = line[:-1] if joins else line + "\n"
+            body[0].extend(text)
+            body[1].extend([idx] * len(text))
             continue
-        code, comment, quote, opened, continues = _scan(line, quote)
-        cur.append((idx, code, comment, False))
-        pending.extend(opened)
-        if not pending and quote is None and not continues:
-            out.append(cur)
-            cur = []
-    if cur:
-        out.append(cur)
+        code, seps, opened, comment, joins = _scan(line, stack, cmd.text[-1] if cmd.text else "")
+        base = len(cmd.text)
+        cmd.add(code, idx)
+        cmd.segs.extend(Segment(base + off) for off in seps)
+        pending.extend((word, cmd.seg_at(base + off)) for word, off in opened)
+        if comment:
+            # A comment annotates the last command with text before it, not an empty one after
+            # a trailing `;`.
+            coded = [k for k in range(len(cmd.segs)) if cmd.has_code(k)]
+            seg = cmd.segs[coded[-1]] if coded else cmd.segs[-1]
+            seg.comments.append((idx, comment))
+            if MARKER_RE.match(comment):
+                seg.marker = idx
+        if joins:
+            continue
+        cmd.add("\n", idx)
+        if not pending and not stack:
+            out.append(cmd)
+            cmd = None
+    if cmd is not None and cmd.text:
+        out.append(cmd)
     return out
 
 
@@ -191,30 +331,26 @@ def _escaped(text, i):
     return (i - k) % 2 == 1
 
 
-def _parse_bracket(text, i):
-    """Parse the bracket expression opening at text[i]. Returns (close_index, ranges).
+def _line_end(text, i):
+    end = text.find("\n", i)
+    return len(text) if end == -1 else end
 
-    POSIX rules: a leading `^` negates, a `]` first in the list is literal, `[:class:]`, `[=x=]`
-    and `[.x.]` are single items, and a hyphen that is neither first nor last joins the items on
-    either side of it into a range. A glob's `!` is read as an ordinary character, so `[!0-9]`
-    still holds the range 0-9 and `[!-~]`, which a regex reads as the range ! to ~, is flagged.
-    A backslash is an ordinary character inside brackets. Returns (None, []) when no closing
-    bracket follows on the line.
+
+def _parse_list(text, j, prev):
+    """Read a bracket list from text[j], with `prev` the item already read or None.
+
+    Returns (close_index, ranges), or (None, ranges) when a newline or the end of the text
+    comes first.
     """
-    n, j = len(text), i + 1
-    if text[j:j + 1] == "^":
-        j += 1
-    if text[j:j + 1] == "]":
-        j += 1
-    prev, ranges = None, []
+    n, ranges = _line_end(text, j), []
     while j < n:
         c = text[j]
         if c == "]":
             return j, ranges
         if c == "[" and text[j + 1:j + 2] in (":", "=", "."):
-            close = text.find(text[j + 1] + "]", j + 2)
+            close = text.find(text[j + 1] + "]", j + 2, n)
             if close == -1:
-                return None, []
+                return None, ranges
             # A class cannot be a range endpoint; an equivalence class or collating symbol can.
             prev = None if text[j + 1] == ":" else text[j:close + 2]
             j = close + 2
@@ -222,9 +358,9 @@ def _parse_bracket(text, i):
         if c == "-" and prev is not None and j + 1 < n and text[j + 1] != "]":
             k = j + 1
             if text[k] == "[" and text[k + 1:k + 2] in ("=", "."):
-                close = text.find(text[k + 1] + "]", k + 2)
+                close = text.find(text[k + 1] + "]", k + 2, n)
                 if close == -1:
-                    return None, []
+                    return None, ranges
                 end, j = text[k:close + 2], close + 2
             elif text[k] == "[" and text[k + 1:k + 2] == ":":
                 prev, j = None, j + 1
@@ -236,11 +372,47 @@ def _parse_bracket(text, i):
             continue
         prev = c
         j += 1
-    return None, []
+    return None, ranges
+
+
+def _parse_bracket(text, i):
+    """Parse the bracket expression opening at text[i]. Returns (close_index, ranges).
+
+    POSIX rules: a leading `^` negates, a `]` first in the list is a literal and may start a
+    range, `[:class:]`, `[=x=]` and `[.x.]` are single items, and a hyphen that is neither first
+    nor last joins the items on either side of it into a range. A glob's `!` is read as an
+    ordinary character, so `[!0-9]` still holds the range 0-9 and `[!-~]`, which a regex reads
+    as the range ! to ~, is flagged; a `]` right after `[!` is read as a glob reads it, a
+    literal, whenever a later `]` on the line closes the expression. A `[]` or `[^]` that no
+    later `]` on the line closes is the empty pair of a JSON, jq or JMESPath expression, which
+    no tool reads as a bracket expression. A backslash is an ordinary character inside
+    brackets. Returns (None, ranges) when nothing closes the expression before a newline or the
+    end of the text.
+    """
+    j = i + 1
+    if text[j:j + 1] == "^":
+        j += 1
+    if text[j:j + 1] == "]" or text[j:j + 2] == "!]":
+        close, ranges = _parse_list(text, j + 1 if text[j] == "]" else j + 2, "]")
+        if close is not None:
+            return close, ranges
+    # Nothing later on the line closes it, so `[]` and `[^]` are an empty pair, `[!]` a set.
+    return _parse_list(text, j, None)
+
+
+def _open_at_end(text, i):
+    """Whether a `[` at i left open reaches the end of its command: the end of the text, or a
+    line that ends in a backslash the shell kept, as single quotes keep one. A `[` left open at
+    any other newline of a multi-line string or here-document is data, such as a JSON or Python
+    list written over several lines: a bracket expression does not span a real newline in grep,
+    sed, awk or a shell word."""
+    end = _line_end(text, i)
+    return end >= len(text) - 1 or _escaped(text, end)
 
 
 def bracket_ranges(text):
-    """Yield (column, expression, ranges) for each bracket expression in text holding a range.
+    """Yield (column, close, expression, ranges) for each bracket expression in text holding a
+    range, and for each one left open at the end of its command, whose `close` is None.
 
     A closed expression is stepped over whole, so a nested `[` inside it is not reported twice.
     """
@@ -250,16 +422,35 @@ def bracket_ranges(text):
             i += 1
             continue
         word_end = i + 2 if text.startswith("[[", i) else i + 1
-        if (i == 0 or text[i - 1] in TEST_BEFORE) and (word_end == n or text[word_end] in " \t"):
+        if (i == 0 or text[i - 1] in TEST_BEFORE) and (word_end == n or text[word_end] in " \t\n"):
             i = word_end
             continue
         close, ranges = _parse_bracket(text, i)
         if close is None:
+            if _open_at_end(text, i):
+                yield i, None, text[i:_line_end(text, i)].rstrip(), ranges
             i += 1
             continue
         if ranges:
-            yield i, text[i:close + 1], ranges
+            yield i, close, text[i:close + 1], ranges
         i = close + 1
+
+
+def _hits(text, origin, start):
+    """Yield (column, line, description) for each range and each open bracket in joined text."""
+    for col, close, expr, ranges in bracket_ranges(text):
+        line = start + origin[col]
+        if close is None:
+            yield col, line, (f"{expr[:60]} opens a bracket expression that nothing closes "
+                              f"before the end of its command, so a range in it cannot be "
+                              f"ruled out,")
+            continue
+        noun = "range" if len(ranges) == 1 else "ranges"
+        listed = ", ".join(ranges)
+        joined = ""
+        if origin[close] != origin[col]:
+            joined = f" (joined from lines {line}-{start + origin[close]})"
+        yield col, line, f"{expr} holds the {noun} {listed}{joined}"
 
 
 def scan_blocks(name, blocks):
@@ -269,33 +460,38 @@ def scan_blocks(name, blocks):
         n_blocks += 1
         waiting = None  # the line of a marker on a comment line, waiting for the next command
         for cmd in commands(body.split("\n")):
-            own, hits = None, []
-            for idx, code, comment, data in cmd:
-                if not data and MARKER_RE.match(comment):
-                    own = start + idx
+            hits = [[] for _ in cmd.segs]
+            for col, line, what in _hits("".join(cmd.text), cmd.origin, start):
+                # A range belongs to the command its opening bracket is in.
+                hits[cmd.segs.index(cmd.seg_at(col))].append((line, what))
+            for k, seg in enumerate(cmd.segs):
+                for chars, origin, _stack in seg.bodies:
+                    hits[k].extend(h[1:] for h in _hits("".join(chars), origin, start))
                 # A comment is read too: a commented-out probe is a command a reader uncomments.
-                for text in (code, comment):
-                    for _col, expr, ranges in bracket_ranges(text):
-                        hits.append((start + idx, expr, ranges))
-            comment_only = len(cmd) == 1 and not cmd[0][3] and not cmd[0][1].strip() and cmd[0][2]
-            if comment_only and own is not None:
+                for idx, comment in seg.comments:
+                    hits[k].extend(h[1:] for h in _hits(comment, [idx] * len(comment), start))
+            coded = [k for k in range(len(cmd.segs)) if cmd.has_code(k)]
+            markers = [seg.marker for seg in cmd.segs if seg.marker is not None]
+            if not coded and markers:
                 if waiting is not None:
                     findings.append(f"{name}:{waiting}: stale bracket-ranges marker: the line "
                                     f"after it is another marker, not a command")
-                waiting = own
+                waiting = start + markers[0]
                 continue
-            covered = own if own is not None else waiting
-            if covered is None:
-                for line, expr, ranges in hits:
-                    noun = "range" if len(ranges) == 1 else "ranges"
-                    listed = ", ".join(ranges)
-                    findings.append(f"{name}:{line}: {expr} holds the {noun} {listed} and no "
-                                    f"bracket-ranges marker covers it")
-            else:
-                n_marked += len(hits)
-                if not hits:
-                    findings.append(f"{name}:{covered}: stale bracket-ranges marker: the "
-                                    f"command it covers holds no bracket range")
+            first = coded[0] if coded else 0
+            for k, seg in enumerate(cmd.segs):
+                if seg.marker is not None:
+                    covered = start + seg.marker
+                else:
+                    covered = waiting if k == first else None
+                if covered is None:
+                    findings.extend(f"{name}:{line}: {what} and no bracket-ranges marker "
+                                    f"covers it" for line, what in hits[k])
+                else:
+                    n_marked += len(hits[k])
+                    if not hits[k]:
+                        findings.append(f"{name}:{covered}: stale bracket-ranges marker: the "
+                                        f"command it covers holds no bracket range")
             waiting = None
         if waiting is not None:
             findings.append(f"{name}:{waiting}: stale bracket-ranges marker: no command follows "

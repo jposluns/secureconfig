@@ -12,7 +12,10 @@ Several cases exist because a simpler scanner gets them wrong in a way that matt
 `${#1}` read as a comment hides the range after it. An apostrophe inside double quotes read as a
 quote hides the marker after it. A here-string read as a here-document turns the rest of the
 block into data, where no marker counts. A here-document terminator after `<<-`, or inside a
-list-item fence, left unrecognized does the same.
+list-item fence, left unrecognized does the same. A set split by a backslash-newline, which bash
+joins outside single quotes, is seen only once the lines are joined. A marker read as covering
+every command on its line covers `a` in `a; b  # bracket-ranges: allow x`, and a `#` inside a
+`${...}` expansion read as a comment fakes a marker.
 
 The KNOWN LIMITS group asserts the gate's current answer on inputs it is known to get wrong, as
 tools/test_shell_blocks.py does, so a change that closes one fails here and the gate's docstring
@@ -91,6 +94,63 @@ CASES = (
     ("two here-documents on one line, both bodies read",
      doc("cat /dev/fd/3 /dev/fd/4 3<<'A' 4<<'B'\n[a-z]\nA\n[0-9]\nB"), 2, "guide.md:9:"),
 
+    ("a literal ] first in the list starts a range", doc("grep -E '[]-z]' f"), 1, "]-z"),
+    ("a literal ] first in a negated list starts a range", doc("grep -E '[^]-z]' f"), 1, "]-z"),
+    ("a literal ] first in a glob's negated list starts a range",
+     doc('case "$1" in *[!]-z]*) exit 2 ;; esac'), 1, "[!]-z] holds the range ]-z"),
+
+    # CONTINUATION LINES, joined as bash joins them before the set is read.
+    ("a set split by a backslash-newline inside double quotes, in grep",
+     doc('grep -E "^[A-\\\nZa-z]+$" names.txt'), 1,
+     "guide.md:6: [A-Za-z] holds the ranges A-Z, a-z (joined from lines 6-7)"),
+    ("a set split by a backslash-newline in an unquoted word",
+     doc("grep -E ^[A-\\\nZa-z]+$ names.txt"), 1, "[A-Za-z] holds the ranges A-Z, a-z (joined"),
+    ("a set split by a backslash-newline in sed", doc('sed -E "s/[^a-\\\nz]//g" names.txt'), 1,
+     "[^a-z] holds the range a-z (joined"),
+    ("a set split by a backslash-newline in awk", doc('awk "/^[0-\\\n9]+$/" ports.txt'), 1,
+     "[0-9] holds the range 0-9 (joined"),
+    ("a set split by a backslash-newline in a case pattern",
+     doc('case "$1" in *[!A-Za-\\\nz0-9.-]*) exit 2 ;; esac'), 1, "[!A-Za-z0-9.-] holds"),
+    ("a set split by a backslash-newline in [[ =~ ]]",
+     doc('[[ "$t" =~ ^[0-9a-\\\nf]+$ ]] || exit 2'), 1, "[0-9a-f] holds the ranges 0-9, a-f"),
+    ("the surrealdb JWT check split after A-Za-, the round-1 reproduction",
+     doc('  [[ "$probe_jwt" =~ ^[A-Za-\\\nz0-9_.-]+$ ]] || { echo ' + "'missing or malformed "
+         "JWT; not probing'; exit 2; }"), 1,
+     "guide.md:6: [A-Za-z0-9_.-] holds the ranges A-Z, a-z, 0-9 (joined from lines 6-7)"),
+    ("a set split across three lines", doc('grep -E "[A-\\\nZa-\\\nz]" f'), 1,
+     "(joined from lines 6-8)"),
+    ("a set split by a backslash-newline in a script written through a quoted here-document",
+     doc("cat > check.sh <<'EOF'\ngrep -qE \"^[a-\\\nz]+$\" name.txt\nEOF"), 1,
+     "guide.md:7: [a-z] holds the range a-z (joined from lines 7-8)"),
+    ("a set split by a backslash-newline in a bare here-document, which bash joins",
+     doc("cat > f <<EOF\n^[0-\\\n9]+$\nEOF"), 1, "guide.md:7: [0-9] holds the range 0-9 (joined"),
+    ("a backslash-newline in single quotes stays, and the open set fails closed",
+     doc("grep -E '^[A-\\\nZa-z]+$' names.txt"), 1, "guide.md:6: [A-\\"),
+    ("a backslash-newline in $'...' stays, and the open set fails closed",
+     doc("grep -E $'^[A-\\\nZa-z]+$' names.txt"), 1, "nothing closes before the end"),
+    ("a backslash-newline in single quotes in a here-document script fails closed",
+     doc("cat > check.sh <<'EOF'\ngrep -qE '^[a-\\\nz]+$' name.txt\nEOF"), 1, "guide.md:7:"),
+    ("a set nothing closes before the end of its command", doc("grep -E '^[a-z' f"), 1,
+     "[a-z' f opens a bracket expression that nothing closes"),
+
+    # A MARKER COVERS ONE COMMAND OF A LIST OR PIPELINE.
+    ("a marker after a ; covers the second command, not the first",
+     doc("grep -E '^[a-z]+$' a; grep -E '^[0-9]+$' b  " + MARK + "x"), 1, "guide.md:6: [a-z]"),
+    ("a marker above && covers the first command, not the second",
+     doc(MARK + "x\ngrep -E '^[a-z]+$' a && grep -E '^[0-9]+$' b"), 1, "guide.md:7: [0-9]"),
+    ("a marker after || covers the second command, not the first",
+     doc("grep -E '^[a-z]+$' a || grep -E '^[0-9]+$' b  " + MARK + "x"), 1, "[a-z]"),
+    ("a marker after a lone & covers the second command, not the first",
+     doc("grep -E '^[a-z]+$' a & grep -E '^[0-9]+$' b  " + MARK + "x"), 1, "[a-z]"),
+    ("a marker at the end of a pipeline covers its last command, and is stale there",
+     doc(GREP + " | head -n 1  " + MARK + "x"), 2, "guide.md:6: stale"),
+
+    # MARKERS INSIDE ${...}, WHICH ARE NOT COMMENTS.
+    ("a marker inside a ${...} default is expansion text, not a comment",
+     doc(GREP + " ${u:-x # bracket-ranges: allow fake}"), 1, "no bracket-ranges marker"),
+    ("a marker inside a nested ${...} is expansion text, not a comment",
+     doc(GREP + " ${u:-${v:-x} # bracket-ranges: allow fake}"), 1, None),
+
     # MARKERS THAT DO NOT COUNT, AND STALE MARKERS.
     ("a marker with no reason",
      doc(GREP + "  # bracket-ranges: allow"), 1, "no bracket-ranges marker covers it"),
@@ -151,6 +211,29 @@ CASES = (
      "# T\n\n- step:\n\n  ```bash\n  cat > f <<'EOF'\n  plain\n  EOF\n  " + GREP + "  " + MARK
      + "x\n  ```\n", 0, None),
 
+    ("a spelled-out set split by a backslash-newline",
+     doc('grep -E "^[0123456789abc\\\ndef]+$" f'), 0, None),
+    ("a marker covers a bracket left open", doc("grep -F '[' f  " + MARK + "a literal bracket"),
+     0, None),
+    ("an empty pair in jq is not a bracket expression", doc("jq -r '.[] | .name' f.json"), 0, None),
+    ("a regex [!] that no later bracket closes is the one-character set it is",
+     doc("grep -E '[!]' f"), 0, None),
+    ("a list opened on one line of a here-document and closed on a later one is data",
+     doc("python3 - <<'PY'\nargs = [" + Q + "curl" + Q + ", " + Q + "-q" + Q + ",\n    " + Q
+         + "-sS" + Q + "]\nPY"), 0, None),
+    ("a redirection's & ends no command, so the marker covers the range before it",
+     doc(GREP + " 2>&1 >/dev/null &>/dev/null  " + MARK + "x"), 0, None),
+    ("a marker after a trailing ; covers the command before it", doc(GREP + ";  " + MARK + "x"),
+     0, None),
+    ("a ; inside quotes ends no command", doc("grep -E '^[a-z]+;$' f  " + MARK + "x"), 0, None),
+    ("a marker after a closed ${...} counts", doc(GREP + " ${u:-x}  " + MARK + "x"), 0, None),
+    ("a quoted } inside ${...} does not close it, so the marker after it counts",
+     doc(GREP + " ${u:-'}'}  " + MARK + "x"), 0, None),
+    ("a double-quoted } inside ${...} in double quotes does not close it",
+     doc(GREP + " " + Q + "${u:-" + Q + "}" + Q + "}" + Q + "  " + MARK + "x"), 0, None),
+    ("a single quote inside ${...} in double quotes is literal, so the marker after it counts",
+     doc(GREP + " " + Q + "${u:-'}" + Q + "  " + MARK + "x"), 0, None),
+
     # FENCES AND LINES.
     ("a U+2028 inside a block does not shift the line number",
      doc("printf '%s' 'x" + chr(0x2028) + "y'\n" + GREP), 1, "guide.md:7:"),
@@ -170,6 +253,10 @@ CASES += (
      doc("echo $((1 << 2))\n" + GREP + "  " + MARK + "x"), 1, None),
     ("known limit: a sh, shell or zsh fence is not a bash fence and is not read",
      doc(GREP, fence="```sh"), 0, None),
+    ("known limit: a set spanning a real newline inside quotes is not read across it",
+     doc("re='^[A-Z\na-z]+$'"), 0, None),
+    ("known limit: an operator inside [[ ]] ends a command, so a marker covers less",
+     doc('[[ "$1" =~ ^[a-z]+$ || -z "$1" ]]  ' + MARK + "x"), 2, "guide.md:6: stale"),
 )
 
 
