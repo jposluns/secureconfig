@@ -181,7 +181,7 @@ This block assumes a clean Bash shell with trusted startup files. The hidden pro
 ```bash
 (
   trap - DEBUG RETURN ERR
-  set +x +a
+  set +x +a +e
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_TRUSTED_AGENT_ORIGIN' 'anonymous'   # replace inside the quotes; mode: anonymous or token
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
