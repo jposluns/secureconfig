@@ -747,6 +747,22 @@ if [ $? -eq 0 ] && ! printf '%s\n' "$ei_st" | grep -q '^  FAIL  '; then
 else
   bad "exposure-index self-test failed: $(printf '%s' "$ei_st" | tail -1)"
 fi
+
+echo "== no leftover authoring placeholders =="
+# The self-test exercises failing fixtures and clean inputs through the real gate.
+# The corpus run then checks tracked Markdown and VERSION, including TODO and DONE.
+for placeholder_check in test_no_placeholders.py check_no_placeholders.py; do
+  if placeholders=$(python3 -I -B "tools/$placeholder_check" 2>&1); then
+    printf '%s\n' "$placeholders"
+    if grep -q '^  FAIL  ' <<< "$placeholders" || ! grep -q '^  ok    ' <<< "$placeholders"; then
+      bad "$placeholder_check exited 0 without a clean ok result"
+    fi
+  else
+    printf '%s\n' "$placeholders"
+    bad "$placeholder_check failed"
+  fi
+done
+
 echo "== no committed secrets =="
 # Deliberately narrow: only material that is a credential wherever it appears.
 # A guide that must show sample key output will trip this; allowlist it here
