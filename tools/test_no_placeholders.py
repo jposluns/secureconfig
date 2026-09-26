@@ -94,17 +94,19 @@ def main():
                      "(#NNN)", "#NNN.", "`1.NEW`", "|1.NEW|", "**1.0.NNN**",
                      "1.NEW.", "(1.NEW-VERIFY).", "**2.0.NNN**"):
             count += case({"notes.md": text})
-        # Underscore delimiters, including Markdown emphasis, expose placeholders.
+        # Underscore delimiters, Markdown emphasis and comment terminators expose placeholders.
         for text in ("_#NNN_", "__#NNN__", "_1.NEW_", "__1.NEW__",
                      "_1.NEW-VERIFY_", "_1.0.NNN_", "*1.NEW*",
-                     "_#NNN", "#NNN_", "_1.NEW", "1.NEW_", "_12.345.NNN"):
+                     "_#NNN", "#NNN_", "_1.NEW", "1.NEW_", "_12.345.NNN",
+                     "<!--1.NEW-->", "<!--1.NEW-VERIFY-->", "<!--#NNN-->", "<!--1.0.NNN-->",
+                     "1.NEW-", "1.NEW--"):
             count += case({"notes.md": text})
         # Embedded and longer tokens, including unsupported id suffixes, are clean.
         for text in ("ldap1.NEW_PASSWORD", "v1.NEWS.md", "#NNNN", "release1.0.NNN",
                      "a#NNN", "#NNN1", "#NNNs",
                      "a1.NEW", "11.NEW", "12.NEW", "12.NEW-VERIFY", ".1.NEW", "1.0.NEW",
                      "1.NEWS", "1.new", "1.NEW1", "1.NEW-Followup", "1.NEW-verify",
-                     "1.NEW-", "1.NEW-VERIFY2", "1.NEW-VERIFY_MORE", "1.NEW-VERIFY-MORE",
+                     "1.NEW-VERIFY2", "1.NEW-VERIFY_MORE", "1.NEW-VERIFY-MORE",
                      "1.NEW.md", "1.NEW-VERIFY.md", "1.NEW_FOLLOWUP",
                      "v1.1.NNN", "release2.0.NNN", "1.1.NNNN",
                      "2.0.NNN1", "12.345.NNN_suffix", "1.0.NNNs",
