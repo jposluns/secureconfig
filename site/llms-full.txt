@@ -24557,7 +24557,7 @@ Start Fooocus with `launch.py` rather than the README's `entry_with_update.py`. 
 git clone --branch v2.5.5 https://github.com/lllyasviel/Fooocus.git
 ```
 
-After preparing the environment as the README describes, start it from the pinned checkout. The block refuses to start any other checkout, including one a failed clone left behind, and `./Fooocus` keeps a `CDPATH` in your shell from moving it elsewhere:
+After preparing the environment as the README describes, start it from the pinned checkout. The block starts Fooocus only when the checkout's HEAD is exactly the `v2.5.5` tag, and `./Fooocus` keeps a `CDPATH` in your shell from moving it elsewhere. It does not check the working tree, so if the clone printed an error, delete `./Fooocus` and clone again before starting:
 
 ```bash
 (
