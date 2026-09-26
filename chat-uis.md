@@ -39,7 +39,7 @@ Keep the three secrets, `KEY_VAULTS_SECRET`, `AUTH_SECRET` and the Google OAuth 
   set -- "$(openssl rand -base64 32)" "$(openssl rand -base64 32)"
   [ "${#1}" -eq 44 ] || { echo 'key generation failed; nothing written'; exit 2; }
   [ "${#2}" -eq 44 ] || { echo 'key generation failed; nothing written'; exit 2; }
-  case "$1$2" in *[!A-Za-z0-9+/=]*) echo 'key generation failed; nothing written'; exit 2 ;; esac
+  case "$1$2" in *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=]*) echo 'key generation failed; nothing written'; exit 2 ;; esac
   mkdir -p -- "$HOME/.config/lobechat"
   chmod 700 -- "$HOME/.config/lobechat"
   printf 'KEY_VAULTS_SECRET=%s\nAUTH_SECRET=%s\nAUTH_GOOGLE_SECRET=%s\n' "$1" "$2" "$gsec" > "$HOME/.config/lobechat/secrets.env"

@@ -514,7 +514,8 @@ Use the same bucket and object in both arguments, with the correct regional endp
           # S3 also returns 403 for an object you cannot list. presign signs a GET.
           set -- "$2" "$(aws s3 presign "$1" --expires-in 60)"
           case "$2" in
-            *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[[:cntrl:]]*|*'"'*|*\\*)
+            *'"'*) echo "signing failed or returned an unsafe URL; not probing" ;;
+            *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[[:cntrl:]]*|*\\*)
               echo "signing failed or returned an unsafe URL; not probing" ;;
             https://*)
               # The URL is a credential. The builtin printf feeds curl on stdin, never argv.

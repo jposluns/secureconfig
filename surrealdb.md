@@ -135,7 +135,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w '
   curl -q -g "$@" </dev/null || exit 1
   IFS= read -r -s -p 'Short-lived system-user JWT: ' probe_jwt || exit 2
   printf '\n'
-  [[ "$probe_jwt" =~ ^[A-Za-z0-9_.-]+$ ]] || { echo 'missing or malformed JWT; not probing'; exit 2; }
+  [[ "$probe_jwt" =~ ^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.-]+$ ]] || { echo 'missing or malformed JWT; not probing'; exit 2; }
   echo AUTHENTICATED
   printf 'Authorization: Bearer %s\n' "$probe_jwt" | curl -q -g "$@" --header @- || exit 1
 )

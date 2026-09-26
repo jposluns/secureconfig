@@ -50,7 +50,7 @@ ss -tlnp   # expect 8080 on loopback or a private address; then probe the public
   esac
   [ -n "$2" ] || { echo 'a public IP is required; not probing'; exit 2; }
   case "$3" in
-    ''|*[!0-9]*) echo 'a numeric published port is required; not probing'; exit 2 ;;
+    ''|*[!0123456789]*) echo 'a numeric published port is required; not probing'; exit 2 ;;
   esac
   # bracket an IPv6 literal in REPLACE_WITH_PUBLIC_IP. Any HTTP response (incl 401/403) = a finding;
   # http=000 is not a pass (a certificate, timeout, or local error is inconclusive). Never add -k.

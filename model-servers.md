@@ -69,7 +69,7 @@ The block makes the directory mode `0700` first, then refuses, before it generat
 (
   { unset -n VLLM_API_KEY VLLM_USE_RUST_FRONTEND && unset -v VLLM_API_KEY VLLM_USE_RUST_FRONTEND; } 2>/dev/null ||
     { echo 'cannot clear VLLM_API_KEY or VLLM_USE_RUST_FRONTEND in this shell; not starting'; exit 2; }
-  grep -Eq '^api-key: "[0-9a-f]{64}"$' "$HOME/.config/vllm/server.yaml" ||
+  grep -Eq '^api-key: "[0123456789abcdef]{64}"$' "$HOME/.config/vllm/server.yaml" ||
     { echo 'no generated api-key line in ~/.config/vllm/server.yaml; not starting'; exit 2; }
   vllm serve 'REPLACE_WITH_MODEL' --host 127.0.0.1 --config "$HOME/.config/vllm/server.yaml"
 )
@@ -199,7 +199,7 @@ All three are secrets, and none belongs on the command line, where `ps` and `/pr
   shift
   [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value, inside the quotes; nothing written'; exit 2; }
   case "$1" in ""|*REPLACE_WITH_*) echo 'substitute a user name inside the quotes on the set -- line above; nothing written'; exit 2 ;; esac
-  case "$1" in *[!A-Za-z0-9._-]*) echo 'use only letters, digits, dot, underscore or hyphen in the user name; nothing written'; exit 2 ;; esac
+  case "$1" in *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-]*) echo 'use only letters, digits, dot, underscore or hyphen in the user name; nothing written'; exit 2 ;; esac
   mkdir -p -- "$HOME/.config/text-generation-webui"
   chmod 700 -- "$HOME/.config/text-generation-webui"
   if [ -e "$HOME/.config/text-generation-webui/gradio-auth" ] || [ -L "$HOME/.config/text-generation-webui/gradio-auth" ]; then

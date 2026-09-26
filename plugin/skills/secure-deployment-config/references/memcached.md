@@ -133,7 +133,7 @@ Paste each complete block, including its parentheses, marker, and count checks. 
       echo "replace the PID; not probing"; exit 1 ;;
     *)
       case "$1" in
-        *[!0-9]*|0) echo "supply a positive numeric PID; not probing"; exit 1 ;;
+        *[!0123456789]*|0) echo "supply a positive numeric PID; not probing"; exit 1 ;;
         *)
           memcached -V
           memcached -h

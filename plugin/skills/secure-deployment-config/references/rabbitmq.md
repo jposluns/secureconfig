@@ -581,8 +581,8 @@ Topic permissions are broker records managed with `rabbitmqctl`, not entries in 
 ```bash
 sudo rabbitmqctl set_topic_permissions -p 'app-prod' 'app' \
   'app.shared.topic' \
-  '^tenant1[.][a-z0-9_-]+$' \
-  '^tenant1[.][a-z0-9_-]+$'
+  '^tenant1[.][abcdefghijklmnopqrstuvwxyz0123456789_-]+$' \
+  '^tenant1[.][abcdefghijklmnopqrstuvwxyz0123456789_-]+$'
 ```
 
 The write pattern gates publishing and the read pattern gates the routing keys a binding may use; both are regular expressions, not AMQP topic wildcards, so this example admits exact `tenant1.<name>` keys and excludes `#` and `*` subscriptions. Consumers still read from their queues under ordinary queue permissions, so topic authorization does not filter messages already sitting in an accessible queue, nor does it remove existing broad bindings: audit current bindings and queue grants, and reconnect clients after changing them. Topic authorization checks routing keys only on a direct publish to the topic exchange; if the section 1 resource grant lets the application declare its own exchanges, it can bind one to the shared exchange and route a disallowed key through it without the topic write check, because a resource-name grant does not distinguish an exchange from a queue, so for strong tenant isolation the administrator must own every route into the shared exchange: deny the application configure permission so it cannot declare a relay exchange, and scope its read grant so it matches no exchange at all (for example a queue-only naming scheme such as `^app[.]q[.]`), because binding any readable exchange into the shared exchange needs only the write grant the application already holds for publishing; the administrator provisions its queues, exchanges, and bindings. Clearing a topic permission returns that exchange to the unrestricted default; it is not a deny rule. Other authorization backends enforce their own topic rules. See the [topic authorization reference](https://www.rabbitmq.com/docs/access-control#topic-authorisation) and the [rabbitmqctl command reference](https://www.rabbitmq.com/docs/man/rabbitmqctl.8).

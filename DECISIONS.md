@@ -17,6 +17,15 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Locale-dependent bracket ranges in shell validators, 2026-09-26T00:27Z: sweep and gate now (#360).**
+  On the #356 review's finding that `é` matched both `[A-Za-z]` and `[0-9a-f]` in GNU grep under
+  en_US.UTF-8, so that a validator written with a range accepts values it claims to refuse, the
+  maintainer's words were "Sweep + gate now": every bracket range in a fenced bash block of the corpus was
+  replaced with a spelled-out ASCII set (one, in mcp-clients.md, with a POSIX class under an explicit
+  `LC_ALL=C`) or marked as not a validator, in the same pull request as the
+  gate that now enforces it, with no backlog row opened first. No reasoning was given beyond the
+  finding.
+
 - **Rule 7's guard turns off errexit, 2026-09-26T00:27Z: "Add +e now" (#358).** The maintainer's words were
   "Add +e now": rule 7's guard `set +x +a` gains `+e`, so that a block pasted into a shell with an inherited
   `set -e` (a script, `bash -e`) does not stop silently at a check expected to fail. As merged, the guard reads

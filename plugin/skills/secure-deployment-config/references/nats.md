@@ -772,7 +772,7 @@ The first publish is the allowed control. The subsequent operations deliberately
   case "$2" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the certificate path'; exit 2 ;; esac
   case "$3" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the key path'; exit 2 ;; esac
   case "$4" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the CA path'; exit 2 ;; esac
-  case "$1" in *[!A-Za-z0-9.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
+  case "$1" in *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
   { unset -n v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA &&
     unset -v v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA; } 2>/dev/null ||
     { echo 'cannot clear the variables this block uses; not probing'; exit 2; }
@@ -835,7 +835,7 @@ Terminal 1 is self-contained and reads its password inside the guarded subshell.
   case "$2" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the certificate path'; exit 2 ;; esac
   case "$3" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the key path'; exit 2 ;; esac
   case "$4" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the CA path'; exit 2 ;; esac
-  case "$1" in *[!A-Za-z0-9.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
+  case "$1" in *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
   { unset -n v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA &&
     unset -v v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA; } 2>/dev/null ||
     { echo 'cannot clear the variables this block uses; not probing'; exit 2; }
@@ -870,7 +870,7 @@ Terminal 2 independently establishes its target, TLS configuration, and credenti
   case "$2" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the certificate path'; exit 2 ;; esac
   case "$3" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the key path'; exit 2 ;; esac
   case "$4" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the CA path'; exit 2 ;; esac
-  case "$1" in *[!A-Za-z0-9.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
+  case "$1" in *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
   { unset -n v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA &&
     unset -v v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA; } 2>/dev/null ||
     { echo 'cannot clear the variables this block uses; not probing'; exit 2; }
@@ -915,7 +915,7 @@ The following self-contained request block is also used by V4 and V5. Its last t
   case "$5" in order-svc|orders-provisioner|sys-admin) ;; *) echo 'select a listed test identity'; exit 2 ;; esac
   case "$6" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the request subject'; exit 2 ;; esac
   case "$7" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the request body'; exit 2 ;; esac
-  case "$1" in *[!A-Za-z0-9.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
+  case "$1" in *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
   { unset -n v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA &&
     unset -v v f pw srv opts marker NATS_USER NATS_PASSWORD NATS_CERT NATS_KEY NATS_CA; } 2>/dev/null ||
     { echo 'cannot clear the variables this block uses; not probing'; exit 2; }
@@ -1036,7 +1036,7 @@ First complete the listener inventory in V1. Run this whole block from the inten
   shift
   [ "$#" -eq 1 ] || { echo 'provide exactly 1 value; not probing'; exit 2; }
   case "$1" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'substitute the monitor host'; exit 2 ;; esac
-  case "$1" in *[!A-Za-z0-9.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
+  case "$1" in *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*|-*) echo 'use a DNS hostname or IPv4 address only'; exit 2 ;; esac
   for endpoint in varz 'connz?subs=true&auth=true' routez jsz; do
     curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
       -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \

@@ -141,12 +141,12 @@ def request(mode):
                     "\nX-GitHub-Delivery: " + str(uuid.uuid4()) + "\n").encode()
     print(mode.upper(), flush=True)
     result = subprocess.run(
-        ["curl", "-q", "-g", "-sS", "-i", "--noproxy", "*",
+        ("curl", "-q", "-g", "-sS", "-i", "--noproxy", "*",
          "--connect-timeout", "5", "--max-time", "10",
          "-H", "Content-Type: application/json", "-H", "@-",
          "--data-binary", "@" + sys.argv[2],
          "-w", "\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n",
-         sys.argv[1]], input=headers, check=False)
+         sys.argv[1]), input=headers, check=False)
     if result.returncode:
         raise SystemExit("Transport failure: inconclusive")
 
