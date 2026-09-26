@@ -25440,19 +25440,42 @@ gateway: keep them all on a private network or behind an identity-aware fronting
 ## OpenTelemetry Collector
 
 The Collector is the pipe these tools (and others) receive traces through, and it ships with no security
-applied until you configure it. The project's own hardening guidance: bind receivers to a specific interface
-or `localhost` (for example `127.0.0.1:4317`). The default host for Collector component servers became `localhost` in v0.104.0 (earlier versions bound all
-interfaces); the `component.UseLocalHostAsDefaultHost` feature gate that governed that transition was
-stabilized and then REMOVED in v0.112.0, so on current versions the localhost default is simply in effect. A
-distribution's own configuration can still override a component's default. Set the endpoint explicitly on any version
-rather than trusting the default, and widen it only where a proxy or
-mesh in front needs the wider bind; require TLS on every receiver and exporter; and attach an authenticator
+applied until you configure it. Bind receivers to a specific interface or loopback (for example
+`127.0.0.1:4317`). The OTLP receiver's default host became `localhost` in v0.104.0; the
+`component.UseLocalHostAsDefaultHost` feature gate was stabilized in v0.111.0 and removed in v0.112.0.
+At v0.161.0, the OTLP factory sets `localhost:4317` (gRPC) and `localhost:4318` (HTTP) directly.
+
+**The official `otelcol` and `otelcol-contrib` images and deb/rpm packages ship a configuration that
+overrides those localhost component defaults.** At v0.161.0, both enable wildcard IPv4 listeners on
+`0.0.0.0`: OTLP `4317`/`4318`, Jaeger `14250`/`6832`/`6831`/`14268`, Zipkin `9411`, and
+the diagnostic extensions pprof `1777` and zPages `55679`, with no authentication configured.
+Their first-line comment tells users to narrow the endpoints, but the shipped values still bind every
+IPv4 interface. Each Dockerfile copies that config and selects it in the default `CMD`; it declares
+`EXPOSE 4317 4318 55679`. `EXPOSE` does not publish ports, and `docker run -p` publishes only the
+mappings you request; the in-container wildcard listeners can still be reachable by container peers.
+Inventory network paths as well as host publications.
+
+For packages, the systemd unit reads `/etc/otelcol/otelcol.conf` or
+`/etc/otelcol-contrib/otelcol-contrib.conf`; its `OTELCOL_OPTIONS` selects the matching
+`/etc/otelcol/config.yaml` or `/etc/otelcol-contrib/config.yaml`. The package recipe installs the
+same shipped config with `config|noreplace` handling; the postinstall scripts manage the service,
+rather than copying the config. Existing local configuration can therefore differ.
+
+Supply your own configuration with explicit endpoints for every enabled listener. Remove pprof and
+zPages from both `extensions` and `service.extensions` unless needed; if retained, bind them privately
+and control access separately from receiver authentication. Widen a receiver's bind only where the
+intended clients, proxy, or mesh need it; require TLS on every receiver and exporter; and attach an authenticator
 extension, such as `basicauth` (htpasswd-style credentials, or a static `client_auth` username/password for
 outgoing calls) or `bearertokenauth` (a static or file-backed token sent as an `Authorization` header), to any
 receiver that accepts data from outside the host. Declaring an authenticator extension is not enough to enforce it: list it under `service.extensions` so it
 starts, then attach it to EACH receiver protocol with an `auth.authenticator` key naming the extension.
-Inventory the other listeners too - the internal Prometheus metrics endpoint (`127.0.0.1:8888` by default)
-and any enabled diagnostic extensions (zPages `55679`, pprof `1777`, health-check `13133`) are also surface.
+Inventory the other listeners too. At v0.161.0, the internal telemetry metrics factory defaults to
+`localhost:8888`; the two shipped configs explicitly use `127.0.0.1:8888`. Their
+`0.0.0.0:8888` Prometheus scrape target is an outbound destination, not a listener setting.
+The enabled health-check extension (`13133`) also needs review independently of receiver authentication.
+The `otelcol-k8s` Dockerfile at this tag copies no default config and supplies no default config
+`CMD`; its `EXPOSE` list alone establishes no running listeners. Helm chart and operator configuration
+are out of scope here.
 Build or run only the receivers, processors, and exporters you use, since every enabled component is attack
 surface, and run the process as a non-root user.
 
@@ -25466,6 +25489,15 @@ per [nginx.md](nginx.md), [caddy.md](caddy.md)), and make sure any plaintext bac
 to is not separately reachable.
 
 ## Verify
+
+Collector live checks remain **REASONED**: the authoring host forbids opening listeners without an
+isolated network namespace, and has none. Backlog row 1.45 tracks live demonstration. Inspect the
+effective config and inventory TCP and UDP sockets in the Collector's network namespace, together
+with container publications and firewall rules. With the shipped config, expect the nine wildcard
+endpoints listed above, including unauthenticated pprof and zPages. With your replacement config,
+expect only the intended private binds and no pprof or zPages listener if removed. Test reachability
+from an untrusted network and use an authorized client as a positive control; a failed connection
+alone does not prove authentication. No exposed-versus-fixed Collector run was performed here.
 
 ```bash
 # These checks are REASONED, not demonstrated here: the authoring environment has no running Langfuse,
@@ -25600,14 +25632,24 @@ that accepts spans with no credential at all.
 - Helicone, repository Compose deployment (`BETTER_AUTH_SECRET` fallback `your-secret-key`; backing stores published on host ports `54388:5432`, `18123:8123`, `19000:9000`, `9000`/`9001`, `6379`, `1025`/`8025`): https://github.com/Helicone/helicone/blob/b12ebaccb824ab9778757ca197ff302d97fda421/docker/docker-compose.yml
 - Langfuse, headless initialization (`LANGFUSE_INIT_ORG_ID`/`USER_EMAIL`/`USER_PASSWORD`, org-before-user ordering): https://langfuse.com/self-hosting/administration/headless-initialization
 - Arize Phoenix, OAuth2 sign-up and basic-auth controls (`PHOENIX_OAUTH2_<IDP>_ALLOW_SIGN_UP` default True, `PHOENIX_DISABLE_BASIC_AUTH`): https://arize.com/docs/phoenix/self-hosting/features/authentication
-- OpenTelemetry Collector, localhost default introduced in v0.104.0: https://opentelemetry.io/blog/2024/hardening-the-collector-one/
-- OpenTelemetry Collector, `component.UseLocalHostAsDefaultHost` feature-gate removal in v0.112.0: https://github.com/open-telemetry/opentelemetry-collector/blob/v0.112.0/CHANGELOG.md
+- OpenTelemetry Collector v0.161.0, OTLP factory endpoints: https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/receiver/otlpreceiver/factory.go#L41-L67
+- OpenTelemetry Collector v0.161.0 changelog, v0.104.0 OTLP localhost transition: https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/CHANGELOG.md#L2058-L2070
+- OpenTelemetry Collector v0.161.0 changelog, gate stabilization in v0.111.0 and removal in v0.112.0: https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/CHANGELOG.md#L1762-L1811 and https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/CHANGELOG.md#L1737-L1743
+- OpenTelemetry Collector releases v0.161.0, shipped configs (wildcard endpoints, explicit loopback metrics, enabled pipelines and extensions): https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol/config.yaml#L1-L81 and https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-contrib/config.yaml#L1-L81
+- OpenTelemetry Collector releases v0.161.0, Docker config COPY, CMD and EXPOSE: https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol/Dockerfile#L10-L15 and https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-contrib/Dockerfile#L10-L15
+- OpenTelemetry Collector releases v0.161.0, deb/rpm config installation and script selection: https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol/.goreleaser.yaml#L86-L118 and https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-contrib/.goreleaser.yaml#L94-L126
+- OpenTelemetry Collector releases v0.161.0, systemd environment and command: https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol/otelcol.service#L5-L7 and https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-contrib/otelcol-contrib.service#L5-L7
+- OpenTelemetry Collector releases v0.161.0, package config arguments: https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol/otelcol.conf#L1-L5 and https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-contrib/otelcol-contrib.conf#L1-L5
+- OpenTelemetry Collector releases v0.161.0, deb postinstall service management: https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol/postinstall.sh#L6-L16 and https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-contrib/postinstall.sh#L6-L16
+- OpenTelemetry Collector releases v0.161.0, rpm postinstall service management: https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol/postinstall-rpm.sh#L6-L9 and https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-contrib/postinstall-rpm.sh#L6-L9
+- OpenTelemetry Collector releases v0.161.0, otelcol-k8s Dockerfile (no config COPY or CMD): https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-k8s/Dockerfile#L1-L17
 - OpenTelemetry, Collector security best practices (bind addresses, TLS, authenticator extensions, minimal
   components, non-root): https://opentelemetry.io/docs/security/config-best-practices/
 - OpenTelemetry Collector Contrib, `basicauthextension` (htpasswd, `client_auth`, `auth.authenticator` wiring): https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/basicauthextension
 - Arize Phoenix, gRPC OTLP Export authorization (`ApiKeyInterceptor`: `UNAUTHENTICATED` without a key, `PERMISSION_DENIED` for a viewer token, `OK` with a write-authorized key or when auth is disabled): https://github.com/Arize-ai/phoenix/blob/f11c885c063f1c9b6146693cda401c5d645d8294/src/phoenix/server/bearer_auth.py
-- OpenTelemetry Collector, internal Prometheus metrics at `127.0.0.1:8888`: https://opentelemetry.io/docs/collector/internal-telemetry/
-- OpenTelemetry Collector, zPages extension (default endpoint `localhost:55679`): https://github.com/open-telemetry/opentelemetry-collector/blob/71f0462d5460ad3055201fd0f17658e56362d63a/extension/zpagesextension/README.md
+- OpenTelemetry Collector v0.161.0, internal telemetry metrics default `localhost:8888`: https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/service/telemetry/otelconftelemetry/factory.go#L49-L64
+- OpenTelemetry Collector v0.161.0, zPages default endpoint and HTTP server configuration: https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/extension/zpagesextension/factory.go#L15-L29
+- OpenTelemetry Collector v0.161.0, zPages server wiring and optional HTTP authentication: https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/extension/zpagesextension/zpagesextension.go#L87-L105 and https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/config/confighttp/server.go#L352-L364
 - OpenTelemetry Collector Contrib, pprof extension (default endpoint `localhost:1777`): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/443567a6a00d7cff8cae1432a6fef655d8698e94/extension/pprofextension/README.md
 - OpenTelemetry Collector Contrib, health-check extension (default endpoint `localhost:13133`): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/d922ffb299c6b9be026f97dd7d6a5f0f507efdeb/extension/healthcheckextension/README.md
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
