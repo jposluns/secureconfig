@@ -24,16 +24,35 @@ def main():
     exact_release = re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", running) is not None
     pin = f'      PYTHON_VERSION: "{running}"\n'.encode()
     other = "0.0.0" if running != "0.0.0" else "0.0.1"
+    other_pin = f'      PYTHON_VERSION: "{other}"\n'.encode()
+    differs = f"  SKIP  python3 {running} differs from CI's pinned PYTHON_VERSION {other}"
     cases = [
         ("different release", f'      PYTHON_VERSION: "{other}"\n'.encode(),
          f"  SKIP  python3 {running} differs from CI's pinned PYTHON_VERSION {other}", ""),
-        ("missing pin", b"env:\n", "found 0 candidate lines", ""),
-        ("comment only", b'# PYTHON_VERSION: "1.2.3"\n', "found 0 candidate lines", ""),
-        ("malformed pin", b'  PYTHON_VERSION: "1.2"\n', "found 1 candidate lines", ""),
-        ("single quotes", b"  PYTHON_VERSION: '1.2.3'\n", "found 1 candidate lines", ""),
-        ("duplicate pins", pin + pin, "found 2 candidate lines", ""),
-        ("mixed duplicate", pin + b"  PYTHON_VERSION: broken\n",
-         "found 2 candidate lines", ""),
+        ("missing pin", b"env:\n", "found 0 PYTHON_VERSION keys and 0 pin lines", ""),
+        # A key inside a YAML comment still counts. This is intended fail-closed behaviour:
+        # a false SKIP on this advisory notice is harmless, a false ok is not.
+        ("comment only", b'# PYTHON_VERSION: "1.2.3"\n',
+         "found 1 PYTHON_VERSION keys and 0 pin lines", ""),
+        ("comment beside pin", b'# PYTHON_VERSION: "1.2.3"\n' + other_pin,
+         "found 2 PYTHON_VERSION keys and 1 pin lines", ""),
+        ("malformed pin", b'  PYTHON_VERSION: "1.2"\n',
+         "found 1 PYTHON_VERSION keys and 0 pin lines", ""),
+        ("single quotes", b"  PYTHON_VERSION: '1.2.3'\n",
+         "found 1 PYTHON_VERSION keys and 0 pin lines", ""),
+        ("duplicate pins", other_pin + other_pin,
+         "found 2 PYTHON_VERSION keys and 2 pin lines", ""),
+        ("mixed duplicate", other_pin + b"  PYTHON_VERSION: broken\n",
+         "found 2 PYTHON_VERSION keys and 1 pin lines", ""),
+        ("flow-mapping second pin", other_pin + b'    env: {PYTHON_VERSION: "1.2.3"}\n',
+         "found 2 PYTHON_VERSION keys and 1 pin lines", ""),
+        ("flow mapping, quoted key", other_pin + b'    env: {"PYTHON_VERSION": "1.2.3"}\n',
+         "found 2 PYTHON_VERSION keys and 1 pin lines", ""),
+        # References are not pins and must not count.
+        ("expression reference", other_pin
+         + b"          python-version: ${{ env.PYTHON_VERSION }}\n", differs, ""),
+        ("shell references", other_pin
+         + b'          run: echo "$PYTHON_VERSION ${PYTHON_VERSION}"\n', differs, ""),
         ("missing workflow", None, "cannot read .github/workflows/checks.yml", ""),
         ("invalid encoding", b"\xff", "cannot read .github/workflows/checks.yml", ""),
         ("unavailable interpreter", pin, "python3 did not complete",
@@ -50,18 +69,24 @@ def main():
             alternate = f'{indent}{key} "{running}"\n'.encode()
             label = f"{name}, indent={len(indent)}"
             cases.extend([
-                (label, alternate, "found 1 candidate lines", ""),
-                (f"duplicate {label}", pin + alternate, "found 2 candidate lines", ""),
+                (label, alternate, "found 1 PYTHON_VERSION keys and 0 pin lines", ""),
+                (f"duplicate {label}", other_pin + alternate,
+                 "found 2 PYTHON_VERSION keys and 1 pin lines", ""),
             ])
     if exact_release:
         cases.extend([
             ("matching release", pin,
              f"  ok    python3 {running} matches CI's pinned PYTHON_VERSION", ""),
-            ("comment ignored", b'# PYTHON_VERSION: "0.0.0"\n' + pin,
+            ("matching pin, expression reference",
+             pin + b"          python-version: ${{ env.PYTHON_VERSION }}\n",
+             f"  ok    python3 {running} matches CI's pinned PYTHON_VERSION", ""),
+            ("matching pin, shell references",
+             pin + b'          run: echo "$PYTHON_VERSION ${PYTHON_VERSION}"\n',
              f"  ok    python3 {running} matches CI's pinned PYTHON_VERSION", ""),
         ])
     else:
-        cases.append(("non-release pin refused", pin, "found 1 candidate lines", ""))
+        cases.append(("non-release pin refused", pin,
+                      "found 1 PYTHON_VERSION keys and 0 pin lines", ""))
     failures = []
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory)
@@ -78,7 +103,7 @@ def main():
                      + block + '\nexit "$fail"\n'],
                     cwd=root, capture_output=True, text=True)
                 output = result.stdout + result.stderr
-                prefix = "  ok    " if name in ("matching release", "comment ignored") else "  SKIP  "
+                prefix = "  ok    " if expected.startswith("  ok    ") else "  SKIP  "
                 if (result.returncode != initial or expected not in output
                         or not result.stdout.startswith(prefix)
                         or "  FAIL  " in output):

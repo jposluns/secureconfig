@@ -454,14 +454,16 @@ try:
 except (OSError, UnicodeError) as exc:
     notice(f"Python version comparison unavailable: cannot read {workflow}: {exc}")
 else:
-    candidate = r"""^[ \t]*(?:PYTHON_VERSION|"PYTHON_VERSION"|'PYTHON_VERSION')[ \t]*:"""
-    pins = [line for line in lines if re.match(candidate, line)]
     pattern = r'[ \t]*PYTHON_VERSION: "([0-9]+\.[0-9]+\.[0-9]+)"[ \t]*'
-    match = re.fullmatch(pattern, pins[0]) if len(pins) == 1 else None
+    # Count every PYTHON_VERSION token except references (env.PYTHON_VERSION, $PYTHON_VERSION,
+    # ${PYTHON_VERSION}), so a second pin in any YAML form (quoted, spaced, flow mapping) is seen.
+    keys = re.findall(r'(?<![.$\w])(?<!\$\{)PYTHON_VERSION(?!\w)', "\n".join(lines))
+    pins = [line for line in lines if re.fullmatch(r'[ \t]*PYTHON_VERSION: "([0-9]+\.[0-9]+\.[0-9]+)"[ \t]*', line)]
+    match = re.fullmatch(pattern, pins[0]) if len(keys) == 1 and len(pins) == 1 else None
     if match is None:
         notice('Python version comparison unavailable: expected exactly one '
                'PYTHON_VERSION: "X.Y.Z" line in .github/workflows/checks.yml '
-               f'(found {len(pins)} candidate lines)')
+               f'(found {len(keys)} PYTHON_VERSION keys and {len(pins)} pin lines)')
     else:
         pinned = match.group(1)
         running = sys.version.split()[0]
