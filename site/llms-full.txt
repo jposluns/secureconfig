@@ -24844,9 +24844,19 @@ The image build excludes `auth.json`, so mount it read-only at `/content/app/aut
 
 ## Verify
 
+None of this guide's live Verify checks has a recorded demonstration. The missing capability is an isolated host or network namespace in which the services and their proxy may open listeners, as described for Fooocus below. Row 1.158 tracks the ComfyUI, AUTOMATIC1111, InvokeAI and proxy demonstrations; row 1.146 continues to track Fooocus.
+
+The ComfyUI (8188), AUTOMATIC1111 (7860) and InvokeAI (9090) entries in the listener inventory and external probe loop are each REASONED, not demonstrated: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none. From the cited ComfyUI v0.37.0 argument parser, AUTOMATIC1111 v1.10.1 `gradio_server_name()` and InvokeAI YAML Config reference, a host process bound to a wildcard address should appear that way in `ss` and answer the external probe with an HTTP code when the network permits it; bound to `127.0.0.1` as above, it should appear only on loopback and the external probe should report a refusal or timeout reaching your address. Confirm each service is running and answers on host loopback before interpreting an external refusal as the fixed state. These are expected outcomes from the sources, not observations.
+
+The InvokeAI `/api/v1/boards/` check is also REASONED: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none. The cited Multi-User Administrator Guide distinguishes the default single-user mode from `multiuser: true`, which requires a login. The expected pair is an unauthenticated boards response in single-user mode (the cited guide gives no status code for it; record the observed code) and the rejection shown below in multi-user mode; record both when demonstrating row 1.158.
+
+The proxy check is REASONED: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none, so no proxy or backend was run. Following [fronting-auth.md](fronting-auth.md), the expected exposed state serves the UI without proxy authentication, and the fixed state requires a login before the UI loads. Use your configured hostname in place of `imagegen.example.com`; the header request below checks the TLS connection and authentication response, and a browser check confirms the login gates the UI. Row 1.158 tracks both states.
+
 The Fooocus entries below (port 7865 in the `ss` comment and in the probe loop) are REASONED, not demonstrated: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none, so no Fooocus instance was run; row 1.146 tracks the demonstration. From the v2.5.5 sources cited below (the `--listen` default and its bare-flag constant in the argument parser, and the launch call that passes the bind and port to gradio), a Fooocus process started on the host with a bare `--listen` should show a wildcard listener on 7865 in `ss` and answer the probe from another host with an HTTP code; started as above, it should show `127.0.0.1:7865` in `ss`, and the probe should report a refusal or timeout reaching your address. The argument parse alone is demonstrated: `argparse` given that `--listen` definition (`type=str`, `default="127.0.0.1"`, `nargs="?"`, `const="0.0.0.0"`) returns `127.0.0.1` with no flag and `0.0.0.0` for a bare `--listen`. Confirm Fooocus is up and answers on the host itself before reading an external refusal as the fixed state. The `ss` expectations cover host processes only. For a container, the check is the PORTS column of `docker ps` plus the probe from another host, not `ss`, because socket visibility varies by Docker version and config (see [docker.md](docker.md#4-verify)): a container published as `7865:7865` should list the publication on every host address in the PORTS column and answer the probe with an HTTP code, and one published as `127.0.0.1:7865:7865` should list `127.0.0.1` as its only host address, with the probe reporting a refusal or timeout reaching your address. A publication with no host address binds `[::]` as well as `0.0.0.0`, so run the probe block twice, once with your public IPv4 address and once with your public IPv6 address in square brackets, each inside the quotes on the `set --` line. The block probes every port even when an earlier probe fails, so its exit status is not the verification result: read each `port=` line. Under rootful Docker's host networking nothing is published and the PORTS column is empty; the listener is in the host's network namespace, so read `ss` for it as for a host process: `127.0.0.1:7865` when fixed, or `0.0.0.0:7865` when `CMDARGS` still binds the wildcard, whether the image's default `--listen` was left in or a bridge-network `--listen 0.0.0.0` was copied over.
 
 ```bash
+# REASONED inventory and external probes: ComfyUI 8188, AUTOMATIC1111 7860, InvokeAI 9090 (row 1.158);
+# Fooocus 7865 (row 1.146). The authoring host forbids listeners without an isolated network namespace, and has none; expected outcomes and sources above.
 ss -tlnp   # host processes: read every listener; 8188/7860/9090/7865: each service on 127.0.0.1 only
 # each must be unreachable from another host. Read err, not the number: it must name a refusal or
 # timeout reaching YOUR address. An HTTP code means the port answered. A resolver failure, a local
@@ -24866,10 +24876,12 @@ ss -tlnp   # host processes: read every listener; 8188/7860/9090/7865: each serv
        done ;;
   esac
 )
+# REASONED: InvokeAI authentication; the authoring host forbids listeners without an isolated network namespace (row 1.158).
 # guard-conventions: allow probe of a fixed loopback target; no reader-substituted placeholder in this probe's argv
 curl -q -g -s --noproxy '*' -o /dev/null -w '%{http_code}\n' http://127.0.0.1:9090/api/v1/boards/
                                                        # from the host itself, InvokeAI multiuser mode: 401
                                                        # without a Bearer token, never the app itself
+# REASONED: TLS and login; the authoring host forbids listeners without an isolated network namespace (row 1.158).
 # guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sI https://imagegen.example.com/                # via the proxy: TLS, and a login prompt
                                                        # or 401 without credentials, before the UI loads
