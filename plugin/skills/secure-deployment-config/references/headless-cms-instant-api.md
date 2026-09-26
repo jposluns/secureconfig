@@ -175,10 +175,12 @@ when run against a live instance; backlog row 2.25 tracks demonstrating them. Gi
 record whose one field reads `secureconfig-canary`, use curl 7.75.0 or later, and run the paired block once per
 applicable endpoint: it sends the same URL and body twice, first with a valid credential and then anonymously,
 so the authorized control proves the origin is the service and the canary exists before an application denial
-can count as protection. Load the authorized header into `CMS_PROBE_HEADER` from your secret manager or an
-interactive prompt, never on the command line (`Authorization: Bearer ...` for Strapi, Directus and PostgREST,
-or `X-Hasura-Admin-Secret: ...` for Hasura); leave `CMS_NEGATIVE_HEADER` unset for the anonymous test. Treat an
-empty result, a missing route, an unrelated error, an HTML page, a TLS error, or a timeout as inconclusive,
+can count as protection. Use a fresh, trusted shell. Enter the authorized header at the block's hidden prompt
+(`Authorization: Bearer ...` for Strapi, Directus and PostgREST, or `X-Hasura-Admin-Secret: ...` for Hasura);
+press Enter at the negative-header prompt for the anonymous test. Both headers stay in unexported subshell
+variables and reach curl on stdin, never in argv or pasted commands. Inherited values are discarded; the
+variables are unset after use and the subshell contains early exits. This does not hide credentials from the
+account owner or root. Treat an empty result, a missing route, an unrelated error, an HTML page, a TLS error, or a timeout as inconclusive,
 never as the fixed state. Substitute your own host for the `example.com` placeholder.
 
 | Tool | Path appended to the deployment's HTTPS origin | JSON body | Expected private-state negative |
@@ -190,7 +192,12 @@ never as the fixed state. Substitute your own host for the `example.com` placeho
 
 ```bash
 (
-  set +x                                  # keep the credential out of any shell trace
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  set +x +a +e
+  { unset -n CMS_PROBE_HEADER CMS_NEGATIVE_HEADER &&
+    unset -v CMS_PROBE_HEADER CMS_NEGATIVE_HEADER; } 2>/dev/null ||
+    { echo 'cannot clear CMS header variables in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_CANARY_URL' ''
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
   shift
@@ -201,31 +208,46 @@ never as the fixed state. Substitute your own host for the `example.com` placeho
     https://*) ;;
     *) echo 'use an https:// URL; not probing'; exit 2 ;;
   esac
-  case "${CMS_PROBE_HEADER-}" in
-    ''|*REPLACE_WITH_*) echo 'load a valid control header into CMS_PROBE_HEADER; not probing'; exit 2 ;;
+  IFS= read -r -s -p 'Authorized header (input hidden): ' CMS_PROBE_HEADER ||
+    { echo 'header input failed; not probing'; exit 2; }
+  printf '\n'
+  case "$CMS_PROBE_HEADER" in
+    ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'supply a valid control header without control characters; not probing'; exit 2 ;;
+  esac
+  IFS= read -r -s -p 'Negative header (empty for anonymous, input hidden): ' CMS_NEGATIVE_HEADER ||
+    { echo 'header input failed; not probing'; exit 2; }
+  printf '\n'
+  case "$CMS_NEGATIVE_HEADER" in
+    *REPLACE_WITH_*|*[[:cntrl:]]*) echo 'supply a negative header without control characters, or leave it empty; not probing'; exit 2 ;;
   esac
   printf '%s\n' 'AUTHORIZED CONTROL (must return the canary):'
   if [ -z "$2" ]; then
-    curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-      -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-      --header @- "$1" <<< "$CMS_PROBE_HEADER" || exit 2
+    printf '%s\n' "$CMS_PROBE_HEADER" |
+      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+        -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+        --header @- "$1" || exit 2
   else
-    curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-      -H 'Content-Type: application/json' --data-raw "$2" \
-      -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-      --header @- "$1" <<< "$CMS_PROBE_HEADER" || exit 2
+    printf '%s\n' "$CMS_PROBE_HEADER" |
+      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+        -H 'Content-Type: application/json' --data-raw "$2" \
+        -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+        --header @- "$1" || exit 2
   fi
-  printf '%s\n' 'NEGATIVE (anonymous unless CMS_NEGATIVE_HEADER is set):'
+  unset -v CMS_PROBE_HEADER
+  printf '%s\n' 'NEGATIVE (anonymous when the negative-header prompt was empty):'
   if [ -z "$2" ]; then
-    curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-      -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-      --header @- "$1" <<< "${CMS_NEGATIVE_HEADER-}" || exit 2
+    printf '%s\n' "${CMS_NEGATIVE_HEADER-}" |
+      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+        -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+        --header @- "$1" || exit 2
   else
-    curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-      -H 'Content-Type: application/json' --data-raw "$2" \
-      -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-      --header @- "$1" <<< "${CMS_NEGATIVE_HEADER-}" || exit 2
+    printf '%s\n' "${CMS_NEGATIVE_HEADER-}" |
+      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+        -H 'Content-Type: application/json' --data-raw "$2" \
+        -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+        --header @- "$1" || exit 2
   fi
+  unset -v CMS_NEGATIVE_HEADER
   printf '%s\n' 'Requests done; compare both bodies. Exit 0 is not a security verdict.'
 )
 ```
@@ -236,7 +258,7 @@ list in the tool (the Directus access policies, the Strapi role permission matri
 for an authorization error by default (its `HASURA_GRAPHQL_PRESERVE_401_ERRORS` flag, Community Edition 2.48.0
 and later, preserves authentication failures as HTTP 401 instead; the quickstart Compose ships 2.46.0), so the
 fixed state is the admin-secret-required message in the JSON. For PostgREST, repeat the negative with an
-invalid token by setting `CMS_NEGATIVE_HEADER='Authorization: Bearer not-a-real-jwt'` and expect `PGRST301`,
+invalid token by entering `Authorization: Bearer not-a-real-jwt` at the negative-header prompt and expect `PGRST301`,
 which confirms a bad token is rejected rather than treated as anonymous; a missing or expired token gives
 `PGRST302` or `PGRST303`.
 
@@ -245,7 +267,7 @@ actually uses. Repeat the paired request using the old credential after retireme
 Directus static token replaced or cleared on the existing user through the Data Studio or Users API, a Hasura
 admin secret removed from the running configuration, or an otherwise valid, unexpired canary JWT signed with a
 key the verifier no longer accepts. Changing Directus's bootstrap `ADMIN_TOKEN` environment variable alone is
-not a rotation procedure for an existing user's token. Load the old credential into `CMS_NEGATIVE_HEADER`,
+not a rotation procedure for an existing user's token. Enter the old credential's header at the negative-header prompt,
 keeping the valid control, origin, path and body unchanged, and require an application authentication failure
 attributable to the retired credential; a permission denial, proxy rejection or unrelated error does not
 establish revocation. For administrator passwords, use a fresh browser session at the same login origin: the

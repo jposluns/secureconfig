@@ -12498,12 +12498,18 @@ Lifecycle note, as of September 2026: the MinIO community repository on GitHub w
 
 ## 1. Set real root credentials
 
-```bash
-export MINIO_ROOT_USER="REPLACE_WITH_ADMIN_NAME"
-export MINIO_ROOT_PASSWORD="REPLACE_WITH_LONG_RANDOM_VALUE"
+Provision `/etc/minio/root-user` and `/etc/minio/root-password` through your secret manager before starting the server. Each must be a regular file owned by the server account, mode `0600`, under a directory other accounts cannot traverse, write to or replace, with no ACL granting them access. Each contains only its credential, with no whitespace or trailing newline. Keep these files and their backups out of source control.
+
+In the server's launch configuration, set only the file paths:
+
+```dotenv
+MINIO_ROOT_USER_FILE=/etc/minio/root-user
+MINIO_ROOT_PASSWORD_FILE=/etc/minio/root-password
 ```
 
-Never run with the `minioadmin`/`minioadmin` pair, which is still the built-in default when the root environment variables are unset; scanners try it constantly. Root credentials are for administration only: create per-application access keys with least-privilege policies (via the console or the `mc` client) so no app holds root ([authentication.md](authentication.md)).
+AIStor reads these files at startup. Remove `MINIO_ROOT_USER` and `MINIO_ROOT_PASSWORD` from the launch environment and any environment file: a direct value takes precedence over its `_FILE` counterpart. Start a fresh server process after changing its launch configuration. This assumes the protected files already exist and the launcher supplies these path variables; it does not create credentials or start a server. The shell and launch arguments contain only paths, while the server account and root can still read the credential files and server memory. See the vendor's [file-based settings](https://docs.min.io/aistor/reference/aistor-server/settings/#file-based-environment-variables) and [root credential file requirements](https://docs.min.io/aistor/reference/aistor-server/settings/root-credentials/).
+
+Never run with the `minioadmin`/`minioadmin` pair, which is still the built-in default when neither direct root credentials nor credential files are supplied; scanners try it constantly. Root credentials are for administration only: create per-application access keys with least-privilege policies (via the console or the `mc` client) so no app holds root ([authentication.md](authentication.md)).
 
 ## 2. Enable TLS
 
@@ -12962,6 +12968,7 @@ MINIO-LIVE additions (open): demonstrate OIDC role-policy and claim-policy scopi
 
 ## Sources (checked September 2026)
 
+- AIStor root credential files and file-variable precedence: https://docs.min.io/aistor/reference/aistor-server/settings/root-credentials/ and https://docs.min.io/aistor/reference/aistor-server/settings/#file-based-environment-variables
 - MinIO network encryption (certs directory, public.crt/private.key, --certs-dir): https://docs.min.io/aistor/installation/linux/network-encryption/
 - MinIO: https://www.min.io/
 - MinIO community repository (archived 2026-04-25, successor editions): https://github.com/minio/minio
@@ -24133,11 +24140,27 @@ The CLI help for `--host` says it plainly: "This is NOT a security setting". Do 
 
 MLflow ships an HTTP basic-auth app that stores users and per-resource permissions in a database (as of September 2026 the current documentation page carries no experimental label; verify before relying on it). The client-side `MLFLOW_TRACKING_USERNAME`/`MLFLOW_TRACKING_PASSWORD` variables do nothing on their own; the server must run this app.
 
+Provision `/etc/mlflow/server.env` through your secret manager as a regular file owned by the server account, mode `0600`, in a directory other accounts cannot traverse, write to or replace, with no ACL granting them access. It must contain a dotenv assignment for `MLFLOW_FLASK_SERVER_SECRET_KEY` with a long random value, identical on every replica. Keep the file and its backups out of source control. The block assumes this file and the auth configuration below are provisioned before startup and a fresh, trusted shell.
+
+The global `mlflow --env-file` option loads the file before executing the server command and does not override existing environment values. Clear inherited values first so the file supplies the key:
+
 ```bash
-pip install 'mlflow[auth]'
-export MLFLOW_FLASK_SERVER_SECRET_KEY="REPLACE_WITH_LONG_RANDOM_VALUE"   # CSRF key, required; same value on every replica
-MLFLOW_AUTH_CONFIG_PATH=/etc/mlflow/basic_auth.ini mlflow server --app-name basic-auth
+(
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  set +x +a +e
+  { unset -n MLFLOW_FLASK_SERVER_SECRET_KEY MLFLOW_AUTH_CONFIG_PATH &&
+    unset -v MLFLOW_FLASK_SERVER_SECRET_KEY MLFLOW_AUTH_CONFIG_PATH; } 2>/dev/null ||
+    { echo 'cannot clear MLflow launch variables in this shell; not starting'; exit 2; }
+  if [ ! -f /etc/mlflow/server.env ] || [ -L /etc/mlflow/server.env ] || [ ! -r /etc/mlflow/server.env ]; then
+    echo 'need a readable regular /etc/mlflow/server.env file, not a symlink; not starting'; exit 2
+  fi
+  pip install 'mlflow[auth]' || exit 2
+  MLFLOW_AUTH_CONFIG_PATH=/etc/mlflow/basic_auth.ini \
+    mlflow --env-file /etc/mlflow/server.env server --app-name basic-auth
+)
 ```
+
+Only the file path reaches the launch command; the shell never reads or exports the key. MLflow loads it into its own environment and forwards it to workers (traced at v3.16.1 in the sources below), so it remains exposed to the same account and root in process memory and, for inheriting processes, `/proc/<pid>/environ` throughout their lifetimes. A protected file does not remove that server-side exposure.
 
 Current MLflow has no default admin password: the first start requires an admin password of at least 12 characters, supplied as `MLFLOW_AUTH_ADMIN_PASSWORD` or as `admin_password` in the configuration file, and it rejects the legacy `password1234`, so startup fails without one. Set a strong password before that first start (an already-bootstrapped server does not need it re-supplied on later restarts):
 
@@ -24262,6 +24285,7 @@ An authenticated user without permission on a resource gets `403`; a missing or 
 
 ## Sources (checked September 2026)
 
+- MLflow CSRF-key file input: [global `--env-file` option and existing-environment precedence](https://mlflow.org/docs/latest/api_reference/cli.html#mlflow), [v3.16.1 auth factory](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/auth/__init__.py#L5557-L5570), and [v3.16.1 worker environment](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/__init__.py#L367-L368).
 - MLflow authentication with username and password (`--app-name basic-auth`, default admin credentials, `basic_auth.ini` keys, `MLFLOW_AUTH_CONFIG_PATH`, `MLFLOW_FLASK_SERVER_SECRET_KEY`, client variables, 403 on missing permission): https://mlflow.org/docs/latest/self-hosting/security/basic-http-auth/
 - MLflow authentication REST API (`2.0/mlflow/users/update-password` request fields): https://mlflow.org/docs/latest/api_reference/auth/rest-api.html
 - `mlflow server` CLI reference (`--host` default 127.0.0.1, `--port` 5000, `--app-name`, `--allowed-hosts`, `--cors-allowed-origins`, `--serve-artifacts`): https://mlflow.org/docs/latest/api_reference/cli.html
@@ -30991,10 +31015,12 @@ when run against a live instance; backlog row 2.25 tracks demonstrating them. Gi
 record whose one field reads `secureconfig-canary`, use curl 7.75.0 or later, and run the paired block once per
 applicable endpoint: it sends the same URL and body twice, first with a valid credential and then anonymously,
 so the authorized control proves the origin is the service and the canary exists before an application denial
-can count as protection. Load the authorized header into `CMS_PROBE_HEADER` from your secret manager or an
-interactive prompt, never on the command line (`Authorization: Bearer ...` for Strapi, Directus and PostgREST,
-or `X-Hasura-Admin-Secret: ...` for Hasura); leave `CMS_NEGATIVE_HEADER` unset for the anonymous test. Treat an
-empty result, a missing route, an unrelated error, an HTML page, a TLS error, or a timeout as inconclusive,
+can count as protection. Use a fresh, trusted shell. Enter the authorized header at the block's hidden prompt
+(`Authorization: Bearer ...` for Strapi, Directus and PostgREST, or `X-Hasura-Admin-Secret: ...` for Hasura);
+press Enter at the negative-header prompt for the anonymous test. Both headers stay in unexported subshell
+variables and reach curl on stdin, never in argv or pasted commands. Inherited values are discarded; the
+variables are unset after use and the subshell contains early exits. This does not hide credentials from the
+account owner or root. Treat an empty result, a missing route, an unrelated error, an HTML page, a TLS error, or a timeout as inconclusive,
 never as the fixed state. Substitute your own host for the `example.com` placeholder.
 
 | Tool | Path appended to the deployment's HTTPS origin | JSON body | Expected private-state negative |
@@ -31006,7 +31032,12 @@ never as the fixed state. Substitute your own host for the `example.com` placeho
 
 ```bash
 (
-  set +x                                  # keep the credential out of any shell trace
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  set +x +a +e
+  { unset -n CMS_PROBE_HEADER CMS_NEGATIVE_HEADER &&
+    unset -v CMS_PROBE_HEADER CMS_NEGATIVE_HEADER; } 2>/dev/null ||
+    { echo 'cannot clear CMS header variables in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_CANARY_URL' ''
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
   shift
@@ -31017,31 +31048,46 @@ never as the fixed state. Substitute your own host for the `example.com` placeho
     https://*) ;;
     *) echo 'use an https:// URL; not probing'; exit 2 ;;
   esac
-  case "${CMS_PROBE_HEADER-}" in
-    ''|*REPLACE_WITH_*) echo 'load a valid control header into CMS_PROBE_HEADER; not probing'; exit 2 ;;
+  IFS= read -r -s -p 'Authorized header (input hidden): ' CMS_PROBE_HEADER ||
+    { echo 'header input failed; not probing'; exit 2; }
+  printf '\n'
+  case "$CMS_PROBE_HEADER" in
+    ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'supply a valid control header without control characters; not probing'; exit 2 ;;
+  esac
+  IFS= read -r -s -p 'Negative header (empty for anonymous, input hidden): ' CMS_NEGATIVE_HEADER ||
+    { echo 'header input failed; not probing'; exit 2; }
+  printf '\n'
+  case "$CMS_NEGATIVE_HEADER" in
+    *REPLACE_WITH_*|*[[:cntrl:]]*) echo 'supply a negative header without control characters, or leave it empty; not probing'; exit 2 ;;
   esac
   printf '%s\n' 'AUTHORIZED CONTROL (must return the canary):'
   if [ -z "$2" ]; then
-    curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-      -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-      --header @- "$1" <<< "$CMS_PROBE_HEADER" || exit 2
+    printf '%s\n' "$CMS_PROBE_HEADER" |
+      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+        -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+        --header @- "$1" || exit 2
   else
-    curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-      -H 'Content-Type: application/json' --data-raw "$2" \
-      -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-      --header @- "$1" <<< "$CMS_PROBE_HEADER" || exit 2
+    printf '%s\n' "$CMS_PROBE_HEADER" |
+      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+        -H 'Content-Type: application/json' --data-raw "$2" \
+        -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+        --header @- "$1" || exit 2
   fi
-  printf '%s\n' 'NEGATIVE (anonymous unless CMS_NEGATIVE_HEADER is set):'
+  unset -v CMS_PROBE_HEADER
+  printf '%s\n' 'NEGATIVE (anonymous when the negative-header prompt was empty):'
   if [ -z "$2" ]; then
-    curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-      -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-      --header @- "$1" <<< "${CMS_NEGATIVE_HEADER-}" || exit 2
+    printf '%s\n' "${CMS_NEGATIVE_HEADER-}" |
+      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+        -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+        --header @- "$1" || exit 2
   else
-    curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-      -H 'Content-Type: application/json' --data-raw "$2" \
-      -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-      --header @- "$1" <<< "${CMS_NEGATIVE_HEADER-}" || exit 2
+    printf '%s\n' "${CMS_NEGATIVE_HEADER-}" |
+      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+        -H 'Content-Type: application/json' --data-raw "$2" \
+        -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+        --header @- "$1" || exit 2
   fi
+  unset -v CMS_NEGATIVE_HEADER
   printf '%s\n' 'Requests done; compare both bodies. Exit 0 is not a security verdict.'
 )
 ```
@@ -31052,7 +31098,7 @@ list in the tool (the Directus access policies, the Strapi role permission matri
 for an authorization error by default (its `HASURA_GRAPHQL_PRESERVE_401_ERRORS` flag, Community Edition 2.48.0
 and later, preserves authentication failures as HTTP 401 instead; the quickstart Compose ships 2.46.0), so the
 fixed state is the admin-secret-required message in the JSON. For PostgREST, repeat the negative with an
-invalid token by setting `CMS_NEGATIVE_HEADER='Authorization: Bearer not-a-real-jwt'` and expect `PGRST301`,
+invalid token by entering `Authorization: Bearer not-a-real-jwt` at the negative-header prompt and expect `PGRST301`,
 which confirms a bad token is rejected rather than treated as anonymous; a missing or expired token gives
 `PGRST302` or `PGRST303`.
 
@@ -31061,7 +31107,7 @@ actually uses. Repeat the paired request using the old credential after retireme
 Directus static token replaced or cleared on the existing user through the Data Studio or Users API, a Hasura
 admin secret removed from the running configuration, or an otherwise valid, unexpired canary JWT signed with a
 key the verifier no longer accepts. Changing Directus's bootstrap `ADMIN_TOKEN` environment variable alone is
-not a rotation procedure for an existing user's token. Load the old credential into `CMS_NEGATIVE_HEADER`,
+not a rotation procedure for an existing user's token. Enter the old credential's header at the negative-header prompt,
 keeping the valid control, origin, path and body unchanged, and require an application authentication failure
 attributable to the retired credential; a permission denial, proxy rejection or unrelated error does not
 establish revocation. For administrator passwords, use a fresh browser session at the same login origin: the
