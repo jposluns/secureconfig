@@ -4,13 +4,14 @@ A LiteLLM proxy fronts paid model APIs, so an exposed, keyless instance spends y
 
 ## 1. Set the master key
 
-In `config.yaml` under `general_settings: master_key`, or via the environment (preferred; see [secrets.md](secrets.md)):
+Set `general_settings.master_key` in the `config.yaml` that LiteLLM reads. Provision that file with mode `0600`, owned by the service account, in a directory other accounts cannot modify. Merge this setting into the existing configuration rather than replacing its model and database settings:
 
-```bash
-export LITELLM_MASTER_KEY="sk-REPLACE_WITH_LONG_RANDOM_VALUE"   # must start with sk-
+```yaml
+general_settings:
+  master_key: sk-REPLACE_WITH_LONG_RANDOM_VALUE
 ```
 
-The master key is the root credential for the proxy; it belongs to the operator only and never to client applications. Generate it with `openssl rand -hex 32` (kept behind the `sk-` prefix), and inject it from your secret store or a root-only environment file rather than typing the `export` above into an interactive shell, where it is captured in shell history and readable in `/proc/<pid>/environ` ([secrets.md](secrets.md)). When both the environment and `config.yaml` set the master key, the `config.yaml` value wins.
+The master key is the root credential for the proxy; it belongs to the operator only and never to client applications. Have your secret store generate 32 random bytes encoded as hex with an `sk-` prefix and write the value into the protected file, replacing the placeholder before startup. Do not paste the key into a shell command or export `LITELLM_MASTER_KEY`. LiteLLM reads the key from the file, keeping it out of launch argv and the process environment. The file is plaintext and remains readable by the service account, root and any backup that copies it; keep it and editor backups out of version control ([secrets.md](secrets.md)). When both the environment and `config.yaml` set the master key, the `config.yaml` value wins.
 
 At the time of writing, current LiteLLM refuses to start when the resolved master key is unset, empty or whitespace-only, or `sk-1234`. Either `LITELLM_DANGEROUSLY_PERMIT_WEAK_OR_UNSET_MASTER_KEY=true` or the YAML setting `general_settings.dangerously_permit_weak_or_unset_master_key: true` permits weak or keyless startup independently; keep both overrides absent or false in production. Older releases and overridden deployments can still operate without authentication, so the unauthenticated-deployment warning above remains relevant. A startup refusal is a protection to retain, not a reason to enable the override. No first release is asserted here. See [master-key startup protection](https://docs.litellm.ai/docs/proxy/master_key_rotations) and the [current startup enforcement call](https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/proxy_server.py).
 
@@ -18,18 +19,41 @@ At the time of writing, current LiteLLM refuses to start when the resolved maste
 
 Virtual keys need a PostgreSQL database: set `DATABASE_URL=postgresql://user:password@host:5432/dbname` in the environment (or `database_url` under `general_settings`) before `/key/generate` will work.
 
-The original alias-only request below illustrates issuance and attribution. It does not establish least privilege: use the restricted request body below for application keys, and substitute your actual HTTPS origin.
+The original alias-only request below illustrates issuance and attribution. It does not establish least privilege: use the restricted request body below for application keys. This block assumes a clean Bash shell. Substitute your actual HTTPS origin inside the single quotes (an apostrophe needs shell escaping), paste the whole block, and enter the master key at the hidden prompt. The key stays in an unexported subshell variable, is sent to curl on stdin, and is unset on exit; no ambient master key is used. The response contains the newly issued virtual key, so keep the output private.
 
 ```bash
-printf 'Authorization: Bearer %s\n' "$LITELLM_MASTER_KEY" | curl -q https://llm.example.com/key/generate \
-  -H @- \
-  -H "Content-Type: application/json" \
-  -d '{"key_alias": "app-frontend"}'
+(
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  set +x +a +e
+  set -o pipefail
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_ORIGIN'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block'; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo 'expected HTTPS origin'; exit 2; }
+  case "$1" in
+    ''|*REPLACE_WITH_*|*example.com*|*example.net*|*example.org*|*[[:cntrl:]]*) echo 'replace the origin placeholder'; exit 2 ;;
+  esac
+  case "$1" in https://?*) ;; *) echo 'HTTPS origin required'; exit 2 ;; esac
+  { unset -n LITELLM_MASTER_KEY && unset -v LITELLM_MASTER_KEY; } 2>/dev/null ||
+    { echo 'cannot clear LITELLM_MASTER_KEY in this shell'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell'; exit 2; }
+  trap 'unset -v LITELLM_MASTER_KEY' EXIT
+  printf 'LiteLLM master key (input hidden): '
+  IFS= read -r -s LITELLM_MASTER_KEY || { printf '\n'; echo 'no secret read'; exit 2; }
+  printf '\n'
+  case "$LITELLM_MASTER_KEY" in
+    ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'empty secret, placeholder or control character'; exit 2 ;;
+  esac
+  printf 'Authorization: Bearer %s\n' "$LITELLM_MASTER_KEY" | curl -q -g "$1/key/generate" \
+    -H @- \
+    -H "Content-Type: application/json" \
+    -d '{"key_alias": "app-frontend"}'
+)
 ```
 
 Each app gets its own virtual key, which can be revoked or budgeted independently; LiteLLM's docs cover per-key models, budgets, and expiry. Clients send the virtual key in the `Authorization` header (the header name is configurable via `litellm_key_header_name`).
 
-Written the naive way, with the key in `-H "Authorization: Bearer $LITELLM_MASTER_KEY"` on curl's own arguments, it would be readable in `/proc/<pid>/cmdline` while it runs (shell history keeps the literal `$LITELLM_MASTER_KEY`, not its value); on a shared host feed the header to curl on stdin instead, as the request above and the Verify below do: `printf 'Authorization: Bearer %s\n' "$LITELLM_MASTER_KEY" | curl -H @- ...`. Virtual keys are stored hashed, but the provider API keys LiteLLM persists when `general_settings.store_model_in_db` is on are ENCRYPTED with `LITELLM_SALT_KEY` (which falls back to the master key when unset): set a permanent `LITELLM_SALT_KEY` BEFORE adding any credential, because changing it later strands what it encrypted, and protect the database and its backups as the store of those secrets. A credential written literally into `config.yaml` stays plaintext in that file, so keep it out of version control ([secrets.md](secrets.md)).
+Putting the key in curl's `-H` argument would expose it through `/proc/<pid>/cmdline`. The prompt above and stdin header avoid that exposure and keep the entered key out of shell history and tracing. They do not hide process memory from the same account or root, or erase an earlier export. The Verify blocks below also pass headers on stdin. Virtual keys are stored hashed, but the provider API keys LiteLLM persists when `general_settings.store_model_in_db` is on are ENCRYPTED with `LITELLM_SALT_KEY` (which falls back to the master key when unset): set a permanent `LITELLM_SALT_KEY` BEFORE adding any credential, because changing it later strands what it encrypted, and protect the database and its backups as the store of those secrets. A credential written literally into `config.yaml` stays plaintext in that file, so keep it out of version control ([secrets.md](secrets.md)).
 
 Keep `DATABASE_URL` in secret storage too: its password is a database credential. Leave `general_settings.store_model_in_db: false` unless database-managed models are needed. Disabling model storage does not remove the database requirement for virtual keys. See [configuration settings](https://docs.litellm.ai/docs/proxy/config_settings).
 

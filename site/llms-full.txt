@@ -1132,8 +1132,25 @@ Leaked API keys and credentials in public repositories are the most common secur
    ```
 5. **Secrets never enter a command line.** A process's arguments are readable through `/proc/<pid>/cmdline`, which is what `ps` prints; on a default Linux that means every other user on the host, for as long as the process runs, and the command is then written to your shell history. A `hidepid` proc mount or a separate PID namespace narrows who can see it, neither is the default, and neither covers the history. Prefer a flag that reads from stdin (`htpasswd -i`, `docker login --password-stdin`, `gh auth login --with-token`), a file the tool reads itself (`~/.pgpass`, `curl --netrc`; create it with `umask 077` and keep it mode `0600`, since it stores the secret in plaintext and PostgreSQL ignores a `~/.pgpass` that group or others can read), or an environment variable where the tool offers nothing better. Where a value has to be typed, `read -rs` keeps it off the screen, and what `read` consumes is input rather than a command, so no shell records it. One caveat: shell tracing (`set -x`) echoes the expanded command line, so a script that expands a secret into a pipeline (including the `printf`-into-`--password-stdin` pattern below) must turn tracing off around it, because reading from stdin protects the argument list but not the trace.
 
+   This block assumes a clean Bash shell and prompts for the registry token instead of using an ambient `TOKEN`. It clears inherited attributes, turns tracing and allexport off, and unsets the unexported variable on exit. The entered token stays out of history, argv and the environment; process memory is still readable by the same account and root, and this does not erase an earlier export. Docker stores the login in its configured credential store or configuration file, as described in rule 9.
+
    ```bash
-   printf '%s' "$TOKEN" | docker login ghcr.io -u "$USER" --password-stdin
+   (
+     trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+     set +x +a +e
+     set -o pipefail
+     { unset -n TOKEN && unset -v TOKEN; } 2>/dev/null ||
+       { echo 'cannot clear TOKEN in this shell'; exit 2; }
+     { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell'; exit 2; }
+     trap 'unset -v TOKEN' EXIT
+     printf 'Registry token (input hidden): '
+     IFS= read -r -s TOKEN || { printf '\n'; echo 'no secret read'; exit 2; }
+     printf '\n'
+     case "$TOKEN" in
+       ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'empty secret, placeholder or control character'; exit 2 ;;
+     esac
+     printf '%s' "$TOKEN" | docker login ghcr.io -u "$USER" --password-stdin
+   )
    ```
 
    There is no probe for this rule, and the obvious one is worse than none. `ps -eo args | grep -i 'password\|token\|secret'` finds only commands that spell the word out, such as `docker login --password hunter2`. It does not match `htpasswd -cbs .htpasswd admin Xk29fQ7LmVt3w9Zr`, or `mysql -pHunter2`, or `curl -u admin:hunter2`, because a real secret is a random string and `.htpasswd` does not contain the word "password". A snapshot also misses every short-lived process, which is most of them. A check that reads clean while the exposure is running is worse than no check, so this rule is enforced by review and by reaching for the stdin flag, not by grep.
@@ -21380,13 +21397,14 @@ A LiteLLM proxy fronts paid model APIs, so an exposed, keyless instance spends y
 
 ## 1. Set the master key
 
-In `config.yaml` under `general_settings: master_key`, or via the environment (preferred; see [secrets.md](secrets.md)):
+Set `general_settings.master_key` in the `config.yaml` that LiteLLM reads. Provision that file with mode `0600`, owned by the service account, in a directory other accounts cannot modify. Merge this setting into the existing configuration rather than replacing its model and database settings:
 
-```bash
-export LITELLM_MASTER_KEY="sk-REPLACE_WITH_LONG_RANDOM_VALUE"   # must start with sk-
+```yaml
+general_settings:
+  master_key: sk-REPLACE_WITH_LONG_RANDOM_VALUE
 ```
 
-The master key is the root credential for the proxy; it belongs to the operator only and never to client applications. Generate it with `openssl rand -hex 32` (kept behind the `sk-` prefix), and inject it from your secret store or a root-only environment file rather than typing the `export` above into an interactive shell, where it is captured in shell history and readable in `/proc/<pid>/environ` ([secrets.md](secrets.md)). When both the environment and `config.yaml` set the master key, the `config.yaml` value wins.
+The master key is the root credential for the proxy; it belongs to the operator only and never to client applications. Have your secret store generate 32 random bytes encoded as hex with an `sk-` prefix and write the value into the protected file, replacing the placeholder before startup. Do not paste the key into a shell command or export `LITELLM_MASTER_KEY`. LiteLLM reads the key from the file, keeping it out of launch argv and the process environment. The file is plaintext and remains readable by the service account, root and any backup that copies it; keep it and editor backups out of version control ([secrets.md](secrets.md)). When both the environment and `config.yaml` set the master key, the `config.yaml` value wins.
 
 At the time of writing, current LiteLLM refuses to start when the resolved master key is unset, empty or whitespace-only, or `sk-1234`. Either `LITELLM_DANGEROUSLY_PERMIT_WEAK_OR_UNSET_MASTER_KEY=true` or the YAML setting `general_settings.dangerously_permit_weak_or_unset_master_key: true` permits weak or keyless startup independently; keep both overrides absent or false in production. Older releases and overridden deployments can still operate without authentication, so the unauthenticated-deployment warning above remains relevant. A startup refusal is a protection to retain, not a reason to enable the override. No first release is asserted here. See [master-key startup protection](https://docs.litellm.ai/docs/proxy/master_key_rotations) and the [current startup enforcement call](https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/proxy_server.py).
 
@@ -21394,18 +21412,41 @@ At the time of writing, current LiteLLM refuses to start when the resolved maste
 
 Virtual keys need a PostgreSQL database: set `DATABASE_URL=postgresql://user:password@host:5432/dbname` in the environment (or `database_url` under `general_settings`) before `/key/generate` will work.
 
-The original alias-only request below illustrates issuance and attribution. It does not establish least privilege: use the restricted request body below for application keys, and substitute your actual HTTPS origin.
+The original alias-only request below illustrates issuance and attribution. It does not establish least privilege: use the restricted request body below for application keys. This block assumes a clean Bash shell. Substitute your actual HTTPS origin inside the single quotes (an apostrophe needs shell escaping), paste the whole block, and enter the master key at the hidden prompt. The key stays in an unexported subshell variable, is sent to curl on stdin, and is unset on exit; no ambient master key is used. The response contains the newly issued virtual key, so keep the output private.
 
 ```bash
-printf 'Authorization: Bearer %s\n' "$LITELLM_MASTER_KEY" | curl -q https://llm.example.com/key/generate \
-  -H @- \
-  -H "Content-Type: application/json" \
-  -d '{"key_alias": "app-frontend"}'
+(
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  set +x +a +e
+  set -o pipefail
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_ORIGIN'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block'; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo 'expected HTTPS origin'; exit 2; }
+  case "$1" in
+    ''|*REPLACE_WITH_*|*example.com*|*example.net*|*example.org*|*[[:cntrl:]]*) echo 'replace the origin placeholder'; exit 2 ;;
+  esac
+  case "$1" in https://?*) ;; *) echo 'HTTPS origin required'; exit 2 ;; esac
+  { unset -n LITELLM_MASTER_KEY && unset -v LITELLM_MASTER_KEY; } 2>/dev/null ||
+    { echo 'cannot clear LITELLM_MASTER_KEY in this shell'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell'; exit 2; }
+  trap 'unset -v LITELLM_MASTER_KEY' EXIT
+  printf 'LiteLLM master key (input hidden): '
+  IFS= read -r -s LITELLM_MASTER_KEY || { printf '\n'; echo 'no secret read'; exit 2; }
+  printf '\n'
+  case "$LITELLM_MASTER_KEY" in
+    ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'empty secret, placeholder or control character'; exit 2 ;;
+  esac
+  printf 'Authorization: Bearer %s\n' "$LITELLM_MASTER_KEY" | curl -q -g "$1/key/generate" \
+    -H @- \
+    -H "Content-Type: application/json" \
+    -d '{"key_alias": "app-frontend"}'
+)
 ```
 
 Each app gets its own virtual key, which can be revoked or budgeted independently; LiteLLM's docs cover per-key models, budgets, and expiry. Clients send the virtual key in the `Authorization` header (the header name is configurable via `litellm_key_header_name`).
 
-Written the naive way, with the key in `-H "Authorization: Bearer $LITELLM_MASTER_KEY"` on curl's own arguments, it would be readable in `/proc/<pid>/cmdline` while it runs (shell history keeps the literal `$LITELLM_MASTER_KEY`, not its value); on a shared host feed the header to curl on stdin instead, as the request above and the Verify below do: `printf 'Authorization: Bearer %s\n' "$LITELLM_MASTER_KEY" | curl -H @- ...`. Virtual keys are stored hashed, but the provider API keys LiteLLM persists when `general_settings.store_model_in_db` is on are ENCRYPTED with `LITELLM_SALT_KEY` (which falls back to the master key when unset): set a permanent `LITELLM_SALT_KEY` BEFORE adding any credential, because changing it later strands what it encrypted, and protect the database and its backups as the store of those secrets. A credential written literally into `config.yaml` stays plaintext in that file, so keep it out of version control ([secrets.md](secrets.md)).
+Putting the key in curl's `-H` argument would expose it through `/proc/<pid>/cmdline`. The prompt above and stdin header avoid that exposure and keep the entered key out of shell history and tracing. They do not hide process memory from the same account or root, or erase an earlier export. The Verify blocks below also pass headers on stdin. Virtual keys are stored hashed, but the provider API keys LiteLLM persists when `general_settings.store_model_in_db` is on are ENCRYPTED with `LITELLM_SALT_KEY` (which falls back to the master key when unset): set a permanent `LITELLM_SALT_KEY` BEFORE adding any credential, because changing it later strands what it encrypted, and protect the database and its backups as the store of those secrets. A credential written literally into `config.yaml` stays plaintext in that file, so keep it out of version control ([secrets.md](secrets.md)).
 
 Keep `DATABASE_URL` in secret storage too: its password is a database credential. Leave `general_settings.store_model_in_db: false` unless database-managed models are needed. Disabling model storage does not remove the database requirement for virtual keys. See [configuration settings](https://docs.litellm.ai/docs/proxy/config_settings).
 
@@ -28517,13 +28558,14 @@ If a receiver fetches payload URLs or forwards webhooks to user-selected destina
 
 ## Verify
 
-These checks are reasoned, not demonstrated: no endpoint, WebSocket client, or event fixtures were supplied, so backlog row 2.35 tracks demonstrating them. Use Bash and curl 7.75.0 or newer. Substitute inside the single quotes and paste each complete block; a value containing an apostrophe needs proper shell escaping. Supply `AUDIT_COOKIE` through a protected environment as the complete Cookie header value, without the `Cookie:` prefix.
+These checks are reasoned, not demonstrated: no endpoint, WebSocket client, or event fixtures were supplied, so backlog row 2.35 tracks demonstrating them. Use Bash and curl 7.75.0 or newer. Substitute inside the single quotes and paste each complete block; a value containing an apostrophe needs proper shell escaping. Each secret-bearing block assumes a clean shell. Enter the complete Cookie header value at the hidden prompt, without the `Cookie:` prefix; do not export `AUDIT_COOKIE`. The block clears inherited attributes before reading, keeps the cookie in an unexported subshell variable, sends headers through curl stdin, and unsets the variable on exit. This avoids putting the new input in history, argv or the environment; it does not hide process memory from the same account or root, or erase an earlier export.
 
 Run the first block with `ws` only for endpoints that require a session cookie during the handshake, and with `sse` for cookie-authenticated SSE endpoints. For WebSocket endpoints authenticated solely by a first-message token, use the application-client checks below: a cookie-free `101` is expected and does not by itself establish application authentication. Each negative uses the same URL and deployment as its successful control, and a failed positive control invalidates the comparison. For the handshake, require `101` with a valid cookie and allowed Origin, then a rejection (`401`/`403`, or a login redirect behind an identity-aware proxy, never `101`) without the cookie and for each invalid-Origin case. For SSE, require `200` with `text/event-stream` and the expected protected event with the cookie, then a rejection or login redirect without it. A login page, `404`, unrelated `403`, or server error proves nothing about the intended control, and a timeout alone is inconclusive (an observed `101` or protected event still counts even if curl then times out on the open stream).
 
 ```bash
 (
-  set +x
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  set +x +a +e
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_ENDPOINT' 'REPLACE_WITH_ALLOWED_HTTPS_ORIGIN' 'ws'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block'; exit 2; }
   shift
@@ -28534,8 +28576,15 @@ Run the first block with `ws` only for endpoints that require a session cookie d
   case "$1" in https://?*) ;; *) echo 'HTTPS endpoint required'; exit 2 ;; esac
   case "$2" in https://?*) ;; *) echo 'HTTPS Origin required'; exit 2 ;; esac
   case "$3" in ws|sse) ;; *) echo 'choose ws or sse'; exit 2 ;; esac
-  case "${AUDIT_COOKIE-}" in
-    ''|*REPLACE_WITH_*|*$'\r'*|*$'\n'*) echo 'load a valid Cookie header value into AUDIT_COOKIE'; exit 2 ;;
+  { unset -n AUDIT_COOKIE && unset -v AUDIT_COOKIE; } 2>/dev/null ||
+    { echo 'cannot clear AUDIT_COOKIE in this shell'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell'; exit 2; }
+  trap 'unset -v AUDIT_COOKIE' EXIT
+  printf 'Cookie header value (input hidden): '
+  IFS= read -r -s AUDIT_COOKIE || { printf '\n'; echo 'no secret read'; exit 2; }
+  printf '\n'
+  case "$AUDIT_COOKIE" in
+    ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'empty secret, placeholder or control character'; exit 2 ;;
   esac
   probe() {
     if curl -q -g -sS -i -N --http1.1 --noproxy '*' \
@@ -28572,11 +28621,12 @@ Run the first block with `ws` only for endpoints that require a session cookie d
 
 First-message-token and default-credential authentication need the application's real WebSocket client and message schema, so they stay reasoned until fixtures and an endpoint are available. Against the same endpoint, first demonstrate a valid token and an authorized protected operation, then repeat with no token, an invalid token, an expired token, and a protected operation attempted before authentication; require explicit rejection or an observed authentication-deadline close with no protected data or side effect (silence alone is inconclusive), test channel authorization by first demonstrating the operation on the target channel with an authorized user's token, then repeating the same operation on the same channel and endpoint with a valid token belonging to an unauthorized user, requiring authorization rejection with no protected data or side effect, and verify revocation on an already-open connection. For each installed component with documented default credentials, pair a successful legitimate login with the same request using the defaults, which must fail; do not infer this from a no-credential request, and do not invent a universal default username or password.
 
-For the webhook route, use an isolated test endpoint and a fresh, valid JSON event fixture that produces an observable effect. Export its endpoint secret as `AUDIT_WEBHOOK_SECRET`, and for GitHub also export the fixture's event type as `AUDIT_GITHUB_EVENT`; these are probe inputs, not vendor configuration. The wrong-signature and unsigned requests must be rejected by signature validation with no effect, the correctly signed request must reach the handler and produce the effect, and its repetition must produce no second effect (a success acknowledgement for an already-processed event is fine). For this Stripe probe, confirm that the isolated receiver uses a 300-second tolerance and that the sender and receiver clocks are synchronized; the harness backdates the stale request by 600 seconds, so that request must fail timestamp validation. Confirm the rejecting component in the application logs; transport errors and timeouts are inconclusive. These endpoint outcomes are reasoned, not demonstrated here.
+For the webhook route, use an isolated test endpoint and a fresh, valid JSON event fixture that produces an observable effect. Enter its endpoint secret at the hidden prompt, and for GitHub export only the fixture's non-secret event type as `AUDIT_GITHUB_EVENT`; these are probe inputs, not vendor configuration. This block assumes a clean shell. It reads `AUDIT_WEBHOOK_SECRET` into an unexported subshell variable and unsets it on exit; Python reads the secret bytes from a pipe on file descriptor 3 and closes that descriptor before starting curl. Neither the secret nor the signed headers enter argv or the environment. The secret remains readable in process memory by the same account and root, and a previously exported value is not erased. The wrong-signature and unsigned requests must be rejected by signature validation with no effect, the correctly signed request must reach the handler and produce the effect, and its repetition must produce no second effect (a success acknowledgement for an already-processed event is fine). For this Stripe probe, confirm that the isolated receiver uses a 300-second tolerance and that the sender and receiver clocks are synchronized; the harness backdates the stale request by 600 seconds, so that request must fail timestamp validation. Confirm the rejecting component in the application logs; transport errors and timeouts are inconclusive. These endpoint outcomes are reasoned, not demonstrated here.
 
 ```bash
 (
-  set +x
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  set +x +a +e
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_WEBHOOK_URL' 'REPLACE_WITH_RAW_BODY_FILE' 'github'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block'; exit 2; }
   shift
@@ -28587,17 +28637,25 @@ For the webhook route, use an isolated test endpoint and a fresh, valid JSON eve
   case "$1" in https://?*) ;; *) echo 'HTTPS required'; exit 2 ;; esac
   if [ -f "$2" ] && [ -r "$2" ]; then :; else echo 'readable raw-body file required'; exit 2; fi
   case "$3" in github|stripe) ;; *) echo 'choose github or stripe'; exit 2 ;; esac
-  case "${AUDIT_WEBHOOK_SECRET-}" in
-    ''|*REPLACE_WITH_*) echo 'export the test endpoint secret as AUDIT_WEBHOOK_SECRET'; exit 2 ;;
+  { unset -n AUDIT_WEBHOOK_SECRET && unset -v AUDIT_WEBHOOK_SECRET; } 2>/dev/null ||
+    { echo 'cannot clear AUDIT_WEBHOOK_SECRET in this shell'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell'; exit 2; }
+  trap 'unset -v AUDIT_WEBHOOK_SECRET' EXIT
+  printf 'Webhook endpoint secret (input hidden): '
+  IFS= read -r -s AUDIT_WEBHOOK_SECRET || { printf '\n'; echo 'no secret read'; exit 2; }
+  printf '\n'
+  case "$AUDIT_WEBHOOK_SECRET" in
+    ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'empty secret, placeholder or control character'; exit 2 ;;
   esac
-  python3 - "$1" "$2" "$3" <<'PY'
+  python3 - "$1" "$2" "$3" 3< <(printf '%s' "$AUDIT_WEBHOOK_SECRET") <<'PY'
 import hashlib, hmac, os, pathlib, subprocess, sys, time, uuid
 
 body = pathlib.Path(sys.argv[2]).read_bytes()
-if not os.environ.get("AUDIT_WEBHOOK_SECRET"):
-    print("Export AUDIT_WEBHOOK_SECRET before running; skipped")
+with os.fdopen(3, "rb") as secret_input:
+    secret = secret_input.read()
+if not secret:
+    print("No webhook secret received; skipped")
     raise SystemExit(2)
-secret = os.environ["AUDIT_WEBHOOK_SECRET"].encode()
 provider = sys.argv[3]
 if provider == "github" and (not os.environ.get("AUDIT_GITHUB_EVENT") or
         any(c in os.environ["AUDIT_GITHUB_EVENT"] for c in "\r\n")):
@@ -28685,6 +28743,7 @@ Scope and revisions: browser behavior follows RFC 6455 and the HTML and Fetch li
 - Caddy server timeouts: https://caddyserver.com/docs/caddyfile/options#timeouts
 - nginx `proxy_read_timeout`: https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout
 - curl manual (`--connect-to`, `--noproxy`, write-out variables require 7.75.0+): https://curl.se/docs/manpage.html
+- Python `os.fdopen`, for reading and closing the secret pipe: https://docs.python.org/3/library/os.html#os.fdopen
 
 ======================================================================
 ==> transactional-email-posture.md

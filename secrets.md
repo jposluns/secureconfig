@@ -14,8 +14,25 @@ Leaked API keys and credentials in public repositories are the most common secur
    ```
 5. **Secrets never enter a command line.** A process's arguments are readable through `/proc/<pid>/cmdline`, which is what `ps` prints; on a default Linux that means every other user on the host, for as long as the process runs, and the command is then written to your shell history. A `hidepid` proc mount or a separate PID namespace narrows who can see it, neither is the default, and neither covers the history. Prefer a flag that reads from stdin (`htpasswd -i`, `docker login --password-stdin`, `gh auth login --with-token`), a file the tool reads itself (`~/.pgpass`, `curl --netrc`; create it with `umask 077` and keep it mode `0600`, since it stores the secret in plaintext and PostgreSQL ignores a `~/.pgpass` that group or others can read), or an environment variable where the tool offers nothing better. Where a value has to be typed, `read -rs` keeps it off the screen, and what `read` consumes is input rather than a command, so no shell records it. One caveat: shell tracing (`set -x`) echoes the expanded command line, so a script that expands a secret into a pipeline (including the `printf`-into-`--password-stdin` pattern below) must turn tracing off around it, because reading from stdin protects the argument list but not the trace.
 
+   This block assumes a clean Bash shell and prompts for the registry token instead of using an ambient `TOKEN`. It clears inherited attributes, turns tracing and allexport off, and unsets the unexported variable on exit. The entered token stays out of history, argv and the environment; process memory is still readable by the same account and root, and this does not erase an earlier export. Docker stores the login in its configured credential store or configuration file, as described in rule 9.
+
    ```bash
-   printf '%s' "$TOKEN" | docker login ghcr.io -u "$USER" --password-stdin
+   (
+     trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+     set +x +a +e
+     set -o pipefail
+     { unset -n TOKEN && unset -v TOKEN; } 2>/dev/null ||
+       { echo 'cannot clear TOKEN in this shell'; exit 2; }
+     { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell'; exit 2; }
+     trap 'unset -v TOKEN' EXIT
+     printf 'Registry token (input hidden): '
+     IFS= read -r -s TOKEN || { printf '\n'; echo 'no secret read'; exit 2; }
+     printf '\n'
+     case "$TOKEN" in
+       ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'empty secret, placeholder or control character'; exit 2 ;;
+     esac
+     printf '%s' "$TOKEN" | docker login ghcr.io -u "$USER" --password-stdin
+   )
    ```
 
    There is no probe for this rule, and the obvious one is worse than none. `ps -eo args | grep -i 'password\|token\|secret'` finds only commands that spell the word out, such as `docker login --password hunter2`. It does not match `htpasswd -cbs .htpasswd admin Xk29fQ7LmVt3w9Zr`, or `mysql -pHunter2`, or `curl -u admin:hunter2`, because a real secret is a random string and `.htpasswd` does not contain the word "password". A snapshot also misses every short-lived process, which is most of them. A check that reads clean while the exposure is running is worse than no check, so this rule is enforced by review and by reaching for the stdin flag, not by grep.
