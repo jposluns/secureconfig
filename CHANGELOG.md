@@ -11,7 +11,7 @@ in step with the merged pull request is therefore an authoring obligation, not a
 
 ## 2026-09-26
 
-- Triton administrative endpoints (#363), bind-audit record 45. `model-servers.md` now names every restriction category, separates unrestricted reads and logging/trace settings from model-control-mode and client-shared-memory opt-ins, and gives HTTP and gRPC restriction syntax covering all categories. It records the file-path mutation refusals and the separate unauthenticated metrics listener. Administrative API sources are pinned to 546a78766fb112128aa0b10a70c55f4f39c3b1df. The new logging authorization probe is REASONED; row 1.152 tracks its live demonstration. No Triton server was run.
+- Triton administrative endpoints (#363), bind-audit record 45. `model-servers.md` now names every restriction category, separates unrestricted reads and logging/trace settings from model-control-mode and client-shared-memory opt-ins, and gives HTTP and gRPC restriction syntax covering all categories. It records the file-path mutation refusals and the separate unauthenticated metrics listener. Administrative API sources are pinned to 546a78766fb112128aa0b10a70c55f4f39c3b1df. The new logging authorization probe is REASONED; row 1.152 tracks its live demonstration. No Triton server was run. It names two cloud paths the flags do not cover: the SageMaker multi-model invoke route, and the Vertex AI redirect header, which reaches `metrics` unrestricted.
 
 ## 2026-09-25
 
