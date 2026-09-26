@@ -23,16 +23,18 @@ hiding a live range. Round 5 found buried quoted closes and quote removal shifti
 negation; the development fuzzer then found six unset-variable shifts of a literal close.
 Round 6 found continuations and quoted newlines; the widened fuzzer supplied 1143 more fixtures.
 Round 8 covers even quote counts and leading literal closes across heredoc newlines.
-Each reported bypass is at least one finding now: a range and an unclosed `[`
-are findings on their own physical line whatever surrounds them, a waiver lives only in
-tools/bracket_ranges_allow.txt keyed by the exact line, and the old in-block marker is itself a
-finding wherever it sits in a guide.
+Except for the disclosed NOT SEEN cases, each reported bypass is a finding. Ranges and unclosed
+`[` are findings on their own physical line whatever surrounds them. Waivers live only in
+tools/bracket_ranges_allow.txt, bound to the complete physical span; the old in-block marker is
+itself a finding wherever it sits in a guide.
 
 The OVER-FLAGGED group asserts the cost of failing closed on inputs a shell parser would accept,
 so the docstring's list stays honest, and the NOT SEEN group asserts what the gate still does
 not read at all, so closing one of those is loud too.
 """
+import hashlib
 import itertools
+import json
 import os
 import re
 import shlex
@@ -64,8 +66,8 @@ def doc(block, fence="```bash"):
 
 
 def entry(text, guide="guide.md", reason="not a validator"):
-    """One allowlist line waiving `text` in `guide`."""
-    return guide + "\t" + text + "\t" + reason
+    """One allowlist entry binding the complete physical source `text` in `guide`."""
+    return guide + "\tsha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest() + "\t" + reason
 
 
 def findings(text, allow=None):
@@ -513,8 +515,11 @@ CASES += tuple(("round 8 fuzz single-word test: " + repr(pattern),
                 doc("re=$(cat <<'EOF'\n" + pattern + "\nEOF\n)"), 1, None)
                for pattern in ("[ -z ]\n]", "[ -x ]\n]", "[ a-z ]\n]"))
 CASES += (
-    ("not seen: a complete test-word shape inside regex data",
-     doc("re='^ [ a-z x ] +$'"), 0, None),
+    ("not seen: disclosed codex round-8 P1-2, test-shaped regex data",
+     doc("set -- ' é '\nre='^ [ a-z x ] +$'\n[[ $1 =~ $re ]]"), 0, None),
+    ("not seen: disclosed codex round-8 P1-1, empty variable across a quoted newline",
+     doc("(\n  a=\n  set -- é\n  shopt -u globasciiranges\n"
+         "  case \"$1\" in *[!$a]$'x\n'a-z]*) exit 1 ;; esac\n)"), 0, None),
 )
 
 # All 17 one-character lists before grep's separate two-dot alternative.
@@ -894,7 +899,7 @@ ALLOW_CASES = (
      entry('case "$1" in *[!a-z]*|*[!0-9]*) exit 2 ;; esac'), 0, None),
     ("an unclosed bracket's line can be waived",
      doc("python3 - <<'EOS'\nargs = [" + Q + "curl" + Q + ",\n    " + Q + "-sS" + Q + "]\nEOS"),
-     entry("args = [" + Q + "curl" + Q + ","), 0, None),
+     entry("args = [" + Q + "curl" + Q + ",\n    " + Q + "-sS" + Q + "]\nEOS"), 0, None),
     ("the whole line must match, not a substring: a line that grew a second command",
      doc(GREP + "; rm -f g"), entry(GREP), 2, STALE),
     ("the whole line must match: leading whitespace counts",
@@ -905,7 +910,7 @@ ALLOW_CASES = (
     ("an entry matching an unflagged line is stale too",
      doc("echo a-z"), entry("echo a-z"), 1, STALE),
     ("an entry with an empty reason",
-     doc(GREP), "guide.md\t" + GREP + "\t", 2, "empty reason"),
+     doc(GREP), entry(GREP, reason=""), 2, "empty reason"),
     ("an entry with two fields is malformed",
      doc(GREP), "guide.md\t" + GREP, 2, "malformed allowlist entry"),
     ("an entry with one field is malformed",
@@ -924,23 +929,42 @@ ALLOW_CASES = (
      doc(GREP + "  " + MARK + "x"), entry(GREP + "  " + MARK + "x"), 1, MARKER),
     ("an entry matches the line as the block extraction yields it, fence indentation removed",
      "# T\n\n- step:\n\n  ```bash\n  " + GREP + "\n  ```\n", entry(GREP), 0, None),
-    ("a TAB inside the line text is carried by the middle field",
+    ("a TAB inside the source text is bound by its digest",
      doc("grep -E '^[a-z]+$'\tf"), entry("grep -E '^[a-z]+$'\tf"), 0, None),
     ("an entry for a non-bash fence is stale, since that fence is not read",
      doc("pattern: '^[a-z]+$'", fence="```yaml"), entry("pattern: '^[a-z]+$'"), 1, STALE),
 )
 
 
+SPAN = 're=[""^]' + BS + "\na-z]"
 ALLOW_CASES += (
-    ('a spanning finding is waived by its opener',
-     doc('re=[""^]\\\na-z]'),
-     'guide.md\tre=[""^]\\\tnot a validator', 0, None),
-    ('a continuation-line waiver does not cover its opener',
-     doc('re=[""^]\\\na-z]'),
-     'guide.md\ta-z]\tnot a validator', 2, 'stale allowlist entry'),
-    ('joined text cannot be an allowlist key',
-     doc('re=[""^]\\\na-z]'),
-     'guide.md\tre=[""^]a-z]\tnot a validator', 2, 'stale allowlist entry'),
+    ("a spanning finding needs every original physical line",
+     doc(SPAN), entry(SPAN), 0, None),
+    ("an opener-only waiver is stale",
+     doc(SPAN), entry(SPAN.split("\n")[0]), 2, STALE),
+    ("a continuation-line waiver does not cover its opener",
+     doc(SPAN), entry("a-z]"), 2, STALE),
+    ("removing a physical continuation changes the key",
+     doc(SPAN), entry('re=[""^]a-z]'), 2, STALE),
+    ("a changed continuation tail leaves its full-span waiver stale",
+     doc("[\na-z]"), entry("[\njson]"), 2, STALE),
+    ("the Elasticsearch bare opener cannot waive a heredoc range",
+     doc("re=$(cat <<'EOF'\n[\na-z]\nEOF\n)\n[[ $1 =~ $re ]]"),
+     entry("["), 2, STALE),
+    ("literal backslash-n is distinct from a physical newline",
+     doc("[\na-z]"), entry(r"[\na-z]"), 2, STALE),
+    ("a span digest preserves a literal backslash-n",
+     doc(r"re='[a-z]\n'"), entry(r"re='[a-z]\n'"), 0, None),
+    ("a bare number is not a span digest", doc(GREP), "guide.md\t42\treason", 2,
+     "malformed allowlist span"),
+    ("invalid digest text is refused", doc(GREP), 'guide.md\tsha256:xyz\treason', 2,
+     "malformed allowlist span"),
+    ("a raw TAB inside a span field is malformed", doc(GREP),
+     'guide.md\tbad\ttext\treason', 2, "malformed allowlist entry"),
+    ("an appended physical line invalidates a spanning waiver",
+     doc("[\na-z]\necho changed"), entry("[\na-z]"), 2, STALE),
+    ("an independent later opener still needs its own waiver",
+     doc("[\na-z]\nre='[0-9]'"), entry("[\na-z]\nre='[0-9]'"), 1, "0-9"),
 )
 
 
@@ -1068,6 +1092,88 @@ def entry_point_failures():
     return failures, runs
 
 
+def corpus_waiver_failures():
+    """Every checked-in waiver matches a real span; editing any physical line invalidates it."""
+    root = TOOLS.parent
+    allow_path = TOOLS / gate.ALLOWLIST
+    allow = gate.Allowlist.load(allow_path)
+    failures, consumed = list(allow.findings), []
+    take = allow.take
+
+    def record(name, span):
+        matched = take(name, span)
+        if matched:
+            consumed.append((name, span))
+        return matched
+
+    allow.take = record
+    blocks = {}
+    for path in sorted(root.glob("*.md")):
+        if path.name in gate.NOT_A_GUIDE:
+            continue
+        blocks[path.name] = list(gate.blocks_of(path))
+        failures.extend(gate.scan_blocks(path.name, blocks[path.name], allow)[0])
+    failures.extend(allow.stale())
+    if failures:
+        return failures, len(consumed), 0
+    edits = 0
+    occurrences = {}
+    for name, span in consumed:
+        physical = span.split("\n")
+        locations = []
+        for block_index, (_, body) in enumerate(blocks[name]):
+            lines = body.split("\n")
+            locations.extend((block_index, i) for i in range(len(lines))
+                             if lines[i:i + len(physical)] == physical)
+        occurrence = occurrences.get((name, span), 0)
+        occurrences[name, span] = occurrence + 1
+        if occurrence >= len(locations):
+            failures.append(f"{name}: waiver has no exact physical occurrence")
+            continue
+        block_index, opener = locations[occurrence]
+        start, body = blocks[name][block_index]
+        if "--show-waivers" in sys.argv:
+            first = start + opener
+            print(f"  waiver {name}:{first}-{first + len(physical) - 1} "
+                  f"sha256:{hashlib.sha256(span.encode('utf-8')).hexdigest()}")
+            print(json.dumps(span, ensure_ascii=False))
+
+        def matching_keys(candidate):
+            audit = gate.Allowlist()
+            keys = []
+
+            def record_key(guide, text):
+                if (guide, text) == (name, span):
+                    keys.append(text)
+                return False
+
+            audit.take = record_key
+            gate.scan_blocks(name, [(start, candidate)], audit)
+            return len(keys)
+
+        original_matches = matching_keys(body)
+        for offset in range(len(physical)):
+            lines = body.split("\n")
+            lines[opener + offset] += " # changed waiver span"
+            edits += 1
+            # Removing a finding also invalidates its old waiver. The exact key must
+            # disappear even if there is no replacement finding on the edited line.
+            changed = "\n".join(lines)
+            if matching_keys(changed) != original_matches - 1:
+                failures.append(f"{name}: edit to span line {offset + 1} kept its waiver")
+            isolated = Path(tempfile.mkdtemp())
+            try:
+                one = isolated / "allow.txt"
+                one.write_text(entry(span, guide=name), encoding="utf-8")
+                check = gate.Allowlist.load(one)
+                gate.scan_blocks(name, [(start, changed)], check)
+                if len(check.stale()) != 1:
+                    failures.append(f"{name}: edit to span line {offset + 1} was not stale")
+            finally:
+                shutil.rmtree(isolated)
+    return failures, len(consumed), edits
+
+
 def main() -> int:
     failures = []
     for desc, text, want, expected in CASES:
@@ -1090,6 +1196,8 @@ def main() -> int:
         actual = gate.joined_reading(lines, idx)
         if actual != expected:
             failures.append(f"joined reading: {lines!r}: expected {expected!r}, got {actual!r}")
+    more, bindings, edits = corpus_waiver_failures()
+    failures += more
     more, runs = entry_point_failures()
     failures += more
     if failures:
@@ -1101,6 +1209,8 @@ def main() -> int:
     print(f"  ok    {n} recorded cases and {runs} entry-point runs for the bracket-ranges "
           f"gate: {n - unseen} behaviours checked, {unseen} disclosed blind spots still "
           f"open")
+    print(f"  ok    {bindings} corpus waiver bindings; {edits} physical-line edits "
+          f"each invalidate their span and leave a stale entry")
     return 0
 
 

@@ -8,14 +8,13 @@ for example [ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789]. An
 POSIX class needs a C locale covering the whole check; a reject-list class can safely refuse
 the locale's wider set. This gate does not interpret LC_ALL or classes.
 
-THREAT MODEL. The gate targets locale-dependent ranges an author writes by accident in
-accept-list validators. It is hardened against the constructed bypasses found in review,
-bounded by the alphabet, lengths, source scaffolds, engines, locales and probe character
-covered by the fuzzer. It is not a general Bash analyser or a defence against arbitrary
-runtime assembly. Known residual classes include bracket-free tr ranges, POSIX classes and \w,
-runtime assembly, complete test-command-shaped data, non-bash fences and fence-extraction
-limits. Exact-line waivers also leave later edits to a spanning reading dependent on human
-review.
+THREAT MODEL. Under ruling (B), the gate targets locale-dependent ranges written by accident
+in accept-list validators. Structural defects, including waiver scope, must be fixed. Runtime
+expansion that changes a list, test-word-shaped data and constructed multiline quoting are
+disclosed residual classes, not hardening targets. The ship criterion is that neither review
+family finds a realistic, accidental fail-open. The fuzzer provides bounded evidence for its
+alphabet, lengths, source scaffolds, engines, locales and probe character; it is not a general
+Bash analyser or a defence against arbitrary runtime assembly.
 
 THE MODEL. The scanner reads every fenced bash block selected by check_shell_blocks.blocks_of
 in guides, README.md, controls-reference.md and CONTRIBUTING.md. It does no shell lexing.
@@ -32,8 +31,8 @@ line and a negated list followed by a dot also retain that alternative because b
 character matching can differ. Only backslash-newline is removed. No shell quote state, escape
 decoding or expansion is computed. Quote removal and ordinary and anywhere-range readings
 reach the last close in the span. Each spanning opener retains an unclosed finding even
-without a literal range. Findings and waivers belong to the opener's physical line; changing
-later lines does not invalidate its key. Review the entire span on every edit. The
+without a literal range. Findings belong to the opener's physical line; waivers bind the entire
+physical source span, so changing a later line invalidates the waiver. The
 test-command exemption requires a standalone closing test word on the same physical line; a
 bare one-word literal test is scanned too.
 
@@ -54,13 +53,18 @@ the block, regardless of even quote counts. Expansion remains outside this proof
 lists before continuations, quoted data, JSON arrays, comments, subscripts and unrelated
 following commands can therefore be over-flagged.
 
-THE ALLOWLIST. tools/bracket_ranges_allow.txt holds <guide-file> TAB <exact extracted physical
-line> TAB <reason>. No in-block waiver is accepted. One entry is consumed per flagged
-occurrence and covers every finding attributed to that line, including spanning readings.
-Duplicate entries require duplicate occurrences. Malformed entries, empty reasons, stale
-entries and retired in-guide markers fail the gate. Moving unchanged text within a guide still
-matches; changing its text or guide does not. A false positive involving range-free validator
-arguments needs a reason distinguishing it from a real range.
+THE ALLOWLIST. tools/bracket_ranges_allow.txt holds three TAB-separated fields:
+<guide-file> TAB sha256:<64 lowercase hex digits> TAB <reason>. Hash the UTF-8 encoding of the
+exact extracted physical line, or, when any scanned opener on that line retains a spanning
+reading, all original physical lines from that line through the end of the Bash block. Join
+these lines with LF and add no trailing LF. Preserve backslashes, whitespace and physical
+newlines after fence indentation removal; do not hash joined or quote-stripped readings.
+One entry consumes one flagged opener-line occurrence and covers its findings. Independent
+later openers still need their own entries. Duplicate occurrences require duplicate entries.
+No in-block waiver is accepted. Malformed digests, empty reasons, stale entries and retired
+in-guide markers fail the gate. Moving the complete unchanged span within the same guide still
+matches; changing any line in it or its guide does not. Context before the span is not bound
+and still needs review. Range-free validator false positives need a distinguishing reason.
 
 Against qa/360-r7, the broad quote-presence rule adds 228 unwaived findings. Settling
 quote-free closed prefixes reduces the final delta to 21 added findings on 19 lines and one
@@ -73,22 +77,27 @@ cover six additional expressions. The corpus has 0 unwaived findings in 411 bash
 99 guides, with 38 consumed entries covering 48 expressions. These are false positives,
 including the range-free RabbitMQ broker validators; they are not all non-validator text.
 
-The deterministic suite has 2875 cases (2829 ordinary, 25 allowlist, 4 quote-removal and 17
-joining), 2868 checked behaviours, 7 disclosed blind spots and 11 entry-point runs. The
-separate development fuzzer has 17 regression tests. All 15 independent round-8 mutations fail
-their relevant suite. The fixed corpus includes the 1143 earlier exploratory misses and all
-1476 round-8 exploratory misses and 3 targeted misses. Seventeen terminal-list variants
-include the 4 terminal exploratory misses. Both quote guards agree with their original
-predicates on 776 values under each of C and en_US.utf8, with ordinary and readonly
-quote-variable names, including diagnostics and exit status. Literal quote alternatives have
-separate bracket-free case arms and assign no quote variables.
+Against qa/360-r8, the corpus delta is 0 added and 0 removed findings, with no new findings.
+All 38 migrated entries bind their intended spans; 605 individual physical-line edits each
+invalidate the corresponding waiver and leave a stale entry. Run test_bracket_ranges.py with
+--show-waivers to print every matched location, digest and exact span.
 
-The complete development run uses C and en_US.utf8, 16 workers, lengths 0 through 6 over 17
-characters, and seven multiline scaffolds with insertions of lengths 0 through 4 over the same
-alphabet: 26,267,354 candidates per engine. Glob: 7,078,038 parsed, 281,235 live and flagged,
-0 missed; grep -E: 15,770,551 parsed, 329,154 live and flagged, 0 missed; Bash regex:
-22,361,038 parsed, 659,537 live and flagged, 0 missed. The sample is é; every live regex
-candidate must be detected in both its quoted assignment and, when multiline, its quoted
+The deterministic suite has 2886 cases (2830 ordinary, 35 allowlist, 4 quote-removal and 17
+joining), 2878 checked behaviours, 8 disclosed blind spots and 11 entry-point runs. The
+separate development fuzzer has 17 regression tests. Both waiver mutations, binding only the
+opener and skipping stale detection, fail the suite. The fixed corpus includes the 1143 earlier
+exploratory misses and all 1476 round-8 exploratory misses and 3 targeted misses. Seventeen
+terminal-list variants include the 4 terminal exploratory misses. Both quote guards agree with
+their original predicates on 776 values under each of C and en_US.utf8, with ordinary and
+readonly quote-variable names, including diagnostics and exit status. Literal quote
+alternatives have separate bracket-free case arms and assign no quote variables.
+
+The development run uses C and en_US.utf8, 16 workers, lengths 0 through 5 over 17 characters,
+and seven multiline scaffolds with insertions of lengths 0 through 4 over the same alphabet:
+2,129,785 candidates per engine. Glob: 645,833 parsed, 157,068 live and flagged, 0 missed;
+grep -E: 1,250,035 parsed, 18,010 live and flagged, 0 missed; Bash regex: 1,895,043 parsed,
+250,686 live and flagged, 0 missed. These counts match round 8. The sample is é; every live
+regex candidate must be detected in both its quoted assignment and, when multiline, its quoted
 heredoc source. Coverage is bounded by these inputs.
 
 The development fuzzer is excluded from offline gates because its collation locale may be
@@ -99,12 +108,15 @@ engine needs live candidates unless --allow-empty is explicit; startup canaries 
 both locale directions and detection.
 
 RESIDUALS. tr can take ranges without brackets. Classes and \w can depend on locale without a
-literal range. Variables or escaped brackets can assemble syntax at runtime. Data shaped like
-a complete test command, for example re='^ [ a-z x ] +$', can still take the test-word
-exemption. Non-bash fences are not scanned, and extraction inherits
-check_shell_blocks.blocks_of limits. The seven blind-spot fixtures record these boundaries;
-they do not claim arbitrary shell coverage.
+literal range. Variables or escaped brackets can assemble syntax at runtime. Empty-variable
+expansion in [!$a] followed by a quoted newline can change a settled close into a literal
+member and hide a later range (codex round-8 P1-1). Constructed multiline quoting is outside
+the hardening target. Data shaped like a complete test command, for example re='^ [ a-z x ] +$',
+can take the test-word exemption (codex round-8 P1-2). Non-bash fences are not scanned, and
+extraction inherits check_shell_blocks.blocks_of limits. The eight blind-spot fixtures assert
+known misses, including both P1 examples; they do not claim arbitrary shell coverage.
 """
+import hashlib
 import re
 import sys
 from pathlib import Path
@@ -118,7 +130,7 @@ from check_shell_blocks import SKIP_DIRS, blocks_of  # noqa: E402  one definitio
 # the shapes new guides are built from, and controls-reference.md, which site/llms.txt lists.
 NOT_A_GUIDE = frozenset(("CLAUDE.md", "AGENTS.md", "CHANGELOG.md", "README.sources.md", "TODO.md",
                          "DONE.md", "DECISIONS.md", "PENDING-DECISIONS.md", "SECURITY.md"))
-# The waivers live here, one `<guide> TAB <exact line text> TAB <reason>` entry per line.
+# The waivers live here, one `<guide> TAB sha256:<span digest> TAB <reason>` per line.
 ALLOWLIST = "bracket_ranges_allow.txt"
 # The retired in-block waiver marker. A guide line holding one is a finding, wherever it sits:
 # deciding whether such a comment is real is the lexing this gate no longer does.
@@ -133,9 +145,9 @@ HINT = ("outside the C locale a bracket range can match non-ASCII letters and di
         "it with globasciiranges off), so a validator written with one accepts values it claims "
         "to refuse. Spell the set out, as in "
         "[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789]. Where the range is "
-        "not a validator, add a '<guide> TAB <exact line text> TAB <reason>' entry to "
-        "tools/bracket_ranges_allow.txt; the entry waives findings on that opener line, "
-        "including spanning readings. See tools/check_bracket_ranges.py.")
+        "not a validator, add a '<guide> TAB sha256:<span digest> TAB <reason>' entry to "
+        "tools/bracket_ranges_allow.txt; the entry binds the complete physical source span, "
+        "as documented in tools/check_bracket_ranges.py.")
 
 
 def _atom(text, j, n):
@@ -315,11 +327,11 @@ def bracket_hits(text, span=None):
 
 
 class Allowlist:
-    """The entries of tools/bracket_ranges_allow.txt, each consumable by one flagged line.
+    """The entries of tools/bracket_ranges_allow.txt, each consumable by one flagged source span.
 
     `findings` holds what loading itself flagged (a malformed entry, an empty field); `take`
-    consumes one entry for one flagged occurrence of a line; `stale` names every entry nothing
-    consumed, so an entry cannot outlive the line it was written for.
+    consumes one entry for one flagged occurrence of a source span; `stale` names every entry nothing
+    consumed, so an entry cannot outlive the span it was written for.
     """
 
     def __init__(self):
@@ -341,9 +353,13 @@ class Allowlist:
             guide = parts[0]
             text = "\t".join(parts[1:-1])
             reason = parts[-1] if len(parts) > 1 else ""
-            if len(parts) < 3 or not guide.strip() or not text:
+            if len(parts) != 3 or not guide.strip() or not text:
                 allow.findings.append(f"{where}:{lineno}: malformed allowlist entry: three "
-                                      f"TAB-separated fields, guide, exact line text, reason")
+                                      f"TAB-separated fields, guide, SHA-256 span, reason")
+                continue
+            if re.fullmatch(r"sha256:[0-9a-f]{64}", text) is None:
+                allow.findings.append(f"{where}:{lineno}: malformed allowlist span: "
+                                      f"expected sha256: followed by 64 lowercase hex digits")
                 continue
             if not reason.strip():
                 allow.findings.append(f"{where}:{lineno}: allowlist entry with an empty "
@@ -355,17 +371,18 @@ class Allowlist:
 
     def take(self, guide, text):
         """Consume one entry for one flagged occurrence of `text` in `guide`, if one is left."""
-        left = self._avail.get((guide, text))
+        digest = "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
+        left = self._avail.get((guide, digest))
         if not left:
             return False
         left.pop(0)
         return True
 
     def stale(self):
-        """One finding per entry that no flagged line consumed."""
+        """One finding per entry that no flagged span consumed."""
         out = []
         for (guide, _), left in self._avail.items():
-            out.extend((lineno, f"{where}:{lineno}: stale allowlist entry: no flagged line of "
+            out.extend((lineno, f"{where}:{lineno}: stale allowlist entry: no flagged span of "
                                 f"{guide} matches its exact text") for lineno, where in left)
         return [msg for _, msg in sorted(out)]
 
@@ -406,22 +423,33 @@ def scan_blocks(name, blocks, allow):
     """Scan one guide's bash blocks, one physical line at a time, against `allow`.
 
     Returns (findings, n_blocks, n_waived). Every physical line is read the same way, a
-    here-document body like any other; a line whose findings the allowlist covers consumes one
-    entry for that occurrence; n_waived counts expressions, not entries.
+    here-document body like any other. A covered source span consumes one entry for that
+    occurrence; n_waived counts expressions, not entries.
     """
     findings, n_blocks, n_waived = [], 0, 0
     for start, body in blocks:
         n_blocks += 1
         lines = body.split("\n")
         for idx, raw in enumerate(lines):
-            hits = list(bracket_hits(raw, lambda i: joined_reading(lines, idx, i)))
+            spans = []
+
+            def reading(opener):
+                joined = joined_reading(lines, idx, opener)
+                if joined is not None:
+                    spans.append(joined)
+                return joined
+
+            hits = list(bracket_hits(raw, reading))
             if not hits:
                 continue
-            if allow.take(name, raw):
+            # Bind original physical bytes, including removed backslash-newlines.
+            # A spanning reading currently extends through the end of its Bash block.
+            key = "\n".join(lines[idx:]) if spans else raw
+            if allow.take(name, key):
                 n_waived += len(hits)
                 continue
             findings.extend(f"{name}:{start + idx}: {what} and no allowlist entry covers its "
-                            f"line" for what in hits)
+                            f"source span" for what in hits)
     return findings, n_blocks, n_waived
 
 
@@ -431,7 +459,7 @@ def scan_path(path, allow=None):
     file it cannot read. With no allowlist given, nothing is waived."""
     allow = Allowlist() if allow is None else allow
     findings = [f"{path.name}:{lineno}: in-guide bracket-ranges marker: waivers live in "
-                f"tools/{ALLOWLIST}, keyed by the guide and the exact line"
+                f"tools/{ALLOWLIST}, keyed by the guide and the complete physical span"
                 for lineno, raw in enumerate(path.read_text(encoding="utf-8").split("\n"), 1)
                 if MARKERISH_RE.search(raw)]
     found, n_blocks, n_waived = scan_blocks(path.name, list(blocks_of(path)), allow)
