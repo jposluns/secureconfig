@@ -98,7 +98,7 @@ gateway: keep them all on a private network or behind an identity-aware fronting
 The Collector is the pipe these tools (and others) receive traces through, and it ships with no security
 applied until you configure it. Bind receivers to a specific interface or loopback (for example
 `127.0.0.1:4317`). The OTLP receiver's default host became `localhost` in v0.104.0; the
-`component.UseLocalHostAsDefaultHost` feature gate was stabilized in v0.111.0 and removed in v0.112.0.
+`component.UseLocalHostAsDefaultHost` feature gate was stabilized in v0.110.0 and removed in v0.112.0.
 At v0.161.0, the OTLP factory sets `localhost:4317` (gRPC) and `localhost:4318` (HTTP) directly.
 
 **The official `otelcol` and `otelcol-contrib` images and deb/rpm packages ship a configuration that
@@ -290,7 +290,7 @@ that accepts spans with no credential at all.
 - Arize Phoenix, OAuth2 sign-up and basic-auth controls (`PHOENIX_OAUTH2_<IDP>_ALLOW_SIGN_UP` default True, `PHOENIX_DISABLE_BASIC_AUTH`): https://arize.com/docs/phoenix/self-hosting/features/authentication
 - OpenTelemetry Collector v0.161.0, OTLP factory endpoints: https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/receiver/otlpreceiver/factory.go#L41-L67
 - OpenTelemetry Collector v0.161.0 changelog, v0.104.0 OTLP localhost transition: https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/CHANGELOG.md#L2058-L2070
-- OpenTelemetry Collector v0.161.0 changelog, gate stabilization in v0.111.0 and removal in v0.112.0: https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/CHANGELOG.md#L1762-L1811 and https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/CHANGELOG.md#L1737-L1743
+- OpenTelemetry Collector v0.161.0 changelog, gate stabilization in v0.110.0 and removal in v0.112.0: https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/CHANGELOG.md#L1793-L1811 and https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/CHANGELOG.md#L1737-L1743
 - OpenTelemetry Collector releases v0.161.0, shipped configs (wildcard endpoints, explicit loopback metrics, enabled pipelines and extensions): https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol/config.yaml#L1-L81 and https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-contrib/config.yaml#L1-L81
 - OpenTelemetry Collector releases v0.161.0, Docker config COPY, CMD and EXPOSE: https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol/Dockerfile#L10-L15 and https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-contrib/Dockerfile#L10-L15
 - OpenTelemetry Collector releases v0.161.0, deb/rpm config installation and script selection: https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol/.goreleaser.yaml#L86-L118 and https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-contrib/.goreleaser.yaml#L94-L126
