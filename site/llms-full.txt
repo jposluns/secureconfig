@@ -26274,10 +26274,16 @@ spans from other hosts need their own authenticator, as described for the OpenTe
 ## Grafana Loki
 
 Loki's documentation leaves no doubt: "Grafana Loki does not come with any included authentication
-layer. You must run an authenticating reverse proxy in front of your services." The HTTP listener is on
-3100 and gRPC on 9095. The listen addresses default to empty, which means every interface. The shipped
-`loki-local-config.yaml` uses gRPC 9096 and `auth_enabled: false`, so read your own file, not the
-defaults.
+layer. You must run an authenticating reverse proxy in front of your services." At Loki v3.7.8 with
+dskit `8d1c6d34bb5a42b04caa982d68403c5a643bb742`, `server.http-listen-address` and
+`server.grpc-listen-address` default to empty. `server.http-listen-port` defaults to 3100 in Loki,
+overriding dskit's 80; `server.grpc-listen-port` keeps dskit's 9095. Both listen networks default to
+`tcp`. dskit passes the address and port through `net.JoinHostPort` to `net.Listen`: an empty
+address becomes `:3100` or `:9095`, a wildcard listener. IPv4 and IPv6 coverage depends on the
+host's Go/OS networking support; do not assume IPv6 is excluded. These are source-derived defaults,
+not observed sockets. The shipped `cmd/loki/loki-local-config.yaml` instead sets gRPC 9096 and
+`auth_enabled: false`; `production/docker/config/loki.yaml` explicitly sets both addresses to
+`0.0.0.0`, ports 3100/9095 and `auth_enabled: true`. Read your effective configuration.
 
 With memberlist as the ring store, Loki v3.7.8 uses dskit
 `8d1c6d34bb5a42b04caa982d68403c5a643bb742`: its TCP-only gossip transport defaults to
@@ -26307,30 +26313,53 @@ for example through NAT; they do not restrict the listener. Without an explicit 
 the transport derives an address from the first bind (a private IP for 0.0.0.0) and advertises its
 actual bound port. Set an explicit reachable cluster IP when that automatic choice is unsuitable.
 
-`auth_enabled: true`, the default, is multi-tenancy, not authentication. Loki requires an `X-Scope-OrgID`
-header and trusts whatever value the client sends. On the v3.7.8 loopback run with `auth_enabled: true`,
-a request without the header got `401`. A request naming any tenant could read labels (`200`) and push
-logs (`204`). Do not read that `401` as a login. `GET /config` (the running configuration) and
-`/debug/pprof/` answered `200` with no header at all. The API reference adds that "authorization is not
-part of the Loki API", and it lists `/flush`, `/ingester/shutdown` (which terminates the process by
-default) and the log-deletion endpoints with no gate.
+`auth_enabled: true`, the default, selects multi-tenancy, not authentication. Tenant-scoped
+HTTP handlers require `X-Scope-OrgID`, but the header does not prove the caller owns that tenant.
+dskit's tenant validation checks syntax and length, not identity or permission. With
+`auth_enabled: false`, Loki uses tenant `fake`. A missing-header rejection is not a login gate.
+dskit's default gRPC interceptor chain has no credential authentication; Loki adds its auth setup,
+with explicit tenant-check exemptions for health, frontend worker, scheduler and other internal RPCs.
+The supplied source subset lacks the auth helper implementation, so its complete interceptor
+behaviour has not been re-traced here. Do not expose gRPC on the strength of `auth_enabled`.
+
+A reachable client without credentials can submit logs through `POST /loki/api/v1/push` and query
+through `/loki/api/v1/query` or `/loki/api/v1/query_range`, subject to tenant headers and ingestion
+or query policies. `GET /config` exposes configuration; `/metrics` and `/debug/pprof/` are
+registered by default. These routes have no tenant-auth wrapper. When the ingester runs,
+`GET` or `POST /flush` and `GET` or `POST /ingester/shutdown` call maintenance handlers without
+that wrapper; `/ingester/prepare_shutdown` also accepts `POST`, `GET` and `DELETE`.
+When the compactor runs outside its worker mode (which returns before these routes are registered), with a TSDB or boltdb-shipper index in the schema (without one it logs that it is not starting and registers nothing, with no error) and `retention_enabled: true` (which also requires `compactor.delete-request-store`, or startup fails), `/loki/api/v1/delete` accepts
+`PUT`/`POST` to request deletion, `GET` to list requests and `DELETE` to cancel one.
+Those deletion routes do have tenant-header and deletion tenant-policy middleware; availability
+does not mean unconditional deletion. The supplied subset lacks those policy and handler
+implementations. The gRPC listener registers ingester push/query services in single-binary mode
+and an HTTP-over-gRPC bridge to the HTTP router. HTTP-only TLS or a proxy in front of 3100 therefore
+does not protect all paths to these services. These exposure consequences are REASONED, not live
+attack results.
 
 There are two fixes, and you can use both:
 
-- **mTLS on the servers.** The authentication docs describe `http_tls_config` and `grpc_tls_config`
-  under `server`, and advise `RequireAndVerifyClientCert` for the strictest setting:
+- **mTLS on the servers.** dskit's `server.http_tls_config` and `server.grpc_tls_config` each
+  accept `cert_file`, `key_file`, `client_ca_file` and `client_auth_type`; YAML also accepts
+  inline `cert`, `key` and `client_ca`. All default to empty, so both listeners serve plaintext
+  by default. TLS is constructed only when both a certificate and a key are supplied. A CA file
+  alone does not enable TLS or require a client certificate. Unlike memberlist's transport above,
+  both server configs pass client-auth policy and client CAs to the TLS builder. Set
+  `client_auth_type: RequireAndVerifyClientCert` and the trusted client CA to require verified
+  client certificates. The example enables HTTP mTLS and recommends loopback gRPC for one process
+  with no remote gRPC clients; check ingestion and queries with your effective configuration:
 
   ```yaml
   # Overlay on a working single-binary config (keep your storage and schema_config).
   common:
-    instance_addr: 127.0.0.1   # the address the rings advertise; it must match the gRPC bind
+    instance_addr: 127.0.0.1   # advertised address must be reachable on the gRPC bind
     replication_factor: 1      # one instance; the default is 3
     ring:
       kvstore:
         store: inmemory        # single binary: no memberlist gossip listener
   server:
     http_listen_address: 10.0.0.6
-    grpc_listen_address: 127.0.0.1   # single binary: Loki's own components call this port
+    grpc_listen_address: 127.0.0.1   # single-process recommendation; verify internal clients
     http_tls_config:
       cert_file: /etc/loki/tls/server.crt
       key_file: /etc/loki/tls/server.key
@@ -26338,30 +26367,30 @@ There are two fixes, and you can use both:
       client_ca_file: /etc/loki/tls/clients-ca.crt
   ```
 
-  On the loopback run, a client with a certificate from that CA got `200`. A client without one was
-  refused in the handshake (curl exit 56, `tlsv13 alert certificate required`), with or without a tenant
-  header. Plain HTTP got `400`. With these keys and filesystem storage, and with HTTP bound to 127.0.0.1
-  rather than a private address, a push with a client certificate returned `204`, a query returned the
-  pushed line with `200`, and Loki held no listener but its HTTP and gRPC ports. `instance_addr` matters
-  because Loki copies it into its ring and component addresses (ingester, distributor, query frontend
-  and others; `config_wrapper.go`); if it resolves to a routable address while gRPC listens on loopback,
-  ingestion breaks (inferred from that source, not run here). `replication_factor` defaults to 3
-  (`common.go`), more ingesters than one instance has. Keep gRPC off the network: left at its default it
-  listens on every interface in plaintext. The fix covers HTTP only: Loki has no authentication of its
-  own, so loopback gRPC stays open to every local user of the host (not tested here). A second run with
-  `memberlist` as the ring store opened a gossip listener (TCP only) on `memberlist.bind_addr`; bind
-  that to the private cluster network and restrict it to trusted peers. For TLS across hosts, configure
-  `memberlist.tls-enabled` and the certificate settings above (not demonstrated here); this pin does
-  not verify incoming client certificates. Then check with the `ss` step below: with the `inmemory` ring
-  nothing listens on a gossip port; with `memberlist`, its port (7946 by default, or your `bind_port`)
-  appears only on the private address. Do not add `grpc_tls_config` to a single binary on its own: on
-  the loopback run, `RequireAndVerifyClientCert` there made a push with a valid client certificate
-  return `500` and queries hang, and Loki logged `error reading server preface`, which indicates that
-  its own components call that gRPC server in plaintext (inferred from the logged error, so the warning
-  extends to other `client_auth_type` values). A deployment whose components talk gRPC across hosts
-  needs TLS on every component's gRPC client as well; that was not demonstrated here, so take it from
-  the Loki configuration reference for your version. mTLS does not set `X-Scope-OrgID`, so your agent or
-  proxy still does.
+  `common.instance_addr` supplies common ring and frontend addresses; explicit component settings
+  can override it. The ingester advertises the server gRPC port, and distributor and querier
+  construction receive the ingester ring and client configuration. The querier worker receives the
+  gRPC listen address and port. A single-binary compactor client uses that listen address and port
+  when deletion filtering is enabled. The supplied source subset omits the worker and ingester
+  client implementations, so the complete dial path is not established here. Loopback is a
+  recommendation for this configuration, not a guarantee for every single-binary deployment:
+  verify advertised addresses, worker/frontend/scheduler settings, successful pushes and queries,
+  and any compactor calls. Remote components need a private address reachable from their hosts.
+
+  Keep gRPC restricted to trusted callers: plaintext loopback is still reachable by local users.
+  Enabling `grpc_tls_config` also requires compatible TLS settings on every internal gRPC client,
+  including client certificates when required; changing the server alone can break internal RPCs.
+  This HTTP mTLS overlay does not configure those clients. mTLS does not set `X-Scope-OrgID`;
+  your agent or proxy must still supply the tenant header when multi-tenancy is enabled.
+  With the `inmemory` ring, check that no gossip listener is present. With memberlist, apply the
+  separate private-cluster and trusted-peer restrictions above.
+
+  **REASONED:** all Loki socket, push/query, administrative-route and TLS/client-certificate checks
+  here need demonstration: the authoring host forbids opening listeners without an isolated network
+  namespace, and has none. Expected HTTP mTLS outcomes are a successful authorized request, handshake
+  rejection without a trusted client certificate, and refusal of plaintext application requests.
+  Check both IPv4 and IPv6 exposure, gRPC reachability and internal RPC success. Row 1.108 tracks
+  these live checks; no Loki listener or TLS test was run for this audit.
 - **An authenticating proxy that owns the tenant header.** The vendor's nginx example sets
   `proxy_set_header X-Scope-OrgID $remote_user;` so that "nginx overwrites any tenant header sent by the
   client". Keep Loki itself reachable only from that proxy. See [nginx.md](nginx.md) and
@@ -26369,8 +26398,10 @@ There are two fixes, and you can use both:
 
 ## Verify
 
-The HTTP results below were demonstrated on 127.0.0.1 against the versions named at the top, in both the
-exposed state and the fixed state. The default all-interfaces binds were not observed, so they are
+The non-Loki HTTP results below were demonstrated on 127.0.0.1 against the versions named at the top,
+in both the exposed state and the fixed state. All Loki checks are REASONED: the authoring host
+forbids opening listeners without an isolated network namespace, and has none. The default
+all-interfaces binds were not observed, so they are
 reasoned: the authoring host forbids binding every interface, so each run overrode the address to
 127.0.0.1. The binds follow from each binary's `--help` default (`:9100`, `:9093`, `0.0.0.0:9094`,
 `:9091`) and from source (Loki's empty listen addresses; Jaeger's `":" + port` query default). Go
@@ -26438,7 +26469,7 @@ The password reaches curl on stdin, not argv. Substitute inside the quotes, and 
 
 Fixed, `no credentials` is `401` and `with credentials` is `200`. The loopback runs gave exactly that
 pair over HTTPS for GETs of node_exporter `/metrics`, Pushgateway `/metrics`, Alertmanager
-`/api/v2/status` and Jaeger `/api/v3/services`. For Loki under mTLS, the equivalent is `--cert` and `--key` on an authorized client
+`/api/v2/status` and Jaeger `/api/v3/services`. For Loki under mTLS, the REASONED equivalent is `--cert` and `--key` on an authorized client
 (`200`) against the same request without them, which fails in the handshake. This closes the argv
 channel only. The password can still reach shell history or `set -x` output.
 
@@ -26464,11 +26495,35 @@ channel only. The password can still reach shell history or `set -x` output.
 - OpenTelemetry Collector contrib v0.160.0 basicauth extension (`htpasswd`, `authenticator`): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/v0.160.0/extension/basicauthextension/README.md
 - Loki v3.7.8 authentication (no built-in auth, tenancy header, mTLS, nginx tenant header): https://github.com/grafana/loki/blob/v3.7.8/docs/sources/operations/authentication.md
 - Loki v3.7.8 HTTP API (`/config`, `/flush`, `/ingester/shutdown`, deletion): https://github.com/grafana/loki/blob/v3.7.8/docs/sources/reference/loki-http-api.md
-- Loki v3.7.8 `auth.enabled` default and port 3100: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go
+- Loki v3.7.8 `auth.enabled` default and fake tenant: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L150-L162
 - Loki v3.7.8 common config (`common.replication-factor` default 3): https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/common/common.go
-- Loki v3.7.8 config wrapper (`common.instance_addr` copied into component addresses): https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/config_wrapper.go
-- Loki v3.7.8 sample local configuration: https://github.com/grafana/loki/blob/v3.7.8/cmd/loki/loki-local-config.yaml
-- dskit as pinned by Loki v3.7.8 (gRPC 9095, empty listen addresses): https://github.com/grafana/dskit/blob/8d1c6d34bb5a/server/server.go
+- Loki v3.7.8 config wrapper (`common.instance_addr` copied into component addresses): https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/config_wrapper.go#L162-L174
+- Loki v3.7.8 sample local configuration: https://github.com/grafana/loki/blob/v3.7.8/cmd/loki/loki-local-config.yaml#L1-L16
+- dskit pinned listener and TLS flag defaults: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L189-L212
+- Loki v3.7.8 HTTP port override: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L241-L269
+- Loki v3.7.8 production Docker listener overrides: https://github.com/grafana/loki/blob/v3.7.8/production/docker/config/loki.yaml#L1-L8
+- Loki v3.7.8 auth setup and gRPC exemptions: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L495-L509
+- Loki v3.7.8 fake HTTP tenant propagation: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L208-L222
+- Loki v3.7.8 push routes and middleware: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L399-L422
+- Loki v3.7.8 query frontend middleware and routes: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1307-L1378
+- Loki v3.7.8 config route: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L533-L540
+- Loki v3.7.8 ingester gRPC services and maintenance routes: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L751-L790
+- Loki v3.7.8 conditional deletion routes and middleware (compactor worker mode returns first): https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1866-L1869 ; https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1880-L1883 ; https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1899-L1908 ; https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1935-L1952
+- Loki v3.7.8 worker connection inputs: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L571-L580
+- Loki v3.7.8 common ring propagation to ingester: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/config_wrapper.go#L193-L248
+- Loki v3.7.8 ingester clients receive ring configuration: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L373-L390
+- Loki v3.7.8 querier ingester-client construction: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1130-L1138
+- Loki v3.7.8 single-binary compactor address: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1241-L1262
+- Loki v3.7.8 conditional compactor gRPC client: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L2532-L2561
+- dskit pinned TLS YAML fields: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L69-L78
+- dskit pinned wildcard listener construction: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L309-L332
+- dskit pinned server TLS and client-auth construction: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L357-L395
+- dskit pinned default gRPC interceptor chain: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L433-L468
+- dskit pinned metrics and pprof routes: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L577-L583
+- dskit pinned HTTP-over-gRPC bridge: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L673-L681
+- dskit pinned HTTP tenant propagation: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/middleware/http_auth.go#L13-L23
+- dskit pinned gRPC tenant propagation: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/middleware/grpc_auth.go#L36-L57
+- dskit pinned tenant syntax validation: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/tenant/tenant.go#L85-L99
 - Loki v3.7.8 dskit dependency pin: https://github.com/grafana/loki/blob/v3.7.8/go.mod#L55
 - dskit pinned transport flags (bind list, port 7946, TLS off): https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/tcp_transport.go#L41-L86
 - dskit pinned listener construction (empty list becomes 0.0.0.0, invalid address rejection, shared TLS config): https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/tcp_transport.go#L133-L197
