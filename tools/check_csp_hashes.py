@@ -142,9 +142,10 @@ whole page, pinned bodies included. Each is a finding with its own message:
      `circle`, `path` and `rect`;
   4. anywhere on the page, pinned bodies included, a `</` not followed by an ASCII letter (`</>`,
      `</ `, `</1`, `</!`, `</` and a tab). Not every one is a bogus comment to a browser: `</>` is
-     dropped, `</` at the end of the input is text, and inside script or style data a malformed
-     ending is text. Everywhere else `</` and a non-letter opens a bogus comment running to the
-     next `>`, which html.parser does not model, and the text it swallows can hold an `</svg>` or
+     dropped, `</` at the end of the input is text, and inside script or style data, RCDATA such as
+     `<title>`, or a quoted attribute value a malformed ending is text. In the tokenizer's data state
+     `</` and a non-letter opens a bogus comment running to the next `>`, which html.parser does not
+     model, and the text it swallows can hold an `</svg>` or
      the end of a pinned block, so the SVG region and the pinned text would differ from a
      browser's. The refusal is conservative: it refuses the harmless spellings too, because
      telling them apart needs the context this gate does not model. The real pages, pinned
@@ -480,9 +481,10 @@ def unlisted_elements(path, html):
 def malformed_end_tags(path, html):
     """Rule 4 of REFUSED CONTEXTS: `</` without a letter after it, anywhere, pinned bodies included."""
     return [f"{path}:{line_of(html, m.start())} has a malformed end tag, `</` not followed by an "
-            f"ASCII letter. Outside script and style data a browser reads most such sequences as "
-            f"a bogus comment running to the next `>` (`</>` is dropped, and `</` at the end of "
-            f"input is text), and html.parser does not, so the text one swallows (an </svg>, or "
+            f"ASCII letter. In the tokenizer's data state a browser reads most such sequences as "
+            f"a bogus comment running to the next `>` (`</>` is dropped, `</` at the end of input "
+            f"is text, and inside script or style data, RCDATA or an attribute value it stays "
+            f"text), and html.parser does not, so the text one swallows (an </svg>, or "
             f"the end of a pinned block) is read differently here and there. Telling the harmless "
             f"ones apart needs context this gate does not model, so it refuses every one, even "
             f"inside a pinned <style> or <script>"
