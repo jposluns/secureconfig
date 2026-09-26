@@ -24551,7 +24551,7 @@ strict_password_checking: true
 
 ## Fooocus
 
-`--listen` exposes the UI to the network (optionally to a specific address); `--port` sets the port; `--share` registers a public `*.gradio.live` endpoint, same relay mechanism and same caution as above. Fooocus's own README states access is unauthenticated by default. Optional basic auth comes from an `auth.json` file with `user`/`pass` entries (no dedicated command-line auth flag exists); use it, but still keep the instance off any public interface.
+`--listen` with no argument binds to `0.0.0.0` (every IPv4 interface); given an address it binds only there, and with the flag absent Fooocus binds `127.0.0.1` (all as of v2.5.5). `--port` sets the port, which is `7865` by default, unless `GRADIO_SERVER_PORT` is set or 7865 is taken (below). `--share` registers a public `*.gradio.live` endpoint, same relay mechanism and same caution as above. Fooocus's own README states access is unauthenticated by default. Optional basic auth comes from an `auth.json` file with `user`/`pass` entries (no dedicated command-line auth flag exists); use it, but still keep the instance off any public interface.
 
 ```json
 [
@@ -24559,13 +24559,44 @@ strict_password_checking: true
 ]
 ```
 
-## Verify
+Fooocus reads `auth.json` by a relative name from the checkout root, the directory `launch.py` changes into, so outside a container put the file next to `launch.py`, owned by the account that runs Fooocus, with mode `0400`. `auth.py` also accepts a `hash` entry in place of `pass`: the lowercase hex SHA-256 of the password. Its `auth_list_to_dict` (`auth.py:8-16`) stores `hash` as given and turns `pass` into that same digest, and its `check_auth` (`auth.py:37-41`) compares the hex SHA-256 of the password typed at login with the stored value, so a `hash` entry keeps the plaintext password out of the file. Check for the login prompt after every start rather than trusting that the file is present. Run on its own with no server started, the v2.5.5 loader (`load_auth_data`) raised `PermissionError` for a file it could not open, because its `open()` sits outside its `try`; for a malformed file it printed `load_auth_data, e: ...` and returned no credentials; for an empty list (`[]`) it also returned none; and for a valid file it returned credentials. From the launch call, which passes a login to gradio only when the loader returned credentials, an unreadable file should stop Fooocus before the UI starts, while a malformed file or an empty list should start the UI with no login. That last step is read from the source, not observed: no Fooocus server was run.
+
+Pass the port explicitly as well as the bind. Fooocus hands gradio no port of its own: `launch.py` sets `GRADIO_SERVER_PORT` to `7865` only when that variable is not already set, so a `GRADIO_SERVER_PORT` inherited from your shell, a service unit or a container's environment moves the UI to whatever port it names. With no port passed, gradio 3.41.2 (the version Fooocus v2.5.5 pins) tries that value and then each port above it in turn, up to 100 ports by default, so a 7865 already in use moves the UI to a higher port with no error. `--port 7865` makes gradio try that port alone and fail to start if it is taken, which keeps the UI where your firewall rules and the Verify probe below expect it. `--listen 127.0.0.1` restates the default, so the launch line records the bind.
+
+Start Fooocus with `launch.py` rather than the README's `entry_with_update.py`. The updater fetches `origin` and, when the checked-out branch can fast-forward to the remote branch of the same name, moves the branch to that commit and hard-resets the working tree before it imports `launch.py`, so a version you pinned on a branch does not stay pinned. `launch.py` is the same program without that step, and it is what the upstream container image runs. Clone the pinned tag:
 
 ```bash
-ss -tlnp   # read every listener; 8188/7860/9090: each service on 127.0.0.1 only
+git clone --branch v2.5.5 https://github.com/lllyasviel/Fooocus.git
+```
+
+After preparing the environment as the README describes, start it from the pinned checkout. The block starts Fooocus only when the checkout's HEAD is exactly the `v2.5.5` tag, and `./Fooocus` keeps a `CDPATH` in your shell from moving it elsewhere. It does not check the working tree, so if the clone printed an error, delete `./Fooocus` and clone again before starting:
+
+```bash
+(
+  cd ./Fooocus || { echo 'no ./Fooocus checkout here; not starting'; exit 2; }
+  [ "$(git describe --tags --exact-match 2>/dev/null)" = v2.5.5 ] ||
+    { echo 'this is not the pinned v2.5.5 checkout; not starting'; exit 2; }
+  python launch.py --listen 127.0.0.1 --port 7865
+)
+```
+
+The upstream container image sets `ENV CMDARGS --listen` in its Dockerfile, and its `docker-compose.yml` and the `docker run` and `podman run` examples in its `docker.md` set `CMDARGS=--listen` again, so inside the container Fooocus binds `0.0.0.0`. Each of them also publishes `7865:7865` with no host address; Docker binds such a publication on every host address, `0.0.0.0` and `[::]` (this guide has not checked Podman's default). On a bridge network the wildcard inside the container is what lets a published port reach the UI, and it also lets any container on the same network reach it, with no login unless a valid `auth.json` is mounted (below). Keep the wildcard inside the container, publish to loopback only, and state the arguments: in the `docker run` and `podman run` examples, replace `-p 7865:7865` with `-p 127.0.0.1:7865:7865` and `-e CMDARGS=--listen` with `-e CMDARGS='--listen 0.0.0.0 --port 7865'`; in `docker-compose.yml`, make the `ports` entry `"127.0.0.1:7865:7865"` and the `CMDARGS` entry `CMDARGS=--listen 0.0.0.0 --port 7865`. Under host networking (`--network host`) nothing is published and the container's wildcard is the host's, so set `CMDARGS` to `--listen 127.0.0.1 --port 7865` there instead. A loopback publication is a reliable boundary only on Docker Engine 28.0 and later; see [docker.md](docker.md#1-publish-nothing-except-the-tls-proxy).
+
+Build the image from the pinned checkout and run that local build, not the GHCR image. The upstream `docker-compose.yml` names both `build: .` and `image: ghcr.io/lllyasviel/fooocus`, so Compose may run the GHCR image it pulls rather than a build of your checkout, and the `docker run` example in the upstream `docker.md` runs `ghcr.io/lllyasviel/fooocus`; this guide has not checked that image's default tag against v2.5.5. With Compose, start it with `docker compose up --build`, or add `pull_policy: build` to the service so that every `docker compose up` builds it; the service keeps `image: ghcr.io/lllyasviel/fooocus`, so Compose tags its local build `ghcr.io/lllyasviel/fooocus`, not `fooocus`. With `docker run`, build it with `docker build . -t fooocus`, as the upstream `docker.md` describes, which tags the build `fooocus`, and run `fooocus` in place of `ghcr.io/lllyasviel/fooocus`.
+
+The image build excludes `auth.json`, so mount it read-only at `/content/app/auth.json`: `-v /srv/fooocus/auth.json:/content/app/auth.json:ro` with `docker run`, or `- /srv/fooocus/auth.json:/content/app/auth.json:ro` under the service's `volumes:` in `docker-compose.yml`. Fooocus runs in the image as its unprivileged `user` account, so the host file must be owned by that account's uid and readable by no other account. Read the uid from the image you built: on the `docker build . -t fooocus` path, `docker run --rm --entrypoint id fooocus -u user` prints it; on the Compose path, run `docker compose build` and then `docker run --rm --entrypoint id ghcr.io/lllyasviel/fooocus -u user`, which reads the local build Compose tagged with that name. Then `sudo chown` the file to that uid and `sudo chmod 0400` it. Read from the source and not observed on a running server (above), an unreadable file should stop Fooocus from starting, and a malformed file or an empty list should start it with no login, so check for the login prompt. Under rootless Docker or user-namespace remapping the host-side owner differs; this guide has not checked that case.
+
+## Verify
+
+The Fooocus entries below (port 7865 in the `ss` comment and in the probe loop) are REASONED, not demonstrated: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none, so no Fooocus instance was run; row 1.146 tracks the demonstration. From the v2.5.5 sources cited below (the `--listen` default and its bare-flag constant in the argument parser, and the launch call that passes the bind and port to gradio), a Fooocus process started on the host with a bare `--listen` should show a wildcard listener on 7865 in `ss` and answer the probe from another host with an HTTP code; started as above, it should show `127.0.0.1:7865` in `ss`, and the probe should report a refusal or timeout reaching your address. The argument parse alone is demonstrated: `argparse` given that `--listen` definition (`type=str`, `default="127.0.0.1"`, `nargs="?"`, `const="0.0.0.0"`) returns `127.0.0.1` with no flag and `0.0.0.0` for a bare `--listen`. Confirm Fooocus is up and answers on the host itself before reading an external refusal as the fixed state. The `ss` expectations cover host processes only. For a container, the check is the PORTS column of `docker ps` plus the probe from another host, not `ss`, because socket visibility varies by Docker version and config (see [docker.md](docker.md#4-verify)): a container published as `7865:7865` should list the publication on every host address in the PORTS column and answer the probe with an HTTP code, and one published as `127.0.0.1:7865:7865` should list `127.0.0.1` as its only host address, with the probe reporting a refusal or timeout reaching your address. A publication with no host address binds `[::]` as well as `0.0.0.0`, so run the probe block twice, once with your public IPv4 address and once with your public IPv6 address in square brackets, each inside the quotes on the `set --` line. The block probes every port even when an earlier probe fails, so its exit status is not the verification result: read each `port=` line. Under rootful Docker's host networking nothing is published and the PORTS column is empty; the listener is in the host's network namespace, so read `ss` for it as for a host process: `127.0.0.1:7865` when fixed, or `0.0.0.0:7865` when `CMDARGS` still binds the wildcard, whether the image's default `--listen` was left in or a bridge-network `--listen 0.0.0.0` was copied over.
+
+```bash
+ss -tlnp   # host processes: read every listener; 8188/7860/9090/7865: each service on 127.0.0.1 only
 # each must be unreachable from another host. Read err, not the number: it must name a refusal or
 # timeout reaching YOUR address. An HTTP code means the port answered. A resolver failure, a local
-# socket error, or a timeout that did not come from the remote address is inconclusive.
+# socket error, or a timeout that did not come from the remote address is inconclusive. Every port is
+# probed even after one fails, so the exit status is not the result; read each port= line.
+# Run it once with your public IPv4 address, then again with your public IPv6 address in brackets.
 (                                                   # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
@@ -24573,18 +24604,18 @@ ss -tlnp   # read every listener; 8188/7860/9090: each service on 127.0.0.1 only
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
   case "$1" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
-    *) for p in 8188 7860 9090; do                              # ComfyUI, SD WebUI, InvokeAI
+    *) for p in 8188 7860 9090 7865; do                         # ComfyUI, SD WebUI, InvokeAI, Fooocus
          curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-           -w "port=$p http=%{http_code} exit=%{exitcode} err=%{errormsg}\n" "http://$1:$p/"
+           -w "port=$p http=%{http_code} exit=%{exitcode} err=%{errormsg}\n" "http://$1:$p/" || :
        done ;;
   esac
 )
 # guard-conventions: allow probe of a fixed loopback target; no reader-substituted placeholder in this probe's argv
-curl -q -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:9090/api/v1/boards/
+curl -q -g -s --noproxy '*' -o /dev/null -w '%{http_code}\n' http://127.0.0.1:9090/api/v1/boards/
                                                        # from the host itself, InvokeAI multiuser mode: 401
                                                        # without a Bearer token, never the app itself
 # guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -sI https://imagegen.example.com/                # via the proxy: TLS, and a login prompt
+curl -q -g -sI https://imagegen.example.com/                # via the proxy: TLS, and a login prompt
                                                        # or 401 without credentials, before the UI loads
 ```
 
@@ -24620,9 +24651,27 @@ curl -q -sI https://imagegen.example.com/                # via the proxy: TLS, a
 - Gradio 3.41.2 turns a list `auth` into a dictionary keyed by user name, so a later password for the same user name replaces an earlier one (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/routes.py#L128-L133
 - InvokeAI YAML Config (host/port defaults): https://invoke.ai/configuration/invokeai-yaml/
 - InvokeAI Multi-User Administrator Guide: https://invoke.ai/features/multi-user-mode/admin-guide/
-- Fooocus repository README (`--listen`, `--share`, auth.json): https://github.com/lllyasviel/Fooocus
+- Fooocus README, UI access and authentication (`--listen`, `--port`, `--share`, `auth.json`; pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/readme.md#L296-L301
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
 - ComfyUI `--listen` default `127.0.0.1`, `0.0.0.0,::` when given without a value, and `--port` default `8188` (pinned tag v0.37.0): https://github.com/Comfy-Org/ComfyUI/blob/v0.37.0/comfy/cli_args.py#L63-L64
+- Fooocus `--listen` default `127.0.0.1`, and `0.0.0.0` when given without a value (pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/ldm_patched/modules/args_parser.py#L36
+- Fooocus sets no port default of its own (`port=None`, pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/args_manager.py#L43-L47
+- Fooocus sets `GRADIO_SERVER_PORT` to `7865` only when it is unset (pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/launch.py#L13-L14
+- Fooocus passes the bind, the port and the `auth.json` login to gradio (pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/webui.py#L1120-L1128
+- Fooocus pins gradio 3.41.2 (pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/requirements_versions.txt#L13
+- gradio 3.41.2 reads `GRADIO_SERVER_PORT` as the start of its port search, 100 ports long by default (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio%403.41.2/gradio/networking.py#L24-L27
+- gradio 3.41.2 tries only the passed port, or searches upward when none is passed, and raises when none is free (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio%403.41.2/gradio/networking.py#L133-L171
+- Fooocus `entry_with_update.py` fetches `origin` and fast-forwards the checked-out branch before importing `launch.py` (pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/entry_with_update.py#L16-L46
+- Fooocus container image: `ENV CMDARGS --listen`, and the process runs as the unprivileged `user` account (pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/Dockerfile#L3 and https://github.com/lllyasviel/Fooocus/blob/v2.5.5/Dockerfile#L17-L29
+- Fooocus container entrypoint runs `launch.py` with `CMDARGS` (pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/entrypoint.sh#L33
+- Fooocus Compose file names both `build: .` and `image: ghcr.io/lllyasviel/fooocus`, publishes `7865:7865` and sets `CMDARGS=--listen` (pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/docker-compose.yml#L6-L11
+- Fooocus Docker instructions (`-p 7865:7865`, `-e CMDARGS=--listen`, a `docker run` of `ghcr.io/lllyasviel/fooocus`, building locally; pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/docker.md#L19-L78
+- Fooocus image build excludes `auth.json` (pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/.dockerignore#L53
+- Fooocus reads `auth.json` by a relative name from the checkout root that `launch.py` changes into; `auth_list_to_dict` stores a `hash` entry as given and turns a `pass` entry into its SHA-256 hex digest; the loader opens the file outside its `try` and returns no credentials for a malformed file or an empty list; and `check_auth` compares the SHA-256 hex digest of the password typed at login with the stored value (pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/constants.py#L5, https://github.com/lllyasviel/Fooocus/blob/v2.5.5/launch.py#L7-L9, https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L8-L16, https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L19-L34 and https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L37-L41
+- Docker port publishing (with no host address, "the Docker daemon publishes ports to all host addresses (0.0.0.0 and [::])"): https://docs.docker.com/engine/network/port-publishing/
+- Compose Specification, `pull_policy` (`build`: "Compose builds the image"; and "The `latest` tag is always pulled even when the `missing` pull policy is used"; pinned commit 914ec15d1fa4): https://github.com/compose-spec/compose-spec/blob/914ec15d1fa498969c0df5c1d672306db3256089/05-services.md#L1816-L1832
+- Compose Specification, a service with both `build` and `image` (Compose "follows the rules defined by the `pull_policy` attribute"; if it is missing, "Compose attempts to pull the image first and then builds from source if the image isn't found", and a built image takes the `image` name, as the example shows; pinned commit 914ec15d1fa4): https://github.com/compose-spec/compose-spec/blob/914ec15d1fa498969c0df5c1d672306db3256089/build.md#L21-L23 and https://github.com/compose-spec/compose-spec/blob/914ec15d1fa498969c0df5c1d672306db3256089/build.md#L50-L62
+- `docker compose up --build` ("Build images before starting containers"; pinned tag v2.32.4): https://github.com/docker/compose/blob/v2.32.4/cmd/compose/up.go#L147
 
 ======================================================================
 ==> chat-uis.md
@@ -30197,6 +30246,7 @@ Open the guide before relying on either, because defaults change between release
 | 7700 | Meilisearch HTTP API; the binary defaults to localhost, while the official Docker image binds all interfaces | Unauthenticated until a master key is set (dev mode) | [search-engines.md](search-engines.md) |
 | 7800 | Keycloak clustered cache transport, carrying sessions and tokens; TLS is on by default for TCP stacks | not stated | [self-hosted-idp.md](self-hosted-idp.md) |
 | 7860 | Gradio, Stable Diffusion WebUI, or Langflow; also text-generation-webui's Gradio UI | varies by service; see the guides | [gradio.md](gradio.md), [image-gen-uis.md](image-gen-uis.md), [agent-builders.md](agent-builders.md), [model-servers.md](model-servers.md) |
+| 7865 | Fooocus's Gradio UI, on `127.0.0.1` by default; the upstream container image, Compose file and `docker run` example pass a bare `--listen` (`0.0.0.0`) and publish `7865:7865` with no host address | No authentication unless a valid `auth.json` is present; read from the v2.5.5 source and not observed on a running server, an unreadable file should stop startup, and a malformed file or an empty list should start the UI with no login | [image-gen-uis.md](image-gen-uis.md) |
 | 7880 | LiveKit HTTP/WebSocket signaling and API, which need a TLS proxy | Refuses to start without keys; `--dev` injects `devkey`/`secret` when the key map is empty; the upstream `config-sample.yaml` ships example pairs `key1: secret1` and `key2: secret2` | [realtime-voice-infra.md](realtime-voice-infra.md) |
 | 7881 | LiveKit ICE media TCP mux, separate from signaling | not stated | [realtime-voice-infra.md](realtime-voice-infra.md) |
 | 7882/UDP | LiveKit development-mode media mux; outside development mode the documented default is the 50000 to 60000 media range | not stated | [realtime-voice-infra.md](realtime-voice-infra.md) |
