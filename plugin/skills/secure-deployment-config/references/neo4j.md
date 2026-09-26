@@ -60,7 +60,9 @@ server.routing.listen_address=localhost:7688
 
 For a cluster, use the intended private interface instead of those loopback hosts. Enable the SSL framework's **`cluster`** scope on every member: it covers discovery, transaction shipping, Raft, and server-side routing, including 7688. The policy is disabled by default, so default cluster traffic has neither TLS encryption nor TLS client-certificate authentication. The documented default `client_auth=REQUIRE` only takes effect once the policy is enabled; a database password does not secure the unauthenticated replication endpoint. See [cluster ports](https://neo4j.com/docs/operations-manual/5/configuration/ports/#_cluster) and [intra-cluster SSL configuration](https://neo4j.com/docs/operations-manual/5/security/ssl-framework/#ssl-cluster-config).
 
-Before enabling it, create `certificates/cluster`, its `trusted` and `revoked` directories, and install each member's own PKCS#8 PEM `private.key` and matching `public.crt`. Make the key readable only by the Neo4j service account. Populate each member's trust directory with the approved peer certificates or their trusted CA as described by the vendor; retain `trust_all=false`. Use the same policy settings on every member, with distinct private keys and certificates:
+Before enabling it, create `certificates/cluster`, its `trusted` and `revoked` directories, and install each member's own PKCS#8 PEM `private.key` and matching `public.crt`. Make the key readable only by the Neo4j service account. Populate each member's trust directory with the approved peer certificates or their trusted CA as described by the vendor; retain `trust_all=false`. Cluster certificates must include both **TLS Web Server Authentication** and **TLS Web Client Authentication** in Extended Key Usage, because each member authenticates as a client to its peers. Inspect each member's certificate with `openssl x509 -in public.crt -noout -text` and look for both usages under `X509v3 Extended Key Usage`. In `public.crt`, concatenate PEM certificates leaf first, then toward the root. See the [vendor certificate requirements](https://neo4j.com/docs/operations-manual/5/security/ssl-framework/#ssl-certificates).
+
+Use the same policy settings on every member, with distinct private keys and certificates:
 
 ```properties
 dbms.ssl.policy.cluster.enabled=true
@@ -74,7 +76,16 @@ This does not enable TLS on the separate 6362 backup connector, which uses the *
 
 **Prometheus is separate from clustering.** Enterprise's `server.metrics.prometheus.enabled` defaults to `false`; if enabled on either a standalone server or a cluster member, `server.metrics.prometheus.endpoint` defaults to the explicit `localhost:2004`. That default does not inherit a widened shared host; an explicitly hostless `:2004` does. No Prometheus scope is listed in the SSL framework, so do not assume the cluster policy protects metrics. Keep it loopback-only or reachable only by authorized monitoring systems. Graphite's `server.metrics.graphite.server=:2003` is an outbound destination, disabled by default, not a Neo4j listener. JMX 3637 and debugging 5005 in the ports table require explicit JVM options; do not enable remote management or debugging as part of this baseline. See [Prometheus settings](https://neo4j.com/docs/operations-manual/5/configuration/configuration-settings/#config_server.metrics.prometheus.endpoint) and [monitoring ports](https://neo4j.com/docs/operations-manual/5/configuration/ports/#_graphite_monitoring).
 
-**Docker:** at the guide's pinned entrypoint commit, the default `server.default_listen_address=0.0.0.0` applies to both editions and widens all four hostless cluster listen defaults when those listeners run. It does not override explicit listener hosts, the backup default, or the Prometheus default. Enterprise additionally defaults the four cluster advertised addresses to the container hostname and their respective ports, and maps legacy `NEO4J_causal__clustering_*` advertised-address variables to the newer names. Explicit configuration overrides Docker defaults; environment configuration then overrides file values. For example, `NEO4J_server_cluster_listen__address=localhost:6000` supplies the single-server transaction-listener override. For a real cluster, use peer-reachable private addresses and the cluster TLS policy, and restrict container-network access as well as host publication. All three Dockerfile variants declare only `EXPOSE 7474 7473 7687`; that declaration is not a listener inventory or firewall. See the [entrypoint](https://github.com/neo4j/docker-neo4j/blob/5359427c4f51d0d51cce5b048757a2c21e6f377e/docker-image-src/5/coredb/docker-entrypoint.sh#L547-L617) and [Debian Dockerfile](https://github.com/neo4j/docker-neo4j/blob/5359427c4f51d0d51cce5b048757a2c21e6f377e/docker-image-src/5/coredb/Dockerfile-debian#L53).
+**Docker:** at the guide's pinned entrypoint commit, the default `server.default_listen_address=0.0.0.0` applies to both editions and widens all four hostless cluster listen defaults when those listeners run. It does not override explicit listener hosts, the backup default, or the Prometheus default. Enterprise additionally defaults the four cluster advertised addresses to the container hostname and their respective ports, and maps legacy `NEO4J_causal__clustering_*` advertised-address variables to the newer names. Explicit configuration overrides Docker defaults; environment configuration then overrides file values. For a real cluster, use peer-reachable private addresses and the cluster TLS policy, and restrict container-network access as well as host publication. All three Dockerfile variants declare only `EXPOSE 7474 7473 7687`; that declaration is not a listener inventory or firewall. See the [entrypoint](https://github.com/neo4j/docker-neo4j/blob/5359427c4f51d0d51cce5b048757a2c21e6f377e/docker-image-src/5/coredb/docker-entrypoint.sh#L547-L617) and [Debian Dockerfile](https://github.com/neo4j/docker-neo4j/blob/5359427c4f51d0d51cce5b048757a2c21e6f377e/docker-image-src/5/coredb/Dockerfile-debian#L53).
+
+For the single-server loopback overrides above, use these Docker environment entries. They are derived from the pinned entrypoint's translation rules: prefix `NEO4J_`, replace each setting underscore with `__`, and each dot with `_`. The entrypoint reverses that translation before writing the setting. See [the naming convention](https://github.com/neo4j/docker-neo4j/blob/5359427c4f51d0d51cce5b048757a2c21e6f377e/docker-image-src/5/coredb/docker-entrypoint.sh#L549-L555) and [the translation](https://github.com/neo4j/docker-neo4j/blob/5359427c4f51d0d51cce5b048757a2c21e6f377e/docker-image-src/5/coredb/docker-entrypoint.sh#L607).
+
+| Environment name | Value |
+| --- | --- |
+| `NEO4J_server_discovery_listen__address` | `localhost:5000` |
+| `NEO4J_server_cluster_listen__address` | `localhost:6000` |
+| `NEO4J_server_cluster_raft_listen__address` | `localhost:7000` |
+| `NEO4J_server_routing_listen__address` | `localhost:7688` |
 
 ## 3. TLS on Bolt and HTTPS, HTTP off
 
@@ -211,7 +222,7 @@ Enable HTTP request logging only when an HTTP/HTTPS connector is in use. It does
 
 **Service verification status: REASONED, not demonstrated.** The authoring environment has no Neo4j server, Cypher Shell, Docker, or Podman available, and no authorized running deployment was supplied. All service comparisons below require capabilities missing here. Run exposed/fixed comparisons only in disposable test deployments. Record server, edition, client, and plugin versions alongside results.
 
-Local validation of this revision: all six shell blocks passed `bash -n` and ShellCheck 0.11.0. The repository's guard scanner found no issues in the in-memory text. Guard-only checks exercised placeholder and malformed marker/count rejection in all five guarded blocks. Six configuration fragments passed basic key/value parsing and duplicate-key checks. These are local syntax checks, not Neo4j configuration validation or service verification. For the Enterprise-listener update, both generated bundles were rebuilt and the whole-corpus gate suite passed with ShellCheck 0.11.0; no Neo4j service was run.
+Local validation of this revision: all seven shell blocks passed `bash -n` and ShellCheck 0.11.0. Guard-only checks exercised placeholder and malformed marker/count rejection in all six guarded blocks. Eight configuration fragments passed basic key/value parsing and duplicate-key checks. These are local syntax checks, not Neo4j configuration validation or service verification. Both generated bundles were rebuilt and the whole-corpus gate suite passed with ShellCheck 0.11.0; no Neo4j service was run.
 
 For each guarded block, replace the hostname inside the single quotes and paste the whole block. The blocks assume ordinary shell builtins; do not insert a literal apostrophe into the quoted substitution. A fragment pasted below the guards is unguarded.
 
@@ -245,7 +256,77 @@ Compare an exposed disposable installation with the configured state. Expect Bol
 
 **REASONED, Enterprise listener comparisons:** also read every listener for 5000 (discovery v1 only), 6000, 7000, and 7688 (server-side routing), including configured replacement ports and IPv6 bindings. In the exposed disposable state, a widened shared host can expose these even on a standalone server; in the fixed single-server state, expect loopback binds. In a cluster, expect the intended private binds and peer-reachable advertised addresses, with firewall access confined to members. Under `V2_ONLY`, do not require 5000; discovery shares 6000. Check 2004 only if Prometheus is enabled, on loopback or the explicitly restricted monitoring interface. There should be no inbound Graphite 2003 listener from enabling its exporter; investigate any JMX 3637 or debugger 5005 listener against the JVM configuration. Inspect the container's namespace as well as host publication rules for Docker. These expectations follow the [5.26 ports inventory](https://neo4j.com/docs/operations-manual/5/configuration/ports/#_cluster) and [setting defaults](https://neo4j.com/docs/operations-manual/5/configuration/configuration-settings/).
 
-A listener inventory does not prove TLS or peer authentication. On a disposable Enterprise cluster, compare the exposed and fixed states on every active cluster port: after enabling the cluster policy, require encrypted communication and rejection of peers without a trusted certificate, alongside successful communication between authorized members, healthy discovery, replication, and routed queries. A closed port or failed cluster is not evidence that mutual TLS works. The [vendor SSL check](https://neo4j.com/docs/operations-manual/5/security/ssl-framework/#ssl-cluster-config) tests TLS availability; it does not by itself demonstrate rejection of unauthenticated peers. These live comparisons remain REASONED and are tracked in TODO row 1.98.
+### Cluster mutual TLS
+
+**REASONED, not demonstrated: the authoring host forbids opening listeners without an isolated network namespace, and has none.** A disposable Enterprise cluster and its certificates are required. These comparisons remain tracked in TODO row 1.98. A listener inventory does not prove TLS or peer authentication. The vendor's [Nmap cipher enumeration](https://neo4j.com/docs/operations-manual/5/security/ssl-framework/#ssl-cluster-config) establishes that TLS is offered, not rejection of unauthenticated peers. The OpenSSL procedure below is reasoned from the [documented cluster mutual-authentication policy](https://neo4j.com/docs/operations-manual/5/security/ssl-framework/#ssl-cluster-config); it is not a vendor-documented cluster-port check.
+
+Run from an allowed peer location against each member and every active cluster listener: 6000, 7000, 5000 when discovery v1 runs, and 7688 when server-side routing runs, or their configured replacements. Substitute the member's certificate DNS name, cluster port, and direct client Bolt TLS URI inside the quotes. The Bolt URI uses the client connector, normally 7687, not the cluster port. Install the Bolt signing CA in Cypher Shell's trust store as described above; the command assumes section 3's Bolt policy and prompts for the administrator password.
+
+Provide `ca.pem` containing the cluster server's trusted signing CA; `member.crt` and `member.key` for a trusted test member; and `untrusted.crt` and `untrusted.key` for an otherwise valid certificate signed by a different CA absent from every member's trust directory. Both certificates need the EKUs above, current validity, and matching keys. Supply each issuing chain in `member-chain.pem` or `untrusted-chain.pem`, starting with the issuing CA; for direct root issuance, use that root certificate. Keep the private keys protected and do not add the untrusted CA to the cluster's trust directory.
+
+Use OpenSSL 3 and a `timeout` command supporting `15s`. `-cert_chain` supplies the client chain, `-verify_hostname` and `-verify_return_error` enforce server verification, and `-ign_eof` keeps the client reading after stdin closes so a later TLS alert is visible. The time limit bounds that wait. See [OpenSSL s_client](https://docs.openssl.org/3.0/man1/openssl-s_client/) and [timeout](https://www.gnu.org/software/coreutils/manual/html_node/timeout-invocation.html).
+
+```bash
+(
+  set +e
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLUSTER_DNS_NAME' 'REPLACE_WITH_CLUSTER_PORT' 'REPLACE_WITH_BOLT_TLS_URI'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 3 ] || { echo "expected a DNS name, cluster port, and Bolt TLS URI; not probing"; exit 1; }
+  case "$1|$2|$3" in
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*)
+      echo "substitute all three values inside the quotes; not probing"; exit 1 ;;
+  esac
+  case "$1" in
+    ""|*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-]*) echo "supply the member's certificate DNS name; not probing"; exit 1 ;;
+  esac
+  case "$2" in
+    ""|*[!0123456789]*) echo "supply a numeric cluster port; not probing"; exit 1 ;;
+  esac
+  [ "${#2}" -le 5 ] && [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || {
+    echo "cluster port must be 1 through 65535; not probing"; exit 1;
+  }
+  case "$3" in
+    bolt+s://?*) ;;
+    *) echo "supply a direct bolt+s:// URI; not probing"; exit 1 ;;
+  esac
+  [ -r ca.pem ] && [ -r member.crt ] && [ -r member.key ] &&
+    [ -r member-chain.pem ] && [ -r untrusted.crt ] &&
+    [ -r untrusted.key ] && [ -r untrusted-chain.pem ] || {
+      echo "provide the CA, both certificates, keys, and issuing chains; not probing"; exit 1;
+    }
+  unset NEO4J_PASSWORD || { echo "cannot clear NEO4J_PASSWORD; not probing"; exit 1; }
+
+  echo "(a) No client certificate"
+  timeout 15s openssl s_client -connect "$1:$2" -servername "$1" \
+    -verify_hostname "$1" -verify_return_error -CAfile ca.pem \
+    -state -brief -ign_eof </dev/null
+  printf 'no-client exit=%s\n' "$?"
+
+  echo "(b) Certificate from an untrusted CA"
+  timeout 15s openssl s_client -connect "$1:$2" -servername "$1" \
+    -verify_hostname "$1" -verify_return_error -CAfile ca.pem \
+    -cert untrusted.crt -key untrusted.key -cert_chain untrusted-chain.pem \
+    -state -brief -ign_eof </dev/null
+  printf 'untrusted-client exit=%s\n' "$?"
+
+  echo "(c) Trusted member certificate"
+  timeout 15s openssl s_client -connect "$1:$2" -servername "$1" \
+    -verify_hostname "$1" -verify_return_error -CAfile ca.pem \
+    -cert member.crt -key member.key -cert_chain member-chain.pem \
+    -state -brief -ign_eof </dev/null
+  printf 'trusted-client exit=%s\n' "$?"
+
+  echo "(d) Cluster status: enter the administrator password at the prompt"
+  cypher-shell -a "$3" -u neo4j -d system 'SHOW SERVERS;'
+)
+```
+
+**REASONED outcomes:** in a disposable, network-isolated comparison, first enable cluster TLS with `client_auth=NONE` on every member: all three TLS probes should complete a handshake. Then use `client_auth=REQUIRE` with `trust_all=false` on every member: (a) must be rejected for lacking a client certificate, (b) for an untrusted issuer, and (c) must complete the handshake. This TLS-enabled baseline isolates the client-authentication control. Against the default TLS-disabled cluster policy, `s_client` cannot complete a TLS handshake; that failure is not evidence of peer authentication. See [policy settings and defaults](https://neo4j.com/docs/operations-manual/5/security/ssl-framework/#ssl-configuration).
+
+For (a) and (b), look for a received fatal TLS alert, such as `certificate required`, `unknown ca`, `bad certificate`, or `handshake failure`; correlate generic alerts with the member's logs to establish the certificate rejection reason. For (c), require a negotiated protocol and cipher, verified server identity, and no subsequent client-certificate rejection. `Verification: OK` alone verifies only the server; in TLS 1.3 a client can print connection details before receiving the server's rejection. Inspect the full output and correlate the member's logs if acceptance is ambiguous. Refusal, DNS failure, reset, local key-loading failure, or timeout alone proves nothing about mutual TLS. Exit 124 only reports that the wait expired, even if the handshake completed first. These probes do not speak the cluster application protocol. See [TLS client-certificate validation](https://www.rfc-editor.org/rfc/rfc8446.html#section-4.4.2.4) and [TLS alerts](https://www.rfc-editor.org/rfc/rfc8446.html#section-6.2).
+
+Run (d) in both states and after enabling the final policy on all members. The documented [`SHOW SERVERS` cluster check](https://neo4j.com/docs/operations-manual/5/clustering/setup/deploy/#cluster-example-configure-a-three-primary-cluster) must return the expected members with state `Enabled` and health `Available`. Missing or unavailable members invalidate the positive control. This checks cluster status, not every replication or routing operation; successful authorized discovery, replication, and routed-query comparisons remain part of TODO row 1.98. A closed port or failed cluster is not evidence that mutual TLS works.
 
 ### Transport, default password, and prompted bootstrap
 
@@ -542,6 +623,9 @@ The single row below records the outstanding service demonstration debt for this
 - Neo4j 5.26 (LTS), fetched 2026-09-26, Enterprise cluster and monitoring ports: https://neo4j.com/docs/operations-manual/5/configuration/ports/#_cluster
 - Neo4j 5.26 (LTS) cluster deployment and discovery-version conditions: https://neo4j.com/docs/operations-manual/5/clustering/setup/deploy/#cluster-example-configure-a-three-primary-cluster
 - Neo4j 5.26 (LTS) cluster settings and advertised addresses: https://neo4j.com/docs/operations-manual/5/clustering/settings/
+- OpenSSL 3 TLS probe options: https://docs.openssl.org/3.0/man1/openssl-s_client/
+- TLS 1.3 client-certificate validation and alerts: https://www.rfc-editor.org/rfc/rfc8446.html
+- Probe time limit and exit status: https://www.gnu.org/software/coreutils/manual/html_node/timeout-invocation.html
 - Neo4j 5.26 (LTS) cluster SSL policy, certificates, and mutual authentication: https://neo4j.com/docs/operations-manual/5/security/ssl-framework/#ssl-cluster-config
 - Pinned Dockerfile EXPOSE declarations, Debian: https://github.com/neo4j/docker-neo4j/blob/5359427c4f51d0d51cce5b048757a2c21e6f377e/docker-image-src/5/coredb/Dockerfile-debian#L53
 - Pinned Dockerfile EXPOSE declarations, UBI 8: https://github.com/neo4j/docker-neo4j/blob/5359427c4f51d0d51cce5b048757a2c21e6f377e/docker-image-src/5/coredb/Dockerfile-ubi8#L90
