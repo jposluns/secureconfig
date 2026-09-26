@@ -25833,14 +25833,35 @@ to such a name, and on Linux file permissions have no meaning for abstract socke
 
 ## Argo Workflows
 
-Argo Server listens on every interface in its network namespace (`--port` defaults to 2746), with HTTPS
-and `--auth-mode=client` enabled by default since v3.0; client mode requires the caller's own Kubernetes
-bearer token and uses that identity's permissions. Avoid `--auth-mode=server`, the dangerous default before
-v3.0: in Kubernetes it uses argo-server's own ServiceAccount for API requests, so anyone who can reach it
-can act with that account's permissions without authenticating; local mode uses the server's kubeconfig
-credentials instead. Adding another auth mode does not remove this anonymous access while `server` remains
-enabled. `--auth-mode=sso` provides OIDC login from v2.9; enable SSO RBAC (`sso.rbac.enabled: true`, v2.12+)
-and map groups to narrowly scoped ServiceAccounts with `workflows.argoproj.io/rbac-rule` and
+At Argo Workflows v3.7.18 and v4.1.4, Argo Server binds `:<port>` (`:2746` by default) using
+Go's `tcp` listener: a wildcard bind, with IPv4/IPv6 availability determined by the host. There is no
+bind-address flag. The CLI defaults are `--secure=true`, `--auth-mode=client` and `--hsts=true`;
+flags or their `ARGO_*` environment equivalents can override them. Client mode uses the caller's
+Kubernetes credentials and permissions. At v4.1.4 it also validates the token with a
+`SelfSubjectReview`, requiring Kubernetes 1.28 or later.
+
+**The shipped quick-start manifests override the authentication default.** At both tags,
+`manifests/quick-start-minimal.yaml`, `manifests/quick-start-mysql.yaml` and
+`manifests/quick-start-postgres.yaml` pass `--auth-mode server --auth-mode client`; v4.1.4 also ships
+`manifests/quick-start-telemetry.yaml` with those arguments. They leave TLS enabled. Following the
+quick-start therefore leaves 2746 open to anonymous callers who can reach it, acting with the
+`argo-server` ServiceAccount's permissions. Its `argo-server-cluster-role` is bound cluster-wide and
+permits creating, listing, updating and deleting workflows and templates, as well as getting and
+creating Secrets. The quick-start also binds `argo-server-clusterworkflowtemplate-role`. These are
+demo installations: the quick-start docs explicitly say they are unsuitable for production.
+
+The sources used to build `manifests/install.yaml` set only `args: [server]`, retaining client auth
+and TLS, and bind the same `argo-server-cluster-role` to the server account. The sources for
+`manifests/namespace-install.yaml` add `--namespaced` and instead bind the namespace-scoped
+`argo-server-role`. Neither enables server auth or disables TLS. In all these manifests the
+`argo-server` Service omits `type` (Kubernetes defaults it to `ClusterIP`) and maps port 2746 to
+2746. That does not publish it on the internet, but does not authenticate reachable callers either.
+
+Remove `--auth-mode=server` from the effective configuration. Adding client or SSO mode does not
+remove anonymous access while server mode remains: a request without credentials falls back to the
+server's own Kubernetes clients. In local mode those use the server's kubeconfig credentials instead.
+`--auth-mode=sso` provides OIDC login; enable SSO RBAC (`sso.rbac.enabled: true`) and map groups to
+narrowly scoped ServiceAccounts with `workflows.argoproj.io/rbac-rule` and
 `workflows.argoproj.io/rbac-rule-precedence`. Without SSO RBAC, authenticated users share the server's
 permissions. Store OAuth client credentials in Kubernetes Secrets referenced by the SSO configuration,
 and feed API tokens to clients through protected input rather than command-line arguments
@@ -25848,17 +25869,24 @@ and feed API tokens to clients through protected input rather than command-line 
 
 Keep 2746 private behind an authenticating HTTPS proxy, with MFA enforced at the identity provider
 ([fronting-auth.md](fronting-auth.md), [mfa.md](mfa.md)); restrict direct Pod and Service access with
-NetworkPolicy and do not publish the port publicly. Argo Server has no documented listener-address flag,
-so enforce private exposure at the network and Service layers. Keep TLS enabled and provision a certificate
-trusted by clients; `--secure=false` explicitly switches the listener to plaintext. Limit the namespaces
-and permissions available to the server, SSO accounts, and workflow execution accounts. Permission to submit
-workflows permits arbitrary containers by default (workflow restrictions and admission policies can constrain the permitted specs), and powerful execution accounts or privileged Pods can turn an
-exposed API into cluster compromise.
+NetworkPolicy and do not publish the port publicly. Enforce private exposure at the network and
+Service layers. Keep TLS enabled and provision a certificate trusted by clients using
+`--tls-certificate-secret-name`. With secure mode enabled and no certificate Secret name supplied,
+the server generates a self-signed certificate; failure to load a named Secret fails startup.
+`--secure=false` switches the same listener to plaintext, and HSTS has no effect without TLS.
+The server's `/metrics` endpoint shares this listener and uses the auth gate unless
+`ARGO_SERVER_METRICS_AUTH=false`; server mode also admits anonymous metrics requests.
+Limit the namespaces and permissions available to the server, SSO accounts, and workflow execution
+accounts. Permission to submit workflows permits arbitrary containers by default (workflow restrictions
+and admission policies can constrain the permitted specs), and powerful execution accounts or privileged
+Pods can turn an exposed API into cluster compromise.
 
 ## Verify
 
 These probes are reasoned, not demonstrated, because the authoring environment has no container runtime, so no
-live orchestrator was stood up in its exposed or fixed state. The exception is the Flower unix-socket stat mode
+live orchestrator was stood up in its exposed or fixed state. For Argo, the authoring host forbids opening listeners without an isolated network namespace, and has none;
+no Kubernetes cluster is available. Its listener, TLS and authentication checks remain REASONED.
+The exception is the Flower unix-socket stat mode
 and named-ACL checks, demonstrated without a container and recorded after the block. Each names its expected
 exposed and fixed result so it discriminates against a live instance; backlog row 2.34 tracks demonstrating them
 across all six tools. The `*.internal` hostnames are examples for a reachable vantage (you have not isolated the
@@ -25940,8 +25968,9 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
 stat -c '%a %U:%G %u:%g %n' /run/flower /run/flower/flower.sock
 getfacl -p /run/flower
 
-# Argo: reasoned, not demonstrated; this authoring environment has no container runtime or Kubernetes test
-# deployment. Server mode: an anonymous HTTP 200 containing a workflow list, even empty, is the finding,
+# Argo: REASONED, not demonstrated; the authoring host forbids opening listeners without an isolated
+# network namespace, and has none; no Kubernetes cluster is available.
+# Server mode: an anonymous HTTP 200 containing a workflow list, even empty, is the finding,
 # provided the server identity can list workflows in this namespace. Without server mode (client/sso only):
 # a missing token is 401. A 403 means only that this operation was denied to the identity used; it does NOT
 # prove server mode is off, since server mode can be enabled yet lack list RBAC in this namespace and also
@@ -26015,7 +26044,7 @@ shares the directory.
 
 ## Sources (checked September 2026)
 
-These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x, Apache Airflow 3.3.2 with FAB provider 3.9.0 (Airflow 2.11.0 noted where the configuration paths differ), Temporal Server 1.28.x and UI Server 2.34.x, and Flower 2.2.0; confirm your own versions, since several of these settings moved between releases. Argo Workflows authentication, TLS, SSO, and API behavior was checked against the release-3.7 documentation, with current upstream source for listener and authentication-path details.
+These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x, Apache Airflow 3.3.2 with FAB provider 3.9.0 (Airflow 2.11.0 noted where the configuration paths differ), Temporal Server 1.28.x and UI Server 2.34.x, and Flower 2.2.0; confirm your own versions, since several of these settings moved between releases. Argo Workflows listener, authentication paths, TLS and manifest settings were checked against tags v3.7.18 (66e32e5cc367f223e2ecf4fbe852b95eaed83034) and v4.1.4 (b5b4d665e9be9b87c115f943584c3e0ae96fe073). The install manifests were traced through their build recipes and Kustomize inputs; their generated YAML files were not present in the supplied trees. SSO setup, API examples and security guidance retain the release-3.7 documentation links.
 
 - Prefect, security settings (`PREFECT_SERVER_API_AUTH_STRING`, `PREFECT_API_AUTH_STRING`, Cloud API keys
   taking precedence and causing 401): https://docs.prefect.io/v3/advanced/security-settings
@@ -26040,12 +26069,31 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
   `--oauth2_secret`, `--oauth2_redirect_uri`, `--auth`): https://flower.readthedocs.io/en/latest/config.html
 - Flower `port` default 5555, `address` default `''` and the `unix_socket` branch, the `FLOWER_` environment variables, and the implicit `flowerconfig.py` load from the working directory (pinned tag v2.2.0), with Tornado's `bind_sockets` treating an empty address as all interfaces (pinned tag v6.5.10): https://github.com/mher/flower/blob/v2.2.0/flower/options.py#L7-L15, https://github.com/mher/flower/blob/v2.2.0/flower/options.py#L56-L57, https://github.com/mher/flower/blob/v2.2.0/flower/command.py#L39-L91, https://github.com/mher/flower/blob/v2.2.0/flower/app.py#L71-L76 and https://github.com/tornadoweb/tornado/blob/v6.5.10/tornado/netutil.py#L72-L73
 - Flower `--unix_socket` passes the fixed mode `0o777` (pinned tag v2.2.0); Tornado's `bind_unix_socket` removes an existing socket at a filesystem path, binds, then applies that mode, and binds a name with a leading NUL with no mode (pinned tag v6.5.10); on Linux, connecting to a stream socket needs write permission on it, and file permissions have no meaning for abstract sockets; path lookup needs search permission on each directory, `CAP_DAC_OVERRIDE` overrides permission checks and `CAP_DAC_READ_SEARCH` grants search on directories; in a user namespace, file permission checks compare IDs mapped back to the initial namespace, and a capability applies only to a file whose owner and group are mapped there; Docker's default capability set includes `CAP_DAC_OVERRIDE` (moby docker-v29.8.1); an idmapped mount changes ownership for that mount only; `RuntimeDirectoryMode=` defaults to `0755` (systemd v257); files under `/run` must be cleared at the beginning of the boot process (FHS 3.0); named ACL entries grant access only up to the mask, changing a file's group permission bits sets its `ACL_MASK` entry, a directory's default ACL governs the initial ACL of objects created within it, and `getfacl` marks a limited entry `#effective:`; `stat -c` format sequences: https://github.com/mher/flower/blob/v2.2.0/flower/app.py#L85-L89, https://github.com/tornadoweb/tornado/blob/v6.5.10/tornado/netutil.py#L215-L228, https://man7.org/linux/man-pages/man7/unix.7.html, https://man7.org/linux/man-pages/man7/path_resolution.7.html, https://man7.org/linux/man-pages/man7/user_namespaces.7.html, https://www.kernel.org/doc/html/latest/filesystems/idmappings.html, https://github.com/moby/moby/blob/docker-v29.8.1/daemon/pkg/oci/caps/defaults.go#L4-L7, https://github.com/systemd/systemd/blob/v257/man/systemd.exec.xml#L1630-L1640, https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch03s15.html, https://man7.org/linux/man-pages/man5/acl.5.html, https://man7.org/linux/man-pages/man1/getfacl.1.html and https://man7.org/linux/man-pages/man1/stat.1.html
-- Argo Workflows, [auth modes](https://argo-workflows.readthedocs.io/en/release-3.7/argo-server-auth-mode/),
-  [server flags and default port 2746](https://argo-workflows.readthedocs.io/en/release-3.7/cli/argo_server/),
-  [TLS](https://argo-workflows.readthedocs.io/en/release-3.7/tls/),
-  [SSO and RBAC](https://argo-workflows.readthedocs.io/en/release-3.7/argo-server-sso/),
+- Argo CLI defaults and environment overrides: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/cmd/argo/commands/server.go#L191-L229), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/cmd/argo/commands/server.go#L195-L239).
+- Argo TLS certificate selection and generation: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/cmd/argo/commands/server.go#L113-L137), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/cmd/argo/commands/server.go#L119-L143).
+- Argo wildcard TCP listener and TLS wrapper: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/server/apiserver/argoserver.go#L263-L282), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/server/apiserver/argoserver.go#L299-L320).
+- Argo anonymous fallback when server mode is enabled: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/server/auth/mode.go#L33-L44), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/server/auth/mode.go#L33-L44).
+- Argo client credentials, server credentials and SSO RBAC selection: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/server/auth/gatekeeper.go#L166-L218), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/server/auth/gatekeeper.go#L189-L244).
+- Argo quick-start auth override: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/manifests/quick-start/base/overlays/argo-server-deployment.yaml#L1-L15), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/quick-start/base/overlays/argo-server-deployment.yaml#L1-L15).
+- Argo quick-start-minimal server deployment: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/manifests/quick-start-minimal.yaml#L3613-L3664), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/quick-start-minimal.yaml#L192772-L192823).
+- Argo quick-start-mysql server deployment: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/manifests/quick-start-mysql.yaml#L3678-L3729), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/quick-start-mysql.yaml#L192838-L192889).
+- Argo quick-start-postgres server deployment: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/manifests/quick-start-postgres.yaml#L3677-L3728), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/quick-start-postgres.yaml#L192837-L192888).
+- Argo additional quick-start-telemetry server deployment: [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/quick-start-telemetry.yaml#L192919-L192970).
+- Argo install manifest build recipes: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/Makefile#L493-L515), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/Makefile#L608-L634).
+- Argo base server account, args and HTTPS readiness probe: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/manifests/base/argo-server/argo-server-deployment.yaml#L14-L34), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/base/argo-server/argo-server-deployment.yaml#L14-L34).
+- Argo base Service ports (type omitted): [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/manifests/base/argo-server/argo-server-service.yaml#L1-L11), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/base/argo-server/argo-server-service.yaml#L1-L11).
+- Argo namespace install server args overlay: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/manifests/namespace-install/overlays/argo-server-deployment.yaml#L1-L4), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/namespace-install/overlays/argo-server-deployment.yaml#L1-L4).
+- Argo server ClusterRole permissions: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/manifests/cluster-install-no-crds/argo-server-rbac/argo-server-clusterole.yaml#L1-L65), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/cluster-install-no-crds/argo-server-rbac/argo-server-clusterole.yaml#L1-L67).
+- Argo server ClusterRole binding: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/manifests/cluster-install-no-crds/argo-server-rbac/argo-server-clusterolebinding.yaml#L1-L11), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/cluster-install-no-crds/argo-server-rbac/argo-server-clusterolebinding.yaml#L1-L11).
+- Argo namespace server Role permissions: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/manifests/namespace-install/argo-server-rbac/argo-server-role.yaml#L1-L65), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/namespace-install/argo-server-rbac/argo-server-role.yaml#L1-L67).
+- Argo namespace server Role binding: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/manifests/namespace-install/argo-server-rbac/argo-server-rolebinding.yaml#L1-L11), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/namespace-install/argo-server-rbac/argo-server-rolebinding.yaml#L1-L11).
+- Argo additional quick-start cluster-template permissions and bindings: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/manifests/quick-start/base/cluster-workflow-template-rbac.yaml#L1-L58), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/quick-start/base/cluster-workflow-template-rbac.yaml#L1-L58).
+- Argo metrics auth and conditional HSTS: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/server/apiserver/argoserver.go#L430-L449), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/server/apiserver/argoserver.go#L476-L494).
+- Argo quick-start purpose and production warning: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/docs/quick-start.md#L3-L34), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/docs/quick-start.md#L3-L34).
+- Argo auth-mode history and hosted/local identities (v4.1.4 also documents the Kubernetes 1.28 requirement): [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/docs/argo-server-auth-mode.md#L3-L9), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/docs/argo-server-auth-mode.md#L3-L9).
+- Argo Workflows, [SSO and RBAC](https://argo-workflows.readthedocs.io/en/release-3.7/argo-server-sso/),
   [workflow-list API](https://argo-workflows.readthedocs.io/en/release-3.7/rest-examples/), and
-  [security model](https://argo-workflows.readthedocs.io/en/release-3.7/security/), and the auth mode-selection [source](https://raw.githubusercontent.com/argoproj/argo-workflows/c811f057f1ef059611294979ba60ba97b1494179/server/auth/mode.go)
+  [security model](https://argo-workflows.readthedocs.io/en/release-3.7/security/).
 
 ======================================================================
 ==> admin-uis.md
