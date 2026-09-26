@@ -78,12 +78,14 @@ removed false positive. The added lines are egress-metadata.md:154; elasticsearc
 rabbitmq.md:377 and :382; realtime-webhooks.md:124 and :135; and
 self-hosted-ci-runners.md:118, :119, :120, :155 and :174. The removed finding is
 container-hardening.md:112. Fourteen new waiver entries cover 15 expressions; existing entries
-cover six additional expressions. The corpus has 0 unwaived findings in 411 bash blocks across
-99 guides, with 38 consumed entries covering 48 expressions. These are false positives,
+cover six additional expressions. The corpus has 0 unwaived findings in 416 bash blocks across
+99 guides, with 39 consumed entries covering 49 expressions. These are false positives,
 including the range-free RabbitMQ broker validators; they are not all non-validator text.
 
-Against qa/360-r9, the corpus delta is 0 added and 0 removed findings, with no new findings.
-All 38 migrated entries bind their intended spans and blocks; 1239 individual block-line
+After merging main, the corpus delta against qa/360-r9 is 1 added and 0 removed findings:
+Python sys.argv[1] indexing in the vLLM TCP probe. Four entries were rebound after main's
+rule-7 guard sweep; their spans and reasons are unchanged. All 39 entries bind their intended
+spans and blocks; 1274 individual block-line
 edits each invalidate the corresponding waiver and leave a stale entry. Run
 test_bracket_ranges.py --show-waivers to print every matched location, digests and extracted span.
 

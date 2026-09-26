@@ -483,7 +483,7 @@ else
 fi
 
 echo "== the bracket-range gate still catches what it claims =="
-# Seven of these cases assert what the gate does NOT catch, so the file cannot quietly start
+# Eight of these cases assert what the gate does NOT catch, so the file cannot quietly start
 # claiming that coverage.
 if bracket_range_tests=$(python3 tools/test_bracket_ranges.py 2>&1); then
   printf '%s\n' "$bracket_range_tests"
