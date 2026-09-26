@@ -11,7 +11,7 @@ in step with the merged pull request is therefore an authoring obligation, not a
 
 ## 2026-09-26
 
-- Document vLLM v0.30.0 internal listeners, isolated-network requirements and address controls; re-pin the unchanged HTTP bind, refresh the protected HTTP prefix list, add a reasoned reachability check and demonstration debt, and map the added ports (bind-audit record 43). (#365)
+- Document vLLM v0.30.0 internal listeners with their activation conditions, isolated-network requirements and address controls; re-pin the unchanged HTTP bind, refresh the protected HTTP prefix list, correct source ranges, and map the added ports. Add a REASONED reachability check with guarded remote and same-namespace loopback controls, quoted substitution instructions and IPv6 handling; track demonstration debt in TODO row 1.155 (bind-audit record 43). (#365)
 
 ## 2026-09-25
 
