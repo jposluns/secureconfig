@@ -45,7 +45,7 @@ Verification status: the checks below were demonstrated on loopback against the 
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
+  set +x +a +e
   set -o pipefail
   { unset -n audit_role audit_key audit_expected audit_reply &&
     unset -v audit_role audit_key audit_expected audit_reply; } 2>/dev/null ||

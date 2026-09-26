@@ -61,6 +61,8 @@ ss -tlnp   # expect 8080 on loopback or a private address; then probe the public
 # Auth discrimination against the SAME editor URL: a proxy 401 proves nothing, so pair an unauthenticated
 # request with an authenticated one and confirm the editor in a fresh browser session too.
 (
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  set +x +a +e
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_EDITOR_URL'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
   shift
@@ -76,8 +78,6 @@ ss -tlnp   # expect 8080 on loopback or a private address; then probe the public
     -w '\nunauth http=%{http_code} url=%{url_effective} exit=%{exitcode} err=%{errormsg}\n' "$1"
   # 2) Authenticated positive control: paste a cookie from a valid browser session; it enters via stdin
   #    (curl --header @-), never argv. The authenticated response must contain the editor.
-  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
   { unset -n code_server_cookie && unset -v code_server_cookie; } 2>/dev/null ||
     { echo 'cannot initialize cookie input; not probing'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }

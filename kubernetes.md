@@ -87,7 +87,7 @@ Gateway API defines no authentication filter; each implementation adds its own. 
 # option." -i reads it from stdin instead. Envoy Gateway's example uses -b; this does not.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
+  set +x +a +e
   { unset -n PASSWORD confirm && unset -v PASSWORD confirm; } 2>/dev/null ||
     { echo 'cannot clear PASSWORD or confirm in this shell; not creating the secret'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not creating the secret'; exit 2; }
@@ -97,7 +97,9 @@ Gateway API defines no authentication filter; each implementation adds its own. 
   echo
   [ -n "$PASSWORD" ] || { echo 'no password supplied; not creating the secret'; exit 2; }
   [ "$PASSWORD" = "$confirm" ] || { echo 'the two entries differ; not creating the secret'; exit 2; }
-  printf '%s' "$PASSWORD" | htpasswd -cis .htpasswd admin
+  set -o pipefail  # so a failure anywhere in a pipeline below, not only in htpasswd, fails it
+  printf '%s' "$PASSWORD" | htpasswd -cis .htpasswd admin ||
+    { echo 'password-file creation failed; not creating the secret'; exit 2; }
   # -i does no verification, so the block asks twice and refuses a mismatch; `-vi` below then
   # confirms the file holds that value, and the secret is created only if it does. Paste the block by
   # itself: the shell reads the whole subshell before either `read` runs. Without bracketed paste,
