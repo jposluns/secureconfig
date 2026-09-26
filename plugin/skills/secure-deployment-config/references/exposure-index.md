@@ -217,6 +217,7 @@ Open the guide before relying on either, because defaults change between release
 | 50000 to 60000/UDP | LiveKit media sockets outside development mode, allocated during active calls | not stated | [realtime-voice-infra.md](realtime-voice-infra.md) |
 | 50051 | Weaviate gRPC, on every local address whatever `--host` says | Anonymous access enabled by default | [vector-databases.md](vector-databases.md) |
 | 51820/UDP | WireGuard, in the configured example here. The port is chosen, not assigned | No username or password; key pairs only | [tunnels.md](tunnels.md) |
+| 52365 | Ray dashboard agent HTTP default on every non-minimal head and worker, including local ray.init() clusters; Jobs agent API executes code, and /logs serves the node log directory | Token authentication off by default; browser-request filtering is not authentication | [ray.md](ray.md) |
 | 54388 | Helicone Compose PostgreSQL publication: host port 54388 maps to container port 5432 | Published independently of the dashboard login; the guide says to rotate the Compose example storage credentials | [llm-observability.md](llm-observability.md) |
 | 55679 | OpenTelemetry Collector zPages diagnostic extension, when enabled | Collector ships with no security until configured | [llm-observability.md](llm-observability.md) |
 | 57800 | Keycloak clustered cache failure detection; TLS is on by default for TCP stacks | not stated | [self-hosted-idp.md](self-hosted-idp.md) |
