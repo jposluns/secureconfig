@@ -297,7 +297,7 @@ case "$gc_out" in
       bad "guard-conventions printed PASS but exited $gc_status"
     fi
     case "$gc_out" in
-      *": [C1-"*|*": [C2-"*)
+      *": [C1-"*|*": [C2-"*|*": [C3-"*)
         bad "guard-conventions printed findings alongside a PASS result" ;;
     esac
     ;;

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gate: the two guard conventions for copy-paste shell in the guides.
+"""Gate: guard conventions for copy-paste shell in the guides.
 
 WHAT THIS CATCHES
   C1-MISSING-Q   a curl invocation in a fenced shell block with no -q/--disable:
@@ -60,6 +60,14 @@ WHAT THIS CATCHES
                  or operands do not grant strict suppression. Opt-in because a
                  flag-variable guard (MISSING=1 tested later) would
                  false-positive it.
+
+  C3-TOOL-ARGV  a known non-curl credential flag or credential positional
+                 argument carries a value in argv. Literal values,
+                 placeholders and expansions are all checked, independently
+                 of C2's network-probe roster. The allowlist and bounded
+                 argument ownership are in _tool_credential_flags. Prompt,
+                 file and documented stdin forms pass; a waiver uses the
+                 same preceding-comment mechanism as curl's C3 checks.
 
 WHAT THIS IS NOT
   This is a tripwire for the accidental case; a determined author walks
@@ -397,6 +405,9 @@ MESSAGES = {
     "C3-URL-ARGV": "a credential-bearing URL (user:password userinfo or a "
                    "presigned signature) is in curl argv; pipe a config line "
                    "'url = \"...\"' to curl --config - instead",
+    "C3-TOOL-ARGV": "a non-curl credential is in argv; use the tool's stdin, "
+                    "protected file or prompt input, or document and waive "
+                    "the CONTRIBUTING rule 7 argv-only exception",
     "C3-NO-VALUE": "a curl credential option lacks a statically readable "
                    "value; move the credential onto stdin (--config - / "
                    "--header @-) so this gate can see it is not in argv",
@@ -785,6 +796,185 @@ def _credential_codes(a):
             continue
         i += 1
     return codes
+
+
+# C3-TOOL-ARGV: explicit tool/flag allowlist, independent of PROBE_CMDS.
+# These flags accept credential values, including placeholders and expansions.
+# OpenSSL 3.5: password sources (including the subcommand-specific names below)
+# and enc's legacy -k password / -kfile filename:
+# https://docs.openssl.org/3.5/man1/openssl-passphrase-options/
+# https://docs.openssl.org/3.5/man1/openssl-enc/
+# https://docs.openssl.org/3.5/man1/openssl-pkcs12/
+# https://docs.openssl.org/3.5/man1/openssl-s_client/
+# https://docs.openssl.org/3.5/man1/openssl-s_server/
+# https://docs.openssl.org/3.5/man1/openssl-cmp/
+# "inline" options prompt without an attached value; "optional" options prompt
+# without a following value. A dash is stdin ONLY for documented consumers.
+_TOOL_SECRET_OPTS = {
+    "lk": {"--api-key": "value", "--api-secret": "value"},
+    "turnutils_uclient": {"-w": "value", "-W": "value"},
+    "mysql": dict.fromkeys(("-p", "--password", "--password1",
+                           "--password2", "--password3"), "inline"),
+    "mariadb": {"-p": "inline", "--password": "inline"},
+    "redis-cli": {"-a": "value", "--pass": "value",
+                  "--cluster-from-pass": "value"},
+    "mongosh": {"-p": "optional", "--password": "optional"},
+    "clickhouse-client": {"--password": "optional"},
+    "docker": {"-p": "stdin", "--password": "stdin"},
+    "openssl": {
+        **dict.fromkeys(("-pass", "-passin", "-passout", "-password",
+                         "-passcerts", "-proxy_pass", "-dpass", "-secret",
+                         "-keypass", "-newkeypass", "-otherpass", "-tls_keypass",
+                         "-srv_secret", "-srv_keypass", "-rsp_keypass"), "source"),
+        "-hmac": "value", "-k": "value",
+    },
+    "kubectl": {"--token": "value"},
+    "influx": {"-t": "value", "--token": "value"},
+    "cypher-shell": {"-p": "value", "--password": "value"},
+    "mosquitto_pub": {"-P": "value", "--pw": "value"},
+    "mosquitto_sub": {"-P": "value", "--pw": "value"},
+}
+# Bounded argument ownership, not a complete parser for every tool. Skip known
+# non-secret option values so a flag-looking value is not reinterpreted.
+_TOOL_SKIP_OPTS = {
+    "lk": "--url --project --subdomain --config --room --identity --valid-for",
+    "turnutils_uclient": "-u -e -p -r -L -d -i -k -z -l -n -m",
+    "mysql": "-h --host -P --port -u --user -e --execute --ssl-ca",
+    "mariadb": "-h --host -P --port -u --user -e --execute --ssl-ca",
+    # Redis 7.4.2 parseOptions: values are not the command name.
+    # https://raw.githubusercontent.com/redis/redis/7.4.2/src/redis-cli.c
+    "redis-cli": "-h -p -s -n -r -i -d -D -u -t -X --user --cacert --cacertdir "
+                 "--cert --key --sni --tls-ciphers --tls-ciphersuites "
+                 "--pipe-timeout --show-pushes --lru-test --pattern --count "
+                 "--quoted-pattern --intrinsic-latency --rdb --functions-rdb "
+                 "--memkeys-samples --keystats-samples --cursor --top --eval "
+                 "--test_hint --test_hint_file --cluster-replicas "
+                 "--cluster-master-id --cluster-from --cluster-to "
+                 "--cluster-from-user --cluster-weight --cluster-slots "
+                 "--cluster-timeout --cluster-pipeline --cluster-threshold",
+    "mongosh": "--host --port -u --username --eval --file --tlsCAFile "
+               "--tlsCertificateKeyFile --authenticationDatabase "
+               "--authenticationMechanism",
+    "clickhouse-client": "--host --port --user --query --config-file",
+    "docker": "-u --username --config -H --host --context",
+    "openssl": "-in -out -key -cert -CAfile -connect -servername -subj -kfile",
+    "kubectl": "-n --namespace --context --kubeconfig --user -o --output -f",
+    "influx": "--host --host-url -o --org --org-id -c --active-config",
+    "cypher-shell": "-a --address --uri -u --username -d --database -f --file",
+    "mosquitto_pub": "-h --host -p --port -u --username -o -t --topic -m --message",
+    "mosquitto_sub": "-h --host -p --port -u --username -o -t --topic",
+    "mc": "--config-dir -C --api --path",
+    "vault": "-method -path -address -namespace -format -field -ca-cert "
+             "-ca-path -client-cert -client-key",
+    "htpasswd": "-C -r",
+    "mosquitto_passwd": "-H",
+}
+
+
+def _tool_credential_flags(word, args):
+    """Return flag names, never secret values. Reuse C3's value/redirection
+    helpers and the shared command walk, wrappers, heredocs and waivers.
+
+    Deliberately bounded: unknown option ownership, most short clusters,
+    secret-bearing URIs, arbitrary positional secrets, expanded option names,
+    aliases, shell strings and array-built commands remain outside this rule.
+    In particular, sudo -u, timeout -s, mysql -Bp"$PW" and
+    turnutils_uclient -vw"$PW" are unresolved; Vault non-token login methods,
+    secret assignments passed to the env binary, and OpenSSL -macopt are not
+    checked. A shell assignment prefix is distinct from an env argv value.
+    Redis/Mosquitto and OpenSSL options require separate values (or the
+    explicit equals form recognized here). Other supported short value options
+    accept attached values. htpasswd handles -b clusters.
+    Redis command data and htpasswd/mosquitto_passwd positional operands are
+    never reinterpreted as options once the first positional word is reached.
+    Redis --cluster instead permits CLI options after its operation/operands.
+    OpenSSL source expansions are uncertain and flagged unless a literal
+    file:/env:/fd: prefix or stdin establishes an out-of-argv input.
+    """
+    name = word.rsplit("/", 1)[-1]
+    if name not in _TOOL_SKIP_OPTS:
+        return []
+    a = _drop_redirections(args)
+    specs = _TOOL_SECRET_OPTS.get(name, {})
+    skip = _TOOL_SKIP_OPTS[name].split()
+    flags, positional, batch = [], [], ""
+    method = "token"
+    redis_cluster = False
+    i = 0
+    while i < len(a):
+        t = a[i]
+        if name == "redis-cli" and t == "--cluster":
+            # Cluster-manager operands may precede further CLI options.
+            redis_cluster = True
+            i += 2  # the next word names the cluster operation
+            continue
+        if ((name in ("htpasswd", "mosquitto_passwd")
+             or (name == "redis-cli" and not redis_cluster))
+                and (not t.startswith("-") or t == "-")):
+            # These tools stop parsing options at the first operand. Preserve
+            # all subsequent words, including "--" and option-looking passwords
+            # or Redis command data.
+            positional.extend(a[i:])
+            break
+        if t == "--":
+            positional.extend(a[i + 1:])
+            break
+        opt, eq, tail = t.partition("=")
+        mode = specs.get(opt)
+        if not mode and t.startswith("-") and not t.startswith("--"):
+            # Do not confuse OpenSSL's single-dash long options with shorts.
+            short = t[:2]
+            if (len(t) > 2 and short in specs
+                    and name not in ("redis-cli", "mosquitto_pub",
+                                     "mosquitto_sub", "openssl")):
+                opt, mode, eq, tail = short, specs[short], True, t[2:]
+        if mode:
+            if not eq and mode == "inline":
+                i += 1  # mysql -p db: db is a database, not a password
+                continue
+            if (not eq and mode == "optional"
+                    and (i + 1 == len(a) or a[i + 1].startswith("-"))):
+                i += 1
+                continue
+            val, i = _cred_value(a, i, bool(eq), tail)
+            if not val:
+                continue  # no secret value in argv
+            if mode == "stdin" and val == "-":
+                continue
+            if mode == "source" and (
+                    val == "stdin" or val.startswith(("file:", "env:", "fd:"))):
+                continue
+            if mode != "source" or val.startswith("pass:") or "$" in val or "__CMDSUB__" in val:
+                flags.append(opt)
+            continue
+        if opt in skip:
+            val, i = _cred_value(a, i, bool(eq), tail)
+            if name == "vault" and opt == "-method":
+                method = val
+            continue
+        if name in ("htpasswd", "mosquitto_passwd") and t.startswith("-") and t != "-":
+            batch += t[1:]
+        elif not t.startswith("-") or t == "-":
+            positional.append(t)
+        i += 1
+    if name == "docker" and (not positional or positional[0] != "login"):
+        return []  # docker run -p is port publication
+    if name == "mc" and positional[:2] == ["alias", "set"]:
+        flags.extend(label for label, val in zip(
+            ("ACCESSKEY", "SECRETKEY"), positional[4:6]) if val)
+    if name == "vault" and positional[:1] == ["login"] and method == "token":
+        for val in positional[1:]:
+            if val.startswith("token="):
+                val = val[len("token="):]
+            elif "=" in val:
+                continue
+            if val and val != "-" and not val.startswith("@"):
+                flags.append("token")
+    if name in ("htpasswd", "mosquitto_passwd") and "b" in batch:
+        at = 1 if name == "htpasswd" and "n" in batch else 2
+        if len(positional) > at and positional[at]:
+            flags.append("-b")
+    return flags
 
 
 def _check_curl(args, q_anywhere_ok):
@@ -1231,6 +1421,11 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
         if not stripped:
             return
         word = stripped[0]
+        for flag in _tool_credential_flags(word, stripped[1:]):
+            if not waived:
+                findings.append((path, line, "C3-TOOL-ARGV",
+                                 " (tool: %s, argument: %s)"
+                                 % (word.rsplit("/", 1)[-1], flag)))
         if _cmd_is(word, ("curl",)):
             stats.curls += 1
             for code in _check_curl(stripped[1:], opts.q_anywhere):
@@ -1890,7 +2085,7 @@ fi
   esac
 )
 ```
-""", [], ("--strict-guards",)),
+""", ["C3-TOOL-ARGV"], ("--strict-guards",)),
     ("strict-mosquitto-case-guard-clean-no-c2",
      r"""```bash
 if mosquitto_sub -P 'REPLACE_WITH_DEVICE_PASSWORD'; then
@@ -1909,7 +2104,7 @@ fi
   esac
 )
 ```
-""", [], ("--strict-guards", "--no-c2")),
+""", ["C3-TOOL-ARGV"], ("--strict-guards", "--no-c2")),
     ("strict-skips-guarded-probe-flags-unguarded",
      r"""```bash
 if [ "$1" = REPLACE_WITH_HOST ]; then
@@ -2750,6 +2945,220 @@ _C2_EXPECT_LINES = {
     "sibling-scopes-do-not-share-certificates": [7],
     "subshell-arm-boundary-tracked": [6],
 }
+
+
+# Explicit expected outcomes for the non-curl credential rule.
+_TOOL_ARGV_CASES = [
+    ("vault login token=-", 0),
+    ("vault login token=@private.txt", 0),
+    ("vault login @private.txt", 0),
+    ("vault login token=", 0),
+    ("mosquitto_passwd -b - user pw", 1),
+    ("htpasswd -nb user -", 1),
+    ("lk --api-secret @file", 1),
+    ("redis-cli --pass @file", 1),
+    ("clickhouse-client --password pw", 1),
+    ("clickhouse-client --password=pw", 1),
+    ("clickhouse-client --password", 0),
+    ("clickhouse-client --config-file private.xml --query SELECT --password", 0),
+    ("lk --api-key REPLACE_WITH_KEY --api-secret \"$secret\"", 2),
+    ("lk --api-key=key --api-secret=secret", 2),
+    ("lk token create --room test", 0),
+    ("lk --room --api-secret", 0),
+    ("LIVEKIT_API_SECRET=\"$secret\" lk token create", 0),
+    ("turnutils_uclient -w \"$pw\" -Wsecret host", 2),
+    ("turnutils_uclient -wpw -W secret host", 2),
+    ("turnutils_uclient -w - host", 1),
+    ("turnutils_uclient -e peer host", 0),
+    ("mysql -ppw --password=pw --password1=pw --password2=pw --password3=pw", 5),
+    ("mysql -p db --password --password1 --password2 --password3", 0),
+    ("mysql --password= -p''", 0),
+    ("mysql -p-", 1),
+    ("mariadb -p\"$pw\" --password=REPLACE_WITH_PASSWORD", 2),
+    ("mariadb -p db --password", 0),
+    ("redis-cli -a \"$pw\" --pass REPLACE_WITH_PASSWORD", 2),
+    ("redis-cli --askpass -p 6379", 0),
+    ("redis-cli -a -", 1),
+    ("mongosh -p pw --password=\"$pw\"", 2),
+    ("mongosh -ppw --password pw", 2),
+    ("mongosh -p --host db --password", 0),
+    ("docker login -ppw --password=pw", 2),
+    ("docker --context local login -p pw --password pw", 2),
+    ("docker login -u user --password-stdin", 0),
+    ("docker login -p - --password=-", 0),
+    ("docker login -u user", 0),
+    ("docker run -p 8080:80 image", 0),
+    ("htpasswd -b file user pw", 1),
+    ("htpasswd -nbB -C 12 user \"$pw\"", 1),
+    ("htpasswd -B -C 12 file user", 0),
+    ("htpasswd -bi file user pw", 1),
+    ("htpasswd -ci file user", 0),
+    ("openssl enc -pass pass:pw -passin pass:pw -passout pass:pw", 3),
+    ("openssl dgst -hmac \"$hmac\"", 1),
+    ("openssl enc -pass \"$source\" -passin \"$(cat source)\"", 2),
+    ("openssl enc -pass stdin -passin file:secret -passout fd:3", 0),
+    ("openssl enc -pass env:PW -passin \"file:$path\"", 0),
+    ("mc alias set local https://s3.example.com key secret", 2),
+    ("mc --config-dir private alias set --api S3v4 local https://s3.example.com \"$key\" \"$secret\"", 2),
+    ("mc alias import local < private.json", 0),
+    ("vault login token", 1),
+    ("vault login -method=token token=\"$token\"", 1),
+    ("vault login -address https://vault.example.com \"$token\"", 1),
+    ("vault login -", 0),
+    ("vault login", 0),
+    ("vault login -method=userpass username=user", 0),
+    ("kubectl --token=\"$token\" get pods", 1),
+    ("kubectl get pods --token REPLACE_WITH_TOKEN", 1),
+    ("kubectl --kubeconfig private get pods", 0),
+    ("kubectl exec pod -- app --token non-kubectl-argument", 0),
+    ("influx query --token \"$token\" -t token", 2),
+    ("influx query --token=token", 1),
+    ("influx query --active-config private", 0),
+    ("cypher-shell -p pw --password=pw", 2),
+    ("cypher-shell -u user", 0),
+    ("mosquitto_pub -P pw --pw pw", 2),
+    ("mosquitto_sub -P \"$pw\" --pw pw", 2),
+    ("mosquitto_pub -o private.conf -p 8883", 0),
+    ("mosquitto_sub -o private.conf -p 8883", 0),
+    ("mosquitto_passwd -b file user pw", 1),
+    ("mosquitto_passwd -c file user", 0),
+    ("echo 'lk --api-secret secret'", 0),
+    ("command -v lk", 0),
+    ("lk --api-secret ''", 0),
+    ("lk --api-secret", 0),
+]
+# Option boundaries: a leading dash belongs to the positional operand.
+_TOOL_ARGV_CASES += [
+    ('htpasswd -nb user "-s3cr3t-value"', 1),
+    ('htpasswd -nb user --', 1),
+    ('htpasswd -nb user -C', 1),
+    ('htpasswd -b file user -n', 1),
+    ('htpasswd -nb -- user --', 1),
+    ('htpasswd -b file -user -C', 1),
+    ('htpasswd -n user', 0),
+    ('htpasswd file -b', 0),
+    ('htpasswd -i file -b', 0),
+    ('htpasswd -nb user ""', 0),
+    ('mosquitto_passwd -b file user "-s3cr3t-value"', 1),
+    ('mosquitto_passwd -b file user --', 1),
+    ('mosquitto_passwd -b file user -H', 1),
+    ('mosquitto_passwd -b file -user -c', 1),
+    ('mosquitto_passwd -H sha512 -b file user --', 1),
+    ('mosquitto_passwd file -b', 0),
+    ('mosquitto_passwd -c file -b', 0),
+    ('mosquitto_passwd -b file user ""', 0),
+    ('redis-cli SET key -a', 0),
+    ('redis-cli SET --pass public-value', 0),
+    ('redis-cli SET key --pass=public-value', 0),
+    ('redis-cli -h host -p 6379 SET --pass public-value', 0),
+    ('redis-cli --user -a SET key value', 0),
+    ('redis-cli -- SET --pass public-value', 0),
+    ('redis-cli -a secret SET key -a', 1),
+    ('redis-cli --pass "$PW" SET --pass public-value', 1),
+    ('redis-cli -n 1 --pass secret GET key', 1),
+    ('redis-cli -s /run/redis.sock -a secret GET key', 1),
+    ('redis-cli -r 2 -i 1 --pass secret GET key', 1),
+    ('redis-cli -n 1 --askpass SET --pass public-value', 0),
+    ('openssl enc -k secret', 1),
+    ('openssl enc -k "$PW"', 1),
+    ('openssl enc -k -kfile', 1),
+    ('openssl enc -kfile private.txt', 0),
+    ('openssl enc -kfile "$path"', 0),
+    ('openssl enc -kfile -k', 0),
+    ('openssl enc -kfile private.txt -k secret', 1),
+    ('openssl enc -k ""', 0),
+    ('openssl enc -key key.pem', 0),
+    ('openssl enc -kfile private.txt -pass env:PW', 0),
+]
+# Redis value ownership must not hide later credentials or reparse command data.
+for _options in (
+    "-t 2", "-X tag", "-d separator", "-D separator",
+    "--sni redis.internal", "--cacertdir certs", "--tls-ciphers DEFAULT",
+    "--tls-ciphersuites TLS_AES_128_GCM_SHA256", "--pipe-timeout 10",
+    "--show-pushes no", "--lru-test 10", "--pattern key:*", "--count 10",
+    "--quoted-pattern key:*", "--intrinsic-latency 1", "--rdb dump.rdb",
+    "--functions-rdb dump.rdb", "--memkeys-samples 10", "--keystats-samples 10",
+    "--cursor 0", "--top 10", "--eval script.lua",
+    "--test_hint hint", "--test_hint_file hints.txt",
+):
+    _TOOL_ARGV_CASES.extend((
+        ("redis-cli %s -a secret" % _options, 1),
+        ("redis-cli %s SET --pass public-value" % _options, 0),
+    ))
+_TOOL_ARGV_CASES += [
+    ('redis-cli --eval script.lua key , --pass public-value', 0),
+    ('redis-cli --cluster check host:6379 -a secret', 1),
+    ('redis-cli --cluster check -a secret host:6379', 1),
+    ('redis-cli --cluster check host:6379 --askpass', 0),
+    ('redis-cli --cluster import host:6379 --cluster-from-pass secret', 1),
+    ('redis-cli --cluster import host:6379 --cluster-from-askpass', 0),
+    ('redis-cli SET --cluster --pass public-value', 0),
+]
+for _options in (
+    "--cluster-replicas 1", "--cluster-master-id node",
+    "--cluster-from host:6379", "--cluster-to node", "--cluster-from-user user",
+    "--cluster-weight node=1", "--cluster-slots 10", "--cluster-timeout 10",
+    "--cluster-pipeline 10", "--cluster-threshold 2",
+):
+    _TOOL_ARGV_CASES.extend((
+        ("redis-cli --cluster check host:6379 %s -a secret" % _options, 1),
+        ("redis-cli --cluster check host:6379 %s --askpass" % _options, 0),
+    ))
+# Each documented source option gets literal, expansion and external-input cases.
+# Keep the expectations independent of the implementation's option table.
+for _subcommand, _option in (
+    ("enc", "-pass"), ("pkey", "-passin"), ("req", "-passout"),
+    ("pkcs12", "-password"), ("pkcs12 -export", "-password"),
+    ("pkcs12 -export", "-passcerts"), ("s_client", "-proxy_pass"),
+    ("s_server", "-dpass"), ("cmp", "-secret"), ("cmp", "-keypass"),
+    ("cmp", "-newkeypass"), ("cmp", "-otherpass"), ("cmp", "-tls_keypass"),
+    ("cmp", "-srv_secret"), ("cmp", "-srv_keypass"), ("cmp", "-rsp_keypass"),
+):
+    for _source, _count in (
+        ("pass:secret", 1), ('"pass:$PW"', 1), ('"$source"', 1),
+        ("stdin", 0), ("file:private.txt", 0), ("env:PW", 0), ("fd:3", 0),
+    ):
+        _TOOL_ARGV_CASES.append(
+            ("openssl %s %s %s" % (_subcommand, _option, _source), _count))
+
+for _i, (_cmd, _count) in enumerate(_TOOL_ARGV_CASES):
+    SELF_TEST_CASES.append((
+        "c3-tool-%d" % _i, "~~~bash\n" + _cmd + "\n~~~\n",
+        ["C3-TOOL-ARGV"] * _count, ()))
+
+for _wrapper in ("sudo", "command", "env A=1", "nohup", "nice", "ionice",
+                 "timeout 5s", "xargs", "stdbuf -oL"):
+    SELF_TEST_CASES.append((
+        "c3-tool-wrapper-" + _wrapper,
+        "~~~bash\n" + _wrapper + " /usr/bin/lk --api-secret \"$s\"\n~~~\n",
+        ["C3-TOOL-ARGV"], ()))
+
+SELF_TEST_CASES += [
+    ("c3-tool-lifted-and-continued",
+     "~~~bash\nx=$(lk token create \\\n --api-secret \"$s\")\n~~~\n",
+     ["C3-TOOL-ARGV"], ()),
+    ("c3-tool-waiver-next-command",
+     "~~~bash\n# guard-conventions: allow documented argv-only exception\n"
+     "turnutils_uclient -w \"$pw\" host\nlk --api-secret secret\n~~~\n",
+     ["C3-TOOL-ARGV"], ()),
+    ("c3-tool-bare-and-trailing-waivers",
+     "~~~bash\n# guard-conventions: allow\nlk --api-secret secret\n"
+     "lk --api-secret secret # guard-conventions: allow reason\n~~~\n",
+     ["C3-TOOL-ARGV", "C3-TOOL-ARGV"], ()),
+    ("c3-tool-console",
+     "~~~console\n$ lk --api-secret secret\nlk --api-secret output\n~~~\n",
+     ["C3-TOOL-ARGV"], ()),
+    ("c3-tool-heredoc-data",
+     "~~~bash\ncat <<'EOF'\nlk --api-secret secret\nEOF\n~~~\n", [], ()),
+    ("c3-tool-heredoc-shell",
+     "~~~bash\nbash <<'EOF'\nlk --api-secret secret\nEOF\n~~~\n",
+     ["C3-TOOL-ARGV"], ()),
+    ("c3-tool-no-c2-does-not-disable-c3",
+     "~~~bash\nlk --api-secret \"$s\"\n~~~\n",
+     ["C3-TOOL-ARGV"], ("--no-c2",)),
+    ("c3-tool-wrapper-limit-disclosed",
+     "~~~bash\nsudo -u user lk --api-secret secret\n~~~\n", [], ()),
+]
 
 
 def run_self_test():
