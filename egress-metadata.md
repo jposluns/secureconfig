@@ -97,13 +97,33 @@ curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w '%{ht
 # workload that has no legitimate reason to reach metadata:
 # GCP (send the required header). For AWS, do the real IMDSv2 two-step - PUT a token then GET WITH it -
 # because a tokenless 401 proves the header requirement, not a network block; for Azure send Metadata: true:
-#   TOKEN=$(curl -q -sf --noproxy '*' --connect-timeout 5 --max-time 5 -X PUT -H 'X-aws-ec2-metadata-token-ttl-seconds: 60' http://169.254.169.254/latest/api/token); tok_rc=$?; echo "PUT exit: $tok_rc"
-#   if [ "$tok_rc" -eq 0 ] && [ -n "$TOKEN" ]; then printf 'X-aws-ec2-metadata-token: %s\n' "$TOKEN" | curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'aws=%{http_code} time_connect=%{time_connect}\n' -H @- http://169.254.169.254/latest/meta-data/iam/security-credentials/; else echo "no usable token (PUT exit $tok_rc): the PUT was refused, timed out, or returned an HTTP error (-f), so this is inconclusive on its own - treat metadata as blocked only with the enforcement-point deny record below"; fi
+#   Assumes a clean Bash shell with trusted startup files. Uncomment each WHOLE subshell to run.
+#   Tokens stay in positional parameters and curl's stdin, not named variables, environment or argv.
+#   The same account and root can still read process memory; this does not erase earlier exports.
+#   (
+#     trap - DEBUG RETURN ERR
+#     set +x +a +e
+#     # Append curl's status after a newline, then split it from the response without a named variable.
+#     set -- "$(curl -q -g -sf --noproxy '*' --connect-timeout 5 --max-time 5 -X PUT -H 'X-aws-ec2-metadata-token-ttl-seconds: 60' http://169.254.169.254/latest/api/token; printf '\n%s' "$?")"
+#     set -- "${1%$'\n'*}" "${1##*$'\n'}"
+#     printf 'PUT exit: %s\n' "$2"
+#     [ "$2" = 0 ] || { echo 'no usable token: PUT failed; inconclusive without an enforcement-point deny record'; exit 2; }
+#     case "$1" in ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'empty or malformed token; inconclusive'; exit 2 ;; esac
+#     printf 'X-aws-ec2-metadata-token: %s\n' "$1" | curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'aws=%{http_code} time_connect=%{time_connect}\n' -H @- http://169.254.169.254/latest/meta-data/iam/security-credentials/
+#   )
 #   Where IPv6 IMDS is enabled, repeat the WHOLE probe over IPv6 (do not reuse the IPv4 token - acquire
 #   one over IPv6 too, since IPv4 may be blocked while IPv6 is not). Quote the bracketed literal, -q first
-#   then -g. AWS:
-#     T6=$(curl -q -g -sf --noproxy '*' --connect-timeout 5 --max-time 5 -X PUT -H 'X-aws-ec2-metadata-token-ttl-seconds: 60' 'http://[fd00:ec2::254]/latest/api/token'); t6_rc=$?; echo "PUT6 exit: $t6_rc"
-#     if [ "$t6_rc" -eq 0 ] && [ -n "$T6" ]; then printf 'X-aws-ec2-metadata-token: %s\n' "$T6" | curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'aws6=%{http_code} time_connect=%{time_connect}\n' -H @- 'http://[fd00:ec2::254]/latest/meta-data/'; else echo "no usable IPv6 token (PUT6 exit $t6_rc): inconclusive"; fi
+#   then -g. AWS, with the same clean-shell assumption:
+#   (
+#     trap - DEBUG RETURN ERR
+#     set +x +a +e
+#     set -- "$(curl -q -g -sf --noproxy '*' --connect-timeout 5 --max-time 5 -X PUT -H 'X-aws-ec2-metadata-token-ttl-seconds: 60' 'http://[fd00:ec2::254]/latest/api/token'; printf '\n%s' "$?")"
+#     set -- "${1%$'\n'*}" "${1##*$'\n'}"
+#     printf 'PUT6 exit: %s\n' "$2"
+#     [ "$2" = 0 ] || { echo 'no usable IPv6 token: PUT failed; inconclusive without an enforcement-point deny record'; exit 2; }
+#     case "$1" in ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'empty or malformed IPv6 token; inconclusive'; exit 2 ;; esac
+#     printf 'X-aws-ec2-metadata-token: %s\n' "$1" | curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'aws6=%{http_code} time_connect=%{time_connect}\n' -H @- 'http://[fd00:ec2::254]/latest/meta-data/'
+#   )
 #   GCP: curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'gcp6=%{http_code} time_connect=%{time_connect}\n' -H 'Metadata-Flavor: Google' 'http://[fd20:ce::254]/computeMetadata/v1/instance/'
 #   Any HTTP response (including 401) means the IPv6 endpoint is reachable; read time_connect as below.
 # Run these BEFORE applying the block too (the positive control): they should reach metadata then, so a
