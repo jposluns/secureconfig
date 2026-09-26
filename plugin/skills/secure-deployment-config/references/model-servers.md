@@ -48,7 +48,8 @@ vLLM's server requires an API key when one is set: at both pinned commits `--api
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set -eC +x +a
+  set +x +a +e
+  set -eC
   umask 077
   mkdir -p -- "$HOME/.config/vllm"
   chmod 700 -- "$HOME/.config/vllm"
@@ -97,7 +98,8 @@ The launcher reference lists `--api-key` (env `API_KEY`) without describing it. 
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set -eC +x +a
+  set +x +a +e
+  set -eC
   umask 077
   mkdir -p -- "$HOME/.config/sglang"
   chmod 700 -- "$HOME/.config/sglang"
@@ -132,6 +134,28 @@ tritonserver --model-repository=/models --http-address=127.0.0.1 --grpc-address=
 
 `--allow-http` and `--allow-grpc` default to true; NVIDIA recommends setting either to false when not required, and `--allow-metrics` switches off the metrics listener. For gRPC, `--grpc-use-ssl` with `--grpc-server-cert` and `--grpc-server-key` enables a TLS channel, and `--grpc-use-ssl-mutual` requires client certificates. HTTP has no TLS option; the proxy provides it. `--http-restricted-api` and `--grpc-restricted-protocol` fence the API groups you name (model-repository control, and inference too if you list it) behind a shared-secret header, a useful second layer against network clients but not a substitute for the gateway. The secret is part of the flag's value (`--http-restricted-api=<API_1>,<API_2>:<restricted-key>=<restricted-value>`), and `tritonserver` has no other input for it. Traced at the pinned source commit: `tritonserver` parses its options with `getopt_long` over argv, the two options hand their value straight to the restricted-feature parser, the parser opens no option or response file and reads nothing from stdin, and every environment variable read under `src/` has a non-secret name (the `AIP_*` and `SAGEMAKER_*` endpoint settings, the `OTEL_BSP_*` tracing settings, a gRPC response-delay setting and test-backend names). So the value sits in argv, readable through `ps` and `/proc/<pid>/cmdline` by other local accounts, as well as by the same account and root, for the server's whole lifetime; quoting does not change that, and no `tritonserver` launch form avoids it. Command-line auditing on the host (auditd `EXECVE` records, for example) can also record the value and keep it after the process exits. Under an orchestrator the same value also sits in the workload definition (a Kubernetes pod spec's `args`, for example) for everyone who can read it. A server's shared secret is neither throwaway nor short-lived, so it is no secret from other accounts on the host: do not rely on it as a control against them. Enforce authorization at the reverse proxy or gateway in front of Triton, which is the control, and treat the restricted-API value only as a check against network clients that reach Triton past it; rotate the value whenever an account you do not trust could have read it, or a command-line audit record holding it could have reached one. If you do not load and unload models at run time, leave `--model-control-mode` at its default, `none`, under which the model-control API returns an error for load and unload requests, whatever the secret. Builds with cloud endpoints add conditional listeners beyond these three: `AIP_MODE=PREDICTION` enables a Vertex AI endpoint (its port is `AIP_HTTP_PORT`, otherwise 8080), and a SageMaker endpoint may also be present, so disable the ones you do not use or add them to the bind inventory and the checks below.
 
+At the pinned commit (first shipped in v2.69.0), every restricted category defaults to unrestricted: `health`, `metadata`, `inference`, `shared-memory`, `model-config`, `model-repository`, `statistics`, `trace`, and `logging`. Model control is only one part of that surface. These defaults apply when the corresponding feature is compiled in:
+
+| Category | Exposure without a restriction |
+| --- | --- |
+| `health`, `metadata`, `inference` | Server/model health and metadata, inference, and HTTP `generate`/`generate_stream` requests need no key. |
+| `logging` | Read the log settings and file path; change info/warning/error logging, verbosity, and format. A request cannot change `log_file`. |
+| `trace` | Read global or per-model settings, including, in the default `triton` mode, the trace file path; change level, rate, count, and log frequency. A request cannot change `trace_file`. Tracing starts OFF with no file path in the default `triton` mode, so enabling it through the API fails until startup supplies a path, for example `--trace-config triton,file=/var/log/triton/trace.json`. That flag leaves the level OFF; `--trace-config level=TIMESTAMPS` enables it at startup, and an unrestricted client can enable or change it later once the configuration is valid. The settings API itself is not disabled by OFF. |
+| `shared-memory` | Read system/CUDA region status. Registration, unregistration, and inference use are disabled by default (`--allow-client-shm=false`); `--allow-client-shm=true` enables them. Clients can then register system shared-memory objects or CUDA IPC handles for tensor input/output and unregister regions. CUDA also requires GPU support; the protocol documentation lists no shared memory on Windows and no CUDA shared memory on Jetson. |
+| `model-repository` | List repository models, including unloaded models. Load/reload and unload require `--model-control-mode=explicit`; `none` (default) and `poll` do not enable those API operations. Load accepts a JSON-string `config` override and inline `file:VERSION/FILE` contents (base64 over HTTP, bytes over gRPC, with `config` required); unload can include `unload_dependents=true`. |
+| `statistics`, `model-config` | Read per-model/version inference statistics and model configuration. Model control mode does not protect these reads or the repository index. Statistics require a build with statistics support. |
+
+Restrictions are per category and per protocol, not a single admin switch. Repeat a flag for disjoint groups with different keys; a category cannot appear in two groups for the same protocol. This syntax example covers all nine categories with a value held by the gateway, which must not give that administrative value to ordinary inference clients:
+
+```text
+--http-restricted-api=health,metadata,inference,shared-memory,model-config,model-repository,statistics,trace,logging:gateway-key=REPLACE_WITH_GATEWAY_VALUE
+--grpc-restricted-protocol=health,metadata,inference,shared-memory,model-config,model-repository,statistics,trace,logging:gateway-key=REPLACE_WITH_GATEWAY_VALUE
+```
+
+Replace the placeholder through your deployment's secret handling, subject to the argv exposure above. HTTP expects `gateway-key: VALUE`; gRPC expects metadata `triton-grpc-protocol-gateway-key: VALUE`, because Triton prefixes the configured key. Missing or wrong values receive HTTP 403 or gRPC `UNAVAILABLE` with a restriction message. Restricting `health` also requires the header on health probes. These rejections apply to the standard HTTP and gRPC handlers; two cloud endpoints at the pinned commit fall outside them. With the SageMaker listener enabled, a multi-model endpoint's `POST /models/{model}/invoke` runs inference with no restriction check, so gateway authorization and network isolation must cover it, or disable the SageMaker listener. The Vertex AI prediction route dispatches to other handlers named in the `X-Vertex-Ai-Triton-Redirect` request header, `metrics` among them with no restriction check, so a gateway that attaches the administrative value to Vertex prediction requests must strip or reject that header from ordinary clients.
+
+The metrics listener is separate: `GET /metrics` (also `/metrics/`) on 8002 returns Prometheus text with no authentication, and neither restricted flag covers it. Keep it private or use `--allow-metrics=false`. Keep the gateway's route allowlist narrow even when every category is restricted.
+
 ## LM Studio (local server)
 
 LM Studio's developer server is a desktop feature. The documentation addresses it at `http://localhost:1234` throughout (the port is a field in Developers Page > Server Settings), and "By default, LM Studio does not require authentication for API requests." The "Serve on Local Network" switch (or `lms server start --bind 0.0.0.0`) rebinds it to every interface; LM Studio's own note reads: "Any bind other than 127.0.0.1 exposes the server beyond localhost; we recommend enabling authentication." Leave that switch off. If another machine must reach it, first enable "Require Authentication" (LM Studio 0.4.0 or newer) and create a token under "Manage Tokens"; clients then send `Authorization: Bearer <token>`. The server settings list no TLS option, so anything beyond the local machine goes through a tailnet ([tailscale.md](tailscale.md)) or an authenticated TLS proxy, never a port-forward.
@@ -152,7 +176,8 @@ All three are secrets, and none belongs on the command line, where `ps` and `/pr
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set -eC +x +a
+  set +x +a +e
+  set -eC
   umask 077
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_UI_USER'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; nothing written'; exit 2; }
@@ -179,7 +204,8 @@ The API keys have no file flag and no environment input at the pinned sources: t
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set -eC +x +a
+  set +x +a +e
+  set -eC
   umask 077
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PRIVATE_USER_DATA_DIR'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; nothing written'; exit 2; }
@@ -291,6 +317,14 @@ For text-generation-webui, ask the API edge for the model list without a key. Th
 )
 ```
 
+For Triton, this read checks the `logging` restriction directly on the server host. **REASONED, not demonstrated:** no Triton server, container runtime, or GPU is available in the authoring environment; TODO row 1.152 tracks the live pair. On an isolated instance with logging support, run it before and after applying the restriction above. Before, expect HTTP 200 with settings JSON containing `log_file` and `log_verbose_level`; after, expect HTTP 403 with `This API is restricted, expecting header 'gateway-key'`. These outcomes follow from the [logging handler](https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L2031-L2149) and [restriction check](https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L4939-L4953). Use the same address and port for both runs. This command assumes Triton's HTTP listener is on loopback port 8000 and needs curl 7.75.0 or newer. A connection error, a proxy rejection, 404, or a logging-unsupported response is inconclusive; a failing request alone is not a pass. This checks only logging over HTTP, not the other categories, gRPC, or external listener isolation. The existing `pgrep` check measures argv exposure, not API authorization.
+
+```bash
+curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+  -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+  http://127.0.0.1:8000/v2/logging
+```
+
 ## Sources (checked September 2026)
 
 - llama.cpp server README (defaults, `--api-key` and its `LLAMA_API_KEY` environment input, `--api-key-file` ("path to file containing API keys, one per line") and its `LLAMA_ARG_API_KEY_FILE` environment input, the `LLAMA_ARG_*` environment inputs most options carry, `LLAMA_ARG_HOST` for `--host` among them, SSL flags): https://github.com/ggml-org/llama.cpp/blob/e0dff58475bc9ed68eedcb265ee998f2fcabb3b1/tools/server/README.md
@@ -311,12 +345,21 @@ For text-generation-webui, ask the API edge for the model list without a key. Th
 - TGI repository (maintenance-mode notice, archived 2026-03-21): https://github.com/huggingface/text-generation-inference
 - SGLang server arguments (--host, --port, --api-key, --admin-api-key, SSL flags; docs.sglang.ai redirects here): https://docs.sglang.io/docs/advanced_features/server_arguments
 - Triton secure deployment considerations: https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/customization_guide/deploy.html
-- Triton quickstart (default listeners on 8000, 8001, 8002): https://github.com/triton-inference-server/server/blob/0194c3da9ddeeff07547f46aa058cf88acb51893/docs/getting_started/quickstart.md
-- Triton inference protocols (gRPC SSL flags, restricted APIs): https://github.com/triton-inference-server/server/blob/c29bbe17eac256bbcd8fea47cde2f219d2be37cf/docs/customization_guide/inference_protocols.md
-- Triton command line parser (address and port flags with defaults): https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc
+- Triton listener defaults: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.h#L191-L219 and https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/grpc/grpc_server.h#L51-L67
+- Triton gRPC TLS flags and restricted protocols: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L558-L576 and https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L632-L640
+- Triton command line parser (HTTP address and port, restricted APIs): https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L477-L516
+- Triton cloud endpoints outside the restriction flags (commit 546a78766fb112128aa0b10a70c55f4f39c3b1df): the SageMaker multi-model invoke dispatch, which reaches inference without a restriction check, and the Vertex AI redirect header with its unrestricted `metrics` target: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/sagemaker_server.cc#L198-L225, https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/vertex_ai_server.cc#L34-L37, https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/vertex_ai_server.cc#L142-L145 and https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/vertex_ai_server.cc#L245-L272; shared-memory platform limits: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/docs/protocol/extension_shared_memory.md#L65-L68
 - Triton `--http-restricted-api` and `--grpc-restricted-protocol`, parsed from argv by `getopt_long` only (traced at 546a787 across `src/`: the option definitions, the parse loop and the two cases handing `optarg` to `ParseRestrictedFeatureOption`, no option or response file, and every `getenv`/`GetEnvironmentVariableOrDefault` under `src/` reading a non-secret name): https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L508-L516, #L632-L640, #L1329-L1330, #L1420-L1423 and #L1561-L1566
-- Triton restricted API groups, `inference` among them: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/restricted_features.h#L54-L57 and https://github.com/triton-inference-server/server/blob/c29bbe17eac256bbcd8fea47cde2f219d2be37cf/docs/customization_guide/inference_protocols.md#L153-L196
-- Triton model control mode `NONE`, the default, returning an error for load and unload requests: https://github.com/triton-inference-server/server/blob/c29bbe17eac256bbcd8fea47cde2f219d2be37cf/docs/user_guide/model_management.md#L35-L45
+- Triton category names and initially unrestricted state: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/restricted_features.h#L37-L112
+- Triton HTTP route patterns and dispatch: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L1140-L1149 and https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L4786-L4885
+- Triton dynamic logging (mutable settings, file-path disclosure, refusal to change the file path): https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L2031-L2149
+- Triton trace settings API and file-path refusal: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L1759-L2027; defaults: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.h#L180-L188; runtime updates and file-path requirement: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/tracer.cc#L221-L232 and https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/tracer.cc#L1244-L1249; startup trace flags: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L739-L750, https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L2247-L2278 and https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L2297-L2312
+- Triton client shared memory (disabled by default, opt-in flag, platform limits): https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/docs/protocol/extension_shared_memory.md#L29-L68; status and mutation handlers: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L2177-L2378
+- Triton repository index and inline load overrides: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/docs/protocol/extension_model_repository.md#L59-L90, https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/docs/protocol/extension_model_repository.md#L136-L152 and https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/docs/protocol/extension_model_repository.md#L350-L400
+- Triton model configuration and statistics reads: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L1684-L1755; generation routes use the inference restriction: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L3324-L3334
+- Triton restriction grouping/parser: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L2095-L2163; gRPC header prefix: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/grpc/grpc_server.h#L47-L49; HTTP rejection: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L4939-L4953; gRPC rejection: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/grpc/grpc_server.cc#L194-L225
+- Triton metrics path and unauthenticated Prometheus handler: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.h#L143-L157 and https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L308-L345; metrics controls: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L708-L725
+- Triton model control modes (`none` by default, repository polling under `poll`, API load/unload under `explicit`): https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L424-L434
 - LM Studio local server: https://lmstudio.ai/docs/developer/core/server
 - LM Studio serve on local network: https://lmstudio.ai/docs/developer/core/server/serve-on-network
 - LM Studio server settings: https://lmstudio.ai/docs/developer/core/server/settings

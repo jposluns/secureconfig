@@ -99,7 +99,7 @@ Scan built client bundles for a leaked Turso/libSQL token, keeping the token off
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a                             # never trace or export the token read below
+  set +x +a +e                          # never trace or export the token read below
   { unset -n tok && unset -v tok; } 2>/dev/null ||
     { echo 'a readonly tok is set in this shell; not scanning'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not scanning'; exit 2; }
@@ -175,7 +175,7 @@ Any HTTP response from the untrusted vantage shows that an HTTP listener answere
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a
+  set +x +a +e
   { unset -n turso_tok && unset -v turso_tok; } 2>/dev/null ||
     { echo "a readonly turso_tok is set in this shell; not probing"; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo "a readonly IFS is set in this shell; not probing"; exit 2; }
