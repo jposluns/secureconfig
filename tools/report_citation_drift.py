@@ -90,7 +90,7 @@ RESERVED_PREFIX = ("192.0.2.", "198.51.100.", "203.0.113.", "2001:db8:")
 
 # A cross-host redirect that is the vendor's own canonical answer rather than drift. This list
 # is the only way to acknowledge one: without it a consent interstitial or a vendor that always
-# redirects would red the weekly run forever, and a report that is always red is a report
+# redirects would fail standalone runs forever, and a report that is always red is a report
 # nobody reads. Each entry is (cited prefix, destination prefix) and both must match.
 #
 # End both prefixes at a `/` boundary. They are matched with `startswith`, so `https://a.com`

@@ -22,7 +22,11 @@ jobs:
         continue-on-error: true
         uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8  # v2.9.0
         with:
-          # Only the numeric HTTP status check below decides which link results fail.
+          lycheeVersion: v0.24.2
+          # The maintainer's dead-links-only ruling covers completed results.
+          # Integrity requires surfacing checker failures, so incomplete sweeps
+          # fail closed. v0.24.2 exit 2 includes advisory link failures; the
+          # reports below check the action outcome, exit code and JSON.
           fail: false
           failIfEmpty: false
           format: json
@@ -55,35 +59,57 @@ jobs:
           import os
           from pathlib import Path
 
+
+          def checked(value, kind, field):
+              if type(value) is not kind:
+                  raise ValueError(f"{field} must be {kind.__name__}")
+              return value
+
+
           lines = [
               "Lychee action outcome: " + os.environ.get("LYCHEE_OUTCOME", "unknown"),
               "Lychee exit code: " + os.environ.get("LYCHEE_EXIT_CODE", "unavailable"),
-              "Only HTTP 404 and 410 fail this link check.",
+              "Completed sweeps fail only on HTTP 404 and 410; incomplete sweeps fail closed.",
           ]
           dead = False
+          incomplete = False
           try:
+              if (os.environ.get("LYCHEE_OUTCOME") != "success"
+                      or os.environ.get("LYCHEE_EXIT_CODE") not in ("0", "2")):
+                  raise ValueError("lychee action failed or did not return exit code 0 or 2")
               data = json.loads(Path("lychee/out.json").read_text(encoding="utf-8"))
+              for field in ("total", "excludes", "unknown", "unsupported"):
+                  if checked(data[field], int, field) < 0:
+                      raise ValueError(f"{field} must not be negative")
+              if data["total"] == 0 or data["detailed_stats"] is not True:
+                  raise ValueError("no links checked or detailed results unavailable")
               lines.append(f"Total: {data['total']}; excluded: {data['excludes']}; "
                            f"unknown: {data['unknown']}; unsupported: {data['unsupported']}")
-              if not data["total"] or not data["detailed_stats"]:
-                  lines.append("INCOMPLETE: no links checked or detailed results unavailable.")
               for name in ("error_map", "timeout_map", "success_map"):
-                  for source, rows in sorted(data[name].items()):
-                      for row in sorted(rows, key=lambda item: item["url"]):
-                          status = row["status"]
+                  for source, rows in sorted(checked(data[name], dict, name).items()):
+                      for row in sorted(checked(rows, list, name), key=lambda item: item["url"]):
+                          checked(row["url"], str, "url")
+                          status = checked(row["status"], dict, "status")
+                          checked(status["text"], str, "status.text")
                           code = status.get("code")
+                          if "code" in status:
+                              if not 100 <= checked(code, int, "status.code") <= 999:
+                                  raise ValueError("invalid HTTP status code")
+                          else:
+                              checked(status["details"], str, "status.details")
                           # Match the numeric status field, never text or digits in a URL.
                           dead = dead or code in (404, 410)
                           if code is None or not 200 <= code < 300:
                               lines.append(f"{source}: {row['url']} | "
                                            f"{json.dumps(status, ensure_ascii=True)}")
-          except (OSError, ValueError, KeyError, TypeError) as exc:
-              lines.append(f"INCOMPLETE: cannot read lychee results: {exc}")
+          except (OSError, ValueError, KeyError, TypeError, AttributeError) as exc:
+              incomplete = True
+              lines.append(f"INCOMPLETE: sweep could not complete: {exc}")
           report = "\n".join(lines)
           print(report)
           with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
               summary.write("## Link results\n\n<pre>" + html.escape(report) + "</pre>\n")
-          raise SystemExit(1 if dead else 0)
+          raise SystemExit(1 if dead or incomplete else 0)
           PY
 
       - name: Report citations that have moved
@@ -103,21 +129,31 @@ jobs:
           from pathlib import Path
 
           lines = []
+          incomplete = False
           try:
               data = json.loads(Path("lychee/out.json").read_text(encoding="utf-8"))
-              if not data["detailed_stats"]:
-                  lines.append("INCOMPLETE: redirect details unavailable.")
+              if data["detailed_stats"] is not True:
+                  raise ValueError("redirect details unavailable")
               for source, chains in sorted(data["redirect_map"].items()):
+                  if not isinstance(chains, list):
+                      raise ValueError("redirect chains must be a list")
                   for chain in sorted(chains, key=lambda item: item["origin"]):
                       previous = chain["origin"]
+                      if not isinstance(previous, str) or not isinstance(chain["redirects"], list):
+                          raise ValueError("invalid redirect chain")
                       for hop in chain["redirects"]:
+                          if (not isinstance(hop["url"], str) or type(hop["code"]) is not int
+                                  or not 300 <= hop["code"] < 400):
+                              raise ValueError("invalid redirect hop")
                           lines.append(f"{source}: {previous} -> {hop['url']} "
                                        f"(HTTP {hop['code']})")
                           previous = hop["url"]
-          except (OSError, ValueError, KeyError, TypeError) as exc:
-              lines.append(f"INCOMPLETE: cannot read redirect results: {exc}")
+          except (OSError, ValueError, KeyError, TypeError, AttributeError) as exc:
+              incomplete = True
+              lines.append(f"INCOMPLETE: sweep could not complete: {exc}")
           report = "\n".join(lines) or "No redirects recorded."
           print(report)
           with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
               summary.write("## Redirects\n\n<pre>" + html.escape(report) + "</pre>\n")
+          raise SystemExit(1 if incomplete else 0)
           PY
