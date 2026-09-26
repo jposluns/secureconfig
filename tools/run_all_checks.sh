@@ -437,6 +437,63 @@ else
   printf '%s\n' "$shellblocks" | sed 's/^/          /'
 fi
 
+echo "== local Python release matches CI =="
+# Advisory like the shellcheck SKIP above: html.parser can change between releases.
+# Never set fail here, including when the workflow or the interpreter cannot be read.
+if ! python3 - <<'PY'
+import re
+import sys
+from pathlib import Path
+
+def notice(message):
+    print(f"  SKIP  {message}")
+
+workflow = Path(".github/workflows/checks.yml")
+try:
+    lines = workflow.read_text(encoding="utf-8").splitlines()
+except (OSError, UnicodeError) as exc:
+    notice(f"Python version comparison unavailable: cannot read {workflow}: {exc}")
+else:
+    pattern = r'[ \t]*PYTHON_VERSION: "([0-9]+\.[0-9]+\.[0-9]+)"[ \t]*'
+    # Threat model (maintainer ruling, 2026-09-26, after #360's ruling (B)): this advisory notice guards
+    # against ACCIDENTAL edits to checks.yml, not adversarial YAML. It is a stdlib text scan, not a YAML
+    # parser, so a pin-looking line inside a block scalar with no real pin, a \u-escaped key, aliases or a
+    # multi-document file can still mislead it. Such states are out of scope; a real missing pin also
+    # breaks setup-python's `${{ env.PYTHON_VERSION }}` reference loudly in CI.
+    # Count every PYTHON_VERSION token except references (env.PYTHON_VERSION, $PYTHON_VERSION,
+    # ${PYTHON_VERSION}), so a second pin in any YAML form (quoted, spaced, flow mapping) is seen.
+    keys = re.findall(r'(?<![.$\w])(?<!\$\{)PYTHON_VERSION(?!\w)', "\n".join(lines))
+    pins = [line for line in lines if re.fullmatch(r'[ \t]*PYTHON_VERSION: "([0-9]+\.[0-9]+\.[0-9]+)"[ \t]*', line)]
+    match = re.fullmatch(pattern, pins[0]) if len(keys) == 1 and len(pins) == 1 else None
+    if match is None:
+        notice('Python version comparison unavailable: expected exactly one '
+               'PYTHON_VERSION: "X.Y.Z" line in .github/workflows/checks.yml '
+               f'(found {len(keys)} PYTHON_VERSION keys and {len(pins)} pin lines)')
+    else:
+        pinned = match.group(1)
+        running = sys.version.split()[0]
+        if running == pinned:
+            print(f"  ok    python3 {running} matches CI's pinned PYTHON_VERSION")
+        else:
+            notice(f"python3 {running} differs from CI's pinned PYTHON_VERSION {pinned}; "
+                   "html.parser behaviour may differ, so a local green predicts CI less well")
+PY
+then
+  printf '  SKIP  Python version comparison unavailable: python3 did not complete\n'
+fi
+
+echo "== the Python-version notice still reports without failing =="
+if python_notice_tests=$(python3 tools/test_python_version_notice.py 2>&1); then
+  printf '%s\n' "$python_notice_tests"
+  if grep -q '^  FAIL  ' <<< "$python_notice_tests" ||
+     ! grep -qE '^  ok    [0-9]+ recorded cases for the Python-version notice$' <<< "$python_notice_tests"; then
+    bad "test_python_version_notice.py did not report a clean self-test"
+  fi
+else
+  bad "test_python_version_notice.py failed"
+  printf '%s\n' "$python_notice_tests"
+fi
+
 echo "== the shell-block gate still catches what it claims =="
 # Two of these cases assert what the gate does NOT catch, which are the very defects that
 # prompted it. They are recorded so the file cannot quietly start claiming that coverage.
@@ -869,6 +926,17 @@ elif grep -q '^  FAIL  ' <<< "$workflow_pin_tests"; then
 else
   bad "test_workflow_pins.py exited non-zero without reporting a result"
   printf '%s\n' "$workflow_pin_tests" | sed 's/^/          /'
+fi
+
+echo "== weekly link reports fail closed on incomplete sweeps =="
+if lychee_tests=$(python3 -I -B tools/test_lychee_report.py 2>&1); then
+  printf '%s\n' "$lychee_tests"
+  if ! grep -qE '^  ok    [0-9]+ lychee fixture cases$' <<< "$lychee_tests"; then
+    bad "lychee report fixtures exited 0 without a result"
+  fi
+else
+  printf '%s\n' "$lychee_tests"
+  bad "lychee report fixtures failed"
 fi
 
 echo "== the advisory citation sweep still imports =="
