@@ -243,7 +243,7 @@ cluster client must still reach 10250. With `readOnlyPort: 0`, 10255 should have
 even from that authorized client. Check every configured address family and retain an authorized
 positive control so an unavailable node is not mistaken for successful isolation. The pinned
 listener/default sources below support these expectations; no live result is claimed.
-TODO row 1.NEW-DEMO tracks demonstration of these checks against exposed and fixed deployments.
+TODO row 1.169 tracks demonstration of these checks against exposed and fixed deployments.
 
 ```bash
 kubectl get svc -A | grep -E 'NodePort|LoadBalancer'                 # only the Gateway's Service
