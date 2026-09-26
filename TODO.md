@@ -138,7 +138,6 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 3.19 | Weekly lychee sweep: fail only on dead links (404s); list redirects without failing the job (maintainer ruling, 2026-09-25). (L, S) | `[gap]` |
 | 3.20 | Verify-marking convention: every Verify step states explicitly whether it was demonstrated or reasoned, enforced corpus-wide (maintainer ruling, 2026-09-25). (M, L) | `[gap]` |
 | 3.23 | Shell-block gate: flag known secret-taking flags of non-curl tools in guide blocks (for example `lk --api-secret`, `turnutils_uclient -w`), which no gate sees today because `PROBE_CMDS` lists network probes only (from the #353 plan, maintainer ruling 2026-09-25). (L, S) | `[gap]` |
 
