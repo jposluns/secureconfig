@@ -55,15 +55,27 @@ On each physical line, two things are findings:
     regcomp reads across the newline), or a multi-line data list, lands here by construction,
     without the gate having to know which of those it was.
 
-A close immediately preceded by a backslash or quote is ambiguous. A quote immediately after
-`]` also makes it ambiguous when that same quote occurs inside the list. Besides the ordinary
-reading, the gate reads that `]` as a member and continues to the next close, repeating at each
-ambiguous close. Either reading holding a range, or an alternative running off the physical
-line, is a finding. This is a local character test, not quote or escape lexing. Requiring an
-interior quote for the quote-after case keeps `'[0123456789]'` and "[[:digit:]]" clean: outside
-quoting does not hide the closing bracket from a regex engine, and quoting a glob's opening
-bracket makes that opener literal too. The ordinary close still bounds the outer scan, so an
-alternative cannot swallow a separate expression. There is at most one finding per opener.
+For every opener considered, the additional region ends at the LAST `]` on that physical
+line. If it contains a single quote, double quote or backslash, the gate deletes all three
+characters and any dollar sign directly before a quote, then applies two readings: the ordinary
+bracket parser on that stripped region, and every three-character `X-Y` anywhere in its interior,
+including past earlier closes. A range in any reading is a finding. This deliberately includes
+text between separate expressions; no quote state, shell lexing or escape decoding is involved.
+The ordinary close still bounds the outer scan, so the additional readings cannot swallow a
+later opener. There is at most one finding per opener.
+
+The development fuzzer also found six glob counterexamples such as `[$a]-z]`: an unset variable
+exposes a leading literal `]`. A dollar inside the ordinary list therefore enables the same broad
+readings. A dollar after that list, such as a regex end anchor, does not enable them by itself.
+The terminal fallback below applies too. This covers shifts of literal closes, not general
+expansion or runtime-assembled ranges.
+
+The range readings do not subsume every old unclosed-alternative finding. The final close still
+gets that finding when a backslash or quote immediately precedes it, or when a quote immediately
+follows it and the same quote occurs inside the region. A quote-affected final close at physical
+end of line also gets an unclosed reading, including a close buried in longer quoted text.
+This terminal fallback is separate from range detection; earlier closes never need adjacency
+tests. With no close on the line, the existing unclosed-bracket finding always stands.
 
 Shell text, comments and here-document bodies are all read the same way: a regex stored in a
 variable, a `case` alternative on its own line, a script written to a file through a
@@ -105,7 +117,15 @@ the text may itself hold a TAB; a reason may not.
 WHAT THIS IS NOT. A shell parser, and not proof that a guard is correct. The model is
 deliberately conservative: everything in the first list below is over-flagging that fails
 closed, listed honestly; what the gate still does not see at all is in the second. Each is a
-recorded case in tools/test_bracket_ranges.py so that a change is loud.
+recorded case in tools/test_bracket_ranges.py so that a change is loud. That suite has
+186 cases (160 ordinary, 22 allowlist and 4 quote-removal), 178 checked behaviours,
+8 disclosed blind spots and 11 entry-point runs. All 14 round-6 single-rule mutations fail.
+The separate tools/fuzz_bracket_ranges.py development check exhausts lengths 0 through 7
+over its 12-character alphabet, 39,089,245 candidates per engine. Under C and en_US.utf8, glob parsed 10,370,257 candidates, with 221,297 live and 221,297
+flagged; grep -E and Bash [[ =~ ]] on bare bracket forms each parsed 33,567,364, with
+1,091,548 live and 1,091,548 flagged. All three missed 0. The run covered a contiguous
+4,486,237-candidate prefix and 34,603,008-candidate suffix, with no sampling.
+It is intentionally absent from the offline gates, since the collation locale may be missing.
 
   Over-flagged, by design (restructure the line, spell the set out, or allowlist the line):
   - A multi-line data list, a JSON array or Python list whose `[` closes on a later line, is an
@@ -117,12 +137,13 @@ recorded case in tools/test_bracket_ranges.py so that a change is loud.
   - A malformed atom, `[[:alpha]` with no closing `:]` on its line, is read as ordinary
     characters rather than an atom, so `alpha` contributes no range but a live range beside it
     is still seen.
-  - Ambiguous closes in data, such as `["read"]`, `d["key"]` or the regex `[^"]`, can produce
-    an unclosed alternative even when the ordinary reading is harmless. On the 411-block,
-    99-guide corpus, allowing every quote-after close added 17 falsely flagged lines; requiring
-    an interior matching quote reduced that to 8. Both rules added one expression on each of
-    2 already waived lines. The narrowed rule has 14 consumed entries waiving 16 expressions;
-    the 8 new entries name non-validator uses, never locale-dependent accept lists.
+  - Quote-affected regions extend to the last close, even across separate expressions.
+    Range-free quoted data can still get a terminal unclosed-alternative finding. Against
+    round 5's 411-block, 99-guide corpus, round 6 adds 2 falsely flagged lines:
+    realtime-webhooks.md:135 (Python digest indexing and slicing) and sqlite.md:99 (a
+    spelled-out JWT search whose escaped dot connects two sets). The first gets a specific
+    non-validator waiver; spelling the second's literal dot as `[.]` removes its finding.
+    There are 15 consumed entries waiving 17 expressions, with no unwaived finding.
   - An allowlist entry waives its whole line: one of two ranges on a line cannot be waived
     alone. Changing its text or guide breaks its entry, but moving unchanged text within the
     same guide does not. Neither does changing surrounding lines: a continued printf argument
@@ -262,13 +283,16 @@ def _parse_bracket(text, i):
     return _parse_list(text, j, None)
 
 
-def _ambiguous_close(text, start, close):
-    """A local ambiguity test, with no quote state or escape decoding.
+def _strip_quotes(region):
+    """Delete quotes, backslashes and a dollar sign directly before either quote."""
+    region = region.replace("$'", "'").replace('$"', '"')
+    return region.translate(str.maketrans("", "", "'\"\\"))
 
-    A backslash or quote immediately before `]` permits a literal-member reading. A quote
-    immediately after it does too, if that same quote occurs inside the list. Without an
-    interior quote, the latter is just outside quoting: it does not hide a regex's close,
-    and quoting a glob's opening `[` makes that opener literal too.
+
+def _ambiguous_close(text, start, close):
+    """Preserve the old terminal unclosed alternatives; never bound range scanning.
+
+    The full last-close region handles ranges independently of this local fallback.
     """
     before, after = text[close - 1], text[close + 1:close + 2]
     return before in "\\'\"" or (after in ("'", '"') and after in text[start + 1:close])
@@ -276,10 +300,10 @@ def _ambiguous_close(text, start, close):
 
 def bracket_hits(text):
     """Yield one description per bracket expression in one line's text holding a range, and per
-    `[` left open at the end of the line. A closed expression is stepped over whole, so a nested
-    `[` inside it is not reported twice. Ambiguous closes also admit a literal-member reading;
-    a range or an unclosed alternative is a finding for the original opener. A backslash before
-    a `[` does not hide it: unquoted, the shell removes it and the tool sees a live bracket."""
+    `[` left open at the end of the line. Quote-affected regions extend to the last close;
+    stripped ordinary and anywhere-range readings supplement the ordinary parse. Terminal
+    unclosed alternatives remain conservative. Only the ordinary close bounds the outer scan.
+    A backslash before `[` never hides an opener."""
     i, n = 0, len(text)
     while i < n:
         if text[i] != "[":
@@ -290,22 +314,34 @@ def bracket_hits(text):
             i = word_end
             continue
         close, ranges = _parse_bracket(text, i)
-        first_close = close
-        # Keep the ordinary boundary for the outer scan, so a possible continuation cannot
-        # swallow another expression. One finding per opener suffices if either reading has
-        # a range. Otherwise try each ambiguous close as a literal member, without lexing.
-        while close is not None and not ranges and _ambiguous_close(text, i, close):
-            close, ranges = _parse_list(text, close + 1, "]")
-        if close is None:
+        last = text.rfind("]", i + 1)
+        region = text[i:last + 1] if last >= 0 else text[i:]
+        affected = any(c in region for c in ("'", '"', chr(92)))
+        # The exhaustive glob check found unset variables exposing a leading literal close:
+        # [$a]-z] becomes []-z]. A dollar inside the ordinary list gets the broad reading too.
+        affected |= "$" in text[i:close + 1 if close is not None else n]
+        if affected and last >= 0:
+            stripped = _strip_quotes(region)
+            _, stripped_ranges = _parse_bracket(stripped, 0)
+            # Every interior close may be a quoted member. Do not stop at any of them,
+            # or let atom recognition hide a range in this deliberately broad reading.
+            anywhere = re.findall(r"(?=(.-.))", stripped[1:-1])
+            ranges = list(dict.fromkeys(ranges + stripped_ranges + anywhere))
+        # Preserve terminal unclosed alternatives from round 5, including a buried quoted
+        # close at physical end of line. The range readings above need no adjacency rule.
+        unclosed = close is None or (affected and last >= 0 and (
+            _ambiguous_close(text, i, last) or not text[last + 1:].strip()))
+        if ranges and close is not None:
+            noun = "range" if len(ranges) == 1 else "ranges"
+            end = last if affected else close
+            yield f"{text[i:end + 1]} holds the {noun} {', '.join(ranges)}"
+        elif unclosed:
             yield (f"{text[i:i + 60].rstrip()} opens a bracket expression that nothing closes "
                    f"on its physical line in at least one reading, so a range in it cannot "
                    f"be ruled out,")
-            i = first_close + 1 if first_close is not None else i + 1
-            continue
-        if ranges:
-            noun = "range" if len(ranges) == 1 else "ranges"
-            yield f"{text[i:close + 1]} holds the {noun} {', '.join(ranges)}"
-        i = first_close + 1
+        # Only the ordinary close bounds the outer scan. The extra readings cannot swallow
+        # an independent opener later on this line.
+        i = close + 1 if close is not None else i + 1
 
 
 class Allowlist:

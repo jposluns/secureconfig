@@ -9,6 +9,8 @@ entry point does: choosing which files to read, loading tools/bracket_ranges_all
 line, the exit status, and failing closed on an unreadable guide, an unlistable directory, an
 unreadable allowlist, or a corpus with no bash block in it.
 
+Four direct quote-removal checks pin the context-free transformation as well.
+
 The REGRESSIONS groups preserve the reported bypasses and nearby variants, with their original
 in-block waiver attempts where present. Rounds 1 and 2 beat the joined-line lexing; round 3 beat the
 residual one-line lexing that decided whether a waiver comment was real (an escaped space before
@@ -17,7 +19,9 @@ delimiter, a fake POSIX atom swallowing a validator, quoting inside a parameter-
 and only the last marker attempt on a line being validated). Not every variant was fail-open:
 the round-2 trailing-marker `codex r2-1` case already produced two findings in round 2, while its
 preceding-marker counterpart produced zero. Round 4 found escaped and quoted closing brackets
-hiding a live range. Each reported bypass is at least one finding now: a range and an unclosed `[`
+hiding a live range. Round 5 found buried quoted closes and quote removal shifting a leading
+negation; the development fuzzer then found six unset-variable shifts of a literal close.
+Each reported bypass is at least one finding now: a range and an unclosed `[`
 are findings on their own physical line whatever surrounds them, a waiver lives only in
 tools/bracket_ranges_allow.txt keyed by the exact line, and the old in-block marker is itself a
 finding wherever it sits in a guide.
@@ -152,7 +156,7 @@ CASES = (
     ('double-quoted close with an unclosed alternative',
      doc('pattern=[!"]"'), 1, UNCLOSED),
     ('a possible continuation does not swallow the next expression',
-     doc('case "$1" in *[!\\]abc]*|*[!0-9]*) exit 2 ;; esac'), 1, '0-9'),
+     doc('case "$1" in *[!\\]abc]*|*[!0-9]*) exit 2 ;; esac'), 2, '0-9'),
     ("an alternative spanning a separate expression preserves both openers",
      doc("printf '%s\\n' '[\"key\"]' '[a-z]'"), 2, "a-z"),
     ('a single-quoted spelled set needs no alternative',
@@ -359,6 +363,93 @@ CASES += (
      doc("lo='a-'\nhi=z\nre=" + Q + "^[$lo$hi]+$" + Q + "\n[[ é =~ $re ]]"), 0, None),
 )
 
+# REGRESSIONS, ROUND 5, AND THE LAST-CLOSE RULE.
+CASES += (
+    ('round 5: a double-quoted close buried between letters',
+     doc('case "$1" in *[!"x]y"a-z]*) exit 2 ;; esac'), 1, 'a-z'),
+    ('round 5: a single-quoted close buried between letters',
+     doc('case "$1" in *[\'x]y\'a-z]*) exit 2 ;; esac'), 1, 'a-z'),
+    ('round 5: an ANSI-C quoted close buried between letters',
+     doc('case "$1" in *[$\'x]y\'a-z]*) exit 2 ;; esac'), 1, 'a-z'),
+    ('round 5: a locale-quoted close buried between letters',
+     doc('case "$1" in *[$"x]y"a-z]*) exit 2 ;; esac'), 1, 'a-z'),
+    ('round 5: nested quote characters around a buried close',
+     doc('case "$1" in *["\'x]y\'"a-z]*) exit 2 ;; esac'), 1, 'a-z'),
+    ('round 5: an escaped close followed by a buried quoted close',
+     doc('case "$1" in *[\\]\'x]y\'a-z]*) exit 2 ;; esac'), 1, 'a-z'),
+    ('round 5: mixed quotes around a buried close',
+     doc('case "$1" in *[!\'x]"y"\'a-z]*) exit 2 ;; esac'), 1, 'a-z'),
+    ('round 5: a space after a buried quoted close',
+     doc('case "$1" in *[!\'x] y\'a-z]*) exit 2 ;; esac'), 1, 'a-z'),
+    ('round 5: a quoted close at physical end of line',
+     doc('case "$1" in *[!"x]\ny"a-z]*) exit 2 ;; esac'), 1, 'guide.md:6:'),
+    ('round 5: empty quotes expose a leading glob negation',
+     doc('case "$1" in *[""!]a-z]*) exit 2 ;; esac'), 1, 'a-z'),
+    ('round 5: empty quotes expose a leading regex negation',
+     doc('re=[""^]a-z]\nprintf "%s\\n" "$1" | grep -qE "$re"'), 1, 'a-z'),
+    ('round 5: empty quotes expose a leading Bash regex negation',
+     doc('re=[""^]a-z]\n[[ $1 =~ $re ]]'), 1, 'a-z'),
+    ('quotes join the two range endpoints',
+     doc('case "$1" in *[a""-""z]*) exit 2 ;; esac'), 1, 'a-z'),
+    ('backslashes join the two range endpoints',
+     doc('case "$1" in *[\\a-\\z]*) exit 2 ;; esac'), 1, 'a-z'),
+    ('ANSI-C prefix deletion exposes a leading regex negation',
+     doc("re=[$''^]a-z]"), 1, 'a-z'),
+    ('locale prefix deletion exposes a leading regex negation',
+     doc('re=[$""^]a-z]'), 1, 'a-z'),
+    ('a quote after the ordinary close still affects the whole region',
+     doc('re=[x]""a-z]'), 1, 'a-z'),
+    ('a backslash after the ordinary close still affects the whole region',
+     doc('re=[x]\\a-z]'), 1, 'a-z'),
+    ('an interior close can itself be a range endpoint',
+     doc('case "$1" in *["x]y"]-z]*) exit 2 ;; esac'), 1, ']-z'),
+    ('no quote means no reading beyond the ordinary close',
+     doc('re=[x]a-z]'), 0, None),
+    ('a quote after the last close does not affect the region',
+     doc('re=[x]a-z]"'), 0, None),
+    ('quoted range-free members with a final close stay clean',
+     doc('case "$1" in *["x]y"abc]*) exit 2 ;; esac'), 0, None),
+    ('over-flagged: quotes between two subscripts reach a line-final close',
+     doc('digest = ("0" if digest[0] != "0" else "1") + digest[1:]'), 1, 'opens a bracket expression'),
+    ('over-flagged: a range outside an earlier quote-affected set',
+     doc('printf "%s\\n" \'["key"] a-z [abc]\''), 1, 'a-z'),
+)
+
+CASES += (
+    ("quote removal restores collating atoms for the ordinary parser",
+     doc("re=[[.'a'.]-[.'z'.]]"), 2, "[.a.]-[.z.]"),
+)
+
+QUOTE_CASES = (
+    ('[""^]a-z]', '[^]a-z]'),
+    ("[$''^]a-z]", '[^]a-z]'),
+    ('[$""!]a-z]', '[!]a-z]'),
+    ("[a" + BS + "-z$" + Q + Q + "$x]", '[a-z$x]'),
+)
+
+# Fixed counterexamples found by the development fuzzer with unset a, z and x.
+CASES += (
+    ('fuzz: glob [$a]-z]',
+     doc('case "$1" in *[$a]-z]*) exit 2 ;; esac'), 1, None),
+    ('fuzz: glob [$a]-x]',
+     doc('case "$1" in *[$a]-x]*) exit 2 ;; esac'), 1, None),
+    ('fuzz: glob [$z]-z]',
+     doc('case "$1" in *[$z]-z]*) exit 2 ;; esac'), 1, None),
+    ('fuzz: glob [$z]-x]',
+     doc('case "$1" in *[$z]-x]*) exit 2 ;; esac'), 1, None),
+    ('fuzz: glob [$x]-z]',
+     doc('case "$1" in *[$x]-z]*) exit 2 ;; esac'), 1, None),
+    ('fuzz: glob [$x]-x]',
+     doc('case "$1" in *[$x]-x]*) exit 2 ;; esac'), 1, None),
+)
+
+CASES += (
+    ("claude round 5: *[!'x]y'a-z]*",
+     doc('case "$1" in *[!\'x]y\'a-z]*) exit 2 ;; esac'), 1, "a-z"),
+    ("claude round 5: *[!$'x]y'a-z]*",
+     doc('case "$1" in *[!$\'x]y\'a-z]*) exit 2 ;; esac'), 1, "a-z"),
+)
+
 # (description, guide text, allowlist text, exact findings, substring or None)
 ALLOW_CASES = (
     ("an entry waives its exact line", doc(GREP), entry(GREP), 0, None),
@@ -547,13 +638,17 @@ def main() -> int:
             failures.append(f"{desc}: expected {want} finding(s), got {len(found)}: {found!r}")
         elif expected is not None and not any(expected in f for f in found):
             failures.append(f"{desc}: no finding contains {expected!r}: {found!r}")
+    for raw, expected in QUOTE_CASES:
+        actual = gate._strip_quotes(raw)
+        if actual != expected:
+            failures.append(f"quote removal: {raw!r}: expected {expected!r}, got {actual!r}")
     more, runs = entry_point_failures()
     failures += more
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")
         return 1
-    n = len(CASES) + len(ALLOW_CASES)
+    n = len(CASES) + len(ALLOW_CASES) + len(QUOTE_CASES)
     unseen = sum(1 for c in CASES if c[0].startswith("not seen:"))
     print(f"  ok    {n} recorded cases and {runs} entry-point runs for the bracket-ranges "
           f"gate: {n - unseen} behaviours checked, {unseen} disclosed blind spots still "

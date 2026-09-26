@@ -21,3 +21,4 @@ realtime-webhooks.md	        headers += ("X-GitHub-Event: " + os.environ["AUDIT_
 self-hosted-idp.md	  | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["issuer"])'	a Python JSON dictionary lookup printing the issuer field, not a bracket pattern
 vault.md	  capabilities = ["read"]	a Vault HCL capability list containing the literal permission read, not a pattern
 vault.md	  capabilities = ["create", "update"]	a Vault HCL capability list containing the literal permissions create and update, not a pattern
+realtime-webhooks.md	        digest = ("0" if digest[0] != "0" else "1") + digest[1:]	Python indexing and slicing deliberately corrupt a probe HMAC, not an accept-list validator
