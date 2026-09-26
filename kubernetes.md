@@ -189,31 +189,61 @@ the literal written here. Keep issuance narrow rather than absolute, because kub
 be able to name every holder. A firewall rule in front of an etcd still listening on `0.0.0.0` is one
 misconfiguration away from the same outcome.
 
-**The kubelet's default depends on how it is configured, and the two answers are opposites.**
-Configured by command-line flag, `--anonymous-auth` carries "Default: true", and Kubernetes states that
-"requests to the kubelet's HTTPS endpoint that are not rejected by other configured authentication
-methods are treated as anonymous requests", given the username `system:anonymous`. Configured by file,
-the same settings default the other way: the `KubeletConfiguration` v1beta1 reference gives
-`authentication` the defaults "anonymous: enabled: false" and "webhook: enabled: true", and gives
-`authorization` the default "mode: Webhook". kubeadm and the managed distributions configure by file, so
-those nodes are not anonymous by default and a flag-configured node is. The EKS AMI's own node
-bootstrap writes a `KubeletConfiguration` carrying `Anonymous.Enabled: false`, `Mode: "Webhook"` and
-`ReadOnlyPort: 0`, which is the file path rather than the flag path. Assume neither. Read the
-effective configuration on a node, and where the flags are in use set `--anonymous-auth=false` and
-`--authorization-mode=Webhook`. Port 10250 runs commands in containers, so it should never be reachable
-from outside the cluster either way.
+**The kubelet's defaults depend on how it is configured.** At Kubernetes v1.37.1
+(commit `f78e722310e50bcaca9276be22276d9e91d91308`), the legacy command-line defaults are
+`--anonymous-auth=true`, `--authentication-token-webhook=false` and
+`--authorization-mode=AlwaysAllow`. The v1beta1 `KubeletConfiguration` defaults instead are
+`authentication.anonymous.enabled: false`, `authentication.webhook.enabled: true` and
+`authorization.mode: Webhook`. These are defaults for omitted settings, not enforced policy.
+An explicitly supplied command-line flag overrides the configuration file, as the pinned `--config`
+help states. Read the configuration and the node's actual startup arguments together. Where flags
+configure these controls, set `--anonymous-auth=false`, `--authentication-token-webhook=true` and
+`--authorization-mode=Webhook`. The authentication documentation in Sources explains the resulting
+anonymous identity and webhook checks.
 
-**The read-only port has the same split, and the same answer.** The `--read-only-port` FLAG carries
-"Default: 10255", and Kubernetes describes that listener as serving "with no
-authentication/authorization (set to 0 to disable)". The `KubeletConfiguration` v1beta1 field carries
-"Default: 0 (disabled)". So a flag-configured node serves an unauthenticated listener nobody asked for,
-and a file-configured node does not unless something turned it on. GKE is the case where something did:
-it states that "The kubelet read-only port is disabled by default in new clusters that run version 1.32
-or later", which is only worth saying because older clusters have it on. Read the effective
-configuration here too, and remember that 10255 is a separate listener, so securing 10250 does not
-touch it.
+kubeadm's v1.37.1 `KubeletConfiguration` sets anonymous authentication to false, token webhook
+authentication to true and authorization to `Webhook`, and leaves `readOnlyPort` at 0. Its source
+warns when a user supplies different values for these controls; it preserves those overrides rather
+than forcing the recommended values. A default kubeadm configuration therefore disables anonymous
+access and the read-only service, but kubeadm's involvement alone does not prove a node is safe.
+The separately pinned EKS AMI bootstrap cited below writes `Anonymous.Enabled: false`,
+`Mode: "Webhook"` and `ReadOnlyPort: 0`; do not generalize that snapshot to every managed distribution.
+
+**Both ports need a bind and network boundary.** The v1.37.1 default `address` is `0.0.0.0`,
+with the secured API on port 10250. The read-only server takes a bind address from its caller;
+that caller is outside the offline source subset, so its wiring to `address` was not verified here. The pinned `--address` help describes both `0.0.0.0` and `::` as listening on all interfaces
+and IP address families. Do not interpret `0.0.0.0` as an IPv4-only restriction: IPv6 can be included
+where the host supports dual-stack wildcard sockets. Bind `address` (or `--address`) to the node's
+intended private address and restrict access to the control plane and other authorized cluster
+clients. Check both address families. Port 10250 can expose container execution through its
+debugging handlers, so authentication does not make public reachability appropriate.
+
+**Disable the separate read-only service.** The command-line reference gives `--read-only-port`
+a default of 10255; the pinned legacy-default code assigns `ports.KubeletReadOnlyPort`, which `pkg/cluster/ports/ports.go:37` sets to 10255. The v1beta1
+`readOnlyPort` field defaults to 0 (disabled). Set `readOnlyPort: 0` in the configuration file or
+`--read-only-port=0`, and remove any overriding startup flag that enables it. In v1.37.1 the
+read-only server uses plain HTTP and installs no authentication or authorization filter.
+It exposes `/pods` (pod specifications), `/stats/summary`, `/metrics`, `/metrics/cadvisor`,
+`/metrics/resource`, `/metrics/probes` and health checks. This version has no `/spec` handler;
+do not rely on historical endpoint lists. Securing 10250 does not secure 10255.
+
+GKE's cited documentation says the read-only port is disabled by default in **new clusters running
+1.32 or later**. That is not proof that every older cluster still has it enabled, or that an upgraded
+cluster has it disabled. Check the provider's effective node configuration. The provider citations
+are retained context; this offline source audit did not recheck their current contents.
 
 ## Verify
+
+**REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
+the authoring host forbids opening listeners without an isolated network namespace, and has none.
+The existing commands state the expected workload and API outcomes. For the node scans, an exposed
+kubelet is expected to show 10250 open and, when enabled, 10255 open; after private binding and
+network restrictions, neither should be reachable from an untrusted network, while an authorized
+cluster client must still reach 10250. With `readOnlyPort: 0`, 10255 should have no kubelet listener
+even from that authorized client. Check every configured address family and retain an authorized
+positive control so an unavailable node is not mistaken for successful isolation. The pinned
+listener/default sources below support these expectations; no live result is claimed.
+TODO row 1.NEW-DEMO tracks demonstration of these checks against exposed and fixed deployments.
 
 ```bash
 kubectl get svc -A | grep -E 'NodePort|LoadBalancer'                 # only the Gateway's Service
@@ -350,8 +380,11 @@ allowed ranges out of the provider's own configuration rather than inferring the
 - Nmap host discovery (`-Pn`): https://nmap.org/book/man-host-discovery.html ; port specification (`-p`): https://nmap.org/book/man-port-specification.html ; IPv6 scanning (`-6`): https://nmap.org/book/man-misc-options.html
 - Kubernetes ports and protocols (6443 API server, 2379 and 2380 etcd, 10250 kubelet, 10259 scheduler, 10257 controller manager): https://kubernetes.io/docs/reference/networking/ports-and-protocols/
 - Kubernetes kubelet authentication and authorization (unrejected requests treated as anonymous, `--anonymous-auth`, `--authorization-mode=Webhook`): https://kubernetes.io/docs/reference/access-authn-authz/kubelet-authn-authz/
-- Kubernetes kubelet command-line reference (`--anonymous-auth` "Default: true", `--read-only-port` "Default: 10255" serving "with no authentication/authorization"): https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/
-- Kubernetes `KubeletConfiguration` v1beta1 reference (the file defaults: `anonymous: enabled: false`, `webhook: enabled: true`, `mode: Webhook`, `readOnlyPort` "Default: 0 (disabled)"): https://kubernetes.io/docs/reference/config-api/kubelet-config.v1beta1/
+- Kubernetes v1.37.1 source, legacy flag defaults (anonymous true, webhook false, AlwaysAllow, read-only port constant): https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/cmd/kubelet/app/options/options.go#L196-L224 ; explicit flags override the file (`--config` help): https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/cmd/kubelet/app/options/options.go#L281 ; wildcard address families and read-only flag semantics: https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/cmd/kubelet/app/options/options.go#L373-L398 ; read-only port constant 10255: https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/pkg/cluster/ports/ports.go#L32-L37
+- Kubernetes v1.37.1 source, v1beta1 defaults (`address`, secured port, anonymous false, webhook true, Webhook authorization): https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/pkg/kubelet/apis/config/v1beta1/defaults.go#L85-L102 ; field contract (`0.0.0.0`, 10250, `readOnlyPort: 0`): https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/staging/src/k8s.io/kubelet/config/v1beta1/types.go#L160-L176
+- Kubernetes v1.37.1 kubeadm configuration (read-only port 0, anonymous false, webhook true): https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/cmd/kubeadm/app/componentconfigs/kubelet.go#L33-L48 ; serialization: https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/cmd/kubeadm/app/componentconfigs/kubelet.go#L95-L100 ; authentication/authorization defaults and override warnings: https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/cmd/kubeadm/app/componentconfigs/kubelet.go#L144-L188 ; warning text: https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/cmd/kubeadm/app/componentconfigs/utils.go#L66-L71
+- Kubernetes v1.37.1 server (secured address/port, read-only HTTP with nil auth): https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/pkg/kubelet/server/server.go#L181-L250 ; conditional auth filter and debugging handlers: https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/pkg/kubelet/server/server.go#L339-L375 ; read-only handlers, with no `/spec` registration: https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/pkg/kubelet/server/server.go#L477-L572 ; `/stats/summary`: https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/pkg/kubelet/server/stats/handler.go#L109-L133
+- Kubernetes command-line and configuration references (usage context; the numeric legacy port 10255 remains sourced to the CLI reference because the constant definition is absent from the offline source subset): https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/ ; https://kubernetes.io/docs/reference/config-api/kubelet-config.v1beta1/
 - Amazon EKS AMI node bootstrap, the default `KubeletConfiguration` it writes (`Anonymous.Enabled: false`, `Mode: "Webhook"`, `ReadOnlyPort: 0`): https://github.com/awslabs/amazon-eks-ami/blob/6caf8311a3c6a8da71ac7e5e83f9c2e06287039a/nodeadm/internal/kubelet/config.go
 - Kubernetes kubeconfig API reference (`ExecConfig`, whose `env` "defines additional environment variables to expose to the process"): https://kubernetes.io/docs/reference/config-api/kubeconfig.v1/
 - Kubernetes encrypting confidential data at rest ("By default, the API server stores plain-text representations of resources into etcd, with no at-rest encryption"): https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/
