@@ -139,7 +139,6 @@ marked, and those are the ones worth taking first.
 | --- | --- | --- |
 | 3.20 | Verify-marking convention: every Verify step states explicitly whether it was demonstrated or reasoned, enforced corpus-wide (maintainer ruling, 2026-09-25). (M, L) | `[gap]` |
 | 3.23 | Shell-block gate: flag known secret-taking flags of non-curl tools in guide blocks (for example `lk --api-secret`, `turnutils_uclient -w`), which no gate sees today because `PROBE_CMDS` lists network probes only (from the #353 plan, maintainer ruling 2026-09-25). (L, S) | `[gap]` |
-| 3.24 | Gate suite: print a notice when the local `python3` release differs from CI's pinned `PYTHON_VERSION` in `checks.yml`, since `html.parser` behaviour can differ between releases and a local green then predicts CI less well (from the #351 review, maintainer ruling 2026-09-25). (L, S) | `[gap]` |
 
 ## Decisions
 

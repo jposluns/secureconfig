@@ -85,7 +85,10 @@ and a SHA-256-verified shellcheck, so an outage at GitHub or in those downloads 
 with no change in this repository. Run the suite before pushing. A local run lints with whatever
 shellcheck is on PATH and skips the lint, without failing, when none is installed; CI installs the
 pinned version and asserts it before the suite runs, so a local green predicts CI only when the
-shell-block gate's pass line names that version.
+shell-block gate's pass line names that version. The suite also compares local Python with CI's
+pinned `PYTHON_VERSION`: a mismatch or unavailable comparison prints an advisory SKIP,
+never a failure, because `html.parser` behaviour can differ between releases.
+A matching release prints an ok line.
 
 The weekly lychee workflow sweeps external links and stays advisory, because a third-party site
 that is down or refuses automated clients must never block a merge.
