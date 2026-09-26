@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.141**, **2.48**, **3.25**, **4.12**.
+Next ids: **1.142**, **2.48**, **3.25**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -43,7 +43,6 @@ many.
 | ID | Item | Tags |
 | --- | --- | --- |
 | 1.135 | Secret-bearing blocks that a trap line cannot fix, found by the #340 review, on the maintainer's 2026-09-25 ruling: fix per block, argv breaches first. Argv: `chat-uis.md:20` and `image-gen-uis.md:24` (secrets in launch arguments). Environment-held: `realtime-webhooks.md` (`AUDIT_COOKIE`, `AUDIT_WEBHOOK_SECRET`), `litellm.md` (the exported and ambient master key), `secrets.md:18` (`TOKEN`), `minio.md:11` and `mlflow.md:25` (exports), `headless-cms-instant-api.md` (`CMS_PROBE_HEADER`). Also `ray.md:125` (a prefix assignment without rule 7's guard), `egress-metadata.md` (the commented IMDSv2 token recipes keep the token in a shell variable) and `low-code-builders.md` (`NC_CONNECTION_ENCRYPT_KEY` tested in a container shell). For each, prompt for the secret, read it from a file, or state the assumption. (H, M) | `[gap]` |
-| 1.137 | `model-servers.md`, remaining credentials on command lines, found while closing row 1.135's llama.cpp and SGLang items: vLLM's key flag (the guide pins no flag; `VLLM_API_KEY` is declared in `vllm/envs.py` at both pinned commits, `dee37d89` and `8c1557a7`, but its consumer and any `--config` file input were not verified), Triton's `--http-restricted-api` and `--grpc-restricted-protocol` shared secrets inside the flag value (no other input verified), and text-generation-webui's `--gradio-auth user:password`, `--api-key KEY` and `--admin-key` (line 105 already names `--gradio-auth-path FILE`; whether `user_data/CMD_FLAGS.txt` is read in-process at the pinned `shared.py` was not verified). Also inherited `LLAMA_ARG_*` variables, which can rebind llama-server the way `SURREAL_*` rebinds SurrealDB (`surrealdb.md` refuses them). For each: cite the non-argv inputs at the pinned sources, or say plainly that none exists, and add the `/proc/<pid>/environ` sentence to any environment recipe. (M, S) | `[gap]` |
 
 ## Priority 2: Deepen existing guides
 
@@ -113,6 +112,7 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.138 | `realtime-voice-infra.md`: the key-rotation test never shows how the rotated token is presented, and the obvious forms put a live bearer token in argv. Show it sent as a header on stdin (`--header @-`) to the existing `/rtc/validate` probe, once LiveKit v1.13.7 is confirmed to accept the token that way on that route and to answer old and new tokens distinguishably (from the #353 plan, maintainer ruling 2026-09-25). (L, S) | `[gap]` |
 | 1.139 | `realtime-voice-infra.md`: `turnserver.conf` holds the TURN password in plaintext. Document the hashed-key alternative and whether `turnadmin`'s key derivation takes the password in argv at coturn 4.18.0 (from the #353 plan, maintainer ruling 2026-09-25). (L, S) | `[gap]` |
 | 1.140 | `realtime-voice-infra.md`: evaluate a TURN allocation client that takes the password outside argv (stdin, a file or the environment), verified at a pinned tag, to replace `turnutils_uclient -w` in the allocation test, as CONTRIBUTING rule 7's third exception asks (from #354, maintainer ruling 2026-09-25). (L, S) | `[gap]` |
+| 1.141 | Create-once key writers (`model-servers.md`'s llama.cpp, SGLang, vLLM and text-generation-webui blocks): a default ACL on the target directory is inherited by new files and defeats `umask 077`, so a key file can be group-readable while the guide says `0600`. Refuse a directory carrying a default ACL (`getfacl`) and assert the file's mode after the write, verifying setfacl/getfacl behaviour first (from the #355 review, maintainer ruling 2026-09-25). (L, S) | `[gap]` |
 ## Priority 3: Add missing content
 
 Gaps from the same audit, one row per missing guide. A gap raised by more than one family is
