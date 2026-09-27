@@ -952,7 +952,8 @@ _ENV_SECRET_RE = re.compile(
     r"(?:^|_)(?:SECRET|PASSWORD|PASSWD|TOKEN|PWD|PASS)(?:_|$)|"
     r"(?:^|_)(?:API|PRIVATE|ACCESS)_KEY$")
 _ENV_NONSECRET_RE = re.compile(
-    r"(?:_FILE|_PATH|_KEY_ID|_PUBLIC_KEY|_TTL|_TTL_SECONDS)$")
+    r"(?:_URL|_URI|_ENDPOINT|_HOST|_PORT|_PATH|_FILE|_DIR|_NAME|"
+    r"_KEY_ID|_PUBLIC_KEY|_TTL|_TTL_SECONDS)$")
 _ENV_VALUE_OPTS = frozenset(("-u", "--unset", "-C", "--chdir",
                             "-a", "--argv0", "-f", "--file"))
 _ENV_NOARG_OPTS = frozenset((
@@ -1075,10 +1076,12 @@ def _tool_credential_flags(word, args, shell_builtin=False):
     _ENV_CREDENTIAL_NAMES; generic _ENV_SECRET_RE words must be underscore-
     delimited components (case-insensitive).
     Bare AUTH, CREDENTIAL, CREDENTIALS, KEY and arbitrary application names
-    are not covered. PWD (working directory), *_FILE, *_PATH, KEY_ID,
-    *_KEY_ID, PUBLIC_KEY, *_PUBLIC_KEY, *_TTL and *_TTL_SECONDS are
-    treated as metadata, unless
-    their value visibly contains a credential URI. No value dataflow is done.
+    are not covered. PWD (working directory), *_URL, *_URI, *_ENDPOINT,
+    *_HOST, *_PORT, *_PATH, *_FILE, *_DIR, *_NAME, KEY_ID, *_KEY_ID,
+    PUBLIC_KEY, *_PUBLIC_KEY, *_TTL and *_TTL_SECONDS are treated as metadata,
+    unless their value visibly contains a credential URI. Other *_ID names
+    retain credential-name matching, including SECRET_ID and TOKEN_ID.
+    No value dataflow is done.
     Vault login checks only _VAULT_LOGIN_KEY's methods/keys; its known
     value-taking flags accept one/two dashes and =/separate values. Other
     flags, abbreviated names and options supplied through expansion are not
@@ -3677,6 +3680,33 @@ for _name in (
 ):
     _ROUND2_ARGV_CASES.append(('env %s="$PW" tool' % _name, 1))
 _TOOL_ARGV_CASES.extend(_ROUND2_ARGV_CASES)
+
+# Round-3 QA: final locator components do not hide credential-bearing URIs.
+_ROUND3_ARGV_CASES = []
+for _suffix in ("URL", "URI", "ENDPOINT", "HOST", "PORT", "PATH", "FILE",
+                "DIR", "NAME"):
+    for _value, _count in (
+        ("https://example.com/token", 0),
+        ("https://u:$PW@h/token", 1),
+        ("https://example.com/token?access_token=$T", 1),
+    ):
+        _ROUND3_ARGV_CASES.append((
+            'env X_TOKEN_%s=%s tool' % (_suffix, _value), _count))
+_ROUND3_ARGV_CASES += [
+    ('env OAUTH_TOKEN_ENDPOINT=https://example.com/token tool', 0),
+    ('env app_password_url=https://example.com/login tool', 0),
+    ('env OPENAI_API_KEY_FILE=/run/key tool', 0),
+    ('env TOKENIZERS_PARALLELISM=false tool', 0),
+    ('env X_TOKEN_URL_VALUE="$T" tool', 1),
+    ('env SECRET_ID="$T" tool', 1),
+    ('env TOKEN_ID="$T" tool', 1),
+    ('env APP_ID=public tool', 0),
+    ('env AWS_ACCESS_KEY_ID=public tool', 0),
+]
+for _name in ("GITHUB_TOKEN", "HF_TOKEN", "API_TOKEN", "TOKEN",
+              "AWS_SESSION_TOKEN"):
+    _ROUND3_ARGV_CASES.append(('env %s=$T tool' % _name, 1))
+_TOOL_ARGV_CASES.extend(_ROUND3_ARGV_CASES)
 
 for _i, (_cmd, _count) in enumerate(_TOOL_ARGV_CASES):
     SELF_TEST_CASES.append((
