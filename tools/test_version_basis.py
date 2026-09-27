@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 """Mutation and integration tests for accidental metadata/summary drift."""
+import contextlib
+import datetime
+import io
 import json
 import subprocess
 import sys
@@ -174,6 +177,120 @@ class VersionBasisTests(unittest.TestCase):
         result = subprocess.run([sys.executable, str(vb.ROOT / 'tools/version_basis.py'), '--check'],
                                 capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
+
+
+class RoundTwoTests(unittest.TestCase):
+    def test_calendar_bound(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            log = root / 'CHANGELOG.md'
+            with patch.object(vb, 'ROOT', root):
+                log.write_text('## 2026-09-25\n## 2026-09-26\n## 2026-08-01\n')
+                self.assertEqual(vb.latest_change(), datetime.date(2026, 9, 26))
+                vb.updated(document(fixture()))
+                log.write_text('## 2026-09-25\n')
+                with self.assertRaisesRegex(ValueError, 'newest CHANGELOG'):
+                    vb.updated(document(fixture()))
+                for content in ('# No dated heading\n', '## 2026-02-30\n'):
+                    log.write_text(content)
+                    with self.assertRaises(ValueError):
+                        vb.updated(document(fixture()))
+                log.unlink()
+                with self.assertRaises(OSError):
+                    vb.updated(document(fixture()))
+
+    def test_digest_diagnostic(self):
+        body = BODY + 'A reviewed qualification.\n'
+        with self.assertRaises(ValueError) as caught:
+            vb.updated(document(fixture(), body), 'fixture.md')
+        self.assertIn(vb.digest(body), str(caught.exception))
+        self.assertIn('python3 tools/version_basis.py --rebind fixture.md', str(caught.exception))
+
+    def test_rebind_only_digest_and_strict_validation(self):
+        data = fixture()
+        data = {'claims': data.pop('claims'), **data}
+        data['claims']['control']['text'] = data['body_sha256']
+        raw = document(data).replace('"body_sha256":', r'"body_\u0073ha256" :')
+        raw += 'A reviewed qualification.\n'
+        expected_hash = vb.digest(vb.without_summary(vb.split(raw)[1]))
+        result = vb.rebound(raw, 'fixture.md')
+        self.assertEqual(result, raw.replace(
+            r'"body_\u0073ha256" : "' + data['body_sha256'] + '"',
+            r'"body_\u0073ha256" : "' + expected_hash + '"'))
+        self.assertEqual(vb.rebound(result), result)
+        bad = fixture()
+        bad['claims']['control']['status'] = 'DEMONSTRATED'
+        with self.assertRaisesRegex(ValueError, 'needs evidence'):
+            vb.rebound(document(bad, BODY + 'Body edit.\n'))
+        with self.assertRaisesRegex(ValueError, 'bad body digest'):
+            vb.rebound(document({**fixture(), 'body_sha256': 'invalid'}))
+
+    def test_cli_review_workflow(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'tools').mkdir()
+            (root / 'tools/version_basis_guides.txt').write_text('fixture.md\n')
+            (root / 'CHANGELOG.md').write_text('## 2026-09-26\n')
+            path = root / 'fixture.md'
+            raw = vb.updated(document(fixture())) + 'A reviewed qualification.\n'
+            path.write_text(raw)
+            def run(*args):
+                output = io.StringIO()
+                with patch.object(vb, 'ROOT', root), patch.object(sys, 'argv', ['version_basis.py', *args]), \
+                        contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
+                    rc = vb.main()
+                return rc, output.getvalue()
+            self.assertEqual(run('--write')[0], 1)
+            self.assertEqual(path.read_text(), raw)
+            rc, output = run('--rebind', str(path))
+            self.assertEqual(rc, 0, output)
+            self.assertIn('asserts the claim inventory was reviewed', output)
+            old = fixture()['body_sha256']
+            new = vb.digest(BODY + 'A reviewed qualification.\n')
+            self.assertEqual(path.read_text(), raw.replace(old, new, 1))
+            self.assertEqual(run('--write')[0], 0)
+            self.assertEqual(run('--check', str(path))[0], 0)
+            before = path.read_bytes()
+            self.assertEqual(run('--rebind', str(root / 'other.md'))[0], 1)
+            self.assertEqual(path.read_bytes(), before)
+            invalid = path.read_text().replace('"status": "REASONED"', '"status": "DEMONSTRATED"')
+            path.write_text(invalid)
+            self.assertEqual(run('--rebind', str(path))[0], 1)
+            self.assertEqual(path.read_text(), invalid)
+
+    def test_rebind_does_not_refresh_stale_summary(self):
+        raw = vb.updated(document(fixture()))
+        raw = raw.replace('control: Requires authentication.', 'control: Stale summary.')
+        raw += 'A reviewed qualification.\n'
+        result = vb.rebound(raw)
+        self.assertIn('control: Stale summary.', result)
+        self.assertNotEqual(vb.updated(result), result)
+
+    def test_multiline_emission(self):
+        data = fixture()
+        other = URL + '-other'
+        data['components']['product']['sources'][vb.source_id(other)] = other
+        front = vb.front_matter(data)
+        self.assertEqual(vb.split(front + BODY)[0], data)
+        lines = front.splitlines()
+        for key in data['components']['product']['sources']:
+            self.assertEqual(sum(line.count('"' + key + '":') for line in lines), 1)
+        self.assertFalse(any(SID in line and vb.source_id(other) in line for line in lines))
+        self.assertEqual(sum('"control": {' in line for line in lines), 1)
+        self.assertEqual(len(body_lines(front + BODY)), len((front + BODY).splitlines()))
+
+    def test_shape_cli_front_matter_refusals(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for front in ('---\ntitle: foreign\n---\n',
+                          '---\nversion_basis: {bad}\n---\n',
+                          '---\nversion_basis: {}\n'):
+                (root / 'fixture.md').write_text(front + BODY)
+                result = subprocess.run([sys.executable, str(vb.ROOT / 'tools/check_guide_shape.py'),
+                                         str(root)], capture_output=True, text=True)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn('FAIL  fixture.md: invalid front matter:', result.stdout)
+                self.assertNotIn('Traceback', result.stdout + result.stderr)
 
 
 if __name__ == '__main__':

@@ -5,13 +5,104 @@ version_basis: {
   "documentation_checked": "2026-09",
   "body_sha256": "32f9ebf39c23f73748283eca4a5c958f05661d03c0c4222249eae570c1dc715e",
   "components": {
-    "docs": {"name": "Vault documentation", "basis": "unknown", "sources": {"sbffd38b4758e": "https://developer.hashicorp.com/vault/docs/concepts/dev-server", "se38e85360763": "https://developer.hashicorp.com/vault/docs/commands/server", "sbfb9c60f21c1": "https://developer.hashicorp.com/vault/docs/configuration/listener/tcp", "s60d6655e9803": "https://developer.hashicorp.com/vault/docs/configuration/storage/raft", "sf7bd8360ca01": "https://developer.hashicorp.com/vault/docs/concepts/seal", "s847725e335a1": "https://developer.hashicorp.com/vault/docs/commands/operator/init", "s6a139716500f": "https://developer.hashicorp.com/vault/docs/audit", "s0f36ae51e56b": "https://developer.hashicorp.com/vault/docs/concepts/production-hardening", "sa1a925943f6a": "https://developer.hashicorp.com/vault/api-docs/system/health", "sfbfbd7179dca": "https://developer.hashicorp.com/vault/docs/concepts/policies", "s85efb0c5061e": "https://developer.hashicorp.com/vault/docs/auth/login-mfa", "sf1aad6c3d00d": "https://developer.hashicorp.com/vault/docs/configuration", "sb271b7950e37": "https://developer.hashicorp.com/vault/docs/concepts/ha", "s91710ca3e5c1": "https://developer.hashicorp.com/vault/docs/secrets/kmip", "sd7d57255b0b5": "https://developer.hashicorp.com/vault/docs/agent-and-proxy/agent", "s8320687a6d11": "https://developer.hashicorp.com/vault/docs/agent-and-proxy/proxy", "sbf26b6d0ef76": "https://developer.hashicorp.com/vault/docs/configuration/seal/awskms", "s3036564c8eb4": "https://developer.hashicorp.com/vault/docs/configuration/seal/transit", "s6a0b17f5713a": "https://developer.hashicorp.com/vault/docs/commands/operator/unseal", "s89677a91be0d": "https://developer.hashicorp.com/vault/docs/commands/operator/rekey", "scfd7c15adedf": "https://developer.hashicorp.com/vault/docs/audit/file", "s32194cc039b1": "https://developer.hashicorp.com/vault/docs/audit/syslog", "s6a89353a6c03": "https://developer.hashicorp.com/vault/api-docs/system/audit", "sd66fc0bcfb15": "https://developer.hashicorp.com/vault/docs/audit/schema", "s4bc92d253ba6": "https://developer.hashicorp.com/vault/docs/commands/audit/list", "s449e83b31426": "https://developer.hashicorp.com/vault/docs/concepts/tokens", "s923f5369652b": "https://developer.hashicorp.com/vault/docs/commands/token/revoke", "s426748068836": "https://developer.hashicorp.com/vault/docs/commands/operator/generate-root", "sab78482b691b": "https://developer.hashicorp.com/vault/docs/commands", "s0f2cf5468884": "https://developer.hashicorp.com/vault/docs/commands/login", "s607f5b7aafbc": "https://developer.hashicorp.com/vault/docs/commands/policy/write", "sf7640abb07c2": "https://developer.hashicorp.com/vault/api-docs/secret/kv/kv-v2", "s745b51dd1719": "https://developer.hashicorp.com/vault/docs/auth/approle", "s553adec7c375": "https://developer.hashicorp.com/vault/api-docs/auth/approle", "s3cf51daf4c81": "https://developer.hashicorp.com/vault/docs/auth/approle/approle-pattern", "s45334d3270eb": "https://developer.hashicorp.com/vault/docs/commands/auth/enable", "scfa855ec9d87": "https://developer.hashicorp.com/vault/api-docs/auth/kubernetes", "sf213104862ac": "https://developer.hashicorp.com/vault/docs/auth/jwt", "sa79f2fd07092": "https://developer.hashicorp.com/vault/docs/concepts/response-wrapping", "sca6c552728d7": "https://developer.hashicorp.com/vault/api-docs/system/wrapping-lookup", "s17fb33326e35": "https://developer.hashicorp.com/vault/docs/commands/write", "sd1209454cb98": "https://developer.hashicorp.com/vault/docs/commands/unwrap", "s1437757f255b": "https://developer.hashicorp.com/vault/api-docs/system/metrics", "s84bf68313c5d": "https://developer.hashicorp.com/vault/api-docs/system/pprof", "sabe0751ee280": "https://developer.hashicorp.com/vault/api-docs/system/init", "s51416363da81": "https://developer.hashicorp.com/vault/api-docs/system/leader", "s1e239e51209c": "https://developer.hashicorp.com/vault/api-docs/system/seal-status", "sd032f083ae99": "https://developer.hashicorp.com/vault/docs/commands/operator/raft", "s70ec02f4b4d7": "https://developer.hashicorp.com/vault/docs/commands/status", "sdb9905c2f649": "https://developer.hashicorp.com/vault/docs/commands/token/lookup"}},
-    "run": {"name": "Vault loopback run", "basis": "2.1.1", "sources": {"sd936be5e4c41": "https://github.com/hashicorp/vault/blob/v2.1.1/builtin/credential/approle/backend.go"}},
-    "ha": {"name": "Vault handler source", "basis": "v1.21.0", "sources": {"s8c81f240066a": "https://raw.githubusercontent.com/hashicorp/vault/v1.21.0/http/handler.go"}},
-    "forward": {"name": "Vault forwarding source", "basis": "v1.20.0", "sources": {"sfdb628929b01": "https://raw.githubusercontent.com/hashicorp/vault/v1.20.0/http/logical.go"}},
-    "curl": {"name": "curl minimum write-out version", "basis": "7.75.0", "sources": {"s2b2686afaf41": "https://curl.se/docs/manpage.html"}},
-    "jwt-min": {"name": "Vault JWT audience minimum", "basis": "1.17", "sources": {"sf213104862ac": "https://developer.hashicorp.com/vault/docs/auth/jwt"}},
-    "wrap-history": {"name": "Vault historical wrapping qualification", "basis": "0.8", "sources": {"sa79f2fd07092": "https://developer.hashicorp.com/vault/docs/concepts/response-wrapping"}}
+    "docs": {
+      "name": "Vault documentation",
+      "basis": "unknown",
+      "sources": {
+        "sbffd38b4758e": "https://developer.hashicorp.com/vault/docs/concepts/dev-server",
+        "se38e85360763": "https://developer.hashicorp.com/vault/docs/commands/server",
+        "sbfb9c60f21c1": "https://developer.hashicorp.com/vault/docs/configuration/listener/tcp",
+        "s60d6655e9803": "https://developer.hashicorp.com/vault/docs/configuration/storage/raft",
+        "sf7bd8360ca01": "https://developer.hashicorp.com/vault/docs/concepts/seal",
+        "s847725e335a1": "https://developer.hashicorp.com/vault/docs/commands/operator/init",
+        "s6a139716500f": "https://developer.hashicorp.com/vault/docs/audit",
+        "s0f36ae51e56b": "https://developer.hashicorp.com/vault/docs/concepts/production-hardening",
+        "sa1a925943f6a": "https://developer.hashicorp.com/vault/api-docs/system/health",
+        "sfbfbd7179dca": "https://developer.hashicorp.com/vault/docs/concepts/policies",
+        "s85efb0c5061e": "https://developer.hashicorp.com/vault/docs/auth/login-mfa",
+        "sf1aad6c3d00d": "https://developer.hashicorp.com/vault/docs/configuration",
+        "sb271b7950e37": "https://developer.hashicorp.com/vault/docs/concepts/ha",
+        "s91710ca3e5c1": "https://developer.hashicorp.com/vault/docs/secrets/kmip",
+        "sd7d57255b0b5": "https://developer.hashicorp.com/vault/docs/agent-and-proxy/agent",
+        "s8320687a6d11": "https://developer.hashicorp.com/vault/docs/agent-and-proxy/proxy",
+        "sbf26b6d0ef76": "https://developer.hashicorp.com/vault/docs/configuration/seal/awskms",
+        "s3036564c8eb4": "https://developer.hashicorp.com/vault/docs/configuration/seal/transit",
+        "s6a0b17f5713a": "https://developer.hashicorp.com/vault/docs/commands/operator/unseal",
+        "s89677a91be0d": "https://developer.hashicorp.com/vault/docs/commands/operator/rekey",
+        "scfd7c15adedf": "https://developer.hashicorp.com/vault/docs/audit/file",
+        "s32194cc039b1": "https://developer.hashicorp.com/vault/docs/audit/syslog",
+        "s6a89353a6c03": "https://developer.hashicorp.com/vault/api-docs/system/audit",
+        "sd66fc0bcfb15": "https://developer.hashicorp.com/vault/docs/audit/schema",
+        "s4bc92d253ba6": "https://developer.hashicorp.com/vault/docs/commands/audit/list",
+        "s449e83b31426": "https://developer.hashicorp.com/vault/docs/concepts/tokens",
+        "s923f5369652b": "https://developer.hashicorp.com/vault/docs/commands/token/revoke",
+        "s426748068836": "https://developer.hashicorp.com/vault/docs/commands/operator/generate-root",
+        "sab78482b691b": "https://developer.hashicorp.com/vault/docs/commands",
+        "s0f2cf5468884": "https://developer.hashicorp.com/vault/docs/commands/login",
+        "s607f5b7aafbc": "https://developer.hashicorp.com/vault/docs/commands/policy/write",
+        "sf7640abb07c2": "https://developer.hashicorp.com/vault/api-docs/secret/kv/kv-v2",
+        "s745b51dd1719": "https://developer.hashicorp.com/vault/docs/auth/approle",
+        "s553adec7c375": "https://developer.hashicorp.com/vault/api-docs/auth/approle",
+        "s3cf51daf4c81": "https://developer.hashicorp.com/vault/docs/auth/approle/approle-pattern",
+        "s45334d3270eb": "https://developer.hashicorp.com/vault/docs/commands/auth/enable",
+        "scfa855ec9d87": "https://developer.hashicorp.com/vault/api-docs/auth/kubernetes",
+        "sf213104862ac": "https://developer.hashicorp.com/vault/docs/auth/jwt",
+        "sa79f2fd07092": "https://developer.hashicorp.com/vault/docs/concepts/response-wrapping",
+        "sca6c552728d7": "https://developer.hashicorp.com/vault/api-docs/system/wrapping-lookup",
+        "s17fb33326e35": "https://developer.hashicorp.com/vault/docs/commands/write",
+        "sd1209454cb98": "https://developer.hashicorp.com/vault/docs/commands/unwrap",
+        "s1437757f255b": "https://developer.hashicorp.com/vault/api-docs/system/metrics",
+        "s84bf68313c5d": "https://developer.hashicorp.com/vault/api-docs/system/pprof",
+        "sabe0751ee280": "https://developer.hashicorp.com/vault/api-docs/system/init",
+        "s51416363da81": "https://developer.hashicorp.com/vault/api-docs/system/leader",
+        "s1e239e51209c": "https://developer.hashicorp.com/vault/api-docs/system/seal-status",
+        "sd032f083ae99": "https://developer.hashicorp.com/vault/docs/commands/operator/raft",
+        "s70ec02f4b4d7": "https://developer.hashicorp.com/vault/docs/commands/status",
+        "sdb9905c2f649": "https://developer.hashicorp.com/vault/docs/commands/token/lookup"
+      }
+    },
+    "run": {
+      "name": "Vault loopback run",
+      "basis": "2.1.1",
+      "sources": {
+        "sd936be5e4c41": "https://github.com/hashicorp/vault/blob/v2.1.1/builtin/credential/approle/backend.go"
+      }
+    },
+    "ha": {
+      "name": "Vault handler source",
+      "basis": "v1.21.0",
+      "sources": {
+        "s8c81f240066a": "https://raw.githubusercontent.com/hashicorp/vault/v1.21.0/http/handler.go"
+      }
+    },
+    "forward": {
+      "name": "Vault forwarding source",
+      "basis": "v1.20.0",
+      "sources": {
+        "sfdb628929b01": "https://raw.githubusercontent.com/hashicorp/vault/v1.20.0/http/logical.go"
+      }
+    },
+    "curl": {
+      "name": "curl minimum write-out version",
+      "basis": "7.75.0",
+      "sources": {
+        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
+      }
+    },
+    "jwt-min": {
+      "name": "Vault JWT audience minimum",
+      "basis": "1.17",
+      "sources": {
+        "sf213104862ac": "https://developer.hashicorp.com/vault/docs/auth/jwt"
+      }
+    },
+    "wrap-history": {
+      "name": "Vault historical wrapping qualification",
+      "basis": "0.8",
+      "sources": {
+        "sa79f2fd07092": "https://developer.hashicorp.com/vault/docs/concepts/response-wrapping"
+      }
+    }
   },
   "claims": {
     "dev": {"text": "Dev modes, token-helper storage and production config-file startup.", "components": ["docs"], "sources": ["docs:sbffd38b4758e", "docs:se38e85360763"], "status": "REASONED"},
@@ -30,6 +121,7 @@ version_basis: {
     "bootstrap": {"text": "Unauthenticated health, seal-status, init and leader paths need network isolation; policies cannot close bootstrap paths.", "components": ["docs"], "sources": ["docs:sa1a925943f6a", "docs:sabe0751ee280", "docs:s51416363da81", "docs:s1e239e51209c"], "status": "REASONED"},
     "storage": {"text": "Unprivileged process, protected snapshots/storage, no swap/core dumps; disable_mlock is Raft-specific.", "components": ["docs"], "sources": ["docs:s60d6655e9803", "docs:s0f36ae51e56b", "docs:sf1aad6c3d00d", "docs:sd032f083ae99"], "status": "REASONED"},
     "bind-test": {"text": "Loopback socket inventory and TLS/plaintext discrimination; extra unintended loopback listener detected.", "components": ["docs", "run"], "sources": ["docs:sbfb9c60f21c1", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "a plaintext request got `400` \"Client sent an HTTP request to an HTTPS server\"", "verify": [1]},
+    "cluster-address": {"text": "cluster_address defaults to the address port + 1; the follow-up loopback run observed 127.0.0.2:8200 and :8201 for a second listener.", "components": ["docs", "run"], "sources": ["docs:sbfb9c60f21c1", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "verify": [1], "evidence": "socket table also showed `127.0.0.2:8200` and `127.0.0.2:8201`, an unintended listener with its own cluster port, because `cluster_address` defaults to one port above `address`."},
     "bind-limits": {"text": "Wildcard binds, ss as root and actual firewall isolation remain unobserved.", "components": ["docs"], "sources": ["docs:sbfb9c60f21c1", "docs:s0f36ae51e56b"], "status": "REASONED", "verify": [1, 7]},
     "health-test": {"text": "Single-node health 501/503/200 and status sealed/unsealed exits; stopped-server failure is inconclusive.", "components": ["docs", "run"], "sources": ["docs:sa1a925943f6a", "docs:s70ec02f4b4d7", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "Health returned `501` before initialization, `503` while sealed (status exit code `2`) and `200` once unsealed (exit code `0`)", "verify": [1]},
     "health-ha": {"text": "Standby, removed-node and Enterprise health/status codes and query overrides are documentation reasoning.", "components": ["docs"], "sources": ["docs:sa1a925943f6a", "docs:s70ec02f4b4d7"], "status": "REASONED", "verify": [1]},
@@ -79,6 +171,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | bootstrap: Unauthenticated health, seal-status, init and leader paths need network isolation; policies cannot close bootstrap paths. | Vault documentation unknown | REASONED |
 | storage: Unprivileged process, protected snapshots/storage, no swap/core dumps; disable_mlock is Raft-specific. | Vault documentation unknown | REASONED |
 | bind-test: Loopback socket inventory and TLS/plaintext discrimination; extra unintended loopback listener detected. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
+| cluster-address: cluster_address defaults to the address port + 1; the follow-up loopback run observed 127.0.0.2:8200 and :8201 for a second listener. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
 | bind-limits: Wildcard binds, ss as root and actual firewall isolation remain unobserved. | Vault documentation unknown | REASONED |
 | health-test: Single-node health 501/503/200 and status sealed/unsealed exits; stopped-server failure is inconclusive. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
 | health-ha: Standby, removed-node and Enterprise health/status codes and query overrides are documentation reasoning. | Vault documentation unknown | REASONED |

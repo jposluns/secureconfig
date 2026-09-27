@@ -10,6 +10,7 @@ import hashlib
 import html
 import json
 import re
+import shlex
 import sys
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -113,14 +114,23 @@ def citation_urls(text):
     return explicit | bare
 
 
-def validate(data, body):
+def latest_change():
+    """Calendar bound from the checkout, never from the runner's clock."""
+    dates = re.findall(r'^## ([0-9]{4}-[0-9]{2}-[0-9]{2})[ \t]*$',
+                       (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8'), re.M)
+    require(dates, 'CHANGELOG.md has no dated level-2 headings')
+    return max(datetime.date.fromisoformat(value) for value in dates)
+
+
+def validate(data, body, guide='GUIDE.md'):
     from check_guide_shape import headings, section_body, SOURCES_RE
     keys(data, ('schema', 'checked', 'documentation_checked', 'body_sha256', 'components', 'claims'))
     require(type(data['schema']) is int and data['schema'] == 1, 'unsupported schema')
     string(data['checked'])
     require(re.fullmatch(r'[0-9]{4}-[0-9]{2}-[0-9]{2}', data['checked']), 'checked must be YYYY-MM-DD')
     checked = datetime.date.fromisoformat(data['checked'])
-    require(checked <= datetime.date.today(), 'checked date is in the future')
+    bound = latest_change()
+    require(checked <= bound, f'checked exceeds newest CHANGELOG.md heading: {bound}')
     string(data['documentation_checked'])
     require(re.fullmatch(r'[0-9]{4}-[0-9]{2}', data['documentation_checked']),
             'documentation_checked must be YYYY-MM (preserve recorded precision)')
@@ -128,7 +138,10 @@ def validate(data, body):
     require(documentation <= checked, 'documentation check follows metadata review')
     string(data['body_sha256'])
     require(re.fullmatch(r'[0-9a-f]{64}', data['body_sha256']), 'bad body digest')
-    require(data['body_sha256'] == digest(body), 'body changed: review claims before rebinding digest')
+    expected_digest = digest(body)
+    require(data['body_sha256'] == expected_digest,
+            f'body changed: expected body_sha256={expected_digest}; review the claim inventory, '
+            f'then run: python3 tools/version_basis.py --rebind {shlex.quote(str(guide))}')
     require(body.startswith('# ') and sum(level == 1 for _, level, _, _ in headings(body)) == 1,
             'guide body must start with exactly one H1')
     heads = headings(body)
@@ -216,13 +229,64 @@ def render(data):
     return '\n'.join(lines)
 
 
-def updated(text):
+def front_matter(data):
+    """Canonical JSON-in-YAML: one component source and one claim per line."""
+    dump = lambda value: json.dumps(value, ensure_ascii=False)
+    lines = ['---', 'version_basis: {']
+    for key in ('schema', 'checked', 'documentation_checked', 'body_sha256'):
+        lines.append(f'  {dump(key)}: {dump(data[key])},')
+    lines.append('  "components": {')
+    components = list(data['components'].items())
+    for index, (name, component) in enumerate(components):
+        lines.extend([f'    {dump(name)}: {{',
+                      f'      "name": {dump(component["name"])},',
+                      f'      "basis": {dump(component["basis"])},',
+                      '      "sources": {'])
+        sources = list(component['sources'].items())
+        for offset, (key, url) in enumerate(sources):
+            comma = ',' if offset + 1 < len(sources) else ''
+            lines.append(f'        {dump(key)}: {dump(url)}{comma}')
+        lines.extend(['      }', '    }' + (',' if index + 1 < len(components) else '')])
+    lines.extend(['  },', '  "claims": {'])
+    claims = list(data['claims'].items())
+    for index, (name, claim) in enumerate(claims):
+        comma = ',' if index + 1 < len(claims) else ''
+        lines.append(f'    {dump(name)}: {dump(claim)}{comma}')
+    return '\n'.join(lines + ['  }', '}', '---', ''])
+
+
+def rebound(text, guide='GUIDE.md'):
+    """Validate the reviewed inventory and replace only the top-level digest token."""
     data, full_body = split(text)
     require(data is not None, 'missing version_basis front matter')
     body = without_summary(full_body)
-    validate(data, body)
+    string(data['body_sha256'])
+    require(re.fullmatch(r'[0-9a-f]{64}', data['body_sha256']), 'bad body digest')
+    data['body_sha256'] = digest(body)
+    validate(data, body, guide)
+    # split() already strictly parsed the object. Walk only its top-level members,
+    # preserving all other bytes, even escaped keys or noncanonical whitespace.
+    decoder = json.JSONDecoder()
+    position = len('---\nversion_basis: ')
+    position = re.compile(r'\s*').match(text, position).end() + 1  # opening {
+    while True:
+        position = re.compile(r'\s*').match(text, position).end()
+        key, position = decoder.raw_decode(text, position)
+        position = re.compile(r'\s*:\s*').match(text, position).end()
+        start = position
+        _, position = decoder.raw_decode(text, position)
+        if key == 'body_sha256':
+            return text[:start] + json.dumps(data['body_sha256']) + text[position:]
+        position = re.compile(r'\s*,\s*').match(text, position).end()
+
+
+def updated(text, guide='GUIDE.md'):
+    data, full_body = split(text)
+    require(data is not None, 'missing version_basis front matter')
+    body = without_summary(full_body)
+    validate(data, body, guide)
     title, rest = body.split('\n\n', 1)
-    prefix = text[:len(text) - len(full_body)]
+    prefix = front_matter(data)
     return prefix + title + '\n\n' + render(data) + '\n\n' + rest
 
 
@@ -242,20 +306,41 @@ def main():
     modes.add_argument('--check', action='store_true')
     modes.add_argument('--write', action='store_true')
     modes.add_argument('--bundle', type=Path)
+    modes.add_argument('--rebind', type=Path, metavar='GUIDE',
+                       help='assert the claim inventory was reviewed; update only its digest')
+    parser.add_argument('guide', nargs='?', type=Path,
+                        help='optional enrolled guide for --check or --write')
     args = parser.parse_args()
     try:
+        require(args.guide is None or args.check or args.write,
+                'a positional guide requires --check or --write')
+        if args.rebind:
+            path = args.rebind.resolve()
+            require(path in paths(), '--rebind requires an enrolled guide')
+            text = path.read_bytes().decode('utf-8')
+            expected = rebound(text, path.name)
+            path.write_bytes(expected.encode('utf-8'))
+            print(f'  ok    {path.name}: rebound digest; this asserts the claim inventory '
+                  'was reviewed, not that a demonstration was run. '
+                  'Run python3 tools/version_basis.py --write to refresh summaries.')
+            return 0
         if args.bundle:
             text = args.bundle.read_text(encoding='utf-8')
             data, body = split(text)
             if data is not None:
-                require(updated(text) == text, 'stale summary')
+                require(updated(text, args.bundle) == text, 'stale summary')
             sys.stdout.write(body)
             return 0
         pending = []
-        for path in paths():
+        selected = paths()
+        if args.guide:
+            path = args.guide.resolve()
+            require(path in selected, 'expected an enrolled guide')
+            selected = [path]
+        for path in selected:
             text = path.read_text(encoding='utf-8')
             try:
-                expected = updated(text)
+                expected = updated(text, path.name)
                 require(args.write or text == expected, 'stale summary: run tools/version_basis.py --write')
             except (ValueError, TypeError, KeyError) as exc:
                 raise ValueError(f'{path.name}: {exc}') from exc

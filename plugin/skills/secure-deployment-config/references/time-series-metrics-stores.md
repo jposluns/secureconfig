@@ -3,24 +3,126 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "6e5e6123cfd4c7cd40d9f90280de6b2aecb8b54ccda398aeccd45c24c13d8ba5",
+  "body_sha256": "c049027bb9c72ff9d501769ced2ace107bbd965f4a58c337b7b2f06230efaab1",
   "components": {
-    "influx2": {"name": "InfluxDB OSS", "basis": "2.x", "sources": {"sc9e982673a2c": "https://docs.influxdata.com/influxdb/v2/api/setup/", "s51be52d52f2d": "https://docs.influxdata.com/influxdb/v2/reference/config-options/"}},
-    "influx1": {"name": "InfluxDB OSS", "basis": "1.x", "sources": {"s5b36c54676cf": "https://docs.influxdata.com/influxdb/v1/administration/config/", "s33366bcde097": "https://docs.influxdata.com/influxdb/v1/administration/authentication_and_authorization/"}},
-    "single": {"name": "VictoriaMetrics single-node", "basis": "v1.152.0", "sources": {"sa2064b7f7fde": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/victoria-metrics/main.go#L91-L114", "s466b138f957d": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/victoria-metrics/main.go#L137-L201", "s249469a9efa7": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/netutil/tcplistener.go#L16-L43", "s987c110a0edf": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/netutil/tcplistener.go#L79-L85", "s6b03d23b3093": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/httpserver/httpserver.go#L38-L57", "s29f1814c0fd1": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/httpserver/httpserver.go#L385-L419", "sf2990c7273c4": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/httpserver/httpserver.go#L425-L510", "s79f8b1e8eaad": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/httpserver/httpserver.go#L534-L573", "s2517f5aeb932": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/flagutil/password.go#L16-L30", "saecbf1f05812": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/vminsert/main.go#L138-L303", "s42d2b0ce4a7e": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/deployment/docker/compose-vm-single.yml#L18-L37", "s93fe4e7a4f06": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/vminsert/main.go#L49-L70", "s0d0b471d6432": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/ingestserver/graphite/server.go#L46-L53", "see5f5b942c00": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/ingestserver/influx/server.go#L46-L52", "sebc8d4060c41": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/ingestserver/opentsdb/server.go#L49-L60", "s6390a3764ab9": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/ingestserver/opentsdbhttp/server.go#L88-L92", "sd99ec4d08863": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/vmstorage/main.go#L38-L46", "sb6dcdcc221e4": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/vmselect/main.go#L33-L37"}},
-    "cluster": {"name": "VictoriaMetrics cluster", "basis": "v1.152.0-cluster", "sources": {"saab5425284b6": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vminsert/main.go#L161-L167", "s479ca0b4df35": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmselect/main.go#L150-L158", "sbbabc9e0412a": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmstorage/main.go#L221-L244", "s3a9a2abdad17": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmstorage/main.go#L46-L68", "sd22646cb0be5": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/lib/netutil/tcplistener.go#L79-L85", "s3e4eb7d48b66": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/lib/handshake/handshake.go#L203-L233", "s92f08e888601": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/lib/vmselectapi/server.go#L558-L588", "s429c413cd3cb": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vminsert/main.go#L53-L54", "s57e2ac042ad3": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmselect/main.go#L77-L78", "sc2940f50c072": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/lib/httpserver/httpserver.go#L38-L57", "sf4856285e76b": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/lib/httpserver/httpserver.go#L534-L573", "s82e2718b5417": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmstorage/main.go#L307-L420", "s0cd1a9b994b9": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmselect/main.go#L269-L296", "sc6f6632ae4c1": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmselect/main.go#L580-L594", "sc65ed9e63bfa": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmselect/main.go#L867-L884", "se1ccf8033c97": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/lib/httpserver/httpserver.go#L461-L510"}},
-    "rpc": {"name": "VictoriaMetrics cluster source", "basis": "e4b1d55683f0da20410dc765787bd4e9b5afa0da", "sources": {"sca91785d878c": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/e4b1d55683f0da20410dc765787bd4e9b5afa0da/lib/vminsertapi/server.go#L78-L144", "sdba733140e0c": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/e4b1d55683f0da20410dc765787bd4e9b5afa0da/lib/vminsertapi/server.go#L255-L267", "sb17dce5a1339": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/e4b1d55683f0da20410dc765787bd4e9b5afa0da/lib/netutil/tcplistener.go#L107-L140", "sa18d26bb1269": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/e4b1d55683f0da20410dc765787bd4e9b5afa0da/lib/flagutil/password.go#L21-L30"}},
-    "proxy": {"name": "VictoriaMetrics security/vmauth documentation", "basis": "unknown", "sources": {"s185272dd320f": "https://docs.victoriametrics.com/victoriametrics/cluster-victoriametrics/#security", "s79ed3b00108a": "https://docs.victoriametrics.com/victoriametrics/vmauth/"}},
-    "quest": {"name": "QuestDB documentation", "basis": "unknown", "sources": {"s3a0487771c1a": "https://questdb.com/docs/configuration/http-server/", "s9c38998f3725": "https://questdb.com/docs/configuration/postgres-wire-protocol/", "se0fda155b33d": "https://questdb.com/docs/configuration/ingestion/"}},
-    "single-commit": {"name": "VictoriaMetrics single-node source commit", "basis": "540b91da031aa8b7d53d3784693bb451e2be980a", "sources": {"sa2064b7f7fde": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/victoria-metrics/main.go#L91-L114"}},
-    "image": {"name": "VictoriaMetrics shipped Compose image", "basis": "v1.151.0", "sources": {"s42d2b0ce4a7e": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/deployment/docker/compose-vm-single.yml#L18-L37"}},
-    "enterprise": {"name": "QuestDB Enterprise qualification", "basis": "4.0.0", "sources": {"s3a0487771c1a": "https://questdb.com/docs/configuration/http-server/"}}
+    "influx2": {
+      "name": "InfluxDB OSS",
+      "basis": "2.x",
+      "sources": {
+        "sc9e982673a2c": "https://docs.influxdata.com/influxdb/v2/api/setup/",
+        "s51be52d52f2d": "https://docs.influxdata.com/influxdb/v2/reference/config-options/"
+      }
+    },
+    "influx1": {
+      "name": "InfluxDB OSS",
+      "basis": "1.x",
+      "sources": {
+        "s5b36c54676cf": "https://docs.influxdata.com/influxdb/v1/administration/config/",
+        "s33366bcde097": "https://docs.influxdata.com/influxdb/v1/administration/authentication_and_authorization/"
+      }
+    },
+    "single": {
+      "name": "VictoriaMetrics single-node",
+      "basis": "v1.152.0",
+      "sources": {
+        "sa2064b7f7fde": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/victoria-metrics/main.go#L91-L114",
+        "s466b138f957d": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/victoria-metrics/main.go#L137-L201",
+        "s249469a9efa7": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/netutil/tcplistener.go#L16-L43",
+        "s987c110a0edf": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/netutil/tcplistener.go#L79-L85",
+        "s6b03d23b3093": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/httpserver/httpserver.go#L38-L57",
+        "s29f1814c0fd1": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/httpserver/httpserver.go#L385-L419",
+        "sf2990c7273c4": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/httpserver/httpserver.go#L425-L510",
+        "s79f8b1e8eaad": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/httpserver/httpserver.go#L534-L573",
+        "s2517f5aeb932": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/flagutil/password.go#L16-L30",
+        "saecbf1f05812": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/vminsert/main.go#L138-L303",
+        "s42d2b0ce4a7e": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/deployment/docker/compose-vm-single.yml#L18-L37",
+        "s93fe4e7a4f06": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/vminsert/main.go#L49-L70",
+        "s0d0b471d6432": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/ingestserver/graphite/server.go#L46-L53",
+        "see5f5b942c00": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/ingestserver/influx/server.go#L46-L52",
+        "sebc8d4060c41": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/ingestserver/opentsdb/server.go#L49-L60",
+        "s6390a3764ab9": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/ingestserver/opentsdbhttp/server.go#L88-L92",
+        "sd99ec4d08863": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/vmstorage/main.go#L38-L46",
+        "sb6dcdcc221e4": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/vmselect/main.go#L33-L37"
+      }
+    },
+    "cluster": {
+      "name": "VictoriaMetrics cluster",
+      "basis": "v1.152.0-cluster",
+      "sources": {
+        "saab5425284b6": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vminsert/main.go#L161-L167",
+        "s479ca0b4df35": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmselect/main.go#L150-L158",
+        "sbbabc9e0412a": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmstorage/main.go#L221-L244",
+        "s3a9a2abdad17": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmstorage/main.go#L46-L68",
+        "sd22646cb0be5": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/lib/netutil/tcplistener.go#L79-L85",
+        "s3e4eb7d48b66": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/lib/handshake/handshake.go#L203-L233",
+        "s92f08e888601": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/lib/vmselectapi/server.go#L558-L588",
+        "s429c413cd3cb": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vminsert/main.go#L53-L54",
+        "s57e2ac042ad3": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmselect/main.go#L77-L78",
+        "sc2940f50c072": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/lib/httpserver/httpserver.go#L38-L57",
+        "sf4856285e76b": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/lib/httpserver/httpserver.go#L534-L573",
+        "s82e2718b5417": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmstorage/main.go#L307-L420",
+        "s0cd1a9b994b9": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmselect/main.go#L269-L296",
+        "sc6f6632ae4c1": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmselect/main.go#L580-L594",
+        "sc65ed9e63bfa": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmselect/main.go#L867-L884",
+        "se1ccf8033c97": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/lib/httpserver/httpserver.go#L461-L510",
+        "sb0412a061355": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmselect/prometheus/prometheus.go#L57-L60"
+      }
+    },
+    "rpc": {
+      "name": "VictoriaMetrics cluster source",
+      "basis": "e4b1d55683f0da20410dc765787bd4e9b5afa0da",
+      "sources": {
+        "sca91785d878c": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/e4b1d55683f0da20410dc765787bd4e9b5afa0da/lib/vminsertapi/server.go#L78-L144",
+        "sdba733140e0c": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/e4b1d55683f0da20410dc765787bd4e9b5afa0da/lib/vminsertapi/server.go#L255-L267",
+        "sb17dce5a1339": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/e4b1d55683f0da20410dc765787bd4e9b5afa0da/lib/netutil/tcplistener.go#L107-L140",
+        "sa18d26bb1269": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/e4b1d55683f0da20410dc765787bd4e9b5afa0da/lib/flagutil/password.go#L21-L30"
+      }
+    },
+    "proxy": {
+      "name": "VictoriaMetrics security/vmauth documentation",
+      "basis": "unknown",
+      "sources": {
+        "s185272dd320f": "https://docs.victoriametrics.com/victoriametrics/cluster-victoriametrics/#security",
+        "s79ed3b00108a": "https://docs.victoriametrics.com/victoriametrics/vmauth/"
+      }
+    },
+    "quest": {
+      "name": "QuestDB documentation",
+      "basis": "unknown",
+      "sources": {
+        "s3a0487771c1a": "https://questdb.com/docs/configuration/http-server/",
+        "s9c38998f3725": "https://questdb.com/docs/configuration/postgres-wire-protocol/",
+        "se0fda155b33d": "https://questdb.com/docs/configuration/ingestion/",
+        "s19f43451ff2b": "https://questdb.com/docs/configuration/http-min-server/"
+      }
+    },
+    "single-commit": {
+      "name": "VictoriaMetrics single-node source commit",
+      "basis": "540b91da031aa8b7d53d3784693bb451e2be980a",
+      "sources": {
+        "sa2064b7f7fde": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/victoria-metrics/main.go#L91-L114"
+      }
+    },
+    "image": {
+      "name": "VictoriaMetrics shipped Compose image",
+      "basis": "v1.151.0",
+      "sources": {
+        "s42d2b0ce4a7e": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/deployment/docker/compose-vm-single.yml#L18-L37"
+      }
+    },
+    "enterprise": {
+      "name": "QuestDB Enterprise qualification",
+      "basis": "4.0.0",
+      "sources": {
+        "s3a0487771c1a": "https://questdb.com/docs/configuration/http-server/"
+      }
+    }
   },
   "claims": {
     "influx2-setup": {"text": "8086 shares API/UI/write; private onboarding creates operator user/org/token, setup allowed changes true to false, scoped app tokens.", "components": ["influx2"], "sources": ["influx2:sc9e982673a2c"], "status": "REASONED"},
     "influx2-tls": {"text": "INFLUXD_CONFIG_PATH selects config; http-bind-address, tls-cert and tls-key set private HTTPS.", "components": ["influx2"], "sources": ["influx2:s51be52d52f2d"], "status": "REASONED"},
     "influx1-auth": {"text": "8086 auth defaults off; create admin then set bind-address, auth-enabled and HTTPS certificate/key fields.", "components": ["influx1"], "sources": ["influx1:s5b36c54676cf", "influx1:s33366bcde097"], "status": "REASONED"},
-    "influx1-other": {"text": "prom-read-auth-enabled needs auth-enabled; 8088 backup RPC defaults loopback; optional unauthenticated ingest stays disabled.", "components": ["influx1"], "sources": ["influx1:s5b36c54676cf"], "status": "REASONED"},
+    "influx1-other": {"text": "prom-read-auth-enabled=false by default; set it true with auth-enabled for remote-read auth; 8088 backup RPC defaults loopback; optional unauthenticated ingest stays disabled.", "components": ["influx1"], "sources": ["influx1:s5b36c54676cf"], "status": "REASONED"},
     "vm-bind": {"text": "Single-node HTTP fallback :8428, tcp4 default, enableTCP6 false; explicit private bind and TLS flags.", "components": ["single", "single-commit"], "sources": ["single:sa2064b7f7fde", "single:s249469a9efa7", "single:s987c110a0edf", "single:s6b03d23b3093", "single-commit:sa2064b7f7fde"], "status": "REASONED"},
     "vm-image": {"text": "Source tag ships Compose using image v1.151.0, wildcard 8428 publication and additional ingest listeners.", "components": ["single", "image"], "sources": ["single:s42d2b0ce4a7e", "image:s42d2b0ce4a7e"], "status": "REASONED"},
     "vm-basic": {"text": "Empty username disables Basic auth even with password; ordinary query/UI/HTTP ingest and aliases share the credential.", "components": ["single"], "sources": ["single:s6b03d23b3093", "single:s79f8b1e8eaad", "single:s2517f5aeb932", "single:saecbf1f05812"], "status": "REASONED"},
@@ -30,9 +132,18 @@ version_basis: {
     "cluster-http": {"text": "vminsert/vmselect/vmstorage fall back to 8480/8481/8482 on IPv4 wildcard; optional IPv6, empty Basic credentials and HTTP-only TLS.", "components": ["cluster", "rpc"], "sources": ["cluster:saab5425284b6", "cluster:s479ca0b4df35", "cluster:sbbabc9e0412a", "cluster:sd22646cb0be5", "cluster:sc2940f50c072", "rpc:sa18d26bb1269"], "status": "REASONED"},
     "cluster-rpc": {"text": "8400/8401 wildcard RPC has no credentials/TLS; handshake/compression permits writes, reads, deletion and metadata mutations, outside HTTP auth.", "components": ["cluster", "rpc"], "sources": ["cluster:s3a9a2abdad17", "cluster:s3e4eb7d48b66", "cluster:s92f08e888601", "rpc:sca91785d878c", "rpc:sdba733140e0c", "rpc:sb17dce5a1339"], "status": "REASONED"},
     "cluster-native": {"text": "Optional clusternativeListenAddr is disabled by default; restrict enabled native listeners to trusted cluster peers.", "components": ["cluster", "proxy"], "sources": ["cluster:s429c413cd3cb", "cluster:s57e2ac042ad3", "proxy:s185272dd320f"], "status": "REASONED"},
-    "cluster-keys": {"text": "Storage snapshot/merge/flush/logging, select deletion/cache/stat resets and common metrics/flags/pprof keys are per-handler.", "components": ["cluster"], "sources": ["cluster:s82e2718b5417", "cluster:s0cd1a9b994b9", "cluster:sc6f6632ae4c1", "cluster:sc65ed9e63bfa", "cluster:se1ccf8033c97"], "status": "REASONED"},
+    "cluster-key-snapshot": {"text": "vmstorage: -snapshotAuthKey gates /snapshot/create, /snapshot/list, /snapshot/delete and /snapshot/delete_all.", "components": ["cluster"], "sources": ["cluster:s82e2718b5417"], "status": "REASONED"},
+    "cluster-key-merge": {"text": "vmstorage: -forceMergeAuthKey gates /internal/force_merge.", "components": ["cluster"], "sources": ["cluster:s82e2718b5417"], "status": "REASONED"},
+    "cluster-key-flush": {"text": "vmstorage: -forceFlushAuthKey gates /internal/force_flush.", "components": ["cluster"], "sources": ["cluster:s82e2718b5417"], "status": "REASONED"},
+    "cluster-key-logging": {"text": "vmstorage: -logNewSeriesAuthKey gates /internal/log_new_series.", "components": ["cluster"], "sources": ["cluster:s82e2718b5417"], "status": "REASONED"},
+    "cluster-key-delete": {"text": "vmselect: -deleteAuthKey gates POSTs to /delete/{accountID}/prometheus/api/v1/admin/tsdb/delete_series and /select/{accountID}/graphite/tags/delSeries.", "components": ["cluster"], "sources": ["cluster:sc6f6632ae4c1", "cluster:sc65ed9e63bfa"], "status": "REASONED"},
+    "cluster-key-cache": {"text": "vmselect: -search.resetCacheAuthKey gates /internal/resetRollupResultCache.", "components": ["cluster"], "sources": ["cluster:s0cd1a9b994b9", "cluster:sb0412a061355"], "status": "REASONED"},
+    "cluster-key-stats": {"text": "vmselect: -metricNamesStatsResetAuthKey gates /admin/api/v1/admin/status/metric_names_stats/reset.", "components": ["cluster"], "sources": ["cluster:s0cd1a9b994b9"], "status": "REASONED"},
+    "cluster-key-metrics": {"text": "All three HTTP components: -metricsAuthKey gates /metrics.", "components": ["cluster"], "sources": ["cluster:se1ccf8033c97"], "status": "REASONED"},
+    "cluster-key-flags": {"text": "All three HTTP components: -flagsAuthKey gates /flags.", "components": ["cluster"], "sources": ["cluster:se1ccf8033c97"], "status": "REASONED"},
+    "cluster-key-pprof": {"text": "All three HTTP components: -pprofAuthKey gates /debug/pprof/*.", "components": ["cluster"], "sources": ["cluster:se1ccf8033c97"], "status": "REASONED"},
     "cluster-precedence": {"text": "Empty keys fall back to Basic; nonempty keys replace it, not add a factor or protect other routes; allowlist proxy routes.", "components": ["cluster", "rpc", "proxy"], "sources": ["cluster:sf4856285e76b", "rpc:sa18d26bb1269", "proxy:s185272dd320f", "proxy:s79ed3b00108a"], "status": "REASONED"},
-    "quest-http": {"text": "9000 HTTP/console/SQL defaults unauthenticated; set http.user/password in server.conf; 9003 health follows HTTP policy.", "components": ["quest"], "sources": ["quest:s3a0487771c1a"], "status": "REASONED"},
+    "quest-http": {"text": "9000 HTTP/console/SQL defaults unauthenticated; set http.user/password in server.conf. 9003 health requires auth when HTTP does by default; http.health.check.authentication.required=false disables that health check requirement.", "components": ["quest"], "sources": ["quest:s3a0487771c1a", "quest:s19f43451ff2b"], "status": "REASONED"},
     "quest-pg": {"text": "8812 PostgreSQL wire defaults admin/quest; replace pg.user/password and protect its separate listener.", "components": ["quest"], "sources": ["quest:s9c38998f3725"], "status": "REASONED"},
     "quest-ilp": {"text": "9009 TCP writes default unauthenticated; line.tcp.auth.db.path selects P-256 public-key file.", "components": ["quest"], "sources": ["quest:se0fda155b33d"], "status": "REASONED"},
     "quest-tls": {"text": "OSS requires proxy TLS; Enterprise uses RBAC/tls.enabled and rejects HTTP credential keys since stated Enterprise 4.0.0.", "components": ["quest", "enterprise"], "sources": ["quest:s3a0487771c1a", "enterprise:s3a0487771c1a"], "status": "REASONED"},
@@ -70,7 +181,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | influx2-setup: 8086 shares API/UI/write; private onboarding creates operator user/org/token, setup allowed changes true to false, scoped app tokens. | InfluxDB OSS 2.x | REASONED |
 | influx2-tls: INFLUXD_CONFIG_PATH selects config; http-bind-address, tls-cert and tls-key set private HTTPS. | InfluxDB OSS 2.x | REASONED |
 | influx1-auth: 8086 auth defaults off; create admin then set bind-address, auth-enabled and HTTPS certificate/key fields. | InfluxDB OSS 1.x | REASONED |
-| influx1-other: prom-read-auth-enabled needs auth-enabled; 8088 backup RPC defaults loopback; optional unauthenticated ingest stays disabled. | InfluxDB OSS 1.x | REASONED |
+| influx1-other: prom-read-auth-enabled=false by default; set it true with auth-enabled for remote-read auth; 8088 backup RPC defaults loopback; optional unauthenticated ingest stays disabled. | InfluxDB OSS 1.x | REASONED |
 | vm-bind: Single-node HTTP fallback :8428, tcp4 default, enableTCP6 false; explicit private bind and TLS flags. | VictoriaMetrics single-node v1.152.0; VictoriaMetrics single-node source commit 540b91da031aa8b7d53d3784693bb451e2be980a | REASONED |
 | vm-image: Source tag ships Compose using image v1.151.0, wildcard 8428 publication and additional ingest listeners. | VictoriaMetrics single-node v1.152.0; VictoriaMetrics shipped Compose image v1.151.0 | REASONED |
 | vm-basic: Empty username disables Basic auth even with password; ordinary query/UI/HTTP ingest and aliases share the credential. | VictoriaMetrics single-node v1.152.0 | REASONED |
@@ -80,9 +191,18 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | cluster-http: vminsert/vmselect/vmstorage fall back to 8480/8481/8482 on IPv4 wildcard; optional IPv6, empty Basic credentials and HTTP-only TLS. | VictoriaMetrics cluster v1.152.0-cluster; VictoriaMetrics cluster source e4b1d55683f0da20410dc765787bd4e9b5afa0da | REASONED |
 | cluster-rpc: 8400/8401 wildcard RPC has no credentials/TLS; handshake/compression permits writes, reads, deletion and metadata mutations, outside HTTP auth. | VictoriaMetrics cluster v1.152.0-cluster; VictoriaMetrics cluster source e4b1d55683f0da20410dc765787bd4e9b5afa0da | REASONED |
 | cluster-native: Optional clusternativeListenAddr is disabled by default; restrict enabled native listeners to trusted cluster peers. | VictoriaMetrics cluster v1.152.0-cluster; VictoriaMetrics security/vmauth documentation unknown | REASONED |
-| cluster-keys: Storage snapshot/merge/flush/logging, select deletion/cache/stat resets and common metrics/flags/pprof keys are per-handler. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
+| cluster-key-snapshot: vmstorage: -snapshotAuthKey gates /snapshot/create, /snapshot/list, /snapshot/delete and /snapshot/delete_all. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
+| cluster-key-merge: vmstorage: -forceMergeAuthKey gates /internal/force_merge. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
+| cluster-key-flush: vmstorage: -forceFlushAuthKey gates /internal/force_flush. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
+| cluster-key-logging: vmstorage: -logNewSeriesAuthKey gates /internal/log_new_series. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
+| cluster-key-delete: vmselect: -deleteAuthKey gates POSTs to /delete/{accountID}/prometheus/api/v1/admin/tsdb/delete_series and /select/{accountID}/graphite/tags/delSeries. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
+| cluster-key-cache: vmselect: -search.resetCacheAuthKey gates /internal/resetRollupResultCache. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
+| cluster-key-stats: vmselect: -metricNamesStatsResetAuthKey gates /admin/api/v1/admin/status/metric_names_stats/reset. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
+| cluster-key-metrics: All three HTTP components: -metricsAuthKey gates /metrics. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
+| cluster-key-flags: All three HTTP components: -flagsAuthKey gates /flags. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
+| cluster-key-pprof: All three HTTP components: -pprofAuthKey gates /debug/pprof/*. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
 | cluster-precedence: Empty keys fall back to Basic; nonempty keys replace it, not add a factor or protect other routes; allowlist proxy routes. | VictoriaMetrics cluster v1.152.0-cluster; VictoriaMetrics cluster source e4b1d55683f0da20410dc765787bd4e9b5afa0da; VictoriaMetrics security/vmauth documentation unknown | REASONED |
-| quest-http: 9000 HTTP/console/SQL defaults unauthenticated; set http.user/password in server.conf; 9003 health follows HTTP policy. | QuestDB documentation unknown | REASONED |
+| quest-http: 9000 HTTP/console/SQL defaults unauthenticated; set http.user/password in server.conf. 9003 health requires auth when HTTP does by default; http.health.check.authentication.required=false disables that health check requirement. | QuestDB documentation unknown | REASONED |
 | quest-pg: 8812 PostgreSQL wire defaults admin/quest; replace pg.user/password and protect its separate listener. | QuestDB documentation unknown | REASONED |
 | quest-ilp: 9009 TCP writes default unauthenticated; line.tcp.auth.db.path selects P-256 public-key file. | QuestDB documentation unknown | REASONED |
 | quest-tls: OSS requires proxy TLS; Enterprise uses RBAC/tls.enabled and rejects HTTP credential keys since stated Enterprise 4.0.0. | QuestDB documentation unknown; QuestDB Enterprise qualification 4.0.0 | REASONED |
@@ -200,7 +320,7 @@ pg.password=REPLACE_WITH_A_SECRET
 line.tcp.auth.db.path=conf/auth.txt
 ```
 
-`line.tcp.auth.db.path` points at a file of P-256 public keys. The minimal health server on `9003` follows the HTTP policy you set. The open-source build has no native TLS, so terminate it at a reverse proxy; QuestDB Enterprise instead uses role-based access control (since Enterprise 4.0.0 it refuses to start if the `http.user` and `http.password` keys are set) and its own `tls.enabled` settings.
+`line.tcp.auth.db.path` points at a file of P-256 public keys. The [minimal health server](https://questdb.com/docs/configuration/http-min-server/) on `9003` requires authentication when the HTTP server does by default (`http.health.check.authentication.required=true`); setting this option to `false` independently permits unauthenticated health checks. The open-source build has no native TLS, so terminate it at a reverse proxy; QuestDB Enterprise instead uses role-based access control (since Enterprise 4.0.0 it refuses to start if the `http.user` and `http.password` keys are set) and its own `tls.enabled` settings.
 
 ## The pattern, any of these
 
@@ -247,8 +367,9 @@ PY
 An exposed listener is expected to report `TCP REACHABLE` from outside; this is an exposure failure even if an HTTP request to that port fails, since RPC is not HTTP. In the fixed state, outside connections must be blocked while the trusted-host control still connects to both running listeners. A timeout or refusal alone is inconclusive: confirm the target, running listener and firewall or network-policy rule responsible. A `401` from `vmauth` says nothing about RPC isolation.
 
 ```bash
-# Per-target discriminator against the default plaintext listener: an exposed store returns the named
-# body or a 200, a fixed one behind auth returns 401. Substitute a full URL on the set -- line
+# Per-target discriminator: InfluxDB 2.x setup returns 200 in both states; read allowed
+# (true before setup, false after). The other named data endpoints should return 401 with auth.
+# Substitute a full URL on the set -- line
 # and paste the whole block so the guard runs; use `http://` for the exposed check and the hardened `https://` entrypoint for the re-run, and the body is kept because one target discriminates on it.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_URL'
@@ -303,3 +424,5 @@ Run that block once per target, over `http://` against the default plaintext lis
 - QuestDB HTTP server (Enterprise 4.0.0 qualification recorded above; `9000`, `http.user` / `http.password` unset by default): https://questdb.com/docs/configuration/http-server/
 - QuestDB PostgreSQL wire protocol (`8812`, default `admin` / `quest`): https://questdb.com/docs/configuration/postgres-wire-protocol/
 - QuestDB ingestion / line protocol (`9009`, `line.tcp.auth.db.path` default none): https://questdb.com/docs/configuration/ingestion/
+
+- QuestDB minimal HTTP server (`9003`, `http.health.check.authentication.required` defaults to `true`; `false` permits unauthenticated health checks): https://questdb.com/docs/configuration/http-min-server/

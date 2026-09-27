@@ -112,7 +112,8 @@
         "tools/version_basis.py",
         "tools/version_basis_guides.txt",
         "tools/_markdown.py",
-        "tools/check_guide_shape.py"
+        "tools/check_guide_shape.py",
+        "CHANGELOG.md"
       ],
       "target": "site/llms-full.txt"
     },
@@ -231,7 +232,8 @@
         "tools/version_basis.py",
         "tools/version_basis_guides.txt",
         "tools/_markdown.py",
-        "tools/check_guide_shape.py"
+        "tools/check_guide_shape.py",
+        "CHANGELOG.md"
       ]
     }
   ]

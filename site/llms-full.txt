@@ -1230,6 +1230,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | bootstrap: Unauthenticated health, seal-status, init and leader paths need network isolation; policies cannot close bootstrap paths. | Vault documentation unknown | REASONED |
 | storage: Unprivileged process, protected snapshots/storage, no swap/core dumps; disable_mlock is Raft-specific. | Vault documentation unknown | REASONED |
 | bind-test: Loopback socket inventory and TLS/plaintext discrimination; extra unintended loopback listener detected. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
+| cluster-address: cluster_address defaults to the address port + 1; the follow-up loopback run observed 127.0.0.2:8200 and :8201 for a second listener. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
 | bind-limits: Wildcard binds, ss as root and actual firewall isolation remain unobserved. | Vault documentation unknown | REASONED |
 | health-test: Single-node health 501/503/200 and status sealed/unsealed exits; stopped-server failure is inconclusive. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
 | health-ha: Standby, removed-node and Enterprise health/status codes and query overrides are documentation reasoning. | Vault documentation unknown | REASONED |
@@ -19503,7 +19504,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | influx2-setup: 8086 shares API/UI/write; private onboarding creates operator user/org/token, setup allowed changes true to false, scoped app tokens. | InfluxDB OSS 2.x | REASONED |
 | influx2-tls: INFLUXD_CONFIG_PATH selects config; http-bind-address, tls-cert and tls-key set private HTTPS. | InfluxDB OSS 2.x | REASONED |
 | influx1-auth: 8086 auth defaults off; create admin then set bind-address, auth-enabled and HTTPS certificate/key fields. | InfluxDB OSS 1.x | REASONED |
-| influx1-other: prom-read-auth-enabled needs auth-enabled; 8088 backup RPC defaults loopback; optional unauthenticated ingest stays disabled. | InfluxDB OSS 1.x | REASONED |
+| influx1-other: prom-read-auth-enabled=false by default; set it true with auth-enabled for remote-read auth; 8088 backup RPC defaults loopback; optional unauthenticated ingest stays disabled. | InfluxDB OSS 1.x | REASONED |
 | vm-bind: Single-node HTTP fallback :8428, tcp4 default, enableTCP6 false; explicit private bind and TLS flags. | VictoriaMetrics single-node v1.152.0; VictoriaMetrics single-node source commit 540b91da031aa8b7d53d3784693bb451e2be980a | REASONED |
 | vm-image: Source tag ships Compose using image v1.151.0, wildcard 8428 publication and additional ingest listeners. | VictoriaMetrics single-node v1.152.0; VictoriaMetrics shipped Compose image v1.151.0 | REASONED |
 | vm-basic: Empty username disables Basic auth even with password; ordinary query/UI/HTTP ingest and aliases share the credential. | VictoriaMetrics single-node v1.152.0 | REASONED |
@@ -19513,9 +19514,18 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | cluster-http: vminsert/vmselect/vmstorage fall back to 8480/8481/8482 on IPv4 wildcard; optional IPv6, empty Basic credentials and HTTP-only TLS. | VictoriaMetrics cluster v1.152.0-cluster; VictoriaMetrics cluster source e4b1d55683f0da20410dc765787bd4e9b5afa0da | REASONED |
 | cluster-rpc: 8400/8401 wildcard RPC has no credentials/TLS; handshake/compression permits writes, reads, deletion and metadata mutations, outside HTTP auth. | VictoriaMetrics cluster v1.152.0-cluster; VictoriaMetrics cluster source e4b1d55683f0da20410dc765787bd4e9b5afa0da | REASONED |
 | cluster-native: Optional clusternativeListenAddr is disabled by default; restrict enabled native listeners to trusted cluster peers. | VictoriaMetrics cluster v1.152.0-cluster; VictoriaMetrics security/vmauth documentation unknown | REASONED |
-| cluster-keys: Storage snapshot/merge/flush/logging, select deletion/cache/stat resets and common metrics/flags/pprof keys are per-handler. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
+| cluster-key-snapshot: vmstorage: -snapshotAuthKey gates /snapshot/create, /snapshot/list, /snapshot/delete and /snapshot/delete_all. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
+| cluster-key-merge: vmstorage: -forceMergeAuthKey gates /internal/force_merge. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
+| cluster-key-flush: vmstorage: -forceFlushAuthKey gates /internal/force_flush. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
+| cluster-key-logging: vmstorage: -logNewSeriesAuthKey gates /internal/log_new_series. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
+| cluster-key-delete: vmselect: -deleteAuthKey gates POSTs to /delete/{accountID}/prometheus/api/v1/admin/tsdb/delete_series and /select/{accountID}/graphite/tags/delSeries. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
+| cluster-key-cache: vmselect: -search.resetCacheAuthKey gates /internal/resetRollupResultCache. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
+| cluster-key-stats: vmselect: -metricNamesStatsResetAuthKey gates /admin/api/v1/admin/status/metric_names_stats/reset. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
+| cluster-key-metrics: All three HTTP components: -metricsAuthKey gates /metrics. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
+| cluster-key-flags: All three HTTP components: -flagsAuthKey gates /flags. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
+| cluster-key-pprof: All three HTTP components: -pprofAuthKey gates /debug/pprof/*. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
 | cluster-precedence: Empty keys fall back to Basic; nonempty keys replace it, not add a factor or protect other routes; allowlist proxy routes. | VictoriaMetrics cluster v1.152.0-cluster; VictoriaMetrics cluster source e4b1d55683f0da20410dc765787bd4e9b5afa0da; VictoriaMetrics security/vmauth documentation unknown | REASONED |
-| quest-http: 9000 HTTP/console/SQL defaults unauthenticated; set http.user/password in server.conf; 9003 health follows HTTP policy. | QuestDB documentation unknown | REASONED |
+| quest-http: 9000 HTTP/console/SQL defaults unauthenticated; set http.user/password in server.conf. 9003 health requires auth when HTTP does by default; http.health.check.authentication.required=false disables that health check requirement. | QuestDB documentation unknown | REASONED |
 | quest-pg: 8812 PostgreSQL wire defaults admin/quest; replace pg.user/password and protect its separate listener. | QuestDB documentation unknown | REASONED |
 | quest-ilp: 9009 TCP writes default unauthenticated; line.tcp.auth.db.path selects P-256 public-key file. | QuestDB documentation unknown | REASONED |
 | quest-tls: OSS requires proxy TLS; Enterprise uses RBAC/tls.enabled and rejects HTTP credential keys since stated Enterprise 4.0.0. | QuestDB documentation unknown; QuestDB Enterprise qualification 4.0.0 | REASONED |
@@ -19633,7 +19643,7 @@ pg.password=REPLACE_WITH_A_SECRET
 line.tcp.auth.db.path=conf/auth.txt
 ```
 
-`line.tcp.auth.db.path` points at a file of P-256 public keys. The minimal health server on `9003` follows the HTTP policy you set. The open-source build has no native TLS, so terminate it at a reverse proxy; QuestDB Enterprise instead uses role-based access control (since Enterprise 4.0.0 it refuses to start if the `http.user` and `http.password` keys are set) and its own `tls.enabled` settings.
+`line.tcp.auth.db.path` points at a file of P-256 public keys. The [minimal health server](https://questdb.com/docs/configuration/http-min-server/) on `9003` requires authentication when the HTTP server does by default (`http.health.check.authentication.required=true`); setting this option to `false` independently permits unauthenticated health checks. The open-source build has no native TLS, so terminate it at a reverse proxy; QuestDB Enterprise instead uses role-based access control (since Enterprise 4.0.0 it refuses to start if the `http.user` and `http.password` keys are set) and its own `tls.enabled` settings.
 
 ## The pattern, any of these
 
@@ -19680,8 +19690,9 @@ PY
 An exposed listener is expected to report `TCP REACHABLE` from outside; this is an exposure failure even if an HTTP request to that port fails, since RPC is not HTTP. In the fixed state, outside connections must be blocked while the trusted-host control still connects to both running listeners. A timeout or refusal alone is inconclusive: confirm the target, running listener and firewall or network-policy rule responsible. A `401` from `vmauth` says nothing about RPC isolation.
 
 ```bash
-# Per-target discriminator against the default plaintext listener: an exposed store returns the named
-# body or a 200, a fixed one behind auth returns 401. Substitute a full URL on the set -- line
+# Per-target discriminator: InfluxDB 2.x setup returns 200 in both states; read allowed
+# (true before setup, false after). The other named data endpoints should return 401 with auth.
+# Substitute a full URL on the set -- line
 # and paste the whole block so the guard runs; use `http://` for the exposed check and the hardened `https://` entrypoint for the re-run, and the body is kept because one target discriminates on it.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_URL'
@@ -19736,6 +19747,8 @@ Run that block once per target, over `http://` against the default plaintext lis
 - QuestDB HTTP server (Enterprise 4.0.0 qualification recorded above; `9000`, `http.user` / `http.password` unset by default): https://questdb.com/docs/configuration/http-server/
 - QuestDB PostgreSQL wire protocol (`8812`, default `admin` / `quest`): https://questdb.com/docs/configuration/postgres-wire-protocol/
 - QuestDB ingestion / line protocol (`9009`, `line.tcp.auth.db.path` default none): https://questdb.com/docs/configuration/ingestion/
+
+- QuestDB minimal HTTP server (`9003`, `http.health.check.authentication.required` defaults to `true`; `false` permits unauthenticated health checks): https://questdb.com/docs/configuration/http-min-server/
 
 ======================================================================
 ==> jupyter.md
@@ -25343,7 +25356,8 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | Claim | Basis | Status |
 | --- | --- | --- |
 | comfy-bind: Default loopback:8188, bare --listen binds IPv4/IPv6 wildcards; explicit bind/port and proxy login. | ComfyUI v0.37.0 | REASONED |
-| nodes: No built-in login; Python nodes/extensions execute with server privileges; trust nodes and apply container containment. | ComfyUI v0.37.0; Fooocus v2.5.5 | REASONED |
+| comfy-nodes: ComfyUI has no built-in login; Python custom nodes run with server privileges. Trust nodes and apply container containment. | ComfyUI v0.37.0 | REASONED |
+| fooocus-login: Fooocus is unauthenticated by default and offers optional auth.json login; keep it off public interfaces. | Fooocus v2.5.5 | REASONED |
 | manager: Manager RCE advisory requires ComfyUI at least v0.3.76 and Manager at least v3.38 together. | ComfyUI advisory minimum v0.3.76; ComfyUI-Manager advisory minimum v3.38 | REASONED |
 | node-flags: --disable-all-custom-nodes and --whitelist-custom-nodes limit loaded nodes, not network exposure. | ComfyUI v0.37.0 | REASONED |
 | webui-auth: UI auth file/list syntax, API-only auth, colon/comma parsing differences and plaintext HTTP require a TLS proxy. | AUTOMATIC1111 v1.10.1 | REASONED |
@@ -25356,18 +25370,18 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | webui-bind: Explicit --server-name overrides Gradio environment-based bind; without it GRADIO_SERVER_NAME can replace loopback. | AUTOMATIC1111 v1.10.1; Gradio 3.41.2 | REASONED |
 | sysinfo: Unredacted environment and incomplete argv redaction in unauthenticated sysinfo routes are source-reasoned; proxy must deny the prefix. | AUTOMATIC1111 v1.10.1; Gradio 3.41.2 | REASONED |
 | invoke-config: Flat schema 4.0.2, host 127.0.0.1, port 9090 and INVOKEAI_HOST/PORT overrides; default single-user mode has no login. | InvokeAI 6.14.1 | REASONED |
-| invoke-login: Experimental multiuser login/JWT, strict password checks and restart logout; keep loopback and TLS. | InvokeAI 6.14.1 | REASONED |
+| invoke-login: Experimental multiuser login/JWT and strict password checks; changing the stored JWT secret then restarting logs users out. Ordinary restart logout is not established; keep loopback and TLS. | InvokeAI 6.14.1 | REASONED |
 | fooocus-flags: Loopback by default, bare --listen wildcard, --share public relay; auth.json supplies optional login. | Fooocus v2.5.5 | REASONED |
 | fooocus-loader: Isolated loader returns credentials only for valid data; unreadable raises PermissionError, malformed/empty returns none. | Fooocus v2.5.5 | DEMONSTRATED |
 | fooocus-auth: Relative auth.json location, pass/hash SHA-256 handling, permissions and expected fail-open for malformed/empty data; no live server test. | Fooocus v2.5.5 | REASONED |
-| fooocus-port: Inherited port or occupied 7865 can move the UI; explicit --port makes Gradio try only that port. | Fooocus v2.5.5; Gradio 3.41.2 | REASONED |
+| fooocus-port: Fooocus v2.5.5 pins Gradio 3.41.2; inherited port or occupied 7865 can move the UI; explicit --port makes Gradio try only that port. | Fooocus v2.5.5; Gradio 3.41.2 | REASONED |
 | fooocus-pin: entry_with_update updates the checkout; use launch.py from exact v2.5.5, with working-tree caveat. | Fooocus v2.5.5 | REASONED |
 | container: CMDARGS bare --listen plus wildcard publication exposes image; bridge uses internal wildcard and loopback publish, host networking needs loopback bind. | Fooocus v2.5.5; Docker Engine minimum loopback boundary 28.0 | REASONED |
 | image-build: Build pinned source, not unchecked GHCR default; Compose build/image pull policy and --build determine selected/tagged image. | Fooocus v2.5.5; Compose Specification 914ec15d1fa4; Docker Compose source v2.32.4 | REASONED |
 | auth-mount: Image excludes auth.json; mount read-only, use built image user UID and mode 0400; remapped/rootless ownership is unchecked. | Fooocus v2.5.5 | REASONED |
 | argparse: Isolated argparse definition yields loopback with no flag and wildcard for bare --listen; this is not a server demonstration. | Fooocus v2.5.5 | DEMONSTRATED |
 | verify-network: Inventory every service and port, confirm loopback service is up, probe actual IPv4/IPv6; container PORTS or host-network ss have different scope. | ComfyUI v0.37.0; AUTOMATIC1111 v1.10.1; InvokeAI 6.14.1; Fooocus v2.5.5; Docker Engine minimum loopback boundary 28.0; curl minimum write-out version 7.75.0 | REASONED |
-| verify-invoke: Unauthenticated boards should answer in single-user mode and reject with 401 in multi-user mode; exposed status is unrecorded. | InvokeAI 6.14.1 | REASONED |
+| verify-invoke: Unauthenticated /api/v1/boards/ should answer in single-user mode and reject with 401 in multi-user mode; exposed status is unrecorded and no listener demonstration was available. | InvokeAI 6.14.1 | REASONED |
 | verify-proxy: TLS/header and browser checks should require login before UI; no service/proxy listeners were run. | ComfyUI v0.37.0; Fooocus v2.5.5 | REASONED |
 <!-- version-basis:end -->
 
@@ -25455,7 +25469,7 @@ Even with `--gradio-auth-path` set, put TLS in front; the login alone only gates
 
 InvokeAI's `invokeai.yaml` uses a flat schema (current as of InvokeAI 6.14.1, `schema_version: 4.0.2`): `host` (default `127.0.0.1`) and `port` (default `9090`) are top-level keys, not nested under a `Web Server` or `InvokeAI` section. Setting `host: 0.0.0.0` serves the local network with no login at all in the default single-user mode. `INVOKEAI_HOST` and `INVOKEAI_PORT` override the same settings from the environment.
 
-An experimental multi-user mode exists: add `multiuser: true` to `invokeai.yaml` to require per-user login (username and password, stateless JWT sessions), and `strict_password_checking: true` to enforce a minimum password (8+ characters, upper, lower, and a digit) rather than just warning on a weak one. Restarting the server logs every user out. Outside multi-user mode, treat InvokeAI as having no login and keep it on loopback regardless.
+An experimental multi-user mode exists: add `multiuser: true` to `invokeai.yaml` to require per-user login (username and password, stateless JWT sessions), and `strict_password_checking: true` to enforce a minimum password (8+ characters, upper, lower, and a digit) rather than just warning on a weak one. The JWT secret persists in the database. The [administrator guide](https://invoke.ai/features/multi-user-mode/admin-guide/#secret-key-management) instructs administrators to change that secret and then restart to log every user out; it does not establish logout on an ordinary restart. Outside multi-user mode, treat InvokeAI as having no login and keep it on loopback regardless.
 
 ```yaml
 # invokeai.yaml, flat schema (schema_version 4.0.2, InvokeAI 6.14.1 and later)
@@ -25508,7 +25522,7 @@ None of this guide's live Verify checks has a recorded demonstration. The missin
 
 The ComfyUI (8188), AUTOMATIC1111 (7860) and InvokeAI (9090) entries in the listener inventory and external probe loop are each REASONED, not demonstrated: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none. From the cited ComfyUI v0.37.0 argument parser, AUTOMATIC1111 v1.10.1 `gradio_server_name()` and InvokeAI YAML Config reference, a host process bound to a wildcard address should appear that way in `ss` and answer the external probe with an HTTP code when the network permits it; bound to `127.0.0.1` as above, it should appear only on loopback and the external probe should report a refusal or timeout reaching your address. Confirm each service is running and answers on host loopback before interpreting an external refusal as the fixed state. These are expected outcomes from the sources, not observations.
 
-The InvokeAI `/api/v1/boards/` check is also REASONED: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none. The cited Multi-User Administrator Guide distinguishes the default single-user mode from `multiuser: true`, which requires a login. The expected pair is an unauthenticated boards response in single-user mode (the cited guide gives no status code for it; record the observed code) and the rejection shown below in multi-user mode; record both when demonstrating row 1.158.
+The InvokeAI `/api/v1/boards/` check is also REASONED: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none. The cited Multi-User Administrator Guide distinguishes the default single-user mode from `multiuser: true`, which requires a login. The [Multi-User API Guide](https://invoke.ai/features/multi-user-mode/api-guide/) documents the boards endpoint and missing-token `401`. The expected pair is an unauthenticated boards response in single-user mode (the cited guides give no status code for it; record the observed code) and `401` in multi-user mode; record both when demonstrating row 1.158.
 
 The proxy check is REASONED: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none, so no proxy or backend was run. Following [fronting-auth.md](fronting-auth.md), the expected exposed state serves the UI without proxy authentication, and the fixed state requires a login before the UI loads. Use your configured hostname in place of `imagegen.example.com`; the header request below checks the TLS connection and authentication response, and a browser check confirms the login gates the UI. Row 1.158 tracks both states.
 
@@ -25583,6 +25597,7 @@ curl -q -g -sI https://imagegen.example.com/                # via the proxy: TLS
 - Gradio 3.41.2 turns a list `auth` into a dictionary keyed by user name, so a later password for the same user name replaces an earlier one (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/routes.py#L128-L133
 - InvokeAI YAML Config (6.14.1, schema 4.0.2, as recorded above; host/port defaults): https://invoke.ai/configuration/invokeai-yaml/
 - InvokeAI Multi-User Administrator Guide: https://invoke.ai/features/multi-user-mode/admin-guide/
+- InvokeAI Multi-User API Guide (boards endpoint and missing-token `401`): https://invoke.ai/features/multi-user-mode/api-guide/
 - Fooocus README, UI access and authentication (`--listen`, `--port`, `--share`, `auth.json`; pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/readme.md#L296-L301
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
 - ComfyUI `--listen` default `127.0.0.1`, `0.0.0.0,::` when given without a value, and `--port` default `8188` (pinned tag v0.37.0): https://github.com/Comfy-Org/ComfyUI/blob/v0.37.0/comfy/cli_args.py#L63-L64
