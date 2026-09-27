@@ -90,3 +90,4 @@ bi-dashboards.md
 devops-uis.md
 server-admin-panels.md
 low-code-builders.md
+python.md

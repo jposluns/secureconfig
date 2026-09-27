@@ -5310,6 +5310,39 @@ curl -q -g -sS --noproxy '*' -H 'X-Forwarded-For: 203.0.113.9' https://example.c
 
 # Python web apps: TLS and authentication
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| bind: Use loopback behind a same-host TLS proxy; wildcard is for authenticated direct TLS or private managed ingress. Platform-specific address/port mappings are cross-guide guidance without a listed platform source. | Gunicorn documentation unknown; Uvicorn source 5ac6265a01ff6dcadb0e4250152c3deaf8a168a9 | REASONED |
+| flask-tls: Flask development server binds 127.0.0.1:8443 with cert/key ssl_context; adhoc requires cryptography and remains development-only. | Werkzeug documentation unknown | REASONED |
+| gunicorn-tls: Gunicorn binds 0.0.0.0:8443 with --certfile and --keyfile for direct TLS. | Gunicorn documentation unknown | REASONED |
+| uvicorn-tls: Uvicorn binds 0.0.0.0:8443 with --ssl-certfile and --ssl-keyfile for direct TLS. | Uvicorn source 5ac6265a01ff6dcadb0e4250152c3deaf8a168a9 | REASONED |
+| django-redirect: Set SECURE_SSL_REDIRECT=True. | Django documentation 6.1 | REASONED |
+| django-proxy: Set SECURE_PROXY_SSL_HEADER only behind a trusted proxy that strips and replaces X-Forwarded-Proto; prevent direct bypass. | Django documentation 6.1 | REASONED |
+| django-cookies: Set SESSION_COOKIE_SECURE and CSRF_COOKIE_SECURE true. | Django documentation 6.1 | REASONED |
+| django-hsts: Begin HSTS at 3600 seconds and include-subdomains false; raise duration and scope only after valid HTTPS is confirmed. | Django documentation 6.1 | REASONED |
+| deploy-check: Run manage.py check --deploy and fix its findings. | Django documentation 6.1 | REASONED |
+| password: Keep Django built-in hashing; Flask/FastAPI require an application user store and argon2-cffi or bcrypt. PasswordHasher.verify raises on mismatch; bcrypt and user-store assertions lack listed sources. | Django documentation 6.1; argon2-cffi documentation unknown | REASONED |
+| secrets: Generate secrets.token_urlsafe(32) and load secrets from the environment; the secrets API is not covered by listed Sources. | Django documentation 6.1 | REASONED |
+| credential-extraction: FastAPI security helpers extract credentials and declare schemes; presence/scheme checks do not verify signature, issuer, audience or expiry. | FastAPI documentation unknown | REASONED |
+| oidc: OpenIdConnect is a stub and does not use its discovery URL; validate extracted tokens with an OIDC library and authorize separately. | FastAPI documentation unknown; FastAPI OpenIdConnect source 31bbb380748ccead62fc0f42dbf4273f11dadccf | REASONED |
+| login-limit: Rate-limit login at the proxy or with slowapi; no listed source documents that limiter. | FastAPI documentation unknown | REASONED |
+| mfa: Use pyotp and qrcode, django-otp for Django, or linked MFA guidance; these packages lack listed Sources. | Django documentation 6.1 | REASONED |
+| client-validation: Never ship requests/httpx verify=False or ssl._create_unverified_context; these client APIs lack listed Sources. | Python http.server documentation 3.14.4 | REASONED |
+| client-ca: REQUESTS_CA_BUNDLE selects a requests CA and SSL_CERT_FILE selects an httpx/ssl CA; these variables lack listed Sources. | Python http.server documentation 3.14.4 | REASONED |
+| http-server-bind: As of Python 3.14.4, http.server binds every interface by default; explicitly bind 127.0.0.1:8000. | Python http.server source v3.14.4 | REASONED |
+| http-server-files: http.server serves the current directory and follows symlinks outside it; it is unsuitable for production. Share only a non-private directory through an SSH tunnel. | Python http.server documentation 3.14.4 | REASONED |
+| verify-tls: Public HTTPS must succeed without -k; certificate, chain, hostname and trust failures need investigation. | Gunicorn documentation unknown; Uvicorn source 5ac6265a01ff6dcadb0e4250152c3deaf8a168a9 | REASONED |
+| verify-auth: A real protected route denies no credentials with 401/403 and accepts valid file-supplied credentials with 2xx; logs or direct probing distinguish app from proxy enforcement. | Django documentation 6.1; FastAPI documentation unknown | REASONED |
+| verify-bind: Inspect every listener for loopback behind a same-host proxy or the required managed-ingress address and port. | Gunicorn documentation unknown; Uvicorn source 5ac6265a01ff6dcadb0e4250152c3deaf8a168a9 | REASONED |
+<!-- version-basis:end -->
+
 Covers Flask, FastAPI/Uvicorn, Gunicorn, and Django. Preferred production layout: bind the app server to `127.0.0.1` and terminate TLS in a reverse proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)) or behind [cloudflare.md](cloudflare.md). On a managed platform the platform terminates TLS at its edge and you bind the address it requires ([paas.md](paas.md)). The app servers can also terminate TLS themselves, shown below. Certificates: [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).
 
 ## 1. TLS per server
@@ -5398,7 +5431,7 @@ python -m http.server -b 127.0.0.1 8000
 
 Reach it through an SSH tunnel, including one that runs over your tailnet, never a public bind.
 
-## 6. Verify
+## 6. Verify (REASONED: TLS, authentication and listener expectations follow the Sources below and linked deployment guidance; no deployment run or outcome is recorded in this guide. This metadata-only review has no deployed Python application, proxy or managed ingress to test.)
 
 ```bash
 curl -q -sSI --noproxy '*' https://example.com/        # public HTTPS endpoint: must succeed without -k; if not, investigate the cert, chain, hostname, or your client trust store, never -k
@@ -5412,7 +5445,7 @@ ss -tlnp   # every listener: loopback for a same-host reverse proxy, or the plat
 
 ## Sources (checked September 2026)
 
-- Python `http.server` (binds all interfaces by default, serves the current directory, follows symlinks, not for production): https://docs.python.org/3/library/http.server.html
+- Python `http.server` (binds all interfaces by default, serves the current directory, follows symlinks, not for production) (Python 3.14.4): https://docs.python.org/3/library/http.server.html
 - Gunicorn documentation (settings reference: bind, certfile, keyfile, ca_certs): https://gunicorn.org/reference/settings/
 - Uvicorn settings reference: https://github.com/Kludex/uvicorn/blob/5ac6265a01ff6dcadb0e4250152c3deaf8a168a9/docs/settings.md
 - Django deployment checklist: https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
@@ -36566,7 +36599,7 @@ Open the guide before relying on either, because defaults change between release
 | 7946 | Grafana Loki memberlist gossip when memberlist is the ring store, on 0.0.0.0 by default, over TCP; also Weaviate's memberlist gossip, on every local address (`0.0.0.0`) unless a non-empty `CLUSTER_BIND_ADDR` is set | not stated | [observability-components.md](observability-components.md), [vector-databases.md](vector-databases.md) |
 | 7946/UDP | Weaviate's memberlist gossip, on every local address (`0.0.0.0`) unless a non-empty `CLUSTER_BIND_ADDR` is set | not stated | [vector-databases.md](vector-databases.md) |
 | 7947 | Weaviate's internal cluster API, on every local address | not stated | [vector-databases.md](vector-databases.md) |
-| 8000 | SurrealDB, Chroma, Triton HTTP, Coolify, Vaultwarden outside Docker, Portainer's Edge agent tunnel, the Supabase self-hosted API gateway (Envoy by default, Kong optional) which fronts the whole stack, or GlitchTip's web, API, and open self-signup; also Windmill's server, on `0.0.0.0` by default when run as a binary (its Compose file only exposes it to the Compose network); also LangServe, JupyterHub, Ray Serve, and the Onyx development code interpreter | varies by service; see the guides | [surrealdb.md](surrealdb.md), [vector-databases.md](vector-databases.md), [model-servers.md](model-servers.md), [devops-uis.md](devops-uis.md), [supabase-self-hosted.md](supabase-self-hosted.md), [self-hosted-error-trackers.md](self-hosted-error-trackers.md), [low-code-builders.md](low-code-builders.md), [ai-infra-services.md](ai-infra-services.md), [jupyter.md](jupyter.md), [ray.md](ray.md) |
+| 8000 | SurrealDB, Chroma, Triton HTTP, Coolify, Vaultwarden outside Docker, Portainer's Edge agent tunnel, the Supabase self-hosted API gateway (Envoy by default, Kong optional) which fronts the whole stack, or GlitchTip's web, API, and open self-signup; also Windmill's server, on `0.0.0.0` by default when run as a binary (its Compose file only exposes it to the Compose network); also LangServe, JupyterHub, Ray Serve, and the Onyx development code interpreter; also Python's `python -m http.server` quick-share, on every interface by default | varies by service; see the guides | [surrealdb.md](surrealdb.md), [vector-databases.md](vector-databases.md), [model-servers.md](model-servers.md), [devops-uis.md](devops-uis.md), [supabase-self-hosted.md](supabase-self-hosted.md), [self-hosted-error-trackers.md](self-hosted-error-trackers.md), [low-code-builders.md](low-code-builders.md), [ai-infra-services.md](ai-infra-services.md), [jupyter.md](jupyter.md), [ray.md](ray.md), [python.md](python.md) |
 | 8001, 8002 | Triton gRPC and Triton Prometheus metrics; and Datasette's CLI default HTTP listener on 8001, loopback by default (an overridden bind or a published container mapping is the exposure) | varies by service; see the guides | [model-servers.md](model-servers.md), [sqlite-http-frontends.md](sqlite-http-frontends.md) |
 | 8006 | Proxmox VE's `pveproxy`: the web interface and the whole cluster API over HTTPS, on every address by default | `root@pam` with the host's root password can always log in; no second factor until configured | [server-admin-panels.md](server-admin-panels.md) |
 | 8055 | Directus HTTP API and admin app | Bootstrap admin via `ADMIN_EMAIL`/`ADMIN_PASSWORD` or browser onboarding; public access off | [headless-cms-instant-api.md](headless-cms-instant-api.md) |
