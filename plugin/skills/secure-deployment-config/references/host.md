@@ -1,4 +1,121 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "7ec61a3b662fc5b4bc804bea03d70b2907837b5d7382ece647096b00e5012adb",
+  "components": {
+    "ssh": {
+      "name": "OpenSSH documentation",
+      "basis": "unknown",
+      "sources": {
+        "s44f73ffcb41e": "https://man.openbsd.org/sshd_config"
+      }
+    },
+    "ufw": {
+      "name": "UFW documentation",
+      "basis": "unknown",
+      "sources": {
+        "scff3a017f30b": "https://manpages.ubuntu.com/manpages/noble/man8/ufw.8.html"
+      }
+    },
+    "firewalld": {
+      "name": "firewalld documentation",
+      "basis": "unknown",
+      "sources": {
+        "sa1a1385129f1": "https://firewalld.org/documentation/man-pages/firewall-cmd.html",
+        "sc1cb4d135f3b": "https://firewalld.org/documentation/man-pages/firewalld.richlanguage.html"
+      }
+    },
+    "fail2ban": {
+      "name": "fail2ban",
+      "basis": "unknown",
+      "sources": {
+        "s7a37ae416e85": "https://github.com/fail2ban/fail2ban"
+      }
+    },
+    "crowdsec": {
+      "name": "CrowdSec",
+      "basis": "unknown",
+      "sources": {
+        "s4efe4c22c69b": "https://www.crowdsec.net/"
+      }
+    },
+    "totp": {
+      "name": "google-authenticator-libpam",
+      "basis": "unknown",
+      "sources": {
+        "s6f787f7b4f18": "https://github.com/google/google-authenticator-libpam"
+      }
+    },
+    "duo": {
+      "name": "Duo Unix",
+      "basis": "unknown",
+      "sources": {
+        "s18b76ce18df1": "https://duo.com/docs/duounix"
+      }
+    }
+  },
+  "claims": {
+    "safe-transition": {"text": "Confirm non-root key login and sudo in a fresh session before disabling password/root access; retain the working session while testing.", "components": ["ssh"], "sources": ["ssh:s44f73ffcb41e"], "status": "REASONED"},
+    "keys-only": {"text": "Disable PasswordAuthentication and KbdInteractiveAuthentication; enable PubkeyAuthentication and prohibit root login.", "components": ["ssh"], "sources": ["ssh:s44f73ffcb41e"], "status": "REASONED"},
+    "include-order": {"text": "First-read values and lexical includes motivate 00-hardening.conf; the OpenSSH 8.2, Ubuntu 20.04 and cloud-init distribution history lacks a direct source here.", "components": ["ssh"], "sources": ["ssh:s44f73ffcb41e"], "status": "REASONED"},
+    "effective-config": {"text": "Validate with sshd -t before reload; inspect sshd -T global values and -T -C for Match-specific settings. Service names differ by distribution.", "components": ["ssh"], "sources": ["ssh:s44f73ffcb41e"], "status": "REASONED"},
+    "totp": {"text": "SSH TOTP uses google-authenticator-libpam through PAM keyboard-interactive; keys-only configuration must change before adding this factor.", "components": ["ssh", "totp"], "sources": ["ssh:s44f73ffcb41e", "totp:s6f787f7b4f18"], "status": "REASONED"},
+    "duo": {"text": "Duo pam_duo provides the alternative push factor through PAM keyboard-interactive.", "components": ["ssh", "duo"], "sources": ["ssh:s44f73ffcb41e", "duo:s18b76ce18df1"], "status": "REASONED"},
+    "mfa-methods": {"text": "UsePAM yes and AuthenticationMethods publickey,keyboard-interactive require both methods; keep password/root login disabled and public keys enabled.", "components": ["ssh", "duo"], "sources": ["ssh:s44f73ffcb41e", "duo:s18b76ce18df1"], "status": "REASONED"},
+    "legacy-name": {"text": "Older configurations use ChallengeResponseAuthentication for KbdInteractiveAuthentication; enable the spelling present when configuring PAM MFA.", "components": ["ssh", "duo"], "sources": ["ssh:s44f73ffcb41e", "duo:s18b76ce18df1"], "status": "REASONED"},
+    "ufw-default": {"text": "Set deny incoming and allow outgoing, then enable UFW; permit TCP 80 and 443 for the TLS layer.", "components": ["ufw"], "sources": ["ufw:scff3a017f30b"], "status": "REASONED"},
+    "ufw-ssh": {"text": "Remove any broad OpenSSH allow before adding an admin-source TCP 22 rule; adding a narrower rule does not replace the old allowance.", "components": ["ufw"], "sources": ["ufw:scff3a017f30b"], "status": "REASONED"},
+    "brokered-ssh": {"text": "SSM/tailnet avoid public inbound SSH; IAP uses 35.235.240.0/20 and Bastion its subnet on 22 in both layers. Broker details have no direct source here.", "components": ["ufw"], "sources": ["ufw:scff3a017f30b"], "status": "REASONED"},
+    "firewalld-zone": {"text": "Find the public interface zone explicitly; remove its broad ssh service, add the IPv4 admin rich rule permanently, then reload to activate it.", "components": ["firewalld"], "sources": ["firewalld:sa1a1385129f1", "firewalld:sc1cb4d135f3b"], "status": "REASONED"},
+    "firewalld-audit": {"text": "Inspect applicable zones for other services, port ranges, protocol/source allowances or ACCEPT targets that reopen 22; the narrow rich rule does not supersede them.", "components": ["firewalld"], "sources": ["firewalld:sa1a1385129f1", "firewalld:sc1cb4d135f3b"], "status": "REASONED"},
+    "docker-bypass": {"text": "Published Docker ports bypass UFW; consult docker.md before relying on the host firewall. This guide has no direct Docker citation.", "components": ["ufw"], "sources": ["ufw:scff3a017f30b"], "status": "REASONED"},
+    "fail2ban": {"text": "Use fail2ban to ban repeated authentication failures against SSH/login services.", "components": ["fail2ban"], "sources": ["fail2ban:s7a37ae416e85"], "status": "REASONED"},
+    "crowdsec": {"text": "CrowdSec is the alternative protection for repeated authentication failures.", "components": ["crowdsec"], "sources": ["crowdsec:s4efe4c22c69b"], "status": "REASONED"},
+    "updates": {"text": "Automate patches with unattended-upgrades on Debian/Ubuntu or dnf-automatic on RHEL-family systems; no update-tool source is listed.", "components": ["ssh"], "sources": ["ssh:s44f73ffcb41e"], "status": "REASONED"},
+    "verify-listeners": {"text": "Inventory intended TCP/UDP listeners and addresses in both IP families; no ss manual is listed.", "components": ["ufw"], "sources": ["ufw:scff3a017f30b"], "status": "REASONED", "verify": [1]},
+    "verify-firewall": {"text": "UFW status should show default-deny ingress and admin-scoped SSH allowances; also inspect show raw because status omits /etc/ufw rules.", "components": ["ufw"], "sources": ["ufw:scff3a017f30b"], "status": "REASONED", "verify": [1]},
+    "verify-external": {"text": "Disallowed-source TCP 22 must fail while allowed SSH works; correlate effective rules. Refusal alone, local errors and unsupported netcat options are inconclusive.", "components": ["ufw", "firewalld"], "sources": ["ufw:scff3a017f30b", "firewalld:sa1a1385129f1"], "status": "REASONED", "verify": [1]},
+    "verify-password": {"text": "A password-only SSH attempt must fail immediately without a password prompt; a prompt means password authentication remains enabled.", "components": ["ssh"], "sources": ["ssh:s44f73ffcb41e"], "status": "REASONED", "verify": [1]},
+    "verify-mfa": {"text": "After key acceptance require a code, reject wrong/omitted codes and unenrolled users without nullok, and use Duo failmode=secure; test before closing the working session.", "components": ["ssh", "totp", "duo"], "sources": ["ssh:s44f73ffcb41e", "totp:s6f787f7b4f18", "duo:s18b76ce18df1"], "status": "REASONED", "verify": [1]}
+  }
+}
+---
 # Host baseline: SSH, firewall, updates
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| safe-transition: Confirm non-root key login and sudo in a fresh session before disabling password/root access; retain the working session while testing. | OpenSSH documentation unknown | REASONED |
+| keys-only: Disable PasswordAuthentication and KbdInteractiveAuthentication; enable PubkeyAuthentication and prohibit root login. | OpenSSH documentation unknown | REASONED |
+| include-order: First-read values and lexical includes motivate 00-hardening.conf; the OpenSSH 8.2, Ubuntu 20.04 and cloud-init distribution history lacks a direct source here. | OpenSSH documentation unknown | REASONED |
+| effective-config: Validate with sshd -t before reload; inspect sshd -T global values and -T -C for Match-specific settings. Service names differ by distribution. | OpenSSH documentation unknown | REASONED |
+| totp: SSH TOTP uses google-authenticator-libpam through PAM keyboard-interactive; keys-only configuration must change before adding this factor. | OpenSSH documentation unknown; google-authenticator-libpam unknown | REASONED |
+| duo: Duo pam_duo provides the alternative push factor through PAM keyboard-interactive. | OpenSSH documentation unknown; Duo Unix unknown | REASONED |
+| mfa-methods: UsePAM yes and AuthenticationMethods publickey,keyboard-interactive require both methods; keep password/root login disabled and public keys enabled. | OpenSSH documentation unknown; Duo Unix unknown | REASONED |
+| legacy-name: Older configurations use ChallengeResponseAuthentication for KbdInteractiveAuthentication; enable the spelling present when configuring PAM MFA. | OpenSSH documentation unknown; Duo Unix unknown | REASONED |
+| ufw-default: Set deny incoming and allow outgoing, then enable UFW; permit TCP 80 and 443 for the TLS layer. | UFW documentation unknown | REASONED |
+| ufw-ssh: Remove any broad OpenSSH allow before adding an admin-source TCP 22 rule; adding a narrower rule does not replace the old allowance. | UFW documentation unknown | REASONED |
+| brokered-ssh: SSM/tailnet avoid public inbound SSH; IAP uses 35.235.240.0/20 and Bastion its subnet on 22 in both layers. Broker details have no direct source here. | UFW documentation unknown | REASONED |
+| firewalld-zone: Find the public interface zone explicitly; remove its broad ssh service, add the IPv4 admin rich rule permanently, then reload to activate it. | firewalld documentation unknown | REASONED |
+| firewalld-audit: Inspect applicable zones for other services, port ranges, protocol/source allowances or ACCEPT targets that reopen 22; the narrow rich rule does not supersede them. | firewalld documentation unknown | REASONED |
+| docker-bypass: Published Docker ports bypass UFW; consult docker.md before relying on the host firewall. This guide has no direct Docker citation. | UFW documentation unknown | REASONED |
+| fail2ban: Use fail2ban to ban repeated authentication failures against SSH/login services. | fail2ban unknown | REASONED |
+| crowdsec: CrowdSec is the alternative protection for repeated authentication failures. | CrowdSec unknown | REASONED |
+| updates: Automate patches with unattended-upgrades on Debian/Ubuntu or dnf-automatic on RHEL-family systems; no update-tool source is listed. | OpenSSH documentation unknown | REASONED |
+| verify-listeners: Inventory intended TCP/UDP listeners and addresses in both IP families; no ss manual is listed. | UFW documentation unknown | REASONED |
+| verify-firewall: UFW status should show default-deny ingress and admin-scoped SSH allowances; also inspect show raw because status omits /etc/ufw rules. | UFW documentation unknown | REASONED |
+| verify-external: Disallowed-source TCP 22 must fail while allowed SSH works; correlate effective rules. Refusal alone, local errors and unsupported netcat options are inconclusive. | UFW documentation unknown; firewalld documentation unknown | REASONED |
+| verify-password: A password-only SSH attempt must fail immediately without a password prompt; a prompt means password authentication remains enabled. | OpenSSH documentation unknown | REASONED |
+| verify-mfa: After key acceptance require a code, reject wrong/omitted codes and unenrolled users without nullok, and use Duo failmode=secure; test before closing the working session. | OpenSSH documentation unknown; google-authenticator-libpam unknown; Duo Unix unknown | REASONED |
+<!-- version-basis:end -->
 
 Every guide in this repository secures a service; this one secures the machine under them. Apply it once per host before exposing anything.
 
@@ -75,6 +192,8 @@ sudo firewall-cmd --zone=REPLACE_WITH_PUBLIC_ZONE --list-all   # confirm nothing
 - Automate security patches: `unattended-upgrades` on Debian/Ubuntu, `dnf-automatic` on RHEL-family systems.
 
 ## 4. Verify
+
+REASONED: listener, firewall, SSH key-only and PAM MFA checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited SSH, firewall and MFA sources; this read-only review has no authorized target host or external probe machine.
 
 ```bash
 sudo ss -tulnp                    # TCP and UDP listeners (IPv4 and IPv6): only intended ones, on intended addresses

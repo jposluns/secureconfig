@@ -1,4 +1,96 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "9e9abd4af1684b644bf1bdc1e4cf84a0be849eb0edeff32c1c8de692075071c3",
+  "components": {
+    "engine": {
+      "name": "Docker Engine networking",
+      "basis": "unknown",
+      "sources": {
+        "s351180c6678f": "https://docs.docker.com/engine/network/packet-filtering-firewalls/",
+        "s2fecb6db5480": "https://docs.docker.com/engine/network/firewall-iptables/",
+        "s1e53417c513d": "https://docs.docker.com/engine/network/port-publishing/"
+      }
+    },
+    "boundary": {
+      "name": "Docker Engine minimum boundary",
+      "basis": "28.0",
+      "sources": {
+        "s50eb099eac95": "https://docs.docker.com/engine/release-notes/28/"
+      }
+    },
+    "compose": {
+      "name": "Compose networking",
+      "basis": "unknown",
+      "sources": {
+        "sae565a19136c": "https://docs.docker.com/compose/how-tos/networking/"
+      }
+    }
+  },
+  "claims": {
+    "publish": {"text": "Omitting the host address publishes 3000:3000 on 0.0.0.0 and [::].", "components": ["engine"], "sources": ["engine:s1e53417c513d"], "status": "REASONED"},
+    "host-firewall": {"text": "Docker programs firewall rules directly; UFW or firewalld blocking a host port does not establish published-port isolation.", "components": ["engine"], "sources": ["engine:s351180c6678f"], "status": "REASONED"},
+    "private-network": {"text": "Omit app/database ports; Compose peers use service names. The example uses postgres:17 at db:5432; no PostgreSQL source is listed.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
+    "loopback": {"text": "Publish local access as 127.0.0.1:3000:3000; check the running server version, with Engine 28.0 as the stated boundary.", "components": ["engine", "boundary"], "sources": ["engine:s1e53417c513d", "boundary:s50eb099eac95"], "status": "REASONED"},
+    "old-loopback": {"text": "Before 28.0, same-L2 neighbours could reach loopback publications under the default bridge configuration.", "components": ["boundary"], "sources": ["boundary:s50eb099eac95"], "status": "REASONED"},
+    "old-host-bind": {"text": "Before 28.0, remote hosts could reach published container ports despite the host-IP binding.", "components": ["boundary"], "sources": ["boundary:s50eb099eac95"], "status": "REASONED"},
+    "old-unpublished": {"text": "Before 28.0, direct routing could reach unpublished container ports; 28.0 fixed the stated default-bridge exposures.", "components": ["boundary"], "sources": ["boundary:s50eb099eac95"], "status": "REASONED"},
+    "upstream": {"text": "Use an upstream security group or network ACL for routable publications and boot-time protection; provider configuration is not sourced here.", "components": ["engine"], "sources": ["engine:s351180c6678f"], "status": "REASONED"},
+    "docker-user": {"text": "On the iptables backend, DOCKER-USER precedes Docker accepts; the nftables backend has no such chain. Match NEW traffic from outside the allowed subnet.", "components": ["engine"], "sources": ["engine:s351180c6678f", "engine:s2fecb6db5480"], "status": "REASONED"},
+    "dnat": {"text": "DOCKER-USER sees post-DNAT container destinations; conntrack original destination port and ORIGINAL direction scope a published service.", "components": ["engine"], "sources": ["engine:s2fecb6db5480"], "status": "REASONED"},
+    "ipv6": {"text": "Native IPv6 forwarding needs ip6tables; the IPv6-to-IPv4 userland-proxy path terminates on host INPUT and bypasses DOCKER-USER.", "components": ["engine"], "sources": ["engine:s2fecb6db5480", "engine:s1e53417c513d"], "status": "REASONED"},
+    "proxy-path": {"text": "Close the userland-proxy path with an explicit publish address, disabled userland proxy or IPv6 INPUT restrictions; test both address families and sources.", "components": ["engine"], "sources": ["engine:s1e53417c513d", "engine:s2fecb6db5480"], "status": "REASONED"},
+    "persistence": {"text": "Guide recommends persisting only DOCKER-USER rules after Docker startup, avoiding blanket dynamic-chain saves; startup-unit details lack a direct source.", "components": ["engine"], "sources": ["engine:s351180c6678f", "engine:s2fecb6db5480"], "status": "REASONED"},
+    "tls": {"text": "Example caddy:2 publishes 80:80 and 443:443, mounts Caddyfile read-only and persists data/config, proxying app:3000 with automatic certificates; no Caddy source is listed.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
+    "alternate-entry": {"text": "Cloudflared to http://app:3000, Tailscale or internal self-signed TLS are linked alternatives; no direct vendor sources for these alternatives are listed.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
+    "auth": {"text": "Proxy authentication and human MFA supplement application login; no authentication-provider source is listed.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
+    "secrets": {"text": "Use runtime environment files or Compose secrets, exclude .env from Git, and avoid image ENV/build-argument secrets; no direct secret-handling source is listed.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
+    "workload": {"text": "Use a non-root USER and the linked capability, no-new-privileges, read-only-root and Docker-socket guidance; no workload-control source is listed here.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
+    "database": {"text": "Database TLS and authentication remain necessary for connections from outside the Compose network; database vendor sources are in linked guides.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
+    "verify-publish": {"text": "Compose ps is project-scoped; inventory every host container and TCP/UDP socket, including IPv6. Socket visibility alone does not prove reachability.", "components": ["compose", "engine"], "sources": ["compose:sae565a19136c", "engine:s1e53417c513d"], "status": "REASONED", "verify": [1]},
+    "verify-redirect": {"text": "HTTP should redirect to HTTPS; the guide records an expected result, with no direct proxy citation or run.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED", "verify": [1]},
+    "verify-auth": {"text": "Unauthenticated HTTPS /api should return 401 or 403, never 200; confirm authorized success separately. The proxy discriminator has no direct source here.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED", "verify": [1]},
+    "verify-isolation": {"text": "Probe each restricted host address and publication from allowed/disallowed sources in both families; backend isolation must coexist with proxy reachability.", "components": ["engine"], "sources": ["engine:s351180c6678f", "engine:s2fecb6db5480", "engine:s1e53417c513d"], "status": "REASONED", "verify": [1]}
+  }
+}
+---
 # Docker and Compose: exposure, TLS, and authentication
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| publish: Omitting the host address publishes 3000:3000 on 0.0.0.0 and [::]. | Docker Engine networking unknown | REASONED |
+| host-firewall: Docker programs firewall rules directly; UFW or firewalld blocking a host port does not establish published-port isolation. | Docker Engine networking unknown | REASONED |
+| private-network: Omit app/database ports; Compose peers use service names. The example uses postgres:17 at db:5432; no PostgreSQL source is listed. | Compose networking unknown | REASONED |
+| loopback: Publish local access as 127.0.0.1:3000:3000; check the running server version, with Engine 28.0 as the stated boundary. | Docker Engine networking unknown; Docker Engine minimum boundary 28.0 | REASONED |
+| old-loopback: Before 28.0, same-L2 neighbours could reach loopback publications under the default bridge configuration. | Docker Engine minimum boundary 28.0 | REASONED |
+| old-host-bind: Before 28.0, remote hosts could reach published container ports despite the host-IP binding. | Docker Engine minimum boundary 28.0 | REASONED |
+| old-unpublished: Before 28.0, direct routing could reach unpublished container ports; 28.0 fixed the stated default-bridge exposures. | Docker Engine minimum boundary 28.0 | REASONED |
+| upstream: Use an upstream security group or network ACL for routable publications and boot-time protection; provider configuration is not sourced here. | Docker Engine networking unknown | REASONED |
+| docker-user: On the iptables backend, DOCKER-USER precedes Docker accepts; the nftables backend has no such chain. Match NEW traffic from outside the allowed subnet. | Docker Engine networking unknown | REASONED |
+| dnat: DOCKER-USER sees post-DNAT container destinations; conntrack original destination port and ORIGINAL direction scope a published service. | Docker Engine networking unknown | REASONED |
+| ipv6: Native IPv6 forwarding needs ip6tables; the IPv6-to-IPv4 userland-proxy path terminates on host INPUT and bypasses DOCKER-USER. | Docker Engine networking unknown | REASONED |
+| proxy-path: Close the userland-proxy path with an explicit publish address, disabled userland proxy or IPv6 INPUT restrictions; test both address families and sources. | Docker Engine networking unknown | REASONED |
+| persistence: Guide recommends persisting only DOCKER-USER rules after Docker startup, avoiding blanket dynamic-chain saves; startup-unit details lack a direct source. | Docker Engine networking unknown | REASONED |
+| tls: Example caddy:2 publishes 80:80 and 443:443, mounts Caddyfile read-only and persists data/config, proxying app:3000 with automatic certificates; no Caddy source is listed. | Compose networking unknown | REASONED |
+| alternate-entry: Cloudflared to http://app:3000, Tailscale or internal self-signed TLS are linked alternatives; no direct vendor sources for these alternatives are listed. | Compose networking unknown | REASONED |
+| auth: Proxy authentication and human MFA supplement application login; no authentication-provider source is listed. | Compose networking unknown | REASONED |
+| secrets: Use runtime environment files or Compose secrets, exclude .env from Git, and avoid image ENV/build-argument secrets; no direct secret-handling source is listed. | Compose networking unknown | REASONED |
+| workload: Use a non-root USER and the linked capability, no-new-privileges, read-only-root and Docker-socket guidance; no workload-control source is listed here. | Compose networking unknown | REASONED |
+| database: Database TLS and authentication remain necessary for connections from outside the Compose network; database vendor sources are in linked guides. | Compose networking unknown | REASONED |
+| verify-publish: Compose ps is project-scoped; inventory every host container and TCP/UDP socket, including IPv6. Socket visibility alone does not prove reachability. | Compose networking unknown; Docker Engine networking unknown | REASONED |
+| verify-redirect: HTTP should redirect to HTTPS; the guide records an expected result, with no direct proxy citation or run. | Compose networking unknown | REASONED |
+| verify-auth: Unauthenticated HTTPS /api should return 401 or 403, never 200; confirm authorized success separately. The proxy discriminator has no direct source here. | Compose networking unknown | REASONED |
+| verify-isolation: Probe each restricted host address and publication from allowed/disallowed sources in both families; backend isolation must coexist with proxy reachability. | Docker Engine networking unknown | REASONED |
+<!-- version-basis:end -->
 
 Containers are where accidental exposure happens most. Two Docker behaviours cause it:
 
@@ -79,6 +171,8 @@ Caddy obtains and renews the certificate automatically ([free-certificates.md](f
 - Databases in containers still need their own TLS and authentication when anything outside the Compose network connects: see [postgresql.md](postgresql.md), [mysql.md](mysql.md), [mongodb.md](mongodb.md), and [redis.md](redis.md).
 
 ## 4. Verify
+
+REASONED: publication, redirect, authentication and external isolation checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited Docker networking sources and linked proxy guides; this read-only review has no authorized deployment or external probe hosts.
 
 ```bash
 docker compose ps                     # project-scoped: only the proxy shows a published (0.0.0.0/[::] or a host IP) binding; review every container on the host, IPv6 included

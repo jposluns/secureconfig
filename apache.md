@@ -1,4 +1,113 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "8f56b613dff4786f4771bddb49668fc13e23a853167793f2f783a67d417eadf5",
+  "components": {
+    "apache": {
+      "name": "Apache HTTP Server",
+      "basis": "2.4",
+      "sources": {
+        "sde155f1667f3": "https://httpd.apache.org/docs/2.4/ssl/ssl_howto.html",
+        "s99dcb49d86a4": "https://httpd.apache.org/docs/2.4/howto/auth.html",
+        "sc07f97af99e3": "https://httpd.apache.org/docs/2.4/vhosts/name-based.html",
+        "scf804f4940d7": "https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslvhostsnipolicy",
+        "s7c302c734a0d": "https://httpd.apache.org/docs/2.4/vhosts/details.html"
+      }
+    },
+    "policy": {
+      "name": "Mozilla TLS policy",
+      "basis": "unknown",
+      "sources": {
+        "s529b0eabe2ed": "https://ssl-config.mozilla.org/"
+      }
+    },
+    "tls-min": {
+      "name": "Apache TLSv1.3 minimum",
+      "basis": "2.4.36+",
+      "sources": {
+        "scf804f4940d7": "https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslvhostsnipolicy"
+      }
+    },
+    "sni-min": {
+      "name": "Apache per-vhost protocol minimum",
+      "basis": "2.4.42+",
+      "sources": {
+        "scf804f4940d7": "https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslvhostsnipolicy"
+      }
+    },
+    "openssl": {
+      "name": "OpenSSL qualification",
+      "basis": "1.1.1+",
+      "sources": {
+        "scf804f4940d7": "https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslvhostsnipolicy"
+      }
+    },
+    "chain-min": {
+      "name": "Apache chain-file minimum",
+      "basis": "2.4.8",
+      "sources": {
+        "scf804f4940d7": "https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslvhostsnipolicy"
+      }
+    }
+  },
+  "claims": {
+    "certbot": {"text": "The guide says certbot --apache installs certificates and redirects by default; --redirect is explicit and --hsts defaults off. Certbot is not in Sources.", "components": ["apache"], "sources": ["apache:sde155f1667f3"], "status": "REASONED"},
+    "modules": {"text": "Enable ssl/headers and a 443 vhost on Debian/Ubuntu, or install mod_ssl/httpd-tools on RHEL/Fedora; package-command sources are absent.", "components": ["apache"], "sources": ["apache:sde155f1667f3"], "status": "REASONED"},
+    "tls": {"text": "The 443 vhost enables TLS with a certificate chain and private key and TLSv1.2/TLSv1.3 only.", "components": ["apache"], "sources": ["apache:sde155f1667f3", "apache:scf804f4940d7"], "status": "REASONED"},
+    "tls-version": {"text": "TLSv1.3 needs Apache 2.4.36+ with OpenSSL 1.1.1+; older builds use SSLProtocol all -SSLv3 -TLSv1 -TLSv1.1.", "components": ["apache", "tls-min", "openssl"], "sources": ["apache:scf804f4940d7", "tls-min:scf804f4940d7", "openssl:scf804f4940d7"], "status": "REASONED"},
+    "vhost-floor": {"text": "Independent per-vhost SSLProtocol needs Apache 2.4.42+, OpenSSL 1.1.1+ and client SNI; older builds also need the floor in global/base config.", "components": ["apache", "sni-min", "openssl"], "sources": ["apache:scf804f4940d7", "apache:s7c302c734a0d", "sni-min:scf804f4940d7", "openssl:scf804f4940d7"], "status": "REASONED"},
+    "chain": {"text": "Apache 2.4.8+ permits the chain in SSLCertificateFile; SSLCertificateChainFile is deprecated.", "components": ["apache", "chain-min"], "sources": ["apache:scf804f4940d7", "chain-min:scf804f4940d7"], "status": "REASONED"},
+    "hsts": {"text": "Header always sets HSTS after HTTPS works; includeSubDomains requires valid HTTPS everywhere. Sources omit mod_headers.", "components": ["apache"], "sources": ["apache:sde155f1667f3"], "status": "REASONED"},
+    "cipher-policy": {"text": "Generate explicit cipher policy with Mozilla rather than copying old lists.", "components": ["policy"], "sources": ["policy:s529b0eabe2ed"], "status": "REASONED"},
+    "redirect": {"text": "The 80 vhost sends a permanent redirect to the canonical HTTPS host; retain only redirects and needed ACME HTTP-01 paths.", "components": ["apache"], "sources": ["apache:sc07f97af99e3", "apache:sde155f1667f3"], "status": "REASONED"},
+    "password-file": {"text": "Create a bcrypt htpasswd file with cost 12 and -c only for its first user; paths differ by distribution. Cost defaults and OWASP guidance are not directly cited.", "components": ["apache"], "sources": ["apache:s99dcb49d86a4"], "status": "REASONED"},
+    "basic": {"text": "AuthType Basic, AuthName, AuthUserFile and Require valid-user protect the chosen site/path over TLS; enumerate every public path.", "components": ["apache"], "sources": ["apache:s99dcb49d86a4"], "status": "REASONED"},
+    "mtls": {"text": "A separate machine-client 443 vhost requires a trusted certificate with SSLVerifyClient require and depth 2; SSLCACertificateFile is server/vhost scoped.", "components": ["apache"], "sources": ["apache:scf804f4940d7"], "status": "REASONED"},
+    "mfa": {"text": "Basic is single-factor; the guide says Authelia does not support Apache and proposes mod_auth_openidc with IdP MFA or Cloudflare Access. Integration sources are absent.", "components": ["apache"], "sources": ["apache:s99dcb49d86a4"], "status": "REASONED"},
+    "key-permissions": {"text": "Keep private keys root-owned and mode 0600.", "components": ["apache"], "sources": ["apache:sde155f1667f3"], "status": "REASONED"},
+    "verify-config": {"text": "Run apachectl configtest before service reload; no outcome is recorded.", "components": ["apache"], "sources": ["apache:sde155f1667f3"], "status": "REASONED", "verify": [1]},
+    "verify-redirect": {"text": "HTTP should return 301 with an HTTPS Location.", "components": ["apache"], "sources": ["apache:sc07f97af99e3"], "status": "REASONED", "verify": [1]},
+    "verify-auth": {"text": "Read printed status: curl can exit 0 for 200 or 401; expect 200 before auth and 401 after it.", "components": ["apache"], "sources": ["apache:s99dcb49d86a4"], "status": "REASONED", "verify": [1]},
+    "verify-listeners": {"text": "Inspect the entire listener table, without filtering away unexpected ports.", "components": ["apache"], "sources": ["apache:sc07f97af99e3"], "status": "REASONED", "verify": [1]},
+    "verify-unmatched": {"text": "Use an unconfigured certificate-covered URL name for both SNI and Host; 401 passes, 200 exposes a protected resource through another vhost. Host-only probes can misleadingly give 401 or 421.", "components": ["apache"], "sources": ["apache:sc07f97af99e3", "apache:scf804f4940d7", "apache:s7c302c734a0d"], "status": "REASONED", "verify": [1]},
+    "verify-vhost-review": {"text": "If no spare certificate-covered name exists, use apachectl -S and review that the first matching vhost cannot serve the protected DocumentRoot.", "components": ["apache"], "sources": ["apache:sc07f97af99e3", "apache:s7c302c734a0d"], "status": "REASONED", "verify": [2]}
+  }
+}
+---
 # Apache HTTP Server: TLS and authentication
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| certbot: The guide says certbot --apache installs certificates and redirects by default; --redirect is explicit and --hsts defaults off. Certbot is not in Sources. | Apache HTTP Server 2.4 | REASONED |
+| modules: Enable ssl/headers and a 443 vhost on Debian/Ubuntu, or install mod_ssl/httpd-tools on RHEL/Fedora; package-command sources are absent. | Apache HTTP Server 2.4 | REASONED |
+| tls: The 443 vhost enables TLS with a certificate chain and private key and TLSv1.2/TLSv1.3 only. | Apache HTTP Server 2.4 | REASONED |
+| tls-version: TLSv1.3 needs Apache 2.4.36+ with OpenSSL 1.1.1+; older builds use SSLProtocol all -SSLv3 -TLSv1 -TLSv1.1. | Apache HTTP Server 2.4; Apache TLSv1.3 minimum 2.4.36+; OpenSSL qualification 1.1.1+ | REASONED |
+| vhost-floor: Independent per-vhost SSLProtocol needs Apache 2.4.42+, OpenSSL 1.1.1+ and client SNI; older builds also need the floor in global/base config. | Apache HTTP Server 2.4; Apache per-vhost protocol minimum 2.4.42+; OpenSSL qualification 1.1.1+ | REASONED |
+| chain: Apache 2.4.8+ permits the chain in SSLCertificateFile; SSLCertificateChainFile is deprecated. | Apache HTTP Server 2.4; Apache chain-file minimum 2.4.8 | REASONED |
+| hsts: Header always sets HSTS after HTTPS works; includeSubDomains requires valid HTTPS everywhere. Sources omit mod_headers. | Apache HTTP Server 2.4 | REASONED |
+| cipher-policy: Generate explicit cipher policy with Mozilla rather than copying old lists. | Mozilla TLS policy unknown | REASONED |
+| redirect: The 80 vhost sends a permanent redirect to the canonical HTTPS host; retain only redirects and needed ACME HTTP-01 paths. | Apache HTTP Server 2.4 | REASONED |
+| password-file: Create a bcrypt htpasswd file with cost 12 and -c only for its first user; paths differ by distribution. Cost defaults and OWASP guidance are not directly cited. | Apache HTTP Server 2.4 | REASONED |
+| basic: AuthType Basic, AuthName, AuthUserFile and Require valid-user protect the chosen site/path over TLS; enumerate every public path. | Apache HTTP Server 2.4 | REASONED |
+| mtls: A separate machine-client 443 vhost requires a trusted certificate with SSLVerifyClient require and depth 2; SSLCACertificateFile is server/vhost scoped. | Apache HTTP Server 2.4 | REASONED |
+| mfa: Basic is single-factor; the guide says Authelia does not support Apache and proposes mod_auth_openidc with IdP MFA or Cloudflare Access. Integration sources are absent. | Apache HTTP Server 2.4 | REASONED |
+| key-permissions: Keep private keys root-owned and mode 0600. | Apache HTTP Server 2.4 | REASONED |
+| verify-config: Run apachectl configtest before service reload; no outcome is recorded. | Apache HTTP Server 2.4 | REASONED |
+| verify-redirect: HTTP should return 301 with an HTTPS Location. | Apache HTTP Server 2.4 | REASONED |
+| verify-auth: Read printed status: curl can exit 0 for 200 or 401; expect 200 before auth and 401 after it. | Apache HTTP Server 2.4 | REASONED |
+| verify-listeners: Inspect the entire listener table, without filtering away unexpected ports. | Apache HTTP Server 2.4 | REASONED |
+| verify-unmatched: Use an unconfigured certificate-covered URL name for both SNI and Host; 401 passes, 200 exposes a protected resource through another vhost. Host-only probes can misleadingly give 401 or 421. | Apache HTTP Server 2.4 | REASONED |
+| verify-vhost-review: If no spare certificate-covered name exists, use apachectl -S and review that the first matching vhost cannot serve the protected DocumentRoot. | Apache HTTP Server 2.4 | REASONED |
+<!-- version-basis:end -->
 
 Applies to Apache 2.4. Get a certificate first: [free-certificates.md](free-certificates.md) for a public host (note that `certbot --apache` obtains and installs the certificate and, at the time of writing, enables the HTTP-to-HTTPS redirect by default (`--redirect` requests it explicitly), but review its generated TLS config against steps 1 to 3 and add HSTS yourself, since certbot's `--hsts` is off by default), or [self-signed.md](self-signed.md) for internal use.
 
@@ -78,7 +187,7 @@ SSLVerifyDepth 2
 
 Basic authentication is single-factor, and Authelia documents Apache as unsupported for its portal. For human-facing sites, add MFA by making Apache an OIDC client with [mod_auth_openidc](https://github.com/OpenIDC/mod_auth_openidc), with MFA enforced at the identity provider, or by fronting the site with Cloudflare Access; options in [mfa.md](mfa.md).
 
-## 5. Verify
+## 5. Verify (REASONED: all Verify scenarios follow the cited Apache documentation; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized Apache deployment fixture.)
 
 These are read-and-judge checks. `curl` exits 0 for a 401 as readily as for a 200, so the
 status code is printed and you compare it; nothing here fails on its own.
@@ -134,6 +243,6 @@ sudo apachectl -S                       # the vhost list, in Apache's own matchi
 - Apache SSL/TLS how-to: https://httpd.apache.org/docs/2.4/ssl/ssl_howto.html
 - Apache authentication how-to: https://httpd.apache.org/docs/2.4/howto/auth.html
 - Apache name-based virtual hosts, for which vhost answers an unmatched Host header: https://httpd.apache.org/docs/2.4/vhosts/name-based.html
-- Apache mod_ssl `SSLVHostSNIPolicy`, for the 421 a mismatched SNI and Host pairing can produce: https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslvhostsnipolicy
+- Apache mod_ssl `SSLVHostSNIPolicy`, for the 421 a mismatched SNI and Host pairing can produce (Apache 2.4.36+, Apache 2.4.42+, OpenSSL 1.1.1+, Apache 2.4.8): https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslvhostsnipolicy
 - Apache virtual host matching in detail, for SNI selecting the vhost on a TLS connection: https://httpd.apache.org/docs/2.4/vhosts/details.html
 - Mozilla SSL Configuration Generator: https://ssl-config.mozilla.org/

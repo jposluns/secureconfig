@@ -437,6 +437,46 @@ maintaining a private assessment indefinitely.
 
 # Free publicly trusted certificates (ACME)
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| public-trust: ACME CAs such as Let's Encrypt and ZeroSSL issue free publicly trusted certificates; prefer these for public DNS names, including private hosts using DNS-01. | Let's Encrypt documentation unknown; ZeroSSL unknown | REASONED |
+| http-challenge: HTTP-01 needs a public A/AAAA or CNAME pointing to the server and inbound internet access to port 80. | Let's Encrypt documentation unknown | REASONED |
+| alpn-challenge: TLS-ALPN-01 needs a public DNS record and inbound port 443; the guide names Caddy and Traefik without direct vendor Sources entries. | Let's Encrypt documentation unknown | REASONED |
+| dns-challenge: DNS-01 needs control of the challenge TXT record, no public address record or inbound port, and supports wildcards; the guide additionally requires DNS API access and a DNS plugin. | Let's Encrypt documentation unknown; Certbot documentation unknown | REASONED |
+| certbot-install: Install Certbot and nginx/Apache plugins from the distribution, or the classic snap with /usr/bin/certbot pointing to /snap/bin/certbot. | Certbot documentation unknown | REASONED |
+| server-plugins: certbot --nginx or --apache issues and installs certificates for the supplied domain names when the server is supported. | Certbot documentation unknown | REASONED |
+| standalone: certonly --standalone binds port 80; stop its current owner and arrange webroot, a server plugin or port-freeing hooks for unattended renewal. | Certbot documentation unknown | REASONED |
+| webroot: certonly --webroot uses /var/www/html to serve challenge files while the existing web server keeps running. | Certbot documentation unknown | REASONED |
+| dns-credentials: The Cloudflare DNS plugin uses a credentials file and a Zone:DNS:Edit token limited to required zones, never the Global API Key; protect the file with mode 600 in a 700 directory. | Certbot documentation unknown | REASONED |
+| certificate-paths: Configure servers against stable /etc/letsencrypt/live/example.com/fullchain.pem and privkey.pem paths for the chain and private key. | Certbot documentation unknown | REASONED |
+| renewal-schedule: Package and snap installs register a timer or cron job running certbot renew; confirm the timer and test renewal plus reload with --dry-run --run-deploy-hooks. | Certbot documentation unknown | REASONED |
+| deploy-hook: Persist a reload hook during successful initial issuance or renewal, or install an executable in renewal-hooks/deploy; renew --deploy-hook does not persist it when no renewal is due. | Certbot documentation unknown | REASONED |
+| reconfigure: certbot reconfigure can add the reload hook later on Certbot 2.3.0 and later. | Certbot reconfigure minimum 2.3.0 | REASONED |
+| expiry-monitoring: Monitor the served certificate's expiry and renewal failures instead of relying on CA reminder emails; include a dry run in the deployment checklist. | Let's Encrypt documentation unknown; Certbot documentation unknown | REASONED |
+| default-lifetime: At the guide's September 2026 documentation check, Let's Encrypt's default certificate lifetime is 90 days. | Let's Encrypt documentation unknown | REASONED |
+| short-lifetime: Optional 6-day short-lived certificates are available to every subscriber as of the guide's September 2026 check. | Let's Encrypt documentation unknown | REASONED |
+| lifetime-schedule: The classic profile moves to 64 days on 2027-02-10 and 45 days on 2028-02-16; industry rules cap publicly trusted certificates at 47 days from 2029-03-15. | Let's Encrypt documentation unknown | REASONED |
+| revocation: Let's Encrypt ended OCSP on 2025-08-06 and publishes revocation through CRLs only; do not add OCSP stapling directives for its certificates. | Let's Encrypt documentation unknown | REASONED |
+| staging: Let's Encrypt limits per-domain issuance; test with certbot --staging or --test-cert before real issuance. | Let's Encrypt documentation unknown; Certbot documentation unknown | REASONED |
+| caa: CAA restricts issuing CAs, using issue letsencrypt.org for Let's Encrypt; certificate-transparency monitoring detects mis-issuance afterwards and complements CAA. | Let's Encrypt documentation unknown | REASONED |
+| zerossl-eab: ZeroSSL offers free ACME certificates; some clients need dashboard EAB credentials. | ZeroSSL unknown | REASONED |
+| acme-default: acme.sh registers with ZeroSSL by default. | acme.sh unknown | REASONED |
+| acme-install: acme.sh is a shell ACME client supporting many DNS providers; the guide recommends installation from a repository release instead of piping a download into a shell. | acme.sh unknown | REASONED |
+| server-automation: The guide recommends Caddy or Traefik for built-in issuance and renewal without an external client; direct vendor Sources entries are absent. | Let's Encrypt documentation unknown | REASONED |
+| origin-certificates: The guide describes Cloudflare origin certificates as free, long-lived and trusted only by Cloudflare's edge behind its proxy; a Cloudflare Sources entry is absent. | Let's Encrypt documentation unknown | REASONED |
+| verify-inventory: certbot certificates lists issued certificates and their expiry dates. | Certbot documentation unknown | REASONED |
+| verify-https: Use the deployment's public hostname rather than example.com; curl HTTPS should succeed without -k. A curl source and version are not recorded. | Let's Encrypt documentation unknown | REASONED |
+| verify-certificate: The OpenSSL probe targets the hostname on port 443 with SNI, hostname verification and verification errors enabled, then displays issuer and dates; an OpenSSL source and version are not recorded. | Let's Encrypt documentation unknown | REASONED |
+| authentication: A certificate alone is insufficient protection; continue with server controls and authentication. | Let's Encrypt documentation unknown | REASONED |
+<!-- version-basis:end -->
+
 Publicly trusted certificates are free through ACME certificate authorities such as Let's Encrypt and ZeroSSL. Browsers and libraries accept them without any client-side configuration, which makes them the correct choice for every service with a public DNS name. Use [self-signed.md](self-signed.md) only when no public domain exists; a host that cannot accept inbound connections can still get a publicly trusted certificate through the DNS-01 challenge (below), or serve behind [cloudflare.md](cloudflare.md).
 
 ## Prerequisites
@@ -523,6 +563,8 @@ A CAA DNS record restricts which certificate authorities may issue for your doma
 
 ## Verify
 
+REASONED: certificate inventory and HTTPS/certificate inspection follow the cited Certbot and Let's Encrypt guidance; curl and OpenSSL command-specific sources are not recorded. No deployment hostname or issued certificate was supplied for live checks, and this guide records no run.
+
 ```bash
 sudo certbot certificates                       # what is issued and when it expires
 host=REPLACE_WITH_YOUR_HOSTNAME                    # your deployment's public hostname, not example.com (which serves a live page and would pass spuriously)
@@ -537,7 +579,7 @@ A certificate alone does not protect anything: continue with the server guide fo
 ## Sources (checked September 2026)
 
 - Let's Encrypt documentation: https://letsencrypt.org/docs/
-- Certbot instructions: https://certbot.eff.org/
+- Certbot instructions (reconfigure: 2.3.0 and later): https://certbot.eff.org/
 - ZeroSSL: https://zerossl.com/
 - acme.sh: https://github.com/acmesh-official/acme.sh
 - Let's Encrypt certificate lifetimes: https://letsencrypt.org/docs/cert-lifetimes/
@@ -550,6 +592,41 @@ A certificate alone does not protect anything: continue with the server guide fo
 ======================================================================
 
 # Self-signed certificates
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| trust-scope: Self-signed TLS encrypts transit but needs explicit client trust and triggers browser warnings; the guide prefers publicly trusted certificates for browser users and external parties. | OpenSSL documentation unknown; mkcert unknown | REASONED |
+| rsa-certificate: OpenSSL 3.0 or later generates an RSA 4096-bit self-signed certificate with SHA-256, 365-day validity, an unencrypted key and the shown subject and extensions. | OpenSSL generation minimum 3.0 | REASONED |
+| ec-certificate: Generate a prime256v1 EC key first, then a SHA-256 self-signed certificate with 365-day validity and the shown subject and extensions; the guide describes ECDSA as smaller and faster. | OpenSSL generation minimum 3.0 | REASONED |
+| san: SAN must cover every client DNS name and IP; replace the documentation IP or omit IP entries for name-only access. RFC 9525 clients reject a missing matching SAN; that RFC is named but not linked in Sources. | OpenSSL documentation unknown | REASONED |
+| leaf-constraint: Set basicConstraints=critical,CA:FALSE because the stated stock req -x509 configuration otherwise marks a trusted certificate CA:TRUE, allowing its unencrypted server key to sign for any name. | OpenSSL generation minimum 3.0 | REASONED |
+| extension-history: The command-line extension override relies on OpenSSL 3.0 or later; the guide says end-of-life 1.1.1 instead emits a duplicate invalid extension. | OpenSSL generation minimum 3.0; OpenSSL historical extension behaviour 1.1.1 | REASONED |
+| unencrypted-key: -noenc leaves the key unencrypted for unattended startup; -nodes is the pre-3.0 spelling, still accepted but deprecated. Protect the key with permissions. | OpenSSL generation minimum 3.0 | REASONED |
+| expiry: Track the -days expiry with a calendar or monitoring; self-signed certificates do not renew themselves. | OpenSSL documentation unknown | REASONED |
+| key-permissions: chmod 600 and service-user ownership protect server.key; filesystem command sources and versions are not recorded. | OpenSSL documentation unknown | REASONED |
+| key-compromise: Never commit private keys; ignore *.key and *.pem before generation in a repository and regenerate keys committed or pasted into chat. Git-specific sources are not recorded. | OpenSSL documentation unknown | REASONED |
+| mkcert: mkcert -install creates and trusts a local CA; mkcert issues certificates for the listed development DNS names and IPs. | mkcert unknown | REASONED |
+| mkcert-custody: Use mkcert only for development; its CA key can sign for any name, must not leave the developer's machine and must not serve real users. | mkcert unknown | REASONED |
+| debian-trust: Install app-internal.crt under /usr/local/share/ca-certificates and run update-ca-certificates on Debian/Ubuntu; a platform-specific Sources entry is absent. | mkcert unknown | REASONED |
+| rhel-trust: Install app-internal.crt under /etc/pki/ca-trust/source/anchors and run update-ca-trust on RHEL/Fedora; a platform-specific Sources entry is absent. | mkcert unknown | REASONED |
+| curl-trust: curl --cacert server.crt supplies explicit trust for app.internal; a curl source and version are not recorded. | OpenSSL documentation unknown | REASONED |
+| requests-trust: REQUESTS_CA_BUNDLE supplies the certificate path to Python requests; a requests Sources entry and version are absent. | OpenSSL documentation unknown | REASONED |
+| node-trust: NODE_EXTRA_CA_CERTS supplies additional client trust to Node.js; its version is unrecorded. | mkcert unknown | REASONED |
+| verification-bypasses: Do not commit curl -k, verify=False, rejectUnauthorized: false or NODE_TLS_REJECT_UNAUTHORIZED=0; the guide says they disable TLS validation, but tool-specific Sources entries are absent. | OpenSSL documentation unknown | REASONED |
+| verify-extensions: Inspect x509 output for SAN coverage and CA:FALSE, not its exit status: it can exit 0 with no SAN. | OpenSSL documentation unknown | REASONED |
+| verify-tls: The app.internal:443 s_client check supplies SNI, hostname checking, verification errors and CAfile; a pass prints Verification: OK, Verified peername: app.internal and return code 0, and exits 0. | OpenSSL documentation unknown | REASONED |
+| verify-failures: Without -verify_hostname the name is ignored; without -verify_return_error a verification failure can still complete the handshake and exit 0. Both flags make name or trust failures exit nonzero; wrong name reports code 62. | OpenSSL documentation unknown | REASONED |
+| verify-identity: Use -verify_ip for IP identities; -verify_hostname can fall back to CN without a DNS SAN, even with an IP SAN, so CN-only or IP-only certificates can pass hostname checks. | OpenSSL documentation unknown | REASONED |
+| verify-store: Explicit -CAfile proves certificate and name, not the system-store installation; test each normally configured client separately, expecting plain curl without --cacert to fail before trust installation and succeed after. | OpenSSL documentation unknown; mkcert unknown | REASONED |
+| trust-limits: Self-signed certificates have no revocation or third-party accountability and need manual trust distribution; move beyond them as the audience grows and retain authentication. | OpenSSL documentation unknown; mkcert unknown | REASONED |
+<!-- version-basis:end -->
 
 Use a self-signed certificate when the service has no public DNS name, when an ACME CA cannot reach it, and when [cloudflare.md](cloudflare.md) is not an option: internal tools, lab and development environments, and machine-to-machine links on private networks. For anything a browser user or external party reaches, prefer [free-certificates.md](free-certificates.md); self-signed certificates trigger browser warnings and every client must be configured to trust them.
 
@@ -627,6 +704,8 @@ Do not ship `curl -k`, `verify=False`, `rejectUnauthorized: false`, or `NODE_TLS
 
 ## 5. Verify
 
+REASONED: certificate extensions, TLS identity, failure handling and client-trust checks follow the cited OpenSSL and mkcert documentation. No deployment certificate, app.internal service or client trust-store installation was supplied for live checks, and this guide records no run; expected outcomes and limitations are stated below.
+
 ```bash
 openssl x509 -in server.crt -noout -subject -dates -ext subjectAltName,basicConstraints
 openssl s_client -connect app.internal:443 -servername app.internal -verify_hostname app.internal -verify_return_error -CAfile server.crt </dev/null
@@ -640,7 +719,7 @@ Self-signed certificates have no revocation and no third-party accountability, a
 
 ## Sources (checked September 2026)
 
-- OpenSSL documentation: https://docs.openssl.org/ ; `openssl s_client` (`-servername`, `-verify_return_error`): https://docs.openssl.org/master/man1/openssl-s_client/ ; verification options (`-verify_hostname`): https://docs.openssl.org/master/man1/openssl-verification-options/
+- OpenSSL documentation (3.0 or later; historical 1.1.1): https://docs.openssl.org/ ; `openssl s_client` (`-servername`, `-verify_return_error`): https://docs.openssl.org/master/man1/openssl-s_client/ ; verification options (`-verify_hostname`): https://docs.openssl.org/master/man1/openssl-verification-options/
 - mkcert: https://github.com/FiloSottile/mkcert
 
 ======================================================================
@@ -3191,6 +3270,37 @@ After a real login through the proxy, confirm a session reaches the app and the 
 
 # Apache HTTP Server: TLS and authentication
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| certbot: The guide says certbot --apache installs certificates and redirects by default; --redirect is explicit and --hsts defaults off. Certbot is not in Sources. | Apache HTTP Server 2.4 | REASONED |
+| modules: Enable ssl/headers and a 443 vhost on Debian/Ubuntu, or install mod_ssl/httpd-tools on RHEL/Fedora; package-command sources are absent. | Apache HTTP Server 2.4 | REASONED |
+| tls: The 443 vhost enables TLS with a certificate chain and private key and TLSv1.2/TLSv1.3 only. | Apache HTTP Server 2.4 | REASONED |
+| tls-version: TLSv1.3 needs Apache 2.4.36+ with OpenSSL 1.1.1+; older builds use SSLProtocol all -SSLv3 -TLSv1 -TLSv1.1. | Apache HTTP Server 2.4; Apache TLSv1.3 minimum 2.4.36+; OpenSSL qualification 1.1.1+ | REASONED |
+| vhost-floor: Independent per-vhost SSLProtocol needs Apache 2.4.42+, OpenSSL 1.1.1+ and client SNI; older builds also need the floor in global/base config. | Apache HTTP Server 2.4; Apache per-vhost protocol minimum 2.4.42+; OpenSSL qualification 1.1.1+ | REASONED |
+| chain: Apache 2.4.8+ permits the chain in SSLCertificateFile; SSLCertificateChainFile is deprecated. | Apache HTTP Server 2.4; Apache chain-file minimum 2.4.8 | REASONED |
+| hsts: Header always sets HSTS after HTTPS works; includeSubDomains requires valid HTTPS everywhere. Sources omit mod_headers. | Apache HTTP Server 2.4 | REASONED |
+| cipher-policy: Generate explicit cipher policy with Mozilla rather than copying old lists. | Mozilla TLS policy unknown | REASONED |
+| redirect: The 80 vhost sends a permanent redirect to the canonical HTTPS host; retain only redirects and needed ACME HTTP-01 paths. | Apache HTTP Server 2.4 | REASONED |
+| password-file: Create a bcrypt htpasswd file with cost 12 and -c only for its first user; paths differ by distribution. Cost defaults and OWASP guidance are not directly cited. | Apache HTTP Server 2.4 | REASONED |
+| basic: AuthType Basic, AuthName, AuthUserFile and Require valid-user protect the chosen site/path over TLS; enumerate every public path. | Apache HTTP Server 2.4 | REASONED |
+| mtls: A separate machine-client 443 vhost requires a trusted certificate with SSLVerifyClient require and depth 2; SSLCACertificateFile is server/vhost scoped. | Apache HTTP Server 2.4 | REASONED |
+| mfa: Basic is single-factor; the guide says Authelia does not support Apache and proposes mod_auth_openidc with IdP MFA or Cloudflare Access. Integration sources are absent. | Apache HTTP Server 2.4 | REASONED |
+| key-permissions: Keep private keys root-owned and mode 0600. | Apache HTTP Server 2.4 | REASONED |
+| verify-config: Run apachectl configtest before service reload; no outcome is recorded. | Apache HTTP Server 2.4 | REASONED |
+| verify-redirect: HTTP should return 301 with an HTTPS Location. | Apache HTTP Server 2.4 | REASONED |
+| verify-auth: Read printed status: curl can exit 0 for 200 or 401; expect 200 before auth and 401 after it. | Apache HTTP Server 2.4 | REASONED |
+| verify-listeners: Inspect the entire listener table, without filtering away unexpected ports. | Apache HTTP Server 2.4 | REASONED |
+| verify-unmatched: Use an unconfigured certificate-covered URL name for both SNI and Host; 401 passes, 200 exposes a protected resource through another vhost. Host-only probes can misleadingly give 401 or 421. | Apache HTTP Server 2.4 | REASONED |
+| verify-vhost-review: If no spare certificate-covered name exists, use apachectl -S and review that the first matching vhost cannot serve the protected DocumentRoot. | Apache HTTP Server 2.4 | REASONED |
+<!-- version-basis:end -->
+
 Applies to Apache 2.4. Get a certificate first: [free-certificates.md](free-certificates.md) for a public host (note that `certbot --apache` obtains and installs the certificate and, at the time of writing, enables the HTTP-to-HTTPS redirect by default (`--redirect` requests it explicitly), but review its generated TLS config against steps 1 to 3 and add HSTS yourself, since certbot's `--hsts` is off by default), or [self-signed.md](self-signed.md) for internal use.
 
 ## 1. Enable the modules
@@ -3269,7 +3379,7 @@ SSLVerifyDepth 2
 
 Basic authentication is single-factor, and Authelia documents Apache as unsupported for its portal. For human-facing sites, add MFA by making Apache an OIDC client with [mod_auth_openidc](https://github.com/OpenIDC/mod_auth_openidc), with MFA enforced at the identity provider, or by fronting the site with Cloudflare Access; options in [mfa.md](mfa.md).
 
-## 5. Verify
+## 5. Verify (REASONED: all Verify scenarios follow the cited Apache documentation; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized Apache deployment fixture.)
 
 These are read-and-judge checks. `curl` exits 0 for a 401 as readily as for a 200, so the
 status code is printed and you compare it; nothing here fails on its own.
@@ -3325,7 +3435,7 @@ sudo apachectl -S                       # the vhost list, in Apache's own matchi
 - Apache SSL/TLS how-to: https://httpd.apache.org/docs/2.4/ssl/ssl_howto.html
 - Apache authentication how-to: https://httpd.apache.org/docs/2.4/howto/auth.html
 - Apache name-based virtual hosts, for which vhost answers an unmatched Host header: https://httpd.apache.org/docs/2.4/vhosts/name-based.html
-- Apache mod_ssl `SSLVHostSNIPolicy`, for the 421 a mismatched SNI and Host pairing can produce: https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslvhostsnipolicy
+- Apache mod_ssl `SSLVHostSNIPolicy`, for the 421 a mismatched SNI and Host pairing can produce (Apache 2.4.36+, Apache 2.4.42+, OpenSSL 1.1.1+, Apache 2.4.8): https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslvhostsnipolicy
 - Apache virtual host matching in detail, for SNI selecting the vhost on a TLS connection: https://httpd.apache.org/docs/2.4/vhosts/details.html
 - Mozilla SSL Configuration Generator: https://ssl-config.mozilla.org/
 
@@ -3334,6 +3444,45 @@ sudo apachectl -S                       # the vhost list, in Apache's own matchi
 ======================================================================
 
 # nginx: TLS and authentication
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| certbot: The guide says certbot --nginx edits the server block; certificate acquisition is delegated to the linked certificate guides. Sources omit certbot. | nginx documentation unknown | REASONED |
+| tls: 443 IPv4/IPv6 TLS uses certificate chain and private key, TLSv1.2/TLSv1.3 and ssl_prefer_server_ciphers off. | nginx documentation unknown | REASONED |
+| http2: http2 on requires nginx 1.25.1+; older versions use listen 443 ssl http2. No HTTP/2 module source is listed. | nginx documentation unknown | REASONED |
+| tokens: server_tokens off suppresses nginx version in headers and error pages. | nginx documentation unknown | REASONED |
+| hsts: Send HSTS only after HTTPS works; includeSubDomains commits every subdomain for max-age. Sources omit the headers module. | nginx documentation unknown | REASONED |
+| hsts-inheritance: A location add_header drops inherited server headers; always changes response-code coverage, not inheritance. Sources omit the headers module. | nginx documentation unknown | REASONED |
+| proxy: Proxy to loopback 127.0.0.1:3000 and set Host, X-Forwarded-For, X-Forwarded-Proto and X-Forwarded-Host. | nginx documentation unknown | REASONED |
+| forwarded-host: Overwrite X-Forwarded-Host: client-set values otherwise pass upstream. | nginx documentation unknown | REASONED |
+| cipher-policy: Use Mozilla for explicit cipher policy; retain the stated protocol floor. | nginx documentation unknown; Mozilla TLS policy unknown | REASONED |
+| tickets: ssl_session_tickets defaults on; disable tickets or use a shared cache on nginx 1.23.2+ for automatic key rotation. The SSL module source is not listed. | nginx documentation unknown | REASONED |
+| redirect: Port 80 on IPv4/IPv6 redirects with 301; a default server reflecting $host can redirect unmatched hosts off-site, so use 444 or a canonical host. | nginx documentation unknown | REASONED |
+| password-file: Install apache2-utils and create the bcrypt password file at cost 12; bare -B cost 5 and OWASP minimum 10 are not directly sourced here. | nginx documentation unknown | REASONED |
+| basic: auth_basic and auth_basic_user_file gate the existing proxied location over TLS; preserve its forwarded headers. | nginx documentation unknown | REASONED |
+| mtls: ssl_client_certificate and ssl_verify_client on require trusted client certificates; the SSL module source is not listed. | nginx documentation unknown | REASONED |
+| mfa: Basic is single-factor; the guide proposes auth_request with Authelia/oauth2-proxy or Cloudflare Access. Integration sources are not listed. | nginx documentation unknown | REASONED |
+| body-limit: client_max_body_size defaults to 1m; 10m rejects larger bodies with 413, and 0 disables the check. | nginx documentation unknown | REASONED |
+| rate-limit: Per-address limit_req uses a 10r/s zone, burst 20 and nodelay; rejection status defaults to 503. | nginx documentation unknown | REASONED |
+| connection-limit: limit_conn apiconn 10 caps concurrent connections per client address; it can also return 503. | nginx documentation unknown | REASONED |
+| location-auth: Keep limits in the authenticated location; sibling locations do not inherit its auth or proxy headers. Repeat auth or inherit it from server; auth_basic off is deliberate. | nginx documentation unknown | REASONED |
+| read-timeout: proxy_read_timeout 60s limits gaps between upstream reads, not total response duration; active streams can continue indefinitely. | nginx documentation unknown | REASONED |
+| client-address: At a direct edge trust the appended last X-Forwarded-For entry; behind a CDN, recover the client with trusted set_real_ip_from and real_ip_header before per-client limits. | nginx documentation unknown | REASONED |
+| verify-config: Run nginx -t before reload; no configuration-test outcome is recorded. | nginx documentation unknown | REASONED |
+| verify-redirect: HTTP should return 301 with an HTTPS Location. | nginx documentation unknown | REASONED |
+| verify-tls: HTTPS must validate without -k; TLS 1.1-only rejection must be protocol_version, not a generic/local failure; test TLS 1.0 separately. | nginx documentation unknown | REASONED |
+| verify-auth: An open path may return 200; the protected path must reject no credentials with 401/403, and valid credentials reach the app rather than 401. | nginx documentation unknown | REASONED |
+| verify-size: Authenticated 9M succeeds normally only after raising the 1m default; 11M returns 413. Disable the check with 0 in isolation to distinguish backend refusal. | nginx documentation unknown | REASONED |
+| verify-rate: Concurrent unauthenticated probes exercise pre-auth limits; 503 does not identify the limiter. Compare both off and each alone with measured arrival rate. | nginx documentation unknown | REASONED |
+| verify-backend: Inspect every listener: direct public access to backend 3000 bypasses proxy TLS/auth even when front-door probes pass. | nginx documentation unknown | REASONED |
+<!-- version-basis:end -->
 
 Get a certificate first: [free-certificates.md](free-certificates.md) for a public host (note that `certbot --nginx` edits the server block for you), or [self-signed.md](self-signed.md) for internal use.
 
@@ -3450,7 +3599,7 @@ that tolerance rather than removing the timeout.
 
 Mind the client address these headers carry. At a direct internet edge the block above appends the peer to `X-Forwarded-For` with `$proxy_add_x_forwarded_for`, so the app must read the LAST entry (the one nginx added), never the client-controlled first one. And if nginx sits behind a CDN or another proxy (for example fronting the site with Cloudflare Access, above), `$binary_remote_addr` is the CDN's edge IP, not the client's, so all callers arriving via the same edge IP share one `limit_req`/`limit_conn` bucket: the limits blur across clients or throttle real users, and a client-supplied `X-Forwarded-For` reaches the app, to be trusted if the app reads its first entry. Recover the real client address with `set_real_ip_from <cdn-ranges>` and `real_ip_header CF-Connecting-IP` (or `X-Forwarded-For`) from `ngx_http_realip_module`, so the limit key and the logged address are the client rather than the edge.
 
-## 5. Verify
+## 5. Verify (REASONED: all Verify scenarios follow the cited nginx documentation; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized nginx deployment fixture.)
 
 ```bash
 sudo nginx -t && sudo systemctl reload nginx
@@ -3534,6 +3683,33 @@ ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.
 
 # lighttpd: TLS and authentication
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| tls-defaults: lighttpd 1.4.56 and later disables SSLv2, SSLv3, TLS 1.0 and TLS 1.1 by default. | lighttpd TLS minimum 1.4.56 | REASONED |
+| tls-listeners: Load mod_openssl and enable TLS on both :443 and [::]:443 with ssl.pemfile and ssl.privkey; omitting the IPv6 socket leaves IPv6 clients on plain HTTP. | lighttpd TLS minimum 1.4.56 | REASONED |
+| certificate-chain: ssl.pemfile uses fullchain.pem rather than a certificate without its chain. | lighttpd TLS minimum 1.4.56 | REASONED |
+| separate-key: ssl.privkey exists from 1.4.53; older versions need certificate and key concatenated into ssl.pemfile. | lighttpd separate-key minimum 1.4.53 | REASONED |
+| protocol-floor: ssl.openssl.ssl-conf-cmd sets MinProtocol to TLSv1.2 explicitly; recent versions already default to TLS 1.2. | lighttpd TLS minimum 1.4.56 | REASONED |
+| module-defaults: Only mod_indexfile, mod_dirlisting and mod_staticfile load without server.modules entries; load mod_redirect explicitly. | lighttpd documentation unknown | REASONED |
+| http-redirect: For the http scheme, redirect to HTTPS preserving authority, path and query; port 80 must redirect rather than serve content. | lighttpd documentation unknown | REASONED |
+| redirect-code: Set url.redirect-code to 308 explicitly on versions before 1.4.75. | lighttpd redirect default transition 1.4.75 | REASONED |
+| basic-auth: Load mod_auth and mod_authn_file, select the htpasswd file backend and require valid-user Basic authentication on / over TLS; application login is preferable. | lighttpd documentation unknown | REASONED |
+| password-file: Create the user file with Apache htpasswd; the backend reads user:crypt()-hashed-password entries and accepted hashes depend on the build. | lighttpd documentation unknown | REASONED |
+| mfa: Basic authentication is single-factor; use an MFA-capable front proxy. The stated Authelia support-list exclusion and Cloudflare Access option lack direct Sources entries. | lighttpd documentation unknown | REASONED |
+| verify-config: lighttpd -tt checks /etc/lighttpd/lighttpd.conf before systemctl reload; command-specific and service-manager sources are not recorded. | lighttpd documentation unknown | REASONED |
+| verify-redirect: The HTTP header request should show a redirect to HTTPS; these are read-and-judge status checks. | lighttpd documentation unknown | REASONED |
+| verify-auth: An HTTPS request without credentials should return 401 once authentication is enabled. | lighttpd documentation unknown | REASONED |
+| verify-listeners: Read every listener with ss -tlnp: front-door authentication does not establish that no other listener serves content. The ss version is unrecorded. | lighttpd TLS minimum 1.4.56 | REASONED |
+| verify-host: A Host header outside a conditional auth.require falls back to global configuration; on a protected path, 401 passes and 200 exposes an authentication bypass. The Apache SNI comparison lacks a Sources entry. | lighttpd documentation unknown | REASONED |
+<!-- version-basis:end -->
+
 Applies to lighttpd 1.4.56 and later, which disables SSLv2/SSLv3/TLS 1.0/TLS 1.1 by default. Get a certificate first: [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).
 
 ## 1. Enable TLS
@@ -3603,6 +3779,8 @@ Basic authentication is single-factor, and lighttpd is absent from Authelia's su
 
 These are read-and-judge checks: the status code is printed and you compare it.
 
+REASONED: configuration, redirect, authentication, listener inventory and alternate-Host checks follow the cited lighttpd TLS, mod_auth, redirect and configuration documentation. No deployment or protected path was supplied for live checks, and this guide records no run; expected outcomes are stated in the following block.
+
 ```bash
 sudo lighttpd -tt -f /etc/lighttpd/lighttpd.conf && sudo systemctl reload lighttpd
 curl -q -sI http://example.com/        # expect a redirect to https://
@@ -3633,9 +3811,9 @@ curl -q -s -o /dev/null -w '%{http_code}\n' -H 'Host: not-configured.example' \
 
 ## Sources (checked September 2026)
 
-- lighttpd TLS documentation: https://redmine.lighttpd.net/projects/lighttpd/wiki/Docs_SSL
+- lighttpd TLS documentation (1.4.56 and later; ssl.privkey from 1.4.53): https://redmine.lighttpd.net/projects/lighttpd/wiki/Docs_SSL
 - lighttpd mod_auth documentation, including `auth.require` inside a `$HTTP["host"]` conditional: https://redmine.lighttpd.net/projects/lighttpd/wiki/Mod_auth
-- lighttpd HTTP-to-HTTPS redirect how-to: https://redmine.lighttpd.net/projects/lighttpd/wiki/HowToRedirectHttpToHttps
+- lighttpd HTTP-to-HTTPS redirect how-to (308 explicit before 1.4.75): https://redmine.lighttpd.net/projects/lighttpd/wiki/HowToRedirectHttpToHttps
 - lighttpd configuration options (`server.modules`, the three modules loaded by default): https://redmine.lighttpd.net/projects/lighttpd/wiki/Docs_ConfigurationOptions
 
 ======================================================================
@@ -3643,6 +3821,48 @@ curl -q -s -o /dev/null -w '%{http_code}\n' -H 'Host: not-configured.example' \
 ======================================================================
 
 # Caddy: TLS and authentication
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| auto-https: Caddy 2 obtains and renews public certificates and redirects HTTP to HTTPS; DNS must point here and the example requires public 80/443. | Caddy documentation 2 | REASONED |
+| issuers: Public certificates come from Let's Encrypt or ZeroSSL and renew automatically. | Caddy documentation 2 | REASONED |
+| renewal-monitoring: Set the ACME email contact but monitor renewal yourself: Let's Encrypt stopped expiration emails. | Caddy documentation 2 | REASONED |
+| backend: reverse_proxy sends traffic to 127.0.0.1:3000; keep the app private to prevent TLS/auth bypass. | Caddy documentation 2 | REASONED |
+| hsts: Caddy sends no HSTS automatically; add it only after HTTPS works across every included subdomain. | Caddy documentation 2 | REASONED |
+| forwarded: Caddy ignores untrusted client X-Forwarded-* by default; configure trusted_proxies behind a trusted CDN/proxy. | Caddy documentation 2 | REASONED |
+| internal-tls: tls internal uses a local CA; clients must trust its root, with caddy trust for the local host. tls also accepts explicit cert/key files. | Caddy documentation 2 | REASONED |
+| basic: basic_auth uses hashed passwords from caddy hash-password; it was named basicauth before v2.8.0 and remains single-factor. | Caddy documentation 2; Caddy basic_auth rename v2.8.0 | REASONED |
+| path-auth: Protect /admin and /admin/* together: path matches are exact and multiple paths are OR'ed. | Caddy documentation 2 | REASONED |
+| mfa: forward_auth (Caddy 2.5+) can delegate human authentication to Authelia; Cloudflare Access is another proposed layer. | Caddy documentation 2; Caddy forward_auth minimum 2.5 | REASONED |
+| access-origin: Cloudflare Access requires closing direct origin ingress and validating its JWT; Caddy still answers directly on 443. Sources omit Cloudflare controls. | Caddy documentation 2 | REASONED |
+| body-limit: Add request_body max_size 10MB inside the existing authenticated site; replacing the site without basic_auth makes it public. | Caddy documentation 2 | REASONED |
+| rate-limit: The standard build has no rate_limit directive; use a compiled community caddy-ratelimit module or an upstream layer. | Caddy documentation 2 | REASONED |
+| admin-bind: The admin API defaults to localhost:2019 as of v2.11.4; never publish it or reverse-proxy to it. | Caddy admin source v2.11.4; Caddy documentation 2 | REASONED |
+| admin-authority: Reachable unauthenticated admin clients can replace config at POST /load, edit /config/ or stop with POST /stop. | Caddy documentation 2 | REASONED |
+| admin-isolation: Host/Origin checks are not process isolation; local untrusted workloads require a permissioned Unix socket. | Caddy documentation 2 | REASONED |
+| docker-admin: Official 2.11.4 Alpine and Windows runtime images EXPOSE 2019 but ship a Caddyfile without admin; absent overrides, the endpoint stays namespace-local. | Official image tag map d82ca5102fa6735be29d5e1fc6ce03af77eb091e; Caddy Docker source fba2853501d36e8a72f946ac8cb7ff64d07e48f2; Default Caddyfile source 33ae08ff08d168572df2956ed14fbc4949880d94; Caddy admin source v2.11.4 | REASONED |
+| admin-override: A mounted admin setting or CADDY_ADMIN changes the address; do not set 0.0.0.0:2019 to make publication work. | Caddy documentation 2; Caddy admin source v2.11.4; Default Caddyfile source 33ae08ff08d168572df2956ed14fbc4949880d94 | REASONED |
+| namespace: Bridge publication cannot reach container loopback; host/shared namespaces permit local peers. Avoid untrusted namespace sharing and run CLI commands inside the container. | Caddy documentation 2; Caddy Docker source fba2853501d36e8a72f946ac8cb7ff64d07e48f2 | REASONED |
+| admin-socket: admin unix//run/caddy/admin.sock uses owner-only mode 0200 by default; append &#124;0600 to set it explicitly. | Caddy documentation 2 | REASONED |
+| runtime-directory: The packaged caddy user needs RuntimeDirectory=caddy for /run/caddy; restart creates it and binds the socket. Sources omit the service unit/systemd manual. | Caddy documentation 2 | REASONED |
+| reload: API reload uses the Caddyfile admin address; admin off disables it and systemd then requires restart. | Caddy documentation 2 | REASONED |
+| signal-reload: A manual run without --resume may reload startup config via SIGUSR1; API changes or reload with a different file/adapter disable signal reloads. | Caddy documentation 2 | REASONED |
+| on-demand: Do not enable unrestricted on_demand TLS without an ask endpoint or host allowlist; this guide does not enable it. | Caddy documentation 2 | REASONED |
+| verify-config: Validate /etc/caddy/Caddyfile; no validation outcome is recorded. | Caddy documentation 2 | REASONED |
+| verify-redirect: HTTP should redirect to HTTPS. | Caddy documentation 2 | REASONED |
+| verify-auth: With site-wide auth, HTTPS without credentials returns 401. | Caddy documentation 2 | REASONED |
+| verify-scope: The @admin variant must return 401 for /admin and /admin/x, but an app response rather than 401 for a non-admin path. | Caddy documentation 2 | REASONED |
+| verify-size: Authenticated 1M reaches the app and 11M returns 413; 401/000 void the control. Auth can prevent body reads; remove request_body in isolation to attribute refusal. | Caddy documentation 2 | REASONED |
+| verify-backend: Read all listeners: app 3000 must be loopback-only even if proxy checks pass. | Caddy documentation 2 | REASONED |
+| verify-admin: TCP admin must bind only loopback; absent 2019 requires confirming admin off or a socket. Check Unix socket existence and owner restrictions separately. | Caddy documentation 2 | REASONED |
+<!-- version-basis:end -->
 
 Caddy 2 obtains, installs, and renews publicly trusted certificates automatically and redirects HTTP to HTTPS by default. For a new deployment with a public domain, it is the shortest correct path to HTTPS: no ACME client, no renewal timer, no redirect block.
 
@@ -3755,7 +3975,7 @@ RuntimeDirectory=caddy
 
 systemd creates `/run/caddy` owned by `caddy` when the service starts, so the switch from the default TCP endpoint to the socket needs `sudo systemctl restart caddy`, not a reload: the restart makes the runtime directory and binds the socket in one step. After that, `caddy reload`, and so `sudo systemctl reload caddy`, applies config through this API by reading the admin address from the Caddyfile, so the socket keeps reload working. Disabling the endpoint with `admin off` turns off API reload, so under systemd a config change then needs `systemctl restart caddy` (a manual `caddy run` process started without `--resume` can instead reload the startup config file with `SIGUSR1`; a change made through the admin API, or a `caddy reload` with a different file or adapter, disables signal reloads, so check the logs to confirm the reload took).
 
-## 6. Verify
+## 6. Verify (REASONED: all Verify scenarios follow the cited Caddy documentation and pinned admin/image sources; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized Caddy deployment fixture.)
 
 ```bash
 caddy validate --config /etc/caddy/Caddyfile
@@ -3813,18 +4033,18 @@ ls -l /run/caddy/admin.sock          # if you bound it to a unix socket: it exis
 ## Sources (checked September 2026)
 
 - Official Caddy Docker images: the tag map (library file pinned commit d82ca5102fa6735be29d5e1fc6ce03af77eb091e), and at image source pinned commit fba2853501d36e8a72f946ac8cb7ff64d07e48f2 each runtime image's Caddyfile download, `EXPOSE 2019` and `CMD`, with the default Caddyfile at caddyserver/dist pinned commit 33ae08ff08d168572df2956ed14fbc4949880d94 and the `CADDY_ADMIN` variable that sets the admin address (pinned tag v2.11.4): https://github.com/docker-library/official-images/blob/d82ca5102fa6735be29d5e1fc6ce03af77eb091e/library/caddy#L7-L65, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L17, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L59-L63, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2022/Dockerfile#L10, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2022/Dockerfile#L42-L47, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2025/Dockerfile#L10, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2025/Dockerfile#L42-L47, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2022/Dockerfile#L8, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2022/Dockerfile#L27-L32, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2025/Dockerfile#L8, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2025/Dockerfile#L27-L32, https://github.com/caddyserver/dist/blob/33ae08ff08d168572df2956ed14fbc4949880d94/config/Caddyfile and https://github.com/caddyserver/caddy/blob/v2.11.4/admin.go#L58-L67
-- Automatic HTTPS: https://caddyserver.com/docs/automatic-https
+- Automatic HTTPS (Caddy 2): https://caddyserver.com/docs/automatic-https
 - Caddy admin API (default `localhost:2019`, `POST /load` and `/config/` replace or edit the whole config, requires no credentials with only Host/Origin header checks, the permissioned-unix-socket warning for untrusted-workload hosts): https://caddyserver.com/docs/api
 - Caddy `admin` global option (`admin off`, an address, or `admin unix//...`): https://caddyserver.com/docs/caddyfile/options
 - `request_body` directive (`max_size`): https://caddyserver.com/docs/caddyfile/directives/request_body
 - Caddyfile directive list, which carries no `rate_limit` entry: https://caddyserver.com/docs/caddyfile/directives
 - caddy-ratelimit, the community module that adds rate limiting: https://github.com/mholt/caddy-ratelimit
-- basic_auth directive: https://caddyserver.com/docs/caddyfile/directives/basic_auth
+- basic_auth directive (v2.8.0): https://caddyserver.com/docs/caddyfile/directives/basic_auth
 - tls directive: https://caddyserver.com/docs/caddyfile/directives/tls
 - reverse_proxy directive (X-Forwarded-* ignored from untrusted sources by default; `trusted_proxies`): https://caddyserver.com/docs/caddyfile/directives/reverse_proxy
 - Caddy conventions (unix socket default mode 0200, `|<mode>` suffix): https://caddyserver.com/docs/conventions
 - header directive (HSTS): https://caddyserver.com/docs/caddyfile/directives/header
-- forward_auth directive: https://caddyserver.com/docs/caddyfile/directives/forward_auth
+- forward_auth directive (2.5): https://caddyserver.com/docs/caddyfile/directives/forward_auth
 - Caddy command-line signals (SIGUSR1 reload conditions): https://caddyserver.com/docs/command-line#signals
 - Let's Encrypt ending expiration-notification emails (2025): https://letsencrypt.org/2025/01/22/ending-expiration-emails/
 - Request matchers (path, wildcards, multiple paths): https://caddyserver.com/docs/caddyfile/matchers
@@ -3835,6 +4055,47 @@ ls -l /run/caddy/admin.sock          # if you bound it to a unix socket: it exis
 ======================================================================
 
 # HAProxy: TLS termination and authentication
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| scope: Examples target a maintained HAProxy 3.0 installation and treat frontend, stats, runtime API and direct backend as separate surfaces. | HAProxy 3.0; Supporting documentation unknown | REASONED |
+| pem: Use matching chain/key in a combined PEM, built via a root-only temporary file and rename; separate key loading is also supported. | HAProxy 3.0 | REASONED |
+| renewal: Rebuild the combined PEM on certificate renewal via a certbot deploy hook and reload HAProxy; Sources omit certbot hook syntax. | HAProxy 3.0 | REASONED |
+| tls: Frontend :443 loads the PEM with ssl and ssl-min-ver TLSv1.2; :80 redirects to HTTPS with 301. | HAProxy 3.0 | REASONED |
+| ciphers: ssl-default-bind-ciphers governs TLS 1.2 and -ciphersuites TLS 1.3; Mozilla is policy guidance, not HAProxy syntax authority. | HAProxy 3.0; Supporting documentation unknown | REASONED |
+| privileges: Preserve service hardening; root-started workers drop to haproxy user/group and chroot into a provisioned root-owned directory. | HAProxy 3.0 | REASONED |
+| timeouts: Set connect 5s, client/server 30s and http-request 10s timeouts. | HAProxy 3.0 | REASONED |
+| hsts: http-after-response (HAProxy 2.2+) covers generated 401/413 responses that http-response misses; includeSubDomains requires HTTPS on every affected subdomain. | HAProxy 3.0; HAProxy http-after-response minimum 2.2+ | REASONED |
+| backend: Example backend is plaintext 127.0.0.1:3000 with health checks; keep it private. | HAProxy 3.0 | REASONED |
+| remote-backend: Remote TLS backends require certificate verification, a trusted CA and verifyhost matching the backend name. | HAProxy 3.0 | REASONED |
+| basic: Use a crypt(3)-hashed userlist and http_auth condition; $6$ works on glibc Linux, while insecure-password stores plaintext. Sources omit openssl passwd -6. | HAProxy 3.0 | REASONED |
+| mtls: For machine access, bind verify required with ca-file requires trusted client certificates. | HAProxy 3.0 | REASONED |
+| mfa: Basic is single-factor; Authelia uses its HAProxy Lua integration, or use Cloudflare Access for human MFA. | Supporting documentation unknown | REASONED |
+| maxconn: Global maxconn 4096 caps per-process concurrent connections; frontend maxconn 2000 caps that frontend. | HAProxy 3.0 | REASONED |
+| body-guard: No single request-body-size directive: req.body_size reads advertised Content-Length; deny_status 413 rejects values above 10485760 without buffering. | HAProxy 3.0 | REASONED |
+| body-buffering: Do not add http-buffer-request for this guard: it waits for a complete body or full request buffer. | HAProxy 3.0 | REASONED |
+| chunked: Chunked req.body_size reflects available data, so this unbuffered guard does not meaningfully bound chunked uploads; enforce the real limit in the app. | HAProxy 3.0 | REASONED |
+| stats-default: Stats is disabled until configured and enabling it adds no authentication; inventory every loaded config. | HAProxy 3.0; Supporting documentation unknown | REASONED |
+| stats-admin: stats admin permits backend enable/disable/drain; omit it for monitoring and keep any admin page private. | HAProxy 3.0; Supporting documentation unknown | REASONED |
+| stats-auth: Bind the example stats listener to TLS 127.0.0.1:8404 at /stats and use hashed-userlist auth instead of cleartext stats auth. | HAProxy 3.0; Supporting documentation unknown | REASONED |
+| runtime-default: Runtime API is not enabled by default; default command level is operator, and level admin grants authority rather than authentication. | HAProxy 3.0 | REASONED |
+| runtime-isolation: Keep /run/haproxy/admin.sock a root-owned mode-600 Unix socket; HTTP stats auth does not protect an exposed runtime TCP socket. | HAProxy 3.0 | REASONED |
+| verify-config: haproxy -c precedes reload; the guide records shell checks but no HAProxy runtime or exposed/fixed response demonstration. | HAProxy 3.0 | REASONED |
+| verify-redirect: HTTP must return 301 with an HTTPS Location; transport/TLS/DNS errors are inconclusive. | HAProxy 3.0 | REASONED |
+| verify-auth: On one protected resource, absent and wrong credentials yield 401 while valid credentials reach the expected app response; credentials travel via stdin. | HAProxy 3.0 | REASONED |
+| verify-size: With valid credentials, 1M succeeds and 11M returns 413; remove only the deny rule in isolation to attribute refusal. These Content-Length probes do not test chunked bodies. | HAProxy 3.0 | REASONED |
+| verify-backend: Inventory all listeners: backend 3000 must be loopback-only even if frontend checks pass, and the runtime endpoint must not be TCP. | HAProxy 3.0 | REASONED |
+| verify-stats: Probe the 8404 stats listener itself via loopback with the certificate hostname: no credentials refused, valid credentials return statistics. | HAProxy 3.0; Supporting documentation unknown | REASONED |
+| verify-mtls: With verify required, no/untrusted client certificates must fail TLS and trusted ones pass; readable cert/key controls avoid local errors, and Basic may still return 401. | HAProxy 3.0 | REASONED |
+| verify-runtime: Check root/root mode 600 and root show info success versus nobody permission denial; reported admin command level is not proof of access control. | HAProxy 3.0 | REASONED |
+<!-- version-basis:end -->
 
 HAProxy's public frontend, its stats interface, its runtime API, and any directly reachable backend are separate exposure surfaces; protect and verify each one you enable. These examples target a maintained HAProxy 3.0 installation.
 
@@ -4056,7 +4317,7 @@ sudo -u nobody socat - /run/haproxy/admin.sock < /dev/null         # unauthorize
 
 ## Sources (checked September 2026)
 
-- HAProxy 3.0 Configuration Manual (`bind ssl crt`/`verify`, `ssl-default-bind-options`/`-ciphers`/`-ciphersuites`, `maxconn`, `req.body_size`, `http-request deny deny_status`, `http-after-response`, `timeout http-request`, `stats enable`/`auth`/`admin`, `user`/`group`/`chroot`): https://docs.haproxy.org/3.0/configuration.html
+- HAProxy 3.0 Configuration Manual (`bind ssl crt`/`verify`, `ssl-default-bind-options`/`-ciphers`/`-ciphersuites`, `maxconn`, `req.body_size`, `http-request deny deny_status`, `http-after-response`, `timeout http-request`, `stats enable`/`auth`/`admin`, `user`/`group`/`chroot`) (http-after-response: HAProxy 2.2+): https://docs.haproxy.org/3.0/configuration.html
 - HAProxy 3.0 Management Guide (runtime API over the `stats socket`, command levels, reload): https://docs.haproxy.org/3.0/management.html
 - HAProxy supported releases: https://www.haproxy.org/
 - HAProxy statistics dashboard (`stats enable`/`auth`/`admin` capabilities): https://www.haproxy.com/documentation/haproxy-configuration-tutorials/alerts-and-monitoring/statistics/
@@ -4068,6 +4329,47 @@ sudo -u nobody socat - /run/haproxy/admin.sock < /dev/null         # unauthorize
 ======================================================================
 
 # Traefik: automatic TLS and authentication middleware
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| entrypoints: For Traefik v2/v3, web :80 redirects to HTTPS websecure :443 and an ACME resolver obtains/renews certificates. | Traefik scope v2 and v3 | REASONED |
+| acme-storage: Persist acme.json across restarts with mode 600 to retain certificates and avoid repeated issuance/rate limits. | Traefik scope v2 and v3 | REASONED |
+| acme-challenges: TLS-ALPN requires inbound 443; HTTP-01 uses 80, while DNS supports wildcards without inbound ports. | Traefik scope v2 and v3 | REASONED |
+| docker-default: Docker discovery defaults exposedByDefault to true; set false and opt each intended container in with traefik.enable=true. | Traefik Docker provider unknown | REASONED |
+| docker-scope: Discovery is daemon-wide, not Compose-project scoped; eligible unlabelled containers get routers unless excluded. Missing usable ports skip service creation. | Traefik Docker provider unknown | REASONED |
+| docker-socket: The Docker socket gives daemon control despite :ro; use a restricted socket proxy to limit API access. | Traefik Docker provider unknown | REASONED |
+| tls-floor: Dynamic default TLS options set minVersion VersionTLS12. | Traefik scope v2 and v3 | REASONED |
+| route: Docker labels select the app host, websecure, letsencrypt resolver and backend port 3000. | Traefik scope v2 and v3; Traefik Docker provider unknown | REASONED |
+| backend-isolation: Publish only Traefik 80/443, not the app's 3000, to prevent middleware/TLS bypass. | Traefik Docker provider unknown | REASONED |
+| basic: Attach bcrypt basicAuth to the router; htpasswd -nB -C 12 selects cost 12 rather than bare cost 5; the OWASP minimum is not directly sourced here. | Traefik scope v2 and v3 | REASONED |
+| compose-hash: Double each dollar sign in Compose hash labels; file-provider hashes need no such escaping. | Traefik scope v2 and v3 | REASONED |
+| file-provider: Load dynamic files with providers.file.directory/filename and reference their middleware from Docker as app-auth@file. | Traefik scope v2 and v3 | REASONED |
+| mfa: Basic is single-factor; use forwardAuth with Authelia/oauth2-proxy or front the site with Cloudflare Access for human MFA. | Traefik scope v2 and v3 | REASONED |
+| body-limit: Attach buffering.maxRequestBodyBytes=10485760 alongside existing auth/routing labels; it bounds accepted body size. | Traefik middleware documentation unknown | REASONED |
+| buffer-storage: memRequestBodyBytes defaults to 1048576 and controls the memory-to-disk threshold independently of maximum accepted body size. | Traefik middleware documentation unknown | REASONED |
+| rate-limit: average=10 and burst=20 configure a rate cap, per source by default. | Traefik middleware documentation unknown | REASONED |
+| inflight: inflightreq.amount=10 bounds concurrent requests; sourceCriterion defaults to request host rather than client, so configure a per-client cap explicitly. | Traefik middleware documentation unknown | REASONED |
+| middleware-order: Rate/inflight precede auth to count rejected logins; buffering follows admission controls to avoid buffering rejected uploads. | Traefik scope v2 and v3; Traefik middleware documentation unknown | REASONED |
+| dashboard: Keep api.insecure and unprotected api@internal routers off public entry points or protect the dashboard with auth. | Traefik scope v2 and v3 | REASONED |
+| swarm: Standalone Docker guidance does not cover Swarm; v3 uses providers.swarm and its separate exposedByDefault also defaults true. | Traefik Swarm provider unknown | REASONED |
+| verify-redirect: HTTP should redirect to HTTPS. | Traefik scope v2 and v3 | REASONED |
+| verify-auth: Unauthenticated HTTPS should return 401 once auth is attached. | Traefik scope v2 and v3 | REASONED |
+| verify-size: Authenticated 1M must reach the app and 11M return 413; 401/000 invalidate the control. Remove app-body in isolation to rule out backend refusal. | Traefik middleware documentation unknown; Traefik scope v2 and v3 | REASONED |
+| observed-429: The guide records only a 429 response; no limiter attribution or exposed/fixed demonstration is established. | Traefik middleware documentation unknown | DEMONSTRATED |
+| verify-rate: Concurrent unauthenticated probes can reach pre-auth limiters; 429 alone cannot distinguish rate, inflight or upstream refusal. Compare each limiter alone against both disabled. | Traefik middleware documentation unknown | REASONED |
+| verify-isolation: Compose ps covers one project; ss misses NAT-only publication without a userland proxy. Neither finds unintended routes through Traefik. | Traefik Docker provider unknown | REASONED |
+| verify-acme: Inspect ACME startup errors; failed issuance can leave a self-signed TRAEFIK DEFAULT CERT. | Traefik scope v2 and v3 | REASONED |
+| canary-route: On a disposable deployment, unlabelled traefik/whoami has one HTTP port; use its generated Host rule and plain HTTP even on :443 because the generated router requests no TLS. | Traefik Docker provider unknown; Traefik scope v2 and v3 | REASONED |
+| verify-canary: Calibrate exposedByDefault true with 200 and the canary Hostname body; false should give 404. Missing discovery/provider also gives 404, unreachable backend 502/504. | Traefik Docker provider unknown; curl write-out minimum 7.75.0 | REASONED |
+| verify-app-control: In the same run, the app must return 401 or known authenticated 200 while the canary gives 404; app 401 proves routing, not proxy-auth attachment. Keep TLS verification. | Traefik Docker provider unknown; Traefik scope v2 and v3; curl write-out minimum 7.75.0 | REASONED |
+<!-- version-basis:end -->
 
 Applies to Traefik v2 and v3. Traefik obtains and renews certificates itself through ACME resolvers, which suits container deployments.
 
@@ -4188,7 +4490,7 @@ from memory to disk. Raising the first increases what you will buffer, not where
 in-flight requests rather than their rate, and its `sourceCriterion` defaults to the request host rather
 than the client, so set it explicitly if you want a per-client cap.
 
-## 5. Verify
+## 5. Verify (REASONED: all Verify scenarios follow the cited Traefik and curl documentation; no live Docker/Traefik canary demonstration is recorded. The recorded 429 alone does not demonstrate limiter attribution. This metadata-only review has no authorized deployment fixture.)
 
 ```bash
 # guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
@@ -4292,7 +4594,7 @@ With the authentication from section 3 in place, this unauthenticated probe retu
 
 ## Sources (checked September 2026)
 
-- Traefik documentation: https://doc.traefik.io/traefik/ (HTTPS/ACME, routers, and basicAuth middleware sections)
+- Traefik documentation (v2 and v3): https://doc.traefik.io/traefik/ (HTTPS/ACME, routers, and basicAuth middleware sections)
 - Docker provider (`exposedByDefault`, socket endpoint): https://doc.traefik.io/traefik/reference/install-configuration/providers/docker/
 - Swarm provider (`providers.swarm.exposedByDefault`): https://doc.traefik.io/traefik/reference/install-configuration/providers/swarm/
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
@@ -4568,6 +4870,40 @@ ss -tlnp   # every listener: loopback for a same-host reverse proxy, or the plat
 
 # Docker and Compose: exposure, TLS, and authentication
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| publish: Omitting the host address publishes 3000:3000 on 0.0.0.0 and [::]. | Docker Engine networking unknown | REASONED |
+| host-firewall: Docker programs firewall rules directly; UFW or firewalld blocking a host port does not establish published-port isolation. | Docker Engine networking unknown | REASONED |
+| private-network: Omit app/database ports; Compose peers use service names. The example uses postgres:17 at db:5432; no PostgreSQL source is listed. | Compose networking unknown | REASONED |
+| loopback: Publish local access as 127.0.0.1:3000:3000; check the running server version, with Engine 28.0 as the stated boundary. | Docker Engine networking unknown; Docker Engine minimum boundary 28.0 | REASONED |
+| old-loopback: Before 28.0, same-L2 neighbours could reach loopback publications under the default bridge configuration. | Docker Engine minimum boundary 28.0 | REASONED |
+| old-host-bind: Before 28.0, remote hosts could reach published container ports despite the host-IP binding. | Docker Engine minimum boundary 28.0 | REASONED |
+| old-unpublished: Before 28.0, direct routing could reach unpublished container ports; 28.0 fixed the stated default-bridge exposures. | Docker Engine minimum boundary 28.0 | REASONED |
+| upstream: Use an upstream security group or network ACL for routable publications and boot-time protection; provider configuration is not sourced here. | Docker Engine networking unknown | REASONED |
+| docker-user: On the iptables backend, DOCKER-USER precedes Docker accepts; the nftables backend has no such chain. Match NEW traffic from outside the allowed subnet. | Docker Engine networking unknown | REASONED |
+| dnat: DOCKER-USER sees post-DNAT container destinations; conntrack original destination port and ORIGINAL direction scope a published service. | Docker Engine networking unknown | REASONED |
+| ipv6: Native IPv6 forwarding needs ip6tables; the IPv6-to-IPv4 userland-proxy path terminates on host INPUT and bypasses DOCKER-USER. | Docker Engine networking unknown | REASONED |
+| proxy-path: Close the userland-proxy path with an explicit publish address, disabled userland proxy or IPv6 INPUT restrictions; test both address families and sources. | Docker Engine networking unknown | REASONED |
+| persistence: Guide recommends persisting only DOCKER-USER rules after Docker startup, avoiding blanket dynamic-chain saves; startup-unit details lack a direct source. | Docker Engine networking unknown | REASONED |
+| tls: Example caddy:2 publishes 80:80 and 443:443, mounts Caddyfile read-only and persists data/config, proxying app:3000 with automatic certificates; no Caddy source is listed. | Compose networking unknown | REASONED |
+| alternate-entry: Cloudflared to http://app:3000, Tailscale or internal self-signed TLS are linked alternatives; no direct vendor sources for these alternatives are listed. | Compose networking unknown | REASONED |
+| auth: Proxy authentication and human MFA supplement application login; no authentication-provider source is listed. | Compose networking unknown | REASONED |
+| secrets: Use runtime environment files or Compose secrets, exclude .env from Git, and avoid image ENV/build-argument secrets; no direct secret-handling source is listed. | Compose networking unknown | REASONED |
+| workload: Use a non-root USER and the linked capability, no-new-privileges, read-only-root and Docker-socket guidance; no workload-control source is listed here. | Compose networking unknown | REASONED |
+| database: Database TLS and authentication remain necessary for connections from outside the Compose network; database vendor sources are in linked guides. | Compose networking unknown | REASONED |
+| verify-publish: Compose ps is project-scoped; inventory every host container and TCP/UDP socket, including IPv6. Socket visibility alone does not prove reachability. | Compose networking unknown; Docker Engine networking unknown | REASONED |
+| verify-redirect: HTTP should redirect to HTTPS; the guide records an expected result, with no direct proxy citation or run. | Compose networking unknown | REASONED |
+| verify-auth: Unauthenticated HTTPS /api should return 401 or 403, never 200; confirm authorized success separately. The proxy discriminator has no direct source here. | Compose networking unknown | REASONED |
+| verify-isolation: Probe each restricted host address and publication from allowed/disallowed sources in both families; backend isolation must coexist with proxy reachability. | Docker Engine networking unknown | REASONED |
+<!-- version-basis:end -->
+
 Containers are where accidental exposure happens most. Two Docker behaviours cause it:
 
 1. `ports: - "3000:3000"` (or `-p 3000:3000`) publishes on every host address, `0.0.0.0` and `[::]`, at the time of writing.
@@ -4647,6 +4983,8 @@ Caddy obtains and renews the certificate automatically ([free-certificates.md](f
 - Databases in containers still need their own TLS and authentication when anything outside the Compose network connects: see [postgresql.md](postgresql.md), [mysql.md](mysql.md), [mongodb.md](mongodb.md), and [redis.md](redis.md).
 
 ## 4. Verify
+
+REASONED: publication, redirect, authentication and external isolation checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited Docker networking sources and linked proxy guides; this read-only review has no authorized deployment or external probe hosts.
 
 ```bash
 docker compose ps                     # project-scoped: only the proxy shows a published (0.0.0.0/[::] or a host IP) binding; review every container on the host, IPv6 included
@@ -6008,6 +6346,39 @@ Behind a reverse proxy, confirm cookies still carry `Secure` and redirects use a
 
 # Containers: non-root, dropped capabilities, read-only root, and network segmentation
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| docker-user: Dockerfile USER sets build/runtime identity; set user and group, since no primary group uses root. Compose user overrides it; unset in both runs as root. | Docker documentation unknown | REASONED |
+| docker-rootfs: Compose read_only makes the root filesystem read-only; provide tmpfs only for required writable paths. | Docker documentation unknown | REASONED |
+| docker-capabilities: cap_drop: [ALL] removes capabilities; add back only specific required capabilities with cap_add. | Docker documentation unknown | REASONED |
+| docker-escalation: no-new-privileges prevents setuid privilege gain; the guide lists bare, equals-true and colon-true spellings as equivalent. | Docker documentation unknown | REASONED |
+| docker-socket: Do not mount /var/run/docker.sock: the guide treats access as host-root equivalent through privileged siblings; no direct socket-security source is listed. | Docker documentation unknown | REASONED |
+| kube-user: runAsNonRoot rejects root; pin runAsUser and runAsGroup to 10001, with the guide noting runtime-default GID 0 if unset. | Kubernetes documentation unknown | REASONED |
+| kube-rootfs: Set readOnlyRootFilesystem per container; this is a separate recommendation, not a restricted Pod Security requirement. | Kubernetes documentation unknown | REASONED |
+| kube-escalation: Set allowPrivilegeEscalation: false in the container securityContext. | Kubernetes documentation unknown | REASONED |
+| kube-capabilities: Drop ALL capabilities in the container securityContext. | Kubernetes documentation unknown | REASONED |
+| kube-seccomp: RuntimeDefault selects the runtime syscall filter instead of Unconfined. | Kubernetes documentation unknown | REASONED |
+| admission: Namespace enforce: restricted rejects new violating Pods: privileged mode, host namespaces/ports, root, missing capability drops or Unconfined seccomp. | Kubernetes documentation unknown | REASONED |
+| existing-pods: Adding the namespace label warns about existing violating Pods without evicting them; recreate workloads. Admission transition details lack a direct Sources entry. | Kubernetes documentation unknown | REASONED |
+| policy-semantics: NetworkPolicies are additive and require an enforcing CNI; both source egress and destination ingress must allow a connection. | Kubernetes documentation unknown | REASONED |
+| default-deny: The empty podSelector with Ingress and Egress isolates all pods selected in the namespace before narrow allowances. | Kubernetes documentation unknown | REASONED |
+| dns: The app egress rule permits UDP/TCP 53 to all kube-system pods, not just CoreDNS; narrow it to the actual resolver. | Kubernetes documentation unknown | REASONED |
+| database-path: Allow app egress to role: db and db ingress from role: app on TCP 5432; other paths governed by these namespace policies are refused. | Kubernetes documentation unknown | REASONED |
+| policy-limits: hostNetwork and same-node traffic handling are implementation-dependent; database TLS/authentication remain separate controls. | Kubernetes documentation unknown | REASONED |
+| verify-user: Compose exec app id must report a nonzero UID; the service name is project-scoped, unlike docker exec container names. | Docker documentation unknown | REASONED |
+| verify-rootfs: touch must first print WRITABLE on an owned existing path with read_only false, then blocked after recreation with true; ENOENT/EACCES or exit 0 do not discriminate. | Docker documentation unknown | REASONED |
+| verify-context: kubectl get reads declared context; inspect the application process for nonzero UID, NoNewPrivs:1, Seccomp:2 and zero effective/bounding capabilities, avoiding pause PID 1 in shared namespaces. | Kubernetes documentation unknown | REASONED |
+| verify-probe: Resolve the db ClusterIP once; busybox:1.36 probes use matching container names and restricted-compliant overrides. BusyBox nc flags and kubectl merge semantics lack direct sources here. | Kubernetes documentation unknown | REASONED |
+| verify-segmentation: The role: app TCP probe must succeed first; role: other to the same IP must fail at TCP, not DNS. This tests combined segmentation, not either policy layer independently. | Kubernetes documentation unknown | REASONED |
+<!-- version-basis:end -->
+
 A model server, chat UI, or proxy is the thing most likely to face untrusted input, so treat its container as compromised eventually and limit what that gets an attacker: not root, not the host's capabilities, not a writable filesystem, and not a route to the rest of the network.
 
 ## Docker and Compose
@@ -6102,6 +6473,8 @@ still need their own TLS and auth on top ([postgresql.md](postgresql.md), [mysql
 [mongodb.md](mongodb.md), [redis.md](redis.md)); a NetworkPolicy is a layer, not a substitute.
 
 ## Verify
+
+REASONED: identity, filesystem, runtime security context and segmentation checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited Docker and Kubernetes sources; this read-only review has no authorized Docker workload or Kubernetes cluster.
 
 ```bash
 docker compose exec app id                          # uid is not 0 (run from the Compose project; a bare `docker exec` needs the real container name, not the `app` service name)
@@ -7909,6 +8282,39 @@ git ls-files config/master.key                                   # prints nothin
 
 # Host baseline: SSH, firewall, updates
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| safe-transition: Confirm non-root key login and sudo in a fresh session before disabling password/root access; retain the working session while testing. | OpenSSH documentation unknown | REASONED |
+| keys-only: Disable PasswordAuthentication and KbdInteractiveAuthentication; enable PubkeyAuthentication and prohibit root login. | OpenSSH documentation unknown | REASONED |
+| include-order: First-read values and lexical includes motivate 00-hardening.conf; the OpenSSH 8.2, Ubuntu 20.04 and cloud-init distribution history lacks a direct source here. | OpenSSH documentation unknown | REASONED |
+| effective-config: Validate with sshd -t before reload; inspect sshd -T global values and -T -C for Match-specific settings. Service names differ by distribution. | OpenSSH documentation unknown | REASONED |
+| totp: SSH TOTP uses google-authenticator-libpam through PAM keyboard-interactive; keys-only configuration must change before adding this factor. | OpenSSH documentation unknown; google-authenticator-libpam unknown | REASONED |
+| duo: Duo pam_duo provides the alternative push factor through PAM keyboard-interactive. | OpenSSH documentation unknown; Duo Unix unknown | REASONED |
+| mfa-methods: UsePAM yes and AuthenticationMethods publickey,keyboard-interactive require both methods; keep password/root login disabled and public keys enabled. | OpenSSH documentation unknown; Duo Unix unknown | REASONED |
+| legacy-name: Older configurations use ChallengeResponseAuthentication for KbdInteractiveAuthentication; enable the spelling present when configuring PAM MFA. | OpenSSH documentation unknown; Duo Unix unknown | REASONED |
+| ufw-default: Set deny incoming and allow outgoing, then enable UFW; permit TCP 80 and 443 for the TLS layer. | UFW documentation unknown | REASONED |
+| ufw-ssh: Remove any broad OpenSSH allow before adding an admin-source TCP 22 rule; adding a narrower rule does not replace the old allowance. | UFW documentation unknown | REASONED |
+| brokered-ssh: SSM/tailnet avoid public inbound SSH; IAP uses 35.235.240.0/20 and Bastion its subnet on 22 in both layers. Broker details have no direct source here. | UFW documentation unknown | REASONED |
+| firewalld-zone: Find the public interface zone explicitly; remove its broad ssh service, add the IPv4 admin rich rule permanently, then reload to activate it. | firewalld documentation unknown | REASONED |
+| firewalld-audit: Inspect applicable zones for other services, port ranges, protocol/source allowances or ACCEPT targets that reopen 22; the narrow rich rule does not supersede them. | firewalld documentation unknown | REASONED |
+| docker-bypass: Published Docker ports bypass UFW; consult docker.md before relying on the host firewall. This guide has no direct Docker citation. | UFW documentation unknown | REASONED |
+| fail2ban: Use fail2ban to ban repeated authentication failures against SSH/login services. | fail2ban unknown | REASONED |
+| crowdsec: CrowdSec is the alternative protection for repeated authentication failures. | CrowdSec unknown | REASONED |
+| updates: Automate patches with unattended-upgrades on Debian/Ubuntu or dnf-automatic on RHEL-family systems; no update-tool source is listed. | OpenSSH documentation unknown | REASONED |
+| verify-listeners: Inventory intended TCP/UDP listeners and addresses in both IP families; no ss manual is listed. | UFW documentation unknown | REASONED |
+| verify-firewall: UFW status should show default-deny ingress and admin-scoped SSH allowances; also inspect show raw because status omits /etc/ufw rules. | UFW documentation unknown | REASONED |
+| verify-external: Disallowed-source TCP 22 must fail while allowed SSH works; correlate effective rules. Refusal alone, local errors and unsupported netcat options are inconclusive. | UFW documentation unknown; firewalld documentation unknown | REASONED |
+| verify-password: A password-only SSH attempt must fail immediately without a password prompt; a prompt means password authentication remains enabled. | OpenSSH documentation unknown | REASONED |
+| verify-mfa: After key acceptance require a code, reject wrong/omitted codes and unenrolled users without nullok, and use Duo failmode=secure; test before closing the working session. | OpenSSH documentation unknown; google-authenticator-libpam unknown; Duo Unix unknown | REASONED |
+<!-- version-basis:end -->
+
 Every guide in this repository secures a service; this one secures the machine under them. Apply it once per host before exposing anything.
 
 ## 1. SSH: keys only, no root login
@@ -7985,6 +8391,8 @@ sudo firewall-cmd --zone=REPLACE_WITH_PUBLIC_ZONE --list-all   # confirm nothing
 
 ## 4. Verify
 
+REASONED: listener, firewall, SSH key-only and PAM MFA checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited SSH, firewall and MFA sources; this read-only review has no authorized target host or external probe machine.
+
 ```bash
 sudo ss -tulnp                    # TCP and UDP listeners (IPv4 and IPv6): only intended ones, on intended addresses
 sudo ufw status verbose           # default deny incoming; then `sudo ufw show raw` (status verbose omits rules loaded from /etc/ufw): every allowance that can reach 22 (a port-22 rule OR a broader "from <range> to any" allow) is scoped to your admin range, never Anywhere
@@ -8027,6 +8435,31 @@ Run the SSH test from a second terminal before closing your working session.
 
 # Cloud firewalls: security groups and network rules
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| public-front: Allow internet sources only to the front TLS layer on 80 for redirects and 443; private sources alone reach databases/internal services, with TLS/authentication still required. | AWS security groups and CLI unknown; Google Cloud firewall and CLI unknown; Azure NSG and CLI unknown | REASONED |
+| ssh: Restrict 22 to named administrative addresses or documented broker sources, never unrestricted internet ranges. | AWS security groups and CLI unknown; Google Cloud firewall and CLI unknown; Azure NSG and CLI unknown | REASONED |
+| ssm: SSM Agent dials out and requires no inbound rule; no Session Manager source is listed. | AWS security groups and CLI unknown | REASONED |
+| iap: IAP needs TCP 22 ingress from 35.235.240.0/20; no IAP source is listed. | Google Cloud firewall and CLI unknown | REASONED |
+| bastion: Bastion needs target-VM ingress from AzureBastionSubnet; tailnet is another linked alternative. Direct broker sources are absent. | Azure NSG and CLI unknown | REASONED |
+| least-access: Start default-deny, add minimum allowances and retire obsolete rules; use security-group references where supported to survive app IP changes. | AWS security groups and CLI unknown; Google Cloud firewall and CLI unknown; Azure NSG and CLI unknown | REASONED |
+| docker: Cloud and host firewall layers both matter for Docker VMs; the linked Docker guide explains UFW bypass, with no Docker source in this Sources section. | AWS security groups and CLI unknown | REASONED |
+| verify-aws: Per region inspect all inbound rules, protocol/port ranges, IPv4/IPv6 CIDRs, resolved prefix lists and group references; combinations of narrower ranges can still expose the internet. | AWS security groups and CLI unknown | REASONED |
+| verify-gcp: Per project read JSON classic VPC rules, including direction, disabled state, allowed/denied and source ranges; a table can hide whether enforcement is disabled. | Google Cloud firewall and CLI unknown | REASONED |
+| gcp-policies: Also list/describe hierarchical and network policies and their effective order; the guide says hierarchy precedes VPC and network policies follow by default. Policy-specific sources are absent. | Google Cloud firewall and CLI unknown | REASONED |
+| verify-azure: Per NSG include default rules and read JSON direction/access plus singular/plural source prefixes; tables omit arrays and can conceal exposure. | Azure NSG and CLI unknown | REASONED |
+| azure-admin: Review Virtual Network Manager security admin rules; the guide says Always allow bypasses NSGs. No security-admin-rule source is listed. | Azure NSG and CLI unknown | REASONED |
+| verify-ports: Outside the admin range, spot-check 22, 3306, 5432, 6379 and 27017; refusal/timeout is expected, while netcat usage errors or silent local failure are inconclusive. | AWS security groups and CLI unknown; Google Cloud firewall and CLI unknown; Azure NSG and CLI unknown | REASONED |
+| verify-complete: The spot-check omits RDP 3389 and apps such as 8080/9200; scan all public IPv4/IPv6 ports, distinguish open/closed/filtered, and correlate allowed/disallowed controls with effective rules. | AWS security groups and CLI unknown; Google Cloud firewall and CLI unknown; Azure NSG and CLI unknown | REASONED |
+<!-- version-basis:end -->
+
 On AWS (security groups), Google Cloud (VPC firewall rules), and Azure (network security groups), the recurring hole is one rule wide open to the world: `0.0.0.0/0` (or `::/0`) on a database, admin, or SSH port, added once to unblock a remote connection and never removed.
 
 ## Rules
@@ -8040,6 +8473,8 @@ On AWS (security groups), Google Cloud (VPC firewall rules), and Azure (network 
 ## Verify
 
 Enumerate every inbound rule, then, for each one whose source reaches the internet, confirm that the destination port is 80 or 443 on the front layer, nothing else. Rule 3's administrative SSH access is the one other source that may reach 22, and it is a named address or a documented broker range (an IAP `35.235.240.0/20` rule, or an Azure Bastion subnet rule, is expected), never `0.0.0.0/0`. These commands list rather than select, because no filter catches the exposure class.
+
+REASONED: cloud-rule inventory and external reachability checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited provider rule documentation; this read-only review has no authorized cloud accounts or allowed/disallowed probe hosts.
 
 ```bash
 # AWS, once per region. Every rule, not a selection: no filter catches the exposure class, because
@@ -8085,6 +8520,8 @@ az network nsg rule list \
 ```
 
 - From an address outside the range you administer from:
+
+  REASONED: cloud-rule inventory and external reachability checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited provider rule documentation; this read-only review has no authorized cloud accounts or allowed/disallowed probe hosts.
 
   ```bash
   (                                       # a subshell, so your own script arguments are untouched
@@ -8173,6 +8610,44 @@ curl -q -g -s --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' https://app.ex
 
 # Egress control and cloud metadata: keeping an agent from exfiltrating credentials
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| aws-endpoints: IMDS uses 169.254.169.254 and, on Nitro in IPv6-enabled subnets, [fd00:ec2::254]; block or verify-disabled both paths. | AWS metadata and networking unknown | REASONED |
+| aws-token: IMDSv2 requires a PUT-issued session token on subsequent GETs; required tokens make missing/invalid-token requests return 401. | AWS metadata and networking unknown | REASONED |
+| hop-default: PUT response hop limit is often 1, but launch/account/Region options and ImdsSupport: v2.0 AMIs can make it 2; set it explicitly. | AWS metadata and networking unknown | REASONED |
+| hop-control: Set required tokens, hop limit 1 and endpoint enabled; a container an extra routing hop away cannot receive the token, but this does not exclude every proxy path. | AWS metadata and networking unknown | REASONED |
+| aws-ipv6: The modify command leaves HttpProtocolIpv6 unchanged; IPv6 IMDS defaults disabled. If deliberately enabled, block and probe it too. | AWS metadata and networking unknown | REASONED |
+| gcp-header: GCP metadata uses metadata.google.internal or 169.254.169.254, requires Metadata-Flavor: Google and stays on the physical host. | Google Cloud metadata and firewall unknown | REASONED |
+| gcp-ipv6: IPv6-only GCP instances also expose metadata at [fd20:ce::254]; include it in workload restrictions. | Google Cloud metadata and firewall unknown | REASONED |
+| azure-header: Azure IMDS is VM-local at 169.254.169.254, requires Metadata: true and rejects X-Forwarded-For; the example instance API uses 2025-04-07. | Azure IMDS API 2025-04-07 | REASONED |
+| guest-block: Headers do not stop a fetcher that can add them; use guest/workload metadata restrictions, accounting for DNS use of the address and all enabled IPv6 endpoints. | Google Cloud metadata and firewall unknown; Azure IMDS API 2025-04-07; AWS metadata and networking unknown | REASONED |
+| gcp-firewall: GCP VPC and hierarchical firewall rules do not block metadata-server traffic; use a host firewall, CNI or enforced egress proxy path. | Google Cloud metadata and firewall unknown | REASONED |
+| cloud-egress: Replace broadly allowed outbound access with DNS and required API destinations; the most-providers default generalization is not fully sourced here. | AWS metadata and networking unknown | REASONED |
+| aws-groups: Security groups are allow-only and additive across attached groups; remove default allow-all egress and add narrow rules. A subnet network ACL supplies deny rules. | AWS metadata and networking unknown | REASONED |
+| aws-metadata-bypass: AWS security groups do not filter 169.254.169.254; use IMDSv2/hop limit or disable unused metadata, keeping egress rules for other destinations. | AWS metadata and networking unknown | REASONED |
+| policy-default: Pod egress is unrestricted until a selecting policy includes Egress; policies add allowances, so audit every selecting policy. | Kubernetes NetworkPolicy unknown | REASONED |
+| policy-limits: NetworkPolicy needs an enforcing CNI and has undefined hostNetwork behaviour; confirm enforcement before relying on it. | Kubernetes NetworkPolicy unknown | REASONED |
+| policy-dns: agent-egress selects app: agent and allows UDP/TCP 53 to kube-system pods labeled k8s-app: kube-dns. | Kubernetes NetworkPolicy unknown | REASONED |
+| policy-api: The API allowance permits TCP 443 to 203.0.113.0/24 as a replaceable destination placeholder. | Kubernetes NetworkPolicy unknown | REASONED |
+| docker-internal: An internal Docker network has no default route out and firewall rules drop external traffic while peer containers communicate. | Docker network create unknown | REASONED |
+| host-owner: Hop limit 1 still permits host processes; the guide recommends OUTPUT owner filtering and matching IPv6 rules, excluding forwarded containers. Netfilter syntax lacks a direct source here. | AWS metadata and networking unknown | REASONED |
+| proxy-bypass: A destination-allowlist proxy controls only traversing traffic; pair it with a direct metadata block and test its path separately. | curl documentation unknown | REASONED |
+| verify-headers: Tokenless AWS must return 401; headerless GCP/Azure must not return metadata. These header checks alone do not demonstrate network isolation. | AWS metadata and networking unknown; Google Cloud metadata and firewall unknown; Azure IMDS API 2025-04-07 | REASONED |
+| verify-token: AWS network checks acquire a token then GET with it, separately over IPv4/IPv6; failed PUT needs enforcement evidence. Token/session reachability is not IAM credential issuance. | AWS metadata and networking unknown; curl documentation unknown | REASONED |
+| verify-provider-paths: Required-header GCP token and Azure instance requests test reachability; any HTTP response means reachable. GCP returns credentials; Azure instance data is separate from managed-identity tokens. | Google Cloud metadata and firewall unknown; Azure IMDS API 2025-04-07 | REASONED |
+| verify-deny: Run positive metadata controls before blocking; http=000 alone is inconclusive. Require no completed connection plus a matching enforcement deny record; metadata is excluded from AWS VPC Flow Logs. | curl documentation unknown; AWS metadata and networking unknown | REASONED |
+| verify-allow: The allowed STS destination must remain reachable; --noproxy tests direct egress, so proxy allowlists require separate probes. STS-specific behaviour has no direct source here. | curl documentation unknown | REASONED |
+| verify-negative: Known-live disallowed egress must fail: curl success is failure, exit 6 is DNS-inconclusive, and 7/28 need zero time_connect plus correlated deny evidence. | curl documentation unknown | REASONED |
+| verify-options: Read MetadataOptions for required tokens, hop limit 1, intended IPv6 state and State applied rather than pending, then repeat workload probes. | AWS metadata and networking unknown | REASONED |
+<!-- version-basis:end -->
+
 An AI agent, RAG fetcher, or webhook handler that retrieves URLs can be steered by a prompt injection into requesting the cloud metadata endpoint or an internal service instead of the URL it was meant to fetch. Making the fetcher refuse that request is application security; this guide covers the deployment-side backstop, metadata hardening so the endpoint rejects an unqualified request, plus default-deny egress so the request never leaves the workload at all.
 
 ## AWS: require IMDSv2 and cap the hop limit
@@ -8253,6 +8728,8 @@ header requirements above, and egress rules are deployment-side controls: they d
 from being attempted, they make the attempt fail.
 
 ## Verify
+
+REASONED: metadata headers, token flow, network blocks, egress controls and applied options; no exposed/fixed run is recorded in this guide. Expectations follow the cited cloud, NetworkPolicy and curl sources; this read-only review has no authorized cloud VM or workload enforcement point.
 
 ```bash
 # --noproxy so an ambient http(s)_proxy/ALL_PROXY cannot answer in place of the metadata service (Azure
@@ -8361,7 +8838,7 @@ aws ec2 describe-instances --instance-ids i-0123456789abcdef0 \
 - AWS CLI `modify-instance-metadata-options`: https://docs.aws.amazon.com/cli/latest/reference/ec2/modify-instance-metadata-options.html
 - GCP metadata server overview: https://docs.cloud.google.com/compute/docs/metadata/overview
 - GCP VPC firewall (a VM reaches metadata regardless of firewall rules): https://docs.cloud.google.com/firewall/docs/firewalls#metadata-server
-- Azure Instance Metadata Service: https://learn.microsoft.com/en-us/azure/virtual-machines/instance-metadata-service
+- Azure Instance Metadata Service (2025-04-07): https://learn.microsoft.com/en-us/azure/virtual-machines/instance-metadata-service
 - Kubernetes NetworkPolicy: https://kubernetes.io/docs/concepts/services-networking/network-policies/
 - Docker network create (`--internal`): https://docs.docker.com/reference/cli/docker/network/create/
 - curl manual (exit 7 "Failed to connect to host", exit 28 "Operation timeout", `--connect-timeout`, and the `time_connect` write-out variable): https://curl.se/docs/manpage.html
@@ -29907,6 +30384,29 @@ From outside the network, every panel URL is unreachable or shows a login; a pag
 
 # CORS: allow your origins, not everyone's
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| exact-origins: Allow exact browser origins, illustrated by Access-Control-Allow-Origin: https://app.example.com; keep environment-specific lists in configuration instead of production localhost entries. | MDN CORS documentation unknown | REASONED |
+| wildcard-credentials: Browsers refuse wildcard Access-Control-Allow-Origin with credentials; the guide restricts wildcard use to public, unauthenticated, read-only resources. | MDN CORS documentation unknown | REASONED |
+| origin-reflection: Reflect only origins checked against an explicit allowlist; reflecting arbitrary Origin values permits hostile sites to read credentialed responses. | MDN CORS documentation unknown | REASONED |
+| authentication: CORS controls browsers rather than curl or other attackers, does not expose a port and does not replace endpoint authentication. | MDN CORS documentation unknown; Express cors middleware unknown | REASONED |
+| express-origins: Express cors uses origin: ['https://app.example.com'] as the allowed origin list. | Express cors middleware unknown | REASONED |
+| express-credentials: The Express example enables credentials with credentials: true. | Express cors middleware unknown | REASONED |
+| fastapi-origins: FastAPI adds CORSMiddleware with allow_origins restricted to https://app.example.com. | FastAPI CORSMiddleware unknown | REASONED |
+| fastapi-credentials: The FastAPI example enables allow_credentials=True. | FastAPI CORSMiddleware unknown | REASONED |
+| fastapi-methods: The FastAPI example allows only GET and POST through allow_methods. | FastAPI CORSMiddleware unknown | REASONED |
+| fastapi-headers: The FastAPI example allows Authorization and Content-Type through allow_headers. | FastAPI CORSMiddleware unknown | REASONED |
+| verify-hostile: The hostile-Origin probe should not return Access-Control-Allow-Origin echoing https://evil.example; no actual response is recorded. | MDN CORS documentation unknown; Express cors middleware unknown; FastAPI CORSMiddleware unknown | REASONED |
+| verify-allowed: The allowed-Origin probe should return the app origin, with Allow-Credentials only if cookies are used as stated in the guide; no actual response is recorded. | MDN CORS documentation unknown; Express cors middleware unknown; FastAPI CORSMiddleware unknown | REASONED |
+<!-- version-basis:end -->
+
 CORS misconfiguration does not expose a port; it lets hostile websites use your users' browsers, cookies included, against your API. AI assistants reach for `Access-Control-Allow-Origin: *` the moment a browser console shows a CORS error; that is the wrong fix for any API that authenticates.
 
 ## Rules
@@ -29945,6 +30445,8 @@ Keep the origin list in configuration per environment rather than hardcoding loc
 
 ## Verify
 
+REASONED: hostile- and allowed-Origin response checks follow the cited MDN CORS, Express cors and FastAPI CORSMiddleware documentation. No deployed API endpoint was supplied for live checks, and this guide records no run; expected response headers are stated in the following block.
+
 ```bash
 curl -q -s -o /dev/null -D - https://api.example.com/data -H "Origin: https://evil.example" | grep -i access-control
 # expect: no Access-Control-Allow-Origin echoing the hostile origin
@@ -29963,6 +30465,41 @@ curl -q -s -o /dev/null -D - https://api.example.com/data -H "Origin: https://ap
 ======================================================================
 
 # Security headers for your application
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| placement: Set response headers at a proxy, in application middleware or in a static host's _headers file; stack-specific Sources entries and versions are not recorded. | MDN HTTP documentation unknown | REASONED |
+| hsts: Use HSTS max-age=31536000 with includeSubDomains only after HTTPS works across the domain; every subdomain is committed to HTTPS and max-age=0 disables HSTS. | MDN HTTP documentation unknown | REASONED |
+| hsts-preload: Omit preload unless its commitment is understood; removal is slow, takes weeks and depends on browser list updates. | MDN HTTP documentation unknown | REASONED |
+| csp: Start CSP at default-src 'self', tailor sources to the app and prefer script nonces or hashes over unsafe-inline; Verify requires an enforcing policy. | MDN HTTP documentation unknown | REASONED |
+| csp-report-only: Roll out Content-Security-Policy-Report-Only first on existing apps to find breakage; it enforces nothing and is not a substitute for enforcing CSP. | MDN HTTP documentation unknown | REASONED |
+| nosniff: Send X-Content-Type-Options: nosniff and verify that value on the final response. | MDN HTTP documentation unknown | REASONED |
+| referrer: Send Referrer-Policy: strict-origin-when-cross-origin and verify that final-response value. | MDN HTTP documentation unknown | REASONED |
+| permissions: Permissions-Policy disables camera, microphone and geolocation with empty allowlists; verify all three restrictions. | MDN HTTP documentation unknown | REASONED |
+| framing: X-Frame-Options: DENY or enforcing CSP frame-ancestors 'none' denies framing; supported frame-ancestors supersedes X-Frame-Options, and default-src does not cover it. frame-ancestors * overrides DENY. | MDN HTTP documentation unknown | REASONED |
+| all-responses: Send headers on every response, including errors; nginx add_header inheritance is mentioned through a local guide without a direct vendor Sources entry. | MDN HTTP documentation unknown | REASONED |
+| shared-cache: Use Cache-Control: private for authenticated responses or no-store for sensitive ones; cache only public content unless authenticated caching is explicitly configured. | MDN HTTP documentation unknown | REASONED |
+| cache-key: A URL-only shared cache can leak one user's response to another; explicitly vary authenticated cache entries on the cookie or authorization header. | MDN HTTP documentation unknown | REASONED |
+| browser-cache: private still permits browser storage; no-store forbids private and shared storage and belongs on authenticated responses and responses setting session cookies. | MDN HTTP documentation unknown | REASONED |
+| history-cache: no-cache does not prevent a Back navigation from restoring a back/forward-cache snapshot without revalidation. | MDN HTTP documentation unknown | REASONED |
+| logout-cache: Send Clear-Site-Data on logout confirmation; cache clears browser cache and may clear back/forward cache depending on the browser. | MDN HTTP documentation unknown | REASONED |
+| logout-cookies: Clear-Site-Data cookies clears cookies across the registered domain and all subdomains, plus HTTP authentication credentials; invalidate the server session separately. | MDN HTTP documentation unknown | REASONED |
+| logout-storage: Clear-Site-Data storage removes origin local/session storage, IndexedDB and service-worker registrations; understand effects on companion applications before clearing. | MDN HTTP documentation unknown | REASONED |
+| logout-header: The cited MDN logout example includes cache, cookies, storage, executionContexts, prefetchCache and prerenderCache. | MDN HTTP documentation unknown | REASONED |
+| verify-fetch: Fetch the final page with redirects restricted to HTTPS, bypass client proxies, discard the body and inspect the last response's headers and final status/URL; curl-specific Sources and version are absent. | MDN HTTP documentation unknown | REASONED |
+| verify-values: Judge header values on the final response, not presence on an earlier hop; missing final headers are findings and a failed fetch is inconclusive. | MDN HTTP documentation unknown | REASONED |
+| verify-scanner: Use the external Security Headers scanner for a second opinion; the guide states that it fetches with GET. | Security Headers scanner unknown | REASONED |
+| verify-csp: Unexpected console violations must be absent in normal use, but this alone is insufficient; confirm a deliberately disallowed resource is blocked while an allowed one loads. | MDN HTTP documentation unknown | REASONED |
+| verify-cache: Warm an authenticated URL in the shared cache, then request it as user A, user B and anonymously; each response must belong only to its caller. | MDN HTTP documentation unknown | REASONED |
+| verify-logout: After logout, Back must not restore authenticated content; verify a request to the login screen and inspect no-store and Clear-Site-Data separately in every supported browser. | MDN HTTP documentation unknown | REASONED |
+<!-- version-basis:end -->
 
 TLS protects the transport; these response headers protect the page. Set them at the proxy (`add_header` in [nginx.md](nginx.md), `Header` in [apache.md](apache.md), `header` in Caddy), in app middleware (helmet for Express per [nodejs.md](nodejs.md), Django's security settings per [python.md](python.md)), or in a `_headers` file on static hosts.
 
@@ -29995,6 +30532,8 @@ A CDN or shared proxy that keys its cache on the URL alone can serve one user's 
 On logout, clear what the browser already holds. `Cache-Control: no-cache` does not cover this, because a history navigation such as the Back button can restore a back/forward-cache snapshot without revalidating. Send the `Clear-Site-Data` header on the logout-confirmation response instead: its `cache` directive clears the browser cache and, depending on the browser, the back/forward cache as well, and `cookies` clears the client-side session cookie (invalidate the server-side session separately, as part of logout). MDN's own logout example is `Clear-Site-Data: "cache", "cookies", "storage", "executionContexts", "prefetchCache", "prerenderCache"`. Know the scope before sending the full set: `"cookies"` clears cookies across the entire registered domain (all subdomains) and also clears HTTP authentication credentials, and `"storage"` removes origin local/session storage, IndexedDB, and service-worker registrations, so a shared parent domain or a companion app on a subdomain is affected too.
 
 ## Verify
+
+REASONED: final-response header inspection follows the cited MDN header documentation; curl command-specific sources are not recorded. No deployment URL was supplied for live checks, and this guide records no run; the following block states the expected values and treats failed fetches as inconclusive.
 
 ```bash
 # Fetch the FINAL page and read its response headers by eye. -L follows redirects (--proto-redir

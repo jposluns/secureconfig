@@ -1,4 +1,103 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "157d1635f027debf8f5435502a8cdbea7d8f4b2ab000345a5b23119d1af743e0",
+  "components": {
+    "ng": {
+      "name": "nginx documentation",
+      "basis": "unknown",
+      "sources": {
+        "s6a0728ca7609": "https://nginx.org/en/docs/http/configuring_https_servers.html",
+        "s40bdf1af1596": "https://nginx.org/en/docs/http/ngx_http_core_module.html",
+        "sb3bee9429629": "https://nginx.org/en/docs/http/ngx_http_limit_req_module.html",
+        "sddc43aac8779": "https://nginx.org/en/docs/http/ngx_http_limit_conn_module.html",
+        "sf3430c5a0b22": "https://nginx.org/en/docs/http/ngx_http_proxy_module.html",
+        "sf32ce2956917": "https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html",
+        "sddacc1191f5f": "https://nginx.org/en/docs/http/ngx_http_realip_module.html"
+      }
+    },
+    "policy": {
+      "name": "Mozilla TLS policy",
+      "basis": "unknown",
+      "sources": {
+        "s529b0eabe2ed": "https://ssl-config.mozilla.org/"
+      }
+    }
+  },
+  "claims": {
+    "certbot": {"text": "The guide says certbot --nginx edits the server block; certificate acquisition is delegated to the linked certificate guides. Sources omit certbot.", "components": ["ng"], "sources": ["ng:s6a0728ca7609"], "status": "REASONED"},
+    "tls": {"text": "443 IPv4/IPv6 TLS uses certificate chain and private key, TLSv1.2/TLSv1.3 and ssl_prefer_server_ciphers off.", "components": ["ng"], "sources": ["ng:s6a0728ca7609"], "status": "REASONED"},
+    "http2": {"text": "http2 on requires nginx 1.25.1+; older versions use listen 443 ssl http2. No HTTP/2 module source is listed.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED"},
+    "tokens": {"text": "server_tokens off suppresses nginx version in headers and error pages.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED"},
+    "hsts": {"text": "Send HSTS only after HTTPS works; includeSubDomains commits every subdomain for max-age. Sources omit the headers module.", "components": ["ng"], "sources": ["ng:s6a0728ca7609"], "status": "REASONED"},
+    "hsts-inheritance": {"text": "A location add_header drops inherited server headers; always changes response-code coverage, not inheritance. Sources omit the headers module.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED"},
+    "proxy": {"text": "Proxy to loopback 127.0.0.1:3000 and set Host, X-Forwarded-For, X-Forwarded-Proto and X-Forwarded-Host.", "components": ["ng"], "sources": ["ng:sf3430c5a0b22"], "status": "REASONED"},
+    "forwarded-host": {"text": "Overwrite X-Forwarded-Host: client-set values otherwise pass upstream.", "components": ["ng"], "sources": ["ng:sf3430c5a0b22"], "status": "REASONED"},
+    "cipher-policy": {"text": "Use Mozilla for explicit cipher policy; retain the stated protocol floor.", "components": ["ng", "policy"], "sources": ["ng:s6a0728ca7609", "policy:s529b0eabe2ed"], "status": "REASONED"},
+    "tickets": {"text": "ssl_session_tickets defaults on; disable tickets or use a shared cache on nginx 1.23.2+ for automatic key rotation. The SSL module source is not listed.", "components": ["ng"], "sources": ["ng:s6a0728ca7609"], "status": "REASONED"},
+    "redirect": {"text": "Port 80 on IPv4/IPv6 redirects with 301; a default server reflecting $host can redirect unmatched hosts off-site, so use 444 or a canonical host.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED"},
+    "password-file": {"text": "Install apache2-utils and create the bcrypt password file at cost 12; bare -B cost 5 and OWASP minimum 10 are not directly sourced here.", "components": ["ng"], "sources": ["ng:sf32ce2956917"], "status": "REASONED"},
+    "basic": {"text": "auth_basic and auth_basic_user_file gate the existing proxied location over TLS; preserve its forwarded headers.", "components": ["ng"], "sources": ["ng:sf32ce2956917", "ng:sf3430c5a0b22"], "status": "REASONED"},
+    "mtls": {"text": "ssl_client_certificate and ssl_verify_client on require trusted client certificates; the SSL module source is not listed.", "components": ["ng"], "sources": ["ng:s6a0728ca7609"], "status": "REASONED"},
+    "mfa": {"text": "Basic is single-factor; the guide proposes auth_request with Authelia/oauth2-proxy or Cloudflare Access. Integration sources are not listed.", "components": ["ng"], "sources": ["ng:sf32ce2956917"], "status": "REASONED"},
+    "body-limit": {"text": "client_max_body_size defaults to 1m; 10m rejects larger bodies with 413, and 0 disables the check.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED"},
+    "rate-limit": {"text": "Per-address limit_req uses a 10r/s zone, burst 20 and nodelay; rejection status defaults to 503.", "components": ["ng"], "sources": ["ng:sb3bee9429629"], "status": "REASONED"},
+    "connection-limit": {"text": "limit_conn apiconn 10 caps concurrent connections per client address; it can also return 503.", "components": ["ng"], "sources": ["ng:sddc43aac8779"], "status": "REASONED"},
+    "location-auth": {"text": "Keep limits in the authenticated location; sibling locations do not inherit its auth or proxy headers. Repeat auth or inherit it from server; auth_basic off is deliberate.", "components": ["ng"], "sources": ["ng:sf32ce2956917", "ng:s40bdf1af1596", "ng:sf3430c5a0b22"], "status": "REASONED"},
+    "read-timeout": {"text": "proxy_read_timeout 60s limits gaps between upstream reads, not total response duration; active streams can continue indefinitely.", "components": ["ng"], "sources": ["ng:sf3430c5a0b22"], "status": "REASONED"},
+    "client-address": {"text": "At a direct edge trust the appended last X-Forwarded-For entry; behind a CDN, recover the client with trusted set_real_ip_from and real_ip_header before per-client limits.", "components": ["ng"], "sources": ["ng:sf3430c5a0b22", "ng:sddacc1191f5f", "ng:sb3bee9429629", "ng:sddc43aac8779"], "status": "REASONED"},
+    "verify-config": {"text": "Run nginx -t before reload; no configuration-test outcome is recorded.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED", "verify": [1]},
+    "verify-redirect": {"text": "HTTP should return 301 with an HTTPS Location.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED", "verify": [1]},
+    "verify-tls": {"text": "HTTPS must validate without -k; TLS 1.1-only rejection must be protocol_version, not a generic/local failure; test TLS 1.0 separately.", "components": ["ng"], "sources": ["ng:s6a0728ca7609"], "status": "REASONED", "verify": [1]},
+    "verify-auth": {"text": "An open path may return 200; the protected path must reject no credentials with 401/403, and valid credentials reach the app rather than 401.", "components": ["ng"], "sources": ["ng:sf32ce2956917"], "status": "REASONED", "verify": [1]},
+    "verify-size": {"text": "Authenticated 9M succeeds normally only after raising the 1m default; 11M returns 413. Disable the check with 0 in isolation to distinguish backend refusal.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED", "verify": [1]},
+    "verify-rate": {"text": "Concurrent unauthenticated probes exercise pre-auth limits; 503 does not identify the limiter. Compare both off and each alone with measured arrival rate.", "components": ["ng"], "sources": ["ng:sb3bee9429629", "ng:sddc43aac8779", "ng:sf32ce2956917"], "status": "REASONED", "verify": [1]},
+    "verify-backend": {"text": "Inspect every listener: direct public access to backend 3000 bypasses proxy TLS/auth even when front-door probes pass.", "components": ["ng"], "sources": ["ng:sf3430c5a0b22"], "status": "REASONED", "verify": [1]}
+  }
+}
+---
 # nginx: TLS and authentication
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| certbot: The guide says certbot --nginx edits the server block; certificate acquisition is delegated to the linked certificate guides. Sources omit certbot. | nginx documentation unknown | REASONED |
+| tls: 443 IPv4/IPv6 TLS uses certificate chain and private key, TLSv1.2/TLSv1.3 and ssl_prefer_server_ciphers off. | nginx documentation unknown | REASONED |
+| http2: http2 on requires nginx 1.25.1+; older versions use listen 443 ssl http2. No HTTP/2 module source is listed. | nginx documentation unknown | REASONED |
+| tokens: server_tokens off suppresses nginx version in headers and error pages. | nginx documentation unknown | REASONED |
+| hsts: Send HSTS only after HTTPS works; includeSubDomains commits every subdomain for max-age. Sources omit the headers module. | nginx documentation unknown | REASONED |
+| hsts-inheritance: A location add_header drops inherited server headers; always changes response-code coverage, not inheritance. Sources omit the headers module. | nginx documentation unknown | REASONED |
+| proxy: Proxy to loopback 127.0.0.1:3000 and set Host, X-Forwarded-For, X-Forwarded-Proto and X-Forwarded-Host. | nginx documentation unknown | REASONED |
+| forwarded-host: Overwrite X-Forwarded-Host: client-set values otherwise pass upstream. | nginx documentation unknown | REASONED |
+| cipher-policy: Use Mozilla for explicit cipher policy; retain the stated protocol floor. | nginx documentation unknown; Mozilla TLS policy unknown | REASONED |
+| tickets: ssl_session_tickets defaults on; disable tickets or use a shared cache on nginx 1.23.2+ for automatic key rotation. The SSL module source is not listed. | nginx documentation unknown | REASONED |
+| redirect: Port 80 on IPv4/IPv6 redirects with 301; a default server reflecting $host can redirect unmatched hosts off-site, so use 444 or a canonical host. | nginx documentation unknown | REASONED |
+| password-file: Install apache2-utils and create the bcrypt password file at cost 12; bare -B cost 5 and OWASP minimum 10 are not directly sourced here. | nginx documentation unknown | REASONED |
+| basic: auth_basic and auth_basic_user_file gate the existing proxied location over TLS; preserve its forwarded headers. | nginx documentation unknown | REASONED |
+| mtls: ssl_client_certificate and ssl_verify_client on require trusted client certificates; the SSL module source is not listed. | nginx documentation unknown | REASONED |
+| mfa: Basic is single-factor; the guide proposes auth_request with Authelia/oauth2-proxy or Cloudflare Access. Integration sources are not listed. | nginx documentation unknown | REASONED |
+| body-limit: client_max_body_size defaults to 1m; 10m rejects larger bodies with 413, and 0 disables the check. | nginx documentation unknown | REASONED |
+| rate-limit: Per-address limit_req uses a 10r/s zone, burst 20 and nodelay; rejection status defaults to 503. | nginx documentation unknown | REASONED |
+| connection-limit: limit_conn apiconn 10 caps concurrent connections per client address; it can also return 503. | nginx documentation unknown | REASONED |
+| location-auth: Keep limits in the authenticated location; sibling locations do not inherit its auth or proxy headers. Repeat auth or inherit it from server; auth_basic off is deliberate. | nginx documentation unknown | REASONED |
+| read-timeout: proxy_read_timeout 60s limits gaps between upstream reads, not total response duration; active streams can continue indefinitely. | nginx documentation unknown | REASONED |
+| client-address: At a direct edge trust the appended last X-Forwarded-For entry; behind a CDN, recover the client with trusted set_real_ip_from and real_ip_header before per-client limits. | nginx documentation unknown | REASONED |
+| verify-config: Run nginx -t before reload; no configuration-test outcome is recorded. | nginx documentation unknown | REASONED |
+| verify-redirect: HTTP should return 301 with an HTTPS Location. | nginx documentation unknown | REASONED |
+| verify-tls: HTTPS must validate without -k; TLS 1.1-only rejection must be protocol_version, not a generic/local failure; test TLS 1.0 separately. | nginx documentation unknown | REASONED |
+| verify-auth: An open path may return 200; the protected path must reject no credentials with 401/403, and valid credentials reach the app rather than 401. | nginx documentation unknown | REASONED |
+| verify-size: Authenticated 9M succeeds normally only after raising the 1m default; 11M returns 413. Disable the check with 0 in isolation to distinguish backend refusal. | nginx documentation unknown | REASONED |
+| verify-rate: Concurrent unauthenticated probes exercise pre-auth limits; 503 does not identify the limiter. Compare both off and each alone with measured arrival rate. | nginx documentation unknown | REASONED |
+| verify-backend: Inspect every listener: direct public access to backend 3000 bypasses proxy TLS/auth even when front-door probes pass. | nginx documentation unknown | REASONED |
+<!-- version-basis:end -->
 
 Get a certificate first: [free-certificates.md](free-certificates.md) for a public host (note that `certbot --nginx` edits the server block for you), or [self-signed.md](self-signed.md) for internal use.
 
@@ -115,7 +214,7 @@ that tolerance rather than removing the timeout.
 
 Mind the client address these headers carry. At a direct internet edge the block above appends the peer to `X-Forwarded-For` with `$proxy_add_x_forwarded_for`, so the app must read the LAST entry (the one nginx added), never the client-controlled first one. And if nginx sits behind a CDN or another proxy (for example fronting the site with Cloudflare Access, above), `$binary_remote_addr` is the CDN's edge IP, not the client's, so all callers arriving via the same edge IP share one `limit_req`/`limit_conn` bucket: the limits blur across clients or throttle real users, and a client-supplied `X-Forwarded-For` reaches the app, to be trusted if the app reads its first entry. Recover the real client address with `set_real_ip_from <cdn-ranges>` and `real_ip_header CF-Connecting-IP` (or `X-Forwarded-For`) from `ngx_http_realip_module`, so the limit key and the logged address are the client rather than the edge.
 
-## 5. Verify
+## 5. Verify (REASONED: all Verify scenarios follow the cited nginx documentation; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized nginx deployment fixture.)
 
 ```bash
 sudo nginx -t && sudo systemctl reload nginx
