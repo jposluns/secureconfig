@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "5fd221fba0a666a52a81af9e890f51f3231c0dbaedc1ff01d5f09e7e8f93bb93",
+  "body_sha256": "154f92e013afc74a7aacee2575d1f0bf23b860edea5e709d36040d3def594d70",
   "components": {
     "runpod": {
       "name": "RunPod documentation",
@@ -175,6 +175,8 @@ ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not
   # Feed the token to curl on stdin (curl --header @-), never in argv:
   # -H "Authorization: token TOKEN" is readable in ps / /proc/<pid>/cmdline.
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  # The Jupyter token you substitute on the set -- line enters shell history.
+  # Clear that history line afterward.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_JUPYTER_TOKEN'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -192,6 +194,8 @@ ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not
 # guard refuses while a placeholder remains; repeat for each mapped port.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  # The token you substitute on the set -- line enters shell history.
+  # Use a short-lived token or clear that history line afterward.
   set -- PASTE_WHOLE_BLOCK 'https://REPLACE_WITH_POD_ID-REPLACE_WITH_PORT.proxy.runpod.net/REPLACE_WITH_PROTECTED_PATH' 'REPLACE_WITH_TOKEN'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
