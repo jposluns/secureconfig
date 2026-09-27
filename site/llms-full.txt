@@ -444,7 +444,7 @@ Publicly trusted certificates are free through ACME certificate authorities such
 - A public DNS record (`A`/`AAAA` or `CNAME`) pointing at the server, for the HTTP-01 and TLS-ALPN-01 challenges; the DNS-01 challenge instead needs only control of the challenge `TXT` record and can certify a host with no public address record or inbound port.
 - For the HTTP-01 challenge: inbound port 80 reachable from the internet.
 - For the TLS-ALPN-01 challenge (used by Caddy and Traefik): inbound port 443.
-- For the DNS-01 challenge (required for wildcard certificates): API access to the DNS provider.
+- For the DNS-01 challenge (required for wildcard certificates), automated issuance and renewal need API access to the DNS provider. Manual DNS-01 is also possible with `certbot certonly --manual --preferred-challenges dns`, creating the TXT record by hand; certificates obtained this way do not auto-renew without an authentication hook (`--manual-auth-hook`) that automates the challenge.
 
 If none of these is possible, use [cloudflare.md](cloudflare.md) instead.
 
@@ -478,7 +478,7 @@ sudo certbot certonly --standalone -d example.com
 sudo certbot certonly --webroot -w /var/www/html -d example.com
 ```
 
-Wildcard certificates require the DNS-01 challenge through a DNS plugin (for example `python3-certbot-dns-cloudflare`), with provider API credentials scoped to least privilege (a Cloudflare API token with `Zone:DNS:Edit` on only the required zones, never the account-wide Global API Key) in a file readable only by root (`chmod 600` the file in a `700` directory; Certbot warns when other users can read it):
+Wildcard certificates require the DNS-01 challenge. For automated issuance and renewal, use a DNS plugin (for example `python3-certbot-dns-cloudflare`), with provider API credentials scoped to least privilege (a Cloudflare API token with `Zone:DNS:Edit` on only the required zones, never the account-wide Global API Key) in a file readable only by root (`chmod 600` the file in a `700` directory; Certbot warns when other users can read it):
 
 ```bash
 sudo certbot certonly --dns-cloudflare \
@@ -538,6 +538,8 @@ A certificate alone does not protect anything: continue with the server guide fo
 
 - Let's Encrypt documentation: https://letsencrypt.org/docs/
 - Certbot instructions: https://certbot.eff.org/
+- Certbot manual DNS-01 and renewal hooks: https://eff-certbot.readthedocs.io/en/stable/using.html#manual
+- Certbot DNS plugins: https://eff-certbot.readthedocs.io/en/stable/using.html#dns-plugins
 - ZeroSSL: https://zerossl.com/
 - acme.sh: https://github.com/acmesh-official/acme.sh
 - Let's Encrypt certificate lifetimes: https://letsencrypt.org/docs/cert-lifetimes/
@@ -10834,14 +10836,14 @@ auditLog:
 
 A failed audit write can terminate the process, so confirm the destination is writable during deployment validation. Omitting a filter records every auditable event; a filter such as `auditLog.filter: '{"atype": "authenticate"}'` records only that event type and deliberately excludes the rest. See [configure auditing](https://www.mongodb.com/docs/v8.0/tutorial/configure-auditing/) and [audit filters](https://www.mongodb.com/docs/v8.0/tutorial/configure-audit-filters/).
 
-Recording successful authorization checks is a separate decision. `auditAuthorizationSuccess` defaults to `false`, so the audit system logs only authorization failures until it is enabled, and enabling it carries a performance cost:
+Recording successful authorization checks is a separate decision. In MongoDB 8.0, `auditAuthorizationSuccess` defaults to `false`, so `authCheck` events are logged only for authorization failures. Other auditable events, such as authentication, schema (DDL), and replica-set changes, do not depend on this setting and are recorded when auditing is enabled and the filter permits them. Enabling successful `authCheck` events carries a performance cost:
 
 ```yaml
 setParameter:
   auditAuthorizationSuccess: true
 ```
 
-Set it only where the accountability requirement justifies the overhead. See the [auditAuthorizationSuccess parameter](https://www.mongodb.com/docs/v8.0/reference/parameters/).
+Set it only where the accountability requirement justifies the overhead. See the [auditAuthorizationSuccess parameter](https://www.mongodb.com/docs/v8.0/reference/parameters/#mongodb-parameter-param.auditAuthorizationSuccess).
 
 ## 6. Redact document values from the diagnostic log
 
@@ -27609,16 +27611,19 @@ Keep the origin list in configuration per environment rather than hardcoding loc
 
 ## Verify
 
+**REASONED:** not demonstrated here: the authoring host forbids opening listeners without an isolated network namespace, and has none, so no deployed API or browser session could be run; this rests on the Fetch Standard and MDN's CORS guide (Sources). An exposed API echoes `https://evil.example` in `Access-Control-Allow-Origin`; the fixed API omits it for that origin and returns only your listed origin, with `Access-Control-Allow-Credentials: true` only where the browser must send credentials.
+
 ```bash
 curl -q -s -o /dev/null -D - https://api.example.com/data -H "Origin: https://evil.example" | grep -i access-control
 # expect: no Access-Control-Allow-Origin echoing the hostile origin
 curl -q -s -o /dev/null -D - https://api.example.com/data -H "Origin: https://app.example.com" | grep -i access-control
-# expect: your origin, and Allow-Credentials only if you use cookies
+# expect: your origin, and Allow-Credentials only if the browser must send credentials: cookies, HTTP authentication, or TLS client certificates
 ```
 
 ## Sources (checked September 2026)
 
 - MDN: Cross-Origin Resource Sharing, for the protocol itself: https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS
+- Fetch Standard, definition of credentials: https://fetch.spec.whatwg.org/#credentials
 - Express `cors` middleware, for the `origin` and `credentials` options used above: https://expressjs.com/en/resources/middleware/cors/
 - FastAPI CORS, for `CORSMiddleware` and its parameters: https://fastapi.tiangolo.com/tutorial/cors/
 

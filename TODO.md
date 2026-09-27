@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.182**, **2.48**, **3.36**, **4.12**.
+Next ids: **1.183**, **2.48**, **3.36**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -43,7 +43,6 @@ many.
 | ID | Item | Tags |
 | --- | --- | --- |
 | 1.143 | `image-gen-uis.md`: confirm on a live AUTOMATIC1111 v1.10.1 instance what the guide states as read from the code, not run, on the maintainer's 2026-09-25 "Disclose + row" ruling: that `GET /internal/sysinfo` and `/internal/sysinfo-download` (`modules/ui.py:1223-1232`) answer without a login while the Gradio login is on, and return `COMMANDLINE_ARGS` unredacted (`modules/sysinfo.py:33`, `:130-131`) and a `--gradio-auth=user:pass` argv element unhidden (`get_argv()`, `:134-148`). Use dummy credentials and a loopback bind; record the unauthenticated request and response, and the proxy refusal of `/internal/sysinfo*` as the fixed state. Also confirm the unhidden `--api-auth=user:pass` argv form under the same conditions (`modules/sysinfo.py:142-148`, v1.10.1). Also confirm that `GET /sdapi/v1/cmd-flags` returns the `--gradio-auth` and `--api-auth` values (`modules/api/api.py:689-690`, `modules/api/models.py:221-231`), with no credential when `--api-auth` is unset and with any API user's credential when it is set. Then replace the "read from the code, not run" wording with the observation, or correct the disclosure. (H, S) | `[gap]` |
-| 1.177 | F-MONGODB-AUDIT-SCOPE: `mongodb.md:579` says auditing logs only authorization failures. The MongoDB 8.0 parameter reference for `auditAuthorizationSuccess` scopes the failures-only default to `authCheck` events. Verify at a pinned version and correct the guide's scope. (M, S) | `[gap]` |
 | 1.178 | F-BROWSERLESS-TOKEN: `headless-browser-services.md:86` records Browserless's token as optional by default. The vendor documentation disagrees with itself: the older quickstart (https://docs.browserless.io/enterprise/docker/quickstart) says an omitted token is generated, while the current configuration reference (https://docs.browserless.io/enterprise/docker/config) says endpoints remain unauthenticated. Pin a Browserless release and verify its default before deciding which guide wording to change. (M, S) | `[gap]` |
 
 ## Priority 2: Deepen existing guides
