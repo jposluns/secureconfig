@@ -46,6 +46,52 @@ This repository covers deployment exposure: TLS, authentication, MFA, secret han
 
 8. **A validator's character set is spelled out, never written as a range.** Outside the C locale, GNU grep, GNU sed and bash `[[ =~ ]]` let a bracket range such as `[A-Za-z]` or `[0-9a-f]` match non-ASCII letters and digits (`é` matched both in the #356 review), and bash `case` is ASCII only while its `globasciiranges` option is on, which a build or a `shopt -u` can change; a reader pastes a block into whatever locale their terminal has. A guard that accepts or refuses input writes its set out, as in `*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*` for a host name or `[0123456789abcdef]` for a generated hex value, which means the same thing in every locale, tool and shell. A POSIX class in an accept list is not a fix on its own: `[[:alnum:]]` matches non-ASCII letters under C.UTF-8 too, so a class that decides what to accept is sound only inside a check that runs entirely under an explicit `LC_ALL=C`, as the token search in `mcp-clients.md` does. A class in a reject list is sound in any locale, because a locale that widens the class only refuses more: refusing the locale's whitespace and control characters with `*[[:space:][:cntrl:]]*`, as `chat-uis.md` does and documents, needs neither a spelled-out set nor `LC_ALL=C`. A false positive is waived in `tools/bracket_ranges_allow.txt`, never in the guide. Each entry has four TAB-separated fields: `<guide-file> TAB sha256:<span digest> TAB sha256:<block digest> TAB <reason>`, with each digest 64 lowercase hex digits. Hash SHA-256 of UTF-8 of the extracted, newline-normalized text: `blocks_of` converts CRLF and bare CR to LF and removes fence indentation. The span is the opener line or, when any scanned opener on it retains a spanning reading, all lines from it through Bash block end, joined with LF and no added trailing LF. The block digest hashes the whole extracted body, excluding fence lines. Preserve backslashes and remaining whitespace; do not hash joined or quote-stripped readings. These are not raw-file byte digests: changing only LF to CRLF or bare CR keeps the waiver. One entry covers the findings attributed to one opener-line occurrence; later independent openers need their own entries, and duplicate occurrences consume duplicate entries. Moving a span to a different block body or editing any extracted line of its enclosing block makes the entry stale, including lines before or after the span. Absolute line numbers are not bound: edits elsewhere in the guide and movement of a whole unchanged block within it keep the waiver. A range-free validator false positive needs a reason distinguishing it from a real range. Malformed digests, empty reasons, stale entries and retired in-guide waiver markers fail the gate. The gate `tools/check_bracket_ranges.py` scans every fenced bash block in the guides, README.md, controls-reference.md and this file, including comments and heredocs, without shell lexing. Quote-free closed prefixes settle the lexical reading; ambiguous alternatives retain the span through block end. The test-word exemption requires a same-line standalone close and excludes bare one-word literal tests. Under threat model (B), the target is accidental locale-dependent ranges in accept-list validators, and structural defects must be fixed. Runtime expansion that changes the list, test-word-shaped data and constructed multiline quoting are disclosed residual classes, not hardening targets. In particular, empty-variable expansion in `[!$a]` across a quoted newline (codex round-8 P1-1) and `re='^ [ a-z x ] +$'` (P1-2) remain disclosed misses. Other residuals include bracket-free tr ranges, POSIX classes, \w, runtime assembly, non-bash fences and fence-extraction limits. The ship criterion is that neither review family finds a realistic, accidental fail-open. The corpus has 0 unwaived findings in 416 bash blocks across 99 guides: 39 consumed entries cover 49 expressions. After merging main, the delta against qa/360-r9 is 1 added and 0 removed findings: Python sys.argv[1] indexing in the vLLM TCP probe. Four entries were rebound after main's rule-7 guard sweep; their spans and reasons are unchanged. All 39 span and block bindings match, and 1274 individual block-line edits each invalidate their waiver and leave a stale entry. The deterministic suite has 2892 cases (2830 ordinary, 41 allowlist, 4 quote-removal and 17 joining), 2884 checked behaviours, 8 disclosed blind spots and 17 entry-point runs. Mutations removing block binding, using a partial block, accepting legacy entries or malformed block digests, preserving raw line endings, binding only the opener or skipping stale detection fail the suite. The fuzzer has 17 regression tests. Its length-5 run with `--multiline-length 4` generates 2,129,785 candidates per engine under C and en_US.utf8. Glob: 645,833 parsed, 157,068 live and flagged, 0 missed; grep -E: 1,250,035 parsed, 18,010 live and flagged, 0 missed; Bash regex: 1,895,043 parsed, 250,686 live and flagged, 0 missed. These bounded counts match round 8. The gate's docstring details the settlement argument, false positives and residuals.
 
+## Version-basis pilot
+
+The enrolled guides are listed in `tools/version_basis_guides.txt`. Their front matter uses a
+restricted JSON-in-YAML format: `---`, then `version_basis: ` followed by one strict JSON object,
+then `---`, each delimiter on its own line. Use double-quoted JSON keys and strings. YAML aliases,
+tags, comments, block scalars, trailing commas, duplicate keys, non-JSON numbers and unknown fields
+are rejected. `--write` emits one component source and one claim per line. Use a renderer that
+understands front matter; the llms bundle strips it and retains the visible summary.
+
+Schema 1 requires exactly these top-level fields:
+
+- `schema`: integer `1`.
+- `checked`: calendar date `YYYY-MM-DD`, no later than the newest exact `## YYYY-MM-DD`
+  heading in `CHANGELOG.md`. This is a deterministic checkout bound, not a wall-clock freshness check.
+- `documentation_checked`: `YYYY-MM`, matching the Sources heading and no later than `checked`.
+  Preserve the recorded precision; a metadata review does not establish a new documentation check.
+- `body_sha256`: lowercase SHA-256 of the UTF-8 body returned by `without_summary()` after `split()`
+  removes front matter in `tools/version_basis.py`. The generated summary and its extra blank line
+  are excluded. Do not hash the complete Markdown file.
+- `components`: nonempty object keyed by IDs matching `[a-z][a-z0-9-]*`. Each component has exactly
+  `name`, `basis` and `sources`. Use `unknown` when no version is recorded. Sources map
+  `s` plus the first 12 lowercase SHA-256 hex digits of the exact URL to that absolute HTTP(S) URL.
+  Each URL must occur in Sources; a known basis must occur in its cited Sources entries.
+- `claims`: nonempty object with the same ID grammar. Each claim requires `text`, a nonempty unique
+  `components` list, a nonempty `sources` list of `component-id:source-id` references, and `status`
+  (`DEMONSTRATED` or `REASONED`). Every claim component needs a source; every component must be used.
+  `evidence` is required only for DEMONSTRATED and quotes the whitespace-normalized historical body.
+  Optional `verify` lists unique, one-based bash-fence ordinals within Verify sections; every such
+  fence needs a mapping. Names, bases, claim text, URLs and evidence are nonempty single-line strings.
+  Evidence presence and fence coverage do not prove truth or completeness.
+
+After a body edit, review the entire claim inventory against the changed body and cited sources,
+including version qualifications, status, evidence and Verify mappings. Correct the metadata first.
+A body-change failure prints the expected digest and the exact per-guide rebind command. For example,
+run `python3 tools/version_basis.py --rebind vault.md` only after that review. The command asserts
+that the inventory was reviewed, validates it, and changes only the digest token. It does not update
+the review dates, claims or summary, and does not claim a new demonstration. Ordinary `--write`
+continues to refuse an unbound body edit.
+
+Then run `python3 tools/version_basis.py --write`, `python3 tools/version_basis.py --check`,
+`bash scripts/build-llms-full.sh`, `bash scripts/build-plugin.sh` and `bash tools/run_all_checks.sh`.
+Use `python3 tools/version_basis.py --check vault.md` for a single enrolled guide. Review the source
+and generated diffs together. Verify mappings use the same fence-level declaration and attachment grammar as the Verify-marking
+gate. Every mapped claim must agree with its fence's declaration; later per-command comments do not
+change that status. Review every ordinal affected by a split.
+
 ## Shipping a change
 
 `VERSION` names the most recently merged pull request, as `1.0.<number>`. That number is knowable

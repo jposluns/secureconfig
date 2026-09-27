@@ -30,6 +30,7 @@ enforced by review. This gate catches only the structural floor: a guide shipped
 with no Verify section, an empty one, undated sources, or no citation at all.
 """
 import datetime
+from _markdown import body_lines
 import pathlib
 import re
 import sys
@@ -176,7 +177,7 @@ def scan(text):
                    these can be headings, so a '## heading' printed inside a code
                    block can never open or close a section.
     """
-    lines = text.splitlines()
+    lines = body_lines(text)
     content = [""] * len(lines)
     visible = {}
 
@@ -370,29 +371,32 @@ def main():
         text = path.read_text(encoding="utf-8")
         checked_count += 1
 
-        failures.extend(find_verify(name, text))
+        try:
+            failures.extend(find_verify(name, text))
 
-        if name == README:
-            companion = root / README_SOURCES
-            if not companion.is_file():
-                failures.append(
-                    f"{name}: its citations live in {README_SOURCES}, which is missing."
+            if name == README:
+                companion = root / README_SOURCES
+                if not companion.is_file():
+                    failures.append(
+                        f"{name}: its citations live in {README_SOURCES}, which is missing."
+                    )
+                    continue
+                failures.extend(
+                    find_sources(
+                        name, companion.read_text(encoding="utf-8"), today,
+                        origin=README_SOURCES,
+                    )
                 )
-                continue
-            failures.extend(
-                find_sources(
-                    name, companion.read_text(encoding="utf-8"), today,
-                    origin=README_SOURCES,
-                )
-            )
-            readme_content, _ = scan(text)
-            if not README_SOURCES_LINK_RE.search("\n".join(readme_content)):
-                failures.append(
-                    f"{name}: has no Markdown link to {README_SOURCES}, so a reader "
-                    f"has no path from the checklist to its citations."
-                )
-        else:
-            failures.extend(find_sources(name, text, today))
+                readme_content, _ = scan(text)
+                if not README_SOURCES_LINK_RE.search("\n".join(readme_content)):
+                    failures.append(
+                        f"{name}: has no Markdown link to {README_SOURCES}, so a reader "
+                        f"has no path from the checklist to its citations."
+                    )
+            else:
+                failures.extend(find_sources(name, text, today))
+        except ValueError as exc:
+            failures.append(f"{name}: invalid front matter: {exc}")
 
     if not checked_count:
         print("  FAIL  guide-shape gate found no guides to check; run it from the "
