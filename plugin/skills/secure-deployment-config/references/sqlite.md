@@ -55,7 +55,7 @@ The upstream image bakes in no configuration file and declares no `EXPOSE`. With
 
 ## Verify
 
-The bundle scan, the git inventory and the `stat` check were demonstrated on the authoring host in exposed and fixed states; the paragraph after the `stat` step records what was observed. The download probe, the LiteFS/Litestream listener check and the Turso check are REASONED, each marked at its step with the capability that was missing. Their outcomes are derived from the cited vendor pages, and backlog row 2.37 tracks demonstrating them. Use Bash and curl 7.75.0 or newer; never add `-k`. Substitute inside the single quotes and paste each complete subshell.
+The bundle scan, the git inventory and the `stat` check were demonstrated on the authoring host in exposed and fixed states; the paragraph after the `stat` step records what was observed. The download probe, the LiteFS/Litestream listener check and the Turso check are REASONED, each marked at its step with the capability that was missing. Their outcomes are derived from the cited vendor pages. Use Bash and curl 7.75.0 or newer; never add `-k`. Substitute inside the single quotes and paste each complete subshell.
 
 ```bash
 # REASONED: needs a served application, which opens a listener; the authoring host forbids that without an isolated network namespace, and none was available.

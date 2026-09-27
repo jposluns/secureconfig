@@ -165,7 +165,7 @@ Restart the node through your deployment's service manager after applying listen
 
 ## 5. Verify
 
-Service behaviour has not been demonstrated in the authoring environment. The nine service checks below are REASONED: RabbitMQ/Erlang binaries, `rabbitmqadmin`, Pika, Docker, and Podman are absent, and no broker or external peer test environment was supplied. Outstanding demonstrations are tracked in `RABBITMQ-LIVE-1` below.
+Service behaviour has not been demonstrated in the authoring environment. The nine service checks below are REASONED: RabbitMQ/Erlang binaries, `rabbitmqadmin`, Pika, Docker, and Podman are absent, and no broker or external peer test environment was supplied. Expected outcomes are REASONED from the cited RabbitMQ documentation.
 
 Use Bash and paste whole guarded blocks. Substitute inside the single quotes on each `set --` line, retaining the quotes; do not insert literal apostrophes. The guards assume real shell builtins. A fragment pasted below its guard is unguarded, and inherited arguments identical to the marker and expected values cannot be distinguished from a complete paste. Use curl 7.75.0 or newer for the diagnostic write-out fields. `--user` below contains only a username and prompts for the password; do not append a password.
 
@@ -531,9 +531,10 @@ Local authoring checks, completed without a broker:
 
 No broker, container, or whole-corpus gate suite was run. Local syntax checks do not demonstrate service behaviour.
 
-| ID | Outstanding demonstration | Status |
+| Check scope | Procedure and prerequisites | Status |
 |---|---|---|
-| RABBITMQ-LIVE-1 | Demonstrate checks 1-9 against isolated exposed and fixed states: scoped grants and vhost refusal; monitoring versus administration and message operations; listener/epmd bindings, cookie permissions, external denial and allowed-peer controls including 15671 and removed 5672; management authenticated/anonymous responses; mutual TLS and AMQP user authentication; approved blank-node imports and reduced exports; plaintext versus TLS-required inter-node and CLI distribution, with rejection of a missing or untrusted client certificate; and topic-exchange routing-key authorization, with a broker ACCESS_REFUSED for an out-of-pattern publish or binding. Include native RabbitMQ configuration parsing/startup and retain commands, versions, outputs, and matching broker logs. | OPEN: missing RabbitMQ/Erlang, rabbitmqadmin, Pika, container runtime, test certificates, and peer infrastructure in the authoring environment. |
+| Service checks | Demonstrate checks 1-9 against isolated exposed and fixed states: scoped grants and vhost refusal; monitoring versus administration and message operations; listener/epmd bindings, cookie permissions, external denial and allowed-peer controls including 15671 and removed 5672; management authenticated/anonymous responses; mutual TLS and AMQP user authentication; approved blank-node imports and reduced exports; plaintext versus TLS-required inter-node and CLI distribution, with rejection of a missing or untrusted client certificate; and topic-exchange routing-key authorization, with a broker ACCESS_REFUSED for an out-of-pattern publish or binding. Include startup checks and retain commands, versions, outputs, and matching broker logs. | REASONED from the cited RabbitMQ documentation; missing RabbitMQ/Erlang, rabbitmqadmin, Pika, container runtime, test certificates, and peer infrastructure in the authoring environment. |
+| Native configuration/schema parsing | Parse the RabbitMQ configuration with the native tools. | Unconfirmed because RabbitMQ and Erlang are absent; retained local work. |
 
 ## 6. Encrypt inter-node and CLI distribution traffic with TLS
 

@@ -168,7 +168,7 @@ What each run observed:
 - **Block 3 from the same host:** `http=200` against the address Streamlit listened on, and `exit=7` against another loopback address.
 - **Static serving:** with `server.enableStaticServing` on, the script called `st.stop()` at once, yet `/app/static/public.txt` returned the file with `200` and `text/plain`. With it off, the same path returned `200` with the app's HTML page, not the file. Judge a static-route probe by its body, not its status.
 
-REASONED, and tracked in backlog row 1.121:
+REASONED from the cited Streamlit 1.64.0 source and the recorded loopback observations:
 - an external vantage for block 3, since there was one host with no second network;
 - the default wildcard bind, since the host forbids binding every interface.
 

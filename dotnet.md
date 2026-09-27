@@ -278,7 +278,7 @@ For the `/api` check, the route must exist, require authorization, and use the a
 
 ### Additional deployment checks
 
-**REASONED, .NET 10 LTS:** The following checks have not been demonstrated: the authoring environment has no .NET runtime or container runtime, and no deployed application or replica infrastructure. `DOTNET-VERIFY` in [TODO.md](TODO.md) tracks demonstration against exposed and corrected deployments. Shell checks do not establish server behavior.
+**REASONED, .NET 10 LTS:** The following checks have not been demonstrated: the authoring environment has no .NET runtime or container runtime, and no deployed application or replica infrastructure. Expected exposed and corrected outcomes rest on the cited .NET 10 documentation. Shell checks do not establish server behavior.
 
 Paste each complete guarded block. Substitute the entire URL inside its single quotes; a literal apostrophe requires proper shell escaping. Run public-exposure checks from outside the application host and its trusted proxy network. Supply trusted CA configuration where needed; do not use `-k`. A DNS error, TLS failure, timeout, or HTTP `000` is not proof of an application-level rejection. The final `|| true` protects an enclosing shell from termination; it does not mean the check passed.
 

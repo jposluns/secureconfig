@@ -125,7 +125,7 @@ unpublished wherever these run.
 Every live check below is **REASONED**, not demonstrated: the authoring host forbids opening listeners
 without an isolated network namespace, and has none. No exposed or fixed service was run.
 Each names its expected exposed and fixed result so
-it discriminates when run against a live instance; backlog row 2.26 tracks demonstrating them. Run each
+it discriminates when run against a live instance, based on the cited vendor documentation and pinned sources. Run each
 probe from an external vantage, not the service host, and run its positive control (for a token-gated
 service, an authorized request that succeeds) so a dead service or a blocked local socket is not
 misread as fixed. A transport failure is inconclusive on its own: read the `err` field and confirm the
@@ -134,6 +134,8 @@ local policy blocked the probe or a slow response outlasted `--max-time`. These 
 curl 7.75.0 or newer, and an IPv6 literal needs brackets in the URL.
 
 ```bash
+# REASONED: listener inventory follows the cited vendor documentation and pinned sources;
+# the authoring host lacks an isolated network namespace for authorized live listeners.
 # On the host: these listeners should be bound to loopback or an internal interface, not a wildcard.
 # Add the distributed Grid ports (5553, 5556, 5557, 5559) and your Playwright port if you run them.
 ss -tlnp   # read every listener; 9222/4442/4443/4444/5555/3000/5900/7900: loopback or internal only
@@ -144,7 +146,7 @@ ss -tlnp   # read every listener; 9222/4442/4443/4444/5555/3000/5900/7900: loopb
 port, including ephemeral ports, plus forwarders in the host and container network namespaces.
 Exposed, a forwarder supplies a reachable non-loopback listener; fixed, no unauthenticated external
 path remains while the local browser endpoint still answers. The pinned socket factories and HTTP
-handler below establish these expected results; row 2.26 tracks their live demonstration.
+handler below establish these expected results.
 
 For the DevTools, Grid, browserless and Playwright ports, guard the address in the block below so it
 forces a real substitution, and read the write-out. Replace `9222` in the curl URL with the actual

@@ -240,12 +240,14 @@ The client hop takes three commands, not one. A single failing connection proves
 Run the same three against pgpool-II on port 9999 where that is the pooler in front, because nothing above tests its listener. pgpool-II also needs its own effective-policy and admin-channel checks, because the client probes exercise one path and the console inspection below is PgBouncer-specific:
 
 ```bash
+# REASONED: pgpool-II policy and PCP checks follow the cited pgpool-II documentation;
+# no running pgpool-II/PCP deployment is available in the authoring environment.
 # Effective pgpool-II policy (through the pooler on 9999):
 psql -X "host=pooler.internal port=9999 dbname=app user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" \
   -c 'PGPOOL SHOW enable_pool_hba;' -c 'PGPOOL SHOW ssl;'
 grep -vE '^\s*(#|$)' /etc/pgpool-II/pool_hba.conf   # active rules, in order; first match wins
-# Reasoned, not demonstrated: no running pgpool-II/PCP deployment in the authoring environment; TODO.md row
-# 1.79 tracks the live test. Correct credentials must succeed; a wrong password must be refused on
+# Not demonstrated: no running pgpool-II/PCP deployment in the authoring environment.
+# Correct credentials must succeed; a wrong password must be refused on
 # authentication, and any other error leaves verification incomplete.
 # PCP admin channel on loopback: an authenticated read must succeed, a wrong password must be refused.
 pcp_node_count -h 127.0.0.1 -p 9898 -U pcpadmin -W   # enter the correct PCP password: succeeds
@@ -280,9 +282,11 @@ psql -X "host=pooler.internal port=6432 dbname=app user=app sslmode=verify-full 
 
 `ssl` reports whether the pooler-to-PostgreSQL connection uses SSL. It does not report whether the pooler validated the certificate, so a `t` here is consistent with `server_tls_sslmode = require`, which validates nothing. Certificate validation cannot be observed from the client at all: for PgBouncer configured with `server_tls_sslmode = verify-full`, test enforcement by presenting the pooler with a certificate that should fail, one signed by an untrusted CA and one valid but issued for a different host name, and confirm that it refuses both. It has to be a fresh BACKEND connection rather than a fresh client one: a new client is routinely handed a server connection that was opened earlier, under the old certificate. `inet_client_addr()` is the address section 5 tells you to write into `pg_hba.conf`.
 
-These direct-database checks are reasoned, not demonstrated: the authoring environment lacks a running pooler/PostgreSQL deployment with distinct application and pooler source addresses, and TODO.md row 1.79 tracks the live test; an exposed database admits the direct application connection while the intended HBA policy rejects it and the permitted controls succeed, and a password, certificate, DNS, or connection failure is inconclusive. Test the bypass the pooler cannot prevent. From an application source that is supposed to go through the pooler, connect to the DATABASE directly with the same credentials and require a rejection, then confirm the permitted pooler egress still connects and the application still connects through the pooler. Give the real destination as `hostaddr` while keeping the certificate host name in `host`, and guard the substituted values:
+These direct-database checks are REASONED from the cited PostgreSQL HBA documentation, not demonstrated: the authoring environment lacks a running pooler/PostgreSQL deployment with distinct application and pooler source addresses; an exposed database admits the direct application connection while the intended HBA policy rejects it and the permitted controls succeed, and a password, certificate, DNS, or connection failure is inconclusive. Test the bypass the pooler cannot prevent. From an application source that is supposed to go through the pooler, connect to the DATABASE directly with the same credentials and require a rejection, then confirm the permitted pooler egress still connects and the application still connects through the pooler. Give the real destination as `hostaddr` while keeping the certificate host name in `host`, and guard the substituted values:
 
 ```bash
+# REASONED: direct-database isolation follows the cited PostgreSQL HBA documentation;
+# no running pooler/PostgreSQL deployment with distinct application and pooler source addresses is available.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DB_HOSTNAME' 'REPLACE_WITH_DB_IP'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
@@ -297,7 +301,7 @@ These direct-database checks are reasoned, not demonstrated: the authoring envir
 )
 ```
 
-These backend tests are reasoned, not demonstrated: the authoring environment lacks an isolated running pooler/PostgreSQL deployment, and TODO.md row 1.79 tracks the demonstration. Force and identify a fresh backend connection before each attempt; establish a trusted-certificate control, change one condition, repeat the query above through the relevant pooler port, and restore the control after each case. PgBouncer with `server_tls_sslmode = verify-full` must reject an untrusted CA, a valid certificate for the wrong host name, and a backend that declines TLS. Pgpool-II 4.7.2 with `ssl_ca_cert` must reject an untrusted CA, but does not enforce backend host-name matching or mandatory TLS; record those two as limitations.
+These backend tests are REASONED from the cited PgBouncer and Pgpool-II TLS documentation, not demonstrated: the authoring environment lacks an isolated running pooler/PostgreSQL deployment. Force and identify a fresh backend connection before each attempt; establish a trusted-certificate control, change one condition, repeat the query above through the relevant pooler port, and restore the control after each case. PgBouncer with `server_tls_sslmode = verify-full` must reject an untrusted CA, a valid certificate for the wrong host name, and a backend that declines TLS. Pgpool-II 4.7.2 with `ssl_ca_cert` must reject an untrusted CA, but does not enforce backend host-name matching or mandatory TLS; record those two as limitations.
 
 Ask the pooler what it negotiated, and what identity it forces:
 

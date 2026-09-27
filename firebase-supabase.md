@@ -11,7 +11,7 @@ views and functions execute, not only on the table policies.
 Documentation was checked in September 2026. Defaults below describe the documentation at the
 time of writing; inspect the effective settings of each project. Live behavior has not been
 demonstrated in this authoring environment. The Verify section records the missing prerequisites
-and demonstration debt.
+and the vendor documentation supporting the REASONED checks.
 
 ## Firebase
 
@@ -588,7 +588,7 @@ logs, or client bundles. Secret hygiene and in-function authorization are both r
 Use disposable projects and harmless fixtures for exposed/fixed comparisons. Do not temporarily
 open production data. No disposable cloud project, controlled user accounts, deployed client
 bundle, or authorized writable service-fixture environment was supplied here. The checks below
-are **reasoned, not demonstrated**, and are tracked in the demonstration backlog.
+are **REASONED, not demonstrated**, from the cited Firebase and Supabase documentation.
 
 ### 1. Compare unauthenticated, owner, and unrelated-user access
 
@@ -843,7 +843,7 @@ bundle and confirm that its filename is reported; remove it and repeat. A clean 
 prove the absence of encoded, split, binary, or differently shaped credentials. Inspect build
 inputs, source maps, and private-key material separately.
 
-### Demonstration backlog
+### Local validation and REASONED service checks
 
 Both bash blocks passed ShellCheck 0.11.0 and `bash -n` during authoring. Local guard tests refused
 embedded `REPLACE_WITH_` placeholders, `example.com`, angle brackets, empty values, and omitted
@@ -855,9 +855,9 @@ checks. These checks establish syntax and the stated shell behavior only; they d
 Firebase Rules, execute SQL policies, or demonstrate service authorization. The replacement
 was not installed in the repository, and no whole-corpus gate result is claimed.
 
-| ID | Required exposed/fixed demonstration | Status |
+| Scope | Exposed/fixed checks and prerequisites | Status |
 | --- | --- | --- |
-| FIREBASE-SUPABASE-LIVE | Demonstrate every REASONED comparison above using disposable Firebase and Supabase projects, controlled A/B accounts and mailboxes, MFA sessions, registered App Check clients, a writable emulator/service fixture, a second host, Storage objects, Realtime clients, view/RPC inventories, an outbound-request collector, a Vault canary, key-lifecycle controls, and the actual client build. Record versions, effective rules/grants/settings, requests, responses, persisted write results, positive controls, propagation intervals, and cleanup. Include all three Firebase Rules engines, Firebase Functions, Supabase Edge Functions (using deployed operation fixtures and caller/webhook credentials to compare JWT verification enabled/disabled, handler authorization, positive controls, persisted effects, and secret hygiene), emulators, API restrictions, signup (including signed-out Anonymous-provider comparisons that confirm new-account creation when enabled and rejection when disabled), Data API removal, views, every function overload, HTTP wrappers, Vault, Storage (including sessionless GET of the same saved download URL before and after Rules tightening and token revocation, with an authorized SDK direct-download positive control), both Realtime authorization paths, MFA, API-key retirement, JWT-signing-key revocation, and bundle-scan controls. | Open; live behavior is reasoned, not demonstrated. |
+| Firebase and Supabase | Check every REASONED comparison above using disposable Firebase and Supabase projects, controlled A/B accounts and mailboxes, MFA sessions, registered App Check clients, a writable emulator/service fixture, a second host, Storage objects, Realtime clients, view/RPC inventories, an outbound-request collector, a Vault canary, key-lifecycle controls, and the actual client build. Record versions, effective rules/grants/settings, requests, responses, persisted write results, positive controls, propagation intervals, and cleanup. Include all three Firebase Rules engines, Firebase Functions, Supabase Edge Functions (using deployed operation fixtures and caller/webhook credentials to compare JWT verification enabled/disabled, handler authorization, positive controls, persisted effects, and secret hygiene), emulators, API restrictions, signup (including signed-out Anonymous-provider comparisons that confirm new-account creation when enabled and rejection when disabled), Data API removal, views, every function overload, HTTP wrappers, Vault, Storage (including sessionless GET of the same saved download URL before and after Rules tightening and token revocation, with an authorized SDK direct-download positive control), both Realtime authorization paths, MFA, API-key retirement, JWT-signing-key revocation, and bundle-scan controls. | REASONED from the cited Firebase and Supabase documentation; live behavior is not demonstrated. |
 
 ## Sources (checked September 2026)
 

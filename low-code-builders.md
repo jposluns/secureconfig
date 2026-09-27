@@ -123,7 +123,7 @@ stand-in for `docker exec`. Everything else is reasoned. NocoDB 2026.09.0, Baser
 Appsmith and Budibase ship for production as container images and the authoring host has no container
 runtime. NocoDB also cannot run here outside a container: its server calls `listen` with no host, so it
 can only bind every interface, which the host forbids; the same applies to Windmill's default bind.
-Backlog row 1.109 tracks demonstrating the rest.
+The remaining checks are REASONED from the cited vendor documentation and pinned source readings.
 
 On the host, list the listeners, then read Docker's own publications, because a port published through
 Docker's NAT may have no host socket at all, so absence from `ss` is not proof of isolation:

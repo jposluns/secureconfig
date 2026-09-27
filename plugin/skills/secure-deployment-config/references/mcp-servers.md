@@ -105,6 +105,7 @@ location /mcp {
 The direct-origin request below checks listener reachability, not MCP RPC success: any HTTP response, now typically `400`/`405`, proves that the port answered. Use curl 7.75.0 or newer for the `exitcode` and `errormsg` write-out variables. See the curl manual.
 
 ```bash
+# REASONED: listener isolation follows the cited deployment guidance; no live MCP 2026-07-28 server is available.
 ss -tlnp   # read every listener; 127.0.0.1:3000 only, never 0.0.0.0 or ::
 # From another host: refused at the origin, or answered only by the fronting layer.
 # read err, not the number: it must name a refusal or timeout reaching YOUR address. An HTTP code
@@ -123,13 +124,14 @@ ss -tlnp   # read every listener; 127.0.0.1:3000 only, never 0.0.0.0 or ::
 )
 ```
 
-**Probe 1 - REASONED, not demonstrated.** No live MCP 2026-07-28 server is available in the authoring environment. Fixed: the unauthenticated request receives the applicable `401` denial; exposed: it returns an actual discovery result without authentication. A login page, redirect, transport failure, or JSON-RPC error does not demonstrate an exposed MCP result. The expected denial and metadata-discovery alternatives follow Authorization and Authorization Server Discovery. Backlog row 1.75 tracks demonstration.
+**Probe 1 - REASONED, not demonstrated.** No live MCP 2026-07-28 server is available in the authoring environment. Fixed: the unauthenticated request receives the applicable `401` denial; exposed: it returns an actual discovery result without authentication. A login page, redirect, transport failure, or JSON-RPC error does not demonstrate an exposed MCP result. The expected denial and metadata-discovery alternatives follow Authorization and Authorization Server Discovery.
 
 `Mcp-Name` is deliberately absent: it is required only for `tools/call`, `resources/read`, and `prompts/get`, not `server/discover`. The `MCP-Protocol-Version` header must equal the body's `_meta` version; all three probes satisfy that requirement by construction. See Streamable HTTP and the Discovery request shape.
 
 Replace each RPC probe's placeholders inside the single quotes on its `set --` line, keeping the quotes, and paste the whole subshell block.
 
 ```bash
+# REASONED: unauthenticated discovery follows MCP 2026-07-28 Authorization and Authorization Server Discovery; no live server is available.
 # Unauthenticated server/discover: expect 401 (Option A: the WWW-Authenticate header MAY carry
 # resource_metadata; if absent, use the well-known URL below) or the proxy's 401 (Option B).
 # A 400 with JSON-RPC -32020 is a HEADER MISMATCH (missing/malformed Mcp-* headers or a
@@ -157,11 +159,12 @@ Replace each RPC probe's placeholders inside the single quotes on its `set --` l
 curl -q -g -s --noproxy '*' https://mcp.example.com/.well-known/oauth-protected-resource   # JSON with "authorization_servers"
 ```
 
-**Probe 2 - REASONED, not demonstrated.** No live MCP 2026-07-28 server and valid deployment credential are available in the authoring environment. Establish the allowed-Origin positive control before interpreting the negative request. Require a real `DiscoverResult`, including `resultType:"complete"`, `supportedVersions`, `capabilities`, and the `ttlMs`/`cacheScope` caching hints required for complete discovery results. See Discovery and Caching. Fixed: changing only Origin produces `403`; exposed: the disallowed Origin still receives a discovery result. A `403` counts as an Origin rejection only after the otherwise-identical positive control succeeds. See Streamable HTTP, Security & Endpoint. Backlog row 1.75 tracks demonstration.
+**Probe 2 - REASONED, not demonstrated.** No live MCP 2026-07-28 server and valid deployment credential are available in the authoring environment. Establish the allowed-Origin positive control before interpreting the negative request. Require a real `DiscoverResult`, including `resultType:"complete"`, `supportedVersions`, `capabilities`, and the `ttlMs`/`cacheScope` caching hints required for complete discovery results. See Discovery and Caching. Fixed: changing only Origin produces `403`; exposed: the disallowed Origin still receives a discovery result. A `403` counts as an Origin rejection only after the otherwise-identical positive control succeeds. See Streamable HTTP, Security & Endpoint.
 
 Header files keep credential values out of curl's argv; this does not protect a secret copied into shell history, exposed through tracing, or readable by the account owner. See [secrets.md](secrets.md) and the curl manual.
 
 ```bash
+# REASONED: Origin rejection follows MCP 2026-07-28 Streamable HTTP security requirements; no live server or deployment credential is available.
 # Origin control (DNS rebinding): a wrong Origin must be rejected even WITH a valid credential. Run the
 # positive control first (ALLOWED Origin + a real server/discover body: require an actual discovery
 # result - resultType:"complete", supportedVersions, capabilities, and ttlMs/cacheScope - not merely a 2xx
@@ -196,9 +199,11 @@ Header files keep credential values out of curl's argv; this does not protect a 
 )
 ```
 
-**Probe 3 - REASONED, not demonstrated.** The authoring environment has no live authorization server with a second registered resource. Use an otherwise valid, unexpired token for that other resource, keeping the endpoint, allowed Origin, and request body unchanged. The audience-validation requirement and `401` outcome come from Authorization and Authorization Security Considerations. Backlog row 1.75 tracks demonstration in both exposed and fixed states.
+**Probe 3 - REASONED, not demonstrated.** The authoring environment has no live authorization server with a second registered resource. Use an otherwise valid, unexpired token for that other resource, keeping the endpoint, allowed Origin, and request body unchanged. The audience-validation requirement and `401` outcome come from Authorization and Authorization Security Considerations.
 
 ```bash
+# REASONED: wrong-audience check follows MCP 2026-07-28 Authorization and Authorization Security Considerations;
+# no live authorization server with a second registered resource is available here.
 # Wrong audience (Option A): a token issued for a DIFFERENT resource must fail with 401. Use an
 # otherwise valid, unexpired token whose aud names another resource (a forged or expired token would
 # fail for the wrong reason), in its own mode-0600 header file. Fixed: 401, the audience is rejected.
@@ -207,7 +212,7 @@ Header files keep credential values out of curl's argv; this does not protect a 
 # ttlMs, and cacheScope; a login page or JSON-RPC error, even with 2xx, is not acceptance.
 # A 400 -32020 is a header mismatch, not an audience verdict.
 # This step is reasoned, not demonstrated in the authoring environment: it needs a second resource
-# registered at your authorization server. Backlog row 1.75 tracks demonstrating it.
+# registered at your authorization server.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_MCP_HTTPS_URL' 'REPLACE_WITH_ALLOWED_ORIGIN' 'REPLACE_WITH_WRONG_AUDIENCE_HEADER_FILE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
