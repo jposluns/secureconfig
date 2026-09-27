@@ -1,4 +1,162 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "5c454ccf285b299461c57e919647f59bbc8bc68188f552bd2b94f321c1cb6700",
+  "components": {
+    "puma-readme": {
+      "name": "Puma README",
+      "basis": "aef89221e4d729c3133c723844382331ba3bbbd9",
+      "sources": {
+        "se5323687b58f": "https://github.com/puma/puma/blob/aef89221e4d729c3133c723844382331ba3bbbd9/README.md"
+      }
+    },
+    "puma-dsl": {
+      "name": "Puma DSL",
+      "basis": "d70de8b4e926f1f5fa0269dc46cdfadf52562628",
+      "sources": {
+        "s8d510226544c": "https://github.com/puma/puma/blob/d70de8b4e926f1f5fa0269dc46cdfadf52562628/lib/puma/dsl.rb"
+      }
+    },
+    "puma": {
+      "name": "Puma defaults",
+      "basis": "v8.0.2",
+      "sources": {
+        "s9687194339f3": "https://github.com/puma/puma/blob/v8.0.2/lib/puma/configuration.rb#L369-L384",
+        "s1d9011be835b": "https://github.com/puma/puma/blob/v8.0.2/lib/puma/const.rb#L214-L215"
+      }
+    },
+    "rails": {
+      "name": "Rails documentation",
+      "basis": "unknown",
+      "sources": {
+        "s0e5c35fd756d": "https://api.rubyonrails.org/classes/ActionController/RateLimiting/ClassMethods.html",
+        "s22fb0dcbb6e1": "https://api.rubyonrails.org/classes/ActionDispatch/RemoteIp.html",
+        "sba5f72c7a627": "https://api.rubyonrails.org/classes/ActionDispatch/Session/CookieStore.html",
+        "sae7bf5d75809": "https://api.rubyonrails.org/classes/ActiveModel/SecurePassword/ClassMethods.html",
+        "s574629d873e4": "https://guides.rubyonrails.org/configuring.html",
+        "s2abb8f0ec8d2": "https://guides.rubyonrails.org/security.html"
+      }
+    },
+    "assume": {
+      "name": "Action Pack",
+      "basis": "7.1",
+      "sources": {
+        "sf720dd92b2e7": "https://github.com/rails/rails/blob/ffcbf6f205363f8c2fb3e9834bc86690dd59f1cb/actionpack/CHANGELOG.md"
+      }
+    },
+    "credentials": {
+      "name": "Rails credentials source",
+      "basis": "e4cd6ae6f1f0a847958b3aa846c9fd8a3014922a",
+      "sources": {
+        "saab0a90edc0c": "https://github.com/rails/rails/blob/e4cd6ae6f1f0a847958b3aa846c9fd8a3014922a/railties/lib/rails/commands/credentials/USAGE"
+      }
+    },
+    "rack": {
+      "name": "Rack::Attack",
+      "basis": "unknown",
+      "sources": {
+        "s1e5ca83efb79": "https://github.com/rack/rack-attack"
+      }
+    },
+    "sidekiq": {
+      "name": "Sidekiq Web",
+      "basis": "unknown",
+      "sources": {
+        "s106d0b1ced6e": "https://github.com/sidekiq/sidekiq/wiki/Monitoring"
+      }
+    },
+    "net-http": {
+      "name": "Net::HTTP source",
+      "basis": "39cf5f648a9e5e25312909a2dc26681edaa2402c",
+      "sources": {
+        "sbcafa3e06a73": "https://github.com/ruby/net-http/blob/39cf5f648a9e5e25312909a2dc26681edaa2402c/lib/net/http.rb"
+      }
+    },
+    "openssl-ruby": {
+      "name": "Ruby OpenSSL source",
+      "basis": "a77ed4b9908e179cea8f018f7e245535301746a8",
+      "sources": {
+        "sf0192683941c": "https://github.com/ruby/openssl/blob/a77ed4b9908e179cea8f018f7e245535301746a8/lib/openssl/ssl.rb"
+      }
+    },
+    "openssl": {
+      "name": "OpenSSL documentation",
+      "basis": "unknown",
+      "sources": {
+        "se3858048f9d6": "https://docs.openssl.org/master/man7/openssl-env/"
+      }
+    }
+  },
+  "claims": {
+    "puma-default": {"text": "Puma v8.0.2 defaults plaintext 9292 on :: when non-loopback IPv6 exists, otherwise 0.0.0.0.", "components": ["puma"], "sources": ["puma:s9687194339f3", "puma:s1d9011be835b"], "status": "REASONED"},
+    "puma-private": {"text": "Bind loopback TCP 3000 or Unix socket with proxy TLS; bind accepts tcp, unix and ssl URIs only.", "components": ["puma-readme", "puma-dsl"], "sources": ["puma-readme:se5323687b58f", "puma-dsl:s8d510226544c"], "status": "REASONED"},
+    "puma-tls": {"text": "Native ssl bind example uses 8443 with key/cert; ca and verify_mode configure client certificates.", "components": ["puma-dsl"], "sources": ["puma-dsl:s8d510226544c"], "status": "REASONED"},
+    "force-ssl": {"text": "force_ssl enables HTTPS redirect and HSTS; ssl_options defaults hsts subdomains true. Encrypted cookies still need HTTPS.", "components": ["rails"], "sources": ["rails:s574629d873e4", "rails:sba5f72c7a627"], "status": "REASONED"},
+    "assume-ssl": {"text": "Rails 7.1+ assume_ssl says the proxy terminated TLS before forwarding HTTP.", "components": ["rails", "assume"], "sources": ["rails:s574629d873e4", "assume:sf720dd92b2e7"], "status": "REASONED"},
+    "hosts": {"text": "Add the application hostname to config.hosts for Host allowlisting.", "components": ["rails"], "sources": ["rails:s574629d873e4"], "status": "REASONED"},
+    "session": {"text": "CookieStore example selects Secure, HttpOnly, SameSite=Lax and 14-day expiry.", "components": ["rails"], "sources": ["rails:sba5f72c7a627", "rails:s574629d873e4"], "status": "REASONED"},
+    "trusted-proxies": {"text": "Defaults include loopback/private/link-local; public proxies require an enumerable. Without a proxy, client-controlled X-Forwarded-For makes remote_ip unsuitable for allowlists/rate limits.", "components": ["rails"], "sources": ["rails:s22fb0dcbb6e1"], "status": "REASONED"},
+    "same-site-default": {"text": "cookies_same_site_protection defaults lax from load_defaults 6.1.", "components": ["rails"], "sources": ["rails:s574629d873e4"], "status": "REASONED"},
+    "auth-generator": {"text": "Rails 8.0+ authentication generator supplies users, sessions and password reset using has_secure_password.", "components": ["rails"], "sources": ["rails:s2abb8f0ec8d2"], "status": "REASONED"},
+    "passwords": {"text": "has_secure_password needs bcrypt ~> 3.1.7 and password_digest; authenticate returns user/false, validates presence and 72-byte limit, and needs an app minimum length.", "components": ["rails"], "sources": ["rails:sae7bf5d75809"], "status": "REASONED"},
+    "rate-limit": {"text": "Controller rate_limit allows ten attempts per three minutes for create; needs ActiveSupport::Cache, defaulting to action_controller.cache_store.", "components": ["rails"], "sources": ["rails:s0e5c35fd756d"], "status": "REASONED"},
+    "rack-attack": {"text": "Rack::Attack supplies path throttles/blocklists; configure its initializer and Rails railtie installs middleware.", "components": ["rack"], "sources": ["rack:s1e5ca83efb79"], "status": "REASONED"},
+    "credentials": {"text": "Edit encrypted credentials with credentials:edit; RAILS_MASTER_KEY overrides master.key, which Rails gitignores.", "components": ["credentials", "rails"], "sources": ["credentials:saab0a90edc0c", "rails:s2abb8f0ec8d2"], "status": "REASONED"},
+    "require-key": {"text": "require_master_key=true refuses boot without the decryption key.", "components": ["rails"], "sources": ["rails:s574629d873e4"], "status": "REASONED"},
+    "mfa": {"text": "Rails has no built-in second factor; add TOTP or an identity layer and use linked MFA/OIDC guidance.", "components": ["rails"], "sources": ["rails:s2abb8f0ec8d2"], "status": "REASONED"},
+    "sidekiq-open": {"text": "Bare /sidekiq mount has no auth; reachable users can read job arguments and retry, kill or clear queues.", "components": ["sidekiq"], "sources": ["sidekiq:s106d0b1ced6e"], "status": "REASONED"},
+    "sidekiq-devise": {"text": "Devise authenticate constraint requires a signed-in admin; keep Sidekiq off the public internet even with auth.", "components": ["sidekiq"], "sources": ["sidekiq:s106d0b1ced6e"], "status": "REASONED"},
+    "sidekiq-basic": {"text": "Otherwise add Rack Basic auth with credentials outside source, equal-length SHA256 secure_compare inputs and non-short-circuit &.", "components": ["sidekiq"], "sources": ["sidekiq:s106d0b1ced6e"], "status": "REASONED"},
+    "client-tls": {"text": "Net::HTTP.start use_ssl defaults VERIFY_PEER; supply ca_file before handshake, not inside the opened block. Never use VERIFY_NONE.", "components": ["net-http"], "sources": ["net-http:sbcafa3e06a73"], "status": "REASONED"},
+    "client-store": {"text": "Ruby SSLContext loads system trust through set_default_paths; SSL_CERT_FILE and SSL_CERT_DIR select an internal CA store.", "components": ["openssl-ruby", "openssl"], "sources": ["openssl-ruby:sf0192683941c", "openssl:se3858048f9d6"], "status": "REASONED"},
+    "verify-bind": {"text": "Inventory every listener; Puma should bind only 127.0.0.1:3000.", "components": ["puma-readme", "puma-dsl"], "sources": ["puma-readme:se5323687b58f", "puma-dsl:s8d510226544c"], "status": "REASONED", "verify": [1]},
+    "verify-https": {"text": "HTTP should redirect 301 to HTTPS; inspect HSTS and Secure/HttpOnly/SameSite=Lax cookies.", "components": ["rails"], "sources": ["rails:s574629d873e4", "rails:sba5f72c7a627"], "status": "REASONED", "verify": [1]},
+    "verify-dashboard": {"text": "Anonymous dashboard request should return login 302 or 401.", "components": ["rails"], "sources": ["rails:s2abb8f0ec8d2"], "status": "REASONED", "verify": [1]},
+    "verify-sidekiq": {"text": "Basic needs 401 plus WWW-Authenticate, Devise login 302; bare 404 is inconclusive, dashboard 200 is exposure. Require authorized success.", "components": ["sidekiq"], "sources": ["sidekiq:s106d0b1ced6e"], "status": "REASONED", "verify": [1]},
+    "verify-key": {"text": "git ls-files config/master.key should print nothing.", "components": ["credentials"], "sources": ["credentials:saab0a90edc0c"], "status": "REASONED", "verify": [1]}
+  }
+}
+---
 # Ruby on Rails and Puma: TLS and authentication
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| puma-default: Puma v8.0.2 defaults plaintext 9292 on :: when non-loopback IPv6 exists, otherwise 0.0.0.0. | Puma defaults v8.0.2 | REASONED |
+| puma-private: Bind loopback TCP 3000 or Unix socket with proxy TLS; bind accepts tcp, unix and ssl URIs only. | Puma README aef89221e4d729c3133c723844382331ba3bbbd9; Puma DSL d70de8b4e926f1f5fa0269dc46cdfadf52562628 | REASONED |
+| puma-tls: Native ssl bind example uses 8443 with key/cert; ca and verify_mode configure client certificates. | Puma DSL d70de8b4e926f1f5fa0269dc46cdfadf52562628 | REASONED |
+| force-ssl: force_ssl enables HTTPS redirect and HSTS; ssl_options defaults hsts subdomains true. Encrypted cookies still need HTTPS. | Rails documentation unknown | REASONED |
+| assume-ssl: Rails 7.1+ assume_ssl says the proxy terminated TLS before forwarding HTTP. | Rails documentation unknown; Action Pack 7.1 | REASONED |
+| hosts: Add the application hostname to config.hosts for Host allowlisting. | Rails documentation unknown | REASONED |
+| session: CookieStore example selects Secure, HttpOnly, SameSite=Lax and 14-day expiry. | Rails documentation unknown | REASONED |
+| trusted-proxies: Defaults include loopback/private/link-local; public proxies require an enumerable. Without a proxy, client-controlled X-Forwarded-For makes remote_ip unsuitable for allowlists/rate limits. | Rails documentation unknown | REASONED |
+| same-site-default: cookies_same_site_protection defaults lax from load_defaults 6.1. | Rails documentation unknown | REASONED |
+| auth-generator: Rails 8.0+ authentication generator supplies users, sessions and password reset using has_secure_password. | Rails documentation unknown | REASONED |
+| passwords: has_secure_password needs bcrypt ~&gt; 3.1.7 and password_digest; authenticate returns user/false, validates presence and 72-byte limit, and needs an app minimum length. | Rails documentation unknown | REASONED |
+| rate-limit: Controller rate_limit allows ten attempts per three minutes for create; needs ActiveSupport::Cache, defaulting to action_controller.cache_store. | Rails documentation unknown | REASONED |
+| rack-attack: Rack::Attack supplies path throttles/blocklists; configure its initializer and Rails railtie installs middleware. | Rack::Attack unknown | REASONED |
+| credentials: Edit encrypted credentials with credentials:edit; RAILS_MASTER_KEY overrides master.key, which Rails gitignores. | Rails credentials source e4cd6ae6f1f0a847958b3aa846c9fd8a3014922a; Rails documentation unknown | REASONED |
+| require-key: require_master_key=true refuses boot without the decryption key. | Rails documentation unknown | REASONED |
+| mfa: Rails has no built-in second factor; add TOTP or an identity layer and use linked MFA/OIDC guidance. | Rails documentation unknown | REASONED |
+| sidekiq-open: Bare /sidekiq mount has no auth; reachable users can read job arguments and retry, kill or clear queues. | Sidekiq Web unknown | REASONED |
+| sidekiq-devise: Devise authenticate constraint requires a signed-in admin; keep Sidekiq off the public internet even with auth. | Sidekiq Web unknown | REASONED |
+| sidekiq-basic: Otherwise add Rack Basic auth with credentials outside source, equal-length SHA256 secure_compare inputs and non-short-circuit &amp;. | Sidekiq Web unknown | REASONED |
+| client-tls: Net::HTTP.start use_ssl defaults VERIFY_PEER; supply ca_file before handshake, not inside the opened block. Never use VERIFY_NONE. | Net::HTTP source 39cf5f648a9e5e25312909a2dc26681edaa2402c | REASONED |
+| client-store: Ruby SSLContext loads system trust through set_default_paths; SSL_CERT_FILE and SSL_CERT_DIR select an internal CA store. | Ruby OpenSSL source a77ed4b9908e179cea8f018f7e245535301746a8; OpenSSL documentation unknown | REASONED |
+| verify-bind: Inventory every listener; Puma should bind only 127.0.0.1:3000. | Puma README aef89221e4d729c3133c723844382331ba3bbbd9; Puma DSL d70de8b4e926f1f5fa0269dc46cdfadf52562628 | REASONED |
+| verify-https: HTTP should redirect 301 to HTTPS; inspect HSTS and Secure/HttpOnly/SameSite=Lax cookies. | Rails documentation unknown | REASONED |
+| verify-dashboard: Anonymous dashboard request should return login 302 or 401. | Rails documentation unknown | REASONED |
+| verify-sidekiq: Basic needs 401 plus WWW-Authenticate, Devise login 302; bare 404 is inconclusive, dashboard 200 is exposure. Require authorized success. | Sidekiq Web unknown | REASONED |
+| verify-key: git ls-files config/master.key should print nothing. | Rails credentials source e4cd6ae6f1f0a847958b3aa846c9fd8a3014922a | REASONED |
+<!-- version-basis:end -->
 
 Puma's default bind is `tcp://[::]:9292` when the host has a non-loopback IPv6 address, otherwise `tcp://0.0.0.0:9292` (as of v8.0.2): every interface, plain HTTP. Rails encrypts its session cookie but still sends it in clear unless HTTPS is enforced. Preferred layout: bind Puma to loopback and terminate TLS in a reverse proxy ([nginx.md](nginx.md), [caddy.md](caddy.md), [apache.md](apache.md)) or behind [cloudflare.md](cloudflare.md), with a certificate from [free-certificates.md](free-certificates.md). Puma can also terminate TLS itself, shown below.
 
@@ -90,6 +248,8 @@ end
 Never set `verify_mode = OpenSSL::SSL::VERIFY_NONE`. Ruby's default SSL context loads the system store through `set_default_paths`, and OpenSSL reads `SSL_CERT_FILE` and `SSL_CERT_DIR` to locate that store, so an internal CA goes there (see [self-signed.md](self-signed.md)) rather than into a disabled check.
 
 ## Verify
+
+REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial and master-key tracking. No application deployment or run outcome is recorded here; these checks are reasoned from the cited Puma, Rails and Sidekiq sources.
 
 ```bash
 ss -tlnp   # read every listener; puma/ruby: 127.0.0.1:3000 only

@@ -1,4 +1,231 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "a04f8a9df4b4a7bd2adf972e0f55453e67d1b1505c6ca31521b47f0b53e3723e",
+  "components": {
+    "docs": {
+      "name": "ClickHouse documentation",
+      "basis": "unknown",
+      "sources": {
+        "sd76f8dcfe61f": "https://clickhouse.com/docs/reference/settings/server-settings/settings/listen#listen_host",
+        "s8d4bf69ecb45": "https://clickhouse.com/docs/get-started/setup/self-managed/docker#managing-default-user",
+        "sd891987369e6": "https://clickhouse.com/docs/concepts/features/security/network-ports",
+        "sd156261650ee": "https://clickhouse.com/docs/reference/settings/server-settings/settings/interserver#interserver_listen_host",
+        "sfd95effa4d9b": "https://clickhouse.com/docs/concepts/features/configuration/server-config/configuration-files",
+        "s2ee7469699a5": "https://clickhouse.com/docs/concepts/features/configuration/settings/settings-users",
+        "sc7a527d82e50": "https://clickhouse.com/docs/reference/statements/create/user",
+        "s324525fe685e": "https://clickhouse.com/docs/concepts/features/security/access-rights",
+        "sa133286c107f": "https://clickhouse.com/docs/reference/settings/server-settings/settings/access-control#access_control_path",
+        "s38015aaf3159": "https://clickhouse.com/docs/reference/settings/server-settings/settings/user#user_directories",
+        "s6b90e2c1092e": "https://clickhouse.com/docs/reference/statements/grant",
+        "s25556959ddfa": "https://clickhouse.com/docs/reference/statements/create/role",
+        "sd137a7449c51": "https://clickhouse.com/docs/reference/statements/set-role",
+        "s26cbbfd750d7": "https://clickhouse.com/docs/reference/statements/create/settings-profile",
+        "sae310a80cd58": "https://clickhouse.com/docs/concepts/features/configuration/settings/constraints-on-settings",
+        "s02fa1a2ea84b": "https://clickhouse.com/docs/reference/settings/session-settings/max-memory-usage",
+        "sfd00c9c1a9a1": "https://clickhouse.com/docs/reference/settings/session-settings/max-execution#max_execution_time",
+        "sf738cc05299a": "https://clickhouse.com/docs/reference/statements/create/quota",
+        "s8d50f48221f7": "https://clickhouse.com/docs/concepts/features/configuration/server-config/quotas",
+        "sad8b1924b3ce": "https://clickhouse.com/docs/concepts/features/configuration/settings/permissions-for-queries",
+        "sd78f0c21ad7b": "https://clickhouse.com/docs/concepts/features/security/tls/configuring-tls",
+        "s4e31b63753ab": "https://clickhouse.com/docs/reference/settings/server-settings/settings/interserver-https",
+        "s6255e1dd351e": "https://clickhouse.com/docs/reference/settings/server-settings/settings/other#openSSL",
+        "s5b738c4b057c": "https://clickhouse.com/docs/reference/settings/server-settings/settings/interserver-http",
+        "s01de3f86a875": "https://clickhouse.com/docs/concepts/features/interfaces/client",
+        "s4d5d0964fabb": "https://clickhouse.com/docs/concepts/features/configuration/settings/settings-users#totp-authentication-configuration",
+        "s8db5ea270091": "https://clickhouse.com/docs/reference/functions/table-functions/url",
+        "s78d0544db7eb": "https://clickhouse.com/docs/reference/functions/table-functions/file",
+        "sbb755048d8c0": "https://clickhouse.com/docs/reference/functions/table-functions/remote",
+        "s32fae5e0bf85": "https://clickhouse.com/docs/reference/statements/create/dictionary/sources/http",
+        "saa2d39175e49": "https://clickhouse.com/docs/reference/settings/server-settings/settings/remote#remote_url_allow_hosts",
+        "scce6af3a28a6": "https://clickhouse.com/docs/reference/settings/server-settings/settings/access-control#access_control_improvements",
+        "sc172859d92a4": "https://clickhouse.com/docs/reference/settings/server-settings/settings/user#user_scripts_path",
+        "sba7a666c54ee": "https://clickhouse.com/docs/reference/settings/server-settings/settings/user-defined#user_defined_executable_functions_config",
+        "s0be4d04f7874": "https://clickhouse.com/docs/reference/functions/table-functions/executable",
+        "s247524807405": "https://clickhouse.com/docs/reference/functions/regular-functions/udf",
+        "s3ebb0f281977": "https://clickhouse.com/docs/reference/system-tables/overview",
+        "sc67e973f5ab7": "https://clickhouse.com/docs/reference/settings/server-settings/settings/query",
+        "s41bbbde68a83": "https://clickhouse.com/docs/reference/engines/table-engines/mergetree-family/mergetree",
+        "s67072795b79e": "https://clickhouse.com/docs/reference/settings/session-settings/log-queries",
+        "scfe38c988cb3": "https://clickhouse.com/docs/reference/system-tables/query_log",
+        "sde710fc1a785": "https://clickhouse.com/docs/reference/system-tables/session_log",
+        "s1b518ea764fb": "https://clickhouse.com/docs/reference/statements/system#system-flush-logs",
+        "s5b17854afa6d": "https://clickhouse.com/docs/products/cloud/guides/security/audit-logging/database-audit-log",
+        "s6298fa9f4719": "https://clickhouse.com/docs/products/cloud/guides/security/audit-logging/console-audit-log",
+        "s3919007d159e": "https://clickhouse.com/docs/concepts/features/interfaces/http",
+        "s201098033e10": "https://clickhouse.com/docs/reference/functions/aggregate-functions/uniqExact",
+        "sde8cc2811bb5": "https://clickhouse.com/docs/reference/statements/create/table",
+        "s463e85e20441": "https://clickhouse.com/docs/reference/engines/table-engines/log-family/tinylog",
+        "s2d3e9d1310e4": "https://clickhouse.com/docs/reference/statements/show"
+      }
+    },
+    "config": {
+      "name": "ClickHouse server config source",
+      "basis": "9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6",
+      "sources": {
+        "s5bcf465239d6": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/programs/server/config.xml"
+      }
+    },
+    "users": {
+      "name": "ClickHouse users source",
+      "basis": "b40982f9416bb4bc2d423d7e75ec384e79494b99",
+      "sources": {
+        "s20eec88438df": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/b40982f9416bb4bc2d423d7e75ec384e79494b99/programs/server/users.xml"
+      }
+    },
+    "totp": {
+      "name": "ClickHouse TOTP introduction",
+      "basis": "26.2",
+      "sources": {
+        "sf7b9d01ede30": "https://clickhouse.com/blog/clickhouse-release-26-02"
+      }
+    },
+    "sources": {
+      "name": "ClickHouse privilege registry",
+      "basis": "37c6c8c9bfc1de323e9a27711c5649352364bcba",
+      "sources": {
+        "s04a87783572d": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/37c6c8c9bfc1de323e9a27711c5649352364bcba/src/Access/Common/AccessType.h"
+      }
+    },
+    "curl": {
+      "name": "curl documentation",
+      "basis": "unknown",
+      "sources": {
+        "s5345a985007a": "https://curl.se/docs/manpage.html#-H"
+      }
+    },
+    "roles": {
+      "name": "ClickHouse role source",
+      "basis": "1163c482760fb0204e40f8fb5d81ffa1272bc9ea",
+      "sources": {
+        "sa66cde5c2b6e": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/1163c482760fb0204e40f8fb5d81ffa1272bc9ea/src/Interpreters/Access/InterpreterSetRoleQuery.cpp"
+      }
+    }
+  },
+  "claims": {
+    "listen-default": {"text": "Shipped config tries IPv4/IPv6 localhost; widening listen_host can expose services; inspect merged overrides.", "components": ["docs", "config"], "sources": ["docs:sd76f8dcfe61f", "config:s5bcf465239d6"], "status": "REASONED"},
+    "default-user": {"text": "Upstream default has empty password, ::/0 origins and access_management; full bootstrap needs additional capabilities.", "components": ["users"], "sources": ["users:s20eec88438df"], "status": "REASONED"},
+    "docker-default": {"text": "Official image disables default network access when all three documented initialization variables are unset.", "components": ["docs"], "sources": ["docs:s8d4bf69ecb45"], "status": "REASONED"},
+    "ports": {"text": "8123 HTTP, 9000 native, 9004 MySQL, 9005 PostgreSQL and 9009 interserver are documented, not necessarily active.", "components": ["docs"], "sources": ["docs:sd891987369e6", "docs:sd156261650ee"], "status": "REASONED"},
+    "interserver-bind": {"text": "interserver_listen_host defaults to listen_host but can independently widen replica exposure.", "components": ["docs"], "sources": ["docs:sd156261650ee"], "status": "REASONED"},
+    "xml-merge": {"text": "config.d/users.d retain clickhouse roots; remove/replace inherited entries explicitly and inspect merged configuration.", "components": ["docs"], "sources": ["docs:sfd95effa4d9b"], "status": "REASONED"},
+    "passwords": {"text": "Replace inherited password with protected SHA-256 hash and loopback origins; SQL bcrypt has a 72-character limit.", "components": ["docs"], "sources": ["docs:s2ee7469699a5", "docs:sc7a527d82e50"], "status": "REASONED"},
+    "bootstrap": {"text": "Complete administrator bootstrap needs access_management, named_collection_control and show_named_collections_secrets.", "components": ["docs"], "sources": ["docs:s2ee7469699a5", "docs:s324525fe685e"], "status": "REASONED"},
+    "access-storage": {"text": "Persist SQL access storage; configured user_directories takes precedence over access_control_path.", "components": ["docs"], "sources": ["docs:sa133286c107f", "docs:s38015aaf3159"], "status": "REASONED"},
+    "admin": {"text": "Separate SQL administrator gets global grants and restricted HOST IP; host restrictions do not enforce TLS.", "components": ["docs"], "sources": ["docs:s324525fe685e", "docs:sc7a527d82e50", "docs:s6b90e2c1092e"], "status": "REASONED"},
+    "reader": {"text": "Table-scoped reader role combines with direct/inherited grants; remove excessive privileges and separate ingestion.", "components": ["docs"], "sources": ["docs:s25556959ddfa", "docs:sd137a7449c51", "docs:s6b90e2c1092e"], "status": "REASONED"},
+    "retire-default": {"text": "After matched replacement login and dependency migration, remove temporary bootstrap and inherited default definition.", "components": ["docs"], "sources": ["docs:s324525fe685e", "docs:sfd95effa4d9b"], "status": "REASONED"},
+    "profiles": {"text": "Bind locked settings directly to the account so disabling roles cannot remove them; review overlapping profiles.", "components": ["docs"], "sources": ["docs:s26cbbfd750d7", "docs:sae310a80cd58"], "status": "REASONED"},
+    "memory": {"text": "Query/per-user memory limits apply per server, are incompletely tracked, and do not bound all process memory.", "components": ["docs"], "sources": ["docs:s02fa1a2ea84b"], "status": "REASONED"},
+    "timeout": {"text": "Zero speed-check delay makes timeout elapsed-time based; cancellation checkpoints can exceed the example 30 seconds.", "components": ["docs"], "sources": ["docs:sfd00c9c1a9a1"], "status": "REASONED"},
+    "quota": {"text": "Username-keyed cumulative quotas are receiving-server local, reset on restart, and do not limit concurrency; some reads are exempt.", "components": ["docs"], "sources": ["docs:sf738cc05299a", "docs:s8d50f48221f7"], "status": "REASONED"},
+    "readonly": {"text": "readonly/allow_ddl do not replace grants; readonly=2 permits more operations and is not a READONLY constraint.", "components": ["docs"], "sources": ["docs:sad8b1924b3ce"], "status": "REASONED"},
+    "tls-ports": {"text": "Enable HTTPS 8443/native TLS 9440 and remove plaintext 8123/9000; baseline removes both replication listeners.", "components": ["docs"], "sources": ["docs:sd891987369e6", "docs:sd78f0c21ad7b", "docs:sfd95effa4d9b"], "status": "REASONED"},
+    "replica-tls": {"text": "Replica variant uses private HTTPS 9010, matching advertised hostname and verified outbound TLS, while removing 9009.", "components": ["docs"], "sources": ["docs:sd156261650ee", "docs:s4e31b63753ab", "docs:sd78f0c21ad7b", "docs:s6255e1dd351e"], "status": "REASONED"},
+    "replica-auth": {"text": "Omitted interserver credentials disable auth; allow_empty true admits anonymous peers; match protected secrets across replicas.", "components": ["docs"], "sources": ["docs:s5b738c4b057c"], "status": "REASONED"},
+    "cluster-tls": {"text": "Distributed-query and Keeper paths require separate TLS configuration beyond replication data HTTPS.", "components": ["docs"], "sources": ["docs:sd78f0c21ad7b"], "status": "REASONED"},
+    "emulation": {"text": "Remove unused 9004/9005 listeners; PostgreSQL emulation can support TLS.", "components": ["docs"], "sources": ["docs:sd891987369e6", "docs:sfd95effa4d9b"], "status": "REASONED"},
+    "client-tls": {"text": "Explicit client trust file and certificate hostname are required; extendedVerification defaults false, so enable it.", "components": ["docs"], "sources": ["docs:s6255e1dd351e", "docs:s01de3f86a875"], "status": "REASONED"},
+    "certificate-auth": {"text": "ssl_certificate CN authentication supplies a machine possession factor, separate from human MFA.", "components": ["docs"], "sources": ["docs:sc7a527d82e50"], "status": "REASONED"},
+    "totp": {"text": "26.2 introduced XML-user TOTP with password auth; SQL access control lacks it and each code is accepted at most once.", "components": ["docs", "totp"], "sources": ["docs:s4d5d0964fabb", "totp:sf7b9d01ede30"], "status": "REASONED"},
+    "source-grants": {"text": "Withhold all source privileges and inherited grants; separate READ/WRITE needs 25.7+, filtering 25.8+, and enable_read_write_grants.", "components": ["docs", "sources"], "sources": ["docs:s6b90e2c1092e", "sources:s04a87783572d"], "status": "REASONED"},
+    "source-interfaces": {"text": "url/HTTP dictionaries fetch remote data, file reads under user_files_path, and remote reaches other servers.", "components": ["docs"], "sources": ["docs:s8db5ea270091", "docs:s78d0544db7eb", "docs:sbb755048d8c0", "docs:s32fae5e0bf85"], "status": "REASONED"},
+    "url-default": {"text": "Omitted remote_url_allow_hosts allows covered URL hosts; hostname-only permits every port.", "components": ["config", "docs"], "sources": ["config:s5bcf465239d6", "docs:saa2d39175e49"], "status": "REASONED"},
+    "url-matching": {"text": "Host matching precedes DNS and applies on redirects; host:port does not require HTTPS or constrain every protocol.", "components": ["docs"], "sources": ["docs:saa2d39175e49"], "status": "REASONED"},
+    "engine-grants": {"text": "OSS engine enforcement defaults disabled; enable it and grant only required engines alongside scoped CREATE TABLE.", "components": ["docs"], "sources": ["docs:s6b90e2c1092e", "docs:scce6af3a28a6"], "status": "REASONED"},
+    "dictionaries": {"text": "Separate dictionary management from scoped dictGet use; ordinary readers need no management privilege.", "components": ["docs"], "sources": ["docs:s6b90e2c1092e"], "status": "REASONED"},
+    "executables": {"text": "Administrator-controlled script/UDF discovery paths restrict modification; existing executable objects still need review.", "components": ["docs"], "sources": ["docs:sc172859d92a4", "docs:sba7a666c54ee", "docs:s0be4d04f7874"], "status": "REASONED"},
+    "direct-exec": {"text": "execute_direct runs the approved program directly; zero invokes a shell; neither is a sandbox.", "components": ["docs"], "sources": ["docs:s247524807405"], "status": "REASONED"},
+    "log-retention": {"text": "Configure query/session logs and explicit 30-day TTL; deprecated database option is omitted; custom engine conflicts need review.", "components": ["docs"], "sources": ["docs:s3ebb0f281977", "docs:sc67e973f5ab7", "docs:s41bbbde68a83"], "status": "REASONED"},
+    "log-profile": {"text": "Lock query logging and sampling settings for each relevant account; overlapping profiles can conflict.", "components": ["docs"], "sources": ["docs:s26cbbfd750d7", "docs:s67072795b79e"], "status": "REASONED"},
+    "log-events": {"text": "Query log records activity/errors, not results; session log records login/logout/failure; inspect every serving interface/node.", "components": ["docs"], "sources": ["docs:scfe38c988cb3", "docs:sde710fc1a785", "docs:s1b518ea764fb"], "status": "REASONED"},
+    "log-access": {"text": "Require system-table grants, withhold application log access, mask sensitive query text and export to independent storage.", "components": ["docs"], "sources": ["docs:scce6af3a28a6", "docs:sc67e973f5ab7"], "status": "REASONED"},
+    "log-upgrades": {"text": "Upgrades can rename old log tables; inspect their retention; no separate immutable OSS audit_log or imported Cloud retention is established.", "components": ["docs"], "sources": ["docs:s3ebb0f281977", "docs:s5b17854afa6d", "docs:s6298fa9f4719"], "status": "REASONED"},
+    "verify-inventory": {"text": "Inventory intended 8443/9440 and optional private 9010; removed listeners absent; local ss proves no remote isolation/authentication.", "components": ["docs"], "sources": ["docs:sd891987369e6", "docs:sd78f0c21ad7b"], "status": "REASONED", "verify": [1]},
+    "verify-http": {"text": "Matched no_password fixture accepts supplied/empty/wrong passwords; fixed HTTPS requires correct password and returns 1.", "components": ["docs", "curl"], "sources": ["docs:sc7a527d82e50", "docs:s3919007d159e", "curl:s5345a985007a"], "status": "REASONED", "verify": [2]},
+    "verify-plaintext": {"text": "Any HTTP status on 8123 proves reachability; HTTP 000 needs inventory and successful TLS controls.", "components": ["docs"], "sources": ["docs:sd891987369e6", "docs:sd78f0c21ad7b", "docs:s3919007d159e"], "status": "REASONED", "verify": [2]},
+    "verify-native": {"text": "Native wrong password needs authentication error/nonzero exit; correct credentials return 1; transport failures are inconclusive.", "components": ["docs"], "sources": ["docs:sc7a527d82e50", "docs:s01de3f86a875"], "status": "REASONED", "verify": [2, 3]},
+    "verify-tables": {"text": "Fixed reader reads populated events and rejects private_events; test allowed/disallowed origins with matched reachable controls.", "components": ["docs"], "sources": ["docs:sc7a527d82e50", "docs:s25556959ddfa", "docs:s6b90e2c1092e"], "status": "REASONED", "verify": [3]},
+    "verify-retirement": {"text": "Fresh default login fails after retirement on native/HTTPS while same-origin sql_admin still succeeds.", "components": ["docs"], "sources": ["docs:s324525fe685e", "docs:sfd95effa4d9b", "docs:s01de3f86a875", "docs:s3919007d159e"], "status": "REASONED", "verify": [2, 3]},
+    "verify-settings": {"text": "Reject unlocked override; inspect four limits and require successful SET ROLE NONE/DEFAULT with account profile retained.", "components": ["roles", "docs"], "sources": ["roles:sa66cde5c2b6e", "docs:s26cbbfd750d7", "docs:sae310a80cd58", "docs:s02fa1a2ea84b", "docs:sfd00c9c1a9a1"], "status": "REASONED", "verify": [3]},
+    "verify-memory": {"text": "Calibrated aggregation fails at lower memory limit while simple read succeeds; test concurrent user budget and timeout separately.", "components": ["docs"], "sources": ["docs:s02fa1a2ea84b", "docs:sfd00c9c1a9a1", "docs:s201098033e10"], "status": "REASONED", "verify": [3]},
+    "verify-quota": {"text": "Fresh fixture accepts first two application reads and rejects the third; test restart reset and independent server counters.", "components": ["docs"], "sources": ["docs:sf738cc05299a", "docs:s8d50f48221f7"], "status": "REASONED", "verify": [3]},
+    "verify-file": {"text": "Isolate FILE privilege with existing fixture and constant prerequisites; missing-file/readonly errors prove no source denial.", "components": ["docs"], "sources": ["docs:s6b90e2c1092e", "docs:sad8b1924b3ce", "docs:s78d0544db7eb"], "status": "REASONED", "verify": [3]},
+    "verify-url": {"text": "Approved HTTPS fixture succeeds and unlisted host gets allow-list rejection; other errors are inconclusive.", "components": ["docs"], "sources": ["docs:saa2d39175e49", "docs:s8db5ea270091"], "status": "REASONED", "verify": [3]},
+    "verify-engine": {"text": "With engine enforcement enabled MergeTree succeeds and TinyLog gets engine-privilege denial; remove fixtures between runs.", "components": ["docs"], "sources": ["docs:s6b90e2c1092e", "docs:scce6af3a28a6", "docs:sde8cc2811bb5", "docs:s463e85e20441"], "status": "REASONED", "verify": [3]},
+    "verify-logs": {"text": "Require new marker/login-failure records, locked logging, reader denial and admin/collector success with correlated provenance.", "components": ["docs"], "sources": ["docs:scce6af3a28a6", "docs:s67072795b79e", "docs:scfe38c988cb3", "docs:sde710fc1a785", "docs:s1b518ea764fb"], "status": "REASONED", "verify": [3]},
+    "verify-retention": {"text": "Inspect table TTLs and historical tables; expired records disappear while recent ones remain in isolated retention test.", "components": ["docs"], "sources": ["docs:s3ebb0f281977", "docs:s41bbbde68a83", "docs:s2d3e9d1310e4"], "status": "REASONED", "verify": [3]},
+    "verify-totp": {"text": "Fixed XML human account rejects missing/invalid OTP and accepts password with fresh code; do not reuse positive code.", "components": ["docs"], "sources": ["docs:s4d5d0964fabb"], "status": "REASONED", "verify": [3]}
+  }
+}
+---
 # ClickHouse: listen address, the default user, and TLS ports
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| listen-default: Shipped config tries IPv4/IPv6 localhost; widening listen_host can expose services; inspect merged overrides. | ClickHouse documentation unknown; ClickHouse server config source 9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6 | REASONED |
+| default-user: Upstream default has empty password, ::/0 origins and access_management; full bootstrap needs additional capabilities. | ClickHouse users source b40982f9416bb4bc2d423d7e75ec384e79494b99 | REASONED |
+| docker-default: Official image disables default network access when all three documented initialization variables are unset. | ClickHouse documentation unknown | REASONED |
+| ports: 8123 HTTP, 9000 native, 9004 MySQL, 9005 PostgreSQL and 9009 interserver are documented, not necessarily active. | ClickHouse documentation unknown | REASONED |
+| interserver-bind: interserver_listen_host defaults to listen_host but can independently widen replica exposure. | ClickHouse documentation unknown | REASONED |
+| xml-merge: config.d/users.d retain clickhouse roots; remove/replace inherited entries explicitly and inspect merged configuration. | ClickHouse documentation unknown | REASONED |
+| passwords: Replace inherited password with protected SHA-256 hash and loopback origins; SQL bcrypt has a 72-character limit. | ClickHouse documentation unknown | REASONED |
+| bootstrap: Complete administrator bootstrap needs access_management, named_collection_control and show_named_collections_secrets. | ClickHouse documentation unknown | REASONED |
+| access-storage: Persist SQL access storage; configured user_directories takes precedence over access_control_path. | ClickHouse documentation unknown | REASONED |
+| admin: Separate SQL administrator gets global grants and restricted HOST IP; host restrictions do not enforce TLS. | ClickHouse documentation unknown | REASONED |
+| reader: Table-scoped reader role combines with direct/inherited grants; remove excessive privileges and separate ingestion. | ClickHouse documentation unknown | REASONED |
+| retire-default: After matched replacement login and dependency migration, remove temporary bootstrap and inherited default definition. | ClickHouse documentation unknown | REASONED |
+| profiles: Bind locked settings directly to the account so disabling roles cannot remove them; review overlapping profiles. | ClickHouse documentation unknown | REASONED |
+| memory: Query/per-user memory limits apply per server, are incompletely tracked, and do not bound all process memory. | ClickHouse documentation unknown | REASONED |
+| timeout: Zero speed-check delay makes timeout elapsed-time based; cancellation checkpoints can exceed the example 30 seconds. | ClickHouse documentation unknown | REASONED |
+| quota: Username-keyed cumulative quotas are receiving-server local, reset on restart, and do not limit concurrency; some reads are exempt. | ClickHouse documentation unknown | REASONED |
+| readonly: readonly/allow_ddl do not replace grants; readonly=2 permits more operations and is not a READONLY constraint. | ClickHouse documentation unknown | REASONED |
+| tls-ports: Enable HTTPS 8443/native TLS 9440 and remove plaintext 8123/9000; baseline removes both replication listeners. | ClickHouse documentation unknown | REASONED |
+| replica-tls: Replica variant uses private HTTPS 9010, matching advertised hostname and verified outbound TLS, while removing 9009. | ClickHouse documentation unknown | REASONED |
+| replica-auth: Omitted interserver credentials disable auth; allow_empty true admits anonymous peers; match protected secrets across replicas. | ClickHouse documentation unknown | REASONED |
+| cluster-tls: Distributed-query and Keeper paths require separate TLS configuration beyond replication data HTTPS. | ClickHouse documentation unknown | REASONED |
+| emulation: Remove unused 9004/9005 listeners; PostgreSQL emulation can support TLS. | ClickHouse documentation unknown | REASONED |
+| client-tls: Explicit client trust file and certificate hostname are required; extendedVerification defaults false, so enable it. | ClickHouse documentation unknown | REASONED |
+| certificate-auth: ssl_certificate CN authentication supplies a machine possession factor, separate from human MFA. | ClickHouse documentation unknown | REASONED |
+| totp: 26.2 introduced XML-user TOTP with password auth; SQL access control lacks it and each code is accepted at most once. | ClickHouse documentation unknown; ClickHouse TOTP introduction 26.2 | REASONED |
+| source-grants: Withhold all source privileges and inherited grants; separate READ/WRITE needs 25.7+, filtering 25.8+, and enable_read_write_grants. | ClickHouse documentation unknown; ClickHouse privilege registry 37c6c8c9bfc1de323e9a27711c5649352364bcba | REASONED |
+| source-interfaces: url/HTTP dictionaries fetch remote data, file reads under user_files_path, and remote reaches other servers. | ClickHouse documentation unknown | REASONED |
+| url-default: Omitted remote_url_allow_hosts allows covered URL hosts; hostname-only permits every port. | ClickHouse server config source 9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6; ClickHouse documentation unknown | REASONED |
+| url-matching: Host matching precedes DNS and applies on redirects; host:port does not require HTTPS or constrain every protocol. | ClickHouse documentation unknown | REASONED |
+| engine-grants: OSS engine enforcement defaults disabled; enable it and grant only required engines alongside scoped CREATE TABLE. | ClickHouse documentation unknown | REASONED |
+| dictionaries: Separate dictionary management from scoped dictGet use; ordinary readers need no management privilege. | ClickHouse documentation unknown | REASONED |
+| executables: Administrator-controlled script/UDF discovery paths restrict modification; existing executable objects still need review. | ClickHouse documentation unknown | REASONED |
+| direct-exec: execute_direct runs the approved program directly; zero invokes a shell; neither is a sandbox. | ClickHouse documentation unknown | REASONED |
+| log-retention: Configure query/session logs and explicit 30-day TTL; deprecated database option is omitted; custom engine conflicts need review. | ClickHouse documentation unknown | REASONED |
+| log-profile: Lock query logging and sampling settings for each relevant account; overlapping profiles can conflict. | ClickHouse documentation unknown | REASONED |
+| log-events: Query log records activity/errors, not results; session log records login/logout/failure; inspect every serving interface/node. | ClickHouse documentation unknown | REASONED |
+| log-access: Require system-table grants, withhold application log access, mask sensitive query text and export to independent storage. | ClickHouse documentation unknown | REASONED |
+| log-upgrades: Upgrades can rename old log tables; inspect their retention; no separate immutable OSS audit_log or imported Cloud retention is established. | ClickHouse documentation unknown | REASONED |
+| verify-inventory: Inventory intended 8443/9440 and optional private 9010; removed listeners absent; local ss proves no remote isolation/authentication. | ClickHouse documentation unknown | REASONED |
+| verify-http: Matched no_password fixture accepts supplied/empty/wrong passwords; fixed HTTPS requires correct password and returns 1. | ClickHouse documentation unknown; curl documentation unknown | REASONED |
+| verify-plaintext: Any HTTP status on 8123 proves reachability; HTTP 000 needs inventory and successful TLS controls. | ClickHouse documentation unknown | REASONED |
+| verify-native: Native wrong password needs authentication error/nonzero exit; correct credentials return 1; transport failures are inconclusive. | ClickHouse documentation unknown | REASONED |
+| verify-tables: Fixed reader reads populated events and rejects private_events; test allowed/disallowed origins with matched reachable controls. | ClickHouse documentation unknown | REASONED |
+| verify-retirement: Fresh default login fails after retirement on native/HTTPS while same-origin sql_admin still succeeds. | ClickHouse documentation unknown | REASONED |
+| verify-settings: Reject unlocked override; inspect four limits and require successful SET ROLE NONE/DEFAULT with account profile retained. | ClickHouse role source 1163c482760fb0204e40f8fb5d81ffa1272bc9ea; ClickHouse documentation unknown | REASONED |
+| verify-memory: Calibrated aggregation fails at lower memory limit while simple read succeeds; test concurrent user budget and timeout separately. | ClickHouse documentation unknown | REASONED |
+| verify-quota: Fresh fixture accepts first two application reads and rejects the third; test restart reset and independent server counters. | ClickHouse documentation unknown | REASONED |
+| verify-file: Isolate FILE privilege with existing fixture and constant prerequisites; missing-file/readonly errors prove no source denial. | ClickHouse documentation unknown | REASONED |
+| verify-url: Approved HTTPS fixture succeeds and unlisted host gets allow-list rejection; other errors are inconclusive. | ClickHouse documentation unknown | REASONED |
+| verify-engine: With engine enforcement enabled MergeTree succeeds and TinyLog gets engine-privilege denial; remove fixtures between runs. | ClickHouse documentation unknown | REASONED |
+| verify-logs: Require new marker/login-failure records, locked logging, reader denial and admin/collector success with correlated provenance. | ClickHouse documentation unknown | REASONED |
+| verify-retention: Inspect table TTLs and historical tables; expired records disappear while recent ones remain in isolated retention test. | ClickHouse documentation unknown | REASONED |
+| verify-totp: Fixed XML human account rejects missing/invalid OTP and accepts password with fresh code; do not reuse positive code. | ClickHouse documentation unknown | REASONED |
+<!-- version-basis:end -->
 
 ClickHouse listens on localhost only until you set `listen_host`, but the upstream base configuration ships a `default` user that has an empty password, may connect from any address (`<ip>::/0</ip>`), and holds `access_management`, so widening `listen_host` to `::` or `0.0.0.0` can publish a passwordless administrative account on plaintext HTTP 8123 and native TCP 9000. Packaging, container initialization, and configuration overrides can change these defaults (the official Docker image, for one, disables the `default` user's network access when none of `CLICKHOUSE_USER`, `CLICKHOUSE_PASSWORD`, or `CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT` is set), so inspect the effective configuration of the version you run rather than assuming either behaviour. Complete the account and TLS setup before widening access. The full administrator bootstrap needs the additional capabilities in step 2. [Access control](https://clickhouse.com/docs/concepts/features/security/access-rights), [Docker default-user behaviour](https://clickhouse.com/docs/get-started/setup/self-managed/docker#managing-default-user).
 
@@ -476,6 +703,7 @@ In the deliberately authentication-disabled fixture, empty, wrong, and supplied 
 **REASONED: table authorization requires the missing runtime and two populated fixture tables.** In the isolated deployment, have the administrator provision both `appdb.events` and `appdb.private_events`. Run these individually as `app_reader`:
 
 ```sql
+-- REASONED: table authorization; no server/client runtime or deployment fixtures. Expected outcomes and vendor sources are recorded in this section.
 SELECT * FROM appdb.events LIMIT 1;
 SELECT * FROM appdb.private_events LIMIT 1;
 ```
@@ -503,6 +731,7 @@ An unconstrained baseline accepts the override. The fixed account rejects it and
 For a memory discriminator, give the isolated `events` fixture an `x UInt64` column with a finite, recorded number of distinct values. Use:
 
 ```sql
+-- REASONED: bounded memory comparison; no server/client runtime or deployment fixtures. Expected outcomes and vendor sources are recorded in this section.
 SELECT uniqExact(x) FROM appdb.events;
 ```
 
@@ -520,6 +749,7 @@ TO quota_reader;
 Through the guarded connection as `quota_reader`, issue these individually without intervening application queries:
 
 ```sql
+-- REASONED: quota enforcement; no server/client runtime or deployment fixtures. Expected outcomes and vendor sources are recorded in this section.
 SELECT * FROM appdb.events LIMIT 1;
 SELECT * FROM appdb.events LIMIT 1;
 SELECT * FROM appdb.events LIMIT 1;
@@ -538,6 +768,7 @@ A source-authorized baseline reads the fixture; `app_reader` must not. To isolat
 For URL allow-list enforcement, use a separately source-authorized test account with the required table-function permissions and two harmless, certificate-valid HTTPS fixtures. Substitute the actual hosts before executing:
 
 ```sql
+-- REASONED: URL allow-list; no server/client runtime or deployment fixtures. Expected outcomes and vendor sources are recorded in this section.
 SELECT * FROM url(
     'https://REPLACE_WITH_APPROVED_SOURCE_HOST:443/probe.tsv',
     'TSV',
@@ -581,6 +812,7 @@ The disabled-logging baseline lacks new matching records. The fixed state record
 As administrator, inspect the current table definitions:
 
 ```sql
+-- REASONED: log retention; no server/client runtime or deployment fixtures. Expected outcomes and vendor sources are recorded in this section.
 SHOW CREATE TABLE system.query_log;
 SHOW CREATE TABLE system.session_log;
 ```

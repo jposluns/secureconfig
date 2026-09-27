@@ -1,4 +1,148 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "3f57cf397309733b3077df7ca3524ee43a9a25978aa42adf56f51c0a633784a0",
+  "components": {
+    "chromium": {
+      "name": "Chromium",
+      "basis": "154.0.8037.57",
+      "sources": {
+        "s087ba883abe3": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L69-L158",
+        "s65073710f8bd": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L160-L282",
+        "sc62d44c2dee6": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L325-L417",
+        "s6e1b34a120d1": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/headless/lib/browser/headless_devtools.cc#L31-L145",
+        "sdf5f61d9b325": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/headless/lib/browser/command_line_handler.cc#L199-L206",
+        "s005d90d4912a": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/public/common/content_switches.cc#L596-L607",
+        "s804c1266fb81": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L267-L312",
+        "s66b210123ff8": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L459-L630",
+        "s1044899c624a": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L811-L880",
+        "s1ca85f782546": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L1032-L1055"
+      }
+    },
+    "cdp": {
+      "name": "Chrome DevTools Protocol",
+      "basis": "unknown",
+      "sources": {
+        "se77e8fd82ffd": "https://developer.chrome.com/docs/devtools/remote-debugging/",
+        "s523649d3b233": "https://chromedevtools.github.io/devtools-protocol/"
+      }
+    },
+    "chrome-change": {
+      "name": "Chrome profile restriction",
+      "basis": "136",
+      "sources": {
+        "s643c9edab288": "https://developer.chrome.com/blog/remote-debugging-port"
+      }
+    },
+    "selenium": {
+      "name": "Selenium Grid",
+      "basis": "unknown",
+      "sources": {
+        "sb304923778ab": "https://www.selenium.dev/documentation/grid/configuration/cli_options/",
+        "s0a0129b8dd37": "https://www.selenium.dev/documentation/grid/getting_started/"
+      }
+    },
+    "selenium-docker": {
+      "name": "Selenium Docker images",
+      "basis": "aafe4d6136f3bb5afcd9b7cb691c624516d06e1b",
+      "sources": {
+        "s992336986b07": "https://github.com/SeleniumHQ/docker-selenium/blob/aafe4d6136f3bb5afcd9b7cb691c624516d06e1b/ENV_VARIABLES.md"
+      }
+    },
+    "browserless": {
+      "name": "browserless",
+      "basis": "unknown",
+      "sources": {
+        "s79abd584d9bc": "https://docs.browserless.io/baas/docker/config"
+      }
+    },
+    "playwright": {
+      "name": "Playwright",
+      "basis": "unknown",
+      "sources": {
+        "sc13c2e85f08c": "https://playwright.dev/docs/api/class-browsertype",
+        "s94dfef953286": "https://playwright.dev/docs/docker"
+      }
+    }
+  },
+  "claims": {
+    "cdp-bind": {"text": "Command-line DevTools binds 127.0.0.1, falling back to ::1; stock browser and headless shell have no remote-debugging-address switch.", "components": ["chromium"], "sources": ["chromium:s087ba883abe3", "chromium:s6e1b34a120d1", "chromium:s005d90d4912a"], "status": "REASONED"},
+    "cdp-port": {"text": "Explicit nonzero DevTools ports do not fall back to another port; port 0 requests an ephemeral port.", "components": ["chromium"], "sources": ["chromium:s087ba883abe3", "chromium:s6e1b34a120d1"], "status": "REASONED"},
+    "cdp-approval": {"text": "Feature-gated approval mode uses DevToolsActivePort or 9222, with requested/ephemeral IPv4 then IPv6 fallback; command-line modes take precedence.", "components": ["chromium"], "sources": ["chromium:s087ba883abe3", "chromium:s65073710f8bd", "chromium:sc62d44c2dee6"], "status": "REASONED"},
+    "cdp-discovery": {"text": "Command-line /json and /json/version disclose debugger URLs; approval-mode 404 does not establish isolation.", "components": ["chromium"], "sources": ["chromium:s66b210123ff8", "chromium:s1ca85f782546"], "status": "REASONED", "verify": [2]},
+    "cdp-auth": {"text": "Command-line CDP has no client authentication or password flag; Host and Origin checks do not authenticate clients.", "components": ["chromium"], "sources": ["chromium:s66b210123ff8", "chromium:s1044899c624a"], "status": "REASONED"},
+    "cdp-capabilities": {"text": "CDP grants page JavaScript, cookie/credential and tab control; restrict ingress, browser egress and local-file reach.", "components": ["cdp"], "sources": ["cdp:s523649d3b233"], "status": "REASONED"},
+    "cdp-private": {"text": "Keep DevTools loopback/private behind authenticated access; inspect forwarders and container namespaces, since publishing cannot reach container loopback.", "components": ["chromium"], "sources": ["chromium:s087ba883abe3", "chromium:s6e1b34a120d1", "chromium:s804c1266fb81"], "status": "REASONED"},
+    "cdp-profile": {"text": "Chrome 136 requires non-default user data; pinned desktop branding check excludes normal Chromium, and Chrome for Testing exemption rests on the announcement.", "components": ["chrome-change", "chromium"], "sources": ["chrome-change:s643c9edab288", "chromium:s65073710f8bd"], "status": "REASONED"},
+    "cdp-policy": {"text": "RemoteDebuggingAllowed gates browser command-line and approval modes; headless-shell startup lacks the corresponding profile/policy check.", "components": ["chromium"], "sources": ["chromium:s65073710f8bd", "chromium:sc62d44c2dee6", "chromium:s6e1b34a120d1"], "status": "REASONED"},
+    "cdp-pipe": {"text": "Pipe mode alone opens no TCP port; supplying a port too can start an independent listener, and pipe access still grants browser control.", "components": ["chromium"], "sources": ["chromium:sc62d44c2dee6", "chromium:s6e1b34a120d1", "chromium:sdf5f61d9b325"], "status": "REASONED"},
+    "grid-auth": {"text": "Router username/password are unset by default, including Docker SE_ROUTER_USERNAME and SE_ROUTER_PASSWORD.", "components": ["selenium", "selenium-docker"], "sources": ["selenium:sb304923778ab", "selenium-docker:s992336986b07"], "status": "REASONED"},
+    "grid-bind": {"text": "Grid host is usually autodetected; Docker SE_BIND_HOST is unset and historical Grid 3 binds 0.0.0.0. Set and observe a private host with bind-host.", "components": ["selenium", "selenium-docker"], "sources": ["selenium:sb304923778ab", "selenium-docker:s992336986b07"], "status": "REASONED"},
+    "grid-ports": {"text": "Router, Hub, Standalone and UI use 4444; Nodes use 5555. Keep all private.", "components": ["selenium"], "sources": ["selenium:s0a0129b8dd37"], "status": "REASONED"},
+    "grid-distributed": {"text": "Distributed event bus uses 4442/4443; Distributor, Session Map, bus HTTP and New Session Queue add 5553/5556/5557/5559.", "components": ["selenium"], "sources": ["selenium:sb304923778ab", "selenium:s0a0129b8dd37"], "status": "REASONED"},
+    "grid-bus": {"text": "Router Basic auth does not protect the bus; registration-secret validates event messages without encrypting transport, so isolate every participant.", "components": ["selenium"], "sources": ["selenium:sb304923778ab", "selenium:s0a0129b8dd37"], "status": "REASONED"},
+    "grid-vnc": {"text": "Docker enables VNC by default on 5900 and noVNC on 7900; replace the example secret password or disable VNC, and avoid passwordless mode.", "components": ["selenium-docker"], "sources": ["selenium-docker:s992336986b07"], "status": "REASONED"},
+    "grid-tls": {"text": "Native https-certificate/https-private-key or a TLS proxy protects Router Basic credentials; TLS is not on by default.", "components": ["selenium"], "sources": ["selenium:sb304923778ab"], "status": "REASONED"},
+    "browserless-auth": {"text": "Guide records optional TOKEN and unauthenticated endpoints when unset; this historical claim conflicts with the current destination of its rolling citation.", "components": ["browserless"], "sources": ["browserless:s79abd584d9bc"], "status": "REASONED"},
+    "browserless-bind": {"text": "browserless uses 3000; publish 127.0.0.1:3000:3000 or keep an internal network with no host mapping.", "components": ["browserless"], "sources": ["browserless:s79abd584d9bc"], "status": "REASONED"},
+    "browserless-token": {"text": "Use a randomized TOKEN, protect token-bearing connection URLs and logs, and terminate TLS at the fronting layer.", "components": ["browserless"], "sources": ["browserless:s79abd584d9bc"], "status": "REASONED"},
+    "browserless-file": {"text": "Guide records ALLOW_FILE_PROTOCOL=false as the default file-navigation block.", "components": ["browserless"], "sources": ["browserless:s79abd584d9bc"], "status": "REASONED"},
+    "playwright-auth": {"text": "Playwright server has no password/user model; reachable endpoints grant OS-user control, so bind 127.0.0.1 and protect endpoint URLs.", "components": ["playwright"], "sources": ["playwright:sc13c2e85f08c", "playwright:s94dfef953286"], "status": "REASONED"},
+    "playwright-discovery": {"text": "Guide records run-server path / and launchServer random paths discoverable through GET /json; a secret path is not an access boundary.", "components": ["playwright"], "sources": ["playwright:sc13c2e85f08c", "playwright:s94dfef953286"], "status": "REASONED"},
+    "playwright-tls": {"text": "Authenticate WebSocket upgrades and discovery at a wss proxy; connect accepts custom headers and the server supplies no native TLS.", "components": ["playwright"], "sources": ["playwright:sc13c2e85f08c", "playwright:s94dfef953286"], "status": "REASONED"},
+    "debug-bypass": {"text": "A separately forwarded Chromium debug endpoint bypasses front-tool authentication; keep 9222 unpublished and restrict browser egress.", "components": ["cdp", "selenium", "browserless", "playwright"], "sources": ["cdp:s523649d3b233", "selenium:s0a0129b8dd37", "browserless:s79abd584d9bc", "playwright:sc13c2e85f08c"], "status": "REASONED"},
+    "verify-listeners": {"text": "Inventory every listener, including distributed Grid and configured Playwright ports, and require intended loopback/private addresses.", "components": ["chromium", "selenium", "selenium-docker", "browserless", "playwright"], "sources": ["chromium:s087ba883abe3", "chromium:s6e1b34a120d1", "selenium:sb304923778ab", "selenium:s0a0129b8dd37", "selenium-docker:s992336986b07", "browserless:s79abd584d9bc", "playwright:sc13c2e85f08c"], "status": "REASONED", "verify": [1]},
+    "verify-cdp": {"text": "External command-line CDP returns 200 with webSocketDebuggerUrl when forwarded; fixed isolation retains a working local control. Approval-mode 404 is inconclusive.", "components": ["chromium"], "sources": ["chromium:s804c1266fb81", "chromium:s66b210123ff8"], "status": "REASONED", "verify": [2]},
+    "verify-grid": {"text": "Grid /status returns ready/node JSON when exposed; Router 401 with Basic challenge shows auth but still proves reachability. Probe Nodes separately.", "components": ["selenium"], "sources": ["selenium:sb304923778ab", "selenium:s0a0129b8dd37"], "status": "REASONED", "verify": [2]},
+    "verify-browserless": {"text": "Guide expects /pressure load JSON without TOKEN and rejection with missing/wrong tokens when configured; verify image-specific status and a correct-token control.", "components": ["browserless"], "sources": ["browserless:s79abd584d9bc"], "status": "REASONED", "verify": [2]},
+    "verify-playwright": {"text": "Any HTTP answer proves Playwright reachability; launchServer uses an ephemeral port unless set, while run-server takes --port.", "components": ["playwright"], "sources": ["playwright:sc13c2e85f08c", "playwright:s94dfef953286"], "status": "REASONED", "verify": [2]}
+  }
+}
+---
 # Headless browser services: Chrome DevTools Protocol, Selenium Grid, browserless, and Playwright server
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| cdp-bind: Command-line DevTools binds 127.0.0.1, falling back to ::1; stock browser and headless shell have no remote-debugging-address switch. | Chromium 154.0.8037.57 | REASONED |
+| cdp-port: Explicit nonzero DevTools ports do not fall back to another port; port 0 requests an ephemeral port. | Chromium 154.0.8037.57 | REASONED |
+| cdp-approval: Feature-gated approval mode uses DevToolsActivePort or 9222, with requested/ephemeral IPv4 then IPv6 fallback; command-line modes take precedence. | Chromium 154.0.8037.57 | REASONED |
+| cdp-discovery: Command-line /json and /json/version disclose debugger URLs; approval-mode 404 does not establish isolation. | Chromium 154.0.8037.57 | REASONED |
+| cdp-auth: Command-line CDP has no client authentication or password flag; Host and Origin checks do not authenticate clients. | Chromium 154.0.8037.57 | REASONED |
+| cdp-capabilities: CDP grants page JavaScript, cookie/credential and tab control; restrict ingress, browser egress and local-file reach. | Chrome DevTools Protocol unknown | REASONED |
+| cdp-private: Keep DevTools loopback/private behind authenticated access; inspect forwarders and container namespaces, since publishing cannot reach container loopback. | Chromium 154.0.8037.57 | REASONED |
+| cdp-profile: Chrome 136 requires non-default user data; pinned desktop branding check excludes normal Chromium, and Chrome for Testing exemption rests on the announcement. | Chrome profile restriction 136; Chromium 154.0.8037.57 | REASONED |
+| cdp-policy: RemoteDebuggingAllowed gates browser command-line and approval modes; headless-shell startup lacks the corresponding profile/policy check. | Chromium 154.0.8037.57 | REASONED |
+| cdp-pipe: Pipe mode alone opens no TCP port; supplying a port too can start an independent listener, and pipe access still grants browser control. | Chromium 154.0.8037.57 | REASONED |
+| grid-auth: Router username/password are unset by default, including Docker SE_ROUTER_USERNAME and SE_ROUTER_PASSWORD. | Selenium Grid unknown; Selenium Docker images aafe4d6136f3bb5afcd9b7cb691c624516d06e1b | REASONED |
+| grid-bind: Grid host is usually autodetected; Docker SE_BIND_HOST is unset and historical Grid 3 binds 0.0.0.0. Set and observe a private host with bind-host. | Selenium Grid unknown; Selenium Docker images aafe4d6136f3bb5afcd9b7cb691c624516d06e1b | REASONED |
+| grid-ports: Router, Hub, Standalone and UI use 4444; Nodes use 5555. Keep all private. | Selenium Grid unknown | REASONED |
+| grid-distributed: Distributed event bus uses 4442/4443; Distributor, Session Map, bus HTTP and New Session Queue add 5553/5556/5557/5559. | Selenium Grid unknown | REASONED |
+| grid-bus: Router Basic auth does not protect the bus; registration-secret validates event messages without encrypting transport, so isolate every participant. | Selenium Grid unknown | REASONED |
+| grid-vnc: Docker enables VNC by default on 5900 and noVNC on 7900; replace the example secret password or disable VNC, and avoid passwordless mode. | Selenium Docker images aafe4d6136f3bb5afcd9b7cb691c624516d06e1b | REASONED |
+| grid-tls: Native https-certificate/https-private-key or a TLS proxy protects Router Basic credentials; TLS is not on by default. | Selenium Grid unknown | REASONED |
+| browserless-auth: Guide records optional TOKEN and unauthenticated endpoints when unset; this historical claim conflicts with the current destination of its rolling citation. | browserless unknown | REASONED |
+| browserless-bind: browserless uses 3000; publish 127.0.0.1:3000:3000 or keep an internal network with no host mapping. | browserless unknown | REASONED |
+| browserless-token: Use a randomized TOKEN, protect token-bearing connection URLs and logs, and terminate TLS at the fronting layer. | browserless unknown | REASONED |
+| browserless-file: Guide records ALLOW_FILE_PROTOCOL=false as the default file-navigation block. | browserless unknown | REASONED |
+| playwright-auth: Playwright server has no password/user model; reachable endpoints grant OS-user control, so bind 127.0.0.1 and protect endpoint URLs. | Playwright unknown | REASONED |
+| playwright-discovery: Guide records run-server path / and launchServer random paths discoverable through GET /json; a secret path is not an access boundary. | Playwright unknown | REASONED |
+| playwright-tls: Authenticate WebSocket upgrades and discovery at a wss proxy; connect accepts custom headers and the server supplies no native TLS. | Playwright unknown | REASONED |
+| debug-bypass: A separately forwarded Chromium debug endpoint bypasses front-tool authentication; keep 9222 unpublished and restrict browser egress. | Chrome DevTools Protocol unknown; Selenium Grid unknown; browserless unknown; Playwright unknown | REASONED |
+| verify-listeners: Inventory every listener, including distributed Grid and configured Playwright ports, and require intended loopback/private addresses. | Chromium 154.0.8037.57; Selenium Grid unknown; Selenium Docker images aafe4d6136f3bb5afcd9b7cb691c624516d06e1b; browserless unknown; Playwright unknown | REASONED |
+| verify-cdp: External command-line CDP returns 200 with webSocketDebuggerUrl when forwarded; fixed isolation retains a working local control. Approval-mode 404 is inconclusive. | Chromium 154.0.8037.57 | REASONED |
+| verify-grid: Grid /status returns ready/node JSON when exposed; Router 401 with Basic challenge shows auth but still proves reachability. Probe Nodes separately. | Selenium Grid unknown | REASONED |
+| verify-browserless: Guide expects /pressure load JSON without TOKEN and rejection with missing/wrong tokens when configured; verify image-specific status and a correct-token control. | browserless unknown | REASONED |
+| verify-playwright: Any HTTP answer proves Playwright reachability; launchServer uses an ephemeral port unless set, while run-server takes --port. | Playwright unknown | REASONED |
+<!-- version-basis:end -->
 
 Agent and scraping stacks run these to drive a real browser, and that is exactly the exposure: whoever
 reaches the endpoint gets JavaScript execution inside the pages the browser opens, the profile's cookie
@@ -154,6 +298,8 @@ externally forwarded port if different. For the local positive control, run the 
 inside the browser's network namespace with its actual loopback address and DevTools port.
 Substitute an IP literal, not a name, for the DevTools probe, because the endpoint rejects a forwarded
 `Host` that is not an address or localhost.
+
+REASONED: following block; external discovery/authentication probes and local positive controls follow the cited vendor documentation and pinned sources; the authoring host has no isolated network namespace for authorized live listeners.
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched

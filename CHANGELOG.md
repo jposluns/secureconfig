@@ -12,6 +12,7 @@ in step with the merged pull request is therefore an authoring obligation, not a
 ## 2026-09-27
 
 - Deny dotfiles and common backup and dump suffixes in the Caddy web-exposure example, align nginx and Apache suffix rules, and add planted-file probes for the added classes. Row 1.184. (#406)
+- Version basis for every guide: 100 guides carry version-basis front matter and a generated per-claim summary (versions, documentation date, DEMONSTRATED or REASONED), drafted in 20 batches under a body-identity check and reviewed in five two-family stages; every Verify fence is now marked. Rows 3.32 and 3.27. (#407)
 - Use a fixed canonical host for the Go port-80 redirect so a client-controlled Host cannot choose the redirect destination. Row 1.183. (#405)
 - Keep the Cloudflare Access Verify service-token secret out of curl argv and shell history with a guarded hidden prompt and stdin headers; report only HTTP status and redirect destination. Apply the same hidden prompt and stdin headers to the section-4 service-token request. Replace the dashboard-managed tunnel step that ran `cloudflared service install <TOKEN>`, which put the tunnel token in the installer's argv, with a protected token file and `cloudflared tunnel run --token-file` (2025.4.0 or later). Row 1.182. (#403)
 - Correct MongoDB 8.0 auditing scope: the failures-only default applies to `authCheck` events, while other auditable events do not depend on `auditAuthorizationSuccess`. Row 1.177. (#404)

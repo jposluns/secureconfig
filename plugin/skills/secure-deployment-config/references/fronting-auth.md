@@ -1,4 +1,151 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "515345dee167967a432a70f4daad9b02782e2122a6a8032c3f7069b92d625959",
+  "components": {
+    "oauth": {
+      "name": "oauth2-proxy",
+      "basis": "v7.15.4",
+      "sources": {
+        "s26940e6584e8": "https://oauth2-proxy.github.io/oauth2-proxy/configuration/overview",
+        "sdcd74a9cd9c6": "https://oauth2-proxy.github.io/oauth2-proxy/configuration/integrations/nginx/",
+        "sfe2dce1756e8": "https://oauth2-proxy.github.io/oauth2-proxy/configuration/integrations/traefik/",
+        "sa987fae1c9ef": "https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/pkg/apis/options/legacy_options.go#L494"
+      }
+    },
+    "authelia": {
+      "name": "Authelia",
+      "basis": "v4.39.28",
+      "sources": {
+        "s0cb4f49871b5": "https://www.authelia.com/integration/proxies/introduction/",
+        "s1409ac8fe3d9": "https://www.authelia.com/integration/proxies/support/",
+        "s4af41b2fed9f": "https://www.authelia.com/integration/proxies/nginx/",
+        "sfb8ce161d56a": "https://www.authelia.com/integration/proxies/traefik/",
+        "sd5437cbc4328": "https://www.authelia.com/integration/proxies/caddy/",
+        "scd46ff77c737": "https://www.authelia.com/configuration/second-factor/introduction/",
+        "s064d1e72c1e8": "https://github.com/authelia/authelia/blob/v4.39.28/internal/configuration/schema/server.go#L90-L92",
+        "sbec86d37ea1c": "https://github.com/authelia/authelia/blob/v4.39.28/internal/configuration/schema/types_addresses_nix.go#L37"
+      }
+    },
+    "traefik": {
+      "name": "Traefik",
+      "basis": "unknown",
+      "sources": {
+        "s7f6f6200de1f": "https://doc.traefik.io/traefik/reference/routing-configuration/http/middlewares/forwardauth/"
+      }
+    },
+    "go": {
+      "name": "Go net.Listen",
+      "basis": "unknown",
+      "sources": {
+        "s37204ff1b27c": "https://pkg.go.dev/net#Listen"
+      }
+    },
+    "caddy": {
+      "name": "Authelia Caddy support minimum",
+      "basis": "2.5.1+",
+      "sources": {
+        "s1409ac8fe3d9": "https://www.authelia.com/integration/proxies/support/"
+      }
+    },
+    "pomerium": {
+      "name": "Pomerium",
+      "basis": "unknown",
+      "sources": {
+        "s181907d16ed1": "https://www.pomerium.com/docs/reference/identity-provider-settings",
+        "s4ed306cb118e": "https://www.pomerium.com/docs"
+      }
+    },
+    "curl": {
+      "name": "curl minimum write-out version",
+      "basis": "7.75.0",
+      "sources": {
+        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
+      }
+    }
+  },
+  "claims": {
+    "isolate": {"text": "Bind app and auth service to loopback or an unpublished private container network; only the fronting proxy may reach them.", "components": ["oauth", "authelia"], "sources": ["oauth:sdcd74a9cd9c6", "oauth:sfe2dce1756e8", "authelia:s0cb4f49871b5"], "status": "REASONED"},
+    "oauth-bind": {"text": "oauth2-proxy --http-address defaults to 127.0.0.1:4180.", "components": ["oauth"], "sources": ["oauth:sa987fae1c9ef"], "status": "REASONED"},
+    "authelia-bind": {"text": "Authelia server.address defaults tcp://:9091/; its empty host reaches Go net.Listen and binds every local address.", "components": ["authelia", "go"], "sources": ["authelia:s064d1e72c1e8", "authelia:sbec86d37ea1c", "go:s37204ff1b27c"], "status": "REASONED"},
+    "authenticate": {"text": "oauth2-proxy, Authelia or Pomerium must check the session before forwarding to the app.", "components": ["oauth", "authelia", "pomerium"], "sources": ["oauth:sdcd74a9cd9c6", "authelia:s0cb4f49871b5", "pomerium:s4ed306cb118e"], "status": "REASONED"},
+    "header-trust": {"text": "The app must trust only headers overwritten from verified proxy responses; other client headers pass through, so isolation alone is insufficient.", "components": ["oauth", "authelia", "traefik"], "sources": ["oauth:sdcd74a9cd9c6", "oauth:sfe2dce1756e8", "authelia:s4af41b2fed9f", "traefik:s7f6f6200de1f"], "status": "REASONED"},
+    "oauth-provider": {"text": "OAUTH2_PROXY_ environment variables map core flags; configure provider and IdP client-id/client-secret.", "components": ["oauth"], "sources": ["oauth:s26940e6584e8"], "status": "REASONED"},
+    "oauth-domain": {"text": "--email-domain restricts a domain; * admits any authenticated user.", "components": ["oauth"], "sources": ["oauth:s26940e6584e8"], "status": "REASONED"},
+    "oauth-upstream": {"text": "--upstream targets the app, or static://202 when another proxy handles forwarding.", "components": ["oauth"], "sources": ["oauth:s26940e6584e8", "oauth:sfe2dce1756e8"], "status": "REASONED"},
+    "oauth-cookie": {"text": "--cookie-secret must be 16, 24 or 32 bytes, optionally base64-encoded; generate randomly and do not reuse or commit it.", "components": ["oauth"], "sources": ["oauth:s26940e6584e8"], "status": "REASONED"},
+    "oauth-nginx": {"text": "nginx auth_request at /oauth2/auth needs --reverse-proxy; --set-xauthrequest supplies User/Email response headers.", "components": ["oauth"], "sources": ["oauth:sdcd74a9cd9c6"], "status": "REASONED"},
+    "oauth-nginx-identity": {"text": "nginx maps verified X-Auth-Request-User/Email to X-User/Email before forwarding to 127.0.0.1:3000.", "components": ["oauth"], "sources": ["oauth:sdcd74a9cd9c6"], "status": "REASONED"},
+    "oauth-signin": {"text": "The nginx example forwards /oauth2/ to 127.0.0.1:4180 and redirects auth 401 to /oauth2/sign_in with the return URL.", "components": ["oauth"], "sources": ["oauth:sdcd74a9cd9c6"], "status": "REASONED"},
+    "oauth-traefik": {"text": "Traefik forwardAuth calls oauth2-proxy:4180/oauth2/auth with static://202, reverse-proxy and set-xauthrequest enabled.", "components": ["oauth"], "sources": ["oauth:sfe2dce1756e8"], "status": "REASONED"},
+    "traefik-headers": {"text": "authResponseHeaders must include every trusted identity header; only those replace client values, with other headers forwarded unchanged.", "components": ["traefik", "oauth"], "sources": ["traefik:s7f6f6200de1f", "oauth:sfe2dce1756e8"], "status": "REASONED"},
+    "traefik-attach": {"text": "Attach oauth-auth to every protected router; defining middleware without a router reference protects nothing.", "components": ["oauth", "traefik"], "sources": ["oauth:sfe2dce1756e8", "traefik:s7f6f6200de1f"], "status": "REASONED"},
+    "authelia-support": {"text": "Authelia supports the listed nginx, Traefik, Caddy, HAProxy/Lua, Envoy, Skipper, NGINX Proxy Manager and SWAG integrations, not Apache/IIS.", "components": ["authelia"], "sources": ["authelia:s1409ac8fe3d9"], "status": "REASONED"},
+    "caddy-min": {"text": "Authelia's documented Caddy support requires 2.5.1+.", "components": ["caddy"], "sources": ["caddy:s1409ac8fe3d9"], "status": "REASONED"},
+    "authelia-nginx": {"text": "nginx uses the dedicated /api/authz/auth-request endpoint through an internal location with original method/URL and no request body.", "components": ["authelia"], "sources": ["authelia:s4af41b2fed9f"], "status": "REASONED"},
+    "authelia-dns": {"text": "Variable proxy_pass needs runtime DNS resolution or a matching upstream; the shown 127.0.0.11 resolver assumes Docker DNS.", "components": ["authelia"], "sources": ["authelia:s4af41b2fed9f"], "status": "REASONED"},
+    "authelia-identity": {"text": "nginx copies verified Remote-User/Groups/Name/Email and uses the auth Location for 401 redirection; trusted client headers must be overwritten.", "components": ["authelia"], "sources": ["authelia:s4af41b2fed9f"], "status": "REASONED"},
+    "authelia-traefik": {"text": "Traefik calls authelia:9091/api/authz/forward-auth and copies the four Remote-* identity headers.", "components": ["authelia"], "sources": ["authelia:sfb8ce161d56a"], "status": "REASONED"},
+    "authelia-caddy": {"text": "Caddy forward_auth calls authelia:9091 with /api/authz/forward-auth and copies the four Remote-* identity headers.", "components": ["authelia"], "sources": ["authelia:sd5437cbc4328"], "status": "REASONED"},
+    "authelia-session": {"text": "Authelia needs a random session secret and path access rules selecting one_factor or two_factor.", "components": ["authelia"], "sources": ["authelia:s0cb4f49871b5", "authelia:s4af41b2fed9f"], "status": "REASONED"},
+    "authelia-mfa": {"text": "Authelia enforces TOTP, WebAuthn/passkeys or Duo push itself.", "components": ["authelia"], "sources": ["authelia:scd46ff77c737"], "status": "REASONED"},
+    "pomerium-idp": {"text": "Pomerium combines routing, TLS and access control; configure idp_provider, idp_provider_url, idp_client_id and idp_client_secret.", "components": ["pomerium"], "sources": ["pomerium:s181907d16ed1", "pomerium:s4ed306cb118e"], "status": "REASONED"},
+    "pomerium-policy": {"text": "Each Pomerium route carries policy restricting users, domains or claims.", "components": ["pomerium"], "sources": ["pomerium:s4ed306cb118e"], "status": "REASONED"},
+    "idp-mfa": {"text": "oauth2-proxy and Pomerium rely on MFA enforced by their identity provider.", "components": ["oauth", "pomerium"], "sources": ["oauth:s26940e6584e8", "pomerium:s181907d16ed1"], "status": "REASONED"},
+    "verify-listeners": {"text": "Inspect every listener: app 3000, oauth2-proxy 4180 and Authelia 9091 must be reachable only by the proxy.", "components": ["oauth", "authelia"], "sources": ["oauth:sa987fae1c9ef", "authelia:s064d1e72c1e8", "authelia:sbec86d37ea1c"], "status": "REASONED", "verify": [1]},
+    "verify-direct": {"text": "From another host, all three ports must refuse/time out at the actual address; HTTP proves exposure and local/resolver failures are inconclusive.", "components": ["oauth", "authelia", "curl"], "sources": ["oauth:sdcd74a9cd9c6", "authelia:s0cb4f49871b5", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
+    "verify-forged-direct": {"text": "A forged X-User sent directly to app port 3000 must be refused by network isolation.", "components": ["oauth", "curl"], "sources": ["oauth:sdcd74a9cd9c6", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
+    "verify-login": {"text": "Without a session, expect 401 or a 302 to the sign-in page; other redirects do not pass. A real session must reach the app.", "components": ["oauth", "authelia"], "sources": ["oauth:sdcd74a9cd9c6", "authelia:s4af41b2fed9f"], "status": "REASONED", "verify": [1]},
+    "verify-overwrite": {"text": "With a valid session, replay a forged trusted identity header through each proxy; the app log must show the real identity, not admin.", "components": ["oauth", "authelia", "traefik"], "sources": ["oauth:sdcd74a9cd9c6", "oauth:sfe2dce1756e8", "authelia:s4af41b2fed9f", "authelia:sfb8ce161d56a", "authelia:sd5437cbc4328", "traefik:s7f6f6200de1f"], "status": "REASONED"}
+  }
+}
+---
 # Fronting auth: putting login and MFA in front of an app that has none (oauth2-proxy, Authelia, Pomerium)
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| isolate: Bind app and auth service to loopback or an unpublished private container network; only the fronting proxy may reach them. | oauth2-proxy v7.15.4; Authelia v4.39.28 | REASONED |
+| oauth-bind: oauth2-proxy --http-address defaults to 127.0.0.1:4180. | oauth2-proxy v7.15.4 | REASONED |
+| authelia-bind: Authelia server.address defaults tcp://:9091/; its empty host reaches Go net.Listen and binds every local address. | Authelia v4.39.28; Go net.Listen unknown | REASONED |
+| authenticate: oauth2-proxy, Authelia or Pomerium must check the session before forwarding to the app. | oauth2-proxy v7.15.4; Authelia v4.39.28; Pomerium unknown | REASONED |
+| header-trust: The app must trust only headers overwritten from verified proxy responses; other client headers pass through, so isolation alone is insufficient. | oauth2-proxy v7.15.4; Authelia v4.39.28; Traefik unknown | REASONED |
+| oauth-provider: OAUTH2_PROXY_ environment variables map core flags; configure provider and IdP client-id/client-secret. | oauth2-proxy v7.15.4 | REASONED |
+| oauth-domain: --email-domain restricts a domain; * admits any authenticated user. | oauth2-proxy v7.15.4 | REASONED |
+| oauth-upstream: --upstream targets the app, or static://202 when another proxy handles forwarding. | oauth2-proxy v7.15.4 | REASONED |
+| oauth-cookie: --cookie-secret must be 16, 24 or 32 bytes, optionally base64-encoded; generate randomly and do not reuse or commit it. | oauth2-proxy v7.15.4 | REASONED |
+| oauth-nginx: nginx auth_request at /oauth2/auth needs --reverse-proxy; --set-xauthrequest supplies User/Email response headers. | oauth2-proxy v7.15.4 | REASONED |
+| oauth-nginx-identity: nginx maps verified X-Auth-Request-User/Email to X-User/Email before forwarding to 127.0.0.1:3000. | oauth2-proxy v7.15.4 | REASONED |
+| oauth-signin: The nginx example forwards /oauth2/ to 127.0.0.1:4180 and redirects auth 401 to /oauth2/sign_in with the return URL. | oauth2-proxy v7.15.4 | REASONED |
+| oauth-traefik: Traefik forwardAuth calls oauth2-proxy:4180/oauth2/auth with static://202, reverse-proxy and set-xauthrequest enabled. | oauth2-proxy v7.15.4 | REASONED |
+| traefik-headers: authResponseHeaders must include every trusted identity header; only those replace client values, with other headers forwarded unchanged. | Traefik unknown; oauth2-proxy v7.15.4 | REASONED |
+| traefik-attach: Attach oauth-auth to every protected router; defining middleware without a router reference protects nothing. | oauth2-proxy v7.15.4; Traefik unknown | REASONED |
+| authelia-support: Authelia supports the listed nginx, Traefik, Caddy, HAProxy/Lua, Envoy, Skipper, NGINX Proxy Manager and SWAG integrations, not Apache/IIS. | Authelia v4.39.28 | REASONED |
+| caddy-min: Authelia's documented Caddy support requires 2.5.1+. | Authelia Caddy support minimum 2.5.1+ | REASONED |
+| authelia-nginx: nginx uses the dedicated /api/authz/auth-request endpoint through an internal location with original method/URL and no request body. | Authelia v4.39.28 | REASONED |
+| authelia-dns: Variable proxy_pass needs runtime DNS resolution or a matching upstream; the shown 127.0.0.11 resolver assumes Docker DNS. | Authelia v4.39.28 | REASONED |
+| authelia-identity: nginx copies verified Remote-User/Groups/Name/Email and uses the auth Location for 401 redirection; trusted client headers must be overwritten. | Authelia v4.39.28 | REASONED |
+| authelia-traefik: Traefik calls authelia:9091/api/authz/forward-auth and copies the four Remote-* identity headers. | Authelia v4.39.28 | REASONED |
+| authelia-caddy: Caddy forward_auth calls authelia:9091 with /api/authz/forward-auth and copies the four Remote-* identity headers. | Authelia v4.39.28 | REASONED |
+| authelia-session: Authelia needs a random session secret and path access rules selecting one_factor or two_factor. | Authelia v4.39.28 | REASONED |
+| authelia-mfa: Authelia enforces TOTP, WebAuthn/passkeys or Duo push itself. | Authelia v4.39.28 | REASONED |
+| pomerium-idp: Pomerium combines routing, TLS and access control; configure idp_provider, idp_provider_url, idp_client_id and idp_client_secret. | Pomerium unknown | REASONED |
+| pomerium-policy: Each Pomerium route carries policy restricting users, domains or claims. | Pomerium unknown | REASONED |
+| idp-mfa: oauth2-proxy and Pomerium rely on MFA enforced by their identity provider. | oauth2-proxy v7.15.4; Pomerium unknown | REASONED |
+| verify-listeners: Inspect every listener: app 3000, oauth2-proxy 4180 and Authelia 9091 must be reachable only by the proxy. | oauth2-proxy v7.15.4; Authelia v4.39.28 | REASONED |
+| verify-direct: From another host, all three ports must refuse/time out at the actual address; HTTP proves exposure and local/resolver failures are inconclusive. | oauth2-proxy v7.15.4; Authelia v4.39.28; curl minimum write-out version 7.75.0 | REASONED |
+| verify-forged-direct: A forged X-User sent directly to app port 3000 must be refused by network isolation. | oauth2-proxy v7.15.4; curl minimum write-out version 7.75.0 | REASONED |
+| verify-login: Without a session, expect 401 or a 302 to the sign-in page; other redirects do not pass. A real session must reach the app. | oauth2-proxy v7.15.4; Authelia v4.39.28 | REASONED |
+| verify-overwrite: With a valid session, replay a forged trusted identity header through each proxy; the app log must show the real identity, not admin. | oauth2-proxy v7.15.4; Authelia v4.39.28; Traefik unknown | REASONED |
+<!-- version-basis:end -->
 
 Many self-hosted apps (internal tools, dashboards, webhook receivers) ship with no login at all. The fix is the same shape every time: the app binds to loopback, a proxy in front does authentication and MFA, and it passes the app a verified identity, which the app must not accept from anywhere else. This guide is what [mfa.md](mfa.md), [nginx.md](nginx.md), [traefik.md](traefik.md), and [caddy.md](caddy.md) point at.
 
@@ -123,6 +270,8 @@ oauth2-proxy's MFA is whatever its OIDC/OAuth provider enforces; Pomerium's is w
 
 ## Verify
 
+REASONED: following block; the cited oauth2-proxy/Authelia integrations, pinned listener defaults and curl manual define isolation, direct-header refusal and anonymous challenges. This read-only review cannot provision the proxy, backend, IdP and external probe host; no live outcome is recorded. Expected responses and inconclusive failures are stated below.
+
 ```bash
 ss -tlnp   # read every listener; app 3000, oauth2-proxy 4180, Authelia 9091 reachable only by the proxy (loopback, or a private container network), never a public interface
 # each must be unreachable from another host. Read err, not the number: it must name a refusal or timeout reaching
@@ -165,7 +314,7 @@ After a real login through the proxy, confirm a session reaches the app and the 
 - oauth2-proxy Traefik integration: https://oauth2-proxy.github.io/oauth2-proxy/configuration/integrations/traefik/
 - Traefik forwardAuth middleware (authResponseHeaders replaces only the listed headers; others pass through): https://doc.traefik.io/traefik/reference/routing-configuration/http/middlewares/forwardauth/
 - Authelia proxy integration introduction: https://www.authelia.com/integration/proxies/introduction/
-- Authelia proxy support matrix (Apache and IIS unsupported): https://www.authelia.com/integration/proxies/support/
+- Authelia proxy support matrix (Apache and IIS unsupported) (Caddy 2.5.1+): https://www.authelia.com/integration/proxies/support/
 - Authelia nginx integration: https://www.authelia.com/integration/proxies/nginx/
 - Authelia Traefik integration: https://www.authelia.com/integration/proxies/traefik/
 - Authelia Caddy integration: https://www.authelia.com/integration/proxies/caddy/

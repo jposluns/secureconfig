@@ -1,4 +1,281 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "3fbdc6ab2236595ce5a612471d7982a0d8e0364fcb2c2103a72b8aeb729d5441",
+  "components": {
+    "node": {
+      "name": "node_exporter",
+      "basis": "v1.12.1",
+      "sources": {
+        "s9cc780c8cd13": "https://github.com/prometheus/node_exporter/blob/v1.12.1/README.md",
+        "s896899f5a500": "https://github.com/prometheus/node_exporter/blob/v1.12.1/node_exporter.go"
+      }
+    },
+    "toolkit": {
+      "name": "Exporter toolkit",
+      "basis": "v0.17.1",
+      "sources": {
+        "sbb86207a38e5": "https://github.com/prometheus/exporter-toolkit/blob/v0.17.1/docs/web-configuration.md"
+      }
+    },
+    "security": {
+      "name": "Prometheus security model",
+      "basis": "a0d29881382ad1ea20597d34fc4229984b326576",
+      "sources": {
+        "s3ffe42e99660": "https://github.com/prometheus/docs/blob/a0d29881382ad1ea20597d34fc4229984b326576/docs/operating/security.md"
+      }
+    },
+    "alert": {
+      "name": "Alertmanager",
+      "basis": "v0.34.1",
+      "sources": {
+        "s0fd66cba968e": "https://github.com/prometheus/alertmanager/blob/v0.34.1/README.md",
+        "s120d6ecf3fcd": "https://github.com/prometheus/alertmanager/blob/v0.34.1/docs/https.md",
+        "s2f25ecba24e9": "https://github.com/prometheus/alertmanager/blob/v0.34.1/docs/management_api.md"
+      }
+    },
+    "push": {
+      "name": "Pushgateway",
+      "basis": "v1.11.3",
+      "sources": {
+        "s5c9f9745f42d": "https://github.com/prometheus/pushgateway/blob/v1.11.3/README.md",
+        "s17fa4021d868": "https://github.com/prometheus/pushgateway/blob/v1.11.3/main.go"
+      }
+    },
+    "jaeger": {
+      "name": "Jaeger",
+      "basis": "v2.21.0",
+      "sources": {
+        "s5619bba2be59": "https://github.com/jaegertracing/jaeger/blob/v2.21.0/cmd/jaeger/internal/all-in-one.yaml",
+        "sc6f47d82b947": "https://github.com/jaegertracing/jaeger/blob/v2.21.0/cmd/jaeger/internal/extension/jaegerquery/internal/flags.go",
+        "s15354f575fde": "https://github.com/jaegertracing/jaeger/blob/v2.21.0/ports/ports.go",
+        "sb0d71eec9578": "https://github.com/jaegertracing/jaeger/blob/v2.21.0/cmd/jaeger/Dockerfile",
+        "s9cba9ed883db": "https://github.com/jaegertracing/jaeger/releases/tag/v2.21.0"
+      }
+    },
+    "jaeger-docs": {
+      "name": "Jaeger documentation",
+      "basis": "4d150659ee4ed3ccc69253ec77c368392f59e625",
+      "sources": {
+        "s2c0a96684979": "https://github.com/jaegertracing/documentation/blob/4d150659ee4ed3ccc69253ec77c368392f59e625/content/docs/v2/2.21/deployment/configuration.md",
+        "s4969c5ffaa59": "https://github.com/jaegertracing/documentation/blob/4d150659ee4ed3ccc69253ec77c368392f59e625/content/docs/v2/2.21/deployment/security.md"
+      }
+    },
+    "tls": {
+      "name": "OpenTelemetry configtls",
+      "basis": "v1.66.0",
+      "sources": {
+        "s11d519172812": "https://github.com/open-telemetry/opentelemetry-collector/blob/cd3455cf3a7f672208140b1ebb1581c542b2b0ed/config/configtls/README.md"
+      }
+    },
+    "basic": {
+      "name": "OpenTelemetry basicauth extension",
+      "basis": "v0.160.0",
+      "sources": {
+        "s881d8805b6c6": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/v0.160.0/extension/basicauthextension/README.md"
+      }
+    },
+    "loki": {
+      "name": "Loki",
+      "basis": "v3.7.8",
+      "sources": {
+        "s70975c2655fa": "https://github.com/grafana/loki/blob/v3.7.8/docs/sources/operations/authentication.md",
+        "s303881c903ca": "https://github.com/grafana/loki/blob/v3.7.8/docs/sources/reference/loki-http-api.md",
+        "sd13fa86b20d0": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L150-L162",
+        "s8f06ddfa5291": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/common/common.go",
+        "s8cf14a90ec61": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/config_wrapper.go#L162-L174",
+        "s924fd8ffd310": "https://github.com/grafana/loki/blob/v3.7.8/cmd/loki/loki-local-config.yaml#L1-L16",
+        "s9fd7d8bd80e3": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L241-L269",
+        "s985dfb0ea97c": "https://github.com/grafana/loki/blob/v3.7.8/production/docker/config/loki.yaml#L1-L8",
+        "s057e686b00bb": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L495-L509",
+        "sb5e56f0d6348": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L208-L222",
+        "s9f316e1a5fef": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L399-L422",
+        "s39c270ed878c": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1307-L1378",
+        "sbe0aa939a44d": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L533-L540",
+        "sc2b013001317": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L751-L790",
+        "s4f3a19f7f08c": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1866-L1869",
+        "s3d51e1213e70": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1880-L1883",
+        "s38c1e77fe01e": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1899-L1908",
+        "s1f38431776f2": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1935-L1952",
+        "s765907d2b4ee": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L571-L580",
+        "sfb3d52071e7c": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/config_wrapper.go#L193-L248",
+        "scf12ae06cdc4": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L373-L390",
+        "s970473c2dcdb": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1130-L1138",
+        "s6b2f01173a97": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1241-L1262",
+        "s44e7547da37d": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L2532-L2561",
+        "s33f320afa73a": "https://github.com/grafana/loki/blob/v3.7.8/go.mod#L55"
+      }
+    },
+    "dskit": {
+      "name": "dskit",
+      "basis": "8d1c6d34bb5a42b04caa982d68403c5a643bb742",
+      "sources": {
+        "sb19d54a19636": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L189-L212",
+        "s0dc9a01e591a": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L69-L78",
+        "s7848c6311aee": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L309-L332",
+        "sd35a28be4391": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L357-L395",
+        "s38beab6892ea": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L433-L468",
+        "s761b46738198": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L577-L583",
+        "s5fd7b12bfcf1": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L673-L681",
+        "s3634557bb838": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/middleware/http_auth.go#L13-L23",
+        "saf57a4cbc682": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/middleware/grpc_auth.go#L36-L57",
+        "s1ca109a7a016": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/tenant/tenant.go#L85-L99",
+        "s23d81aeedf07": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/tcp_transport.go#L41-L86",
+        "s4d546b0d82d4": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/tcp_transport.go#L133-L197",
+        "s251174df8783": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/tcp_transport.go#L394-L451",
+        "s052e8107edad": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/memberlist_client.go#L229-L232",
+        "scf57b6b1f148": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/memberlist_client.go#L457-L520",
+        "s675104c4819c": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/crypto/tls/tls.go#L27-L64",
+        "s99e7e34182f1": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/crypto/tls/tls.go#L86-L175",
+        "s69c68f3d3e6a": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/memberlist_client.go#L1383-L1470",
+        "s1b539b8100a3": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/memberlist_client.go#L1577-L1672"
+      }
+    },
+    "go": {
+      "name": "Go documentation",
+      "basis": "unknown",
+      "sources": {
+        "sd3b3c1c431ec": "https://pkg.go.dev/crypto/tls#ClientAuthType",
+        "s37204ff1b27c": "https://pkg.go.dev/net#Listen"
+      }
+    }
+  },
+  "claims": {
+    "node-bind": {"text": "node_exporter defaults to :9100 on all interfaces; private binds are required.", "components": ["node", "go"], "sources": ["node:s9cc780c8cd13", "node:s896899f5a500", "go:s37204ff1b27c"], "status": "REASONED"},
+    "node-open": {"text": "Unconfigured loopback metrics and pprof both returned 200 without credentials.", "components": ["node"], "sources": ["node:s896899f5a500"], "status": "DEMONSTRATED", "evidence": "On a loopback run, both paths returned `200` with no credentials."},
+    "toolkit-config": {"text": "--web.config.file enables TLS and bcrypt Basic auth across HTTP paths; the format is experimental and not every exporter uses it.", "components": ["toolkit", "node", "alert", "push"], "sources": ["toolkit:sbb86207a38e5", "node:s9cc780c8cd13", "alert:s120d6ecf3fcd", "push:s5c9f9745f42d"], "status": "REASONED"},
+    "node-tls": {"text": "Loopback HTTP returned 400; HTTPS metrics/pprof rejected absent credentials and accepted correct ones.", "components": ["node", "toolkit"], "sources": ["node:s896899f5a500", "toolkit:sbb86207a38e5"], "status": "DEMONSTRATED", "evidence": "HTTPS without credentials got `401` on both `/metrics` and `/debug/pprof/`, and HTTPS with the right credentials got `200`."},
+    "toolkit-mtls": {"text": "Use RequireAndVerifyClientCert with client_ca_file for verified clients; other client_auth_type values are called insecure by the toolkit.", "components": ["toolkit"], "sources": ["toolkit:sbb86207a38e5"], "status": "REASONED"},
+    "toolkit-reload": {"text": "The toolkit rereads web configuration per request; password/certificate changes apply without restart.", "components": ["toolkit"], "sources": ["toolkit:sbb86207a38e5"], "status": "REASONED"},
+    "toolkit-clients": {"text": "Basic auth suits a few users; supply matching credentials/CA to scrapers, pushers and Alertmanager clients, or use client certificates/proxy login.", "components": ["toolkit", "alert", "push"], "sources": ["toolkit:sbb86207a38e5", "alert:s120d6ecf3fcd", "push:s5c9f9745f42d"], "status": "REASONED"},
+    "alert-bind": {"text": "Alertmanager HTTP defaults :9093; HA gossip defaults 0.0.0.0:9094 and needs both TCP and UDP.", "components": ["alert", "go"], "sources": ["alert:s0fd66cba968e", "go:s37204ff1b27c"], "status": "REASONED"},
+    "alert-api": {"text": "Loopback anonymous status, silence creation, reload and pprof succeeded; status carried wildcard CORS.", "components": ["alert", "security"], "sources": ["alert:s2f25ecba24e9", "security:s3ffe42e99660"], "status": "DEMONSTRATED", "evidence": "`GET /api/v2/status` returned `200`, `POST /api/v2/silences` created a silence and returned `200`, and `POST /-/reload` returned `200`. `GET /debug/pprof/` also returned `200`."},
+    "alert-auth": {"text": "Web configuration rejected anonymous silence creation and absent/wrong status passwords; valid status credentials succeeded.", "components": ["alert", "toolkit"], "sources": ["alert:s120d6ecf3fcd", "toolkit:sbb86207a38e5"], "status": "DEMONSTRATED", "evidence": "the loopback runs returned `401` to an unauthenticated silence creation and to an unauthenticated or wrong-password status read, and `200` to an authenticated status read."},
+    "alert-gossip-off": {"text": "An empty --cluster.listen-address disabled both gossip socket protocols in the loopback run.", "components": ["alert"], "sources": ["alert:s0fd66cba968e"], "status": "DEMONSTRATED", "evidence": "On a loopback run with it empty, Alertmanager held no TCP or UDP socket on 9094."},
+    "alert-gossip-tls": {"text": "HA gossip is plaintext without experimental --cluster.tls-config; restrict it to peers and configure server/client TLS sections.", "components": ["alert"], "sources": ["alert:s120d6ecf3fcd"], "status": "REASONED"},
+    "alert-proxy": {"text": "Proxy mutating routes/CORS to reduce CSRF; send Prometheus traffic to every Alertmanager rather than load-balancing it.", "components": ["security", "alert"], "sources": ["security:s3ffe42e99660", "alert:s0fd66cba968e"], "status": "REASONED"},
+    "push-bind": {"text": "Pushgateway defaults :9091; reachable users can forge trusted series, particularly with honor_labels.", "components": ["push", "security"], "sources": ["push:s5c9f9745f42d", "security:s3ffe42e99660"], "status": "REASONED"},
+    "push-write": {"text": "Anonymous loopback POST wrote a series visible on metrics; an anonymous DELETE of the group returned 202.", "components": ["push"], "sources": ["push:s5c9f9745f42d"], "status": "DEMONSTRATED", "evidence": "an unauthenticated `POST /metrics/job/demo` returned `200` and the series appeared on `/metrics`. An unauthenticated `DELETE` of the group returned `202`."},
+    "push-pprof": {"text": "Anonymous loopback GET /debug/pprof/ returned 200.", "components": ["push"], "sources": ["push:s17fa4021d868"], "status": "DEMONSTRATED", "evidence": "it answered `200`"},
+    "push-pprof-registration": {"text": "The pinned source registers /debug/pprof/ outside every flag check.", "components": ["push"], "sources": ["push:s17fa4021d868"], "status": "REASONED"},
+    "push-admin": {"text": "Admin wipe defaults off; loopback PUT /api/v1/admin/wipe returned 404 without --web.enable-admin-api.", "components": ["push"], "sources": ["push:s17fa4021d868"], "status": "DEMONSTRATED", "evidence": "`PUT /api/v1/admin/wipe` returned `404` by default."},
+    "push-lifecycle": {"text": "Lifecycle shutdown defaults off; leave --web.enable-lifecycle and the admin API disabled.", "components": ["push"], "sources": ["push:s17fa4021d868"], "status": "REASONED"},
+    "push-auth": {"text": "With web configuration, anonymous push returned 401 and authenticated push 200.", "components": ["push", "toolkit"], "sources": ["push:s5c9f9745f42d", "toolkit:sbb86207a38e5"], "status": "DEMONSTRATED", "evidence": "an unauthenticated push returned `401` and an authenticated one returned `200`."},
+    "push-auth-scope": {"text": "The README says web configuration affects all HTTP endpoints: metrics, push API, admin API and web UI.", "components": ["push"], "sources": ["push:s5c9f9745f42d"], "status": "REASONED"},
+    "jaeger-config": {"text": "No --config selects in-memory all-in-one; receiver/diagnostic hosts use JAEGER_LISTEN_HOST with localhost fallback.", "components": ["jaeger", "jaeger-docs"], "sources": ["jaeger:s5619bba2be59", "jaeger-docs:s2c0a96684979"], "status": "REASONED"},
+    "jaeger-receivers": {"text": "All-in-one maps OTLP 4317/4318, Jaeger 14250/14268 and UDP 6831/6832, Zipkin 9411 and sampling 5778/5779.", "components": ["jaeger"], "sources": ["jaeger:s5619bba2be59", "jaeger:s15354f575fde"], "status": "REASONED"},
+    "jaeger-diagnostics": {"text": "Health 13133, expvar 27777, zpages 27778 and metrics 8888 follow JAEGER_LISTEN_HOST.", "components": ["jaeger"], "sources": ["jaeger:s5619bba2be59", "jaeger:s15354f575fde"], "status": "REASONED"},
+    "jaeger-loopback": {"text": "The overridden loopback run showed every listed receiver/diagnostic listener, including UDP, on 127.0.0.1.", "components": ["jaeger"], "sources": ["jaeger:s5619bba2be59"], "status": "DEMONSTRATED", "evidence": "the loopback run showed each of them, UDP included, on 127.0.0.1"},
+    "jaeger-image": {"text": "The official image sets JAEGER_LISTEN_HOST=0.0.0.0, exposing these listeners to its interfaces and published ports.", "components": ["jaeger"], "sources": ["jaeger:sb0d71eec9578"], "status": "REASONED"},
+    "jaeger-query": {"text": "Query HTTP 16686 and gRPC 16685 default wildcard independently of JAEGER_LISTEN_HOST; bind both explicitly.", "components": ["jaeger", "jaeger-docs"], "sources": ["jaeger:sc6f47d82b947", "jaeger:s15354f575fde", "jaeger-docs:s2c0a96684979"], "status": "REASONED"},
+    "jaeger-mcp": {"text": "All-in-one enables ai.mcp on the query HTTP port at /api/ai/mcp/; remove mcp from ai when unused.", "components": ["jaeger"], "sources": ["jaeger:s5619bba2be59", "jaeger:sc6f47d82b947"], "status": "REASONED"},
+    "jaeger-open": {"text": "Anonymous loopback v3 services, UI and MCP initialize returned 200; removed v1 services returned 404, not proof of protection.", "components": ["jaeger"], "sources": ["jaeger:s9cba9ed883db", "jaeger:sc6f47d82b947"], "status": "DEMONSTRATED", "evidence": "`GET /api/v3/services` returned `200`, the UI at `/` returned `200`, and an MCP `initialize` POST to `/api/ai/mcp/` returned `200`."},
+    "jaeger-basic": {"text": "Query basicauth/server with htpasswd rejected absent/wrong credentials on services, UI and MCP; correct credentials returned 200.", "components": ["jaeger", "basic"], "sources": ["jaeger:sc6f47d82b947", "basic:s881d8805b6c6"], "status": "DEMONSTRATED", "evidence": "`/api/v3/services`, the UI and the MCP endpoint each returned `401` without credentials and `401` with a wrong password. Each returned `200` with the right credentials."},
+    "jaeger-tls": {"text": "Query HTTP TLS cert_file/key_file gave HTTPS 401/200 and plaintext 400; inferred wiring was tested locally and needs upgrade retesting.", "components": ["jaeger", "tls"], "sources": ["jaeger:sc6f47d82b947", "tls:s11d519172812"], "status": "DEMONSTRATED", "evidence": "HTTPS without credentials got `401`, HTTPS with them `200`, and plain HTTP `400`"},
+    "jaeger-grpc": {"text": "Query gRPC auth exists but was not demonstrated; restrict it, authenticate remote collectors separately and front human UI access.", "components": ["jaeger", "jaeger-docs"], "sources": ["jaeger:sc6f47d82b947", "jaeger-docs:s4969c5ffaa59"], "status": "REASONED"},
+    "loki-listeners": {"text": "Empty TCP listen addresses yield wildcard HTTP 3100 and gRPC 9095; IPv4/IPv6 depends on Go/OS support.", "components": ["loki", "dskit", "go"], "sources": ["loki:s9fd7d8bd80e3", "dskit:sb19d54a19636", "dskit:s7848c6311aee", "go:s37204ff1b27c"], "status": "REASONED"},
+    "loki-samples": {"text": "Local sample uses gRPC 9096/auth_enabled false; production Docker config uses wildcard 3100/9095/auth_enabled true.", "components": ["loki"], "sources": ["loki:s924fd8ffd310", "loki:s985dfb0ea97c"], "status": "REASONED"},
+    "memberlist-bind": {"text": "With the memberlist store, TCP gossip defaults 0.0.0.0:7946; an empty list selects wildcard and an empty list entry is invalid.", "components": ["loki", "dskit"], "sources": ["loki:s33f320afa73a", "dskit:s23d81aeedf07", "dskit:s4d546b0d82d4"], "status": "REASONED"},
+    "memberlist-label": {"text": "Cluster labels reject mismatches unless verification is disabled, but matching labels are not credentials; no SecretKey/keyring setting is wired.", "components": ["dskit"], "sources": ["dskit:s052e8107edad", "dskit:scf57b6b1f148"], "status": "REASONED"},
+    "memberlist-updates": {"text": "Without TLS, reachable matching-label peers can submit KV/ring state subject to codecs/merge rules; disruption is inferred, not demonstrated.", "components": ["dskit"], "sources": ["dskit:scf57b6b1f148", "dskit:s69c68f3d3e6a", "dskit:s1b539b8100a3"], "status": "REASONED"},
+    "memberlist-tls": {"text": "TLS defaults off; enabled transport verifies outgoing servers but leaves incoming ClientAuth at NoClientCert, so it is not mutual peer authentication.", "components": ["dskit", "go"], "sources": ["dskit:s23d81aeedf07", "dskit:s4d546b0d82d4", "dskit:s675104c4819c", "dskit:s99e7e34182f1", "go:sd3b3c1c431ec"], "status": "REASONED"},
+    "memberlist-policy": {"text": "Keep tls-insecure-skip-verify false, set expected server name as needed, bind privately and restrict trusted peers even with TLS.", "components": ["dskit"], "sources": ["dskit:s675104c4819c", "dskit:s99e7e34182f1"], "status": "REASONED"},
+    "memberlist-advertise": {"text": "Advertise address/port affect discovery, not bind; absent overrides derive an address from the first bind and actual port.", "components": ["dskit"], "sources": ["dskit:s251174df8783", "dskit:s052e8107edad"], "status": "REASONED"},
+    "loki-tenants": {"text": "auth_enabled defaults true and requires tenant headers, not credentials; false uses fake, and tenant validation checks syntax/length only.", "components": ["loki", "dskit"], "sources": ["loki:sd13fa86b20d0", "loki:sb5e56f0d6348", "dskit:s3634557bb838", "dskit:s1ca109a7a016"], "status": "REASONED"},
+    "loki-grpc-auth": {"text": "Default dskit interceptors lack credentials; Loki has tenant exemptions, and the supplied subset omits full auth-helper implementation.", "components": ["dskit", "loki"], "sources": ["dskit:s38beab6892ea", "dskit:saf57a4cbc682", "loki:s057e686b00bb"], "status": "REASONED"},
+    "loki-push-query": {"text": "Reachable clients can push/query without credentials subject to tenant headers and ingest/query policies.", "components": ["loki"], "sources": ["loki:s9f316e1a5fef", "loki:s39c270ed878c"], "status": "REASONED"},
+    "loki-config": {"text": "GET /config exposes configuration without a tenant-auth wrapper.", "components": ["loki"], "sources": ["loki:sbe0aa939a44d"], "status": "REASONED"},
+    "loki-diagnostics": {"text": "Metrics and pprof routes are registered by default without a tenant-auth wrapper.", "components": ["dskit"], "sources": ["dskit:s761b46738198"], "status": "REASONED"},
+    "loki-maintenance": {"text": "Ingester flush/shutdown accept GET/POST; prepare_shutdown accepts POST/GET/DELETE, without tenant-auth wrappers.", "components": ["loki"], "sources": ["loki:sc2b013001317"], "status": "REASONED"},
+    "loki-delete": {"text": "Non-worker compactor deletion routes need a supported shipper index, retention and delete-request-store; tenant/policy middleware applies and omitted handlers limit the trace.", "components": ["loki"], "sources": ["loki:s4f3a19f7f08c", "loki:s3d51e1213e70", "loki:s38c1e77fe01e", "loki:s1f38431776f2"], "status": "REASONED"},
+    "loki-grpc-bridge": {"text": "Single-binary ingester RPC and HTTP-over-gRPC expose paths that HTTP-only TLS/proxying does not protect.", "components": ["loki", "dskit"], "sources": ["loki:sc2b013001317", "dskit:s5fd7b12bfcf1"], "status": "REASONED"},
+    "loki-mtls": {"text": "HTTP/gRPC TLS defaults empty and requires a cert/key pair; configure client CA plus RequireAndVerifyClientCert, not CA alone.", "components": ["dskit"], "sources": ["dskit:sb19d54a19636", "dskit:s0dc9a01e591a", "dskit:sd35a28be4391"], "status": "REASONED"},
+    "loki-ring": {"text": "Single-binary overlay uses inmemory ring, loopback instance address and replication_factor 1 instead of default 3; check no gossip listener remains.", "components": ["loki"], "sources": ["loki:s8f06ddfa5291", "loki:s8cf14a90ec61", "loki:sfb3d52071e7c"], "status": "REASONED"},
+    "loki-internal": {"text": "Loopback gRPC is a configuration-specific recommendation; verify advertised/dial addresses and successful internal worker, ingester and compactor calls.", "components": ["loki"], "sources": ["loki:s765907d2b4ee", "loki:sfb3d52071e7c", "loki:scf12ae06cdc4", "loki:s970473c2dcdb", "loki:s6b2f01173a97", "loki:s44e7547da37d"], "status": "REASONED"},
+    "loki-grpc-tls": {"text": "gRPC TLS requires compatible TLS on every internal client; local users can reach plaintext loopback and mTLS does not supply tenant headers.", "components": ["dskit", "loki"], "sources": ["dskit:sd35a28be4391", "loki:s70975c2655fa"], "status": "REASONED"},
+    "loki-proxy": {"text": "An authenticating proxy must overwrite X-Scope-OrgID with its identity and be the only caller that can reach Loki.", "components": ["loki"], "sources": ["loki:s70975c2655fa"], "status": "REASONED"},
+    "verify-inventory": {"text": "Inventory every TCP/UDP listener; wildcard defaults, all Loki listeners and off-host isolation were not observed.", "components": ["node", "alert", "push", "jaeger", "dskit"], "sources": ["node:s896899f5a500", "alert:s0fd66cba968e", "push:s5c9f9745f42d", "jaeger:s5619bba2be59", "dskit:sb19d54a19636", "dskit:s23d81aeedf07"], "status": "REASONED", "verify": [1]},
+    "verify-external": {"text": "External 200 exposes unauthenticated HTTP; HTTPS 401 shows auth, not isolation. Confirm connection failures and a permitted positive control.", "components": ["security", "toolkit", "jaeger-docs"], "sources": ["security:s3ffe42e99660", "toolkit:sbb86207a38e5", "jaeger-docs:s4969c5ffaa59"], "status": "REASONED", "verify": [2]},
+    "verify-loki": {"text": "A tenant-header rejection is not authentication; repeat with an arbitrary X-Scope-OrgID and test both families, gRPC and internal RPCs.", "components": ["loki"], "sources": ["loki:s70975c2655fa", "loki:s057e686b00bb"], "status": "REASONED", "verify": [2]},
+    "verify-basic": {"text": "Loopback HTTPS GETs on node/Pushgateway metrics, Alertmanager status and Jaeger v3 services gave no-credential 401 and credentialed 200.", "components": ["node", "push", "alert", "jaeger", "toolkit"], "sources": ["node:s896899f5a500", "push:s5c9f9745f42d", "alert:s120d6ecf3fcd", "jaeger:sc6f47d82b947", "toolkit:sbb86207a38e5"], "status": "DEMONSTRATED", "evidence": "The loopback runs gave exactly that pair over HTTPS for GETs of node_exporter `/metrics`, Pushgateway `/metrics`, Alertmanager `/api/v2/status` and Jaeger `/api/v3/services`.", "verify": [3]},
+    "verify-loki-mtls": {"text": "Authorized HTTP mTLS should succeed, untrusted/missing client certs fail handshake and plaintext fail; no Loki listener/TLS run occurred.", "components": ["loki", "dskit"], "sources": ["loki:s70975c2655fa", "dskit:sd35a28be4391"], "status": "REASONED"},
+    "verify-secret": {"text": "Basic-auth stdin closes argv exposure only; shell history and tracing can still leak the password. curl diagnostics lack a Sources citation.", "components": ["toolkit"], "sources": ["toolkit:sbb86207a38e5"], "status": "REASONED"}
+  }
+}
+---
 # Self-hosted observability components: node_exporter, Alertmanager, Pushgateway, Jaeger, and Loki
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| node-bind: node_exporter defaults to :9100 on all interfaces; private binds are required. | node_exporter v1.12.1; Go documentation unknown | REASONED |
+| node-open: Unconfigured loopback metrics and pprof both returned 200 without credentials. | node_exporter v1.12.1 | DEMONSTRATED |
+| toolkit-config: --web.config.file enables TLS and bcrypt Basic auth across HTTP paths; the format is experimental and not every exporter uses it. | Exporter toolkit v0.17.1; node_exporter v1.12.1; Alertmanager v0.34.1; Pushgateway v1.11.3 | REASONED |
+| node-tls: Loopback HTTP returned 400; HTTPS metrics/pprof rejected absent credentials and accepted correct ones. | node_exporter v1.12.1; Exporter toolkit v0.17.1 | DEMONSTRATED |
+| toolkit-mtls: Use RequireAndVerifyClientCert with client_ca_file for verified clients; other client_auth_type values are called insecure by the toolkit. | Exporter toolkit v0.17.1 | REASONED |
+| toolkit-reload: The toolkit rereads web configuration per request; password/certificate changes apply without restart. | Exporter toolkit v0.17.1 | REASONED |
+| toolkit-clients: Basic auth suits a few users; supply matching credentials/CA to scrapers, pushers and Alertmanager clients, or use client certificates/proxy login. | Exporter toolkit v0.17.1; Alertmanager v0.34.1; Pushgateway v1.11.3 | REASONED |
+| alert-bind: Alertmanager HTTP defaults :9093; HA gossip defaults 0.0.0.0:9094 and needs both TCP and UDP. | Alertmanager v0.34.1; Go documentation unknown | REASONED |
+| alert-api: Loopback anonymous status, silence creation, reload and pprof succeeded; status carried wildcard CORS. | Alertmanager v0.34.1; Prometheus security model a0d29881382ad1ea20597d34fc4229984b326576 | DEMONSTRATED |
+| alert-auth: Web configuration rejected anonymous silence creation and absent/wrong status passwords; valid status credentials succeeded. | Alertmanager v0.34.1; Exporter toolkit v0.17.1 | DEMONSTRATED |
+| alert-gossip-off: An empty --cluster.listen-address disabled both gossip socket protocols in the loopback run. | Alertmanager v0.34.1 | DEMONSTRATED |
+| alert-gossip-tls: HA gossip is plaintext without experimental --cluster.tls-config; restrict it to peers and configure server/client TLS sections. | Alertmanager v0.34.1 | REASONED |
+| alert-proxy: Proxy mutating routes/CORS to reduce CSRF; send Prometheus traffic to every Alertmanager rather than load-balancing it. | Prometheus security model a0d29881382ad1ea20597d34fc4229984b326576; Alertmanager v0.34.1 | REASONED |
+| push-bind: Pushgateway defaults :9091; reachable users can forge trusted series, particularly with honor_labels. | Pushgateway v1.11.3; Prometheus security model a0d29881382ad1ea20597d34fc4229984b326576 | REASONED |
+| push-write: Anonymous loopback POST wrote a series visible on metrics; an anonymous DELETE of the group returned 202. | Pushgateway v1.11.3 | DEMONSTRATED |
+| push-pprof: Anonymous loopback GET /debug/pprof/ returned 200. | Pushgateway v1.11.3 | DEMONSTRATED |
+| push-pprof-registration: The pinned source registers /debug/pprof/ outside every flag check. | Pushgateway v1.11.3 | REASONED |
+| push-admin: Admin wipe defaults off; loopback PUT /api/v1/admin/wipe returned 404 without --web.enable-admin-api. | Pushgateway v1.11.3 | DEMONSTRATED |
+| push-lifecycle: Lifecycle shutdown defaults off; leave --web.enable-lifecycle and the admin API disabled. | Pushgateway v1.11.3 | REASONED |
+| push-auth: With web configuration, anonymous push returned 401 and authenticated push 200. | Pushgateway v1.11.3; Exporter toolkit v0.17.1 | DEMONSTRATED |
+| push-auth-scope: The README says web configuration affects all HTTP endpoints: metrics, push API, admin API and web UI. | Pushgateway v1.11.3 | REASONED |
+| jaeger-config: No --config selects in-memory all-in-one; receiver/diagnostic hosts use JAEGER_LISTEN_HOST with localhost fallback. | Jaeger v2.21.0; Jaeger documentation 4d150659ee4ed3ccc69253ec77c368392f59e625 | REASONED |
+| jaeger-receivers: All-in-one maps OTLP 4317/4318, Jaeger 14250/14268 and UDP 6831/6832, Zipkin 9411 and sampling 5778/5779. | Jaeger v2.21.0 | REASONED |
+| jaeger-diagnostics: Health 13133, expvar 27777, zpages 27778 and metrics 8888 follow JAEGER_LISTEN_HOST. | Jaeger v2.21.0 | REASONED |
+| jaeger-loopback: The overridden loopback run showed every listed receiver/diagnostic listener, including UDP, on 127.0.0.1. | Jaeger v2.21.0 | DEMONSTRATED |
+| jaeger-image: The official image sets JAEGER_LISTEN_HOST=0.0.0.0, exposing these listeners to its interfaces and published ports. | Jaeger v2.21.0 | REASONED |
+| jaeger-query: Query HTTP 16686 and gRPC 16685 default wildcard independently of JAEGER_LISTEN_HOST; bind both explicitly. | Jaeger v2.21.0; Jaeger documentation 4d150659ee4ed3ccc69253ec77c368392f59e625 | REASONED |
+| jaeger-mcp: All-in-one enables ai.mcp on the query HTTP port at /api/ai/mcp/; remove mcp from ai when unused. | Jaeger v2.21.0 | REASONED |
+| jaeger-open: Anonymous loopback v3 services, UI and MCP initialize returned 200; removed v1 services returned 404, not proof of protection. | Jaeger v2.21.0 | DEMONSTRATED |
+| jaeger-basic: Query basicauth/server with htpasswd rejected absent/wrong credentials on services, UI and MCP; correct credentials returned 200. | Jaeger v2.21.0; OpenTelemetry basicauth extension v0.160.0 | DEMONSTRATED |
+| jaeger-tls: Query HTTP TLS cert_file/key_file gave HTTPS 401/200 and plaintext 400; inferred wiring was tested locally and needs upgrade retesting. | Jaeger v2.21.0; OpenTelemetry configtls v1.66.0 | DEMONSTRATED |
+| jaeger-grpc: Query gRPC auth exists but was not demonstrated; restrict it, authenticate remote collectors separately and front human UI access. | Jaeger v2.21.0; Jaeger documentation 4d150659ee4ed3ccc69253ec77c368392f59e625 | REASONED |
+| loki-listeners: Empty TCP listen addresses yield wildcard HTTP 3100 and gRPC 9095; IPv4/IPv6 depends on Go/OS support. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742; Go documentation unknown | REASONED |
+| loki-samples: Local sample uses gRPC 9096/auth_enabled false; production Docker config uses wildcard 3100/9095/auth_enabled true. | Loki v3.7.8 | REASONED |
+| memberlist-bind: With the memberlist store, TCP gossip defaults 0.0.0.0:7946; an empty list selects wildcard and an empty list entry is invalid. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
+| memberlist-label: Cluster labels reject mismatches unless verification is disabled, but matching labels are not credentials; no SecretKey/keyring setting is wired. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
+| memberlist-updates: Without TLS, reachable matching-label peers can submit KV/ring state subject to codecs/merge rules; disruption is inferred, not demonstrated. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
+| memberlist-tls: TLS defaults off; enabled transport verifies outgoing servers but leaves incoming ClientAuth at NoClientCert, so it is not mutual peer authentication. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742; Go documentation unknown | REASONED |
+| memberlist-policy: Keep tls-insecure-skip-verify false, set expected server name as needed, bind privately and restrict trusted peers even with TLS. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
+| memberlist-advertise: Advertise address/port affect discovery, not bind; absent overrides derive an address from the first bind and actual port. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
+| loki-tenants: auth_enabled defaults true and requires tenant headers, not credentials; false uses fake, and tenant validation checks syntax/length only. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
+| loki-grpc-auth: Default dskit interceptors lack credentials; Loki has tenant exemptions, and the supplied subset omits full auth-helper implementation. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742; Loki v3.7.8 | REASONED |
+| loki-push-query: Reachable clients can push/query without credentials subject to tenant headers and ingest/query policies. | Loki v3.7.8 | REASONED |
+| loki-config: GET /config exposes configuration without a tenant-auth wrapper. | Loki v3.7.8 | REASONED |
+| loki-diagnostics: Metrics and pprof routes are registered by default without a tenant-auth wrapper. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
+| loki-maintenance: Ingester flush/shutdown accept GET/POST; prepare_shutdown accepts POST/GET/DELETE, without tenant-auth wrappers. | Loki v3.7.8 | REASONED |
+| loki-delete: Non-worker compactor deletion routes need a supported shipper index, retention and delete-request-store; tenant/policy middleware applies and omitted handlers limit the trace. | Loki v3.7.8 | REASONED |
+| loki-grpc-bridge: Single-binary ingester RPC and HTTP-over-gRPC expose paths that HTTP-only TLS/proxying does not protect. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
+| loki-mtls: HTTP/gRPC TLS defaults empty and requires a cert/key pair; configure client CA plus RequireAndVerifyClientCert, not CA alone. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
+| loki-ring: Single-binary overlay uses inmemory ring, loopback instance address and replication_factor 1 instead of default 3; check no gossip listener remains. | Loki v3.7.8 | REASONED |
+| loki-internal: Loopback gRPC is a configuration-specific recommendation; verify advertised/dial addresses and successful internal worker, ingester and compactor calls. | Loki v3.7.8 | REASONED |
+| loki-grpc-tls: gRPC TLS requires compatible TLS on every internal client; local users can reach plaintext loopback and mTLS does not supply tenant headers. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742; Loki v3.7.8 | REASONED |
+| loki-proxy: An authenticating proxy must overwrite X-Scope-OrgID with its identity and be the only caller that can reach Loki. | Loki v3.7.8 | REASONED |
+| verify-inventory: Inventory every TCP/UDP listener; wildcard defaults, all Loki listeners and off-host isolation were not observed. | node_exporter v1.12.1; Alertmanager v0.34.1; Pushgateway v1.11.3; Jaeger v2.21.0; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
+| verify-external: External 200 exposes unauthenticated HTTP; HTTPS 401 shows auth, not isolation. Confirm connection failures and a permitted positive control. | Prometheus security model a0d29881382ad1ea20597d34fc4229984b326576; Exporter toolkit v0.17.1; Jaeger documentation 4d150659ee4ed3ccc69253ec77c368392f59e625 | REASONED |
+| verify-loki: A tenant-header rejection is not authentication; repeat with an arbitrary X-Scope-OrgID and test both families, gRPC and internal RPCs. | Loki v3.7.8 | REASONED |
+| verify-basic: Loopback HTTPS GETs on node/Pushgateway metrics, Alertmanager status and Jaeger v3 services gave no-credential 401 and credentialed 200. | node_exporter v1.12.1; Pushgateway v1.11.3; Alertmanager v0.34.1; Jaeger v2.21.0; Exporter toolkit v0.17.1 | DEMONSTRATED |
+| verify-loki-mtls: Authorized HTTP mTLS should succeed, untrusted/missing client certs fail handshake and plaintext fail; no Loki listener/TLS run occurred. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
+| verify-secret: Basic-auth stdin closes argv exposure only; shell history and tracing can still leak the password. curl diagnostics lack a Sources citation. | Exporter toolkit v0.17.1 | REASONED |
+<!-- version-basis:end -->
 
 The Prometheus server has its own section in [admin-uis.md](admin-uis.md). This guide covers the pieces
 that usually run next to it, and each of them is an unauthenticated HTTP service by default. node_exporter
@@ -312,6 +589,8 @@ Exposed, the reasoned expectation is `*:9100` (or `0.0.0.0:`/`[::]:`) for an unc
 and likewise for the others. Fixed means a loopback or private address. Then probe from a host that
 should not have access. The block refuses to run until you substitute the address.
 
+REASONED: following block; external probes follow the cited listener and authentication sources; the authoring environment had no second host and no Loki listener was run.
+
 ```bash
 (                              # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_SERVICE_ADDRESS'
@@ -339,6 +618,8 @@ with `-H 'X-Scope-OrgID: anyone'` added, and treat a `200` as exposure.
 Run the positive control from a host that should have access, so a dead service is not read as fixed.
 The password reaches curl on stdin, not argv. Substitute inside the quotes, and add
 `--cacert /path/to/ca.crt` if the certificate is private.
+
+DEMONSTRATED: following block; the recorded loopback HTTPS GETs for node_exporter, Pushgateway, Alertmanager and Jaeger returned 401 without credentials and 200 with them.
 
 ```bash
 (

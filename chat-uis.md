@@ -1,4 +1,179 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "486088828da5dea283608a49ddf61fb9fb8138d8c0a9aa629c64bc397df58214",
+  "components": {
+    "anything": {
+      "name": "AnythingLLM documentation",
+      "basis": "unknown",
+      "sources": {
+        "s6b5aa8c91ad3": "https://docs.anythingllm.com/features/security-and-access"
+      }
+    },
+    "lobe": {
+      "name": "LobeHub",
+      "basis": "v2.2.16",
+      "sources": {
+        "s78199d80212a": "https://lobehub.com/only-ai/markdown/docs/en/self-hosting/environment-variables/basic",
+        "s977fd003b436": "https://github.com/lobehub/lobehub/blob/v2.2.16/docs/self-hosting/environment-variables/basic.mdx#L22-L32",
+        "s84e88654e760": "https://lobehub.com/only-ai/markdown/docs/en/self-hosting/environment-variables/auth",
+        "sdb87ee6e14a5": "https://github.com/lobehub/lobehub/blob/v2.2.16/docs/self-hosting/environment-variables/auth.mdx"
+      }
+    },
+    "docker": {
+      "name": "Docker CLI",
+      "basis": "v27.5.1",
+      "sources": {
+        "s52c162a9786f": "https://github.com/docker/cli/blob/v27.5.1/docs/reference/commandline/container_run.md",
+        "s8c2adc7212d7": "https://github.com/docker/cli/blob/v27.5.1/docs/reference/commandline/container_run.md#L626-L640",
+        "s2611a6021e2f": "https://github.com/docker/cli/blob/v27.5.1/opts/env.go#L18-L31",
+        "s9a4c6197f246": "https://github.com/docker/cli/blob/v27.5.1/pkg/kvfile/kvfile.go#L54-L69",
+        "sdc1935b6999f": "https://github.com/docker/cli/blob/v27.5.1/opts/parse.go#L19-L39",
+        "sd1025af9c6ff": "https://github.com/docker/cli/blob/v27.5.1/pkg/kvfile/kvfile.go#L121-L126"
+      }
+    },
+    "compose": {
+      "name": "Docker Compose",
+      "basis": "v2.32.4",
+      "sources": {
+        "s14c0c0a70b7e": "https://github.com/docker/compose/blob/v2.32.4/go.mod#L5-L18",
+        "se594167796f7": "https://github.com/docker/compose/blob/v2.32.4/pkg/compose/create.go#L1029-L1084",
+        "sf6263e4f21f0": "https://github.com/docker/compose/blob/v2.32.4/pkg/compose/secrets.go#L101",
+        "s0d8af80827c8": "https://github.com/docker/compose/blob/v2.32.4/pkg/compose/secrets.go#L31-L61"
+      }
+    },
+    "compose-go": {
+      "name": "compose-go",
+      "basis": "v2.4.7",
+      "sources": {
+        "s25bb7bb5626f": "https://github.com/compose-spec/compose-go/blob/v2.4.7/types/project.go#L631-L664"
+      }
+    },
+    "moby": {
+      "name": "Moby",
+      "basis": "v27.5.1",
+      "sources": {
+        "s638ae9c795a2": "https://github.com/moby/moby/blob/v27.5.1/api/types/container/config.go#L55",
+        "sa3cf5ca8ad4d": "https://github.com/moby/moby/blob/v27.5.1/daemon/inspect.go#L107-L110"
+      }
+    },
+    "chainlit": {
+      "name": "Chainlit documentation",
+      "basis": "unknown",
+      "sources": {
+        "sa8ffef5a2afe": "https://docs.chainlit.io/authentication/overview",
+        "sfc1842532120": "https://docs.chainlit.io/authentication/password"
+      }
+    },
+    "python": {
+      "name": "Python documentation",
+      "basis": "unknown",
+      "sources": {
+        "se86233c0ce69": "https://docs.python.org/3/library/os.html",
+        "s7a54556e5dac": "https://docs.python.org/3/library/hmac.html"
+      }
+    },
+    "owasp": {
+      "name": "OWASP password guidance",
+      "basis": "unknown",
+      "sources": {
+        "s49e8d76431d9": "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html"
+      }
+    },
+    "openhands": {
+      "name": "OpenHands documentation",
+      "basis": "unknown",
+      "sources": {
+        "s1756d23e1d0b": "https://docs.openhands.dev/overview/faqs",
+        "s0ceb47353632": "https://docs.openhands.dev/openhands/usage/run-openhands/local-setup"
+      }
+    },
+    "curl": {
+      "name": "curl minimum write-out version",
+      "basis": "7.75.0",
+      "sources": {
+        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
+      }
+    }
+  },
+  "claims": {
+    "anything-single": {"text": "Docker single-user password protection is optional and grants every holder settings/admin/chat access, not per-user isolation.", "components": ["anything"], "sources": ["anything:s6b5aa8c91ad3"], "status": "REASONED"},
+    "anything-roles": {"text": "Multi-user mode is preferred: Admin has full access, Manager all workspaces without provider/store settings, Default only assigned workspaces.", "components": ["anything"], "sources": ["anything:s6b5aa8c91ad3"], "status": "REASONED"},
+    "anything-mode": {"text": "Enabling multi-user mode cannot be reverted to single-user; choose deliberately.", "components": ["anything"], "sources": ["anything:s6b5aa8c91ad3"], "status": "REASONED"},
+    "anything-bind": {"text": "Publish AnythingLLM only on loopback 3001 and put proxy TLS/login in front.", "components": ["anything", "docker"], "sources": ["anything:s6b5aa8c91ad3", "docker:s52c162a9786f"], "status": "REASONED"},
+    "lobe-vault": {"text": "KEY_VAULTS_SECRET encrypts stored provider credentials; generate with openssl rand -base64 32 and preserve it for the data lifetime, not as a login password.", "components": ["lobe"], "sources": ["lobe:s78199d80212a", "lobe:s977fd003b436"], "status": "REASONED"},
+    "lobe-session": {"text": "Better Auth requires AUTH_SECRET, generated the same way, to sign sessions.", "components": ["lobe"], "sources": ["lobe:s84e88654e760", "lobe:sdb87ee6e14a5"], "status": "REASONED"},
+    "lobe-sso": {"text": "AUTH_SSO_PROVIDERS selects providers and matching credentials; AUTH_DISABLE_EMAIL_PASSWORD=1 forces SSO-only login.", "components": ["lobe"], "sources": ["lobe:s84e88654e760", "lobe:sdb87ee6e14a5"], "status": "REASONED"},
+    "lobe-admission": {"text": "AUTH_ALLOWED_EMAILS defaults empty, permitting all emails; set explicit addresses/domains for registration.", "components": ["lobe"], "sources": ["lobe:s84e88654e760", "lobe:sdb87ee6e14a5"], "status": "REASONED"},
+    "lobe-mfa": {"text": "Enforce MFA at the configured SSO provider; LobeChat login has no second factor of its own.", "components": ["lobe"], "sources": ["lobe:s84e88654e760"], "status": "REASONED"},
+    "docker-input": {"text": "Docker --env-file reads a named file, not stdin; -e NAME uses CLI environment, while -e NAME=value exposes argv.", "components": ["docker"], "sources": ["docker:s52c162a9786f", "docker:s8c2adc7212d7", "docker:s2611a6021e2f", "docker:s9a4c6197f246"], "status": "REASONED"},
+    "docker-envfile": {"text": "Bare names in env files import CLI environment; validate exactly the intended secret assignments and reject extra/missing/duplicate lines.", "components": ["docker"], "sources": ["docker:sdc1935b6999f", "docker:sd1025af9c6ff"], "status": "REASONED"},
+    "compose-envfile": {"text": "Compose env_file resolves environment via compose-go v2.4.7, pinned by Compose v2.32.4.", "components": ["compose", "compose-go"], "sources": ["compose:s14c0c0a70b7e", "compose-go:s25bb7bb5626f"], "status": "REASONED"},
+    "compose-secrets": {"text": "Compose file secrets mount read-only under /run/secrets; environment secrets are copied there, default 0444, and need an application reader.", "components": ["compose"], "sources": ["compose:se594167796f7", "compose:sf6263e4f21f0", "compose:s0d8af80827c8"], "status": "REASONED"},
+    "lobe-file-input": {"text": "LobeHub documents environment inputs; the recorded v2.2.16 search found no KEY_VAULTS_SECRET_FILE, AUTH_SECRET_FILE or AUTH_GOOGLE_SECRET_FILE.", "components": ["lobe"], "sources": ["lobe:s977fd003b436", "lobe:sdb87ee6e14a5"], "status": "REASONED"},
+    "lobe-file": {"text": "Create the durable plaintext env file once in protected directories; never replace a live encryption key, inspect default ACLs and discard partial failed writes.", "components": ["lobe", "docker"], "sources": ["lobe:s977fd003b436", "lobe:sdb87ee6e14a5", "docker:s52c162a9786f"], "status": "REASONED"},
+    "lobe-launch": {"text": "Use validated env-file with loopback 3210 publication and non-secret SSO/admission settings on argv.", "components": ["lobe", "docker"], "sources": ["lobe:sdb87ee6e14a5", "docker:s52c162a9786f"], "status": "REASONED"},
+    "container-secrets": {"text": "Environment values remain readable through Docker inspect for running/stopped containers and process environ during lifetime; env-file avoids CLI argv, not operator access.", "components": ["moby", "docker"], "sources": ["moby:s638ae9c795a2", "moby:sa3cf5ca8ad4d", "docker:s52c162a9786f"], "status": "REASONED"},
+    "chainlit-default": {"text": "Chainlit applications are public by default; set CHAINLIT_AUTH_SECRET and at least one password/OAuth/header callback.", "components": ["chainlit"], "sources": ["chainlit:sa8ffef5a2afe"], "status": "REASONED"},
+    "chainlit-callback": {"text": "Password callback returns a user on success and None on refusal; shared credential creates one identity without individual revocation.", "components": ["chainlit"], "sources": ["chainlit:sfc1842532120"], "status": "REASONED"},
+    "chainlit-environment": {"text": "Example reads credentials once at import, fails on missing or empty values, and requires restart to adopt replacements.", "components": ["python", "chainlit"], "sources": ["python:se86233c0ce69", "chainlit:sfc1842532120"], "status": "REASONED"},
+    "chainlit-comparison": {"text": "Both compare_digest calls run before combining results; content-based short-circuiting is avoided, but types/lengths and whole callback timing are not concealed.", "components": ["python"], "sources": ["python:s7a54556e5dac"], "status": "REASONED"},
+    "chainlit-rotation": {"text": "Password replacement stops new logins, not existing signed sessions; rotate CHAINLIT_AUTH_SECRET too to invalidate them.", "components": ["chainlit"], "sources": ["chainlit:sa8ffef5a2afe"], "status": "REASONED"},
+    "chainlit-accounts": {"text": "Chainlit persists users but supplies no password-account management; per-user store/verification are the application's responsibility, with Argon2id for new hashes.", "components": ["chainlit", "owasp"], "sources": ["chainlit:sfc1842532120", "owasp:s49e8d76431d9"], "status": "REASONED"},
+    "chainlit-mfa": {"text": "Chainlit has no built-in MFA; use an enforcing identity provider or authenticating proxy.", "components": ["chainlit"], "sources": ["chainlit:sa8ffef5a2afe"], "status": "REASONED"},
+    "openhands-boundary": {"text": "OpenHands is single-user; shared-key API access is not per-user identity, and execution isolation depends on backend/mount/socket choices.", "components": ["openhands"], "sources": ["openhands:s1756d23e1d0b"], "status": "REASONED"},
+    "openhands-bind": {"text": "Quickstart publishes 3000 on every interface; use 127.0.0.1:3000:3000 and an authenticated tunnel.", "components": ["openhands"], "sources": ["openhands:s0ceb47353632"], "status": "REASONED"},
+    "verify-listeners": {"text": "Inventory loopback UI listeners 3001/3210/3000; external refusal must name the real remote path, with DNS/local failures inconclusive.", "components": ["docker", "openhands", "curl"], "sources": ["docker:s52c162a9786f", "openhands:s0ceb47353632", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
+    "verify-login": {"text": "Verify proxy HTTPS and login requirement; generic API refusal is a deployment-specific check requiring an actual protected route.", "components": ["anything", "lobe", "chainlit", "openhands"], "sources": ["anything:s6b5aa8c91ad3", "lobe:s84e88654e760", "chainlit:sa8ffef5a2afe", "openhands:s1756d23e1d0b"], "status": "REASONED", "verify": [1]},
+    "verify-registration": {"text": "A new Google identity absent from AUTH_ALLOWED_EMAILS should fail registration; this does not revoke an existing user's session.", "components": ["lobe"], "sources": ["lobe:s84e88654e760", "lobe:sdb87ee6e14a5"], "status": "REASONED", "verify": [1]},
+    "verify-isolation": {"text": "User A's retrieval must succeed before user B is checked for denial; independently test documents, history, memory and caches, not login alone.", "components": ["anything"], "sources": ["anything:s6b5aa8c91ad3"], "status": "REASONED"}
+  }
+}
+---
 # Self-hosted chat and agent UIs: AnythingLLM, LobeChat, Chainlit, OpenHands
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| anything-single: Docker single-user password protection is optional and grants every holder settings/admin/chat access, not per-user isolation. | AnythingLLM documentation unknown | REASONED |
+| anything-roles: Multi-user mode is preferred: Admin has full access, Manager all workspaces without provider/store settings, Default only assigned workspaces. | AnythingLLM documentation unknown | REASONED |
+| anything-mode: Enabling multi-user mode cannot be reverted to single-user; choose deliberately. | AnythingLLM documentation unknown | REASONED |
+| anything-bind: Publish AnythingLLM only on loopback 3001 and put proxy TLS/login in front. | AnythingLLM documentation unknown; Docker CLI v27.5.1 | REASONED |
+| lobe-vault: KEY_VAULTS_SECRET encrypts stored provider credentials; generate with openssl rand -base64 32 and preserve it for the data lifetime, not as a login password. | LobeHub v2.2.16 | REASONED |
+| lobe-session: Better Auth requires AUTH_SECRET, generated the same way, to sign sessions. | LobeHub v2.2.16 | REASONED |
+| lobe-sso: AUTH_SSO_PROVIDERS selects providers and matching credentials; AUTH_DISABLE_EMAIL_PASSWORD=1 forces SSO-only login. | LobeHub v2.2.16 | REASONED |
+| lobe-admission: AUTH_ALLOWED_EMAILS defaults empty, permitting all emails; set explicit addresses/domains for registration. | LobeHub v2.2.16 | REASONED |
+| lobe-mfa: Enforce MFA at the configured SSO provider; LobeChat login has no second factor of its own. | LobeHub v2.2.16 | REASONED |
+| docker-input: Docker --env-file reads a named file, not stdin; -e NAME uses CLI environment, while -e NAME=value exposes argv. | Docker CLI v27.5.1 | REASONED |
+| docker-envfile: Bare names in env files import CLI environment; validate exactly the intended secret assignments and reject extra/missing/duplicate lines. | Docker CLI v27.5.1 | REASONED |
+| compose-envfile: Compose env_file resolves environment via compose-go v2.4.7, pinned by Compose v2.32.4. | Docker Compose v2.32.4; compose-go v2.4.7 | REASONED |
+| compose-secrets: Compose file secrets mount read-only under /run/secrets; environment secrets are copied there, default 0444, and need an application reader. | Docker Compose v2.32.4 | REASONED |
+| lobe-file-input: LobeHub documents environment inputs; the recorded v2.2.16 search found no KEY_VAULTS_SECRET_FILE, AUTH_SECRET_FILE or AUTH_GOOGLE_SECRET_FILE. | LobeHub v2.2.16 | REASONED |
+| lobe-file: Create the durable plaintext env file once in protected directories; never replace a live encryption key, inspect default ACLs and discard partial failed writes. | LobeHub v2.2.16; Docker CLI v27.5.1 | REASONED |
+| lobe-launch: Use validated env-file with loopback 3210 publication and non-secret SSO/admission settings on argv. | LobeHub v2.2.16; Docker CLI v27.5.1 | REASONED |
+| container-secrets: Environment values remain readable through Docker inspect for running/stopped containers and process environ during lifetime; env-file avoids CLI argv, not operator access. | Moby v27.5.1; Docker CLI v27.5.1 | REASONED |
+| chainlit-default: Chainlit applications are public by default; set CHAINLIT_AUTH_SECRET and at least one password/OAuth/header callback. | Chainlit documentation unknown | REASONED |
+| chainlit-callback: Password callback returns a user on success and None on refusal; shared credential creates one identity without individual revocation. | Chainlit documentation unknown | REASONED |
+| chainlit-environment: Example reads credentials once at import, fails on missing or empty values, and requires restart to adopt replacements. | Python documentation unknown; Chainlit documentation unknown | REASONED |
+| chainlit-comparison: Both compare_digest calls run before combining results; content-based short-circuiting is avoided, but types/lengths and whole callback timing are not concealed. | Python documentation unknown | REASONED |
+| chainlit-rotation: Password replacement stops new logins, not existing signed sessions; rotate CHAINLIT_AUTH_SECRET too to invalidate them. | Chainlit documentation unknown | REASONED |
+| chainlit-accounts: Chainlit persists users but supplies no password-account management; per-user store/verification are the application's responsibility, with Argon2id for new hashes. | Chainlit documentation unknown; OWASP password guidance unknown | REASONED |
+| chainlit-mfa: Chainlit has no built-in MFA; use an enforcing identity provider or authenticating proxy. | Chainlit documentation unknown | REASONED |
+| openhands-boundary: OpenHands is single-user; shared-key API access is not per-user identity, and execution isolation depends on backend/mount/socket choices. | OpenHands documentation unknown | REASONED |
+| openhands-bind: Quickstart publishes 3000 on every interface; use 127.0.0.1:3000:3000 and an authenticated tunnel. | OpenHands documentation unknown | REASONED |
+| verify-listeners: Inventory loopback UI listeners 3001/3210/3000; external refusal must name the real remote path, with DNS/local failures inconclusive. | Docker CLI v27.5.1; OpenHands documentation unknown; curl minimum write-out version 7.75.0 | REASONED |
+| verify-login: Verify proxy HTTPS and login requirement; generic API refusal is a deployment-specific check requiring an actual protected route. | AnythingLLM documentation unknown; LobeHub v2.2.16; Chainlit documentation unknown; OpenHands documentation unknown | REASONED |
+| verify-registration: A new Google identity absent from AUTH_ALLOWED_EMAILS should fail registration; this does not revoke an existing user's session. | LobeHub v2.2.16 | REASONED |
+| verify-isolation: User A's retrieval must succeed before user B is checked for denial; independently test documents, history, memory and caches, not login alone. | AnythingLLM documentation unknown | REASONED |
+<!-- version-basis:end -->
 
 These tools hold provider API keys and full conversation history, and several are wide open the moment they start. Bind every one to loopback, front it with TLS and a login ([caddy.md](caddy.md)/[nginx.md](nginx.md), [free-certificates.md](free-certificates.md)), and turn on the tool's own authentication as a second layer, never as a substitute for the network boundary. See also [open-webui.md](open-webui.md) for the Open WebUI case, [secrets.md](secrets.md) for the provider keys these apps store, and [fronting-auth.md](fronting-auth.md)/[mfa.md](mfa.md) for the identity layer in front.
 

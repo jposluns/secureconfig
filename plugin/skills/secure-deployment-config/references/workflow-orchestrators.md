@@ -1,4 +1,332 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "965e0ea7e5b505a8833337698efb7501e00cd1c35e2a00132d7c96f978baf3f9",
+  "components": {
+    "prefect": {
+      "name": "Prefect Basic Auth minimum",
+      "basis": "3.1.8",
+      "sources": {
+        "s0ef73a227667": "https://docs.prefect.io/v3/advanced/security-settings",
+        "sbe64d51110a2": "https://docs.prefect.io/v3/how-to-guides/self-hosted/server-cli"
+      }
+    },
+    "prefect-source": {
+      "name": "Prefect server source",
+      "basis": "9e560c9b6df4e19a5109a66e66d461f9facb538d",
+      "sources": {
+        "sa4574c7ed80f": "https://github.com/PrefectHQ/prefect/blob/9e560c9b6df4e19a5109a66e66d461f9facb538d/src/prefect/server/api/server.py"
+      }
+    },
+    "dagster": {
+      "name": "Dagster OSS",
+      "basis": "1.13.24",
+      "sources": {
+        "sab1b42d92f27": "https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L41-L42",
+        "s6bc57f86dfe1": "https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L81-L96",
+        "s2455602a504b": "https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L306-L311",
+        "s3c7d8f17f245": "https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster/dagster/_cli/dev.py#L251-L252",
+        "s469c458c4a71": "https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L339-L351",
+        "s695dfd19dcca": "https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_deployment-webserver.tpl#L86-L90",
+        "sf6f027e96a0d": "https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_helpers.tpl#L55",
+        "seda3a1b24425": "https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/values.yaml#L54-L58",
+        "s4c04d5da5257": "https://docs.dagster.io/guides/operate/webserver"
+      }
+    },
+    "airflow": {
+      "name": "Apache Airflow",
+      "basis": "3.3.2",
+      "sources": {
+        "s308d83e60789": "https://airflow.apache.org/docs/apache-airflow/stable/security/security_model.html",
+        "s053ce1d0e6e9": "https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/auth-manager/simple/index.html",
+        "sf7cc755e7847": "https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/auth-manager/index.html",
+        "s39bfd91c507b": "https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html",
+        "s2d1891641c91": "https://airflow.apache.org/docs/apache-airflow/stable/security/"
+      }
+    },
+    "airflow-two": {
+      "name": "Apache Airflow historical configuration",
+      "basis": "unknown",
+      "sources": {
+        "s2d1891641c91": "https://airflow.apache.org/docs/apache-airflow/stable/security/"
+      }
+    },
+    "airflow-old": {
+      "name": "Apache Airflow historical default",
+      "basis": "unknown",
+      "sources": {
+        "s2d1891641c91": "https://airflow.apache.org/docs/apache-airflow/stable/security/"
+      }
+    },
+    "fab": {
+      "name": "Airflow FAB provider",
+      "basis": "3.9.0",
+      "sources": {
+        "s989f09d05161": "https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/api-authentication.html"
+      }
+    },
+    "temporal": {
+      "name": "Temporal Server",
+      "basis": "1.28.x",
+      "sources": {
+        "s06d4f0dbd0c8": "https://docs.temporal.io/self-hosted-guide/security",
+        "s12f2c64ad396": "https://docs.temporal.io/cli/command-reference/server"
+      }
+    },
+    "temporal-ui": {
+      "name": "Temporal UI Server",
+      "basis": "2.34.x",
+      "sources": {
+        "sa9d5614385ca": "https://docs.temporal.io/references/web-ui-configuration",
+        "s12f2c64ad396": "https://docs.temporal.io/cli/command-reference/server"
+      }
+    },
+    "flower": {
+      "name": "Flower",
+      "basis": "v2.2.0",
+      "sources": {
+        "s25760fae7152": "https://github.com/mher/flower/blob/v2.2.0/flower/options.py#L7-L15",
+        "s1f72a8415337": "https://github.com/mher/flower/blob/v2.2.0/flower/options.py#L56-L57",
+        "s4dd518442b7f": "https://github.com/mher/flower/blob/v2.2.0/flower/command.py#L39-L91",
+        "s4e49ebc71dc1": "https://github.com/mher/flower/blob/v2.2.0/flower/app.py#L71-L76",
+        "sb1ba69f79c9b": "https://flower.readthedocs.io/en/latest/config.html",
+        "s0fe6c77e9c9d": "https://github.com/mher/flower/blob/v2.2.0/flower/app.py#L85-L89"
+      }
+    },
+    "tornado": {
+      "name": "Tornado",
+      "basis": "v6.5.10",
+      "sources": {
+        "sc503b4425831": "https://github.com/tornadoweb/tornado/blob/v6.5.10/tornado/netutil.py#L72-L73",
+        "s737c51cccd00": "https://github.com/tornadoweb/tornado/blob/v6.5.10/tornado/netutil.py#L215-L228"
+      }
+    },
+    "linux": {
+      "name": "Linux permissions and tools",
+      "basis": "unknown",
+      "sources": {
+        "s8ffd93b0efa4": "https://man7.org/linux/man-pages/man7/unix.7.html",
+        "sfb53d2819cd0": "https://man7.org/linux/man-pages/man7/path_resolution.7.html",
+        "s31f41c54750c": "https://man7.org/linux/man-pages/man5/acl.5.html",
+        "s3cf3d5be0f64": "https://man7.org/linux/man-pages/man7/user_namespaces.7.html",
+        "sa5ccbfea6e16": "https://www.kernel.org/doc/html/latest/filesystems/idmappings.html",
+        "s08902025e5f9": "https://man7.org/linux/man-pages/man1/getfacl.1.html",
+        "sa0d3793fabb7": "https://man7.org/linux/man-pages/man1/stat.1.html"
+      }
+    },
+    "systemd": {
+      "name": "systemd",
+      "basis": "v257",
+      "sources": {
+        "s48ece26c16d3": "https://github.com/systemd/systemd/blob/v257/man/systemd.exec.xml#L1630-L1640"
+      }
+    },
+    "fhs": {
+      "name": "Filesystem Hierarchy Standard",
+      "basis": "3.0",
+      "sources": {
+        "seafd8219f367": "https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch03s15.html"
+      }
+    },
+    "docker": {
+      "name": "Moby Docker",
+      "basis": "docker-v29.8.1",
+      "sources": {
+        "s1f268e247a1f": "https://github.com/moby/moby/blob/docker-v29.8.1/daemon/pkg/oci/caps/defaults.go#L4-L7"
+      }
+    },
+    "argo-three": {
+      "name": "Argo Workflows",
+      "basis": "v3.7.18",
+      "sources": {
+        "s262098553d2f": "https://github.com/argoproj/argo-workflows/blob/v3.7.18/cmd/argo/commands/server.go#L191-L229",
+        "sbddb9f07a301": "https://github.com/argoproj/argo-workflows/blob/v3.7.18/server/apiserver/argoserver.go#L263-L282",
+        "s2ca4f14c3164": "https://github.com/argoproj/argo-workflows/blob/v3.7.18/server/auth/gatekeeper.go#L166-L218",
+        "sfbb904619bfa": "https://github.com/argoproj/argo-workflows/blob/v3.7.18/manifests/quick-start/base/overlays/argo-server-deployment.yaml#L1-L15",
+        "s0ac72aa1a86c": "https://github.com/argoproj/argo-workflows/blob/v3.7.18/manifests/cluster-install-no-crds/argo-server-rbac/argo-server-clusterole.yaml#L1-L65",
+        "s1689f25010be": "https://github.com/argoproj/argo-workflows/blob/v3.7.18/manifests/quick-start/base/cluster-workflow-template-rbac.yaml#L1-L58",
+        "sf0c3a52d3302": "https://github.com/argoproj/argo-workflows/blob/v3.7.18/Makefile#L493-L515",
+        "sfdcdf614ee37": "https://github.com/argoproj/argo-workflows/blob/v3.7.18/manifests/base/argo-server/argo-server-deployment.yaml#L14-L34",
+        "sc7ca3a37b16c": "https://github.com/argoproj/argo-workflows/blob/v3.7.18/manifests/namespace-install/overlays/argo-server-deployment.yaml#L1-L4",
+        "s01f102470d97": "https://github.com/argoproj/argo-workflows/blob/v3.7.18/manifests/base/argo-server/argo-server-service.yaml#L1-L11",
+        "s49cdaf0691c0": "https://github.com/argoproj/argo-workflows/blob/v3.7.18/server/auth/mode.go#L33-L44",
+        "sdb4a0c18b7c6": "https://github.com/argoproj/argo-workflows/blob/v3.7.18/cmd/argo/commands/server.go#L113-L137",
+        "s36759aec55fa": "https://github.com/argoproj/argo-workflows/blob/v3.7.18/server/apiserver/argoserver.go#L430-L449"
+      }
+    },
+    "argo-four": {
+      "name": "Argo Workflows",
+      "basis": "v4.1.4",
+      "sources": {
+        "s774215022573": "https://github.com/argoproj/argo-workflows/blob/v4.1.4/cmd/argo/commands/server.go#L195-L239",
+        "s0f074a9ac21e": "https://github.com/argoproj/argo-workflows/blob/v4.1.4/server/apiserver/argoserver.go#L299-L320",
+        "sb284f93cde9c": "https://github.com/argoproj/argo-workflows/blob/v4.1.4/server/auth/gatekeeper.go#L189-L244",
+        "s0871a1dd9b13": "https://github.com/argoproj/argo-workflows/blob/v4.1.4/docs/argo-server-auth-mode.md#L3-L9",
+        "sa7b9db8384be": "https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/quick-start/base/overlays/argo-server-deployment.yaml#L1-L15",
+        "s79648b46d3f5": "https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/quick-start-telemetry.yaml#L192919-L192970",
+        "sd2706d04971d": "https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/cluster-install-no-crds/argo-server-rbac/argo-server-clusterole.yaml#L1-L67",
+        "sd920da4ad4b7": "https://github.com/argoproj/argo-workflows/blob/v4.1.4/docs/quick-start.md#L3-L34",
+        "s144b824252c1": "https://github.com/argoproj/argo-workflows/blob/v4.1.4/Makefile#L608-L634",
+        "s51645bfbc47c": "https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/base/argo-server/argo-server-deployment.yaml#L14-L34",
+        "s5188f6f2efbb": "https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/namespace-install/overlays/argo-server-deployment.yaml#L1-L4",
+        "s639e9fe0024e": "https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/base/argo-server/argo-server-service.yaml#L1-L11",
+        "s4613c15c72af": "https://github.com/argoproj/argo-workflows/blob/v4.1.4/server/auth/mode.go#L33-L44",
+        "s0b16f1ac50df": "https://github.com/argoproj/argo-workflows/blob/v4.1.4/cmd/argo/commands/server.go#L119-L143",
+        "sa120f74372eb": "https://github.com/argoproj/argo-workflows/blob/v4.1.4/server/apiserver/argoserver.go#L476-L494"
+      }
+    },
+    "argo-docs": {
+      "name": "Argo Workflows documentation",
+      "basis": "release-3.7",
+      "sources": {
+        "s6c8e78288632": "https://argo-workflows.readthedocs.io/en/release-3.7/security/",
+        "s9898d4653a47": "https://argo-workflows.readthedocs.io/en/release-3.7/argo-server-sso/",
+        "s96145eacf345": "https://argo-workflows.readthedocs.io/en/release-3.7/rest-examples/"
+      }
+    }
+  },
+  "claims": {
+    "fronting": {"text": "Keep UI/API origins private behind HTTPS and authentication; use IdP MFA for browsers and separate machine authentication, and constrain worker egress.", "components": ["airflow", "temporal", "argo-docs"], "sources": ["airflow:s308d83e60789", "temporal:s06d4f0dbd0c8", "argo-docs:s6c8e78288632"], "status": "REASONED"},
+    "prefect-auth": {"text": "Self-hosted Prefect defaults unauthenticated; Basic Auth from 3.1.8 uses matching server/client auth strings and prompts the UI.", "components": ["prefect"], "sources": ["prefect:s0ef73a227667"], "status": "REASONED"},
+    "prefect-key": {"text": "Cloud-only PREFECT_API_KEY takes precedence over PREFECT_API_AUTH_STRING and produces 401 against a self-hosted server.", "components": ["prefect"], "sources": ["prefect:s0ef73a227667"], "status": "REASONED"},
+    "prefect-secrets": {"text": "Protect the auth string and credential-bearing Blocks; block-document reads can request secrets, so masking is not authorization and workers need scoped credentials.", "components": ["prefect"], "sources": ["prefect:s0ef73a227667"], "status": "REASONED"},
+    "prefect-port": {"text": "The self-hosted Prefect server uses port 4200.", "components": ["prefect"], "sources": ["prefect:sbe64d51110a2"], "status": "REASONED"},
+    "dagster-bind": {"text": "Direct dagster-webserver/dev defaults to 127.0.0.1:3000, with flag/environment overrides and free-port fallback only when no port is set; explicitly bind the private origin.", "components": ["dagster"], "sources": ["dagster:sab1b42d92f27", "dagster:s6bc57f86dfe1", "dagster:s2455602a504b", "dagster:s3c7d8f17f245", "dagster:s469c458c4a71"], "status": "REASONED"},
+    "dagster-helm": {"text": "The chart passes -h 0.0.0.0 on the Service port, default 80, with ClusterIP Service by default.", "components": ["dagster"], "sources": ["dagster:s695dfd19dcca", "dagster:sf6f027e96a0d", "dagster:seda3a1b24425"], "status": "REASONED"},
+    "dagster-auth": {"text": "OSS webserver has no built-in login or access control; protect all routes with an authenticating proxy.", "components": ["dagster"], "sources": ["dagster:s4c04d5da5257"], "status": "REASONED"},
+    "airflow-boundary": {"text": "Airflow assumes authenticated known users and is not designed for untrusted public exposure; deployment managers must keep it private.", "components": ["airflow"], "sources": ["airflow:s308d83e60789"], "status": "REASONED"},
+    "airflow-two-api": {"text": "Airflow 2.11.0 uses [api] auth_backends with session default; before 2.3 the name was auth_backend and 2.2.5 defaulted to deny_all.", "components": ["airflow-two", "airflow-old"], "sources": ["airflow-two:s2d1891641c91", "airflow-old:s2d1891641c91"], "status": "REASONED"},
+    "airflow-simple": {"text": "Airflow 3 defaults to development-only Simple Auth Manager, with configured users/roles and generated passwords printed to logs unless supplied.", "components": ["airflow"], "sources": ["airflow:s053ce1d0e6e9"], "status": "REASONED"},
+    "airflow-fab": {"text": "For production install FAB and select FabAuthManager through [core] auth_manager; verify the effective manager and use an identity backend with MFA.", "components": ["airflow", "fab"], "sources": ["airflow:sf7cc755e7847", "fab:s989f09d05161"], "status": "REASONED"},
+    "airflow-api": {"text": "Airflow 3 public API uses JWT independently of [fab] auth_backends, which selects FAB API backends rather than the auth manager.", "components": ["airflow", "fab"], "sources": ["airflow:sf7cc755e7847", "fab:s989f09d05161"], "status": "REASONED"},
+    "airflow-all-admins": {"text": "Keep simple_auth_manager_all_admins unset or False; enabling it disables login and grants every visitor admin.", "components": ["airflow"], "sources": ["airflow:s053ce1d0e6e9"], "status": "REASONED"},
+    "fab-public-role": {"text": "Leave FAB AUTH_ROLE_PUBLIC unset; a configured role grants that access to anonymous visitors.", "components": ["fab"], "sources": ["fab:s989f09d05161"], "status": "REASONED"},
+    "airflow-compose-account": {"text": "Development Compose selects FAB but defaults to airflow/airflow; set credentials before account creation and update/delete an existing account separately.", "components": ["airflow", "fab"], "sources": ["airflow:s39bfd91c507b", "fab:s989f09d05161"], "status": "REASONED"},
+    "airflow-jwt": {"text": "Replace Compose fallback AIRFLOW__API_AUTH__JWT_SECRET=airflow_jwt_secret and share the strong value with all signers/validators; the public fallback permits token forgery.", "components": ["airflow"], "sources": ["airflow:s39bfd91c507b"], "status": "REASONED"},
+    "airflow-secret-key": {"text": "Provision the independent secret_key too: [webserver] on 2.11.0 and [api] on 3.3.2.", "components": ["airflow", "airflow-two"], "sources": ["airflow:s2d1891641c91", "airflow-two:s2d1891641c91"], "status": "REASONED"},
+    "airflow-config": {"text": "Keep configuration exposure off with WEBSERVER__EXPOSE_CONFIG on 2.11.0 or API__EXPOSE_CONFIG on 3.3.2.", "components": ["airflow", "airflow-two"], "sources": ["airflow:s2d1891641c91", "airflow-two:s2d1891641c91"], "status": "REASONED"},
+    "airflow-fernet": {"text": "Protect Connections, Variables, database and Fernet key; an empty key disables new-value encryption, while removing an existing key prevents decryption. Authorized workloads still use secrets.", "components": ["airflow"], "sources": ["airflow:s2d1891641c91"], "status": "REASONED"},
+    "airflow-port": {"text": "Compose publishes 8080 on all interfaces; use 127.0.0.1:8080:8080 behind the fronting layer.", "components": ["airflow"], "sources": ["airflow:s39bfd91c507b"], "status": "REASONED"},
+    "temporal-authorizer": {"text": "Empty authorizer selects noopAuthorizer allowing every API request, including administration; configure default authorization with trusted JWT keys and audience.", "components": ["temporal"], "sources": ["temporal:s06d4f0dbd0c8"], "status": "REASONED"},
+    "temporal-claims": {"text": "Empty claimMapper selects a no-op granting system-admin claims; configure both Authorizer and ClaimMapper, with frontend TLS.", "components": ["temporal"], "sources": ["temporal:s06d4f0dbd0c8"], "status": "REASONED"},
+    "temporal-health": {"text": "The built-in default authorizer permits health checks without claims; health is not an authorization discriminator.", "components": ["temporal"], "sources": ["temporal:s06d4f0dbd0c8"], "status": "REASONED"},
+    "temporal-ui": {"text": "UI OIDC auth.enabled is a sibling of providers; TEMPORAL_AUTH_ENABLED plus provider settings gates the UI only, with MFA at the IdP.", "components": ["temporal-ui"], "sources": ["temporal-ui:sa9d5614385ca"], "status": "REASONED"},
+    "temporal-tls": {"text": "Internode and frontend mTLS are separate from UI login and API authorization.", "components": ["temporal"], "sources": ["temporal:s06d4f0dbd0c8"], "status": "REASONED"},
+    "temporal-payloads": {"text": "Keep plaintext credentials out of persisted inputs/results/history; payload encryption and an independently authenticated Codec Server form separate controls.", "components": ["temporal"], "sources": ["temporal:s06d4f0dbd0c8"], "status": "REASONED"},
+    "temporal-ports": {"text": "Frontend gRPC uses 7233 and the Web UI 8233 in the cited CLI server reference.", "components": ["temporal", "temporal-ui"], "sources": ["temporal:s12f2c64ad396", "temporal-ui:s12f2c64ad396"], "status": "REASONED"},
+    "flower-bind": {"text": "Flower defaults to wildcard address and 5555 unless Unix socket, FLOWER_ variables or implicit working-directory flowerconfig.py override; bind loopback explicitly.", "components": ["flower", "tornado"], "sources": ["flower:s25760fae7152", "flower:s1f72a8415337", "flower:s4dd518442b7f", "flower:s4e49ebc71dc1", "tornado:sc503b4425831"], "status": "REASONED"},
+    "flower-api": {"text": "Authentication defaults off; unauthenticated HTTP API is disabled unless FLOWER_UNAUTHENTICATED_API=true, which must not be mistaken for dashboard protection.", "components": ["flower"], "sources": ["flower:sb1ba69f79c9b"], "status": "REASONED"},
+    "flower-basic": {"text": "Basic auth uses a comma-separated credential list; supply it through FLOWER_BASIC_AUTH or protected config rather than argv and retain private TLS fronting.", "components": ["flower"], "sources": ["flower:sb1ba69f79c9b"], "status": "REASONED"},
+    "flower-oauth": {"text": "OAuth needs handler, client key/secret, redirect and allowed-email regex; protect the secret outside argv and prefer an MFA-enforcing provider.", "components": ["flower"], "sources": ["flower:sb1ba69f79c9b"], "status": "REASONED"},
+    "flower-socket": {"text": "Flower passes fixed mode 0777; Tornado removes/recreates filesystem sockets on startup, so chmod does not persist. Abstract sockets have no filesystem permission boundary.", "components": ["flower", "tornado", "linux"], "sources": ["flower:s0fe6c77e9c9d", "tornado:s737c51cccd00", "linux:s8ffd93b0efa4"], "status": "REASONED"},
+    "flower-directory": {"text": "Restrict socket directory search with Flower ownership, proxy-only group, mode 0750 and no outsider ACL; directory access is essential because socket mode permits writes.", "components": ["linux"], "sources": ["linux:sfb53d2819cd0", "linux:s8ffd93b0efa4", "linux:s31f41c54750c"], "status": "REASONED"},
+    "flower-capabilities": {"text": "Applicable DAC capabilities bypass directory search checks; Docker defaults include CAP_DAC_OVERRIDE, while user namespaces and idmapped mounts change identity interpretation.", "components": ["linux", "docker"], "sources": ["linux:s3cf3d5be0f64", "linux:sa5ccbfea6e16", "docker:s1f268e247a1f"], "status": "REASONED"},
+    "flower-runtime-dir": {"text": "Reapply directory owner/group/mode on creation: /run is cleared at boot and RuntimeDirectory defaults 0755 unless RuntimeDirectoryMode overrides it.", "components": ["systemd", "fhs"], "sources": ["systemd:s48ece26c16d3", "fhs:seafd8219f367"], "status": "REASONED"},
+    "flower-numeric-ids": {"text": "A proxy sharing the socket directory must hold the required numeric group after namespace/mount mappings; names alone do not establish access.", "components": ["linux"], "sources": ["linux:s3cf3d5be0f64", "linux:sa5ccbfea6e16"], "status": "REASONED"},
+    "argo-bind": {"text": "Argo Server binds wildcard :2746 with host-dependent IPv4/IPv6 support and no bind-address flag.", "components": ["argo-three", "argo-four"], "sources": ["argo-three:s262098553d2f", "argo-four:s774215022573", "argo-three:sbddb9f07a301", "argo-four:s0f074a9ac21e"], "status": "REASONED"},
+    "argo-defaults": {"text": "Both tags default secure=true, auth-mode=client and hsts=true; flags and ARGO_ environment equivalents can override.", "components": ["argo-three", "argo-four"], "sources": ["argo-three:s262098553d2f", "argo-four:s774215022573"], "status": "REASONED"},
+    "argo-client": {"text": "Client mode uses caller Kubernetes credentials/RBAC; v4.1.4 validates via SelfSubjectReview and requires Kubernetes 1.28+.", "components": ["argo-three", "argo-four"], "sources": ["argo-three:s2ca4f14c3164", "argo-four:sb284f93cde9c", "argo-four:s0871a1dd9b13"], "status": "REASONED"},
+    "argo-quickstart": {"text": "Both tags' minimal/mysql/postgres quick-starts enable server plus client mode while retaining TLS; v4.1.4 telemetry does too. Anonymous callers inherit server permissions.", "components": ["argo-three", "argo-four"], "sources": ["argo-three:sfbb904619bfa", "argo-four:sa7b9db8384be", "argo-four:s79648b46d3f5"], "status": "REASONED"},
+    "argo-quickstart-rbac": {"text": "Quick-start binds cluster-wide workflow/template and Secret get/create permissions, plus cluster-workflow-template rights; it is demo-only.", "components": ["argo-three", "argo-four"], "sources": ["argo-three:s0ac72aa1a86c", "argo-four:sd2706d04971d", "argo-three:s1689f25010be", "argo-four:sd920da4ad4b7"], "status": "REASONED"},
+    "argo-installs": {"text": "Traced install inputs keep client auth/TLS with cluster-wide server RBAC; namespace-install adds --namespaced and namespace RBAC. Generated install YAML was absent.", "components": ["argo-three", "argo-four"], "sources": ["argo-three:sf0c3a52d3302", "argo-four:s144b824252c1", "argo-three:sfdcdf614ee37", "argo-four:s51645bfbc47c", "argo-three:sc7ca3a37b16c", "argo-four:s5188f6f2efbb"], "status": "REASONED"},
+    "argo-service": {"text": "Base Service omits type, defaulting to ClusterIP, and maps 2746 to 2746; this does not authenticate reachable callers.", "components": ["argo-three", "argo-four"], "sources": ["argo-three:s01f102470d97", "argo-four:s639e9fe0024e"], "status": "REASONED"},
+    "argo-fallback": {"text": "Remove server auth mode: adding client/SSO does not prevent anonymous fallback to server credentials; local mode uses the server kubeconfig.", "components": ["argo-three", "argo-four"], "sources": ["argo-three:s49cdaf0691c0", "argo-four:s4613c15c72af", "argo-three:s2ca4f14c3164", "argo-four:sb284f93cde9c"], "status": "REASONED"},
+    "argo-sso": {"text": "Enable sso.rbac.enabled and map groups to narrow ServiceAccounts through rbac-rule/precedence; without SSO RBAC, authenticated users share server permissions.", "components": ["argo-docs", "argo-three", "argo-four"], "sources": ["argo-docs:s9898d4653a47", "argo-three:s2ca4f14c3164", "argo-four:sb284f93cde9c"], "status": "REASONED"},
+    "argo-secrets": {"text": "Store SSO OAuth credentials in referenced Kubernetes Secrets and supply API tokens through protected input, not argv.", "components": ["argo-docs"], "sources": ["argo-docs:s9898d4653a47", "argo-docs:s96145eacf345"], "status": "REASONED"},
+    "argo-tls": {"text": "Keep TLS enabled with a trusted certificate Secret; no name generates a self-signed certificate, failed named-Secret loading fails startup, secure=false is plaintext and defeats HSTS.", "components": ["argo-three", "argo-four"], "sources": ["argo-three:sdb4a0c18b7c6", "argo-four:s0b16f1ac50df", "argo-three:s36759aec55fa", "argo-four:sa120f74372eb"], "status": "REASONED"},
+    "argo-metrics": {"text": "/metrics shares the server listener and auth gate unless ARGO_SERVER_METRICS_AUTH=false; server mode also admits anonymous metrics.", "components": ["argo-three", "argo-four"], "sources": ["argo-three:s36759aec55fa", "argo-four:sa120f74372eb"], "status": "REASONED"},
+    "argo-network": {"text": "Keep 2746 private behind authenticated HTTPS; restrict direct Pod/Service access and scope server, SSO and execution-account permissions. Workflow submission permits arbitrary containers unless constrained.", "components": ["argo-docs"], "sources": ["argo-docs:s6c8e78288632"], "status": "REASONED"},
+    "verify-inventory": {"text": "ss inventories only the current namespace, not publication, routing or authentication; inspect publications and external reachability separately.", "components": ["prefect", "flower", "argo-three"], "sources": ["prefect:sbe64d51110a2", "flower:s25760fae7152", "argo-three:sbddb9f07a301"], "status": "REASONED", "verify": [1]},
+    "verify-prefect": {"text": "Anonymous POST /api/flows/filter returning a JSON list is exposed; fixed is 401 with an authorized list on the same origin. Health/ready GET exemptions are version-dependent.", "components": ["prefect", "prefect-source"], "sources": ["prefect:s0ef73a227667", "prefect-source:sa4574c7ed80f"], "status": "REASONED", "verify": [1]},
+    "verify-dagster": {"text": "A RepositoryConnection from /graphql is a read, including empty nodes; GraphQL/transport errors are inconclusive. Test proxy authentication and origin isolation separately.", "components": ["dagster"], "sources": ["dagster:s4c04d5da5257"], "status": "REASONED", "verify": [1]},
+    "verify-airflow": {"text": "FAB 3.9.0 returning 201 with access_token for airflow/airflow is exposed; pair a valid account and anonymous/authenticated API reads at proxy and origin. Airflow 2 uses its own API/auth.", "components": ["fab", "airflow", "airflow-two"], "sources": ["fab:s989f09d05161", "airflow:s39bfd91c507b", "airflow-two:s2d1891641c91"], "status": "REASONED", "verify": [1]},
+    "verify-temporal": {"text": "Credential-free workflow listing on 7233 is exposed; require rejection and a matched authorized call, not health, TLS errors or missing namespaces as proof of auth.", "components": ["temporal"], "sources": ["temporal:s06d4f0dbd0c8", "temporal:s12f2c64ad396"], "status": "REASONED", "verify": [1]},
+    "verify-flower": {"text": "Anonymous UI/API should yield Basic 401 or OAuth login redirect, with a valid-session control; API-disabled is not proof the dashboard is protected.", "components": ["flower"], "sources": ["flower:sb1ba69f79c9b"], "status": "REASONED", "verify": [1]},
+    "verify-socket": {"text": "Directory/socket permissions, outsider denial, reboot persistence and container numeric IDs remain reasoned; no socket or Flower process ran.", "components": ["flower", "linux"], "sources": ["flower:s0fe6c77e9c9d", "linux:s31f41c54750c", "linux:s08902025e5f9", "linux:sa0d3793fabb7"], "status": "REASONED", "verify": [1]},
+    "flower-stat-run": {"text": "Tmpfs directory-only stat distinguished 0755 and 0750; the 0750 directory initially had only base ACL entries.", "components": ["linux"], "sources": ["linux:sa0d3793fabb7", "linux:s08902025e5f9"], "status": "DEMONSTRATED", "evidence": "`stat -c '%a %U:%G %u:%g %n'` printed `755` for a directory created with mode `0755` and `750` for one created with `0750`; `getfacl -p` on the `0750` directory listed only `user::rwx`, `group::r-x` and `other::---`."},
+    "flower-acl-run": {"text": "A named nobody search ACL remained invisible in stat mode 750; ls and getfacl exposed the entry.", "components": ["linux"], "sources": ["linux:s31f41c54750c", "linux:s08902025e5f9"], "status": "DEMONSTRATED", "evidence": "After `setfacl -m u:nobody:--x` on the `0750` directory, `stat` still printed `750`. Only the trailing `+` in `ls -ld` and getfacl's `user:nobody:--x` line showed the named entry."},
+    "flower-mask-run": {"text": "Changing the ACL mask hid named search permission; chmod 0750 restored its reported effectiveness. Access as nobody was not tested.", "components": ["linux"], "sources": ["linux:s31f41c54750c", "linux:s08902025e5f9"], "status": "DEMONSTRATED", "evidence": "After `setfacl -m m::r--`, getfacl printed `user:nobody:--x` with `#effective:---`. While masked, `stat` printed `740`."},
+    "verify-argo": {"text": "Anonymous workflow JSON is exposed when server RBAC permits; missing tokens should yield 401 without server mode. A 403 alone is inconclusive; pair authorized 200 and inspect auth modes.", "components": ["argo-three", "argo-four", "argo-docs"], "sources": ["argo-three:s49cdaf0691c0", "argo-four:s4613c15c72af", "argo-docs:s96145eacf345"], "status": "REASONED", "verify": [1]},
+    "verify-origin": {"text": "Any HTTP response from the origin at an untrusted vantage proves publication; use the same responding allowed origin as control and treat connection errors/timeouts as inconclusive.", "components": ["airflow", "argo-docs"], "sources": ["airflow:s308d83e60789", "argo-docs:s6c8e78288632"], "status": "REASONED", "verify": [1]}
+  }
+}
+---
 # Workflow and agent orchestrators: Prefect, Dagster, Airflow, Temporal, Flower, Argo
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| fronting: Keep UI/API origins private behind HTTPS and authentication; use IdP MFA for browsers and separate machine authentication, and constrain worker egress. | Apache Airflow 3.3.2; Temporal Server 1.28.x; Argo Workflows documentation release-3.7 | REASONED |
+| prefect-auth: Self-hosted Prefect defaults unauthenticated; Basic Auth from 3.1.8 uses matching server/client auth strings and prompts the UI. | Prefect Basic Auth minimum 3.1.8 | REASONED |
+| prefect-key: Cloud-only PREFECT_API_KEY takes precedence over PREFECT_API_AUTH_STRING and produces 401 against a self-hosted server. | Prefect Basic Auth minimum 3.1.8 | REASONED |
+| prefect-secrets: Protect the auth string and credential-bearing Blocks; block-document reads can request secrets, so masking is not authorization and workers need scoped credentials. | Prefect Basic Auth minimum 3.1.8 | REASONED |
+| prefect-port: The self-hosted Prefect server uses port 4200. | Prefect Basic Auth minimum 3.1.8 | REASONED |
+| dagster-bind: Direct dagster-webserver/dev defaults to 127.0.0.1:3000, with flag/environment overrides and free-port fallback only when no port is set; explicitly bind the private origin. | Dagster OSS 1.13.24 | REASONED |
+| dagster-helm: The chart passes -h 0.0.0.0 on the Service port, default 80, with ClusterIP Service by default. | Dagster OSS 1.13.24 | REASONED |
+| dagster-auth: OSS webserver has no built-in login or access control; protect all routes with an authenticating proxy. | Dagster OSS 1.13.24 | REASONED |
+| airflow-boundary: Airflow assumes authenticated known users and is not designed for untrusted public exposure; deployment managers must keep it private. | Apache Airflow 3.3.2 | REASONED |
+| airflow-two-api: Airflow 2.11.0 uses [api] auth_backends with session default; before 2.3 the name was auth_backend and 2.2.5 defaulted to deny_all. | Apache Airflow historical configuration unknown; Apache Airflow historical default unknown | REASONED |
+| airflow-simple: Airflow 3 defaults to development-only Simple Auth Manager, with configured users/roles and generated passwords printed to logs unless supplied. | Apache Airflow 3.3.2 | REASONED |
+| airflow-fab: For production install FAB and select FabAuthManager through [core] auth_manager; verify the effective manager and use an identity backend with MFA. | Apache Airflow 3.3.2; Airflow FAB provider 3.9.0 | REASONED |
+| airflow-api: Airflow 3 public API uses JWT independently of [fab] auth_backends, which selects FAB API backends rather than the auth manager. | Apache Airflow 3.3.2; Airflow FAB provider 3.9.0 | REASONED |
+| airflow-all-admins: Keep simple_auth_manager_all_admins unset or False; enabling it disables login and grants every visitor admin. | Apache Airflow 3.3.2 | REASONED |
+| fab-public-role: Leave FAB AUTH_ROLE_PUBLIC unset; a configured role grants that access to anonymous visitors. | Airflow FAB provider 3.9.0 | REASONED |
+| airflow-compose-account: Development Compose selects FAB but defaults to airflow/airflow; set credentials before account creation and update/delete an existing account separately. | Apache Airflow 3.3.2; Airflow FAB provider 3.9.0 | REASONED |
+| airflow-jwt: Replace Compose fallback AIRFLOW__API_AUTH__JWT_SECRET=airflow_jwt_secret and share the strong value with all signers/validators; the public fallback permits token forgery. | Apache Airflow 3.3.2 | REASONED |
+| airflow-secret-key: Provision the independent secret_key too: [webserver] on 2.11.0 and [api] on 3.3.2. | Apache Airflow 3.3.2; Apache Airflow historical configuration unknown | REASONED |
+| airflow-config: Keep configuration exposure off with WEBSERVER__EXPOSE_CONFIG on 2.11.0 or API__EXPOSE_CONFIG on 3.3.2. | Apache Airflow 3.3.2; Apache Airflow historical configuration unknown | REASONED |
+| airflow-fernet: Protect Connections, Variables, database and Fernet key; an empty key disables new-value encryption, while removing an existing key prevents decryption. Authorized workloads still use secrets. | Apache Airflow 3.3.2 | REASONED |
+| airflow-port: Compose publishes 8080 on all interfaces; use 127.0.0.1:8080:8080 behind the fronting layer. | Apache Airflow 3.3.2 | REASONED |
+| temporal-authorizer: Empty authorizer selects noopAuthorizer allowing every API request, including administration; configure default authorization with trusted JWT keys and audience. | Temporal Server 1.28.x | REASONED |
+| temporal-claims: Empty claimMapper selects a no-op granting system-admin claims; configure both Authorizer and ClaimMapper, with frontend TLS. | Temporal Server 1.28.x | REASONED |
+| temporal-health: The built-in default authorizer permits health checks without claims; health is not an authorization discriminator. | Temporal Server 1.28.x | REASONED |
+| temporal-ui: UI OIDC auth.enabled is a sibling of providers; TEMPORAL_AUTH_ENABLED plus provider settings gates the UI only, with MFA at the IdP. | Temporal UI Server 2.34.x | REASONED |
+| temporal-tls: Internode and frontend mTLS are separate from UI login and API authorization. | Temporal Server 1.28.x | REASONED |
+| temporal-payloads: Keep plaintext credentials out of persisted inputs/results/history; payload encryption and an independently authenticated Codec Server form separate controls. | Temporal Server 1.28.x | REASONED |
+| temporal-ports: Frontend gRPC uses 7233 and the Web UI 8233 in the cited CLI server reference. | Temporal Server 1.28.x; Temporal UI Server 2.34.x | REASONED |
+| flower-bind: Flower defaults to wildcard address and 5555 unless Unix socket, FLOWER_ variables or implicit working-directory flowerconfig.py override; bind loopback explicitly. | Flower v2.2.0; Tornado v6.5.10 | REASONED |
+| flower-api: Authentication defaults off; unauthenticated HTTP API is disabled unless FLOWER_UNAUTHENTICATED_API=true, which must not be mistaken for dashboard protection. | Flower v2.2.0 | REASONED |
+| flower-basic: Basic auth uses a comma-separated credential list; supply it through FLOWER_BASIC_AUTH or protected config rather than argv and retain private TLS fronting. | Flower v2.2.0 | REASONED |
+| flower-oauth: OAuth needs handler, client key/secret, redirect and allowed-email regex; protect the secret outside argv and prefer an MFA-enforcing provider. | Flower v2.2.0 | REASONED |
+| flower-socket: Flower passes fixed mode 0777; Tornado removes/recreates filesystem sockets on startup, so chmod does not persist. Abstract sockets have no filesystem permission boundary. | Flower v2.2.0; Tornado v6.5.10; Linux permissions and tools unknown | REASONED |
+| flower-directory: Restrict socket directory search with Flower ownership, proxy-only group, mode 0750 and no outsider ACL; directory access is essential because socket mode permits writes. | Linux permissions and tools unknown | REASONED |
+| flower-capabilities: Applicable DAC capabilities bypass directory search checks; Docker defaults include CAP_DAC_OVERRIDE, while user namespaces and idmapped mounts change identity interpretation. | Linux permissions and tools unknown; Moby Docker docker-v29.8.1 | REASONED |
+| flower-runtime-dir: Reapply directory owner/group/mode on creation: /run is cleared at boot and RuntimeDirectory defaults 0755 unless RuntimeDirectoryMode overrides it. | systemd v257; Filesystem Hierarchy Standard 3.0 | REASONED |
+| flower-numeric-ids: A proxy sharing the socket directory must hold the required numeric group after namespace/mount mappings; names alone do not establish access. | Linux permissions and tools unknown | REASONED |
+| argo-bind: Argo Server binds wildcard :2746 with host-dependent IPv4/IPv6 support and no bind-address flag. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
+| argo-defaults: Both tags default secure=true, auth-mode=client and hsts=true; flags and ARGO_ environment equivalents can override. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
+| argo-client: Client mode uses caller Kubernetes credentials/RBAC; v4.1.4 validates via SelfSubjectReview and requires Kubernetes 1.28+. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
+| argo-quickstart: Both tags' minimal/mysql/postgres quick-starts enable server plus client mode while retaining TLS; v4.1.4 telemetry does too. Anonymous callers inherit server permissions. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
+| argo-quickstart-rbac: Quick-start binds cluster-wide workflow/template and Secret get/create permissions, plus cluster-workflow-template rights; it is demo-only. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
+| argo-installs: Traced install inputs keep client auth/TLS with cluster-wide server RBAC; namespace-install adds --namespaced and namespace RBAC. Generated install YAML was absent. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
+| argo-service: Base Service omits type, defaulting to ClusterIP, and maps 2746 to 2746; this does not authenticate reachable callers. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
+| argo-fallback: Remove server auth mode: adding client/SSO does not prevent anonymous fallback to server credentials; local mode uses the server kubeconfig. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
+| argo-sso: Enable sso.rbac.enabled and map groups to narrow ServiceAccounts through rbac-rule/precedence; without SSO RBAC, authenticated users share server permissions. | Argo Workflows documentation release-3.7; Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
+| argo-secrets: Store SSO OAuth credentials in referenced Kubernetes Secrets and supply API tokens through protected input, not argv. | Argo Workflows documentation release-3.7 | REASONED |
+| argo-tls: Keep TLS enabled with a trusted certificate Secret; no name generates a self-signed certificate, failed named-Secret loading fails startup, secure=false is plaintext and defeats HSTS. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
+| argo-metrics: /metrics shares the server listener and auth gate unless ARGO_SERVER_METRICS_AUTH=false; server mode also admits anonymous metrics. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
+| argo-network: Keep 2746 private behind authenticated HTTPS; restrict direct Pod/Service access and scope server, SSO and execution-account permissions. Workflow submission permits arbitrary containers unless constrained. | Argo Workflows documentation release-3.7 | REASONED |
+| verify-inventory: ss inventories only the current namespace, not publication, routing or authentication; inspect publications and external reachability separately. | Prefect Basic Auth minimum 3.1.8; Flower v2.2.0; Argo Workflows v3.7.18 | REASONED |
+| verify-prefect: Anonymous POST /api/flows/filter returning a JSON list is exposed; fixed is 401 with an authorized list on the same origin. Health/ready GET exemptions are version-dependent. | Prefect Basic Auth minimum 3.1.8; Prefect server source 9e560c9b6df4e19a5109a66e66d461f9facb538d | REASONED |
+| verify-dagster: A RepositoryConnection from /graphql is a read, including empty nodes; GraphQL/transport errors are inconclusive. Test proxy authentication and origin isolation separately. | Dagster OSS 1.13.24 | REASONED |
+| verify-airflow: FAB 3.9.0 returning 201 with access_token for airflow/airflow is exposed; pair a valid account and anonymous/authenticated API reads at proxy and origin. Airflow 2 uses its own API/auth. | Airflow FAB provider 3.9.0; Apache Airflow 3.3.2; Apache Airflow historical configuration unknown | REASONED |
+| verify-temporal: Credential-free workflow listing on 7233 is exposed; require rejection and a matched authorized call, not health, TLS errors or missing namespaces as proof of auth. | Temporal Server 1.28.x | REASONED |
+| verify-flower: Anonymous UI/API should yield Basic 401 or OAuth login redirect, with a valid-session control; API-disabled is not proof the dashboard is protected. | Flower v2.2.0 | REASONED |
+| verify-socket: Directory/socket permissions, outsider denial, reboot persistence and container numeric IDs remain reasoned; no socket or Flower process ran. | Flower v2.2.0; Linux permissions and tools unknown | REASONED |
+| flower-stat-run: Tmpfs directory-only stat distinguished 0755 and 0750; the 0750 directory initially had only base ACL entries. | Linux permissions and tools unknown | DEMONSTRATED |
+| flower-acl-run: A named nobody search ACL remained invisible in stat mode 750; ls and getfacl exposed the entry. | Linux permissions and tools unknown | DEMONSTRATED |
+| flower-mask-run: Changing the ACL mask hid named search permission; chmod 0750 restored its reported effectiveness. Access as nobody was not tested. | Linux permissions and tools unknown | DEMONSTRATED |
+| verify-argo: Anonymous workflow JSON is exposed when server RBAC permits; missing tokens should yield 401 without server mode. A 403 alone is inconclusive; pair authorized 200 and inspect auth modes. | Argo Workflows v3.7.18; Argo Workflows v4.1.4; Argo Workflows documentation release-3.7 | REASONED |
+| verify-origin: Any HTTP response from the origin at an untrusted vantage proves publication; use the same responding allowed origin as control and treat connection errors/timeouts as inconclusive. | Apache Airflow 3.3.2; Argo Workflows documentation release-3.7 | REASONED |
+<!-- version-basis:end -->
 
 These webservers and UIs schedule and trigger arbitrary code execution across your infrastructure, and most
 ship with no authentication at all. Keep every one of them off the public internet and add auth before
@@ -357,13 +685,13 @@ shares the directory.
 These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x, Apache Airflow 3.3.2 with FAB provider 3.9.0 (Airflow 2.11.0 noted where the configuration paths differ), Temporal Server 1.28.x and UI Server 2.34.x, and Flower 2.2.0; confirm your own versions, since several of these settings moved between releases. Argo Workflows listener, authentication paths, TLS and manifest settings were checked against tags v3.7.18 (66e32e5cc367f223e2ecf4fbe852b95eaed83034) and v4.1.4 (b5b4d665e9be9b87c115f943584c3e0ae96fe073). The install manifests were traced through their build recipes and Kustomize inputs; their generated YAML files were not present in the supplied trees. SSO setup, API examples and security guidance retain the release-3.7 documentation links.
 
 - Prefect, security settings (`PREFECT_SERVER_API_AUTH_STRING`, `PREFECT_API_AUTH_STRING`, Cloud API keys
-  taking precedence and causing 401): https://docs.prefect.io/v3/advanced/security-settings
+  taking precedence and causing 401) (Prefect 3.1.8 Basic Auth minimum): https://docs.prefect.io/v3/advanced/security-settings
 - Prefect, self-hosted server (default port 4200): https://docs.prefect.io/v3/how-to-guides/self-hosted/server-cli
 - Dagster, webserver and UI (default local port, no documented built-in auth): https://docs.dagster.io/guides/operate/webserver
 - Dagster webserver `DEFAULT_WEBSERVER_HOST` "127.0.0.1" and port 3000 with the free-port fallback, `dagster dev` forwarding `--host` only when one is given, its environment-variable routes (`DAGSTER_WEBSERVER_*` through `auto_envvar_prefix`, legacy `DAGIT_*` copied onto them, and the `dagster` CLI's `DAGSTER_CLI` prefix, which Click extends per subcommand, so `dagster dev` reads `DAGSTER_CLI_DEV_*`), and the Helm chart's webserver command, which hardcodes `-h 0.0.0.0` and takes the port from `dagsterWebserver.service.port` (80 by default, Service type `ClusterIP` by default) (pinned tag 1.13.24): https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L41-L42, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L81-L96, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L306-L311, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster/dagster/_cli/dev.py#L251-L252, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L339-L351, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster/dagster/_cli/__init__.py#L45-L50, Click's subcommand prefix rule (pinned tag 8.5.0) https://github.com/pallets/click/blob/8.5.0/src/click/core.py#L476-L484, https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_deployment-webserver.tpl#L86-L90, https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_helpers.tpl#L55 and https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/values.yaml#L54-L58
 - Apache Airflow, security overview: https://airflow.apache.org/docs/apache-airflow/stable/security/
-- Apache Airflow, auth manager selection (`[core] auth_manager`, `airflow config get-value core auth_manager`): https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/auth-manager/index.html
-- Apache Airflow FAB provider, API authentication (`[fab] auth_backends`, independent of the auth manager): https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/api-authentication.html
+- Apache Airflow, auth manager selection (`[core] auth_manager`, `airflow config get-value core auth_manager`) (Airflow 3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/auth-manager/index.html
+- Apache Airflow FAB provider, API authentication (`[fab] auth_backends`, independent of the auth manager) (FAB provider 3.9.0 documentation): https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/api-authentication.html
 - Prefect server source (health and ready paths exempted from the auth string on GET): https://github.com/PrefectHQ/prefect/blob/9e560c9b6df4e19a5109a66e66d461f9facb538d/src/prefect/server/api/server.py
 - Apache Airflow, quickstart (default port 8080): https://airflow.apache.org/docs/apache-airflow/stable/start.html
 - Apache Airflow, running Airflow in Docker (the `docker-compose.yaml` default `airflow`/`airflow` web user via `_AIRFLOW_WWW_USER_*`, `AIRFLOW__API_AUTH__JWT_SECRET` default `airflow_jwt_secret`, FAB auth manager, port 8080 published on all interfaces, "for local development. Do not use it in a production deployment"; checked 2026-09-14): https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html
@@ -371,9 +699,9 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
   untrusted users on the public internet"): https://airflow.apache.org/docs/apache-airflow/stable/security/security_model.html
 - Apache Airflow, Simple auth manager (default, dev/test only, `simple_auth_manager_users`, generated
   passwords): https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/auth-manager/simple/index.html
-- Temporal, self-hosted security (`noopAuthorizer` default, `Authorizer`, `ClaimMapper`): https://docs.temporal.io/self-hosted-guide/security
+- Temporal, self-hosted security (`noopAuthorizer` default, `Authorizer`, `ClaimMapper`) (Temporal Server 1.28.x documentation): https://docs.temporal.io/self-hosted-guide/security
 - Temporal, Web UI configuration reference (`auth.providers`, `enabled`, `type: oidc`, `providerUrl`,
-  `clientId`, `clientSecret`, `callbackUrl`, `scopes`): https://docs.temporal.io/references/web-ui-configuration
+  `clientId`, `clientSecret`, `callbackUrl`, `scopes`) (Temporal UI Server 2.34.x documentation): https://docs.temporal.io/references/web-ui-configuration
 - Temporal, CLI server reference (default frontend gRPC port 7233, Web UI port 8233): https://docs.temporal.io/cli/command-reference/server
 - Flower, configuration (`--address`, `--port` 5555 default, `--basic-auth`, `--auth_provider`, `--oauth2_key`,
   `--oauth2_secret`, `--oauth2_redirect_uri`, `--auth`): https://flower.readthedocs.io/en/latest/config.html

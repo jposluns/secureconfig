@@ -125,7 +125,7 @@ Open the guide before relying on either, because defaults change between release
 | 7946 | Grafana Loki memberlist gossip when memberlist is the ring store, on 0.0.0.0 by default, over TCP; also Weaviate's memberlist gossip, on every local address (`0.0.0.0`) unless a non-empty `CLUSTER_BIND_ADDR` is set | not stated | [observability-components.md](observability-components.md), [vector-databases.md](vector-databases.md) |
 | 7946/UDP | Weaviate's memberlist gossip, on every local address (`0.0.0.0`) unless a non-empty `CLUSTER_BIND_ADDR` is set | not stated | [vector-databases.md](vector-databases.md) |
 | 7947 | Weaviate's internal cluster API, on every local address | not stated | [vector-databases.md](vector-databases.md) |
-| 8000 | SurrealDB, Chroma, Triton HTTP, Coolify, Vaultwarden outside Docker, Portainer's Edge agent tunnel, the Supabase self-hosted API gateway (Envoy by default, Kong optional) which fronts the whole stack, or GlitchTip's web, API, and open self-signup; also Windmill's server, on `0.0.0.0` by default when run as a binary (its Compose file only exposes it to the Compose network); also LangServe, JupyterHub, Ray Serve, and the Onyx development code interpreter | varies by service; see the guides | [surrealdb.md](surrealdb.md), [vector-databases.md](vector-databases.md), [model-servers.md](model-servers.md), [devops-uis.md](devops-uis.md), [supabase-self-hosted.md](supabase-self-hosted.md), [self-hosted-error-trackers.md](self-hosted-error-trackers.md), [low-code-builders.md](low-code-builders.md), [ai-infra-services.md](ai-infra-services.md), [jupyter.md](jupyter.md), [ray.md](ray.md) |
+| 8000 | SurrealDB, Chroma, Triton HTTP, Coolify, Vaultwarden outside Docker, Portainer's Edge agent tunnel, the Supabase self-hosted API gateway (Envoy by default, Kong optional) which fronts the whole stack, or GlitchTip's web, API, and open self-signup; also Windmill's server, on `0.0.0.0` by default when run as a binary (its Compose file only exposes it to the Compose network); also LangServe, JupyterHub, Ray Serve, and the Onyx development code interpreter; also Python's `python -m http.server` quick-share, on every interface by default | varies by service; see the guides | [surrealdb.md](surrealdb.md), [vector-databases.md](vector-databases.md), [model-servers.md](model-servers.md), [devops-uis.md](devops-uis.md), [supabase-self-hosted.md](supabase-self-hosted.md), [self-hosted-error-trackers.md](self-hosted-error-trackers.md), [low-code-builders.md](low-code-builders.md), [ai-infra-services.md](ai-infra-services.md), [jupyter.md](jupyter.md), [ray.md](ray.md), [python.md](python.md) |
 | 8001, 8002 | Triton gRPC and Triton Prometheus metrics; and Datasette's CLI default HTTP listener on 8001, loopback by default (an overridden bind or a published container mapping is the exposure) | varies by service; see the guides | [model-servers.md](model-servers.md), [sqlite-http-frontends.md](sqlite-http-frontends.md) |
 | 8006 | Proxmox VE's `pveproxy`: the web interface and the whole cluster API over HTTPS, on every address by default | `root@pam` with the host's root password can always log in; no second factor until configured | [server-admin-panels.md](server-admin-panels.md) |
 | 8055 | Directus HTTP API and admin app | Bootstrap admin via `ADMIN_EMAIL`/`ADMIN_PASSWORD` or browser onboarding; public access off | [headless-cms-instant-api.md](headless-cms-instant-api.md) |
@@ -253,6 +253,13 @@ It establishes nothing at all about whether those services are safe to expose, a
 index page can. That claim belongs to each service's own guide, and even there the Verify blocks are
 worked examples over sampled URLs, not an enumeration of your application's sensitive routes.
 
+**REASONED:** following block; not demonstrated, and this page records no run. The block rests on the
+cited `ss` manual and Docker `container ls` reference, and on this index's consistency with the guides
+it cites; it is not an observation. A discriminating run needs a service bound on every interface (the
+exposed state, a `0.0.0.0` or `[::]` local address) and the same service bound to loopback (the fixed
+state, `127.0.0.1` or `::1`), and the authoring host forbids opening listeners without an isolated
+network namespace, and has none.
+
 ```bash
 sudo ss -tlnp                    # listening TCP sockets, with the owning process
 sudo ss -tlunp                   # again including UDP, which Memcached and WireGuard answer on
@@ -273,6 +280,14 @@ interfaces or a NAT address beside an elastic address has several inbound paths.
 address, and check the target Nmap prints before you read the result: the
 placeholder below is a hostname as far as Nmap is concerned, and if it resolves in your environment
 Nmap will scan whatever it resolved to.
+
+**REASONED:** following block; not demonstrated, and this page records no run. The block rests on the
+cited Nmap port-specification, host-discovery, target-specification and scan-technique pages, and on
+this index's consistency with the guides it cites; it is not an observation. A discriminating run needs
+a publicly bound listener that the scan reports `open` (exposed) and the same port reported `closed` or
+`filtered` once it is bound privately (fixed), probed from a second network. The authoring host forbids
+opening listeners without an isolated network namespace, and has none, and no second network was
+available.
 
 ```bash
 sudo nmap -Pn -p- REPLACE_WITH_A_LITERAL_IPV4_ADDRESS            # TCP over IPv4

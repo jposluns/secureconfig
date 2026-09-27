@@ -1,4 +1,106 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "96dac08673ef750ebc859a3fcefa4a3d17b12ee0173dbc3fdadcfa090a8cf584",
+  "components": {
+    "docs": {
+      "name": "Supabase documentation",
+      "basis": "unknown",
+      "sources": {
+        "s399d0fbba196": "https://supabase.com/docs/guides/self-hosting/docker",
+        "s73d939b4644e": "https://supabase.com/docs/guides/api/api-keys",
+        "s46cff2590323": "https://supabase.com/docs/guides/database/postgres/row-level-security"
+      }
+    },
+    "env": {
+      "name": "Supabase environment source",
+      "basis": "eabe06be5b36cf57f2b158bd5093b396606bf801",
+      "sources": {
+        "sb8e42c6de990": "https://github.com/supabase/supabase/blob/eabe06be5b36cf57f2b158bd5093b396606bf801/docker/.env.example"
+      }
+    },
+    "compose": {
+      "name": "Supabase Compose source",
+      "basis": "e693f206f5050b0004a86e12e533bb75ba2a9c76",
+      "sources": {
+        "s3f1258414a91": "https://github.com/supabase/supabase/blob/e693f206f5050b0004a86e12e533bb75ba2a9c76/docker/docker-compose.yml"
+      }
+    }
+  },
+  "claims": {
+    "release": {"text": "Guide names self-hosted/v0.8.1, Envoy v1.39.1 and Auth v2.196.0; compare installed releases and overrides with the separately pinned environment and Compose sources.", "components": ["docs", "env", "compose"], "sources": ["docs:s399d0fbba196", "env:sb8e42c6de990", "compose:s3f1258414a91"], "status": "REASONED"},
+    "jwt-secrets": {"text": "Replace demo JWT_SECRET and derived ANON_KEY/SERVICE_ROLE_KEY together; the public signing secret permits forged roles even after merely replacing API keys.", "components": ["docs", "env"], "sources": ["docs:s399d0fbba196", "docs:s73d939b4644e", "env:sb8e42c6de990"], "status": "REASONED"},
+    "dashboard-secret": {"text": "Replace shipped supabase / this_password_is_insecure_and_should_be_updated dashboard credentials before first start.", "components": ["docs", "env"], "sources": ["docs:s399d0fbba196", "env:sb8e42c6de990"], "status": "REASONED"},
+    "postgres-secret": {"text": "Replace your-super-secret-and-long-postgres-password; initialized databases require utils/db-passwd.sh and service recreation, not an env-only edit.", "components": ["docs", "env"], "sources": ["docs:s399d0fbba196", "env:sb8e42c6de990"], "status": "REASONED"},
+    "s3-secrets": {"text": "Replace both demo S3_PROTOCOL_ACCESS_KEY_ID and S3_PROTOCOL_ACCESS_KEY_SECRET.", "components": ["docs", "env"], "sources": ["docs:s399d0fbba196", "env:sb8e42c6de990"], "status": "REASONED"},
+    "encryption-secrets": {"text": "Regenerate SECRET_KEY_BASE (at least 64), REALTIME_DB_ENC_KEY (16), VAULT_ENC_KEY (32) and PG_META_CRYPTO_KEY (at least 32); VAULT_ENC_KEY protects Supavisor configuration.", "components": ["docs", "env"], "sources": ["docs:s399d0fbba196", "env:sb8e42c6de990"], "status": "REASONED"},
+    "key-generation": {"text": "Use generate-keys.sh and add-new-auth-keys.sh, including JWT_KEYS/JWT_JWKS where present, and protect the resulting env file outside source control.", "components": ["docs"], "sources": ["docs:s399d0fbba196"], "status": "REASONED"},
+    "key-retirement": {"text": "Recreate affected services; remove old signing keys from every verifier. Opaque API-key rotation alone does not retire JWT signing keys or user sessions.", "components": ["docs"], "sources": ["docs:s399d0fbba196", "docs:s73d939b4644e"], "status": "REASONED"},
+    "gateway-port": {"text": "Default Envoy gateway publishes HTTP 8000 on every interface and fronts API services plus Studio; bind host publication to loopback or firewall it.", "components": ["docs", "compose"], "sources": ["docs:s399d0fbba196", "compose:s3f1258414a91"], "status": "REASONED"},
+    "pooler-ports": {"text": "Supavisor publishes 5432 and 6543 on every interface; unpublished db ports remain reachable from the Docker host. Isolate database access independently.", "components": ["compose"], "sources": ["compose:s3f1258414a91"], "status": "REASONED"},
+    "kong-port": {"text": "Optional Kong additionally publishes HTTPS 8443; include that mapping in isolation checks.", "components": ["docs"], "sources": ["docs:s399d0fbba196"], "status": "REASONED"},
+    "network-check": {"text": "Docker NAT can bypass UFW and lack matching host sockets; inspect effective mappings and test IPv4/IPv6 externally with a working allowed-vantage control.", "components": ["docs", "compose"], "sources": ["docs:s399d0fbba196", "compose:s3f1258414a91"], "status": "REASONED", "verify": [1]},
+    "transport": {"text": "Default Envoy and Supavisor supply no TLS termination; HTTPS proxy protects the API, while PostgreSQL wire traffic needs its own TLS or encrypted tunnel.", "components": ["docs", "compose"], "sources": ["docs:s399d0fbba196", "compose:s3f1258414a91"], "status": "REASONED"},
+    "egress": {"text": "Constrain Edge Function and Storage URL-fetching egress; inbound JWT verification does not restrict outbound requests.", "components": ["docs"], "sources": ["docs:s399d0fbba196"], "status": "REASONED"},
+    "role-secret": {"text": "service_role bypasses RLS but remains subject to SQL privileges; keep service credentials server-side and never ship them to clients.", "components": ["docs"], "sources": ["docs:s73d939b4644e", "docs:s46cff2590323"], "status": "REASONED"},
+    "anon-rls": {"text": "Public anon access requires SQL privileges and applicable RLS policies; enabled RLS without a policy returns no rows, missing grants error, and disabled RLS does not constrain granted operations.", "components": ["docs"], "sources": ["docs:s73d939b4644e", "docs:s46cff2590323"], "status": "REASONED"},
+    "views": {"text": "Enable RLS on every exposed table and review owner-privileged views that can disclose rows beyond caller policies.", "components": ["docs"], "sources": ["docs:s46cff2590323"], "status": "REASONED"},
+    "gateway-routes": {"text": "Studio uses Basic auth; REST/GraphQL/Realtime and protected Auth routes require API keys. Some Auth routes are open; Storage and Functions enforce their own controls.", "components": ["docs", "compose"], "sources": ["docs:s399d0fbba196", "compose:s3f1258414a91"], "status": "REASONED"},
+    "functions": {"text": "FUNCTIONS_VERIFY_JWT defaults false; main worker then performs no JWT check, although individual functions can authenticate. Choose each function policy deliberately.", "components": ["env", "compose"], "sources": ["env:sb8e42c6de990", "compose:s3f1258414a91"], "status": "REASONED"},
+    "studio-port": {"text": "Studio listens internally on 3000 without host publication; never route around gateway dashboard authentication.", "components": ["compose"], "sources": ["compose:s3f1258414a91"], "status": "REASONED"},
+    "signup": {"text": "DISABLE_SIGNUP=false ships registration open; ENABLE_PHONE_SIGNUP and ENABLE_PHONE_AUTOCONFIRM=true permit self-confirmed phone signup.", "components": ["env", "compose"], "sources": ["env:sb8e42c6de990", "compose:s3f1258414a91"], "status": "REASONED"},
+    "mfa": {"text": "Application-user TOTP needs assurance-level enforcement; it adds no factor to Studio Basic auth, which needs a private or MFA-enforcing administrative boundary.", "components": ["docs"], "sources": ["docs:s399d0fbba196", "docs:s46cff2590323"], "status": "REASONED"},
+    "verify-isolation": {"text": "Any external HTTP/database response proves publication; refusal is vantage-specific and timeout inconclusive. Corroborate with mappings and a live allowed control.", "components": ["docs", "compose"], "sources": ["docs:s399d0fbba196", "compose:s3f1258414a91"], "status": "REASONED", "verify": [1]},
+    "verify-function": {"text": "Known unauthenticated canary responds to both requests with JWT checking off; with it on, missing Bearer gets 401 and current legacy anon JWT returns the known response.", "components": ["env", "compose"], "sources": ["env:sb8e42c6de990", "compose:s3f1258414a91"], "status": "REASONED", "verify": [2]},
+    "verify-api-keys": {"text": "Compare shipped and current API keys at /auth/v1/settings; current key must return settings JSON. This tests gateway acceptance, not signing-key retirement.", "components": ["docs"], "sources": ["docs:s399d0fbba196", "docs:s73d939b4644e"], "status": "REASONED"},
+    "verify-signing": {"text": "Compare equivalent unexpired service_role JWTs signed by current versus demo secret against one REST canary, retaining a valid apikey; require JWT signature rejection.", "components": ["docs"], "sources": ["docs:s399d0fbba196", "docs:s73d939b4644e", "docs:s46cff2590323"], "status": "REASONED"},
+    "verify-dashboard": {"text": "Default Basic credentials must fail with 401 after replacement, while a current credential retrieves a known Studio response.", "components": ["docs", "env"], "sources": ["docs:s399d0fbba196", "env:sb8e42c6de990"], "status": "REASONED"},
+    "verify-database": {"text": "Check pooler 5432/6543 as postgres.your-tenant-id against postgres using SELECT current_user, current_database(); require demo-password authentication failure and a working control.", "components": ["docs", "env", "compose"], "sources": ["docs:s399d0fbba196", "env:sb8e42c6de990", "compose:s3f1258414a91"], "status": "REASONED"}
+  }
+}
+---
 # Self-hosted Supabase
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| release: Guide names self-hosted/v0.8.1, Envoy v1.39.1 and Auth v2.196.0; compare installed releases and overrides with the separately pinned environment and Compose sources. | Supabase documentation unknown; Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
+| jwt-secrets: Replace demo JWT_SECRET and derived ANON_KEY/SERVICE_ROLE_KEY together; the public signing secret permits forged roles even after merely replacing API keys. | Supabase documentation unknown; Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801 | REASONED |
+| dashboard-secret: Replace shipped supabase / this_password_is_insecure_and_should_be_updated dashboard credentials before first start. | Supabase documentation unknown; Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801 | REASONED |
+| postgres-secret: Replace your-super-secret-and-long-postgres-password; initialized databases require utils/db-passwd.sh and service recreation, not an env-only edit. | Supabase documentation unknown; Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801 | REASONED |
+| s3-secrets: Replace both demo S3_PROTOCOL_ACCESS_KEY_ID and S3_PROTOCOL_ACCESS_KEY_SECRET. | Supabase documentation unknown; Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801 | REASONED |
+| encryption-secrets: Regenerate SECRET_KEY_BASE (at least 64), REALTIME_DB_ENC_KEY (16), VAULT_ENC_KEY (32) and PG_META_CRYPTO_KEY (at least 32); VAULT_ENC_KEY protects Supavisor configuration. | Supabase documentation unknown; Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801 | REASONED |
+| key-generation: Use generate-keys.sh and add-new-auth-keys.sh, including JWT_KEYS/JWT_JWKS where present, and protect the resulting env file outside source control. | Supabase documentation unknown | REASONED |
+| key-retirement: Recreate affected services; remove old signing keys from every verifier. Opaque API-key rotation alone does not retire JWT signing keys or user sessions. | Supabase documentation unknown | REASONED |
+| gateway-port: Default Envoy gateway publishes HTTP 8000 on every interface and fronts API services plus Studio; bind host publication to loopback or firewall it. | Supabase documentation unknown; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
+| pooler-ports: Supavisor publishes 5432 and 6543 on every interface; unpublished db ports remain reachable from the Docker host. Isolate database access independently. | Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
+| kong-port: Optional Kong additionally publishes HTTPS 8443; include that mapping in isolation checks. | Supabase documentation unknown | REASONED |
+| network-check: Docker NAT can bypass UFW and lack matching host sockets; inspect effective mappings and test IPv4/IPv6 externally with a working allowed-vantage control. | Supabase documentation unknown; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
+| transport: Default Envoy and Supavisor supply no TLS termination; HTTPS proxy protects the API, while PostgreSQL wire traffic needs its own TLS or encrypted tunnel. | Supabase documentation unknown; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
+| egress: Constrain Edge Function and Storage URL-fetching egress; inbound JWT verification does not restrict outbound requests. | Supabase documentation unknown | REASONED |
+| role-secret: service_role bypasses RLS but remains subject to SQL privileges; keep service credentials server-side and never ship them to clients. | Supabase documentation unknown | REASONED |
+| anon-rls: Public anon access requires SQL privileges and applicable RLS policies; enabled RLS without a policy returns no rows, missing grants error, and disabled RLS does not constrain granted operations. | Supabase documentation unknown | REASONED |
+| views: Enable RLS on every exposed table and review owner-privileged views that can disclose rows beyond caller policies. | Supabase documentation unknown | REASONED |
+| gateway-routes: Studio uses Basic auth; REST/GraphQL/Realtime and protected Auth routes require API keys. Some Auth routes are open; Storage and Functions enforce their own controls. | Supabase documentation unknown; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
+| functions: FUNCTIONS_VERIFY_JWT defaults false; main worker then performs no JWT check, although individual functions can authenticate. Choose each function policy deliberately. | Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
+| studio-port: Studio listens internally on 3000 without host publication; never route around gateway dashboard authentication. | Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
+| signup: DISABLE_SIGNUP=false ships registration open; ENABLE_PHONE_SIGNUP and ENABLE_PHONE_AUTOCONFIRM=true permit self-confirmed phone signup. | Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
+| mfa: Application-user TOTP needs assurance-level enforcement; it adds no factor to Studio Basic auth, which needs a private or MFA-enforcing administrative boundary. | Supabase documentation unknown | REASONED |
+| verify-isolation: Any external HTTP/database response proves publication; refusal is vantage-specific and timeout inconclusive. Corroborate with mappings and a live allowed control. | Supabase documentation unknown; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
+| verify-function: Known unauthenticated canary responds to both requests with JWT checking off; with it on, missing Bearer gets 401 and current legacy anon JWT returns the known response. | Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
+| verify-api-keys: Compare shipped and current API keys at /auth/v1/settings; current key must return settings JSON. This tests gateway acceptance, not signing-key retirement. | Supabase documentation unknown | REASONED |
+| verify-signing: Compare equivalent unexpired service_role JWTs signed by current versus demo secret against one REST canary, retaining a valid apikey; require JWT signature rejection. | Supabase documentation unknown | REASONED |
+| verify-dashboard: Default Basic credentials must fail with 401 after replacement, while a current credential retrieves a known Studio response. | Supabase documentation unknown; Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801 | REASONED |
+| verify-database: Check pooler 5432/6543 as postgres.your-tenant-id against postgres using SELECT current_user, current_database(); require demo-password authentication failure and a working control. | Supabase documentation unknown; Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
+<!-- version-basis:end -->
 
 The self-hosted Supabase Docker stack ships a `.env.example` full of demo secrets, and its own
 documentation says plainly: "you should never start your self-hosted Supabase using these defaults."
@@ -120,6 +222,8 @@ authentication. With `FUNCTIONS_VERIFY_JWT=false`, both requests should reach it
 enabled, the credential-free request should receive `401` and the Bearer-authenticated request should
 return its known response. An arbitrary function can return its own `401`, so that status alone does not
 identify the main worker's policy.
+
+REASONED: following block; the canary function comparison follows the cited environment and Compose sources; no container runtime was available for exposed/fixed service runs.
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched

@@ -76,9 +76,7 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 3.27 | Migrate the grandfathered Verify fences guide by guide: attach canonical DEMONSTRATED or REASONED declarations with audited scope and provenance, and remove matching entries from tools/verify_marking_baseline.txt. Never invent evidence or a missing prerequisite to clear the gate. (M, L) | `[gap]` |
 | 3.30 | Extend the fenced-block Verify-marking gate planned in #389 to list items, table rows and prose units, with the same baseline-and-ratchet mechanism (maintainer ruling, 2026-09-26). (M, L) | `[gap]` |
-| 3.32 | Roll version-basis metadata out to every remaining guide in one generated PR (maintainer ruling 2026-09-26): generate candidate claims from pinned Sources, explicit versions, controls, endpoint mappings, Verify markers and recorded observations; review by guide family with a coverage matrix (claim, body passage, source, version qualification, evidence); never infer DEMONSTRATED from an unmarked fence; enrol each guide in tools/version_basis_guides.txt. Depends on #395. (M, L) | `[gap]` |
 
 ## Decisions
 

@@ -1,4 +1,194 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "c68fdbadfd0e17511c4a80123ba99cccaae5a7f7b0abc38afc273abd2462e313",
+  "components": {
+    "oauth": {
+      "name": "OAuth client credentials",
+      "basis": "unknown",
+      "sources": {
+        "s65b02b1812cc": "https://datatracker.ietf.org/doc/html/rfc6749#section-4.4"
+      }
+    },
+    "bearer": {
+      "name": "Bearer token guidance",
+      "basis": "unknown",
+      "sources": {
+        "sefd3dd623da3": "https://www.rfc-editor.org/info/rfc6750/"
+      }
+    },
+    "jwt": {
+      "name": "JWT access-token profile",
+      "basis": "unknown",
+      "sources": {
+        "sc36d79fcad94": "https://www.rfc-editor.org/rfc/rfc9068.html"
+      }
+    },
+    "python": {
+      "name": "Python hmac",
+      "basis": "unknown",
+      "sources": {
+        "s7a54556e5dac": "https://docs.python.org/3/library/hmac.html"
+      }
+    },
+    "node": {
+      "name": "Node.js crypto",
+      "basis": "unknown",
+      "sources": {
+        "s96b80e6816a2": "https://nodejs.org/api/crypto.html"
+      }
+    },
+    "entra": {
+      "name": "Entra External ID",
+      "basis": "unknown",
+      "sources": {
+        "s0ee5939cfc03": "https://learn.microsoft.com/en-us/entra/external-id/external-identities-pricing"
+      }
+    },
+    "github": {
+      "name": "GitHub Actions OIDC",
+      "basis": "unknown",
+      "sources": {
+        "s65bfc1e3ee0d": "https://docs.github.com/en/actions/concepts/security/openid-connect",
+        "s653a0d94dd2f": "https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-aws",
+        "sa8ed4c86a8ea": "https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-google-cloud-platform",
+        "s80d46a4f675c": "https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-azure"
+      }
+    },
+    "aws": {
+      "name": "AWS IAM and credential action",
+      "basis": "unknown",
+      "sources": {
+        "s6fff7087bca4": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-idp_oidc.html",
+        "se185ac33f225": "https://github.com/aws-actions/configure-aws-credentials"
+      }
+    },
+    "google": {
+      "name": "Google Cloud federation and auth action",
+      "basis": "unknown",
+      "sources": {
+        "s03844cd0246a": "https://docs.cloud.google.com/iam/docs/workload-identity-federation-with-deployment-pipelines",
+        "s0f874cc5b70e": "https://docs.cloud.google.com/iam/docs/workload-identity-federation",
+        "saa567d0c2c78": "https://github.com/google-github-actions/auth"
+      }
+    },
+    "azure": {
+      "name": "Azure federation and login",
+      "basis": "unknown",
+      "sources": {
+        "sb7a38a36ac47": "https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation",
+        "sc70c3d4b8844": "https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation-create-trust",
+        "s231245f7e96b": "https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure-openid-connect"
+      }
+    },
+    "spiffe": {
+      "name": "SPIFFE and SPIRE",
+      "basis": "unknown",
+      "sources": {
+        "s96e9b9e2739d": "https://spiffe.io/",
+        "sfa39616d8260": "https://spiffe.io/docs/latest/spire-about/"
+      }
+    },
+    "pki": {
+      "name": "Certificate revocation",
+      "basis": "unknown",
+      "sources": {
+        "s93ee2b4751f8": "https://www.rfc-editor.org/info/rfc5280/"
+      }
+    }
+  },
+  "claims": {
+    "key-scope": {"text": "Issue a random least-privilege key per client and environment so one client can be revoked independently.", "components": ["bearer"], "sources": ["bearer:sefd3dd623da3"], "status": "REASONED"},
+    "key-lifetime": {"text": "Give keys expiries and scheduled rotation with a short overlap for continuity.", "components": ["bearer"], "sources": ["bearer:sefd3dd623da3"], "status": "REASONED"},
+    "bearer-transport": {"text": "Send bearer keys in Authorization headers over mandatory TLS; URLs leak through history and logs.", "components": ["bearer"], "sources": ["bearer:sefd3dd623da3"], "status": "REASONED"},
+    "constant-time": {"text": "Use hmac.compare_digest or crypto.timingSafeEqual rather than plain equality; the guide requires equal byte lengths.", "components": ["python", "node"], "sources": ["python:s7a54556e5dac", "node:s96b80e6816a2"], "status": "REASONED"},
+    "key-hash": {"text": "Where only verification is needed, store key hashes and show plaintext once; this is guide advice, without a hash-implementation source in Sources.", "components": ["bearer"], "sources": ["bearer:sefd3dd623da3"], "status": "REASONED"},
+    "client-grant": {"text": "Confidential clients authenticate with grant_type=client_credentials for access tokens; refresh tokens SHOULD NOT be issued, so re-authenticate.", "components": ["oauth"], "sources": ["oauth:s65b02b1812cc"], "status": "REASONED"},
+    "token-scope": {"text": "Request the narrowest scope or provider audience and bound access-token lifetime and reach.", "components": ["oauth", "bearer"], "sources": ["oauth:s65b02b1812cc", "bearer:sefd3dd623da3"], "status": "REASONED"},
+    "jwt-validation": {"text": "Validate access-token signature, reject alg none, check exact issuer, API audience and expiry, require at+jwt for JWT access tokens, and enforce scopes.", "components": ["jwt"], "sources": ["jwt:sc36d79fcad94"], "status": "REASONED"},
+    "m2m-billing": {"text": "As of September 2026, Entra External ID M2M is billed per transaction as an add-on; hourly renewal is roughly 720 monthly transactions.", "components": ["entra"], "sources": ["entra:s0ee5939cfc03"], "status": "REASONED"},
+    "client-secret": {"text": "Client credentials still need long-lived-secret protection unless replaced by federation supported by the provider.", "components": ["oauth", "azure"], "sources": ["oauth:s65b02b1812cc", "azure:sb7a38a36ac47"], "status": "REASONED"},
+    "mtls-identity": {"text": "Use a separate short-lived certificate per client and keep CA keys off signed servers; mTLS is a possession factor, not human MFA.", "components": ["pki"], "sources": ["pki:s93ee2b4751f8"], "status": "REASONED"},
+    "mtls-nginx": {"text": "nginx uses ssl_verify_client on in the linked service guide; the cited RFC covers certificate revocation, not this product directive.", "components": ["pki"], "sources": ["pki:s93ee2b4751f8"], "status": "REASONED"},
+    "mtls-apache": {"text": "Apache uses SSLVerifyClient require in the linked service guide; the cited RFC covers certificate revocation, not this product directive.", "components": ["pki"], "sources": ["pki:s93ee2b4751f8"], "status": "REASONED"},
+    "mtls-postgres": {"text": "PostgreSQL uses clientcert=verify-full in the linked service guide; the cited RFC covers certificate revocation, not this product directive.", "components": ["pki"], "sources": ["pki:s93ee2b4751f8"], "status": "REASONED"},
+    "mtls-mysql": {"text": "MySQL uses REQUIRE X509 in the linked service guide; the cited RFC covers certificate revocation, not this product directive.", "components": ["pki"], "sources": ["pki:s93ee2b4751f8"], "status": "REASONED"},
+    "mtls-redis": {"text": "Redis uses tls-auth-clients yes in the linked service guide; the cited RFC covers certificate revocation, not this product directive.", "components": ["pki"], "sources": ["pki:s93ee2b4751f8"], "status": "REASONED"},
+    "mtls-rabbitmq": {"text": "RabbitMQ uses ssl_options.fail_if_no_peer_cert = true in the linked service guide; the cited RFC covers certificate revocation, not this product directive.", "components": ["pki"], "sources": ["pki:s93ee2b4751f8"], "status": "REASONED"},
+    "mtls-mosquitto": {"text": "Mosquitto uses require_certificate true in the linked service guide; the cited RFC covers certificate revocation, not this product directive.", "components": ["pki"], "sources": ["pki:s93ee2b4751f8"], "status": "REASONED"},
+    "mtls-revocation": {"text": "Replacing a key does not reject the old certificate; revoke with checked CRL/OCSP, remove it from an allowlist or wait for expiry, and test refusal.", "components": ["pki"], "sources": ["pki:s93ee2b4751f8"], "status": "REASONED"},
+    "oidc-token": {"text": "GitHub id-token: write permits short-lived OIDC tokens from token.actions.githubusercontent.com; restrict trust to the exact repository and branch or environment.", "components": ["github"], "sources": ["github:s65bfc1e3ee0d"], "status": "REASONED"},
+    "aws-action": {"text": "configure-aws-credentials uses role-to-assume and aws-region and defaults its audience to sts.amazonaws.com.", "components": ["aws"], "sources": ["aws:se185ac33f225"], "status": "REASONED"},
+    "aws-trust": {"text": "AWS trust uses AssumeRoleWithWebIdentity and exact aud/sub conditions; IAM rejects absent or wildcard-only sub, and broad subjects admit outside repositories.", "components": ["aws", "github"], "sources": ["aws:s6fff7087bca4", "github:s653a0d94dd2f"], "status": "REASONED"},
+    "google-provider": {"text": "Create an OIDC provider with the GitHub issuer, subject/repository mappings and an owner plus branch/environment condition.", "components": ["google"], "sources": ["google:s03844cd0246a", "google:s0f874cc5b70e"], "status": "REASONED"},
+    "google-binding": {"text": "Grant workloadIdentityUser to the exact repository principalSet; prefer immutable numeric repository and owner IDs over reusable names.", "components": ["google"], "sources": ["google:s03844cd0246a", "google:s0f874cc5b70e"], "status": "REASONED"},
+    "google-action": {"text": "google-github-actions/auth takes workload_identity_provider and service_account.", "components": ["google", "github"], "sources": ["google:saa567d0c2c78", "github:sa8ed4c86a8ea"], "status": "REASONED"},
+    "azure-trust": {"text": "Configure the exact GitHub issuer, repository branch/environment subject and api://AzureADTokenExchange audience; wildcards are unsupported and wrong subjects fail at exchange.", "components": ["azure"], "sources": ["azure:sb7a38a36ac47", "azure:sc70c3d4b8844"], "status": "REASONED"},
+    "azure-action": {"text": "azure/login needs client-id, tenant-id and subscription-id for OIDC, without a stored client secret.", "components": ["azure", "github"], "sources": ["azure:s231245f7e96b", "github:s80d46a4f675c"], "status": "REASONED"},
+    "subject-format": {"text": "The guide records an immutable default subject with owner/repository IDs for repositories created after July 15, 2026; inspect the actual claim before writing trust.", "components": ["github"], "sources": ["github:s65bfc1e3ee0d"], "status": "REASONED"},
+    "action-pins": {"text": "Pin actions to full commit SHAs; tags and branches can move to different code.", "components": ["github"], "sources": ["github:s65bfc1e3ee0d", "github:s653a0d94dd2f", "github:sa8ed4c86a8ea", "github:s80d46a4f675c"], "status": "REASONED"},
+    "workload-attestation": {"text": "SPIFFE/SPIRE provides attested short-lived workload identities without a stored secret.", "components": ["spiffe"], "sources": ["spiffe:s96e9b9e2739d", "spiffe:sfa39616d8260"], "status": "REASONED"},
+    "secret-store": {"text": "Store unavoidable machine secrets in the listed secret managers and use platform identity to authenticate, avoiding another long-lived bootstrap key.", "components": ["azure", "google", "aws"], "sources": ["azure:sb7a38a36ac47", "google:s03844cd0246a", "aws:s6fff7087bca4"], "status": "REASONED"},
+    "verify-scope": {"text": "A protected header-file staging key must receive 401/403 in production while succeeding in staging; otherwise denial does not establish environment scoping.", "components": ["bearer"], "sources": ["bearer:sefd3dd623da3"], "status": "REASONED"},
+    "verify-expiry": {"text": "Revoked or expired credentials must be rejected with a service-log record identifying the client.", "components": ["bearer", "jwt"], "sources": ["bearer:sefd3dd623da3", "jwt:sc36d79fcad94"], "status": "REASONED"},
+    "verify-ci": {"text": "Repository Actions secrets should hold no long-lived cloud credentials and the workflow must declare id-token: write.", "components": ["github"], "sources": ["github:s65bfc1e3ee0d", "github:s653a0d94dd2f", "github:sa8ed4c86a8ea", "github:s80d46a4f675c"], "status": "REASONED"},
+    "verify-trust": {"text": "Inspect AWS sub, Google repository binding and Azure subject for exact repository plus branch/environment restriction without broad wildcard suffixes.", "components": ["aws", "google", "azure"], "sources": ["aws:s6fff7087bca4", "google:s03844cd0246a", "google:s0f874cc5b70e", "azure:sc70c3d4b8844"], "status": "REASONED"},
+    "verify-artifacts": {"text": "History, working-tree and image-layer scans must show no keys; docker history alone misses copied files. Sources cites confidentiality guidance, not these scanner commands.", "components": ["bearer"], "sources": ["bearer:sefd3dd623da3"], "status": "REASONED"},
+    "verify-mtls": {"text": "Reject missing, untrusted, expired, revoked and, where identity authorization applies, unauthorized certificates while the authorized client succeeds.", "components": ["pki"], "sources": ["pki:s93ee2b4751f8"], "status": "REASONED"}
+  }
+}
+---
 # Machine identity: API keys, client credentials, mutual TLS, and workload identity
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| key-scope: Issue a random least-privilege key per client and environment so one client can be revoked independently. | Bearer token guidance unknown | REASONED |
+| key-lifetime: Give keys expiries and scheduled rotation with a short overlap for continuity. | Bearer token guidance unknown | REASONED |
+| bearer-transport: Send bearer keys in Authorization headers over mandatory TLS; URLs leak through history and logs. | Bearer token guidance unknown | REASONED |
+| constant-time: Use hmac.compare_digest or crypto.timingSafeEqual rather than plain equality; the guide requires equal byte lengths. | Python hmac unknown; Node.js crypto unknown | REASONED |
+| key-hash: Where only verification is needed, store key hashes and show plaintext once; this is guide advice, without a hash-implementation source in Sources. | Bearer token guidance unknown | REASONED |
+| client-grant: Confidential clients authenticate with grant_type=client_credentials for access tokens; refresh tokens SHOULD NOT be issued, so re-authenticate. | OAuth client credentials unknown | REASONED |
+| token-scope: Request the narrowest scope or provider audience and bound access-token lifetime and reach. | OAuth client credentials unknown; Bearer token guidance unknown | REASONED |
+| jwt-validation: Validate access-token signature, reject alg none, check exact issuer, API audience and expiry, require at+jwt for JWT access tokens, and enforce scopes. | JWT access-token profile unknown | REASONED |
+| m2m-billing: As of September 2026, Entra External ID M2M is billed per transaction as an add-on; hourly renewal is roughly 720 monthly transactions. | Entra External ID unknown | REASONED |
+| client-secret: Client credentials still need long-lived-secret protection unless replaced by federation supported by the provider. | OAuth client credentials unknown; Azure federation and login unknown | REASONED |
+| mtls-identity: Use a separate short-lived certificate per client and keep CA keys off signed servers; mTLS is a possession factor, not human MFA. | Certificate revocation unknown | REASONED |
+| mtls-nginx: nginx uses ssl_verify_client on in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
+| mtls-apache: Apache uses SSLVerifyClient require in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
+| mtls-postgres: PostgreSQL uses clientcert=verify-full in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
+| mtls-mysql: MySQL uses REQUIRE X509 in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
+| mtls-redis: Redis uses tls-auth-clients yes in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
+| mtls-rabbitmq: RabbitMQ uses ssl_options.fail_if_no_peer_cert = true in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
+| mtls-mosquitto: Mosquitto uses require_certificate true in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
+| mtls-revocation: Replacing a key does not reject the old certificate; revoke with checked CRL/OCSP, remove it from an allowlist or wait for expiry, and test refusal. | Certificate revocation unknown | REASONED |
+| oidc-token: GitHub id-token: write permits short-lived OIDC tokens from token.actions.githubusercontent.com; restrict trust to the exact repository and branch or environment. | GitHub Actions OIDC unknown | REASONED |
+| aws-action: configure-aws-credentials uses role-to-assume and aws-region and defaults its audience to sts.amazonaws.com. | AWS IAM and credential action unknown | REASONED |
+| aws-trust: AWS trust uses AssumeRoleWithWebIdentity and exact aud/sub conditions; IAM rejects absent or wildcard-only sub, and broad subjects admit outside repositories. | AWS IAM and credential action unknown; GitHub Actions OIDC unknown | REASONED |
+| google-provider: Create an OIDC provider with the GitHub issuer, subject/repository mappings and an owner plus branch/environment condition. | Google Cloud federation and auth action unknown | REASONED |
+| google-binding: Grant workloadIdentityUser to the exact repository principalSet; prefer immutable numeric repository and owner IDs over reusable names. | Google Cloud federation and auth action unknown | REASONED |
+| google-action: google-github-actions/auth takes workload_identity_provider and service_account. | Google Cloud federation and auth action unknown; GitHub Actions OIDC unknown | REASONED |
+| azure-trust: Configure the exact GitHub issuer, repository branch/environment subject and api://AzureADTokenExchange audience; wildcards are unsupported and wrong subjects fail at exchange. | Azure federation and login unknown | REASONED |
+| azure-action: azure/login needs client-id, tenant-id and subscription-id for OIDC, without a stored client secret. | Azure federation and login unknown; GitHub Actions OIDC unknown | REASONED |
+| subject-format: The guide records an immutable default subject with owner/repository IDs for repositories created after July 15, 2026; inspect the actual claim before writing trust. | GitHub Actions OIDC unknown | REASONED |
+| action-pins: Pin actions to full commit SHAs; tags and branches can move to different code. | GitHub Actions OIDC unknown | REASONED |
+| workload-attestation: SPIFFE/SPIRE provides attested short-lived workload identities without a stored secret. | SPIFFE and SPIRE unknown | REASONED |
+| secret-store: Store unavoidable machine secrets in the listed secret managers and use platform identity to authenticate, avoiding another long-lived bootstrap key. | Azure federation and login unknown; Google Cloud federation and auth action unknown; AWS IAM and credential action unknown | REASONED |
+| verify-scope: A protected header-file staging key must receive 401/403 in production while succeeding in staging; otherwise denial does not establish environment scoping. | Bearer token guidance unknown | REASONED |
+| verify-expiry: Revoked or expired credentials must be rejected with a service-log record identifying the client. | Bearer token guidance unknown; JWT access-token profile unknown | REASONED |
+| verify-ci: Repository Actions secrets should hold no long-lived cloud credentials and the workflow must declare id-token: write. | GitHub Actions OIDC unknown | REASONED |
+| verify-trust: Inspect AWS sub, Google repository binding and Azure subject for exact repository plus branch/environment restriction without broad wildcard suffixes. | AWS IAM and credential action unknown; Google Cloud federation and auth action unknown; Azure federation and login unknown | REASONED |
+| verify-artifacts: History, working-tree and image-layer scans must show no keys; docker history alone misses copied files. Sources cites confidentiality guidance, not these scanner commands. | Bearer token guidance unknown | REASONED |
+| verify-mtls: Reject missing, untrusted, expired, revoked and, where identity authorization applies, unauthorized certificates while the authorized client succeeds. | Certificate revocation unknown | REASONED |
+<!-- version-basis:end -->
 
 Machines cannot do MFA, so their credentials are long-lived by default, and long-lived credentials leak through repositories, container images, and logs. The fix is scoped, short-lived, and where possible credential-free access: a CI job or workload that holds no key cannot leak one. [authentication.md](authentication.md) sets the baseline and [secrets.md](secrets.md) covers handling and leak response; this guide covers the credential types themselves, from the weakest to the one that removes the secret entirely.
 
