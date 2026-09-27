@@ -55,7 +55,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _markdown import Fences
 from _verify_sections import TITLE, heading_parts, title_text, verify_ranges
-from check_reasoned_rows import HEADING, guides
+from _verify_sections import HEADING, guides
 
 BASELINE = Path("tools/verify_marking_baseline.txt")
 DECL = re.compile(

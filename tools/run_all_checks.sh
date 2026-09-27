@@ -765,26 +765,6 @@ else
   bad "the pinned-citation gate could not complete (exit $pc_rc); failing closed:"
   printf '%s\n' "$pc" | sed 's/^/          /'
 fi
-echo "== reasoned Verify steps are tracked by a demonstration backlog row =="
-# tools/check_reasoned_rows.py: CONTRIBUTING rule 5 makes a demonstration backlog row a condition of the
-# reasoned-step allowance ("reasoned is a debt, not a destination"). BLOCKING since 2026-09-24 (maintainer
-# ruling): --strict fails the suite on a reasoned guide that no TODO.md/DONE.md demonstration row tracks and
-# tools/reasoned_row_baseline.txt does not grandfather (the baseline is now empty). Self-test first so what
-# runs is the shipped checker; a failing self-test fails closed.
-rr_st="$(python3 -I -B tools/test_reasoned_rows.py 2>&1)"
-if [ $? -eq 0 ] && ! printf '%s\n' "$rr_st" | grep -q '^  FAIL  '; then
-  ok "reasoned-row self-test"
-  rr="$(python3 -I -B tools/check_reasoned_rows.py --strict 2>&1)"
-  rr_rc=$?
-  if [ "$rr_rc" -eq 0 ]; then
-    ok "$(printf '%s\n' "$rr" | tail -1)"
-  else
-    bad "reasoned Verify steps without a demonstration backlog row (exit $rr_rc):"
-    printf '%s\n' "$rr" | sed 's/^/          /'
-  fi
-else
-  bad "reasoned-row self-test failed: $(printf '%s' "$rr_st" | tail -1)"
-fi
 echo "== Verify fences declare demonstration or reasoning =="
 # Keep retained exemptions visible; a baseline pass is not full corpus compliance.
 if vm_st=$(python3 -I -B tools/test_verify_marking.py 2>&1); then

@@ -104,7 +104,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _markdown import Fences  # noqa: E402  one definition of a fenced block
-from check_reasoned_rows import META_EXCLUDE  # noqa: E402  one definition of "not a guide"
+from _verify_sections import META_EXCLUDE  # noqa: E402  one definition of "not a guide"
 
 INDEX = "exposure-index.md"
 ALLOWLIST = Path("tools/exposure_index_allowlist.txt")

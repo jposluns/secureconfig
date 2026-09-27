@@ -8,12 +8,12 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from check_reasoned_rows import META_EXCLUDE, verify_sections_text
+from _verify_sections import META_EXCLUDE, verify_sections_text
 from check_verify_marking import scan_guide
 
 TOOLS = Path(__file__).resolve().parent
 PLAIN = "# Guide\n\n## Verify\n\n```sh\necho ok\n```\n"
-MARK = "REASONED: no authorized second network; TODO 1.1 tracks both-state checks."
+MARK = "REASONED: expected exposed and fixed outcomes follow the cited vendor source."
 count = 0
 
 
@@ -36,7 +36,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix="verify-marking-test-") as directory:
         root = Path(directory)
         (root / "tools").mkdir()
-        for name in ("check_verify_marking.py", "check_reasoned_rows.py",
+        for name in ("check_verify_marking.py",
                      "_markdown.py", "_verify_sections.py"):
             shutil.copyfile(TOOLS / name, root / "tools" / name)
         guide = root / "guide.md"
