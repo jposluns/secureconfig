@@ -11,7 +11,7 @@ in step with the merged pull request is therefore an authoring obligation, not a
 
 ## 2026-09-26
 
-- Restrict the shared gate walker to tracked working-tree files (#NNN), row 3.28. Preserve caller filters, fail closed when Git or selected tracked inputs are unavailable, and test unreadable untracked directories alongside untracked violations. Stage existing gate fixtures in temporary Git indexes.
+- Restrict the shared gate walker to tracked working-tree files (#396), row 3.28. Preserve caller filters, fail closed when Git or selected tracked inputs are unavailable, and test unreadable untracked directories alongside untracked violations. Stage existing gate fixtures in temporary Git indexes.
 
 - Apply the remapped-publication convention to Helicone PostgreSQL 5432, Helicone ClickHouse 8123 and the Onyx MinIO console 9001 (#394), row 1.176. Allowlist the container ports against host rows 54388, 18123 and 9005, and remove their container descriptions and guide citations from the container-port rows.
 - Apply the 2026-09-26 maintainer ruling on remapped container ports (#393), row 1.175. Allowlist Open WebUI 8080 behind host port 3000; remove the Vaultwarden 80, TEI 80, Mem0 8000 and SearxNG 8080 container descriptions while retaining their guides for other listeners on those numbers. Vaultwarden has no documented remapped publication or host-port row citing its guide. Record the convention and supersede P4; other remapped services remain outside this change. Row 1.176 tracks them.
