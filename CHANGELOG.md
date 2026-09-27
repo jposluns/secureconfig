@@ -13,6 +13,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 ## 2026-09-27
 
 - Check Verify inline commands for credential arguments with the shared fenced-shell checks, explicit code-specific waivers and regression fixtures. Row 3.36 (#NNN).
+- Report Vite SSR server-build matches under dist/server/ separately in frontend-frameworks.md's Verify secret scan instead of as client leaks; the scan still covers all of dist, since automatic narrowing proved unsafe, and now follows symlinks. Row 1.188. (#414)
 - Correct version-basis claim sources in 6 guides found by the row 1.187 audit, part 2a (#417).
 - Correct version-basis claim sources in 9 guides found by the row 1.187 audit: 25 claims now cite the lines that show their facts, and the Dagster port-fallback claim and body now cover an explicit port 0 (#416).
 - Correct 44 offset or wrong GitHub line anchors across 14 guides found by the row 1.187 audit (#415).
