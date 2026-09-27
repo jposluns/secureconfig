@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "fbca096135e6435fb871c3121bcf03d6f4131888d3a4bd4e13a62b2d5e66e05b",
+  "body_sha256": "808963ba1a2f2fa2449413a34edaafcba712497f2b46e1c6e2670ea95e07d0a1",
   "components": {
     "adapter": {
       "name": "SvelteKit adapter-node",
@@ -183,7 +183,7 @@ Both are development tooling, not a production server: the `vite preview` docs s
 
 Run from the project root after a production build. The paths below cover default SvelteKit adapter-node output (`build/client` plus the separate `build/prerendered`), Nuxt/Nitro public output (`.output/public`, including copied public assets and prerendered pages), and a plain Vite client build (`dist`, including copied public assets). They exclude adapter-node server output and Nitro `.output/server`.
 
-Before running, adjust both path lists for your actual adapter, Nitro preset or configured output directories. The block always scans all of `dist`, so it never misses a browser-served file. In a Vite SSR layout, where `dist/server` holds the server build, a result whose matches are all under `dist/server/` is reported as server output rather than as a client leak; any other match is a FINDING; confirm that `dist/server` is server-only in your deployment before treating it as clean. Include any separately deployed static assets and prerendered HTML, and, apart from `dist` (whose server-build matches are reported separately), never select a parent containing server-only output. This file scan does not inspect dynamically rendered HTML or API responses.
+Before running, adjust both path lists for your actual adapter, Nitro preset or configured output directories. The block always scans all of `dist`, so it never misses a browser-served file. In a Vite SSR layout, where `dist/server` holds the server build, a result whose matches are all under `dist/server/` is reported as server output rather than as a client leak, and any other match is a FINDING. Confirm that `dist/server` is server-only in your deployment before treating a server-output result as clean. Include any separately deployed static assets and prerendered HTML, and, apart from `dist` (scanned whole, as described above), never select a parent containing server-only output. This file scan does not inspect dynamically rendered HTML or API responses.
 
 REASONED: following block; private-route denial, client-secret scanning, Host handling and proxy cookies/redirects. No deployed framework application or run outcome is recorded here; expectations are reasoned from the guide and its cited framework and grep documentation.
 
