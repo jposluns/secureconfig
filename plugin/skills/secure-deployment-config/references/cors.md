@@ -38,15 +38,18 @@ Keep the origin list in configuration per environment rather than hardcoding loc
 
 ## Verify
 
+**REASONED:** No deployed API or browser session was run here; this rests on the Fetch Standard and MDN's CORS guide (Sources). An exposed API echoes `https://evil.example` in `Access-Control-Allow-Origin`; the fixed API omits it for that origin and returns only your listed origin, with `Access-Control-Allow-Credentials: true` only where the browser must send credentials.
+
 ```bash
 curl -q -s -o /dev/null -D - https://api.example.com/data -H "Origin: https://evil.example" | grep -i access-control
 # expect: no Access-Control-Allow-Origin echoing the hostile origin
 curl -q -s -o /dev/null -D - https://api.example.com/data -H "Origin: https://app.example.com" | grep -i access-control
-# expect: your origin, and Allow-Credentials only if you use cookies
+# expect: your origin, and Allow-Credentials only if the browser must send credentials: cookies, HTTP authentication, or TLS client certificates
 ```
 
 ## Sources (checked September 2026)
 
 - MDN: Cross-Origin Resource Sharing, for the protocol itself: https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS
+- Fetch Standard, definition of credentials: https://fetch.spec.whatwg.org/#credentials
 - Express `cors` middleware, for the `origin` and `credentials` options used above: https://expressjs.com/en/resources/middleware/cors/
 - FastAPI CORS, for `CORSMiddleware` and its parameters: https://fastapi.tiangolo.com/tutorial/cors/

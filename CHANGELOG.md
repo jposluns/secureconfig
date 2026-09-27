@@ -11,6 +11,8 @@ in step with the merged pull request is therefore an authoring obligation, not a
 
 ## 2026-09-27
 
+- Clarify manual DNS-01 and its renewal limits, and include HTTP authentication and TLS client certificates in CORS credential guidance. Row 1.181. (#NNN)
+
 - Qualify Docker 28.0 publishing hardening with the firewalld-reload regression, recommend Engine 28.3.3 or later with firewalld, and re-check container-address reachability after reload. Row 1.180. (#401)
 
 ## 2026-09-26
