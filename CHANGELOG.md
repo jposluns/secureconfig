@@ -11,6 +11,7 @@ in step with the merged pull request is therefore an authoring obligation, not a
 
 ## 2026-09-27
 
+- Narrow the frontend-frameworks secret scan to client assets and prerendered pages, preserve its secret-input and grep-status guards, and document custom and SSR output paths. Row 1.185. (#NNN)
 - Move the #389 and #391 to #399 bullets to their UTC merge date, rename the version-basis gate label after the rollout, and extend the source-gap and follow-up backlog, with rows 1.143 and 1.138 retired (maintainer ruling 2026-09-27), and record the day's four rulings in DECISIONS.md. Row 3.37. (#408)
 - Deny dotfiles and common backup and dump suffixes in the Caddy web-exposure example, align nginx and Apache suffix rules, and add planted-file probes for the added classes. Row 1.184. (#406)
 - Version basis for every guide: 100 guides carry version-basis front matter and a generated per-claim summary (versions, documentation date, DEMONSTRATED or REASONED), drafted in 20 batches under a body-identity check and reviewed in five two-family stages; every Verify fence is now marked. Rows 3.32 and 3.27. (#407)
