@@ -108,7 +108,8 @@ SCOPE
   equal-length backticks, including double backticks and multiline spans,
   are recognized in prose, lists, tables, headings and quoted prose. Newlines
   normalize to spaces. Fences, indented code and HTML are not inline prose.
-  One leading `$ ` or `# ` console prompt is stripped first. inline_kind
+  One leading `$ ` or `# ` console prompt, optionally after spaces or tabs,
+  is stripped first. inline_kind
   selects a span with a known command word (INLINE_COMMANDS) in command
   position anywhere (after leading assignments, keywords such as if/then/do/!,
   `(`, a lifted $(...), or ; && || |), or with shell pipe or redirection
@@ -2169,13 +2170,15 @@ def verify_inline_spans(text, in_verify=False, in_quote=False):
                 yield line, body
 
 
-# One leading console prompt. Unlike the console fence's `$` prompt, the
-# space is required, so `$(cmd)` and `$VAR` spans keep their first character.
-INLINE_PROMPT_RE = re.compile(r"[$#] (.*)", re.S)
+# One leading console prompt, optionally after spaces or tabs. Unlike the
+# console fence's `$` prompt, the space after it is required, so `$(cmd)` and
+# `$VAR` spans keep their first character.
+INLINE_PROMPT_RE = re.compile(r"[ \t]*[$#] (.*)", re.S)
 
 
 def inline_prompt(span):
-    """Strip a single leading `$ ` or `# ` console prompt."""
+    """Strip a single leading `$ ` or `# ` console prompt, with any leading
+    spaces or tabs before it."""
     m = INLINE_PROMPT_RE.fullmatch(span)
     return m.group(1) if m else span
 
@@ -3995,6 +3998,15 @@ _INLINE_CASES = [
     ("prompt-dollar-pipe", "## Verify\n`$ curl -u user:pass https://x | cat`\n",
      ["C3-USER-ARGV"], [2]),
     ("prompt-hash", "## Verify\n`# mysql -pSECRET`\n", ["C3-TOOL-ARGV"], [2]),
+    # Round 2: optional leading whitespace before the prompt; `$(` and `$VAR`
+    # are never prompts.
+    ("prompt-dollar-lead-space", "## Verify\n` $ curl -u user:pass https://x`\n",
+     ["C3-USER-ARGV"], [2]),
+    ("prompt-hash-lead-tab", "## Verify\n`\t# mysql -pSECRET`\n",
+     ["C3-TOOL-ARGV"], [2]),
+    ("lead-space-cmdsub", "## Verify\n` $(mysql -pSECRET)`\n",
+     ["C3-TOOL-ARGV"], [2]),
+    ("lead-space-var", "## Verify\n` $VAR`\n", [], []),
     ("option-fragment", "## Verify\n`--password` `$ --password`\n", [], []),
 ]
 for _waiver in (
