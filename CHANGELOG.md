@@ -11,7 +11,7 @@ in step with the merged pull request is therefore an authoring obligation, not a
 
 ## 2026-09-27
 
-- Keep the Cloudflare Access Verify service-token secret out of curl argv and shell history with a guarded hidden prompt and stdin headers; report only HTTP status and redirect destination. Row 1.181. (#NNN)
+- Keep the Cloudflare Access Verify service-token secret out of curl argv and shell history with a guarded hidden prompt and stdin headers; report only HTTP status and redirect destination. Row 1.181. (#403)
 - Reject leading or trailing whitespace in version-basis strings and test each component-name, basis, claim-text and evidence field. Replace CONTRIBUTING rule 8's drifting corpus counts with a reference to gate output. Row 3.35. (#400)
 - Qualify Docker 28.0 publishing hardening with the firewalld-reload regression, recommend Engine 28.3.3 or later with firewalld, and re-check container-address reachability after reload. Row 1.180. (#401)
 
