@@ -348,9 +348,7 @@ class SourcesBasisTests(unittest.TestCase):
                       f'{u} <a': '<a> element', f'{u} <span title="x">t</span>':
                       '<span> tag with attributes', f'{u} <span\n  title=x>t</span>':
                       '<span> tag with attributes'}
-        reference_forms = {f'[t][r] {u}': 'reference-style link', f'[t][] {u}': 'reference-style link',
-                           f'{u}\n\n[r]: {u}': 'reference definition',
-                           f'{u}\n  [r]:\n  {u}': 'reference definition'}
+        reference_forms = {f'[t][r] {u}': 'reference-style link', f'[t][] {u}': 'reference-style link'}
         entity = 'character reference or backslash escape'
         encoded = 'percent-encoded unreserved character'
         spelling_forms = {u.replace('/control', '&#47;control'): entity,
@@ -380,19 +378,75 @@ class SourcesBasisTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, r'^Sources line 19: raw HTML <a> element'):
             self.check(form, baseline=Counter({('fixture.md', fp): 1}))
 
-    def test_shortcut_reference_to_a_definition_elsewhere_fails(self):
+    def check_with_prose(self, prose, sources):
+        """Like check(), with prose added after the fixture's first paragraph."""
         u = self.url
         data = fixture()
         data['components']['product']['sources'] = {vb.source_id(u): u}
         data['claims']['control']['sources'] = ['product:' + vb.source_id(u)]
         body = (BODY[:BODY.index('- Product')].replace(
-                    'A documented control.', f'A documented control.\n\n[Ref  Doc]: {u}')
-                + f'- Product v1.0: {u}\n- Again: [ref doc]\n')
+                    'A documented control.', 'A documented control.\n\n' + prose)
+                + sources + '\n')
         data['body_sha256'] = vb.digest(body)
-        with self.assertRaisesRegex(ValueError, 'shortcut reference link'):
-            vb.updated(document(data, body), 'fixture.md')
-        # Without a definition, a bracketed word is literal text.
+        return vb.updated(document(data, body), 'fixture.md')
+
+    def test_reference_definitions_fail_guide_wide(self):
+        # Round 5: with a definition anywhere, each of these Sources labels renders
+        # as a link to u (checked against markdown-it-py's CommonMark renderer),
+        # but the per-line shortcut check missed it and the basis-less item passed.
+        u = self.url
+        definition = 'reference definition; enrolled guides cite with inline links only'
+        for prose, again in ((f'[ref doc]: {u}', '[ref\n  doc]'),          # split use
+                             (f'[ref\ndoc]: {u}', '[ref doc]'),            # split definition
+                             (f'[ref\\]doc]: {u}', '[ref\\]doc]'),        # escaped bracket
+                             (f'[manual]: {u}', '[manual](updated September 2026)'),
+                             (f'[Ref  Doc]: {u}', '[ref doc]'),
+                             (f'- [r]: {u}', '[r]'), (f'> [r]:\n> {u}', '[r]'),
+                             (f'   [r]: <{u}>', '[r]')):
+            with self.subTest(prose=prose), self.assertRaisesRegex(
+                    ValueError, r'^line \d+: ' + re.escape(definition)):
+                self.check_with_prose(prose, f'- Product v1.0: {u}\n- Again: {again}')
+        # A definition outside Sources fails with no use at all, and so does one in Sources.
+        with self.assertRaisesRegex(ValueError, r'^line 8: ' + re.escape(definition)):
+            self.check_with_prose(f'[r]: {u}', f'- Product v1.0: {u}')
+        for sources in (f'- Product v1.0: {u}\n\n[r]: {u}', f'- Product v1.0: {u}\n  [r]:\n  {u}',
+                        f'- Product v1.0: {u}\n  [r\n  s]: {u}'):
+            with self.subTest(sources=sources), self.assertRaisesRegex(
+                    ValueError, r'^line \d+: ' + re.escape(definition)):
+                self.check(sources)
+        # Passing controls: a bracketed word or an IPv6 literal is literal text.
         self.check(f'- Product v1.0: {u}; `loopback_users` [guest] and [::]')
+        self.check_with_prose('Listen on [::]:443 and [guest].', f'- Product v1.0: {u}')
+
+    def test_sources_lines_close_brackets_and_code_spans(self):
+        # Round 5: constructs that span lines escaped the per-line grammar.
+        u = self.url
+        grammar = r'^Sources line \d+: .*'
+        span = 'code span crosses a line in Sources'
+        bracket = 'bracket left open or closed across a line in Sources'
+        escaped = 'escaped bracket or backtick in Sources'
+        # Each hides a live <a href> from same-line masking (markdown-it-py renders
+        # it); the second has an even count of backticks on each line.
+        for again, construct in ((f'` ``\n  ` <a href={u}>t</a> `', span),
+                                 (f'`` `x`\n  ` `` <a href={u}>t</a> `', span),
+                                 ('`one line', span), ('[ref\n  doc]', bracket),
+                                 ('ref]', bracket), ('][', bracket), ('[a [b]', bracket),
+                                 ('[t\n  more](https://x.example/)', bracket),
+                                 ('[ref\\]doc]', escaped), ('\\[literal\\]', escaped),
+                                 ('a \\( b', escaped), ('a \\) b', escaped),
+                                 ('a \\` b', escaped), ('`\\[`', escaped)):
+            with self.subTest(again=again), self.assertRaisesRegex(
+                    ValueError, grammar + re.escape(construct)):
+                self.check(f'- Product v1.0: {u}\n- Again: {again}')
+        # Passing controls: an even run of backslashes escapes only itself; a
+        # wrapped item without brackets across lines; ordinary [text](url); code
+        # spans and bracket pairs that close on their own line.
+        for sources in (f'- Product v1.0: {u}\n  Again C:\\\\[x] without a URL',
+                        f'- Product v1.0 wrapped\n  across lines:\n  {u}',
+                        f'- Product v1.0: [text]({u})',
+                        f'- Product v1.0 (`[a`, `` ` ``, [b [c]]):\n  [text]({u})'):
+            with self.subTest(sources=sources):
+                self.check(sources)
 
     def test_sources_grammar_allowed_forms(self):
         u = self.url

@@ -77,12 +77,17 @@ Schema 1 requires exactly these top-level fields:
   heading of the same or higher level; a Setext underline never ends it. Basis matching is
   literal and case-sensitive, with no adjacent ASCII letter, digit or dot: `v2.51.0` and
   `2.51.0` are not interchangeable. A matching literal inside the cited URL counts too.
-  Components with basis `unknown` are exempt from the basis requirement. Sources cite URLs
-  only as bare URLs, `<autolinks>` or inline links (bracketed text, then the URL in
-  parentheses). In an enrolled guide's Sources, outside fences and code spans, these fail and
-  are never baselined: a raw HTML tag with attributes, and any `a`, `img`, `link` or `area`
-  element (a `<PLACEHOLDER>` without attributes is fine); a reference-style link, a reference
-  definition, or a bracketed label that a definition elsewhere in the guide turns into a link;
+  Components with basis `unknown` are exempt from the basis requirement. Enrolled guides cite
+  with inline links only: a link reference definition anywhere outside fences fails, even one
+  whose label spans lines, so no bracketed label can become a link. Sources cite URLs only as
+  bare URLs, `<autolinks>` or inline links (bracketed text, then the URL in parentheses). In
+  an enrolled guide's Sources, outside fences, every line closes what it opens: each backtick
+  lies in a code span that ends on that line, and outside code spans each opening bracket is
+  closed on that line, with no stray closing bracket. A backslash-escaped bracket, parenthesis
+  or backtick fails anywhere in Sources, even in a code span. Outside fences and code spans,
+  these also fail, and none of these failures is ever baselined: a raw HTML tag with
+  attributes, and any `a`, `img`, `link` or `area` element (a `<PLACEHOLDER>` without
+  attributes is fine); a reference-style link (bracketed text, then a bracketed label);
   a character reference (`&amp;`, `&#47;`) or backslash escape on a line with a URL or link;
   and, on such a line, a percent-encoded unreserved character (letter, digit, `-`, `.`, `_` or
   `~`, such as `%61`). A component URL may not contain a character reference, an escape or an

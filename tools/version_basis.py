@@ -138,9 +138,9 @@ def cites(text, url):
 
     Match each component URL; never extract URLs from the text. An extractor
     reads [url](url) and **url** as other spellings and so misses the citation.
-    Text is not decoded: sources_grammar() first refuses the spellings (raw HTML
-    links, reference links, entities, escapes, percent-encoded unreserved
-    characters) whose rendered URL differs from the raw text.
+    Text is not decoded: definitions() and sources_grammar() first refuse the
+    spellings (raw HTML links, reference links, entities, escapes, percent-encoded
+    unreserved characters) whose rendered URL differs from the raw text.
     """
     escaped = re.escape(url)
     return len(re.findall(_OPENS + '(?:(?<=_)' + escaped + _CLOSES_AFTER_UNDERSCORE
@@ -152,10 +152,13 @@ _URL_OR_LINK = re.compile(r'[A-Za-z][A-Za-z0-9+.-]*://|www\.|\]\(|<[A-Za-z][A-Za
 _TAG = re.compile(r'</?([A-Za-z][A-Za-z0-9-]*)(?![A-Za-z0-9-])')
 _LINK_TAGS = {'a', 'img', 'link', 'area'}
 _REFERENCE_USE = re.compile(r'\]\[')
-_REFERENCE_DEFINITION = re.compile(r'\[[^\]]*\]:')
-# A definition anywhere in the guide makes a Sources [ref] a shortcut reference link.
-_DEFINITION_LINE = re.compile(r'^[ \t]*(?:(?:[-*+]|[0-9]{1,9}[.)])[ \t]+|>[ \t]?)*\[([^\]]+)\]:')
-_SHORTCUT = re.compile(r'\[([^\]]+)\](?![(\[])')
+# A link reference definition: after container markers, [label]: at the start of a
+# line, or the ]: that ends a label begun on an earlier line (no unescaped bracket
+# before it). Enrolled guides have none, so no [ref], [ref][] or [t][ref] resolves.
+_DEFINITION = re.compile(r'^[ \t]*(?:(?:[-*+]|[0-9]{1,9}[.)])[ \t]+|>[ \t]?)*'
+                         r'\[?(?:[^\[\]\\]|\\.)*\]:')
+# An escaped bracket, parenthesis or backtick (after an even run of backslashes).
+_ESCAPED_DELIMITER = re.compile(r'(?<!\\)(?:\\\\)*\\[\[\]()`]')
 _UNRESERVED = re.compile(r'%(?:3[0-9]|4[1-9A-Fa-f]|5[0-9Aa]|6[1-9A-Fa-f]|7[0-9Aa]'
                          r'|2[DdEe]|5[Ff]|7[Ee])')
 
@@ -168,14 +171,33 @@ def without_code_spans(line):
     return line
 
 
-def label(text):
-    return ' '.join(text.split()).casefold()
+def balanced(text):
+    depth = 0
+    for char in text:
+        depth += {'[': 1, ']': -1}.get(char, 0)
+        if depth < 0:
+            return False
+    return depth == 0
 
 
-def grammar_violations(line, labels=frozenset()):
+def definitions(body, line_offset=0):
+    """Fail closed on any link reference definition outside fences, guide-wide.
+
+    With none, a bracketed label can never become a shortcut, collapsed or full
+    reference link, however its label or an invalid inline destination is spelled.
+    """
+    from check_guide_shape import scan
+    errors = [f'line {index + 1 + line_offset}: reference definition; '
+              'enrolled guides cite with inline links only'
+              for index, line in sorted(scan(body)[1].items()) if _DEFINITION.match(line)]
+    require(not errors, '; '.join(errors))
+
+
+def grammar_violations(line):
     """Yield a construct description for each Sources grammar violation on one line.
 
-    labels: normalized reference-definition labels defined anywhere in the guide.
+    Each line must close its code spans and brackets, so the same-line masking
+    here is exact: no code span, link text or label can continue onto another line.
     """
     text = without_code_spans(line)
     for match in _TAG.finditer(text):
@@ -186,15 +208,19 @@ def grammar_violations(line, labels=frozenset()):
             yield f'raw HTML <{match[1]}> tag with attributes'
     if _REFERENCE_USE.search(text):
         yield 'reference-style link ([text][ref] or [text][])'
-    if _REFERENCE_DEFINITION.search(text):
-        yield 'reference definition ([ref]: url)'
-    if any(label(match[1]) in labels for match in _SHORTCUT.finditer(text)):
-        yield 'shortcut reference link ([ref] with a definition elsewhere in the guide)'
     if _URL_OR_LINK.search(decoded(text)):
         if _ESCAPE.search(text):
             yield 'character reference or backslash escape on a line with a URL or link'
         if _UNRESERVED.search(text):
             yield 'percent-encoded unreserved character on a line with a URL or link'
+    # Every backtick must lie in a same-line span. A count is no test: `` ` `` is
+    # odd but closed, while `` `x` is even and its `` can close on the next line.
+    if '`' in text:
+        yield 'code span crosses a line in Sources'
+    if not balanced(text):
+        yield 'bracket left open or closed across a line in Sources'
+    if _ESCAPED_DELIMITER.search(line):
+        yield 'escaped bracket or backtick in Sources'
 
 
 def sources_grammar(body, heads, line_offset=0):
@@ -203,14 +229,13 @@ def sources_grammar(body, heads, line_offset=0):
     Sources cite URLs as bare URLs, <autolinks> or inline [text](url) links.
     Raw HTML links, reference links, character references, backslash escapes and
     percent-encoded unreserved characters render as a URL that the raw text
-    does not spell, so cites() would miss the citation. Scans the ATX-bounded
-    Sources lines of raw_sources(), outside fences and same-line code spans.
+    does not spell, so cites() would miss the citation. Code spans and brackets
+    that cross lines would make the per-line checks misread what renders.
+    Scans the ATX-bounded Sources lines of raw_sources(), outside fences and
+    same-line code spans; definitions() has already refused reference definitions.
     """
-    from check_guide_shape import scan
     from check_verify_marking import tokenize
     content, ranges = _sources_ranges(body, heads)
-    labels = {label(match[1]) for line in scan(body)[1].values()
-              for match in [_DEFINITION_LINE.match(line)] if match}
     errors = []
     for start, end in ranges:
         lines, _, tokens = tokenize('\n'.join(content[start:end]))
@@ -220,7 +245,7 @@ def sources_grammar(body, heads, line_offset=0):
             if index not in code:
                 errors.extend(f'Sources line {start + index + 1 + line_offset}: {construct}; '
                               'cite URLs as bare URLs, <autolinks> or inline [text](url) links'
-                              for construct in grammar_violations(line, labels))
+                              for construct in grammar_violations(line))
     require(not errors, '; '.join(errors))
 
 
@@ -380,6 +405,7 @@ def validate(data, body, guide='GUIDE.md', baseline=None, line_offset=0):
                 SOURCES_RE.match(title).group(1).lower() == documentation.strftime('%B').lower() and
                 int(SOURCES_RE.match(title).group(2)) == documentation.year
                 for _, _, title, _ in heads), 'documentation month differs from Sources')
+    definitions(body, line_offset)
     sources_grammar(body, heads, line_offset)
     identifiers(data['components'])
     for component in data['components'].values():
