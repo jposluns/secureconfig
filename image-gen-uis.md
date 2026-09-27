@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "f08ec22b34c406f453d633597feba6aabd55243dee5b5628b4b0bb8404bf6037",
+  "body_sha256": "b6f475d01b9b9b02da6c714d18c5327af2e172484bda2a27270cd05be2badf02",
   "components": {
     "comfy": {
       "name": "ComfyUI",
@@ -37,7 +37,9 @@ version_basis: {
         "sf3f6d5cafad0": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/shared_init.py#L17-L24",
         "sbfd3d01539c3": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/ui_loadsave.py#L14-L73",
         "s7b714092036e": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L77-L78",
-        "s23a49b75b6a1": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/webui.py#L79-L82"
+        "s23a49b75b6a1": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/webui.py#L79-L82",
+        "s9a93a7fe8617": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L47",
+        "s72ec61fe38c9": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L51"
       }
     },
     "gradio": {
@@ -134,7 +136,7 @@ version_basis: {
     "manager": {"text": "Manager RCE advisory requires ComfyUI at least v0.3.76 and Manager at least v3.38 together.", "components": ["comfy-min", "manager-min"], "sources": ["comfy-min:s4ce66189c3c9", "manager-min:s4ce66189c3c9"], "status": "REASONED"},
     "node-flags": {"text": "--disable-all-custom-nodes and --whitelist-custom-nodes limit loaded nodes, not network exposure.", "components": ["comfy"], "sources": ["comfy:s8b2f213483c1"], "status": "REASONED"},
     "webui-auth": {"text": "UI auth file/list syntax, API-only auth, colon/comma parsing differences and plaintext HTTP require a TLS proxy.", "components": ["webui"], "sources": ["webui:s42a42cca605b", "webui:s0195caed3cb9", "webui:sd5f3496b66aa", "webui:s66a044b7666c"], "status": "REASONED"},
-    "webui-flags": {"text": "--listen, --share relay and insecure extension access affect exposure. Without --port, Gradio searches from GRADIO_SERVER_PORT (7860 when unset) for up to GRADIO_NUM_PORTS ports (default 100); explicit --port 7860 pins the UI port.", "components": ["webui", "gradio"], "sources": ["webui:s42a42cca605b", "webui:s7b714092036e", "webui:s23a49b75b6a1", "webui:saf69abeba189", "gradio:s6f6c16695b71", "gradio:s67ebd44760a7"], "status": "REASONED"},
+    "webui-flags": {"text": "--listen, --share relay and insecure extension access affect exposure. Without --port, Gradio searches from GRADIO_SERVER_PORT (7860 when unset) for up to GRADIO_NUM_PORTS ports (default 100); explicit --port 7860 pins the UI port.", "components": ["webui", "gradio"], "sources": ["webui:s7b714092036e", "webui:s23a49b75b6a1", "webui:saf69abeba189", "gradio:s6f6c16695b71", "gradio:s67ebd44760a7", "webui:s9a93a7fe8617", "webui:s72ec61fe38c9"], "status": "REASONED"},
     "api-input": {"text": "API credentials have no shipped stdin/file/environment/prompt input; settings and UI config do not populate api_auth.", "components": ["webui"], "sources": ["webui:s82803810022a", "webui:s914278bcbf70", "webui:sb59e633133f6", "webui:sf3f6d5cafad0", "webui:sbfd3d01539c3"], "status": "REASONED"},
     "api-leak": {"text": "cmd-flags reveals all options; API auth users can read API passwords, unauthenticated API can expose UI argv credentials.", "components": ["webui"], "sources": ["webui:sb59e633133f6", "webui:s57d98254f09d", "webui:s256946a60534"], "status": "REASONED"},
     "argv": {"text": "COMMANDLINE_ARGS becomes argv; launcher prints credentials and local argv/environment readers may read them.", "components": ["webui"], "sources": ["webui:s914278bcbf70", "webui:s5b2e23d1781d", "webui:sfa27f3a86456"], "status": "REASONED"},
@@ -396,6 +398,7 @@ curl -q -g -sI https://imagegen.example.com/                # via the proxy: TLS
 - AUTOMATIC1111 Command Line Arguments and Settings wiki: https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Command-Line-Arguments-and-Settings
 - AUTOMATIC1111 `--gradio-auth-path` ("set gradio authentication file path"), `--gradio-auth`, `--api-auth` and `--server-name` definitions (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L87-L113
 - AUTOMATIC1111 `--listen` and `--port` (`default=None`) definitions and the UI launch call passing `server_port=cmd_opts.port` (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L77-L78 and https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/webui.py#L79-L82
+- AUTOMATIC1111 `--share` (a Gradio share link) and `--enable-insecure-extension-access` definitions (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L47 and https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L51
 - AUTOMATIC1111 credential reader: opens `cmd_opts.gradio_auth_path`, splits each line on `,` and each entry once on `:` (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/initialize_util.py#L114-L139
 - AUTOMATIC1111 passes the credential list to Gradio as `auth=` (`list(initialize_util.get_gradio_auth_creds()) or None`; pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/webui.py#L70-L90
 - AUTOMATIC1111 API credential input trace: plain `ArgumentParser()` without argument-file support, string `--api-auth` defaulting to `None`, parsing of argv and the shared namespace alias (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L6, https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L102, https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/shared_cmd_options.py#L7-L15 and https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/shared.py#L14-L20
