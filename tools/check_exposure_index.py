@@ -24,8 +24,8 @@ names the number, one to five digits count; elsewhere two to five do:
   - a published mapping, quoted or not and with an optional IPv4 or bracketed IPv6 bind host
     (`-p 3000:8080`, `-p "127.0.0.1:3000:8080"`, `-p [::]:3000:8080`, a Compose `- "3000:8080"`),
     where both sides count: map the host side and allowlist the container side when remapped,
-    unless the guide also documents a listener on that number; a Compose-style `- H:C` must end its line, so a bullet such as
-    "- 10:30 UTC" is not a mapping;
+    unless the guide also documents a listener on that number; a Compose-style `- H:C` must end
+    its line, so a bullet such as "- 10:30 UTC" is not a mapping;
   - a backticked published pair in prose or a table cell, the code span holding only `H:C` with
     the same optional bind host and an optional `/tcp` or `/udp` (`8888:8080`,
     `127.0.0.1:8888:8080`), both sides counting as for a published mapping; when both sides have
@@ -88,9 +88,9 @@ guides are silent. A row that breaks this fails the gate and maps nothing.
 ALLOWLIST. tools/exposure_index_allowlist.txt lists `<guide> <port>  # reason` pairs that match a
 pattern but are not listeners that guide documents (an outbound destination, an illustrative
 number, a container port behind a remapped publication), whether the mention is unmapped or
-uncited. An entry fails the gate when it is STALE (no
-mention of that port remains in that guide) or REDUNDANT (the mention remains but the index now
-maps it for that guide), so the list cannot outlive the text or the gap it excuses.
+uncited. An entry fails the gate when it is STALE (no mention of that port remains in that guide)
+or REDUNDANT (the mention remains but the index now maps it for that guide), so the list cannot
+outlive the text or the gap it excuses.
 
 Exit status: 0 when every mention is mapped for its guide or allowlisted, every entry is still
 needed, and every index row is well formed; 1 otherwise; 2 when the exact header line cannot be
