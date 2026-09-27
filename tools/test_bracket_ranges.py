@@ -47,6 +47,7 @@ from pathlib import Path
 TOOLS = Path(__file__).resolve().parent
 sys.path.insert(0, str(TOOLS))
 import check_bracket_ranges as gate  # noqa: E402
+from _walk import isolated_git_environment  # noqa: E402
 
 MARK = "# bracket-ranges: allow "
 GREP = "grep -E '^[a-z]+$' f"
@@ -994,6 +995,7 @@ ALLOW_CASES += (
 )
 
 
+@isolated_git_environment()
 def run_repo(files, unreadable_dir=False, unreadable_allow=False):
     """Build a throwaway repository and run the shipped gate in it. Returns (exit, stdout)."""
     d = Path(tempfile.mkdtemp())

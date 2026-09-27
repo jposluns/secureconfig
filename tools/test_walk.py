@@ -7,7 +7,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from _walk import walk_files
+from _walk import isolated_git_environment, walk_files
 
 TOOLS = Path(__file__).resolve().parent
 GATES = {
@@ -34,6 +34,7 @@ def write(root, name, text):
     return path
 
 
+@isolated_git_environment()
 def gate_case(gate, name, violation):
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory)
@@ -82,6 +83,7 @@ def gate_case(gate, name, violation):
             blocked.chmod(0o755)
 
 
+@isolated_git_environment()
 def selection_cases():
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory)
@@ -146,11 +148,65 @@ def expect_git_error(root):
         raise AssertionError("Git failure passed")
 
 
+@isolated_git_environment()
+def fixture_environment_cases():
+    """Each fixture entry point must preserve an unrelated repository's index."""
+    commands = (
+        ("check_site.py", "--self-test"),
+        ("check_newtab.py", "--self-test"),
+        ("test_shell_blocks.py",),
+        ("test_bracket_ranges.py",),
+        ("test_workflow_pins.py",),
+        # Exercise the walker fixtures without recursively launching this matrix.
+        ("test_walk.py", "--fixtures-only"),
+    )
+    with tempfile.TemporaryDirectory() as directory:
+        external = Path(directory)
+        git(external, "init", "-q")
+        write(external, "sentinel.txt", "staged work must survive\n")
+        git(external, "add", "sentinel.txt")
+        index = external / ".git" / "index"
+        before = index.read_bytes()
+        staged = subprocess.run(
+            ["git", "ls-files", "-z"], cwd=external, check=True,
+            capture_output=True, timeout=30,
+        )
+        assert staged.stdout == b"sentinel.txt\0", staged.stdout
+        for variable, value in (("GIT_INDEX_FILE", index),
+                                ("GIT_DIR", external / ".git")):
+            for script, *args in commands:
+                env = dict(os.environ, **{variable: str(value)})
+                # The existing new-tab self-test assumes the upstream default host.
+                env["AIQT_SITE_HOST"] = "aiqt.ai"
+                label = (script, variable)
+                try:
+                    result = subprocess.run(
+                        [sys.executable, "-B", str(TOOLS / script), *args],
+                        cwd=TOOLS.parent, env=env, capture_output=True,
+                        text=True, timeout=300,
+                    )
+                finally:
+                    assert index.read_bytes() == before, (label, "external index changed")
+                assert result.returncode == 0, (
+                    label, result.returncode, result.stdout, result.stderr,
+                )
+        # The production walker must still honor an explicitly selected index.
+        write(external, "alternate.txt", "selected by a hook\n")
+        alternate = external / ".git" / "alternate-index"
+        os.environ["GIT_INDEX_FILE"] = str(alternate)
+        git(external, "add", "alternate.txt")
+        assert list(walk_files(external)) == [external / "alternate.txt"]
+        assert index.read_bytes() == before, "production scan changed the default index"
+    print("  ok    6 fixture entry points preserve external indexes under both Git selectors")
+
+
 def main():
     try:
         selection_cases()
         for gate, (name, violation) in GATES.items():
             gate_case(gate, name, violation)
+        if "--fixtures-only" not in sys.argv[1:]:
+            fixture_environment_cases()
     except (AssertionError, OSError, subprocess.SubprocessError) as exc:
         print(f"  FAIL  tracked walker self-test: {exc}")
         return 1

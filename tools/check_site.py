@@ -36,7 +36,7 @@ from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _walk import walk_files  # noqa: E402  fail-closed tracked-file enumeration
+from _walk import isolated_git_environment, walk_files  # noqa: E402  fail-closed tracked-file enumeration
 
 EN, EM = "–", "—"
 # Site host from AIQT_SITE_HOST (default, and empty-value fallback, aiqt.ai; lowercased), so a
@@ -256,6 +256,7 @@ def logo_findings(pages):
     return out
 
 
+@isolated_git_environment()
 def _self_test():
     good = '<a class="logo" href="/">L</a>'
     bad = '<a class="logo" href="/">L&trade;</a>'

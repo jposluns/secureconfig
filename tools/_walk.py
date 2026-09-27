@@ -10,7 +10,28 @@ is no filesystem-walk fallback. Callers retain their own content checks and erro
 import os
 import stat
 import subprocess
+from contextlib import contextmanager
 from pathlib import Path
+
+
+@contextmanager
+def isolated_git_environment():
+    """Isolate synchronous fixture setup and scans, restoring the caller on exit.
+
+    Used only by tests. Clearing all GIT_* variables also removes config injection
+    and repository selectors beyond GIT_DIR, GIT_WORK_TREE and GIT_INDEX_FILE.
+    The context covers in-process scans as well as their child Git processes.
+    """
+    saved = os.environ.copy()
+    env = {key: value for key, value in saved.items() if not key.startswith("GIT_")}
+    env.update(GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull)
+    try:
+        os.environ.clear()
+        os.environ.update(env)
+        yield
+    finally:
+        os.environ.clear()
+        os.environ.update(saved)
 
 
 def walk_files(root, skip_dirs=frozenset(), suffixes=None):
@@ -22,6 +43,8 @@ def walk_files(root, skip_dirs=frozenset(), suffixes=None):
     selected paths raise OSError, as do Git failures; callers fail closed on that exception.
     """
     root = Path(root)
+    # Real scans must inherit Git's environment: a pre-commit hook must list
+    # the index selected by Git. Only fixture callers isolate their environment.
     try:
         result = subprocess.run(
             ["git", "ls-files", "-z", "--cached"], cwd=root, check=True,

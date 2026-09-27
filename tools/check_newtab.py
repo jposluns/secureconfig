@@ -37,7 +37,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _walk import walk_files  # noqa: E402  fail-closed tree walk
+from _walk import isolated_git_environment, walk_files  # noqa: E402  fail-closed tree walk
 from _gen_common import is_external_url  # noqa: E402
 
 
@@ -135,6 +135,7 @@ def run(root):
     return worst
 
 
+@isolated_git_environment()
 def _self_test():
     ext_ok = '<a href="https://github.com/x" target="_blank" rel="noopener noreferrer">gh</a>'
     cases = [
