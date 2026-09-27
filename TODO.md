@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.191**, **2.48**, **3.39**, **4.12**.
+Next ids: **1.191**, **2.48**, **3.40**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -75,6 +75,7 @@ marked, and those are the ones worth taking first.
 | ID | Item | Tags |
 | --- | --- | --- |
 | 3.30 | Extend the fenced-block Verify-marking gate planned in #389 to list items, table rows and prose units, with the same baseline-and-ratchet mechanism (maintainer ruling, 2026-09-26). (M, L) | `[gap]` |
+| 3.39 | Render Sources with a pinned CommonMark parser in `tools/version_basis.py` (for example markdown-it-py, installed and SHA-verified in CI like shellcheck; local runs SKIP with an advisory when absent) and check rendered link targets against component URLs, replacing the line-grammar approximation of #420. Seven review rounds on #420 each found a new exotic construct the regex approach missed; residuals are listed in CONTRIBUTING. (M, M) | `[gap]` |
 
 ## Decisions
 

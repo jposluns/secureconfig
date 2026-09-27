@@ -501,6 +501,74 @@ class SourcesBasisTests(unittest.TestCase):
             with self.subTest(sources=sources):
                 self.check(sources)
 
+    def check_heading(self, heading, sources, prose=''):
+        """Like check_with_prose(), with the Sources heading line replaced."""
+        u = self.url
+        data = fixture()
+        data['components']['product']['sources'] = {vb.source_id(u): u}
+        data['claims']['control']['sources'] = ['product:' + vb.source_id(u)]
+        head = BODY[:BODY.index('- Product')]
+        if prose:
+            head = head.replace('A documented control.', 'A documented control.\n\n' + prose)
+        body = head.replace('## Sources (checked September 2026)', heading) + sources + '\n'
+        data['body_sha256'] = vb.digest(body)
+        return vb.updated(document(data, body), 'fixture.md')
+
+    def test_round_seven_reproducers(self):
+        # Round 7: each passed before this round while its markup renders a live
+        # citation of u (or of w) that no basis-bearing Sources item counted.
+        u, base, sources = self.url, f'- Product v1.0: {self.url}', '## Sources (checked September 2026)'
+        after = 'text after the Sources heading'
+        # (B1) Text or a link on the Sources heading line itself.
+        for heading, construct in ((f'{sources} [Again]({u})', after), (f'{sources} {u}', after),
+                                   (f'{sources} <{u}>', after), (f'{sources} ## {u} ##', after),
+                                   (f'## See {u} sources (checked September 2026)',
+                                    'text other than words before Sources')):
+            with self.subTest(heading=heading), self.assertRaisesRegex(
+                    ValueError, r'^line 17: ' + re.escape(construct)):
+                self.check_heading(heading, base)
+        # (B2) An HTML block or link element before the Sources heading.
+        for prose, construct in ((f'<div>\n<h2>Sources</h2>\n<a href="{u}">Again</a>\n</div>',
+                                  'raw HTML block'),
+                                 (f'<details><summary>Sources</summary>\n\n`<a href={u}>x</a>`'
+                                  '\n\n</details>', 'raw HTML block'),
+                                 (f'See <a href="{u}">Again</a>.', 'raw HTML <a> element'),
+                                 (f'See `<img src={u}>`.', 'raw HTML <img> element')):
+            with self.subTest(prose=prose), self.assertRaisesRegex(
+                    ValueError, r'^line 8: ' + re.escape(construct)):
+                self.check_with_prose(prose, base)
+        # (B3) A heading inside a list item: CommonMark keeps it in the item, so it
+        # no longer ends the Sources range, and it is refused anywhere.
+        with self.assertRaisesRegex(ValueError, r'unsupported Sources container.*\(2 in Sources'):
+            self.check(f'{base}\n- Again\n  ## More: <{u}>')
+        for prose in ('- item\n  ## Note', '- item\n\n   ## Note', '\t## Note'):
+            with self.subTest(prose=prose), self.assertRaisesRegex(
+                    ValueError, r'^line \d+: indented heading'):
+                self.check_with_prose(prose, base)
+        body = f'# T\n\n{sources}\n\n{base}\n- Again\n  ## More\n- {u}\n\n## Next\n\n{u}\n'
+        self.assertEqual(vb.cites(vb.raw_sources(body, headings(body)), u), 2)
+        # (B4) An angle-bracket destination, whose spaces render percent-encoded.
+        w = 'https://example.com/con%20trol'
+        angle = 'angle-bracket link destination'
+        spaced = 'https://example.com/con trol'
+        for again in (f'[t](<{spaced}>\n  )', f'[t](<{spaced}>)', f'[t]( <{spaced}> "title")'):
+            with self.subTest(again=again), self.assertRaisesRegex(
+                    ValueError, r'^line \d+: ' + re.escape(angle)):
+                self.check_urls(f'- Product v1.0: {w}\n- Again: {again}', [w])
+        for prose in (f'See [t](<{u}>).', f'See [t](\n<{u}>).'):
+            with self.subTest(prose=prose), self.assertRaisesRegex(
+                    ValueError, r'^line 8: ' + re.escape(angle)):
+                self.check_with_prose(prose, base)
+        # Passing controls: a numbered, worded Sources heading with a closing
+        # sequence; ](< shown in a code span; a heading-like #tag; ordinary links.
+        for heading in ('## 9. Standards and sources (checked September 2026)',
+                        '## Sources (checked September 2026) ##',
+                        '### Sources (checked September 2026)  '):
+            with self.subTest(heading=heading):
+                self.check_heading(heading, base)
+        self.check_with_prose('Write `[t](<u>)` and `<b>`; #tag\n  #tag', base)
+        self.check(f'{base}\n- Also v1.0 [text]({u})')
+
     def test_scheme_and_host_match_case_insensitively(self):
         # Round 6: HTTPS://, Https:// and an uppercase host dereference to the same
         # resource, so they cite u; an uppercase path is another resource.

@@ -74,7 +74,8 @@ Schema 1 requires exactly these top-level fields:
   item that cites it. For a known basis, every citation of the URL must be parsed as its own
   list item: one in a nested compact list (`- - ...`), a heading item, a quote or loose prose
   fails, and such failures are never baselined. For that count, Sources runs to the next ATX
-  heading of the same or higher level; a Setext underline never ends it. Basis matching is
+  heading of the same or higher level with no leading whitespace; a Setext underline never
+  ends it. Basis matching is
   literal and case-sensitive, with no adjacent ASCII letter, digit or dot: `v2.51.0` and
   `2.51.0` are not interchangeable. A matching literal inside the cited URL counts too.
   Components with basis `unknown` are exempt from the basis requirement. Enrolled guides cite
@@ -87,12 +88,19 @@ Schema 1 requires exactly these top-level fields:
   an enrolled guide's Sources, outside fences, every line closes what it opens: each backtick
   lies in a code span that ends on that line, and outside code spans each opening bracket is
   closed on that line, with no stray closing bracket. A backslash-escaped bracket, parenthesis
-  or backtick fails anywhere in Sources, even in a code span, and so does any `a`, `img`,
-  `link` or `area` element. Outside fences, a line that could open a CommonMark HTML block
-  fails, because its lines are raw HTML, where backticks are literal: after indentation and
-  any list or quote markers, `<` followed by a letter, `/`, `!` or `?`, unless the line starts
-  with a whole autolink such as `<https://...>`. Outside fences and code spans, these also
-  fail, and none of these failures is ever baselined: a raw HTML tag with attributes (a
+  or backtick fails on any Sources line below the heading, outside fences and HTML comments,
+  even in a code span. Anywhere in an enrolled guide outside fences, any `a`, `img`, `link` or
+  `area` element fails, even in a code span or HTML comment, and so does a line that could
+  open a CommonMark HTML block, because its lines are raw HTML, where backticks are literal:
+  after indentation and any list or quote markers, `<` followed by a letter, `/`, `!` or `?`,
+  unless the line starts with a whole autolink such as `<https://...>`. The only exemption is
+  the generated summary's marker pair, which the check removes before it scans. Also
+  guide-wide outside fences, an ATX heading with leading whitespace fails, since CommonMark
+  can keep it inside a list item, and outside code spans so does a link destination in angle
+  brackets, whose spaces and line breaks render percent-encoded. A Sources heading must be an
+  ATX heading with only words before `Sources` and nothing after `(checked <Month> <Year>)`.
+  In Sources, outside fences and code spans, these also fail, and none of these failures is
+  ever baselined: a raw HTML tag with attributes (a
   `<PLACEHOLDER>` without attributes is fine); a reference-style link (bracketed text, then
   a bracketed label); a character reference (`&amp;`, `&#47;`) or backslash escape on a line
   with a URL or link; and, on such a line, a percent-encoded unreserved character (letter,
@@ -107,6 +115,10 @@ Schema 1 requires exactly these top-level fields:
   punctuation unless a URL character follows them, so `url.` cites `url`, but `url.json`,
   `url/v2` and `url_v2` do not. A `*` or `~` right after the URL, or a `_` after a URL that a
   `_` opened, always ends it, so `**url**x`, `~~url~~x` and `_url_x` cite `url`.
+  Known limits: after these grammar restrictions, the check matches known component URLs
+  textually. It does not render Markdown, so a construct outside CommonMark's common forms, or
+  renderer-specific URL normalization (for example IDNA or fullwidth host mapping), could
+  still cite a URL uncounted. Row 3.39 in `TODO.md` tracks a parser-based check.
   `tools/version_basis_sources_baseline.txt` grandfathers existing violations by guide and a
   counted SHA-256 fingerprint of component ID, basis, URL and item paragraph text. New, changed
   or excess occurrences fail, and fixed or removed occurrences require removing their stale

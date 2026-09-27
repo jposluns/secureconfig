@@ -274,6 +274,61 @@ def sources_grammar(body, heads, line_offset=0):
     require(not errors, '; '.join(errors))
 
 
+# Guide-wide constructs (round 7), outside fences. An ATX heading with leading
+# whitespace can belong to a list item, which CommonMark keeps open across it.
+_INDENTED_HEADING = re.compile(r'^[ \t]+#{1,6}(?:[ \t]|$)')
+# An angle-bracket link destination may hold spaces and line breaks that the
+# renderer percent-encodes, so its raw text need not spell the rendered URL.
+_ANGLE_DESTINATION = re.compile(r'\]\([ \t]*<')
+_OPEN_DESTINATION = re.compile(r'\]\([ \t]*$')
+# The Sources heading line: an optional number, words, then the dated title,
+# with nothing after the closing parenthesis, so the line cannot cite a URL.
+_SOURCES_HEADING = re.compile(r'(?:[0-9]+[.)][ \t]+)?(?:[A-Za-z]+[ \t]+)*sources[ \t]*'
+                              r'\(checked[ \t]+[A-Za-z]+[ \t]+[0-9]{1,4}\)', re.I)
+
+
+def guide_violations(body, heads, line_offset=0):
+    """Fail closed guide-wide on constructs the per-line Sources scan cannot see.
+
+    Outside fences: a raw HTML block (one can fabricate a Sources section before
+    the real heading), a link element (code spans included, as raw HTML shows
+    them literally), an indented ATX heading, and an angle-bracket link
+    destination (outside code spans). Sources headings carry no other text.
+    validate() receives the body after without_summary() removed the one exact
+    generated marker pair, so those markers are the only HTML a guide may hold.
+    """
+    from check_guide_shape import ATX_RE, SOURCES_RE
+    from check_verify_marking import tokenize
+    lines, _, tokens = tokenize(body)
+    code = {index for token in tokens if token.kind in ('fence', 'unclosed')
+            for index in range(token.start, token.end)}
+    errors = []
+    for index, line in enumerate(lines):
+        if index in code:
+            continue
+        where = f'line {index + 1 + line_offset}: '
+        if _HTML_BLOCK.match(line) and not _LINE_START_AUTOLINK.match(line):
+            errors.append(where + 'raw HTML block')
+        errors.extend(where + f'raw HTML <{match[1]}> element' for match in _TAG.finditer(line)
+                      if match[1].lower() in _LINK_TAGS)
+        if _INDENTED_HEADING.match(line):
+            errors.append(where + 'indented heading')
+        text = without_code_spans(line)
+        following = next((lines[after] for after in range(index + 1, len(lines))
+                          if lines[after].strip()), '')
+        if _ANGLE_DESTINATION.search(text) or (
+                _OPEN_DESTINATION.search(text) and re.match(_CONTAINERS + '<', following)):
+            errors.append(where + 'angle-bracket link destination')
+    for index, _, title, _ in heads:
+        if SOURCES_RE.match(title) and not _SOURCES_HEADING.fullmatch(title):
+            construct = ('text after the Sources heading' if title[SOURCES_RE.match(title).end():]
+                         else 'text other than words before Sources in its heading')
+            errors.append(f'line {index + 1 + line_offset}: {construct}')
+        elif SOURCES_RE.match(title) and not ATX_RE.match(lines[index]):
+            errors.append(f'line {index + 1 + line_offset}: Setext Sources heading')
+    require(not errors, '; '.join(errors))
+
+
 def source_entries(sources):
     """List-item paragraphs, including wrapped lines; nested items stay separate."""
     from check_verify_marking import tokenize
@@ -328,8 +383,9 @@ def _sources_ranges(body, heads):
     """(content, [(start, end)]) of each ATX-bounded Sources section; see raw_sources()."""
     from check_guide_shape import ATX_RE, SOURCES_RE, scan
     content, visible = scan(body)
+    # Only an unindented ATX heading ends a range; an indented one may sit in a list item.
     atx = [(index, len(match.group('hashes'))) for index, line in sorted(visible.items())
-           for match in [ATX_RE.match(line)] if match]
+           for match in [ATX_RE.match(line)] if match and line[:1] not in ' \t']
     ranges = []
     for _, level, title, start in heads:
         if SOURCES_RE.match(title):
@@ -452,6 +508,8 @@ def validate(data, body, guide='GUIDE.md', baseline=None, line_offset=0):
     check_source_bases(data, raw_sources(body, heads), entries, guide, baseline)
     identifiers(data['claims'])
     blocks = verify_blocks(body, with_status=True)
+    # After verify_blocks(), so Verify-marking diagnostics keep precedence.
+    guide_violations(body, heads, line_offset)
     covered, used = set(), set()
     for name, claim in data['claims'].items():
         keys(claim, ('text', 'components', 'sources', 'status'), ('evidence', 'verify'))
