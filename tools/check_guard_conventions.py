@@ -62,7 +62,9 @@ WHAT THIS CATCHES
                  false-positive it.
 
   C3-TOOL-ARGV  a known non-curl credential flag or credential positional
-                 argument carries a value in argv. Literal values,
+                 argument, env assignment or URI carries a value in argv.
+                 URI passwords that are whole REPLACE_WITH_ placeholders
+                 are exempt; other literal values,
                  placeholders and expansions are all checked, independently
                  of C2's network-probe roster. The allowlist and bounded
                  argument ownership are in _tool_credential_flags. Prompt,
@@ -539,7 +541,7 @@ def _expand(line):
     return texts
 
 
-def _strip_wrappers(cmd):
+def _strip_wrappers(cmd, env_credentials=None):
     toks = list(cmd)
     while toks:
         t = toks[0]
@@ -549,7 +551,9 @@ def _strip_wrappers(cmd):
             toks = toks[2:]; continue
         if FD_RE.match(t) and len(toks) > 1 and toks[1] in REDIRECTS:
             toks = toks[3:]; continue
-        if t in WRAPPERS:
+        if t in WRAPPERS or t.rsplit("/", 1)[-1] == "env":
+            if t.rsplit("/", 1)[-1] == "env" and env_credentials is not None:
+                env_credentials.extend(_env_credential_flags(toks[1:]))
             toks.pop(0)
             opts = []
             while toks and toks[0].startswith("-") and toks[0] != "--":
@@ -808,6 +812,7 @@ def _credential_codes(a):
 # https://docs.openssl.org/3.5/man1/openssl-s_client/
 # https://docs.openssl.org/3.5/man1/openssl-s_server/
 # https://docs.openssl.org/3.5/man1/openssl-cmp/
+# https://docs.openssl.org/3.5/man1/openssl-dgst/ (-macopt key:/hexkey:)
 # "inline" options prompt without an attached value; "optional" options prompt
 # without a following value. A dash is stdin ONLY for documented consumers.
 _TOOL_SECRET_OPTS = {
@@ -871,17 +876,82 @@ _TOOL_SKIP_OPTS = {
 }
 
 
+# Only known no-argument letters may precede a credential-taking short option.
+# MySQL no-argument options; MariaDB uses the shared batch/quiet forms.
+# https://dev.mysql.com/doc/refman/8.4/en/mysql-command-options.html
+# https://mariadb.com/docs/server/clients-and-utilities/mariadb-client/mariadb-command-line-client
+# Coturn 4.6.3 getopt string:
+# https://github.com/coturn/coturn/blob/4.6.3/src/apps/uclient/mainuclient.c
+_TOOL_CLUSTER_NOARG = {
+    "mysql": "?ABCEGHLNTUVWXbcfijnoqrstvw", "mariadb": "BNsv",
+    "turnutils_uclient": "bZvsyhcxXgtTSAPDNOUMRIGBJ",
+}
+# Vault login K=V credentials. '-' and '@path' use stdin and files.
+# https://developer.hashicorp.com/vault/docs/commands#passing-command-arguments
+# https://developer.hashicorp.com/vault/docs/auth/userpass
+# https://developer.hashicorp.com/vault/docs/auth/github
+# https://developer.hashicorp.com/vault/docs/auth/ldap
+# https://developer.hashicorp.com/vault/docs/auth/okta
+# https://developer.hashicorp.com/vault/docs/auth/radius
+_VAULT_LOGIN_KEY = dict.fromkeys(("userpass", "ldap", "okta", "radius"), "password")
+_VAULT_LOGIN_KEY.update(token="token", github="token")
+
+
+def _uri_credential(value):
+    """A visible scheme://user:password@host, not an opaque URL variable.
+
+    Reuse curl's userinfo recognizer. Only this new rule exempts whole house
+    REPLACE_WITH_ passwords; existing flag/curl rules still flag placeholders.
+    A placeholder host or username must not conceal a real password.
+    """
+    match = URL_USERINFO_RE.match(value)
+    if not match:
+        return False
+    password = match.group().split("://", 1)[1][:-1].split(":", 1)[1]
+    return not re.fullmatch(re.escape(SENTINEL) + r"[A-Z0-9_]+", password)
+
+
+def _env_credential_flags(args):
+    """Inspect env's assignment operands before wrapper stripping loses them.
+
+    Plain env, -i/--ignore-environment and -- are supported. Other env options
+    remain outside wrapper resolution. Shell assignment prefixes are not argv.
+    Reuse the existing body/header credential-name patterns, normalizing env
+    underscores to header hyphens. No secret-value dataflow is claimed.
+    """
+    flags = []
+    a = _drop_redirections(args)
+    i = 0
+    while i < len(a) and a[i] in ("-i", "--ignore-environment"):
+        i += 1
+    if i < len(a) and a[i] == "--":
+        i += 1
+    for t in a[i:]:
+        if not ASSIGNMENT_RE.match(t):
+            break
+        name, _, value = t.partition("=")
+        if value and (BODY_SECRET_RE.search(name + "=")
+                      or CREDENTIAL_HEADER_RE.fullmatch(name.replace("_", "-"))
+                      or _uri_credential(value)):
+            flags.append(name)
+    return flags
+
+
 def _tool_credential_flags(word, args):
     """Return flag names, never secret values. Reuse C3's value/redirection
     helpers and the shared command walk, wrappers, heredocs and waivers.
 
-    Deliberately bounded: unknown option ownership, most short clusters,
-    secret-bearing URIs, arbitrary positional secrets, expanded option names,
-    aliases, shell strings and array-built commands remain outside this rule.
-    In particular, sudo -u, timeout -s, mysql -Bp"$PW" and
-    turnutils_uclient -vw"$PW" are unresolved; Vault non-token login methods,
-    secret assignments passed to the env binary, and OpenSSL -macopt are not
-    checked. A shell assignment prefix is distinct from an env argv value.
+    Deliberately bounded: unknown option ownership, short clusters outside
+    _TOOL_CLUSTER_NOARG or without attached values, arbitrary positional
+    secrets, expanded option names, aliases, shell strings and array-built
+    commands remain outside this rule.
+    In particular, sudo -u, timeout -s and env's value-taking options remain
+    unresolved. Vault login checks only _VAULT_LOGIN_KEY's methods/keys.
+    URI checks cover whole arguments and NAME=URI/--option=URI values, not
+    opaque URL variables, attached short-option URIs or schemeless userinfo.
+    OpenSSL -macopt checks literal key:/hexkey: prefixes, not opaque values.
+    Non-shell configuration fences retain the shared scanner's scope limit.
+    A shell assignment prefix is distinct from an env argv value.
     Redis/Mosquitto and OpenSSL options require separate values (or the
     explicit equals form recognized here). Other supported short value options
     accept attached values. htpasswd handles -b clusters.
@@ -892,12 +962,16 @@ def _tool_credential_flags(word, args):
     file:/env:/fd: prefix or stdin establishes an out-of-argv input.
     """
     name = word.rsplit("/", 1)[-1]
-    if name not in _TOOL_SKIP_OPTS:
-        return []
     a = _drop_redirections(args)
+    # Curl keeps its existing C3-URL-ARGV policy and diagnostics.
+    uri_flags = [] if name == "curl" else [
+        "URI userinfo" for t in a
+        if _uri_credential(t) or ("=" in t and _uri_credential(t.split("=", 1)[1]))]
+    if name not in _TOOL_SKIP_OPTS:
+        return uri_flags
     specs = _TOOL_SECRET_OPTS.get(name, {})
     skip = _TOOL_SKIP_OPTS[name].split()
-    flags, positional, batch = [], [], ""
+    flags, positional, batch = list(uri_flags), [], ""
     method = "token"
     redis_cluster = False
     i = 0
@@ -921,6 +995,20 @@ def _tool_credential_flags(word, args):
             break
         opt, eq, tail = t.partition("=")
         mode = specs.get(opt)
+        if name == "openssl" and opt == "-macopt":
+            val, i = _cred_value(a, i, bool(eq), tail)
+            if val:
+                key, colon, value = val.partition(":")
+                if colon and key in ("key", "hexkey") and value:
+                    flags.append("-macopt " + key)
+            continue
+        if not mode and name in _TOOL_CLUSTER_NOARG and t.startswith("-"):
+            j = 1
+            while j < len(t) and t[j] in _TOOL_CLUSTER_NOARG[name]:
+                j += 1
+            short = "-" + t[j:j + 1]
+            if j > 1 and j + 1 < len(t) and short in specs:
+                opt, mode, eq, tail = short, specs[short], True, t[j + 1:]
         if not mode and t.startswith("-") and not t.startswith("--"):
             # Do not confuse OpenSSL's single-dash long options with shorts.
             short = t[:2]
@@ -958,18 +1046,21 @@ def _tool_credential_flags(word, args):
             positional.append(t)
         i += 1
     if name == "docker" and (not positional or positional[0] != "login"):
-        return []  # docker run -p is port publication
+        return uri_flags  # docker run -p is port publication
     if name == "mc" and positional[:2] == ["alias", "set"]:
         flags.extend(label for label, val in zip(
             ("ACCESSKEY", "SECRETKEY"), positional[4:6]) if val)
-    if name == "vault" and positional[:1] == ["login"] and method == "token":
+    if name == "vault" and positional[:1] == ["login"]:
+        credential = _VAULT_LOGIN_KEY.get(method)
         for val in positional[1:]:
-            if val.startswith("token="):
-                val = val[len("token="):]
-            elif "=" in val:
+            if "=" in val:
+                key, _, val = val.partition("=")
+                if key != credential:
+                    continue
+            elif method != "token":
                 continue
             if val and val != "-" and not val.startswith("@"):
-                flags.append("token")
+                flags.append(credential)
     if name in ("htpasswd", "mosquitto_passwd") and "b" in batch:
         at = 1 if name == "htpasswd" and "n" in batch else 2
         if len(positional) > at and positional[at]:
@@ -1417,7 +1508,12 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
                     arm["uses_return"] = (
                         arm["uses_return"] or cmd[0] == "return")
 
-        stripped = _strip_wrappers(cmd)
+        env_credentials = []
+        stripped = _strip_wrappers(cmd, env_credentials)
+        if not waived:
+            for flag in env_credentials:
+                findings.append((path, line, "C3-TOOL-ARGV",
+                                 " (tool: env, argument: %s)" % flag))
         if not stripped:
             return
         word = stripped[0]
@@ -3120,6 +3216,115 @@ for _subcommand, _option in (
     ):
         _TOOL_ARGV_CASES.append(
             ("openssl %s %s %s" % (_subcommand, _option, _source), _count))
+
+# Row 3.29: formerly passing accidental exposures and adjacent safe forms.
+_TOOL_ARGV_CASES += [
+    ('mysql -Bp"$PW"', 1),
+    ('mysql -BNpsecret', 1),
+    ('mysql -ABNrp"$PW"', 1),
+    ('mysql -Bhpsecret', 0),
+    ('mysql -svpREPLACE_WITH_PASSWORD', 1),
+    ('mariadb -BNp"$PW"', 1),
+    ('mysql -Bp db', 0),
+    ('mysql -BNp"" db', 0),
+    ('mysql -BN --password', 0),
+    ('mysql -e "-Bpsecret"', 0),
+    ('mysql -Bepublic', 0),
+    ('mysql -- -Bpsecret', 0),
+    ('turnutils_uclient -vw"$PW" host', 1),
+    ('turnutils_uclient -tvW"$SECRET" host', 1),
+    ('turnutils_uclient -vwREPLACE_WITH_PASSWORD host', 1),
+    ('turnutils_uclient -v host', 0),
+    ('turnutils_uclient -u "-vwpublic" host', 0),
+    ('turnutils_uclient -vepeerwpublic host', 0),
+    ('turnutils_uclient -- -vwpublic', 0),
+    ('env API_KEY=secret tool', 1),
+    ('env API_KEY="$KEY" tool', 1),
+    ('env PASSWORD="$(cat private)" tool', 1),
+    ('env VAULT_TOKEN="$TOKEN" vault status', 1),
+    ('sudo env -i -- DB_PASSWORD="$PW" tool', 1),
+    ('/usr/bin/env --ignore-environment CLIENT_SECRET=secret tool', 1),
+    ('env API_KEY=secret env TOKEN=secret tool', 2),
+    ('env API_KEY=secret', 1),
+    ('env API_KEY=REPLACE_WITH_KEY tool', 1),
+    ('env API_KEY=@private tool', 1),
+    ('env API_KEY=- tool', 1),
+    ('env API_KEY= tool', 0),
+    ('env API_KEY="" tool', 0),
+    ('env PUBLIC_PORT=443 tool', 0),
+    ('env PASSWORD_FILE=/run/private tool', 0),
+    ('env TOKEN_TTL_SECONDS=60 tool', 0),
+    ('env tool API_KEY=ordinary-data', 0),
+    ('API_KEY="$KEY" tool', 0),
+    ('export API_KEY="$KEY"', 0),
+    ('command -v env', 0),
+    ('env -u API_KEY tool', 0),
+    ('openssl dgst -mac HMAC -macopt key:secret', 1),
+    ('openssl dgst -mac HMAC -macopt "key:$KEY"', 1),
+    ('openssl dgst -mac HMAC -macopt hexkey:0123abcd', 1),
+    ('openssl dgst -macopt="hexkey:$HEXKEY"', 1),
+    ('openssl dgst -macopt key:REPLACE_WITH_KEY', 1),
+    ('openssl dgst -macopt key:env:KEY', 1),
+    ('openssl dgst -macopt key: -macopt hexkey:', 0),
+    ('openssl dgst -macopt digest:SHA256', 0),
+    ('openssl dgst -macopt', 0),
+    ('openssl dgst -out "-macopt" key:public', 0),
+    ('openssl dgst -macopt digest:SHA256 -macopt key:secret', 1),
+    ('psql "postgresql://user:secret@db/app"', 1),
+    ('mongosh "mongodb://user:$PW@db/app"', 1),
+    ('redis-cli -u "redis://user:secret@db"', 1),
+    ('tool --url="https://user:secret@example.com/"', 1),
+    ('tool URI="custom+tls://user:secret@host/path"', 1),
+    ('tool "https://REPLACE_WITH_USER:secret@REPLACE_WITH_HOST/"', 1),
+    ('tool "https://user:prefixREPLACE_WITH_PASSWORD@host/"', 1),
+    ('tool "https://user:REPLACE_WITH_PASSWORD-suffix@host/"', 1),
+    ('env DATABASE_URL="postgresql://user:secret@db/app" tool', 1),
+    ('psql "postgresql://user:REPLACE_WITH_PASSWORD@db/app"', 0),
+    ('tool --uri="nats-route://route:REPLACE_WITH_URL_ENCODED_ROUTE_PASSWORD@host"', 0),
+    ('tool "https://user:$REPLACE_WITH_PASSWORD@host/"', 1),
+    ('psql "postgresql://user@db/app"', 0),
+    ('tool "https://user:@host/"', 0),
+    ('tool "https://host/path/user:pass@data"', 0),
+    ('tool "$URL"', 0),
+    ('URL="postgresql://user:secret@db/app" tool', 0),
+    ('tool > "https://user:pass@host"', 0),
+    ('echo "psql postgresql://user:secret@db/app"', 0),
+]
+for _method, _key in (
+    ("userpass", "password"), ("ldap", "password"), ("okta", "password"),
+    ("radius", "password"), ("github", "token"), ("token", "token"),
+):
+    for _value, _count in (
+        ("secret", 1), ('"$SECRET"', 1), ("REPLACE_WITH_SECRET", 1),
+        ("", 0), ("-", 0), ("@private.txt", 0),
+    ):
+        _TOOL_ARGV_CASES.append((
+            "vault login -method=%s %s=%s" % (_method, _key, _value), _count))
+_TOOL_ARGV_CASES += [
+    ('vault login -method userpass -path employees username=user password="$PW"', 1),
+    ('vault login -method=ldap username=user', 0),
+    ('vault login -method=github', 0),
+    ('vault login -method=cert -client-key private.pem', 0),
+    ('vault login -method=cert password=unused token=unused', 0),
+    ('vault status password=ordinary-data', 0),
+    ('vault login -method=userpass username=password=public', 0),
+    ('vault login -method=userpass -path password=public username=user', 0),
+]
+# The shared wrapper/waiver path must apply to every new form.
+for _cmd in (
+    'mysql -Bp"$PW"', 'turnutils_uclient -vw"$PW" host',
+    'vault login -method=userpass password="$PW"',
+    'env API_KEY="$KEY" tool', 'openssl dgst -macopt "key:$KEY"',
+    'psql "postgresql://user:$PW@db/app"',
+):
+    SELF_TEST_CASES.extend((
+        ("c3-gap-wrapped-" + _cmd, "~~~sh\nsudo " + _cmd + "\n~~~\n",
+         ["C3-TOOL-ARGV"], ()),
+        ("c3-gap-waived-" + _cmd,
+         "~~~sh\n# guard-conventions: allow documented exception\n"
+         + _cmd + "\n~~~\n", [], ()),
+    ))
+
 
 for _i, (_cmd, _count) in enumerate(_TOOL_ARGV_CASES):
     SELF_TEST_CASES.append((

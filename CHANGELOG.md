@@ -11,6 +11,8 @@ in step with the merged pull request is therefore an authoring obligation, not a
 
 ## 2026-09-26
 
+- Close row 3.29's bounded C3-TOOL-ARGV gaps: attached credentials after known short-option clusters, Vault login credential pairs, env secret assignments, OpenSSL MAC keys, and URI userinfo. Preserve prompts, file/stdin inputs and shell assignment prefixes; exempt whole house placeholders only in the new URI rule. Add failing and safe fixtures and document remaining limits. (#NNN)
+
 - Restrict the shared gate walker to tracked working-tree files (#396), row 3.28. Preserve caller filters, fail closed when Git or selected tracked inputs are unavailable, and test unreadable untracked directories alongside untracked violations. Stage existing gate fixtures in temporary Git indexes.
 
 - Version basis pilot: vault.md, image-gen-uis.md and time-series-metrics-stores.md carry version-basis front matter and a generated visible summary (the versions and documentation date each claim was checked against, DEMONSTRATED or REASONED per claim, and an instruction to compare with current releases); tools/version_basis.py generates and checks them, a blocking gate enforces them, and the Verify-marking gate understands the front matter. Row 3.31. (#395)
