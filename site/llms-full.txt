@@ -7902,13 +7902,33 @@ curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w '%{ht
 # workload that has no legitimate reason to reach metadata:
 # GCP (send the required header). For AWS, do the real IMDSv2 two-step - PUT a token then GET WITH it -
 # because a tokenless 401 proves the header requirement, not a network block; for Azure send Metadata: true:
-#   TOKEN=$(curl -q -sf --noproxy '*' --connect-timeout 5 --max-time 5 -X PUT -H 'X-aws-ec2-metadata-token-ttl-seconds: 60' http://169.254.169.254/latest/api/token); tok_rc=$?; echo "PUT exit: $tok_rc"
-#   if [ "$tok_rc" -eq 0 ] && [ -n "$TOKEN" ]; then printf 'X-aws-ec2-metadata-token: %s\n' "$TOKEN" | curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'aws=%{http_code} time_connect=%{time_connect}\n' -H @- http://169.254.169.254/latest/meta-data/iam/security-credentials/; else echo "no usable token (PUT exit $tok_rc): the PUT was refused, timed out, or returned an HTTP error (-f), so this is inconclusive on its own - treat metadata as blocked only with the enforcement-point deny record below"; fi
+#   Assumes a clean Bash shell with trusted startup files. Uncomment each WHOLE subshell to run.
+#   Tokens stay in positional parameters and curl's stdin, not named variables, environment or argv.
+#   The same account and root can still read process memory; this does not erase earlier exports.
+#   (
+#     trap - DEBUG RETURN ERR
+#     set +x +a +e
+#     # Append curl's status after a newline, then split it from the response without a named variable.
+#     set -- "$(curl -q -g -sf --noproxy '*' --connect-timeout 5 --max-time 5 -X PUT -H 'X-aws-ec2-metadata-token-ttl-seconds: 60' http://169.254.169.254/latest/api/token; printf '\n%s' "$?")"
+#     set -- "${1%$'\n'*}" "${1##*$'\n'}"
+#     printf 'PUT exit: %s\n' "$2"
+#     [ "$2" = 0 ] || { echo 'no usable token: PUT failed; inconclusive without an enforcement-point deny record'; exit 2; }
+#     case "$1" in ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'empty or malformed token; inconclusive'; exit 2 ;; esac
+#     printf 'X-aws-ec2-metadata-token: %s\n' "$1" | curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'aws=%{http_code} time_connect=%{time_connect}\n' -H @- http://169.254.169.254/latest/meta-data/iam/security-credentials/
+#   )
 #   Where IPv6 IMDS is enabled, repeat the WHOLE probe over IPv6 (do not reuse the IPv4 token - acquire
 #   one over IPv6 too, since IPv4 may be blocked while IPv6 is not). Quote the bracketed literal, -q first
-#   then -g. AWS:
-#     T6=$(curl -q -g -sf --noproxy '*' --connect-timeout 5 --max-time 5 -X PUT -H 'X-aws-ec2-metadata-token-ttl-seconds: 60' 'http://[fd00:ec2::254]/latest/api/token'); t6_rc=$?; echo "PUT6 exit: $t6_rc"
-#     if [ "$t6_rc" -eq 0 ] && [ -n "$T6" ]; then printf 'X-aws-ec2-metadata-token: %s\n' "$T6" | curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'aws6=%{http_code} time_connect=%{time_connect}\n' -H @- 'http://[fd00:ec2::254]/latest/meta-data/'; else echo "no usable IPv6 token (PUT6 exit $t6_rc): inconclusive"; fi
+#   then -g. AWS, with the same clean-shell assumption:
+#   (
+#     trap - DEBUG RETURN ERR
+#     set +x +a +e
+#     set -- "$(curl -q -g -sf --noproxy '*' --connect-timeout 5 --max-time 5 -X PUT -H 'X-aws-ec2-metadata-token-ttl-seconds: 60' 'http://[fd00:ec2::254]/latest/api/token'; printf '\n%s' "$?")"
+#     set -- "${1%$'\n'*}" "${1##*$'\n'}"
+#     printf 'PUT6 exit: %s\n' "$2"
+#     [ "$2" = 0 ] || { echo 'no usable IPv6 token: PUT failed; inconclusive without an enforcement-point deny record'; exit 2; }
+#     case "$1" in ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'empty or malformed IPv6 token; inconclusive'; exit 2 ;; esac
+#     printf 'X-aws-ec2-metadata-token: %s\n' "$1" | curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'aws6=%{http_code} time_connect=%{time_connect}\n' -H @- 'http://[fd00:ec2::254]/latest/meta-data/'
+#   )
 #   GCP: curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'gcp6=%{http_code} time_connect=%{time_connect}\n' -H 'Metadata-Flavor: Google' 'http://[fd20:ce::254]/computeMetadata/v1/instance/'
 #   Any HTTP response (including 401) means the IPv6 endpoint is reachable; read time_connect as below.
 # Run these BEFORE applying the block too (the positive control): they should reach metadata then, so a
@@ -24010,7 +24030,25 @@ ss -tlnp   # if you run Ray Serve, keep 8000 (HTTP proxy) private too, and 9000 
 )
 # Through the SSH tunnel of step 1, with RAY_AUTH_MODE=token on the cluster.
 # POSITIVE control first: WITH the token the submit succeeds, proving the endpoint is live and reachable:
-RAY_AUTH_MODE=token RAY_AUTH_TOKEN="$(cat ~/.ray/auth_token)" ray job submit --address http://127.0.0.1:8265 -- python -c "print(1)"   # succeeds (RAY_AUTH_MODE=token on the CLIENT makes it send the token header)
+# Assumes a clean Bash shell with trusted startup files, and a token file owned by this account
+# under ~/.ray in directories no other account can write to or replace. Ray reads the file itself.
+(
+  trap - DEBUG RETURN ERR
+  set +x +a +e
+  { unset -n RAY_AUTH_TOKEN RAY_AUTH_TOKEN_PATH RAY_AUTH_MODE &&
+    unset -v RAY_AUTH_TOKEN RAY_AUTH_TOKEN_PATH RAY_AUTH_MODE; } 2>/dev/null ||
+    { echo 'cannot clear Ray authentication variables; not submitting'; exit 2; }
+  if [ ! -f "$HOME/.ray/auth_token" ] || [ -L "$HOME/.ray/auth_token" ] ||
+     [ ! -r "$HOME/.ray/auth_token" ] || [ ! -s "$HOME/.ray/auth_token" ]; then
+    echo 'need a readable, non-empty regular token file, not a symlink; not submitting'; exit 2
+  fi
+  chmod 600 -- "$HOME/.ray/auth_token" ||
+    { echo 'cannot protect the token file; not submitting'; exit 2; }
+  RAY_AUTH_MODE=token RAY_AUTH_TOKEN_PATH="$HOME/.ray/auth_token" \
+    ray job submit --address http://127.0.0.1:8265 -- python -c "print(1)"
+)
+# Only the path is in the environment; the token stays in the file and Ray's memory, readable by
+# this account and root. Clearing variables does not erase a token previously exported or logged.
 # NEGATIVE: from a client with NO token available (no RAY_AUTH_TOKEN or RAY_AUTH_TOKEN_PATH set and no
 # ~/.ray/auth_token file), the same submit must be refused for AUTHENTICATION (HTTP 401); a connection
 # error (tunnel down, wrong address) is INCONCLUSIVE, not a pass:
@@ -24074,6 +24112,7 @@ Service behaviour is not demonstrated here. A watcher stopped each of four loopb
 
 - Ray security guidelines (arbitrary code execution, network isolation, TLS is not a replacement, token auth from 2.52.0): https://docs.ray.io/en/latest/ray-security/index.html
 - Ray token authentication (`RAY_AUTH_MODE`, `RAY_AUTH_TOKEN`, `RAY_AUTH_TOKEN_PATH`, `ray get-auth-token`, plaintext-header caveat): https://docs.ray.io/en/latest/ray-security/token-auth.html
+- Ray 2.58.0 token input precedence and file-based job submission: https://github.com/ray-project/ray/blob/ray-2.58.0/doc/source/ray-security/token-auth.md
 - `ray start` CLI reference (`--dashboard-host` default, `--dashboard-port` 8265, `--port` 6379, `--ray-client-server-port` 10001): https://docs.ray.io/en/latest/cluster/cli.html
 - Configuring Ray (TLS environment variables, ports opened by nodes): https://docs.ray.io/en/latest/ray-core/configure.html
 - Configure Ray clusters to use token authentication (KubeRay `authOptions`, 401 without token): https://docs.ray.io/en/latest/cluster/kubernetes/user-guides/kuberay-auth.html
@@ -29229,15 +29268,30 @@ without touching it, but the pinned tree has no Dockerfile, so which script the 
 verified. The block reports only whether the key is non-empty and never prints it. Substitute the
 container name inside the single quotes.
 
+This check assumes a clean host Bash shell, trusted container image and startup files, and a
+container shell whose `[` is a builtin. It intentionally tests an existing container environment
+value: prompting for a key or supplying a file would test that replacement, not the deployed
+configuration. Docker's documented `exec`
+environment inheritance and the pinned NocoDB startup scripts cited below are the trace for this
+assumption. The host sends only the literal variable name and test program, never the key, in argv.
+The container shell's builtin `[` tests the value without starting a child process with it in argv.
+The key remains in the container's configured environment and is inherited by this extra shell;
+the same account and root may read it through `/proc/<pid>/environ` for those processes' lifetimes,
+and Docker-socket holders can read the configured value with `docker inspect`. This presence check
+does not remove that exposure, prove encryption is working, or establish what the server process
+actually received. Do not use `docker exec -e` to inject a key for this check.
+
 ```bash
 (
+  trap - DEBUG RETURN ERR
+  set +x +a +e
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NOCODB_CONTAINER_NAME'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not checking"; exit; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not checking"; exit; }
   case "$1" in *REPLACE_WITH_*|""|-*|*[[:cntrl:]]*) echo "substitute the container name on the set -- line above; not checking"; exit ;; esac
   # shellcheck disable=SC2016  # the single-quoted script is meant to expand inside the container
-  docker exec "$1" sh -c 'if [ -n "${NC_CONNECTION_ENCRYPT_KEY-}" ]; then exit 0; else exit 3; fi'
+  docker exec "$1" sh -c 'set +x; if [ -n "${NC_CONNECTION_ENCRYPT_KEY-}" ]; then exit 0; else exit 3; fi'
   case "$?" in
     0) echo "NC_CONNECTION_ENCRYPT_KEY is non-empty in the container's configured environment" ;;
     3) echo "NC_CONNECTION_ENCRYPT_KEY is EMPTY or unset in the container's configured environment" ;;
