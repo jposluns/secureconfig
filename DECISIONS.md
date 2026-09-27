@@ -17,6 +17,11 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Container ports behind remapped publications, 2026-09-26: allowlist.** This supersedes P4
+  option A below. A container-internal port published on a different host port is not the host
+  listener the reader exposes; allowlist it with a reason naming the host-port row, following
+  #311. Retain index mappings needed for another listener on that number in the same guide.
+
 - **Locale-dependent bracket ranges in shell validators, 2026-09-26T00:27Z: sweep and gate now (#360).**
   On the #356 review's finding that `é` matched both `[A-Za-z]` and `[0-9a-f]` in GNU grep under
   en_US.UTF-8, so that a validator written with a range accepts values it claims to refuse, the
@@ -97,7 +102,7 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 - **A retroactive full-panel review of #255 and #256:** run it against their current text. This overrode my
   recommendation, which was to close it without one. No reasoning was given. Its findings are rows 1.136 and 3.17.
 
-- **P4, container ports: option A.** A container port behind a remapped publication is cited in the exposure index
+- **P4, container ports: option A (superseded by the 2026-09-26 ruling above).** A container port behind a remapped publication is cited in the exposure index
   like any other mention, not allowlisted (#341). *Reasoning (as the chosen option put it):* "a scan from inside
   the container network or a pod sees the container port, so a reader who looks it up should reach the guide."
 
