@@ -10,7 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
-| 1.181 | Correct DNS-01 automation prerequisites and the cookies-only CORS credential guidance, with authoritative sources. (M, XS) | Done, #NNN. |
+| 1.181 | Correct DNS-01 automation prerequisites and the cookies-only CORS credential guidance, with authoritative sources. (M, XS) | Done, #402. |
 | 1.180 | Correct the Docker publishing boundary for the firewalld-reload regression and add verification after reload with pinned source evidence. (H, S) | Done, #401. |
 | 3.29 | Follow up #387's C3-TOOL-ARGV gate to close its disclosed bounded misses: clustered short options (`mysql -Bp"$PW"`, `turnutils_uclient -vw"$PW"`), `vault login -method=... password=`, `env VAR=secret tool`, `openssl dgst -macopt key:`/`hexkey:`, and secrets in URIs. (L, M) | Done, #399. |
 | 3.34 | Isolate fixture Git environments in the placeholder and changelog self-tests, and verify external staged indexes survive both Git selectors. (L, XS) | Done, #398. |
