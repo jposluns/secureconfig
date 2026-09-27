@@ -187,8 +187,14 @@ Preferred production layout: bind the Go server to `127.0.0.1` and terminate TLS
 ## 1. HTTPS directly in Go
 
 ```go
+const canonicalHost = "app.example.com"   // r.Host comes from the client; never reflect it in the redirect.
 go http.ListenAndServe(":80", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {   // port 80 only redirects
-    http.Redirect(w, r, "https://"+r.Host+r.URL.RequestURI(), http.StatusMovedPermanently)
+    target := r.URL.RequestURI()
+    // Opaque or absolute-form targets can yield non-path values; only append an origin-form path.
+    if len(target) == 0 || target[0] != '/' {
+        target = "/"
+    }
+    http.Redirect(w, r, "https://"+canonicalHost+target, http.StatusMovedPermanently)
 }))
 srv := &http.Server{
     Addr:              ":443",
@@ -198,6 +204,8 @@ srv := &http.Server{
 }
 log.Fatal(srv.ListenAndServeTLS("/etc/ssl/certs/server.crt", "/etc/ssl/private/server.key"))   // cert file: leaf, then intermediates
 ```
+
+Set `canonicalHost` to your canonical hostname (no scheme or path) and append only an origin-form path (falling back to `/` for non-path values from opaque or absolute-form targets), so neither a forged Host nor a crafted request target can turn this into an open redirect.
 
 crypto/tls already defaults to a TLS 1.2 minimum (as of September 2026); setting `MinVersion` keeps that true when a config is copied or a default shifts. Binding ports below 1024 needs root or `CAP_NET_BIND_SERVICE` on Linux's usual configuration (the per-namespace `net.ipv4.ip_unprivileged_port_start` defaults to 1024 but is configurable), one more reason to prefer the proxy layout.
 
@@ -353,6 +361,7 @@ curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/debug/pprof/   
 ## Sources (checked September 2026)
 
 - net/http (Server, ListenAndServeTLS, Cookie, SameSite, Redirect, Transport.TLSClientConfig): https://pkg.go.dev/net/http
+- net/http Request.Host (Go 1.27.0, supplied by the client): https://pkg.go.dev/net/http@go1.27.0#Request
 - crypto/tls (Config.MinVersion, InsecureSkipVerify, RootCAs): https://pkg.go.dev/crypto/tls
 - crypto/x509 (SystemCertPool, SSL_CERT_FILE, AppendCertsFromPEM) (Go 1.27): https://pkg.go.dev/crypto/x509
 - golang.org/x/crypto/bcrypt: https://pkg.go.dev/golang.org/x/crypto/bcrypt
