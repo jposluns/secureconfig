@@ -3,17 +3,12 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "8f1219d7cb4b0005621ca2e4081cf37252b610a0e5fde8f464024f9f4d186905",
+  "body_sha256": "72e02420addaad9790d2d7d4666607d7bf159be62b9857946faa5b4c92160652",
   "components": {
     "pb": {
       "name": "PocketBase",
       "basis": "v0.40.4",
       "sources": {
-        "s9029ab974cf1": "https://pocketbase.io/docs/going-to-production/",
-        "saedbdfbdfc48": "https://pocketbase.io/docs/api-rules-and-filters/",
-        "s773e441dd51c": "https://pocketbase.io/docs/authentication/",
-        "sf711b6345643": "https://pocketbase.io/docs/files-handling/",
-        "sb850a71fad4d": "https://pocketbase.io/docs/api-realtime/",
         "saf684a26056b": "https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/installer.go",
         "s4b155ef30262": "https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/cmd/serve.go",
         "sb2129128b86c": "https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/serve.go",
@@ -33,6 +28,32 @@ version_basis: {
       "name": "Appwrite",
       "basis": "2.2.0",
       "sources": {
+        "s9f5bd3b70f14": "https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/config/variables.php",
+        "sadb8c6e7b00a": "https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/.env",
+        "s2bb21218c5ee": "https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/controllers/api/account.php",
+        "s193bfa5c6e22": "https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/controllers/shared/api.php",
+        "s427bab3733b6": "https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/controllers/general.php",
+        "se9480e5807b3": "https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/src/Appwrite/Platform/Modules/Storage/Http/Buckets/Create.php",
+        "s655a0abb9ef0": "https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/src/Appwrite/Platform/Modules/Functions/Http/Functions/Create.php",
+        "s4ab95ecbf6b5": "https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/init/constants.php",
+        "s8e5272615f2e": "https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/docker-compose.yml"
+      }
+    },
+    "pb-docs": {
+      "name": "PocketBase documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "s9029ab974cf1": "https://pocketbase.io/docs/going-to-production/",
+        "saedbdfbdfc48": "https://pocketbase.io/docs/api-rules-and-filters/",
+        "s773e441dd51c": "https://pocketbase.io/docs/authentication/",
+        "sf711b6345643": "https://pocketbase.io/docs/files-handling/",
+        "sb850a71fad4d": "https://pocketbase.io/docs/api-realtime/"
+      }
+    },
+    "appwrite-docs": {
+      "name": "Appwrite documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
         "s4a965bdeeb98": "https://appwrite.io/docs/advanced/self-hosting/production/security",
         "saa37bb5d4d7e": "https://appwrite.io/docs/partners/project/api-keys",
         "sa0bd132f7968": "https://appwrite.io/docs/advanced/security/permissions",
@@ -42,92 +63,83 @@ version_basis: {
         "s000d05106450": "https://appwrite.io/docs/advanced/security/rate-limits",
         "s38a1efa0c7d2": "https://appwrite.io/docs/advanced/self-hosting/configuration/email",
         "s256ef73f7b85": "https://appwrite.io/docs/advanced/self-hosting/production/backups",
-        "s9f5bd3b70f14": "https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/config/variables.php",
-        "sadb8c6e7b00a": "https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/.env",
-        "s2bb21218c5ee": "https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/controllers/api/account.php",
-        "s221c6aaef8df": "https://appwrite.io/docs/advanced/security/mfa",
-        "s193bfa5c6e22": "https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/controllers/shared/api.php",
-        "s427bab3733b6": "https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/controllers/general.php",
-        "se9480e5807b3": "https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/src/Appwrite/Platform/Modules/Storage/Http/Buckets/Create.php",
-        "s655a0abb9ef0": "https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/src/Appwrite/Platform/Modules/Functions/Http/Functions/Create.php",
-        "s4ab95ecbf6b5": "https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/init/constants.php",
-        "s8e5272615f2e": "https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/docker-compose.yml"
+        "s221c6aaef8df": "https://appwrite.io/docs/advanced/security/mfa"
       }
     }
   },
   "claims": {
-    "pb-bootstrap": {"text": "Privately bootstrap through the logged installer URL; superuser create EMAIL PASS exposes passwords in argv. Ordinary registration does not grant superuser rights.", "components": ["pb"], "sources": ["pb:s9029ab974cf1", "pb:saf684a26056b"], "status": "REASONED"},
+    "pb-bootstrap": {"text": "Privately bootstrap through the logged installer URL; superuser create EMAIL PASS exposes passwords in argv. Ordinary registration does not grant superuser rights.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:s9029ab974cf1", "pb:saf684a26056b"], "status": "REASONED"},
     "pb-installer": {"text": "Installer system-superuser token lasts about 30 minutes; protect its URL and startup logs as credentials.", "components": ["pb"], "sources": ["pb:saf684a26056b"], "status": "REASONED"},
-    "pb-ips": {"text": "Superuser IP allowlists are available from v0.38.0; superuserIPs defaults empty and restricts authenticated requests, not /_/ static assets.", "components": ["pb"], "sources": ["pb:s9029ab974cf1", "pb:s5b66ca69bf6d"], "status": "REASONED"},
+    "pb-ips": {"text": "Superuser IP allowlists are available from v0.38.0; superuserIPs defaults empty and restricts authenticated requests, not /_/ static assets.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:s9029ab974cf1", "pb:s5b66ca69bf6d"], "status": "REASONED"},
     "pb-tls": {"text": "serve with a domain provides native HTTPS/ACME; alternatively terminate TLS at a reverse proxy.", "components": ["pb"], "sources": ["pb:sb2129128b86c"], "status": "REASONED"},
     "pb-bind": {"text": "Without a domain serve defaults to 127.0.0.1:8090; with a domain it uses 0.0.0.0:80/443. Behind a local proxy omit the domain and set --http loopback.", "components": ["pb"], "sources": ["pb:s4b155ef30262"], "status": "REASONED"},
     "pb-origins": {"text": "--origins defaults * and accepts comma-separated allowed origins; CORS does not authorize records.", "components": ["pb"], "sources": ["pb:s4b155ef30262"], "status": "REASONED"},
     "pb-proxy": {"text": "Trust only headers the proxy overwrites, review useLeftmostIP ordering and block direct backend access to protect IP/rate controls.", "components": ["pb"], "sources": ["pb:s03dd7dd84c2a"], "status": "REASONED"},
     "pb-dev": {"text": "--dev adds diagnostics including SQL on stderr, not an auth bypass; its flag default remains unverified.", "components": ["pb"], "sources": ["pb:seb56d3763223"], "status": "REASONED"},
-    "pb-rules": {"text": "Each list/view/create/update/delete rule defaults null (superuser-only); empty opens to guests and nonempty filters. Superusers bypass rules.", "components": ["pb"], "sources": ["pb:saedbdfbdfc48", "pb:s04ae861b5709"], "status": "REASONED"},
+    "pb-rules": {"text": "Each list/view/create/update/delete rule defaults null (superuser-only); empty opens to guests and nonempty filters. Superusers bypass rules.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:saedbdfbdfc48", "pb:s04ae861b5709"], "status": "REASONED"},
     "pb-manage": {"text": "Top-level manageRule defaults null and permits privileged auth-record changes alongside create/update rules; its validator rejects empty-string rules.", "components": ["pb"], "sources": ["pb:sce114368c2ad"], "status": "REASONED"},
-    "pb-files": {"text": "File fields default unprotected despite locked record rules; Protected plus an authorized viewRule gates downloads, while a public viewRule still permits public access.", "components": ["pb"], "sources": ["pb:sf711b6345643", "pb:sa5e571f8d473"], "status": "REASONED"},
-    "pb-file-token": {"text": "Short-lived file tokens provide identity context, not file authorization; viewRule decides. Protect token-bearing file URLs.", "components": ["pb"], "sources": ["pb:sf711b6345643", "pb:sa5e571f8d473"], "status": "REASONED"},
-    "pb-realtime": {"text": "Collection subscriptions use listRule and individual-record subscriptions viewRule; SSE/subscription success does not prove event authorization.", "components": ["pb"], "sources": ["pb:sb850a71fad4d", "pb:sfd2f779e8e11"], "status": "REASONED"},
+    "pb-files": {"text": "File fields default unprotected despite locked record rules; Protected plus an authorized viewRule gates downloads, while a public viewRule still permits public access.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:sf711b6345643", "pb:sa5e571f8d473"], "status": "REASONED"},
+    "pb-file-token": {"text": "Short-lived file tokens provide identity context, not file authorization; viewRule decides. Protect token-bearing file URLs.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:sf711b6345643", "pb:sa5e571f8d473"], "status": "REASONED"},
+    "pb-realtime": {"text": "Collection subscriptions use listRule and individual-record subscriptions viewRule; SSE/subscription success does not prove event authorization.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:sb850a71fad4d", "pb:sfd2f779e8e11"], "status": "REASONED"},
     "pb-password": {"text": "Auth initialization enables password authentication with email as the identity field.", "components": ["pb"], "sources": ["pb:sce114368c2ad"], "status": "REASONED"},
-    "pb-oauth": {"text": "OAuth2 defaults disabled and is unsupported for _superusers.", "components": ["pb"], "sources": ["pb:sce114368c2ad", "pb:s773e441dd51c"], "status": "REASONED"},
+    "pb-oauth": {"text": "OAuth2 defaults disabled and is unsupported for _superusers.", "components": ["pb", "pb-docs"], "sources": ["pb:sce114368c2ad", "pb-docs:s773e441dd51c"], "status": "REASONED"},
     "pb-mfa-default": {"text": "MFA defaults disabled with duration 600 seconds.", "components": ["pb"], "sources": ["pb:sce114368c2ad"], "status": "REASONED"},
     "pb-otp-default": {"text": "OTP defaults disabled with duration 180 seconds and length 8.", "components": ["pb"], "sources": ["pb:sce114368c2ad"], "status": "REASONED"},
     "pb-alerts": {"text": "Authentication alerts default enabled; retain alerts and provide working email.", "components": ["pb"], "sources": ["pb:sce114368c2ad"], "status": "REASONED"},
     "pb-auth-token": {"text": "Auth token duration defaults to 432000 seconds.", "components": ["pb"], "sources": ["pb:sce114368c2ad"], "status": "REASONED"},
     "pb-file-duration": {"text": "File token duration defaults to 180 seconds.", "components": ["pb"], "sources": ["pb:sce114368c2ad"], "status": "REASONED"},
-    "pb-auth-rule": {"text": "authRule defaults empty; verified-only collections can require verified = true after email verification works.", "components": ["pb"], "sources": ["pb:sce114368c2ad", "pb:s773e441dd51c"], "status": "REASONED"},
-    "pb-mfa": {"text": "For superusers retain password auth and enable both OTP and MFA; empty mfa.rule applies to everyone. OTP alone is not a second factor.", "components": ["pb"], "sources": ["pb:sce114368c2ad", "pb:s773e441dd51c"], "status": "REASONED"},
-    "pb-logout": {"text": "Stateless authentication means clearing pb.authStore removes only the local copy, not a stolen token.", "components": ["pb"], "sources": ["pb:s773e441dd51c", "pb:s04ae861b5709"], "status": "REASONED"},
-    "pb-encryption": {"text": "Settings default to plaintext JSON; select a 32-character environment secret with --encryptionEnv. This encrypts settings, not the whole database or files.", "components": ["pb"], "sources": ["pb:s9029ab974cf1", "pb:s03dd7dd84c2a"], "status": "REASONED"},
-    "pb-backups": {"text": "Backups default local with empty cron (automatic backups off); schedule/retain deliberately, protect archives and back up S3 objects separately.", "components": ["pb"], "sources": ["pb:s9029ab974cf1", "pb:s03dd7dd84c2a"], "status": "REASONED"},
+    "pb-auth-rule": {"text": "authRule defaults empty; verified-only collections can require verified = true after email verification works.", "components": ["pb", "pb-docs"], "sources": ["pb:sce114368c2ad", "pb-docs:s773e441dd51c"], "status": "REASONED"},
+    "pb-mfa": {"text": "For superusers retain password auth and enable both OTP and MFA; empty mfa.rule applies to everyone. OTP alone is not a second factor.", "components": ["pb", "pb-docs"], "sources": ["pb:sce114368c2ad", "pb-docs:s773e441dd51c"], "status": "REASONED"},
+    "pb-logout": {"text": "Stateless authentication means clearing pb.authStore removes only the local copy, not a stolen token.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:s773e441dd51c", "pb:s04ae861b5709"], "status": "REASONED"},
+    "pb-encryption": {"text": "Settings default to plaintext JSON; select a 32-character environment secret with --encryptionEnv. This encrypts settings, not the whole database or files.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:s9029ab974cf1", "pb:s03dd7dd84c2a"], "status": "REASONED"},
+    "pb-backups": {"text": "Backups default local with empty cron (automatic backups off); schedule/retain deliberately, protect archives and back up S3 objects separately.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:s9029ab974cf1", "pb:s03dd7dd84c2a"], "status": "REASONED"},
     "pb-backup-auth": {"text": "Backup downloads require a superuser file token and obey superuser IP restrictions; ordinary auth/file tokens do not suffice.", "components": ["pb"], "sources": ["pb:s31a5adccd695"], "status": "REASONED"},
-    "pb-limiter": {"text": "Native limits exist from v0.23.0 but default disabled at v0.40.4; enable rateLimits.enabled.", "components": ["pb"], "sources": ["pb:s9029ab974cf1", "pb:s03dd7dd84c2a"], "status": "REASONED"},
+    "pb-limiter": {"text": "Native limits exist from v0.23.0 but default disabled at v0.40.4; enable rateLimits.enabled.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:s9029ab974cf1", "pb:s03dd7dd84c2a"], "status": "REASONED"},
     "pb-limit-rules": {"text": "Seeded limits are *:auth 2/3s, *:create 20/5s, /api/batch 3/1s and /api/ 300/10s.", "components": ["pb"], "sources": ["pb:s03dd7dd84c2a"], "status": "REASONED"},
     "pb-limit-bypass": {"text": "Superusers and rateLimits.excludedIPs bypass limits; test ordinary non-excluded clients.", "components": ["pb"], "sources": ["pb:sf6ffdca4dd39"], "status": "REASONED"},
     "pb-smtp": {"text": "smtp.enabled and smtp.tls default false; disabled SMTP falls back to sendmail. Configure protected transport and test actual delivery.", "components": ["pb"], "sources": ["pb:s03dd7dd84c2a", "pb:seb56d3763223"], "status": "REASONED"},
-    "appwrite-https": {"text": "API FORCE_HTTPS and function/site ROUTER_FORCE_HTTPS default disabled at 2.2.0; explicitly enable both despite conflicting rolling deprecation/default documentation.", "components": ["appwrite"], "sources": ["appwrite:s9f5bd3b70f14", "appwrite:s427bab3733b6", "appwrite:s2bf9a4746d28"], "status": "REASONED"},
+    "appwrite-https": {"text": "API FORCE_HTTPS and function/site ROUTER_FORCE_HTTPS default disabled at 2.2.0; explicitly enable both despite conflicting rolling deprecation/default documentation.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:s9f5bd3b70f14", "appwrite:s427bab3733b6", "appwrite-docs:s2bf9a4746d28"], "status": "REASONED"},
     "appwrite-hosts": {"text": "ROUTER_PROTECTION defaults disabled; configure actual domains and enable rejection of unknown hostnames.", "components": ["appwrite"], "sources": ["appwrite:s9f5bd3b70f14", "appwrite:s427bab3733b6"], "status": "REASONED"},
     "appwrite-registration": {"text": "Console root-only registration defaults enabled with empty email/IP allowlists; these restrict account creation, not dashboard reachability or login.", "components": ["appwrite"], "sources": ["appwrite:s9f5bd3b70f14", "appwrite:s2bb21218c5ee"], "status": "REASONED"},
-    "appwrite-console": {"text": "Claim the first operator privately and use a separate network/access boundary for a private dashboard.", "components": ["appwrite"], "sources": ["appwrite:s4a965bdeeb98", "appwrite:s2bb21218c5ee"], "status": "REASONED"},
-    "appwrite-mfa": {"text": "Enroll and verify operator TOTP, protect recovery codes; at 2.2.0 enabled MFA with a verified factor requires a second session factor.", "components": ["appwrite"], "sources": ["appwrite:s221c6aaef8df", "appwrite:s193bfa5c6e22"], "status": "REASONED"},
+    "appwrite-console": {"text": "Claim the first operator privately and use a separate network/access boundary for a private dashboard.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite-docs:s4a965bdeeb98", "appwrite:s2bb21218c5ee"], "status": "REASONED"},
+    "appwrite-mfa": {"text": "Enroll and verify operator TOTP, protect recovery codes; at 2.2.0 enabled MFA with a verified factor requires a second session factor.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite-docs:s221c6aaef8df", "appwrite:s193bfa5c6e22"], "status": "REASONED"},
     "appwrite-dev-env": {"text": "Development env disables root-only registration, abuse and router protection and carries placeholders; do not inherit it for production.", "components": ["appwrite"], "sources": ["appwrite:sadb8c6e7b00a"], "status": "REASONED"},
-    "appwrite-recreate": {"text": "Apply env/Compose changes with docker compose up -d from the install directory, then check effective behavior.", "components": ["appwrite"], "sources": ["appwrite:s4a965bdeeb98"], "status": "REASONED"},
-    "appwrite-permissions": {"text": "Collection and document grants are additive; explicitly enable documentSecurity for document grants, whose default remains unverified.", "components": ["appwrite"], "sources": ["appwrite:s4c460f71c553", "appwrite:se308ccf94aac"], "status": "REASONED"},
-    "appwrite-creation": {"text": "Omitted Client SDK permissions can grant creator read/update/delete; Server SDK/Console omission grants no ordinary access. Use specific users/teams for private data.", "components": ["appwrite"], "sources": ["appwrite:sa0bd132f7968"], "status": "REASONED"},
-    "appwrite-keys": {"text": "Properly scoped server API keys bypass resource permissions but still obey operation scopes; keys.write is admin-equivalent and keys never belong in clients.", "components": ["appwrite"], "sources": ["appwrite:s193bfa5c6e22", "appwrite:saa37bb5d4d7e"], "status": "REASONED"},
-    "appwrite-encryption": {"text": "Replace _APP_OPENSSL_KEY_V1=your-secret-key before production data; preserve the exact key separately, since replacement/loss strands encrypted secrets.", "components": ["appwrite"], "sources": ["appwrite:s9f5bd3b70f14", "appwrite:s256ef73f7b85"], "status": "REASONED"},
-    "appwrite-backups": {"text": "Back up database, persistent storage and deployment configuration; restrict access and test restoration in a separate installation.", "components": ["appwrite"], "sources": ["appwrite:s256ef73f7b85"], "status": "REASONED"},
-    "appwrite-abuse": {"text": "_APP_OPTIONS_ABUSE defaults enabled but dev env disables it; server API-key requests are exempt, so test with ordinary clients.", "components": ["appwrite"], "sources": ["appwrite:s9f5bd3b70f14", "appwrite:sadb8c6e7b00a", "appwrite:s193bfa5c6e22", "appwrite:s000d05106450"], "status": "REASONED"},
-    "appwrite-smtp": {"text": "SMTP host/port/secure/username/password default empty and empty host disables sending; configure the provider and confirm message receipt/use.", "components": ["appwrite"], "sources": ["appwrite:s9f5bd3b70f14", "appwrite:s38a1efa0c7d2"], "status": "REASONED"},
+    "appwrite-recreate": {"text": "Apply env/Compose changes with docker compose up -d from the install directory, then check effective behavior.", "components": ["appwrite-docs"], "sources": ["appwrite-docs:s4a965bdeeb98"], "status": "REASONED"},
+    "appwrite-permissions": {"text": "Collection and document grants are additive; explicitly enable documentSecurity for document grants, whose default remains unverified.", "components": ["appwrite-docs"], "sources": ["appwrite-docs:s4c460f71c553", "appwrite-docs:se308ccf94aac"], "status": "REASONED"},
+    "appwrite-creation": {"text": "Omitted Client SDK permissions can grant creator read/update/delete; Server SDK/Console omission grants no ordinary access. Use specific users/teams for private data.", "components": ["appwrite-docs"], "sources": ["appwrite-docs:sa0bd132f7968"], "status": "REASONED"},
+    "appwrite-keys": {"text": "Properly scoped server API keys bypass resource permissions but still obey operation scopes; keys.write is admin-equivalent and keys never belong in clients.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:s193bfa5c6e22", "appwrite-docs:saa37bb5d4d7e"], "status": "REASONED"},
+    "appwrite-encryption": {"text": "Replace _APP_OPENSSL_KEY_V1=your-secret-key before production data; preserve the exact key separately, since replacement/loss strands encrypted secrets.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:s9f5bd3b70f14", "appwrite-docs:s256ef73f7b85"], "status": "REASONED"},
+    "appwrite-backups": {"text": "Back up database, persistent storage and deployment configuration; restrict access and test restoration in a separate installation.", "components": ["appwrite-docs"], "sources": ["appwrite-docs:s256ef73f7b85"], "status": "REASONED"},
+    "appwrite-abuse": {"text": "_APP_OPTIONS_ABUSE defaults enabled but dev env disables it; server API-key requests are exempt, so test with ordinary clients.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:s9f5bd3b70f14", "appwrite:sadb8c6e7b00a", "appwrite:s193bfa5c6e22", "appwrite-docs:s000d05106450"], "status": "REASONED"},
+    "appwrite-smtp": {"text": "SMTP host/port/secure/username/password default empty and empty host disables sending; configure the provider and confirm message receipt/use.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:s9f5bd3b70f14", "appwrite-docs:s38a1efa0c7d2"], "status": "REASONED"},
     "appwrite-storage": {"text": "Storage defaults local, upload limit 30000000 and server antivirus disabled; enabling scanning requires configured reachable ClamAV.", "components": ["appwrite"], "sources": ["appwrite:s9f5bd3b70f14"], "status": "REASONED"},
     "appwrite-bucket": {"text": "New bucket permissions are empty and fileSecurity=false; enable per-file security deliberately, since bucket grants also permit access.", "components": ["appwrite"], "sources": ["appwrite:se9480e5807b3"], "status": "REASONED"},
     "appwrite-bucket-options": {"text": "Bucket encryption and antivirus default true; bucket antivirus does not enable the server scanner.", "components": ["appwrite"], "sources": ["appwrite:se9480e5807b3"], "status": "REASONED"},
     "appwrite-size": {"text": "Encryption/scanning skip files above 20000000 bytes; cap maximumFileSize at that threshold when either is mandatory and test the boundary.", "components": ["appwrite"], "sources": ["appwrite:se9480e5807b3", "appwrite:s4ab95ecbf6b5"], "status": "REASONED"},
     "appwrite-functions": {"text": "Function execute roles and execution-key scopes default empty; grant narrowly. Disabled functions still admit authorized Server SDK API keys.", "components": ["appwrite"], "sources": ["appwrite:s655a0abb9ef0"], "status": "REASONED"},
-    "appwrite-executor": {"text": "Keep executor/orchestrator private, protect Docker-socket authority and replace _APP_EXECUTOR_SECRET; container execution is not demonstrated hostile-tenant isolation.", "components": ["appwrite"], "sources": ["appwrite:s8e5272615f2e", "appwrite:s2bf9a4746d28"], "status": "REASONED"},
-    "verify-pb-records": {"text": "Public rules allow guest reads; locked rules deny with 403, unsatisfied list filters can return empty 200 and view rules 404. Retain owner and separate superuser controls.", "components": ["pb"], "sources": ["pb:saedbdfbdfc48"], "status": "REASONED", "verify": [1]},
-    "verify-appwrite-records": {"text": "Broad collection grants defeat document restrictions; removing them must deny unrelated users while document grantees succeed. Compare client/server creation defaults.", "components": ["appwrite"], "sources": ["appwrite:s4c460f71c553", "appwrite:sa0bd132f7968"], "status": "REASONED", "verify": [1]},
+    "appwrite-executor": {"text": "Keep executor/orchestrator private, protect Docker-socket authority and replace _APP_EXECUTOR_SECRET; container execution is not demonstrated hostile-tenant isolation.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:s8e5272615f2e", "appwrite-docs:s2bf9a4746d28"], "status": "REASONED"},
+    "verify-pb-records": {"text": "Public rules allow guest reads; locked rules deny with 403, unsatisfied list filters can return empty 200 and view rules 404. Retain owner and separate superuser controls.", "components": ["pb-docs"], "sources": ["pb-docs:saedbdfbdfc48"], "status": "REASONED", "verify": [1]},
+    "verify-appwrite-records": {"text": "Broad collection grants defeat document restrictions; removing them must deny unrelated users while document grantees succeed. Compare client/server creation defaults.", "components": ["appwrite-docs"], "sources": ["appwrite-docs:s4c460f71c553", "appwrite-docs:sa0bd132f7968"], "status": "REASONED", "verify": [1]},
     "verify-appwrite-keys": {"text": "A correctly scoped server key reads despite empty permissions, while a key without scope fails; neither substitutes for an ordinary-user control.", "components": ["appwrite"], "sources": ["appwrite:s193bfa5c6e22"], "status": "REASONED", "verify": [1]},
     "verify-registration": {"text": "On disposable Appwrite fixtures compare open signup 201 with root-only account-limit failure and independent email/IP restrictions; retain login/invitation controls.", "components": ["appwrite"], "sources": ["appwrite:s2bb21218c5ee"], "status": "REASONED", "verify": [2]},
     "verify-pb-bootstrap": {"text": "Guest and ordinary-user _superusers record creation must fail while a valid installer token creates the private operator; static dashboard assets prove no admin access.", "components": ["pb"], "sources": ["pb:saf684a26056b", "pb:s69aa223f52e4"], "status": "REASONED"},
-    "verify-appwrite-mfa": {"text": "Console account GET succeeds without MFA, fails with user_more_factors_required for a fresh password-only MFA session, and succeeds after TOTP completion.", "components": ["appwrite"], "sources": ["appwrite:s221c6aaef8df", "appwrite:s193bfa5c6e22"], "status": "REASONED"},
+    "verify-appwrite-mfa": {"text": "Console account GET succeeds without MFA, fails with user_more_factors_required for a fresh password-only MFA session, and succeeds after TOTP completion.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite-docs:s221c6aaef8df", "appwrite:s193bfa5c6e22"], "status": "REASONED"},
     "verify-pb-writes": {"text": "Compare intended/unauthorized POST/PATCH/DELETE and privileged auth-record management; locked manageRule grants no management and empty-string configuration must fail.", "components": ["pb"], "sources": ["pb:s69aa223f52e4", "pb:sce114368c2ad"], "status": "REASONED"},
     "verify-pb-files": {"text": "Before protection unsigned file GET works; Protected plus private viewRule rejects guests/unrelated-user file tokens with 404 while permitted-user bytes still arrive.", "components": ["pb"], "sources": ["pb:sa5e571f8d473"], "status": "REASONED"},
-    "verify-pb-realtime": {"text": "Mutate a fixture while comparing collection and record subscriptions; deny unauthorized event delivery, retaining authorized delivery. PB_CONNECT/acknowledgment alone is insufficient.", "components": ["pb"], "sources": ["pb:sb850a71fad4d", "pb:sfd2f779e8e11"], "status": "REASONED"},
-    "verify-pb-mfa": {"text": "Compare password-only completion with password-plus-OTP MFA and verified/unverified authRule logins; clearing authStore must not revoke a retained valid token.", "components": ["pb"], "sources": ["pb:s773e441dd51c"], "status": "REASONED"},
+    "verify-pb-realtime": {"text": "Mutate a fixture while comparing collection and record subscriptions; deny unauthorized event delivery, retaining authorized delivery. PB_CONNECT/acknowledgment alone is insufficient.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:sb850a71fad4d", "pb:sfd2f779e8e11"], "status": "REASONED"},
+    "verify-pb-mfa": {"text": "Compare password-only completion with password-plus-OTP MFA and verified/unverified authRule logins; clearing authStore must not revoke a retained valid token.", "components": ["pb-docs"], "sources": ["pb-docs:s773e441dd51c"], "status": "REASONED"},
     "verify-pb-ips": {"text": "Compare allowed/excluded superuser sources and forged forwarded headers; excluded sources must get 403 and direct backend access must fail with a working proxy control.", "components": ["pb"], "sources": ["pb:s5b66ca69bf6d", "pb:s03dd7dd84c2a"], "status": "REASONED"},
     "verify-transport": {"text": "Compare HTTP/HTTPS and certificates, Appwrite API/function/site domains and configured/unknown Host; compare browser origins separately from record authorization.", "components": ["pb", "appwrite"], "sources": ["pb:s4b155ef30262", "appwrite:s427bab3733b6"], "status": "REASONED"},
-    "verify-abuse": {"text": "Cross each configured threshold with ordinary non-excluded clients and compare disabled/enabled controls; PocketBase limiting yields 429 with later successful recovery.", "components": ["pb", "appwrite"], "sources": ["pb:sf6ffdca4dd39", "appwrite:s000d05106450"], "status": "REASONED"},
-    "verify-email": {"text": "Request OTP, verification and recovery messages and confirm receipt and use; request success alone is not delivery evidence.", "components": ["pb", "appwrite"], "sources": ["pb:seb56d3763223", "appwrite:s38a1efa0c7d2"], "status": "REASONED"},
-    "verify-pb-recovery": {"text": "Compare plaintext/encrypted persisted settings, restart with retained key and restore local/S3 data; only permitted superuser file tokens may download backups.", "components": ["pb"], "sources": ["pb:s03dd7dd84c2a", "pb:s31a5adccd695", "pb:s9029ab974cf1"], "status": "REASONED"},
-    "verify-appwrite-recovery": {"text": "Restore encrypted fixtures with the original key; a separate wrong-key fixture must not recover encrypted values.", "components": ["appwrite"], "sources": ["appwrite:s256ef73f7b85"], "status": "REASONED"},
+    "verify-abuse": {"text": "Cross each configured threshold with ordinary non-excluded clients and compare disabled/enabled controls; PocketBase limiting yields 429 with later successful recovery.", "components": ["pb", "appwrite-docs"], "sources": ["pb:sf6ffdca4dd39", "appwrite-docs:s000d05106450"], "status": "REASONED"},
+    "verify-email": {"text": "Request OTP, verification and recovery messages and confirm receipt and use; request success alone is not delivery evidence.", "components": ["pb", "appwrite-docs"], "sources": ["pb:seb56d3763223", "appwrite-docs:s38a1efa0c7d2"], "status": "REASONED"},
+    "verify-pb-recovery": {"text": "Compare plaintext/encrypted persisted settings, restart with retained key and restore local/S3 data; only permitted superuser file tokens may download backups.", "components": ["pb", "pb-docs"], "sources": ["pb:s03dd7dd84c2a", "pb:s31a5adccd695", "pb-docs:s9029ab974cf1"], "status": "REASONED"},
+    "verify-appwrite-recovery": {"text": "Restore encrypted fixtures with the original key; a separate wrong-key fixture must not recover encrypted values.", "components": ["appwrite-docs"], "sources": ["appwrite-docs:s256ef73f7b85"], "status": "REASONED"},
     "verify-uploads": {"text": "Compare permitted/unrelated uploads and size-boundary fixtures; mandatory processing requires rejecting over-limit files and confirming accepted-file encryption/scanning.", "components": ["appwrite"], "sources": ["appwrite:se9480e5807b3", "appwrite:s4ab95ecbf6b5"], "status": "REASONED"},
     "verify-functions": {"text": "Compare intended execute roles, unrelated users and privileged server keys, including disabled functions; confirm executor/orchestrator privacy from a second host.", "components": ["appwrite"], "sources": ["appwrite:s655a0abb9ef0", "appwrite:s8e5272615f2e"], "status": "REASONED"},
-    "verify-bundle": {"text": "Search filenames using protected exact-secret patterns with a disposable marker control; client bundles must contain neither superuser tokens nor Appwrite API keys, and encoded/split forms can evade scanning.", "components": ["pb", "appwrite"], "sources": ["pb:s773e441dd51c", "appwrite:saa37bb5d4d7e"], "status": "REASONED", "verify": [3]},
-    "local-guards": {"text": "Recorded guard tests rejected placeholders and omitted/shortened arguments; this demonstrates shell behavior only, not service access or deployed-bundle scanning.", "components": ["pb", "appwrite"], "sources": ["pb:saedbdfbdfc48", "appwrite:sa0bd132f7968", "appwrite:saa37bb5d4d7e"], "status": "DEMONSTRATED", "evidence": "Local guard tests refused embedded `REPLACE_WITH_` placeholders, `example.com`, angle brackets, empty arguments, and omitted or shortened `set --` lines."},
-    "local-syntax": {"text": "All three bash fences have recorded local lint/syntax success, not live service evidence; ShellCheck version is recorded only in the body.", "components": ["pb", "appwrite"], "sources": ["pb:saedbdfbdfc48", "appwrite:s2bb21218c5ee", "appwrite:saa37bb5d4d7e"], "status": "DEMONSTRATED", "evidence": "All three bash blocks passed ShellCheck 0.11.0 and `bash -n` during authoring."},
-    "source-limits": {"text": "Pin-specific Appwrite legacy permissions/creator defaults and PocketBase CLI/backup archive tracing remain incomplete; documentSecurity and --dev defaults are not established.", "components": ["appwrite", "pb"], "sources": ["appwrite:sa0bd132f7968", "appwrite:s4c460f71c553", "appwrite:se308ccf94aac", "pb:s9029ab974cf1"], "status": "REASONED"}
+    "verify-bundle": {"text": "Search filenames using protected exact-secret patterns with a disposable marker control; client bundles must contain neither superuser tokens nor Appwrite API keys, and encoded/split forms can evade scanning.", "components": ["pb-docs", "appwrite-docs"], "sources": ["pb-docs:s773e441dd51c", "appwrite-docs:saa37bb5d4d7e"], "status": "REASONED", "verify": [3]},
+    "local-guards": {"text": "Recorded guard tests rejected placeholders and omitted/shortened arguments; this demonstrates shell behavior only, not service access or deployed-bundle scanning.", "components": ["pb-docs", "appwrite-docs"], "sources": ["pb-docs:saedbdfbdfc48", "appwrite-docs:sa0bd132f7968", "appwrite-docs:saa37bb5d4d7e"], "status": "DEMONSTRATED", "evidence": "Local guard tests refused embedded `REPLACE_WITH_` placeholders, `example.com`, angle brackets, empty arguments, and omitted or shortened `set --` lines."},
+    "local-syntax": {"text": "All three bash fences have recorded local lint/syntax success, not live service evidence; ShellCheck version is recorded only in the body.", "components": ["appwrite", "pb-docs", "appwrite-docs"], "sources": ["pb-docs:saedbdfbdfc48", "appwrite:s2bb21218c5ee", "appwrite-docs:saa37bb5d4d7e"], "status": "DEMONSTRATED", "evidence": "All three bash blocks passed ShellCheck 0.11.0 and `bash -n` during authoring."},
+    "source-limits": {"text": "Pin-specific Appwrite legacy permissions/creator defaults and PocketBase CLI/backup archive tracing remain incomplete; documentSecurity and --dev defaults are not established.", "components": ["appwrite-docs", "pb-docs"], "sources": ["appwrite-docs:sa0bd132f7968", "appwrite-docs:s4c460f71c553", "appwrite-docs:se308ccf94aac", "pb-docs:s9029ab974cf1"], "status": "REASONED"}
   }
 }
 ---
@@ -142,78 +154,78 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| pb-bootstrap: Privately bootstrap through the logged installer URL; superuser create EMAIL PASS exposes passwords in argv. Ordinary registration does not grant superuser rights. | PocketBase v0.40.4 | REASONED |
+| pb-bootstrap: Privately bootstrap through the logged installer URL; superuser create EMAIL PASS exposes passwords in argv. Ordinary registration does not grant superuser rights. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
 | pb-installer: Installer system-superuser token lasts about 30 minutes; protect its URL and startup logs as credentials. | PocketBase v0.40.4 | REASONED |
-| pb-ips: Superuser IP allowlists are available from v0.38.0; superuserIPs defaults empty and restricts authenticated requests, not /_/ static assets. | PocketBase v0.40.4 | REASONED |
+| pb-ips: Superuser IP allowlists are available from v0.38.0; superuserIPs defaults empty and restricts authenticated requests, not /_/ static assets. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
 | pb-tls: serve with a domain provides native HTTPS/ACME; alternatively terminate TLS at a reverse proxy. | PocketBase v0.40.4 | REASONED |
 | pb-bind: Without a domain serve defaults to 127.0.0.1:8090; with a domain it uses 0.0.0.0:80/443. Behind a local proxy omit the domain and set --http loopback. | PocketBase v0.40.4 | REASONED |
 | pb-origins: --origins defaults * and accepts comma-separated allowed origins; CORS does not authorize records. | PocketBase v0.40.4 | REASONED |
 | pb-proxy: Trust only headers the proxy overwrites, review useLeftmostIP ordering and block direct backend access to protect IP/rate controls. | PocketBase v0.40.4 | REASONED |
 | pb-dev: --dev adds diagnostics including SQL on stderr, not an auth bypass; its flag default remains unverified. | PocketBase v0.40.4 | REASONED |
-| pb-rules: Each list/view/create/update/delete rule defaults null (superuser-only); empty opens to guests and nonempty filters. Superusers bypass rules. | PocketBase v0.40.4 | REASONED |
+| pb-rules: Each list/view/create/update/delete rule defaults null (superuser-only); empty opens to guests and nonempty filters. Superusers bypass rules. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
 | pb-manage: Top-level manageRule defaults null and permits privileged auth-record changes alongside create/update rules; its validator rejects empty-string rules. | PocketBase v0.40.4 | REASONED |
-| pb-files: File fields default unprotected despite locked record rules; Protected plus an authorized viewRule gates downloads, while a public viewRule still permits public access. | PocketBase v0.40.4 | REASONED |
-| pb-file-token: Short-lived file tokens provide identity context, not file authorization; viewRule decides. Protect token-bearing file URLs. | PocketBase v0.40.4 | REASONED |
-| pb-realtime: Collection subscriptions use listRule and individual-record subscriptions viewRule; SSE/subscription success does not prove event authorization. | PocketBase v0.40.4 | REASONED |
+| pb-files: File fields default unprotected despite locked record rules; Protected plus an authorized viewRule gates downloads, while a public viewRule still permits public access. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
+| pb-file-token: Short-lived file tokens provide identity context, not file authorization; viewRule decides. Protect token-bearing file URLs. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
+| pb-realtime: Collection subscriptions use listRule and individual-record subscriptions viewRule; SSE/subscription success does not prove event authorization. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
 | pb-password: Auth initialization enables password authentication with email as the identity field. | PocketBase v0.40.4 | REASONED |
-| pb-oauth: OAuth2 defaults disabled and is unsupported for _superusers. | PocketBase v0.40.4 | REASONED |
+| pb-oauth: OAuth2 defaults disabled and is unsupported for _superusers. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
 | pb-mfa-default: MFA defaults disabled with duration 600 seconds. | PocketBase v0.40.4 | REASONED |
 | pb-otp-default: OTP defaults disabled with duration 180 seconds and length 8. | PocketBase v0.40.4 | REASONED |
 | pb-alerts: Authentication alerts default enabled; retain alerts and provide working email. | PocketBase v0.40.4 | REASONED |
 | pb-auth-token: Auth token duration defaults to 432000 seconds. | PocketBase v0.40.4 | REASONED |
 | pb-file-duration: File token duration defaults to 180 seconds. | PocketBase v0.40.4 | REASONED |
-| pb-auth-rule: authRule defaults empty; verified-only collections can require verified = true after email verification works. | PocketBase v0.40.4 | REASONED |
-| pb-mfa: For superusers retain password auth and enable both OTP and MFA; empty mfa.rule applies to everyone. OTP alone is not a second factor. | PocketBase v0.40.4 | REASONED |
-| pb-logout: Stateless authentication means clearing pb.authStore removes only the local copy, not a stolen token. | PocketBase v0.40.4 | REASONED |
-| pb-encryption: Settings default to plaintext JSON; select a 32-character environment secret with --encryptionEnv. This encrypts settings, not the whole database or files. | PocketBase v0.40.4 | REASONED |
-| pb-backups: Backups default local with empty cron (automatic backups off); schedule/retain deliberately, protect archives and back up S3 objects separately. | PocketBase v0.40.4 | REASONED |
+| pb-auth-rule: authRule defaults empty; verified-only collections can require verified = true after email verification works. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
+| pb-mfa: For superusers retain password auth and enable both OTP and MFA; empty mfa.rule applies to everyone. OTP alone is not a second factor. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
+| pb-logout: Stateless authentication means clearing pb.authStore removes only the local copy, not a stolen token. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
+| pb-encryption: Settings default to plaintext JSON; select a 32-character environment secret with --encryptionEnv. This encrypts settings, not the whole database or files. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
+| pb-backups: Backups default local with empty cron (automatic backups off); schedule/retain deliberately, protect archives and back up S3 objects separately. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
 | pb-backup-auth: Backup downloads require a superuser file token and obey superuser IP restrictions; ordinary auth/file tokens do not suffice. | PocketBase v0.40.4 | REASONED |
-| pb-limiter: Native limits exist from v0.23.0 but default disabled at v0.40.4; enable rateLimits.enabled. | PocketBase v0.40.4 | REASONED |
+| pb-limiter: Native limits exist from v0.23.0 but default disabled at v0.40.4; enable rateLimits.enabled. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
 | pb-limit-rules: Seeded limits are *:auth 2/3s, *:create 20/5s, /api/batch 3/1s and /api/ 300/10s. | PocketBase v0.40.4 | REASONED |
 | pb-limit-bypass: Superusers and rateLimits.excludedIPs bypass limits; test ordinary non-excluded clients. | PocketBase v0.40.4 | REASONED |
 | pb-smtp: smtp.enabled and smtp.tls default false; disabled SMTP falls back to sendmail. Configure protected transport and test actual delivery. | PocketBase v0.40.4 | REASONED |
-| appwrite-https: API FORCE_HTTPS and function/site ROUTER_FORCE_HTTPS default disabled at 2.2.0; explicitly enable both despite conflicting rolling deprecation/default documentation. | Appwrite 2.2.0 | REASONED |
+| appwrite-https: API FORCE_HTTPS and function/site ROUTER_FORCE_HTTPS default disabled at 2.2.0; explicitly enable both despite conflicting rolling deprecation/default documentation. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
 | appwrite-hosts: ROUTER_PROTECTION defaults disabled; configure actual domains and enable rejection of unknown hostnames. | Appwrite 2.2.0 | REASONED |
 | appwrite-registration: Console root-only registration defaults enabled with empty email/IP allowlists; these restrict account creation, not dashboard reachability or login. | Appwrite 2.2.0 | REASONED |
-| appwrite-console: Claim the first operator privately and use a separate network/access boundary for a private dashboard. | Appwrite 2.2.0 | REASONED |
-| appwrite-mfa: Enroll and verify operator TOTP, protect recovery codes; at 2.2.0 enabled MFA with a verified factor requires a second session factor. | Appwrite 2.2.0 | REASONED |
+| appwrite-console: Claim the first operator privately and use a separate network/access boundary for a private dashboard. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
+| appwrite-mfa: Enroll and verify operator TOTP, protect recovery codes; at 2.2.0 enabled MFA with a verified factor requires a second session factor. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
 | appwrite-dev-env: Development env disables root-only registration, abuse and router protection and carries placeholders; do not inherit it for production. | Appwrite 2.2.0 | REASONED |
-| appwrite-recreate: Apply env/Compose changes with docker compose up -d from the install directory, then check effective behavior. | Appwrite 2.2.0 | REASONED |
-| appwrite-permissions: Collection and document grants are additive; explicitly enable documentSecurity for document grants, whose default remains unverified. | Appwrite 2.2.0 | REASONED |
-| appwrite-creation: Omitted Client SDK permissions can grant creator read/update/delete; Server SDK/Console omission grants no ordinary access. Use specific users/teams for private data. | Appwrite 2.2.0 | REASONED |
-| appwrite-keys: Properly scoped server API keys bypass resource permissions but still obey operation scopes; keys.write is admin-equivalent and keys never belong in clients. | Appwrite 2.2.0 | REASONED |
-| appwrite-encryption: Replace _APP_OPENSSL_KEY_V1=your-secret-key before production data; preserve the exact key separately, since replacement/loss strands encrypted secrets. | Appwrite 2.2.0 | REASONED |
-| appwrite-backups: Back up database, persistent storage and deployment configuration; restrict access and test restoration in a separate installation. | Appwrite 2.2.0 | REASONED |
-| appwrite-abuse: _APP_OPTIONS_ABUSE defaults enabled but dev env disables it; server API-key requests are exempt, so test with ordinary clients. | Appwrite 2.2.0 | REASONED |
-| appwrite-smtp: SMTP host/port/secure/username/password default empty and empty host disables sending; configure the provider and confirm message receipt/use. | Appwrite 2.2.0 | REASONED |
+| appwrite-recreate: Apply env/Compose changes with docker compose up -d from the install directory, then check effective behavior. | Appwrite documentation (rolling) unknown | REASONED |
+| appwrite-permissions: Collection and document grants are additive; explicitly enable documentSecurity for document grants, whose default remains unverified. | Appwrite documentation (rolling) unknown | REASONED |
+| appwrite-creation: Omitted Client SDK permissions can grant creator read/update/delete; Server SDK/Console omission grants no ordinary access. Use specific users/teams for private data. | Appwrite documentation (rolling) unknown | REASONED |
+| appwrite-keys: Properly scoped server API keys bypass resource permissions but still obey operation scopes; keys.write is admin-equivalent and keys never belong in clients. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
+| appwrite-encryption: Replace _APP_OPENSSL_KEY_V1=your-secret-key before production data; preserve the exact key separately, since replacement/loss strands encrypted secrets. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
+| appwrite-backups: Back up database, persistent storage and deployment configuration; restrict access and test restoration in a separate installation. | Appwrite documentation (rolling) unknown | REASONED |
+| appwrite-abuse: _APP_OPTIONS_ABUSE defaults enabled but dev env disables it; server API-key requests are exempt, so test with ordinary clients. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
+| appwrite-smtp: SMTP host/port/secure/username/password default empty and empty host disables sending; configure the provider and confirm message receipt/use. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
 | appwrite-storage: Storage defaults local, upload limit 30000000 and server antivirus disabled; enabling scanning requires configured reachable ClamAV. | Appwrite 2.2.0 | REASONED |
 | appwrite-bucket: New bucket permissions are empty and fileSecurity=false; enable per-file security deliberately, since bucket grants also permit access. | Appwrite 2.2.0 | REASONED |
 | appwrite-bucket-options: Bucket encryption and antivirus default true; bucket antivirus does not enable the server scanner. | Appwrite 2.2.0 | REASONED |
 | appwrite-size: Encryption/scanning skip files above 20000000 bytes; cap maximumFileSize at that threshold when either is mandatory and test the boundary. | Appwrite 2.2.0 | REASONED |
 | appwrite-functions: Function execute roles and execution-key scopes default empty; grant narrowly. Disabled functions still admit authorized Server SDK API keys. | Appwrite 2.2.0 | REASONED |
-| appwrite-executor: Keep executor/orchestrator private, protect Docker-socket authority and replace _APP_EXECUTOR_SECRET; container execution is not demonstrated hostile-tenant isolation. | Appwrite 2.2.0 | REASONED |
-| verify-pb-records: Public rules allow guest reads; locked rules deny with 403, unsatisfied list filters can return empty 200 and view rules 404. Retain owner and separate superuser controls. | PocketBase v0.40.4 | REASONED |
-| verify-appwrite-records: Broad collection grants defeat document restrictions; removing them must deny unrelated users while document grantees succeed. Compare client/server creation defaults. | Appwrite 2.2.0 | REASONED |
+| appwrite-executor: Keep executor/orchestrator private, protect Docker-socket authority and replace _APP_EXECUTOR_SECRET; container execution is not demonstrated hostile-tenant isolation. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
+| verify-pb-records: Public rules allow guest reads; locked rules deny with 403, unsatisfied list filters can return empty 200 and view rules 404. Retain owner and separate superuser controls. | PocketBase documentation (rolling) unknown | REASONED |
+| verify-appwrite-records: Broad collection grants defeat document restrictions; removing them must deny unrelated users while document grantees succeed. Compare client/server creation defaults. | Appwrite documentation (rolling) unknown | REASONED |
 | verify-appwrite-keys: A correctly scoped server key reads despite empty permissions, while a key without scope fails; neither substitutes for an ordinary-user control. | Appwrite 2.2.0 | REASONED |
 | verify-registration: On disposable Appwrite fixtures compare open signup 201 with root-only account-limit failure and independent email/IP restrictions; retain login/invitation controls. | Appwrite 2.2.0 | REASONED |
 | verify-pb-bootstrap: Guest and ordinary-user _superusers record creation must fail while a valid installer token creates the private operator; static dashboard assets prove no admin access. | PocketBase v0.40.4 | REASONED |
-| verify-appwrite-mfa: Console account GET succeeds without MFA, fails with user_more_factors_required for a fresh password-only MFA session, and succeeds after TOTP completion. | Appwrite 2.2.0 | REASONED |
+| verify-appwrite-mfa: Console account GET succeeds without MFA, fails with user_more_factors_required for a fresh password-only MFA session, and succeeds after TOTP completion. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
 | verify-pb-writes: Compare intended/unauthorized POST/PATCH/DELETE and privileged auth-record management; locked manageRule grants no management and empty-string configuration must fail. | PocketBase v0.40.4 | REASONED |
 | verify-pb-files: Before protection unsigned file GET works; Protected plus private viewRule rejects guests/unrelated-user file tokens with 404 while permitted-user bytes still arrive. | PocketBase v0.40.4 | REASONED |
-| verify-pb-realtime: Mutate a fixture while comparing collection and record subscriptions; deny unauthorized event delivery, retaining authorized delivery. PB_CONNECT/acknowledgment alone is insufficient. | PocketBase v0.40.4 | REASONED |
-| verify-pb-mfa: Compare password-only completion with password-plus-OTP MFA and verified/unverified authRule logins; clearing authStore must not revoke a retained valid token. | PocketBase v0.40.4 | REASONED |
+| verify-pb-realtime: Mutate a fixture while comparing collection and record subscriptions; deny unauthorized event delivery, retaining authorized delivery. PB_CONNECT/acknowledgment alone is insufficient. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
+| verify-pb-mfa: Compare password-only completion with password-plus-OTP MFA and verified/unverified authRule logins; clearing authStore must not revoke a retained valid token. | PocketBase documentation (rolling) unknown | REASONED |
 | verify-pb-ips: Compare allowed/excluded superuser sources and forged forwarded headers; excluded sources must get 403 and direct backend access must fail with a working proxy control. | PocketBase v0.40.4 | REASONED |
 | verify-transport: Compare HTTP/HTTPS and certificates, Appwrite API/function/site domains and configured/unknown Host; compare browser origins separately from record authorization. | PocketBase v0.40.4; Appwrite 2.2.0 | REASONED |
-| verify-abuse: Cross each configured threshold with ordinary non-excluded clients and compare disabled/enabled controls; PocketBase limiting yields 429 with later successful recovery. | PocketBase v0.40.4; Appwrite 2.2.0 | REASONED |
-| verify-email: Request OTP, verification and recovery messages and confirm receipt and use; request success alone is not delivery evidence. | PocketBase v0.40.4; Appwrite 2.2.0 | REASONED |
-| verify-pb-recovery: Compare plaintext/encrypted persisted settings, restart with retained key and restore local/S3 data; only permitted superuser file tokens may download backups. | PocketBase v0.40.4 | REASONED |
-| verify-appwrite-recovery: Restore encrypted fixtures with the original key; a separate wrong-key fixture must not recover encrypted values. | Appwrite 2.2.0 | REASONED |
+| verify-abuse: Cross each configured threshold with ordinary non-excluded clients and compare disabled/enabled controls; PocketBase limiting yields 429 with later successful recovery. | PocketBase v0.40.4; Appwrite documentation (rolling) unknown | REASONED |
+| verify-email: Request OTP, verification and recovery messages and confirm receipt and use; request success alone is not delivery evidence. | PocketBase v0.40.4; Appwrite documentation (rolling) unknown | REASONED |
+| verify-pb-recovery: Compare plaintext/encrypted persisted settings, restart with retained key and restore local/S3 data; only permitted superuser file tokens may download backups. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
+| verify-appwrite-recovery: Restore encrypted fixtures with the original key; a separate wrong-key fixture must not recover encrypted values. | Appwrite documentation (rolling) unknown | REASONED |
 | verify-uploads: Compare permitted/unrelated uploads and size-boundary fixtures; mandatory processing requires rejecting over-limit files and confirming accepted-file encryption/scanning. | Appwrite 2.2.0 | REASONED |
 | verify-functions: Compare intended execute roles, unrelated users and privileged server keys, including disabled functions; confirm executor/orchestrator privacy from a second host. | Appwrite 2.2.0 | REASONED |
-| verify-bundle: Search filenames using protected exact-secret patterns with a disposable marker control; client bundles must contain neither superuser tokens nor Appwrite API keys, and encoded/split forms can evade scanning. | PocketBase v0.40.4; Appwrite 2.2.0 | REASONED |
-| local-guards: Recorded guard tests rejected placeholders and omitted/shortened arguments; this demonstrates shell behavior only, not service access or deployed-bundle scanning. | PocketBase v0.40.4; Appwrite 2.2.0 | DEMONSTRATED |
-| local-syntax: All three bash fences have recorded local lint/syntax success, not live service evidence; ShellCheck version is recorded only in the body. | PocketBase v0.40.4; Appwrite 2.2.0 | DEMONSTRATED |
-| source-limits: Pin-specific Appwrite legacy permissions/creator defaults and PocketBase CLI/backup archive tracing remain incomplete; documentSecurity and --dev defaults are not established. | Appwrite 2.2.0; PocketBase v0.40.4 | REASONED |
+| verify-bundle: Search filenames using protected exact-secret patterns with a disposable marker control; client bundles must contain neither superuser tokens nor Appwrite API keys, and encoded/split forms can evade scanning. | PocketBase documentation (rolling) unknown; Appwrite documentation (rolling) unknown | REASONED |
+| local-guards: Recorded guard tests rejected placeholders and omitted/shortened arguments; this demonstrates shell behavior only, not service access or deployed-bundle scanning. | PocketBase documentation (rolling) unknown; Appwrite documentation (rolling) unknown | DEMONSTRATED |
+| local-syntax: All three bash fences have recorded local lint/syntax success, not live service evidence; ShellCheck version is recorded only in the body. | Appwrite 2.2.0; PocketBase documentation (rolling) unknown; Appwrite documentation (rolling) unknown | DEMONSTRATED |
+| source-limits: Pin-specific Appwrite legacy permissions/creator defaults and PocketBase CLI/backup archive tracing remain incomplete; documentSecurity and --dev defaults are not established. | Appwrite documentation (rolling) unknown; PocketBase documentation (rolling) unknown | REASONED |
 <!-- version-basis:end -->
 
 Like Firebase and Supabase ([firebase-supabase.md](firebase-supabase.md)), these backends hand a
@@ -795,13 +807,13 @@ service result or deployed-bundle scan is claimed.
 
 ## Sources (checked September 2026)
 
-- PocketBase v0.40.4 going to production: https://pocketbase.io/docs/going-to-production/
-- PocketBase v0.40.4 API rules and filters: https://pocketbase.io/docs/api-rules-and-filters/
-- Appwrite 2.2.0 self-hosting production security: https://appwrite.io/docs/advanced/self-hosting/production/security
-- Appwrite 2.2.0 project API keys: https://appwrite.io/docs/partners/project/api-keys
-- [PocketBase v0.40.4 authentication](https://pocketbase.io/docs/authentication/).
-- [PocketBase v0.40.4 files and protected downloads](https://pocketbase.io/docs/files-handling/).
-- [PocketBase v0.40.4 Realtime API](https://pocketbase.io/docs/api-realtime/).
+- PocketBase going to production (rolling documentation, checked September 2026): https://pocketbase.io/docs/going-to-production/
+- PocketBase API rules and filters (rolling documentation, checked September 2026): https://pocketbase.io/docs/api-rules-and-filters/
+- Appwrite self-hosting production security (rolling documentation, checked September 2026): https://appwrite.io/docs/advanced/self-hosting/production/security
+- Appwrite project API keys (rolling documentation, checked September 2026): https://appwrite.io/docs/partners/project/api-keys
+- [PocketBase authentication (rolling documentation, checked September 2026)](https://pocketbase.io/docs/authentication/).
+- [PocketBase files and protected downloads (rolling documentation, checked September 2026)](https://pocketbase.io/docs/files-handling/).
+- [PocketBase Realtime API (rolling documentation, checked September 2026)](https://pocketbase.io/docs/api-realtime/).
 - [PocketBase v0.40.4 installer and bootstrap-token lifetime](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/installer.go).
 - [PocketBase v0.40.4 listener and origin flags](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/cmd/serve.go).
 - [PocketBase v0.40.4 native TLS and ACME listener](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/serve.go).
@@ -815,17 +827,17 @@ service result or deployed-bundle scan is claimed.
 - [PocketBase v0.40.4 realtime authorization](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/realtime.go).
 - [PocketBase v0.40.4 backup download authorization](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/backup.go).
 - [PocketBase v0.40.4 rate limiter and exemptions](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/middlewares_rate_limit.go).
-- [Appwrite 2.2.0 permissions, creation defaults, and server integrations](https://appwrite.io/docs/advanced/security/permissions).
-- [Appwrite 2.2.0 additive database permissions](https://appwrite.io/docs/products/databases/permissions/).
-- [Appwrite 2.2.0 legacy Databases API](https://appwrite.io/docs/references/cloud/server-nodejs/databases).
-- [Appwrite 2.2.0 environment reference and HTTPS deprecation wording](https://appwrite.io/docs/advanced/self-hosting/configuration/environment-variables).
-- [Appwrite 2.2.0 rate limits](https://appwrite.io/docs/advanced/security/rate-limits).
-- [Appwrite 2.2.0 email delivery](https://appwrite.io/docs/advanced/self-hosting/configuration/email).
-- [Appwrite 2.2.0 self-hosted backups and encryption-key preservation](https://appwrite.io/docs/advanced/self-hosting/production/backups).
+- [Appwrite permissions, creation defaults, and server integrations (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/security/permissions).
+- [Appwrite additive database permissions (rolling documentation, checked September 2026)](https://appwrite.io/docs/products/databases/permissions/).
+- [Appwrite legacy Databases API (rolling documentation, checked September 2026)](https://appwrite.io/docs/references/cloud/server-nodejs/databases).
+- [Appwrite environment reference and HTTPS deprecation wording (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/self-hosting/configuration/environment-variables).
+- [Appwrite rate limits (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/security/rate-limits).
+- [Appwrite email delivery (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/self-hosting/configuration/email).
+- [Appwrite self-hosted backups and encryption-key preservation (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/self-hosting/production/backups).
 - [Appwrite 2.2.0 configuration defaults](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/config/variables.php).
 - [Appwrite 2.2.0 development environment and placeholder secrets](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/.env).
 - [Appwrite 2.2.0 console registration handler](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/controllers/api/account.php).
-- [Appwrite 2.2.0 console MFA enrollment and recovery codes](https://appwrite.io/docs/advanced/security/mfa).
+- [Appwrite console MFA enrollment and recovery codes (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/security/mfa).
 - [Appwrite 2.2.0 API-key authorization, scopes, MFA enforcement, and abuse exemptions](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/controllers/shared/api.php).
 - [Appwrite 2.2.0 hostname routing and HTTPS enforcement](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/controllers/general.php).
 - [Appwrite 2.2.0 bucket defaults and upload controls](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/src/Appwrite/Platform/Modules/Storage/Http/Buckets/Create.php).

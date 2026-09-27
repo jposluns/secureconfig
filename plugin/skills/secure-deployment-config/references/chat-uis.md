@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "0f37852c6be2749d0e17a5f5222bae379db07548b73f09989318b1342eccb068",
+  "body_sha256": "89f6a105edbe7c40fd10e4397e5c89fb4d84e7e28f3f16ca40f264b6f5d02076",
   "components": {
     "anything": {
       "name": "AnythingLLM documentation",
@@ -16,9 +16,7 @@ version_basis: {
       "name": "LobeHub",
       "basis": "v2.2.16",
       "sources": {
-        "s78199d80212a": "https://lobehub.com/only-ai/markdown/docs/en/self-hosting/environment-variables/basic",
         "s977fd003b436": "https://github.com/lobehub/lobehub/blob/v2.2.16/docs/self-hosting/environment-variables/basic.mdx#L22-L32",
-        "s84e88654e760": "https://lobehub.com/only-ai/markdown/docs/en/self-hosting/environment-variables/auth",
         "sdb87ee6e14a5": "https://github.com/lobehub/lobehub/blob/v2.2.16/docs/self-hosting/environment-variables/auth.mdx"
       }
     },
@@ -96,6 +94,13 @@ version_basis: {
       "sources": {
         "s2b2686afaf41": "https://curl.se/docs/manpage.html"
       }
+    },
+    "lobe-docs": {
+      "name": "LobeHub documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "s84e88654e760": "https://lobehub.com/only-ai/markdown/docs/en/self-hosting/environment-variables/auth"
+      }
     }
   },
   "claims": {
@@ -103,11 +108,11 @@ version_basis: {
     "anything-roles": {"text": "Multi-user mode is preferred: Admin has full access, Manager all workspaces without provider/store settings, Default only assigned workspaces.", "components": ["anything"], "sources": ["anything:s6b5aa8c91ad3"], "status": "REASONED"},
     "anything-mode": {"text": "Enabling multi-user mode cannot be reverted to single-user; choose deliberately.", "components": ["anything"], "sources": ["anything:s6b5aa8c91ad3"], "status": "REASONED"},
     "anything-bind": {"text": "Publish AnythingLLM only on loopback 3001 and put proxy TLS/login in front.", "components": ["anything", "docker"], "sources": ["anything:s6b5aa8c91ad3", "docker:s52c162a9786f"], "status": "REASONED"},
-    "lobe-vault": {"text": "KEY_VAULTS_SECRET encrypts stored provider credentials; generate with openssl rand -base64 32 and preserve it for the data lifetime, not as a login password.", "components": ["lobe"], "sources": ["lobe:s78199d80212a", "lobe:s977fd003b436"], "status": "REASONED"},
-    "lobe-session": {"text": "Better Auth requires AUTH_SECRET, generated the same way, to sign sessions.", "components": ["lobe"], "sources": ["lobe:s84e88654e760", "lobe:sdb87ee6e14a5"], "status": "REASONED"},
-    "lobe-sso": {"text": "AUTH_SSO_PROVIDERS selects providers and matching credentials; AUTH_DISABLE_EMAIL_PASSWORD=1 forces SSO-only login.", "components": ["lobe"], "sources": ["lobe:s84e88654e760", "lobe:sdb87ee6e14a5"], "status": "REASONED"},
-    "lobe-admission": {"text": "AUTH_ALLOWED_EMAILS defaults empty, permitting all emails; set explicit addresses/domains for registration.", "components": ["lobe"], "sources": ["lobe:s84e88654e760", "lobe:sdb87ee6e14a5"], "status": "REASONED"},
-    "lobe-mfa": {"text": "Enforce MFA at the configured SSO provider; LobeChat login has no second factor of its own.", "components": ["lobe"], "sources": ["lobe:s84e88654e760"], "status": "REASONED"},
+    "lobe-vault": {"text": "KEY_VAULTS_SECRET encrypts stored provider credentials; generate with openssl rand -base64 32 and preserve it for the data lifetime, not as a login password.", "components": ["lobe"], "sources": ["lobe:s977fd003b436"], "status": "REASONED"},
+    "lobe-session": {"text": "Better Auth requires AUTH_SECRET, generated the same way, to sign sessions.", "components": ["lobe", "lobe-docs"], "sources": ["lobe-docs:s84e88654e760", "lobe:sdb87ee6e14a5"], "status": "REASONED"},
+    "lobe-sso": {"text": "AUTH_SSO_PROVIDERS selects providers and matching credentials; AUTH_DISABLE_EMAIL_PASSWORD=1 forces SSO-only login.", "components": ["lobe", "lobe-docs"], "sources": ["lobe-docs:s84e88654e760", "lobe:sdb87ee6e14a5"], "status": "REASONED"},
+    "lobe-admission": {"text": "AUTH_ALLOWED_EMAILS defaults empty, permitting all emails; set explicit addresses/domains for registration.", "components": ["lobe", "lobe-docs"], "sources": ["lobe-docs:s84e88654e760", "lobe:sdb87ee6e14a5"], "status": "REASONED"},
+    "lobe-mfa": {"text": "Enforce MFA at the configured SSO provider; LobeChat login has no second factor of its own.", "components": ["lobe-docs"], "sources": ["lobe-docs:s84e88654e760"], "status": "REASONED"},
     "docker-input": {"text": "Docker --env-file reads a named file, not stdin; -e NAME uses CLI environment, while -e NAME=value exposes argv.", "components": ["docker"], "sources": ["docker:s52c162a9786f", "docker:s8c2adc7212d7", "docker:s2611a6021e2f", "docker:s9a4c6197f246"], "status": "REASONED"},
     "docker-envfile": {"text": "Bare names in env files import CLI environment; validate exactly the intended secret assignments and reject extra/missing/duplicate lines.", "components": ["docker"], "sources": ["docker:sdc1935b6999f", "docker:sd1025af9c6ff"], "status": "REASONED"},
     "compose-envfile": {"text": "Compose env_file resolves environment via compose-go v2.4.7, pinned by Compose v2.32.4.", "components": ["compose", "compose-go"], "sources": ["compose:s14c0c0a70b7e", "compose-go:s25bb7bb5626f"], "status": "REASONED"},
@@ -126,8 +131,8 @@ version_basis: {
     "openhands-boundary": {"text": "OpenHands is single-user; shared-key API access is not per-user identity, and execution isolation depends on backend/mount/socket choices.", "components": ["openhands"], "sources": ["openhands:s1756d23e1d0b"], "status": "REASONED"},
     "openhands-bind": {"text": "Quickstart publishes 3000 on every interface; use 127.0.0.1:3000:3000 and an authenticated tunnel.", "components": ["openhands"], "sources": ["openhands:s0ceb47353632"], "status": "REASONED"},
     "verify-listeners": {"text": "Inventory loopback UI listeners 3001/3210/3000; external refusal must name the real remote path, with DNS/local failures inconclusive.", "components": ["docker", "openhands", "curl"], "sources": ["docker:s52c162a9786f", "openhands:s0ceb47353632", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
-    "verify-login": {"text": "Verify proxy HTTPS and login requirement; generic API refusal is a deployment-specific check requiring an actual protected route.", "components": ["anything", "lobe", "chainlit", "openhands"], "sources": ["anything:s6b5aa8c91ad3", "lobe:s84e88654e760", "chainlit:sa8ffef5a2afe", "openhands:s1756d23e1d0b"], "status": "REASONED", "verify": [1]},
-    "verify-registration": {"text": "A new Google identity absent from AUTH_ALLOWED_EMAILS should fail registration; this does not revoke an existing user's session.", "components": ["lobe"], "sources": ["lobe:s84e88654e760", "lobe:sdb87ee6e14a5"], "status": "REASONED", "verify": [1]},
+    "verify-login": {"text": "Verify proxy HTTPS and login requirement; generic API refusal is a deployment-specific check requiring an actual protected route.", "components": ["anything", "chainlit", "openhands", "lobe-docs"], "sources": ["anything:s6b5aa8c91ad3", "lobe-docs:s84e88654e760", "chainlit:sa8ffef5a2afe", "openhands:s1756d23e1d0b"], "status": "REASONED", "verify": [1]},
+    "verify-registration": {"text": "A new Google identity absent from AUTH_ALLOWED_EMAILS should fail registration; this does not revoke an existing user's session.", "components": ["lobe", "lobe-docs"], "sources": ["lobe-docs:s84e88654e760", "lobe:sdb87ee6e14a5"], "status": "REASONED", "verify": [1]},
     "verify-isolation": {"text": "User A's retrieval must succeed before user B is checked for denial; independently test documents, history, memory and caches, not login alone.", "components": ["anything"], "sources": ["anything:s6b5aa8c91ad3"], "status": "REASONED"}
   }
 }
@@ -148,10 +153,10 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | anything-mode: Enabling multi-user mode cannot be reverted to single-user; choose deliberately. | AnythingLLM documentation unknown | REASONED |
 | anything-bind: Publish AnythingLLM only on loopback 3001 and put proxy TLS/login in front. | AnythingLLM documentation unknown; Docker CLI v27.5.1 | REASONED |
 | lobe-vault: KEY_VAULTS_SECRET encrypts stored provider credentials; generate with openssl rand -base64 32 and preserve it for the data lifetime, not as a login password. | LobeHub v2.2.16 | REASONED |
-| lobe-session: Better Auth requires AUTH_SECRET, generated the same way, to sign sessions. | LobeHub v2.2.16 | REASONED |
-| lobe-sso: AUTH_SSO_PROVIDERS selects providers and matching credentials; AUTH_DISABLE_EMAIL_PASSWORD=1 forces SSO-only login. | LobeHub v2.2.16 | REASONED |
-| lobe-admission: AUTH_ALLOWED_EMAILS defaults empty, permitting all emails; set explicit addresses/domains for registration. | LobeHub v2.2.16 | REASONED |
-| lobe-mfa: Enforce MFA at the configured SSO provider; LobeChat login has no second factor of its own. | LobeHub v2.2.16 | REASONED |
+| lobe-session: Better Auth requires AUTH_SECRET, generated the same way, to sign sessions. | LobeHub v2.2.16; LobeHub documentation (rolling) unknown | REASONED |
+| lobe-sso: AUTH_SSO_PROVIDERS selects providers and matching credentials; AUTH_DISABLE_EMAIL_PASSWORD=1 forces SSO-only login. | LobeHub v2.2.16; LobeHub documentation (rolling) unknown | REASONED |
+| lobe-admission: AUTH_ALLOWED_EMAILS defaults empty, permitting all emails; set explicit addresses/domains for registration. | LobeHub v2.2.16; LobeHub documentation (rolling) unknown | REASONED |
+| lobe-mfa: Enforce MFA at the configured SSO provider; LobeChat login has no second factor of its own. | LobeHub documentation (rolling) unknown | REASONED |
 | docker-input: Docker --env-file reads a named file, not stdin; -e NAME uses CLI environment, while -e NAME=value exposes argv. | Docker CLI v27.5.1 | REASONED |
 | docker-envfile: Bare names in env files import CLI environment; validate exactly the intended secret assignments and reject extra/missing/duplicate lines. | Docker CLI v27.5.1 | REASONED |
 | compose-envfile: Compose env_file resolves environment via compose-go v2.4.7, pinned by Compose v2.32.4. | Docker Compose v2.32.4; compose-go v2.4.7 | REASONED |
@@ -170,8 +175,8 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | openhands-boundary: OpenHands is single-user; shared-key API access is not per-user identity, and execution isolation depends on backend/mount/socket choices. | OpenHands documentation unknown | REASONED |
 | openhands-bind: Quickstart publishes 3000 on every interface; use 127.0.0.1:3000:3000 and an authenticated tunnel. | OpenHands documentation unknown | REASONED |
 | verify-listeners: Inventory loopback UI listeners 3001/3210/3000; external refusal must name the real remote path, with DNS/local failures inconclusive. | Docker CLI v27.5.1; OpenHands documentation unknown; curl minimum write-out version 7.75.0 | REASONED |
-| verify-login: Verify proxy HTTPS and login requirement; generic API refusal is a deployment-specific check requiring an actual protected route. | AnythingLLM documentation unknown; LobeHub v2.2.16; Chainlit documentation unknown; OpenHands documentation unknown | REASONED |
-| verify-registration: A new Google identity absent from AUTH_ALLOWED_EMAILS should fail registration; this does not revoke an existing user's session. | LobeHub v2.2.16 | REASONED |
+| verify-login: Verify proxy HTTPS and login requirement; generic API refusal is a deployment-specific check requiring an actual protected route. | AnythingLLM documentation unknown; Chainlit documentation unknown; OpenHands documentation unknown; LobeHub documentation (rolling) unknown | REASONED |
+| verify-registration: A new Google identity absent from AUTH_ALLOWED_EMAILS should fail registration; this does not revoke an existing user's session. | LobeHub v2.2.16; LobeHub documentation (rolling) unknown | REASONED |
 | verify-isolation: User A's retrieval must succeed before user B is checked for denial; independently test documents, history, memory and caches, not login alone. | AnythingLLM documentation unknown | REASONED |
 <!-- version-basis:end -->
 
@@ -360,8 +365,8 @@ For a multi-user chat or RAG deployment (AnythingLLM workspaces, or a shared ass
 ## Sources (checked September 2026)
 
 - AnythingLLM security and access documentation: https://docs.anythingllm.com/features/security-and-access
-- LobeHub v2.2.16 environment variables (KEY_VAULTS_SECRET): https://lobehub.com/only-ai/markdown/docs/en/self-hosting/environment-variables/basic
-- LobeHub v2.2.16 authentication service environment variables (Better Auth): https://lobehub.com/only-ai/markdown/docs/en/self-hosting/environment-variables/auth
+- LobeHub environment variables (KEY_VAULTS_SECRET; pinned tag v2.2.16): https://github.com/lobehub/lobehub/blob/v2.2.16/docs/self-hosting/environment-variables/basic.mdx#L22-L32
+- LobeHub authentication service environment variables (Better Auth; rolling documentation, checked September 2026): https://lobehub.com/only-ai/markdown/docs/en/self-hosting/environment-variables/auth
 - LobeHub `KEY_VAULTS_SECRET` callout, "This key is used to encrypt sensitive data." (pinned tag v2.2.16): https://github.com/lobehub/lobehub/blob/v2.2.16/docs/self-hosting/environment-variables/basic.mdx#L22-L32
 - LobeHub `AUTH_SECRET` generated with `openssl rand -base64 32`, and `AUTH_GOOGLE_SECRET` as the "Client Secret of the Google OAuth application." (pinned tag v2.2.16): https://github.com/lobehub/lobehub/blob/v2.2.16/docs/self-hosting/environment-variables/auth.mdx
 - Docker `container run` reference, `--env-file` ("Read in a file of environment variables"; pinned tag v27.5.1): https://github.com/docker/cli/blob/v27.5.1/docs/reference/commandline/container_run.md
