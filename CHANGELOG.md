@@ -12,7 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-09-27
 
-- Correct version-basis claim sources in 9 guides found by the row 1.187 audit: 25 claims now cite the lines that show their facts, and the Dagster port-fallback claim and body now cover an explicit port 0 (#N).
+- Correct version-basis claim sources in 9 guides found by the row 1.187 audit: 25 claims now cite the lines that show their facts, and the Dagster port-fallback claim and body now cover an explicit port 0 (#416).
 - Correct 44 offset or wrong GitHub line anchors across 14 guides found by the row 1.187 audit (#415).
 - Re-anchor mlflow.md's two MLflow v3.16.1 CSRF-key citations to the lines that show the static secret key and its forwarding to workers; open rows 1.187 (full line-anchor audit) and 1.188 (Vite SSR scan path) (#413).
 - Record the maintainer's ruling that CHANGELOG headings use the UTC merge date from 2026-09-27, leaving earlier headings as recorded (#410).
