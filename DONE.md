@@ -10,6 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.183 | Fix the Go port-80 redirect to use a fixed canonical host instead of the client-controlled request Host, with a pinned net/http source. (M, XS) | Done, #405. |
 | 1.182 | Remove the Cloudflare Access Verify service-token secret from curl argv and shell history with a guarded hidden prompt and stdin headers, and replace the `cloudflared service install <TOKEN>` step, which put the tunnel token in argv, with a protected token file and `cloudflared tunnel run --token-file`. (H, XS) | Done, #403. |
 | 1.177 | F-MONGODB-AUDIT-SCOPE: `mongodb.md:579` says auditing logs only authorization failures. The MongoDB 8.0 parameter reference for `auditAuthorizationSuccess` scopes the failures-only default to `authCheck` events. Verify at a pinned version and correct the guide's scope. (M, S) | Done, #404. |
 | 1.181 | Correct DNS-01 automation prerequisites and the cookies-only CORS credential guidance, with authoritative sources. (M, XS) | Done, #402. |
