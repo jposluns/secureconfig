@@ -15,18 +15,24 @@ before fences or '>', matching fence character/length, and paragraph-only lazy
 quote continuation. A missing '>' ends quoted fenced code, never continues it.
 Quoted fences (including quoted Verify roots) are detected but rejected as an
 unsupported declaration container. Unclosed fences are convention errors only
-inside Verify. Non-fence code and quoted prose are attachment boundaries, not
-findings. Space-indented list containers and ATX headings are supported.
+inside Verify. Non-fence code and quoted prose are attachment boundaries;
+comment rejection below still applies. Space-indented lists and ATX headings are supported.
 Verify fences or headings in unsupported containers fail with
 '[unsupported-container]', including compact nested lists, lists inside quotes,
-empty list items, and headings inside lists or quotes; those containers are not parsed.
+empty list items, and headings inside lists or quotes. Lazy paragraph continuation
+retains list ownership for this rejection. Setext headings are rejected throughout
+guides, including nested candidates. HTML blocks (types 1-7) are quarantined to
+their CommonMark end condition; every heading/fence candidate inside is rejected
+and cannot change section selection. These constructs are detected, not modeled.
+Every HTML comment opener outside a fence or matched code span is rejected,
+including mid-paragraph openers and indented code samples. Code-span matching
+handles equal-length backtick runs across paragraph lines and escaped openers.
 https://spec.commonmark.org/0.31.2/
 
-This is not a full CommonMark parser: Setext headings, general HTML blocks,
-link-reference definitions, full list laziness and inline parsing are not implemented.
-HTML comments are hidden in prose; status emphasis uses the declaration grammar,
-not a general emphasis parser. Lazy continuation is used only to keep quoted
-paragraphs together; quoted declarations are never attached to outside fences.
+This is not a full CommonMark parser: link-reference definitions, full list
+semantics and general inline parsing are not implemented. Status emphasis uses
+the declaration grammar, not a general emphasis parser. Quoted declarations
+are never attached to outside fences.
 
 Fingerprints contain normalized heading ancestry, exact LF-normalized fence
 text (including delimiters/info), and adjacent paragraphs in the same list
@@ -59,7 +65,82 @@ DECL = re.compile(
 LIST = re.compile(r"^( {0,3})(?:[-+*]|[0-9]{1,9}[.)])([ ]+)(.*)$")
 EMPTY_LIST = re.compile(r"^ {0,3}(?:[-+*]|[0-9]{1,9}[.)]) *$")
 QUOTE = re.compile(r"^ {0,3}> ?")
+SETEXT = re.compile(r"^ {0,3}(?:=+|-+)[ \t]*$")
 THEMATIC = re.compile(r" {0,3}(?:(?:\* *){3,}|(?:_ *){3,}|(?:- *){3,})$")
+
+# CommonMark 0.31.2 section 4.6. These are quarantine boundaries only;
+# no Markdown semantics or declarations are read from the enclosed HTML.
+HTML_TAGS = (
+    "address|article|aside|base|basefont|blockquote|body|caption|center|col|"
+    "colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|"
+    "form|frame|frameset|h1|h2|h3|h4|h5|h6|head|header|hr|html|iframe|legend|li|"
+    "link|main|menu|menuitem|nav|noframes|ol|optgroup|option|p|param|search|"
+    "section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul"
+)
+HTML_TYPE6 = re.compile(r"^ {0,3}</?(?:" + HTML_TAGS + r")(?:[ \t>]|/>|$)", re.I)
+HTML_RAW = re.compile(r"^ {0,3}<(?:pre|script|style|textarea)(?:[ \t>]|$)", re.I)
+HTML_RAW_END = re.compile(r"</(?:pre|script|style|textarea)>", re.I)
+HTML_ATTRIBUTE = r'[a-zA-Z_:][a-zA-Z0-9_.:-]*(?:[ \t]*=[ \t]*(?:[^ \t"\'=<>`]+|\'[^\']*\'|"[^"]*"))?'
+HTML_TYPE7 = re.compile(
+    r"^ {0,3}(?:<(?!(?:pre|script|style|textarea)(?:[ \t/>]))"
+    r"[a-zA-Z][a-zA-Z0-9-]*(?:[ \t]+" + HTML_ATTRIBUTE
+    + r")*[ \t]*/?>|</[a-zA-Z][a-zA-Z0-9-]*[ \t]*>)[ \t]*$", re.I
+)
+
+
+def html_end(line, continuing=False):
+    """Return a quarantine terminator for HTML types 1-7, or None."""
+    if HTML_RAW.match(line):
+        return HTML_RAW_END
+    for start, end in ((r"<!--", r"-->"), (r"<\?", r"\?>"),
+                       (r"<![A-Za-z]", r">"), (r"<!\[CDATA\[", r"\]\]>")):
+        if re.match(r"^ {0,3}" + start, line):
+            return re.compile(end)
+    if HTML_TYPE6.match(line) or (not continuing and HTML_TYPE7.fullmatch(line)):
+        return re.compile(r"^ *$")
+    return None
+
+
+def html_block(lines, start, first, offset, owner, terminator):
+    """Keep HTML opaque through its terminator, EOF or container dedent."""
+    end, body = start + 1, [first]
+    while not terminator.search(body[-1]) and end < len(lines):
+        line = lines[end].expandtabs(4)
+        if line.strip() and not line.startswith(" " * offset):
+            break
+        body.append(line[offset:])
+        end += 1
+    return Token("html", start, end, "\n".join(body), owner)
+
+
+def comment_lines(text):
+    """Locate comment openers outside matched, equal-length code spans.
+
+    Only this literal-code exemption is implemented, not general inline parsing.
+    Spans can cross paragraph lines; unmatched runs cannot hide a comment.
+    Backslashes escape opening backticks but are literal inside a code span.
+    """
+    runs = list(re.finditer(r"`+", text))
+    visible, position, i = [], 0, 0
+    while i < len(runs):
+        opening = runs[i]
+        before = text[:opening.start()]
+        escaped = (len(before) - len(before.rstrip("\\"))) % 2
+        width = len(opening[0]) - escaped
+        closing = next((j for j in range(i + 1, len(runs))
+                        if len(runs[j][0]) == width), None)
+        if not width or closing is None:
+            i += 1
+            continue
+        # An escape consumes only the first backtick of an opening run.
+        begin = opening.start() + escaped
+        visible.append(text[position:begin])
+        visible.append("\n" * text[begin:runs[closing].end()].count("\n"))
+        position = runs[closing].end()
+        i = closing + 1
+    visible.append(text[position:])
+    return [number for number, line in enumerate("".join(visible).split("\n"))
+            if "<!--" in line]
 
 
 @dataclass
@@ -86,7 +167,8 @@ def interrupts_paragraph(line):
     """Only block starts can prevent a missing '>' from being lazy prose."""
     return (not line.strip(" \t") or HEADING.match(line)
             or Fences().feed(line) or QUOTE.match(line) or THEMATIC.fullmatch(line)
-            or re.match(r"^ {0,3}(?:[-+*] +|1[.)] +|<!--)", line))
+            or re.match(r"^ {0,3}(?:[-+*] +|1[.)] +)", line)
+            or html_end(line, continuing=True) is not None)
 
 
 def unsupported_block(lines, start, first, offset, owner):
@@ -99,8 +181,11 @@ def unsupported_block(lines, start, first, offset, owner):
     while end < len(lines):
         line = lines[end].expandtabs(4)
         if line.strip() and not line.startswith(" " * offset):
-            break
-        body.append(line[offset:])
+            if not body[-1].strip() or interrupts_paragraph(line):
+                break
+            body.append(line)
+        else:
+            body.append(line[offset:])
         end += 1
     return Token("unsupported", start, end, "\n".join(body), owner)
 
@@ -108,6 +193,7 @@ def unsupported_block(lines, start, first, offset, owner):
 def unsupported_features(text):
     """Locate fence/heading candidates without interpreting container syntax."""
     features = []
+    previous = ""
     for number, line in enumerate(text.split("\n")):
         line = line.lstrip(" ")
         while True:
@@ -118,6 +204,9 @@ def unsupported_features(text):
                 line = item[3].lstrip(" ")
             else:
                 break
+        if previous and SETEXT.fullmatch(line):
+            features.append((number, "Setext heading", True))
+        previous = line if (line.strip() and not interrupts_paragraph(line)) else ""
         head = HEADING.match(line)
         if head or Fences().feed(line):
             root = bool(head and TITLE.fullmatch(heading_parts(head[2] or "")[0]))
@@ -130,7 +219,7 @@ def tokenize(text, in_quote=False):
     lines = text.replace("\r\n", "\n").replace("\r", "\n").split("\n")
     heads, tokens, stack = [None] * len(lines), [], []
     fences = Fences()
-    start, fence_owner, comment = 0, (), False
+    start, fence_owner = 0, ()
     i = 0
     while i < len(lines):
         raw = lines[i]
@@ -144,7 +233,15 @@ def tokenize(text, in_quote=False):
                                     "unclosed list fence", fence_owner))
                 fences.close()
             if not fences.inside:
-                while stack and indent < stack[-1][0]:
+                # A dedented paragraph line can still belong to the list.
+                # Retain that ownership so a later indented heading cannot
+                # masquerade as a top-level boundary. A blank or interrupting
+                # block ends laziness; no additional list syntax is modeled.
+                lazy = (tokens and tokens[-1].kind == "paragraph"
+                        and tokens[-1].end == i
+                        and tokens[-1].owner == tuple(item[1] for item in stack)
+                        and not interrupts_paragraph(expanded))
+                while stack and indent < stack[-1][0] and not lazy:
                     stack.pop()
         offset = stack[-1][0] if stack else 0
         line = expanded[offset:] if expanded.startswith(" " * offset) else expanded
@@ -154,11 +251,17 @@ def tokenize(text, in_quote=False):
             # HTML, lists or declarations, and retain it as an attachment wall.
             continuing = (tokens and tokens[-1].kind == "paragraph"
                           and tokens[-1].end == i and tokens[-1].owner == owner)
-            if line.startswith("    ") and line.strip() and not continuing and not comment:
+            if continuing and SETEXT.fullmatch(line):
+                tokens[-1].kind = "setext"
+                tokens[-1].end = i + 1
+                tokens[-1].text += "\n" + line
+                i += 1
+                continue
+            if line.startswith("    ") and line.strip() and not continuing:
                 tokens.append(Token("code", i, i + 1, raw, owner))
                 i += 1
                 continue
-            if (not comment and EMPTY_LIST.fullmatch(line)
+            if (EMPTY_LIST.fullmatch(line)
                     and (in_quote or not continuing)):
                 # Empty items are not modeled either. Include the conventional
                 # content indentation only to quarantine their continuation.
@@ -167,7 +270,7 @@ def tokenize(text, in_quote=False):
                 tokens.append(token)
                 i = token.end
                 continue
-            match = LIST.match(line) if not comment else None
+            match = LIST.match(line)
             # Ordered lists starting above 1 cannot interrupt a paragraph.
             # In a quote, quarantine any list-looking container first, even
             # when its interruption rules would otherwise make it prose.
@@ -179,6 +282,7 @@ def tokenize(text, in_quote=False):
                 padding = len(match[2])
                 width = len(line) - len(match[3]) - (padding - 1 if padding > 4 else 0)
                 stack.append((offset + width, i))
+                continuing = False
                 line = line[width:]
                 owner = tuple(item[1] for item in stack)
                 if line.startswith("    "):
@@ -191,7 +295,7 @@ def tokenize(text, in_quote=False):
                     tokens.append(token)
                     i = token.end
                     continue
-            match = QUOTE.match(line) if not comment else None
+            match = QUOTE.match(line)
             if match:
                 # Quotes are attachment boundaries. Recursively inspect their
                 # contents for fences, but never use quoted prose as a marker.
@@ -213,19 +317,13 @@ def tokenize(text, in_quote=False):
                     i += 1
                 tokens.append(Token("quote", begin, i, "\n".join(quoted), owner))
                 continue
-            # Ignore HTML comments only in prose, never rewrite code.
-            visible = ""
-            while line:
-                end = line.find("-->" if comment else "<!--")
-                if end < 0:
-                    if not comment:
-                        visible += line
-                    break
-                if not comment:
-                    visible += line[:end]
-                line = line[end + (3 if comment else 4):]
-                comment = not comment
-            line = visible
+            terminator = html_end(line, continuing)
+            if terminator is not None:
+                html_offset = stack[-1][0] if stack else 0
+                token = html_block(lines, i, line, html_offset, owner, terminator)
+                tokens.append(token)
+                i = token.end
+                continue
             if owner and HEADING.match(line):
                 token = unsupported_block(lines, i, line, stack[-1][0], owner)
                 tokens.append(token)
@@ -296,6 +394,21 @@ def scan_guide(text, in_verify=False, in_quote=False):
     blocks = [t for t in tokens if t.kind != "break" or t.text.strip()]
     units, errors = [], []
     for k, token in enumerate(blocks):
+        if token.kind not in {"fence", "unclosed", "quote"}:
+            comments = ([n for n, line in enumerate(token.text.split("\n"))
+                         if "<!--" in line] if token.kind == "html"
+                        else comment_lines(token.text))
+            for number in comments:
+                errors.append(f"line {token.start + number + 1}: "
+                              "[unsupported-container] HTML comment outside fence or code span")
+        if token.kind == "html":
+            for number, kind, _ in unsupported_features(token.text):
+                errors.append(f"line {token.start + number + 1}: "
+                              f"[unsupported-container] {kind} in HTML block")
+            continue
+        if token.kind == "setext":
+            errors.append(f"line {token.end}: [unsupported-container] Setext heading")
+            continue
         if token.kind == "quote":
             quoted_units, quoted_errors = scan_guide(token.text, token.start in selected, True)
             if quoted_units or quoted_errors:
