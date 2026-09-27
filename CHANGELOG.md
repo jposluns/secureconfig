@@ -11,7 +11,7 @@ in step with the merged pull request is therefore an authoring obligation, not a
 
 ## 2026-09-26
 
-- Fail the secrets scan on grep read errors with path diagnostics, preserving whole-tree coverage. Isolate placeholder and changelog fixture Git environments and extend external-index regressions for both Git selectors. Rows 3.33 and 3.34. (#NNN)
+- Fail the secrets scan on grep read errors with path diagnostics, preserving whole-tree coverage. Isolate placeholder and changelog fixture Git environments and extend external-index regressions for both Git selectors. Rows 3.33 and 3.34. (#398)
 
 - Restrict the shared gate walker to tracked working-tree files (#396), row 3.28. Preserve caller filters, fail closed when Git or selected tracked inputs are unavailable, and test unreadable untracked directories alongside untracked violations. Stage existing gate fixtures in temporary Git indexes.
 

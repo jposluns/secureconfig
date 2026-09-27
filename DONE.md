@@ -9,8 +9,8 @@ gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
-| 3.34 | Isolate fixture Git environments in the placeholder and changelog self-tests, and verify external staged indexes survive both Git selectors. (L, XS) | Done, #NNN. |
-| 3.33 | Fail the whole-tree secrets scan on grep read errors, retain path diagnostics, and test clean, secret-bearing and unreadable trees. (M, XS) | Done, #NNN. |
+| 3.34 | Isolate fixture Git environments in the placeholder and changelog self-tests, and verify external staged indexes survive both Git selectors. (L, XS) | Done, #398. |
+| 3.33 | Fail the whole-tree secrets scan on grep read errors, retain path diagnostics, and test clean, secret-bearing and unreadable trees. (M, XS) | Done, #398. |
 | 3.28 | Restrict the shared file walker used by prose conventions, no-dashes and other gates to tracked files, so an unreadable untracked directory cannot make them error; #372 already does this for its own gate. (L, S) | Done, #396. |
 | 3.31 | Version basis pilot: per-guide version and documentation-date metadata, front matter plus a generated visible per-claim summary, a blocking gate, and three enrolled guides (vault.md, image-gen-uis.md, time-series-metrics-stores.md), on the maintainer's 2026-09-26 request and rulings. (M, M) | Done, #395. |
 | 1.176 | Exposure index: apply the remapped-publication convention to Helicone PostgreSQL 5432, Helicone ClickHouse 8123 and the Onyx MinIO console 9001. (M, S) | Done, #394. Allowlist the three container ports against host rows 54388, 18123 and 9005; remove their container descriptions and guide citations from rows 5432, 8123 and 9001. None of the respective guides documents another listener on those numbers. |
