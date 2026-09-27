@@ -1,4 +1,127 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "5fd221fba0a666a52a81af9e890f51f3231c0dbaedc1ff01d5f09e7e8f93bb93",
+  "components": {
+    "runpod": {
+      "name": "RunPod documentation",
+      "basis": "unknown",
+      "sources": {
+        "s817198f039ee": "https://docs.runpod.io/pods/configuration/expose-ports",
+        "s13c43b856d4f": "https://docs.runpod.io/pods/configuration/use-ssh"
+      }
+    },
+    "vast": {
+      "name": "Vast.ai documentation",
+      "basis": "unknown",
+      "sources": {
+        "sc25989a1613e": "https://docs.vast.ai/guides/instances/connect/networking",
+        "s0bdbda534723": "https://docs.vast.ai/guides/instances/connect/instance-portal",
+        "s6e0303ef19fe": "https://docs.vast.ai/guides/instances/connect/ssh"
+      }
+    },
+    "vast-image": {
+      "name": "Vast.ai base image",
+      "basis": "00064421641881c1f83ff58c55f13cbc10cbea4d",
+      "sources": {
+        "sf75c3c07819e": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/README.md"
+      }
+    },
+    "lambda": {
+      "name": "Lambda Public Cloud documentation",
+      "basis": "unknown",
+      "sources": {
+        "se22064748974": "https://docs.lambda.ai/public-cloud/firewalls/",
+        "sb12b4a953833": "https://docs.lambda.ai/public-cloud/on-demand/connecting-instance/"
+      }
+    },
+    "modal": {
+      "name": "Modal proxy authentication",
+      "basis": "unknown",
+      "sources": {
+        "s7d083f819a21": "https://modal.com/docs/guide/webhook-proxy-auth"
+      }
+    },
+    "jupyter": {
+      "name": "Jupyter Server security",
+      "basis": "unknown",
+      "sources": {
+        "sc703a8030c8f": "https://jupyter-server.readthedocs.io/en/latest/operators/security.html"
+      }
+    }
+  },
+  "claims": {
+    "publication": {"text": "Raw port publication or a firewall allowance adds no listener authentication; platform proxies authenticate only the routes they actually cover.", "components": ["runpod", "vast", "lambda", "modal"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "vast:s0bdbda534723", "lambda:se22064748974", "modal:s7d083f819a21"], "status": "REASONED"},
+    "runpod-http": {"text": "Expose HTTP Ports publishes https://[POD_ID]-[INTERNAL_PORT].proxy.runpod.net with automatic HTTPS; anyone with the URL can reach it, so the application still needs authentication.", "components": ["runpod"], "sources": ["runpod:s817198f039ee"], "status": "REASONED"},
+    "runpod-tcp": {"text": "Exposed TCP ports forward directly on a public IP without automatic TLS; secure template listeners before exposure and implement application TLS for sensitive TCP data.", "components": ["runpod"], "sources": ["runpod:s817198f039ee"], "status": "REASONED"},
+    "runpod-symmetry": {"text": "TCP configuration values above 70000 request symmetrical mapping rather than naming valid ports; read the assigned mapping from the pod environment, such as RUNPOD_TCP_PORT_70000. Mapping remains public.", "components": ["runpod"], "sources": ["runpod:s817198f039ee"], "status": "REASONED"},
+    "vast-ssh-port": {"text": "Vast.ai SSH launch mode opens internal port 22 by default.", "components": ["vast"], "sources": ["vast:sc25989a1613e"], "status": "REASONED"},
+    "vast-jupyter-port": {"text": "Vast.ai Jupyter launch mode opens internal 8080 as well as SSH port 22 by default.", "components": ["vast"], "sources": ["vast:sc25989a1613e"], "status": "REASONED"},
+    "vast-mapping": {"text": "Each open Vast.ai internal port maps to a random external port on a usually shared public IP; the networking docs describe no additional firewall step.", "components": ["vast"], "sources": ["vast:sc25989a1613e"], "status": "REASONED"},
+    "vast-proxy": {"text": "Instance Portal uses local Caddy proxying when external and internal ports differ; forwarded apps can stay on loopback and PORTAL_CONFIG describes routing and presentation.", "components": ["vast"], "sources": ["vast:s0bdbda534723"], "status": "REASONED"},
+    "vast-token": {"text": "Portal links carry a credential token; protect the URL, test access without it and confirm the selected route actually authenticates.", "components": ["vast"], "sources": ["vast:s0bdbda534723"], "status": "REASONED"},
+    "vast-auth-controls": {"text": "The pinned base image exposes OPEN_BUTTON_TOKEN, WEB_PASSWORD and ENABLE_AUTH/AUTH_EXCLUDE; PORTAL_CONFIG is not the credential.", "components": ["vast-image", "vast"], "sources": ["vast-image:sf75c3c07819e", "vast:s0bdbda534723"], "status": "REASONED"},
+    "lambda-default": {"text": "Lambda inbound firewall denies by default except ICMP and TCP 22; other listeners require explicit global/workspace rules or a per-instance ruleset attached at launch.", "components": ["lambda"], "sources": ["lambda:se22064748974"], "status": "REASONED"},
+    "lambda-rule": {"text": "An allow rule admits the specified source range without authenticating callers; pair it with listener or proxy authentication. Removing an allow rule closes access.", "components": ["lambda"], "sources": ["lambda:se22064748974"], "status": "REASONED"},
+    "modal-web": {"text": "Web endpoints using modal.fastapi_endpoint, the replacement for @web_endpoint, are public by default; requires_proxy_auth=True enables proxy authentication.", "components": ["modal"], "sources": ["modal:s7d083f819a21"], "status": "REASONED"},
+    "modal-dedicated": {"text": "Dedicated Endpoints require proxy authentication by default; --unauthenticated makes them public.", "components": ["modal"], "sources": ["modal:s7d083f819a21"], "status": "REASONED"},
+    "modal-server": {"text": "Servers require proxy authentication by default; @app.server(unauthenticated=True) makes them public.", "components": ["modal"], "sources": ["modal:s7d083f819a21"], "status": "REASONED"},
+    "modal-shared": {"text": "Shared Endpoints always require a Proxy Token and cannot be made public with the Dedicated Endpoint flag; the cited proxy-auth page does not explicitly document this exception.", "components": ["modal"], "sources": ["modal:s7d083f819a21"], "status": "REASONED"},
+    "modal-credentials": {"text": "Proxy authentication accepts Modal-Key and Modal-Secret or Authorization: Bearer <token_id>.<token_secret>; missing credentials on a protected endpoint return 401.", "components": ["modal"], "sources": ["modal:s7d083f819a21"], "status": "REASONED"},
+    "runpod-bind": {"text": "RunPod HTTP proxy needs the exposed pod interface: bind the exposed service to 0.0.0.0 inside the pod, not localhost.", "components": ["runpod"], "sources": ["runpod:s817198f039ee"], "status": "REASONED"},
+    "listener-auth": {"text": "Add listener authentication where supported; otherwise expose an authenticating gateway and keep the bare backend private. The guide cites Ollama locally, but records no Ollama vendor source here.", "components": ["runpod", "vast", "jupyter"], "sources": ["runpod:s817198f039ee", "vast:s0bdbda534723", "jupyter:sc703a8030c8f"], "status": "REASONED"},
+    "mfa": {"text": "Platform-account MFA and workload authentication are separate; the guide recommends account MFA and says no platform adds workload MFA. Account-MFA sources are not recorded here.", "components": ["modal", "jupyter"], "sources": ["modal:s7d083f819a21", "jupyter:sc703a8030c8f"], "status": "REASONED"},
+    "lambda-ssh": {"text": "Lambda requires an SSH key at launch; keep the private key off the instance.", "components": ["lambda"], "sources": ["lambda:sb12b4a953833"], "status": "REASONED"},
+    "vast-ssh": {"text": "Vast.ai disables SSH password authentication and uses the registered public key; keep the private key off the instance.", "components": ["vast"], "sources": ["vast:s6e0303ef19fe"], "status": "REASONED"},
+    "runpod-ssh": {"text": "RunPod recommends SSH keys and offers an optional password; use the key and skip the password.", "components": ["runpod"], "sources": ["runpod:s13c43b856d4f"], "status": "REASONED"},
+    "verify-inventory": {"text": "ss inventories TCP listeners in the current network namespace only, not UDP, firewall state or platform publication; cross-check mappings and probe each from outside. No ss source is recorded.", "components": ["runpod", "vast"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e"], "status": "REASONED", "verify": [1]},
+    "verify-jupyter": {"text": "Probe loopback :8888/api/contents directly: the guide expects 403 without the Jupyter token and 200 with it; any anonymous data response is a finding. The cited security page documents token auth but not this exact endpoint/status pair.", "components": ["jupyter"], "sources": ["jupyter:sc703a8030c8f"], "status": "REASONED", "verify": [1]},
+    "verify-mapping": {"text": "Repeat credential-free and authenticated requests per exposed mapping; anonymous app data fails, while a proxy 401 alone does not prove native listener auth and needs the direct positive control.", "components": ["runpod", "vast", "modal", "jupyter"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "vast:s0bdbda534723", "modal:s7d083f819a21", "jupyter:sc703a8030c8f"], "status": "REASONED", "verify": [1]},
+    "remote-desktop": {"text": "Inventory template noVNC ports such as 6080 and VNC ports such as 5900/5901; check weak or empty passwords, require a strong password plus encrypted tunnel for direct VNC, or remove its public mapping. Test with a VNC client; no noVNC/VNC source is recorded here.", "components": ["runpod", "vast"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e"], "status": "REASONED"}
+  }
+}
+---
 # Rented GPUs: RunPod, Vast.ai, Lambda, Modal
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| publication: Raw port publication or a firewall allowance adds no listener authentication; platform proxies authenticate only the routes they actually cover. | RunPod documentation unknown; Vast.ai documentation unknown; Lambda Public Cloud documentation unknown; Modal proxy authentication unknown | REASONED |
+| runpod-http: Expose HTTP Ports publishes https://[POD_ID]-[INTERNAL_PORT].proxy.runpod.net with automatic HTTPS; anyone with the URL can reach it, so the application still needs authentication. | RunPod documentation unknown | REASONED |
+| runpod-tcp: Exposed TCP ports forward directly on a public IP without automatic TLS; secure template listeners before exposure and implement application TLS for sensitive TCP data. | RunPod documentation unknown | REASONED |
+| runpod-symmetry: TCP configuration values above 70000 request symmetrical mapping rather than naming valid ports; read the assigned mapping from the pod environment, such as RUNPOD_TCP_PORT_70000. Mapping remains public. | RunPod documentation unknown | REASONED |
+| vast-ssh-port: Vast.ai SSH launch mode opens internal port 22 by default. | Vast.ai documentation unknown | REASONED |
+| vast-jupyter-port: Vast.ai Jupyter launch mode opens internal 8080 as well as SSH port 22 by default. | Vast.ai documentation unknown | REASONED |
+| vast-mapping: Each open Vast.ai internal port maps to a random external port on a usually shared public IP; the networking docs describe no additional firewall step. | Vast.ai documentation unknown | REASONED |
+| vast-proxy: Instance Portal uses local Caddy proxying when external and internal ports differ; forwarded apps can stay on loopback and PORTAL_CONFIG describes routing and presentation. | Vast.ai documentation unknown | REASONED |
+| vast-token: Portal links carry a credential token; protect the URL, test access without it and confirm the selected route actually authenticates. | Vast.ai documentation unknown | REASONED |
+| vast-auth-controls: The pinned base image exposes OPEN_BUTTON_TOKEN, WEB_PASSWORD and ENABLE_AUTH/AUTH_EXCLUDE; PORTAL_CONFIG is not the credential. | Vast.ai base image 00064421641881c1f83ff58c55f13cbc10cbea4d; Vast.ai documentation unknown | REASONED |
+| lambda-default: Lambda inbound firewall denies by default except ICMP and TCP 22; other listeners require explicit global/workspace rules or a per-instance ruleset attached at launch. | Lambda Public Cloud documentation unknown | REASONED |
+| lambda-rule: An allow rule admits the specified source range without authenticating callers; pair it with listener or proxy authentication. Removing an allow rule closes access. | Lambda Public Cloud documentation unknown | REASONED |
+| modal-web: Web endpoints using modal.fastapi_endpoint, the replacement for @web_endpoint, are public by default; requires_proxy_auth=True enables proxy authentication. | Modal proxy authentication unknown | REASONED |
+| modal-dedicated: Dedicated Endpoints require proxy authentication by default; --unauthenticated makes them public. | Modal proxy authentication unknown | REASONED |
+| modal-server: Servers require proxy authentication by default; @app.server(unauthenticated=True) makes them public. | Modal proxy authentication unknown | REASONED |
+| modal-shared: Shared Endpoints always require a Proxy Token and cannot be made public with the Dedicated Endpoint flag; the cited proxy-auth page does not explicitly document this exception. | Modal proxy authentication unknown | REASONED |
+| modal-credentials: Proxy authentication accepts Modal-Key and Modal-Secret or Authorization: Bearer &lt;token_id&gt;.&lt;token_secret&gt;; missing credentials on a protected endpoint return 401. | Modal proxy authentication unknown | REASONED |
+| runpod-bind: RunPod HTTP proxy needs the exposed pod interface: bind the exposed service to 0.0.0.0 inside the pod, not localhost. | RunPod documentation unknown | REASONED |
+| listener-auth: Add listener authentication where supported; otherwise expose an authenticating gateway and keep the bare backend private. The guide cites Ollama locally, but records no Ollama vendor source here. | RunPod documentation unknown; Vast.ai documentation unknown; Jupyter Server security unknown | REASONED |
+| mfa: Platform-account MFA and workload authentication are separate; the guide recommends account MFA and says no platform adds workload MFA. Account-MFA sources are not recorded here. | Modal proxy authentication unknown; Jupyter Server security unknown | REASONED |
+| lambda-ssh: Lambda requires an SSH key at launch; keep the private key off the instance. | Lambda Public Cloud documentation unknown | REASONED |
+| vast-ssh: Vast.ai disables SSH password authentication and uses the registered public key; keep the private key off the instance. | Vast.ai documentation unknown | REASONED |
+| runpod-ssh: RunPod recommends SSH keys and offers an optional password; use the key and skip the password. | RunPod documentation unknown | REASONED |
+| verify-inventory: ss inventories TCP listeners in the current network namespace only, not UDP, firewall state or platform publication; cross-check mappings and probe each from outside. No ss source is recorded. | RunPod documentation unknown; Vast.ai documentation unknown | REASONED |
+| verify-jupyter: Probe loopback :8888/api/contents directly: the guide expects 403 without the Jupyter token and 200 with it; any anonymous data response is a finding. The cited security page documents token auth but not this exact endpoint/status pair. | Jupyter Server security unknown | REASONED |
+| verify-mapping: Repeat credential-free and authenticated requests per exposed mapping; anonymous app data fails, while a proxy 401 alone does not prove native listener auth and needs the direct positive control. | RunPod documentation unknown; Vast.ai documentation unknown; Modal proxy authentication unknown; Jupyter Server security unknown | REASONED |
+| remote-desktop: Inventory template noVNC ports such as 6080 and VNC ports such as 5900/5901; check weak or empty passwords, require a strong password plus encrypted tunnel for direct VNC, or remove its public mapping. Test with a VNC client; no noVNC/VNC source is recorded here. | RunPod documentation unknown; Vast.ai documentation unknown | REASONED |
+<!-- version-basis:end -->
 
 Unlike the major clouds, most rented-GPU platforms put no default-deny firewall in front of the box. How a bound port becomes public differs by platform: on RunPod you expose a port (HTTP or TCP), on Vast.ai a launch mode or an added port maps it to a public port, on Lambda you open a firewall rule (its inbound firewall is deny-by-default), and on Modal it depends on the serverless construct. Raw port publication and a firewall allowance add NO authentication of their own, so a listener exposed that way is reachable with only whatever auth it has itself; an authenticating platform proxy is the exception (Modal's Endpoints and Servers require proxy auth by default and Shared Endpoints always do, only a public Web endpoint does not, and Vast.ai's Instance Portal gates the routes it proxies), but do not assume one is in front of a given port. Treat every listener the same way you would on your own hardware: bind it privately or authenticate it, per [ollama.md](ollama.md) and [model-servers.md](model-servers.md).
 
@@ -37,6 +160,8 @@ MFA: none of these platforms add a second factor to the workload itself. The acc
 SSH: authenticate with your own key, not a password. Lambda requires an SSH key at launch; Vast.ai disables password authentication and uses the key you register; RunPod recommends key auth and offers an optional password you should skip. Keep the private key off the instance, and treat SSH access as a control separate from the platform login above.
 
 ## Verify
+
+REASONED: listener inventory and direct/proxied authentication pairs; no GPU-platform deployment, workload credentials or outside probe host was supplied for this metadata review, and no run is recorded. Expected readings below follow the cited platform and Jupyter documentation; the exact Jupyter endpoint/status pair and ss semantics lack direct citations.
 
 ```bash
 ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not a firewall, and not

@@ -9549,6 +9549,39 @@ az network nsg rule list \
 
 # PaaS platforms: what the platform does, what stays yours
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| managed-tls: The guide assigns HTTPS termination and certificate management, including custom domains, to the PaaS and advises against adding certbot or a TLS proxy. Render/Fly.io/Vercel are cited; Railway and Heroku are named without their own sources. | Render documentation unknown; Fly.io documentation unknown; Vercel documentation unknown | REASONED |
+| application-auth: Deployment protection does not replace app login, endpoint keys or application MFA; non-public endpoints still need their own access controls. | Vercel documentation unknown | REASONED |
+| vercel-login: Vercel login can gate preview/deployment URLs on every plan and production domains with All Deployments; the 9 September 2026 change made that scope free including Hobby. | Vercel documentation unknown | REASONED |
+| vercel-password: At the recorded documentation date, Password Protection is unavailable on Hobby, a paid per-project add-on on Pro and included on Enterprise. | Vercel documentation unknown | REASONED |
+| secret-store: Use platform environment/secret configuration, not committed .env files; rotate credentials exposed in repositories, build logs or client bundles. | Render documentation unknown; Fly.io documentation unknown; Vercel documentation unknown | REASONED |
+| public-env: Only public values belong in browser-compiled environment variables such as NEXT_PUBLIC_; the guide records no specific frontend compiler source here. | Vercel documentation unknown | REASONED |
+| https-redirect: Redirect HTTP to HTTPS with the platform toggle or application logic using the forwarded-protocol header; exact platform toggles are not supplied. | Render documentation unknown; Fly.io documentation unknown; Vercel documentation unknown | REASONED |
+| proxy-awareness: Configure Express trust proxy or Django SECURE_PROXY_SSL_HEADER so secure cookies and redirects work behind the platform; framework vendor sources are not recorded here. | Render documentation unknown; Fly.io documentation unknown; Vercel documentation unknown | REASONED |
+| listener-port: Bind only the platform-injected port, commonly PORT, and avoid extra listeners; exact platform binding requirements are not cited beyond documentation roots. | Render documentation unknown; Fly.io documentation unknown; Vercel documentation unknown | REASONED |
+| database-identity: Where supported, require TLS certificate/hostname verification with PostgreSQL sslmode=verify-full or MySQL --ssl-mode=VERIFY_IDENTITY; MySQL client syntax lacks a source here. | Render documentation unknown | REASONED |
+| render-internal-tls: Render internal PostgreSQL TLS is optional and supports neither verify-ca nor verify-full; sslmode=require prevents plaintext fallback but is not identity verification. | Render documentation unknown | REASONED |
+| database-network: Render Postgres external access is open to any IP by default; prefer private connectivity and disable or source-restrict external access. Keep database credentials in the secret store. | Render documentation unknown | REASONED |
+| spaces-creation: Explicitly select and verify Space visibility: creation path and organization policy affect defaults and duplication defaults private. The organization private-by-default policy lacks a direct citation here. | Hugging Face Spaces documentation unknown | REASONED |
+| spaces-public: Public Spaces expose both source and running app. | Hugging Face Spaces documentation unknown | REASONED |
+| spaces-protected: Protected Spaces keep source private to owner/collaborators but expose the app via embed URL or custom domain; the recorded requirement is PRO for personal accounts or Team/Enterprise for organizations. | Hugging Face Spaces documentation unknown | REASONED |
+| spaces-private: Private Spaces restrict both source and running app to the owner and collaborators. | Hugging Face Spaces documentation unknown | REASONED |
+| spaces-secrets: Use Settings secrets for sensitive values, never repository/README metadata; variables remain publicly readable. | Hugging Face Spaces documentation unknown | REASONED |
+| spaces-static: Static Spaces expose both variables and secrets to client JavaScript through window.huggingface.variables; keep backend/provider credentials in Docker/Gradio Spaces or another server-side service. | Hugging Face Spaces documentation unknown | REASONED |
+| spaces-dev: Dev Mode opens SSH and VS Code access into the container; treat unattended sessions as admin exposure. The cited overview links Dev Mode but does not document these endpoints itself. | Hugging Face Spaces documentation unknown | REASONED |
+| verify-redirect: A HEAD request to HTTP / should return 301/302/307/308 with an HTTPS Location; the guide names Vercel 308. This spot-check proves neither every route/method nor secure-cookie proxy awareness; the exact status lacks a direct citation here. | Vercel documentation unknown | REASONED |
+| verify-app-auth: Disable deployment protection or use a Protection Bypass token to isolate app auth: anonymous protected requests should get the app's 401/403, then valid app credentials a 2xx. A platform SSO 401 is not app enforcement. | Vercel documentation unknown | REASONED |
+| verify-secrets: Scan history, working tree and deployed client JS, source maps, generated config and runtime values for every credential type; no matches is evidence, not proof. The cited platform roots do not document this scan procedure. | Render documentation unknown; Fly.io documentation unknown; Vercel documentation unknown | REASONED |
+<!-- version-basis:end -->
+
 On Render, Fly.io, Railway, Vercel, Heroku, and similar platforms, TLS is not your problem: the platform terminates HTTPS and manages certificates, including for custom domains. Do not bolt certbot or a reverse proxy onto a PaaS app, and do not apply this repository's server-TLS guides there. What stays yours:
 
 ## 1. Authentication: entirely yours
@@ -9574,6 +9607,8 @@ Managed databases from these platforms come with TLS endpoints, but check what t
 A new Space's default visibility depends on the creation path and any organization policy (organizations can enforce private-by-default, and duplicating a Space defaults to private), so explicitly select and verify visibility when you create it; public visibility exposes both the source and the running app. Visibility can be changed to "protected" (the source stays private to the owner and collaborators, but the running app is still public through its embed URL or custom domain) or "private" (both the source and the running app are restricted to the owner and collaborators); protected visibility requires a paid plan, PRO for personal accounts or Team/Enterprise for organizations, at the time of writing. Space secrets belong in the Settings tab's secrets store, never in the repository or its README metadata; anything set as a "variable" instead of a "secret" is still publicly readable. That secrets store is not a safe place for backend or provider credentials on a Static Space: Hugging Face exposes both variables and secrets to client-side JavaScript there, through `window.huggingface.variables`, so anything placed in a Static Space's secrets still reaches the browser. Keep server-side credentials in a server-side service, such as a Docker or Gradio Space or a separate backend, instead. Dev Mode opens an SSH and VS Code endpoint straight into the running container, which is materially more access than the app itself, so treat an unattended Dev Mode session the same as any other exposed admin path. For serverless GPU platforms, see [gpu-clouds.md](gpu-clouds.md).
 
 ## 6. Verify
+
+REASONED: HTTPS redirect, application-authentication and deployed-secret checks; no PaaS application, tenant credentials or deployed client bundle was supplied for this metadata review, and no run is recorded. The expected readings below follow the cited platform documentation and the guide's application-security reasoning; exact application behaviour remains deployment-specific.
 
 ```bash
 # 1. Edge redirects HTTP->HTTPS. Spot-check on / only: it does not prove HTTPS on every route/method, nor that
@@ -9843,6 +9878,44 @@ aws ec2 describe-instances --instance-ids i-0123456789abcdef0 \
 
 # Rented GPUs: RunPod, Vast.ai, Lambda, Modal
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| publication: Raw port publication or a firewall allowance adds no listener authentication; platform proxies authenticate only the routes they actually cover. | RunPod documentation unknown; Vast.ai documentation unknown; Lambda Public Cloud documentation unknown; Modal proxy authentication unknown | REASONED |
+| runpod-http: Expose HTTP Ports publishes https://[POD_ID]-[INTERNAL_PORT].proxy.runpod.net with automatic HTTPS; anyone with the URL can reach it, so the application still needs authentication. | RunPod documentation unknown | REASONED |
+| runpod-tcp: Exposed TCP ports forward directly on a public IP without automatic TLS; secure template listeners before exposure and implement application TLS for sensitive TCP data. | RunPod documentation unknown | REASONED |
+| runpod-symmetry: TCP configuration values above 70000 request symmetrical mapping rather than naming valid ports; read the assigned mapping from the pod environment, such as RUNPOD_TCP_PORT_70000. Mapping remains public. | RunPod documentation unknown | REASONED |
+| vast-ssh-port: Vast.ai SSH launch mode opens internal port 22 by default. | Vast.ai documentation unknown | REASONED |
+| vast-jupyter-port: Vast.ai Jupyter launch mode opens internal 8080 as well as SSH port 22 by default. | Vast.ai documentation unknown | REASONED |
+| vast-mapping: Each open Vast.ai internal port maps to a random external port on a usually shared public IP; the networking docs describe no additional firewall step. | Vast.ai documentation unknown | REASONED |
+| vast-proxy: Instance Portal uses local Caddy proxying when external and internal ports differ; forwarded apps can stay on loopback and PORTAL_CONFIG describes routing and presentation. | Vast.ai documentation unknown | REASONED |
+| vast-token: Portal links carry a credential token; protect the URL, test access without it and confirm the selected route actually authenticates. | Vast.ai documentation unknown | REASONED |
+| vast-auth-controls: The pinned base image exposes OPEN_BUTTON_TOKEN, WEB_PASSWORD and ENABLE_AUTH/AUTH_EXCLUDE; PORTAL_CONFIG is not the credential. | Vast.ai base image 00064421641881c1f83ff58c55f13cbc10cbea4d; Vast.ai documentation unknown | REASONED |
+| lambda-default: Lambda inbound firewall denies by default except ICMP and TCP 22; other listeners require explicit global/workspace rules or a per-instance ruleset attached at launch. | Lambda Public Cloud documentation unknown | REASONED |
+| lambda-rule: An allow rule admits the specified source range without authenticating callers; pair it with listener or proxy authentication. Removing an allow rule closes access. | Lambda Public Cloud documentation unknown | REASONED |
+| modal-web: Web endpoints using modal.fastapi_endpoint, the replacement for @web_endpoint, are public by default; requires_proxy_auth=True enables proxy authentication. | Modal proxy authentication unknown | REASONED |
+| modal-dedicated: Dedicated Endpoints require proxy authentication by default; --unauthenticated makes them public. | Modal proxy authentication unknown | REASONED |
+| modal-server: Servers require proxy authentication by default; @app.server(unauthenticated=True) makes them public. | Modal proxy authentication unknown | REASONED |
+| modal-shared: Shared Endpoints always require a Proxy Token and cannot be made public with the Dedicated Endpoint flag; the cited proxy-auth page does not explicitly document this exception. | Modal proxy authentication unknown | REASONED |
+| modal-credentials: Proxy authentication accepts Modal-Key and Modal-Secret or Authorization: Bearer &lt;token_id&gt;.&lt;token_secret&gt;; missing credentials on a protected endpoint return 401. | Modal proxy authentication unknown | REASONED |
+| runpod-bind: RunPod HTTP proxy needs the exposed pod interface: bind the exposed service to 0.0.0.0 inside the pod, not localhost. | RunPod documentation unknown | REASONED |
+| listener-auth: Add listener authentication where supported; otherwise expose an authenticating gateway and keep the bare backend private. The guide cites Ollama locally, but records no Ollama vendor source here. | RunPod documentation unknown; Vast.ai documentation unknown; Jupyter Server security unknown | REASONED |
+| mfa: Platform-account MFA and workload authentication are separate; the guide recommends account MFA and says no platform adds workload MFA. Account-MFA sources are not recorded here. | Modal proxy authentication unknown; Jupyter Server security unknown | REASONED |
+| lambda-ssh: Lambda requires an SSH key at launch; keep the private key off the instance. | Lambda Public Cloud documentation unknown | REASONED |
+| vast-ssh: Vast.ai disables SSH password authentication and uses the registered public key; keep the private key off the instance. | Vast.ai documentation unknown | REASONED |
+| runpod-ssh: RunPod recommends SSH keys and offers an optional password; use the key and skip the password. | RunPod documentation unknown | REASONED |
+| verify-inventory: ss inventories TCP listeners in the current network namespace only, not UDP, firewall state or platform publication; cross-check mappings and probe each from outside. No ss source is recorded. | RunPod documentation unknown; Vast.ai documentation unknown | REASONED |
+| verify-jupyter: Probe loopback :8888/api/contents directly: the guide expects 403 without the Jupyter token and 200 with it; any anonymous data response is a finding. The cited security page documents token auth but not this exact endpoint/status pair. | Jupyter Server security unknown | REASONED |
+| verify-mapping: Repeat credential-free and authenticated requests per exposed mapping; anonymous app data fails, while a proxy 401 alone does not prove native listener auth and needs the direct positive control. | RunPod documentation unknown; Vast.ai documentation unknown; Modal proxy authentication unknown; Jupyter Server security unknown | REASONED |
+| remote-desktop: Inventory template noVNC ports such as 6080 and VNC ports such as 5900/5901; check weak or empty passwords, require a strong password plus encrypted tunnel for direct VNC, or remove its public mapping. Test with a VNC client; no noVNC/VNC source is recorded here. | RunPod documentation unknown; Vast.ai documentation unknown | REASONED |
+<!-- version-basis:end -->
+
 Unlike the major clouds, most rented-GPU platforms put no default-deny firewall in front of the box. How a bound port becomes public differs by platform: on RunPod you expose a port (HTTP or TCP), on Vast.ai a launch mode or an added port maps it to a public port, on Lambda you open a firewall rule (its inbound firewall is deny-by-default), and on Modal it depends on the serverless construct. Raw port publication and a firewall allowance add NO authentication of their own, so a listener exposed that way is reachable with only whatever auth it has itself; an authenticating platform proxy is the exception (Modal's Endpoints and Servers require proxy auth by default and Shared Endpoints always do, only a public Web endpoint does not, and Vast.ai's Instance Portal gates the routes it proxies), but do not assume one is in front of a given port. Treat every listener the same way you would on your own hardware: bind it privately or authenticate it, per [ollama.md](ollama.md) and [model-servers.md](model-servers.md).
 
 ## RunPod
@@ -9880,6 +9953,8 @@ MFA: none of these platforms add a second factor to the workload itself. The acc
 SSH: authenticate with your own key, not a password. Lambda requires an SSH key at launch; Vast.ai disables password authentication and uses the key you register; RunPod recommends key auth and offers an optional password you should skip. Keep the private key off the instance, and treat SSH access as a control separate from the platform login above.
 
 ## Verify
+
+REASONED: listener inventory and direct/proxied authentication pairs; no GPU-platform deployment, workload credentials or outside probe host was supplied for this metadata review, and no run is recorded. Expected readings below follow the cited platform and Jupyter documentation; the exact Jupyter endpoint/status pair and ss semantics lack direct citations.
 
 ```bash
 ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not a firewall, and not
@@ -9950,6 +10025,39 @@ Every port `ss` shows listening should be either closed (not exposed at the plat
 
 # Deploying safely over time: verify from outside, safe order, previews, teardown
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| outside: Run exposure checks from a second network; host-local curl and ss do not establish outside reachability or platform firewall behaviour. | Nmap documentation unknown | REASONED |
+| tcp-scan: Sweep authorized hosts with nmap -Pn -p-; the guide also gives an nc port loop. No nc reference is recorded in Sources. | Nmap documentation unknown | REASONED |
+| udp-scan: The full port sweep is TCP only; inventory UDP services and probe their ports separately with nmap -sU. | Nmap documentation unknown | REASONED |
+| all-addresses: Check public IPv4, public IPv6 and platform URLs as well as the custom domain; one address cannot establish coverage of the others. | Nmap documentation unknown; Vercel Deployment Protection unknown | REASONED |
+| passive-index: Cross-reference Shodan and Censys indexes for previously indexed exposure; indexed observations are not a fresh direct scan. | Shodan unknown; Censys unknown | REASONED |
+| initialize-secrets: Create owner/admin credentials and signing secrets before opening access. Access-policy citation is context only; application bootstrap sources are not recorded. | Cloudflare Access policies unknown | REASONED |
+| registration: Disable open registration or restrict it to an allowlisted domain before exposure. Access-policy citation is context only; application registration sources are not recorded. | Cloudflare Access policies unknown | REASONED |
+| fronting-order: Install TLS and proxy authentication before opening network access. Access policies support the gate; TLS and deployment-order sources are not recorded. | Cloudflare Access policies unknown | REASONED |
+| setup-route: After initialization, restart and confirm the setup URL refuses a second admin. Access-policy citation is context only; setup-route behaviour is not sourced. | Cloudflare Access policies unknown | REASONED |
+| preview-standard: Vercel Standard Protection is available on every plan and gates previews and generated deployment URLs while leaving the production domain open. | Vercel Deployment Protection unknown | REASONED |
+| preview-all: All Deployments also protects production; pairing it with Vercel Authentication became free on every plan on 9 September 2026, with no paid add-on. | Vercel Deployment Protection unknown | REASONED |
+| preview-gate: Apply a fronting gate such as a Cloudflare Access policy to preview hostnames the platform gate does not cover. | Cloudflare Access policies unknown; Vercel Deployment Protection unknown | REASONED |
+| clone-secrets: Treat clone data like production and rotate inherited credentials if the clone is less trusted. Access-policy citation is context only; clone credential lifecycle is not sourced. | Cloudflare Access policies unknown | REASONED |
+| dns-retirement: Remove CNAME or A/AAAA records before releasing the resource; retain it through the old TTL and authoritative removal checks. dig supports DNS inspection; takeover and resource-retention guidance has no dedicated source. | BIND dig documentation unknown | REASONED |
+| retire-credentials: After DNS retirement revoke deployment access policies, API/service credentials and dedicated database users. Access-policy citation covers only the fronting context. | Cloudflare Access policies unknown | REASONED |
+| reverify: Repeat outside scans and negative auth tests after upgrades, restores or network/auth changes; restored defaults can reopen exposure. Nmap supports the scan, not application restore behaviour. | Nmap documentation unknown | REASONED |
+| certificate-monitor: Monitor certificate expiry externally; a local certbot renewal dry run does not prove the last production renewal succeeded. Nmap is outside-check context only; OpenSSL and Certbot sources are not recorded. | Nmap documentation unknown | REASONED |
+| offboarding: Revoke identity membership, proxy/app sessions, personal tokens, API keys and second factors; account for cached-session expiry. Access-policy citation does not establish each layer or its revocation delay. | Cloudflare Access policies unknown | REASONED |
+| verify-ipv4: From another network, nmap -Pn -p- should find only intended TCP ports; unintended open ports fail, and errors or an unexecuted scan are inconclusive. | Nmap documentation unknown | REASONED |
+| verify-ipv6: Repeat the full TCP sweep over the public IPv6 address with -6; a scan that did not run is inconclusive. | Nmap documentation unknown | REASONED |
+| verify-dns: curl failure does not prove DNS removal; resolver A/AAAA/CNAME answers need investigation and empty output is inconclusive. Check every authoritative server with +norecurse for NXDOMAIN or NOERROR/NODATA without CNAME; SERVFAIL, referral and timeout are inconclusive. | BIND dig documentation unknown | REASONED |
+| verify-certificate: The scheduled external s_client probe checks hostname and verification errors and pipes the certificate to x509 -enddate. No OpenSSL source or observed outcome is recorded; Nmap is outside-check context only. | Nmap documentation unknown | REASONED |
+<!-- version-basis:end -->
+
 This repository's per-service guides check TLS, binding, and authentication from inside the host and at the moment you set them up. Real exposure is judged from outside the host, and it drifts: a preview URL, a restored backup, or an upgrade can reopen something already closed. This guide is the lifecycle layer around the per-service checks.
 
 ## 1. Verify from outside, not just from the host
@@ -9994,6 +10102,8 @@ When a person leaves, revoke access at every layer they touched, not only their 
 - Trusting a local `certbot renew --dry-run` as proof that production certificates are actually renewing; it proves the client works, not that the last real renewal succeeded.
 
 ## Verify
+
+REASONED: outside-network scans, DNS retirement and certificate inspection; no deployment, authoritative DNS zone or second-network probe host was supplied for this metadata review, and no run is recorded. The commands and expected readings below follow the cited Nmap and dig documentation and the guide's lifecycle reasoning; an OpenSSL source is not recorded.
 
 ```bash
 # From a second network, not the host itself:
@@ -21743,6 +21853,57 @@ Version scope: Typesense 30.2; Meilisearch current unversioned documentation che
 
 # SQLite in deployment: the file is the exposure (plus Turso and Litestream)
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| filesystem: No server, network listener or database-side authentication; filesystem authority controls access, including ATTACH. Treat files writable across security domains as suspect. | SQLite documentation 3.x | REASONED |
+| extensions: Core extension loading defaults off, while the CLI enables it; enable only when required and load trusted libraries. | SQLite documentation 3.x | REASONED |
+| web-files: Keep databases, sidecars, temporary files, exports and backups outside web-served paths; inspect aliases, symlinks, download routes and publishing, and do not rely on hidden names. | SQLite documentation 3.x | REASONED |
+| git-files: Ignore database extensions and each -wal, -shm and -journal suffix before committing; ignore rules do not remove tracked files or history. | SQLite documentation 3.x | REASONED |
+| permissions: Dedicated account, directory 700, database and existing sidecars 600, and launch umask 077; same-account processes and privileged users remain outside this isolation. | SQLite documentation 3.x | REASONED |
+| temporary: Protect temporary files and backups; Unix SQLITE_TMPDIR needs an existing private directory and may fall back elsewhere. Do not delete live sidecars to repair permissions. | SQLite documentation 3.x | REASONED |
+| encryption: Public-domain SQLite has no file encryption; SEE is licensed and SQLCipher is a third-party alternative, otherwise use filesystem or volume encryption. | SQLite Encryption Extension unknown; SQLCipher unknown | REASONED |
+| encryption-keys: Keep keys outside databases and backups; SEE TEMP tables can be unencrypted. Treat credential-bearing copies as secrets and rotate credentials after a leak. | SQLite Encryption Extension unknown; SQLite documentation 3.x | REASONED |
+| turso-http: Turso serves libSQL over HTTPS at the database/organization turso.io URL using bearer authentication; TURSO_DATABASE_URL and TURSO_AUTH_TOKEN belong in application configuration, never a client bundle or git. | Turso documentation unknown | REASONED |
+| turso-scope: db tokens create --read-only scopes away writes; --expiration accepts never or durations such as 7d3h. Prefer scoped, expiring tokens. | Turso documentation unknown | REASONED |
+| replicas: Litestream replicates to supported object stores; scope AWS credentials and IAM to the required bucket/prefix, keep replicas private, and restore with scoped credentials. | Litestream documentation unknown | REASONED |
+| metrics: Litestream addr metrics listener defaults disabled; leave off unless needed, otherwise bind loopback, for example 127.0.0.1:9090. | Litestream documentation unknown | REASONED |
+| mcp: Litestream MCP mcp-addr is documented for v0.5.0 and later, defaults disabled and has no built-in authentication; protect information and restore access with an authenticated tunnel/proxy, for example at loopback:3001. | Litestream MCP minimum v0.5.0 | REASONED |
+| litefs-backups: LiteFS replicates among cluster nodes; its pre-1.0 documentation recommends separate off-site backups with private destinations. | LiteFS documentation unknown | REASONED |
+| litefs-transport: LiteFS v0.5.14 routes have no credential gate; the server accepts cleartext HTTP/1 and h2c, and its client uses h2c. Litefs-Id comparisons reject self-connections, not unauthenticated callers. | LiteFS source v0.5.14; Go library documentation unknown | REASONED |
+| litefs-bind: http.addr defaults to host-less :20202, including the example; an empty address still listens on all interfaces at a system-chosen port. | LiteFS source v0.5.14; Go library documentation unknown | REASONED |
+| litefs-config: Set API bind in the config file; no direct address flag. Search working directory, available home directory, then /etc/litefs.yml; -config overrides and -no-expand-env disables ${VAR} expansion. | LiteFS source v0.5.14 | REASONED |
+| import: POST /import creates or replaces a named database on the primary only; replicas return 503 before creation without forwarding, and DB.Import also checks primary status. | LiteFS source v0.5.14 | REASONED |
+| export: GET /export returns the full existing local database, including applicable WAL pages, on either role; missing databases return 404. | LiteFS source v0.5.14 | REASONED |
+| stream: POST /stream requires primary, HTTP/2 and a valid position map; replicas return 503. Unfiltered streams cover every database, filters narrow them, and fresh positions receive snapshots. | LiteFS source v0.5.14 | REASONED |
+| tx: POST /tx applies a validated LTX file to an existing local database on either role without forwarding, primary or halt-owner checks; non-snapshots must match next transaction/checksum, missing databases return 404. | LiteFS source v0.5.14 | REASONED |
+| halt: POST /halt on either role creates the database if absent and acquires write locks with a nonzero id, stalling primary writes or replica updates; DELETE releases an existing lock for a matching id. | LiteFS source v0.5.14 | REASONED |
+| halt-ttl: LiteFS halt-lock TTL defaults to 30 seconds. | LiteFS source v0.5.14 | REASONED |
+| promote: POST /promote needs an eligible candidate, succeeds unchanged for an existing primary, and asks a known primary for handoff from a candidate replica; no database name is required. | LiteFS source v0.5.14 | REASONED |
+| handoff: POST /handoff requires primary, a connected target subscriber and a handoff-capable lease; static leases refuse it and no database name is required. | LiteFS source v0.5.14 | REASONED |
+| information: GET /info, /events and /metrics disclose node, cluster and database state on either role without a named database. | LiteFS source v0.5.14 | REASONED |
+| debug: Unconditional /debug/pprof/ exposes command line and live profiles; /debug/vars exposes command line, memory and store database/lock state on either role without a database name. | LiteFS source v0.5.14; Go library documentation unknown | REASONED |
+| debug-rand: /debug/rand streams deterministic pseudo-random data; its minute timeout is checked between writes and no server write timeout bounds a slow or non-reading client. | LiteFS source v0.5.14 | REASONED |
+| cluster-private: Bind each LiteFS API to its private node address and restrict reachability to cluster nodes; never publish 20202 through an internet-facing mapping or proxy. | LiteFS source v0.5.14; LiteFS documentation unknown | REASONED |
+| consul-url: Consul lease.advertise-url names each node private API; when unset it derives http:// plus lease.hostname or OS hostname and the actual listening port. | LiteFS source v0.5.14 | REASONED |
+| static-url: Static leasing uses lease.advertise-url as configured: the primary points at itself and each replica at the primary private API. | LiteFS source v0.5.14 | REASONED |
+| container: LiteFS image supplies no configuration or EXPOSE; default wildcard binding applies within its namespace. Peers, host/shared networking, routing, firewall and publication determine reachability. | LiteFS source v0.5.14; Docker documentation unknown | REASONED |
+| proxy: LiteFS application proxy is separate: proxy.target enables attempted startup, proxy.db and proxy.addr must be nonempty, example :8080; application TLS and authentication remain necessary. | LiteFS source v0.5.14 | REASONED |
+| verify-download: Probe actual database/sidecar paths only after a successful application control; timeouts, DNS and proxy failures do not establish non-publication. No served application was available. | SQLite documentation 3.x | REASONED |
+| verify-bundle: Local placeholder-token scan distinguished exposed and clean bundles and refused absent directories; readonly, nameref, lowercase and IFS cases are recorded. A clean scan covers only the searched forms and paths. | Turso documentation unknown | DEMONSTRATED |
+| verify-git: Local throwaway repositories showed tracked/history copies survive ignore rules and index removal; a never-committed ignored file produced only rule matches. Git version is unrecorded. | SQLite documentation 3.x | DEMONSTRATED |
+| verify-modes: SQLite 3.46.1 local WAL and rollback-journal runs showed umask 022 versus 077 modes; every file belonged to the test account, and separate application-account ownership was not exercised. | SQLite local file tests 3.46.1 | DEMONSTRATED |
+| verify-listeners: Compare authorized private control with untrusted reachability for LiteFS or enabled Litestream metrics/MCP; any HTTP response shows a listener, not every backend route. Transport errors and failed controls are inconclusive; no isolated listener environment was available. | LiteFS source v0.5.14; Litestream documentation unknown; Litestream MCP minimum v0.5.0 | REASONED |
+| verify-turso: Turso /v2/pipeline must return SELECT 1 with a valid bearer token and no successful result anonymously; HTTP 200 alone is insufficient and transport failure inconclusive. No database/token was available. | Turso documentation unknown | REASONED |
+| halt-expiration: LiteFS checks halt-lock expiration every 5 seconds. | LiteFS source v0.5.14 | REASONED |
+<!-- version-basis:end -->
+
 SQLite has no server process and no network listener: "there are no other processes, threads, machines, or other mechanisms (apart from host computer OS and filesystem) to help provide database services" ([SQLite: serverless](https://www.sqlite.org/serverless.html)), so there is no database-side authentication and the only access control is the filesystem's. Its security page warns that "any database file which might have ever been writable by an agent in a different security domain should be treated as suspect." So the deployment exposure is rarely a flaw in SQLite itself; it is wherever the database file ends up: under a web root, inside a git repository, readable by another local account, or replicated to a public bucket. Run the application with access only to the files it needs, since `ATTACH` opens further databases under the process's filesystem authority; keep extension loading disabled unless required (core SQLite disables it by default, though the SQLite CLI enables it) and load only trusted extension libraries. Application-level SQL-injection prevention is outside this guide's scope.
 
 ## 1. Keep the file out of anything that serves it
@@ -21839,6 +22000,8 @@ The bundle scan, the git inventory and the `stat` check were demonstrated on the
 
 Scan built client bundles for a leaked Turso/libSQL token, keeping the token off argv and shell history:
 
+DEMONSTRATED: following block; the recorded authoring-host placeholder-token runs distinguish exposed and clean bundles and exercise the listed shell guards; no real token was used.
+
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
@@ -21866,6 +22029,8 @@ A clean result is evidence, not proof: neither pattern matched in the paths sear
 
 Confirm the database is not tracked in git, not only that a rule exists (ignore rules do not apply to already-tracked files):
 
+DEMONSTRATED: following block; the recorded three throwaway repositories distinguish tracked, historical and never-committed database files.
+
 ```bash
 git check-ignore -v app.db app.db-wal app.db-shm app.db-journal   # substitute the real repository paths
 git ls-files -- app.db app.db-wal app.db-shm app.db-journal   # any output is a tracked database or sidecar
@@ -21873,6 +22038,8 @@ git log --all --oneline -- app.db app.db-wal app.db-shm app.db-journal | head   
 ```
 
 Check the live file, its directory, and every existing sidecar while the application is running:
+
+DEMONSTRATED: following block; the recorded local WAL and rollback-journal runs compare umask 022 with 077; ownership by a separate application account was not exercised.
 
 ```bash
 stat -c '%a %U %n' /var/lib/myapp /var/lib/myapp/app.db*   # 700 on the directory, 600 on app.db and any -wal/-shm/-journal sidecars, each owned by the app user; an absent sidecar says nothing about its future mode
@@ -21900,6 +22067,8 @@ On the authoring host, without opening any socket, these three checks ran in exp
 
 For LiteFS (`20202`) or an enabled Litestream metrics/MCP listener (REASONED: needs a running LiteFS or Litestream, which opens listeners; the authoring host forbids that without an isolated network namespace, and none was available), prove network isolation from an untrusted vantage. Run it first from an authorized peer against the private URL (a response is the positive control), then from an untrusted network against the same public address and port:
 
+REASONED: following block; LiteFS and Litestream listener isolation follows the cited API and configuration sources; no isolated network namespace was available to run listeners.
+
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_LISTENER_PROBE_URL'
@@ -21914,6 +22083,8 @@ For LiteFS (`20202`) or an enabled Litestream metrics/MCP listener (REASONED: ne
 ```
 
 Any HTTP response from the untrusted vantage shows that an HTTP listener answered. Confirmed direct reachability to LiteFS exposes its unauthenticated endpoints, subject to their role and state conditions above; a fronting proxy can return its own denial or expose only selected paths, so its response alone does not establish reachability to the whole LiteFS API. A timeout, DNS, or TLS error, or a failed authorized control, is inconclusive, so corroborate with the bind address, routing, proxy configuration, and firewall. For Turso (REASONED: this outbound check needs a Turso database and token, and none was available to the authoring environment), prove the HTTP database rejects anonymous queries. Have a valid database token from the secret store ready to paste. The block prompts for it with input hidden, never exports it, and refuses a control character, so a pasted token cannot inject a second header. This keeps the token out of curl's argv, not out of reach of the account that runs the block:
+
+REASONED: following block; the cited Turso SQL-over-HTTP reference supplies the anonymous/authorized discriminator; no Turso database and token were available.
 
 ```bash
 (
@@ -21950,14 +22121,14 @@ The authorized request must return a result containing `1`; the identical anonym
 
 Applicability checked on 2026-09-18: SQLite 3.x documentation (local file tests on SQLite 3.46.1); LiteFS HTTP behavior traced to v0.5.14; Litestream MCP documented for v0.5.0 and later; Turso rolling CLI documentation and the SQL-over-HTTP `/v2/pipeline` protocol. Installed Turso, Litestream, and LiteFS versions were not available for runtime confirmation. The Verify commands require Bash, curl 7.75.0 or later, GNU-compatible grep and stat, and Git.
 
-- SQLite security: https://www.sqlite.org/security.html
+- SQLite security (SQLite 3.x documentation): https://www.sqlite.org/security.html
 - Turso HTTP API quickstart (`TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`): https://docs.turso.tech/sdk/http/quickstart
 - Turso CLI `db tokens create` (`--read-only`, `--expiration`): https://docs.turso.tech/cli/db/tokens/create
 - Litestream guides (supported replica destinations): https://litestream.io/guides/
 - Litestream S3 guide (credentials, scoped IAM policy): https://litestream.io/guides/s3/
 - LiteFS overview (cluster replication, pre-1.0 status, backup recommendation): https://fly.io/docs/litefs/
 - SQLite serverless architecture (no server process; OS and filesystem only): https://www.sqlite.org/serverless.html
-- SQLite temporary and sidecar file naming (-wal, -shm, -journal): https://www.sqlite.org/tempfiles.html
+- SQLite temporary and sidecar file naming (-wal, -shm, -journal) (local file tests on SQLite 3.46.1): https://www.sqlite.org/tempfiles.html
 - SQLite Encryption Extension (licensed; the public build cannot read an encrypted file): https://www.sqlite.org/see/doc/trunk/www/readme.wiki
 - SQLCipher (third-party encrypted-SQLite build): https://www.zetetic.net/sqlcipher/
 - SQLite extension loading (disabled by default; enabled in the CLI): https://sqlite.org/loadext.html
@@ -21970,7 +22141,7 @@ Applicability checked on 2026-09-18: SQLite 3.x documentation (local file tests 
 - Go standard library defaults the LiteFS listener and debug routes inherit (a host-less or empty address listens on every unicast address, with the port chosen automatically when empty; expvar serves `cmdline` and `memstats`; pprof's `cmdline` responds with the running program's command line): https://pkg.go.dev/net#Listen, https://pkg.go.dev/expvar and https://pkg.go.dev/net/http/pprof
 - Go h2c handler (ordinary HTTP/1 requests pass to the underlying handler): [NewHandler documentation](https://pkg.go.dev/github.com/golang/net/http2/h2c#NewHandler).
 - Docker container reachability: [bridge peers and publication](https://docs.docker.com/engine/network/drivers/bridge/), [host networking](https://docs.docker.com/engine/network/drivers/host/), and [shared container networking stacks](https://docs.docker.com/engine/network/#container-networks).
-- Litestream configuration (metrics addr, MCP mcp-addr): https://litestream.io/reference/config/
+- Litestream configuration (metrics addr, MCP mcp-addr) (Litestream MCP listener in v0.5.0 and later): https://litestream.io/reference/config/
 - Turso SQL over HTTP (`/v2/pipeline`, bearer authentication): https://docs.turso.tech/sdk/http/reference
 
 ======================================================================
@@ -21978,6 +22149,72 @@ Applicability checked on 2026-09-18: SQLite 3.x documentation (local file tests 
 ======================================================================
 
 # SQLite HTTP front-ends: Datasette and sqlite-web
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| release: The recorded stable Datasette documentation lists 0.65.5 with a table-permission bypass fix; deploy a supported release containing the security fixes. | Datasette 0.65.5 | REASONED |
+| datasette-bind: Bare datasette serve without host or port flags listened on 127.0.0.1:8001 in the recorded unprivileged local ss inventory. | Datasette 0.65.5 | DEMONSTRATED |
+| immutable: Use --immutable only for an unchanged snapshot; SQLite skips locking/change detection, so changing it can yield incorrect results or corruption errors. | Datasette 0.65.5; SQLite documentation unknown | REASONED |
+| datasette-docker: Documented Docker launch binds 0.0.0.0:8001 and publishes 8001:8001; container bind and host publication are separate. | Datasette 0.65.5 | REASONED |
+| container-generator: Inspected make_dockerfile selects --host 0.0.0.0, immutable databases, --cors and --port $PORT; inspect the generated command. | Datasette container generator caf238aac86ebe370959b25384d6e05f6a1e2359 | REASONED |
+| cloudrun: Inspected publisher uses --allow-unauthenticated; Cloud Run requires 0.0.0.0 and PORT, ingress default 8080, with external TLS termination but no implied application authorization. | Datasette Cloud Run publisher e889403d3bbe143854262682161c98a57bdb6594; Cloud Run documentation unknown | REASONED |
+| publish-plugins: Review each publishing plugin and provider hostname; datasette-publish-fly documents app.fly.dev and no universal plugin authentication default was established. | Datasette 0.65.5; Datasette Fly publishing plugin unknown | REASONED |
+| docker-publication: Address-less Docker publication binds all host addresses; use explicit host loopback mappings for 8001 or 8080, and check direct routing and the pre-28.0.0 caveat externally. | Docker localhost-publication boundary 28.0.0 | REASONED |
+| actor-policy: Metadata allow blocks authorize actors at instance, database, table and canned-query scope; authentication alone does not restrict access. GitHub authentication explicitly leaves anonymous access until permissions restrict it. | Datasette 0.65.5; datasette-auth-github unknown | REASONED |
+| root-url: datasette --root issues a one-use root-cookie login URL, not an anonymous-access restriction; treat the URL as a credential. | Datasette 0.65.5 | REASONED |
+| canned-writes: Ordinary SQL is read-only; canned queries enable writes with write:true and plugins may add further mutable routes, not a global write mode. | Datasette 0.65.5 | REASONED |
+| write-plugin: datasette-write adds /db/-/write governed by its own permission, root-only by default; installing it does not grant anonymous writes. | Datasette 0.65.5; datasette-write 0.4 | REASONED |
+| sql-policy: ?sql= and .json?sql= allow arbitrary reads; table/view allow rules do not prevent SQL reading those objects. Set allow_sql policy or default_allow_sql off; no generic --setting permissions exists. | Datasette 0.65.5 | REASONED |
+| query-limits: Queries default to a one-second time limit; repeated expensive requests may still consume resources, an inference rather than demonstrated denial of service. | Datasette 0.65.5 | REASONED |
+| downloads: allow_download defaults on for immutable file-backed databases; disabling it controls whole-file downloads, not ordinary exports. Local /published.db changed from 200 to 403. | Datasette 0.65.5 | DEMONSTRATED |
+| cors: The local --cors run added Access-Control-Allow-Origin: *; the header was absent without the flag. | Datasette 0.65.5 | DEMONSTRATED |
+| introspection: /-/metadata, /-/plugins, /-/versions, /-/settings and /-/databases, including JSON forms, expose instance details; permissions debugger separately requires root or its permission. | Datasette 0.65.5 | REASONED |
+| hash-urls: Core hash_urls was removed in 0.61; datasette-hashed-urls provides cache-oriented content hashes, not secrecy or authorization. | Datasette hash_urls removal 0.61; Datasette 0.65.5 | REASONED |
+| csrf: Datasette asgi-csrf compares ds_csrftoken cookie with csrftoken form field or x-csrftoken header; preserve it for writes and review skip_csrf plugins. It does not restrict anonymous reads. | Datasette 0.65.5 | REASONED |
+| plugin-secrets: The local analyst saw inline password hashes in metadata, but only $env references after environment indirection. | Datasette 0.65.5; datasette-auth-passwords 1.1.1 | DEMONSTRATED |
+| web-bind: Bare sqlite_web listened on 127.0.0.1:8080 in the recorded unprivileged local ss inventory. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2 | DEMONSTRATED |
+| web-capabilities: sqlite-web supports queries, imports/exports, row changes and dropping schema objects; reachable unauthenticated write access implies database compromise, not automatic host compromise. | sqlite-web package 0.8.1 | REASONED |
+| web-container: sqlite-web Dockerfile starts -H 0.0.0.0 and exposes 8080; README publishes 8080:8080. Use explicit loopback publication for a same-host proxy. | sqlite-web Dockerfile 7f6658b012a789f0b9418cad543e7798ce850130; sqlite-web package 0.8.1 | REASONED |
+| web-password: Local SQLITE_WEB_PASSWORD without -P left anonymous query access at 200; with -P the anonymous query redirected to /login/. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2 | DEMONSTRATED |
+| web-readonly: In the local --read-only run the anonymous read still returned 200 while the insert changed nothing. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2; SQLite documentation unknown | DEMONSTRATED |
+| web-methods: Inspected sqlite-web query handler permits read GETs; writes, scripts and drops require POST. A harmless query GET establishes anonymous read access. | sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2 | REASONED |
+| web-tls: sqlite-web documents native --ssl-cert and --ssl-key; this deployment baseline uses the shared TLS proxy. | sqlite-web package 0.8.1 | REASONED |
+| web-csrf: sqlite-web 0.8.1 loopback insert accepted an authenticated POST without a token and with foreign Origin; the form has no CSRF field. Prefer read-only behind the proxy. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2 | DEMONSTRATED |
+| web-cookie: sqlite-web 0.8.1 set HttpOnly; Path=/ without SameSite or Secure even over TLS; cross-site cookie sending therefore depends on browser defaults. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2 | DEMONSTRATED |
+| fronting: Keep same-host origins on loopback and apply TLS and authentication to every UI, SQL, JSON, export, download and auxiliary route. | Datasette 0.65.5; nginx documentation unknown; Caddy loopback proxy v2.11.4 | REASONED |
+| identity-proxy: IAP and Cloudflare Access evaluate access before forwarding; no tenancy was available to demonstrate these routes. | Google IAP documentation unknown; Cloudflare Access documentation unknown | REASONED |
+| mfa: Neither reviewed core authentication interface supplies native MFA; enforce it at the identity provider or through Cloudflare Access independent MFA. | Datasette 0.65.5; sqlite-web package 0.8.1; Cloudflare Access documentation unknown | REASONED |
+| tailnet: Tailscale Serve shares inside the tailnet; Funnel publishes publicly. Verify which path is configured. | Tailscale documentation unknown | REASONED |
+| origin-bypass: Inventory direct origins and provider hostnames so proxy login cannot be bypassed; IAP documents backend and Cloud Run hostname precautions. | Google IAP documentation unknown | REASONED |
+| os-account: Use a dedicated unprivileged account and curated snapshot whose file and parent it cannot modify; protect sidecars and temporary files under SQLite filesystem authority. | SQLite documentation unknown | REASONED |
+| verify-inventory: Inspect complete listener table, IPv6 and unexpected ports; empty output after an error is inconclusive. Root ss, wildcard binds, Docker publication and managed ingress remain reasoned without sudo/container capability. | Datasette 0.65.5; sqlite-web package 0.8.1; ss documentation unknown; Docker localhost-publication boundary 28.0.0; Cloud Run documentation unknown | REASONED |
+| verify-external: External origin/provider tests require a successful local control and actual deployment targets; any HTTP response proves reachability, while transport failures alone prove no isolation. No second network/provider deployment was available. | Datasette 0.65.5; sqlite-web package 0.8.1; Google IAP documentation unknown; curl minimum write-out version 7.75.0 | REASONED |
+| verify-anonymous: UI, schema or row data without credentials is exposure; login pages, unexplained 404s and HTTP success alone do not establish protection. SQL-disabled tests also need an authorized browsing control. | Datasette 0.65.5; sqlite-web package 0.8.1 | REASONED |
+| datasette-exposed: Local bare Datasette returned listing and known SQL row with 200 and /-/versions.json anonymously with 200; baseline SQL returned 403 while table JSON still returned 200. | Datasette 0.65.5 | DEMONSTRATED |
+| web-exposed: Local bare sqlite-web returned query GET 200 anonymously and accepted an anonymous insert into a disposable database. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2 | DEMONSTRATED |
+| verify-authorized: Private mode-0600 header file supplies credentials by path, not argv values; compare known authorized data with anonymous denial and repeat with an unauthorized actor. File guards establish readability/type, not privacy; identity-proxy scenarios lack a tenancy. | Datasette 0.65.5; sqlite-web package 0.8.1; curl minimum write-out version 7.75.0; Google IAP documentation unknown; Cloudflare Access documentation unknown | REASONED |
+| actor-results: Local password-plugin analyst cookie returned table rows with 200, anonymous and guest requests got 403, and analyst SQL got 403 under allow_sql:false. | Datasette 0.65.5; datasette-auth-passwords 1.1.1 | DEMONSTRATED |
+| web-auth-results: Local sqlite-web -P session cookie returned the row with 200 and the anonymous request redirected to /login/. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2 | DEMONSTRATED |
+| introspection-results: Under the local metadata policy, all five auxiliary JSON routes returned 403 anonymously and 200 to a freshly logged-in analyst. | Datasette 0.65.5; datasette-auth-passwords 1.1.1 | DEMONSTRATED |
+| caddy-results: Caddy v2.11.4 loopback TLS/Basic proxy denied anonymous UI, SQL, database download, versions and CSV with 401 and allowed credentials with 200; direct backend remained anonymous. Protection depends on backend isolation. | Caddy loopback proxy v2.11.4; Datasette 0.65.5 | DEMONSTRATED |
+| local-checks: Recorded bash parsing, metadata JSON parsing and 120 guard executions passed; curl argument recording tested guards separately from service outcomes. | curl minimum write-out version 7.75.0 | DEMONSTRATED |
+| guard-limits: Use Bash with real unshadowed builtins and curl 7.75.0 or newer; paste whole blocks, escape apostrophes, avoid credential URLs, and retain TLS verification. Partial pastes and inherited matching marker/arguments remain outside guard coverage. | curl minimum write-out version 7.75.0 | REASONED |
+| datasette-cli: Bare datasette invokes serve; -h/--host and -p/--port override its bind and port. | Datasette 0.65.5 | REASONED |
+| web-cli: sqlite-web -H/--host uses uppercase H and -p/--port overrides the port; the documented default is 127.0.0.1:8080. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2 | REASONED |
+| write-test: Local anonymous write and root write without CSRF were denied; root write with the token returned 302 and wrote the row. | Datasette 0.65.5; datasette-write 0.4 | DEMONSTRATED |
+| secret-indirection: Keep plugin secrets out of public metadata with documented environment or file indirection, and protect root login URLs and credential files. | Datasette 0.65.5 | REASONED |
+| web-auth-config: A nonempty shared password requires -P/--password; SQLITE_WEB_PASSWORD is read only inside that option branch. The shared login supplies no per-table roles. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2 | REASONED |
+| web-readonly-config: --read-only opens SQLite with mode=ro and reduces exposure to reads; it does not authenticate callers. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2; SQLite documentation unknown | REASONED |
+| cors-policy: --cors permits cross-origin JSON access and should be omitted unless intended; its absence does not authenticate requests. | Datasette 0.65.5 | REASONED |
+| query-pages: Queries return at most 1,000 rows at a time by default; pagination retrieves more, so that limit is not a confidentiality boundary. | Datasette 0.65.5 | REASONED |
+<!-- version-basis:end -->
 
 An SQLite HTTP front-end turns a local file into a network service: **the port is the exposure**. Datasette allows anonymous browsing and read-only SQL by default; sqlite-web provides queries, imports, exports, row changes, and schema deletion. An unprotected, reachable instance exposes those capabilities. See Datasette permissions and sqlite-web features.
 
@@ -22097,6 +22334,8 @@ Use Bash with real, unshadowed builtins and curl 7.75.0 or newer. Paste whole su
 
 **The fixed bind demonstrated on loopback; a wildcard bind and container publications REASONED** (the host forbids binding every interface and has no container runtime). On the deployment host, inspect the complete listener table:
 
+REASONED: following block; the cited ss and deployment documentation supplies the full inventory check; sudo, wildcard binding and container publication were unavailable. Only the unprivileged loopback inventory is recorded as demonstrated below.
+
 ```bash
 sudo ss -tlnp
 ```
@@ -22110,6 +22349,8 @@ Inspect container publications separately: Docker forwarding can expose a port w
 **Demonstrated on loopback against both tools; an external vantage and provider hostnames REASONED** (the host has no second network and no provider deployment). The same-host reverse proxy was demonstrated with Caddy (section C); identity-aware-proxy routes are REASONED, since no IAP or Cloudflare Access tenancy was available.
 
 First obtain a successful local control against the running backend. Then run the block from an authorized external testing host against each direct origin and provider hostname, followed by the published HTTPS routes. For a protected route, establish section C's authorized positive control first. Use disposable databases for any local exposed-state reproduction.
+
+REASONED: following block; the complete deployment scenario needs an external vantage and provider deployment, neither available. The cited route documentation supplies expectations; the separate loopback outcomes are recorded below.
 
 ```bash
 (
@@ -22154,6 +22395,8 @@ Prepare a private mode-0600 header file per [secrets.md](secrets.md), containing
 
 Choose a URL that returns known nonsensitive protected data. When arbitrary SQL is disabled, use a permitted table page or its JSON representation.
 
+REASONED: following block; the complete fronting-layer scenario includes IAP or Cloudflare Access, and no tenancy was available. The cited authentication documentation supplies expectations; native-TLS and Caddy loopback outcomes are recorded below.
+
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_DATA_URL' 'REPLACE_WITH_AUTH_HEADER_FILE'
@@ -22193,7 +22436,7 @@ Applicability checked on 2026-09-18: Datasette stable documentation lists 0.65.5
 
 Every URL listed below was fetched during authoring. This list also records the source-fetch review.
 
-- Datasette CLI reference: https://docs.datasette.io/en/stable/cli-reference.html
+- Datasette CLI reference (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/cli-reference.html
 - Datasette authentication and permissions: https://docs.datasette.io/en/stable/authentication.html
 - Datasette settings: https://docs.datasette.io/en/stable/settings.html
 - Datasette SQL queries and writable canned queries: https://docs.datasette.io/en/stable/sql_queries.html
@@ -22208,26 +22451,26 @@ Every URL listed below was fetched during authoring. This list also records the 
 - Datasette immutable mode and hashed URLs: https://docs.datasette.io/en/stable/performance.html
 - Datasette CSRF protection: https://docs.datasette.io/en/stable/internals.html#csrf-protection
 - Datasette plugin secret configuration: https://docs.datasette.io/en/stable/plugins.html#secret-configuration-values
-- Datasette changelog and security fixes: https://docs.datasette.io/en/stable/changelog.html
-- Datasette password authentication plugin: https://github.com/simonw/datasette-auth-passwords
+- Datasette changelog and security fixes (Datasette core hash_urls removed in 0.61): https://docs.datasette.io/en/stable/changelog.html
+- Datasette password authentication plugin (datasette-auth-passwords 1.1.1 used in the loopback demonstrations): https://github.com/simonw/datasette-auth-passwords
 - Datasette GitHub authentication plugin: https://github.com/simonw/datasette-auth-github
-- Datasette write plugin: https://github.com/simonw/datasette-write
-- sqlite-web README, features, options, and Docker usage: https://github.com/coleifer/sqlite-web
+- Datasette write plugin (datasette-write 0.4 used in the loopback demonstrations): https://github.com/simonw/datasette-write
+- sqlite-web README, features, options, and Docker usage (sqlite-web 0.8.1 from PyPI, tested on loopback): https://github.com/coleifer/sqlite-web
 - sqlite-web implementation: https://raw.githubusercontent.com/coleifer/sqlite-web/825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2/sqlite_web/sqlite_web.py
 - sqlite-web Dockerfile: https://raw.githubusercontent.com/coleifer/sqlite-web/7f6658b012a789f0b9418cad543e7798ce850130/docker/Dockerfile
 - SQLite security: https://www.sqlite.org/security.html
 - SQLite serverless architecture and filesystem access: https://www.sqlite.org/serverless.html
 - SQLite URI semantics: https://www.sqlite.org/uri.html
-- Docker port publishing: https://docs.docker.com/engine/network/port-publishing/
+- Docker port publishing (Docker's pre-28.0.0 localhost-publication caveat): https://docs.docker.com/engine/network/port-publishing/
 - Cloud Run container contract: https://docs.cloud.google.com/run/docs/container-contract
 - nginx HTTPS configuration: https://nginx.org/en/docs/http/configuring_https_servers.html
 - nginx Basic authentication: https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html
-- Caddy Basic authentication: https://caddyserver.com/docs/caddyfile/directives/basic_auth
+- Caddy Basic authentication (loopback run behind Caddy v2.11.4): https://caddyserver.com/docs/caddyfile/directives/basic_auth
 - Google IAP overview and origin protection: https://docs.cloud.google.com/iap/docs/concepts-overview
 - Cloudflare Access HTTP applications: https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/
 - Cloudflare independent MFA: https://developers.cloudflare.com/cloudflare-one/access-controls/access-settings/independent-mfa/
 - Tailscale Serve and Funnel distinction: https://tailscale.com/docs/reference/tailscale-cli/serve
-- curl manual: https://curl.se/docs/manpage.html
+- curl manual (curl 7.75.0 or newer): https://curl.se/docs/manpage.html
 - ss manual: https://man7.org/linux/man-pages/man8/ss.8.html
 - OWASP SQL injection prevention: https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
 
@@ -28057,6 +28300,49 @@ Service behaviour is not demonstrated here. A watcher stopped each of four loopb
 
 # MLflow tracking server: no authentication by default
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| default-host: v3.16.1 defaults to 127.0.0.1 unless MLFLOW_HOST overrides it; explicitly bind privately and do not treat --host as an authentication setting. | MLflow pinned source v3.16.1 | REASONED |
+| default-port: v3.16.1 serves the tracking UI and REST API on port 5000 unless MLFLOW_PORT overrides it. | MLflow pinned source v3.16.1 | REASONED |
+| default-auth: Authentication is opt-in; a reachable server without the auth app permits reading, changing and deleting tracking resources and proxied artifacts. | MLflow documentation unknown | REASONED |
+| container-bind: Normal bridge NAT requires host loopback publication 127.0.0.1:5000:5000 and --host 0.0.0.0 inside the container; container loopback cannot serve the publication. Before Docker 28.0.0, same-layer-2 hosts could reach loopback-published ports. | Docker Engine loopback publication minimum 28.0.0; MLflow documentation unknown | REASONED |
+| middleware-scope: Security middleware requires MLflow 3.5.0 or newer and the default Uvicorn server; --gunicorn-opts and --waitress-opts do not use it. | MLflow security middleware minimum 3.5.0; MLflow documentation unknown | REASONED |
+| host-allowlist: Set --allowed-hosts mlflow.example.com for access beyond loopback; defaults admit localhost, 127.0.0.1, [::1], 0.0.0.0 and private ranges as Host headers, not client-source firewall rules. | MLflow documentation unknown | REASONED |
+| cors: Set --cors-allowed-origins https://mlflow.example.com for the intended browser origin. | MLflow documentation unknown | REASONED |
+| middleware-disable: Do not use --disable-security-middleware outside a test. | MLflow documentation unknown | REASONED |
+| tls: There are no dedicated server TLS flags; --uvicorn-opts can forward --ssl-keyfile/--ssl-certfile. Use a TLS proxy to 127.0.0.1:5000 or a tunnel/tailnet and set the allowed public hostname. | MLflow documentation unknown | REASONED |
+| client-tls: Use MLFLOW_TRACKING_URI=https://mlflow.example.com and never enable MLFLOW_TRACKING_INSECURE_TLS in production. | MLflow documentation unknown | REASONED |
+| auth-app: Install mlflow[auth] and run --app-name basic-auth; client username/password variables alone enable no server authentication. The September 2026 documentation has no experimental label. | MLflow documentation unknown | REASONED |
+| csrf-key: Provision a long random MLFLOW_FLASK_SERVER_SECRET_KEY identical on every replica through a protected server.env file, mode 0600, with protected directories and no other-account ACL access; keep file and backups out of source control. | MLflow documentation unknown | REASONED |
+| env-file: Global --env-file loads dotenv before the server command without overriding existing environment; clear inherited key/config-path variables and require a readable regular non-symlink file before launching. | MLflow documentation unknown | REASONED |
+| key-exposure: Only the file path reaches the launch command; MLflow v3.16.1 loads the key into its environment and forwards it to workers, retaining same-account/root memory and inheriting-process environment exposure. | MLflow pinned source v3.16.1; MLflow documentation unknown | REASONED |
+| admin-bootstrap: No default admin password: first start requires at least 12 characters from MLFLOW_AUTH_ADMIN_PASSWORD or admin_password, rejects password1234 and fails without a password; an already-bootstrapped admin needs no resupply. | MLflow documentation unknown | REASONED |
+| default-permission: default_permission is READ on every resource; set NO_PERMISSIONS in the auth configuration to remove that default grant. | MLflow documentation unknown | REASONED |
+| auth-database: database_uri defaults to basic_auth.db in the working directory; use a central database for multiple nodes, as in the PostgreSQL auth-database example. | MLflow documentation unknown | REASONED |
+| auth-config: MLFLOW_AUTH_CONFIG_PATH selects basic_auth.ini; authorization_function accepts module:function for custom authentication, while the shipped scheme is HTTP Basic. | MLflow documentation unknown | REASONED |
+| password-rotation: PATCH /api/2.0/mlflow/users/update-password takes username and password; the example feeds current and new passwords through curl config stdin with JSON/config escaping. | MLflow documentation unknown; curl minimum write-out version 7.75.0 | REASONED |
+| user-creation: User creation requires admin credentials at /signup or POST /api/2.0/mlflow/users/create; give humans individual accounts and CI a separate low-permission user. | MLflow documentation unknown | REASONED |
+| client-credentials: ~/.mlflow/credentials stores passwords unencrypted; prefer runtime-injected MLFLOW_TRACKING_USERNAME/MLFLOW_TRACKING_PASSWORD. | MLflow documentation unknown | REASONED |
+| rate-limit: The UI has no login-attempt limit and Basic auth is checked on every protected API request; rate-limit all authentication-bearing routes at the proxy and protect password transport with TLS. | MLflow documentation unknown | REASONED |
+| mfa: The Basic-auth app has no MFA; front it with an identity-aware layer. The guide names external proxy options without recording their vendor sources here. | MLflow documentation unknown | REASONED |
+| proxy-token: MLFLOW_TRACKING_TOKEN supplies a proxy bearer token, but Basic credentials take precedence; confirm both auth layers survive, including proxies needing separate service-token headers. Cloudflare header syntax is not sourced here. | MLflow documentation unknown | REASONED |
+| artifact-proxy: --serve-artifacts defaults on; --artifacts-destination s3://bucket lets the server proxy reads/writes for proxied experiments, holding storage credentials so clients need none. | MLflow documentation unknown | REASONED |
+| artifact-existing: Pre-existing experiments and explicit direct artifact locations retain their locations outside tracking-server permission enforcement; inspect locations and apply storage IAM directly. | MLflow documentation unknown | REASONED |
+| artifact-direct: With --no-serve-artifacts every client needs storage credentials and tracking-server permissions no longer gate artifacts; use environment or instance-role credentials, not repository/Compose secrets. | MLflow documentation unknown | REASONED |
+| verify-bind: Read every listener and require 5000 on 127.0.0.1; ss itself has no vendor citation here. | MLflow pinned source v3.16.1 | REASONED |
+| verify-network: Outside :5000 must form no TCP connection: time_connect stays 0.000000 with a connection-level failure. A handshake or HTTP response means exposure; DNS/local socket errors are inconclusive. | curl minimum write-out version 7.75.0; MLflow documentation unknown | REASONED |
+| verify-public-auth: POST experiments/search with a minimal body: anonymous and wrong-password requests should return 401, valid admin 200; an open backend returns anonymous 200. Proxy credentials may also be needed; shell success is not a pass. | MLflow documentation unknown; curl minimum write-out version 7.75.0 | REASONED |
+| verify-backend-auth: Repeat anonymous 401/admin 200 directly on loopback with Host: mlflow.example.com; an allowlist Host rejection is 403 before auth, and a proxy-only denial proves no backend enforcement. | MLflow documentation unknown | REASONED |
+| verify-authorization: Search filters visible experiments and does not prove authorization denial. First GET a real experiment as admin for 200, then the same backend resource as a low-permission user for 403; 401 means bad credentials and a failed admin control is inconclusive. | MLflow documentation unknown | REASONED |
+<!-- version-basis:end -->
+
 `mlflow server` serves the tracking UI and REST API at `http://127.0.0.1:5000` (as of v3.16.1, unless `MLFLOW_HOST` or `MLFLOW_PORT` is set) and performs no authentication: anyone who can reach the port can read, alter, and delete experiments, runs, registered models, and (with artifact proxying on) the artifacts themselves. Authentication is opt-in through a separate app, and the server has no dedicated TLS flags (though `mlflow server --uvicorn-opts` can forward `--ssl-keyfile`/`--ssl-certfile` to the default Uvicorn server); MLflow's tracking-server documentation recommends a reverse proxy or VPN for both.
 
 ## 1. Bind privately
@@ -28227,9 +28513,9 @@ An authenticated user without permission on a resource gets `403`; a missing or 
 - MLflow authentication with username and password (`--app-name basic-auth`, default admin credentials, `basic_auth.ini` keys, `MLFLOW_AUTH_CONFIG_PATH`, `MLFLOW_FLASK_SERVER_SECRET_KEY`, client variables, 403 on missing permission): https://mlflow.org/docs/latest/self-hosting/security/basic-http-auth/
 - MLflow authentication REST API (`2.0/mlflow/users/update-password` request fields): https://mlflow.org/docs/latest/api_reference/auth/rest-api.html
 - `mlflow server` CLI reference (`--host` default 127.0.0.1, `--port` 5000, `--app-name`, `--allowed-hosts`, `--cors-allowed-origins`, `--serve-artifacts`): https://mlflow.org/docs/latest/api_reference/cli.html
-- MLflow tracking server (default address, reverse proxy or VPN for TLS and auth, `MLFLOW_TRACKING_TOKEN`, `MLFLOW_TRACKING_INSECURE_TLS`, artifact proxying): https://mlflow.org/docs/latest/self-hosting/architecture/tracking-server
+- MLflow tracking server (default address, reverse proxy or VPN for TLS and auth, `MLFLOW_TRACKING_TOKEN`, `MLFLOW_TRACKING_INSECURE_TLS`, artifact proxying) (security-middleware flags need MLflow 3.5.0 or newer): https://mlflow.org/docs/latest/self-hosting/architecture/tracking-server
 - MLflow REST API, Search Experiments (`POST 2.0/mlflow/experiments/search`): https://mlflow.org/docs/latest/api_reference/rest-api.html
-- Docker, port publishing (loopback publishing): https://docs.docker.com/engine/network/port-publishing/
+- Docker, port publishing (loopback publishing) (loopback-only reach assumes Docker 28.0.0 or later): https://docs.docker.com/engine/network/port-publishing/
 - curl manual (`--connect-timeout` bounds the connection phase only; the `time_connect`, `exitcode`, and `errormsg` write-out variables, the last two added in curl 7.75.0): https://curl.se/docs/manpage.html
 - MLflow `--host` option, default `127.0.0.1`, and `--port`, default `5000`, which the `MLFLOW_HOST` and `MLFLOW_PORT` environment variables override (pinned tag v3.16.1): https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/utils/cli_args.py#L162-L180
 - MLflow's tracking-server command, `def server`, takes those `--host` and `--port` options (pinned tag v3.16.1): https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L369-L541
@@ -33600,6 +33886,48 @@ Scope and revisions: browser behavior follows RFC 6455 and the HTML and Fetch li
 ======================================================================
 
 # Transactional email posture: authenticating the mail your deployment sends
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| spf-identity: SPF TXT authorizes connecting IPs for MAIL FROM, or HELO with a null return path; it does not authenticate visible From without DMARC alignment. | SPF RFC 7208; DMARC RFC 9989 | REASONED |
+| spf-all: -all fails unmatched senders, ~all softfails and may still be delivered, while +all or bare all passes everyone. | SPF RFC 7208 | REASONED |
+| spf-record: Publish exactly one v=spf1 record per evaluated domain; multiple records produce permerror. | SPF RFC 7208 | REASONED |
+| spf-lookups: Ten DNS-lookup terms across recursion include include/a/mx/ptr/exists/redirect but exclude ip4/ip6/all; exceeding the limit gives permerror. An earlier matching mechanism stops evaluation; permerror is no SPF pass. | SPF RFC 7208 | REASONED |
+| dkim-signing: DKIM d= and s= select the _domainkey public key; signatures authenticate signed content for the signing domain, not encryption. Actual signing and verification are required for DMARC. | DKIM RFC 6376; DMARC RFC 9989 | REASONED |
+| dkim-crypto: Use rsa-sha256, never rsa-sha1; RFC 8301 sets a 1024-bit RSA floor and recommends at least 2048 bits, used here as the working minimum. Publish the full generated key, not the truncated example. | DKIM cryptography RFC 8301 | REASONED |
+| dkim-rotation: Publish a new selector before switching signing, retire the old selector after in-flight mail clears, and revoke with empty p=; inspect actual selector, delegation and rotation ownership. | DKIM RFC 6376 | REASONED |
+| dmarc-alignment: DMARC requires at least one passing and aligned SPF or DKIM result; relaxed adkim=r/aspf=r defaults to organizational-domain alignment, strict s requires exact domain matching. | DMARC RFC 9989 | REASONED |
+| dmarc-policy: p=none requests monitoring only, quarantine suspicious handling, and reject SMTP-time rejection; receivers retain local policy, so missing enforcement does not guarantee delivery. | DMARC RFC 9989 | REASONED |
+| dmarc-subdomains: sp covers existing subdomains and np non-existent ones, falling back np to sp to p; a subdomain-specific record can take precedence. Inventory explicit and inherited policies. | DMARC RFC 9989 | REASONED |
+| dmarc-discovery: RFC 9989 DNS tree walk discovers policy and organizational domain, replacing the former public-suffix-list method. | DMARC RFC 9989 | REASONED |
+| dmarc-testing: t=y weakens enforcement and t=n is the default; the illustrated enforcing record omits the tag. | DMARC RFC 9989 | REASONED |
+| dmarc-rollout: Monitor aggregate reports under p=none until legitimate streams align before moving to p=reject, or legitimate mail can be rejected. | DMARC RFC 9989; DMARC aggregate reporting RFC 9990 | REASONED |
+| dmarc-pct: RFC 9989, May 2026, obsoletes RFC 7489 and removes pct; legacy p=reject;pct=25 was partial application, not a current rollout control. | DMARC RFC 9989 | REASONED |
+| aggregate: Enable rua daily aggregate XML reporting to observe sending streams; an external reporting domain must authorize reports, and actual receipt/processing must be checked. | DMARC aggregate reporting RFC 9990 | REASONED |
+| failure-reports: ruf forensic reports can expose content, recipients and reset tokens; omit initially, settle redaction/retention/access before enabling, and authorize external destinations. | DMARC failure reporting RFC 9991 | REASONED |
+| starttls: 587 submission upgrades with STARTTLS before authentication; an opportunistic fallback can expose credentials to stripping, so require successful validated TLS. | Submission TLS RFC 8314 | REASONED |
+| implicit-tls: 465 submission starts with TLS and avoids STARTTLS stripping; RFC 8314 prefers implicit TLS going forward. | Submission TLS RFC 8314 | REASONED |
+| tls-validation: Validate certificate chain and hostname before credentials on either submission port; the guide states TLS 1.2 as the floor and attributes that update to RFC 8997, absent from its Sources list. | Submission TLS RFC 8314 | REASONED |
+| port-25: 25 is inter-server relay or provider submission; identify the endpoint role instead of assuming that port 25 implies no authentication. | SMTP submission roles RFC 6409 | REASONED |
+| relay-policy: Reject unauthenticated untrusted forwarding to non-local recipients while allowing ordinary inbound local delivery and explicitly authorized relay paths. | SMTP relay controls RFC 2505 | REASONED |
+| submission-auth: After TLS, unauthenticated or invalidly authenticated submission must fail while authorized submission succeeds. | SMTP submission roles RFC 6409; Submission TLS RFC 8314 | REASONED |
+| sts-publication: MTA-STS TXT advertises the HTTPS text/plain policy at /.well-known/mta-sts.txt on mta-sts.example.com; the example selects enforce, an MX host and max_age 604800. | MTA-STS RFC 8461 | REASONED |
+| sts-enforcement: Only enforce constrains delivery; testing and none do not. MTA-STS protects mail arriving at the policy domain and depends on sending-server validation, not protection of the publishing domain outbound mail. | MTA-STS RFC 8461 | REASONED |
+| sts-refresh: Update the MTA-STS TXT id whenever the policy changes. | MTA-STS RFC 8461 | REASONED |
+| tls-reports: TLS-RPT _smtp._tls TXT with TLSRPTv1 and rua supplies reports, never enforcement. | TLS-RPT RFC 8460 | REASONED |
+| bimi: BIMI is optional logo display metadata requiring DMARC enforcement, not authentication or guaranteed rendering; deploy it last. | BIMI documentation unknown | REASONED |
+| verify-dns: Inspect SPF, DKIM TXT/CNAME, DMARC, MTA-STS, TLS-RPT and BIMI records using actual inventory; DNS inspection alone does not evaluate SPF/DMARC or prove a listener. No DNS control was available. | SPF RFC 7208; DKIM RFC 6376; DMARC RFC 9989; MTA-STS RFC 8461; TLS-RPT RFC 8460; BIMI documentation unknown | REASONED |
+| verify-tls: 587 STARTTLS and 465 implicit-TLS probes require validated TLS 1.2 or newer; TLS availability does not establish AUTH gating. Plaintext or stripped-STARTTLS AUTH must be refused; transport/TLS failures are inconclusive. No SMTP endpoint or container runtime was available. | Submission TLS RFC 8314 | REASONED |
+| verify-alignment: Send a benign message to a controlled recipient and inspect receiver-trusted Authentication-Results, not a supplied header; require passing aligned SPF or DKIM and p=reject with subdomain coverage and no testing or legacy sampling. | Authentication-Results RFC 8601; DMARC RFC 9989 | REASONED |
+| verify-relay: In an operator-controlled environment, external MAIL FROM and non-local RCPT TO should receive 5xx; compare with authorized submission and ordinary local delivery. These expected outcomes remain unobserved. | SMTP relay controls RFC 2505; SMTP submission roles RFC 6409 | REASONED |
+<!-- version-basis:end -->
 
 Password resets, sign-in links, and invitations are part of your authentication path: a recipient who trusts a forged one hands an attacker the account. The controls that stop that forgery are not a single service's settings but three DNS-published standards (SPF, DKIM, and DMARC), the submission channel your application sends through, and the transport policy between mail servers. This guide covers that posture for a deployment that sends transactional mail. It is standards-based rather than product-based, so [authentication.md](authentication.md) covers the account side and [secrets.md](secrets.md) covers the SMTP credential and DKIM private key you will handle here.
 

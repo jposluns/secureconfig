@@ -91,3 +91,10 @@ devops-uis.md
 server-admin-panels.md
 low-code-builders.md
 python.md
+deployment-lifecycle.md
+gpu-clouds.md
+mlflow.md
+paas.md
+sqlite.md
+sqlite-http-frontends.md
+transactional-email-posture.md
