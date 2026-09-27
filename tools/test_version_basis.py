@@ -454,12 +454,72 @@ class SourcesBasisTests(unittest.TestCase):
                         f'- Product v1.0: [text]({u})', f'- Product v1.0: [**{u}**]({u})',
                         f'- Product v1.0 reads <VAR>_FILE and `<GRPC_PORT>`: {u}',
                         f'- Product v1.0 (<PLACEHOLDER>, <br/>): {u}',
-                        f'- Product v1.0 (`a&amp;b`, `m%61npage`, `<a href=x>`, `[t][r]`): {u}',
+                        f'- Product v1.0 (`a&amp;b`, `m%61npage`, `<b id=x>`, `[t][r]`): {u}',
                         f'- Product v1.0: {u}\n  AT&amp;T and 50%41 on a line with no URL',
                         f'- Product v1.0: {u}\n\n  ```\n  <a href="x">&amp;</a> %61 [r]: x\n  ```',
                         f'- Product v1.0: {u} and https://x.example/pkg%40v1%20x%2F'):
             with self.subTest(sources=sources):
                 self.check(sources)
+
+    def test_raw_html_blocks_and_link_elements_fail_closed(self):
+        # Round 6: a line that opens a CommonMark HTML block makes the following
+        # lines raw HTML, where backticks are literal and entities decode, so a
+        # masked code span hid a live link. markdown-it-py renders each <a> or
+        # <iframe> below as raw HTML; all passed before this round.
+        u = self.url
+        grammar = r'^Sources line \d+: '
+        block = 'raw HTML block in Sources'
+        element = 'raw HTML <a> element'
+        entity = 'https://example.com/co&#110;trol'
+        for again, construct in (
+                (f'<div>\n`<a href={u}>Again</a>`\n</div>', block),
+                (f'<div>\n`<a href="{entity}">Again</a>`\n</div>', block),
+                (f'\n<span>\n`<a href={u}>Again</a>`\n</span>', block),     # type 7
+                (f'<div>\n`<iframe src={u}></iframe>`\n</div>', block),
+                (f'</div> `<a href={u}>Again</a>`', block),
+                (f'<?x ?> `<a href={u}>Again</a>`', block),
+                (f'\n<!-- x --> `<iframe src="{entity}"></iframe>`', block),
+                (f'\n<!--\n--> `<iframe src={u}></iframe>`', block),
+                (f'   <div>\n`<a href={u}>Again</a>`', block),
+                (f'- <div>\n  `<a href={u}>Again</a>`', block),
+                (f'\n> <div>\n> `<a href={u}>Again</a>`', block),
+                (f'<https://example.com/a b>', block),                      # not an autolink
+                (f'- Again `<a href={u}>x</a>`', element),                  # no block needed
+                (f'- Again `<A HREF="{entity}">x</A>`', 'raw HTML <A> element'),
+                (f'- Again `<img src={u}>`', 'raw HTML <img> element'),
+                (f'- Again `<link href={u}>`', 'raw HTML <link> element'),
+                (f'- Again `<area href={u}>`', 'raw HTML <area> element')):
+            with self.subTest(again=again), self.assertRaisesRegex(
+                    ValueError, grammar + re.escape(construct)):
+                self.check(f'- Product v1.0: {u}\n{again}')
+        # Passing controls: a line-start autolink, a placeholder in a code span,
+        # an IPv6 literal before a port, and a non-link tag shown as code.
+        for sources in (f'- Product v1.0:\n  <{u}>', f'- <{u}> (Product v1.0)',
+                        f'- Product v1.0 reads `<VAR>`: {u}',
+                        f'- Product v1.0 listens on [::]:443: {u}',
+                        f'- Product v1.0 (`<b title="x">`): {u}'):
+            with self.subTest(sources=sources):
+                self.check(sources)
+
+    def test_scheme_and_host_match_case_insensitively(self):
+        # Round 6: HTTPS://, Https:// and an uppercase host dereference to the same
+        # resource, so they cite u; an uppercase path is another resource.
+        u = self.url
+        for form in ('HTTPS://example.com/control', 'Https://example.com/control',
+                     'https://EXAMPLE.com/control', 'HTTPS://Example.COM/control',
+                     '[t](HTTPS://example.com/control)', '<Https://EXAMPLE.com/control>'):
+            with self.subTest(form=form):
+                self.assertEqual(vb.cites(form, u), 1)
+                self.check(f'- Product v1.0: {form}')
+                with self.assertRaisesRegex(ValueError, 'basis.*absent'):
+                    self.check(f'- Product v1.0: {u}\n- Again: {form}')
+        for form in ('https://example.com/CONTROL', 'https://example.com/Control'):
+            with self.subTest(form=form):
+                self.assertEqual(vb.cites(form, u), 0)
+                with self.assertRaisesRegex(ValueError, 'source URL absent from Sources'):
+                    self.check(f'- Product v1.0: {form}')
+        self.assertEqual(vb.cites('https://Example.com:8443/a', 'https://example.com:8443/a'), 1)
+        self.assertEqual(vb.cites('https://example.com:8443/A', 'https://example.com:8443/a'), 0)
 
     def test_closing_emphasis_counts_as_citation(self):
         # Round 4: _CLOSES read the closing delimiter plus a letter as URL continuation.

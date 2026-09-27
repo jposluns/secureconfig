@@ -138,11 +138,16 @@ def cites(text, url):
 
     Match each component URL; never extract URLs from the text. An extractor
     reads [url](url) and **url** as other spellings and so misses the citation.
+    The scheme and authority match case-insensitively (HTTPS://EXAMPLE.com/p
+    cites https://example.com/p); the rest is exact (/P is another resource).
     Text is not decoded: definitions() and sources_grammar() first refuse the
     spellings (raw HTML links, reference links, entities, escapes, percent-encoded
     unreserved characters) whose rendered URL differs from the raw text.
     """
-    escaped = re.escape(url)
+    # Scheme and authority (userinfo, host, port) compare case-insensitively, as
+    # they dereference alike; path, query and fragment compare exactly.
+    split_at = re.match(r'[A-Za-z][A-Za-z0-9+.-]*://[^/?#]*', url).end()
+    escaped = '(?i:' + re.escape(url[:split_at]) + ')' + re.escape(url[split_at:])
     return len(re.findall(_OPENS + '(?:(?<=_)' + escaped + _CLOSES_AFTER_UNDERSCORE
                           + '|(?<!_)' + escaped + _CLOSES + ')', text))
 
@@ -152,11 +157,17 @@ _URL_OR_LINK = re.compile(r'[A-Za-z][A-Za-z0-9+.-]*://|www\.|\]\(|<[A-Za-z][A-Za
 _TAG = re.compile(r'</?([A-Za-z][A-Za-z0-9-]*)(?![A-Za-z0-9-])')
 _LINK_TAGS = {'a', 'img', 'link', 'area'}
 _REFERENCE_USE = re.compile(r'\]\[')
+# A possible CommonMark HTML block start, after container markers: < then a letter,
+# / ! or ?. Its lines to the end condition are raw HTML, where backticks are
+# literal and entities decode, so code-span masking would hide a live link.
+_CONTAINERS = r'^[ \t]*(?:(?:[-*+]|[0-9]{1,9}[.)])[ \t]+|>[ \t]?)*'
+_HTML_BLOCK = re.compile(_CONTAINERS + r'<[A-Za-z/!?]')
+# Exempt only a line-start <scheme:...> that is wholly a CommonMark URI autolink.
+_LINE_START_AUTOLINK = re.compile(_CONTAINERS + r'<[A-Za-z][A-Za-z0-9+.-]{1,31}:[^\x00-\x20<>]*>')
 # A link reference definition: after container markers, [label]: at the start of a
 # line, or the ]: that ends a label begun on an earlier line (no unescaped bracket
 # before it). Enrolled guides have none, so no [ref], [ref][] or [t][ref] resolves.
-_DEFINITION = re.compile(r'^[ \t]*(?:(?:[-*+]|[0-9]{1,9}[.)])[ \t]+|>[ \t]?)*'
-                         r'\[?(?:[^\[\]\\]|\\.)*\]:')
+_DEFINITION = re.compile(_CONTAINERS + r'\[?(?:[^\[\]\\]|\\.)*\]:')
 # An escaped bracket, parenthesis or backtick (after an even run of backslashes).
 _ESCAPED_DELIMITER = re.compile(r'(?<!\\)(?:\\\\)*\\[\[\]()`]')
 _UNRESERVED = re.compile(r'%(?:3[0-9]|4[1-9A-Fa-f]|5[0-9Aa]|6[1-9A-Fa-f]|7[0-9Aa]'
@@ -193,18 +204,27 @@ def definitions(body, line_offset=0):
     require(not errors, '; '.join(errors))
 
 
-def grammar_violations(line):
+def grammar_violations(line, raw=None):
     """Yield a construct description for each Sources grammar violation on one line.
 
     Each line must close its code spans and brackets, so the same-line masking
     here is exact: no code span, link text or label can continue onto another line.
+    Raw is the line before scan() strips HTML comments (default: line). A raw line
+    that could open an HTML block, where backticks are literal, is refused, and so
+    is a link element anywhere in the raw line, code spans and comments included.
     """
+    raw = line if raw is None else raw
+    if _HTML_BLOCK.match(raw) and not _LINE_START_AUTOLINK.match(raw):
+        yield 'raw HTML block in Sources'
+    for match in _TAG.finditer(raw):
+        if match[1].lower() in _LINK_TAGS:
+            yield f'raw HTML <{match[1]}> element'
     text = without_code_spans(line)
     for match in _TAG.finditer(text):
         rest = text[match.end():]
         if match[1].lower() in _LINK_TAGS:
-            yield f'raw HTML <{match[1]}> element'
-        elif not re.match(r'[ \t]*/?>', rest) and (not rest or rest[0] in ' \t/'):
+            continue  # already refused in the raw line
+        if not re.match(r'[ \t]*/?>', rest) and (not rest or rest[0] in ' \t/'):
             yield f'raw HTML <{match[1]}> tag with attributes'
     if _REFERENCE_USE.search(text):
         yield 'reference-style link ([text][ref] or [text][])'
@@ -232,10 +252,15 @@ def sources_grammar(body, heads, line_offset=0):
     does not spell, so cites() would miss the citation. Code spans and brackets
     that cross lines would make the per-line checks misread what renders.
     Scans the ATX-bounded Sources lines of raw_sources(), outside fences and
-    same-line code spans; definitions() has already refused reference definitions.
+    same-line code spans, but reads HTML block starts and link elements in the
+    raw lines, before comments are stripped; definitions() has already refused
+    reference definitions.
     """
+    from _markdown import body_lines
     from check_verify_marking import tokenize
     content, ranges = _sources_ranges(body, heads)
+    raw = body_lines(body)  # scan() keeps one content line per body line
+    require(len(raw) == len(content), 'Sources line views disagree')
     errors = []
     for start, end in ranges:
         lines, _, tokens = tokenize('\n'.join(content[start:end]))
@@ -245,7 +270,7 @@ def sources_grammar(body, heads, line_offset=0):
             if index not in code:
                 errors.extend(f'Sources line {start + index + 1 + line_offset}: {construct}; '
                               'cite URLs as bare URLs, <autolinks> or inline [text](url) links'
-                              for construct in grammar_violations(line))
+                              for construct in grammar_violations(line, raw[start + index]))
     require(not errors, '; '.join(errors))
 
 
