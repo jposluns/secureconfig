@@ -11,6 +11,7 @@ in step with the merged pull request is therefore an authoring obligation, not a
 
 ## 2026-09-27
 
+- Correct the main-merge dates for #396 to #399, rename the version-basis gate label after the rollout, and extend the source-gap and follow-up backlog, with rows 1.143 and 1.138 retired (maintainer ruling 2026-09-27). Row 3.37. (#NNN)
 - Deny dotfiles and common backup and dump suffixes in the Caddy web-exposure example, align nginx and Apache suffix rules, and add planted-file probes for the added classes. Row 1.184. (#406)
 - Version basis for every guide: 100 guides carry version-basis front matter and a generated per-claim summary (versions, documentation date, DEMONSTRATED or REASONED), drafted in 20 batches under a body-identity check and reviewed in five two-family stages; every Verify fence is now marked. Rows 3.32 and 3.27. (#407)
 - Use a fixed canonical host for the Go port-80 redirect so a client-controlled Host cannot choose the redirect destination. Row 1.183. (#405)
@@ -19,13 +20,13 @@ in step with the merged pull request is therefore an authoring obligation, not a
 - Clarify manual DNS-01 and its renewal limits, and include HTTP authentication and TLS client certificates in CORS credential guidance. Row 1.181. (#402)
 - Reject leading or trailing whitespace in version-basis strings and test each component-name, basis, claim-text and evidence field. Replace CONTRIBUTING rule 8's drifting corpus counts with a reference to gate output. Row 3.35. (#400)
 - Qualify Docker 28.0 publishing hardening with the firewalld-reload regression, recommend Engine 28.3.3 or later with firewalld, and re-check container-address reachability after reload. Row 1.180. (#401)
-
-## 2026-09-26
-
 - Close row 3.29's bounded C3-TOOL-ARGV gaps: attached credentials after known short-option clusters, Vault login credential pairs, env secret assignments, OpenSSL MAC keys, and URI userinfo. Preserve prompts, file/stdin inputs and shell assignment prefixes; exempt whole house placeholders only in the new URI rule. Add failing and safe fixtures and document remaining limits. (#399)
 - Fail the secrets scan on grep read errors with path diagnostics, preserving whole-tree coverage. Isolate placeholder and changelog fixture Git environments and extend external-index regressions for both Git selectors. Rows 3.33 and 3.34. (#398)
 - Retire the live-demonstration backlog requirement under the 2026-09-26 maintainer ruling (#397). Close 67 demonstration rows or portions in DONE, retain the five doable remainders under their ids, and accept REASONED with scope and provenance as an end state. Remove the reasoned-row gate, its tests and baseline; preserve shared helpers and the Verify-marking and exposure-index gates. Guide wording is reserved for Part B of the same retirement change.
 - Restrict the shared gate walker to tracked working-tree files (#396), row 3.28. Preserve caller filters, fail closed when Git or selected tracked inputs are unavailable, and test unreadable untracked directories alongside untracked violations. Stage existing gate fixtures in temporary Git indexes.
+
+## 2026-09-26
+
 - Version basis pilot: vault.md, image-gen-uis.md and time-series-metrics-stores.md carry version-basis front matter and a generated visible summary (the versions and documentation date each claim was checked against, DEMONSTRATED or REASONED per claim, and an instruction to compare with current releases); tools/version_basis.py generates and checks them, a blocking gate enforces them, and the Verify-marking gate understands the front matter. Row 3.31. (#395)
 - Apply the remapped-publication convention to Helicone PostgreSQL 5432, Helicone ClickHouse 8123 and the Onyx MinIO console 9001 (#394), row 1.176. Allowlist the container ports against host rows 54388, 18123 and 9005, and remove their container descriptions and guide citations from the container-port rows.
 - Apply the 2026-09-26 maintainer ruling on remapped container ports (#393), row 1.175. Allowlist Open WebUI 8080 behind host port 3000; remove the Vaultwarden 80, TEI 80, Mem0 8000 and SearxNG 8080 container descriptions while retaining their guides for other listeners on those numbers. Vaultwarden has no documented remapped publication or host-port row citing its guide. Record the convention and supersede P4; other remapped services remain outside this change. Row 1.176 tracks them.
