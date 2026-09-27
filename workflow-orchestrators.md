@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "93d9586414c6c9af19aa44238b1cb6db303689d12c0e94cb152eff6455d740ef",
+  "body_sha256": "b6673fbfef148d642b74c483e9c33aa07dd5f51be566af068cdf980068e5122d",
   "components": {
     "prefect": {
       "name": "Prefect Basic Auth minimum",
@@ -113,9 +113,7 @@ version_basis: {
         "s3cf3d5be0f64": "https://man7.org/linux/man-pages/man7/user_namespaces.7.html",
         "sa5ccbfea6e16": "https://www.kernel.org/doc/html/latest/filesystems/idmappings.html",
         "s08902025e5f9": "https://man7.org/linux/man-pages/man1/getfacl.1.html",
-        "sa0d3793fabb7": "https://man7.org/linux/man-pages/man1/stat.1.html",
-        "sfc58f455acfa": "https://man7.org/linux/man-pages/man8/ss.8.html",
-        "sca11a98a52fa": "https://man7.org/linux/man-pages/man7/network_namespaces.7.html"
+        "sa0d3793fabb7": "https://man7.org/linux/man-pages/man1/stat.1.html"
       }
     },
     "systemd": {
@@ -204,6 +202,21 @@ version_basis: {
         "s9898d4653a47": "https://argo-workflows.readthedocs.io/en/release-3.7/argo-server-sso/",
         "s96145eacf345": "https://argo-workflows.readthedocs.io/en/release-3.7/rest-examples/"
       }
+    },
+    "iproute2": {
+      "name": "iproute2 ss manual",
+      "basis": "v6.15.0",
+      "sources": {
+        "s6cc7f285a0c7": "https://github.com/iproute2/iproute2/blob/v6.15.0/man/man8/ss.8#L358-L359",
+        "s9fa9a260f1de": "https://github.com/iproute2/iproute2/blob/v6.15.0/man/man8/ss.8#L7-L12"
+      }
+    },
+    "network-namespaces": {
+      "name": "Linux network namespaces manual",
+      "basis": "man-pages-5.13",
+      "sources": {
+        "s427c923e346f": "https://github.com/mkerrisk/man-pages/blob/man-pages-5.13/man7/network_namespaces.7#L30-L40"
+      }
     }
   },
   "claims": {
@@ -257,7 +270,7 @@ version_basis: {
     "argo-tls": {"text": "Keep TLS enabled with a trusted certificate Secret; no name generates a self-signed certificate, failed named-Secret loading fails startup, secure=false is plaintext and defeats HSTS.", "components": ["argo-three", "argo-four"], "sources": ["argo-three:sdb4a0c18b7c6", "argo-four:s0b16f1ac50df", "argo-three:s36759aec55fa", "argo-four:sa120f74372eb"], "status": "REASONED"},
     "argo-metrics": {"text": "/metrics shares the server listener and auth gate unless ARGO_SERVER_METRICS_AUTH=false; server mode also admits anonymous metrics.", "components": ["argo-three", "argo-four"], "sources": ["argo-three:s36759aec55fa", "argo-four:sa120f74372eb", "argo-three:s49cdaf0691c0", "argo-three:s2ca4f14c3164", "argo-four:s4613c15c72af", "argo-four:sb284f93cde9c", "argo-three:s64e74b0dbe95", "argo-four:se758d83aaf1f"], "status": "REASONED"},
     "argo-network": {"text": "Keep 2746 private behind authenticated HTTPS; restrict direct Pod/Service access and scope server, SSO and execution-account permissions. Workflow submission permits arbitrary containers unless constrained.", "components": ["argo-docs"], "sources": ["argo-docs:s6c8e78288632"], "status": "REASONED"},
-    "verify-inventory": {"text": "ss inventories only the current namespace, not publication, routing or authentication; inspect publications and external reachability separately.", "components": ["prefect", "flower", "argo-three", "linux"], "sources": ["prefect:sbe64d51110a2", "flower:s25760fae7152", "argo-three:sbddb9f07a301", "linux:sfc58f455acfa", "linux:sca11a98a52fa"], "status": "REASONED", "verify": [1]},
+    "verify-inventory": {"text": "ss inventories only the current namespace, not publication, routing or authentication; inspect publications and external reachability separately.", "components": ["prefect", "flower", "argo-three", "iproute2", "network-namespaces"], "sources": ["prefect:sbe64d51110a2", "flower:s25760fae7152", "argo-three:sbddb9f07a301", "iproute2:s6cc7f285a0c7", "network-namespaces:s427c923e346f", "iproute2:s9fa9a260f1de"], "status": "REASONED", "verify": [1]},
     "verify-prefect": {"text": "Anonymous POST /api/flows/filter returning a JSON list is exposed; fixed is 401 with an authorized list on the same origin. Health/ready GET exemptions are version-dependent.", "components": ["prefect", "prefect-source"], "sources": ["prefect:s0ef73a227667", "prefect-source:sa4574c7ed80f"], "status": "REASONED", "verify": [1]},
     "verify-dagster": {"text": "A RepositoryConnection from /graphql is a read, including empty nodes; GraphQL/transport errors are inconclusive. Test proxy authentication and origin isolation separately.", "components": ["dagster"], "sources": ["dagster:s4c04d5da5257"], "status": "REASONED", "verify": [1]},
     "verify-airflow": {"text": "FAB 3.9.0 returning 201 with access_token for airflow/airflow is exposed; pair a valid account and anonymous/authenticated API reads at proxy and origin. Airflow 2 uses its own API/auth.", "components": ["fab", "airflow", "airflow-two"], "sources": ["fab:s989f09d05161", "airflow:s39bfd91c507b", "airflow-two:s2d1891641c91"], "status": "REASONED", "verify": [1]},
@@ -279,7 +292,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -333,7 +346,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | argo-tls: Keep TLS enabled with a trusted certificate Secret; no name generates a self-signed certificate, failed named-Secret loading fails startup, secure=false is plaintext and defeats HSTS. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
 | argo-metrics: /metrics shares the server listener and auth gate unless ARGO_SERVER_METRICS_AUTH=false; server mode also admits anonymous metrics. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
 | argo-network: Keep 2746 private behind authenticated HTTPS; restrict direct Pod/Service access and scope server, SSO and execution-account permissions. Workflow submission permits arbitrary containers unless constrained. | Argo Workflows documentation release-3.7 | REASONED |
-| verify-inventory: ss inventories only the current namespace, not publication, routing or authentication; inspect publications and external reachability separately. | Prefect Basic Auth minimum 3.1.8; Flower v2.2.0; Argo Workflows v3.7.18; Linux permissions and tools unknown | REASONED |
+| verify-inventory: ss inventories only the current namespace, not publication, routing or authentication; inspect publications and external reachability separately. | Prefect Basic Auth minimum 3.1.8; Flower v2.2.0; Argo Workflows v3.7.18; iproute2 ss manual v6.15.0; Linux network namespaces manual man-pages-5.13 | REASONED |
 | verify-prefect: Anonymous POST /api/flows/filter returning a JSON list is exposed; fixed is 401 with an authorized list on the same origin. Health/ready GET exemptions are version-dependent. | Prefect Basic Auth minimum 3.1.8; Prefect server source 9e560c9b6df4e19a5109a66e66d461f9facb538d | REASONED |
 | verify-dagster: A RepositoryConnection from /graphql is a read, including empty nodes; GraphQL/transport errors are inconclusive. Test proxy authentication and origin isolation separately. | Dagster OSS 1.13.24 | REASONED |
 | verify-airflow: FAB 3.9.0 returning 201 with access_token for airflow/airflow is exposed; pair a valid account and anonymous/authenticated API reads at proxy and origin. Airflow 2 uses its own API/auth. | Airflow FAB provider 3.9.0; Apache Airflow 3.3.2; Apache Airflow historical configuration unknown | REASONED |
@@ -726,7 +739,7 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
   `--oauth2_secret`, `--oauth2_redirect_uri`, `--auth`): https://flower.readthedocs.io/en/latest/config.html
 - Flower `port` default 5555, `address` default `''` and the `unix_socket` branch, the `FLOWER_` environment variables, and the implicit `flowerconfig.py` load from the working directory (pinned tag v2.2.0), with Tornado's `bind_sockets` treating an empty address as all interfaces (pinned tag v6.5.10): https://github.com/mher/flower/blob/v2.2.0/flower/options.py#L7-L15, https://github.com/mher/flower/blob/v2.2.0/flower/options.py#L56-L57, https://github.com/mher/flower/blob/v2.2.0/flower/command.py#L39-L91, https://github.com/mher/flower/blob/v2.2.0/flower/app.py#L71-L76 and https://github.com/tornadoweb/tornado/blob/v6.5.10/tornado/netutil.py#L72-L73
 - Flower `--unix_socket` passes the fixed mode `0o777` (pinned tag v2.2.0); Tornado's `bind_unix_socket` removes an existing socket at a filesystem path, binds, then applies that mode, and binds a name with a leading NUL with no mode (pinned tag v6.5.10); on Linux, connecting to a stream socket needs write permission on it, and file permissions have no meaning for abstract sockets; path lookup needs search permission on each directory, `CAP_DAC_OVERRIDE` overrides permission checks and `CAP_DAC_READ_SEARCH` grants search on directories; in a user namespace, file permission checks compare IDs mapped back to the initial namespace, and a capability applies only to a file whose owner and group are mapped there; Docker's default capability set includes `CAP_DAC_OVERRIDE` (moby docker-v29.8.1); an idmapped mount changes ownership for that mount only; `RuntimeDirectoryMode=` defaults to `0755` (systemd v257); files under `/run` must be cleared at the beginning of the boot process (FHS 3.0); named ACL entries grant access only up to the mask, changing a file's group permission bits sets its `ACL_MASK` entry, a directory's default ACL governs the initial ACL of objects created within it, and `getfacl` marks a limited entry `#effective:`; `stat -c` format sequences: https://github.com/mher/flower/blob/v2.2.0/flower/app.py#L85-L89, https://github.com/tornadoweb/tornado/blob/v6.5.10/tornado/netutil.py#L215-L228, https://man7.org/linux/man-pages/man7/unix.7.html, https://man7.org/linux/man-pages/man7/path_resolution.7.html, https://man7.org/linux/man-pages/man7/user_namespaces.7.html, https://www.kernel.org/doc/html/latest/filesystems/idmappings.html, https://github.com/moby/moby/blob/docker-v29.8.1/daemon/pkg/oci/caps/defaults.go#L4-L7, https://github.com/systemd/systemd/blob/v257/man/systemd.exec.xml#L1630-L1640, https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch03s15.html, https://man7.org/linux/man-pages/man5/acl.5.html, https://man7.org/linux/man-pages/man1/getfacl.1.html and https://man7.org/linux/man-pages/man1/stat.1.html
-- Linux `ss` socket statistics, with `-N`/`--net` to switch network namespace, and network namespaces isolating sockets and port numbers: https://man7.org/linux/man-pages/man8/ss.8.html and https://man7.org/linux/man-pages/man7/network_namespaces.7.html
+- Linux `ss` socket statistics (`iproute2` v6.15.0), with `-N`/`--net` to switch network namespace: https://github.com/iproute2/iproute2/blob/v6.15.0/man/man8/ss.8#L7-L12 and https://github.com/iproute2/iproute2/blob/v6.15.0/man/man8/ss.8#L358-L359; network namespaces isolating network devices, protocol stacks and port numbers (Linux man-pages-5.13): https://github.com/mkerrisk/man-pages/blob/man-pages-5.13/man7/network_namespaces.7#L30-L40
 - Argo CLI defaults and environment overrides: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/cmd/argo/commands/server.go#L191-L229), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/cmd/argo/commands/server.go#L195-L239).
 - Argo TLS certificate selection and generation: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/cmd/argo/commands/server.go#L113-L137), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/cmd/argo/commands/server.go#L119-L143).
 - Argo wildcard TCP listener and TLS wrapper: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/server/apiserver/argoserver.go#L263-L282), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/server/apiserver/argoserver.go#L299-L320).

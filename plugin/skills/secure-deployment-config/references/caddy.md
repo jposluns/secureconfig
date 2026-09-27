@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "e4ea10976bad434d5112a09a1ea7f33d383b101ed29cdcc6da8d3e357b1deca7",
+  "body_sha256": "5488273918614a078e0317aed055aa3790d108a230c00b6d656406ec4e54a37a",
   "components": {
     "docs": {
       "name": "Caddy documentation",
@@ -77,6 +77,15 @@ version_basis: {
       "sources": {
         "s8df93f3e3d4c": "https://caddyserver.com/docs/caddyfile/directives/forward_auth"
       }
+    },
+    "docker-network": {
+      "name": "Docker networking documentation",
+      "basis": "4e9a5751518ed8223a8dcde53693badddd72604f",
+      "sources": {
+        "se1437c0f19fb": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/_index.md#L286",
+        "sfce645f8b46e": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/drivers/host.md#L11-L13",
+        "sfd29f33e4108": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/_index.md#L302-L325"
+      }
     }
   },
   "claims": {
@@ -98,7 +107,7 @@ version_basis: {
     "admin-isolation": {"text": "Host/Origin checks are not process isolation; local untrusted workloads require a permissioned Unix socket.", "components": ["docs"], "sources": ["docs:s3923477355fb", "docs:sdbcd496895d6"], "status": "REASONED"},
     "docker-admin": {"text": "Official 2.11.4 Alpine and Windows runtime images EXPOSE 2019 but ship a Caddyfile without admin; absent overrides, the endpoint stays namespace-local.", "components": ["tags", "images", "dist", "admin"], "sources": ["tags:sdc8aca42f5e2", "images:s0f0994ef9fac", "images:s2dce0bbf3a70", "images:sd2c1b05a8088", "images:sf3e9c2d4e0cd", "images:sc5dd3f9746fe", "images:s6c800a156eac", "images:sc5c82704d33f", "images:sc1cb0e1fb9eb", "images:s11528dfcc516", "images:s70b76475a281", "dist:s433758a90af0", "admin:s35044463fa67", "admin:s2bbcf239df02"], "status": "REASONED"},
     "admin-override": {"text": "A mounted admin setting or CADDY_ADMIN changes the address; do not set 0.0.0.0:2019 to make publication work.", "components": ["docs", "admin", "dist"], "sources": ["docs:sdbcd496895d6", "admin:s35044463fa67", "admin:s2bbcf239df02", "dist:s433758a90af0"], "status": "REASONED"},
-    "namespace": {"text": "As shipped, the images' Caddyfile sets no admin address, leaving the localhost:2019 default; avoid untrusted namespace sharing and run CLI commands inside the container.", "components": ["docs", "images", "dist", "admin"], "sources": ["docs:s3923477355fb", "images:s0f0994ef9fac", "images:s2dce0bbf3a70", "images:sd2c1b05a8088", "images:sf3e9c2d4e0cd", "images:sc5dd3f9746fe", "images:s6c800a156eac", "images:sc5c82704d33f", "images:sc1cb0e1fb9eb", "images:s11528dfcc516", "images:s70b76475a281", "dist:s433758a90af0", "admin:s35044463fa67"], "status": "REASONED"},
+    "namespace": {"text": "The shipped admin default is localhost:2019. On Docker Engine on Linux, bridge networking keeps loopback container-local; host or container networking shares a namespace, so treat its processes as potential admin clients.", "components": ["docs", "images", "dist", "admin", "docker-network"], "sources": ["docs:s3923477355fb", "images:s0f0994ef9fac", "images:s2dce0bbf3a70", "images:sd2c1b05a8088", "images:sf3e9c2d4e0cd", "images:sc5dd3f9746fe", "images:s6c800a156eac", "images:sc5c82704d33f", "images:sc1cb0e1fb9eb", "images:s11528dfcc516", "images:s70b76475a281", "dist:s433758a90af0", "admin:s35044463fa67", "docker-network:se1437c0f19fb", "docker-network:sfce645f8b46e", "docker-network:sfd29f33e4108"], "status": "REASONED"},
     "admin-socket": {"text": "admin unix//run/caddy/admin.sock uses owner-only mode 0200 by default; append |0600 to set it explicitly.", "components": ["docs"], "sources": ["docs:sdbcd496895d6", "docs:s82efc39a8130"], "status": "REASONED"},
     "runtime-directory": {"text": "The packaged caddy user needs RuntimeDirectory=caddy for /run/caddy; restart creates it and binds the socket. Sources omit the service unit/systemd manual.", "components": ["docs"], "sources": ["docs:sdbcd496895d6"], "status": "REASONED"},
     "reload": {"text": "API reload uses the Caddyfile admin address; admin off disables it and systemd then requires restart.", "components": ["docs"], "sources": ["docs:sdbcd496895d6", "docs:sf12ad47e81b5"], "status": "REASONED"},
@@ -121,7 +130,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -143,7 +152,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | admin-isolation: Host/Origin checks are not process isolation; local untrusted workloads require a permissioned Unix socket. | Caddy documentation 2 | REASONED |
 | docker-admin: Official 2.11.4 Alpine and Windows runtime images EXPOSE 2019 but ship a Caddyfile without admin; absent overrides, the endpoint stays namespace-local. | Official image tag map d82ca5102fa6735be29d5e1fc6ce03af77eb091e; Caddy Docker source fba2853501d36e8a72f946ac8cb7ff64d07e48f2; Default Caddyfile source 33ae08ff08d168572df2956ed14fbc4949880d94; Caddy admin source v2.11.4 | REASONED |
 | admin-override: A mounted admin setting or CADDY_ADMIN changes the address; do not set 0.0.0.0:2019 to make publication work. | Caddy documentation 2; Caddy admin source v2.11.4; Default Caddyfile source 33ae08ff08d168572df2956ed14fbc4949880d94 | REASONED |
-| namespace: As shipped, the images' Caddyfile sets no admin address, leaving the localhost:2019 default; avoid untrusted namespace sharing and run CLI commands inside the container. | Caddy documentation 2; Caddy Docker source fba2853501d36e8a72f946ac8cb7ff64d07e48f2; Default Caddyfile source 33ae08ff08d168572df2956ed14fbc4949880d94; Caddy admin source v2.11.4 | REASONED |
+| namespace: The shipped admin default is localhost:2019. On Docker Engine on Linux, bridge networking keeps loopback container-local; host or container networking shares a namespace, so treat its processes as potential admin clients. | Caddy documentation 2; Caddy Docker source fba2853501d36e8a72f946ac8cb7ff64d07e48f2; Default Caddyfile source 33ae08ff08d168572df2956ed14fbc4949880d94; Caddy admin source v2.11.4; Docker networking documentation 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
 | admin-socket: admin unix//run/caddy/admin.sock uses owner-only mode 0200 by default; append &#124;0600 to set it explicitly. | Caddy documentation 2 | REASONED |
 | runtime-directory: The packaged caddy user needs RuntimeDirectory=caddy for /run/caddy; restart creates it and binds the socket. Sources omit the service unit/systemd manual. | Caddy documentation 2 | REASONED |
 | reload: API reload uses the Caddyfile admin address; admin off disables it and systemd then requires restart. | Caddy documentation 2 | REASONED |
@@ -249,7 +258,7 @@ request_body {
 
 Caddy runs a local admin API, by default on `localhost:2019` (as of v2.11.4), that requires no credentials: anything that can reach it replaces the whole configuration with `POST /load`, edits it path by path under `/config/`, or stops the server with `POST /stop`. Its Host and Origin header checks block a browser on another site, but they are not process isolation, so the endpoint's safety rests on the loopback bind. Never publish it: do not reverse-proxy a route to `:2019`, and never move it to a public address.
 
-The official Docker runtime images (2.11.4: Alpine, Windows Server Core and Nano Server) list 2019 in `EXPOSE`, but their default Caddyfile has no `admin` option, so as shipped, with no mounted configuration that sets `admin` and no `CADDY_ADMIN`, the admin API listens on the loopback of the container's network namespace. On a bridge or user-defined network that is the container's own loopback, out of reach of the published port; with host networking it is the host's loopback, reachable by every process on the host, and containers that share the namespace (the other containers in a Kubernetes pod, or one started with `--network container:`) reach it too. Do not set `admin 0.0.0.0:2019` (or `CADDY_ADMIN`) to make that port work, do not publish it, and do not run the container with host networking or share its namespace with untrusted containers; run `caddy` commands inside the container instead, for example with `docker exec`.
+The official Docker runtime images (2.11.4: Alpine, Windows Server Core and Nano Server) list 2019 in `EXPOSE`, but their default Caddyfile has no `admin` option, so as shipped, with no mounted configuration that sets `admin` and no `CADDY_ADMIN`, the admin API listens on `localhost:2019`. On Docker Engine on Linux, ordinary bridge networking keeps that address on the container's own loopback. Host networking shares the host's network namespace, while `--network container:<name|id>` shares another container's networking stack, including its loopback. Treat processes in that shared namespace as potential admin clients. Do not set `admin 0.0.0.0:2019` (or `CADDY_ADMIN`) to make that port work, do not publish it, and do not run the container with host networking or share its namespace with untrusted containers; run `caddy` commands inside the container instead, for example with `docker exec`.
 
 On a host where untrusted workloads share the machine, loopback is not enough, because any local process can reach `127.0.0.1:2019`. Bind the endpoint to a permissioned Unix socket instead, in the same global options block from section 1 (a Caddyfile has only one), so only processes that can open the socket file reconfigure Caddy:
 
@@ -345,3 +354,4 @@ ls -l /run/caddy/admin.sock          # if you bound it to a unix socket: it exis
 - Let's Encrypt ending expiration-notification emails (2025): https://letsencrypt.org/2025/01/22/ending-expiration-emails/
 - Request matchers (path, wildcards, multiple paths): https://caddyserver.com/docs/caddyfile/matchers
 - Caddy admin API default `DefaultAdminListen = "localhost:2019"` (pinned tag v2.11.4): https://github.com/caddyserver/caddy/blob/v2.11.4/admin.go#L1433
+- Docker networking documentation at 4e9a5751518ed8223a8dcde53693badddd72604f (container loopback, host namespace sharing, and the `--network container:` loopback example; the Linux bridge/host distinction above is inferred from these documented namespace semantics): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/_index.md#L286, https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/drivers/host.md#L11-L13, https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/_index.md#L302-L325
