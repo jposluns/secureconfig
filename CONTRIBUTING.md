@@ -73,10 +73,12 @@ Schema 1 requires exactly these top-level fields:
   or nested items cannot supply each other's basis. Repeating a URL requires the basis in every
   item that cites it. For a known basis, every citation of the URL must be parsed as its own
   list item: one in a nested compact list (`- - ...`), a heading item, a quote or loose prose
-  fails, and such failures are never baselined. Matching is literal and case-sensitive, with no
-  adjacent ASCII letter, digit or dot: `v2.51.0` and `2.51.0` are not interchangeable. A
-  matching literal inside the cited URL counts too. Components with basis `unknown` are exempt
-  from the basis requirement.
+  fails, and such failures are never baselined. For that count, Sources runs to the next ATX
+  heading of the same or higher level; a Setext underline never ends it. Basis matching is
+  literal and case-sensitive, with no adjacent ASCII letter, digit or dot: `v2.51.0` and
+  `2.51.0` are not interchangeable. A matching literal inside the cited URL counts too.
+  Components with basis `unknown` are exempt from the basis requirement. Every check reads a
+  bare URL without trailing `.,;` or Markdown delimiters (`*`, `_`, `~`, a backtick, `>`).
   `tools/version_basis_sources_baseline.txt` grandfathers existing violations by guide and a
   counted SHA-256 fingerprint of component ID, basis, URL and item paragraph text. New, changed
   or excess occurrences fail, and fixed or removed occurrences require removing their stale

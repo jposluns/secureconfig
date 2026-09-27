@@ -292,6 +292,30 @@ class SourcesBasisTests(unittest.TestCase):
         # Unknown basis: URL presence stays mandatory, the container check is skipped.
         self.check(f'- Product: {self.url}\n- - Again: {self.url}', basis='unknown')
 
+    def test_formatted_bare_urls_are_counted(self):
+        # Codex round 2: a trailing ** once hid the URL from every check.
+        forms = (f'**{self.url}**', f'`{self.url}`', f'_{self.url}_', f'<{self.url}>',
+                 f'*_{self.url}_*.', f'~~{self.url}~~;', f'`{self.url}`**,')
+        for form in forms:
+            with self.subTest(form=form):
+                self.assertEqual(vb.citation_urls(form), {self.url})
+                self.check(f'- Product v1.0: {form}')
+                with self.assertRaisesRegex(
+                        ValueError, re.escape(self.url) + ' cited in an unsupported Sources container'):
+                    self.check(f'- Product v1.0: {self.url}\n- - Again: {form}')
+        # Explicit Markdown targets keep their exact spelling as well.
+        self.assertEqual(vb.citation_urls(f'[x]({self.url}_)'), {self.url, self.url + '_'})
+
+    def test_setext_lookalike_does_not_truncate_sources(self):
+        # Codex round 2: "- item" over a marker-only "-" reads as a Setext heading
+        # in check_guide_shape.headings(), which ended section_body() early.
+        with self.assertRaisesRegex(
+                ValueError, re.escape(self.url) + ' cited in an unsupported Sources container'):
+            self.check(f'- Product v1.0: {self.url}\n- Additional v1.0: {self.url}\n-\n'
+                       f'  Again: {self.url}')
+        # Passing control: a later ATX section still ends Sources for the count.
+        self.check(f'- Product v1.0: {self.url}\n\n## Later\n\nProse: {self.url}')
+
     def test_marker_only_items_start_new_items(self):
         # Codex round 1: a marker-only line begins an item (CommonMark); it is
         # not lazy prose that lets the previous item's basis cover the citation.

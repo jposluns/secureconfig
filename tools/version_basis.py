@@ -108,11 +108,15 @@ def verify_blocks(body, with_status=False):
 def citation_counts(text):
     """Count each URL occurrence once per spelling it cites.
 
-    Preserve explicit Markdown targets; trim sentence punctuation from bare URLs.
+    Preserve explicit Markdown targets. From bare URLs, trim sentence punctuation
+    and Markdown delimiters (**url**, `url`, _url_, <url>), in any interleaving, so
+    presence, item ownership and container counts all see the same spelling.
     """
     counts = Counter()
     for match in re.finditer(r'https?://[^\s<>\)]+', text):
-        forms = {match[0].rstrip('.,;')}
+        # rstrip removes every trailing member of the set, so the result is stable.
+        # The class excludes < and >, so an autolink yields neither delimiter.
+        forms = {match[0].rstrip('.,;*_~`>')}
         if text[max(0, match.start() - 2):match.start()] == '](' and text[match.end():match.end() + 1] == ')':
             forms.add(match[0])
         counts.update(forms)
@@ -174,12 +178,34 @@ def load_source_baseline():
     return counts
 
 
+def raw_sources(body, heads):
+    """Sources text bounded only by ATX headings, for container_violations().
+
+    headings() also reads Setext headings, so a list line followed by a
+    marker-only "-" line becomes a level-2 heading that ends section_body()
+    early and hides later citations. Here Setext underlines never end a section:
+    each Sources section runs to the next ATX heading of the same or higher rank
+    (fence-aware, as in check_guide_shape), so hidden citations stay counted.
+    """
+    from check_guide_shape import ATX_RE, SOURCES_RE, scan
+    content, visible = scan(body)
+    atx = [(index, len(match.group('hashes'))) for index, line in sorted(visible.items())
+           for match in [ATX_RE.match(line)] if match]
+    parts = []
+    for _, level, title, start in heads:
+        if SOURCES_RE.match(title):
+            end = next((index for index, rank in atx if index >= start and rank <= level), None)
+            parts.append('\n'.join(content[start:end]))
+    return '\n'.join(parts)
+
+
 def container_violations(data, sources, entries):
     """Fail closed: every citation of a basis-bearing URL must be a parsed item.
 
     source_entries() sees only list-item paragraphs, so a citation in a nested
     compact list, a heading item, a quote or other prose would escape the basis
-    check. Compare raw occurrences with parsed-entry occurrences instead.
+    check. Compare raw occurrences (sources: raw_sources(), not section_body())
+    with parsed-entry occurrences instead.
     """
     raw = citation_counts(sources)
     parsed = Counter()
@@ -267,7 +293,8 @@ def validate(data, body, guide='GUIDE.md', baseline=None):
             require(urlsplit(url).scheme in ('http', 'https') and urlsplit(url).hostname,
                     'source must be an absolute HTTP(S) URL')
             require(url in source_urls, 'source URL absent from Sources: ' + url)
-    check_source_bases(data, sources, entries, guide, baseline)
+    # The container count uses ATX-bounded text; see raw_sources().
+    check_source_bases(data, raw_sources(body, heads), entries, guide, baseline)
     identifiers(data['claims'])
     blocks = verify_blocks(body, with_status=True)
     covered, used = set(), set()
