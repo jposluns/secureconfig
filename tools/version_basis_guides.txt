@@ -10,3 +10,8 @@ rabbitmq.md
 nats.md
 mosquitto.md
 clickhouse.md
+ollama.md
+open-webui.md
+litellm.md
+model-servers.md
+chat-uis.md

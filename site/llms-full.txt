@@ -21046,6 +21046,82 @@ Keep `open_signup` at its default `False`: with it off, a pending account waits 
 
 # Ollama: it has no built-in authentication or TLS
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| local-auth: Local API has no inbound authentication; cloud keys and OLLAMA_AUTH concern upstream signing. | Ollama v0.34.2 | REASONED |
+| local-tls: Ollama serves plaintext; an https prefix in OLLAMA_HOST does not enable TLS. | Ollama v0.34.2 | REASONED |
+| host-bind: Standalone default is 127.0.0.1:11434; set OLLAMA_HOST in the service and reload/restart systemd. | Ollama v0.34.2; systemd v257 | REASONED |
+| container-bind: Official image sets 0.0.0.0:11434 internally; bridge publication and container binding are separate. | Ollama v0.34.2; Docker Engine localhost boundary 28.0 | REASONED |
+| publication: Use 127.0.0.1:11434:11434 with Engine 28.0+; earlier same-L2 access defeats this boundary; unpublished private networks are an alternative. | Docker Engine localhost boundary 28.0 | REASONED |
+| host-network: Host networking ignores publication flags; override the image listener and restrict authorized peers. | Ollama v0.34.2; Docker Engine localhost boundary 28.0 | REASONED |
+| basic-auth: nginx server-scope Basic auth protects permitted locations; denied paths/methods may reject before authentication. | nginx unknown | REASONED |
+| password-hash: Use prompted htpasswd -B -C 12; bare -B defaults to bcrypt cost 5, below the cited minimum 10. | Apache htpasswd unknown; OWASP password guidance unknown | REASONED |
+| tls-proxy: Publish authenticated TLS; encrypt the backend leg separately when proxy and Ollama are on different hosts. | nginx unknown | REASONED |
+| host-header: Proxy Host localhost:11434 avoids loopback middleware hostname rejection; it is not authentication. | Ollama v0.34.2; nginx unknown | REASONED |
+| idle-timeout: proxy_read_timeout 300s limits gaps between reads, not total generation duration. | nginx unknown | REASONED |
+| caddy-policy: Caddy Basic auth, exact POST /api/chat matcher and fallback deny other paths; supply admission limits separately. | Caddy unknown | REASONED |
+| bearer-policy: Exact nginx bearer comparison is a shared configuration secret without a constant-time guarantee; repeat it in every permitted location. | nginx unknown | REASONED |
+| mtls: Dedicated client CA and ssl_verify_client require certificate lifecycle management; combine Basic auth only deliberately. | nginx unknown | REASONED |
+| access: Access authenticates the tunnel; target a loopback policy proxy on 11435 to retain inference-only authorization. | Cloudflare unknown; nginx unknown | REASONED |
+| access-host: originRequest.httpHostHeader and the final proxy retain localhost:11434; keep both local listeners private. | Cloudflare unknown; Ollama v0.34.2 | REASONED |
+| access-limits: Access authentication supplies no inference budgets; retain proxy limits, optionally add WAF rate limits and trusted client-address handling. | Cloudflare unknown; nginx unknown | REASONED |
+| mfa: Human MFA belongs at the fronting identity layer; machine service tokens are not a human MFA flow. | Cloudflare unknown | REASONED |
+| inference-policy: Allow only exact required inference paths/methods; broad /api/ or /v1/ prefixes grant excessive authority. | nginx unknown; Ollama v0.34.2 | REASONED |
+| pull: Keep POST /api/pull private: acquisition consumes storage and network capacity. | Ollama v0.34.2 | REASONED |
+| push: Keep POST /api/push private: export has separate upstream authorization. | Ollama v0.34.2 | REASONED |
+| create: Keep POST /api/create private: it creates/replaces definitions and processes uploaded model material. | Ollama v0.34.2 | REASONED |
+| copy: Keep POST /api/copy private: it creates another model name. | Ollama v0.34.2 | REASONED |
+| delete: Keep DELETE /api/delete private: it removes models and associated data. | Ollama v0.34.2 | REASONED |
+| blob-write: Keep POST /api/blobs/:digest private: it uploads model-store bytes. | Ollama v0.34.2 | REASONED |
+| blob-read: Keep HEAD /api/blobs/:digest private: it reveals blob existence. | Ollama v0.34.2 | REASONED |
+| other-routes: Default denial excludes account, experimental web, desktop proxy and unused compatibility routes. | Ollama v0.34.2 | REASONED |
+| file-validation: Create validates relative filenames and blob paths; arbitrary host-file access is not established at this pin. | Ollama v0.34.2 | REASONED |
+| transfer: Management transfers are egress/disk-fill surfaces; insecure alters redirect protections, without demonstrating unrestricted SSRF. | Ollama v0.34.2; Ollama release commit dfabde4539e42ba1e1eab50a3a50b88aea7958a0 | REASONED |
+| origins: OLLAMA_ORIGINS adds to built-in origins; removing wildcards is neither authentication nor an exclusive-origin policy. | Ollama v0.34.2 | REASONED |
+| service-user: Use a dedicated account and writable store; preserve GPU access and do not assume the container shares installer identity. | Ollama v0.34.2 | REASONED |
+| store: Proposed 0700 directories, 0600 files and UMask=0077 need existing-permission/ACL inspection; separate service configuration and proxy keys. | Ollama v0.34.2; systemd v257 | REASONED |
+| model-path: OLLAMA_MODELS relocates models, not the entire service home or signing keys. | Ollama v0.34.2 | REASONED |
+| loaded-models: Loaded-model capacity is automatic unless configured; the example selects one model, not a total memory cap. | Ollama v0.34.2 | REASONED |
+| parallel: OLLAMA_NUM_PARALLEL defaults to 1. | Ollama v0.34.2 | REASONED |
+| queue: OLLAMA_MAX_QUEUE defaults to 512; the example selects 16 without promising the seventeenth HTTP request is refused. | Ollama v0.34.2 | REASONED |
+| keep-alive: Keep-alive defaults to five minutes; one minute is the example, and requests can override it. | Ollama v0.34.2 | REASONED |
+| context: Context defaults are VRAM-dependent 4K/32K/256K; implementation thresholds are roughly 23/47 GiB after overhead versus nominal 24/48 GiB. | Ollama v0.34.2 | REASONED |
+| rate: Example nginx source-address rate is 2r/s, burst 4 nodelay, with 429 responses; trusted client-address handling matters behind proxies. | nginx unknown | REASONED |
+| concurrency: Example nginx server-name budget is four active requests with 429; it does not cap every idle/incomplete connection. | nginx unknown | REASONED |
+| body-limit: Example body cap is 1 MiB; a larger valid fixture should get 413 without upstream work. | nginx unknown | REASONED |
+| parameters: Gateway must validate model, num_ctx, num_predict and keep_alive; defaults/path allowlists do not enforce JSON ceilings. | Ollama v0.34.2 | REASONED |
+| registry-names: Fully qualified registry names are supported; unqualified names select Ollama's registry and omitted tags select latest. | Ollama v0.34.2 | REASONED |
+| provenance: Compare deployed tags digests with independent approval; mutable tags/digest equality do not establish publisher trust. | Ollama v0.34.2 | REASONED |
+| local-import: CLI imports reviewed local GGUF through a Modelfile; artifact SHA-256 and manifest digest are different identifiers. | Ollama v0.34.2 | REASONED |
+| registry-egress: Restrict acquisition/export to administrators and constrain egress; compare approved and controlled disallowed transfers. | Ollama v0.34.2 | REASONED |
+| cloud: OLLAMA_NO_CLOUD=1 disables cloud models and web search after restart; it is not a no-network switch. | Ollama v0.34.2 | REASONED |
+| remotes: OLLAMA_REMOTES selects remote-model hosts, not a registry allowlist. | Ollama v0.34.2 | REASONED |
+| diagnostics: Keep root, version, status, tags, ps and show private; model details can disclose templates/system prompts. | Ollama v0.34.2 | REASONED |
+| request-logs: Disable OLLAMA_DEBUG and OLLAMA_DEBUG_LOG_REQUESTS; existing request captures/replay scripts need separate cleanup. | Ollama v0.34.2 | REASONED |
+| profiling: No metrics route was found in the main router; shipped pprof availability remains unestablished and cannot be inferred from debug settings. | Ollama v0.34.2 | REASONED |
+| verify-inventory: Inspect namespaces, publication, identity, store and ACLs; local ss output alone does not establish isolation. | Ollama v0.34.2; Docker Engine localhost boundary 28.0; systemd v257 | REASONED |
+| verify-bypass: HTTP means direct 11434 answered; fixed refusal needs the real remote path plus successful proxy inference; local errors are inconclusive. | Ollama v0.34.2; curl unknown | REASONED |
+| verify-auth: Absent/wrong credentials must refuse while correct credentials complete chat; streamed 200 alone is insufficient. | nginx unknown; Ollama v0.34.2; curl unknown | REASONED |
+| verify-tls: Correct trust/hostname succeeds; wrong trust/hostname and missing/untrusted mTLS certificates must fail before inference. | nginx unknown; curl unknown | REASONED |
+| verify-management: Public management must be denied without upstream mutation; private admin operations and public chat supply positive controls. | Ollama v0.34.2 | REASONED |
+| verify-tags: Public tags may return 404 with valid credentials; private tags should return model JSON; public 404 is not an authentication test. | Ollama v0.34.2; nginx unknown | REASONED |
+| verify-origins: Compare unwanted, required and built-in origins with actual browser calls; POST-only proxy preflight refusals differ by variant. | Ollama v0.34.2; nginx unknown; Caddy unknown | REASONED |
+| verify-rate: Eight bounded requests test admission with limiter/upstream evidence and recovery; the burst alone does not demonstrate both limiters. | nginx unknown | REASONED |
+| verify-concurrency: Hold four accepted requests active within the rate budget, reject another, then confirm a freed slot accepts work. | nginx unknown | REASONED |
+| verify-scheduler: Compare loading/eviction, keep-alive expiry and actual queue occupancy; public limits can prevent exercising the private queue. | Ollama v0.34.2 | REASONED |
+| verify-cloud: Authorized cloud chat works before disablement and refuses afterward while local chat succeeds; invalid credentials/models are inconclusive. | Ollama v0.34.2 | REASONED |
+| verify-captures: Compare completed canary requests with logging enabled/disabled in the actual temporary namespace; deny public diagnostics while private controls work. | Ollama v0.34.2 | REASONED |
+| proxy-parsing: nginx -t and caddy validate check configuration acceptance only; native parsing was not demonstrated here. | nginx unknown; Caddy unknown | REASONED |
+| curl-version: Displayed exitcode and errormsg write-out variables need curl 7.75.0 or later; no tested curl release is recorded. | curl unknown | REASONED |
+<!-- version-basis:end -->
+
 Ollama's local HTTP API has **no native inbound authentication and no TLS**. A reachable listener gives callers inference and management capabilities, including model acquisition, replacement, export, and deletion. Model metadata may disclose templates and system prompts. Cloud credentials can also authorize upstream use. These capabilities do not establish arbitrary access to every host file. The security boundary for remote access is an authenticating proxy or tunnel, with a policy that separates inference from administration. See the [authentication reference](https://docs.ollama.com/api/authentication) and [server implementation](https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go).
 
 This guide's baseline is **Ollama v0.34.2**, identified as the latest release when checked on **20 September 2026**, at commit **`dfabde4539e42ba1e1eab50a3a50b88aea7958a0`**. Review subsequent releases before changing the deployment pin. See the [release](https://github.com/ollama/ollama/releases/tag/v0.34.2) and [release commit](https://github.com/ollama/ollama/commit/dfabde4539e42ba1e1eab50a3a50b88aea7958a0).
@@ -21551,7 +21627,7 @@ Exposed: an HTTP response establishes that the direct port answered, even if its
 
 Read `err`, not merely the exit number. A resolver failure, local socket error, wrong address, stopped service, or unexplained timeout is inconclusive. Correlate the result with V1 and firewall evidence. See C1's [binding documentation](https://github.com/ollama/ollama/blob/v0.34.2/docs/faq.mdx).
 
-### V3. Verify authentication and TLS with a real inference request
+### V3. Verify authentication and TLS with a real inference request (REASONED: cited Ollama, proxy and curl behavior; no live proxy, certificates, credentials or model)
 
 **REASONED:** no proxy deployment, trusted certificates, credentials, or loaded model is available. Prepare a small approved local model and a request body file such as `chat.json`:
 
@@ -21883,6 +21959,79 @@ These commands validate configuration acceptance; they do not prove authenticati
 
 # Open WebUI: signup control, TLS, and MFA
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| signup: ENABLE_SIGNUP defaults true; disable ordinary registration after accounts exist. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| persistence: ConfigVar database values override environment after first launch unless ENABLE_PERSISTENT_CONFIG=false; default is true. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| roles: DEFAULT_USER_ROLE defaults pending; user auto-approves and admin grants administrative privileges to later registrations. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| first-admin: First account is admin regardless of DEFAULT_USER_ROLE; bootstrap privately or preset admin email/password. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| signup-auto-disable: First normal registration and successful environment admin creation disable signup under normal persisted configuration. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| bootstrap-exception: Empty-database signup bypasses ENABLE_SIGNUP with ENABLE_LOGIN_FORM=true, its default; disabled-form bootstrap needs ENABLE_INITIAL_ADMIN_SIGNUP=true, default false. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| password-auth: ENABLE_PASSWORD_AUTH=false blocks password and trusted-header signin because its check runs first; use for OAuth/OIDC-only login. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| sso-mfa: OAuth/OIDC MFA belongs at the identity provider; ordinary signup refusal does not close alternative provisioning. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| publication: Publish host 127.0.0.1:3000 to container 8080 with Engine 28.0+; inspect NAT and external reachability as well as ss. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Docker Engine localhost boundary 28.0.0 | REASONED |
+| data-volume: Retain /app/backend/data for accounts/config; lost data reopens first-admin bootstrap, so keep ingress closed until claimed. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| transport: Open WebUI has no native TLS; use a TLS fronting layer and keep authentication enabled behind public access paths. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| session-cookie: Set WEBUI_SESSION_COOKIE_SECURE=true before HTTPS publication; default is false. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| auth-cookie: WEBUI_AUTH_COOKIE_SECURE inherits the session setting unless overridden; set it true explicitly, since TLS termination alone does not set Secure. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| cookie-test: Issued token and owui-session cookies need Secure/HttpOnly and intended SameSite, lax by default; no issued cookie is inconclusive. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| auth: WEBUI_AUTH defaults true; do not disable it to bypass empty signing-key startup refusal. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| jwt-lifetime: JWT_EXPIRES_IN defaults 4w; 24h is an example finite lifetime. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| signing-key: Inject the same persistent WEBUI_SECRET_KEY into every replica; HS256 signing-key disclosure permits existing-user impersonation. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| key-file: Launcher generates .webui_secret_key only when absent; default /app/backend location is outside the data volume and can be lost on replacement. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| revocation: Without Redis signout does not revoke a copied JWT before expiry; shared revocation needs Redis across workers. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| rotation: WEBUI_JWT_SECRET_KEY is deprecated; signing-key rotation invalidates tokens and affects default OAuth encryption keys. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| key-persistence-test: Unexpired JWT should survive recreation with retained key/data and work across replicas; a changed key rejects it. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| oauth-signup: ENABLE_OAUTH_SIGNUP defaults false and independently controls OAuth provisioning; test new and already-linked identities. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| oauth-domains: OAUTH_ALLOWED_DOMAINS defaults *; set approved domains and test excluded-domain refusal. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| oauth-merge: OAUTH_MERGE_ACCOUNTS_BY_EMAIL defaults false; retain it absent verified-email guarantees. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| oauth-roles: ENABLE_OAUTH_ROLE_MANAGEMENT defaults false; enable only after reviewing role claims. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| oauth-persistence: ENABLE_OAUTH_PERSISTENT_CONFIG defaults false with environment authority/read-only admin UI; enabling persistence permits stored precedence. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| trusted-headers: Leave identity headers unset unless a sole trusted proxy strips client values and supplies authenticated identity; forged headers can impersonate/provision users. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| plugins: ENABLE_PLUGINS defaults true; uploaded Tools/Functions execute server-side Python, including top-level code at load. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| plugin-scope: Disabling plugins blocks loading/execution, not every management endpoint, built-in tool, MCP/OpenAPI connection or terminal. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| tools-access: USER_PERMISSIONS_WORKSPACE_TOOLS_ACCESS defaults false; ordinary Tool creation depends on workspace.tools, Function creation is administrative. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| tools-import: USER_PERMISSIONS_WORKSPACE_TOOLS_IMPORT defaults false; remove unintended import grants from every group. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| code-execution: ENABLE_CODE_EXECUTION defaults true with pyodide engine; disable unused legacy execution independently of server plugins. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| code-interpreter: ENABLE_CODE_INTERPRETER defaults true with pyodide engine; test its own request path separately. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| groups: Group permissions add grants; a false default or another false membership cannot cancel a true grant. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| model-bypass: BYPASS_MODEL_ACCESS_CONTROL defaults false; keep bypass disabled. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| model-workspace: USER_PERMISSIONS_WORKSPACE_MODELS_ACCESS defaults false and controls creation/editing, not invocation of existing models. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| model-grants: Private models need user/group grants; current payloads use access_grants; permitted completion is the positive control for excluded-user refusal. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| ollama-admin: Pull/create/copy/delete require admin role, not ENABLE_MODEL_* switches; test ordinary-user refusal, including DELETE /ollama/api/delete, against valid admin controls. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| connections: Pin every backend; initial OpenAI destination is https://api.openai.com/v1, and connection URLs do not enforce network egress. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| direct-connections: ENABLE_DIRECT_CONNECTIONS defaults false; enabling it sends browser-to-provider inference, not server-side SSRF protection. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| admin-chat: ENABLE_ADMIN_CHAT_ACCESS defaults true; disable/restart and test admin list-user refusal while owner access works. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| admin-export: ENABLE_ADMIN_EXPORT defaults true; disable separately and test /api/v1/chats/all/db refusal; operator/database access remains possible. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| community: ENABLE_COMMUNITY_SHARING defaults true; false removes community UI, not all local sharing/export. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| docs: ENV defaults dev in backend and prod in official image; prod removes docs/schema registration, not APIs; inspect content rather than HTTP 200 alone. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| api-keys: ENABLE_API_KEYS defaults false; disabling rejects existing keys without deleting them or disabling JWTs. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| key-permission: API-key permission defaults false; ordinary users need it and global enablement, admins need the global switch; keys inherit owner authority. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| key-routes: Endpoint restrictions default false; allowed exact paths also admit slash descendants and do not constrain methods or vary per key. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| local-fetch: ENABLE_LOCAL_WEB_FETCH defaults false; ENABLE_RAG_LOCAL_WEB_FETCH is its deprecated alias. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| redirects: AIOHTTP_CLIENT_ALLOW_REDIRECTS defaults false; keep redirects disabled and enforce independent egress. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| fetch-filter: WEB_FETCH_FILTER_LIST uses comma-separated allow entries and ! deny entries extending the built-in blocklist. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| web-search: ENABLE_WEB_SEARCH defaults false; disabling should stop controlled search-provider calls. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| file-size: RAG_FILE_MAX_SIZE defaults unset; 10 MB is an example and handler checks after storage upload, so proxy body limits are also needed. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| file-count: RAG_FILE_MAX_COUNT defaults unset; five is an example count, not aggregate storage/request quota. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| file-permission: Chat file-upload permission defaults true; false alone does not block verified-user POST /api/v1/files/, requiring proxy denial when prohibited. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| web-permission: Chat web-upload permission defaults true; false alone does not block web/youtube/url handlers; test each proxy denial with a working fixture. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| search-permission: USER_PERMISSIONS_FEATURES_WEB_SEARCH defaults true; audit every group grant alongside global search disablement. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| signin-rate: Password signin is limited to 15 attempts per 180 seconds per email; this is not an inference quota. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| inference-limits: Apply proxy rate/concurrency and provider/gateway spend limits; under-limit requests work while excess work is refused without provider calls. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| verify-signup: After bootstrap require disabled feature flag, absent signup option and actual registration refusal; enabled signup should yield pending, not access. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| verify-network: Actual host port 3000 must not answer from a second LAN/VPC host while trusted HTTPS works; DNS/local errors do not prove isolation. | Docker Engine localhost boundary 28.0.0 | REASONED |
+| verify-ssrf: Compare allowed public, controlled private, filter-denied and redirected destinations using contact/egress logs; failed fetch alone proves no boundary. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| recorded-version: Pinned package identifies v0.11.3; the environment reference describes coverage through v0.11.1; introduction versions remain unverified. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+<!-- version-basis:end -->
+
 Open WebUI has account-based authentication built in; the risks are open signup on an exposed instance and running it on plain HTTP. It provides no TLS of its own, so encryption comes from a fronting layer.
 
 At the time of writing, the pinned source identifies release **v0.11.3** at commit `0a7c15832fb30b1903753e83f81dc7d27e5b0944`; the environment reference labels itself current through **v0.11.1**. The controls below were checked against that commit and the linked vendor documentation in September 2026. Introduction versions are unverified unless stated. See the [release version](https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/package.json) and [environment reference](https://docs.openwebui.com/reference/env-configuration/).
@@ -22118,6 +22267,8 @@ Prepare a mode-0600 header file in a private directory containing `Authorization
 
 Use the actual HTTPS endpoint, or `http://127.0.0.1:3000/...` on the backend host. Replace placeholders inside the quoted arguments. Responses are captured privately because signin, signup, API-key, and export responses can contain credentials or private data.
 
+**REASONED:** following block; protected requests support the comparisons below from the cited Open WebUI handlers; no live deployment or test identities are available.
+
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ENDPOINT_URL' 'GET' 'REPLACE_WITH_HEADER_FILE' 'REPLACE_WITH_BODY_FILE'
@@ -22253,6 +22404,68 @@ The original probes and the new controls are REASONED from the pinned source and
 ======================================================================
 
 # LiteLLM proxy: master key and virtual keys
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| master-file: Keep operator-only master_key in protected config.yaml, not argv/exported environment; YAML wins over environment and remains plaintext at rest. | LiteLLM documentation unknown | REASONED |
+| startup: Current startup refuses missing, empty, whitespace-only or sk-1234 master keys; no first release is asserted. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+| env-override: LITELLM_DANGEROUSLY_PERMIT_WEAK_OR_UNSET_MASTER_KEY=true independently allows weak/keyless startup; retain refusal in production. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+| yaml-override: general_settings.dangerously_permit_weak_or_unset_master_key=true independently allows weak/keyless startup. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+| database: Virtual-key generation requires PostgreSQL via DATABASE_URL or general_settings.database_url, even with model storage disabled. | LiteLLM documentation unknown | REASONED |
+| virtual-keys: Issue separate revocable application keys; default Authorization header is configurable via litellm_key_header_name. | LiteLLM documentation unknown | REASONED |
+| salt: Stored virtual keys are hashed; database provider credentials are encrypted with LITELLM_SALT_KEY, falling back to master key; preserve the salt. | LiteLLM documentation unknown | REASONED |
+| model-storage: Leave store_model_in_db false unless required; protect database credentials, backups and plaintext configuration. | LiteLLM documentation unknown | REASONED |
+| ownership: Use non-admin owners with team membership; keys inherit owner authority and master keys bypass application restrictions. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+| key-models: Explicit key and team model lists intersect; models: [] means all models, not none. | LiteLLM documentation unknown | REASONED |
+| key-budget: max_budget is USD and defaults null, with no key-level cap; budget_duration resets spend and does not expire the key. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+| expiry: duration controls lifetime separately; compare finite-key success before expiry/refusal afterward against an unexpired control. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+| rpm: rpm_limit limits requests per minute; test its own window and successful under-limit control across workers. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+| tpm: tpm_limit limits tokens per minute; RPM results do not demonstrate this limit. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+| parallel: max_parallel_requests limits concurrent requests; overlap a bounded workload to distinguish it from rate limits. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+| soft-budget: soft_budget triggers configured alerts without blocking spending. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+| teams: POST team/new and team/update set shared model/spend/throughput limits; attach every relevant key and add the intended owner with team/member_add. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+| shared-state: Multiple workers, even in one container, require shared Redis for limits/revocation; configure router Redis and proxy caching, not variables alone. | LiteLLM documentation unknown | REASONED |
+| cache: The shown Redis cache configuration also caches responses; absent content logs do not imply absent cached content. | LiteLLM documentation unknown | REASONED |
+| fail-closed: fail_closed_budget_enforcement=true returns 503 when spend cannot be verified; restore dependencies and confirm permitted work. | LiteLLM documentation unknown | REASONED |
+| reservation: Keep reservation enabled; batch/unestimable costs and delayed or concurrent charges mean budgets are not absolute provider-spend caps. | LiteLLM documentation unknown | REASONED |
+| delete: POST /key/delete permanently revokes the listed keys; removing application configuration is not revocation. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+| block: POST /key/block suspends and /key/unblock restores; compare each operation on every worker with replacement-key positive controls. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+| rotation: In-place /key/regenerate is Enterprise-gated; otherwise generate restricted replacement, deploy/test it, then delete old key while retaining team budget. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+| bind: CLI defaults 0.0.0.0:4000; use --host 127.0.0.1 --port 4000 --config config.yaml behind TLS. | LiteLLM documentation unknown; LiteLLM CLI v1.102.1 | REASONED |
+| ip-filter: allowed_ips is Enterprise; otherwise ingress filtering must be enforced independently. | LiteLLM documentation unknown | REASONED |
+| ui-login: UI_USERNAME defaults admin; without UI_PASSWORD the UI accepts the master key; remove fallback with disable_env_credential_login after personal login works. | LiteLLM documentation unknown | REASONED |
+| ui-cookie: Set PROXY_BASE_URL to the actual HTTPS origin for Secure UI cookies and test in a fresh browser. | LiteLLM documentation unknown | REASONED |
+| ui-disable: DISABLE_ADMIN_UI=true removes an unused UI; authorized inference must still work. | LiteLLM documentation unknown | REASONED |
+| sso: SSO is free for up to five users from v1.76.0; more require Enterprise and bootstrap credentials still need removal. | LiteLLM SSO allowance v1.76.0 | REASONED |
+| mfa: Human UI MFA belongs at the fronting identity layer. | LiteLLM documentation unknown; LiteLLM SSO allowance v1.76.0 | REASONED |
+| routes: allowed_routes admits named paths and slash descendants, not exact path/method pairs; narrow at ingress where required. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+| admin-routes: admin_only_routes uses exact matches, not /key/*; without Enterprise source logs an error and skips this additional check. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+| health-live: Liveliness/liveness and readiness are unauthenticated; their success proves no inference authentication. | LiteLLM documentation unknown | REASONED |
+| health-paid: /health is authenticated with key auth and runs potentially paid model probes; keep it private. | LiteLLM documentation unknown | REASONED |
+| docs: Docs are public by default; clear DOCS_URL/REDOC_URL/OPENAPI_URL and set NO_DOCS/NO_REDOC/NO_OPENAPI in actual startup environment; explicit URLs win. | LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec; LiteLLM documentation unknown | REASONED |
+| metrics-proxy: Proxy-port /metrics defaults authenticated, confirmed in v1.85.0; require_auth_for_metrics_endpoint=false reopens it. | LiteLLM metrics default v1.85.0; LiteLLM documentation unknown | REASONED |
+| metrics-port: PROMETHEUS_METRICS_PORT can create a separate unauthenticated listener; proxy-port auth does not cover it, so isolate collectors. | LiteLLM documentation unknown | REASONED |
+| passthrough-auth: Docs call pass-through auth Enterprise, but pinned main attaches auth without a licence gate; verify the installed release. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+| passthrough-authorization: Non-admin callers also need allowed_passthrough_routes metadata; allowed_routes alone is insufficient and normal metadata provisioning is Enterprise-gated. | LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+| passthrough-policy: Optional forwarder pins target, auth, GET-only, no subpaths and no wholesale incoming-header forwarding; omit unused forwarders. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+| destinations: Pin api_base/target and control who changes them; caller api_base/base_url overrides still need trusted validation and independent egress controls. | LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+| message-logging: turn_off_message_logging suppresses content in supported integrations while retaining operational metadata; arbitrary callbacks need separate review. | LiteLLM documentation unknown | REASONED |
+| spend-logging: Either store_prompts_in_spend_logs or STORE_PROMPTS_IN_SPEND_LOGS enables payload storage; YAML false does not override environment true. | LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+| debug-logging: Avoid detailed_debug and LITELLM_LOG=DEBUG; inspect process, error, callback and proxy logs with canaries and positive log controls. | LiteLLM documentation unknown | REASONED |
+| verify-auth: Probe backend directly: absent/wrong keys must get 401 and valid key a model list; public proxy responses alone cannot prove backend auth. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+| verify-network: Inspect every listener and actual external backend reachability; refusal must be attributable to the intended remote path, not DNS/local errors. | LiteLLM documentation unknown; LiteLLM CLI v1.102.1 | REASONED |
+| verify-spend: Use bounded uncached provider calls; exhaust key and aggregate team budgets separately with successful controls and record overshoot. | LiteLLM documentation unknown | REASONED |
+| verify-admin: Application key must fail a valid management request that operator credentials complete; licensed/unlicensed admin-route cases are separate. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+| verify-forwarding: Require anonymous refusal and permitted authenticated GET; wrong method/subpath must not reach the controlled upstream. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+| verify-egress: Compare api_base and base_url overrides separately against a controlled sink; no contact plus working pinned destination establishes the intended boundary. | LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+<!-- version-basis:end -->
 
 A LiteLLM proxy fronts paid model APIs, so an exposed, keyless instance spends your provider credits for whoever finds it. Authentication is built in and must be switched on before anything else.
 
@@ -22510,7 +22723,7 @@ Avoid production `--detailed_debug` and `LITELLM_LOG=DEBUG`; inspect the actual 
 
 ## 6. Verify
 
-### Backend authentication and listener exposure
+### Backend authentication and listener exposure (REASONED: cited LiteLLM auth and CLI behavior; no service or second-host fixture)
 
 **REASONED:** No live LiteLLM service, PostgreSQL/Redis deployment, provider credentials, or second-host network fixture is available in this read-only authoring environment; LiteLLM and a container runtime are not installed. The checks below have not been demonstrated against exposed and fixed deployments. Sources: [virtual-key authentication](https://docs.litellm.ai/docs/proxy/virtual_keys) and [CLI listener settings](https://docs.litellm.ai/docs/proxy/cli). Expected exposed and fixed outcomes are stated in the block.
 
@@ -22557,6 +22770,8 @@ The `/v1/models` comparison tests authentication and listing, not successful inf
 Before running it, provision a mode-0600 header file in a private directory containing `Authorization: Bearer ` followed by the appropriate test or administrative key. Use an empty header file for unauthenticated requests. Prepare the JSON body in another protected file, substituting its placeholders before use; `{}` suffices for GET, which ignores that file. Keep URLs free of credentials. The block captures responses privately because management responses can contain keys.
 
 Use `http://127.0.0.1:4000/...` on the backend host, or your actual HTTPS endpoint. For each POST, use the endpoint and JSON specified in the comparison. Run destructive operations only against disposable test keys and teams.
+
+**REASONED:** following block; requests follow the cited LiteLLM endpoint documentation; the live service and test credentials are unavailable.
 
 ```bash
 (
@@ -22696,6 +22911,92 @@ The checks below remain REASONED from the cited LiteLLM documentation and pinned
 ======================================================================
 
 # Model servers: llama.cpp, vLLM, TGI, SGLang, Triton, and LM Studio
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| llama-bind: llama-server defaults to 127.0.0.1:8080; retain loopback and exclude inherited LLAMA_ARG_* overrides. | llama.cpp e0dff58475bc9ed68eedcb265ee998f2fcabb3b1 | REASONED |
+| llama-key: api-key-file reads one key per line, with # comments; protect the plaintext file and avoid argv/environment secret exposure. | llama.cpp e0dff58475bc9ed68eedcb265ee998f2fcabb3b1 | REASONED |
+| llama-env: Clear LLAMA_API_KEY and LLAMA_ARG_API_KEY_FILE; reject a file without a key line and test native refusal/acceptance directly. | llama.cpp e0dff58475bc9ed68eedcb265ee998f2fcabb3b1 | REASONED |
+| llama-tls: Native PEM TLS needs a build with DLLAMA_OPENSSL=ON and ssl-key-file/ssl-cert-file; otherwise use a TLS proxy. | llama.cpp e0dff58475bc9ed68eedcb265ee998f2fcabb3b1 | REASONED |
+| vllm-key: At both source commits --api-key takes precedence over VLLM_API_KEY fallback; keep secrets out of launch argv. | vLLM source dee37d89115db4c94a820a79a78a7828e141c910; vLLM second source 8c1557a79c539ffe82d004d2a0c8d7b5e71159ce | REASONED |
+| vllm-file: Use protected YAML via two-word --config FILE; --config=FILE is accepted without loading the key; clear inherited VLLM_API_KEY. | vLLM source dee37d89115db4c94a820a79a78a7828e141c910 | REASONED |
+| vllm-process: Python spawn transfers API server arguments through a pipe; opt-in Rust frontend puts api_key in --args-json argv, so clear VLLM_USE_RUST_FRONTEND. | vLLM source dee37d89115db4c94a820a79a78a7828e141c910 | REASONED |
+| vllm-logs: HTTP startup redacts api_key, but gRPC logs the argument set unredacted; protect those logs. | vLLM source dee37d89115db4c94a820a79a78a7828e141c910 | REASONED |
+| vllm-scope: API key covers /v1, /v2, /inference and /cohere; /invocations, enabled profiler routes and unprotected plugins remain outside it. | vLLM v0.30.0 | REASONED |
+| vllm-bind: Unset frontend host listens on 0.0.0.0:8000; explicitly select 127.0.0.1. | vLLM v0.30.0 | REASONED |
+| vllm-tls: Frontend ssl-keyfile, ssl-certfile and ssl-ca-certs support TLS; proxy or tunnel remains the recommended boundary. | vLLM source dee37d89115db4c94a820a79a78a7828e141c910 | REASONED |
+| vllm-isolation: HTTP key/TLS do not protect internal TCPStore, ZMQ or collective channels; isolate trusted cluster members and treat Ray as one trust domain. | vLLM v0.30.0 | REASONED |
+| vllm-store: TCPStore can bind all interfaces; stateless rank-zero binding and other rendezvous paths differ; inventory actual transport sockets. | vLLM v0.30.0 | REASONED |
+| vllm-master: Multi-node multiprocessing uses master-addr and master-port, default 29501; DP adds ports and Ray V2 can bind port zero. | vLLM v0.30.0 | REASONED |
+| vllm-handshake: Remote/elastic multiprocessing DP uses startup TCP handshake on data-parallel-address/rpc-port, default 29550; otherwise IPC, with Ray bypassing that constructor. | vLLM v0.30.0 | REASONED |
+| vllm-channels: Remote engine request/result and coordinator channels use dynamic TCP, local paths generally IPC with elastic exceptions. | vLLM v0.30.0 | REASONED |
+| vllm-queues: Worker queues add dynamic TCP only for remote readers, using detected multiprocessing or Ray node addresses; headless removes only the HTTP frontend. | vLLM v0.30.0 | REASONED |
+| nixl: Opt-in NIXL handshake defaults localhost:5600 plus DP index and starts with metadata; its host/port settings are separate. | vLLM v0.30.0 | REASONED |
+| mooncake: Producer/kv_both bootstrap uses wildcard 8998 at selected ranks; producer workers use node IP/dynamic ports; consumer-only workers omit those listeners. | vLLM v0.30.0 | REASONED |
+| vllm-grpc: Optional gRPC replaces HTTP with unauthenticated plaintext on host/port, default 0.0.0.0:8000; the documented grpc-port does not match this CLI. | vLLM v0.30.0 | REASONED |
+| vllm-supervisor: Multi-port external-LB mode adds keyless health supervision after child readiness on host:9256 by default; frontend TLS options apply. | vLLM v0.30.0 | REASONED |
+| vllm-node-ip: Set per-node VLLM_HOST_IP and serving master/DP addresses deliberately; automatic node detection can choose public IP or fall back to wildcard. | vLLM v0.30.0 | REASONED |
+| vllm-ports: VLLM_PORT starts allocation, not a firewall range; DP fallback variables are not serving-flag substitutes and DP master port also reserves ten ports. | vLLM v0.30.0 | REASONED |
+| vllm-single: Single-GPU normally uses file store/local IPC with ROCm AITER TCP exception; Gloo groups still require listener inventory. | vLLM v0.30.0 | REASONED |
+| tgi-bind: Launcher defaults 0.0.0.0:3000 via hostname/port flags or HOSTNAME/PORT; bind privately. | TGI launcher/image v3.3.7 | REASONED |
+| tgi-image: Main image sets PORT=80; Docker's non-IP hostname makes router fall back to wildcard. | TGI launcher/image v3.3.7 | REASONED |
+| tgi-lifecycle: Guide records maintenance mode and archive on 2026-03-21; retain controls and plan migration. | TGI documentation unknown | REASONED |
+| tgi-key-argv: Launcher passes API_KEY or --api-key to router argv; no launcher input avoids that exposure to local process observers. | TGI launcher/image v3.3.7 | REASONED |
+| tgi-auth: Bearer middleware protects base inference routes with 401, not health/info/metrics, KServe, v1/models or Vertex prediction; enforce proxy allowlists/auth. | TGI router 24ee40d143d8d046039f12f76940a85886cbe152 | REASONED |
+| tgi-tls: Launcher has no TLS option; terminate TLS in front. | TGI documentation unknown | REASONED |
+| tgi-metrics: Separate Prometheus listener defaults 9000 and is unauthenticated; keep it private. | TGI documentation unknown; TGI launcher/image v3.3.7 | REASONED |
+| sglang-bind: SGLang defaults 127.0.0.1:30000; retain private host/port. | SGLang v0.5.20 | REASONED |
+| sglang-auth: api-key protects ordinary endpoints; admin-api-key separately protects administrative operations, not server_info; an empty API key leaves ordinary requests open. | SGLang v0.5.20 | REASONED |
+| sglang-file: Protected YAML --config keeps both keys out of kernel argv; no documented stdin/environment input exists at the pin. | SGLang v0.5.20 | REASONED |
+| sglang-log: INFO startup logs all resolved server_args including both keys; protect the log. | SGLang v0.5.20 | REASONED |
+| sglang-info: server_info/get_server_info expose resolved keys and launch_command to ordinary API-key holders; exclude them or trust those holders with admin authority. | SGLang v0.5.20 | REASONED |
+| sglang-tls: ssl-keyfile/ssl-certfile/ssl-ca-certs provide native TLS; enable-ssl-refresh reloads renewed certificates. | SGLang v0.5.20 | REASONED |
+| triton-listeners: Triton defaults to wildcard HTTP 8000, gRPC 8001 and metrics 8002; bind each privately. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-protocols: HTTP/gRPC default enabled; disable unused protocols and metrics, while keeping gateway authorization. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-tls: gRPC supports TLS and mutual TLS with certificate/key flags; HTTP requires fronting TLS. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-secrets: Restricted-API secrets are argv-only, visible for process lifetime and possibly retained by audit/orchestrator records; they do not protect against local readers. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-categories: All nine compiled categories default unrestricted; restrictions are per category/protocol, and groups must not overlap. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-health: Unrestricted health/metadata/inference, including HTTP generate/generate_stream, need no key; restricting health also affects probes. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-logging: Logging API reads settings/file path and changes verbosity/format/levels, but cannot change log_file. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-trace: Trace settings API remains available when tracing is OFF; default triton mode needs a startup file path before enabling tracing, and API cannot change that path. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-shm: Shared-memory status is readable; registration/use defaults off until allow-client-shm=true, with GPU/platform restrictions. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-repository: Repository index is readable; API load/unload require explicit mode, not default none or poll, and can accept config/inline files or unload dependents. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-reads: Model-config and supported statistics reads are independent of model-control mode. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-denial: HTTP expects configured header and returns 403 on failure; gRPC prefixes triton-grpc-protocol- and returns UNAVAILABLE with restriction message. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-cloud: Conditional Vertex/SageMaker listeners need separate inventory/isolation; SageMaker invoke bypasses restrictions and Vertex redirect headers can reach unrestricted metrics. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-metrics: Metrics 8002 at /metrics or /metrics/ is unauthenticated and outside both restriction flags; isolate or disable it. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| lmstudio-bind: Desktop server uses localhost:1234; Serve on Local Network or bind 0.0.0.0 widens access. | LM Studio documentation unknown | REASONED |
+| lmstudio-auth: Authentication defaults off; Require Authentication and bearer tokens are documented for 0.4.0+; enable before remote access. | LM Studio documentation unknown | REASONED |
+| lmstudio-tls: Server settings list no TLS; use a tailnet or authenticated TLS proxy for remote access. | LM Studio documentation unknown | REASONED |
+| webui-listeners: Gradio defaults 127.0.0.1:7860; optional --api defaults 127.0.0.1:5000; both start unauthenticated. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08; text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f | REASONED |
+| webui-bind: --listen widens both enabled surfaces; listen-port/api-port move them and listen-host only works with listen. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08; text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f | REASONED |
+| webui-publication: --share publishes Gradio UI and --public-api publishes API through a Cloudflare tunnel; treat both as publication. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08; text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f | REASONED |
+| webui-ui-auth: gradio-auth-path protects UI only; file entries split on commas/newlines and every colon, so use permitted username and generated hex password. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08 | REASONED |
+| webui-api-auth: api-key protects OpenAI routes via bearer and Anthropic messages via x-api-key; admin-key protects administration and defaults to api-key, not vice versa. | text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f; text-generation-webui API documentation ceade2eb1ba3f84518076270df2240b6bbb01da0 | REASONED |
+| webui-key-logs: API startup logs api-key and distinct admin-key in plaintext at INFO; protect output and rotate after disclosure. | text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f; text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08 | REASONED |
+| webui-file: API keys lack file/environment flags; private external user-data-dir CMD_FLAGS.txt supplies in-process arguments, keeping keys out of kernel argv. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08 | REASONED |
+| webui-checkout: Checkout CMD_FLAGS.txt is tracked; git diff/stash and one-click autostash/reset can expose or discard keys; use a new private directory outside checkout. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08 | REASONED |
+| webui-launcher: Run server.py directly: one-click unquoted argument joining and shell=True can split paths or execute shell syntax. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08 | REASONED |
+| webui-api-only: --api --nowebui removes UI; ssl-keyfile/ssl-certfile provide both surfaces TLS, with proxy TLS/auth the recommended pattern. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08; text-generation-webui API documentation ceade2eb1ba3f84518076270df2240b6bbb01da0 | REASONED |
+| webui-host: Loopback API rejects Host other than localhost/127.0.0.1 with 400 unless listen/public-api is set; proxy must rewrite Host. | text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f | REASONED |
+| verify-listeners: Inspect all backend listeners, namespaces and publications; ss alone proves no external isolation. | llama.cpp e0dff58475bc9ed68eedcb265ee998f2fcabb3b1; vLLM v0.30.0; TGI launcher/image v3.3.7; Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df; SGLang v0.5.20 | REASONED |
+| verify-proxy-auth: Proxy model-list probes expect no-key 401 and keyed 200/list; TGI model listing does not establish native key enforcement. | TGI router 24ee40d143d8d046039f12f76940a85886cbe152; curl minimum write-out version 7.75.0 | REASONED |
+| verify-invocations: Use valid JSON/served model and upstream evidence: unknown-model 404 or proxy-intercepted errors cannot establish vLLM route denial. | vLLM v0.30.0 | REASONED |
+| verify-webui: No-key API model-list 200 is exposure, 401 auth; TLS/transport errors or invalid Host are inconclusive and proxy rejection proves only proxy policy. | text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f; curl minimum write-out version 7.75.0 | REASONED |
+| verify-triton: Direct HTTP logging should change from 200/settings to 403/restriction; other errors prove neither this control nor other categories/protocols. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df; curl minimum write-out version 7.75.0 | REASONED |
+| verify-cluster: Inventory startup/dynamic sockets; trusted peers connect to cross-node endpoints while outsiders fail with firewall evidence; local-only endpoints need local positive controls. | vLLM v0.30.0 | REASONED |
+| verify-transport: TCP probe establishes only reachability; stale ports, wrong address or stopped service are inconclusive, and RDMA/non-TCP need separate tests. | vLLM v0.30.0 | REASONED |
+| vllm-parser-run: Isolated parser harness with stubbed logger/minimal serve parser loaded --config FILE but not --config=FILE; no vLLM server was run. | vLLM source dee37d89115db4c94a820a79a78a7828e141c910 | DEMONSTRATED |
+| webui-parser-run: Imported shared.py parsed keys and a later flag from a private path containing a space while kernel cmdline held neither; no server was run. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08 | DEMONSTRATED |
+| argv-test: Recorded procps-ng 4.0.4 stub-process checks distinguish named secret flags from file flags; JSON, abbreviations, hidden/scrubbed argv remain misses. | llama.cpp e0dff58475bc9ed68eedcb265ee998f2fcabb3b1; vLLM source dee37d89115db4c94a820a79a78a7828e141c910; SGLang v0.5.20; TGI launcher/image v3.3.7; text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08; Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | DEMONSTRATED |
+<!-- version-basis:end -->
 
 Self-hosted model servers follow the [ollama.md](ollama.md) pattern: exposing one means someone else's prompts run on your GPU. Most default to local use, but vLLM, TGI, and Triton bind to `0.0.0.0` out of the box, and Triton enables no authentication by default (its native controls, gRPC mutual TLS and shared-secret restricted APIs, do not replace the gateway). Keep every server on loopback or a private network, require an API key where the server supports one, and terminate TLS in front. LocalAI is an OpenAI-compatible model server too, but its bind and authentication controls are documented in [ai-infra-services.md](ai-infra-services.md) rather than here, so the facts live in one place.
 
@@ -22967,6 +23268,8 @@ One proxy detail is specific to this API: unless `--listen` (or `--public-api`) 
 
 ## Verify
 
+**REASONED:** following block; service checks follow the cited server handlers and need unavailable live servers/proxy fixtures. Only the pgrep subcheck has the recorded stub-process demonstration below; the whole mixed block remains REASONED.
+
 ```bash
 ss -tlnp   # every listener; 8080/8000/8001/8002/3000/80/9000/30000/5000/7860/1234. ss shows only a
            # namespace-local BIND, not a host firewall, a cloud security group, or Docker -p NAT
@@ -23039,7 +23342,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
   http://127.0.0.1:8000/v2/logging
 ```
 
-### vLLM internal-listener isolation
+### vLLM internal-listener isolation (REASONED: cited v0.30.0 listener constructors; no multi-node cluster)
 
 **REASONED, not demonstrated:** no multi-GPU or multi-node cluster is available in the authoring environment. The expected distinction follows from v0.30.0's [internal-network warning and firewall guidance](https://github.com/vllm-project/vllm/blob/v0.30.0/docs/usage/security.md#L109-L138) and the listener constructors cited below. No vLLM server was run for this addition.
 
@@ -26416,6 +26719,47 @@ curl -q -g -sI https://imagegen.example.com/                # via the proxy: TLS
 ======================================================================
 
 # Self-hosted chat and agent UIs: AnythingLLM, LobeChat, Chainlit, OpenHands
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| anything-single: Docker single-user password protection is optional and grants every holder settings/admin/chat access, not per-user isolation. | AnythingLLM documentation unknown | REASONED |
+| anything-roles: Multi-user mode is preferred: Admin has full access, Manager all workspaces without provider/store settings, Default only assigned workspaces. | AnythingLLM documentation unknown | REASONED |
+| anything-mode: Enabling multi-user mode cannot be reverted to single-user; choose deliberately. | AnythingLLM documentation unknown | REASONED |
+| anything-bind: Publish AnythingLLM only on loopback 3001 and put proxy TLS/login in front. | AnythingLLM documentation unknown; Docker CLI v27.5.1 | REASONED |
+| lobe-vault: KEY_VAULTS_SECRET encrypts stored provider credentials; generate with openssl rand -base64 32 and preserve it for the data lifetime, not as a login password. | LobeHub v2.2.16 | REASONED |
+| lobe-session: Better Auth requires AUTH_SECRET, generated the same way, to sign sessions. | LobeHub v2.2.16 | REASONED |
+| lobe-sso: AUTH_SSO_PROVIDERS selects providers and matching credentials; AUTH_DISABLE_EMAIL_PASSWORD=1 forces SSO-only login. | LobeHub v2.2.16 | REASONED |
+| lobe-admission: AUTH_ALLOWED_EMAILS defaults empty, permitting all emails; set explicit addresses/domains for registration. | LobeHub v2.2.16 | REASONED |
+| lobe-mfa: Enforce MFA at the configured SSO provider; LobeChat login has no second factor of its own. | LobeHub v2.2.16 | REASONED |
+| docker-input: Docker --env-file reads a named file, not stdin; -e NAME uses CLI environment, while -e NAME=value exposes argv. | Docker CLI v27.5.1 | REASONED |
+| docker-envfile: Bare names in env files import CLI environment; validate exactly the intended secret assignments and reject extra/missing/duplicate lines. | Docker CLI v27.5.1 | REASONED |
+| compose-envfile: Compose env_file resolves environment via compose-go v2.4.7, pinned by Compose v2.32.4. | Docker Compose v2.32.4; compose-go v2.4.7 | REASONED |
+| compose-secrets: Compose file secrets mount read-only under /run/secrets; environment secrets are copied there, default 0444, and need an application reader. | Docker Compose v2.32.4 | REASONED |
+| lobe-file-input: LobeHub documents environment inputs; the recorded v2.2.16 search found no KEY_VAULTS_SECRET_FILE, AUTH_SECRET_FILE or AUTH_GOOGLE_SECRET_FILE. | LobeHub v2.2.16 | REASONED |
+| lobe-file: Create the durable plaintext env file once in protected directories; never replace a live encryption key, inspect default ACLs and discard partial failed writes. | LobeHub v2.2.16; Docker CLI v27.5.1 | REASONED |
+| lobe-launch: Use validated env-file with loopback 3210 publication and non-secret SSO/admission settings on argv. | LobeHub v2.2.16; Docker CLI v27.5.1 | REASONED |
+| container-secrets: Environment values remain readable through Docker inspect for running/stopped containers and process environ during lifetime; env-file avoids CLI argv, not operator access. | Moby v27.5.1; Docker CLI v27.5.1 | REASONED |
+| chainlit-default: Chainlit applications are public by default; set CHAINLIT_AUTH_SECRET and at least one password/OAuth/header callback. | Chainlit documentation unknown | REASONED |
+| chainlit-callback: Password callback returns a user on success and None on refusal; shared credential creates one identity without individual revocation. | Chainlit documentation unknown | REASONED |
+| chainlit-environment: Example reads credentials once at import, fails on missing or empty values, and requires restart to adopt replacements. | Python documentation unknown; Chainlit documentation unknown | REASONED |
+| chainlit-comparison: Both compare_digest calls run before combining results; content-based short-circuiting is avoided, but types/lengths and whole callback timing are not concealed. | Python documentation unknown | REASONED |
+| chainlit-rotation: Password replacement stops new logins, not existing signed sessions; rotate CHAINLIT_AUTH_SECRET too to invalidate them. | Chainlit documentation unknown | REASONED |
+| chainlit-accounts: Chainlit persists users but supplies no password-account management; per-user store/verification are the application's responsibility, with Argon2id for new hashes. | Chainlit documentation unknown; OWASP password guidance unknown | REASONED |
+| chainlit-mfa: Chainlit has no built-in MFA; use an enforcing identity provider or authenticating proxy. | Chainlit documentation unknown | REASONED |
+| openhands-boundary: OpenHands is single-user; shared-key API access is not per-user identity, and execution isolation depends on backend/mount/socket choices. | OpenHands documentation unknown | REASONED |
+| openhands-bind: Quickstart publishes 3000 on every interface; use 127.0.0.1:3000:3000 and an authenticated tunnel. | OpenHands documentation unknown | REASONED |
+| verify-listeners: Inventory loopback UI listeners 3001/3210/3000; external refusal must name the real remote path, with DNS/local failures inconclusive. | Docker CLI v27.5.1; OpenHands documentation unknown; curl minimum write-out version 7.75.0 | REASONED |
+| verify-login: Verify proxy HTTPS and login requirement; generic API refusal is a deployment-specific check requiring an actual protected route. | AnythingLLM documentation unknown; LobeHub v2.2.16; Chainlit documentation unknown; OpenHands documentation unknown | REASONED |
+| verify-registration: A new Google identity absent from AUTH_ALLOWED_EMAILS should fail registration; this does not revoke an existing user's session. | LobeHub v2.2.16 | REASONED |
+| verify-isolation: User A's retrieval must succeed before user B is checked for denial; independently test documents, history, memory and caches, not login alone. | AnythingLLM documentation unknown | REASONED |
+<!-- version-basis:end -->
 
 These tools hold provider API keys and full conversation history, and several are wide open the moment they start. Bind every one to loopback, front it with TLS and a login ([caddy.md](caddy.md)/[nginx.md](nginx.md), [free-certificates.md](free-certificates.md)), and turn on the tool's own authentication as a second layer, never as a substitute for the network boundary. See also [open-webui.md](open-webui.md) for the Open WebUI case, [secrets.md](secrets.md) for the provider keys these apps store, and [fronting-auth.md](fronting-auth.md)/[mfa.md](mfa.md) for the identity layer in front.
 

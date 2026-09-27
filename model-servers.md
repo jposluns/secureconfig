@@ -1,4 +1,382 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "64c9d3437159ff1b56379b3745cea5ca7a2a1579bd87a310fcd09288d0abb385",
+  "components": {
+    "llama": {
+      "name": "llama.cpp",
+      "basis": "e0dff58475bc9ed68eedcb265ee998f2fcabb3b1",
+      "sources": {
+        "s808f8d1c8da9": "https://github.com/ggml-org/llama.cpp/blob/e0dff58475bc9ed68eedcb265ee998f2fcabb3b1/tools/server/README.md"
+      }
+    },
+    "vllm": {
+      "name": "vLLM",
+      "basis": "v0.30.0",
+      "sources": {
+        "s65a60be2808c": "https://github.com/vllm-project/vllm/blob/v0.30.0/docs/usage/security.md#L140-L247",
+        "s36fcb4c4fc18": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/entrypoints/serve/middleware/authenticate.py#L11-L62",
+        "s90b2ada8e38b": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/entrypoints/launchers/cli_args.py#L256-L266",
+        "sb9c63e342665": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/entrypoints/launchers/launcher.py#L211-L225",
+        "s701a469f3c23": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/entrypoints/launchers/launcher.py#L270-L288",
+        "se5660cf62498": "https://github.com/vllm-project/vllm/blob/v0.30.0/docs/usage/security.md#L109-L138",
+        "sec32bab94990": "https://github.com/vllm-project/vllm/blob/v0.30.0/docs/usage/security.md#L3-L55",
+        "s1de6a9f4ed49": "https://github.com/vllm-project/vllm/blob/v0.30.0/docs/usage/security.md#L442-L538",
+        "sd18839fe8984": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/distributed/parallel_state.py#L1793-L1880",
+        "s27ba1937dca0": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/distributed/utils.py#L467-L506",
+        "s7abb84b61c6e": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/distributed/utils.py#L634-L647",
+        "s1fc694d68aac": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/config/parallel.py#L100-L330",
+        "s8c1221a0c7b9": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/config/parallel.py#L890-L960",
+        "s15bf642ce14e": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/v1/executor/ray_executor_v2.py#L127-L139",
+        "sfecabc3bc16d": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/v1/engine/utils.py#L1039-L1084",
+        "se3e528b9ca5c": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/v1/engine/utils.py#L1130-L1247",
+        "s8ddf90ed2cb1": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/v1/engine/coordinator.py#L79-L97",
+        "sb6a7effd4318": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/distributed/device_communicators/shm_broadcast.py#L519-L537",
+        "s2dad806d290a": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/v1/executor/multiproc_executor.py#L148-L169",
+        "s66d892167b5d": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/v1/executor/ray_executor_v2.py#L327-L336",
+        "s19f4f6a6790f": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/entrypoints/cli/serve.py#L215-L253",
+        "sdb9dac146cd4": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/distributed/kv_transfer/kv_connector/v1/nixl/base_scheduler.py#L299-L382",
+        "s0ec5750d8161": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/distributed/kv_transfer/kv_connector/v1/nixl/base_scheduler.py#L75-L79",
+        "s2c10a0015812": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/envs.py#L1650-L1680",
+        "s97fe4257dfc6": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/distributed/kv_transfer/kv_connector/v1/mooncake/mooncake_connector.py#L1160-L1187",
+        "s623327f195f8": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/distributed/kv_transfer/kv_connector/v1/mooncake/mooncake_connector.py#L1793-L1801",
+        "s0341e26f43ae": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/distributed/kv_transfer/kv_connector/v1/mooncake/mooncake_connector.py#L2261-L2296",
+        "s0fa9693f3666": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/distributed/kv_transfer/kv_connector/v1/mooncake/mooncake_connector.py#L948-L1035",
+        "sd52612723dde": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/entrypoints/launchers/cli_args.py#L424-L429",
+        "sb6766a13ce4a": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/entrypoints/launchers/grpc_server.py#L87-L118",
+        "sbc83e9d09208": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/entrypoints/cli/serve.py#L145-L148",
+        "s471a29420e3a": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/entrypoints/cli/serve.py#L85-L95",
+        "s80888a79d6e2": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/entrypoints/launchers/dp_supervisor.py#L118-L132",
+        "s7d70cef86248": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/entrypoints/launchers/dp_supervisor.py#L220-L238",
+        "sd80aa5c7d7cc": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/entrypoints/launchers/dp_supervisor.py#L322-L349",
+        "sdf64db690b1c": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/utils/network_utils.py#L34-L73",
+        "s0497a5e3fe44": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/engine/arg_utils.py#L2310-L2336",
+        "s92bab6d08b69": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/envs.py#L701-L715",
+        "s7cb33671d83d": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/utils/network_utils.py#L166-L247",
+        "scfeadcdcd9a1": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/envs.py#L1433-L1445",
+        "s3b1ce10c3e66": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/distributed/parallel_state.py#L494-L508",
+        "s67bc8be47a91": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/utils/network_utils.py#L135-L147",
+        "sed65b4428b70": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/v1/executor/uniproc_executor.py#L77-L88"
+      }
+    },
+    "vllm-a": {
+      "name": "vLLM source",
+      "basis": "dee37d89115db4c94a820a79a78a7828e141c910",
+      "sources": {
+        "s7b472d8bd2d0": "https://github.com/vllm-project/vllm/blob/dee37d89115db4c94a820a79a78a7828e141c910/vllm/entrypoints/launchers/cli_args.py#L304",
+        "sd13651484ed1": "https://github.com/vllm-project/vllm/blob/dee37d89115db4c94a820a79a78a7828e141c910/vllm/entrypoints/serve/middleware/register.py#L32-L36",
+        "safb9d5e38921": "https://github.com/vllm-project/vllm/blob/dee37d89115db4c94a820a79a78a7828e141c910/vllm/utils/argparse_utils.py#L329-L330",
+        "sccd45a9ffb02": "https://github.com/vllm-project/vllm/blob/dee37d89115db4c94a820a79a78a7828e141c910/vllm/v1/utils.py#L210-L246",
+        "sc14e6c37774c": "https://github.com/vllm-project/vllm/blob/dee37d89115db4c94a820a79a78a7828e141c910/vllm/v1/utils.py#L384-L411",
+        "sba4bc217b9de": "https://github.com/vllm-project/vllm/blob/dee37d89115db4c94a820a79a78a7828e141c910/vllm/entrypoints/cli/serve.py#L63-L64",
+        "scf43e725574b": "https://github.com/vllm-project/vllm/blob/dee37d89115db4c94a820a79a78a7828e141c910/vllm/entrypoints/serve/utils/api_utils.py#L271-L286",
+        "s4b161060c056": "https://github.com/vllm-project/vllm/blob/dee37d89115db4c94a820a79a78a7828e141c910/vllm/entrypoints/launchers/grpc_server.py#L64"
+      }
+    },
+    "vllm-b": {
+      "name": "vLLM second source",
+      "basis": "8c1557a79c539ffe82d004d2a0c8d7b5e71159ce",
+      "sources": {
+        "sdbf0512be177": "https://github.com/vllm-project/vllm/blob/8c1557a79c539ffe82d004d2a0c8d7b5e71159ce/vllm/entrypoints/launchers/cli_args.py#L296",
+        "se5d922e084ed": "https://github.com/vllm-project/vllm/blob/8c1557a79c539ffe82d004d2a0c8d7b5e71159ce/vllm/envs.py#L801"
+      }
+    },
+    "tgi": {
+      "name": "TGI launcher/image",
+      "basis": "v3.3.7",
+      "sources": {
+        "s6d442de48f37": "https://github.com/huggingface/text-generation-inference/blob/v3.3.7/launcher/src/main.rs#L769-L774",
+        "se7504fa5bd0c": "https://github.com/huggingface/text-generation-inference/blob/v3.3.7/Dockerfile#L147-L149",
+        "sbe4cfd078ceb": "https://github.com/huggingface/text-generation-inference/blob/v3.3.7/router/src/server.rs#L1906-L1910",
+        "s3f8623221ee5": "https://github.com/huggingface/text-generation-inference/blob/v3.3.7/launcher/src/main.rs"
+      }
+    },
+    "tgi-router": {
+      "name": "TGI router",
+      "basis": "24ee40d143d8d046039f12f76940a85886cbe152",
+      "sources": {
+        "sc46baeb2e20d": "https://github.com/huggingface/text-generation-inference/blob/24ee40d143d8d046039f12f76940a85886cbe152/router/src/server.rs"
+      }
+    },
+    "tgi-docs": {
+      "name": "TGI documentation",
+      "basis": "unknown",
+      "sources": {
+        "s07efbedb395d": "https://github.com/huggingface/text-generation-inference",
+        "sf21d69ac884f": "https://huggingface.co/docs/text-generation-inference/reference/launcher"
+      }
+    },
+    "sglang": {
+      "name": "SGLang",
+      "basis": "v0.5.20",
+      "sources": {
+        "saf08ef6910b0": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/arg_groups/fields/serving.py#L72-L73",
+        "sbf57dc2f54d2": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/arg_groups/fields/serving.py#L155-L162",
+        "sa5df753aef88": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/utils/auth.py#L145-L151",
+        "scce1a63feba8": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/server_args.py#L397-L399",
+        "s0a4966847154": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/utils/server_args_config_parser.py#L118-L187",
+        "scc4de2d1f4bc": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/environ.py",
+        "s50e55d90147c": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/entrypoints/engine.py#L1109",
+        "se29cdc6dade1": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/server_args.py#L311-L325",
+        "sd5cd1ab725c3": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/entrypoints/http_server.py#L818-L850",
+        "sd4ed6d838a92": "https://docs.sglang.io/docs/advanced_features/server_arguments"
+      }
+    },
+    "triton": {
+      "name": "Triton source",
+      "basis": "546a78766fb112128aa0b10a70c55f4f39c3b1df",
+      "sources": {
+        "s33bf29bf71da": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.h#L191-L219",
+        "s67ab19969241": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/grpc/grpc_server.h#L51-L67",
+        "sf92f4669ae27": "https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/customization_guide/deploy.html",
+        "sa915d43059a2": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L708-L725",
+        "sc8b533580b3b": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L558-L576",
+        "s5f927b497e5d": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L508-L516",
+        "s705af5df3dd8": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L632-L640",
+        "s1b9ce89125bd": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/restricted_features.h#L37-L112",
+        "sa9c069223fba": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L2095-L2163",
+        "s79fae2bcb514": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L3324-L3334",
+        "s2a4cdfc6be30": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L4939-L4953",
+        "s7f5038fa0fe2": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L2031-L2149",
+        "s2fee6c80ec1d": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.h#L180-L188",
+        "s4b469f1c21de": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L1759-L2027",
+        "sce84579a9a6e": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/tracer.cc#L1244-L1249",
+        "s682fdddf06a8": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/tracer.cc#L221-L232",
+        "sc68b8b9a1b21": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L739-L750",
+        "sb1f8ac2356f6": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/docs/protocol/extension_shared_memory.md#L29-L68",
+        "s601665063934": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L2177-L2378",
+        "s9fe885785c49": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/docs/protocol/extension_shared_memory.md#L65-L68",
+        "s6f16e1d770dc": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/docs/protocol/extension_model_repository.md#L136-L152",
+        "s48cab4cab77d": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/docs/protocol/extension_model_repository.md#L350-L400",
+        "sa63a1d3d8242": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/docs/protocol/extension_model_repository.md#L59-L90",
+        "s7d85aace8e33": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L424-L434",
+        "s8501fbc9ecb4": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L1684-L1755",
+        "s2f7f38a83db9": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/grpc/grpc_server.cc#L194-L225",
+        "s614cd673f20f": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/grpc/grpc_server.h#L47-L49",
+        "sad0e75f73ba4": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/sagemaker_server.cc#L198-L225",
+        "s672bf7fa57b3": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/vertex_ai_server.cc#L142-L145",
+        "s0c7905e1e132": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/vertex_ai_server.cc#L245-L272",
+        "s0ce822aef316": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/vertex_ai_server.cc#L34-L37",
+        "se9f3f1a88325": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L308-L345",
+        "s9cd72f11c287": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.h#L143-L157"
+      }
+    },
+    "lmstudio": {
+      "name": "LM Studio documentation",
+      "basis": "unknown",
+      "sources": {
+        "s776be8700529": "https://lmstudio.ai/docs/developer/core/server",
+        "s6b9f80dc5c59": "https://lmstudio.ai/docs/developer/core/server/serve-on-network",
+        "sb756d0785d3d": "https://lmstudio.ai/docs/developer/openai-compat",
+        "sb940f6563319": "https://lmstudio.ai/docs/developer/core/authentication",
+        "sb7e0fa7490b2": "https://lmstudio.ai/docs/developer/core/server/settings"
+      }
+    },
+    "webui": {
+      "name": "text-generation-webui source",
+      "basis": "c022565b1257a9c7d9a5128c8b4c03587559cf08",
+      "sources": {
+        "sf47dbc117b02": "https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py",
+        "sfafd8b6e5106": "https://github.com/oobabooga/text-generation-webui#command-line-flags",
+        "sfbacbf383d45": "https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/server.py#L90-L95",
+        "s304dbbc211b7": "https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/api/script.py#L594-L597",
+        "s578896c6eca6": "https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py#L50",
+        "s75153f5981cf": "https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/paths.py#L5-L21",
+        "s4010efbd61e8": "https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/user_data/CMD_FLAGS.txt",
+        "s77fccc0c7e77": "https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/one_click.py#L24"
+      }
+    },
+    "webui-api": {
+      "name": "text-generation-webui API source",
+      "basis": "619a2b8ee4b7e48541a9be5c07e04cd31b91b44f",
+      "sources": {
+        "s6c159a552ded": "https://github.com/oobabooga/text-generation-webui/blob/619a2b8ee4b7e48541a9be5c07e04cd31b91b44f/modules/api/script.py",
+        "sbafd006b7156": "https://github.com/oobabooga/text-generation-webui/blob/619a2b8ee4b7e48541a9be5c07e04cd31b91b44f/modules/api/script.py#L599-L602"
+      }
+    },
+    "webui-docs": {
+      "name": "text-generation-webui API documentation",
+      "basis": "ceade2eb1ba3f84518076270df2240b6bbb01da0",
+      "sources": {
+        "sfc908ade10d1": "https://github.com/oobabooga/text-generation-webui/blob/ceade2eb1ba3f84518076270df2240b6bbb01da0/docs/12%20-%20OpenAI%20API.md"
+      }
+    },
+    "curl": {
+      "name": "curl minimum write-out version",
+      "basis": "7.75.0",
+      "sources": {
+        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
+      }
+    }
+  },
+  "claims": {
+    "llama-bind": {"text": "llama-server defaults to 127.0.0.1:8080; retain loopback and exclude inherited LLAMA_ARG_* overrides.", "components": ["llama"], "sources": ["llama:s808f8d1c8da9"], "status": "REASONED"},
+    "llama-key": {"text": "api-key-file reads one key per line, with # comments; protect the plaintext file and avoid argv/environment secret exposure.", "components": ["llama"], "sources": ["llama:s808f8d1c8da9"], "status": "REASONED"},
+    "llama-env": {"text": "Clear LLAMA_API_KEY and LLAMA_ARG_API_KEY_FILE; reject a file without a key line and test native refusal/acceptance directly.", "components": ["llama"], "sources": ["llama:s808f8d1c8da9"], "status": "REASONED"},
+    "llama-tls": {"text": "Native PEM TLS needs a build with DLLAMA_OPENSSL=ON and ssl-key-file/ssl-cert-file; otherwise use a TLS proxy.", "components": ["llama"], "sources": ["llama:s808f8d1c8da9"], "status": "REASONED"},
+    "vllm-key": {"text": "At both source commits --api-key takes precedence over VLLM_API_KEY fallback; keep secrets out of launch argv.", "components": ["vllm-a", "vllm-b"], "sources": ["vllm-a:s7b472d8bd2d0", "vllm-b:sdbf0512be177", "vllm-a:sd13651484ed1", "vllm-b:se5d922e084ed"], "status": "REASONED"},
+    "vllm-file": {"text": "Use protected YAML via two-word --config FILE; --config=FILE is accepted without loading the key; clear inherited VLLM_API_KEY.", "components": ["vllm-a"], "sources": ["vllm-a:safb9d5e38921", "vllm-a:sd13651484ed1"], "status": "REASONED"},
+    "vllm-process": {"text": "Python spawn transfers API server arguments through a pipe; opt-in Rust frontend puts api_key in --args-json argv, so clear VLLM_USE_RUST_FRONTEND.", "components": ["vllm-a"], "sources": ["vllm-a:sccd45a9ffb02", "vllm-a:sc14e6c37774c", "vllm-a:sba4bc217b9de"], "status": "REASONED"},
+    "vllm-logs": {"text": "HTTP startup redacts api_key, but gRPC logs the argument set unredacted; protect those logs.", "components": ["vllm-a"], "sources": ["vllm-a:scf43e725574b", "vllm-a:s4b161060c056"], "status": "REASONED"},
+    "vllm-scope": {"text": "API key covers /v1, /v2, /inference and /cohere; /invocations, enabled profiler routes and unprotected plugins remain outside it.", "components": ["vllm"], "sources": ["vllm:s65a60be2808c", "vllm:s36fcb4c4fc18"], "status": "REASONED", "verify": [1]},
+    "vllm-bind": {"text": "Unset frontend host listens on 0.0.0.0:8000; explicitly select 127.0.0.1.", "components": ["vllm"], "sources": ["vllm:s90b2ada8e38b", "vllm:sb9c63e342665", "vllm:s701a469f3c23"], "status": "REASONED"},
+    "vllm-tls": {"text": "Frontend ssl-keyfile, ssl-certfile and ssl-ca-certs support TLS; proxy or tunnel remains the recommended boundary.", "components": ["vllm-a"], "sources": ["vllm-a:s7b472d8bd2d0"], "status": "REASONED"},
+    "vllm-isolation": {"text": "HTTP key/TLS do not protect internal TCPStore, ZMQ or collective channels; isolate trusted cluster members and treat Ray as one trust domain.", "components": ["vllm"], "sources": ["vllm:se5660cf62498", "vllm:sec32bab94990", "vllm:s1de6a9f4ed49"], "status": "REASONED"},
+    "vllm-store": {"text": "TCPStore can bind all interfaces; stateless rank-zero binding and other rendezvous paths differ; inventory actual transport sockets.", "components": ["vllm"], "sources": ["vllm:sd18839fe8984", "vllm:s27ba1937dca0", "vllm:s7abb84b61c6e", "vllm:se5660cf62498"], "status": "REASONED"},
+    "vllm-master": {"text": "Multi-node multiprocessing uses master-addr and master-port, default 29501; DP adds ports and Ray V2 can bind port zero.", "components": ["vllm"], "sources": ["vllm:s1fc694d68aac", "vllm:s8c1221a0c7b9", "vllm:s15bf642ce14e"], "status": "REASONED"},
+    "vllm-handshake": {"text": "Remote/elastic multiprocessing DP uses startup TCP handshake on data-parallel-address/rpc-port, default 29550; otherwise IPC, with Ray bypassing that constructor.", "components": ["vllm"], "sources": ["vllm:sfecabc3bc16d", "vllm:se3e528b9ca5c", "vllm:s1fc694d68aac"], "status": "REASONED"},
+    "vllm-channels": {"text": "Remote engine request/result and coordinator channels use dynamic TCP, local paths generally IPC with elastic exceptions.", "components": ["vllm"], "sources": ["vllm:sfecabc3bc16d", "vllm:se3e528b9ca5c", "vllm:s8ddf90ed2cb1"], "status": "REASONED"},
+    "vllm-queues": {"text": "Worker queues add dynamic TCP only for remote readers, using detected multiprocessing or Ray node addresses; headless removes only the HTTP frontend.", "components": ["vllm"], "sources": ["vllm:sb6a7effd4318", "vllm:s2dad806d290a", "vllm:s66d892167b5d", "vllm:s19f4f6a6790f"], "status": "REASONED"},
+    "nixl": {"text": "Opt-in NIXL handshake defaults localhost:5600 plus DP index and starts with metadata; its host/port settings are separate.", "components": ["vllm"], "sources": ["vllm:sdb9dac146cd4", "vllm:s0ec5750d8161", "vllm:s2c10a0015812"], "status": "REASONED"},
+    "mooncake": {"text": "Producer/kv_both bootstrap uses wildcard 8998 at selected ranks; producer workers use node IP/dynamic ports; consumer-only workers omit those listeners.", "components": ["vllm"], "sources": ["vllm:s97fe4257dfc6", "vllm:s623327f195f8", "vllm:s0341e26f43ae", "vllm:s0fa9693f3666"], "status": "REASONED"},
+    "vllm-grpc": {"text": "Optional gRPC replaces HTTP with unauthenticated plaintext on host/port, default 0.0.0.0:8000; the documented grpc-port does not match this CLI.", "components": ["vllm"], "sources": ["vllm:sd52612723dde", "vllm:sb6766a13ce4a"], "status": "REASONED"},
+    "vllm-supervisor": {"text": "Multi-port external-LB mode adds keyless health supervision after child readiness on host:9256 by default; frontend TLS options apply.", "components": ["vllm"], "sources": ["vllm:sbc83e9d09208", "vllm:s471a29420e3a", "vllm:s80888a79d6e2", "vllm:s7d70cef86248", "vllm:sd80aa5c7d7cc"], "status": "REASONED"},
+    "vllm-node-ip": {"text": "Set per-node VLLM_HOST_IP and serving master/DP addresses deliberately; automatic node detection can choose public IP or fall back to wildcard.", "components": ["vllm"], "sources": ["vllm:sdf64db690b1c", "vllm:s0497a5e3fe44", "vllm:s92bab6d08b69"], "status": "REASONED"},
+    "vllm-ports": {"text": "VLLM_PORT starts allocation, not a firewall range; DP fallback variables are not serving-flag substitutes and DP master port also reserves ten ports.", "components": ["vllm"], "sources": ["vllm:s7cb33671d83d", "vllm:scfeadcdcd9a1", "vllm:s92bab6d08b69"], "status": "REASONED"},
+    "vllm-single": {"text": "Single-GPU normally uses file store/local IPC with ROCm AITER TCP exception; Gloo groups still require listener inventory.", "components": ["vllm"], "sources": ["vllm:s3b1ce10c3e66", "vllm:s67bc8be47a91", "vllm:sed65b4428b70"], "status": "REASONED"},
+    "tgi-bind": {"text": "Launcher defaults 0.0.0.0:3000 via hostname/port flags or HOSTNAME/PORT; bind privately.", "components": ["tgi"], "sources": ["tgi:s6d442de48f37"], "status": "REASONED"},
+    "tgi-image": {"text": "Main image sets PORT=80; Docker's non-IP hostname makes router fall back to wildcard.", "components": ["tgi"], "sources": ["tgi:se7504fa5bd0c", "tgi:sbe4cfd078ceb"], "status": "REASONED"},
+    "tgi-lifecycle": {"text": "Guide records maintenance mode and archive on 2026-03-21; retain controls and plan migration.", "components": ["tgi-docs"], "sources": ["tgi-docs:s07efbedb395d"], "status": "REASONED"},
+    "tgi-key-argv": {"text": "Launcher passes API_KEY or --api-key to router argv; no launcher input avoids that exposure to local process observers.", "components": ["tgi"], "sources": ["tgi:s3f8623221ee5"], "status": "REASONED"},
+    "tgi-auth": {"text": "Bearer middleware protects base inference routes with 401, not health/info/metrics, KServe, v1/models or Vertex prediction; enforce proxy allowlists/auth.", "components": ["tgi-router"], "sources": ["tgi-router:sc46baeb2e20d"], "status": "REASONED"},
+    "tgi-tls": {"text": "Launcher has no TLS option; terminate TLS in front.", "components": ["tgi-docs"], "sources": ["tgi-docs:sf21d69ac884f"], "status": "REASONED"},
+    "tgi-metrics": {"text": "Separate Prometheus listener defaults 9000 and is unauthenticated; keep it private.", "components": ["tgi-docs", "tgi"], "sources": ["tgi-docs:sf21d69ac884f", "tgi:s3f8623221ee5"], "status": "REASONED"},
+    "sglang-bind": {"text": "SGLang defaults 127.0.0.1:30000; retain private host/port.", "components": ["sglang"], "sources": ["sglang:saf08ef6910b0"], "status": "REASONED"},
+    "sglang-auth": {"text": "api-key protects ordinary endpoints; admin-api-key separately protects administrative operations, not server_info; an empty API key leaves ordinary requests open.", "components": ["sglang"], "sources": ["sglang:sbf57dc2f54d2", "sglang:sa5df753aef88"], "status": "REASONED"},
+    "sglang-file": {"text": "Protected YAML --config keeps both keys out of kernel argv; no documented stdin/environment input exists at the pin.", "components": ["sglang"], "sources": ["sglang:scce1a63feba8", "sglang:s0a4966847154", "sglang:scc4de2d1f4bc"], "status": "REASONED"},
+    "sglang-log": {"text": "INFO startup logs all resolved server_args including both keys; protect the log.", "components": ["sglang"], "sources": ["sglang:s50e55d90147c", "sglang:se29cdc6dade1"], "status": "REASONED"},
+    "sglang-info": {"text": "server_info/get_server_info expose resolved keys and launch_command to ordinary API-key holders; exclude them or trust those holders with admin authority.", "components": ["sglang"], "sources": ["sglang:sd5cd1ab725c3", "sglang:se29cdc6dade1", "sglang:sa5df753aef88"], "status": "REASONED"},
+    "sglang-tls": {"text": "ssl-keyfile/ssl-certfile/ssl-ca-certs provide native TLS; enable-ssl-refresh reloads renewed certificates.", "components": ["sglang"], "sources": ["sglang:sd4ed6d838a92"], "status": "REASONED"},
+    "triton-listeners": {"text": "Triton defaults to wildcard HTTP 8000, gRPC 8001 and metrics 8002; bind each privately.", "components": ["triton"], "sources": ["triton:s33bf29bf71da", "triton:s67ab19969241"], "status": "REASONED"},
+    "triton-protocols": {"text": "HTTP/gRPC default enabled; disable unused protocols and metrics, while keeping gateway authorization.", "components": ["triton"], "sources": ["triton:sf92f4669ae27", "triton:s33bf29bf71da", "triton:sa915d43059a2"], "status": "REASONED"},
+    "triton-tls": {"text": "gRPC supports TLS and mutual TLS with certificate/key flags; HTTP requires fronting TLS.", "components": ["triton"], "sources": ["triton:sc8b533580b3b", "triton:s67ab19969241"], "status": "REASONED"},
+    "triton-secrets": {"text": "Restricted-API secrets are argv-only, visible for process lifetime and possibly retained by audit/orchestrator records; they do not protect against local readers.", "components": ["triton"], "sources": ["triton:s5f927b497e5d", "triton:s705af5df3dd8"], "status": "REASONED"},
+    "triton-categories": {"text": "All nine compiled categories default unrestricted; restrictions are per category/protocol, and groups must not overlap.", "components": ["triton"], "sources": ["triton:s1b9ce89125bd", "triton:sa9c069223fba"], "status": "REASONED"},
+    "triton-health": {"text": "Unrestricted health/metadata/inference, including HTTP generate/generate_stream, need no key; restricting health also affects probes.", "components": ["triton"], "sources": ["triton:s1b9ce89125bd", "triton:s79fae2bcb514", "triton:s2a4cdfc6be30"], "status": "REASONED"},
+    "triton-logging": {"text": "Logging API reads settings/file path and changes verbosity/format/levels, but cannot change log_file.", "components": ["triton"], "sources": ["triton:s7f5038fa0fe2"], "status": "REASONED"},
+    "triton-trace": {"text": "Trace settings API remains available when tracing is OFF; default triton mode needs a startup file path before enabling tracing, and API cannot change that path.", "components": ["triton"], "sources": ["triton:s2fee6c80ec1d", "triton:s4b469f1c21de", "triton:sce84579a9a6e", "triton:s682fdddf06a8", "triton:sc68b8b9a1b21"], "status": "REASONED"},
+    "triton-shm": {"text": "Shared-memory status is readable; registration/use defaults off until allow-client-shm=true, with GPU/platform restrictions.", "components": ["triton"], "sources": ["triton:sb1f8ac2356f6", "triton:s601665063934", "triton:s9fe885785c49"], "status": "REASONED"},
+    "triton-repository": {"text": "Repository index is readable; API load/unload require explicit mode, not default none or poll, and can accept config/inline files or unload dependents.", "components": ["triton"], "sources": ["triton:s6f16e1d770dc", "triton:s48cab4cab77d", "triton:sa63a1d3d8242", "triton:s7d85aace8e33"], "status": "REASONED"},
+    "triton-reads": {"text": "Model-config and supported statistics reads are independent of model-control mode.", "components": ["triton"], "sources": ["triton:s8501fbc9ecb4"], "status": "REASONED"},
+    "triton-denial": {"text": "HTTP expects configured header and returns 403 on failure; gRPC prefixes triton-grpc-protocol- and returns UNAVAILABLE with restriction message.", "components": ["triton"], "sources": ["triton:sa9c069223fba", "triton:s2f7f38a83db9", "triton:s614cd673f20f", "triton:s2a4cdfc6be30"], "status": "REASONED"},
+    "triton-cloud": {"text": "Conditional Vertex/SageMaker listeners need separate inventory/isolation; SageMaker invoke bypasses restrictions and Vertex redirect headers can reach unrestricted metrics.", "components": ["triton"], "sources": ["triton:sad0e75f73ba4", "triton:s672bf7fa57b3", "triton:s0c7905e1e132", "triton:s0ce822aef316"], "status": "REASONED"},
+    "triton-metrics": {"text": "Metrics 8002 at /metrics or /metrics/ is unauthenticated and outside both restriction flags; isolate or disable it.", "components": ["triton"], "sources": ["triton:sa915d43059a2", "triton:se9f3f1a88325", "triton:s9cd72f11c287"], "status": "REASONED"},
+    "lmstudio-bind": {"text": "Desktop server uses localhost:1234; Serve on Local Network or bind 0.0.0.0 widens access.", "components": ["lmstudio"], "sources": ["lmstudio:s776be8700529", "lmstudio:s6b9f80dc5c59", "lmstudio:sb756d0785d3d"], "status": "REASONED"},
+    "lmstudio-auth": {"text": "Authentication defaults off; Require Authentication and bearer tokens are documented for 0.4.0+; enable before remote access.", "components": ["lmstudio"], "sources": ["lmstudio:sb940f6563319"], "status": "REASONED"},
+    "lmstudio-tls": {"text": "Server settings list no TLS; use a tailnet or authenticated TLS proxy for remote access.", "components": ["lmstudio"], "sources": ["lmstudio:sb7e0fa7490b2"], "status": "REASONED"},
+    "webui-listeners": {"text": "Gradio defaults 127.0.0.1:7860; optional --api defaults 127.0.0.1:5000; both start unauthenticated.", "components": ["webui", "webui-api"], "sources": ["webui:sf47dbc117b02", "webui-api:s6c159a552ded"], "status": "REASONED"},
+    "webui-bind": {"text": "--listen widens both enabled surfaces; listen-port/api-port move them and listen-host only works with listen.", "components": ["webui", "webui-api"], "sources": ["webui:sf47dbc117b02", "webui-api:s6c159a552ded"], "status": "REASONED"},
+    "webui-publication": {"text": "--share publishes Gradio UI and --public-api publishes API through a Cloudflare tunnel; treat both as publication.", "components": ["webui", "webui-api"], "sources": ["webui:sfafd8b6e5106", "webui-api:s6c159a552ded"], "status": "REASONED"},
+    "webui-ui-auth": {"text": "gradio-auth-path protects UI only; file entries split on commas/newlines and every colon, so use permitted username and generated hex password.", "components": ["webui"], "sources": ["webui:sfbacbf383d45"], "status": "REASONED"},
+    "webui-api-auth": {"text": "api-key protects OpenAI routes via bearer and Anthropic messages via x-api-key; admin-key protects administration and defaults to api-key, not vice versa.", "components": ["webui-api", "webui-docs"], "sources": ["webui-api:s6c159a552ded", "webui-docs:sfc908ade10d1"], "status": "REASONED"},
+    "webui-key-logs": {"text": "API startup logs api-key and distinct admin-key in plaintext at INFO; protect output and rotate after disclosure.", "components": ["webui-api", "webui"], "sources": ["webui-api:sbafd006b7156", "webui:s304dbbc211b7"], "status": "REASONED"},
+    "webui-file": {"text": "API keys lack file/environment flags; private external user-data-dir CMD_FLAGS.txt supplies in-process arguments, keeping keys out of kernel argv.", "components": ["webui"], "sources": ["webui:sf47dbc117b02", "webui:s578896c6eca6", "webui:s75153f5981cf"], "status": "REASONED"},
+    "webui-checkout": {"text": "Checkout CMD_FLAGS.txt is tracked; git diff/stash and one-click autostash/reset can expose or discard keys; use a new private directory outside checkout.", "components": ["webui"], "sources": ["webui:s4010efbd61e8", "webui:s77fccc0c7e77"], "status": "REASONED"},
+    "webui-launcher": {"text": "Run server.py directly: one-click unquoted argument joining and shell=True can split paths or execute shell syntax.", "components": ["webui"], "sources": ["webui:s77fccc0c7e77"], "status": "REASONED"},
+    "webui-api-only": {"text": "--api --nowebui removes UI; ssl-keyfile/ssl-certfile provide both surfaces TLS, with proxy TLS/auth the recommended pattern.", "components": ["webui", "webui-docs"], "sources": ["webui:sf47dbc117b02", "webui-docs:sfc908ade10d1"], "status": "REASONED"},
+    "webui-host": {"text": "Loopback API rejects Host other than localhost/127.0.0.1 with 400 unless listen/public-api is set; proxy must rewrite Host.", "components": ["webui-api"], "sources": ["webui-api:s6c159a552ded"], "status": "REASONED"},
+    "verify-listeners": {"text": "Inspect all backend listeners, namespaces and publications; ss alone proves no external isolation.", "components": ["llama", "vllm", "tgi", "triton", "sglang"], "sources": ["llama:s808f8d1c8da9", "vllm:s90b2ada8e38b", "tgi:s6d442de48f37", "triton:s33bf29bf71da", "sglang:saf08ef6910b0"], "status": "REASONED", "verify": [1]},
+    "verify-proxy-auth": {"text": "Proxy model-list probes expect no-key 401 and keyed 200/list; TGI model listing does not establish native key enforcement.", "components": ["tgi-router", "curl"], "sources": ["tgi-router:sc46baeb2e20d", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
+    "verify-invocations": {"text": "Use valid JSON/served model and upstream evidence: unknown-model 404 or proxy-intercepted errors cannot establish vLLM route denial.", "components": ["vllm"], "sources": ["vllm:s65a60be2808c", "vllm:s36fcb4c4fc18"], "status": "REASONED", "verify": [1]},
+    "verify-webui": {"text": "No-key API model-list 200 is exposure, 401 auth; TLS/transport errors or invalid Host are inconclusive and proxy rejection proves only proxy policy.", "components": ["webui-api", "curl"], "sources": ["webui-api:s6c159a552ded", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [2]},
+    "verify-triton": {"text": "Direct HTTP logging should change from 200/settings to 403/restriction; other errors prove neither this control nor other categories/protocols.", "components": ["triton", "curl"], "sources": ["triton:s7f5038fa0fe2", "triton:s2a4cdfc6be30", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [3]},
+    "verify-cluster": {"text": "Inventory startup/dynamic sockets; trusted peers connect to cross-node endpoints while outsiders fail with firewall evidence; local-only endpoints need local positive controls.", "components": ["vllm"], "sources": ["vllm:se5660cf62498", "vllm:sfecabc3bc16d", "vllm:se3e528b9ca5c"], "status": "REASONED", "verify": [4]},
+    "verify-transport": {"text": "TCP probe establishes only reachability; stale ports, wrong address or stopped service are inconclusive, and RDMA/non-TCP need separate tests.", "components": ["vllm"], "sources": ["vllm:se5660cf62498", "vllm:sec32bab94990"], "status": "REASONED", "verify": [4]},
+    "vllm-parser-run": {"text": "Isolated parser harness with stubbed logger/minimal serve parser loaded --config FILE but not --config=FILE; no vLLM server was run.", "components": ["vllm-a"], "sources": ["vllm-a:safb9d5e38921"], "status": "DEMONSTRATED", "evidence": "The pinned parser class was also run on its own, outside vLLM, with vLLM's logger stubbed and a minimal `serve` parser in place of vLLM's own: with `--config FILE` it turned the generated file's `api-key` line into a one-element key list, and with `--config=FILE` it left the key unset."},
+    "webui-parser-run": {"text": "Imported shared.py parsed keys and a later flag from a private path containing a space while kernel cmdline held neither; no server was run.", "components": ["webui"], "sources": ["webui:s578896c6eca6"], "status": "DEMONSTRATED", "evidence": "The pinned `modules/shared.py`, imported with `--user-data-dir` pointing at a directory the block had written (a path containing a space, with a `--listen-port` line added after the key lines), parsed both keys and that flag from `CMD_FLAGS.txt` while the process's `/proc/self/cmdline` held neither"},
+    "argv-test": {"text": "Recorded procps-ng 4.0.4 stub-process checks distinguish named secret flags from file flags; JSON, abbreviations, hidden/scrubbed argv remain misses.", "components": ["llama", "vllm-a", "sglang", "tgi", "webui", "triton"], "sources": ["llama:s808f8d1c8da9", "vllm-a:s7b472d8bd2d0", "sglang:sbf57dc2f54d2", "tgi:s3f8623221ee5", "webui:sf47dbc117b02", "triton:s5f927b497e5d"], "status": "DEMONSTRATED", "evidence": "`--api-key DUMMY_NOT_A_SECRET`, `--admin-key DUMMY_NOT_A_SECRET`, `--admin-api-key=DUMMY_NOT_A_SECRET`, `--gradio-auth u:DUMMY_NOT_A_SECRET`, `--http-restricted-api=model-repository:admin-key=DUMMY_NOT_A_SECRET`, `--grpc-restricted-protocol=model-repository:admin-key=DUMMY_NOT_A_SECRET` and an empty `--api-key=` each counted `1`"}
+  }
+}
+---
 # Model servers: llama.cpp, vLLM, TGI, SGLang, Triton, and LM Studio
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| llama-bind: llama-server defaults to 127.0.0.1:8080; retain loopback and exclude inherited LLAMA_ARG_* overrides. | llama.cpp e0dff58475bc9ed68eedcb265ee998f2fcabb3b1 | REASONED |
+| llama-key: api-key-file reads one key per line, with # comments; protect the plaintext file and avoid argv/environment secret exposure. | llama.cpp e0dff58475bc9ed68eedcb265ee998f2fcabb3b1 | REASONED |
+| llama-env: Clear LLAMA_API_KEY and LLAMA_ARG_API_KEY_FILE; reject a file without a key line and test native refusal/acceptance directly. | llama.cpp e0dff58475bc9ed68eedcb265ee998f2fcabb3b1 | REASONED |
+| llama-tls: Native PEM TLS needs a build with DLLAMA_OPENSSL=ON and ssl-key-file/ssl-cert-file; otherwise use a TLS proxy. | llama.cpp e0dff58475bc9ed68eedcb265ee998f2fcabb3b1 | REASONED |
+| vllm-key: At both source commits --api-key takes precedence over VLLM_API_KEY fallback; keep secrets out of launch argv. | vLLM source dee37d89115db4c94a820a79a78a7828e141c910; vLLM second source 8c1557a79c539ffe82d004d2a0c8d7b5e71159ce | REASONED |
+| vllm-file: Use protected YAML via two-word --config FILE; --config=FILE is accepted without loading the key; clear inherited VLLM_API_KEY. | vLLM source dee37d89115db4c94a820a79a78a7828e141c910 | REASONED |
+| vllm-process: Python spawn transfers API server arguments through a pipe; opt-in Rust frontend puts api_key in --args-json argv, so clear VLLM_USE_RUST_FRONTEND. | vLLM source dee37d89115db4c94a820a79a78a7828e141c910 | REASONED |
+| vllm-logs: HTTP startup redacts api_key, but gRPC logs the argument set unredacted; protect those logs. | vLLM source dee37d89115db4c94a820a79a78a7828e141c910 | REASONED |
+| vllm-scope: API key covers /v1, /v2, /inference and /cohere; /invocations, enabled profiler routes and unprotected plugins remain outside it. | vLLM v0.30.0 | REASONED |
+| vllm-bind: Unset frontend host listens on 0.0.0.0:8000; explicitly select 127.0.0.1. | vLLM v0.30.0 | REASONED |
+| vllm-tls: Frontend ssl-keyfile, ssl-certfile and ssl-ca-certs support TLS; proxy or tunnel remains the recommended boundary. | vLLM source dee37d89115db4c94a820a79a78a7828e141c910 | REASONED |
+| vllm-isolation: HTTP key/TLS do not protect internal TCPStore, ZMQ or collective channels; isolate trusted cluster members and treat Ray as one trust domain. | vLLM v0.30.0 | REASONED |
+| vllm-store: TCPStore can bind all interfaces; stateless rank-zero binding and other rendezvous paths differ; inventory actual transport sockets. | vLLM v0.30.0 | REASONED |
+| vllm-master: Multi-node multiprocessing uses master-addr and master-port, default 29501; DP adds ports and Ray V2 can bind port zero. | vLLM v0.30.0 | REASONED |
+| vllm-handshake: Remote/elastic multiprocessing DP uses startup TCP handshake on data-parallel-address/rpc-port, default 29550; otherwise IPC, with Ray bypassing that constructor. | vLLM v0.30.0 | REASONED |
+| vllm-channels: Remote engine request/result and coordinator channels use dynamic TCP, local paths generally IPC with elastic exceptions. | vLLM v0.30.0 | REASONED |
+| vllm-queues: Worker queues add dynamic TCP only for remote readers, using detected multiprocessing or Ray node addresses; headless removes only the HTTP frontend. | vLLM v0.30.0 | REASONED |
+| nixl: Opt-in NIXL handshake defaults localhost:5600 plus DP index and starts with metadata; its host/port settings are separate. | vLLM v0.30.0 | REASONED |
+| mooncake: Producer/kv_both bootstrap uses wildcard 8998 at selected ranks; producer workers use node IP/dynamic ports; consumer-only workers omit those listeners. | vLLM v0.30.0 | REASONED |
+| vllm-grpc: Optional gRPC replaces HTTP with unauthenticated plaintext on host/port, default 0.0.0.0:8000; the documented grpc-port does not match this CLI. | vLLM v0.30.0 | REASONED |
+| vllm-supervisor: Multi-port external-LB mode adds keyless health supervision after child readiness on host:9256 by default; frontend TLS options apply. | vLLM v0.30.0 | REASONED |
+| vllm-node-ip: Set per-node VLLM_HOST_IP and serving master/DP addresses deliberately; automatic node detection can choose public IP or fall back to wildcard. | vLLM v0.30.0 | REASONED |
+| vllm-ports: VLLM_PORT starts allocation, not a firewall range; DP fallback variables are not serving-flag substitutes and DP master port also reserves ten ports. | vLLM v0.30.0 | REASONED |
+| vllm-single: Single-GPU normally uses file store/local IPC with ROCm AITER TCP exception; Gloo groups still require listener inventory. | vLLM v0.30.0 | REASONED |
+| tgi-bind: Launcher defaults 0.0.0.0:3000 via hostname/port flags or HOSTNAME/PORT; bind privately. | TGI launcher/image v3.3.7 | REASONED |
+| tgi-image: Main image sets PORT=80; Docker's non-IP hostname makes router fall back to wildcard. | TGI launcher/image v3.3.7 | REASONED |
+| tgi-lifecycle: Guide records maintenance mode and archive on 2026-03-21; retain controls and plan migration. | TGI documentation unknown | REASONED |
+| tgi-key-argv: Launcher passes API_KEY or --api-key to router argv; no launcher input avoids that exposure to local process observers. | TGI launcher/image v3.3.7 | REASONED |
+| tgi-auth: Bearer middleware protects base inference routes with 401, not health/info/metrics, KServe, v1/models or Vertex prediction; enforce proxy allowlists/auth. | TGI router 24ee40d143d8d046039f12f76940a85886cbe152 | REASONED |
+| tgi-tls: Launcher has no TLS option; terminate TLS in front. | TGI documentation unknown | REASONED |
+| tgi-metrics: Separate Prometheus listener defaults 9000 and is unauthenticated; keep it private. | TGI documentation unknown; TGI launcher/image v3.3.7 | REASONED |
+| sglang-bind: SGLang defaults 127.0.0.1:30000; retain private host/port. | SGLang v0.5.20 | REASONED |
+| sglang-auth: api-key protects ordinary endpoints; admin-api-key separately protects administrative operations, not server_info; an empty API key leaves ordinary requests open. | SGLang v0.5.20 | REASONED |
+| sglang-file: Protected YAML --config keeps both keys out of kernel argv; no documented stdin/environment input exists at the pin. | SGLang v0.5.20 | REASONED |
+| sglang-log: INFO startup logs all resolved server_args including both keys; protect the log. | SGLang v0.5.20 | REASONED |
+| sglang-info: server_info/get_server_info expose resolved keys and launch_command to ordinary API-key holders; exclude them or trust those holders with admin authority. | SGLang v0.5.20 | REASONED |
+| sglang-tls: ssl-keyfile/ssl-certfile/ssl-ca-certs provide native TLS; enable-ssl-refresh reloads renewed certificates. | SGLang v0.5.20 | REASONED |
+| triton-listeners: Triton defaults to wildcard HTTP 8000, gRPC 8001 and metrics 8002; bind each privately. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-protocols: HTTP/gRPC default enabled; disable unused protocols and metrics, while keeping gateway authorization. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-tls: gRPC supports TLS and mutual TLS with certificate/key flags; HTTP requires fronting TLS. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-secrets: Restricted-API secrets are argv-only, visible for process lifetime and possibly retained by audit/orchestrator records; they do not protect against local readers. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-categories: All nine compiled categories default unrestricted; restrictions are per category/protocol, and groups must not overlap. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-health: Unrestricted health/metadata/inference, including HTTP generate/generate_stream, need no key; restricting health also affects probes. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-logging: Logging API reads settings/file path and changes verbosity/format/levels, but cannot change log_file. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-trace: Trace settings API remains available when tracing is OFF; default triton mode needs a startup file path before enabling tracing, and API cannot change that path. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-shm: Shared-memory status is readable; registration/use defaults off until allow-client-shm=true, with GPU/platform restrictions. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-repository: Repository index is readable; API load/unload require explicit mode, not default none or poll, and can accept config/inline files or unload dependents. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-reads: Model-config and supported statistics reads are independent of model-control mode. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-denial: HTTP expects configured header and returns 403 on failure; gRPC prefixes triton-grpc-protocol- and returns UNAVAILABLE with restriction message. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-cloud: Conditional Vertex/SageMaker listeners need separate inventory/isolation; SageMaker invoke bypasses restrictions and Vertex redirect headers can reach unrestricted metrics. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-metrics: Metrics 8002 at /metrics or /metrics/ is unauthenticated and outside both restriction flags; isolate or disable it. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| lmstudio-bind: Desktop server uses localhost:1234; Serve on Local Network or bind 0.0.0.0 widens access. | LM Studio documentation unknown | REASONED |
+| lmstudio-auth: Authentication defaults off; Require Authentication and bearer tokens are documented for 0.4.0+; enable before remote access. | LM Studio documentation unknown | REASONED |
+| lmstudio-tls: Server settings list no TLS; use a tailnet or authenticated TLS proxy for remote access. | LM Studio documentation unknown | REASONED |
+| webui-listeners: Gradio defaults 127.0.0.1:7860; optional --api defaults 127.0.0.1:5000; both start unauthenticated. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08; text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f | REASONED |
+| webui-bind: --listen widens both enabled surfaces; listen-port/api-port move them and listen-host only works with listen. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08; text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f | REASONED |
+| webui-publication: --share publishes Gradio UI and --public-api publishes API through a Cloudflare tunnel; treat both as publication. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08; text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f | REASONED |
+| webui-ui-auth: gradio-auth-path protects UI only; file entries split on commas/newlines and every colon, so use permitted username and generated hex password. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08 | REASONED |
+| webui-api-auth: api-key protects OpenAI routes via bearer and Anthropic messages via x-api-key; admin-key protects administration and defaults to api-key, not vice versa. | text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f; text-generation-webui API documentation ceade2eb1ba3f84518076270df2240b6bbb01da0 | REASONED |
+| webui-key-logs: API startup logs api-key and distinct admin-key in plaintext at INFO; protect output and rotate after disclosure. | text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f; text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08 | REASONED |
+| webui-file: API keys lack file/environment flags; private external user-data-dir CMD_FLAGS.txt supplies in-process arguments, keeping keys out of kernel argv. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08 | REASONED |
+| webui-checkout: Checkout CMD_FLAGS.txt is tracked; git diff/stash and one-click autostash/reset can expose or discard keys; use a new private directory outside checkout. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08 | REASONED |
+| webui-launcher: Run server.py directly: one-click unquoted argument joining and shell=True can split paths or execute shell syntax. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08 | REASONED |
+| webui-api-only: --api --nowebui removes UI; ssl-keyfile/ssl-certfile provide both surfaces TLS, with proxy TLS/auth the recommended pattern. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08; text-generation-webui API documentation ceade2eb1ba3f84518076270df2240b6bbb01da0 | REASONED |
+| webui-host: Loopback API rejects Host other than localhost/127.0.0.1 with 400 unless listen/public-api is set; proxy must rewrite Host. | text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f | REASONED |
+| verify-listeners: Inspect all backend listeners, namespaces and publications; ss alone proves no external isolation. | llama.cpp e0dff58475bc9ed68eedcb265ee998f2fcabb3b1; vLLM v0.30.0; TGI launcher/image v3.3.7; Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df; SGLang v0.5.20 | REASONED |
+| verify-proxy-auth: Proxy model-list probes expect no-key 401 and keyed 200/list; TGI model listing does not establish native key enforcement. | TGI router 24ee40d143d8d046039f12f76940a85886cbe152; curl minimum write-out version 7.75.0 | REASONED |
+| verify-invocations: Use valid JSON/served model and upstream evidence: unknown-model 404 or proxy-intercepted errors cannot establish vLLM route denial. | vLLM v0.30.0 | REASONED |
+| verify-webui: No-key API model-list 200 is exposure, 401 auth; TLS/transport errors or invalid Host are inconclusive and proxy rejection proves only proxy policy. | text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f; curl minimum write-out version 7.75.0 | REASONED |
+| verify-triton: Direct HTTP logging should change from 200/settings to 403/restriction; other errors prove neither this control nor other categories/protocols. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df; curl minimum write-out version 7.75.0 | REASONED |
+| verify-cluster: Inventory startup/dynamic sockets; trusted peers connect to cross-node endpoints while outsiders fail with firewall evidence; local-only endpoints need local positive controls. | vLLM v0.30.0 | REASONED |
+| verify-transport: TCP probe establishes only reachability; stale ports, wrong address or stopped service are inconclusive, and RDMA/non-TCP need separate tests. | vLLM v0.30.0 | REASONED |
+| vllm-parser-run: Isolated parser harness with stubbed logger/minimal serve parser loaded --config FILE but not --config=FILE; no vLLM server was run. | vLLM source dee37d89115db4c94a820a79a78a7828e141c910 | DEMONSTRATED |
+| webui-parser-run: Imported shared.py parsed keys and a later flag from a private path containing a space while kernel cmdline held neither; no server was run. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08 | DEMONSTRATED |
+| argv-test: Recorded procps-ng 4.0.4 stub-process checks distinguish named secret flags from file flags; JSON, abbreviations, hidden/scrubbed argv remain misses. | llama.cpp e0dff58475bc9ed68eedcb265ee998f2fcabb3b1; vLLM source dee37d89115db4c94a820a79a78a7828e141c910; SGLang v0.5.20; TGI launcher/image v3.3.7; text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08; Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | DEMONSTRATED |
+<!-- version-basis:end -->
 
 Self-hosted model servers follow the [ollama.md](ollama.md) pattern: exposing one means someone else's prompts run on your GPU. Most default to local use, but vLLM, TGI, and Triton bind to `0.0.0.0` out of the box, and Triton enables no authentication by default (its native controls, gRPC mutual TLS and shared-secret restricted APIs, do not replace the gateway). Keep every server on loopback or a private network, require an API key where the server supports one, and terminate TLS in front. LocalAI is an OpenAI-compatible model server too, but its bind and authentication controls are documented in [ai-infra-services.md](ai-infra-services.md) rather than here, so the facts live in one place.
 
@@ -270,6 +648,8 @@ One proxy detail is specific to this API: unless `--listen` (or `--public-api`) 
 
 ## Verify
 
+**REASONED:** following block; service checks follow the cited server handlers and need unavailable live servers/proxy fixtures. Only the pgrep subcheck has the recorded stub-process demonstration below; the whole mixed block remains REASONED.
+
 ```bash
 ss -tlnp   # every listener; 8080/8000/8001/8002/3000/80/9000/30000/5000/7860/1234. ss shows only a
            # namespace-local BIND, not a host firewall, a cloud security group, or Docker -p NAT
@@ -342,7 +722,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
   http://127.0.0.1:8000/v2/logging
 ```
 
-### vLLM internal-listener isolation
+### vLLM internal-listener isolation (REASONED: cited v0.30.0 listener constructors; no multi-node cluster)
 
 **REASONED, not demonstrated:** no multi-GPU or multi-node cluster is available in the authoring environment. The expected distinction follows from v0.30.0's [internal-network warning and firewall guidance](https://github.com/vllm-project/vllm/blob/v0.30.0/docs/usage/security.md#L109-L138) and the listener constructors cited below. No vLLM server was run for this addition.
 
