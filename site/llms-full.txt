@@ -10310,6 +10310,97 @@ Verification scope:
 
 # MongoDB: TLS and authorization
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| lifecycle: Use supported releases and security patches; 4.2 reached end of life on April 30, 2023. Examples use tls options rather than older ssl names. | MongoDB documentation unknown | REASONED |
+| private-listener: Configure port 27017 and loopback bindIp; widen only to required private addresses with firewall restrictions. | MongoDB documentation unknown | REASONED |
+| authorization: Enable security.authorization on mongod; a reachable listener with authorization off exposes data. | MongoDB documentation unknown | REASONED |
+| docker-bind: Linux 7.0, 8.0 and 8.3 images default to mongod and add --bind_ip_all unless arguments or a --config file set binding; a bind only in a -f file does not stop the addition. | Official MongoDB Docker images 0a29f3374c7fa7c38cfe280363b754f898e0a5eb | REASONED |
+| docker-auth: Linux entrypoint adds --auth only with both root credential variables or their _FILE forms; one alone exits. With neither credential nor explicit authorization/internal-authentication settings, authorization is off. | Official MongoDB Docker images 0a29f3374c7fa7c38cfe280363b754f898e0a5eb; MongoDB documentation unknown | REASONED |
+| wildcard-ipv6: --bind_ip_all listens on all IPv4 addresses; IPv6 is added only when net.ipv6 is true through --ipv6 or configuration. | MongoDB bind source r8.0.32 | REASONED |
+| docker-windows: Windows images run mongod --bind_ip_all without the Linux entrypoint; root credential variables do not enable authorization. | Official MongoDB Docker images 0a29f3374c7fa7c38cfe280363b754f898e0a5eb | REASONED |
+| config-startup: mongod reads a configuration file only through --config or -f; mounting alone is insufficient. Supply --config for the image bind check, use required container addresses, and publish privately. | MongoDB documentation unknown; Official MongoDB Docker images 0a29f3374c7fa7c38cfe280363b754f898e0a5eb | REASONED |
+| bootstrap: On loopback, the localhost exception permits the first admin only with no existing users or roles; it is not recovery. Create the SCRAM-SHA-256 userAdminAnyDatabase user, then authenticate the current shell. | MongoDB documentation unknown | REASONED |
+| credential-transport: passwordPrompt() avoids password command text but does not encrypt createUser transport; reconnect as admin over TLS before creating application users. | MongoDB documentation unknown | REASONED |
+| application-identity: Use a separate application identity; its creation database is its authentication database. read is database-wide; readWrite includes collection and index management permissions. | MongoDB documentation unknown | REASONED |
+| collection-role: The custom role grants find, insert and update on one collection, with no deletion, collection dropping or index management; insert still permits creating that named non-capped collection. | MongoDB documentation unknown | REASONED |
+| role-scope: createRole requires privileges and roles; a role outside admin can grant and inherit only within its database. Use a separate deployment identity for provisioning. | MongoDB documentation unknown | REASONED |
+| scram-user-default: Omitting user mechanisms normally creates both SCRAM-SHA-1 and SCRAM-SHA-256 credentials; the example explicitly restricts the user to SCRAM-SHA-256. | MongoDB documentation unknown | REASONED |
+| scram-negotiation: Omitting authMechanism permits fallback from SCRAM-SHA-256 to SCRAM-SHA-1; explicitly select SCRAM-SHA-256 and check driver compatibility. | MongoDB documentation unknown | REASONED |
+| client-source: authenticationRestrictions.clientSource checks the source MongoDB sees, including NAT or proxy effects; it restricts authentication, not TCP reachability. | MongoDB documentation unknown | REASONED |
+| server-address: authenticationRestrictions.serverAddress checks the accepting listener address; include required alternate and failover paths. Preserve recovery access because incompatible inherited restrictions can prevent login. | MongoDB documentation unknown | REASONED |
+| human-mfa: Community supports SCRAM and x.509, without a wire-protocol TOTP dialogue; a machine certificate is not human MFA. Protect human host and admin-UI paths with MFA. | MongoDB documentation unknown | REASONED |
+| pem-file: Initial PEM creation uses an unused path in a protected directory, umask 077, noclobber, service-account ownership and mode 600; this is not a rotation procedure. | Bash documentation unknown; MongoDB documentation unknown | REASONED |
+| tls-server: Merge requireTLS, certificateKeyFile and CAFile into the existing net mapping; SANs must cover client hostnames. Restart the configured service and confirm TLS before widening access. | MongoDB documentation unknown | REASONED |
+| tls-mixed-modes: allowTLS and preferTLS accept plaintext and TLS; use them only for transition and finish with requireTLS. | MongoDB documentation unknown | REASONED |
+| tls-client-certificates: With the shown CA configuration, certificates are required unless allowConnectionsWithoutCertificates is true; presented certificates are still validated. False also requires SCRAM clients to present certificates and does not assign roles. | MongoDB documentation unknown | REASONED |
+| mongot: The cited TLS documentation requires allowConnectionsWithoutCertificates: true for mongot; check topology before requiring certificates. | MongoDB documentation unknown | REASONED |
+| membership-x509: Configure internal authentication on every member, config server and router. Production x.509 membership uses clusterAuthMode: x509 and a protected clusterFile for outgoing authentication, retaining TLS. | MongoDB documentation unknown | REASONED |
+| membership-certificates: Default x.509 membership needs matching O, OU and DC attributes with at least one populated, a common CA and matching SANs; EKU, if present, must cover serverAuth/clientAuth as used. Separate application membership attributes. | MongoDB documentation unknown | REASONED |
+| membership-keyfile: The alternative generates one shared key with openssl rand -base64 756, service-account ownership and mode 400; securely distribute it to all members and routers, set keyFile and clusterAuthMode: keyFile, and retain TLS. | MongoDB documentation unknown; Bash documentation unknown | REASONED |
+| keyfile-rotation: Unix keyfiles require no group/world permissions and service-account readability; multiple rotation keys are allowed but every member must share a common key. | MongoDB documentation unknown | REASONED |
+| transition-auth: transitionToAuth: true permits unauthenticated operations without enforcing user access controls; keep it false in the final state and use vendor procedures for existing-cluster migration. | MongoDB documentation unknown | REASONED |
+| mongos-access-control: Keep authorization enabled on mongod; security.authorization is unavailable on mongos, where internal authentication enables client access control. | MongoDB documentation unknown | REASONED |
+| member-source: clusterIpSourceAllowlist, introduced in 5.0, restricts internal authentication only when authentication is enabled; include every member/router source after NAT. It does not restrict application accounts or TCP reachability. | MongoDB documentation unknown | REASONED |
+| scram-client: mongosh selects the user creation database and SCRAM-SHA-256 over TLS on 27017; final --password prompts without placing the password in argv. | mongosh documentation unknown | REASONED |
+| driver-tls: Enable driver TLS and CA trust with certificate and hostname validation; tlsCAFile is not supported by every driver. Do not ship tlsAllowInvalidCertificates. | MongoDB documentation unknown | REASONED |
+| x509-identity: Register the exact RFC2253 subject in $external with the application role and use MONGODB-X509; without a username mongosh uses the certificate subject. TLS validation alone does not authenticate a MongoDB user. | MongoDB documentation unknown; mongosh documentation unknown | REASONED |
+| x509-client-certificate: Application certificates must be current, satisfy CA requirements and contain digitalSignature and clientAuth; keep subjects and membership attributes separate from server/member certificates to avoid internal privileges. | MongoDB documentation unknown | REASONED |
+| x509-source: Apply source restrictions separately to the $external subject; restrictions on a SCRAM identity do not transfer to the certificate identity. | MongoDB documentation unknown | REASONED |
+| local-guards: Recorded local placeholder and JavaScript guard tests rejected invalid inputs before database access; shell argument tracing did not verify MongoDB behavior. Tool versions are unrecorded. | Bash documentation unknown; MongoDB documentation unknown | DEMONSTRATED |
+| verify-listeners: Inspect all database/router listeners and configured ports; unintended wildcard/public binds are exposed. Private binds require separate firewall checks; the recorded netlink refusal establishes nothing about listeners. | MongoDB documentation unknown | REASONED |
+| verify-dispatch: Use the whole guarded six-value connection block, real certificate hostname and application PEM; --norc prevents shell startup authentication. Guards assume normal Bash builtins and cannot distinguish inherited exact marker/count arguments. | mongosh documentation unknown; Bash documentation unknown | REASONED |
+| verify-plaintext: Plaintext ping succeeds when plaintext is accepted and must fail under requireTLS while a same-endpoint authenticated TLS control succeeds; timeout/refusal alone is inconclusive and ping does not prove authorization. | MongoDB documentation unknown; mongosh documentation unknown | REASONED |
+| verify-anonymous: With a valid client certificate but no authenticated MongoDB identity, an existing collection read succeeds with authorization off and fails Unauthorized (13) with it on; pair with an authenticated read and inspect connectionStatus. | MongoDB documentation unknown; mongosh documentation unknown | REASONED |
+| verify-listdatabases: listDatabases depends on privileges and authorizedDatabases and cannot prove collection authorization; empty output, timeout or unrelated errors are not authorization denials. | MongoDB documentation unknown | REASONED |
+| verify-role-allow: In a disposable fixture, the application role must insert, update and read its own probe document; check result counts and contents with fresh IDs and valid documents. | MongoDB documentation unknown; mongosh documentation unknown | REASONED |
+| verify-role-read-denial: The application role must deny reads of an unrelated existing collection with Unauthorized (13); database-wide readWrite is the exposed comparison. | MongoDB documentation unknown; mongosh documentation unknown | REASONED |
+| verify-role-insert-denial: The application role must deny inserts into the unrelated collection with Unauthorized (13); database-wide readWrite permits them. Test each denial separately because the script stops at its first unexpected result. | MongoDB documentation unknown; mongosh documentation unknown | REASONED |
+| verify-role-delete-denial: The application role must deny deletion from its own collection with Unauthorized (13); database-wide readWrite permits it. The deployment identity cleans up probe documents afterward. | MongoDB documentation unknown; mongosh documentation unknown | REASONED |
+| verify-client-source: With TLS reachability proven from both sources, valid credentials work from both before restriction; afterward only the permitted source authenticates and reads. TLS failures/timeouts do not prove clientSource enforcement. | MongoDB documentation unknown; mongosh documentation unknown | REASONED |
+| verify-server-address: Hold source, credentials and client certificate constant; both reachable listener addresses authenticate before serverAddress restriction, then only the allowed listener does. Permitted-listener tests alone cannot detect an omitted restriction. | MongoDB documentation unknown; mongosh documentation unknown | REASONED |
+| verify-x509: The same trusted non-member certificate must fail x.509 authentication before subject registration and succeed afterward with only assigned roles; inspect the exact $external identity and repeat role checks. | MongoDB documentation unknown; mongosh documentation unknown | REASONED |
+| verify-missing-certificate: Certificate-less TLS ping can succeed when allowConnectionsWithoutCertificates is true; false must reject it while a registered-certificate control succeeds. Repeat anonymous collection access with a valid certificate to test authorization separately. | MongoDB documentation unknown; mongosh documentation unknown | REASONED |
+| verify-membership: In an isolated cluster compare valid and invalid membership credentials; correlate replSetGetStatus with explicit authentication failures, since unhealthy members alone do not prove enforcement. Include router/shard/config-server paths. | MongoDB documentation unknown | REASONED |
+| verify-member-source: Compare permitted and excluded member source addresses against an isolated deployment lacking clusterIpSourceAllowlist; hold application TLS constant and correlate member health with authentication failures. | MongoDB documentation unknown | REASONED |
+| verify-audit-destination: Without a destination no audit records appear; with one, correlate failed authentication and collection-creation records with identity, operation and time. A file alone does not prove coverage; an authentication-only filter excludes other events. | MongoDB documentation 8.0 | REASONED |
+| verify-audit-authorization: The unauthorized read produces failed authCheck result 13 regardless of auditAuthorizationSuccess; the permitted read produces successful authCheck only when true. Inspect getParameter and compare off/on, accounting for performance cost. | MongoDB documentation 8.0 | REASONED |
+| verify-redaction: At verbosity 1, compare a logged canary with redaction off/on; the matching entry remains while values become ### and metadata remains. A missing entry is inconclusive; restore prior verbosity. | MongoDB documentation 8.0 | REASONED |
+| verify-storage: Disposable encrypted data copies require the correct key configuration and a working reader; an unencrypted fixture reopens without a key. Inspect key-manager initialization; a missing key or wrong KMIP identity prevents startup, and strings cannot prove encryption. | MongoDB documentation 8.0 | REASONED |
+| verify-csfle: Use separate clients to compare plaintext and encrypted field bytes by retained _id; a key-authorized client recovers the value. Community explicitly encrypts before writing; the automatic-encryption client silently decrypts and cannot serve as the exposed control. | MongoDB documentation 8.0 | REASONED |
+| verify-csfle-schema: A plaintext write to a server-side $jsonSchema requiring encryption is rejected; denied reads alone do not demonstrate field encryption. | MongoDB documentation 8.0 | REASONED |
+| verify-qe-ciphertext: Compare ordinary and encryptedFields collections through distinct clients: plaintext versus ciphertext without decryption, original value with keys; Community encrypts explicitly. Reject plaintext writes to declared encrypted fields. | MongoDB documentation 8.0 | REASONED |
+| verify-qe-equality: An encryptedFields field without queryType is encrypted but not queryable; set equality on the encrypted string field and confirm the configured client matches an encrypted equality query. | MongoDB documentation 8.0 | REASONED |
+| verify-qe-range: Test range separately with queryType: range on int, long, double, decimal or date, not a string, and documents inside/outside the interval; missing results or connection errors do not establish confidentiality. | MongoDB documentation 8.0 | REASONED |
+| audit-destination: Enterprise auditing covers mongod and mongos; Community has no equivalent and diagnostic logs are not a substitute. Configure a destination on every process; the example selects a JSON file. | MongoDB documentation 8.0 | REASONED |
+| audit-write: A failed audit write can terminate the process; validate that the destination is writable. | MongoDB documentation 8.0 | REASONED |
+| audit-filter: Omitting auditLog.filter records every auditable event; an authenticate-only filter deliberately excludes all other event types. | MongoDB documentation 8.0 | REASONED |
+| audit-success-default: auditAuthorizationSuccess defaults false for authorization-success recording; enabling it records successful checks at a performance cost. | MongoDB documentation 8.0 | REASONED |
+| diagnostic-redaction: Enterprise-only redactClientLogData uses a startup flag or security.redactClientLogData; document values become ### while metadata remains. Its documented scope is diagnostic logs, not audit logs; combine with TLS and storage encryption. | MongoDB documentation 8.0 | REASONED |
+| storage-encryption: Enterprise 3.2 introduced native WiredTiger encryption; Community depends on host/filesystem encryption. security.enableEncryption defaults false. | MongoDB documentation 8.0 | REASONED |
+| storage-migration: Native encryption does not encrypt existing data in place; use a fresh member and initial sync or the documented migration. | MongoDB documentation 8.0 | REASONED |
+| storage-local-key: security.encryptionKeyFile supplies the storage master key, unrelated to membership keyFile; local key management does not support rotation. | MongoDB documentation 8.0 | REASONED |
+| storage-kmip: Prefer KMIP to a local key file; retain enableEncryption and configure serverName, port 5696, serverCAFile and clientCertificateFile containing the client certificate and private key. | MongoDB documentation 8.0 | REASONED |
+| storage-key-identifier: Set security.kmip.keyIdentifier only to adopt an existing key when first enabling encryption; otherwise MongoDB requests a new key. | MongoDB documentation 8.0 | REASONED |
+| csfle-editions: CSFLE encrypts fields in the driver before the server, with no mongod switch; explicit encryption and automatic decryption work in Community, while automatic encryption requires Enterprise or Atlas. | MongoDB documentation 8.0 | REASONED |
+| csfle-schema: Automatic CSFLE autoEncryption names the key vault, KMS providers and local schemaMap; relying only on a server-fetched schema lets a compromised server induce plaintext writes. | MongoDB documentation 8.0 | REASONED |
+| csfle-explicit: Community explicit CSFLE sets bypassAutoEncryption: true and calls ClientEncryption.encrypt() before writing and for query values; keep master-key access separate from database access. | MongoDB documentation 8.0 | REASONED |
+| csfle-algorithms: Randomized encryption does not support equality matching; deterministic encryption does but reveals equal stored values. A server-side $jsonSchema can reject plaintext writes. | MongoDB documentation 8.0 | REASONED |
+| qe-releases: QE equality queries became GA in 7.0 and range queries in 8.0; the incompatible 6.0 public preview is not a production baseline. | MongoDB documentation 8.0 | REASONED |
+| qe-editions: QE encrypts fields in the driver for supported ciphertext queries; automatic encryption requires Enterprise or Atlas, while Community supports explicit encryption and automatic decryption. | MongoDB documentation 8.0 | REASONED |
+| qe-collection: QE requires a new encryptedFields collection, cannot be enabled in place, and cannot share a collection with CSFLE. | MongoDB documentation 8.0 | REASONED |
+| qe-client: Automatic QE uses autoEncryption with key-vault namespace, KMS providers and local encryptedFieldsMap; Community explicit QE uses bypassQueryAnalysis: true and ClientEncryption. | MongoDB documentation 8.0 | REASONED |
+| qe-topology: QE supports replica sets and sharded clusters, not standalone servers. | MongoDB documentation 8.0 | REASONED |
+| qe-range-preview: rangePreview was removed in 8.0; do not carry legacy rangePreview recipes forward. | MongoDB documentation 8.0 | REASONED |
+<!-- version-basis:end -->
+
 MongoDB's history of mass data leaks comes from 2 settings: binding to all interfaces and running with authorization off. Fix both before anything else, then add TLS. Use a supported MongoDB release and its current security patches. MongoDB 4.2 reached end of life on April 30, 2023; it is not a deployment recommendation. Compatibility note: these examples use `tls` options; older configurations used `ssl` names. Check the [vendor lifecycle schedule](https://www.mongodb.com/legal/support-policy/lifecycles) before deploying.
 
 This guide covers self-managed Community and Enterprise deployments. Tier labels below describe deployment priorities, not MongoDB subscription tiers.
@@ -10596,6 +10687,7 @@ Local checks did run: Bash parsing, ShellCheck, JavaScript syntax parsing, dupli
 Run on every database and router host:
 
 ```bash
+# REASONED: listener inventory; no MongoDB service or permitted netlink socket. Expected binds and network-hardening source follow.
 ss -tlnp
 ```
 
@@ -10612,6 +10704,7 @@ The guard assumes normal Bash builtins. A literal apostrophe requires proper she
 **REASONED for every connection mode:** no `mongod`, `mongosh`, Docker, or Podman is available. Expected exposed and fixed outcomes follow each probe below. The options are documented in the [mongosh reference](https://www.mongodb.com/docs/mongodb-shell/reference/options/).
 
 ```bash
+# REASONED: connection modes; no mongod, mongosh, Docker, Podman or authorized deployment. Expected outcomes and MongoDB sources follow.
 (
   set -- PASTE_WHOLE_BLOCK 'scram' 'REPLACE_WITH_DB_HOST' \
     'REPLACE_WITH_CA_FILE' 'REPLACE_WITH_CLIENT_PEM' \
@@ -10673,6 +10766,8 @@ With plaintext accepted, the plaintext `ping` succeeds. With `requireTLS`, it mu
 
 Open a fresh session using `tls` mode, then substitute and run:
 
+**REASONED:** unauthenticated collection access; no MongoDB deployment. Expected authorization outcomes and MongoDB sources follow.
+
 ```javascript
 (() => {
   const appDB = "REPLACE_WITH_APP_DB";
@@ -10701,6 +10796,8 @@ Do not substitute `listDatabases` as proof of collection access. Its results dep
 **REASONED:** no `mongod`, `mongosh`, Docker, or Podman is available.
 
 Use a disposable test deployment with two existing ordinary collections and the application's actual role configuration. The probe document must satisfy the collection's validation rules. Choose a fresh probe ID for each run. Use `scram` mode as the application identity, then run:
+
+**REASONED:** collection-role allows and denials; no disposable MongoDB deployment. Expected results and command sources follow.
 
 ```javascript
 (() => {
@@ -10784,6 +10881,8 @@ Without the user restriction, authentication from both sources succeeds. With th
 
 In the permitted session, inspect:
 
+**REASONED:** user source and listener restrictions; no MongoDB deployment or permitted/excluded hosts. Expected results and sources follow.
+
 ```javascript
 db.runCommand({connectionStatus: 1});
 ```
@@ -10812,6 +10911,8 @@ In an isolated replica-set test, compare a configured member with valid membersh
 
 From a separate operator session with the `replSetGetStatus` privilege, inspect:
 
+**REASONED:** cluster membership; no multi-host MongoDB deployment. Expected results and membership sources follow.
+
 ```javascript
 db.adminCommand({replSetGetStatus: 1});
 ```
@@ -10826,6 +10927,8 @@ See [internal membership authentication](https://www.mongodb.com/docs/manual/cor
 
 In an isolated Enterprise fixture with the auditing configuration from section 5, perform a successful authentication, a failed authentication, a collection creation, a permitted collection read, and a read attempted by an authenticated user that lacks find permission on the collection, then inspect the audit destination. Confirm the successful-authorization-check setting first:
 
+**REASONED:** Enterprise audit coverage; no Enterprise deployment or readable audit destination. Expected events and MongoDB 8.0 sources follow.
+
 ```javascript
 db.adminCommand({getParameter: 1, auditAuthorizationSuccess: 1});
 ```
@@ -10837,6 +10940,8 @@ With no destination configured, no audit records are produced. With the destinat
 **REASONED:** no MongoDB Enterprise binaries, running test server, or process-log access is available.
 
 Set the log verbosity to 1 in both fixtures so the operation is logged regardless of latency, insert a harmless canary, read the corresponding entry in the process log, then restore the previous verbosity:
+
+**REASONED:** diagnostic-log redaction; no Enterprise test server or process-log access. Expected canary results and MongoDB 8.0 sources follow.
 
 ```javascript
 db.setLogLevel(1);
@@ -10852,6 +10957,7 @@ Without redaction, the canary value appears in the matching log entry. With `sec
 Create equivalent unencrypted and encrypted fixtures, each holding a known document, then confirm on disposable copies that the encrypted data files require the key configuration while a correctly configured server reads them. Inspect the startup log for the key-manager initialization:
 
 ```bash
+# REASONED: storage encryption; no Enterprise fixture, disposable data directory or KMIP endpoint. Expected key-manager results and MongoDB 8.0 sources follow.
 grep -iE 'encryption.*key|key manager' /var/log/mongodb/mongod.log
 ```
 
@@ -24596,6 +24702,56 @@ None of the checks above tests isolation between tenants. Where one embeddings t
 
 # MCP servers: exposing Model Context Protocol servers safely
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| revision: Current revision can receive compatible changes; legacy 2025-11-25 is Final and handshake-based. | MCP 2026-07-28; MCP legacy 2025-11-25 | REASONED |
+| stdio: Prefer local stdio; subprocess inherits user privileges and supplied environment credentials; restrict that environment. | MCP 2026-07-28 | REASONED |
+| http: Streamable HTTP uses one POST endpoint; 2024-11-05 HTTP+SSE is deprecated. | MCP 2026-07-28 | REASONED |
+| metadata: No initialize handshake; each request needs protocolVersion and clientCapabilities in params._meta; clientInfo is recommended. | MCP 2026-07-28 | REASONED |
+| headers: MCP-Protocol-Version mirrors body version; Mcp-Method mirrors method; Mcp-Name is required only for tools/call, resources/read and prompts/get. | MCP 2026-07-28 | REASONED |
+| header-error: Missing/malformed required headers or body mismatch require HTTP 400 and -32020; unsupported version requires 400 and -32022. | MCP 2026-07-28 | REASONED |
+| discover: Servers MUST implement server/discover; clients MAY call it, without a mandatory first-call requirement. | MCP 2026-07-28 | REASONED |
+| legacy-removal: Sessions, Mcp-Session-Id, GET stream and Last-Event-ID resumability are removed; revision-only servers SHOULD ignore legacy headers and return GET/DELETE 405. | MCP 2026-07-28 | REASONED |
+| bind: Local HTTP SHOULD bind localhost; explicitly bind 127.0.0.1 and expose only the fronting layer, checking framework options. | MCP 2026-07-28 | REASONED |
+| origin: Validate Origin; a present invalid value requires 403, optionally a JSON-RPC error without id. | MCP 2026-07-28 | REASONED |
+| origin-proxy: nginx /mcp forwards to 127.0.0.1:3000; the if rule rejects missing Origin, while the map variant allows it and rejects wrong origins. | nginx unknown | REASONED |
+| origin-limits: Proxy Origin checks do not replace server mirror-header/body validation. | MCP 2026-07-28 | REASONED |
+| tls: Use loopback HTTP with TLS ingress; authorization-server endpoints require HTTPS. | MCP 2026-07-28 | REASONED |
+| auth: Protocol authorization is optional; this guide requires authentication beyond loopback, with OAuth 2.1 resource-server or fronting controls. | MCP 2026-07-28 | REASONED |
+| resource-metadata: RFC 9728 metadata must name at least one authorization server; server supports challenge or well-known discovery, client both, path-suffixed then root fallback. | MCP 2026-07-28 | REASONED |
+| pkce: Clients require PKCE, S256 when capable, and refuse metadata lacking code_challenge_methods_supported. | MCP 2026-07-28 | REASONED |
+| resource: Clients send canonical MCP resource URI in authorization and token requests. | MCP 2026-07-28 | REASONED |
+| audience: Validate intended audience; invalid/expired tokens receive 401 and insufficient scope 403. | MCP 2026-07-28 | REASONED |
+| upstream: Never pass caller tokens upstream; use separate upstream tokens, least-privilege keys and identity-attributed tool logs. | MCP 2026-07-28 | REASONED |
+| bearer: Bearer token goes in Authorization on every request, never the URL; the authorization GET /mcp example is identified as stale. | MCP 2026-07-28 | REASONED |
+| handles: State handles are not authentication; verify every request, use unpredictable handles and bind them to the verified user. | MCP 2026-07-28 | REASONED |
+| scopes: Server token acceptance MUST account for broader scopes implying narrower ones. | MCP 2026-07-28 | REASONED |
+| refresh: Public-client refresh tokens MUST rotate; servers SHOULD NOT advertise offline_access as a resource scope. | MCP 2026-07-28 | REASONED |
+| registration: CIMD is preferred over deprecated DCR; DCR remains compatible and requires appropriate application_type. | MCP 2026-07-28 | REASONED |
+| azure-prm: Preview WEBSITE_AUTH_PRM_DEFAULT_WITH_SCOPES takes comma-separated scopes and adds metadata URL/scopes to the 401 challenge. | Azure App Service unknown | REASONED |
+| fronting: Static proxy bearer auth requires preconfigured client headers; it does not implement MCP OAuth metadata negotiation. | MCP 2026-07-28 | REASONED |
+| mfa: Enforce human MFA at the authorization server or fronting identity provider; MCP has no login dialogue. | MCP 2026-07-28 | REASONED |
+| secrets: Supply separate upstream keys per server/environment from environment or secret storage, with least privilege. | MCP 2026-07-28 | REASONED |
+| subscriptions: subscriptions/listen POST opens a long-lived text/event-stream until cancelled; preserve framing and content type. | MCP 2026-07-28 | REASONED |
+| nginx-buffer: nginx buffers by default; proxy_buffering off or honored X-Accel-Buffering: no permits immediate events. | nginx unknown; MCP 2026-07-28 | REASONED |
+| nginx-timeout: proxy_read_timeout defaults to 60s between reads; example 3600s must exceed expected idle gaps, with keep-alives as an alternative. | nginx unknown; MCP 2026-07-28 | REASONED |
+| caddy-stream: Caddy flushes text/event-stream immediately and defaults to no read timeout. | Caddy unknown | REASONED |
+| cache: Private caches must separate authorization contexts and result-affecting inputs; cacheScope never replaces access checks; public results may be shared. | MCP 2026-07-28 | REASONED |
+| nginx-cache: proxy_cache off keeps caching disabled; default methods are GET/HEAD, and POST caching needs explicit configuration. | nginx unknown | REASONED |
+| verify-network: Inventory listeners and probe actual direct origin; any HTTP response proves reachability, local errors and unexplained timeouts are inconclusive. | MCP 2026-07-28; curl minimum 7.75.0 | REASONED |
+| verify-anonymous: Unauthenticated discovery should get 401; actual discovery data is exposure, while redirects, login pages and RPC/transport errors are inconclusive. | MCP 2026-07-28 | REASONED |
+| verify-origin: Require valid-credential allowed-Origin DiscoverResult, including complete/version/capabilities/cache hints; changing only Origin should yield 403. | MCP 2026-07-28 | REASONED |
+| verify-audience: Otherwise-valid token for another resource should get 401, not DiscoverResult; no second-resource authorization server was available. | MCP 2026-07-28 | REASONED |
+| verify-credential-file: Mode-0600 header files keep credentials out of curl argv, without protecting history, tracing or account-owner access. | curl minimum 7.75.0 | REASONED |
+<!-- version-basis:end -->
+
 An MCP server gives a model tools, and every tool it exposes runs with the credentials the server holds. The 2026-07-28 specification defines two transports. Over **stdio** the client launches the server as a subprocess and talks over stdin and stdout: there is no network listener, but the process runs as the launching user with every credential in its environment, so a malicious or careless server is a local compromise, not a network one. Over **Streamable HTTP** the server is a web service with a single endpoint accepting **POST**, and every rule in [authentication.md](authentication.md) applies to it. For a server supporting only this revision, the spec says GET or DELETE to that endpoint SHOULD receive `405 Method Not Allowed`; server-to-client change notifications now flow on a long-lived `subscriptions/listen` POST response stream rather than a standalone GET stream. The older HTTP with SSE transport (protocol version 2024-11-05) is deprecated; Streamable HTTP replaces it. See Streamable HTTP. The spec makes authorization OPTIONAL at the protocol level; this repository does not, so an HTTP MCP server reachable beyond loopback authenticates every request, either natively or through a fronting layer. See Authorization.
 
 **Spec revision.** This guide is written against MCP **2026-07-28**, the **Current** revision. Current means ready for use and still able to receive backwards-compatible changes; it does not mean Final. See MCP versioning. Two distinct changes matter:
@@ -24867,6 +25023,46 @@ Header files keep credential values out of curl's argv; this does not protect a 
 
 # MCP clients: authorizing to Model Context Protocol servers safely
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| iss: Compare received iss exactly with the transaction issuer before sending a code to any token endpoint; reject mismatches without normalization. | MCP 2026-07-28; OAuth and HTTP RFCs unknown | REASONED |
+| iss-required: If issuer-response support is advertised, missing iss is rejected; otherwise present iss is validated and absent iss still needs multi-AS mix-up protection. | OAuth and HTTP RFCs unknown | REASONED |
+| transaction: Bind the validated expected issuer to the state/PKCE transaction; multi-AS clients MUST prevent mix-up attacks. | OAuth and HTTP RFCs unknown; MCP 2026-07-28 | REASONED |
+| issuer: Authorization metadata issuer must exactly equal the issuer used to construct discovery, including its path; reject the document before using endpoints. | MCP 2026-07-28; OAuth and HTTP RFCs unknown | REASONED |
+| resource-metadata: Validate protected-resource resource separately from authorization-server issuer; issuer equality is not SSRF protection. | OAuth and HTTP RFCs unknown | REASONED |
+| oidc-discovery: OIDC discovery requires equivalent provider issuer validation; the cited Core offline-access section does not establish the discovery procedure. | OpenID Connect 1.0 errata 2 | REASONED |
+| cimd: CIMD client_id uses HTTPS with a path; document client_id must exactly match its URL. | CIMD draft draft-ietf-oauth-client-id-metadata-document-00 | REASONED |
+| registration-order: Clients SHOULD support CIMD and prefer available preregistration, then CIMD, then optional deprecated DCR. | MCP 2026-07-28 | REASONED |
+| application-type: DCR MUST specify appropriate application_type: native SHOULD cover desktop/mobile/CLI/localhost apps; web SHOULD cover remote browser apps. | MCP 2026-07-28 | REASONED |
+| web-default: Omitted application_type defaults to web; incompatible native redirects can be rejected under provider policy, without justification for weakening validation. | OpenID Connect 1.0 errata 2 | REASONED |
+| registration-history: Body records DCR SHOULD support in 2025-06-18 and CIMD priority by 2025-11-25; Sources pins only the current MCP revision. | MCP 2026-07-28 | REASONED |
+| refresh-confidential: Keep refresh tokens confidential in transit/storage, including public clients; send only to issuing-server token/revocation endpoints over authenticated TLS. | OAuth 2.1 draft draft-ietf-oauth-v2-1-14; OAuth and HTTP RFCs unknown | REASONED |
+| refresh-storage: Keep refresh tokens out of logs, URLs, repositories and public metadata; use protected storage or native credential storage. | OAuth 2.1 draft draft-ietf-oauth-v2-1-14 | REASONED |
+| refresh-request: SHOULD include refresh_token grant type; MAY request advertised offline_access; MUST NOT assume refresh-token issuance. | MCP 2026-07-28 | REASONED |
+| offline-access: OIDC offline_access requires code-returning response_type and normally prompt=consent; another permitting condition can waive consent prompting. | OpenID Connect 1.0 errata 2 | REASONED |
+| ssrf: RFC 9728 recommends SSRF precautions; server-deployed MCP clients MUST mitigate every OAuth-related fetch. | OAuth and HTTP RFCs unknown; MCP 2026-07-28 | REASONED |
+| ssrf-destinations: Use HTTPS destination controls blocking private/reserved, loopback, link-local and metadata addresses; configure necessary private exceptions explicitly. | MCP 2026-07-28; OAuth and HTTP RFCs unknown; OWASP SSRF guidance unknown | REASONED |
+| ssrf-redirects: Revalidate redirects and prevent DNS check/connect races with pinned resolution or controlled egress. | MCP 2026-07-28; OAuth and HTTP RFCs unknown; OWASP SSRF guidance unknown | REASONED |
+| ssrf-allowlist: Known-provider issuer/destination allowlists narrow exposure; dynamic clients still need runtime controls, beyond issuer equality. | OWASP SSRF guidance unknown; OAuth and HTTP RFCs unknown | REASONED |
+| pkce: Require PKCE, S256 when capable, and refuse absent code_challenge_methods_supported. | MCP 2026-07-28 | REASONED |
+| resource: Send canonical resource URI in both authorization/token requests; replay protection also needs audience-bound issuance and server audience validation. | MCP 2026-07-28; OAuth and HTTP RFCs unknown | REASONED |
+| https: Use HTTPS authorization endpoints and localhost or HTTPS redirect URIs. | MCP 2026-07-28 | REASONED |
+| token-url: Access tokens go in Authorization, never URL queries; authorization codes use callback queries with PKCE/iss and referrer/log suppression. | MCP 2026-07-28; OAuth 2.1 draft draft-ietf-oauth-v2-1-14; OAuth and HTTP RFCs unknown | REASONED |
+| verify-iss: Restore the same fresh transaction before matched callbacks; control redeems code, mismatched iss must cause no token request, independently of state replay. | OAuth and HTTP RFCs unknown; MCP 2026-07-28 | REASONED |
+| verify-metadata: Fresh uncached complete metadata pair differs only in issuer; prove test fetch, disable alternative discovery, and reject endpoints from mismatched metadata. | OAuth and HTTP RFCs unknown; MCP 2026-07-28 | REASONED |
+| verify-address: Local classifier should print BLOCK for all five internal addresses; guide says it ran but records no observed output, so no demonstration is established. | OAuth and HTTP RFCs unknown; MCP 2026-07-28 | REASONED |
+| verify-ssrf: Trusted HTTPS public-address control must fetch; cleared-state private-address test must resolve and reject before connecting, with positive evidence beyond absent traffic. | OAuth and HTTP RFCs unknown; MCP 2026-07-28 | REASONED |
+| verify-secrets: Filename-only token scan distinguishes findings, clean and errors; grant_types alone does not match, empty quoted assignments may, and clean is a bounded heuristic. | OAuth 2.1 draft draft-ietf-oauth-v2-1-14 | REASONED |
+| verify-dcr: Captured native DCR body must contain application_type native; omission/mismatch exits nonzero, correct value zero; illustrative JSON is not a live capture. | MCP 2026-07-28; OpenID Connect 1.0 errata 2 | REASONED |
+<!-- version-basis:end -->
+
 An MCP client authorizes to a remote server on a user's behalf, and a malicious or confused server can steer that authorization: it can name an attacker's authorization server, hand back a discovery document that points credentials the wrong way, or supply OAuth URLs that make the client reach inside its own network. The [mcp-servers.md](mcp-servers.md) guide covers the server operator's side and its fronting proxy; this guide covers the **client's** obligations under the MCP **2026-07-28** authorization flow, where a skipped check is not a style lapse but the difference between an authorization code reaching the honest token endpoint and reaching an attacker's. Everything here is a client-side control: it runs in the MCP client (a desktop app, a CLI, or a client deployed on a server), not in the server it talks to.
 
 **Spec revision.** This guide is written against MCP **2026-07-28**, the **Current** revision, and every "MCP requires" below is quoted from that revision's authorization and security pages. Requirement levels (MUST, SHOULD, MAY) are reproduced as the source states them; where a control is a SHOULD in one document and a MUST in another for a narrower case, both are given rather than the stronger one alone. See MCP Authorization.
@@ -24943,6 +25139,8 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
 3. **SSRF destinations are blocked (partially runnable).** The address-classification half is runnable now; the client-integration half is reasoned. Runnable: confirm the deny-list rejects the reserved and internal ranges a discovery URL might target, namely the cloud metadata address, loopback, and RFC 1918 space:
 
+   REASONED: following block; address classification follows RFC 9728 and MCP SSRF guidance; the guide records execution but no observed output.
+
    ```bash
    (
      for ip in 169.254.169.254 127.0.0.1 10.0.0.1 192.168.0.1 172.16.0.1; do
@@ -24954,6 +25152,8 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
    Every line must print `BLOCK`; a printed `ALLOW` for any of these is an SSRF hole. Reasoned (prerequisite unavailable: a malicious server, the target client, and a controllable HTTPS discovery host that carries a valid, trusted TLS certificate and whose name resolves to an address you choose): keep the scheme HTTPS with valid TLS throughout and vary only the resolved address, so a refusal is attributable to the address policy rather than to HTTPS or TLS enforcement. Run the public-address control and the private-address test from the same fresh pre-discovery state, clearing any cached discovery metadata, DNS answers, and open connections between them, because otherwise a cached response would satisfy discovery with no fetch at all (RFC 9728 section 7.10 notes "Normal HTTP caching behaviors apply", and RFC 9111 section 4.2 has a fresh cached response served without contacting the origin). Establish the public-address control first: have the malicious server advertise a discovery URL on a host you control, for example `https://discovery.example.com/.well-known/oauth-protected-resource`, which the client fetches with `GET /.well-known/oauth-protected-resource HTTP/1.1` and `Host: discovery.example.com` (RFC 9728 section 3.1 requires the metadata "MUST be queried using an HTTP GET request"); resolve `discovery.example.com` to a routable public address and confirm the client fetches it. Then, from that cleared state and changing only the resolved address, point `discovery.example.com` at the cloud metadata address (`169.254.169.254`) or another blocked range. Exposed (vulnerable) client: it fetches the URL and reaches the internal service. Fixed client: it resolves the test to the blocked address and refuses that destination before connecting. Require positive evidence of that resolve-and-reject, not the mere absence of a request, since a cache hit also produces no request. Distinguishing source: RFC 9728 section 7.7 and, for server-deployed clients, the MCP MUST in Security Best Practices.
 
 4. **No refresh token or long-lived bearer token stored in cleartext (runnable, bounded heuristic).** This is a heuristic scan, not a proof: it searches the client's config and log paths for a refresh-token or bearer-token value in the clear, lists only the filenames (never the secret itself), and separates a clean scan from a scan error. Substitute the client's own path for the placeholder, inside the single quotes on the `set --` line:
+
+   REASONED: following block; this bounded token scan follows OAuth 2.1 confidentiality requirements; the guide records execution but no observed output.
 
    ```bash
    (
@@ -24980,11 +25180,15 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
 5. **`application_type` is present on DCR (reasoned).** Prerequisite unavailable: the client's live DCR request. Capture the registration request body the client `POST`s to the DCR endpoint and confirm it includes `application_type` (`native` or `web` per step 3). A fixed native client's captured body looks like this (an illustrative shape, not a live capture):
 
+   REASONED: following block; illustrative native registration follows MCP Client Registration and OIDC Registration; no live DCR request is available.
+
    ```json
    {"redirect_uris":["http://localhost:3000/callback"],"grant_types":["authorization_code"],"response_types":["code"],"token_endpoint_auth_method":"none","application_type":"native"}
    ```
 
    Save the actual captured body as `dcr-request.json` and inspect it (this native client checks for `native`; a remotely-hosted browser client checks for `web` instead):
+
+   REASONED: following block; application_type inspection follows MCP Client Registration and OIDC Registration; no live DCR request is available.
 
    ```bash
    python3 -c 'import json,sys; sys.exit(0 if json.load(sys.stdin).get("application_type") == "native" else 1)' < dcr-request.json
@@ -25497,6 +25701,75 @@ An authenticated user without permission on a resource gets `403`; a missing or 
 
 # Agent and workflow builders: Dify, Flowise, Langflow, LibreChat
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| flowise-port: Flowise PORT defaults 3000; Compose publishes ${PORT}:${PORT}; replace with host-loopback mapping. | Flowise documentation unknown; Flowise Compose 4ea391204a499fb6d19747104502362295b4dde3 | REASONED |
+| langflow-port: Langflow defaults port 7860; example Compose publishes 7860:7860 and Postgres 5432:5432; keep database unpublished or private. | Langflow documentation unknown; Langflow Compose c6dbca308dc85526d5cecb31211821ec4f5e1d05 | REASONED |
+| librechat-port: LibreChat defaults 3080; Compose publishes ${PORT}:${PORT} and admin-panel ${ADMIN_PANEL_PORT:-3000}:3000; restrict both. | LibreChat documentation unknown; LibreChat Compose 1596df724a840f894831fc74f21de8d8df72fcb1 | REASONED |
+| compose-merge: Override ports lists merge; !override replaces and !reset clears. Body requires Compose 2.24.4+ for both; Sources does not record that version. | Docker unknown | REASONED |
+| docker-firewall: Docker published traffic can bypass UFW; removing or narrowing publications is required. | Docker unknown | REASONED |
+| dify-ports: Dify publishes nginx 80/443 and plugin debugging 5003, with more vector-profile ports; EXPOSE_NGINX_SSL_PORT remains published when HTTPS serving is off. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675; Dify Compose source 8387590ace4a094de812b7847fc6a4c3a27cd52b | REASONED |
+| dify-debug-bind: Compose pins daemon 0.6.10-local, publishes 5003 on all host interfaces; EXPOSE_PLUGIN_DEBUGGING_HOST is client destination, not bind control. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
+| daemon-listener: Daemon 0.6.10 uses plaintext newline-delimited JSON TCP; PLUGIN_DEBUGGING_HOST/PORT map to remote-installing listener, default 0.0.0.0:5003. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675; Dify plugin daemon 0.6.10 | REASONED |
+| daemon-key: Per-tenant UUID debugging key has Redis bidirectional mappings with two-hour expiry; retrieval refreshes expiry, not key, and expiry leaves authenticated runtime connected. | Dify plugin daemon 0.6.10 | REASONED |
+| daemon-rejection: Wrong key yields handshake failed, invalid key and closes; lookup is Redis-based and TCP key guessing has no rate limiter. | Dify plugin daemon 0.6.10 | REASONED |
+| daemon-preauth: Non-handshake messages can parse/store declarations and buffer assets before authentication. | Dify plugin daemon source 1310a18b2f6bc6f18768a0a6265484830891433c | REASONED |
+| daemon-assets: Asset limit compares decoded buffered bytes plus incoming base64 string length against 50 MiB; accepted chunks increment decoded length. | Dify plugin daemon source 1310a18b2f6bc6f18768a0a6265484830891433c | REASONED |
+| daemon-authority: Key holder registers tenant runtime receiving invocation parameters/prompts/credentials and returning results; this alone does not demonstrate host shell execution. | Dify plugin daemon 0.6.10 | REASONED |
+| debug-key-access: Initialized authenticated member with active workspace after setup can GET current workspace debugging-key under documented default permissions. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
+| rbac-default: RBAC_ENABLED defaults false and skips enterprise RBAC checks. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
+| plugin-permission: No plugin-permission row allows every member; existing row default noone differs, and admins permits only admin/owner. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
+| debug-remedy: Admin/owner may POST permission/change with debug_permission admins; preserve install_permission, whose omitted value defaults everyone; UI availability unestablished. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
+| debug-disable: PLUGIN_REMOTE_INSTALLING_ENABLED defaults true; false prevents TCP startup and removes debugging-key route, while ports: !reset [] separately removes publication. | Dify plugin daemon 0.6.10; Docker unknown | REASONED |
+| verify-debug-config: Merged Compose should change from published 5003/default-enabled to no publication and explicit false after override and recreation; no Docker/listener demonstration. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675; Dify plugin daemon 0.6.10; Docker unknown | REASONED |
+| flowise-tls: Flowise documented TLS uses nginx/certbot upstream localhost:3000; configure NUMBER_OF_PROXIES for real client addresses. | Flowise documentation unknown | REASONED |
+| librechat-tls: LibreChat documented TLS uses nginx upstream localhost:3080; TRUST_PROXY defaults 1 and must match proxy hops. | LibreChat documentation unknown | REASONED |
+| langflow-tls: LANGFLOW_SSL_CERT_FILE/KEY_FILE enable native TLS; proxy remains a place for login/MFA. | Langflow documentation unknown | REASONED |
+| langflow-cookies: LANGFLOW_ACCESS_SECURE and LANGFLOW_REFRESH_SECURE default false; enable both behind HTTPS. | Langflow documentation unknown | REASONED |
+| dify-tls: Certbot challenge/domain/email and fullchain.pem/privkey.pem precede certificate update; enable HTTPS and recreate nginx; default HTTPS false, protocols TLSv1.2 TLSv1.3. | Dify certbot source 4c1ad40f8e8a6ee58a958330558f2178b7e47fa7; Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
+| dify-urls: Set CONSOLE_API_URL, CONSOLE_WEB_URL and APP_WEB_URL to public HTTPS; CONSOLE_API_URL controls HTTPS-only cookies. | Dify documentation unknown | REASONED |
+| dify-bootstrap: INIT_PASSWORD defaults empty; set it before first up to gate /install and claim admin privately. | Dify documentation unknown; Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
+| dify-secret: SECRET_KEY signs session/JWT and encrypts stored OAuth credentials; generate random value, or empty auto-generates in storage. | Dify documentation unknown; Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
+| dify-registration: ALLOW_REGISTER=false default closes ordinary self-registration, but not invitations or /install bootstrap. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
+| dify-db-redis: Replace DB_PASSWORD and REDIS_PASSWORD defaults difyai123456 and update embedded CELERY_BROKER_URL password. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
+| dify-sandbox: Replace CODE_EXECUTION_API_KEY/SANDBOX_API_KEY default dify-sandbox together. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
+| dify-plugin-keys: Replace PLUGIN_DAEMON_KEY and PLUGIN_DIFY_INNER_API_KEY example service credentials. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
+| dify-agent-keys: Replace DIFY_AGENT_API_TOKEN and DIFY_AGENT_SERVER_SECRET_KEY; signing key needs unpadded base64url of 32 random bytes. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
+| dify-weaviate: If enabled, rotate WEAVIATE_API_KEY and matching allowed keys; disable anonymous access. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
+| dify-api: App Bearer keys are separate from console accounts; create per app and keep calls/keys on the backend. | Dify documentation unknown | REASONED |
+| flowise-accounts: From v3.0.1, email/password accounts use JWT HTTP-only cookies; old FLOWISE_USERNAME/PASSWORD are deprecated migration settings; claim admin privately. | Flowise account minimum v3.0.1 | REASONED |
+| flowise-secrets: Randomize JWT_AUTH_TOKEN_SECRET, JWT_REFRESH_TOKEN_SECRET, EXPRESS_SESSION_SECRET default flowise, and TOKEN_HASH_SECRET; APP_URL defaults localhost:3000. | Flowise account minimum v3.0.1; Flowise documentation unknown | REASONED |
+| flowise-encryption: FLOWISE_SECRETKEY_OVERWRITE supplies stored-credential encryption key; otherwise it lives under SECRETKEY_PATH. | Flowise documentation unknown | REASONED |
+| flowise-prediction: Chatflow without assigned key is public by ID; assign per-chatflow API key (DefaultKey is precreated), Bearer requests reject missing key with 401. | Flowise documentation unknown | REASONED |
+| langflow-auto: Application AUTO_LOGIN defaults True, official images false; explicitly disable it, set superuser password other than legacy langflow; username defaults langflow. | Langflow documentation unknown | REASONED |
+| langflow-secret: Set permanent random LANGFLOW_SECRET_KEY; documented auto-generated key is unsuitable for production. | Langflow documentation unknown | REASONED |
+| langflow-signup: NEW_USER_IS_ACTIVE defaults False but ENABLE_SIGNUP True; disable signup and keep activation requirement. | Langflow documentation unknown | REASONED |
+| langflow-api: With auto-login off, POST /api/v1/run/&lt;flow-id&gt; needs x-api-key; create via settings or CLI. SKIP_AUTH_AUTO_LOGIN defaults false, applies only with auto-login and is slated for removal. | Langflow documentation unknown | REASONED |
+| langflow-host: HOST defaults localhost; bridged containers need 0.0.0.0 plus host-loopback publication and injected env_file/environment. Body labels docs 1.12.x; Sources lacks that pin. | Langflow documentation unknown; Langflow Compose c6dbca308dc85526d5cecb31211821ec4f5e1d05 | REASONED |
+| librechat-bootstrap: First registered user becomes admin; close ALLOW_REGISTRATION after claiming it. | LibreChat documentation unknown | REASONED |
+| librechat-sso: For SSO-only, disable email login and deliberately enable social registration/login; configure OPENID_* and optional required role with provider allowlist and MFA. | LibreChat documentation unknown | REASONED |
+| librechat-secrets: CREDS_KEY is 32 bytes, CREDS_IV 16; JWT secrets at least 32 bytes. Blank values bootstrap keys with persistence caveats; retired JWT defaults are refused. | LibreChat documentation unknown | REASONED |
+| librechat-urls: DOMAIN_CLIENT and DOMAIN_SERVER must use public HTTPS URL. | LibreChat documentation unknown | REASONED |
+| mfa: Instance-wide native MFA enforcement is not documented; use provider/fronting MFA. Flowise SSO is Enterprise; Langflow offers external JWT/JWKS. | Flowise documentation unknown; Langflow documentation unknown; LibreChat documentation unknown | REASONED |
+| librechat-mfa: v0.7.7 changelog lists two-factor enrolment/backup codes, but checked authentication docs do not establish enforced MFA. | LibreChat changelog v0.7.7; LibreChat documentation unknown | REASONED |
+| containment: Treat editor as code/SSRF authority; isolate runtime, limit mounts/privileges and default-deny egress including metadata; rotate exposed provider keys. | Langflow documentation unknown; Flowise documentation unknown; LibreChat documentation unknown; Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
+| flowise-guards: Keep HTTP_SECURITY_CHECK and CUSTOM_MCP_SECURITY_CHECK enabled; disabling MCP check permits arbitrary command execution. | Flowise documentation unknown | REASONED |
+| librechat-actions: Unset actions.allowedDomains allows public domains with private-target SSRF checks; configured allowlist denies others, and listed private destination grants exception. | LibreChat documentation unknown | REASONED |
+| dify-ssrf: Keep Dify SSRF proxy for sandbox and HTTP-request nodes; HTTP allowlists do not contain arbitrary local tools. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675; Dify Compose source 8387590ace4a094de812b7847fc6a4c3a27cd52b | REASONED |
+| verify-network: Inventory all listeners and actual Publishers; direct TCP 5003 success proves exposure, refusal/timeout needs same-host reachable control and merged-model evidence. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675; Dify plugin daemon 0.6.10; Docker unknown | REASONED |
+| verify-editor: Curl checks transport only; fresh unauthenticated browser must show login, and /install must be already claimed rather than open admin setup. | Dify documentation unknown; Flowise account minimum v3.0.1; Langflow documentation unknown; LibreChat documentation unknown | REASONED |
+| verify-dify: Direct /v1/parameters matched pair expects missing-Bearer 401 and valid-key parameters 200; app_unavailable 400 is inconclusive; bundled nginx is not strict api-service attribution. | Dify documentation unknown | REASONED |
+| verify-flowise: Assigned-key chatflow prediction must reject missing key and return real output with valid Bearer key; keyless flow is public. | Flowise documentation unknown | REASONED |
+| verify-langflow: Run API must reject absent x-api-key and return real output with valid key; routing, transport or validation errors are inconclusive. | Langflow documentation unknown | REASONED |
+<!-- version-basis:end -->
+
 Each of these tools stores your provider API keys (OpenAI, Anthropic, and the rest) and exposes both an editor UI and callable APIs, so an open instance is a secrets vault plus free compute for whoever finds it. All four ship with login of some kind; the exposure comes from skipping the first-run setup, leaving default secrets in place, and publishing the container port on every interface over plain HTTP. And because each one runs user-authored flows with custom-code and HTTP-request/tool nodes, the editor is effectively code-execution and server-side-request authority on the host, so authentication decides who gets in but does not contain what a flow can then run or reach (section 8, [egress-metadata.md](egress-metadata.md)). None of them offers a native second factor that this guide can rely on, so MFA comes from an OIDC provider (where the tool supports OIDC) or from the fronting layer ([mfa.md](mfa.md)).
 
 ## 1. Bind privately
@@ -25748,6 +26021,64 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 
 # AI infrastructure services: SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0, and Onyx
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| searx-bind: Direct SearxNG defaults 127.0.0.1:8888 via server.bind_address/port; documented Docker wildcard 8888:8080 needs loopback replacement or removal. | SearxNG documentation unknown | REASONED |
+| searx-auth: Verified SearxNG configuration has no authentication; protect search with authenticated ingress. | SearxNG documentation unknown | REASONED |
+| searx-secret: Set unique server.secret_key/SEARXNG_SECRET; production startup refuses shipped ultrasecretkey, which is not user authentication. | SearxNG documentation unknown; SearxNG source d4ce87c23431f607162fc5c39ce52c538d64588f | REASONED |
+| searx-egress: Server-side search/image fetches, including image redirects, need outbound restrictions against internal/metadata destinations. | SearxNG source d4ce87c23431f607162fc5c39ce52c538d64588f | REASONED |
+| localai-bind: LocalAI defaults :8080; set LOCALAI_ADDRESS or --address for host loopback; documented 8080:8080 publication needs restriction. | LocalAI documentation unknown | REASONED |
+| localai-key: LOCALAI_API_KEY is unset by default; set unique native key and retain ingress authentication. | LocalAI documentation unknown | REASONED |
+| localai-oauth: LOCALAI_AUTH=true enables multi-user OAuth with per-user keys. | LocalAI documentation unknown | REASONED |
+| tei-bind: TEI CLI defaults 0.0.0.0:3000, distinct from documented container 80 mapped to host 8080; use hostname/port or private publication. | TEI documentation unknown | REASONED |
+| tei-key: API_KEY/--api-key is unset by default; configured key requires Authorization Bearer on inference routes. | TEI documentation unknown; TEI HTTP source v1.9.0 | REASONED |
+| tei-exempt: HTTP /, /health, /ping, /metrics, /docs and /api-doc/openapi.json remain outside inference auth on the main port. | TEI HTTP source v1.9.0 | REASONED |
+| tei-metrics: HTTP metrics share main port and expose model/request information; prometheus-port default 9000 starts standalone exporter only in gRPC build. | TEI documentation unknown; TEI HTTP source v1.9.0; TEI gRPC source 1bb59202500e5f69dd8be63dd1604f7625124fbe | REASONED |
+| langserve: Deprecated 2024-11-18; README recommends LangGraph Platform. Existing quickstart localhost:8000 needs FastAPI application auth or full authenticated proxy. | LangServe source 27e57afeda13007a7f4e007c5d1f5e8489963aa4 | REASONED |
+| private-publication: Container loopback is not host/proxy reachability; retain container-network access and remove or host-loopback-scope publications. | Docker unknown | REASONED |
+| firewall: No-host-IP Docker publications bind all host interfaces; Linux forwarding can bypass UFW. | Docker unknown | REASONED |
+| compose-reset: Ordinary override ports merge; use !reset [] to remove Mem0 Postgres publication, inspect effective invocation/model, or edit base if unsupported. | Docker unknown; Mem0 server source c7ee362aff94a369af70f13f2b4f853f6793ff4c | REASONED |
+| ingress: Publish only authenticated TLS ingress and gate every capability route; production Onyx publication boundary alone proves no certificate or access policy. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5; Docker unknown | REASONED |
+| mem0-auth: Mem0 auth defaults on: dashboard JWT, per-user X-API-Key m0sk_ or legacy ADMIN_API_KEY; do not deploy AUTH_DISABLED=true. | Mem0 documentation unknown | REASONED |
+| mem0-warnings: AUTH_DISABLED warning suppresses short nonempty ADMIN_API_KEY (&lt;16) warning via if/elif; unset key has separate branch; warnings do not stop startup. | Mem0 server source c7ee362aff94a369af70f13f2b4f853f6793ff4c | REASONED |
+| mem0-jwt: With auth on, missing JWT_SECRET raises at startup; generate with openssl rand -base64 48 and keep signing secret private. | Mem0 documentation unknown; Mem0 server source c7ee362aff94a369af70f13f2b4f853f6793ff4c | REASONED |
+| mem0-bootstrap: POST /auth/register grants first admin only while no user exists, then returns 403; bootstrap privately with make bootstrap or host-only wizard. | Mem0 documentation unknown | REASONED |
+| mem0-open: Root redirect, /docs and /openapi.json stay open and cannot prove protected-route authentication. | Mem0 documentation unknown | REASONED |
+| mem0-api-port: Compose runs API 0.0.0.0:8000 and wildcard host 8888:8000; remove publication or replace with host loopback. | Mem0 server source c7ee362aff94a369af70f13f2b4f853f6793ff4c | REASONED |
+| mem0-db-port: Compose publishes Postgres 8432:5432 independently of application auth; remove host mapping and retain database auth. | Mem0 server source c7ee362aff94a369af70f13f2b4f853f6793ff4c | REASONED |
+| mem0-dashboard: Compose dashboard 3000:3000 needs private publication and protected ingress; dashboard authentication coverage is unverified. | Mem0 server source c7ee362aff94a369af70f13f2b4f853f6793ff4c | REASONED |
+| mem0-reload: Compose uvicorn --reload is a development setting; remove for production. | Mem0 server source c7ee362aff94a369af70f13f2b4f853f6793ff4c | REASONED |
+| onyx-prod: Production Compose publishes only nginx 80:80 and 443:443; backing services remain unpublished. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5 | REASONED |
+| onyx-bootstrap: Email/password auth is on and first signup becomes admin; claim privately before exposure. | Onyx documentation unknown | REASONED |
+| onyx-auth-type: Body records AUTH_TYPE inert since v4.4.0 and planned v4.5 removal; Sources does not record those version pins. | Onyx documentation unknown | REASONED |
+| onyx-base: Development merges base plus override; base nginx publishes 80:80 and 3000:80, while web_server has no independent host publication. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5; Onyx documentation unknown | REASONED |
+| onyx-api: Development override adds API 8080:8080; remove unless deliberately restricted for access. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5 | REASONED |
+| onyx-backing: Development adds Postgres 5432, OpenSearch 9200, inference 9000, Redis 6379, MinIO 9004/9005 and interpreter 8000; application auth does not protect these. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5 | REASONED |
+| onyx-port-env: ${VAR:-default} changes or restores host port; an empty variable does not remove publication. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5 | REASONED |
+| onyx-secrets: Connector credential_json persists in database; use least privilege, protect storage/backups and rotate after exposure. | Onyx data model 15ead4ca364e654d40dac842ee9d0bb9e0fe5471 | REASONED |
+| mfa: Native MFA coverage remains unverified; guide relies on identity/fronting MFA and separate machine credentials. | Mem0 documentation unknown; Onyx documentation unknown | REASONED |
+| secrets: Runtime provider/signing/service keys stay out of source/images; outbound provider credentials are not inbound authentication. | LocalAI documentation unknown; TEI documentation unknown; Mem0 documentation unknown; Onyx data model 15ead4ca364e654d40dac842ee9d0bb9e0fe5471 | REASONED |
+| verify-placeholder: Placeholder scan should print matched tokens with grep_exit=0, clean with 1; read errors are inconclusive. Local exercise is recorded without explicit observed outcomes. | curl documentation unknown | REASONED |
+| verify-guards: Whole-block marker/count and empty/placeholder guards are prerequisites, not exposure proof; omitted guards and matching inherited positional values remain limits. | curl documentation unknown | REASONED |
+| verify-inventory: Compare full IPv4/IPv6 socket, merged model and running Publishers inventory; DNAT may escape ss, exposed-only entries are not publications, and empty/error inventories do not pass. | Docker unknown | REASONED |
+| verify-direct: Any direct HTTP response or completed TCP connection proves reachability; refused actual backend plus inventory/working ingress supports isolation, timeout or http=000 alone does not. | curl documentation unknown; Docker unknown | REASONED |
+| verify-backing: Probe every actual private application/backing TCP port; connection success is exposure, refusal needs configuration evidence, timeout/local/netcat-option errors are inconclusive. | Docker unknown | REASONED |
+| verify-ingress: Harmless protected request should reject anonymous caller and admit authorized control; inspect redirect destination/body, and test routes outside native auth through ingress too. | LocalAI documentation unknown; TEI documentation unknown; TEI HTTP source v1.9.0; Mem0 documentation unknown; Onyx documentation unknown; curl documentation unknown | REASONED |
+| verify-tei: POST /embed with harmless inputs should reject missing key 401 and return embeddings with valid key; anonymous health/docs/metrics cannot test native auth. | TEI HTTP source v1.9.0 | REASONED |
+| verify-native: From trusted private position vary only empty/wrong/valid credential for same request; first two reject, third returns real output, without publishing a test port. | LocalAI documentation unknown; TEI documentation unknown; Mem0 documentation unknown; Onyx documentation unknown; LangServe source 27e57afeda13007a7f4e007c5d1f5e8489963aa4 | REASONED |
+| verify-native-limits: Intentionally anonymous private SearxNG/LangServe instead use authenticated ingress; exact selected Mem0/Onyx response codes and dashboard policy remain unverified. | SearxNG documentation unknown; LangServe source 27e57afeda13007a7f4e007c5d1f5e8489963aa4; Mem0 documentation unknown; Onyx documentation unknown | REASONED |
+| verify-positive: Authorized ingress request must return expected application body, paired with negative checks; 2xx alone, login page, errors or unreachable service cannot establish success. | curl documentation unknown; LocalAI documentation unknown; TEI documentation unknown; Mem0 documentation unknown; Onyx documentation unknown | REASONED |
+| verify-headers: Credential headers go on curl stdin under control-character guard; separate ingress/native credentials require both, not argv. | curl documentation unknown | REASONED |
+| verify-browser: Fresh browser must require configured MFA then reach application; forged identity direct request must be blocked while legitimate proxied access works; neither was demonstrated. | Mem0 documentation unknown; Onyx documentation unknown | REASONED |
+<!-- version-basis:end -->
+
 These services expose search, inference, embeddings, document access, or an agent's memory. Their authentication stories differ: SearxNG and LangServe require a fronting layer or application authentication, LocalAI and Text Embeddings Inference each have a key that is unset by default, and Mem0 and Onyx ship authentication on. The deployment command decides what the network sees. Mem0's Compose file and Onyx's development Compose publish backing services beside the authenticated application, where application login cannot protect them.
 
 Keep the application and its backing services private, publish only an authenticated TLS ingress, and keep or enable native authentication wherever it exists.
@@ -25915,6 +26246,8 @@ Use Bash for these blocks and curl 7.75.0 or newer for `exitcode` and `errormsg`
 
 Run this for each configuration or environment file you edited:
 
+REASONED: following block; placeholder-scan expectations follow the recorded local exercise; no actual output is recorded and shell/grep versions are unknown.
+
 ```bash
 (                              # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_EDITED_CONFIG_FILE'
@@ -25988,6 +26321,8 @@ A timeout alone is inconclusive. `http=000` can occur after a server accepts and
 
 For the unchanged vendor examples, Mem0 adds 8432 and 3000 beside API port 8888. Onyx development adds 5432, 9200, 9000, 6379, 9004, 9005, and 8000 beside API port 8080, and nginx contributes 80 and 3000 from the base file. Environment variables can move these ports; the running inventory is the authority.
 
+REASONED: following block; backing-port reachability follows the cited Docker firewall and Compose ps sources; no container runtime or external vantage is available.
+
 ```bash
 (                              # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HOST_ADDRESS' 'REPLACE_WITH_PORT'
@@ -26018,6 +26353,8 @@ Do not choose a health endpoint, documentation page, login page, or an invented 
 Test the ingress and the native layer as SEPARATE controls. Where a service's native key does not cover every route (Text Embeddings Inference leaves `/metrics`, `/docs` and the health routes outside it), also probe one of those uncovered routes anonymously THROUGH the public ingress: the fronting auth must gate it, so an anonymous `2xx` there is a finding even when the capability route is protected. Where the ingress and the application use different credentials, send the application's own credential WITHOUT the ingress credential and confirm the ingress still rejects it, so a keyed backend behind a TLS-only proxy cannot pass this check while the ingress itself is open.
 
 Set the second value on the `set --` line to the actual method, such as `GET` or `POST`. Keep the third value's empty quotes for a request without a body; otherwise put a harmless JSON test body there.
+
+REASONED: following block; ingress rejection follows the cited service authentication sources; no container runtime or live ingress is available.
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
@@ -26057,6 +26394,8 @@ A redirect alone is insufficient: inspect its destination. Do not follow it auto
 **Reasoned, not demonstrated** (no container runtime in the authoring environment). For LocalAI or Text Embeddings Inference with a key set, Mem0, Onyx, or LangServe with application authentication, run the same harmless protected request against the private upstream from a trusted location that can reach it. Do not publish a port to perform this check. The same per-service passages in Sources supply the expected outcomes as in check 5, and one of them bounds this check rather than supporting it: the Text Embeddings Inference server source shows its key middleware covering the inference routes only, so an anonymous answer from `/metrics`, `/health` or `/docs` is not evidence that the key is unset.
 
 For SearxNG, for LangServe relying entirely on its proxy, or for any service you have deliberately left unauthenticated on the private side, run this capability check through the authenticated HTTPS ingress. An intentionally unauthenticated private upstream cannot demonstrate native authentication.
+
+REASONED: following block; native authentication follows the cited service sources; no container runtime or live service is available.
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
@@ -26108,6 +26447,8 @@ Mem0 and Onyx ship authentication on, but the verified record does not establish
 **Reasoned, not demonstrated** (no container runtime in the authoring environment). Repeat the capability request through the HTTPS ingress with valid credentials. Keep its method, path, and body the same as the anonymous test, allowing only the expected upstream-to-ingress URL change. The credential shapes this check needs are documented in Sources: Mem0 accepts a JWT or an `X-API-Key`, Onyx uses its email and password session, LocalAI and Text Embeddings Inference take their configured key, and a guide that cannot show this check succeeding has not established that the restriction left a working service behind.
 
 The header below is reader-supplied. For a configured bearer-token proxy it is `Authorization: Bearer` followed by the token. Mem0 accepts its native per-user key through `X-API-Key`, or a JWT through `Authorization: Bearer`. Other native credential transports are **unverified in the supplied record**. Where ingress and application require separate credentials, send both headers on curl's stdin: `--header @-` reads one header per line, so pipe both lines to it under the same control-character guard, and never pass a credential header with `-H`, which puts it in curl's argv.
+
+REASONED: following block; credentialed success follows the cited service and curl sources; no container runtime, TLS exchange or browser flow is available.
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
@@ -26974,6 +27315,65 @@ For a multi-user chat or RAG deployment (AnythingLLM workspaces, or a shared ass
 ======================================================================
 
 # LLM tracing and observability: Langfuse, Phoenix, Helicone, OpenTelemetry Collector
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| lf-signup: Email/password and public signup default on; AUTH_DISABLE_SIGNUP=true also prevents invite acceptance by new users. | Langfuse documentation unknown | REASONED |
+| lf-bootstrap: Create first account before closing signup, or initialize org before headless user/project with LANGFUSE_INIT_*. | Langfuse documentation unknown | REASONED |
+| lf-sso: AUTH_DISABLE_USERNAME_PASSWORD=true requires SSO; supported Auth.js providers need correct NEXTAUTH_URL beyond password login. | Langfuse documentation unknown | REASONED |
+| lf-session: AUTH_SESSION_MAX_AGE must be integer &gt;5 minutes; source default is 20160, while documentation says 43200; check pinned release. | Langfuse session source 24c949d8dd5617219a8415f80e4c65ad611ff05c; Langfuse documentation unknown | REASONED |
+| lf-api: Ingestion/public API use project public-key username and secret-key password via Basic auth, separately from UI credentials. | Langfuse documentation unknown | REASONED |
+| lf-mfa: Langfuse login has no native MFA; enforce it at the identity provider. | Langfuse documentation unknown | REASONED |
+| lf-session-secret: Replace shipped NEXTAUTH_SECRET=mysecret before first start; known session protection secret permits forged sessions bypassing sign-in controls. | Langfuse documentation unknown; Langfuse Compose 0dd0a7fbe2feb300b8776f02b3684eeee3fbceab | REASONED |
+| lf-salt: Replace shipped SALT=mysalt used for API-key hashes with a separate random value. | Langfuse documentation unknown; Langfuse Compose 0dd0a7fbe2feb300b8776f02b3684eeee3fbceab | REASONED |
+| lf-encryption: Replace all-zero ENCRYPTION_KEY with 32 random hex bytes; later changes need re-encryption and exposed provider credentials need rotation. | Langfuse documentation unknown; Langfuse Compose 0dd0a7fbe2feb300b8776f02b3684eeee3fbceab | REASONED |
+| lf-minio: Rotate bundled minio/miniosecret and matching LANGFUSE_S3_* keys; MinIO S3 host 9090 is wildcard-published. | Langfuse Compose 0dd0a7fbe2feb300b8776f02b3684eeee3fbceab; Langfuse documentation unknown | REASONED |
+| lf-ports: langfuse-web host 3000 is wildcard-published; bundled Postgres, ClickHouse and Redis default loopback; keep all publications private. | Langfuse Compose 0dd0a7fbe2feb300b8776f02b3684eeee3fbceab | REASONED |
+| lf-tls: Container deployment needs proxy TLS; an HTTPS public URL does not establish native Langfuse TLS. | Langfuse documentation unknown | REASONED |
+| phoenix-enable: Phoenix auth defaults disabled; enable PHOENIX_ENABLE_AUTH=True with random PHOENIX_SECRET. | Phoenix documentation unknown | REASONED |
+| phoenix-admin: Auth creates admin@localhost/admin unless first-account startup sets PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD; later environment changes are inert. | Phoenix documentation unknown | REASONED |
+| phoenix-password: Existing admin needs UI password replacement before exposure; remove the inert initial-password variable afterwards. | Phoenix documentation unknown | REASONED |
+| phoenix-http: HTTP UI/REST/OTLP defaults to 0.0.0.0:6006; restrict its bind/publication and backing database exposure. | Phoenix listener source arize-phoenix-v20.16.0; Phoenix documentation unknown | REASONED |
+| phoenix-grpc: Separate OTLP gRPC defaults to [::]:4317 independently of PHOENIX_HOST; isolate namespace/publication/firewall separately. | Phoenix listener source arize-phoenix-v20.16.0 | REASONED |
+| phoenix-keys: Enabling auth blocks collection/API access until system or user API keys exist; PHOENIX_API_KEY is sent as Bearer. | Phoenix documentation unknown | REASONED |
+| phoenix-mfa: No native MFA; federate OAuth2/OIDC or use identity-aware ingress and enforce MFA there. | Phoenix documentation unknown | REASONED |
+| phoenix-signup: PHOENIX_OAUTH2_&lt;IDP&gt;_ALLOW_SIGN_UP defaults True; set False and restrict provider membership. | Phoenix documentation unknown | REASONED |
+| phoenix-basic: Local password login remains beside SSO; PHOENIX_DISABLE_BASIC_AUTH=True closes it after an approved IdP administrator is tested. | Phoenix documentation unknown | REASONED |
+| phoenix-tls: Native HTTP/gRPC TLS exists from 8.29, defaults off, uses certificate/key files; later per-protocol switches override PHOENIX_TLS_ENABLED. | Phoenix TLS minimum 8.29; Phoenix TLS source 080959576563900038688ddf01f3bee110005df5 | REASONED |
+| helicone-login: Better Auth uses signup and organizations; test@helicone.ai/password is a local manual trial, not the deployment security model. | Helicone documentation unknown | REASONED |
+| helicone-secret: Replace BETTER_AUTH_SECRET examples change-me-in-production and Compose your-secret-key before first start. | Helicone documentation unknown; Helicone Compose b12ebaccb824ab9778757ca197ff302d97fda421 | REASONED |
+| helicone-ports: Backing Postgres/ClickHouse/MinIO/Redis/MailHog publications bypass UI login, including 54388:5432 and 18123:8123; remove or loopback-scope them. | Helicone Compose b12ebaccb824ab9778757ca197ff302d97fda421 | REASONED |
+| helicone-boundary: Restrict signup, protect dashboard/Jawn/S3 and gateway separately with private networking or authenticated ingress and MFA; rotate example storage credentials. | Helicone documentation unknown; Helicone Compose b12ebaccb824ab9778757ca197ff302d97fda421 | REASONED |
+| helicone-ingest: AI Gateway ingestion and provider environment keys are separate from web sessions; protect those secrets. | Helicone documentation unknown | REASONED |
+| otel-default: OTLP factory defaults localhost:4317 gRPC and localhost:4318 HTTP at v0.161.0; bind every enabled receiver explicitly. | OpenTelemetry Collector v0.161.0; Collector security guidance unknown | REASONED |
+| otel-history: OTLP localhost transition was v0.104.0; UseLocalHostAsDefaultHost stabilized v0.110.0 and was removed v0.112.0. | OpenTelemetry Collector v0.161.0 | REASONED |
+| otel-shipped: Both shipped configs override component defaults with unauthenticated IPv4 wildcard OTLP 4317/4318, Jaeger 14250/6832/6831/14268 and Zipkin 9411. | Collector distributions v0.161.0 | REASONED |
+| otel-diagnostics: Shipped pprof 1777 and zPages 55679 are wildcard and unauthenticated; remove from extensions/service.extensions or restrict separately. | Collector distributions v0.161.0; OpenTelemetry Collector v0.161.0; Collector pprof source 443567a6a00d7cff8cae1432a6fef655d8698e94 | REASONED |
+| otel-images: Dockerfiles COPY/select shipped config; EXPOSE 4317/4318/55679 is not host publication, but container peers may reach wildcard listeners. | Collector distributions v0.161.0 | REASONED |
+| otel-packages: Systemd reads distribution otelcol.conf; OTELCOL_OPTIONS selects config.yaml; config&#124;noreplace installation can retain local config, and postinstall manages service. | Collector distributions v0.161.0 | REASONED |
+| otel-tls: Require TLS on receivers/exporters and authentication on every receiver protocol accepting off-host data. | Collector security guidance unknown | REASONED |
+| otel-auth: Declare authenticator, start it in service.extensions, and attach each receiver protocol with auth.authenticator; Basic supports htpasswd/client_auth. | Collector security guidance unknown; Collector Basic auth extension 1c897ba9c67afc3c9e218b5cd05a6de49435f4de | REASONED |
+| otel-bearer: bearertokenauth accepts static or file-backed Authorization tokens; the guide cites general security guidance, not a pinned extension reference. | Collector security guidance unknown | REASONED |
+| otel-metrics: Internal metrics factory defaults localhost:8888; shipped configs set 127.0.0.1:8888; 0.0.0.0:8888 scrape target is outbound. | OpenTelemetry Collector v0.161.0; Collector distributions v0.161.0 | REASONED |
+| otel-health: Review enabled health-check 13133 independently of receiver authentication. | Collector health source d922ffb299c6b9be026f97dd7d6a5f0f507efdeb; Collector distributions v0.161.0 | REASONED |
+| otel-k8s: otelcol-k8s Dockerfile supplies no default config COPY/CMD; EXPOSE alone establishes no listener; Helm/operator are out of scope. | Collector distributions v0.161.0 | REASONED |
+| otel-minimal: Run only required components and use a non-root process. | Collector security guidance unknown | REASONED |
+| verify-inventory: Inspect effective config, namespace TCP/UDP, publications and firewall; shipped wildcard listeners should become intended private listeners; outside failures need positive controls. | Collector distributions v0.161.0; Collector security guidance unknown; Phoenix listener source arize-phoenix-v20.16.0 | REASONED |
+| verify-dashboard: Langfuse curl is reachability only; fresh unauthenticated browser must show login rather than project data. | Langfuse documentation unknown | REASONED |
+| verify-lf-api: Direct /api/public/projects pair should yield 401 without key and 200 with expected project ID; proxy-only results cannot prove native auth. | Langfuse documentation unknown | REASONED |
+| verify-collector: Direct OTLP/HTTP JSON /v1/traces should reject anonymous 401/403 and admit configured auth 2xx; wrong content type and failed connections are inconclusive. | Collector security guidance unknown; Collector Basic auth extension 1c897ba9c67afc3c9e218b5cd05a6de49435f4de | REASONED |
+| verify-phoenix-admin: Default admin/admin must fail with replacement password succeeding; with basic auth disabled, require local-login refusal and approved MFA IdP success. | Phoenix documentation unknown | REASONED |
+| verify-phoenix-read: Anonymous /v1/projects should reject 401/403, versus exposed project data 2xx; 404, redirect, 415 and transport errors are inconclusive. | Phoenix documentation unknown; curl minimum 7.75.0 | REASONED |
+| verify-phoenix-http: Empty protobuf POST /v1/traces on 6006 tests admission, not persistence: anonymous rejects, write-authorized key admits, viewer key is not a positive control. | Phoenix documentation unknown; Phoenix gRPC auth source f11c885c063f1c9b6146693cda401c5d645d8294 | REASONED |
+| verify-phoenix-grpc: Separate empty gRPC TraceService/Export requires UNAUTHENTICATED without key, OK with write key; auth-off anonymous OK and viewer PERMISSION_DENIED remain source-reasoned. | Phoenix gRPC auth source f11c885c063f1c9b6146693cda401c5d645d8294; Phoenix listener source arize-phoenix-v20.16.0 | REASONED |
+<!-- version-basis:end -->
 
 These tools store full prompts, completions, and often the provider API keys used to generate them, so an
 exposed dashboard leaks your most sensitive data at once. Several ship with authentication off or with open

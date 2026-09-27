@@ -1,4 +1,286 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "4bf686e0600893958df154b5e8ee8297f0e29cd9c03de1efc4de277de1ff973d",
+  "components": {
+    "docker": {
+      "name": "Official MongoDB Docker images",
+      "basis": "0a29f3374c7fa7c38cfe280363b754f898e0a5eb",
+      "sources": {
+        "s9904167cc177": "https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/docker-entrypoint.sh#L4-L6",
+        "s2b2b907c62f6": "https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/docker-entrypoint.sh#L247-L270",
+        "s24121291cdc4": "https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/docker-entrypoint.sh#L186",
+        "s1f17de6c0e57": "https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/docker-entrypoint.sh#L402-L413",
+        "sec084eaf4f47": "https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/Dockerfile#L122-L125",
+        "s794426369608": "https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/windows/windowsservercore-ltsc2022/Dockerfile#L67"
+      }
+    },
+    "bind": {
+      "name": "MongoDB bind source",
+      "basis": "r8.0.32",
+      "sources": {
+        "s754f20f4ec55": "https://github.com/mongodb/mongo/blob/r8.0.32/src/mongo/db/server_options_base.cpp#L125-L132",
+        "s492eaf134763": "https://github.com/mongodb/mongo/blob/r8.0.32/src/mongo/db/server_options_server_helpers.cpp#L404-L410"
+      }
+    },
+    "docs": {
+      "name": "MongoDB documentation",
+      "basis": "unknown",
+      "sources": {
+        "s8c3f376f412d": "https://www.mongodb.com/docs/manual/administration/security-checklist/",
+        "sc8c1c4250459": "https://www.mongodb.com/legal/support-policy/lifecycles",
+        "see7bce37d0f5": "https://www.mongodb.com/docs/manual/tutorial/enable-authentication/",
+        "s22791f6f25b1": "https://www.mongodb.com/docs/manual/reference/configuration-options/",
+        "s1f0c41f45f41": "https://www.mongodb.com/docs/manual/reference/program/mongod/",
+        "sa7d56fbc7a01": "https://www.mongodb.com/docs/manual/reference/program/mongos/",
+        "s5a6380eab815": "https://www.mongodb.com/docs/manual/reference/method/db.auth/",
+        "sc1181cf8dff3": "https://www.mongodb.com/docs/manual/reference/method/db.createuser/",
+        "s80531f5cd47d": "https://www.mongodb.com/docs/manual/reference/method/db.createrole/",
+        "sbe43794c8d1c": "https://www.mongodb.com/docs/manual/reference/privilege-actions/",
+        "sfb89d8101c88": "https://www.mongodb.com/docs/compass/connect/required-access/",
+        "sa8e4a8275384": "https://www.mongodb.com/docs/manual/reference/command/create/",
+        "s6a592c920ac2": "https://www.mongodb.com/docs/manual/reference/method/db.updateuser/",
+        "sa9e55b825b2a": "https://www.mongodb.com/docs/manual/tutorial/configure-ssl/",
+        "sb527c92150ce": "https://www.mongodb.com/docs/manual/core/security-internal-authentication/",
+        "s2862bf749970": "https://www.mongodb.com/docs/manual/tutorial/configure-x509-member-authentication/",
+        "s2093f0ae077e": "https://www.mongodb.com/docs/manual/tutorial/enforce-keyfile-access-control-in-existing-replica-set/",
+        "s85f35d70e6ed": "https://www.mongodb.com/docs/manual/tutorial/configure-x509-client-authentication/",
+        "s0b650ef2f8d8": "https://www.mongodb.com/docs/manual/core/security-x.509/",
+        "s48d0e6640a2c": "https://www.mongodb.com/docs/manual/reference/connection-string-options/",
+        "seee0e2f961d6": "https://www.mongodb.com/docs/manual/reference/command/ping/",
+        "s6eb89ab49dad": "https://www.mongodb.com/docs/manual/reference/command/connectionstatus/",
+        "sb59a2357999d": "https://www.mongodb.com/docs/manual/reference/command/find/",
+        "s4012eeed7cf2": "https://www.mongodb.com/docs/manual/reference/command/insert/",
+        "s051aa306cd4c": "https://www.mongodb.com/docs/manual/reference/command/update/",
+        "s181c6bd1f977": "https://www.mongodb.com/docs/manual/reference/command/delete/",
+        "s9a8c112b4424": "https://www.mongodb.com/docs/manual/reference/error-codes/",
+        "s6fe5567c6b9f": "https://www.mongodb.com/docs/manual/reference/command/listdatabases/",
+        "sc4c49175cea4": "https://www.mongodb.com/docs/manual/reference/command/replsetgetstatus/"
+      }
+    },
+    "shell": {
+      "name": "mongosh documentation",
+      "basis": "unknown",
+      "sources": {
+        "s5ed633d4d270": "https://www.mongodb.com/docs/mongodb-shell/reference/options/"
+      }
+    },
+    "v8": {
+      "name": "MongoDB documentation",
+      "basis": "8.0",
+      "sources": {
+        "s6f1f3f56616d": "https://www.mongodb.com/docs/v8.0/core/auditing/",
+        "s9e86819e68db": "https://www.mongodb.com/docs/v8.0/reference/audit-message/mongo/",
+        "seedf77aa3e73": "https://www.mongodb.com/docs/v8.0/tutorial/configure-auditing/",
+        "s9fcdc05982a6": "https://www.mongodb.com/docs/v8.0/tutorial/configure-audit-filters/",
+        "s1f3040d0fe4c": "https://www.mongodb.com/docs/v8.0/reference/parameters/",
+        "s4ffa7b653364": "https://www.mongodb.com/docs/v8.0/reference/program/mongod/",
+        "s3b7dabf8f41b": "https://www.mongodb.com/docs/v8.0/core/security-encryption-at-rest/",
+        "see769a1a1e2b": "https://www.mongodb.com/docs/v8.0/reference/configuration-options/",
+        "sf88108a9609d": "https://www.mongodb.com/docs/v8.0/tutorial/configure-encryption/",
+        "sdd8ad5fe92b2": "https://www.mongodb.com/docs/v8.0/core/csfle/",
+        "s23650ad42657": "https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/manual-encryption/",
+        "s2a52e3acf56a": "https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/automatic-encryption/",
+        "s2876af0be5e7": "https://www.mongodb.com/docs/v8.0/core/csfle/reference/csfle-options-clients/",
+        "se39572dfb8ad": "https://www.mongodb.com/docs/v8.0/core/queryable-encryption/",
+        "s1b94cb5e8305": "https://www.mongodb.com/docs/v8.0/release-notes/7.0/",
+        "s1d229cb03243": "https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/limitations/",
+        "se55ecf8e7f85": "https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/qe-options-clients/",
+        "s47b976aa1f45": "https://www.mongodb.com/docs/v8.0/core/queryable-encryption/fundamentals/manual-encryption/",
+        "sd08442f8ff38": "https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/supported-operations/",
+        "sc9621a9507cc": "https://www.mongodb.com/docs/v8.0/administration/monitoring/",
+        "sb5d5b8d3dfa1": "https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/encryption-algorithms/",
+        "s43213b00956d": "https://www.mongodb.com/docs/v8.0/release-notes/8.0/",
+        "s09f3af996812": "https://www.mongodb.com/docs/v8.0/release-notes/8.0-compatibility/"
+      }
+    },
+    "bash": {
+      "name": "Bash documentation",
+      "basis": "unknown",
+      "sources": {
+        "s6dc18acb3ad4": "https://www.gnu.org/s/bash/manual/html_node/Bourne-Shell-Builtins.html",
+        "s9d924cbc6972": "https://www.gnu.org/s/bash/manual/bash.html"
+      }
+    }
+  },
+  "claims": {
+    "lifecycle": {"text": "Use supported releases and security patches; 4.2 reached end of life on April 30, 2023. Examples use tls options rather than older ssl names.", "components": ["docs"], "sources": ["docs:sc8c1c4250459", "docs:s22791f6f25b1"], "status": "REASONED"},
+    "private-listener": {"text": "Configure port 27017 and loopback bindIp; widen only to required private addresses with firewall restrictions.", "components": ["docs"], "sources": ["docs:s22791f6f25b1", "docs:s8c3f376f412d"], "status": "REASONED"},
+    "authorization": {"text": "Enable security.authorization on mongod; a reachable listener with authorization off exposes data.", "components": ["docs"], "sources": ["docs:see7bce37d0f5", "docs:s22791f6f25b1", "docs:s1f0c41f45f41"], "status": "REASONED"},
+    "docker-bind": {"text": "Linux 7.0, 8.0 and 8.3 images default to mongod and add --bind_ip_all unless arguments or a --config file set binding; a bind only in a -f file does not stop the addition.", "components": ["docker"], "sources": ["docker:s9904167cc177", "docker:s24121291cdc4", "docker:s1f17de6c0e57", "docker:sec084eaf4f47"], "status": "REASONED"},
+    "docker-auth": {"text": "Linux entrypoint adds --auth only with both root credential variables or their _FILE forms; one alone exits. With neither credential nor explicit authorization/internal-authentication settings, authorization is off.", "components": ["docker", "docs"], "sources": ["docker:s2b2b907c62f6", "docs:s22791f6f25b1", "docs:s1f0c41f45f41"], "status": "REASONED"},
+    "wildcard-ipv6": {"text": "--bind_ip_all listens on all IPv4 addresses; IPv6 is added only when net.ipv6 is true through --ipv6 or configuration.", "components": ["bind"], "sources": ["bind:s754f20f4ec55", "bind:s492eaf134763"], "status": "REASONED"},
+    "docker-windows": {"text": "Windows images run mongod --bind_ip_all without the Linux entrypoint; root credential variables do not enable authorization.", "components": ["docker"], "sources": ["docker:s794426369608"], "status": "REASONED"},
+    "config-startup": {"text": "mongod reads a configuration file only through --config or -f; mounting alone is insufficient. Supply --config for the image bind check, use required container addresses, and publish privately.", "components": ["docs", "docker"], "sources": ["docs:s22791f6f25b1", "docker:s24121291cdc4", "docker:s1f17de6c0e57", "docs:s8c3f376f412d"], "status": "REASONED"},
+    "bootstrap": {"text": "On loopback, the localhost exception permits the first admin only with no existing users or roles; it is not recovery. Create the SCRAM-SHA-256 userAdminAnyDatabase user, then authenticate the current shell.", "components": ["docs"], "sources": ["docs:see7bce37d0f5", "docs:sc1181cf8dff3", "docs:s5a6380eab815"], "status": "REASONED"},
+    "credential-transport": {"text": "passwordPrompt() avoids password command text but does not encrypt createUser transport; reconnect as admin over TLS before creating application users.", "components": ["docs"], "sources": ["docs:sc1181cf8dff3", "docs:sa9e55b825b2a"], "status": "REASONED"},
+    "application-identity": {"text": "Use a separate application identity; its creation database is its authentication database. read is database-wide; readWrite includes collection and index management permissions.", "components": ["docs"], "sources": ["docs:sc1181cf8dff3", "docs:sfb89d8101c88", "docs:s8c3f376f412d"], "status": "REASONED"},
+    "collection-role": {"text": "The custom role grants find, insert and update on one collection, with no deletion, collection dropping or index management; insert still permits creating that named non-capped collection.", "components": ["docs"], "sources": ["docs:s80531f5cd47d", "docs:sbe43794c8d1c", "docs:sa8e4a8275384"], "status": "REASONED"},
+    "role-scope": {"text": "createRole requires privileges and roles; a role outside admin can grant and inherit only within its database. Use a separate deployment identity for provisioning.", "components": ["docs"], "sources": ["docs:s80531f5cd47d", "docs:sbe43794c8d1c"], "status": "REASONED"},
+    "scram-user-default": {"text": "Omitting user mechanisms normally creates both SCRAM-SHA-1 and SCRAM-SHA-256 credentials; the example explicitly restricts the user to SCRAM-SHA-256.", "components": ["docs"], "sources": ["docs:sc1181cf8dff3"], "status": "REASONED"},
+    "scram-negotiation": {"text": "Omitting authMechanism permits fallback from SCRAM-SHA-256 to SCRAM-SHA-1; explicitly select SCRAM-SHA-256 and check driver compatibility.", "components": ["docs"], "sources": ["docs:s48d0e6640a2c"], "status": "REASONED"},
+    "client-source": {"text": "authenticationRestrictions.clientSource checks the source MongoDB sees, including NAT or proxy effects; it restricts authentication, not TCP reachability.", "components": ["docs"], "sources": ["docs:s6a592c920ac2"], "status": "REASONED"},
+    "server-address": {"text": "authenticationRestrictions.serverAddress checks the accepting listener address; include required alternate and failover paths. Preserve recovery access because incompatible inherited restrictions can prevent login.", "components": ["docs"], "sources": ["docs:s6a592c920ac2"], "status": "REASONED"},
+    "human-mfa": {"text": "Community supports SCRAM and x.509, without a wire-protocol TOTP dialogue; a machine certificate is not human MFA. Protect human host and admin-UI paths with MFA.", "components": ["docs"], "sources": ["docs:s8c3f376f412d", "docs:s0b650ef2f8d8"], "status": "REASONED"},
+    "pem-file": {"text": "Initial PEM creation uses an unused path in a protected directory, umask 077, noclobber, service-account ownership and mode 600; this is not a rotation procedure.", "components": ["bash", "docs"], "sources": ["bash:s6dc18acb3ad4", "bash:s9d924cbc6972", "docs:sa9e55b825b2a"], "status": "REASONED"},
+    "tls-server": {"text": "Merge requireTLS, certificateKeyFile and CAFile into the existing net mapping; SANs must cover client hostnames. Restart the configured service and confirm TLS before widening access.", "components": ["docs"], "sources": ["docs:s22791f6f25b1", "docs:sa9e55b825b2a"], "status": "REASONED"},
+    "tls-mixed-modes": {"text": "allowTLS and preferTLS accept plaintext and TLS; use them only for transition and finish with requireTLS.", "components": ["docs"], "sources": ["docs:s22791f6f25b1"], "status": "REASONED"},
+    "tls-client-certificates": {"text": "With the shown CA configuration, certificates are required unless allowConnectionsWithoutCertificates is true; presented certificates are still validated. False also requires SCRAM clients to present certificates and does not assign roles.", "components": ["docs"], "sources": ["docs:sa9e55b825b2a"], "status": "REASONED"},
+    "mongot": {"text": "The cited TLS documentation requires allowConnectionsWithoutCertificates: true for mongot; check topology before requiring certificates.", "components": ["docs"], "sources": ["docs:sa9e55b825b2a"], "status": "REASONED"},
+    "membership-x509": {"text": "Configure internal authentication on every member, config server and router. Production x.509 membership uses clusterAuthMode: x509 and a protected clusterFile for outgoing authentication, retaining TLS.", "components": ["docs"], "sources": ["docs:sb527c92150ce", "docs:s2862bf749970"], "status": "REASONED"},
+    "membership-certificates": {"text": "Default x.509 membership needs matching O, OU and DC attributes with at least one populated, a common CA and matching SANs; EKU, if present, must cover serverAuth/clientAuth as used. Separate application membership attributes.", "components": ["docs"], "sources": ["docs:sb527c92150ce", "docs:s2862bf749970"], "status": "REASONED"},
+    "membership-keyfile": {"text": "The alternative generates one shared key with openssl rand -base64 756, service-account ownership and mode 400; securely distribute it to all members and routers, set keyFile and clusterAuthMode: keyFile, and retain TLS.", "components": ["docs", "bash"], "sources": ["docs:s2093f0ae077e", "bash:s6dc18acb3ad4", "bash:s9d924cbc6972"], "status": "REASONED"},
+    "keyfile-rotation": {"text": "Unix keyfiles require no group/world permissions and service-account readability; multiple rotation keys are allowed but every member must share a common key.", "components": ["docs"], "sources": ["docs:s2093f0ae077e"], "status": "REASONED"},
+    "transition-auth": {"text": "transitionToAuth: true permits unauthenticated operations without enforcing user access controls; keep it false in the final state and use vendor procedures for existing-cluster migration.", "components": ["docs"], "sources": ["docs:s22791f6f25b1", "docs:s2093f0ae077e"], "status": "REASONED"},
+    "mongos-access-control": {"text": "Keep authorization enabled on mongod; security.authorization is unavailable on mongos, where internal authentication enables client access control.", "components": ["docs"], "sources": ["docs:s1f0c41f45f41", "docs:sa7d56fbc7a01", "docs:s2093f0ae077e"], "status": "REASONED"},
+    "member-source": {"text": "clusterIpSourceAllowlist, introduced in 5.0, restricts internal authentication only when authentication is enabled; include every member/router source after NAT. It does not restrict application accounts or TCP reachability.", "components": ["docs"], "sources": ["docs:s22791f6f25b1"], "status": "REASONED"},
+    "scram-client": {"text": "mongosh selects the user creation database and SCRAM-SHA-256 over TLS on 27017; final --password prompts without placing the password in argv.", "components": ["shell"], "sources": ["shell:s5ed633d4d270"], "status": "REASONED"},
+    "driver-tls": {"text": "Enable driver TLS and CA trust with certificate and hostname validation; tlsCAFile is not supported by every driver. Do not ship tlsAllowInvalidCertificates.", "components": ["docs"], "sources": ["docs:s48d0e6640a2c"], "status": "REASONED"},
+    "x509-identity": {"text": "Register the exact RFC2253 subject in $external with the application role and use MONGODB-X509; without a username mongosh uses the certificate subject. TLS validation alone does not authenticate a MongoDB user.", "components": ["docs", "shell"], "sources": ["docs:s85f35d70e6ed", "shell:s5ed633d4d270"], "status": "REASONED"},
+    "x509-client-certificate": {"text": "Application certificates must be current, satisfy CA requirements and contain digitalSignature and clientAuth; keep subjects and membership attributes separate from server/member certificates to avoid internal privileges.", "components": ["docs"], "sources": ["docs:s0b650ef2f8d8"], "status": "REASONED"},
+    "x509-source": {"text": "Apply source restrictions separately to the $external subject; restrictions on a SCRAM identity do not transfer to the certificate identity.", "components": ["docs"], "sources": ["docs:s6a592c920ac2", "docs:s85f35d70e6ed"], "status": "REASONED"},
+    "local-guards": {"text": "Recorded local placeholder and JavaScript guard tests rejected invalid inputs before database access; shell argument tracing did not verify MongoDB behavior. Tool versions are unrecorded.", "components": ["bash", "docs"], "sources": ["bash:s9d924cbc6972", "docs:sb59a2357999d"], "status": "DEMONSTRATED", "evidence": "Placeholder tests rejected unchanged tokens, embedded `REPLACE_WITH_` values, angle brackets, empty values, example hosts, shortened assignments, an omitted assignment with ordinary inherited arguments, and a wrong argument count under a modified `IFS`. The JavaScript probe guards also rejected unchanged placeholders before database access."},
+    "verify-listeners": {"text": "Inspect all database/router listeners and configured ports; unintended wildcard/public binds are exposed. Private binds require separate firewall checks; the recorded netlink refusal establishes nothing about listeners.", "components": ["docs"], "sources": ["docs:s8c3f376f412d", "docs:s22791f6f25b1"], "status": "REASONED", "verify": [1]},
+    "verify-dispatch": {"text": "Use the whole guarded six-value connection block, real certificate hostname and application PEM; --norc prevents shell startup authentication. Guards assume normal Bash builtins and cannot distinguish inherited exact marker/count arguments.", "components": ["shell", "bash"], "sources": ["shell:s5ed633d4d270", "bash:s9d924cbc6972"], "status": "REASONED", "verify": [2]},
+    "verify-plaintext": {"text": "Plaintext ping succeeds when plaintext is accepted and must fail under requireTLS while a same-endpoint authenticated TLS control succeeds; timeout/refusal alone is inconclusive and ping does not prove authorization.", "components": ["docs", "shell"], "sources": ["docs:s22791f6f25b1", "docs:seee0e2f961d6", "shell:s5ed633d4d270"], "status": "REASONED", "verify": [2]},
+    "verify-anonymous": {"text": "With a valid client certificate but no authenticated MongoDB identity, an existing collection read succeeds with authorization off and fails Unauthorized (13) with it on; pair with an authenticated read and inspect connectionStatus.", "components": ["docs", "shell"], "sources": ["docs:s6eb89ab49dad", "docs:sb59a2357999d", "docs:sbe43794c8d1c", "docs:s9a8c112b4424", "shell:s5ed633d4d270"], "status": "REASONED", "verify": [2]},
+    "verify-listdatabases": {"text": "listDatabases depends on privileges and authorizedDatabases and cannot prove collection authorization; empty output, timeout or unrelated errors are not authorization denials.", "components": ["docs"], "sources": ["docs:s6fe5567c6b9f", "docs:s9a8c112b4424"], "status": "REASONED"},
+    "verify-role-allow": {"text": "In a disposable fixture, the application role must insert, update and read its own probe document; check result counts and contents with fresh IDs and valid documents.", "components": ["docs", "shell"], "sources": ["docs:sb59a2357999d", "docs:s4012eeed7cf2", "docs:s051aa306cd4c", "docs:sbe43794c8d1c", "shell:s5ed633d4d270"], "status": "REASONED", "verify": [2]},
+    "verify-role-read-denial": {"text": "The application role must deny reads of an unrelated existing collection with Unauthorized (13); database-wide readWrite is the exposed comparison.", "components": ["docs", "shell"], "sources": ["docs:sb59a2357999d", "docs:sbe43794c8d1c", "docs:sfb89d8101c88", "docs:s9a8c112b4424", "shell:s5ed633d4d270"], "status": "REASONED", "verify": [2]},
+    "verify-role-insert-denial": {"text": "The application role must deny inserts into the unrelated collection with Unauthorized (13); database-wide readWrite permits them. Test each denial separately because the script stops at its first unexpected result.", "components": ["docs", "shell"], "sources": ["docs:s4012eeed7cf2", "docs:sbe43794c8d1c", "docs:sfb89d8101c88", "docs:s9a8c112b4424", "shell:s5ed633d4d270"], "status": "REASONED", "verify": [2]},
+    "verify-role-delete-denial": {"text": "The application role must deny deletion from its own collection with Unauthorized (13); database-wide readWrite permits it. The deployment identity cleans up probe documents afterward.", "components": ["docs", "shell"], "sources": ["docs:s181c6bd1f977", "docs:sbe43794c8d1c", "docs:sfb89d8101c88", "docs:s9a8c112b4424", "shell:s5ed633d4d270"], "status": "REASONED", "verify": [2]},
+    "verify-client-source": {"text": "With TLS reachability proven from both sources, valid credentials work from both before restriction; afterward only the permitted source authenticates and reads. TLS failures/timeouts do not prove clientSource enforcement.", "components": ["docs", "shell"], "sources": ["docs:s6a592c920ac2", "docs:s6eb89ab49dad", "shell:s5ed633d4d270"], "status": "REASONED", "verify": [2]},
+    "verify-server-address": {"text": "Hold source, credentials and client certificate constant; both reachable listener addresses authenticate before serverAddress restriction, then only the allowed listener does. Permitted-listener tests alone cannot detect an omitted restriction.", "components": ["docs", "shell"], "sources": ["docs:s6a592c920ac2", "docs:s6eb89ab49dad", "shell:s5ed633d4d270"], "status": "REASONED", "verify": [2]},
+    "verify-x509": {"text": "The same trusted non-member certificate must fail x.509 authentication before subject registration and succeed afterward with only assigned roles; inspect the exact $external identity and repeat role checks.", "components": ["docs", "shell"], "sources": ["docs:s85f35d70e6ed", "docs:s0b650ef2f8d8", "docs:s6eb89ab49dad", "shell:s5ed633d4d270"], "status": "REASONED", "verify": [2]},
+    "verify-missing-certificate": {"text": "Certificate-less TLS ping can succeed when allowConnectionsWithoutCertificates is true; false must reject it while a registered-certificate control succeeds. Repeat anonymous collection access with a valid certificate to test authorization separately.", "components": ["docs", "shell"], "sources": ["docs:sa9e55b825b2a", "docs:seee0e2f961d6", "docs:s85f35d70e6ed", "shell:s5ed633d4d270"], "status": "REASONED", "verify": [2]},
+    "verify-membership": {"text": "In an isolated cluster compare valid and invalid membership credentials; correlate replSetGetStatus with explicit authentication failures, since unhealthy members alone do not prove enforcement. Include router/shard/config-server paths.", "components": ["docs"], "sources": ["docs:sb527c92150ce", "docs:sc4c49175cea4"], "status": "REASONED"},
+    "verify-member-source": {"text": "Compare permitted and excluded member source addresses against an isolated deployment lacking clusterIpSourceAllowlist; hold application TLS constant and correlate member health with authentication failures.", "components": ["docs"], "sources": ["docs:s22791f6f25b1", "docs:sc4c49175cea4"], "status": "REASONED"},
+    "verify-audit-destination": {"text": "Without a destination no audit records appear; with one, correlate failed authentication and collection-creation records with identity, operation and time. A file alone does not prove coverage; an authentication-only filter excludes other events.", "components": ["v8"], "sources": ["v8:s6f1f3f56616d", "v8:s9e86819e68db", "v8:s9fcdc05982a6"], "status": "REASONED"},
+    "verify-audit-authorization": {"text": "The unauthorized read produces failed authCheck result 13 regardless of auditAuthorizationSuccess; the permitted read produces successful authCheck only when true. Inspect getParameter and compare off/on, accounting for performance cost.", "components": ["v8"], "sources": ["v8:s9e86819e68db", "v8:s1f3040d0fe4c"], "status": "REASONED"},
+    "verify-redaction": {"text": "At verbosity 1, compare a logged canary with redaction off/on; the matching entry remains while values become ### and metadata remains. A missing entry is inconclusive; restore prior verbosity.", "components": ["v8"], "sources": ["v8:s1f3040d0fe4c", "v8:sc9621a9507cc"], "status": "REASONED"},
+    "verify-storage": {"text": "Disposable encrypted data copies require the correct key configuration and a working reader; an unencrypted fixture reopens without a key. Inspect key-manager initialization; a missing key or wrong KMIP identity prevents startup, and strings cannot prove encryption.", "components": ["v8"], "sources": ["v8:s3b7dabf8f41b", "v8:sf88108a9609d"], "status": "REASONED", "verify": [3]},
+    "verify-csfle": {"text": "Use separate clients to compare plaintext and encrypted field bytes by retained _id; a key-authorized client recovers the value. Community explicitly encrypts before writing; the automatic-encryption client silently decrypts and cannot serve as the exposed control.", "components": ["v8"], "sources": ["v8:sdd8ad5fe92b2", "v8:s23650ad42657", "v8:s2876af0be5e7"], "status": "REASONED"},
+    "verify-csfle-schema": {"text": "A plaintext write to a server-side $jsonSchema requiring encryption is rejected; denied reads alone do not demonstrate field encryption.", "components": ["v8"], "sources": ["v8:s2a52e3acf56a", "v8:s2876af0be5e7"], "status": "REASONED"},
+    "verify-qe-ciphertext": {"text": "Compare ordinary and encryptedFields collections through distinct clients: plaintext versus ciphertext without decryption, original value with keys; Community encrypts explicitly. Reject plaintext writes to declared encrypted fields.", "components": ["v8"], "sources": ["v8:se39572dfb8ad", "v8:s1d229cb03243", "v8:s47b976aa1f45"], "status": "REASONED"},
+    "verify-qe-equality": {"text": "An encryptedFields field without queryType is encrypted but not queryable; set equality on the encrypted string field and confirm the configured client matches an encrypted equality query.", "components": ["v8"], "sources": ["v8:se39572dfb8ad", "v8:sd08442f8ff38"], "status": "REASONED"},
+    "verify-qe-range": {"text": "Test range separately with queryType: range on int, long, double, decimal or date, not a string, and documents inside/outside the interval; missing results or connection errors do not establish confidentiality.", "components": ["v8"], "sources": ["v8:sd08442f8ff38"], "status": "REASONED"},
+    "audit-destination": {"text": "Enterprise auditing covers mongod and mongos; Community has no equivalent and diagnostic logs are not a substitute. Configure a destination on every process; the example selects a JSON file.", "components": ["v8"], "sources": ["v8:s6f1f3f56616d", "v8:seedf77aa3e73"], "status": "REASONED"},
+    "audit-write": {"text": "A failed audit write can terminate the process; validate that the destination is writable.", "components": ["v8"], "sources": ["v8:s6f1f3f56616d", "v8:seedf77aa3e73"], "status": "REASONED"},
+    "audit-filter": {"text": "Omitting auditLog.filter records every auditable event; an authenticate-only filter deliberately excludes all other event types.", "components": ["v8"], "sources": ["v8:s9fcdc05982a6"], "status": "REASONED"},
+    "audit-success-default": {"text": "auditAuthorizationSuccess defaults false for authorization-success recording; enabling it records successful checks at a performance cost.", "components": ["v8"], "sources": ["v8:s1f3040d0fe4c"], "status": "REASONED"},
+    "diagnostic-redaction": {"text": "Enterprise-only redactClientLogData uses a startup flag or security.redactClientLogData; document values become ### while metadata remains. Its documented scope is diagnostic logs, not audit logs; combine with TLS and storage encryption.", "components": ["v8"], "sources": ["v8:s1f3040d0fe4c", "v8:s4ffa7b653364", "v8:sc9621a9507cc"], "status": "REASONED"},
+    "storage-encryption": {"text": "Enterprise 3.2 introduced native WiredTiger encryption; Community depends on host/filesystem encryption. security.enableEncryption defaults false.", "components": ["v8"], "sources": ["v8:s3b7dabf8f41b", "v8:see769a1a1e2b"], "status": "REASONED"},
+    "storage-migration": {"text": "Native encryption does not encrypt existing data in place; use a fresh member and initial sync or the documented migration.", "components": ["v8"], "sources": ["v8:s3b7dabf8f41b", "v8:sf88108a9609d"], "status": "REASONED"},
+    "storage-local-key": {"text": "security.encryptionKeyFile supplies the storage master key, unrelated to membership keyFile; local key management does not support rotation.", "components": ["v8"], "sources": ["v8:see769a1a1e2b", "v8:sf88108a9609d"], "status": "REASONED"},
+    "storage-kmip": {"text": "Prefer KMIP to a local key file; retain enableEncryption and configure serverName, port 5696, serverCAFile and clientCertificateFile containing the client certificate and private key.", "components": ["v8"], "sources": ["v8:s3b7dabf8f41b", "v8:see769a1a1e2b", "v8:sf88108a9609d"], "status": "REASONED"},
+    "storage-key-identifier": {"text": "Set security.kmip.keyIdentifier only to adopt an existing key when first enabling encryption; otherwise MongoDB requests a new key.", "components": ["v8"], "sources": ["v8:sf88108a9609d"], "status": "REASONED"},
+    "csfle-editions": {"text": "CSFLE encrypts fields in the driver before the server, with no mongod switch; explicit encryption and automatic decryption work in Community, while automatic encryption requires Enterprise or Atlas.", "components": ["v8"], "sources": ["v8:sdd8ad5fe92b2", "v8:s23650ad42657"], "status": "REASONED"},
+    "csfle-schema": {"text": "Automatic CSFLE autoEncryption names the key vault, KMS providers and local schemaMap; relying only on a server-fetched schema lets a compromised server induce plaintext writes.", "components": ["v8"], "sources": ["v8:s2a52e3acf56a", "v8:s2876af0be5e7"], "status": "REASONED"},
+    "csfle-explicit": {"text": "Community explicit CSFLE sets bypassAutoEncryption: true and calls ClientEncryption.encrypt() before writing and for query values; keep master-key access separate from database access.", "components": ["v8"], "sources": ["v8:s23650ad42657", "v8:s2876af0be5e7"], "status": "REASONED"},
+    "csfle-algorithms": {"text": "Randomized encryption does not support equality matching; deterministic encryption does but reveals equal stored values. A server-side $jsonSchema can reject plaintext writes.", "components": ["v8"], "sources": ["v8:sb5d5b8d3dfa1", "v8:s2a52e3acf56a"], "status": "REASONED"},
+    "qe-releases": {"text": "QE equality queries became GA in 7.0 and range queries in 8.0; the incompatible 6.0 public preview is not a production baseline.", "components": ["v8"], "sources": ["v8:s1b94cb5e8305", "v8:s43213b00956d", "v8:s1d229cb03243"], "status": "REASONED"},
+    "qe-editions": {"text": "QE encrypts fields in the driver for supported ciphertext queries; automatic encryption requires Enterprise or Atlas, while Community supports explicit encryption and automatic decryption.", "components": ["v8"], "sources": ["v8:se39572dfb8ad", "v8:s47b976aa1f45"], "status": "REASONED"},
+    "qe-collection": {"text": "QE requires a new encryptedFields collection, cannot be enabled in place, and cannot share a collection with CSFLE.", "components": ["v8"], "sources": ["v8:s1d229cb03243"], "status": "REASONED"},
+    "qe-client": {"text": "Automatic QE uses autoEncryption with key-vault namespace, KMS providers and local encryptedFieldsMap; Community explicit QE uses bypassQueryAnalysis: true and ClientEncryption.", "components": ["v8"], "sources": ["v8:se55ecf8e7f85", "v8:s47b976aa1f45"], "status": "REASONED"},
+    "qe-topology": {"text": "QE supports replica sets and sharded clusters, not standalone servers.", "components": ["v8"], "sources": ["v8:s1d229cb03243"], "status": "REASONED"},
+    "qe-range-preview": {"text": "rangePreview was removed in 8.0; do not carry legacy rangePreview recipes forward.", "components": ["v8"], "sources": ["v8:s09f3af996812"], "status": "REASONED"}
+  }
+}
+---
 # MongoDB: TLS and authorization
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| lifecycle: Use supported releases and security patches; 4.2 reached end of life on April 30, 2023. Examples use tls options rather than older ssl names. | MongoDB documentation unknown | REASONED |
+| private-listener: Configure port 27017 and loopback bindIp; widen only to required private addresses with firewall restrictions. | MongoDB documentation unknown | REASONED |
+| authorization: Enable security.authorization on mongod; a reachable listener with authorization off exposes data. | MongoDB documentation unknown | REASONED |
+| docker-bind: Linux 7.0, 8.0 and 8.3 images default to mongod and add --bind_ip_all unless arguments or a --config file set binding; a bind only in a -f file does not stop the addition. | Official MongoDB Docker images 0a29f3374c7fa7c38cfe280363b754f898e0a5eb | REASONED |
+| docker-auth: Linux entrypoint adds --auth only with both root credential variables or their _FILE forms; one alone exits. With neither credential nor explicit authorization/internal-authentication settings, authorization is off. | Official MongoDB Docker images 0a29f3374c7fa7c38cfe280363b754f898e0a5eb; MongoDB documentation unknown | REASONED |
+| wildcard-ipv6: --bind_ip_all listens on all IPv4 addresses; IPv6 is added only when net.ipv6 is true through --ipv6 or configuration. | MongoDB bind source r8.0.32 | REASONED |
+| docker-windows: Windows images run mongod --bind_ip_all without the Linux entrypoint; root credential variables do not enable authorization. | Official MongoDB Docker images 0a29f3374c7fa7c38cfe280363b754f898e0a5eb | REASONED |
+| config-startup: mongod reads a configuration file only through --config or -f; mounting alone is insufficient. Supply --config for the image bind check, use required container addresses, and publish privately. | MongoDB documentation unknown; Official MongoDB Docker images 0a29f3374c7fa7c38cfe280363b754f898e0a5eb | REASONED |
+| bootstrap: On loopback, the localhost exception permits the first admin only with no existing users or roles; it is not recovery. Create the SCRAM-SHA-256 userAdminAnyDatabase user, then authenticate the current shell. | MongoDB documentation unknown | REASONED |
+| credential-transport: passwordPrompt() avoids password command text but does not encrypt createUser transport; reconnect as admin over TLS before creating application users. | MongoDB documentation unknown | REASONED |
+| application-identity: Use a separate application identity; its creation database is its authentication database. read is database-wide; readWrite includes collection and index management permissions. | MongoDB documentation unknown | REASONED |
+| collection-role: The custom role grants find, insert and update on one collection, with no deletion, collection dropping or index management; insert still permits creating that named non-capped collection. | MongoDB documentation unknown | REASONED |
+| role-scope: createRole requires privileges and roles; a role outside admin can grant and inherit only within its database. Use a separate deployment identity for provisioning. | MongoDB documentation unknown | REASONED |
+| scram-user-default: Omitting user mechanisms normally creates both SCRAM-SHA-1 and SCRAM-SHA-256 credentials; the example explicitly restricts the user to SCRAM-SHA-256. | MongoDB documentation unknown | REASONED |
+| scram-negotiation: Omitting authMechanism permits fallback from SCRAM-SHA-256 to SCRAM-SHA-1; explicitly select SCRAM-SHA-256 and check driver compatibility. | MongoDB documentation unknown | REASONED |
+| client-source: authenticationRestrictions.clientSource checks the source MongoDB sees, including NAT or proxy effects; it restricts authentication, not TCP reachability. | MongoDB documentation unknown | REASONED |
+| server-address: authenticationRestrictions.serverAddress checks the accepting listener address; include required alternate and failover paths. Preserve recovery access because incompatible inherited restrictions can prevent login. | MongoDB documentation unknown | REASONED |
+| human-mfa: Community supports SCRAM and x.509, without a wire-protocol TOTP dialogue; a machine certificate is not human MFA. Protect human host and admin-UI paths with MFA. | MongoDB documentation unknown | REASONED |
+| pem-file: Initial PEM creation uses an unused path in a protected directory, umask 077, noclobber, service-account ownership and mode 600; this is not a rotation procedure. | Bash documentation unknown; MongoDB documentation unknown | REASONED |
+| tls-server: Merge requireTLS, certificateKeyFile and CAFile into the existing net mapping; SANs must cover client hostnames. Restart the configured service and confirm TLS before widening access. | MongoDB documentation unknown | REASONED |
+| tls-mixed-modes: allowTLS and preferTLS accept plaintext and TLS; use them only for transition and finish with requireTLS. | MongoDB documentation unknown | REASONED |
+| tls-client-certificates: With the shown CA configuration, certificates are required unless allowConnectionsWithoutCertificates is true; presented certificates are still validated. False also requires SCRAM clients to present certificates and does not assign roles. | MongoDB documentation unknown | REASONED |
+| mongot: The cited TLS documentation requires allowConnectionsWithoutCertificates: true for mongot; check topology before requiring certificates. | MongoDB documentation unknown | REASONED |
+| membership-x509: Configure internal authentication on every member, config server and router. Production x.509 membership uses clusterAuthMode: x509 and a protected clusterFile for outgoing authentication, retaining TLS. | MongoDB documentation unknown | REASONED |
+| membership-certificates: Default x.509 membership needs matching O, OU and DC attributes with at least one populated, a common CA and matching SANs; EKU, if present, must cover serverAuth/clientAuth as used. Separate application membership attributes. | MongoDB documentation unknown | REASONED |
+| membership-keyfile: The alternative generates one shared key with openssl rand -base64 756, service-account ownership and mode 400; securely distribute it to all members and routers, set keyFile and clusterAuthMode: keyFile, and retain TLS. | MongoDB documentation unknown; Bash documentation unknown | REASONED |
+| keyfile-rotation: Unix keyfiles require no group/world permissions and service-account readability; multiple rotation keys are allowed but every member must share a common key. | MongoDB documentation unknown | REASONED |
+| transition-auth: transitionToAuth: true permits unauthenticated operations without enforcing user access controls; keep it false in the final state and use vendor procedures for existing-cluster migration. | MongoDB documentation unknown | REASONED |
+| mongos-access-control: Keep authorization enabled on mongod; security.authorization is unavailable on mongos, where internal authentication enables client access control. | MongoDB documentation unknown | REASONED |
+| member-source: clusterIpSourceAllowlist, introduced in 5.0, restricts internal authentication only when authentication is enabled; include every member/router source after NAT. It does not restrict application accounts or TCP reachability. | MongoDB documentation unknown | REASONED |
+| scram-client: mongosh selects the user creation database and SCRAM-SHA-256 over TLS on 27017; final --password prompts without placing the password in argv. | mongosh documentation unknown | REASONED |
+| driver-tls: Enable driver TLS and CA trust with certificate and hostname validation; tlsCAFile is not supported by every driver. Do not ship tlsAllowInvalidCertificates. | MongoDB documentation unknown | REASONED |
+| x509-identity: Register the exact RFC2253 subject in $external with the application role and use MONGODB-X509; without a username mongosh uses the certificate subject. TLS validation alone does not authenticate a MongoDB user. | MongoDB documentation unknown; mongosh documentation unknown | REASONED |
+| x509-client-certificate: Application certificates must be current, satisfy CA requirements and contain digitalSignature and clientAuth; keep subjects and membership attributes separate from server/member certificates to avoid internal privileges. | MongoDB documentation unknown | REASONED |
+| x509-source: Apply source restrictions separately to the $external subject; restrictions on a SCRAM identity do not transfer to the certificate identity. | MongoDB documentation unknown | REASONED |
+| local-guards: Recorded local placeholder and JavaScript guard tests rejected invalid inputs before database access; shell argument tracing did not verify MongoDB behavior. Tool versions are unrecorded. | Bash documentation unknown; MongoDB documentation unknown | DEMONSTRATED |
+| verify-listeners: Inspect all database/router listeners and configured ports; unintended wildcard/public binds are exposed. Private binds require separate firewall checks; the recorded netlink refusal establishes nothing about listeners. | MongoDB documentation unknown | REASONED |
+| verify-dispatch: Use the whole guarded six-value connection block, real certificate hostname and application PEM; --norc prevents shell startup authentication. Guards assume normal Bash builtins and cannot distinguish inherited exact marker/count arguments. | mongosh documentation unknown; Bash documentation unknown | REASONED |
+| verify-plaintext: Plaintext ping succeeds when plaintext is accepted and must fail under requireTLS while a same-endpoint authenticated TLS control succeeds; timeout/refusal alone is inconclusive and ping does not prove authorization. | MongoDB documentation unknown; mongosh documentation unknown | REASONED |
+| verify-anonymous: With a valid client certificate but no authenticated MongoDB identity, an existing collection read succeeds with authorization off and fails Unauthorized (13) with it on; pair with an authenticated read and inspect connectionStatus. | MongoDB documentation unknown; mongosh documentation unknown | REASONED |
+| verify-listdatabases: listDatabases depends on privileges and authorizedDatabases and cannot prove collection authorization; empty output, timeout or unrelated errors are not authorization denials. | MongoDB documentation unknown | REASONED |
+| verify-role-allow: In a disposable fixture, the application role must insert, update and read its own probe document; check result counts and contents with fresh IDs and valid documents. | MongoDB documentation unknown; mongosh documentation unknown | REASONED |
+| verify-role-read-denial: The application role must deny reads of an unrelated existing collection with Unauthorized (13); database-wide readWrite is the exposed comparison. | MongoDB documentation unknown; mongosh documentation unknown | REASONED |
+| verify-role-insert-denial: The application role must deny inserts into the unrelated collection with Unauthorized (13); database-wide readWrite permits them. Test each denial separately because the script stops at its first unexpected result. | MongoDB documentation unknown; mongosh documentation unknown | REASONED |
+| verify-role-delete-denial: The application role must deny deletion from its own collection with Unauthorized (13); database-wide readWrite permits it. The deployment identity cleans up probe documents afterward. | MongoDB documentation unknown; mongosh documentation unknown | REASONED |
+| verify-client-source: With TLS reachability proven from both sources, valid credentials work from both before restriction; afterward only the permitted source authenticates and reads. TLS failures/timeouts do not prove clientSource enforcement. | MongoDB documentation unknown; mongosh documentation unknown | REASONED |
+| verify-server-address: Hold source, credentials and client certificate constant; both reachable listener addresses authenticate before serverAddress restriction, then only the allowed listener does. Permitted-listener tests alone cannot detect an omitted restriction. | MongoDB documentation unknown; mongosh documentation unknown | REASONED |
+| verify-x509: The same trusted non-member certificate must fail x.509 authentication before subject registration and succeed afterward with only assigned roles; inspect the exact $external identity and repeat role checks. | MongoDB documentation unknown; mongosh documentation unknown | REASONED |
+| verify-missing-certificate: Certificate-less TLS ping can succeed when allowConnectionsWithoutCertificates is true; false must reject it while a registered-certificate control succeeds. Repeat anonymous collection access with a valid certificate to test authorization separately. | MongoDB documentation unknown; mongosh documentation unknown | REASONED |
+| verify-membership: In an isolated cluster compare valid and invalid membership credentials; correlate replSetGetStatus with explicit authentication failures, since unhealthy members alone do not prove enforcement. Include router/shard/config-server paths. | MongoDB documentation unknown | REASONED |
+| verify-member-source: Compare permitted and excluded member source addresses against an isolated deployment lacking clusterIpSourceAllowlist; hold application TLS constant and correlate member health with authentication failures. | MongoDB documentation unknown | REASONED |
+| verify-audit-destination: Without a destination no audit records appear; with one, correlate failed authentication and collection-creation records with identity, operation and time. A file alone does not prove coverage; an authentication-only filter excludes other events. | MongoDB documentation 8.0 | REASONED |
+| verify-audit-authorization: The unauthorized read produces failed authCheck result 13 regardless of auditAuthorizationSuccess; the permitted read produces successful authCheck only when true. Inspect getParameter and compare off/on, accounting for performance cost. | MongoDB documentation 8.0 | REASONED |
+| verify-redaction: At verbosity 1, compare a logged canary with redaction off/on; the matching entry remains while values become ### and metadata remains. A missing entry is inconclusive; restore prior verbosity. | MongoDB documentation 8.0 | REASONED |
+| verify-storage: Disposable encrypted data copies require the correct key configuration and a working reader; an unencrypted fixture reopens without a key. Inspect key-manager initialization; a missing key or wrong KMIP identity prevents startup, and strings cannot prove encryption. | MongoDB documentation 8.0 | REASONED |
+| verify-csfle: Use separate clients to compare plaintext and encrypted field bytes by retained _id; a key-authorized client recovers the value. Community explicitly encrypts before writing; the automatic-encryption client silently decrypts and cannot serve as the exposed control. | MongoDB documentation 8.0 | REASONED |
+| verify-csfle-schema: A plaintext write to a server-side $jsonSchema requiring encryption is rejected; denied reads alone do not demonstrate field encryption. | MongoDB documentation 8.0 | REASONED |
+| verify-qe-ciphertext: Compare ordinary and encryptedFields collections through distinct clients: plaintext versus ciphertext without decryption, original value with keys; Community encrypts explicitly. Reject plaintext writes to declared encrypted fields. | MongoDB documentation 8.0 | REASONED |
+| verify-qe-equality: An encryptedFields field without queryType is encrypted but not queryable; set equality on the encrypted string field and confirm the configured client matches an encrypted equality query. | MongoDB documentation 8.0 | REASONED |
+| verify-qe-range: Test range separately with queryType: range on int, long, double, decimal or date, not a string, and documents inside/outside the interval; missing results or connection errors do not establish confidentiality. | MongoDB documentation 8.0 | REASONED |
+| audit-destination: Enterprise auditing covers mongod and mongos; Community has no equivalent and diagnostic logs are not a substitute. Configure a destination on every process; the example selects a JSON file. | MongoDB documentation 8.0 | REASONED |
+| audit-write: A failed audit write can terminate the process; validate that the destination is writable. | MongoDB documentation 8.0 | REASONED |
+| audit-filter: Omitting auditLog.filter records every auditable event; an authenticate-only filter deliberately excludes all other event types. | MongoDB documentation 8.0 | REASONED |
+| audit-success-default: auditAuthorizationSuccess defaults false for authorization-success recording; enabling it records successful checks at a performance cost. | MongoDB documentation 8.0 | REASONED |
+| diagnostic-redaction: Enterprise-only redactClientLogData uses a startup flag or security.redactClientLogData; document values become ### while metadata remains. Its documented scope is diagnostic logs, not audit logs; combine with TLS and storage encryption. | MongoDB documentation 8.0 | REASONED |
+| storage-encryption: Enterprise 3.2 introduced native WiredTiger encryption; Community depends on host/filesystem encryption. security.enableEncryption defaults false. | MongoDB documentation 8.0 | REASONED |
+| storage-migration: Native encryption does not encrypt existing data in place; use a fresh member and initial sync or the documented migration. | MongoDB documentation 8.0 | REASONED |
+| storage-local-key: security.encryptionKeyFile supplies the storage master key, unrelated to membership keyFile; local key management does not support rotation. | MongoDB documentation 8.0 | REASONED |
+| storage-kmip: Prefer KMIP to a local key file; retain enableEncryption and configure serverName, port 5696, serverCAFile and clientCertificateFile containing the client certificate and private key. | MongoDB documentation 8.0 | REASONED |
+| storage-key-identifier: Set security.kmip.keyIdentifier only to adopt an existing key when first enabling encryption; otherwise MongoDB requests a new key. | MongoDB documentation 8.0 | REASONED |
+| csfle-editions: CSFLE encrypts fields in the driver before the server, with no mongod switch; explicit encryption and automatic decryption work in Community, while automatic encryption requires Enterprise or Atlas. | MongoDB documentation 8.0 | REASONED |
+| csfle-schema: Automatic CSFLE autoEncryption names the key vault, KMS providers and local schemaMap; relying only on a server-fetched schema lets a compromised server induce plaintext writes. | MongoDB documentation 8.0 | REASONED |
+| csfle-explicit: Community explicit CSFLE sets bypassAutoEncryption: true and calls ClientEncryption.encrypt() before writing and for query values; keep master-key access separate from database access. | MongoDB documentation 8.0 | REASONED |
+| csfle-algorithms: Randomized encryption does not support equality matching; deterministic encryption does but reveals equal stored values. A server-side $jsonSchema can reject plaintext writes. | MongoDB documentation 8.0 | REASONED |
+| qe-releases: QE equality queries became GA in 7.0 and range queries in 8.0; the incompatible 6.0 public preview is not a production baseline. | MongoDB documentation 8.0 | REASONED |
+| qe-editions: QE encrypts fields in the driver for supported ciphertext queries; automatic encryption requires Enterprise or Atlas, while Community supports explicit encryption and automatic decryption. | MongoDB documentation 8.0 | REASONED |
+| qe-collection: QE requires a new encryptedFields collection, cannot be enabled in place, and cannot share a collection with CSFLE. | MongoDB documentation 8.0 | REASONED |
+| qe-client: Automatic QE uses autoEncryption with key-vault namespace, KMS providers and local encryptedFieldsMap; Community explicit QE uses bypassQueryAnalysis: true and ClientEncryption. | MongoDB documentation 8.0 | REASONED |
+| qe-topology: QE supports replica sets and sharded clusters, not standalone servers. | MongoDB documentation 8.0 | REASONED |
+| qe-range-preview: rangePreview was removed in 8.0; do not carry legacy rangePreview recipes forward. | MongoDB documentation 8.0 | REASONED |
+<!-- version-basis:end -->
 
 MongoDB's history of mass data leaks comes from 2 settings: binding to all interfaces and running with authorization off. Fix both before anything else, then add TLS. Use a supported MongoDB release and its current security patches. MongoDB 4.2 reached end of life on April 30, 2023; it is not a deployment recommendation. Compatibility note: these examples use `tls` options; older configurations used `ssl` names. Check the [vendor lifecycle schedule](https://www.mongodb.com/legal/support-policy/lifecycles) before deploying.
 
@@ -286,6 +568,7 @@ Local checks did run: Bash parsing, ShellCheck, JavaScript syntax parsing, dupli
 Run on every database and router host:
 
 ```bash
+# REASONED: listener inventory; no MongoDB service or permitted netlink socket. Expected binds and network-hardening source follow.
 ss -tlnp
 ```
 
@@ -302,6 +585,7 @@ The guard assumes normal Bash builtins. A literal apostrophe requires proper she
 **REASONED for every connection mode:** no `mongod`, `mongosh`, Docker, or Podman is available. Expected exposed and fixed outcomes follow each probe below. The options are documented in the [mongosh reference](https://www.mongodb.com/docs/mongodb-shell/reference/options/).
 
 ```bash
+# REASONED: connection modes; no mongod, mongosh, Docker, Podman or authorized deployment. Expected outcomes and MongoDB sources follow.
 (
   set -- PASTE_WHOLE_BLOCK 'scram' 'REPLACE_WITH_DB_HOST' \
     'REPLACE_WITH_CA_FILE' 'REPLACE_WITH_CLIENT_PEM' \
@@ -363,6 +647,8 @@ With plaintext accepted, the plaintext `ping` succeeds. With `requireTLS`, it mu
 
 Open a fresh session using `tls` mode, then substitute and run:
 
+**REASONED:** unauthenticated collection access; no MongoDB deployment. Expected authorization outcomes and MongoDB sources follow.
+
 ```javascript
 (() => {
   const appDB = "REPLACE_WITH_APP_DB";
@@ -391,6 +677,8 @@ Do not substitute `listDatabases` as proof of collection access. Its results dep
 **REASONED:** no `mongod`, `mongosh`, Docker, or Podman is available.
 
 Use a disposable test deployment with two existing ordinary collections and the application's actual role configuration. The probe document must satisfy the collection's validation rules. Choose a fresh probe ID for each run. Use `scram` mode as the application identity, then run:
+
+**REASONED:** collection-role allows and denials; no disposable MongoDB deployment. Expected results and command sources follow.
 
 ```javascript
 (() => {
@@ -474,6 +762,8 @@ Without the user restriction, authentication from both sources succeeds. With th
 
 In the permitted session, inspect:
 
+**REASONED:** user source and listener restrictions; no MongoDB deployment or permitted/excluded hosts. Expected results and sources follow.
+
 ```javascript
 db.runCommand({connectionStatus: 1});
 ```
@@ -502,6 +792,8 @@ In an isolated replica-set test, compare a configured member with valid membersh
 
 From a separate operator session with the `replSetGetStatus` privilege, inspect:
 
+**REASONED:** cluster membership; no multi-host MongoDB deployment. Expected results and membership sources follow.
+
 ```javascript
 db.adminCommand({replSetGetStatus: 1});
 ```
@@ -516,6 +808,8 @@ See [internal membership authentication](https://www.mongodb.com/docs/manual/cor
 
 In an isolated Enterprise fixture with the auditing configuration from section 5, perform a successful authentication, a failed authentication, a collection creation, a permitted collection read, and a read attempted by an authenticated user that lacks find permission on the collection, then inspect the audit destination. Confirm the successful-authorization-check setting first:
 
+**REASONED:** Enterprise audit coverage; no Enterprise deployment or readable audit destination. Expected events and MongoDB 8.0 sources follow.
+
 ```javascript
 db.adminCommand({getParameter: 1, auditAuthorizationSuccess: 1});
 ```
@@ -527,6 +821,8 @@ With no destination configured, no audit records are produced. With the destinat
 **REASONED:** no MongoDB Enterprise binaries, running test server, or process-log access is available.
 
 Set the log verbosity to 1 in both fixtures so the operation is logged regardless of latency, insert a harmless canary, read the corresponding entry in the process log, then restore the previous verbosity:
+
+**REASONED:** diagnostic-log redaction; no Enterprise test server or process-log access. Expected canary results and MongoDB 8.0 sources follow.
 
 ```javascript
 db.setLogLevel(1);
@@ -542,6 +838,7 @@ Without redaction, the canary value appears in the matching log entry. With `sec
 Create equivalent unencrypted and encrypted fixtures, each holding a known document, then confirm on disposable copies that the encrypted data files require the key configuration while a correctly configured server reads them. Inspect the startup log for the key-manager initialization:
 
 ```bash
+# REASONED: storage encryption; no Enterprise fixture, disposable data directory or KMIP endpoint. Expected key-manager results and MongoDB 8.0 sources follow.
 grep -iE 'encryption.*key|key manager' /var/log/mongodb/mongod.log
 ```
 

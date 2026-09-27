@@ -15,3 +15,9 @@ open-webui.md
 litellm.md
 model-servers.md
 chat-uis.md
+mongodb.md
+mcp-servers.md
+mcp-clients.md
+llm-observability.md
+agent-builders.md
+ai-infra-services.md

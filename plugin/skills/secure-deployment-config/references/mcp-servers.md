@@ -1,4 +1,161 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "f81de39edb5813b541bc9360003033b6368c7e8baeac46a5aef32d61fa3a898e",
+  "components": {
+    "mcp": {
+      "name": "MCP",
+      "basis": "2026-07-28",
+      "sources": {
+        "s6e1c66cfb825": "https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http",
+        "se8d957787d4b": "https://modelcontextprotocol.io/specification/2026-07-28/basic/index",
+        "s1d962c091f09": "https://modelcontextprotocol.io/specification/2026-07-28/server/discover",
+        "sa739f7343f18": "https://modelcontextprotocol.io/specification/2026-07-28/changelog",
+        "s34fabf499cb7": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization",
+        "s117c3edbfcd7": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/authorization-server-discovery",
+        "s4b9b953ca683": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/security-considerations",
+        "s5655f61af2a0": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/client-registration",
+        "s4903497743e8": "https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices",
+        "s047fe3fd0dc0": "https://modelcontextprotocol.io/specification/2026-07-28/server/utilities/caching",
+        "s7345b33e447b": "https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/subscriptions",
+        "sa55ad56b64e9": "https://modelcontextprotocol.io/specification/versioning"
+      }
+    },
+    "legacy": {
+      "name": "MCP legacy",
+      "basis": "2025-11-25",
+      "sources": {
+        "s937fae6437b3": "https://modelcontextprotocol.io/specification/2025-11-25/basic/transports"
+      }
+    },
+    "azure": {
+      "name": "Azure App Service",
+      "basis": "unknown",
+      "sources": {
+        "s5c4dc1862d97": "https://learn.microsoft.com/en-us/azure/app-service/overview-authentication-authorization"
+      }
+    },
+    "nginx": {
+      "name": "nginx",
+      "basis": "unknown",
+      "sources": {
+        "sf0bc2adae8cb": "https://nginx.org/en/docs/http/ngx_http_rewrite_module.html",
+        "s40bdf1af1596": "https://nginx.org/en/docs/http/ngx_http_core_module.html",
+        "s75350e9e4e15": "https://nginx.org/en/docs/http/ngx_http_map_module.html",
+        "sf3430c5a0b22": "https://nginx.org/en/docs/http/ngx_http_proxy_module.html"
+      }
+    },
+    "caddy": {
+      "name": "Caddy",
+      "basis": "unknown",
+      "sources": {
+        "s3865a73ccda3": "https://caddyserver.com/docs/caddyfile/directives/reverse_proxy"
+      }
+    },
+    "curl": {
+      "name": "curl minimum",
+      "basis": "7.75.0",
+      "sources": {
+        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
+      }
+    }
+  },
+  "claims": {
+    "revision": {"text": "Current revision can receive compatible changes; legacy 2025-11-25 is Final and handshake-based.", "components": ["mcp", "legacy"], "sources": ["mcp:sa55ad56b64e9", "legacy:s937fae6437b3"], "status": "REASONED"},
+    "stdio": {"text": "Prefer local stdio; subprocess inherits user privileges and supplied environment credentials; restrict that environment.", "components": ["mcp"], "sources": ["mcp:s4903497743e8", "mcp:s34fabf499cb7"], "status": "REASONED"},
+    "http": {"text": "Streamable HTTP uses one POST endpoint; 2024-11-05 HTTP+SSE is deprecated.", "components": ["mcp"], "sources": ["mcp:s6e1c66cfb825"], "status": "REASONED"},
+    "metadata": {"text": "No initialize handshake; each request needs protocolVersion and clientCapabilities in params._meta; clientInfo is recommended.", "components": ["mcp"], "sources": ["mcp:se8d957787d4b", "mcp:sa739f7343f18"], "status": "REASONED"},
+    "headers": {"text": "MCP-Protocol-Version mirrors body version; Mcp-Method mirrors method; Mcp-Name is required only for tools/call, resources/read and prompts/get.", "components": ["mcp"], "sources": ["mcp:s6e1c66cfb825"], "status": "REASONED"},
+    "header-error": {"text": "Missing/malformed required headers or body mismatch require HTTP 400 and -32020; unsupported version requires 400 and -32022.", "components": ["mcp"], "sources": ["mcp:s6e1c66cfb825", "mcp:sa739f7343f18"], "status": "REASONED"},
+    "discover": {"text": "Servers MUST implement server/discover; clients MAY call it, without a mandatory first-call requirement.", "components": ["mcp"], "sources": ["mcp:s1d962c091f09"], "status": "REASONED"},
+    "legacy-removal": {"text": "Sessions, Mcp-Session-Id, GET stream and Last-Event-ID resumability are removed; revision-only servers SHOULD ignore legacy headers and return GET/DELETE 405.", "components": ["mcp"], "sources": ["mcp:s6e1c66cfb825", "mcp:sa739f7343f18"], "status": "REASONED"},
+    "bind": {"text": "Local HTTP SHOULD bind localhost; explicitly bind 127.0.0.1 and expose only the fronting layer, checking framework options.", "components": ["mcp"], "sources": ["mcp:s6e1c66cfb825", "mcp:s4903497743e8"], "status": "REASONED"},
+    "origin": {"text": "Validate Origin; a present invalid value requires 403, optionally a JSON-RPC error without id.", "components": ["mcp"], "sources": ["mcp:s6e1c66cfb825"], "status": "REASONED"},
+    "origin-proxy": {"text": "nginx /mcp forwards to 127.0.0.1:3000; the if rule rejects missing Origin, while the map variant allows it and rejects wrong origins.", "components": ["nginx"], "sources": ["nginx:sf0bc2adae8cb", "nginx:s40bdf1af1596", "nginx:s75350e9e4e15"], "status": "REASONED"},
+    "origin-limits": {"text": "Proxy Origin checks do not replace server mirror-header/body validation.", "components": ["mcp"], "sources": ["mcp:s6e1c66cfb825"], "status": "REASONED"},
+    "tls": {"text": "Use loopback HTTP with TLS ingress; authorization-server endpoints require HTTPS.", "components": ["mcp"], "sources": ["mcp:s4b9b953ca683"], "status": "REASONED"},
+    "auth": {"text": "Protocol authorization is optional; this guide requires authentication beyond loopback, with OAuth 2.1 resource-server or fronting controls.", "components": ["mcp"], "sources": ["mcp:s34fabf499cb7", "mcp:s4903497743e8"], "status": "REASONED"},
+    "resource-metadata": {"text": "RFC 9728 metadata must name at least one authorization server; server supports challenge or well-known discovery, client both, path-suffixed then root fallback.", "components": ["mcp"], "sources": ["mcp:s117c3edbfcd7"], "status": "REASONED"},
+    "pkce": {"text": "Clients require PKCE, S256 when capable, and refuse metadata lacking code_challenge_methods_supported.", "components": ["mcp"], "sources": ["mcp:s4b9b953ca683"], "status": "REASONED"},
+    "resource": {"text": "Clients send canonical MCP resource URI in authorization and token requests.", "components": ["mcp"], "sources": ["mcp:s34fabf499cb7"], "status": "REASONED"},
+    "audience": {"text": "Validate intended audience; invalid/expired tokens receive 401 and insufficient scope 403.", "components": ["mcp"], "sources": ["mcp:s34fabf499cb7"], "status": "REASONED"},
+    "upstream": {"text": "Never pass caller tokens upstream; use separate upstream tokens, least-privilege keys and identity-attributed tool logs.", "components": ["mcp"], "sources": ["mcp:s34fabf499cb7", "mcp:s4b9b953ca683", "mcp:s4903497743e8"], "status": "REASONED"},
+    "bearer": {"text": "Bearer token goes in Authorization on every request, never the URL; the authorization GET /mcp example is identified as stale.", "components": ["mcp"], "sources": ["mcp:s34fabf499cb7", "mcp:s6e1c66cfb825"], "status": "REASONED"},
+    "handles": {"text": "State handles are not authentication; verify every request, use unpredictable handles and bind them to the verified user.", "components": ["mcp"], "sources": ["mcp:s4903497743e8"], "status": "REASONED"},
+    "scopes": {"text": "Server token acceptance MUST account for broader scopes implying narrower ones.", "components": ["mcp"], "sources": ["mcp:s34fabf499cb7"], "status": "REASONED"},
+    "refresh": {"text": "Public-client refresh tokens MUST rotate; servers SHOULD NOT advertise offline_access as a resource scope.", "components": ["mcp"], "sources": ["mcp:s4b9b953ca683", "mcp:s34fabf499cb7"], "status": "REASONED"},
+    "registration": {"text": "CIMD is preferred over deprecated DCR; DCR remains compatible and requires appropriate application_type.", "components": ["mcp"], "sources": ["mcp:s5655f61af2a0"], "status": "REASONED"},
+    "azure-prm": {"text": "Preview WEBSITE_AUTH_PRM_DEFAULT_WITH_SCOPES takes comma-separated scopes and adds metadata URL/scopes to the 401 challenge.", "components": ["azure"], "sources": ["azure:s5c4dc1862d97"], "status": "REASONED"},
+    "fronting": {"text": "Static proxy bearer auth requires preconfigured client headers; it does not implement MCP OAuth metadata negotiation.", "components": ["mcp"], "sources": ["mcp:s34fabf499cb7", "mcp:s117c3edbfcd7"], "status": "REASONED"},
+    "mfa": {"text": "Enforce human MFA at the authorization server or fronting identity provider; MCP has no login dialogue.", "components": ["mcp"], "sources": ["mcp:s34fabf499cb7"], "status": "REASONED"},
+    "secrets": {"text": "Supply separate upstream keys per server/environment from environment or secret storage, with least privilege.", "components": ["mcp"], "sources": ["mcp:s34fabf499cb7", "mcp:s4903497743e8"], "status": "REASONED"},
+    "subscriptions": {"text": "subscriptions/listen POST opens a long-lived text/event-stream until cancelled; preserve framing and content type.", "components": ["mcp"], "sources": ["mcp:s7345b33e447b", "mcp:s6e1c66cfb825"], "status": "REASONED"},
+    "nginx-buffer": {"text": "nginx buffers by default; proxy_buffering off or honored X-Accel-Buffering: no permits immediate events.", "components": ["nginx", "mcp"], "sources": ["nginx:sf3430c5a0b22", "mcp:s6e1c66cfb825"], "status": "REASONED"},
+    "nginx-timeout": {"text": "proxy_read_timeout defaults to 60s between reads; example 3600s must exceed expected idle gaps, with keep-alives as an alternative.", "components": ["nginx", "mcp"], "sources": ["nginx:sf3430c5a0b22", "mcp:s6e1c66cfb825"], "status": "REASONED"},
+    "caddy-stream": {"text": "Caddy flushes text/event-stream immediately and defaults to no read timeout.", "components": ["caddy"], "sources": ["caddy:s3865a73ccda3"], "status": "REASONED"},
+    "cache": {"text": "Private caches must separate authorization contexts and result-affecting inputs; cacheScope never replaces access checks; public results may be shared.", "components": ["mcp"], "sources": ["mcp:s047fe3fd0dc0"], "status": "REASONED"},
+    "nginx-cache": {"text": "proxy_cache off keeps caching disabled; default methods are GET/HEAD, and POST caching needs explicit configuration.", "components": ["nginx"], "sources": ["nginx:sf3430c5a0b22"], "status": "REASONED"},
+    "verify-network": {"text": "Inventory listeners and probe actual direct origin; any HTTP response proves reachability, local errors and unexplained timeouts are inconclusive.", "components": ["mcp", "curl"], "sources": ["mcp:s6e1c66cfb825", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
+    "verify-anonymous": {"text": "Unauthenticated discovery should get 401; actual discovery data is exposure, while redirects, login pages and RPC/transport errors are inconclusive.", "components": ["mcp"], "sources": ["mcp:s34fabf499cb7", "mcp:s117c3edbfcd7", "mcp:s1d962c091f09"], "status": "REASONED", "verify": [2]},
+    "verify-origin": {"text": "Require valid-credential allowed-Origin DiscoverResult, including complete/version/capabilities/cache hints; changing only Origin should yield 403.", "components": ["mcp"], "sources": ["mcp:s6e1c66cfb825", "mcp:s1d962c091f09", "mcp:s047fe3fd0dc0"], "status": "REASONED", "verify": [3]},
+    "verify-audience": {"text": "Otherwise-valid token for another resource should get 401, not DiscoverResult; no second-resource authorization server was available.", "components": ["mcp"], "sources": ["mcp:s34fabf499cb7", "mcp:s4b9b953ca683", "mcp:s1d962c091f09", "mcp:s047fe3fd0dc0"], "status": "REASONED", "verify": [4]},
+    "verify-credential-file": {"text": "Mode-0600 header files keep credentials out of curl argv, without protecting history, tracing or account-owner access.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED", "verify": [3, 4]}
+  }
+}
+---
 # MCP servers: exposing Model Context Protocol servers safely
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| revision: Current revision can receive compatible changes; legacy 2025-11-25 is Final and handshake-based. | MCP 2026-07-28; MCP legacy 2025-11-25 | REASONED |
+| stdio: Prefer local stdio; subprocess inherits user privileges and supplied environment credentials; restrict that environment. | MCP 2026-07-28 | REASONED |
+| http: Streamable HTTP uses one POST endpoint; 2024-11-05 HTTP+SSE is deprecated. | MCP 2026-07-28 | REASONED |
+| metadata: No initialize handshake; each request needs protocolVersion and clientCapabilities in params._meta; clientInfo is recommended. | MCP 2026-07-28 | REASONED |
+| headers: MCP-Protocol-Version mirrors body version; Mcp-Method mirrors method; Mcp-Name is required only for tools/call, resources/read and prompts/get. | MCP 2026-07-28 | REASONED |
+| header-error: Missing/malformed required headers or body mismatch require HTTP 400 and -32020; unsupported version requires 400 and -32022. | MCP 2026-07-28 | REASONED |
+| discover: Servers MUST implement server/discover; clients MAY call it, without a mandatory first-call requirement. | MCP 2026-07-28 | REASONED |
+| legacy-removal: Sessions, Mcp-Session-Id, GET stream and Last-Event-ID resumability are removed; revision-only servers SHOULD ignore legacy headers and return GET/DELETE 405. | MCP 2026-07-28 | REASONED |
+| bind: Local HTTP SHOULD bind localhost; explicitly bind 127.0.0.1 and expose only the fronting layer, checking framework options. | MCP 2026-07-28 | REASONED |
+| origin: Validate Origin; a present invalid value requires 403, optionally a JSON-RPC error without id. | MCP 2026-07-28 | REASONED |
+| origin-proxy: nginx /mcp forwards to 127.0.0.1:3000; the if rule rejects missing Origin, while the map variant allows it and rejects wrong origins. | nginx unknown | REASONED |
+| origin-limits: Proxy Origin checks do not replace server mirror-header/body validation. | MCP 2026-07-28 | REASONED |
+| tls: Use loopback HTTP with TLS ingress; authorization-server endpoints require HTTPS. | MCP 2026-07-28 | REASONED |
+| auth: Protocol authorization is optional; this guide requires authentication beyond loopback, with OAuth 2.1 resource-server or fronting controls. | MCP 2026-07-28 | REASONED |
+| resource-metadata: RFC 9728 metadata must name at least one authorization server; server supports challenge or well-known discovery, client both, path-suffixed then root fallback. | MCP 2026-07-28 | REASONED |
+| pkce: Clients require PKCE, S256 when capable, and refuse metadata lacking code_challenge_methods_supported. | MCP 2026-07-28 | REASONED |
+| resource: Clients send canonical MCP resource URI in authorization and token requests. | MCP 2026-07-28 | REASONED |
+| audience: Validate intended audience; invalid/expired tokens receive 401 and insufficient scope 403. | MCP 2026-07-28 | REASONED |
+| upstream: Never pass caller tokens upstream; use separate upstream tokens, least-privilege keys and identity-attributed tool logs. | MCP 2026-07-28 | REASONED |
+| bearer: Bearer token goes in Authorization on every request, never the URL; the authorization GET /mcp example is identified as stale. | MCP 2026-07-28 | REASONED |
+| handles: State handles are not authentication; verify every request, use unpredictable handles and bind them to the verified user. | MCP 2026-07-28 | REASONED |
+| scopes: Server token acceptance MUST account for broader scopes implying narrower ones. | MCP 2026-07-28 | REASONED |
+| refresh: Public-client refresh tokens MUST rotate; servers SHOULD NOT advertise offline_access as a resource scope. | MCP 2026-07-28 | REASONED |
+| registration: CIMD is preferred over deprecated DCR; DCR remains compatible and requires appropriate application_type. | MCP 2026-07-28 | REASONED |
+| azure-prm: Preview WEBSITE_AUTH_PRM_DEFAULT_WITH_SCOPES takes comma-separated scopes and adds metadata URL/scopes to the 401 challenge. | Azure App Service unknown | REASONED |
+| fronting: Static proxy bearer auth requires preconfigured client headers; it does not implement MCP OAuth metadata negotiation. | MCP 2026-07-28 | REASONED |
+| mfa: Enforce human MFA at the authorization server or fronting identity provider; MCP has no login dialogue. | MCP 2026-07-28 | REASONED |
+| secrets: Supply separate upstream keys per server/environment from environment or secret storage, with least privilege. | MCP 2026-07-28 | REASONED |
+| subscriptions: subscriptions/listen POST opens a long-lived text/event-stream until cancelled; preserve framing and content type. | MCP 2026-07-28 | REASONED |
+| nginx-buffer: nginx buffers by default; proxy_buffering off or honored X-Accel-Buffering: no permits immediate events. | nginx unknown; MCP 2026-07-28 | REASONED |
+| nginx-timeout: proxy_read_timeout defaults to 60s between reads; example 3600s must exceed expected idle gaps, with keep-alives as an alternative. | nginx unknown; MCP 2026-07-28 | REASONED |
+| caddy-stream: Caddy flushes text/event-stream immediately and defaults to no read timeout. | Caddy unknown | REASONED |
+| cache: Private caches must separate authorization contexts and result-affecting inputs; cacheScope never replaces access checks; public results may be shared. | MCP 2026-07-28 | REASONED |
+| nginx-cache: proxy_cache off keeps caching disabled; default methods are GET/HEAD, and POST caching needs explicit configuration. | nginx unknown | REASONED |
+| verify-network: Inventory listeners and probe actual direct origin; any HTTP response proves reachability, local errors and unexplained timeouts are inconclusive. | MCP 2026-07-28; curl minimum 7.75.0 | REASONED |
+| verify-anonymous: Unauthenticated discovery should get 401; actual discovery data is exposure, while redirects, login pages and RPC/transport errors are inconclusive. | MCP 2026-07-28 | REASONED |
+| verify-origin: Require valid-credential allowed-Origin DiscoverResult, including complete/version/capabilities/cache hints; changing only Origin should yield 403. | MCP 2026-07-28 | REASONED |
+| verify-audience: Otherwise-valid token for another resource should get 401, not DiscoverResult; no second-resource authorization server was available. | MCP 2026-07-28 | REASONED |
+| verify-credential-file: Mode-0600 header files keep credentials out of curl argv, without protecting history, tracing or account-owner access. | curl minimum 7.75.0 | REASONED |
+<!-- version-basis:end -->
 
 An MCP server gives a model tools, and every tool it exposes runs with the credentials the server holds. The 2026-07-28 specification defines two transports. Over **stdio** the client launches the server as a subprocess and talks over stdin and stdout: there is no network listener, but the process runs as the launching user with every credential in its environment, so a malicious or careless server is a local compromise, not a network one. Over **Streamable HTTP** the server is a web service with a single endpoint accepting **POST**, and every rule in [authentication.md](authentication.md) applies to it. For a server supporting only this revision, the spec says GET or DELETE to that endpoint SHOULD receive `405 Method Not Allowed`; server-to-client change notifications now flow on a long-lived `subscriptions/listen` POST response stream rather than a standalone GET stream. The older HTTP with SSE transport (protocol version 2024-11-05) is deprecated; Streamable HTTP replaces it. See Streamable HTTP. The spec makes authorization OPTIONAL at the protocol level; this repository does not, so an HTTP MCP server reachable beyond loopback authenticates every request, either natively or through a fronting layer. See Authorization.
 
