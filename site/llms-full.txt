@@ -1619,8 +1619,8 @@ not show is marked **REASONED** where it occurs, with the reason: HA behavior (n
 was set up for these runs), a second audit device in a separate failure domain (the host has no second network), the recipient's
 own validation (it belongs to the receiving application), a wildcard bind (the host forbids binding
 every interface), `ss` run as root (the host has no `sudo`), and real network paths and firewalls (the
-host has no second network); backlog row 1.114 and VAULT-LIVE-1 below track
-them. The authoring host has no `sudo`, so the first block's `sudo ss -tlnp` ran through a stand-in
+host has no second network). These expectations follow the cited Vault documentation. The authoring
+host has no `sudo`, so the first block's `sudo ss -tlnp` ran through a stand-in
 that runs `ss` without it; as the same account, `ss` still showed the Vault process.
 
 The curl `exitcode` and `errormsg` write-out fields require curl 7.75.0 or newer.
@@ -1674,7 +1674,7 @@ and read the example AppRole:
 ```
 
 ```bash
-# REASONED: wildcard binds, ss as root, HA health and independent audit delivery; the host lacks the capabilities listed below (row 1.114). Repeat these commands for those scenarios using the cited listener, health and audit sources.
+# REASONED: wildcard binds, ss as root, HA health and independent audit delivery; the host lacks the capabilities listed below. Repeat these commands for those scenarios using the cited listener, health and audit sources.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
     'REPLACE_WITH_CA_FILE'
@@ -1819,7 +1819,7 @@ to avoid printing secrets or profiles.
 ```
 
 ```bash
-# REASONED: HA standby monitoring; no multi-node cluster was set up (row 1.114). Repeat these requests against the node roles described below; the cited handler sources distinguish the outcomes.
+# REASONED: HA standby monitoring; no multi-node cluster was set up. Repeat these requests against the node roles described below; the cited handler sources distinguish the outcomes.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_FULL_HTTPS_API_URL' \
     'REPLACE_WITH_CA_FILE' \
@@ -2083,7 +2083,7 @@ wrapping token through securely injected `VAULT_TOKEN`. Lookup must succeed befo
 ```
 
 ```bash
-# REASONED: recipient validation belongs to the receiving application (row 1.114). Use this lookup with the unexpected-path scenario below; the cited recipient-validation source defines the required rejection.
+# REASONED: recipient validation belongs to the receiving application. Use this lookup with the unexpected-path scenario below; the cited recipient-validation source defines the required rejection.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
     'REPLACE_WITH_CA_FILE' \
@@ -2189,7 +2189,7 @@ Guard the address so the probe cannot run unsubstituted and time out as if the p
 ```
 
 ```bash
-# REASONED: external isolation and permitted-source control; the host has no second network (row 1.114 and VAULT-LIVE-1). Repeat this probe from the sources described below; the cited listener and firewall guidance defines the expected outcomes.
+# REASONED: external isolation and permitted-source control; the host has no second network. Repeat this probe from the sources described below; the cited listener and firewall guidance defines the expected outcomes.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
@@ -2227,9 +2227,9 @@ See [production firewall guidance](https://developer.hashicorp.com/vault/docs/co
 [cluster communication](https://developer.hashicorp.com/vault/docs/concepts/ha), and
 [seal-status API behavior](https://developer.hashicorp.com/vault/api-docs/system/seal-status).
 
-| Backlog ID | Status | Required demonstration |
+| Check scope | Status | Deployment comparison and prerequisites |
 | --- | --- | --- |
-| VAULT-LIVE-1 | OPEN - REASONED parts only; backlog row 1.114 | In an authorized isolated Vault deployment, demonstrate what a single loopback node cannot: HA standby behavior (the `429`, `474` and `530` health and status codes, and the monitoring checks' redirects and local-only handlers), a second audit device in a separate failure domain with delivery to both destinations, a wildcard bind and `ss` run as root, recipient-side rejection of an unexpected creation path, and the external isolation probe from real permitted and forbidden sources against 8200 and 8201. Record the Vault version and edition, effective settings, requests, errors, and matched positive controls without credentials. |
+| Checks beyond the recorded loopback runs | REASONED from the cited Vault documentation; not demonstrated | In an authorized isolated Vault deployment, demonstrate what a single loopback node cannot: HA standby behavior (the `429`, `474` and `530` health and status codes, and the monitoring checks' redirects and local-only handlers), a second audit device in a separate failure domain with delivery to both destinations, a wildcard bind and `ss` run as root, recipient-side rejection of an unexpected creation path, and the external isolation probe from real permitted and forbidden sources against 8200 and 8201. Record the Vault version and edition, effective settings, requests, errors, and matched positive controls without credentials. |
 
 ## Sources (checked September 2026)
 
@@ -19822,19 +19822,19 @@ Bind every listener to loopback or a private interface, and put authentication a
 
 ## Verify
 
-Every probe below is **REASONED, not demonstrated**: the authoring host forbids opening listeners without an isolated network namespace, and has none. Outcomes are derived from the cited vendor sources rather than observed; backlog row 2.32 tracks live exposed and fixed demonstrations. A transport failure, a redirect, a 404, a 405 or a TLS error is inconclusive, never the fixed state.
+Every probe below is **REASONED, not demonstrated**: the authoring host forbids opening listeners without an isolated network namespace, and has none. Outcomes are derived from the cited vendor sources rather than observed. A transport failure, a redirect, a 404, a 405 or a TLS error is inconclusive, never the fixed state.
 
 ```bash
-# REASONED: listener inventory; no isolated network namespace for listeners on the authoring host (row 2.32). Expected outcomes and vendor sources are recorded below.
+# REASONED: listener inventory; no isolated network namespace for listeners on the authoring host. Expected outcomes and vendor sources are recorded below.
 sudo ss -tlnp    # read the whole table: 8086 and loopback 8088; 8428, 8480, 8481, 8482 and native
 sudo ss -ulnp    # RPC 8400, 8401; 9000, 9003, 8812, 9009, each only on its intended private
                  # address, and no metrics or ingest port bound to a public interface
 ```
 
-**REASONED, not demonstrated:** the VictoriaMetrics cluster RPC check needs a running cluster and probe hosts inside and outside its protected network, unavailable because the authoring host forbids opening listeners without an isolated network namespace, and has none. Row 2.32 tracks this demonstration. The `ss` inventory above identifies local binds; it does not prove that `8400` and `8401` are unreachable from outside the cluster network. From an outside host, substitute each storage node's actual IP below and run the whole block. Repeat from a trusted cluster host as the positive control. Use any configured replacement ports too, including enabled `-clusternativeListenAddr` listeners. The pinned RPC listener and handshake sources below explain why reachability matters.
+**REASONED, not demonstrated:** the VictoriaMetrics cluster RPC check needs a running cluster and probe hosts inside and outside its protected network, unavailable because the authoring host forbids opening listeners without an isolated network namespace, and has none. The `ss` inventory above identifies local binds; it does not prove that `8400` and `8401` are unreachable from outside the cluster network. From an outside host, substitute each storage node's actual IP below and run the whole block. Repeat from a trusted cluster host as the positive control. Use any configured replacement ports too, including enabled `-clusternativeListenAddr` listeners. The pinned RPC listener and handshake sources below explain why reachability matters.
 
 ```bash
-# REASONED: cluster RPC isolation and trusted-host control; no isolated network namespace for listeners on the authoring host (row 2.32). Expected outcomes and vendor sources are recorded below.
+# REASONED: cluster RPC isolation and trusted-host control; no isolated network namespace for listeners on the authoring host. Expected outcomes and vendor sources are recorded below.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_STORAGE_NODE_IP'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -19863,7 +19863,7 @@ PY
 An exposed listener is expected to report `TCP REACHABLE` from outside; this is an exposure failure even if an HTTP request to that port fails, since RPC is not HTTP. In the fixed state, outside connections must be blocked while the trusted-host control still connects to both running listeners. A timeout or refusal alone is inconclusive: confirm the target, running listener and firewall or network-policy rule responsible. A `401` from `vmauth` says nothing about RPC isolation.
 
 ```bash
-# REASONED: HTTP setup, authentication and endpoint-key probes; no isolated network namespace for listeners on the authoring host (row 2.32). Expected outcomes and vendor sources are recorded below.
+# REASONED: HTTP setup, authentication and endpoint-key probes; no isolated network namespace for listeners on the authoring host. Expected outcomes and vendor sources are recorded below.
 # Per-target discriminator: InfluxDB 2.x setup returns 200 in both states; read allowed
 # (true before setup, false after). The other named data endpoints should return 401 with auth.
 # Substitute a full URL on the set -- line
@@ -19885,7 +19885,7 @@ An exposed listener is expected to report `TCP REACHABLE` from outside; this is 
 
 Run that block once per target, over `http://` against the default plaintext listener. InfluxDB 2.x `http://tsdb.example.com:8086/api/v2/setup` returns a body containing `"allowed":true` on an un-set-up instance and `"allowed":false` once initialized; the HTTP status is `200` either way, so read the body, not the code. InfluxDB 1.x `http://tsdb.example.com:8086/query?q=SHOW+DATABASES` returns the database list when `auth-enabled` is off and `401` once it is on. VictoriaMetrics `http://tsdb.example.com:8428/api/v1/query?query=up` returns series until `-httpAuth.username` is set or it sits behind `vmauth`, then `401`. QuestDB `http://tsdb.example.com:9000/exec?query=SELECT+1` returns a result set with no `http.user` set and `401` once it is. For the PostgreSQL wire port, confirm separately that `admin` / `quest` is refused with a `psql` connection attempt. Once authentication and TLS are in front, re-run against the `https://` entrypoint to confirm the `401`, and separately confirm the plaintext port is closed from outside, since a `401` from the proxy does not prove the backend listener is unreachable. A `200` health response, a redirect, or a 404 proves none of this on its own.
 
-**REASONED, not demonstrated:** for v1.152.0 single-node, use the guarded URL block above against `/snapshot/list` and `/metrics` with no credentials. With empty endpoint keys and an empty Basic username, expect `200` and snapshot JSON or metrics text; with a Basic username set and the keys still empty, expect `401`. With nonempty endpoint keys, a request lacking `authKey` must return `401`. In an isolated deployment, also confirm that a correct endpoint key succeeds without Basic credentials, that Basic credentials alone cannot satisfy a nonempty endpoint key, and that ordinary query and ingest requests still require Basic auth. Do not use snapshot creation, deletion or ingestion as a read-only probe. `/health` and `/-/ready` remain unauthenticated under native Basic auth; their success is not a failed data-auth check. Include every enabled optional listener in the `ss` inventory and outside-network isolation checks. The authoring host forbids opening listeners without an isolated network namespace, and has none; row 2.32 retains these demonstrations.
+**REASONED, not demonstrated:** for v1.152.0 single-node, use the guarded URL block above against `/snapshot/list` and `/metrics` with no credentials. With empty endpoint keys and an empty Basic username, expect `200` and snapshot JSON or metrics text; with a Basic username set and the keys still empty, expect `401`. With nonempty endpoint keys, a request lacking `authKey` must return `401`. In an isolated deployment, also confirm that a correct endpoint key succeeds without Basic credentials, that Basic credentials alone cannot satisfy a nonempty endpoint key, and that ordinary query and ingest requests still require Basic auth. Do not use snapshot creation, deletion or ingestion as a read-only probe. `/health` and `/-/ready` remain unauthenticated under native Basic auth; their success is not a failed data-auth check. Include every enabled optional listener in the `ss` inventory and outside-network isolation checks. The authoring host forbids opening listeners without an isolated network namespace, and has none; these expectations are REASONED from the pinned sources cited for these controls.
 
 ## Common mistakes
 
@@ -25736,19 +25736,19 @@ The image build excludes `auth.json`, so mount it read-only at `/content/app/aut
 
 ## Verify
 
-None of this guide's live Verify checks has a recorded demonstration. The missing capability is an isolated host or network namespace in which the services and their proxy may open listeners, as described for Fooocus below. Row 1.158 tracks the ComfyUI, AUTOMATIC1111, InvokeAI and proxy demonstrations; row 1.146 continues to track Fooocus.
+None of this guide's live Verify checks has a recorded demonstration. The missing capability is an isolated host or network namespace in which the services and their proxy may open listeners, as described for Fooocus below. The checks remain REASONED from the cited vendor documentation and pinned sources, as detailed below.
 
 The ComfyUI (8188), AUTOMATIC1111 (7860 with the explicit `--port 7860` above) and InvokeAI (9090) entries in the listener inventory and external probe loop are each REASONED, not demonstrated: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none. From the cited ComfyUI v0.37.0 argument parser, AUTOMATIC1111 v1.10.1 `gradio_server_name()` and InvokeAI YAML Config reference, a host process bound to a wildcard address should appear that way in `ss` and answer the external probe with an HTTP code when the network permits it; bound to `127.0.0.1` as above, it should appear only on loopback and the external probe should report a refusal or timeout reaching your address. Without that explicit AUTOMATIC1111 port, Gradio searches from `GRADIO_SERVER_PORT` (7860 when unset) for up to `GRADIO_NUM_PORTS` ports (default 100); replace 7860 in the inventory and probe loop with the actual listener port. Confirm each service is running and answers on host loopback before interpreting an external refusal as the fixed state. These are expected outcomes from the sources, not observations.
 
-The InvokeAI `/api/v1/boards/` check is also REASONED: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none. The cited Multi-User Administrator Guide distinguishes the default single-user mode from `multiuser: true`, which requires a login. The [Multi-User API Guide](https://invoke.ai/features/multi-user-mode/api-guide/) documents the boards endpoint and missing-token `401`. The expected pair is an unauthenticated boards response in single-user mode (the cited guides give no status code for it; record the observed code) and `401` in multi-user mode; record both when demonstrating row 1.158.
+The InvokeAI `/api/v1/boards/` check is also REASONED: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none. The cited Multi-User Administrator Guide distinguishes the default single-user mode from `multiuser: true`, which requires a login. The [Multi-User API Guide](https://invoke.ai/features/multi-user-mode/api-guide/) documents the boards endpoint and missing-token `401`. The expected pair is an unauthenticated boards response in single-user mode (the cited guides give no status code for it; record the observed code) and `401` in multi-user mode.
 
-The proxy check is REASONED: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none, so no proxy or backend was run. Following [fronting-auth.md](fronting-auth.md), the expected exposed state serves the UI without proxy authentication, and the fixed state requires a login before the UI loads. Use your configured hostname in place of `imagegen.example.com`; the header request below checks the TLS connection and authentication response, and a browser check confirms the login gates the UI. Row 1.158 tracks both states.
+The proxy check is REASONED: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none, so no proxy or backend was run. Following [fronting-auth.md](fronting-auth.md), the expected exposed state serves the UI without proxy authentication, and the fixed state requires a login before the UI loads. Use your configured hostname in place of `imagegen.example.com`; the header request below checks the TLS connection and authentication response, and a browser check confirms the login gates the UI.
 
-The Fooocus entries below (port 7865 in the `ss` comment and in the probe loop) are REASONED, not demonstrated: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none, so no Fooocus instance was run; row 1.146 tracks the demonstration. From the v2.5.5 sources cited below (the `--listen` default and its bare-flag constant in the argument parser, and the launch call that passes the bind and port to gradio), a Fooocus process started on the host with a bare `--listen` should show a wildcard listener on 7865 in `ss` and answer the probe from another host with an HTTP code; started as above, it should show `127.0.0.1:7865` in `ss`, and the probe should report a refusal or timeout reaching your address. The argument parse alone is demonstrated: `argparse` given that `--listen` definition (`type=str`, `default="127.0.0.1"`, `nargs="?"`, `const="0.0.0.0"`) returns `127.0.0.1` with no flag and `0.0.0.0` for a bare `--listen`. Confirm Fooocus is up and answers on the host itself before reading an external refusal as the fixed state. The `ss` expectations cover host processes only. For a container, the check is the PORTS column of `docker ps` plus the probe from another host, not `ss`, because socket visibility varies by Docker version and config (see [docker.md](docker.md#4-verify)): a container published as `7865:7865` should list the publication on every host address in the PORTS column and answer the probe with an HTTP code, and one published as `127.0.0.1:7865:7865` should list `127.0.0.1` as its only host address, with the probe reporting a refusal or timeout reaching your address. A publication with no host address binds `[::]` as well as `0.0.0.0`, so run the probe block twice, once with your public IPv4 address and once with your public IPv6 address in square brackets, each inside the quotes on the `set --` line. The block probes every port even when an earlier probe fails, so its exit status is not the verification result: read each `port=` line. Under rootful Docker's host networking nothing is published and the PORTS column is empty; the listener is in the host's network namespace, so read `ss` for it as for a host process: `127.0.0.1:7865` when fixed, or `0.0.0.0:7865` when `CMDARGS` still binds the wildcard, whether the image's default `--listen` was left in or a bridge-network `--listen 0.0.0.0` was copied over.
+The Fooocus entries below (port 7865 in the `ss` comment and in the probe loop) are REASONED, not demonstrated: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none, so no Fooocus instance was run. From the v2.5.5 sources cited below (the `--listen` default and its bare-flag constant in the argument parser, and the launch call that passes the bind and port to gradio), a Fooocus process started on the host with a bare `--listen` should show a wildcard listener on 7865 in `ss` and answer the probe from another host with an HTTP code; started as above, it should show `127.0.0.1:7865` in `ss`, and the probe should report a refusal or timeout reaching your address. The argument parse alone is demonstrated: `argparse` given that `--listen` definition (`type=str`, `default="127.0.0.1"`, `nargs="?"`, `const="0.0.0.0"`) returns `127.0.0.1` with no flag and `0.0.0.0` for a bare `--listen`. Confirm Fooocus is up and answers on the host itself before reading an external refusal as the fixed state. The `ss` expectations cover host processes only. For a container, the check is the PORTS column of `docker ps` plus the probe from another host, not `ss`, because socket visibility varies by Docker version and config (see [docker.md](docker.md#4-verify)): a container published as `7865:7865` should list the publication on every host address in the PORTS column and answer the probe with an HTTP code, and one published as `127.0.0.1:7865:7865` should list `127.0.0.1` as its only host address, with the probe reporting a refusal or timeout reaching your address. A publication with no host address binds `[::]` as well as `0.0.0.0`, so run the probe block twice, once with your public IPv4 address and once with your public IPv6 address in square brackets, each inside the quotes on the `set --` line. The block probes every port even when an earlier probe fails, so its exit status is not the verification result: read each `port=` line. Under rootful Docker's host networking nothing is published and the PORTS column is empty; the listener is in the host's network namespace, so read `ss` for it as for a host process: `127.0.0.1:7865` when fixed, or `0.0.0.0:7865` when `CMDARGS` still binds the wildcard, whether the image's default `--listen` was left in or a bridge-network `--listen 0.0.0.0` was copied over.
 
 ```bash
-# REASONED: inventory and external probes: ComfyUI 8188, AUTOMATIC1111 7860, InvokeAI 9090 (row 1.158);
-# Fooocus 7865 (row 1.146). The authoring host forbids listeners without an isolated network namespace, and has none; expected outcomes and sources above.
+# REASONED: inventory, external probes, InvokeAI authentication and proxy TLS/login follow the sources above.
+# ComfyUI 8188, AUTOMATIC1111 7860, InvokeAI 9090; Fooocus 7865. The authoring host forbids listeners without an isolated network namespace, and has none; expected outcomes and sources above.
 ss -tlnp   # host processes: read every listener; 8188/7860/9090/7865: each service on 127.0.0.1 only
 # each must be unreachable from another host. Read err, not the number: it must name a refusal or
 # timeout reaching YOUR address. An HTTP code means the port answered. A resolver failure, a local
@@ -25768,12 +25768,14 @@ ss -tlnp   # host processes: read every listener; 8188/7860/9090/7865: each serv
        done ;;
   esac
 )
-# REASONED: InvokeAI authentication; the authoring host forbids listeners without an isolated network namespace (row 1.158).
+# REASONED: InvokeAI authentication follows the cited Multi-User Administrator and API Guides;
+# the authoring host forbids listeners without an isolated network namespace, and has none.
 # guard-conventions: allow probe of a fixed loopback target; no reader-substituted placeholder in this probe's argv
 curl -q -g -s --noproxy '*' -o /dev/null -w '%{http_code}\n' http://127.0.0.1:9090/api/v1/boards/
                                                        # from the host itself, InvokeAI multiuser mode: 401
                                                        # without a Bearer token, never the app itself
-# REASONED: TLS and login; the authoring host forbids listeners without an isolated network namespace (row 1.158).
+# REASONED: TLS and login follow the fronting-auth.md guidance above;
+# the authoring host forbids listeners without an isolated network namespace, and has none.
 # guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sI https://imagegen.example.com/                # via the proxy: TLS, and a login prompt
                                                        # or 401 without credentials, before the UI loads

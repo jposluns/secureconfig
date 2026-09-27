@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "74c6ccf1092408e465a15c8d90d540704f07d143b4c304db352d057c627ca74d",
+  "body_sha256": "b68c0e4fccac3bf8f7f4e2ade49f764d974936d35670ab844530e3adf589da37",
   "components": {
     "influx2": {
       "name": "InfluxDB OSS",
@@ -329,19 +329,19 @@ Bind every listener to loopback or a private interface, and put authentication a
 
 ## Verify
 
-Every probe below is **REASONED, not demonstrated**: the authoring host forbids opening listeners without an isolated network namespace, and has none. Outcomes are derived from the cited vendor sources rather than observed; backlog row 2.32 tracks live exposed and fixed demonstrations. A transport failure, a redirect, a 404, a 405 or a TLS error is inconclusive, never the fixed state.
+Every probe below is **REASONED, not demonstrated**: the authoring host forbids opening listeners without an isolated network namespace, and has none. Outcomes are derived from the cited vendor sources rather than observed. A transport failure, a redirect, a 404, a 405 or a TLS error is inconclusive, never the fixed state.
 
 ```bash
-# REASONED: listener inventory; no isolated network namespace for listeners on the authoring host (row 2.32). Expected outcomes and vendor sources are recorded below.
+# REASONED: listener inventory; no isolated network namespace for listeners on the authoring host. Expected outcomes and vendor sources are recorded below.
 sudo ss -tlnp    # read the whole table: 8086 and loopback 8088; 8428, 8480, 8481, 8482 and native
 sudo ss -ulnp    # RPC 8400, 8401; 9000, 9003, 8812, 9009, each only on its intended private
                  # address, and no metrics or ingest port bound to a public interface
 ```
 
-**REASONED, not demonstrated:** the VictoriaMetrics cluster RPC check needs a running cluster and probe hosts inside and outside its protected network, unavailable because the authoring host forbids opening listeners without an isolated network namespace, and has none. Row 2.32 tracks this demonstration. The `ss` inventory above identifies local binds; it does not prove that `8400` and `8401` are unreachable from outside the cluster network. From an outside host, substitute each storage node's actual IP below and run the whole block. Repeat from a trusted cluster host as the positive control. Use any configured replacement ports too, including enabled `-clusternativeListenAddr` listeners. The pinned RPC listener and handshake sources below explain why reachability matters.
+**REASONED, not demonstrated:** the VictoriaMetrics cluster RPC check needs a running cluster and probe hosts inside and outside its protected network, unavailable because the authoring host forbids opening listeners without an isolated network namespace, and has none. The `ss` inventory above identifies local binds; it does not prove that `8400` and `8401` are unreachable from outside the cluster network. From an outside host, substitute each storage node's actual IP below and run the whole block. Repeat from a trusted cluster host as the positive control. Use any configured replacement ports too, including enabled `-clusternativeListenAddr` listeners. The pinned RPC listener and handshake sources below explain why reachability matters.
 
 ```bash
-# REASONED: cluster RPC isolation and trusted-host control; no isolated network namespace for listeners on the authoring host (row 2.32). Expected outcomes and vendor sources are recorded below.
+# REASONED: cluster RPC isolation and trusted-host control; no isolated network namespace for listeners on the authoring host. Expected outcomes and vendor sources are recorded below.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_STORAGE_NODE_IP'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -370,7 +370,7 @@ PY
 An exposed listener is expected to report `TCP REACHABLE` from outside; this is an exposure failure even if an HTTP request to that port fails, since RPC is not HTTP. In the fixed state, outside connections must be blocked while the trusted-host control still connects to both running listeners. A timeout or refusal alone is inconclusive: confirm the target, running listener and firewall or network-policy rule responsible. A `401` from `vmauth` says nothing about RPC isolation.
 
 ```bash
-# REASONED: HTTP setup, authentication and endpoint-key probes; no isolated network namespace for listeners on the authoring host (row 2.32). Expected outcomes and vendor sources are recorded below.
+# REASONED: HTTP setup, authentication and endpoint-key probes; no isolated network namespace for listeners on the authoring host. Expected outcomes and vendor sources are recorded below.
 # Per-target discriminator: InfluxDB 2.x setup returns 200 in both states; read allowed
 # (true before setup, false after). The other named data endpoints should return 401 with auth.
 # Substitute a full URL on the set -- line
@@ -392,7 +392,7 @@ An exposed listener is expected to report `TCP REACHABLE` from outside; this is 
 
 Run that block once per target, over `http://` against the default plaintext listener. InfluxDB 2.x `http://tsdb.example.com:8086/api/v2/setup` returns a body containing `"allowed":true` on an un-set-up instance and `"allowed":false` once initialized; the HTTP status is `200` either way, so read the body, not the code. InfluxDB 1.x `http://tsdb.example.com:8086/query?q=SHOW+DATABASES` returns the database list when `auth-enabled` is off and `401` once it is on. VictoriaMetrics `http://tsdb.example.com:8428/api/v1/query?query=up` returns series until `-httpAuth.username` is set or it sits behind `vmauth`, then `401`. QuestDB `http://tsdb.example.com:9000/exec?query=SELECT+1` returns a result set with no `http.user` set and `401` once it is. For the PostgreSQL wire port, confirm separately that `admin` / `quest` is refused with a `psql` connection attempt. Once authentication and TLS are in front, re-run against the `https://` entrypoint to confirm the `401`, and separately confirm the plaintext port is closed from outside, since a `401` from the proxy does not prove the backend listener is unreachable. A `200` health response, a redirect, or a 404 proves none of this on its own.
 
-**REASONED, not demonstrated:** for v1.152.0 single-node, use the guarded URL block above against `/snapshot/list` and `/metrics` with no credentials. With empty endpoint keys and an empty Basic username, expect `200` and snapshot JSON or metrics text; with a Basic username set and the keys still empty, expect `401`. With nonempty endpoint keys, a request lacking `authKey` must return `401`. In an isolated deployment, also confirm that a correct endpoint key succeeds without Basic credentials, that Basic credentials alone cannot satisfy a nonempty endpoint key, and that ordinary query and ingest requests still require Basic auth. Do not use snapshot creation, deletion or ingestion as a read-only probe. `/health` and `/-/ready` remain unauthenticated under native Basic auth; their success is not a failed data-auth check. Include every enabled optional listener in the `ss` inventory and outside-network isolation checks. The authoring host forbids opening listeners without an isolated network namespace, and has none; row 2.32 retains these demonstrations.
+**REASONED, not demonstrated:** for v1.152.0 single-node, use the guarded URL block above against `/snapshot/list` and `/metrics` with no credentials. With empty endpoint keys and an empty Basic username, expect `200` and snapshot JSON or metrics text; with a Basic username set and the keys still empty, expect `401`. With nonempty endpoint keys, a request lacking `authKey` must return `401`. In an isolated deployment, also confirm that a correct endpoint key succeeds without Basic credentials, that Basic credentials alone cannot satisfy a nonempty endpoint key, and that ordinary query and ingest requests still require Basic auth. Do not use snapshot creation, deletion or ingestion as a read-only probe. `/health` and `/-/ready` remain unauthenticated under native Basic auth; their success is not a failed data-auth check. Include every enabled optional listener in the `ss` inventory and outside-network isolation checks. The authoring host forbids opening listeners without an isolated network namespace, and has none; these expectations are REASONED from the pinned sources cited for these controls.
 
 ## Common mistakes
 
