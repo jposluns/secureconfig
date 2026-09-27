@@ -69,6 +69,7 @@ def keys(value, required, optional=()):
 def string(value):
     require(isinstance(value, str) and bool(value.strip())
             and not any(ord(c) < 32 for c in value), 'expected nonempty single-line string')
+    require(value == value.strip(), 'leading or trailing whitespace in string')
 
 
 def identifiers(mapping):
