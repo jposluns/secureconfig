@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "fa353cbaacec1e11d4b189b9bb58ff4c608fdd6099118d96110bad3a4ed405c0",
+  "body_sha256": "aef3b34472e594723ae3c4210c0c959927dfa820f651471dc17e5e44031f3554",
   "components": {
     "adapter": {
       "name": "SvelteKit adapter-node",
@@ -216,8 +216,8 @@ ls -d build/client build/prerendered .output/public dist 2>/dev/null  # confirm 
   if hits=$(printf '%s\n' "$client_secret" | grep -rlF -f - -- "$@"); then rc=0; else rc=$?; fi
   case "$rc" in
     0)
-      client_hits=$(printf '%s\n' "$hits" | grep -v '^dist/server/')
-      server_hits=$(printf '%s\n' "$hits" | grep '^dist/server/')
+      client_hits=$(printf '%s\n' "$hits" | grep -v '^dist/server/' || :)
+      server_hits=$(printf '%s\n' "$hits" | grep '^dist/server/' || :)
       [ -z "$client_hits" ] || { printf '%s\n' "$client_hits"; echo "FINDING: the secret is in the built client output"; }
       [ -z "$server_hits" ] || { printf '%s\n' "$server_hits"; echo "server output: the secret is under dist/server/, which a Vite SSR build does not serve to browsers; confirm dist/server is server-only in your deployment before treating this as clean"; }
       ;;
