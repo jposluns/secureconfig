@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "76ec91700e39b1daf3c339e17cefe83114b0cbdd6c7632da7cb53b585983ee71",
+  "body_sha256": "be2b957154f87aad0b10b24e01097cd43d9d55af28b332adb094cc8b7d40bec5",
   "components": {
     "s3": {
       "name": "Amazon S3 documentation",
@@ -812,6 +812,8 @@ The signed URL stays out of curl's process arguments because the shell's builtin
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  # A signed URL substituted on the set -- line is a credential and enters shell
+  # history. Use a short-lived signed URL or clear that history line afterward.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_FIXTURE_URL'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift

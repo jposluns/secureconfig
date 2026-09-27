@@ -11,6 +11,7 @@ in step with the merged pull request is therefore an authoring obligation, not a
 
 ## 2026-09-27
 
+- Disclose shell-history exposure at 14 secret-bearing `set --` substitution sites across 12 guides, including credential headers, passwords, API keys, tokens and signed URLs. Preserve commands and existing disclosures. Row 1.186. (#412)
 - Narrow the frontend-frameworks secret scan to client assets and prerendered pages, preserve its secret-input and grep-status guards, and document custom and SSR output paths. Row 1.185. (#411)
 - Pin the Browserless TOKEN default to open-source 2.56.7, distinguish Enterprise documentation from source evidence, and align the authentication probe and version-basis claims; add the CVE-2026-92811 file-protocol fix requirement, conflicting affected-range caveat, and Playwright canary check. Row 1.178. (#409)
 - Move the #389 and #391 to #399 bullets to their UTC merge date, rename the version-basis gate label after the rollout, and extend the source-gap and follow-up backlog, with rows 1.143 and 1.138 retired (maintainer ruling 2026-09-27), and record the day's four rulings in DECISIONS.md. Row 3.37. (#408)

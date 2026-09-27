@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "157d1635f027debf8f5435502a8cdbea7d8f4b2ab000345a5b23119d1af743e0",
+  "body_sha256": "a32fc8d8d095a8076ce19751ba7278712de8ffc5f4ccce0e4c1c9161d38b10e8",
   "components": {
     "ng": {
       "name": "nginx documentation",
@@ -231,6 +231,8 @@ curl -q -s -o /dev/null -w '%{http_code}\n' --max-time 10 https://example.com/  
   # block, including its set -- line. (The TLS-floor and size-prep steps sit
   # inside the same block only so the password is entered once.)
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  # The password you substitute on the set -- line enters shell history.
+  # Clear that history line afterward.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PASSWORD'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift

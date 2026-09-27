@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "64c9d3437159ff1b56379b3745cea5ca7a2a1579bd87a310fcd09288d0abb385",
+  "body_sha256": "658738f0d91e92f38769f2ab4c15750ace4d2edea9ae5d80447859a667998a0f",
   "components": {
     "llama": {
       "name": "llama.cpp",
@@ -666,6 +666,8 @@ pgrep -c -f -- '(^| )--((admin-)?api-key|admin-key|gradio-auth|http-restricted-a
   # Feed the API key to curl on stdin (curl --header @-), never in argv:
   # -H "Authorization: Bearer KEY" is readable in ps / /proc/<pid>/cmdline.
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  # The API key you substitute on the set -- line enters shell history.
+  # Use a short-lived key or clear that history line afterward.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_API_KEY'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
