@@ -12,6 +12,8 @@ import sys
 import tempfile
 from pathlib import Path
 
+from _walk import isolated_git_environment
+
 GATE = Path(__file__).resolve().parent / "check_changelog_prs.py"
 
 
@@ -136,6 +138,7 @@ case(
 )
 
 
+@isolated_git_environment()
 def main():
     failures = 0
     run = 0

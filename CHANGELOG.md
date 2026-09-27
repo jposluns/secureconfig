@@ -11,6 +11,8 @@ in step with the merged pull request is therefore an authoring obligation, not a
 
 ## 2026-09-26
 
+- Fail the secrets scan on grep read errors with path diagnostics, preserving whole-tree coverage. Isolate placeholder and changelog fixture Git environments and extend external-index regressions for both Git selectors. Rows 3.33 and 3.34. (#NNN)
+
 - Restrict the shared gate walker to tracked working-tree files (#396), row 3.28. Preserve caller filters, fail closed when Git or selected tracked inputs are unavailable, and test unreadable untracked directories alongside untracked violations. Stage existing gate fixtures in temporary Git indexes.
 
 - Version basis pilot: vault.md, image-gen-uis.md and time-series-metrics-stores.md carry version-basis front matter and a generated visible summary (the versions and documentation date each claim was checked against, DEMONSTRATED or REASONED per claim, and an instruction to compare with current releases); tools/version_basis.py generates and checks them, a blocking gate enforces them, and the Verify-marking gate understands the front matter. Row 3.31. (#395)
