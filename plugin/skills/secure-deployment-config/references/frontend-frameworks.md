@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "65cbc07d63e274ba629c2675e91011366433f733639b043a8738ba937d9527a2",
+  "body_sha256": "a3e23f8bc34ae286afa3105b7deea3d3412019b763a75229c10c63bf66fb78c8",
   "components": {
     "adapter": {
       "name": "SvelteKit adapter-node",
@@ -254,8 +254,8 @@ Behind a reverse proxy, confirm cookies still carry `Secure` and redirects use a
 - Nuxt 4.x public build assets passed to Nitro (additional source pin v4.0.0): https://github.com/nuxt/nuxt/blob/v4.0.0/packages/nuxt/src/core/nitro.ts#L163-L170
 - Nuxt static dist alias targets Nitro public output (additional source pin v4.0.0): https://github.com/nuxt/nuxt/blob/v4.0.0/packages/nuxt/src/core/nitro.ts#L653-L659
 - Nitro 2.12.0, the nitropack version Nuxt v4.0.0 pins, output defaults .output, .output/server and .output/public (published build, lines 67 to 69): https://cdn.jsdelivr.net/npm/nitropack@2.12.0/dist/core/index.mjs
-- Nitro output defaults and prerender destination (supplementary, unversioned documentation): https://nitro.build/config
-- Nitro public assets copied to production public output (supplementary, unversioned documentation): https://nitro.build/docs/assets
+- Nitro 2.12.0 output defaults and prerender destination (supplementary, unversioned documentation): https://nitro.build/config
+- Nitro 2.12.0 public assets copied to production public output (supplementary, unversioned documentation): https://nitro.build/docs/assets
 - Vite default build.outDir 'dist' (pinned tag v8.3.1): https://github.com/vitejs/vite/blob/v8.3.1/packages/vite/src/node/build.ts#L395
 - Vite public assets copied to build output (pinned tag v8.3.1): https://github.com/vitejs/vite/blob/v8.3.1/packages/vite/src/node/config.ts#L388-L396
 - Vite build output directory and public-copy defaults: https://vite.dev/config/build-options

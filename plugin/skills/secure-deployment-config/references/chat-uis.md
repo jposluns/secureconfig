@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "486088828da5dea283608a49ddf61fb9fb8138d8c0a9aa629c64bc397df58214",
+  "body_sha256": "0f37852c6be2749d0e17a5f5222bae379db07548b73f09989318b1342eccb068",
   "components": {
     "anything": {
       "name": "AnythingLLM documentation",
@@ -360,8 +360,8 @@ For a multi-user chat or RAG deployment (AnythingLLM workspaces, or a shared ass
 ## Sources (checked September 2026)
 
 - AnythingLLM security and access documentation: https://docs.anythingllm.com/features/security-and-access
-- LobeHub environment variables (KEY_VAULTS_SECRET): https://lobehub.com/only-ai/markdown/docs/en/self-hosting/environment-variables/basic
-- LobeHub authentication service environment variables (Better Auth): https://lobehub.com/only-ai/markdown/docs/en/self-hosting/environment-variables/auth
+- LobeHub v2.2.16 environment variables (KEY_VAULTS_SECRET): https://lobehub.com/only-ai/markdown/docs/en/self-hosting/environment-variables/basic
+- LobeHub v2.2.16 authentication service environment variables (Better Auth): https://lobehub.com/only-ai/markdown/docs/en/self-hosting/environment-variables/auth
 - LobeHub `KEY_VAULTS_SECRET` callout, "This key is used to encrypt sensitive data." (pinned tag v2.2.16): https://github.com/lobehub/lobehub/blob/v2.2.16/docs/self-hosting/environment-variables/basic.mdx#L22-L32
 - LobeHub `AUTH_SECRET` generated with `openssl rand -base64 32`, and `AUTH_GOOGLE_SECRET` as the "Client Secret of the Google OAuth application." (pinned tag v2.2.16): https://github.com/lobehub/lobehub/blob/v2.2.16/docs/self-hosting/environment-variables/auth.mdx
 - Docker `container run` reference, `--env-file` ("Read in a file of environment variables"; pinned tag v27.5.1): https://github.com/docker/cli/blob/v27.5.1/docs/reference/commandline/container_run.md

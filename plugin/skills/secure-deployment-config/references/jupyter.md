@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "764211564e0b766247e71506d30f2dd4fd0f28682b282eee9b03d9772ad98961",
+  "body_sha256": "fd7e59c849f505f409d472eeec1206c81346cb01c4f60bf03893b1b951f42aa1",
   "components": {
     "server": {
       "name": "Jupyter Server",
@@ -766,29 +766,29 @@ Keep `open_signup` at its default `False`: with it off, a pending account waits 
 
 ## Sources (checked September 2026)
 
-- Jupyter Server public server guide and password/TLS setup: https://jupyter-server.readthedocs.io/en/latest/operators/public-server.html
-- Jupyter Server security and token/password authentication: https://jupyter-server.readthedocs.io/en/latest/operators/security.html
+- Jupyter Server 2.18.0 public server guide and password/TLS setup: https://jupyter-server.readthedocs.io/en/latest/operators/public-server.html
+- Jupyter Server 2.18.0 security and token/password authentication: https://jupyter-server.readthedocs.io/en/latest/operators/security.html
 - Jupyter Server API base handler, protected API responses, and metrics enforcement: https://github.com/jupyter-server/jupyter_server/blob/00d45c80eeb0f50f191b236ee47cc1d82a7db9ca/jupyter_server/base/handlers.py
-- Jupyter Server configuration reference and authentication migrations: https://jupyter-server.readthedocs.io/en/latest/other/full-config.html
-- Migrating from the classic Notebook server: https://jupyter-server.readthedocs.io/en/latest/operators/migrate-from-nbserver.html
-- Jupyter Server API reference for authentication, origin, Host, root, and terminal controls: https://jupyter-server.readthedocs.io/en/stable/api/jupyter_server.html
-- Jupyter Server authentication API: https://jupyter-server.readthedocs.io/en/stable/api/jupyter_server.auth.html
+- Jupyter Server 2.18.0 configuration reference and authentication migrations: https://jupyter-server.readthedocs.io/en/latest/other/full-config.html
+- Migrating from the classic Notebook server (Jupyter Server 2.18.0): https://jupyter-server.readthedocs.io/en/latest/operators/migrate-from-nbserver.html
+- Jupyter Server 2.18.0 API reference for authentication, origin, Host, root, and terminal controls: https://jupyter-server.readthedocs.io/en/stable/api/jupyter_server.html
+- Jupyter Server 2.18.0 authentication API: https://jupyter-server.readthedocs.io/en/stable/api/jupyter_server.auth.html
 - Jupyter Server release history, including endpoint authentication under 2.13.0 and 2.18.0: https://jupyter-server.readthedocs.io/en/stable/other/changelog.html
 - Jupyter Server startup, dynamic defaults, and root refusal implementation: https://raw.githubusercontent.com/jupyter-server/jupyter_server/9a4d6eea2b16815a493b11fffe0b51b1fe55a81b/jupyter_server/serverapp.py
 - Jupyter Server default port constant: https://raw.githubusercontent.com/jupyter-server/jupyter_server/c5c452c3d5f3060557e57caaadce8f2fffc1c417/jupyter_server/__init__.py
 - Jupyter Server identity provider and token-authenticated origin exception: https://raw.githubusercontent.com/jupyter-server/jupyter_server/3df9a70b8aea53557ad04510a63c95ce9d4c3abc/jupyter_server/auth/identity.py
 - Jupyter Server Host, origin, XSRF, and default authentication implementation: https://raw.githubusercontent.com/jupyter-server/jupyter_server/00d45c80eeb0f50f191b236ee47cc1d82a7db9ca/jupyter_server/base/handlers.py
 - Jupyter Server kernel API implementation: https://raw.githubusercontent.com/jupyter-server/jupyter_server/c8bbb1a77a1d482816bac0dfe5c14c08d37b59ac/jupyter_server/services/kernels/handlers.py
-- Jupyter Server REST API: https://jupyter-server.readthedocs.io/en/stable/developers/rest-api.html
-- Notebook 7 configuration and Jupyter Server backend: https://jupyter-notebook.readthedocs.io/en/stable/configuring/config_overview.html
+- Jupyter Server 2.18.0 REST API: https://jupyter-server.readthedocs.io/en/stable/developers/rest-api.html
+- Notebook 7 configuration and Jupyter Server 2.18.0 backend: https://jupyter-notebook.readthedocs.io/en/stable/configuring/config_overview.html
 - JupyterLab kernel and terminal management: https://jupyterlab.readthedocs.io/en/stable/user/running.html
-- JupyterHub authenticator API and PAM admission settings: https://jupyterhub.readthedocs.io/en/stable/reference/api/auth.html
-- JupyterHub authenticators and Hub 5 admission changes: https://jupyterhub.readthedocs.io/en/stable/reference/authenticators.html
-- JupyterHub configuration reference: https://jupyterhub.readthedocs.io/en/stable/reference/config-reference.html
-- JupyterHub spawner API and user-configuration limitations: https://jupyterhub.readthedocs.io/en/stable/reference/api/spawner.html
-- JupyterHub spawner resource-limit support: https://jupyterhub.readthedocs.io/en/stable/reference/spawners.html
-- JupyterHub browser security, per-user domains, cookies, and server environments: https://jupyterhub.readthedocs.io/en/stable/explanation/websecurity.html
-- JupyterHub HTTPS reverse-proxy example: https://jupyterhub.readthedocs.io/en/stable/howto/configuration/config-proxy.html
+- JupyterHub 5.5.2 authenticator API and PAM admission settings: https://jupyterhub.readthedocs.io/en/stable/reference/api/auth.html
+- JupyterHub 5.5.2 authenticators and Hub 5 admission changes: https://jupyterhub.readthedocs.io/en/stable/reference/authenticators.html
+- JupyterHub 5.5.2 configuration reference: https://jupyterhub.readthedocs.io/en/stable/reference/config-reference.html
+- JupyterHub 5.5.2 spawner API and user-configuration limitations: https://jupyterhub.readthedocs.io/en/stable/reference/api/spawner.html
+- JupyterHub 5.5.2 spawner resource-limit support: https://jupyterhub.readthedocs.io/en/stable/reference/spawners.html
+- JupyterHub 5.5.2 browser security, per-user domains, cookies, and server environments: https://jupyterhub.readthedocs.io/en/stable/explanation/websecurity.html
+- JupyterHub 5.5.2 HTTPS reverse-proxy example: https://jupyterhub.readthedocs.io/en/stable/howto/configuration/config-proxy.html
 - Tornado XSRF cookies and request headers: https://www.tornadoweb.org/en/stable/guide/security.html
 - curl TLS certificate and hostname verification: https://curl.se/docs/sslcerts.html
 - curl options, stdin headers, cookie files, and diagnostic variables: https://curl.se/docs/manpage.html

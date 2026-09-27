@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "a66272331288aec726f8d8a7f5dbfccb6cd6c8e8059913c173be9e64adcd05f8",
+  "body_sha256": "1dad1d49eae2dee9cccc0a1e46b56cb29a92a5b9bfd2b9e9b9645b8b047840c7",
   "components": {
     "server": {
       "name": "NATS Server",
@@ -1394,41 +1394,41 @@ The whole-corpus gate suite was not run for this drop-in generation. Shell check
 - NATS Server v2.14.7 release: https://github.com/nats-io/nats-server/releases/tag/v2.14.7
 - Exact server tag commit: https://github.com/nats-io/nats-server/commit/8d8b69a8c46a46a150eabb7f312607c4d9c58faf
 - Securing NATS overview: https://docs.nats.io/learn/security/
-- Authentication basics, password hashes, NKeys, tokens, and anonymous admission: https://docs.nats.io/learn/security/authentication-basics
-- Authorization and subject permissions: https://docs.nats.io/learn/security/authorization
-- Operator mode, resolver setup, credentials, and signing-store handling: https://docs.nats.io/learn/security/operator-mode
-- Decentralized authentication and signing hierarchy: https://docs.nats.io/learn/security/decentralized-auth
-- Accounts and multitenancy: https://docs.nats.io/learn/security/accounts-and-multitenancy
-- Cross-account exports and imports: https://docs.nats.io/learn/security/cross-account
-- Subscription and queue permissions: https://docs.nats.io/reference/config/authorization/users/permissions/subscribe/
-- Bounded response permissions: https://docs.nats.io/reference/config/authorization/users/permissions/allow_responses/
-- Connection-type restrictions: https://docs.nats.io/reference/config/authorization/users/allowed_connection_types
-- Authorization timeout: https://docs.nats.io/reference/config/authorization/timeout
-- Encryption, TLS authentication, and JetStream key rotation: https://docs.nats.io/learn/security/encryption
-- TLS reference and listener applicability: https://docs.nats.io/reference/config/tls/
-- Monitoring endpoints and query parameters: https://docs.nats.io/learn/monitoring/monitoring-endpoints
-- JetStream concepts: https://docs.nats.io/concepts/jetstream
-- Runtime configuration, defaults, bindings, and system account: https://docs.nats.io/reference/config
-- Account connection limits: https://docs.nats.io/reference/config/accounts/limits/
-- Server JetStream configuration: https://docs.nats.io/reference/config/jetstream/
-- Account JetStream limits and reload caveats: https://docs.nats.io/reference/config/accounts/jetstream/
-- JetStream request queue limit: https://docs.nats.io/reference/config/jetstream/request_queue_limit
-- JetStream domain: https://docs.nats.io/reference/config/jetstream/domain
-- JetStream encryption key: https://docs.nats.io/reference/config/jetstream/encryption_key
-- JetStream cipher selection: https://docs.nats.io/reference/config/jetstream/cipher
-- JetStream previous encryption key: https://docs.nats.io/reference/config/jetstream/prev_encryption_key
-- Cluster configuration: https://docs.nats.io/reference/config/cluster/
-- Gateway configuration: https://docs.nats.io/reference/config/gateway/
-- Leafnode configuration: https://docs.nats.io/reference/config/leafnodes/
-- Leafnode authorization and account binding: https://docs.nats.io/reference/config/leafnodes/authorization/
-- Leafnode remotes and local account selection: https://docs.nats.io/reference/config/leafnodes/remotes/
-- JetStream across leaf nodes: https://docs.nats.io/learn/topologies/leaf-nodes
-- MQTT configuration: https://docs.nats.io/reference/config/mqtt/
-- MQTT authentication and clustering: https://docs.nats.io/learn/mqtt/auth-and-clustering
-- WebSocket configuration: https://docs.nats.io/reference/config/websocket/
-- Auth callout workflows: https://docs.nats.io/learn/security/auth-callout
-- Auth callout configuration: https://docs.nats.io/reference/config/authorization/auth_callout
-- Deployment hardening, non-root service identity, and sandboxing: https://docs.nats.io/learn/deployment/hardening
+- Authentication basics, password hashes, NKeys, tokens, and anonymous admission (NATS Server v2.14.7): https://docs.nats.io/learn/security/authentication-basics
+- Authorization and subject permissions (NATS Server v2.14.7): https://docs.nats.io/learn/security/authorization
+- Operator mode, resolver setup, credentials, and signing-store handling (NATS Server v2.14.7): https://docs.nats.io/learn/security/operator-mode
+- Decentralized authentication and signing hierarchy (NATS Server v2.14.7): https://docs.nats.io/learn/security/decentralized-auth
+- Accounts and multitenancy (NATS Server v2.14.7): https://docs.nats.io/learn/security/accounts-and-multitenancy
+- Cross-account exports and imports (NATS Server v2.14.7): https://docs.nats.io/learn/security/cross-account
+- Subscription and queue permissions (NATS Server v2.14.7): https://docs.nats.io/reference/config/authorization/users/permissions/subscribe/
+- Bounded response permissions (NATS Server v2.14.7): https://docs.nats.io/reference/config/authorization/users/permissions/allow_responses/
+- Connection-type restrictions (NATS Server v2.14.7): https://docs.nats.io/reference/config/authorization/users/allowed_connection_types
+- Authorization timeout (NATS Server v2.14.7): https://docs.nats.io/reference/config/authorization/timeout
+- Encryption, TLS authentication, and JetStream key rotation (NATS Server v2.14.7): https://docs.nats.io/learn/security/encryption
+- TLS reference and listener applicability (NATS Server v2.14.7): https://docs.nats.io/reference/config/tls/
+- Monitoring endpoints and query parameters (NATS Server v2.14.7): https://docs.nats.io/learn/monitoring/monitoring-endpoints
+- JetStream concepts (NATS Server v2.14.7): https://docs.nats.io/concepts/jetstream
+- Runtime configuration, defaults, bindings, and system account (NATS Server v2.14.7): https://docs.nats.io/reference/config
+- Account connection limits (NATS Server v2.14.7): https://docs.nats.io/reference/config/accounts/limits/
+- Server JetStream configuration (NATS Server v2.14.7): https://docs.nats.io/reference/config/jetstream/
+- Account JetStream limits and reload caveats (NATS Server v2.14.7): https://docs.nats.io/reference/config/accounts/jetstream/
+- JetStream request queue limit (NATS Server v2.14.7): https://docs.nats.io/reference/config/jetstream/request_queue_limit
+- JetStream domain (NATS Server v2.14.7): https://docs.nats.io/reference/config/jetstream/domain
+- JetStream encryption key (NATS Server v2.14.7): https://docs.nats.io/reference/config/jetstream/encryption_key
+- JetStream cipher selection (NATS Server v2.14.7): https://docs.nats.io/reference/config/jetstream/cipher
+- JetStream previous encryption key (NATS Server v2.14.7): https://docs.nats.io/reference/config/jetstream/prev_encryption_key
+- Cluster configuration (NATS Server v2.14.7): https://docs.nats.io/reference/config/cluster/
+- Gateway configuration (NATS Server v2.14.7): https://docs.nats.io/reference/config/gateway/
+- Leafnode configuration (NATS Server v2.14.7): https://docs.nats.io/reference/config/leafnodes/
+- Leafnode authorization and account binding (NATS Server v2.14.7): https://docs.nats.io/reference/config/leafnodes/authorization/
+- Leafnode remotes and local account selection (NATS Server v2.14.7): https://docs.nats.io/reference/config/leafnodes/remotes/
+- JetStream across leaf nodes (NATS Server v2.14.7): https://docs.nats.io/learn/topologies/leaf-nodes
+- MQTT configuration (NATS Server v2.14.7): https://docs.nats.io/reference/config/mqtt/
+- MQTT authentication and clustering (NATS Server v2.14.7): https://docs.nats.io/learn/mqtt/auth-and-clustering
+- WebSocket configuration (NATS Server v2.14.7): https://docs.nats.io/reference/config/websocket/
+- Auth callout workflows (NATS Server v2.14.7): https://docs.nats.io/learn/security/auth-callout
+- Auth callout configuration (NATS Server v2.14.7): https://docs.nats.io/reference/config/authorization/auth_callout
+- Deployment hardening, non-root service identity, and sandboxing (NATS Server v2.14.7): https://docs.nats.io/learn/deployment/hardening
 - Server v2.14.7 configuration parser and configuration-test handling: https://raw.githubusercontent.com/nats-io/nats-server/v2.14.7/server/opts.go
 - Server v2.14.7 client and response-permission enforcement: https://raw.githubusercontent.com/nats-io/nats-server/v2.14.7/server/client.go
 - Server v2.14.7 consumer-limit enforcement: https://raw.githubusercontent.com/nats-io/nats-server/v2.14.7/server/consumer.go

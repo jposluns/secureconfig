@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "c5c316c84e440eae88ac91810e0cbbc4610f46011518f16037b11843c3c7370a",
+  "body_sha256": "8f1219d7cb4b0005621ca2e4081cf37252b610a0e5fde8f464024f9f4d186905",
   "components": {
     "pb": {
       "name": "PocketBase",
@@ -795,13 +795,13 @@ service result or deployed-bundle scan is claimed.
 
 ## Sources (checked September 2026)
 
-- PocketBase going to production: https://pocketbase.io/docs/going-to-production/
-- PocketBase API rules and filters: https://pocketbase.io/docs/api-rules-and-filters/
-- Appwrite self-hosting production security: https://appwrite.io/docs/advanced/self-hosting/production/security
-- Appwrite project API keys: https://appwrite.io/docs/partners/project/api-keys
-- [PocketBase authentication](https://pocketbase.io/docs/authentication/).
-- [PocketBase files and protected downloads](https://pocketbase.io/docs/files-handling/).
-- [PocketBase Realtime API](https://pocketbase.io/docs/api-realtime/).
+- PocketBase v0.40.4 going to production: https://pocketbase.io/docs/going-to-production/
+- PocketBase v0.40.4 API rules and filters: https://pocketbase.io/docs/api-rules-and-filters/
+- Appwrite 2.2.0 self-hosting production security: https://appwrite.io/docs/advanced/self-hosting/production/security
+- Appwrite 2.2.0 project API keys: https://appwrite.io/docs/partners/project/api-keys
+- [PocketBase v0.40.4 authentication](https://pocketbase.io/docs/authentication/).
+- [PocketBase v0.40.4 files and protected downloads](https://pocketbase.io/docs/files-handling/).
+- [PocketBase v0.40.4 Realtime API](https://pocketbase.io/docs/api-realtime/).
 - [PocketBase v0.40.4 installer and bootstrap-token lifetime](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/installer.go).
 - [PocketBase v0.40.4 listener and origin flags](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/cmd/serve.go).
 - [PocketBase v0.40.4 native TLS and ACME listener](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/serve.go).
@@ -815,17 +815,17 @@ service result or deployed-bundle scan is claimed.
 - [PocketBase v0.40.4 realtime authorization](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/realtime.go).
 - [PocketBase v0.40.4 backup download authorization](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/backup.go).
 - [PocketBase v0.40.4 rate limiter and exemptions](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/middlewares_rate_limit.go).
-- [Appwrite permissions, creation defaults, and server integrations](https://appwrite.io/docs/advanced/security/permissions).
-- [Appwrite additive database permissions](https://appwrite.io/docs/products/databases/permissions/).
-- [Appwrite legacy Databases API](https://appwrite.io/docs/references/cloud/server-nodejs/databases).
-- [Appwrite environment reference and HTTPS deprecation wording](https://appwrite.io/docs/advanced/self-hosting/configuration/environment-variables).
-- [Appwrite rate limits](https://appwrite.io/docs/advanced/security/rate-limits).
-- [Appwrite email delivery](https://appwrite.io/docs/advanced/self-hosting/configuration/email).
-- [Appwrite self-hosted backups and encryption-key preservation](https://appwrite.io/docs/advanced/self-hosting/production/backups).
+- [Appwrite 2.2.0 permissions, creation defaults, and server integrations](https://appwrite.io/docs/advanced/security/permissions).
+- [Appwrite 2.2.0 additive database permissions](https://appwrite.io/docs/products/databases/permissions/).
+- [Appwrite 2.2.0 legacy Databases API](https://appwrite.io/docs/references/cloud/server-nodejs/databases).
+- [Appwrite 2.2.0 environment reference and HTTPS deprecation wording](https://appwrite.io/docs/advanced/self-hosting/configuration/environment-variables).
+- [Appwrite 2.2.0 rate limits](https://appwrite.io/docs/advanced/security/rate-limits).
+- [Appwrite 2.2.0 email delivery](https://appwrite.io/docs/advanced/self-hosting/configuration/email).
+- [Appwrite 2.2.0 self-hosted backups and encryption-key preservation](https://appwrite.io/docs/advanced/self-hosting/production/backups).
 - [Appwrite 2.2.0 configuration defaults](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/config/variables.php).
 - [Appwrite 2.2.0 development environment and placeholder secrets](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/.env).
 - [Appwrite 2.2.0 console registration handler](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/controllers/api/account.php).
-- [Appwrite console MFA enrollment and recovery codes](https://appwrite.io/docs/advanced/security/mfa).
+- [Appwrite 2.2.0 console MFA enrollment and recovery codes](https://appwrite.io/docs/advanced/security/mfa).
 - [Appwrite 2.2.0 API-key authorization, scopes, MFA enforcement, and abuse exemptions](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/controllers/shared/api.php).
 - [Appwrite 2.2.0 hostname routing and HTTPS enforcement](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/controllers/general.php).
 - [Appwrite 2.2.0 bucket defaults and upload controls](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/src/Appwrite/Platform/Modules/Storage/Http/Buckets/Create.php).
