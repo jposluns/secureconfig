@@ -108,9 +108,12 @@ SCOPE
   equal-length backticks, including double backticks and multiline spans,
   are recognized in prose, lists, tables, headings and quoted prose. Newlines
   normalize to spaces. Fences, indented code and HTML are not inline prose.
-  inline_kind selects a known command word (INLINE_COMMANDS) or shell pipe
-  or redirection tokens, excluding option fragments and whole <placeholders>.
-  Unknown command words without those operators remain outside this check.
+  One leading `$ ` or `# ` console prompt is stripped first. inline_kind
+  selects a span with a known command word (INLINE_COMMANDS) in command
+  position anywhere (after leading assignments, keywords such as if/then/do/!,
+  `(`, a lifted $(...), or ; && || |), or with shell pipe or redirection
+  tokens, excluding option fragments and whole <placeholders>. Unknown
+  command words without those operators remain outside this check.
   Shell-parser blind spots below also apply. No C1 or C2 check applies to
   inline spans; diagnostics use the span opener's guide:line.
 
@@ -2166,6 +2169,40 @@ def verify_inline_spans(text, in_verify=False, in_quote=False):
                 yield line, body
 
 
+# One leading console prompt. Unlike the console fence's `$` prompt, the
+# space is required, so `$(cmd)` and `$VAR` spans keep their first character.
+INLINE_PROMPT_RE = re.compile(r"[$#] (.*)", re.S)
+
+
+def inline_prompt(span):
+    """Strip a single leading `$ ` or `# ` console prompt."""
+    m = INLINE_PROMPT_RE.fullmatch(span)
+    return m.group(1) if m else span
+
+
+def _inline_command_words(span):
+    """Yield each word in command position, using the fenced walk's lexer:
+    $(...) bodies are lifted by _expand, SEPARATORS split commands, and
+    leading KEYWORDS and assignments are skipped as _strip_wrappers does.
+    Backticks are treated as boundaries here only; analysis does not lift
+    them (a disclosed bypass)."""
+    for text in _expand(span):
+        text = text.replace("`", " ; ")
+        try:
+            toks = _tokenize(text)
+        except ValueError:
+            toks = text.split()
+        at_start = True
+        for t in toks:
+            if t in SEPARATORS:
+                at_start = True
+            elif at_start and (t in KEYWORDS or ASSIGNMENT_RE.match(t)):
+                continue
+            elif at_start:
+                at_start = False
+                yield t.rsplit("/", 1)[-1]
+
+
 def inline_kind(span):
     """Classify command / option / other without executing any shell text."""
     if span.startswith("-"):
@@ -2176,8 +2213,8 @@ def inline_kind(span):
         words = _tokenize(span)
     except ValueError:
         words = span.split()
-    first = words[0].rsplit("/", 1)[-1] if words else ""
-    if first in INLINE_COMMANDS or any(w in REDIRECTS or w in {"|", "|&"} for w in words):
+    if (any(w in INLINE_COMMANDS for w in _inline_command_words(span))
+            or any(w in REDIRECTS or w in {"|", "|&"} for w in words)):
         return "command"
     return "other"
 
@@ -2193,6 +2230,7 @@ def _scan_inline(path, text, findings, stats, opts):
             waivers[line + 1] = waiver[1]
             stats.waivers += 1
             continue
+        span = inline_prompt(span)
         if inline_kind(span) != "command":
             continue
         stats.inline_commands += 1
@@ -3939,6 +3977,25 @@ _INLINE_CASES = [
      "`guard-conventions: allow C3-TOOL-ARGV dummy refusal`\n"
      "`mysql --password=SECRET` and `curl -u user:SECRET https://h`\n"
      "`mysql --password=SECRET`\n", ["C3-USER-ARGV", "C3-TOOL-ARGV"], [3, 4]),
+    # Round 1: a roster word in command position anywhere, after a prompt.
+    ("assign-tool", "## Verify\n`FOO=x mysql -pSECRET`\n", ["C3-TOOL-ARGV"], [2]),
+    ("assign-curl", "## Verify\n`FOO=x curl -u user:pass https://x`\n",
+     ["C3-USER-ARGV"], [2]),
+    ("if-then", "## Verify\n`if true; then mysql -pSECRET; fi`\n",
+     ["C3-TOOL-ARGV"], [2]),
+    ("subshell", "## Verify\n`(mysql -pSECRET)`\n", ["C3-TOOL-ARGV"], [2]),
+    ("assign-cmdsub", "## Verify\n`result=$(mysql -pSECRET)`\n",
+     ["C3-TOOL-ARGV"], [2]),
+    ("and-list", "## Verify\n`true && mysql -pSECRET`\n", ["C3-TOOL-ARGV"], [2]),
+    ("negated", "## Verify\n`! mysql -pSECRET`\n", ["C3-TOOL-ARGV"], [2]),
+    ("while-do", "## Verify\n`while true; do mysql -pSECRET; done`\n",
+     ["C3-TOOL-ARGV"], [2]),
+    ("prompt-dollar", "## Verify\n`$ curl -u user:pass https://x`\n",
+     ["C3-USER-ARGV"], [2]),
+    ("prompt-dollar-pipe", "## Verify\n`$ curl -u user:pass https://x | cat`\n",
+     ["C3-USER-ARGV"], [2]),
+    ("prompt-hash", "## Verify\n`# mysql -pSECRET`\n", ["C3-TOOL-ARGV"], [2]),
+    ("option-fragment", "## Verify\n`--password` `$ --password`\n", [], []),
 ]
 for _waiver in (
     "`guard-conventions: allow C3-TOOL-ARGV`\n",
