@@ -555,7 +555,11 @@ def _strip_wrappers(cmd, env_credentials=None):
         if FD_RE.match(t) and len(toks) > 1 and toks[1] in REDIRECTS:
             toks = toks[3:]; continue
         if t.rsplit("/", 1)[-1] == "env" and env_credentials is not None:
-            env_credentials.extend(_env_credential_flags(toks[1:]))
+            # The outermost env already owns every nested env URI operand.
+            seen_uri = "URI credential" in env_credentials
+            env_credentials.extend(
+                flag for flag in _env_credential_flags(toks[1:])
+                if flag != "URI credential" or not seen_uri)
             toks = _drop_redirections(toks[1:])
             toks = toks[_env_operand_start(toks):]
             continue
@@ -945,7 +949,7 @@ _ENV_CREDENTIAL_NAMES = frozenset((
     "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN",
 ))
 _ENV_SECRET_RE = re.compile(
-    r"SECRET|PASSWORD|PASSWD|TOKEN|(?:^|_)(?:PWD|PASS)(?:_|$)|"
+    r"(?:^|_)(?:SECRET|PASSWORD|PASSWD|TOKEN|PWD|PASS)(?:_|$)|"
     r"(?:^|_)(?:API|PRIVATE|ACCESS)_KEY$")
 _ENV_NONSECRET_RE = re.compile(
     r"(?:_FILE|_PATH|_KEY_ID|_PUBLIC_KEY|_TTL|_TTL_SECONDS)$")
@@ -997,9 +1001,11 @@ def _env_operand_start(args):
 
 
 def _env_credential_flags(args):
-    """Check env assignment operands, not shell assignment prefixes."""
-    flags = []
+    """Check visible env argv URIs before resolving assignment ownership."""
     a = _drop_redirections(args)
+    flags = [
+        "URI credential" for t in a
+        if _uri_credential(t) or ("=" in t and _uri_credential(t.split("=", 1)[1]))]
     for t in a[_env_operand_start(a):]:
         if not ASSIGNMENT_RE.match(t):
             break
@@ -1010,9 +1016,10 @@ def _env_credential_flags(args):
             and not _ENV_NONSECRET_RE.search(upper)
             and (upper in _ENV_CREDENTIAL_NAMES
                  or _ENV_SECRET_RE.search(upper)
-                 or BODY_SECRET_RE.search(name + "=")
+                 or BODY_SECRET_RE.fullmatch(name + "=")
                  or CREDENTIAL_HEADER_RE.fullmatch(name.replace("_", "-"))))
-        if value and (secret_name or _uri_credential(value)):
+        # A URI value was already counted, even under a credential name.
+        if value and secret_name and not _uri_credential(value):
             flags.append(name)
     return flags
 
@@ -1041,7 +1048,7 @@ def _uri_builtins_uncertain(records):
     for i, t in enumerate(flat):
         if t in ("enable", "alias", "unalias", "eval", "source", ".", "function"):
             return True
-        if t in _URI_BUILTINS:
+        if t in _URI_BUILTINS or t in ("command", "builtin"):
             tail = flat[i + 1:i + 3]
             if tail[:1] == ["()"] or tail == ["(", ")"]:
                 return True
@@ -1062,8 +1069,11 @@ def _tool_credential_flags(word, args, shell_builtin=False):
     (optional =SIGNAL), and -u/-C/-a/-f or --unset/--chdir/--argv0/--file
     (separate or attached values). Unknown options, abbreviated long options,
     -S/--split-string and assignments from env files remain unresolved.
-    Env names match the existing body/header patterns plus the explicit
-    _ENV_CREDENTIAL_NAMES and _ENV_SECRET_RE vocabulary (case-insensitive).
+    Visible URI operands on env's own argv are checked before child resolution,
+    including when split-string resolution stops the command walk.
+    Env names match whole body names, header names and the explicit
+    _ENV_CREDENTIAL_NAMES; generic _ENV_SECRET_RE words must be underscore-
+    delimited components (case-insensitive).
     Bare AUTH, CREDENTIAL, CREDENTIALS, KEY and arbitrary application names
     are not covered. PWD (working directory), *_FILE, *_PATH, KEY_ID,
     *_KEY_ID, PUBLIC_KEY, *_PUBLIC_KEY, *_TTL and *_TTL_SECONDS are
@@ -1085,9 +1095,10 @@ def _tool_credential_flags(word, args, shell_builtin=False):
     User-only URIs pass. Curl retains its existing URI policy and limits.
     URI operands of visible printf/echo/:/read builtins (also command -p/--
     and builtin --) pass, assuming ordinary shell builtins on entry. Paths
-    and external wrappers remain checked. Visible alias/enable/eval/source
-    or function definitions and unparseable lines deny builtin credit for
-    the whole fence; inherited shell redefinitions cannot be determined.
+    and external wrappers remain checked. Visible alias/enable/eval/source,
+    any function-keyword definition, printf/echo/:/read/command/builtin ()
+    definitions and unparseable lines deny builtin credit for the whole fence;
+    inherited shell redefinitions cannot be determined.
     Heredoc/herestring data follows the shared scanner's limits above.
     OpenSSL -macopt checks literal key:/hexkey: prefixes, not opaque values.
     Non-shell configuration fences retain the shared scanner's scope limit.
@@ -1668,6 +1679,8 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
             shell_builtin = (not uri_builtins_uncertain
                              and _uri_builtin_context(cmd))
             for flag in _tool_credential_flags(word, stripped[1:], shell_builtin):
+                if flag == "URI credential" and flag in env_credentials:
+                    continue  # already checked on the outer env's argv
                 if not waived:
                     findings.append((path, line, "C3-TOOL-ARGV",
                                      " (tool: %s, argument: %s)"
@@ -3610,6 +3623,60 @@ SELF_TEST_CASES.append((
     "c3-env-resolution-keeps-c2-scope",
     "~~~bash\ncase $1 in\n*REPLACE_WITH_*) echo substitute ;;\nesac\n"
     "env -u OLD curl -q https://203.0.113.10/\n~~~\n", [], ()))
+
+
+# Round-2 QA: env's own argv, wrapper definitions and name components.
+_ROUND2_ARGV_CASES = []
+for _options in ("-S echo", "--split-string echo", "--split-string=echo",
+                 "-Secho", "-iS echo"):
+    for _operand, _count in (
+        ('"postgresql://user:$PW@db/app"', 1),
+        ('"postgresql://db/app?password=$PW"', 1),
+        ('URI="postgresql://user:$PW@db/app"', 1),
+        ('--url="postgresql://user:$PW@db/app"', 1),
+        ('PASSWORD_FILE="postgresql://user:$PW@db/app"', 1),
+        ('"postgresql://user:REPLACE_WITH_PASSWORD@db/app"', 0),
+        ('"postgresql://user@db/app"', 0),
+        ('> "postgresql://user:$PW@db/app"', 0),
+        ('<<< "postgresql://user:$PW@db/app"', 0),
+    ):
+        _ROUND2_ARGV_CASES.append(('env %s %s' % (_options, _operand), _count))
+_ROUND2_ARGV_CASES += [
+    ('sudo /usr/bin/env -S echo "postgresql://user:$PW@db/app"', 1),
+    ('env -S echo "postgresql://user:$PW@db/app" "redis://user:$PW@db"', 2),
+    ('env PASSWORD="postgresql://user:$PW@db/app" tool', 1),
+    ('env env echo "postgresql://user:$PW@db/app"', 1),
+    ('env -S echo <<<"postgresql://user:$PW@db/app"', 0),
+    ('env MYSQL_PWD="$PW" env -S echo "postgresql://user:$PW@db/app"', 2),
+    ('env TOKENIZERS_PARALLELISM=false python3 app.py', 0),
+]
+for _wrapper, _builtin in (("command", "printf '%s\\n'"), ("builtin", "echo")):
+    for _definition in (
+        '%s() { /bin/echo "$@"; }',
+        '%s () { /bin/echo "$@"; }',
+        'function %s { /bin/echo "$@"; }',
+        'function %s() { /bin/echo "$@"; }',
+    ):
+        _ROUND2_ARGV_CASES.append((
+            (_definition % _wrapper) + '\n' + _wrapper + ' ' + _builtin
+            + ' "postgresql://user:$PW@db/app"', 1))
+    _ROUND2_ARGV_CASES.append((
+        _wrapper + ' ' + _builtin + ' "postgresql://user:$PW@db/app"', 0))
+for _name in (
+    "TOKENIZER_CACHE", "APP_TOKENIZER_CACHE", "TOKENIZERS_PARALLELISM",
+    "MYTOKEN", "APP_MYTOKEN", "TOKENIZATION", "APP_TOKENIZATION_MODE",
+    "SECRETARY", "APP_SECRETARY", "PASSWORDLESS", "APP_PASSWORDLESS",
+    "PASSWDDB", "APP_PASSWDDB",
+):
+    _ROUND2_ARGV_CASES.append(('env %s=false tool' % _name, 0))
+for _name in (
+    "PGPASSWORD", "MYSQL_PWD", "REDISCLI_AUTH", "AWS_SECRET_ACCESS_KEY",
+    "AWS_SESSION_TOKEN", "GITHUB_TOKEN", "API_TOKEN", "APP_TOKEN", "TOKEN",
+    "APP_TOKEN_VALUE", "TOKEN_VALUE", "APP_SECRET_VALUE", "APP_PASSWORD_VALUE",
+    "APP_PASSWD_VALUE", "APP_PWD_VALUE", "APP_PASS_VALUE", "github_token",
+):
+    _ROUND2_ARGV_CASES.append(('env %s="$PW" tool' % _name, 1))
+_TOOL_ARGV_CASES.extend(_ROUND2_ARGV_CASES)
 
 for _i, (_cmd, _count) in enumerate(_TOOL_ARGV_CASES):
     SELF_TEST_CASES.append((
