@@ -10,7 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
-| 1.183 | Fix the Go port-80 redirect to use a fixed canonical host instead of the client-controlled request Host, with a pinned net/http source. (M, XS) | Done, #NNN. |
+| 1.183 | Fix the Go port-80 redirect to use a fixed canonical host instead of the client-controlled request Host, with a pinned net/http source. (M, XS) | Done, #405. |
 | 1.177 | F-MONGODB-AUDIT-SCOPE: `mongodb.md:579` says auditing logs only authorization failures. The MongoDB 8.0 parameter reference for `auditAuthorizationSuccess` scopes the failures-only default to `authCheck` events. Verify at a pinned version and correct the guide's scope. (M, S) | Done, #404. |
 | 1.181 | Correct DNS-01 automation prerequisites and the cookies-only CORS credential guidance, with authoritative sources. (M, XS) | Done, #402. |
 | 3.35 | Reject leading or trailing whitespace in version-basis component names, bases, claim text and evidence, with per-field regression tests; replace CONTRIBUTING rule 8's drifting corpus counts with a reference to gate output. (L, S) | Done, #400. |

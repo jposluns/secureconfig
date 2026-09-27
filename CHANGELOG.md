@@ -11,7 +11,7 @@ in step with the merged pull request is therefore an authoring obligation, not a
 
 ## 2026-09-27
 
-- Use a fixed canonical host for the Go port-80 redirect so a client-controlled Host cannot choose the redirect destination. Row 1.183. (#NNN)
+- Use a fixed canonical host for the Go port-80 redirect so a client-controlled Host cannot choose the redirect destination. Row 1.183. (#405)
 - Correct MongoDB 8.0 auditing scope: the failures-only default applies to `authCheck` events, while other auditable events do not depend on `auditAuthorizationSuccess`. Row 1.177. (#404)
 - Clarify manual DNS-01 and its renewal limits, and include HTTP authentication and TLS client certificates in CORS credential guidance. Row 1.181. (#402)
 - Reject leading or trailing whitespace in version-basis strings and test each component-name, basis, claim-text and evidence field. Replace CONTRIBUTING rule 8's drifting corpus counts with a reference to gate output. Row 3.35. (#400)
