@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "66e7e958123c6577a097ca7d2040ff83f5d01cb0c2f77738bde96e1f34a1490a",
+  "body_sha256": "c78e8ef8543d7482310292275a64beb9e4b7852baf09ad2e90c7deb4d16def1f",
   "components": {
     "default": {
       "name": "Kafka listener default",
@@ -471,7 +471,7 @@ Kafka 4.0 migrated to Log4j2; do not paste legacy `log4j.logger...` syntax into 
 
 `StandardAuthorizer` logs explicitly requested denials at INFO and allowed access at DEBUG when the corresponding audit flag is set. Some filtering and introspection decisions use TRACE instead. DEBUG therefore does not mean every authorization evaluation.
 
-The manual does not document this logger's full configuration. This recipe is additionally checked against the [tagged logging configuration](https://github.com/apache/kafka/blob/4.3.0/config/log4j2.yaml), [StandardAuthorizer's audit implementation](https://github.com/apache/kafka/blob/4.3.0/metadata/src/main/java/org/apache/kafka/metadata/authorizer/StandardAuthorizerData.java#L257), and the [Action audit-logging API](https://kafka.apache.org/43/javadoc/org/apache/kafka/server/authorizer/Action.html). The migration is documented in [upgrading to Kafka 4.0](https://kafka.apache.org/43/getting-started/upgrade/).
+The manual does not document this logger's full configuration. This recipe is additionally checked against the [tagged logging configuration](https://github.com/apache/kafka/blob/4.3.0/config/log4j2.yaml), [StandardAuthorizer's audit implementation](https://github.com/apache/kafka/blob/4.3.0/metadata/src/main/java/org/apache/kafka/metadata/authorizer/StandardAuthorizerData.java#L279-L308), and the [Action audit-logging API](https://kafka.apache.org/43/javadoc/org/apache/kafka/server/authorizer/Action.html). The migration is documented in [upgrading to Kafka 4.0](https://kafka.apache.org/43/getting-started/upgrade/).
 
 ## 7. Client side
 

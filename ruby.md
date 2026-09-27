@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "5c454ccf285b299461c57e919647f59bbc8bc68188f552bd2b94f321c1cb6700",
+  "body_sha256": "d7d88bbf754652ad64cd1044824c2cc41633732451a815523e2adabc25c7a2a4",
   "components": {
     "puma-readme": {
       "name": "Puma README",
@@ -24,6 +24,7 @@ version_basis: {
       "basis": "v8.0.2",
       "sources": {
         "s9687194339f3": "https://github.com/puma/puma/blob/v8.0.2/lib/puma/configuration.rb#L369-L384",
+        "s8e2a34b121ba": "https://github.com/puma/puma/blob/v8.0.2/lib/puma/configuration.rb#L174",
         "s1d9011be835b": "https://github.com/puma/puma/blob/v8.0.2/lib/puma/const.rb#L214-L215"
       }
     },
@@ -90,7 +91,7 @@ version_basis: {
     }
   },
   "claims": {
-    "puma-default": {"text": "Puma v8.0.2 defaults plaintext 9292 on :: when non-loopback IPv6 exists, otherwise 0.0.0.0.", "components": ["puma"], "sources": ["puma:s9687194339f3", "puma:s1d9011be835b"], "status": "REASONED"},
+    "puma-default": {"text": "Puma v8.0.2 defaults plaintext 9292 on :: when non-loopback IPv6 exists, otherwise 0.0.0.0.", "components": ["puma"], "sources": ["puma:s9687194339f3", "puma:s8e2a34b121ba", "puma:s1d9011be835b"], "status": "REASONED"},
     "puma-private": {"text": "Bind loopback TCP 3000 or Unix socket with proxy TLS; bind accepts tcp, unix and ssl URIs only.", "components": ["puma-readme", "puma-dsl"], "sources": ["puma-readme:se5323687b58f", "puma-dsl:s8d510226544c"], "status": "REASONED"},
     "puma-tls": {"text": "Native ssl bind example uses 8443 with key/cert; ca and verify_mode configure client certificates.", "components": ["puma-dsl"], "sources": ["puma-dsl:s8d510226544c"], "status": "REASONED"},
     "force-ssl": {"text": "force_ssl enables HTTPS redirect and HSTS; ssl_options defaults hsts subdomains true. Encrypted cookies still need HTTPS.", "components": ["rails"], "sources": ["rails:s574629d873e4", "rails:sba5f72c7a627"], "status": "REASONED"},
@@ -268,7 +269,7 @@ git ls-files config/master.key                                   # prints nothin
 
 - Puma README (binding): https://github.com/puma/puma/blob/aef89221e4d729c3133c723844382331ba3bbbd9/README.md
 - Puma DSL (`bind`, `ssl_bind`, default bind): https://github.com/puma/puma/blob/d70de8b4e926f1f5fa0269dc46cdfadf52562628/lib/puma/dsl.rb
-- Puma default TCP port `9292` (`tcp_port: 9292`, L174) and default bind host (L369-L384): `::` when a non-loopback IPv6 interface exists, else `0.0.0.0` (pinned tag v8.0.2): https://github.com/puma/puma/blob/v8.0.2/lib/puma/configuration.rb#L369-L384
+- Puma default TCP port `9292` (`tcp_port: 9292`, L174) and default bind host (L369-L384): `::` when a non-loopback IPv6 interface exists, else `0.0.0.0` (pinned tag v8.0.2): https://github.com/puma/puma/blob/v8.0.2/lib/puma/configuration.rb#L369-L384 and https://github.com/puma/puma/blob/v8.0.2/lib/puma/configuration.rb#L174
 - Puma `UNSPECIFIED_IPV4 = "0.0.0.0"` and `UNSPECIFIED_IPV6 = "::"` (pinned tag v8.0.2): https://github.com/puma/puma/blob/v8.0.2/lib/puma/const.rb#L214-L215
 - Rails configuring guide (`force_ssl`, `assume_ssl`, `ssl_options`, `hosts`, `session_store`, `cookies_same_site_protection`, `require_master_key`): https://guides.rubyonrails.org/configuring.html
 - Action Pack 7.1 changelog (`ActionDispatch::AssumeSSL`): https://github.com/rails/rails/blob/ffcbf6f205363f8c2fb3e9834bc86690dd59f1cb/actionpack/CHANGELOG.md
