@@ -9,9 +9,12 @@ can check `VERSION` against GitHub: no gate reaches the network, by design, so t
 can change a gate's answer, and a pull request number is only knowable from outside. Keeping `VERSION`
 in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
-## 2026-09-26
+## 2026-09-27
 
 - Qualify Docker 28.0 publishing hardening with the firewalld-reload regression, recommend Engine 28.3.3 or later with firewalld, and re-check container-address reachability after reload. Row 1.180. (#401)
+
+## 2026-09-26
+
 - Close row 3.29's bounded C3-TOOL-ARGV gaps: attached credentials after known short-option clusters, Vault login credential pairs, env secret assignments, OpenSSL MAC keys, and URI userinfo. Preserve prompts, file/stdin inputs and shell assignment prefixes; exempt whole house placeholders only in the new URI rule. Add failing and safe fixtures and document remaining limits. (#399)
 - Fail the secrets scan on grep read errors with path diagnostics, preserving whole-tree coverage. Isolate placeholder and changelog fixture Git environments and extend external-index regressions for both Git selectors. Rows 3.33 and 3.34. (#398)
 - Retire the live-demonstration backlog requirement under the 2026-09-26 maintainer ruling (#397). Close 67 demonstration rows or portions in DONE, retain the five doable remainders under their ids, and accept REASONED with scope and provenance as an end state. Remove the reasoned-row gate, its tests and baseline; preserve shared helpers and the Verify-marking and exposure-index gates. Guide wording is reserved for Part B of the same retirement change.
