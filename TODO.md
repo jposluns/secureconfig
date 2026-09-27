@@ -43,7 +43,7 @@ many.
 | ID | Item | Tags |
 | --- | --- | --- |
 | 1.185 | `frontend-frameworks.md:59` and `:71` (before version-basis insertion; now :163 and :175) scan whole build directories for secrets, so server-only output can be reported as a client leak. Narrow the scan to each framework's client bundle directory. (L, S) | `[gap]` |
-| 1.187 | F-LINE-ANCHORS: audit every line-anchored GitHub citation (1029 distinct at 440c6f3, 45 guides) against its pinned raw file. A 60-anchor sample found mlflow.md:299 wrong (fixed in #N) plus a second wrong anchor on the same line; this session's fresh drafts had eight wrong anchors, all caught before merge. Fetch spans mechanically, judge in batches, fix OFFSET and WRONG entries. (M, M) | `[gap]` |
+| 1.187 | F-LINE-ANCHORS: audit every line-anchored GitHub citation (1029 distinct at 440c6f3, 45 guides) against its pinned raw file. A 60-anchor sample found mlflow.md:299 wrong (fixed in #413) plus a second wrong anchor on the same line; this session's fresh drafts had eight wrong anchors, all caught before merge. Fetch spans mechanically, judge in batches, fix OFFSET and WRONG entries. (M, M) | `[gap]` |
 | 1.188 | frontend-frameworks.md Verify secret scan: in a Vite SSR layout (`dist/client` beside `dist/server`) the loop still scans all of `dist`, a false positive the prose warns about. Prefer `dist/client` automatically when it exists. Suggested by #411's review. (L, S) | `[gap]` |
 
 ## Priority 2: Deepen existing guides
