@@ -47,6 +47,7 @@ from pathlib import Path
 TOOLS = Path(__file__).resolve().parent
 sys.path.insert(0, str(TOOLS))
 import check_bracket_ranges as gate  # noqa: E402
+from _walk import isolated_git_environment  # noqa: E402
 
 MARK = "# bracket-ranges: allow "
 GREP = "grep -E '^[a-z]+$' f"
@@ -994,6 +995,7 @@ ALLOW_CASES += (
 )
 
 
+@isolated_git_environment()
 def run_repo(files, unreadable_dir=False, unreadable_allow=False):
     """Build a throwaway repository and run the shipped gate in it. Returns (exit, stdout)."""
     d = Path(tempfile.mkdtemp())
@@ -1009,13 +1011,16 @@ def run_repo(files, unreadable_dir=False, unreadable_allow=False):
                 p.write_bytes(body)
             else:
                 p.write_text(body, encoding="utf-8")
-        if unreadable_allow:
-            (d / "tools" / "bracket_ranges_allow.txt").chmod(0o000)
         if unreadable_dir:
             blocked = d / "blocked"
             blocked.mkdir()
             (blocked / "x.md").write_text("# x\n", encoding="utf-8")
+        subprocess.run(["git", "init", "-q"], cwd=d, check=True, capture_output=True)
+        subprocess.run(["git", "add", "."], cwd=d, check=True, capture_output=True)
+        if unreadable_dir:
             blocked.chmod(0o000)
+        if unreadable_allow:
+            (d / "tools" / "bracket_ranges_allow.txt").chmod(0o000)
         r = subprocess.run([sys.executable, "tools/check_bracket_ranges.py"], cwd=d,
                            capture_output=True, text=True)
         return r.returncode, r.stdout

@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 r"""Flag bracket ranges in fenced bash blocks.
 
+File enumeration uses the shared tracked-file walker. Untracked and ignored-only inputs
+are excluded; Git and a checkout are required, with no traversal fallback. Existing
+suffix, directory and per-gate filters still apply.
+
 WHY THIS EXISTS. Outside the C locale, ranges can match non-ASCII letters and digits. GNU
 grep, GNU sed and Bash [[ =~ ]] accept non-ASCII samples with ASCII-looking ranges under
 en_US.utf8. Bash case does so with globasciiranges disabled. Spell out the intended ASCII set,

@@ -37,6 +37,8 @@ import sys
 import tempfile
 from pathlib import Path
 
+from _walk import isolated_git_environment
+
 TOOLS = Path(__file__).resolve().parent
 ROOT = TOOLS.parent
 C = ".github/workflows/checks.yml"
@@ -75,6 +77,7 @@ def action(*lines):
             + "".join("    " + line + "\n" for line in lines))
 
 
+@isolated_git_environment()
 def run_against(files=None, no_workflows=False, gate=None):
     """Run the real gate against a copy of the workflows. Returns (exit, full output).
 
@@ -103,6 +106,8 @@ def run_against(files=None, no_workflows=False, gate=None):
                 p = d / rel
                 p.parent.mkdir(parents=True, exist_ok=True)
                 p.write_bytes(text if isinstance(text, bytes) else text.encode("utf-8"))
+        subprocess.run(["git", "init", "-q"], cwd=d, check=True, capture_output=True)
+        subprocess.run(["git", "add", "."], cwd=d, check=True, capture_output=True)
         r = subprocess.run([sys.executable, "tools/check_workflow_pins.py"], cwd=d,
                            capture_output=True, text=True)
         return r.returncode, (r.stdout + r.stderr).strip()

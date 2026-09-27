@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 r"""Run shellcheck over every fenced bash block.
 
+File enumeration uses the shared tracked-file walker. Untracked and ignored-only inputs
+are excluded; Git and a checkout are required, with no traversal fallback. Existing
+suffix, directory and per-gate filters still apply.
+
 WHY THIS EXISTS: the gate suite checks Markdown structure, flags, citations and prose, and
 nothing checked whether the shell in a Verify block is shell. On its first run over this
 corpus shellcheck found five real defects across two guides: competing redirections, an

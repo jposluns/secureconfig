@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """New-tab gate: every EXTERNAL link in site/*.html opens in a new tab, safely.
 
+File enumeration uses the shared tracked-file walker. Untracked and ignored-only inputs
+are excluded; Git and a checkout are required, with no traversal fallback. Existing
+suffix, directory and per-gate filters still apply.
+
 Every off-site link (a host other than aiqt.ai or a subdomain) must carry target="_blank" AND a rel that
 includes "noopener" (target=_blank without noopener is a reverse-tabnabbing risk). Internal (relative) links
 and same-site aiqt.ai links are out of scope. This keeps the new-tab behaviour from silently rotting when a
@@ -25,13 +29,15 @@ pages); this gate reads the same files the site drift gates already cover.
 Exit 0 clean, 1 on any finding, 2 on a missing/unreadable required input (fail-closed).
 """
 # LOCAL PATCH (secureconfig, 2026-09-25): main() takes the coverage roots from AIQT_NEWTAB_ROOTS, and this
-# repository scans site/ only. Modified from AIQT Guardrails ad60d25 under the Apache License 2.0; see .aiqt/PIN.
+# repository scans site/ only. LOCAL PATCH (2026-09-26): document tracked coverage and stage fixtures.
+# Modified from AIQT Guardrails ad60d25 under the Apache License 2.0; see .aiqt/PIN.
+import subprocess
 import sys
 from html.parser import HTMLParser
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _walk import walk_files  # noqa: E402  fail-closed tree walk
+from _walk import isolated_git_environment, walk_files  # noqa: E402  fail-closed tree walk
 from _gen_common import is_external_url  # noqa: E402
 
 
@@ -129,6 +135,7 @@ def run(root):
     return worst
 
 
+@isolated_git_environment()
 def _self_test():
     ext_ok = '<a href="https://github.com/x" target="_blank" rel="noopener noreferrer">gh</a>'
     cases = [
@@ -249,32 +256,39 @@ def _self_test():
             return run(r)
     with tempfile.TemporaryDirectory() as d:
         r = Path(d)
+        subprocess.run(["git", "init", "-q"], cwd=r, check=True, capture_output=True)
         if quiet_one(r) != 2:
             failures.append("absent site/ did not fail closed")
         (r / "site").mkdir()
         if quiet_one(r) != 2:
             failures.append("page-less site/ did not fail closed")
         (r / "site" / "a.html").write_text(ext_ok, encoding="utf-8")
+        subprocess.run(["git", "add", "."], cwd=r, check=True, capture_output=True)
         if quiet_one(r) != 0:
             failures.append("a covered page did not pass")
         (r / "site" / "b.html").write_text('<a href="https://x.com/y">y</a>', encoding="utf-8")
+        subprocess.run(["git", "add", "."], cwd=r, check=True, capture_output=True)
         if quiet_one(r) != 1:
             failures.append("an uncovered external link did not report a finding")
     # opf/site is a second required root: run() fails closed when it is absent, covers its pages when
     # present, and flags an unsafe external link there too.
     with tempfile.TemporaryDirectory() as d2:
         r = Path(d2)
+        subprocess.run(["git", "init", "-q"], cwd=r, check=True, capture_output=True)
         (r / "site").mkdir()
         (r / "site" / "a.html").write_text(ext_ok, encoding="utf-8")
+        subprocess.run(["git", "add", "."], cwd=r, check=True, capture_output=True)
         if quiet(r) != 2:
             failures.append("run() with opf/site absent did not fail closed")
         (r / "opf" / "site" / "draft").mkdir(parents=True)
         (r / "opf" / "site" / "index.html").write_text(ext_ok, encoding="utf-8")
         (r / "opf" / "site" / "draft" / "p.html").write_text(ext_ok, encoding="utf-8")
+        subprocess.run(["git", "add", "."], cwd=r, check=True, capture_output=True)
         if quiet(r) != 0:
             failures.append("a covered two-root tree did not pass")
         (r / "opf" / "site" / "draft" / "bad.html").write_text(
             '<a href="https://x.com/y">y</a>', encoding="utf-8")
+        subprocess.run(["git", "add", "."], cwd=r, check=True, capture_output=True)
         if quiet(r) != 1:
             failures.append("an unsafe external link under opf/site was not reported")
     if failures:

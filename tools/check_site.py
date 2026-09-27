@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Site-integrity gate for site/*.html: en/em dashes, link/anchor resolution, and basic HTML validity.
 
+File enumeration uses the shared tracked-file walker. Untracked and ignored-only inputs
+are excluded; Git and a checkout are required, with no traversal fallback. Existing
+suffix, directory and per-gate filters still apply.
+
 Link classification uses urlsplit: an absolute URL on the site's own host (aiqt.ai) is internal; every
 other scheme (http/https elsewhere, mailto, tel, ftp, javascript, data, ...) and protocol-relative
 //host links are external and skipped. An internal path resolves to an existing file under site/ by
@@ -21,15 +25,18 @@ validated (a deferred coverage gap). Non-nestable nesting IS detected (slice-2):
 parser accepts as well-balanced but which break rendering/behaviour. Download-artifact checksums are
 tracked separately (they need a final content baseline). Exit 0 clean, 1 on any finding, 2 on a read error (unreadable dir/file, fail-closed).
 """
+# LOCAL PATCH (secureconfig, 2026-09-26): document tracked-file coverage.
+# Modified from AIQT Guardrails ad60d25 under Apache-2.0; see .aiqt/PIN.
 import os
 import re
+import subprocess
 import sys
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _walk import walk_files  # noqa: E402  fail-closed tree walk (os.walk, not rglob)
+from _walk import isolated_git_environment, walk_files  # noqa: E402  fail-closed tracked-file enumeration
 
 EN, EM = "–", "—"
 # Site host from AIQT_SITE_HOST (default, and empty-value fallback, aiqt.ai; lowercased), so a
@@ -249,6 +256,7 @@ def logo_findings(pages):
     return out
 
 
+@isolated_git_environment()
 def _self_test():
     good = '<a class="logo" href="/">L</a>'
     bad = '<a class="logo" href="/">L&trade;</a>'
@@ -309,6 +317,7 @@ def _self_test():
             return fn(*a)
     with tempfile.TemporaryDirectory() as d:
         r = Path(d)
+        subprocess.run(["git", "init", "-q"], cwd=r, check=True, capture_output=True)
         draft = r / "opf" / "site" / "draft"
         draft.mkdir(parents=True)
         (r / "opf" / "site" / "index.html").write_text(
@@ -316,10 +325,12 @@ def _self_test():
         (draft / "disclosure.html").write_text("<!doctype html><title>t</title><p>d</p>", encoding="utf-8")
         (draft / "manifest.html").write_text(
             '<!doctype html><title>t</title><nav><a href="./disclosure">D</a></nav>', encoding="utf-8")
+        subprocess.run(["git", "add", "."], cwd=r, check=True, capture_output=True)
         if quiet(_scan_root, r, "opf/site") != 0:
             failures.append("coverage: a clean opf/site tree with relative links did not pass")
         (draft / "broken.html").write_text(
             '<!doctype html><title>t</title><a href="./nope">x</a>', encoding="utf-8")
+        subprocess.run(["git", "add", "."], cwd=r, check=True, capture_output=True)
         if quiet(_scan_root, r, "opf/site") != 1:
             failures.append("coverage: a dangling relative link under opf/site/draft was not caught")
     with tempfile.TemporaryDirectory() as d2:
@@ -368,8 +379,7 @@ def _scan_root(root, subdir):
     try:
         html_files = sorted(walk_files(site, suffixes={".html"}))
     except OSError as exc:
-        # an unreadable directory under the root is a read error, not a clean skip: fail closed (exit 2)
-        # so the site gate never reports clean without having scanned an unreadable subtree.
+        # Git failure or an inaccessible selected tracked path is a scan error (exit 2).
         print("error: cannot scan {}/ ({}); fail-closed".format(subdir, exc), file=sys.stderr)
         return 2
     for f in html_files:
