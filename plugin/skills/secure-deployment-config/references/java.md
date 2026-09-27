@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "5da9d59ad4a39f483b16b83cccdf27102a99b9d0f1c61911ad4776b2b459a51e",
+  "body_sha256": "6186722b8daf4256bc2f34e5e673388335c1a151fe06f0984e9fb53ed04702ec",
   "components": {
     "boot": {
       "name": "Spring Boot documentation",
@@ -648,4 +648,4 @@ The small upload must reach and succeed at the intended handler. With a delibera
 - Spring Security CSRF and stateless browser applications: https://docs.spring.io/spring-security/reference/features/exploits/csrf.html
 - Spring Security session fixation protection and changeSessionId: https://docs.spring.io/spring-security/reference/servlet/authentication/session-management.html
 - Apache Tomcat HTTP connector, form parsing and request-header limits: https://tomcat.apache.org/tomcat-10.1-doc/config/http.html
-- curl manual, header input, multipart files, protocol restrictions, and transfer diagnostics (7.75.0): https://curl.se/docs/manpage.html
+- curl manual, header input, multipart files, protocol restrictions, and transfer diagnostics (curl 7.75.0 or newer for `exitcode` and `errormsg`): https://curl.se/docs/manpage.html
