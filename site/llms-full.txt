@@ -662,7 +662,7 @@ This is the recommended path when the host cannot or should not accept inbound c
 Per the Cloudflare docs as of June 2026 (menu locations change; the sources below are authoritative):
 
 1. In the Cloudflare dashboard go to **Networking > Tunnels** and create a tunnel (connector type `cloudflared`).
-2. Copy the installation command the dashboard shows for your OS and run it on the host. It embeds a tunnel token and installs `cloudflared` as a service (`cloudflared service install <TOKEN>` on Linux).
+2. Copy only the tunnel token from the dashboard into a file readable only by the account running `cloudflared` (mode `0600` on Linux/macOS; a restricted ACL on Windows). With `cloudflared` **2025.4.0 or later**, configure your OS service to run `cloudflared tunnel run --token-file /absolute/path/to/token`, substituting your token-file path ([run parameters](https://developers.cloudflare.com/tunnel/reference/run-parameters/#token-file)). Do not run the dashboard’s `cloudflared service install <TOKEN>` command: it exposes the token in the installer’s command line.
 3. Last, and only after step 4 below: add a route: **Routes > Add route > Published application**, choose the subdomain (for example `app.example.com`), and set the service URL to the local service, for example `http://localhost:3000`.
 
 The moment that route exists the app is reachable at `https://app.example.com`, by anyone, with no login in front of it. Access is what adds the login and it is step 4, so doing these steps in the order they are numbered leaves a window in which the application is published and unauthenticated, however short you make it. Close it rather than racing it. Either complete step 4 first and add the route afterwards, which works if Cloudflare accepts an Access application for a hostname you have not routed yet; or leave the local service stopped until Access is in place, which always works. With the route created and the service stopped the hostname still resolves, because the route is a proxied DNS record, and a visitor gets an error page from Cloudflare's edge rather than your application: the point is that nothing of yours is being served, not that the name is invisible. [deployment-lifecycle.md](deployment-lifecycle.md) makes the same point about previews and first deployments.
@@ -804,6 +804,9 @@ Read err, not the number: for a tunnel a refusal or timeout naming your own addr
 - Cloudflare Access One-time PIN (login methods coexist with an IdP): https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/one-time-pin/
 - Cloudflare Access service tokens (request headers and Service Auth policy): https://developers.cloudflare.com/cloudflare-one/access-controls/service-credentials/service-tokens/
 - curl manual (stdin headers, output and redirect reporting): https://curl.se/docs/manpage.html
+- cloudflared run parameters (`--token-file`, requires 2025.4.0 or later): https://developers.cloudflare.com/tunnel/reference/run-parameters/#token-file
+- Tunnel tokens (retrieving the token from the dashboard installation command without running it): https://developers.cloudflare.com/tunnel/reference/tunnel-tokens/
+- cloudflared 2026.9.3 service installer (runs `tunnel run --token-file`): https://github.com/cloudflare/cloudflared/blob/2026.9.3/cmd/cloudflared/common_service.go
 
 ======================================================================
 ==> tailscale.md
