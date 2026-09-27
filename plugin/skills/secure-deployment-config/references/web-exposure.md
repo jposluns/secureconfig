@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "7818b12bbc9a7750cc8a6c7f2a4656b60c99881a6bf4cc543f7633ca9c8a6985",
+  "body_sha256": "bb7bd932ab88b864157dc6819d7d5b2034705f61bd38ec565e65c5815c23bc41",
   "components": {
     "nginx": {
       "name": "nginx documentation",
@@ -27,10 +27,11 @@ version_basis: {
     },
     "caddy": {
       "name": "Caddy documentation",
-      "basis": "unknown",
+      "basis": "v2.11.4",
       "sources": {
         "se9ab71afc4ba": "https://caddyserver.com/docs/caddyfile/directives/respond",
-        "s38b1b78ce980": "https://caddyserver.com/docs/caddyfile/matchers"
+        "s38b1b78ce980": "https://caddyserver.com/docs/caddyfile/matchers",
+        "s450aa9ed710b": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/matchers.go"
       }
     },
     "next": {
@@ -53,31 +54,42 @@ version_basis: {
       "sources": {
         "scfb24624addd": "https://create-react-app.dev/docs/adding-custom-environment-variables/"
       }
+    },
+    "coreutils": {
+      "name": "GNU coreutils documentation",
+      "basis": "unknown",
+      "sources": {
+        "sabbd081d1d5a": "https://www.gnu.org/s/coreutils/manual/html_node/mktemp-invocation.html"
+      }
     }
   },
   "claims": {
-    "nginx-dotfiles": {"text": "Deny dot-prefixed paths by regex; ACME longest-prefix ^~ location skips regex matching.", "components": ["nginx"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596"], "status": "REASONED"},
-    "nginx-backups": {"text": "Dotfile regex misses dump.sql/backup.tar.gz; keep exports outside root or add explicit sql/dump/bak/tar.gz deny.", "components": ["nginx"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596"], "status": "REASONED"},
-    "apache-directories": {"text": "DirectoryMatch denies dot-prefixed filesystem segments; exact well-known exemption permits the whole directory, not well-known-backup lookalikes.", "components": ["apache"], "sources": ["apache:s24f06763d14a", "apache:s7313b1b624d5"], "status": "REASONED"},
-    "apache-files": {"text": "FilesMatch uses basenames, not enough for .git/config; retain for top-level dotfiles and sql/dump/bak files.", "components": ["apache"], "sources": ["apache:se24e9bbc0443", "apache:s7313b1b624d5"], "status": "REASONED"},
+    "nginx-dotfiles": {"text": "Deny dot-prefixed path segments by regex; place deny regex locations before other matching regex locations. Exact locations or a longest matching ^~ prefix can bypass them.", "components": ["nginx"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596"], "status": "REASONED"},
+    "nginx-backups": {"text": "Case-insensitive suffix regex denies .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz outside the ACME exemption, subject to location precedence.", "components": ["nginx"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596"], "status": "REASONED"},
+    "nginx-acme": {"text": "Only /.well-known/acme-challenge/ is exempted: when its ^~ location is the longest matching prefix, it skips both deny regexes. Keep the challenge directory free of secrets.", "components": ["nginx"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596"], "status": "REASONED"},
+    "nginx-security-txt": {"text": "The ACME-only exemption leaves /.well-known/security.txt denied; add location = /.well-known/security.txt {} to serve it, because exact matches precede regex locations.", "components": ["nginx"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596"], "status": "REASONED"},
+    "apache-directories": {"text": "DirectoryMatch denies dot-prefixed filesystem segments except an exact .well-known segment; .well-known-backup is not exempt. FilesMatch suffix denial still applies inside .well-known/.", "components": ["apache"], "sources": ["apache:s24f06763d14a", "apache:s7313b1b624d5", "apache:se24e9bbc0443"], "status": "REASONED"},
+    "apache-files": {"text": "Case-insensitive FilesMatch denies dotfile basenames and .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz suffixes; DirectoryMatch is still needed for .git/config.", "components": ["apache"], "sources": ["apache:se24e9bbc0443", "apache:s7313b1b624d5"], "status": "REASONED"},
     "apache-listing": {"text": "Guide records Debian/Ubuntu Indexes FollowSymLinks and DirectoryIndex defaults without a packaging citation; index-less directories can expose other filenames.", "components": ["apache"], "sources": ["apache:s97468bf1f299", "apache:sef5ff46eddf7"], "status": "REASONED"},
-    "apache-forbidden": {"text": "mod_autoindex hides 403 subrequests unless ShowForbidden is enabled; denies do not protect unrelated archives/CSV exports.", "components": ["apache"], "sources": ["apache:sef5ff46eddf7"], "status": "REASONED"},
+    "apache-forbidden": {"text": "mod_autoindex hides entries whose subrequests return 403 unless ShowForbidden is enabled; unmatched exports such as archive.zip and customers.csv can still be listed.", "components": ["apache"], "sources": ["apache:sef5ff46eddf7"], "status": "REASONED"},
     "apache-options": {"text": "Options -Indexes removes listing, preserving inherited options; Apache 2.4 rejects mixing relative +/- and bare options.", "components": ["apache"], "sources": ["apache:s97468bf1f299"], "status": "REASONED"},
     "nginx-listing": {"text": "nginx autoindex defaults off.", "components": ["nginx"], "sources": ["nginx:sbd17bad53c9d"], "status": "REASONED"},
     "caddy-listing": {"text": "Guide says Caddy lists only with file_server browse; Sources omit a file_server reference.", "components": ["caddy"], "sources": ["caddy:se9ab71afc4ba", "caddy:s38b1b78ce980"], "status": "REASONED"},
-    "caddy-deny": {"text": "Caddy rules return 404 only for /.git/*, /.env and /.env.*; extend coverage or keep other sensitive files outside the served tree.", "components": ["caddy"], "sources": ["caddy:se9ab71afc4ba", "caddy:s38b1b78ce980"], "status": "REASONED"},
-    "caddy-acme": {"text": "Broader Caddy denies must exempt legitimate .well-known paths; independent ACME handling lacks a direct Sources citation.", "components": ["caddy"], "sources": ["caddy:se9ab71afc4ba", "caddy:s38b1b78ce980"], "status": "REASONED"},
-    "backup-storage": {"text": "Keep SQL dumps/backups outside document roots or in object storage; filename denies are only a backstop.", "components": ["nginx", "apache", "caddy"], "sources": ["nginx:s40bdf1af1596", "apache:s24f06763d14a", "caddy:s38b1b78ce980"], "status": "REASONED"},
+    "caddy-deny": {"text": "Caddy v2.11.4 matchers return 404 for dot-prefixed segments at any depth outside root /.well-known/*, and case-insensitive .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz suffixes everywhere. Server execution was not run.", "components": ["caddy"], "sources": ["caddy:se9ab71afc4ba", "caddy:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED"},
+    "caddy-acme": {"text": "ANDed path_regexp and not path matchers exempt the root /.well-known/ subtree only from dotfile denial; suffix denial still applies and .well-known-backup is not exempt. Keep the subtree free of secrets; independent ACME handling lacks a direct Sources citation.", "components": ["caddy"], "sources": ["caddy:se9ab71afc4ba", "caddy:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED"},
+    "backup-storage": {"text": "Keep dumps and backups outside the document root or in object storage; filename denies are a backstop and cannot recognize secrets or backups with unmatched names.", "components": ["nginx", "apache", "caddy"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy:se9ab71afc4ba", "caddy:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED"},
+    "suffix-policy": {"text": "Suffix denies also block intended public downloads, including release archives; narrow the policy for the site and verify intended downloads remain accessible.", "components": ["nginx", "apache", "caddy"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy:se9ab71afc4ba", "caddy:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED"},
     "next-public": {"text": "NEXT_PUBLIC_ embeds values in browser JavaScript; keep provider keys server-side behind backend routes.", "components": ["next"], "sources": ["next:sb98bee5b61c8"], "status": "REASONED"},
     "vite-public": {"text": "VITE_ embeds values in browser JavaScript; reserve for public values.", "components": ["vite"], "sources": ["vite:s3fc0892e0f58"], "status": "REASONED"},
     "cra-public": {"text": "Deprecated Create React App embeds REACT_APP_ values in browser builds.", "components": ["cra"], "sources": ["cra:scfb24624addd"], "status": "REASONED"},
     "source-maps": {"text": "Guide warns against external/inline maps for private code; removing sourceMappingURL does not unpublish deployed maps. Sources omit a direct map reference.", "components": ["next", "vite"], "sources": ["next:sb98bee5b61c8", "vite:s3fc0892e0f58"], "status": "REASONED"},
-    "verify-dotfiles": {"text": "Plant a real readable dotfile exclusively; expect 403/404 without planted content. Missing plants are inconclusive, other paths need real files; remove only created probes.", "components": ["nginx", "apache", "caddy"], "sources": ["nginx:s0e5162d1ce2b", "apache:s7313b1b624d5", "caddy:se9ab71afc4ba"], "status": "REASONED", "verify": [1]},
-    "verify-listing": {"text": "Existing nonempty index-less uploads must not produce 200 autoindex; absent/unwritable directories are inconclusive.", "components": ["apache"], "sources": ["apache:s97468bf1f299", "apache:sef5ff46eddf7"], "status": "REASONED", "verify": [1]},
-    "verify-acme": {"text": "Real readable challenge file should return probe over HTTPS and HTTP:80; Sources do not directly cite HTTP-01.", "components": ["nginx", "apache"], "sources": ["nginx:s40bdf1af1596", "nginx:s0e5162d1ce2b", "apache:s24f06763d14a"], "status": "REASONED", "verify": [1]},
-    "verify-lookalike": {"text": "Real .well-known-backup/config must be denied; bare 404 without a planted file proves nothing.", "components": ["apache"], "sources": ["apache:s24f06763d14a", "apache:s7313b1b624d5"], "status": "REASONED", "verify": [1]},
+    "verify-dotfiles": {"text": "Plant an exclusive, readable .env.probe file; expect 403 or 404 without PLANTED-SECRET. Also probe .git/config, config.php.bak and db.sql; absent files are inconclusive, so plant real files to test each rule and remove only created probes.", "components": ["nginx", "apache", "caddy"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:s24f06763d14a", "apache:s7313b1b624d5", "apache:se24e9bbc0443", "caddy:se9ab71afc4ba", "caddy:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED", "verify": [1]},
+    "verify-listing": {"text": "Plant a throwaway file in an existing index-less uploads directory; Options -Indexes should yield 403 or 404, never a 200 listing. An absent or unwritable directory is inconclusive; remove the probe afterward.", "components": ["apache"], "sources": ["apache:s97468bf1f299", "apache:sef5ff46eddf7"], "status": "REASONED", "verify": [1]},
+    "verify-acme": {"text": "Plant a readable challenge token; webroot requests over HTTPS and HTTP:80 should return probe, not 403. nginx exempts only the challenge prefix; Apache exempts .well-known segments. Failed preparation is inconclusive; Sources do not directly cite HTTP-01.", "components": ["nginx", "apache"], "sources": ["nginx:s40bdf1af1596", "nginx:s0e5162d1ce2b", "apache:s24f06763d14a"], "status": "REASONED", "verify": [1]},
+    "verify-lookalike": {"text": "Probe .well-known-backup/config across nginx, Apache and Caddy; expect 403 or 404. Plant a real readable file to distinguish denial from absence, then remove it.", "components": ["nginx", "apache", "caddy"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:s24f06763d14a", "apache:s7313b1b624d5", "caddy:se9ab71afc4ba", "caddy:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED", "verify": [1]},
     "verify-bundle": {"text": "Scan built client output for credential patterns/literal secrets; grep 0 match, 1 no match, 2 error. Clean does not exclude transformed secrets; no grep reference supplied.", "components": ["next", "vite", "cra"], "sources": ["next:sb98bee5b61c8", "vite:s3fc0892e0f58", "cra:scfb24624addd"], "status": "REASONED", "verify": [1]},
-    "verify-backup": {"text": "Known previously deployed backup URLs should return 404.", "components": ["nginx", "apache", "caddy"], "sources": ["nginx:s40bdf1af1596", "apache:s24f06763d14a", "caddy:s38b1b78ce980"], "status": "REASONED", "verify": [1]}
+    "verify-backup": {"text": "Known previously deployed backup URLs should return 403 or 404 without the file contents.", "components": ["nginx", "apache", "caddy"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy:se9ab71afc4ba", "caddy:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED"},
+    "verify-suffixes": {"text": "GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a generic dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive; only local shell syntax and suffix creation were checked, not server execution.", "components": ["nginx", "apache", "caddy", "coreutils"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy:se9ab71afc4ba", "caddy:s38b1b78ce980", "caddy:s450aa9ed710b", "coreutils:sabbd081d1d5a"], "status": "REASONED", "verify": [2]}
   }
 }
 ---
@@ -88,32 +100,36 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| nginx-dotfiles: Deny dot-prefixed paths by regex; ACME longest-prefix ^~ location skips regex matching. | nginx documentation unknown | REASONED |
-| nginx-backups: Dotfile regex misses dump.sql/backup.tar.gz; keep exports outside root or add explicit sql/dump/bak/tar.gz deny. | nginx documentation unknown | REASONED |
-| apache-directories: DirectoryMatch denies dot-prefixed filesystem segments; exact well-known exemption permits the whole directory, not well-known-backup lookalikes. | Apache documentation 2.4 | REASONED |
-| apache-files: FilesMatch uses basenames, not enough for .git/config; retain for top-level dotfiles and sql/dump/bak files. | Apache documentation 2.4 | REASONED |
+| nginx-dotfiles: Deny dot-prefixed path segments by regex; place deny regex locations before other matching regex locations. Exact locations or a longest matching ^~ prefix can bypass them. | nginx documentation unknown | REASONED |
+| nginx-backups: Case-insensitive suffix regex denies .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz outside the ACME exemption, subject to location precedence. | nginx documentation unknown | REASONED |
+| nginx-acme: Only /.well-known/acme-challenge/ is exempted: when its ^~ location is the longest matching prefix, it skips both deny regexes. Keep the challenge directory free of secrets. | nginx documentation unknown | REASONED |
+| nginx-security-txt: The ACME-only exemption leaves /.well-known/security.txt denied; add location = /.well-known/security.txt {} to serve it, because exact matches precede regex locations. | nginx documentation unknown | REASONED |
+| apache-directories: DirectoryMatch denies dot-prefixed filesystem segments except an exact .well-known segment; .well-known-backup is not exempt. FilesMatch suffix denial still applies inside .well-known/. | Apache documentation 2.4 | REASONED |
+| apache-files: Case-insensitive FilesMatch denies dotfile basenames and .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz suffixes; DirectoryMatch is still needed for .git/config. | Apache documentation 2.4 | REASONED |
 | apache-listing: Guide records Debian/Ubuntu Indexes FollowSymLinks and DirectoryIndex defaults without a packaging citation; index-less directories can expose other filenames. | Apache documentation 2.4 | REASONED |
-| apache-forbidden: mod_autoindex hides 403 subrequests unless ShowForbidden is enabled; denies do not protect unrelated archives/CSV exports. | Apache documentation 2.4 | REASONED |
+| apache-forbidden: mod_autoindex hides entries whose subrequests return 403 unless ShowForbidden is enabled; unmatched exports such as archive.zip and customers.csv can still be listed. | Apache documentation 2.4 | REASONED |
 | apache-options: Options -Indexes removes listing, preserving inherited options; Apache 2.4 rejects mixing relative +/- and bare options. | Apache documentation 2.4 | REASONED |
 | nginx-listing: nginx autoindex defaults off. | nginx documentation unknown | REASONED |
-| caddy-listing: Guide says Caddy lists only with file_server browse; Sources omit a file_server reference. | Caddy documentation unknown | REASONED |
-| caddy-deny: Caddy rules return 404 only for /.git/*, /.env and /.env.*; extend coverage or keep other sensitive files outside the served tree. | Caddy documentation unknown | REASONED |
-| caddy-acme: Broader Caddy denies must exempt legitimate .well-known paths; independent ACME handling lacks a direct Sources citation. | Caddy documentation unknown | REASONED |
-| backup-storage: Keep SQL dumps/backups outside document roots or in object storage; filename denies are only a backstop. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation unknown | REASONED |
+| caddy-listing: Guide says Caddy lists only with file_server browse; Sources omit a file_server reference. | Caddy documentation v2.11.4 | REASONED |
+| caddy-deny: Caddy v2.11.4 matchers return 404 for dot-prefixed segments at any depth outside root /.well-known/*, and case-insensitive .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz suffixes everywhere. Server execution was not run. | Caddy documentation v2.11.4 | REASONED |
+| caddy-acme: ANDed path_regexp and not path matchers exempt the root /.well-known/ subtree only from dotfile denial; suffix denial still applies and .well-known-backup is not exempt. Keep the subtree free of secrets; independent ACME handling lacks a direct Sources citation. | Caddy documentation v2.11.4 | REASONED |
+| backup-storage: Keep dumps and backups outside the document root or in object storage; filename denies are a backstop and cannot recognize secrets or backups with unmatched names. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4 | REASONED |
+| suffix-policy: Suffix denies also block intended public downloads, including release archives; narrow the policy for the site and verify intended downloads remain accessible. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4 | REASONED |
 | next-public: NEXT_PUBLIC_ embeds values in browser JavaScript; keep provider keys server-side behind backend routes. | Next.js documentation unknown | REASONED |
 | vite-public: VITE_ embeds values in browser JavaScript; reserve for public values. | Vite documentation unknown | REASONED |
 | cra-public: Deprecated Create React App embeds REACT_APP_ values in browser builds. | Create React App documentation unknown | REASONED |
 | source-maps: Guide warns against external/inline maps for private code; removing sourceMappingURL does not unpublish deployed maps. Sources omit a direct map reference. | Next.js documentation unknown; Vite documentation unknown | REASONED |
-| verify-dotfiles: Plant a real readable dotfile exclusively; expect 403/404 without planted content. Missing plants are inconclusive, other paths need real files; remove only created probes. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation unknown | REASONED |
-| verify-listing: Existing nonempty index-less uploads must not produce 200 autoindex; absent/unwritable directories are inconclusive. | Apache documentation 2.4 | REASONED |
-| verify-acme: Real readable challenge file should return probe over HTTPS and HTTP:80; Sources do not directly cite HTTP-01. | nginx documentation unknown; Apache documentation 2.4 | REASONED |
-| verify-lookalike: Real .well-known-backup/config must be denied; bare 404 without a planted file proves nothing. | Apache documentation 2.4 | REASONED |
+| verify-dotfiles: Plant an exclusive, readable .env.probe file; expect 403 or 404 without PLANTED-SECRET. Also probe .git/config, config.php.bak and db.sql; absent files are inconclusive, so plant real files to test each rule and remove only created probes. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4 | REASONED |
+| verify-listing: Plant a throwaway file in an existing index-less uploads directory; Options -Indexes should yield 403 or 404, never a 200 listing. An absent or unwritable directory is inconclusive; remove the probe afterward. | Apache documentation 2.4 | REASONED |
+| verify-acme: Plant a readable challenge token; webroot requests over HTTPS and HTTP:80 should return probe, not 403. nginx exempts only the challenge prefix; Apache exempts .well-known segments. Failed preparation is inconclusive; Sources do not directly cite HTTP-01. | nginx documentation unknown; Apache documentation 2.4 | REASONED |
+| verify-lookalike: Probe .well-known-backup/config across nginx, Apache and Caddy; expect 403 or 404. Plant a real readable file to distinguish denial from absence, then remove it. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4 | REASONED |
 | verify-bundle: Scan built client output for credential patterns/literal secrets; grep 0 match, 1 no match, 2 error. Clean does not exclude transformed secrets; no grep reference supplied. | Next.js documentation unknown; Vite documentation unknown; Create React App documentation unknown | REASONED |
-| verify-backup: Known previously deployed backup URLs should return 404. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation unknown | REASONED |
+| verify-backup: Known previously deployed backup URLs should return 403 or 404 without the file contents. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4 | REASONED |
+| verify-suffixes: GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a generic dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive; only local shell syntax and suffix creation were checked, not server execution. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4; GNU coreutils documentation unknown | REASONED |
 <!-- version-basis:end -->
 
 Scanners request `/.env`, `/.git/config`, `/config.php.bak`, and `/db.sql` continuously, and any of these
@@ -123,7 +139,7 @@ Anything a deploy step leaves inside the document root is served too, unless the
 ## nginx
 
 Deny dotfiles by regex location, with the ACME challenge path carved out first, because `.well-known` also
-starts with a dot:
+starts with a dot. Also deny common backup and dump suffixes (case-insensitively):
 
 ```nginx
 location ^~ /.well-known/acme-challenge/ {
@@ -133,13 +149,21 @@ location ^~ /.well-known/acme-challenge/ {
 location ~ /\. {
     deny all;
 }
+
+location ~* (\.(bak|old|orig|sql(\.gz)?|dump|tar\.gz)|~)$ {
+    deny all;
+}
 ```
 
 Once nginx picks the `^~` location as the longest matching prefix, it skips regex locations entirely, so the
 challenge path is served before the dotfile deny is reached (`allow`/`deny`: `ngx_http_access_module`;
-`location` order and `^~`: `ngx_http_core_module`). This denies dot-prefixed paths only; a non-dotfile
-export like `dump.sql` or `backup.tar.gz` is not matched here, so keep those out of the web root (below)
-or add an explicit `location ~* \.(sql|dump|bak|tar\.gz)$ { deny all; }`.
+`location` order and `^~`: `ngx_http_core_module`). Outside that challenge prefix, these rules deny
+dot-prefixed path segments and paths ending in `.bak`, `.old`, `.orig`, `~`, `.sql`, `.sql.gz`, `.dump`,
+or `.tar.gz`. Put these regex locations before other regex locations that could serve the same paths;
+an exact location or another `^~` prefix can bypass them. Keep the challenge directory free of secrets.
+Unlike the Apache and Caddy configs below, which exempt all of `/.well-known/`, this config exempts only
+the ACME challenge prefix, so `/.well-known/security.txt` is denied; if you serve that file, add
+`location = /.well-known/security.txt {}`, because nginx selects an exact match before it checks regex locations.
 
 ## Apache
 
@@ -148,7 +172,7 @@ or add an explicit `location ~* \.(sql|dump|bak|tar\.gz)$ { deny all; }`.
     Require all denied
 </DirectoryMatch>
 
-<FilesMatch "(^\.|\.sql$|\.dump$|\.bak$)">
+<FilesMatch "(?i)(^\.|\.(bak|old|orig|sql(\.gz)?|dump|tar\.gz)$|~$)">
     Require all denied
 </FilesMatch>
 
@@ -166,28 +190,39 @@ rules out that literal substring, so it would still allow a directory that merel
 "well-known", such as `/.well-known-backup/config`; the `(?:/|$)` boundary requires the exempted
 segment to be `well-known` exactly, ending at a slash or the path's end, so only a genuine `.well-known/`
 path is exempt: the whole directory (acme-challenge, and anything else legitimately under it such as
-`security.txt`), while a lookalike segment like `.well-known-backup` is not. Keep the `<FilesMatch>` rule as a backstop for `.sql`, `.dump`, and
-`.bak` basenames and for top-level dotfiles like `/.env`.
+`security.txt`), while a lookalike segment like `.well-known-backup` is not. Keep the `<FilesMatch>` rule as a case-insensitive backstop for the same backup and dump suffixes as
+nginx, and for dotfile basenames like `/.env`. The suffix rule still applies inside `.well-known/`.
 
-One default weakens this. Debian and Ubuntu ship `apache2.conf` with `Options Indexes FollowSymLinks` on `<Directory /var/www/>`, so when a directory below the document root has no `DirectoryIndex` file (`dir.conf` lists `index.html`, `index.php`, and several others), `mod_autoindex` returns a browsable listing of its contents. The deny rules above still hold, and the listing even omits the files they forbid, because `mod_autoindex` hides an entry whose subrequest returns 403 unless `IndexOptions ShowForbidden` is set. The exposure is everything else in the directory: a backup or export the deny rules do not match by name, an `archive.tar.gz`, a `customers.csv`, or a datestamped dump, is listed for anyone who requests the directory, and the listing itself confirms the directory and reveals filenames you were relying on nobody guessing. Turn listing off with `Options -Indexes`, shown above; write it in the relative `-` form so it removes only `Indexes` and keeps the inherited `FollowSymLinks`, and never mix `+`/`-` options with bare ones in a single `Options` line, which Apache 2.4 rejects at startup. nginx (`autoindex` is `off` by default) and Caddy (`file_server` lists only with `browse`) do not need this; Apache on these distributions does.
+One default weakens this. Debian and Ubuntu ship `apache2.conf` with `Options Indexes FollowSymLinks` on `<Directory /var/www/>`, so when a directory below the document root has no `DirectoryIndex` file (`dir.conf` lists `index.html`, `index.php`, and several others), `mod_autoindex` returns a browsable listing of its contents. The deny rules above still hold, and the listing even omits the files they forbid, because `mod_autoindex` hides an entry whose subrequest returns 403 unless `IndexOptions ShowForbidden` is set. The exposure is everything else in the directory: a backup or export the deny rules do not match by name, an `archive.zip`, a `customers.csv`, or a datestamped dump, is listed for anyone who requests the directory, and the listing itself confirms the directory and reveals filenames you were relying on nobody guessing. Turn listing off with `Options -Indexes`, shown above; write it in the relative `-` form so it removes only `Indexes` and keeps the inherited `FollowSymLinks`, and never mix `+`/`-` options with bare ones in a single `Options` line, which Apache 2.4 rejects at startup. nginx (`autoindex` is `off` by default) and Caddy (`file_server` lists only with `browse`) do not need this; Apache on these distributions does.
 
 ## Caddy
 
+Matcher syntax checked against Caddy v2.11.4 source and the matcher reference; server execution was
+not run in the authoring environment. Put these directives in the site's Caddyfile block:
+
 ```caddyfile
-respond /.git/* 404
-respond /.env 404
-respond /.env.* 404
+@dotfiles {
+    path_regexp dotfiles /\.
+    not path /.well-known/*
+}
+respond @dotfiles 404
+
+@backups path *.bak *.old *.orig *~ *.sql *.sql.gz *.dump *.tar.gz
+respond @backups 404
 ```
 
-This list is not exhaustive: it matches only the paths named, so other dotfiles and nested sensitive
-directories are not covered; keep such files out of the served directory (below) and extend the list for any
-other sensitive paths you serve. If a broader matcher replaces this list, carve out `/.well-known/*` first:
-legitimate things live there (ACME challenges, `security.txt`), and Caddy already serves its own ACME
-challenges outside the file server.
+`path_regexp` uses Go regular expressions on the decoded path: `/\.` catches a dot-prefixed segment
+at any depth, including `/.git`, `/.git/config`, `/.env`, and `/nested/.env`. Matchers within a named
+set are ANDed, so `not path` exempts the root `/.well-known/` subtree from the dotfile rule, but not
+`/.well-known-backup/`. Keep that public subtree free of secrets. The separate `path` matcher ORs
+its case-insensitive suffix patterns and denies backups and dumps even under `/.well-known/`.
+Thus `/config.php.bak` and `/db.sql` are denied too. Caddy serves its own ACME challenges outside the
+file server. These filename rules cannot recognize every secret or backup; keep them out of the
+served directory even when their names match none of these patterns.
 
 ## Keep dumps and backups out of the served directory
 
-`.sql`, `.dump`, and backup archives should never land inside a directory a web root points at; the deny rules above are a backstop, not the control. Write exports and backups outside the document root, or to object storage ([object-storage.md](object-storage.md)), never `/var/www/html`.
+`.sql`, `.dump`, and backup archives should never land inside a directory a web root points at; the deny rules above are a backstop, not the control. Write exports and backups outside the document root, or to object storage ([object-storage.md](object-storage.md)), never `/var/www/html`. These rules also block intentionally public files with these suffixes, including release archives. Narrow the suffix policy for your site and verify that intended downloads remain accessible.
 
 ## Client bundles: secrets compiled into the browser
 
@@ -269,7 +304,38 @@ done
 # a bundler can split or encode a value, so scan for the literal secret as well
 ```
 
-Any backup path known to have existed on the server should also 404 at the deployed URL.
+Any backup path known to have existed on the server should also return 403 or 404, without the file contents, at the deployed URL.
+
+Also plant a readable file for each suffix and a generic dotfile, so the added classes are tested
+against real content. Use GNU `mktemp`, set `DOCROOT` to this host's document root, and replace
+`example.com` with its served hostname. On an isolated test host, run before and after enabling the
+deny rules: the exposed static server should return 200 with `PLANTED-SECRET`; the fixed server must
+return 403 or 404 without that body. A failed plant or curl transfer is inconclusive.
+
+```bash
+# REASONED: following probes were not run against a server: no Caddy, nginx, Apache, or container
+# runtime is available, and network restrictions prevent installing one. Expected exposed/fixed
+# outcomes follow the Caddy path/path_regexp, nginx location/deny, and Apache FilesMatch/Require
+# references in Sources. Local shell syntax and GNU mktemp suffix creation were checked only.
+DOCROOT=/var/www/html
+for suffix in '' .bak .old .orig '~' .sql .sql.gz .dump .tar.gz; do
+  template="$DOCROOT/probeXXXXXX"
+  [ -n "$suffix" ] || template="$DOCROOT/.probeXXXXXX"
+  if probe=$(sudo mktemp --suffix="$suffix" "$template" 2>/dev/null); then
+    if printf 'PLANTED-SECRET' | sudo tee "$probe" >/dev/null && sudo chmod 0644 "$probe"; then
+      p="/${probe##*/}"
+      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+        -w "  <= %{http_code} $p\n" "https://example.com$p" || echo "inconclusive: curl failed"
+      # Fixed: 403/404 and no PLANTED-SECRET. Exposed: 200 and PLANTED-SECRET.
+    else
+      echo "inconclusive: could not prepare $probe"
+    fi
+    sudo rm -f "$probe"
+  else
+    echo "inconclusive: could not plant suffix '$suffix' under $DOCROOT"
+  fi
+done
+```
 
 ## Sources (checked September 2026)
 
@@ -281,7 +347,9 @@ Any backup path known to have existed on the server should also 404 at the deplo
 - Apache mod_autoindex (the generated listing, and `ShowForbidden`, which by default hides entries a subrequest forbids): https://httpd.apache.org/docs/2.4/mod/mod_autoindex.html
 - nginx autoindex module (`autoindex` is `off` by default): https://nginx.org/en/docs/http/ngx_http_autoindex_module.html
 - Caddy `respond` directive: https://caddyserver.com/docs/caddyfile/directives/respond
-- Caddy matchers: https://caddyserver.com/docs/caddyfile/matchers
+- Caddy matchers (`path`, `path_regexp`, `not`, named matcher sets): https://caddyserver.com/docs/caddyfile/matchers
+- Caddy v2.11.4 matcher implementation (`MatchPath`, `MatchPathRE`, `MatchNot`): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/matchers.go
+- GNU coreutils `mktemp` (`--suffix`): https://www.gnu.org/s/coreutils/manual/html_node/mktemp-invocation.html
 - Next.js environment variables (`NEXT_PUBLIC_`): https://nextjs.org/docs/pages/guides/environment-variables
 - Vite env variables (`VITE_`): https://vite.dev/guide/env-and-mode
 - Create React App environment variables (`REACT_APP_`, deprecation notice): https://create-react-app.dev/docs/adding-custom-environment-variables/
