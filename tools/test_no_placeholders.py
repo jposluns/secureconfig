@@ -7,6 +7,8 @@ import tempfile
 from pathlib import Path
 
 TOOLS = Path(__file__).resolve().parent
+sys.path.insert(0, str(TOOLS))
+from _walk import isolated_git_environment  # noqa: E402
 
 
 def git(root, *args):
@@ -15,6 +17,7 @@ def git(root, *args):
     )
 
 
+@isolated_git_environment()
 def case(files, expected=1, needle="leftover authoring placeholder", *,
          untracked=(), missing=(), unreadable=(), blocked_dirs=(),
          symlink=False, no_git=False):
