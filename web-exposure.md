@@ -7,7 +7,7 @@ Anything a deploy step leaves inside the document root is served too, unless the
 ## nginx
 
 Deny dotfiles by regex location, with the ACME challenge path carved out first, because `.well-known` also
-starts with a dot:
+starts with a dot. Also deny common backup and dump suffixes (case-insensitively):
 
 ```nginx
 location ^~ /.well-known/acme-challenge/ {
@@ -17,13 +17,18 @@ location ^~ /.well-known/acme-challenge/ {
 location ~ /\. {
     deny all;
 }
+
+location ~* (\.(bak|old|orig|sql(\.gz)?|dump|tar\.gz)|~)$ {
+    deny all;
+}
 ```
 
 Once nginx picks the `^~` location as the longest matching prefix, it skips regex locations entirely, so the
 challenge path is served before the dotfile deny is reached (`allow`/`deny`: `ngx_http_access_module`;
-`location` order and `^~`: `ngx_http_core_module`). This denies dot-prefixed paths only; a non-dotfile
-export like `dump.sql` or `backup.tar.gz` is not matched here, so keep those out of the web root (below)
-or add an explicit `location ~* \.(sql|dump|bak|tar\.gz)$ { deny all; }`.
+`location` order and `^~`: `ngx_http_core_module`). Outside that challenge prefix, these rules deny
+dot-prefixed path segments and paths ending in `.bak`, `.old`, `.orig`, `~`, `.sql`, `.sql.gz`, `.dump`,
+or `.tar.gz`. Put these regex locations before other regex locations that could serve the same paths;
+an exact location or another `^~` prefix can bypass them. Keep the challenge directory free of secrets.
 
 ## Apache
 
@@ -32,7 +37,7 @@ or add an explicit `location ~* \.(sql|dump|bak|tar\.gz)$ { deny all; }`.
     Require all denied
 </DirectoryMatch>
 
-<FilesMatch "(^\.|\.sql$|\.dump$|\.bak$)">
+<FilesMatch "(?i)(^\.|\.(bak|old|orig|sql(\.gz)?|dump|tar\.gz)$|~$)">
     Require all denied
 </FilesMatch>
 
@@ -50,24 +55,35 @@ rules out that literal substring, so it would still allow a directory that merel
 "well-known", such as `/.well-known-backup/config`; the `(?:/|$)` boundary requires the exempted
 segment to be `well-known` exactly, ending at a slash or the path's end, so only a genuine `.well-known/`
 path is exempt: the whole directory (acme-challenge, and anything else legitimately under it such as
-`security.txt`), while a lookalike segment like `.well-known-backup` is not. Keep the `<FilesMatch>` rule as a backstop for `.sql`, `.dump`, and
-`.bak` basenames and for top-level dotfiles like `/.env`.
+`security.txt`), while a lookalike segment like `.well-known-backup` is not. Keep the `<FilesMatch>` rule as a case-insensitive backstop for the same backup and dump suffixes as
+nginx, and for dotfile basenames like `/.env`. The suffix rule still applies inside `.well-known/`.
 
-One default weakens this. Debian and Ubuntu ship `apache2.conf` with `Options Indexes FollowSymLinks` on `<Directory /var/www/>`, so when a directory below the document root has no `DirectoryIndex` file (`dir.conf` lists `index.html`, `index.php`, and several others), `mod_autoindex` returns a browsable listing of its contents. The deny rules above still hold, and the listing even omits the files they forbid, because `mod_autoindex` hides an entry whose subrequest returns 403 unless `IndexOptions ShowForbidden` is set. The exposure is everything else in the directory: a backup or export the deny rules do not match by name, an `archive.tar.gz`, a `customers.csv`, or a datestamped dump, is listed for anyone who requests the directory, and the listing itself confirms the directory and reveals filenames you were relying on nobody guessing. Turn listing off with `Options -Indexes`, shown above; write it in the relative `-` form so it removes only `Indexes` and keeps the inherited `FollowSymLinks`, and never mix `+`/`-` options with bare ones in a single `Options` line, which Apache 2.4 rejects at startup. nginx (`autoindex` is `off` by default) and Caddy (`file_server` lists only with `browse`) do not need this; Apache on these distributions does.
+One default weakens this. Debian and Ubuntu ship `apache2.conf` with `Options Indexes FollowSymLinks` on `<Directory /var/www/>`, so when a directory below the document root has no `DirectoryIndex` file (`dir.conf` lists `index.html`, `index.php`, and several others), `mod_autoindex` returns a browsable listing of its contents. The deny rules above still hold, and the listing even omits the files they forbid, because `mod_autoindex` hides an entry whose subrequest returns 403 unless `IndexOptions ShowForbidden` is set. The exposure is everything else in the directory: a backup or export the deny rules do not match by name, an `archive.zip`, a `customers.csv`, or a datestamped dump, is listed for anyone who requests the directory, and the listing itself confirms the directory and reveals filenames you were relying on nobody guessing. Turn listing off with `Options -Indexes`, shown above; write it in the relative `-` form so it removes only `Indexes` and keeps the inherited `FollowSymLinks`, and never mix `+`/`-` options with bare ones in a single `Options` line, which Apache 2.4 rejects at startup. nginx (`autoindex` is `off` by default) and Caddy (`file_server` lists only with `browse`) do not need this; Apache on these distributions does.
 
 ## Caddy
 
+Matcher syntax checked against Caddy v2.11.4 source and the matcher reference; server execution was
+not run in the authoring environment. Put these directives in the site's Caddyfile block:
+
 ```caddyfile
-respond /.git/* 404
-respond /.env 404
-respond /.env.* 404
+@dotfiles {
+    path_regexp dotfiles /\.
+    not path /.well-known/*
+}
+respond @dotfiles 404
+
+@backups path *.bak *.old *.orig *~ *.sql *.sql.gz *.dump *.tar.gz
+respond @backups 404
 ```
 
-This list is not exhaustive: it matches only the paths named, so other dotfiles and nested sensitive
-directories are not covered; keep such files out of the served directory (below) and extend the list for any
-other sensitive paths you serve. If a broader matcher replaces this list, carve out `/.well-known/*` first:
-legitimate things live there (ACME challenges, `security.txt`), and Caddy already serves its own ACME
-challenges outside the file server.
+`path_regexp` uses Go regular expressions on the decoded path: `/\.` catches a dot-prefixed segment
+at any depth, including `/.git`, `/.git/config`, `/.env`, and `/nested/.env`. Matchers within a named
+set are ANDed, so `not path` exempts the root `/.well-known/` subtree from the dotfile rule, but not
+`/.well-known-backup/`. Keep that public subtree free of secrets. The separate `path` matcher ORs
+its case-insensitive suffix patterns and denies backups and dumps even under `/.well-known/`.
+Thus `/config.php.bak` and `/db.sql` are denied too. Caddy serves its own ACME challenges outside the
+file server. These filename rules cannot recognize every secret or backup; keep them out of the
+served directory even when their names match none of these patterns.
 
 ## Keep dumps and backups out of the served directory
 
@@ -153,6 +169,37 @@ done
 
 Any backup path known to have existed on the server should also 404 at the deployed URL.
 
+Also plant a readable file for each suffix and a generic dotfile, so the added classes are tested
+against real content. Use GNU `mktemp`, set `DOCROOT` to this host's document root, and replace
+`example.com` with its served hostname. On an isolated test host, run before and after enabling the
+deny rules: the exposed static server should return 200 with `PLANTED-SECRET`; the fixed server must
+return 403 or 404 without that body. A failed plant or curl transfer is inconclusive.
+
+```bash
+# REASONED: following probes were not run against a server: no Caddy, nginx, Apache, or container
+# runtime is available, and network restrictions prevent installing one. Expected exposed/fixed
+# outcomes follow the Caddy path/path_regexp, nginx location/deny, and Apache FilesMatch/Require
+# references in Sources. Local shell syntax and GNU mktemp suffix creation were checked only.
+DOCROOT=/var/www/html
+for suffix in '' .bak .old .orig '~' .sql .sql.gz .dump .tar.gz; do
+  template="$DOCROOT/probeXXXXXX"
+  [ -n "$suffix" ] || template="$DOCROOT/.probeXXXXXX"
+  if probe=$(sudo mktemp --suffix="$suffix" "$template" 2>/dev/null); then
+    if printf 'PLANTED-SECRET' | sudo tee "$probe" >/dev/null && sudo chmod 0644 "$probe"; then
+      p="/${probe##*/}"
+      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+        -w "  <= %{http_code} $p\n" "https://example.com$p" || echo "inconclusive: curl failed"
+      # Fixed: 403/404 and no PLANTED-SECRET. Exposed: 200 and PLANTED-SECRET.
+    else
+      echo "inconclusive: could not prepare $probe"
+    fi
+    sudo rm -f "$probe"
+  else
+    echo "inconclusive: could not plant suffix '$suffix' under $DOCROOT"
+  fi
+done
+```
+
 ## Sources (checked September 2026)
 
 - nginx core module (`location`, `^~` modifier, matching order): https://nginx.org/en/docs/http/ngx_http_core_module.html
@@ -163,7 +210,9 @@ Any backup path known to have existed on the server should also 404 at the deplo
 - Apache mod_autoindex (the generated listing, and `ShowForbidden`, which by default hides entries a subrequest forbids): https://httpd.apache.org/docs/2.4/mod/mod_autoindex.html
 - nginx autoindex module (`autoindex` is `off` by default): https://nginx.org/en/docs/http/ngx_http_autoindex_module.html
 - Caddy `respond` directive: https://caddyserver.com/docs/caddyfile/directives/respond
-- Caddy matchers: https://caddyserver.com/docs/caddyfile/matchers
+- Caddy matchers (`path`, `path_regexp`, `not`, named matcher sets): https://caddyserver.com/docs/caddyfile/matchers
+- Caddy v2.11.4 matcher implementation (`MatchPath`, `MatchPathRE`, `MatchNot`): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/matchers.go
+- GNU coreutils `mktemp` (`--suffix`): https://www.gnu.org/s/coreutils/manual/html_node/mktemp-invocation.html
 - Next.js environment variables (`NEXT_PUBLIC_`): https://nextjs.org/docs/pages/guides/environment-variables
 - Vite env variables (`VITE_`): https://vite.dev/guide/env-and-mode
 - Create React App environment variables (`REACT_APP_`, deprecation notice): https://create-react-app.dev/docs/adding-custom-environment-variables/
