@@ -20,11 +20,27 @@ The CLI help for `--host` says it plainly: "This is NOT a security setting". Do 
 
 MLflow ships an HTTP basic-auth app that stores users and per-resource permissions in a database (as of September 2026 the current documentation page carries no experimental label; verify before relying on it). The client-side `MLFLOW_TRACKING_USERNAME`/`MLFLOW_TRACKING_PASSWORD` variables do nothing on their own; the server must run this app.
 
+Provision `/etc/mlflow/server.env` through your secret manager as a regular file owned by the server account, mode `0600`, in a directory other accounts cannot traverse, write to or replace, with no ACL granting them access. It must contain a dotenv assignment for `MLFLOW_FLASK_SERVER_SECRET_KEY` with a long random value, identical on every replica. Keep the file and its backups out of source control. The block assumes this file and the auth configuration below are provisioned before startup and a fresh, trusted shell.
+
+The global `mlflow --env-file` option loads the file before executing the server command and does not override existing environment values. Clear inherited values first so the file supplies the key:
+
 ```bash
-pip install 'mlflow[auth]'
-export MLFLOW_FLASK_SERVER_SECRET_KEY="REPLACE_WITH_LONG_RANDOM_VALUE"   # CSRF key, required; same value on every replica
-MLFLOW_AUTH_CONFIG_PATH=/etc/mlflow/basic_auth.ini mlflow server --app-name basic-auth
+(
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  set +x +a +e
+  { unset -n MLFLOW_FLASK_SERVER_SECRET_KEY MLFLOW_AUTH_CONFIG_PATH &&
+    unset -v MLFLOW_FLASK_SERVER_SECRET_KEY MLFLOW_AUTH_CONFIG_PATH; } 2>/dev/null ||
+    { echo 'cannot clear MLflow launch variables in this shell; not starting'; exit 2; }
+  if [ ! -f /etc/mlflow/server.env ] || [ -L /etc/mlflow/server.env ] || [ ! -r /etc/mlflow/server.env ]; then
+    echo 'need a readable regular /etc/mlflow/server.env file, not a symlink; not starting'; exit 2
+  fi
+  pip install 'mlflow[auth]' || exit 2
+  MLFLOW_AUTH_CONFIG_PATH=/etc/mlflow/basic_auth.ini \
+    mlflow --env-file /etc/mlflow/server.env server --app-name basic-auth
+)
 ```
+
+Only the file path reaches the launch command; the shell never reads or exports the key. MLflow loads it into its own environment and forwards it to workers (traced at v3.16.1 in the sources below), so it remains exposed to the same account and root in process memory and, for inheriting processes, `/proc/<pid>/environ` throughout their lifetimes. A protected file does not remove that server-side exposure.
 
 Current MLflow has no default admin password: the first start requires an admin password of at least 12 characters, supplied as `MLFLOW_AUTH_ADMIN_PASSWORD` or as `admin_password` in the configuration file, and it rejects the legacy `password1234`, so startup fails without one. Set a strong password before that first start (an already-bootstrapped server does not need it re-supplied on later restarts):
 
@@ -149,6 +165,7 @@ An authenticated user without permission on a resource gets `403`; a missing or 
 
 ## Sources (checked September 2026)
 
+- MLflow CSRF-key file input: [global `--env-file` option and existing-environment precedence](https://mlflow.org/docs/latest/api_reference/cli.html#mlflow), [v3.16.1 auth factory](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/auth/__init__.py#L5557-L5570), and [v3.16.1 worker environment](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/__init__.py#L367-L368).
 - MLflow authentication with username and password (`--app-name basic-auth`, default admin credentials, `basic_auth.ini` keys, `MLFLOW_AUTH_CONFIG_PATH`, `MLFLOW_FLASK_SERVER_SECRET_KEY`, client variables, 403 on missing permission): https://mlflow.org/docs/latest/self-hosting/security/basic-http-auth/
 - MLflow authentication REST API (`2.0/mlflow/users/update-password` request fields): https://mlflow.org/docs/latest/api_reference/auth/rest-api.html
 - `mlflow server` CLI reference (`--host` default 127.0.0.1, `--port` 5000, `--app-name`, `--allowed-hosts`, `--cors-allowed-origins`, `--serve-artifacts`): https://mlflow.org/docs/latest/api_reference/cli.html
