@@ -4671,6 +4671,67 @@ Test from a second machine on a different network where possible; the UFW bypass
 
 # Kubernetes: Gateway API TLS and authentication
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| ingress-migration: ingress-nginx retired in March 2026 with no subsequent updates; detect its labeled pods and migrate. Gateway API is recommended and Ingress API is frozen. | Kubernetes documentation unknown | REASONED |
+| gateway-install: Install Envoy Gateway chart v1.9.1 and its default Gateway CRDs; separately create GatewayClass eg with the documented controllerName and confirm Accepted=True. | Envoy Gateway v1.9.1; Gateway API documentation unknown | REASONED |
+| gateway-alternatives: Traefik uses providers.kubernetesGateway; Cilium uses gatewayAPI.enabled=true and requires kube-proxy replacement. | Traefik documentation unknown; Cilium documentation unknown | REASONED |
+| gateway-tls: Gateway HTTPS listener 443 terminates TLS using app-tls for app.example.com; HTTP 80 is for redirect and ACME challenges. | Gateway API documentation unknown; Envoy Gateway v1.9.1 | REASONED |
+| gateway-route: HTTPRoute app attaches only to the HTTPS listener via sectionName and forwards to the ClusterIP app Service on port 80. | Gateway API documentation unknown | REASONED |
+| gateway-redirect: The HTTP route uses RequestRedirect with scheme https and statusCode 301. | Gateway API documentation unknown; Envoy Gateway v1.9.1 | REASONED |
+| cert-manager-enable: From cert-manager 1.15, enable config.gatewayAPI.enabled; install Gateway CRDs before startup or restart cert-manager afterwards. | cert-manager Gateway support minimum 1.15 | REASONED |
+| cert-manager-issue: Gateway issuer annotations produce Certificates per HTTPS-listener Secret using listener hostnames; ACME gatewayHTTPRoute parentRefs selects the challenge Gateway. | cert-manager Gateway support minimum 1.15 | REASONED |
+| basic-auth-policy: Gateway API has no standard auth filter; Envoy SecurityPolicy attaches Basic auth to Gateway/HTTPRoute/GRPCRoute using an htpasswd Secret. | Gateway API documentation unknown; Envoy Gateway v1.9.1 | REASONED |
+| basic-auth-hash: Envoy supports SHA hashes only; htpasswd -s is weak SHA-1, so use long random passwords over TLS and keep application login. | Envoy Gateway v1.9.1; Apache htpasswd documentation unknown | REASONED |
+| basic-auth-input: htpasswd -i reads stdin, unlike argv-exposing -b; confirm twice, create with -cis, verify with -vi and only then create the Kubernetes Secret. | Apache htpasswd documentation unknown; Envoy Gateway v1.9.1 | REASONED |
+| oidc: Envoy SecurityPolicy oidc uses issuer, clientID, clientSecret and redirectURL; enforce MFA at the identity provider. | Envoy Gateway v1.9.1 | REASONED |
+| external-auth: Authelia is an authorization endpoint, not a traffic proxy; Envoy extAuth.http targets its Service and /api/authz/ext-authz/. | Authelia documentation unknown; Envoy Gateway v1.9.1 | REASONED |
+| workload-exposure: Expose workloads only through the Gateway LoadBalancer; keep databases on ClusterIP without routes and enforce pod access with NetworkPolicies plus database TLS/auth. | Envoy Gateway v1.9.1; Kubernetes documentation unknown | REASONED |
+| secrets: Store credentials in Secrets or an external operator, not committed ConfigMaps or environment literals; kubeconfigs containing credentials also need secret handling. | Kubernetes documentation unknown | REASONED |
+| eks-endpoint: EKS API defaults public; restrict public CIDRs or use private access. Private-only endpoints can resolve publicly to private VPC addresses. | Amazon EKS documentation unknown | REASONED |
+| gke-endpoints: GKE authorized networks constrain IP-based access, not its separately IAM-gated DNS endpoint; inspect both and disable unused DNS access. | GKE documentation unknown | REASONED |
+| aks-endpoint: Restrict AKS API access with authorized IP ranges; workload Gateway protection does not secure the control plane. | AKS documentation unknown | REASONED |
+| kubeconfig: Embedded tokens or client keys confer their RBAC access without another factor; exec-plugin configs may be only pointers, but args/env can themselves hold credentials. | Kubernetes documentation unknown | REASONED |
+| api-port: API server commonly uses 6443, but providers may use 443; use the complete kubeconfig endpoint and its actual port. | Kubernetes documentation unknown; Amazon EKS documentation unknown | REASONED |
+| etcd-ports: etcd client/peer defaults are 2379/2380; require certificates, restrict holders and private access, and retain loopback listeners used by the local API server. | Kubernetes documentation unknown | REASONED |
+| etcd-storage: API resources default to plaintext storage in etcd; valid client certificates are the boundary and etcd access is equivalent to cluster root. | Kubernetes documentation unknown | REASONED |
+| scheduler-port: Scheduler default 10259 must remain restricted to cluster clients. | Kubernetes documentation unknown | REASONED |
+| controller-port: Controller-manager default 10257 must remain restricted to cluster clients. | Kubernetes documentation unknown | REASONED |
+| proxy-port: Worker kube-proxy health default 10256 needs separate node exposure checks. | Kubernetes documentation unknown | REASONED |
+| nodeports: NodePort defaults span 30000 to 32767 TCP/UDP; Service listings do not actively probe that range. | Kubernetes documentation unknown | REASONED |
+| kubelet-legacy-anonymous: Legacy kubelet flags default anonymous-auth=true; explicitly disable it where flags control authentication. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
+| kubelet-legacy-webhook: Legacy authentication-token-webhook defaults false; explicitly enable it where flags configure authentication. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
+| kubelet-legacy-authz: Legacy authorization-mode defaults AlwaysAllow; set Webhook where flags configure authorization. | Kubernetes kubelet/kubeadm source v1.37.1; Kubernetes documentation unknown | REASONED |
+| kubelet-file-anonymous: v1beta1 KubeletConfiguration instead defaults authentication.anonymous.enabled=false. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
+| kubelet-file-webhook: v1beta1 KubeletConfiguration defaults authentication.webhook.enabled=true. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
+| kubelet-file-authz: v1beta1 KubeletConfiguration defaults authorization.mode=Webhook. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
+| kubelet-precedence: Explicit flags override --config; --config-dir drop-ins override defaults and the file. Inspect all effective settings together. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
+| kubeadm: kubeadm sets anonymous false, token webhook true, Webhook authorization and readOnlyPort 0; user overrides are preserved with warnings. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
+| eks-bootstrap: The pinned EKS AMI bootstrap writes Anonymous.Enabled=false, Mode=Webhook and ReadOnlyPort=0; do not generalize to all managed nodes. | Amazon EKS AMI bootstrap 6caf8311a3c6a8da71ac7e5e83f9c2e06287039a | REASONED |
+| kubelet-bind: Secured kubelet defaults to address 0.0.0.0 on 10250; wildcard help includes both families. Bind private addresses and restrict authorized callers. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
+| kubelet-exec: 10250 debugging handlers can execute in containers; authentication does not justify public reachability. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
+| readonly-default: Legacy read-only port defaults 10255, while v1beta1 readOnlyPort defaults 0; explicitly disable it and remove enabling overrides. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
+| readonly-auth: Read-only server uses plain HTTP with no authentication or authorization filter; its caller-supplied bind wiring was outside the inspected source subset. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
+| readonly-paths: Read-only handlers expose /pods, /stats/summary, metrics variants and health; v1.37.1 has no /spec handler. Securing 10250 does not secure 10255. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
+| gke-readonly: GKE disables the read-only port by default only for new clusters running 1.32+; inspect effective configuration on older or upgraded clusters. | GKE new-cluster read-only-port boundary 1.32 | REASONED |
+| verify-services: Only the Gateway should have NodePort/LoadBalancer exposure; verify its public address/DNS and Certificate Ready=True. | Kubernetes documentation unknown; Envoy Gateway v1.9.1; cert-manager Gateway support minimum 1.15 | REASONED |
+| verify-redirect: HTTP should return 301 to the HTTPS application URL. | Gateway API documentation unknown | REASONED |
+| verify-basic: Anonymous Basic-protected access should return 401; require SecurityPolicy Accepted=True and a valid credential reaching the app without the gateway Basic challenge. | Envoy Gateway v1.9.1; curl documentation unknown | REASONED |
+| verify-api-target: Use the whole kubeconfig endpoint, preserving IPv6 and inferring a schemeless endpoint from both cluster and user TLS settings, not a hardcoded 6443. | Kubernetes documentation unknown | REASONED |
+| verify-proxies: Disable curl config and configured proxies for direct probes; a transparent TLS middlebox can still answer for an unreachable target. | curl documentation unknown | REASONED |
+| verify-api-tcp: Outside allowed ranges, nc success proves something accepted TCP; corroborate failed probes with provider ranges and multiple vantage points. | Kubernetes documentation unknown; Amazon EKS documentation unknown | REASONED |
+| verify-api-http: Any HTTP status with curl exit 0 means answered; exit 60 means a TLS peer answered, 7 failed connect, 28 is ambiguous timeout and 6 is DNS failure, not privacy proof. | curl documentation unknown; Amazon EKS documentation unknown | REASONED |
+| verify-node-scan: Scan control-plane hosts first and every public node address in both families; workers alone miss API/etcd and separate etcd hosts are absent from kubectl nodes. | Kubernetes documentation unknown; Nmap documentation unknown | REASONED |
+| verify-kubelet: Untrusted clients should reach neither kubelet port after isolation, while authorized clients still reach 10250; readOnlyPort=0 should leave no 10255 listener even for authorized clients. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
+<!-- version-basis:end -->
+
 The cluster equivalents of this repository's rules: nothing reaches a workload except through the TLS-terminating entry point (a Gateway API `Gateway`), and no Service becomes public through a casual `type: LoadBalancer` or `NodePort`; the entry point's own Service is the only exception.
 
 **If you run ingress-nginx today, migrate.** Earlier versions of this guide built on ingress-nginx. The Kubernetes project retired it in March 2026: per the Kubernetes Steering and Security Response Committees, "there will be no more releases for bug fixes, security patches, or any updates of any kind after the project is retired", and "choosing to remain with Ingress NGINX after its retirement leaves you and your users vulnerable to attack" (as of September 2026; statement linked in Sources). Detect it with cluster-admin permissions: `kubectl get pods --all-namespaces --selector app.kubernetes.io/name=ingress-nginx`. Any pod returned means migration is required; the `nginx.ingress.kubernetes.io/*` annotations die with the controller. Kubernetes recommends Gateway API over Ingress (whose API is now frozen) and links a migration guide from its Gateway API page. The rest of this guide is the Gateway API form of the old rules.
@@ -5065,7 +5126,7 @@ allowed ranges out of the provider's own configuration rather than inferring the
 - Amazon EKS cluster endpoint access ("[b]y default, this API server endpoint is public to the internet"; private endpoint DNS, "resolved by public DNS servers to a private IP address from the VPC"): https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html
 - GKE control plane network isolation, including how authorized networks work: https://docs.cloud.google.com/kubernetes-engine/docs/concepts/network-isolation#how_authorized_networks_work
 - AKS API server authorized IP ranges: https://learn.microsoft.com/en-us/azure/aks/api-server-authorized-ip-ranges
-- cert-manager Gateway API usage (enabling support, annotations): https://cert-manager.io/docs/usage/gateway/ ; ACME HTTP-01 `gatewayHTTPRoute` solver: https://cert-manager.io/docs/configuration/acme/http01/
+- cert-manager Gateway API usage (enabling support, annotations) (cert-manager 1.15 and later): https://cert-manager.io/docs/usage/gateway/ ; ACME HTTP-01 `gatewayHTTPRoute` solver: https://cert-manager.io/docs/configuration/acme/http01/
 - Traefik Kubernetes Gateway API provider: https://doc.traefik.io/traefik/reference/install-configuration/providers/kubernetes/kubernetes-gateway/ ; Cilium Gateway API support: https://docs.cilium.io/en/stable/network/servicemesh/gateway-api/gateway-api/
 
 ======================================================================
@@ -5517,6 +5578,54 @@ they were not rechecked online. Missing source implementations are identified ab
 
 # Self-hosted CI runners: GitHub Actions and GitLab Runner
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| job-transport: Both runners poll over HTTPS without an inbound job-polling port; verify GitLab TLS and restrict separate autoscaler management or webhook listeners. | GitHub Actions documentation unknown; GitLab rolling documentation unknown | REASONED |
+| worker-account: Use a dedicated least-privileged account, keep provisioning credentials off workers and confine rootful Docker access to disposable VMs. | GitHub Actions documentation unknown; GitLab rolling documentation unknown; Docker Engine documentation unknown | REASONED |
+| worker-egress: Enforce job egress outside job control, isolate production and other workers, and deny unused metadata over both families; IMDSv2 does not stop arbitrary authorized job code. | GitHub Actions documentation unknown; GitLab rolling documentation unknown; AWS EC2 documentation unknown | REASONED |
+| github-eligibility: Keep self-hosted runners off public repositories; runner groups admit only private repositories by default and the public override should stay off. | GitHub Actions documentation unknown | REASONED |
+| fork-token: Ordinary fork pull_request jobs normally receive a read-only GITHUB_TOKEN and no other secrets, but can still read host credentials and reachable services. | GitHub Actions documentation unknown | REASONED |
+| privileged-triggers: pull_request_target and workflow_run can access secrets and write tokens; never execute untrusted PR code, artifacts or caches in these jobs. | GitHub Actions documentation unknown | REASONED |
+| private-forks: Review private-repository fork settings, which can grant write tokens and secrets; separate trusted privileged workers from untrusted CI. | GitHub Actions documentation unknown | REASONED |
+| registration-token: Registration tokens last one hour; generate on demand, never bake into images, and do not confuse expiry with runner deregistration. | GitHub REST API 2026-03-10 | REASONED |
+| registration-manager: Keep the App/PAT generating registration or JIT credentials off workers; organization endpoints need Self-hosted runners: write, repository endpoints Administration: write. | GitHub REST API 2026-03-10 | REASONED |
+| jit: Protect encoded_jit_config and the whole response; JIT runners execute at most one job. | GitHub REST API 2026-03-10 | REASONED |
+| runner-credential: Protect the installed runner authentication credential, directory and backups. | GitHub Actions documentation unknown | REASONED |
+| github-job-token: GITHUB_TOKEN is repository-scoped and per-job; set read-only defaults and grant only trusted jobs additional permissions. | GitHub Actions documentation unknown | REASONED |
+| oidc: Grant id-token: write only where needed; the cloud trust must restrict issuer, audience and repository/branch or protected-environment subject. | GitHub Actions documentation unknown | REASONED |
+| github-lifecycle: Prefer ephemeral/JIT workers and destroy their machines and storage; deregistration does not destroy disks, and labels route rather than authorize jobs. | GitHub Actions documentation unknown; GitHub REST API 2026-03-10 | REASONED |
+| shell-executor: The GitLab shell executor runs as the runner user without isolation; avoid it for untrusted jobs on shared hosts. | GitLab rolling documentation unknown | REASONED |
+| docker-executor: Use unprivileged Docker; privileged=true or services_privileged and host Docker socket/TCP access can expose the host despite privileged=false. | GitLab rolling documentation unknown; Docker Engine documentation unknown | REASONED |
+| executor-host-access: Deny sensitive host mounts, host PID/network namespaces, unnecessary devices and capabilities; build without the host daemon. | GitLab rolling documentation unknown | REASONED |
+| kubernetes-executor: Enforce nonprivileged containers, no privilege escalation, scoped ServiceAccounts and no unnecessary token mounting; prevent job overrides. | GitLab rolling documentation unknown | REASONED |
+| gitlab-disposal: Containers share the kernel; use disposable separate VMs/nodes as needed and one-job autoscaling workers. Instance and Docker Autoscaler GA is recorded as Runner 17.1. | GitLab rolling documentation unknown | REASONED |
+| gitlab-registration: Legacy registration tokens were disabled by default in GitLab 17.0, with removal scheduled for 20.0; use runner authentication tokens. | GitLab rolling documentation unknown | REASONED |
+| gitlab-runner-token: Protect and rotate the runner authentication token in config.toml and backups; a cloned runner can steal assigned jobs. | GitLab rolling documentation unknown | REASONED |
+| gitlab-creation: POST /user/runners needs create_runner scope; keep that access token off workers and set scope/protection at creation. | GitLab rolling documentation unknown | REASONED |
+| gitlab-job-token: CI_JOB_TOKEN carries supported triggering-user access during the job and appears as CI_REGISTRY_PASSWORD and inside CI_REPOSITORY_URL. | GitLab rolling documentation unknown | REASONED |
+| gitlab-allowlist: Target-project inbound job-token allowlists limit who may access that target, not job egress; also restrict resource feature visibility. | GitLab rolling documentation unknown | REASONED |
+| gitlab-forks: Instance runners on public installations accept strangers; project scope does not establish code trust. Review parent-launched fork pipelines or disable ci_allow_fork_pipelines_to_run_in_parent_project. | GitLab rolling documentation unknown | REASONED |
+| gitlab-protected: Developer access can compromise persistent runners; release runners need ref_protected and a pool separate from fork-merge-request testing. | GitLab rolling documentation unknown | REASONED |
+| gitlab-metrics: Optional listen_address metrics and profiling have no built-in authorization; 9252 is allocated, not proof of the configured port. | GitLab rolling documentation unknown | REASONED |
+| gitlab-session: Optional session_server uses TLS and must admit required GitLab traffic at its configured address; 8093 is an example, not an established default. | GitLab rolling documentation unknown | REASONED |
+| verify-eligibility: Fully paginate groups, selected repositories and public repositories' own runners; visibility=all alone is not public eligibility, and inherited access needs review. | GitHub REST API 2026-03-10 | REASONED |
+| verify-permissions: Inspect organization and repository workflow-token defaults and PR approval settings; explicit workflow permissions can raise grants and id-token is separate. | GitHub Actions documentation unknown | REASONED |
+| verify-assignment: A controlled fork workflow should run when exposed and lose assignment when restricted, while an allowed private job still runs; skipped/pending/offline/timeout is inconclusive. | GitHub REST API 2026-03-10; GitHub Actions documentation unknown | REASONED |
+| verify-config: Python 3.11+ TOML inspection reports executor controls without tokens; null means absent, and empty output or parse/read errors are inconclusive. No fixture outcome is recorded. | Python tomllib minimum 3.11; GitLab rolling documentation unknown | REASONED |
+| verify-daemon: Resolve docker.host through DOCKER_HOST or the default socket when absent; flag actual job access to a rootful daemon, not tcp:// alone. | GitLab rolling documentation unknown; Docker Engine documentation unknown | REASONED |
+| verify-autoscaler: For Instance/Docker Autoscaler require capacity_per_instance=1 and max_use_count=1 explicitly; absent or other values are findings. | GitLab rolling documentation unknown | REASONED |
+| verify-gitlab-api: Read inbound allowlists and require release-runner ref_protected against exposed controls; gitlab-runner verify proves authentication only. | GitLab rolling documentation unknown | REASONED |
+| verify-lifecycle: Check complete deregistration listings and infrastructure disposal; persistent-worker canary must survive in the control, but absence alone does not prove destruction or clean shared caches. | GitHub REST API 2026-03-10; GitLab rolling documentation unknown; GitHub Actions documentation unknown | REASONED |
+| verify-listeners: Inventory namespaces and publications, require the permitted-client response, then test disallowed access; any HTTP response proves reachability, failure needs corroborating firewall denial. | GitLab rolling documentation unknown | REASONED |
+<!-- version-basis:end -->
+
 A self-hosted runner exists to execute CI job commands on your own machine, so the trust question is
 not a bind address but who can cause code to run on it. Both GitHub Actions runners and GitLab Runner
 are outbound-only for job transport: they poll their service over HTTPS (configure GitLab Runner to verify the
@@ -5632,6 +5741,8 @@ GitHub eligibility: `visibility: all` does not by itself mean public access, and
 is a separate control, so list every runner group, then each selected group's repositories, then every public
 repository's own runners (a repository-level runner belongs to no group).
 
+REASONED: following block; GitHub eligibility audit follows the cited runner-group and runner REST documentation; no registered test runner or cloud test infrastructure was available.
+
 ```bash
 gh api -X GET --paginate -H 'X-GitHub-Api-Version: 2026-03-10' /orgs/REPLACE_WITH_ORG/actions/runner-groups --jq '.runner_groups[] | {id, name, visibility, allows_public_repositories, inherited, restricted_to_workflows, selected_workflows}'
 gh api -X GET --paginate -H 'X-GitHub-Api-Version: 2026-03-10' /orgs/REPLACE_WITH_ORG/actions/runner-groups/REPLACE_WITH_GROUP_ID/repositories --jq '.repositories[] | {id, full_name, visibility}'
@@ -5669,6 +5780,8 @@ on it; after applying the private-repository restriction an equivalent fork run 
 the same harmless job from an allowed private repository confirms the runner is still available. Inspect the
 assignment, and treat a skipped workflow, pending approval, offline runner, or queue timeout as inconclusive:
 
+REASONED: following block; assignment discrimination follows the cited workflow-jobs API and runner-group documentation; no registered test runner or cloud test infrastructure was available.
+
 ```bash
 gh api --paginate -H 'X-GitHub-Api-Version: 2026-03-10' /repos/REPLACE_WITH_OWNER/REPLACE_WITH_REPO/actions/runs/REPLACE_WITH_RUN_ID/jobs --jq '.jobs[] | {id, status, conclusion, runner_id, runner_group_id}'
 ```
@@ -5683,6 +5796,8 @@ and network controls, and compare access from the actual job environment with an
 Flag job access to a rootful daemon; a `tcp://` value alone does not establish that access. For an Instance or
 Docker Autoscaler executor, flag either `capacity_per_instance` or `max_use_count` being absent or unequal to
 `1`; require both explicitly set to `1`.
+
+REASONED: following block; TOML inspection follows the cited Python and GitLab configuration documentation; no exposed/fixed fixture outcome is recorded.
 
 ```bash
 sudo python3 - /etc/gitlab-runner/config.toml <<'PYTOML'
@@ -5733,6 +5848,8 @@ connection failure is inconclusive without a matching firewall deny record. This
 reasoned, since no deployed endpoint or external vantage was available. Substitute the URL inside the single
 quotes and paste the whole block; do not bypass TLS certificate verification.
 
+REASONED: following block; listener isolation follows the cited GitLab monitoring and session-server documentation; no deployed endpoint or external vantage was available.
+
 ```bash
 sudo ss -tlnp
 (
@@ -5758,7 +5875,7 @@ Version boundary: GitHub.com documentation checked 18 September 2026, with REST 
 
 - GitHub Actions security hardening and secure use: https://docs.github.com/en/actions/reference/security/secure-use
 - GitHub self-hosted runner groups and access (private-only default): https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/manage-access
-- GitHub self-hosted runners REST API (generate-jitconfig, listings): https://docs.github.com/en/rest/actions/self-hosted-runners
+- GitHub self-hosted runners REST API (generate-jitconfig, listings) (GitHub REST API 2026-03-10): https://docs.github.com/en/rest/actions/self-hosted-runners
 - GitHub GITHUB_TOKEN permissions: https://docs.github.com/en/actions/concepts/security/github_token
 - GitHub events that trigger workflows (pull_request_target, workflow_run): https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows
 - GitLab Runner security (privileged executor, tokens): https://docs.gitlab.com/runner/security/
@@ -5767,9 +5884,9 @@ Version boundary: GitHub.com documentation checked 18 September 2026, with REST 
 - GitLab runner authentication tokens and the creation workflow: https://docs.gitlab.com/ci/runners/new_creation_workflow/
 - GitLab Runner monitoring (metrics port 9252, no built-in authorization): https://docs.gitlab.com/runner/monitoring/
 - GitLab Runner advanced configuration (session_server): https://docs.gitlab.com/runner/configuration/advanced-configuration/
-- GitHub self-hosted runner groups REST API (group visibility, allows_public_repositories, group repositories): https://docs.github.com/en/rest/actions/self-hosted-runner-groups
+- GitHub self-hosted runner groups REST API (group visibility, allows_public_repositories, group repositories) (GitHub REST API 2026-03-10): https://docs.github.com/en/rest/actions/self-hosted-runner-groups
 - GitHub Actions OIDC (id-token permission, issuer/audience/subject claims): https://docs.github.com/en/actions/reference/security/oidc
-- GitHub workflow-jobs REST API (runner assignment: runner_id, runner_group_id): https://docs.github.com/en/rest/actions/workflow-jobs
+- GitHub workflow-jobs REST API (runner assignment: runner_id, runner_group_id) (GitHub REST API 2026-03-10): https://docs.github.com/en/rest/actions/workflow-jobs
 - GitLab ID token authentication (id_tokens, aud): https://docs.gitlab.com/ci/secrets/id_token_authentication/
 - GitLab Users API, create a runner (create_runner scope): https://docs.gitlab.com/api/users/#create-a-runner-linked-to-a-user
 - GitLab Kubernetes executor (privileged, privilege escalation, service-account RBAC and token mounting): https://docs.gitlab.com/runner/executors/kubernetes/
@@ -28522,6 +28639,79 @@ that accepts spans with no credential at all.
 
 # Workflow and agent orchestrators: Prefect, Dagster, Airflow, Temporal, Flower, Argo
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| fronting: Keep UI/API origins private behind HTTPS and authentication; use IdP MFA for browsers and separate machine authentication, and constrain worker egress. | Apache Airflow 3.3.2; Temporal Server 1.28.x; Argo Workflows documentation release-3.7 | REASONED |
+| prefect-auth: Self-hosted Prefect defaults unauthenticated; Basic Auth from 3.1.8 uses matching server/client auth strings and prompts the UI. | Prefect Basic Auth minimum 3.1.8 | REASONED |
+| prefect-key: Cloud-only PREFECT_API_KEY takes precedence over PREFECT_API_AUTH_STRING and produces 401 against a self-hosted server. | Prefect Basic Auth minimum 3.1.8 | REASONED |
+| prefect-secrets: Protect the auth string and credential-bearing Blocks; block-document reads can request secrets, so masking is not authorization and workers need scoped credentials. | Prefect Basic Auth minimum 3.1.8 | REASONED |
+| prefect-port: The self-hosted Prefect server uses port 4200. | Prefect Basic Auth minimum 3.1.8 | REASONED |
+| dagster-bind: Direct dagster-webserver/dev defaults to 127.0.0.1:3000, with flag/environment overrides and free-port fallback only when no port is set; explicitly bind the private origin. | Dagster OSS 1.13.24 | REASONED |
+| dagster-helm: The chart passes -h 0.0.0.0 on the Service port, default 80, with ClusterIP Service by default. | Dagster OSS 1.13.24 | REASONED |
+| dagster-auth: OSS webserver has no built-in login or access control; protect all routes with an authenticating proxy. | Dagster OSS 1.13.24 | REASONED |
+| airflow-boundary: Airflow assumes authenticated known users and is not designed for untrusted public exposure; deployment managers must keep it private. | Apache Airflow 3.3.2 | REASONED |
+| airflow-two-api: Airflow 2.11.0 uses [api] auth_backends with session default; before 2.3 the name was auth_backend and 2.2.5 defaulted to deny_all. | Apache Airflow historical configuration unknown; Apache Airflow historical default unknown | REASONED |
+| airflow-simple: Airflow 3 defaults to development-only Simple Auth Manager, with configured users/roles and generated passwords printed to logs unless supplied. | Apache Airflow 3.3.2 | REASONED |
+| airflow-fab: For production install FAB and select FabAuthManager through [core] auth_manager; verify the effective manager and use an identity backend with MFA. | Apache Airflow 3.3.2; Airflow FAB provider 3.9.0 | REASONED |
+| airflow-api: Airflow 3 public API uses JWT independently of [fab] auth_backends, which selects FAB API backends rather than the auth manager. | Apache Airflow 3.3.2; Airflow FAB provider 3.9.0 | REASONED |
+| airflow-all-admins: Keep simple_auth_manager_all_admins unset or False; enabling it disables login and grants every visitor admin. | Apache Airflow 3.3.2 | REASONED |
+| fab-public-role: Leave FAB AUTH_ROLE_PUBLIC unset; a configured role grants that access to anonymous visitors. | Airflow FAB provider 3.9.0 | REASONED |
+| airflow-compose-account: Development Compose selects FAB but defaults to airflow/airflow; set credentials before account creation and update/delete an existing account separately. | Apache Airflow 3.3.2; Airflow FAB provider 3.9.0 | REASONED |
+| airflow-jwt: Replace Compose fallback AIRFLOW__API_AUTH__JWT_SECRET=airflow_jwt_secret and share the strong value with all signers/validators; the public fallback permits token forgery. | Apache Airflow 3.3.2 | REASONED |
+| airflow-secret-key: Provision the independent secret_key too: [webserver] on 2.11.0 and [api] on 3.3.2. | Apache Airflow 3.3.2; Apache Airflow historical configuration unknown | REASONED |
+| airflow-config: Keep configuration exposure off with WEBSERVER__EXPOSE_CONFIG on 2.11.0 or API__EXPOSE_CONFIG on 3.3.2. | Apache Airflow 3.3.2; Apache Airflow historical configuration unknown | REASONED |
+| airflow-fernet: Protect Connections, Variables, database and Fernet key; an empty key disables new-value encryption, while removing an existing key prevents decryption. Authorized workloads still use secrets. | Apache Airflow 3.3.2 | REASONED |
+| airflow-port: Compose publishes 8080 on all interfaces; use 127.0.0.1:8080:8080 behind the fronting layer. | Apache Airflow 3.3.2 | REASONED |
+| temporal-authorizer: Empty authorizer selects noopAuthorizer allowing every API request, including administration; configure default authorization with trusted JWT keys and audience. | Temporal Server 1.28.x | REASONED |
+| temporal-claims: Empty claimMapper selects a no-op granting system-admin claims; configure both Authorizer and ClaimMapper, with frontend TLS. | Temporal Server 1.28.x | REASONED |
+| temporal-health: The built-in default authorizer permits health checks without claims; health is not an authorization discriminator. | Temporal Server 1.28.x | REASONED |
+| temporal-ui: UI OIDC auth.enabled is a sibling of providers; TEMPORAL_AUTH_ENABLED plus provider settings gates the UI only, with MFA at the IdP. | Temporal UI Server 2.34.x | REASONED |
+| temporal-tls: Internode and frontend mTLS are separate from UI login and API authorization. | Temporal Server 1.28.x | REASONED |
+| temporal-payloads: Keep plaintext credentials out of persisted inputs/results/history; payload encryption and an independently authenticated Codec Server form separate controls. | Temporal Server 1.28.x | REASONED |
+| temporal-ports: Frontend gRPC uses 7233 and the Web UI 8233 in the cited CLI server reference. | Temporal Server 1.28.x; Temporal UI Server 2.34.x | REASONED |
+| flower-bind: Flower defaults to wildcard address and 5555 unless Unix socket, FLOWER_ variables or implicit working-directory flowerconfig.py override; bind loopback explicitly. | Flower v2.2.0; Tornado v6.5.10 | REASONED |
+| flower-api: Authentication defaults off; unauthenticated HTTP API is disabled unless FLOWER_UNAUTHENTICATED_API=true, which must not be mistaken for dashboard protection. | Flower v2.2.0 | REASONED |
+| flower-basic: Basic auth uses a comma-separated credential list; supply it through FLOWER_BASIC_AUTH or protected config rather than argv and retain private TLS fronting. | Flower v2.2.0 | REASONED |
+| flower-oauth: OAuth needs handler, client key/secret, redirect and allowed-email regex; protect the secret outside argv and prefer an MFA-enforcing provider. | Flower v2.2.0 | REASONED |
+| flower-socket: Flower passes fixed mode 0777; Tornado removes/recreates filesystem sockets on startup, so chmod does not persist. Abstract sockets have no filesystem permission boundary. | Flower v2.2.0; Tornado v6.5.10; Linux permissions and tools unknown | REASONED |
+| flower-directory: Restrict socket directory search with Flower ownership, proxy-only group, mode 0750 and no outsider ACL; directory access is essential because socket mode permits writes. | Linux permissions and tools unknown | REASONED |
+| flower-capabilities: Applicable DAC capabilities bypass directory search checks; Docker defaults include CAP_DAC_OVERRIDE, while user namespaces and idmapped mounts change identity interpretation. | Linux permissions and tools unknown; Moby Docker docker-v29.8.1 | REASONED |
+| flower-runtime-dir: Reapply directory owner/group/mode on creation: /run is cleared at boot and RuntimeDirectory defaults 0755 unless RuntimeDirectoryMode overrides it. | systemd v257; Filesystem Hierarchy Standard 3.0 | REASONED |
+| flower-numeric-ids: A proxy sharing the socket directory must hold the required numeric group after namespace/mount mappings; names alone do not establish access. | Linux permissions and tools unknown | REASONED |
+| argo-bind: Argo Server binds wildcard :2746 with host-dependent IPv4/IPv6 support and no bind-address flag. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
+| argo-defaults: Both tags default secure=true, auth-mode=client and hsts=true; flags and ARGO_ environment equivalents can override. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
+| argo-client: Client mode uses caller Kubernetes credentials/RBAC; v4.1.4 validates via SelfSubjectReview and requires Kubernetes 1.28+. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
+| argo-quickstart: Both tags' minimal/mysql/postgres quick-starts enable server plus client mode while retaining TLS; v4.1.4 telemetry does too. Anonymous callers inherit server permissions. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
+| argo-quickstart-rbac: Quick-start binds cluster-wide workflow/template and Secret get/create permissions, plus cluster-workflow-template rights; it is demo-only. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
+| argo-installs: Traced install inputs keep client auth/TLS with cluster-wide server RBAC; namespace-install adds --namespaced and namespace RBAC. Generated install YAML was absent. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
+| argo-service: Base Service omits type, defaulting to ClusterIP, and maps 2746 to 2746; this does not authenticate reachable callers. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
+| argo-fallback: Remove server auth mode: adding client/SSO does not prevent anonymous fallback to server credentials; local mode uses the server kubeconfig. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
+| argo-sso: Enable sso.rbac.enabled and map groups to narrow ServiceAccounts through rbac-rule/precedence; without SSO RBAC, authenticated users share server permissions. | Argo Workflows documentation release-3.7; Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
+| argo-secrets: Store SSO OAuth credentials in referenced Kubernetes Secrets and supply API tokens through protected input, not argv. | Argo Workflows documentation release-3.7 | REASONED |
+| argo-tls: Keep TLS enabled with a trusted certificate Secret; no name generates a self-signed certificate, failed named-Secret loading fails startup, secure=false is plaintext and defeats HSTS. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
+| argo-metrics: /metrics shares the server listener and auth gate unless ARGO_SERVER_METRICS_AUTH=false; server mode also admits anonymous metrics. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
+| argo-network: Keep 2746 private behind authenticated HTTPS; restrict direct Pod/Service access and scope server, SSO and execution-account permissions. Workflow submission permits arbitrary containers unless constrained. | Argo Workflows documentation release-3.7 | REASONED |
+| verify-inventory: ss inventories only the current namespace, not publication, routing or authentication; inspect publications and external reachability separately. | Prefect Basic Auth minimum 3.1.8; Flower v2.2.0; Argo Workflows v3.7.18 | REASONED |
+| verify-prefect: Anonymous POST /api/flows/filter returning a JSON list is exposed; fixed is 401 with an authorized list on the same origin. Health/ready GET exemptions are version-dependent. | Prefect Basic Auth minimum 3.1.8; Prefect server source 9e560c9b6df4e19a5109a66e66d461f9facb538d | REASONED |
+| verify-dagster: A RepositoryConnection from /graphql is a read, including empty nodes; GraphQL/transport errors are inconclusive. Test proxy authentication and origin isolation separately. | Dagster OSS 1.13.24 | REASONED |
+| verify-airflow: FAB 3.9.0 returning 201 with access_token for airflow/airflow is exposed; pair a valid account and anonymous/authenticated API reads at proxy and origin. Airflow 2 uses its own API/auth. | Airflow FAB provider 3.9.0; Apache Airflow 3.3.2; Apache Airflow historical configuration unknown | REASONED |
+| verify-temporal: Credential-free workflow listing on 7233 is exposed; require rejection and a matched authorized call, not health, TLS errors or missing namespaces as proof of auth. | Temporal Server 1.28.x | REASONED |
+| verify-flower: Anonymous UI/API should yield Basic 401 or OAuth login redirect, with a valid-session control; API-disabled is not proof the dashboard is protected. | Flower v2.2.0 | REASONED |
+| verify-socket: Directory/socket permissions, outsider denial, reboot persistence and container numeric IDs remain reasoned; no socket or Flower process ran. | Flower v2.2.0; Linux permissions and tools unknown | REASONED |
+| flower-stat-run: Tmpfs directory-only stat distinguished 0755 and 0750; the 0750 directory initially had only base ACL entries. | Linux permissions and tools unknown | DEMONSTRATED |
+| flower-acl-run: A named nobody search ACL remained invisible in stat mode 750; ls and getfacl exposed the entry. | Linux permissions and tools unknown | DEMONSTRATED |
+| flower-mask-run: Changing the ACL mask hid named search permission; chmod 0750 restored its reported effectiveness. Access as nobody was not tested. | Linux permissions and tools unknown | DEMONSTRATED |
+| verify-argo: Anonymous workflow JSON is exposed when server RBAC permits; missing tokens should yield 401 without server mode. A 403 alone is inconclusive; pair authorized 200 and inspect auth modes. | Argo Workflows v3.7.18; Argo Workflows v4.1.4; Argo Workflows documentation release-3.7 | REASONED |
+| verify-origin: Any HTTP response from the origin at an untrusted vantage proves publication; use the same responding allowed origin as control and treat connection errors/timeouts as inconclusive. | Apache Airflow 3.3.2; Argo Workflows documentation release-3.7 | REASONED |
+<!-- version-basis:end -->
+
 These webservers and UIs schedule and trigger arbitrary code execution across your infrastructure, and most
 ship with no authentication at all. Keep every one of them off the public internet and add auth before
 anyone but you can reach the port. The same baseline applies across all of them: keep each UI and API origin on
@@ -28879,13 +29069,13 @@ shares the directory.
 These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x, Apache Airflow 3.3.2 with FAB provider 3.9.0 (Airflow 2.11.0 noted where the configuration paths differ), Temporal Server 1.28.x and UI Server 2.34.x, and Flower 2.2.0; confirm your own versions, since several of these settings moved between releases. Argo Workflows listener, authentication paths, TLS and manifest settings were checked against tags v3.7.18 (66e32e5cc367f223e2ecf4fbe852b95eaed83034) and v4.1.4 (b5b4d665e9be9b87c115f943584c3e0ae96fe073). The install manifests were traced through their build recipes and Kustomize inputs; their generated YAML files were not present in the supplied trees. SSO setup, API examples and security guidance retain the release-3.7 documentation links.
 
 - Prefect, security settings (`PREFECT_SERVER_API_AUTH_STRING`, `PREFECT_API_AUTH_STRING`, Cloud API keys
-  taking precedence and causing 401): https://docs.prefect.io/v3/advanced/security-settings
+  taking precedence and causing 401) (Prefect 3.1.8 Basic Auth minimum): https://docs.prefect.io/v3/advanced/security-settings
 - Prefect, self-hosted server (default port 4200): https://docs.prefect.io/v3/how-to-guides/self-hosted/server-cli
 - Dagster, webserver and UI (default local port, no documented built-in auth): https://docs.dagster.io/guides/operate/webserver
 - Dagster webserver `DEFAULT_WEBSERVER_HOST` "127.0.0.1" and port 3000 with the free-port fallback, `dagster dev` forwarding `--host` only when one is given, its environment-variable routes (`DAGSTER_WEBSERVER_*` through `auto_envvar_prefix`, legacy `DAGIT_*` copied onto them, and the `dagster` CLI's `DAGSTER_CLI` prefix, which Click extends per subcommand, so `dagster dev` reads `DAGSTER_CLI_DEV_*`), and the Helm chart's webserver command, which hardcodes `-h 0.0.0.0` and takes the port from `dagsterWebserver.service.port` (80 by default, Service type `ClusterIP` by default) (pinned tag 1.13.24): https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L41-L42, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L81-L96, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L306-L311, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster/dagster/_cli/dev.py#L251-L252, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L339-L351, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster/dagster/_cli/__init__.py#L45-L50, Click's subcommand prefix rule (pinned tag 8.5.0) https://github.com/pallets/click/blob/8.5.0/src/click/core.py#L476-L484, https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_deployment-webserver.tpl#L86-L90, https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_helpers.tpl#L55 and https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/values.yaml#L54-L58
 - Apache Airflow, security overview: https://airflow.apache.org/docs/apache-airflow/stable/security/
-- Apache Airflow, auth manager selection (`[core] auth_manager`, `airflow config get-value core auth_manager`): https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/auth-manager/index.html
-- Apache Airflow FAB provider, API authentication (`[fab] auth_backends`, independent of the auth manager): https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/api-authentication.html
+- Apache Airflow, auth manager selection (`[core] auth_manager`, `airflow config get-value core auth_manager`) (Airflow 3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/auth-manager/index.html
+- Apache Airflow FAB provider, API authentication (`[fab] auth_backends`, independent of the auth manager) (FAB provider 3.9.0 documentation): https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/api-authentication.html
 - Prefect server source (health and ready paths exempted from the auth string on GET): https://github.com/PrefectHQ/prefect/blob/9e560c9b6df4e19a5109a66e66d461f9facb538d/src/prefect/server/api/server.py
 - Apache Airflow, quickstart (default port 8080): https://airflow.apache.org/docs/apache-airflow/stable/start.html
 - Apache Airflow, running Airflow in Docker (the `docker-compose.yaml` default `airflow`/`airflow` web user via `_AIRFLOW_WWW_USER_*`, `AIRFLOW__API_AUTH__JWT_SECRET` default `airflow_jwt_secret`, FAB auth manager, port 8080 published on all interfaces, "for local development. Do not use it in a production deployment"; checked 2026-09-14): https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html
@@ -28893,9 +29083,9 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
   untrusted users on the public internet"): https://airflow.apache.org/docs/apache-airflow/stable/security/security_model.html
 - Apache Airflow, Simple auth manager (default, dev/test only, `simple_auth_manager_users`, generated
   passwords): https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/auth-manager/simple/index.html
-- Temporal, self-hosted security (`noopAuthorizer` default, `Authorizer`, `ClaimMapper`): https://docs.temporal.io/self-hosted-guide/security
+- Temporal, self-hosted security (`noopAuthorizer` default, `Authorizer`, `ClaimMapper`) (Temporal Server 1.28.x documentation): https://docs.temporal.io/self-hosted-guide/security
 - Temporal, Web UI configuration reference (`auth.providers`, `enabled`, `type: oidc`, `providerUrl`,
-  `clientId`, `clientSecret`, `callbackUrl`, `scopes`): https://docs.temporal.io/references/web-ui-configuration
+  `clientId`, `clientSecret`, `callbackUrl`, `scopes`) (Temporal UI Server 2.34.x documentation): https://docs.temporal.io/references/web-ui-configuration
 - Temporal, CLI server reference (default frontend gRPC port 7233, Web UI port 8233): https://docs.temporal.io/cli/command-reference/server
 - Flower, configuration (`--address`, `--port` 5555 default, `--basic-auth`, `--auth_provider`, `--oauth2_key`,
   `--oauth2_secret`, `--oauth2_redirect_uri`, `--auth`): https://flower.readthedocs.io/en/latest/config.html

@@ -43,3 +43,6 @@ realtime-voice-infra.md
 ray.md
 gitops-controllers.md
 nomad-consul.md
+self-hosted-ci-runners.md
+workflow-orchestrators.md
+kubernetes.md
