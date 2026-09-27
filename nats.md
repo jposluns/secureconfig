@@ -1,4 +1,271 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "a66272331288aec726f8d8a7f5dbfccb6cd6c8e8059913c173be9e64adcd05f8",
+  "components": {
+    "server": {
+      "name": "NATS Server",
+      "basis": "v2.14.7",
+      "sources": {
+        "s67d42c6498ac": "https://github.com/nats-io/nats-server/releases/tag/v2.14.7",
+        "se640dd73f45d": "https://docs.nats.io/learn/security/authentication-basics",
+        "s4532e40c78ec": "https://docs.nats.io/reference/config",
+        "sfcf4d67bc409": "https://raw.githubusercontent.com/nats-io/nats-server/v2.14.7/server/opts.go",
+        "s468e604fd22d": "https://docs.nats.io/learn/security/operator-mode",
+        "s5f9b8e5012ec": "https://docs.nats.io/learn/security/decentralized-auth",
+        "s7a81108db86e": "https://docs.nats.io/learn/security/authorization",
+        "s77d2cf7237a9": "https://raw.githubusercontent.com/nats-io/nats-server/v2.14.7/server/client.go",
+        "see8fdd7cdcf7": "https://docs.nats.io/reference/config/authorization/users/permissions/subscribe/",
+        "s3eced14a9c7a": "https://docs.nats.io/reference/config/authorization/users/permissions/allow_responses/",
+        "s54ebf5db9564": "https://docs.nats.io/learn/security/encryption",
+        "se9d8f0116aa0": "https://docs.nats.io/reference/config/tls/",
+        "s524e33e8c24d": "https://docs.nats.io/learn/monitoring/monitoring-endpoints",
+        "sdef33959305a": "https://raw.githubusercontent.com/nats-io/nats-server/v2.14.7/server/monitor.go",
+        "sf02d263ec6e8": "https://docs.nats.io/learn/deployment/hardening",
+        "scd743849d62e": "https://docs.nats.io/concepts/jetstream",
+        "s2e1ad079a3bf": "https://docs.nats.io/reference/config/cluster/",
+        "s9371709dd080": "https://docs.nats.io/reference/config/gateway/",
+        "se29432096847": "https://docs.nats.io/reference/config/leafnodes/",
+        "s812e43517c7c": "https://docs.nats.io/reference/config/leafnodes/authorization/",
+        "s65f0d3357c65": "https://docs.nats.io/reference/config/leafnodes/remotes/",
+        "se5f31c6269c9": "https://docs.nats.io/reference/config/authorization/timeout",
+        "s077fb5dcad29": "https://docs.nats.io/reference/config/accounts/limits/",
+        "s8cba9edd33b5": "https://docs.nats.io/learn/security/accounts-and-multitenancy",
+        "sb07c45120b77": "https://docs.nats.io/learn/security/cross-account",
+        "s2aa6be0b95f3": "https://docs.nats.io/reference/config/jetstream/",
+        "sb0a95cb44e8c": "https://docs.nats.io/reference/config/jetstream/request_queue_limit",
+        "sac96fc2fd82c": "https://docs.nats.io/reference/config/accounts/jetstream/",
+        "sbf04a3dffd21": "https://raw.githubusercontent.com/nats-io/nats-server/v2.14.7/server/consumer.go",
+        "s0015a19a5fb9": "https://raw.githubusercontent.com/nats-io/nats-server/v2.14.7/server/jetstream_api.go",
+        "sccd84f1a4406": "https://docs.nats.io/reference/config/jetstream/domain",
+        "s739889828b7d": "https://docs.nats.io/learn/topologies/leaf-nodes",
+        "s5c67c71c763a": "https://docs.nats.io/reference/config/jetstream/encryption_key",
+        "s21378b23fccd": "https://docs.nats.io/reference/config/jetstream/cipher",
+        "sebfa61302021": "https://docs.nats.io/reference/config/jetstream/prev_encryption_key",
+        "sce86f77690da": "https://docs.nats.io/reference/config/authorization/users/allowed_connection_types",
+        "s7255e9ec521c": "https://docs.nats.io/reference/config/mqtt/",
+        "sb21fa571a215": "https://docs.nats.io/learn/mqtt/auth-and-clustering",
+        "s32c27329e016": "https://docs.nats.io/reference/config/websocket/",
+        "s6ce4e35cae81": "https://docs.nats.io/learn/security/auth-callout",
+        "sc7f484b67ca6": "https://docs.nats.io/reference/config/authorization/auth_callout",
+        "sfe9cfda67037": "https://raw.githubusercontent.com/nats-io/nats-server/v2.14.7/server/auth_callout.go"
+      }
+    },
+    "commit": {
+      "name": "NATS baseline commit",
+      "basis": "8d8b69a8c46a46a150eabb7f312607c4d9c58faf",
+      "sources": {
+        "sa981814d2443": "https://github.com/nats-io/nats-server/commit/8d8b69a8c46a46a150eabb7f312607c4d9c58faf"
+      }
+    },
+    "library": {
+      "name": "NATS image catalogue",
+      "basis": "dcd3db677d8919c3a42d369bd48a6f1c234b3ae8",
+      "sources": {
+        "s5820f80dc5e2": "https://github.com/docker-library/official-images/blob/dcd3db677d8919c3a42d369bd48a6f1c234b3ae8/library/nats#L6-L50"
+      }
+    },
+    "image": {
+      "name": "NATS image source",
+      "basis": "0e72748d3cb553ccdb8c2da7c75ec3b767be51a5",
+      "sources": {
+        "s63fd80eda93f": "https://github.com/nats-io/nats-docker/blob/0e72748d3cb553ccdb8c2da7c75ec3b767be51a5/2.15.x/scratch/nats-server.conf",
+        "sf75fdfff87fb": "https://github.com/nats-io/nats-docker/blob/0e72748d3cb553ccdb8c2da7c75ec3b767be51a5/2.15.x/alpine3.22/nats-server.conf",
+        "sb6bb995a1296": "https://github.com/nats-io/nats-docker/blob/0e72748d3cb553ccdb8c2da7c75ec3b767be51a5/2.15.x/nanoserver-ltsc2022/nats-server.conf",
+        "sb2004ba92e96": "https://github.com/nats-io/nats-docker/blob/0e72748d3cb553ccdb8c2da7c75ec3b767be51a5/2.15.x/windowsservercore-ltsc2022/nats-server.conf",
+        "s63901565fdae": "https://github.com/nats-io/nats-docker/blob/0e72748d3cb553ccdb8c2da7c75ec3b767be51a5/2.14.x/scratch/nats-server.conf",
+        "s052d6780e740": "https://github.com/nats-io/nats-docker/blob/0e72748d3cb553ccdb8c2da7c75ec3b767be51a5/2.14.x/alpine3.22/nats-server.conf",
+        "s942be49c75fa": "https://github.com/nats-io/nats-docker/blob/0e72748d3cb553ccdb8c2da7c75ec3b767be51a5/2.14.x/nanoserver-ltsc2022/nats-server.conf",
+        "s4152555c0fa5": "https://github.com/nats-io/nats-docker/blob/0e72748d3cb553ccdb8c2da7c75ec3b767be51a5/2.14.x/windowsservercore-ltsc2022/nats-server.conf",
+        "sac24f019f564": "https://github.com/nats-io/nats-docker/blob/0e72748d3cb553ccdb8c2da7c75ec3b767be51a5/2.15.x/scratch/Dockerfile#L5-L9",
+        "s60e57b8083a9": "https://github.com/nats-io/nats-docker/blob/0e72748d3cb553ccdb8c2da7c75ec3b767be51a5/2.15.x/alpine3.22/Dockerfile#L38-L43",
+        "s38262af3382e": "https://github.com/nats-io/nats-docker/blob/0e72748d3cb553ccdb8c2da7c75ec3b767be51a5/2.15.x/alpine3.22/docker-entrypoint.sh#L7-L9",
+        "sa8e0a5d725c4": "https://github.com/nats-io/nats-docker/blob/0e72748d3cb553ccdb8c2da7c75ec3b767be51a5/2.14.x/alpine3.22/docker-entrypoint.sh#L7-L9",
+        "s56fa48bb22a4": "https://github.com/nats-io/nats-docker/blob/0e72748d3cb553ccdb8c2da7c75ec3b767be51a5/2.15.x/nanoserver-ltsc2022/Dockerfile#L5-L9",
+        "s221e831d1482": "https://github.com/nats-io/nats-docker/blob/0e72748d3cb553ccdb8c2da7c75ec3b767be51a5/2.15.x/windowsservercore-ltsc2022/Dockerfile#L44-L48",
+        "sf46270db6983": "https://github.com/nats-io/nats-docker/blob/0e72748d3cb553ccdb8c2da7c75ec3b767be51a5/2.14.x/windowsservercore-ltsc2022/Dockerfile#L44-L48",
+        "s242baf7508a4": "https://github.com/nats-io/nats-docker/blob/0e72748d3cb553ccdb8c2da7c75ec3b767be51a5/2.14.x/nanoserver-ltsc2022/Dockerfile#L5-L9",
+        "s1be190b618be": "https://github.com/nats-io/nats-docker/blob/0e72748d3cb553ccdb8c2da7c75ec3b767be51a5/2.14.x/scratch/Dockerfile#L5-L9",
+        "s0d4076849de7": "https://github.com/nats-io/nats-docker/blob/0e72748d3cb553ccdb8c2da7c75ec3b767be51a5/2.14.x/alpine3.22/Dockerfile#L38-L43"
+      }
+    },
+    "image-server": {
+      "name": "NATS image listener source",
+      "basis": "v2.15.0",
+      "sources": {
+        "se8793d3c33b3": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/const.go#L85-L86",
+        "s9860c7a8a315": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/opts.go#L6265-L6266",
+        "s4f35f43b860b": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/server.go#L2874-L2880",
+        "s6d1b9c207c22": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/server.go#L3132-L3138",
+        "s63fb63ed420f": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/route.go#L2752-L2753",
+        "s483a2d169cbf": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/util.go#L267-L275"
+      }
+    },
+    "go": {
+      "name": "Go socket source",
+      "basis": "go1.26.8",
+      "sources": {
+        "s172a98468ce6": "https://github.com/golang/go/blob/go1.26.8/src/net/ipsock_posix.go#L134-L147"
+      }
+    },
+    "cli": {
+      "name": "natscli",
+      "basis": "v0.4.0",
+      "sources": {
+        "s068dbbd154ce": "https://raw.githubusercontent.com/nats-io/natscli/v0.4.0/nats/main.go",
+        "sd263b3e2aeb4": "https://raw.githubusercontent.com/nats-io/natscli/v0.4.0/cli/util.go",
+        "sc6b88ab2d1f8": "https://raw.githubusercontent.com/nats-io/natscli/v0.4.0/cli/sub_command.go"
+      }
+    }
+  },
+  "claims": {
+    "baseline": {"text": "v2.14.7 and its recorded commit are the review baseline, not a latest-release claim.", "components": ["server", "commit"], "sources": ["server:s67d42c6498ac", "commit:sa981814d2443"], "status": "REASONED"},
+    "client-default": {"text": "Client port 4222 defaults to no authentication and wildcard host; select loopback or a private interface.", "components": ["server"], "sources": ["server:se640dd73f45d", "server:s4532e40c78ec"], "status": "REASONED"},
+    "image-config": {"text": "Published 2.14/2.15 variants load bundled configuration only with the recorded default command, working directory and mounts.", "components": ["library", "image"], "sources": ["library:s5820f80dc5e2", "image:s63fd80eda93f", "image:sf75fdfff87fb", "image:sb6bb995a1296", "image:sb2004ba92e96", "image:s63901565fdae", "image:s052d6780e740", "image:s942be49c75fa", "image:s4152555c0fa5", "image:sac24f019f564", "image:s60e57b8083a9", "image:s38262af3382e", "image:sa8e0a5d725c4", "image:s56fa48bb22a4", "image:s221e831d1482", "image:sf46270db6983", "image:s242baf7508a4", "image:s1be190b618be", "image:s0d4076849de7"], "status": "REASONED"},
+    "image-client": {"text": "Bundled images enable unauthenticated client 4222; mount and explicitly select protected configuration.", "components": ["image"], "sources": ["image:s63fd80eda93f", "image:s63901565fdae"], "status": "REASONED"},
+    "image-monitor": {"text": "Bundled images enable unauthenticated monitoring 8222; remove or bind privately.", "components": ["image"], "sources": ["image:s63fd80eda93f", "image:s63901565fdae"], "status": "REASONED"},
+    "image-route": {"text": "Bundled route 6222 uses published ruser/T0pS3cr3t and my_cluster; remove or replace with private credentials.", "components": ["image"], "sources": ["image:s63fd80eda93f", "image:s63901565fdae"], "status": "REASONED"},
+    "image-bind": {"text": "Bundled listeners without hosts use 0.0.0.0, dual-stack where IPv4-mapped IPv6 is supported; restrict publication.", "components": ["image-server", "go"], "sources": ["image-server:se8793d3c33b3", "image-server:s9860c7a8a315", "image-server:s4f35f43b860b", "image-server:s6d1b9c207c22", "image-server:s63fb63ed420f", "image-server:s483a2d169cbf", "go:s172a98468ce6"], "status": "REASONED"},
+    "static-auth": {"text": "Separate password/NKey users may coexist; a user's NKey replaces its password pair, without requiring JWT mode.", "components": ["server"], "sources": ["server:se640dd73f45d"], "status": "REASONED"},
+    "passwords": {"text": "Generate bcrypt interactively; protect seeds and password inputs; hashes do not replace TLS.", "components": ["server", "cli"], "sources": ["server:se640dd73f45d", "cli:s068dbbd154ce"], "status": "REASONED"},
+    "anonymous": {"text": "no_auth_user admits anonymous clients as a named identity; omit unless deliberate.", "components": ["server"], "sources": ["server:se640dd73f45d", "server:sfcf4d67bc409"], "status": "REASONED"},
+    "operator": {"text": "Operator signs account JWTs, accounts sign users; preload resolver accounts and protect signing seeds off the broker.", "components": ["server"], "sources": ["server:s468e604fd22d", "server:s5f9b8e5012ec"], "status": "REASONED"},
+    "jwt-proof": {"text": "Non-bearer users prove seed possession by nonce signature; bearer JWT possession is sufficient.", "components": ["server"], "sources": ["server:s5f9b8e5012ec"], "status": "REASONED"},
+    "permissions-default": {"text": "Absent user/default permissions means unrestricted account access; explicit permissions replace defaults.", "components": ["server"], "sources": ["server:s7a81108db86e", "server:sfcf4d67bc409"], "status": "REASONED"},
+    "allow-lists": {"text": "Publish/subscribe lists are independent; nonempty allows restrict, empty allows do not; matching static deny wins.", "components": ["server"], "sources": ["server:s7a81108db86e", "server:s77d2cf7237a9"], "status": "REASONED"},
+    "inboxes": {"text": "Use identity-specific reply inboxes; broad _INBOX.> exposes other clients' replies.", "components": ["server"], "sources": ["server:s7a81108db86e"], "status": "REASONED"},
+    "queues": {"text": "Require the assigned queue in subscription permissions; a bare subject grant defeats queue-only restriction.", "components": ["server"], "sources": ["server:see8fdd7cdcf7"], "status": "REASONED"},
+    "responses": {"text": "allow_responses can override static publish denial for tracked replies; bound count/expiry, not an absolute subject allow-list.", "components": ["server"], "sources": ["server:s3eced14a9c7a", "server:s77d2cf7237a9"], "status": "REASONED"},
+    "tls": {"text": "Client TLS validates endpoint identity; verify requires client certificates but password requirements come from authentication.", "components": ["server"], "sources": ["server:s54ebf5db9564", "server:se9d8f0116aa0", "server:sfcf4d67bc409"], "status": "REASONED"},
+    "tls-map": {"text": "verify_and_map derives configured identity from certificate attributes and enables verification itself.", "components": ["server"], "sources": ["server:se9d8f0116aa0", "server:sfcf4d67bc409"], "status": "REASONED"},
+    "monitor-default": {"text": "Native monitoring is off unless enabled, conventionally 8222; HTTPS adds transport security, not NATS login or client mTLS.", "components": ["server"], "sources": ["server:s524e33e8c24d", "server:sdef33959305a"], "status": "REASONED"},
+    "monitor-data": {"text": "/varz, /connz, /routez and JetStream /jsz disclose metadata; subs/auth query options add details, not authentication.", "components": ["server"], "sources": ["server:s524e33e8c24d", "server:sdef33959305a"], "status": "REASONED"},
+    "monitor-boundary": {"text": "Bind monitoring privately; an authenticating proxy needs direct-backend bypass prevention.", "components": ["server"], "sources": ["server:s524e33e8c24d", "server:sf02d263ec6e8"], "status": "REASONED"},
+    "jetstream-port": {"text": "JetStream shares the server and monitoring endpoint; it adds no listener of its own.", "components": ["server"], "sources": ["server:scd743849d62e"], "status": "REASONED"},
+    "cluster": {"text": "Conditional private 6222 routes have separate credentials/TLS; explicit URLs need credentials; cluster TLS verifies peers.", "components": ["server"], "sources": ["server:s2e1ad079a3bf"], "status": "REASONED"},
+    "gateway": {"text": "Conditional private 7222 gateways verify peers; reject_unknown_cluster supplements credentials, not replaces them.", "components": ["server"], "sources": ["server:s9371709dd080"], "status": "REASONED"},
+    "peer-urls": {"text": "Match SANs, advertisements and URLs; keep insecure disabled; known-URL certificate checks constrain dynamic growth.", "components": ["server"], "sources": ["server:s2e1ad079a3bf", "server:s9371709dd080"], "status": "REASONED"},
+    "leaf": {"text": "Conditional 7422 leaf auth/TLS is independent; static password and operator credentials recipes are alternatives.", "components": ["server"], "sources": ["server:se29432096847", "server:s812e43517c7c", "server:s65f0d3357c65"], "status": "REASONED"},
+    "leaf-accounts": {"text": "Outbound account is local; remote credentials select hub account; remotes-only creates no inbound listener.", "components": ["server"], "sources": ["server:s65f0d3357c65"], "status": "REASONED"},
+    "connection-default": {"text": "Documented client-connection default is 65,536; configured limits are capacities, not attempt-rate limits.", "components": ["server"], "sources": ["server:s4532e40c78ec"], "status": "REASONED"},
+    "payload-default": {"text": "Documented payload default is 1 MiB; max_payload must not exceed max_pending.", "components": ["server"], "sources": ["server:s4532e40c78ec"], "status": "REASONED"},
+    "runtime-budgets": {"text": "Set per-server/account connections, per-client subscriptions, control-line/pending limits and TLS/auth/write deadlines for workload.", "components": ["server"], "sources": ["server:se5f31c6269c9", "server:s4532e40c78ec", "server:s077fb5dcad29"], "status": "REASONED"},
+    "accounts": {"text": "Top-level users share $G; separate account spaces and restrict exports to intended importing accounts.", "components": ["server"], "sources": ["server:s8cba9edd33b5", "server:sb07c45120b77"], "status": "REASONED"},
+    "system-account": {"text": "Default system name is $SYS; selected SYS contains administrative identities, not application users.", "components": ["server"], "sources": ["server:s8cba9edd33b5", "server:sfcf4d67bc409"], "status": "REASONED"},
+    "jetstream-server": {"text": "Conditional store_dir and memory/file budgets bound storage, not all process memory or filesystem use.", "components": ["server"], "sources": ["server:s2aa6be0b95f3"], "status": "REASONED"},
+    "jetstream-queue": {"text": "request_queue_limit bounds pending JetStream API work, not connection attempts.", "components": ["server"], "sources": ["server:sb0a95cb44e8c"], "status": "REASONED"},
+    "jetstream-account": {"text": "Set account memory/file, stream count, required max_bytes, per-stream byte and acknowledgement ceilings; inspect effective reload results.", "components": ["server"], "sources": ["server:sac96fc2fd82c"], "status": "REASONED"},
+    "consumer-limit": {"text": "v2.14.7 account max_consumers is enforced per stream, not as a total account consumer count.", "components": ["server"], "sources": ["server:sac96fc2fd82c", "server:sbf04a3dffd21"], "status": "REASONED"},
+    "jetstream-auth": {"text": "Core-only users deny API subjects; legitimate JetStream apps need reviewed resource, reply and acknowledgement permissions.", "components": ["server"], "sources": ["server:s7a81108db86e", "server:s0015a19a5fb9"], "status": "REASONED"},
+    "domains": {"text": "EDGE/HUB domains select independent JetStream systems, not tenant authorization boundaries.", "components": ["server"], "sources": ["server:sccd84f1a4406", "server:s739889828b7d"], "status": "REASONED"},
+    "encryption": {"text": "Conditional server-wide file-store encryption uses protected key material, recommended at least 32 bytes; aes selects AES-GCM.", "components": ["server"], "sources": ["server:s54ebf5db9564", "server:s5c67c71c763a", "server:s21378b23fccd"], "status": "REASONED"},
+    "rotation": {"text": "Previous-key transition needs restart and recovery tests; protect keys and backups separately.", "components": ["server"], "sources": ["server:s54ebf5db9564", "server:sebfa61302021"], "status": "REASONED"},
+    "mqtt": {"text": "Optional private MQTT TLS needs JetStream, scoped translated subjects, protocol-restricted users and reviewed anonymous overrides.", "components": ["server"], "sources": ["server:sce86f77690da", "server:s7255e9ec521c", "server:sb21fa571a215"], "status": "REASONED"},
+    "mqtt-jwt": {"text": "Operator-mode MQTT uses explicitly permitted bearer JWT passwords, not normal NKey nonce proof.", "components": ["server"], "sources": ["server:sb21fa571a215"], "status": "REASONED"},
+    "websocket": {"text": "Optional 8443 WSS needs scoped users/inboxes and origin policy; non-browser Origin is not authentication.", "components": ["server"], "sources": ["server:sce86f77690da", "server:s32c27329e016"], "status": "REASONED"},
+    "websocket-tls": {"text": "WebSocket TLS is required unless no_tls disables it; protect proxy backends and review listener auth overrides.", "components": ["server"], "sources": ["server:s32c27329e016"], "status": "REASONED"},
+    "callout": {"text": "Conditional auth callout needs dedicated AUTH account, narrow bypass users, signed responses and encrypted XKey exchanges.", "components": ["server"], "sources": ["server:s6ce4e35cae81", "server:sc7f484b67ca6", "server:sfe9cfda67037"], "status": "REASONED"},
+    "callout-mode": {"text": "Static and operator workflows differ; allowed_accounts is mode-dependent; unavailable authenticator must reject admission.", "components": ["server"], "sources": ["server:s6ce4e35cae81", "server:sfcf4d67bc409"], "status": "REASONED"},
+    "files": {"text": "Dedicated non-root broker reads necessary secrets and writes state; application/signing seeds stay with their owners.", "components": ["server"], "sources": ["server:s468e604fd22d", "server:sf02d263ec6e8"], "status": "REASONED"},
+    "verify-offline": {"text": "Native parsing/key generation remain unobserved; pair valid parsing fixtures with malformed controls and separately scan placeholders.", "components": ["server", "cli"], "sources": ["server:sfcf4d67bc409", "cli:s068dbbd154ce"], "status": "REASONED"},
+    "verify-identity": {"text": "Inspect running identity, effective config/limits, every listener namespace and host publication; file inspection alone is insufficient.", "components": ["server"], "sources": ["server:s4532e40c78ec", "server:sf02d263ec6e8"], "status": "REASONED"},
+    "cli-input": {"text": "Clear inherited NATS_* and saved contexts; password uses guarded one-command environment input, still locally readable.", "components": ["cli"], "sources": ["cli:s068dbbd154ce", "cli:sd263b3e2aeb4"], "status": "REASONED", "verify": [1, 2, 3, 4]},
+    "verify-auth": {"text": "Require allowed publish, missing/wrong-password rejection, certificate/hostname discrimination and forbidden subject errors.", "components": ["server", "cli"], "sources": ["server:se640dd73f45d", "server:se9d8f0116aa0", "server:s77d2cf7237a9", "cli:sd263b3e2aeb4"], "status": "REASONED", "verify": [1]},
+    "verify-delivery": {"text": "Require exact live markers; quiet subscribers and publish success alone prove no delivery.", "components": ["server", "cli"], "sources": ["server:s7a81108db86e", "cli:sc6b88ab2d1f8"], "status": "REASONED", "verify": [2, 3]},
+    "verify-queue": {"text": "Assigned queue receives marker; wrong/no queue rejects with matched positive delivery.", "components": ["server", "cli"], "sources": ["server:see8fdd7cdcf7", "server:s77d2cf7237a9", "cli:sc6b88ab2d1f8"], "status": "REASONED", "verify": [2, 3]},
+    "verify-response": {"text": "Same worker connection sends one timely reply; extra, expired and unrelated replies must fail.", "components": ["server", "cli"], "sources": ["server:s3eced14a9c7a", "server:s77d2cf7237a9", "cli:sd263b3e2aeb4"], "status": "REASONED", "verify": [4]},
+    "verify-accounts": {"text": "Created marker stays in ORDERS; shipped marker reaches ANALYTICS; keep count controls live and reject third-account imports.", "components": ["server", "cli"], "sources": ["server:s8cba9edd33b5", "server:sb07c45120b77", "cli:sc6b88ab2d1f8"], "status": "REASONED", "verify": [2, 3]},
+    "verify-system": {"text": "sys-admin gets system response; tenant gets corresponding publish-permission rejection.", "components": ["server", "cli"], "sources": ["server:s8cba9edd33b5", "cli:sd263b3e2aeb4"], "status": "REASONED", "verify": [4]},
+    "verify-js-auth": {"text": "Provisioner creates, inspects, retrieves and deletes fixtures; Core-only identity must receive API-subject denials.", "components": ["server", "cli"], "sources": ["server:sac96fc2fd82c", "server:s0015a19a5fb9", "cli:sd263b3e2aeb4"], "status": "REASONED", "verify": [4]},
+    "verify-js-limits": {"text": "Test byte reservations, stored bytes, stream/consumer counts and ack ceiling independently with below-limit controls.", "components": ["server"], "sources": ["server:s2aa6be0b95f3", "server:sac96fc2fd82c", "server:sbf04a3dffd21", "server:s0015a19a5fb9"], "status": "REASONED", "verify": [4]},
+    "verify-recovery": {"text": "Copied encrypted store must recover with correct key and fail with missing/wrong key; test rotation, not just marker absence.", "components": ["server"], "sources": ["server:s54ebf5db9564", "server:sebfa61302021", "server:s0015a19a5fb9"], "status": "REASONED", "verify": [4]},
+    "verify-peers": {"text": "Actual links need cross-server delivery plus credential/certificate/network denials; client-port/TCP/TLS checks do not substitute.", "components": ["server"], "sources": ["server:s2e1ad079a3bf", "server:s9371709dd080", "server:se29432096847"], "status": "REASONED"},
+    "verify-monitor": {"text": "Collector retrieves expected JSON; unauthorized direct backend cannot answer; pair refusal with identity/inventory and live control.", "components": ["server"], "sources": ["server:s524e33e8c24d", "server:sf02d263ec6e8"], "status": "REASONED", "verify": [5]},
+    "verify-proxy": {"text": "Conditional proxy needs anonymous refusal, authenticated JSON success and direct-backend bypass denial.", "components": ["server"], "sources": ["server:s524e33e8c24d", "server:sf02d263ec6e8"], "status": "REASONED", "verify": [5]},
+    "verify-optional": {"text": "Test MQTT translated subjects/bearer identity, WSS origins versus auth, and callout outage, grants and XKey failures separately.", "components": ["server"], "sources": ["server:sce86f77690da", "server:s7255e9ec521c", "server:sb21fa571a215", "server:s32c27329e016", "server:s6ce4e35cae81"], "status": "REASONED"},
+    "verify-pressure": {"text": "Bounded workloads distinguish connection/subscription/payload/control-line/timeouts/slow-consumer/API limits with healthy controls.", "components": ["server"], "sources": ["server:se5f31c6269c9", "server:s4532e40c78ec", "server:s077fb5dcad29", "server:sb0a95cb44e8c"], "status": "REASONED"}
+  }
+}
+---
 # NATS and JetStream: authentication, TLS, and the monitoring port
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| baseline: v2.14.7 and its recorded commit are the review baseline, not a latest-release claim. | NATS Server v2.14.7; NATS baseline commit 8d8b69a8c46a46a150eabb7f312607c4d9c58faf | REASONED |
+| client-default: Client port 4222 defaults to no authentication and wildcard host; select loopback or a private interface. | NATS Server v2.14.7 | REASONED |
+| image-config: Published 2.14/2.15 variants load bundled configuration only with the recorded default command, working directory and mounts. | NATS image catalogue dcd3db677d8919c3a42d369bd48a6f1c234b3ae8; NATS image source 0e72748d3cb553ccdb8c2da7c75ec3b767be51a5 | REASONED |
+| image-client: Bundled images enable unauthenticated client 4222; mount and explicitly select protected configuration. | NATS image source 0e72748d3cb553ccdb8c2da7c75ec3b767be51a5 | REASONED |
+| image-monitor: Bundled images enable unauthenticated monitoring 8222; remove or bind privately. | NATS image source 0e72748d3cb553ccdb8c2da7c75ec3b767be51a5 | REASONED |
+| image-route: Bundled route 6222 uses published ruser/T0pS3cr3t and my_cluster; remove or replace with private credentials. | NATS image source 0e72748d3cb553ccdb8c2da7c75ec3b767be51a5 | REASONED |
+| image-bind: Bundled listeners without hosts use 0.0.0.0, dual-stack where IPv4-mapped IPv6 is supported; restrict publication. | NATS image listener source v2.15.0; Go socket source go1.26.8 | REASONED |
+| static-auth: Separate password/NKey users may coexist; a user's NKey replaces its password pair, without requiring JWT mode. | NATS Server v2.14.7 | REASONED |
+| passwords: Generate bcrypt interactively; protect seeds and password inputs; hashes do not replace TLS. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
+| anonymous: no_auth_user admits anonymous clients as a named identity; omit unless deliberate. | NATS Server v2.14.7 | REASONED |
+| operator: Operator signs account JWTs, accounts sign users; preload resolver accounts and protect signing seeds off the broker. | NATS Server v2.14.7 | REASONED |
+| jwt-proof: Non-bearer users prove seed possession by nonce signature; bearer JWT possession is sufficient. | NATS Server v2.14.7 | REASONED |
+| permissions-default: Absent user/default permissions means unrestricted account access; explicit permissions replace defaults. | NATS Server v2.14.7 | REASONED |
+| allow-lists: Publish/subscribe lists are independent; nonempty allows restrict, empty allows do not; matching static deny wins. | NATS Server v2.14.7 | REASONED |
+| inboxes: Use identity-specific reply inboxes; broad _INBOX.&gt; exposes other clients' replies. | NATS Server v2.14.7 | REASONED |
+| queues: Require the assigned queue in subscription permissions; a bare subject grant defeats queue-only restriction. | NATS Server v2.14.7 | REASONED |
+| responses: allow_responses can override static publish denial for tracked replies; bound count/expiry, not an absolute subject allow-list. | NATS Server v2.14.7 | REASONED |
+| tls: Client TLS validates endpoint identity; verify requires client certificates but password requirements come from authentication. | NATS Server v2.14.7 | REASONED |
+| tls-map: verify_and_map derives configured identity from certificate attributes and enables verification itself. | NATS Server v2.14.7 | REASONED |
+| monitor-default: Native monitoring is off unless enabled, conventionally 8222; HTTPS adds transport security, not NATS login or client mTLS. | NATS Server v2.14.7 | REASONED |
+| monitor-data: /varz, /connz, /routez and JetStream /jsz disclose metadata; subs/auth query options add details, not authentication. | NATS Server v2.14.7 | REASONED |
+| monitor-boundary: Bind monitoring privately; an authenticating proxy needs direct-backend bypass prevention. | NATS Server v2.14.7 | REASONED |
+| jetstream-port: JetStream shares the server and monitoring endpoint; it adds no listener of its own. | NATS Server v2.14.7 | REASONED |
+| cluster: Conditional private 6222 routes have separate credentials/TLS; explicit URLs need credentials; cluster TLS verifies peers. | NATS Server v2.14.7 | REASONED |
+| gateway: Conditional private 7222 gateways verify peers; reject_unknown_cluster supplements credentials, not replaces them. | NATS Server v2.14.7 | REASONED |
+| peer-urls: Match SANs, advertisements and URLs; keep insecure disabled; known-URL certificate checks constrain dynamic growth. | NATS Server v2.14.7 | REASONED |
+| leaf: Conditional 7422 leaf auth/TLS is independent; static password and operator credentials recipes are alternatives. | NATS Server v2.14.7 | REASONED |
+| leaf-accounts: Outbound account is local; remote credentials select hub account; remotes-only creates no inbound listener. | NATS Server v2.14.7 | REASONED |
+| connection-default: Documented client-connection default is 65,536; configured limits are capacities, not attempt-rate limits. | NATS Server v2.14.7 | REASONED |
+| payload-default: Documented payload default is 1 MiB; max_payload must not exceed max_pending. | NATS Server v2.14.7 | REASONED |
+| runtime-budgets: Set per-server/account connections, per-client subscriptions, control-line/pending limits and TLS/auth/write deadlines for workload. | NATS Server v2.14.7 | REASONED |
+| accounts: Top-level users share $G; separate account spaces and restrict exports to intended importing accounts. | NATS Server v2.14.7 | REASONED |
+| system-account: Default system name is $SYS; selected SYS contains administrative identities, not application users. | NATS Server v2.14.7 | REASONED |
+| jetstream-server: Conditional store_dir and memory/file budgets bound storage, not all process memory or filesystem use. | NATS Server v2.14.7 | REASONED |
+| jetstream-queue: request_queue_limit bounds pending JetStream API work, not connection attempts. | NATS Server v2.14.7 | REASONED |
+| jetstream-account: Set account memory/file, stream count, required max_bytes, per-stream byte and acknowledgement ceilings; inspect effective reload results. | NATS Server v2.14.7 | REASONED |
+| consumer-limit: v2.14.7 account max_consumers is enforced per stream, not as a total account consumer count. | NATS Server v2.14.7 | REASONED |
+| jetstream-auth: Core-only users deny API subjects; legitimate JetStream apps need reviewed resource, reply and acknowledgement permissions. | NATS Server v2.14.7 | REASONED |
+| domains: EDGE/HUB domains select independent JetStream systems, not tenant authorization boundaries. | NATS Server v2.14.7 | REASONED |
+| encryption: Conditional server-wide file-store encryption uses protected key material, recommended at least 32 bytes; aes selects AES-GCM. | NATS Server v2.14.7 | REASONED |
+| rotation: Previous-key transition needs restart and recovery tests; protect keys and backups separately. | NATS Server v2.14.7 | REASONED |
+| mqtt: Optional private MQTT TLS needs JetStream, scoped translated subjects, protocol-restricted users and reviewed anonymous overrides. | NATS Server v2.14.7 | REASONED |
+| mqtt-jwt: Operator-mode MQTT uses explicitly permitted bearer JWT passwords, not normal NKey nonce proof. | NATS Server v2.14.7 | REASONED |
+| websocket: Optional 8443 WSS needs scoped users/inboxes and origin policy; non-browser Origin is not authentication. | NATS Server v2.14.7 | REASONED |
+| websocket-tls: WebSocket TLS is required unless no_tls disables it; protect proxy backends and review listener auth overrides. | NATS Server v2.14.7 | REASONED |
+| callout: Conditional auth callout needs dedicated AUTH account, narrow bypass users, signed responses and encrypted XKey exchanges. | NATS Server v2.14.7 | REASONED |
+| callout-mode: Static and operator workflows differ; allowed_accounts is mode-dependent; unavailable authenticator must reject admission. | NATS Server v2.14.7 | REASONED |
+| files: Dedicated non-root broker reads necessary secrets and writes state; application/signing seeds stay with their owners. | NATS Server v2.14.7 | REASONED |
+| verify-offline: Native parsing/key generation remain unobserved; pair valid parsing fixtures with malformed controls and separately scan placeholders. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
+| verify-identity: Inspect running identity, effective config/limits, every listener namespace and host publication; file inspection alone is insufficient. | NATS Server v2.14.7 | REASONED |
+| cli-input: Clear inherited NATS_* and saved contexts; password uses guarded one-command environment input, still locally readable. | natscli v0.4.0 | REASONED |
+| verify-auth: Require allowed publish, missing/wrong-password rejection, certificate/hostname discrimination and forbidden subject errors. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
+| verify-delivery: Require exact live markers; quiet subscribers and publish success alone prove no delivery. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
+| verify-queue: Assigned queue receives marker; wrong/no queue rejects with matched positive delivery. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
+| verify-response: Same worker connection sends one timely reply; extra, expired and unrelated replies must fail. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
+| verify-accounts: Created marker stays in ORDERS; shipped marker reaches ANALYTICS; keep count controls live and reject third-account imports. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
+| verify-system: sys-admin gets system response; tenant gets corresponding publish-permission rejection. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
+| verify-js-auth: Provisioner creates, inspects, retrieves and deletes fixtures; Core-only identity must receive API-subject denials. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
+| verify-js-limits: Test byte reservations, stored bytes, stream/consumer counts and ack ceiling independently with below-limit controls. | NATS Server v2.14.7 | REASONED |
+| verify-recovery: Copied encrypted store must recover with correct key and fail with missing/wrong key; test rotation, not just marker absence. | NATS Server v2.14.7 | REASONED |
+| verify-peers: Actual links need cross-server delivery plus credential/certificate/network denials; client-port/TCP/TLS checks do not substitute. | NATS Server v2.14.7 | REASONED |
+| verify-monitor: Collector retrieves expected JSON; unauthorized direct backend cannot answer; pair refusal with identity/inventory and live control. | NATS Server v2.14.7 | REASONED |
+| verify-proxy: Conditional proxy needs anonymous refusal, authenticated JSON success and direct-backend bypass denial. | NATS Server v2.14.7 | REASONED |
+| verify-optional: Test MQTT translated subjects/bearer identity, WSS origins versus auth, and callout outage, grants and XKey failures separately. | NATS Server v2.14.7 | REASONED |
+| verify-pressure: Bounded workloads distinguish connection/subscription/payload/control-line/timeouts/slow-consumer/API limits with healthy controls. | NATS Server v2.14.7 | REASONED |
+<!-- version-basis:end -->
 
 NATS accepts client connections on 4222 with no authentication configured by default. A separately enabled HTTP monitoring endpoint, conventionally 8222, reveals connection metadata, subscription subjects, and message/byte counters without a login of its own. Both need explicit configuration. JetStream, the persistence layer for streams and consumers, runs in the same server process: it adds no listening port of its own, and its state surfaces through the same monitoring endpoint at `/jsz`.
 
@@ -761,6 +1028,7 @@ Paste the whole subshell after substituting all four values. These probes accept
 The first publish is the allowed control. The subsequent operations deliberately test missing credentials, a wrong password, a missing client certificate, and forbidden publish/subscribe subjects. Inspect each command's diagnostics; the block's final exit status is not a combined verdict.
 
 ```bash
+# REASONED: authentication, TLS and subject permissions; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -824,6 +1092,7 @@ A successful publish message or a quiet subscriber is insufficient proof of deli
 Terminal 1 is self-contained and reads its password inside the guarded subshell. Piping a password to `nats sub` does not configure authentication; in CLI v0.4.0, a username without a password is treated as a token.
 
 ```bash
+# REASONED: subscriber delivery control; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -859,6 +1128,7 @@ Terminal 1 is self-contained and reads its password inside the guarded subshell.
 Terminal 2 independently establishes its target, TLS configuration, and credentials; it cannot inherit variables from terminal 1's subshell:
 
 ```bash
+# REASONED: publisher delivery control; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -901,6 +1171,7 @@ For queue comparisons, rerun the complete consumer block with the `order-worker`
 The following self-contained request block is also used by V4 and V5. Its last three inputs are identity, subject, and JSON body. Keep subjects such as `$SYS.REQ.SERVER.PING` and `$JS.API.INFO` single-quoted on the `set --` line. The inbox prefix matches the selected identity.
 
 ```bash
+# REASONED: request/reply, account and JetStream checks; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -1030,6 +1301,7 @@ A client-port test, TCP connection alone, or successful TLS handshake without me
 First complete the listener inventory in V1. Run this whole block from the intended collector with its permitted target, then from the unauthorized observer with the inventoried externally reachable address. For the selected loopback binding, the collector runs on the broker host and targets `127.0.0.1`.
 
 ```bash
+# REASONED: monitoring reachability; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_MONITOR_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }

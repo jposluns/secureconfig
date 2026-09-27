@@ -1,4 +1,222 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "f7b13148f4c7d9b913dcb765e37ff8d0a3a5f76e9be2ec44bb9f2ebb83641205",
+  "components": {
+    "docs": {
+      "name": "PostgreSQL documentation",
+      "basis": "unknown",
+      "sources": {
+        "s4feea1443725": "https://www.postgresql.org/docs/current/runtime-config-connection.html",
+        "s8215c4f0b29d": "https://www.postgresql.org/docs/current/ssl-tcp.html",
+        "s7a7f6fb3b9ef": "https://www.postgresql.org/docs/current/auth-password.html",
+        "s6d49df9638da": "https://www.postgresql.org/docs/current/functions-admin.html",
+        "sbb484e8233fe": "https://www.postgresql.org/docs/current/auth-pg-hba-conf.html",
+        "sf8b93623c032": "https://www.postgresql.org/docs/current/app-psql.html",
+        "s213c900cae6f": "https://www.postgresql.org/docs/current/auth-radius.html",
+        "s74d80ffaaf96": "https://www.postgresql.org/docs/current/sql-createrole.html",
+        "sc9e1e81c4eb9": "https://www.postgresql.org/docs/current/sql-alterrole.html",
+        "sf897d9524ed3": "https://www.postgresql.org/docs/current/role-membership.html",
+        "s6c7856c30ba2": "https://www.postgresql.org/docs/current/sql-alterdatabase.html",
+        "s4ded00efc4e2": "https://www.postgresql.org/docs/current/sql-set-role.html",
+        "s20f27b82b893": "https://www.postgresql.org/docs/current/ddl-priv.html",
+        "s230b60e145cf": "https://www.postgresql.org/docs/current/sql-altertable.html",
+        "sb2d96220e6f0": "https://www.postgresql.org/docs/current/sql-createschema.html",
+        "s65aff299a5a6": "https://www.postgresql.org/docs/current/sql-grant.html",
+        "s04e81888353f": "https://www.postgresql.org/docs/current/sql-alterdefaultprivileges.html",
+        "sb6224f4ac866": "https://www.postgresql.org/docs/current/sql-revoke.html",
+        "sdd8b8cfb0e56": "https://www.postgresql.org/docs/current/ddl-schemas.html",
+        "s1844713022bf": "https://www.postgresql.org/docs/current/runtime-config-client.html",
+        "sec39c317b06f": "https://www.postgresql.org/docs/current/sql-createfunction.html",
+        "s0fe66d71aa10": "https://www.postgresql.org/docs/current/sql-alterfunction.html",
+        "sb30fe96b6195": "https://www.postgresql.org/docs/current/libpq-ssl.html",
+        "sd389a3478bc7": "https://www.postgresql.org/docs/current/libpq-connect.html",
+        "sf1b3da55ebd5": "https://www.postgresql.org/docs/current/runtime-config-logging.html",
+        "s8df2d48dbc2d": "https://www.postgresql.org/docs/current/sql-createextension.html",
+        "s1b4e67e38127": "https://manpages.ubuntu.com/manpages/noble/man8/ss.8.html",
+        "s7bb6f68ef52e": "https://www.postgresql.org/docs/current/sql-createtable.html",
+        "seed379369be7": "https://www.postgresql.org/docs/current/monitoring-stats.html",
+        "s8754b96a6114": "https://www.postgresql.org/docs/current/catalog-pg-authid.html",
+        "s3b6607ed7b1a": "https://www.postgresql.org/docs/current/view-pg-hba-file-rules.html",
+        "s2ab6c4aebc59": "https://www.postgresql.org/docs/current/view-pg-file-settings.html",
+        "s55cbaf1aa910": "https://www.postgresql.org/docs/current/app-postgres.html"
+      }
+    },
+    "docker": {
+      "name": "PostgreSQL image source",
+      "basis": "d588a44673ea9d123c1acb1a6924de10a27fc315",
+      "sources": {
+        "sd5180dc544b5": "https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/Dockerfile#L183-L184",
+        "s2e6f9a2e2499": "https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/docker-entrypoint.sh#L105-L138",
+        "s595428f208ab": "https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/docker-entrypoint.sh#L268-L286",
+        "sb9987ddb368d": "https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/docker-entrypoint.sh#L235",
+        "sea8869c4fd61": "https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/docker-entrypoint.sh#L347-L355",
+        "s651e63340b47": "https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/docker-entrypoint.sh#L92"
+      }
+    },
+    "init": {
+      "name": "PostgreSQL initdb source",
+      "basis": "REL_17_11",
+      "sources": {
+        "sd22c3409ddcd": "https://github.com/postgres/postgres/blob/REL_17_11/src/backend/libpq/pg_hba.conf.sample#L113-L117",
+        "s311f8c9d4751": "https://github.com/postgres/postgres/blob/REL_17_11/src/bin/initdb/initdb.c#L2550-L2557",
+        "s7d7180e2b81f": "https://github.com/postgres/postgres/blob/REL_17_11/src/bin/initdb/initdb.c#L3434-L3435"
+      }
+    },
+    "pg12": {
+      "name": "PostgreSQL TLS minimum",
+      "basis": "12",
+      "sources": {
+        "s260cb0b13223": "https://www.postgresql.org/docs/12/release-12.html"
+      }
+    },
+    "pg14": {
+      "name": "PostgreSQL SCRAM default",
+      "basis": "14",
+      "sources": {
+        "s624abdbb3a62": "https://www.postgresql.org/docs/14/release-14.html"
+      }
+    },
+    "pg15": {
+      "name": "PostgreSQL schema defaults",
+      "basis": "15",
+      "sources": {
+        "s674004a0d3a8": "https://www.postgresql.org/docs/15/release-15.html"
+      }
+    },
+    "pg16": {
+      "name": "PostgreSQL membership and require_auth",
+      "basis": "16",
+      "sources": {
+        "s03525343bc49": "https://www.postgresql.org/docs/16/role-membership.html",
+        "s2bdad423cced": "https://www.postgresql.org/docs/16/release-16.html"
+      }
+    },
+    "pg18": {
+      "name": "PostgreSQL MD5 and logging changes",
+      "basis": "18",
+      "sources": {
+        "se36ec635e2a4": "https://www.postgresql.org/docs/18/release-18.html"
+      }
+    },
+    "audit": {
+      "name": "pgAudit source",
+      "basis": "dedd42ec3fe880bf581dd578c0df87ed4ad246cd",
+      "sources": {
+        "s1825bbe4f88c": "https://github.com/pgaudit/pgaudit/blob/dedd42ec3fe880bf581dd578c0df87ed4ad246cd/README.md"
+      }
+    }
+  },
+  "claims": {
+    "bind": {"text": "Keep listen_addresses local; widening requires a restart and listener inspection.", "components": ["docs"], "sources": ["docs:s4feea1443725"], "status": "REASONED"},
+    "server-tls": {"text": "Enable TLS with certificate/key files and a postgres-owned key at mode 600.", "components": ["docs"], "sources": ["docs:s8215c4f0b29d", "docs:s4feea1443725"], "status": "REASONED"},
+    "tls-minimum": {"text": "ssl_min_protocol_version sets TLSv1.2; this setting requires PostgreSQL 12+.", "components": ["pg12", "docs"], "sources": ["pg12:s260cb0b13223", "docs:s4feea1443725"], "status": "REASONED"},
+    "scram-default": {"text": "password_encryption is scram-sha-256 by default from PostgreSQL 14.", "components": ["pg14", "docs"], "sources": ["pg14:s624abdbb3a62", "docs:s7a7f6fb3b9ef"], "status": "REASONED"},
+    "reload": {"text": "pg_reload_conf signals reload, not certificate acceptance; invalid TLS replacements can retain old settings; passphrase reload has extra requirements.", "components": ["docs"], "sources": ["docs:s8215c4f0b29d", "docs:s4feea1443725", "docs:s6d49df9638da"], "status": "REASONED"},
+    "image-bind": {"text": "Pinned Debian/Alpine images for 14 through 19 initialize from listen_addresses='*'; restrict published ports.", "components": ["docker"], "sources": ["docker:sd5180dc544b5"], "status": "REASONED"},
+    "image-init-auth": {"text": "Pinned initdb defaults to trust for sockets and loopback unless auth arguments override it; recorded tags cover 14.24 through 19 beta 4.", "components": ["init", "docker"], "sources": ["init:sd22c3409ddcd", "init:s311f8c9d4751", "init:s7d7180e2b81f", "docker:s2e6f9a2e2499"], "status": "REASONED"},
+    "image-host-auth": {"text": "The entrypoint appends host all all all using POSTGRES_HOST_AUTH_METHOD, defaulting to password_encryption; earlier matching rules win.", "components": ["docker", "docs"], "sources": ["docker:s595428f208ab", "docs:sbb484e8233fe"], "status": "REASONED"},
+    "image-password": {"text": "New-directory initialization requires POSTGRES_PASSWORD or its file unless host auth is trust; never select trust for reachable clients.", "components": ["docker"], "sources": ["docker:sb9987ddb368d", "docker:sea8869c4fd61", "docker:s651e63340b47"], "status": "REASONED"},
+    "hba": {"text": "host permits plaintext and TLS; hostssl plus SCRAM restricts remote access. Local peer is separate; first-match HBA has no fallback after authentication failure.", "components": ["docs"], "sources": ["docs:sbb484e8233fe"], "status": "REASONED"},
+    "hba-reload": {"text": "Unix HBA edits require reload; Windows applies edits to subsequent connections without that same requirement.", "components": ["docs"], "sources": ["docs:sbb484e8233fe"], "status": "REASONED"},
+    "password-migration": {"text": "Changing encryption does not convert stored verifiers; use prompted psql password reset. An md5 rule can negotiate SCRAM.", "components": ["docs"], "sources": ["docs:s7a7f6fb3b9ef", "docs:sf8b93623c032"], "status": "REASONED"},
+    "md5-deprecation": {"text": "PostgreSQL 18 deprecates MD5 password support.", "components": ["pg18"], "sources": ["pg18:se36ec635e2a4"], "status": "REASONED"},
+    "clientcert": {"text": "PostgreSQL 12+ clientcert=verify-full adds CA-validated client identity to SCRAM, matching username/mapping, normally by Common Name.", "components": ["pg12", "docs"], "sources": ["pg12:s260cb0b13223", "docs:sbb484e8233fe"], "status": "REASONED"},
+    "mfa": {"text": "Machine certificates do not establish human MFA; RADIUS is an alternative HBA method, not an added SCRAM factor or general interactive MFA flow.", "components": ["docs"], "sources": ["docs:s213c900cae6f", "docs:sbb484e8233fe"], "status": "REASONED"},
+    "runtime": {"text": "Separate NOLOGIN owner/runtime roles; remove superuser, database/role creation, replication and RLS bypass from app; review inherited grants.", "components": ["docs"], "sources": ["docs:s74d80ffaaf96", "docs:sc9e1e81c4eb9", "docs:sf897d9524ed3"], "status": "REASONED"},
+    "ownership": {"text": "NOLOGIN does not prevent membership access; keep app outside owner roles and transfer existing objects separately from database ownership.", "components": ["docs"], "sources": ["docs:s6c7856c30ba2", "docs:s4ded00efc4e2", "docs:s20f27b82b893", "docs:s230b60e145cf"], "status": "REASONED"},
+    "grants": {"text": "Grant runtime schema, table and sequence access only inside its boundary; owner-specific default grants affect future objects, not existing ones.", "components": ["docs"], "sources": ["docs:sb2d96220e6f0", "docs:s65aff299a5a6", "docs:s04e81888353f"], "status": "REASONED"},
+    "membership": {"text": "PostgreSQL 16+ membership INHERIT/SET options are distinct; role INHERIT defaults new memberships, and NOINHERIT does not prohibit SET ROLE.", "components": ["pg16"], "sources": ["pg16:s03525343bc49"], "status": "REASONED"},
+    "admission": {"text": "PUBLIC receives CONNECT and TEMPORARY by default; restrict each database, preserving required operators. CONNECT revocation affects new sessions only.", "components": ["docs"], "sources": ["docs:s20f27b82b893", "docs:sbb484e8233fe"], "status": "REASONED"},
+    "schema-create": {"text": "Revoke unwanted PUBLIC CREATE and optional TEMPORARY; direct grants, ownership and memberships can still confer access; preserve required USAGE.", "components": ["docs"], "sources": ["docs:sb6224f4ac866", "docs:sdd8b8cfb0e56"], "status": "REASONED"},
+    "schema-default": {"text": "PostgreSQL 15 new databases remove PUBLIC CREATE on public and use pg_database_owner; upgrades/restores can preserve old rights; CONNECT is unchanged.", "components": ["pg15"], "sources": ["pg15:s674004a0d3a8"], "status": "REASONED"},
+    "search-path": {"text": "Trust only owner-writable schemas; set app's login path with pg_temp last. Reconnect; SET ROLE does not apply login defaults and app can change its path.", "components": ["docs"], "sources": ["docs:sdd8b8cfb0e56", "docs:s1844713022bf", "docs:sc9e1e81c4eb9"], "status": "REASONED"},
+    "definer": {"text": "SECURITY DEFINER functions need their own safe path and restricted EXECUTE; revoke global default PUBLIC EXECUTE for future owner-created functions.", "components": ["docs"], "sources": ["docs:sec39c317b06f", "docs:s0fe66d71aa10", "docs:s04e81888353f"], "status": "REASONED"},
+    "client-tls": {"text": "libpq verify-full checks hostname and CA; require does not check hostname, even when a root CA makes it validate the chain.", "components": ["docs"], "sources": ["docs:sb30fe96b6195"], "status": "REASONED"},
+    "gss": {"text": "Set gssencmode=disable when requiring TLS verification; working GSSAPI encryption otherwise can take precedence; other drivers need equivalent settings.", "components": ["docs"], "sources": ["docs:sd389a3478bc7"], "status": "REASONED"},
+    "logging": {"text": "Collect connection/disconnection and DDL logs; logging_collector requires restart, log_file_mode is Unix-only, and broader statement logging risks sensitive values.", "components": ["docs"], "sources": ["docs:sf1b3da55ebd5"], "status": "REASONED"},
+    "logging-version": {"text": "PostgreSQL 18 log_connections accepts a list; on retains receipt, authentication and authorization logging, not every new option.", "components": ["pg18", "docs"], "sources": ["pg18:se36ec635e2a4", "docs:sf1b3da55ebd5"], "status": "REASONED"},
+    "pgaudit": {"text": "pgAudit 18.x targets PostgreSQL 18; match server major, preserve preloads, restart, create extension before pgaudit.log and reconnect; installation is not audit delivery.", "components": ["audit", "docs"], "sources": ["audit:s1825bbe4f88c", "docs:s8df2d48dbc2d", "docs:s1844713022bf"], "status": "REASONED"},
+    "verify-password": {"text": "Wrong prompted password succeeds under trust but must fail under password authentication while the correct-password TLS control succeeds.", "components": ["docs"], "sources": ["docs:sbb484e8233fe", "docs:s7a7f6fb3b9ef", "docs:sf8b93623c032"], "status": "REASONED", "verify": [1]},
+    "verify-scram": {"text": "libpq 16+ require_auth=scram-sha-256 rejects a non-SCRAM exchange; success proves negotiation, not removal of all md5 rules.", "components": ["pg16", "docs"], "sources": ["pg16:s2bdad423cced", "docs:sd389a3478bc7"], "status": "REASONED", "verify": [1]},
+    "verify-plaintext": {"text": "Plaintext succeeds under a permitting host rule; fixed HBA refuses no-encryption access while the same TLS login succeeds.", "components": ["docs"], "sources": ["docs:sbb484e8233fe", "docs:sd389a3478bc7"], "status": "REASONED", "verify": [1]},
+    "verify-identity": {"text": "A trusted wrong-host certificate can pass require but must fail verify-full; restore the matching certificate as the positive control.", "components": ["docs"], "sources": ["docs:sb30fe96b6195"], "status": "REASONED", "verify": [1]},
+    "verify-clientcert": {"text": "Compare matching and mismatched trusted client identities: verify-ca accepts both, verify-full rejects the mismatch while correct identity/password succeeds.", "components": ["docs"], "sources": ["docs:sbb484e8233fe", "docs:sb30fe96b6195"], "status": "REASONED", "verify": [1]},
+    "verify-listeners": {"text": "Inventory all 5432 listeners including IPv6; wildcard becomes intended addresses after restart, with a successful intended-interface TLS control.", "components": ["docs"], "sources": ["docs:s4feea1443725", "docs:s1b4e67e38127"], "status": "REASONED", "verify": [2]},
+    "verify-ownership": {"text": "Real app login reads existing fixtures but cannot ALTER or SET ROLE owner; owner alteration succeeds as the matched control.", "components": ["docs"], "sources": ["docs:s20f27b82b893", "docs:s4ded00efc4e2", "docs:s04e81888353f"], "status": "REASONED"},
+    "verify-admission": {"text": "PUBLIC CONNECT permits a nonmember; revocation must produce database permission denial while app connects, not an HBA/password error.", "components": ["docs"], "sources": ["docs:s20f27b82b893"], "status": "REASONED"},
+    "verify-creation": {"text": "PUBLIC CREATE and TEMPORARY probes must change from success to privilege denial, retaining administrator and application positive controls.", "components": ["docs"], "sources": ["docs:sdd8b8cfb0e56", "docs:s20f27b82b893", "docs:s7bb6f68ef52e"], "status": "REASONED"},
+    "verify-path": {"text": "Trusted/shadow fixtures independently test login and function-local paths; omitted pg_temp permits shadow relations and restoring it returns trusted.", "components": ["docs"], "sources": ["docs:s1844713022bf", "docs:sec39c317b06f"], "status": "REASONED"},
+    "verify-execute": {"text": "With admission and schema lookup held constant, PUBLIC EXECUTE removal denies the nonmember while the application function call succeeds.", "components": ["docs"], "sources": ["docs:s65aff299a5a6"], "status": "REASONED"},
+    "verify-logs": {"text": "Successful connection, disconnection and DDL produce correlated records only when enabled; SHOW and extension installation do not prove delivery.", "components": ["docs"], "sources": ["docs:sf1b3da55ebd5"], "status": "REASONED"},
+    "verify-audit": {"text": "Compare none versus enabled audit classes in fresh app sessions; the same seeded read succeeds and only the enabled state produces its READ event.", "components": ["audit"], "sources": ["audit:s1825bbe4f88c"], "status": "REASONED"},
+    "diagnostics": {"text": "pg_stat_ssl describes live sessions; verifier format, HBA/current-file views and superseded settings do not prove negotiated auth or accepted TLS reload.", "components": ["docs"], "sources": ["docs:seed379369be7", "docs:s8754b96a6114", "docs:s3b6607ed7b1a", "docs:s2ab6c4aebc59"], "status": "REASONED"},
+    "local-guards": {"text": "Historical shell and argument checks exercised local guards only, without service contact.", "components": ["docs"], "sources": ["docs:sf8b93623c032", "docs:s1b4e67e38127"], "status": "DEMONSTRATED", "evidence": "Unsubstituted blocks exited locally, and 22 guard/argument cases passed using explicit local command spies without contacting a service."},
+    "local-parsing": {"text": "Historical PostgreSQL 18.6 parsed 14 configuration values and rejected an invalid Boolean; no certificates, pgAudit, running HBA or SQL were exercised.", "components": ["docs"], "sources": ["docs:s55cbaf1aa910"], "status": "DEMONSTRATED", "evidence": "PostgreSQL 18.6 parsed and returned the 14 configuration values shown in the TLS, logging, and preload blocks using anonymous memory; an invalid Boolean control was rejected."},
+    "verify-default-grants": {"text": "Owner-created future tables must be readable with default grants and denied without them while the existing-table control succeeds; recreate fixtures per state.", "components": ["docs"], "sources": ["docs:s04e81888353f"], "status": "REASONED"}
+  }
+}
+---
 # PostgreSQL: TLS and authentication
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| bind: Keep listen_addresses local; widening requires a restart and listener inspection. | PostgreSQL documentation unknown | REASONED |
+| server-tls: Enable TLS with certificate/key files and a postgres-owned key at mode 600. | PostgreSQL documentation unknown | REASONED |
+| tls-minimum: ssl_min_protocol_version sets TLSv1.2; this setting requires PostgreSQL 12+. | PostgreSQL TLS minimum 12; PostgreSQL documentation unknown | REASONED |
+| scram-default: password_encryption is scram-sha-256 by default from PostgreSQL 14. | PostgreSQL SCRAM default 14; PostgreSQL documentation unknown | REASONED |
+| reload: pg_reload_conf signals reload, not certificate acceptance; invalid TLS replacements can retain old settings; passphrase reload has extra requirements. | PostgreSQL documentation unknown | REASONED |
+| image-bind: Pinned Debian/Alpine images for 14 through 19 initialize from listen_addresses='*'; restrict published ports. | PostgreSQL image source d588a44673ea9d123c1acb1a6924de10a27fc315 | REASONED |
+| image-init-auth: Pinned initdb defaults to trust for sockets and loopback unless auth arguments override it; recorded tags cover 14.24 through 19 beta 4. | PostgreSQL initdb source REL_17_11; PostgreSQL image source d588a44673ea9d123c1acb1a6924de10a27fc315 | REASONED |
+| image-host-auth: The entrypoint appends host all all all using POSTGRES_HOST_AUTH_METHOD, defaulting to password_encryption; earlier matching rules win. | PostgreSQL image source d588a44673ea9d123c1acb1a6924de10a27fc315; PostgreSQL documentation unknown | REASONED |
+| image-password: New-directory initialization requires POSTGRES_PASSWORD or its file unless host auth is trust; never select trust for reachable clients. | PostgreSQL image source d588a44673ea9d123c1acb1a6924de10a27fc315 | REASONED |
+| hba: host permits plaintext and TLS; hostssl plus SCRAM restricts remote access. Local peer is separate; first-match HBA has no fallback after authentication failure. | PostgreSQL documentation unknown | REASONED |
+| hba-reload: Unix HBA edits require reload; Windows applies edits to subsequent connections without that same requirement. | PostgreSQL documentation unknown | REASONED |
+| password-migration: Changing encryption does not convert stored verifiers; use prompted psql password reset. An md5 rule can negotiate SCRAM. | PostgreSQL documentation unknown | REASONED |
+| md5-deprecation: PostgreSQL 18 deprecates MD5 password support. | PostgreSQL MD5 and logging changes 18 | REASONED |
+| clientcert: PostgreSQL 12+ clientcert=verify-full adds CA-validated client identity to SCRAM, matching username/mapping, normally by Common Name. | PostgreSQL TLS minimum 12; PostgreSQL documentation unknown | REASONED |
+| mfa: Machine certificates do not establish human MFA; RADIUS is an alternative HBA method, not an added SCRAM factor or general interactive MFA flow. | PostgreSQL documentation unknown | REASONED |
+| runtime: Separate NOLOGIN owner/runtime roles; remove superuser, database/role creation, replication and RLS bypass from app; review inherited grants. | PostgreSQL documentation unknown | REASONED |
+| ownership: NOLOGIN does not prevent membership access; keep app outside owner roles and transfer existing objects separately from database ownership. | PostgreSQL documentation unknown | REASONED |
+| grants: Grant runtime schema, table and sequence access only inside its boundary; owner-specific default grants affect future objects, not existing ones. | PostgreSQL documentation unknown | REASONED |
+| membership: PostgreSQL 16+ membership INHERIT/SET options are distinct; role INHERIT defaults new memberships, and NOINHERIT does not prohibit SET ROLE. | PostgreSQL membership and require_auth 16 | REASONED |
+| admission: PUBLIC receives CONNECT and TEMPORARY by default; restrict each database, preserving required operators. CONNECT revocation affects new sessions only. | PostgreSQL documentation unknown | REASONED |
+| schema-create: Revoke unwanted PUBLIC CREATE and optional TEMPORARY; direct grants, ownership and memberships can still confer access; preserve required USAGE. | PostgreSQL documentation unknown | REASONED |
+| schema-default: PostgreSQL 15 new databases remove PUBLIC CREATE on public and use pg_database_owner; upgrades/restores can preserve old rights; CONNECT is unchanged. | PostgreSQL schema defaults 15 | REASONED |
+| search-path: Trust only owner-writable schemas; set app's login path with pg_temp last. Reconnect; SET ROLE does not apply login defaults and app can change its path. | PostgreSQL documentation unknown | REASONED |
+| definer: SECURITY DEFINER functions need their own safe path and restricted EXECUTE; revoke global default PUBLIC EXECUTE for future owner-created functions. | PostgreSQL documentation unknown | REASONED |
+| client-tls: libpq verify-full checks hostname and CA; require does not check hostname, even when a root CA makes it validate the chain. | PostgreSQL documentation unknown | REASONED |
+| gss: Set gssencmode=disable when requiring TLS verification; working GSSAPI encryption otherwise can take precedence; other drivers need equivalent settings. | PostgreSQL documentation unknown | REASONED |
+| logging: Collect connection/disconnection and DDL logs; logging_collector requires restart, log_file_mode is Unix-only, and broader statement logging risks sensitive values. | PostgreSQL documentation unknown | REASONED |
+| logging-version: PostgreSQL 18 log_connections accepts a list; on retains receipt, authentication and authorization logging, not every new option. | PostgreSQL MD5 and logging changes 18; PostgreSQL documentation unknown | REASONED |
+| pgaudit: pgAudit 18.x targets PostgreSQL 18; match server major, preserve preloads, restart, create extension before pgaudit.log and reconnect; installation is not audit delivery. | pgAudit source dedd42ec3fe880bf581dd578c0df87ed4ad246cd; PostgreSQL documentation unknown | REASONED |
+| verify-password: Wrong prompted password succeeds under trust but must fail under password authentication while the correct-password TLS control succeeds. | PostgreSQL documentation unknown | REASONED |
+| verify-scram: libpq 16+ require_auth=scram-sha-256 rejects a non-SCRAM exchange; success proves negotiation, not removal of all md5 rules. | PostgreSQL membership and require_auth 16; PostgreSQL documentation unknown | REASONED |
+| verify-plaintext: Plaintext succeeds under a permitting host rule; fixed HBA refuses no-encryption access while the same TLS login succeeds. | PostgreSQL documentation unknown | REASONED |
+| verify-identity: A trusted wrong-host certificate can pass require but must fail verify-full; restore the matching certificate as the positive control. | PostgreSQL documentation unknown | REASONED |
+| verify-clientcert: Compare matching and mismatched trusted client identities: verify-ca accepts both, verify-full rejects the mismatch while correct identity/password succeeds. | PostgreSQL documentation unknown | REASONED |
+| verify-listeners: Inventory all 5432 listeners including IPv6; wildcard becomes intended addresses after restart, with a successful intended-interface TLS control. | PostgreSQL documentation unknown | REASONED |
+| verify-ownership: Real app login reads existing fixtures but cannot ALTER or SET ROLE owner; owner alteration succeeds as the matched control. | PostgreSQL documentation unknown | REASONED |
+| verify-admission: PUBLIC CONNECT permits a nonmember; revocation must produce database permission denial while app connects, not an HBA/password error. | PostgreSQL documentation unknown | REASONED |
+| verify-creation: PUBLIC CREATE and TEMPORARY probes must change from success to privilege denial, retaining administrator and application positive controls. | PostgreSQL documentation unknown | REASONED |
+| verify-path: Trusted/shadow fixtures independently test login and function-local paths; omitted pg_temp permits shadow relations and restoring it returns trusted. | PostgreSQL documentation unknown | REASONED |
+| verify-execute: With admission and schema lookup held constant, PUBLIC EXECUTE removal denies the nonmember while the application function call succeeds. | PostgreSQL documentation unknown | REASONED |
+| verify-logs: Successful connection, disconnection and DDL produce correlated records only when enabled; SHOW and extension installation do not prove delivery. | PostgreSQL documentation unknown | REASONED |
+| verify-audit: Compare none versus enabled audit classes in fresh app sessions; the same seeded read succeeds and only the enabled state produces its READ event. | pgAudit source dedd42ec3fe880bf581dd578c0df87ed4ad246cd | REASONED |
+| diagnostics: pg_stat_ssl describes live sessions; verifier format, HBA/current-file views and superseded settings do not prove negotiated auth or accepted TLS reload. | PostgreSQL documentation unknown | REASONED |
+| local-guards: Historical shell and argument checks exercised local guards only, without service contact. | PostgreSQL documentation unknown | DEMONSTRATED |
+| local-parsing: Historical PostgreSQL 18.6 parsed 14 configuration values and rejected an invalid Boolean; no certificates, pgAudit, running HBA or SQL were exercised. | PostgreSQL documentation unknown | DEMONSTRATED |
+| verify-default-grants: Owner-created future tables must be readable with default grants and denied without them while the existing-table control succeeds; recreate fixtures per state. | PostgreSQL documentation unknown | REASONED |
+<!-- version-basis:end -->
 
 Default posture: PostgreSQL should not listen on public interfaces at all. Widen `listen_addresses` only for genuine remote clients, and then require both TLS and SCRAM authentication as below.
 
@@ -219,7 +437,7 @@ Local checks performed: both shell blocks passed `bash -n` and ShellCheck. Unsub
 
 Demonstrate exposed configurations only in an isolated disposable deployment. Record the server/client versions, fixture, commands, output, and relevant server logs for both states. A DNS error, timeout, missing CA file, or unrelated authentication failure does not prove enforcement.
 
-### 8.1. TLS and authentication
+### 8.1. TLS and authentication (REASONED: TLS/authentication comparisons from cited PostgreSQL documentation; no authorized writable deployment or certificate fixtures.)
 
 **REASONED: no authorized writable PostgreSQL deployment with TLS, credentials, and controllable HBA rules.**
 
@@ -291,7 +509,7 @@ The first-match rule, SCRAM negotiation, and TLS-mode distinctions are documente
 
 If using `clientcert=verify-full`, also test with two trusted, otherwise valid client certificates: one matching the requested database identity and one not matching it or any configured mapping. Run `tls` with each, supplying the certificate through the test client's normal libpq certificate configuration. With exposed `clientcert=verify-ca`, both identities can pass certificate validation; fixed `verify-full` rejects the mismatched identity while the matching certificate and correct password still connect. **REASONED: the writable deployment and client-certificate fixture are unavailable.** See [client certificate options](https://www.postgresql.org/docs/current/auth-pg-hba-conf.html) and [libpq client certificates](https://www.postgresql.org/docs/current/libpq-ssl.html).
 
-### 8.2. Listener binding
+### 8.2. Listener binding (REASONED: listener comparison from cited PostgreSQL and ss documentation; no authorized writable deployment.)
 
 **REASONED: no authorized writable deployment in which to change and inspect PostgreSQL listeners.**
 
@@ -315,7 +533,7 @@ Run on the database host, substituting the intended bind address. Inspect every 
 
 In the exposed disposable fixture, `listen_addresses = '*'` produces wildcard listeners on available IP interfaces. After setting the intended loopback/private addresses and restarting, only the intended addresses should remain. Pair this observation with a successful `tls` connection through an intended interface; no listener at all is not a passing result. See [listen_addresses](https://www.postgresql.org/docs/current/runtime-config-connection.html) and [ss](https://manpages.ubuntu.com/manpages/noble/man8/ss.8.html).
 
-### 8.3. Runtime access and ownership
+### 8.3. Runtime access and ownership (REASONED: ownership and grant comparisons from cited PostgreSQL documentation; no authorized writable cluster.)
 
 **REASONED: no authorized writable cluster for ownership, membership, and default-grant fixtures.**
 
@@ -373,7 +591,7 @@ The fixed state returns the seeded row. In the comparison fixture without the de
 
 These expected distinctions follow [ownership privileges](https://www.postgresql.org/docs/current/ddl-priv.html), [SET ROLE](https://www.postgresql.org/docs/current/sql-set-role.html) and [default grants](https://www.postgresql.org/docs/current/sql-alterdefaultprivileges.html).
 
-### 8.4. Database admission and schema creation
+### 8.4. Database admission and schema creation (REASONED: admission and creation comparisons from cited PostgreSQL documentation; no disposable cluster or nonmember login.)
 
 **REASONED: no authorized writable cluster with a disposable nonmember login and controllable HBA/ACLs.**
 
@@ -407,7 +625,7 @@ ROLLBACK;
 
 The exposed default permits creation; the fixed state denies it. Pair the denial with a successful `SELECT * FROM app_data.security_probe;` as `app` and successful temporary-table creation from an authorized administrative connection. See [TEMPORARY privileges](https://www.postgresql.org/docs/current/ddl-priv.html) and [CREATE TABLE](https://www.postgresql.org/docs/current/sql-createtable.html).
 
-### 8.5. Schema lookup and function execution
+### 8.5. Schema lookup and function execution (REASONED: lookup and execution comparisons from cited PostgreSQL documentation; no writable cluster or function fixtures.)
 
 **REASONED: no authorized writable cluster for trusted/shadow tables and privileged-function fixtures.**
 
@@ -511,7 +729,7 @@ The same call must then fail for the nonmember with a function permission denial
 
 Discard the disposable fixture after testing. The temporary-table and nonmember admission grants above are test prerequisites, not production grants.
 
-### 8.6. Core logging
+### 8.6. Core logging (REASONED: log-delivery comparison from cited PostgreSQL documentation; no writable cluster or collected logs.)
 
 **REASONED: no authorized writable cluster and accessible collected log destination.**
 
@@ -535,7 +753,7 @@ Compare a disposable fixture with connection/disconnection logging disabled and 
 
 `ddl` need not record the successful `SELECT 1` statement. Inspect actual records; `SHOW` output alone does not demonstrate delivery. See the [logging reference](https://www.postgresql.org/docs/current/runtime-config-logging.html).
 
-### 8.7. Optional pgAudit
+### 8.7. Optional pgAudit (REASONED: audit-event comparison from cited pgAudit documentation; no writable cluster with pgAudit and logs.)
 
 **REASONED: no authorized writable cluster with pgAudit and access to its server-side logs.**
 
@@ -549,7 +767,7 @@ Compare fresh sessions with the effective `pgaudit.log` setting disabled (`none`
 
 Extension installation alone is not a passing result. See the [pgAudit session audit documentation](https://github.com/pgaudit/pgaudit/blob/dedd42ec3fe880bf581dd578c0df87ed4ad246cd/README.md).
 
-### 8.8. Supplemental diagnostics
+### 8.8. Supplemental diagnostics (REASONED: diagnostics from cited PostgreSQL documentation; no authorized target service.)
 
 **REASONED: no authorized target service on which to execute these administrative queries.**
 

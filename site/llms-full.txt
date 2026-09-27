@@ -8398,6 +8398,63 @@ openssl s_client -connect app.example.com:443 -servername app.example.com \
 
 # PostgreSQL: TLS and authentication
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| bind: Keep listen_addresses local; widening requires a restart and listener inspection. | PostgreSQL documentation unknown | REASONED |
+| server-tls: Enable TLS with certificate/key files and a postgres-owned key at mode 600. | PostgreSQL documentation unknown | REASONED |
+| tls-minimum: ssl_min_protocol_version sets TLSv1.2; this setting requires PostgreSQL 12+. | PostgreSQL TLS minimum 12; PostgreSQL documentation unknown | REASONED |
+| scram-default: password_encryption is scram-sha-256 by default from PostgreSQL 14. | PostgreSQL SCRAM default 14; PostgreSQL documentation unknown | REASONED |
+| reload: pg_reload_conf signals reload, not certificate acceptance; invalid TLS replacements can retain old settings; passphrase reload has extra requirements. | PostgreSQL documentation unknown | REASONED |
+| image-bind: Pinned Debian/Alpine images for 14 through 19 initialize from listen_addresses='*'; restrict published ports. | PostgreSQL image source d588a44673ea9d123c1acb1a6924de10a27fc315 | REASONED |
+| image-init-auth: Pinned initdb defaults to trust for sockets and loopback unless auth arguments override it; recorded tags cover 14.24 through 19 beta 4. | PostgreSQL initdb source REL_17_11; PostgreSQL image source d588a44673ea9d123c1acb1a6924de10a27fc315 | REASONED |
+| image-host-auth: The entrypoint appends host all all all using POSTGRES_HOST_AUTH_METHOD, defaulting to password_encryption; earlier matching rules win. | PostgreSQL image source d588a44673ea9d123c1acb1a6924de10a27fc315; PostgreSQL documentation unknown | REASONED |
+| image-password: New-directory initialization requires POSTGRES_PASSWORD or its file unless host auth is trust; never select trust for reachable clients. | PostgreSQL image source d588a44673ea9d123c1acb1a6924de10a27fc315 | REASONED |
+| hba: host permits plaintext and TLS; hostssl plus SCRAM restricts remote access. Local peer is separate; first-match HBA has no fallback after authentication failure. | PostgreSQL documentation unknown | REASONED |
+| hba-reload: Unix HBA edits require reload; Windows applies edits to subsequent connections without that same requirement. | PostgreSQL documentation unknown | REASONED |
+| password-migration: Changing encryption does not convert stored verifiers; use prompted psql password reset. An md5 rule can negotiate SCRAM. | PostgreSQL documentation unknown | REASONED |
+| md5-deprecation: PostgreSQL 18 deprecates MD5 password support. | PostgreSQL MD5 and logging changes 18 | REASONED |
+| clientcert: PostgreSQL 12+ clientcert=verify-full adds CA-validated client identity to SCRAM, matching username/mapping, normally by Common Name. | PostgreSQL TLS minimum 12; PostgreSQL documentation unknown | REASONED |
+| mfa: Machine certificates do not establish human MFA; RADIUS is an alternative HBA method, not an added SCRAM factor or general interactive MFA flow. | PostgreSQL documentation unknown | REASONED |
+| runtime: Separate NOLOGIN owner/runtime roles; remove superuser, database/role creation, replication and RLS bypass from app; review inherited grants. | PostgreSQL documentation unknown | REASONED |
+| ownership: NOLOGIN does not prevent membership access; keep app outside owner roles and transfer existing objects separately from database ownership. | PostgreSQL documentation unknown | REASONED |
+| grants: Grant runtime schema, table and sequence access only inside its boundary; owner-specific default grants affect future objects, not existing ones. | PostgreSQL documentation unknown | REASONED |
+| membership: PostgreSQL 16+ membership INHERIT/SET options are distinct; role INHERIT defaults new memberships, and NOINHERIT does not prohibit SET ROLE. | PostgreSQL membership and require_auth 16 | REASONED |
+| admission: PUBLIC receives CONNECT and TEMPORARY by default; restrict each database, preserving required operators. CONNECT revocation affects new sessions only. | PostgreSQL documentation unknown | REASONED |
+| schema-create: Revoke unwanted PUBLIC CREATE and optional TEMPORARY; direct grants, ownership and memberships can still confer access; preserve required USAGE. | PostgreSQL documentation unknown | REASONED |
+| schema-default: PostgreSQL 15 new databases remove PUBLIC CREATE on public and use pg_database_owner; upgrades/restores can preserve old rights; CONNECT is unchanged. | PostgreSQL schema defaults 15 | REASONED |
+| search-path: Trust only owner-writable schemas; set app's login path with pg_temp last. Reconnect; SET ROLE does not apply login defaults and app can change its path. | PostgreSQL documentation unknown | REASONED |
+| definer: SECURITY DEFINER functions need their own safe path and restricted EXECUTE; revoke global default PUBLIC EXECUTE for future owner-created functions. | PostgreSQL documentation unknown | REASONED |
+| client-tls: libpq verify-full checks hostname and CA; require does not check hostname, even when a root CA makes it validate the chain. | PostgreSQL documentation unknown | REASONED |
+| gss: Set gssencmode=disable when requiring TLS verification; working GSSAPI encryption otherwise can take precedence; other drivers need equivalent settings. | PostgreSQL documentation unknown | REASONED |
+| logging: Collect connection/disconnection and DDL logs; logging_collector requires restart, log_file_mode is Unix-only, and broader statement logging risks sensitive values. | PostgreSQL documentation unknown | REASONED |
+| logging-version: PostgreSQL 18 log_connections accepts a list; on retains receipt, authentication and authorization logging, not every new option. | PostgreSQL MD5 and logging changes 18; PostgreSQL documentation unknown | REASONED |
+| pgaudit: pgAudit 18.x targets PostgreSQL 18; match server major, preserve preloads, restart, create extension before pgaudit.log and reconnect; installation is not audit delivery. | pgAudit source dedd42ec3fe880bf581dd578c0df87ed4ad246cd; PostgreSQL documentation unknown | REASONED |
+| verify-password: Wrong prompted password succeeds under trust but must fail under password authentication while the correct-password TLS control succeeds. | PostgreSQL documentation unknown | REASONED |
+| verify-scram: libpq 16+ require_auth=scram-sha-256 rejects a non-SCRAM exchange; success proves negotiation, not removal of all md5 rules. | PostgreSQL membership and require_auth 16; PostgreSQL documentation unknown | REASONED |
+| verify-plaintext: Plaintext succeeds under a permitting host rule; fixed HBA refuses no-encryption access while the same TLS login succeeds. | PostgreSQL documentation unknown | REASONED |
+| verify-identity: A trusted wrong-host certificate can pass require but must fail verify-full; restore the matching certificate as the positive control. | PostgreSQL documentation unknown | REASONED |
+| verify-clientcert: Compare matching and mismatched trusted client identities: verify-ca accepts both, verify-full rejects the mismatch while correct identity/password succeeds. | PostgreSQL documentation unknown | REASONED |
+| verify-listeners: Inventory all 5432 listeners including IPv6; wildcard becomes intended addresses after restart, with a successful intended-interface TLS control. | PostgreSQL documentation unknown | REASONED |
+| verify-ownership: Real app login reads existing fixtures but cannot ALTER or SET ROLE owner; owner alteration succeeds as the matched control. | PostgreSQL documentation unknown | REASONED |
+| verify-admission: PUBLIC CONNECT permits a nonmember; revocation must produce database permission denial while app connects, not an HBA/password error. | PostgreSQL documentation unknown | REASONED |
+| verify-creation: PUBLIC CREATE and TEMPORARY probes must change from success to privilege denial, retaining administrator and application positive controls. | PostgreSQL documentation unknown | REASONED |
+| verify-path: Trusted/shadow fixtures independently test login and function-local paths; omitted pg_temp permits shadow relations and restoring it returns trusted. | PostgreSQL documentation unknown | REASONED |
+| verify-execute: With admission and schema lookup held constant, PUBLIC EXECUTE removal denies the nonmember while the application function call succeeds. | PostgreSQL documentation unknown | REASONED |
+| verify-logs: Successful connection, disconnection and DDL produce correlated records only when enabled; SHOW and extension installation do not prove delivery. | PostgreSQL documentation unknown | REASONED |
+| verify-audit: Compare none versus enabled audit classes in fresh app sessions; the same seeded read succeeds and only the enabled state produces its READ event. | pgAudit source dedd42ec3fe880bf581dd578c0df87ed4ad246cd | REASONED |
+| diagnostics: pg_stat_ssl describes live sessions; verifier format, HBA/current-file views and superseded settings do not prove negotiated auth or accepted TLS reload. | PostgreSQL documentation unknown | REASONED |
+| local-guards: Historical shell and argument checks exercised local guards only, without service contact. | PostgreSQL documentation unknown | DEMONSTRATED |
+| local-parsing: Historical PostgreSQL 18.6 parsed 14 configuration values and rejected an invalid Boolean; no certificates, pgAudit, running HBA or SQL were exercised. | PostgreSQL documentation unknown | DEMONSTRATED |
+| verify-default-grants: Owner-created future tables must be readable with default grants and denied without them while the existing-table control succeeds; recreate fixtures per state. | PostgreSQL documentation unknown | REASONED |
+<!-- version-basis:end -->
+
 Default posture: PostgreSQL should not listen on public interfaces at all. Widen `listen_addresses` only for genuine remote clients, and then require both TLS and SCRAM authentication as below.
 
 ## 1. Server TLS
@@ -8617,7 +8674,7 @@ Local checks performed: both shell blocks passed `bash -n` and ShellCheck. Unsub
 
 Demonstrate exposed configurations only in an isolated disposable deployment. Record the server/client versions, fixture, commands, output, and relevant server logs for both states. A DNS error, timeout, missing CA file, or unrelated authentication failure does not prove enforcement.
 
-### 8.1. TLS and authentication
+### 8.1. TLS and authentication (REASONED: TLS/authentication comparisons from cited PostgreSQL documentation; no authorized writable deployment or certificate fixtures.)
 
 **REASONED: no authorized writable PostgreSQL deployment with TLS, credentials, and controllable HBA rules.**
 
@@ -8689,7 +8746,7 @@ The first-match rule, SCRAM negotiation, and TLS-mode distinctions are documente
 
 If using `clientcert=verify-full`, also test with two trusted, otherwise valid client certificates: one matching the requested database identity and one not matching it or any configured mapping. Run `tls` with each, supplying the certificate through the test client's normal libpq certificate configuration. With exposed `clientcert=verify-ca`, both identities can pass certificate validation; fixed `verify-full` rejects the mismatched identity while the matching certificate and correct password still connect. **REASONED: the writable deployment and client-certificate fixture are unavailable.** See [client certificate options](https://www.postgresql.org/docs/current/auth-pg-hba-conf.html) and [libpq client certificates](https://www.postgresql.org/docs/current/libpq-ssl.html).
 
-### 8.2. Listener binding
+### 8.2. Listener binding (REASONED: listener comparison from cited PostgreSQL and ss documentation; no authorized writable deployment.)
 
 **REASONED: no authorized writable deployment in which to change and inspect PostgreSQL listeners.**
 
@@ -8713,7 +8770,7 @@ Run on the database host, substituting the intended bind address. Inspect every 
 
 In the exposed disposable fixture, `listen_addresses = '*'` produces wildcard listeners on available IP interfaces. After setting the intended loopback/private addresses and restarting, only the intended addresses should remain. Pair this observation with a successful `tls` connection through an intended interface; no listener at all is not a passing result. See [listen_addresses](https://www.postgresql.org/docs/current/runtime-config-connection.html) and [ss](https://manpages.ubuntu.com/manpages/noble/man8/ss.8.html).
 
-### 8.3. Runtime access and ownership
+### 8.3. Runtime access and ownership (REASONED: ownership and grant comparisons from cited PostgreSQL documentation; no authorized writable cluster.)
 
 **REASONED: no authorized writable cluster for ownership, membership, and default-grant fixtures.**
 
@@ -8771,7 +8828,7 @@ The fixed state returns the seeded row. In the comparison fixture without the de
 
 These expected distinctions follow [ownership privileges](https://www.postgresql.org/docs/current/ddl-priv.html), [SET ROLE](https://www.postgresql.org/docs/current/sql-set-role.html) and [default grants](https://www.postgresql.org/docs/current/sql-alterdefaultprivileges.html).
 
-### 8.4. Database admission and schema creation
+### 8.4. Database admission and schema creation (REASONED: admission and creation comparisons from cited PostgreSQL documentation; no disposable cluster or nonmember login.)
 
 **REASONED: no authorized writable cluster with a disposable nonmember login and controllable HBA/ACLs.**
 
@@ -8805,7 +8862,7 @@ ROLLBACK;
 
 The exposed default permits creation; the fixed state denies it. Pair the denial with a successful `SELECT * FROM app_data.security_probe;` as `app` and successful temporary-table creation from an authorized administrative connection. See [TEMPORARY privileges](https://www.postgresql.org/docs/current/ddl-priv.html) and [CREATE TABLE](https://www.postgresql.org/docs/current/sql-createtable.html).
 
-### 8.5. Schema lookup and function execution
+### 8.5. Schema lookup and function execution (REASONED: lookup and execution comparisons from cited PostgreSQL documentation; no writable cluster or function fixtures.)
 
 **REASONED: no authorized writable cluster for trusted/shadow tables and privileged-function fixtures.**
 
@@ -8909,7 +8966,7 @@ The same call must then fail for the nonmember with a function permission denial
 
 Discard the disposable fixture after testing. The temporary-table and nonmember admission grants above are test prerequisites, not production grants.
 
-### 8.6. Core logging
+### 8.6. Core logging (REASONED: log-delivery comparison from cited PostgreSQL documentation; no writable cluster or collected logs.)
 
 **REASONED: no authorized writable cluster and accessible collected log destination.**
 
@@ -8933,7 +8990,7 @@ Compare a disposable fixture with connection/disconnection logging disabled and 
 
 `ddl` need not record the successful `SELECT 1` statement. Inspect actual records; `SHOW` output alone does not demonstrate delivery. See the [logging reference](https://www.postgresql.org/docs/current/runtime-config-logging.html).
 
-### 8.7. Optional pgAudit
+### 8.7. Optional pgAudit (REASONED: audit-event comparison from cited pgAudit documentation; no writable cluster with pgAudit and logs.)
 
 **REASONED: no authorized writable cluster with pgAudit and access to its server-side logs.**
 
@@ -8947,7 +9004,7 @@ Compare fresh sessions with the effective `pgaudit.log` setting disabled (`none`
 
 Extension installation alone is not a passing result. See the [pgAudit session audit documentation](https://github.com/pgaudit/pgaudit/blob/dedd42ec3fe880bf581dd578c0df87ed4ad246cd/README.md).
 
-### 8.8. Supplemental diagnostics
+### 8.8. Supplemental diagnostics (REASONED: diagnostics from cited PostgreSQL documentation; no authorized target service.)
 
 **REASONED: no authorized target service on which to execute these administrative queries.**
 
@@ -9439,6 +9496,72 @@ Put the human paths to the host behind MFA per [mfa.md](mfa.md).
 
 # MySQL and MariaDB: TLS and authentication
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| classic-bind: MySQL bind_address defaults to *; restrict classic TCP 3306 to loopback or deliberate private interfaces. | MySQL reference 8.4 | REASONED |
+| server-tls: Configure CA/certificate/key, require_secure_transport and TLSv1.2/TLSv1.3, then restart; TLSv1.3 needs compatible libraries, MySQL 8.0.16+/OpenSSL 1.1.1+. | MySQL reference 8.0; MariaDB documentation unknown | REASONED |
+| auto-cert: MySQL can generate missing TLS files under documented conditions; generated server certificates lack the deployment hostname and fail VERIFY_IDENTITY. | MySQL reference 8.4 | REASONED |
+| socket: Global require_secure_transport permits Unix sockets; MySQL account REQUIRE SSL takes precedence and disallows that account's socket connection. | MySQL reference 8.4 | REASONED |
+| maria-tls: MariaDB require_secure_transport dates from 10.5.2; 11.4 automatic TLS needs compatible clients and plugins, so mixed deployments may still need explicit CA settings. | MariaDB documentation unknown | REASONED |
+| x-listener: MySQL 8.0/8.4/9.7/26.7 enable X Plugin with separate wildcard 33060; bind it separately or set mysqlx=OFF and restart. | MySQL reference 8.0; MySQL reference 8.4; MySQL reference 9.7; MySQL reference 26.7 | REASONED |
+| maria-protocol: MariaDB has no MySQL X Protocol; omit X Plugin options because unknown options can prevent startup. | MariaDB documentation unknown | REASONED |
+| image-listeners: Pinned MySQL images install Docker packages with no bind setting, retaining wildcard classic/X listeners unless arguments or option files restrict them. | MySQL image source 2f988f198f35d25b1454fa2504a0e4c348100549; MySQL Docker package mysql-8.4.9; MySQL reference 8.4; MySQL reference 9.7; MySQL reference 26.7 | REASONED |
+| mimage-listeners: Pinned MariaDB 10.6-13.1 Ubuntu images comment out bind-address; UBI leaves it commented, enabling IPv4 wildcard and IPv6 where available. | MariaDB image source 1a4c8e99f7816c8d97df11eee52098522dc770cf; MariaDB package source mariadb-11.8.9 | REASONED |
+| skip-networking: skip_networking stops TCP listeners, including MySQL X; mounted options and mysqlx=OFF can restrict image exposure. | MySQL Docker package mysql-8.4.9; MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| image-root: New-directory initialization defaults root host to %, accepting _FILE; empty files suppress remote root unless MariaDB's preferred variable supplies a value. | MySQL image source 2f988f198f35d25b1454fa2504a0e4c348100549; MariaDB image source 1a4c8e99f7816c8d97df11eee52098522dc770cf | REASONED |
+| image-root-grants: A nonempty non-localhost root host gets ALL on *.* WITH GRANT OPTION; MariaDB also grants PROXY. Prefer localhost and private publication. | MySQL image source 2f988f198f35d25b1454fa2504a0e4c348100549; MariaDB image source 1a4c8e99f7816c8d97df11eee52098522dc770cf | REASONED |
+| image-empty-password: Initialization needs a password/hash, random password or empty-password opt-in; any nonempty opt-in, even no, can create passwordless remote root. | MySQL image source 2f988f198f35d25b1454fa2504a0e4c348100549; MariaDB image source 1a4c8e99f7816c8d97df11eee52098522dc770cf | REASONED |
+| account-tls: REQUIRE SSL or X509 independently constrains existing accounts; match the source address seen by the server and avoid deprecated MySQL host wildcards. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| runtime: Use separate table-scoped runtime accounts and migration administrators; MySQL caching_sha2_password and MariaDB ed25519 examples require compatible clients. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| password-input: Enter password-bearing SQL through authenticated client input, never shell or -e arguments; use an empty -p prompt for login. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| maria-ed25519: MariaDB 10.4+ supports ed25519 PASSWORD() form; install the plugin and check connectors; ordinary IDENTIFIED BY is not MySQL's default. | MariaDB documentation unknown | REASONED |
+| cleanup: Interactive hardening removes anonymous users, unused remote root and disposable test access; inventory grants and preserve administrative access. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| maria-root: MariaDB 10.4+ normally supports socket-authenticated local root; mysql.user is a compatibility view, not a table to edit directly. | MariaDB documentation unknown | REASONED |
+| roles: Role assignment and activation differ; MariaDB default-role syntax uses FOR and one current role; MySQL supports multiple active roles. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| admin-privileges: Withhold FILE, SUPER and account/global administration; MySQL 8.4 replaces SET_USER_ID with newer definer privileges; MariaDB SET USER dates from 10.5. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| maria-public: MariaDB 10.11+ PUBLIC grants apply to all users; inspect and revoke at their granted scope while preserving intended access. | MariaDB documentation unknown | REASONED |
+| mysql-auth: MySQL 8.0/8.4 default new accounts to caching_sha2_password; existing plugins persist. Native passwords deprecated in 8.0.34, disabled in 8.4, removed in 9.0. | MySQL reference 8.0; MySQL reference 8.4 | REASONED |
+| maria-sha2: MariaDB documents server caching_sha2_password in Community 12.1 and Enterprise 11.8; syntax/defaults are not interchangeable with MySQL. | MariaDB documentation unknown | REASONED |
+| validation: MySQL 8.0/8.4 validation component uses dotted settings; inspect installation and migrate old plugins before applying MEDIUM and example length values. | MySQL reference 8.0; MySQL reference 8.4 | REASONED |
+| mysql-reuse: SET PERSIST retains example password history/reuse policy across restart; account-specific settings override globals. | MySQL reference 8.4 | REASONED |
+| password-current: PASSWORD REQUIRE CURRENT governs ordinary self-service changes, not privileged resets; external accounts use their identity system's policy. | MySQL reference 8.4 | REASONED |
+| expiry: Use account expiration only with a working rotation process; MariaDB supports expiration too. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| maria-validation: Install MariaDB Simple Password Check and reuse plugins; persist their distinct settings and strict validation so supplied hashes cannot bypass validators. | MariaDB documentation unknown | REASONED |
+| maria-reuse: MariaDB reuse checking dates from 10.7; use plugin 2.0. Interval zero retains history indefinitely; the format upgrade invalidated earlier history. | MariaDB documentation unknown | REASONED |
+| timestamp: MariaDB secure_timestamp defaults NO, permitting session-clock expiration bypass; restart with YES or replication, choosing replication on replicas. | MariaDB documentation unknown | REASONED |
+| mfa: MySQL 8.0.27+ supports up to three factors, with restrictions on later factors; Enterprise FIDO is deprecated from 8.0.35 and removed in 8.4; WebAuthn replaces it from 8.2. | MySQL reference 8.0; MySQL reference 8.4 | REASONED |
+| machine-cert: Community REQUIRE X509 adds a machine-held certificate to password authentication, not human MFA; protect human entrypoints separately. | MySQL reference 8.4 | REASONED |
+| local-loading: Disable LOCAL on server and clients separately; MySQL 8.4 server default is OFF, MariaDB's is ON; CLI option groups do not configure application libraries. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| server-files: MySQL secure_file_priv=NULL disables governed operations; empty removes restriction. MariaDB uses a directory, not NULL; both require restart. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| file-privilege: Withhold FILE from runtime users, but LOAD DATA LOCAL does not require MySQL FILE; test import/restore workflows before disabling LOCAL. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| client-identity: MySQL REQUIRED encrypts, VERIFY_CA checks chain, VERIFY_IDENTITY adds hostname; MariaDB uses --ssl --ssl-verify-server-cert with CA trust. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| client-cert: X509 accounts also need the client certificate and protected key; CA trust alone is insufficient. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| verify-transport: Matched TLS success identifies CURRENT_USER and a cipher; plaintext must succeed without restrictions and fail after enforcement. Error 3159 is specific; 1045 alone is not. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| verify-server-cert: Wrong trusted identity or unrelated CA must fail verification while the correct CA/hostname succeeds against the same endpoint. | MySQL reference 8.4 | REASONED |
+| verify-client-cert: With option-file inheritance disabled, SSL-only permits certificate-free login; X509 rejects it while the certificate-bearing control succeeds; test subject/issuer separately. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| verify-listeners: Inspect all classic/X listeners and nondefault ports; fixed interfaces retain permitted-client success. A stopped service is not proof of restriction. | MySQL reference 8.4 | REASONED |
+| socket-activation: MariaDB systemd socket activation can bypass bind_address selection; configure the socket unit or disable activation and inspect listeners. | MariaDB documentation unknown | REASONED |
+| verify-roles: MySQL SHOW GRANTS omits mandatory roles and unexpanded role privileges; combine mandatory/explicit roles with USING and test SET ROLE ALL. | MySQL reference 8.4 | REASONED |
+| verify-maria-roles: MariaDB requires recursive role inspection and each role activated separately; PUBLIC applies independently, and USAGE ON *.* grants no data privileges. | MariaDB documentation unknown | REASONED |
+| verify-grants: Existing orders read stays allowed while private_probe changes from success under broad grants to privilege denial; test each available role. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| verify-cleanup: Before/after inventories must remove unintended anonymous, remote-root and test grants while preserving administrative and runtime positive controls. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| verify-local: Disable LOCAL separately at client and server, keeping the other side enabled; a readable fixture loads in the exposed state, is refused fixed, and ordinary insertion succeeds. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| verify-server-files: MySQL NULL must refuse a previously successful readable-file load; MariaDB must deny an outside-directory fixture while permitting the allowed directory. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| verify-policy: Read global policy and account overrides, then repeat after restart; MariaDB plugins must be active, reuse version 2.0, and secure_timestamp REPLICATION or deliberate YES. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| verify-weak: Weak password accepted without validation must be rejected with validation while a fresh compliant password succeeds under the same auth plugin. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| verify-reuse: After two compliant passwords, reuse of the first must fail only with recorded protection; a third fresh password must succeed. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| visibility: SHOW DATABASES visibility follows privileges and can broaden through global grants; hiding names is not an access boundary. | MySQL reference 8.4 | REASONED |
+| local-guards: Historical invalid-input and valid-dispatch checks tested guards only; no database behavior was simulated. | MySQL reference 8.4; MariaDB documentation unknown | DEMONSTRATED |
+| local-ini: Historical in-memory INI parsing checked structure only; native configuration acceptance and restart behavior remain unobserved. | MySQL reference 8.4; MariaDB documentation unknown | DEMONSTRATED |
+<!-- version-basis:end -->
+
 Default posture: keep the server on `127.0.0.1` and open it to remote clients only deliberately, with TLS required. Oracle documents MySQL's `bind_address` default as `*`; do not assume a package has already restricted it. [MySQL server variables](https://dev.mysql.com/doc/refman/8.4/en/server-system-variables.html#sysvar_bind_address).
 
 ## 1. Server TLS
@@ -9796,7 +9919,7 @@ All five INI fragments parsed with an in-memory INI parser. This checks basic st
 
 The snapshot's C2 scanner does not classify `mysql`, `mariadb`, or `ss` as probes. A supplemental in-memory check added those command names, accepted these guarded blocks, and detected a deliberately unguarded probe before the guard. No gate or repository file was changed.
 
-### TLS and account requirements
+### TLS and account requirements (REASONED: TLS/account comparisons from cited vendor documentation; no writable deployment, clients, credentials or certificates.)
 
 **REASONED: missing a writable deployment, compatible clients, known-good credentials, and deployment certificates.**
 
@@ -9914,7 +10037,7 @@ The certificate-bearing positive must succeed as the intended `batch` account wi
 
 For MariaDB, adapt the whole block using `mariadb --no-defaults`, omit MySQL's `--no-login-paths`, and replace `--ssl-mode=VERIFY_IDENTITY` with `--ssl --ssl-verify-server-cert` in both commands. Retain the CA, certificate/key positive, certificate-free negative, password prompts, and guards. [MariaDB client options](https://mariadb.com/docs/server/clients-and-utilities/mariadb-client/mariadb-command-line-client).
 
-### Listeners
+### Listeners (REASONED: listener comparison from cited MySQL documentation; no server namespace or writable configuration.)
 
 **REASONED: missing access to the database server's network namespace and its writable listener configuration.**
 
@@ -9940,7 +10063,7 @@ Run on the database server, using its actual `hostname` output:
 
 Read every listener, including configured nondefault ports. In the exposed state, classic protocol or X Protocol listens on an unintended interface. In the fixed loopback deployment, classic protocol remains available on loopback, and X Protocol is either loopback-only or disabled. For deliberate remote access, require only the intended private interfaces. Pair this observation with a successful connection from the permitted location; no listener at all can mean a stopped service. [MySQL listener configuration](https://dev.mysql.com/doc/refman/8.4/en/server-system-variables.html#sysvar_bind_address), [X Plugin listener configuration](https://dev.mysql.com/doc/refman/8.4/en/x-plugin-options-system-variables.html).
 
-### Scoped grants and cleanup
+### Scoped grants and cleanup (REASONED: grant/cleanup comparisons from cited vendor documentation; no writable deployment, credentials or fixtures.)
 
 **REASONED: missing a writable deployment, administrative credentials, and disposable tables for exposed/fixed comparisons.**
 
@@ -9987,7 +10110,7 @@ The positive read of `orders` must succeed. With an exposed broad read grant, th
 
 Repeat the two installation inventories from section 2 before and after cleanup. The fixed inventory has no anonymous accounts, no unused remote root accounts, and no unintended anonymous or test-schema grants. Deliberately retained administrative accounts and similarly named application databases must remain identifiable. Preserve a successful administrative login and the runtime positive control across cleanup. [MySQL cleanup behavior](https://dev.mysql.com/doc/refman/8.4/en/mysql-secure-installation.html), [MariaDB cleanup behavior](https://mariadb.com/docs/server/clients-and-utilities/deployment-tools/mariadb-secure-installation).
 
-### File-loading restrictions
+### File-loading restrictions (REASONED: loading comparisons from cited vendor documentation; no writable deployment, files or import table.)
 
 **REASONED: missing a writable deployment, client/server fixture files, and a disposable import table.**
 
@@ -10026,7 +10149,7 @@ For MySQL, first require this known-readable file to load under a policy permitt
 
 For MariaDB, retain successful loading from the permitted directory and attempt the same statement with a known-readable fixture outside it. That outside-directory load must succeed in the isolated unrestricted baseline and fail under the directory restriction. Missing files, operating-system permission failures, and missing SQL privileges do not demonstrate `secure_file_priv`. [MySQL server-file policy](https://dev.mysql.com/doc/refman/8.4/en/server-system-variables.html#sysvar_secure_file_priv), [MariaDB server-file policy](https://mariadb.com/docs/server/server-management/variables-and-modes/server-system-variables#secure_file_priv).
 
-### Password validation and reuse
+### Password validation and reuse (REASONED: password comparisons from cited vendor documentation; no writable deployment, validation libraries or disposable account.)
 
 **REASONED: missing a writable deployment, installed validation libraries, and a disposable password-managed account.**
 
@@ -10904,6 +11027,76 @@ QE requires a new encrypted collection created with an `encryptedFields` definit
 
 # Redis: TLS and authentication
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| baseline: Redis 6.0+ supplies TLS and ACLs; TLS needs TLS-enabled server/client builds. Restrict bind and credentials before remote access. | Redis documentation unknown; Redis configuration 6.0.20 | REASONED |
+| optional-bind: Redis 6.2+ -::1 makes an absent interface optional, not an occupied address; Redis 6.0 uses plain loopback binding. | Redis configuration 6.2.14; Redis configuration 6.0.20 | REASONED |
+| protected-mode: 6.0/6.2 protected mode requires default nopass and no explicit bind; 7.0 drops the bind condition. Explicit wildcard bind can expose passwordless 6.x. | Redis configuration 6.0.20; Redis configuration 6.2.14; Redis configuration 7.0.15 | REASONED |
+| image-protected: Pinned 6.2-7.4 images and the checked 8.x tag patch protected-mode to no and run redis-server without a config; publish privately with explicit credentials. | Redis image source 584feaab6cd12a77866c121beff1bb16ff239486; Redis image tag v8.10.2 | REASONED |
+| compiled-bind: 7.4.8/8.10.2 compiled bind is * -::*; IPv6 wildcard applies where available. | Redis compiled defaults 7.4.8; Redis compiled defaults 8.10.2 | REASONED |
+| compiled-user: Checked 7.4.8/8.10.2 default users are on nopass +@all; disabled DEBUG/MODULE commands remain disabled. | Redis compiled defaults 7.4.8; Redis compiled defaults 8.10.2; Redis configuration 8.2.1 | REASONED |
+| password: requirepass supplies one shared AUTH password; prefer separate least-privilege ACL identities. | Redis documentation unknown | REASONED |
+| keyless: ~app:* constrains key arguments, not keyless commands: write categories include global flush/swap and 7+ FUNCTION writes; reads include keyspace walking. | Redis documentation unknown | REASONED |
+| allowlist: Removing flushall/flushdb/swapdb removes only those commands; replace broad grants with reset and explicit required commands such as GET/SET. | Redis documentation unknown | REASONED |
+| default-user: Default starts on nopass ~* +@all, adding &amp;* from 6.2; secure or disable it only after named clients/admin work; existing sessions survive. | Redis documentation unknown | REASONED |
+| mfa: Redis has no second-factor dialogue; mutual TLS adds machine possession alongside passwords, not human MFA. | Redis documentation unknown | REASONED |
+| cert-user: Redis 8.6+ tls-auth-clients-user defaults off; enabling it can authenticate without passwords. Keep off for these NOAUTH checks and omit the unknown directive on older releases. | Redis configuration 8.6.0; Redis documentation unknown | REASONED |
+| reset: ACL SETUSER changes users incrementally and applies rules left-to-right; reset removes old grants/passwords and, on 7+, selectors. | Redis documentation unknown | REASONED |
+| channel-default: resetchannels needs 6.2+; 6.0 lacks channel ACLs. Redis 6.2 default allchannels became resetchannels in 7.0. | Redis configuration 8.2.1; Redis documentation unknown | REASONED |
+| inline-persistence: CONFIG REWRITE persists inline users only with a writable startup configuration and OK; it also rewrites other runtime settings. | Redis documentation unknown | REASONED |
+| acl-file: External aclfile excludes inline users and requirepass; ACL SAVE persists, ACL LOAD replaces, invalid loads retain old policy, and CONFIG REWRITE does not save ACLs. | Redis configuration 8.2.1; Redis documentation unknown | REASONED |
+| revocation: Disabling a user blocks new auth but CLIENT KILL USER closes existing sessions; password replacement also needs forced reconnect and persistence. | Redis documentation unknown | REASONED |
+| directional-keys: Redis 7+ %R~/%W~ separate read/write key access; commands still need grants and broader ~ patterns can defeat separation. | Redis documentation unknown | REASONED |
+| channels: Channel patterns are independent of keys; reset then allow required channels/commands. PSUBSCRIBE patterns must literally match an allowed pattern. | Redis documentation unknown | REASONED |
+| scripting: Subtract admin/dangerous/scripting after grants; SCRIPT/FUNCTION removal alone misses execution commands. Omit FUNCTION on 6.x and rebuild unknown selectors first. | Redis documentation unknown | REASONED |
+| startup-commands: Redis 7+ enable-debug-command and enable-module-command default no in the pin; local/yes and startup-loaded modules still require ACL review. | Redis configuration 8.2.1 | REASONED |
+| renaming: rename-command is deprecated; use ACL command restrictions. | Redis documentation unknown | REASONED |
+| tls-listener: port 0 removes plaintext while tls-port 6379 serves TLS with configured CA/certificate/key; set mutual TLS for certificate-capable clients. | Redis documentation unknown; Redis configuration 8.2.1 | REASONED |
+| tls-cert-default: tls-auth-clients defaults yes; this guide's initial no removes client-certificate requirements, including incoming replicas, not the TLS cluster bus. | Redis HA source 8.10.1 | REASONED |
+| cli: Use CA trust, --user and masked --askpass with history disabled; GET app:probe is allowed while PING is not granted to app. | Redis documentation unknown | REASONED |
+| verify-listeners: Inventory all listeners; only intended loopback/private addresses pass, and socket errors establish nothing. | Redis configuration 8.2.1 | REASONED |
+| verify-plaintext: Any plaintext RESP reply proves plaintext availability; TLS-only 6379 must close/reset plaintext while TLS reaches the same endpoint. | Redis documentation unknown | REASONED |
+| verify-noauth: Secured default produces NOAUTH over TLS, exposed nopass produces PONG; certificate failures precede this test, and authenticated GET is the positive control. | Redis documentation unknown | REASONED |
+| verify-acl: Read effective users including selectors/passwords without publishing hashes; app GET succeeds and CONFIG GET bind returns NOPERM, not NOAUTH or unknown command. | Redis documentation unknown | REASONED |
+| verify-acl-log: Correlate denied CONFIG with user and age in ACL LOG; preserve events before resets, and bounded in-memory emptiness proves no absence of failures. | Redis documentation unknown; Redis configuration 8.2.1 | REASONED |
+| verify-direction: Redis 7+ DRYRUN allows input reads/output writes/allowed publication and denies reverse access/unrelated publication; it does not execute or prove authentication. | Redis documentation unknown | REASONED |
+| verify-persistence: Repeat policy and permissions after restart; runtime-only changes revert. Retired users must lose old sessions and fail fresh auth. | Redis documentation unknown | REASONED |
+| replication-auth: Use PING/REPLCONF/PSYNC-only replication users and masteruser/masterauth on every potential primary; outbound credentials do not protect incoming access or limit the stream by key. | Redis documentation unknown; Redis HA source 8.10.1 | REASONED |
+| sentinel-default: Sentinel normally listens on 26379 with protected mode disabled and no active auth rule; data-port protection does not protect it. | Redis HA source 8.10.1 | REASONED |
+| sentinel-auth: Password-only Sentinel auth applies throughout 6.0+; ACLs require 6.2+. Provision separate peer/admin and narrow discovery identities; do not combine the two arrangements. | Redis documentation unknown; Redis HA source 8.10.1 | REASONED |
+| sentinel-announcement: Private bind and network policy restrict Sentinel; announce-ip/port only publish discovery information. Password-only peers share a distinct Sentinel password. | Redis HA source 8.10.1 | REASONED |
+| monitor-auth: Sentinel monitored-server credentials start unset and differ from peer credentials; provision every potential primary/replica. | Redis HA source 8.10.1 | REASONED |
+| monitor-acl: Monitored-server ACLs require 6.0+, channel isolation 6.2+; the 8.10.1-reviewed operational policy permits only __sentinel__:hello publication/subscription. | Redis documentation unknown; Redis HA source 8.10.1 | REASONED |
+| cluster-bus: Opt-in cluster adds a binary bus, normally data port+10000 (16379); data RESP AUTH is not a bus gate. Restrict node and client paths separately. | Redis documentation unknown | REASONED |
+| cluster-announcement: 8.10.1 cluster-port selects the bus listener; announce fields are not firewalls. TLS offset uses tls-port; binds and remapped advertisements must agree. | Redis HA source 8.10.1 | REASONED |
+| ha-tls: Client TLS does not enable outgoing replication or cluster TLS; tls-replication and tls-cluster default disabled and must be configured separately. | Redis documentation unknown; Redis HA source 8.10.1 | REASONED |
+| outgoing-cert: Outgoing TLS normally reuses the server certificate; separate tls-client-cert/key need 6.2+. Older builds require one dual-purpose certificate and reject unknown directives. | Redis configuration 6.0.20; Redis configuration 6.2.0 | REASONED |
+| bus-cert: The TLS cluster bus always requires a trusted peer certificate, independently of data-port tls-auth-clients. | Redis HA source 8.10.1 | REASONED |
+| sentinel-tls: Sentinel tls-port independently creates incoming TLS; tls-replication selects outgoing data/peer TLS and default TLS-port advertisement; explicit announce-port overrides it. | Redis HA source 8.10.1 | REASONED |
+| peer-name: Redis 8.10+ tls-expected-peer-name defaults unset; it adds shared trust-group identity to outgoing replication/bus/MIGRATE and incoming bus, not node-ID binding. | Redis HA source 8.10.1; Redis documentation unknown | REASONED |
+| peer-limits: TLS_NO_PEER_NAME_VERIFICATION builds warn and skip name enforcement; 8.10.1 Sentinel's outgoing hiredis path does not apply this check; use a dedicated trust boundary. | Redis HA source 8.10.1 | REASONED |
+| verify-replication: Wrong/missing replica credentials must fail; correct auth restores link and fresh canary transfer. Test replica incoming auth and repeat through promotion. | Redis HA source 8.10.1; Redis documentation unknown | REASONED |
+| verify-replication-acl: Redis 7+ DRYRUN PSYNC permits replication and denies app; synchronization and promotion require separate runtime tests. | Redis documentation unknown | REASONED |
+| verify-sentinel: Uncredentialed discovery returns endpoint exposed and NOAUTH secured; discovery credentials restore it but administrative commands get NOPERM. Peer announcements alone prove no communication. | Redis documentation unknown; Redis HA source 8.10.1 | REASONED |
+| verify-monitor: sentinel-monitor permits PING but denies GET/unrelated publication; wrong auth-pass stops monitoring, correct credentials restore it, including after promotion. | Redis documentation unknown; Redis HA source 8.10.1 | REASONED |
+| verify-bus: Compare actual bus TCP access from forbidden and allowed locations; only forbidden access must fail. CLUSTER NODES announcements and listener evidence complement reachability. | Redis documentation unknown; Redis HA source 8.10.1 | REASONED |
+| verify-replication-tls: Correlate TLS-only primary listener, replica connection to that port and a fresh replicated canary; link status or a separate TLS probe alone proves no encryption. | Redis HA source 8.10.1; Redis documentation unknown | REASONED |
+| verify-replica-cert: Without automatic certificate-user auth, missing client cert must fail TLS and trusted cert reach NOAUTH; with tls-auth-clients no both reach NOAUTH. | Redis documentation unknown; Redis HA source 8.10.1 | REASONED |
+| verify-bus-cert: TLS 1.2 bus probes reject absent/untrusted certificates and accept trusted peers under either data-port client-auth setting; handshake success is not cluster membership. | Redis HA source 8.10.1; Redis documentation unknown | REASONED |
+| verify-sentinel-tls: 26379 must reject plaintext RESP, require client certificates and Redis credentials, and restore discovery with both; outgoing TLS/failover need separate topology evidence. | Redis documentation unknown; Redis HA source 8.10.1 | REASONED |
+| verify-peer-name: Same-CA bus certificates both pass without name restriction; enabled enforcement rejects wrong SAN/CN and accepts matching identity. Build warnings/readback alone are insufficient. | Redis HA source 8.10.1 | REASONED |
+| verify-outbound-name: Force new replication connections: wrong-name server works unrestricted, fails with explicit name-verification evidence when restricted, then recovers with matching certificate/canary. | Redis HA source 8.10.1; Redis documentation unknown | REASONED |
+| valkey: Valkey shares requirepass/ACL/TLS concepts; verify its version-specific syntax. Redis HA findings and limitations have not been established for Valkey. | Valkey documentation unknown | REASONED |
+| local-sentinel: Historical Sentinel shell parsing and invalid-input rejection tested local dispatch only, not Redis behavior. | Redis documentation unknown | DEMONSTRATED |
+<!-- version-basis:end -->
+
 Redis trusts its network by design, so the network boundary and credentials are your job. An exposed unauthenticated Redis leaks its data, and historic attack tooling has also used the CONFIG command against open instances to write files and take over hosts. Applies to Redis 6.0 and later for TLS and ACLs; the server and client must be built with TLS support. Additional controls below carry their minimum versions. See the [Redis security](https://redis.io/docs/latest/operate/oss_and_stack/management/security/) and [TLS documentation](https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/).
 
 This guide targets upstream Redis 6.0 and later. The existing configuration references through 8.2.1 pin syntax and historical behaviour, not a deployment version. Sections 9-15 add deployment-exposure controls for replication, Sentinel, and Redis Cluster, reviewed against upstream Redis 8.10.1. Version-specific examples carry their own qualifications; the Redis 8.10 peer-name control does not belong in a generic Redis 6.0+ configuration. These HA findings establish no equivalent Valkey or Redis Enterprise behaviour; the Valkey compatibility note remains separate.
@@ -11089,7 +11282,7 @@ GET app:probe
 
 `GET app:probe` is allowed by both the introductory ACL and the narrowed policy in section 3; `(nil)` is a successful read of a missing key. `PING` sits in the `@connection` and `@fast` categories, which neither policy grants, so it fails for `app`. Application clients take equivalent TLS and credential options; point them at the CA rather than disabling verification. See [Redis CLI](https://redis.io/docs/latest/develop/tools/cli/), [AUTH](https://redis.io/docs/latest/commands/auth/), [GET](https://redis.io/docs/latest/commands/get/), and [PING](https://redis.io/docs/latest/commands/ping/).
 
-## 8. Verify
+## 8. Verify (REASONED: deployment and HA comparisons from cited Redis documentation and pinned sources; no Redis runtime, live topology or permitted socket inspection.)
 
 The deployment checks below are **REASONED, not demonstrated**. The authoring environment has no `redis-server`, `redis-cli`, Docker, or Podman, and denies socket inspection. No live deployment was supplied. Shell syntax and placeholder rejection were checked locally; Redis configuration parsing remains unconfirmed, and exposed/fixed runtime behaviour is REASONED from the cited documentation and pinned sources.
 
@@ -13242,6 +13435,52 @@ REASONED from the cited AIStor documentation: OIDC role-policy and claim-policy 
 
 # RabbitMQ: users, TLS listener, and the guest account
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| guest: Upstream guest/guest is an administrator restricted to localhost; create real users and delete or change guest. | RabbitMQ documentation unknown; RabbitMQ source v4.3.6 | REASONED |
+| docker-guest: Shipped official 4.3 images disable guest loopback restriction; later configuration can restore it. | RabbitMQ image source 76efb370838e36e4b120e252e75cf0dac70a7d55 | REASONED |
+| vhosts: Separate users/vhosts and remove old grants; vhosts isolate resources, not CPU or memory. | RabbitMQ documentation unknown | REASONED |
+| resource-grants: Configure/write/read regexes scope app.*; amq.default is excluded; binding needs queue write and exchange read. | RabbitMQ documentation unknown | REASONED |
+| roles: Tags replace previous tags and grant management authority, not resource permissions; observer gets monitoring and empty grants. | RabbitMQ documentation unknown | REASONED |
+| definitions-boot: Reviewed local boot imports need no management plugin, do not overwrite existing definitions, and suppress blank-node default creation. | RabbitMQ documentation unknown | REASONED |
+| definitions-runtime: Runtime imports merge, retain omitted objects and immutable conflicts, and can fail partially; they are not reconciliation. | RabbitMQ documentation unknown | REASONED |
+| definitions-export: v2 export transformations remove users, permissions and runtime parameters; protect TOML credentials and review remaining secrets. | RabbitMQ documentation unknown; rabbitmqadmin v2 | REASONED |
+| amqp-tls: Private 5671 requires trusted client certificates; remove plaintext 5672 after migration. | RabbitMQ documentation unknown | REASONED |
+| tls-depth: ssl_options.depth defaults to 1; clientAuth usage and intermediate-chain depth must fit deployed certificates. | RabbitMQ documentation unknown | REASONED |
+| tls-identity: mTLS does not map a RabbitMQ username; password auth remains unless certificate plugin/SASL EXTERNAL is configured. | RabbitMQ documentation unknown | REASONED |
+| management-bind: Apply and restart with loopback HTTP 15672/private HTTPS 15671 before enabling management. | RabbitMQ documentation unknown | REASONED |
+| management-default: v4.3.6 starts wildcard plain HTTP 15672 when no management listener is configured. | RabbitMQ source v4.3.6 | REASONED |
+| management-auth: Management has separate TLS and RabbitMQ HTTP credentials; restrict admin networks and human access. | RabbitMQ documentation unknown | REASONED |
+| epmd: epmd defaults to 4369; ERL_EPMD_ADDRESS requires broker and epmd restart, or socket-unit changes; loopback remains. | RabbitMQ documentation unknown | REASONED |
+| distribution-port: Distribution defaults to node port plus 20000 (25672); nonempty environment or configured range can replace it. | RabbitMQ source v4.3.6; RabbitMQ documentation unknown | REASONED |
+| cli-ports: CLI defaults 35672-35682; prefixed variables fall back to unprefixed forms, treating empty as unset. | RabbitMQ source v4.3.6; RabbitMQ documentation unknown | REASONED |
+| cookie: Matching owner-only cookie files grant powerful node/CLI access; protect secret delivery and restrict peer reachability. | RabbitMQ documentation unknown | REASONED |
+| distribution-tls: Use Erlang TLS distribution for server and CLI with matching launch arguments; 4.3 requires at least OTP 27. | RabbitMQ documentation unknown; Erlang/OTP distribution 27; RabbitMQ source v4.3.6 | REASONED |
+| distribution-identity: Verify peer certificates both ways and outbound node hostnames; coordinate transport changes and retain cookie/firewall controls. | Erlang/OTP distribution 27 | REASONED |
+| topic-default: Topic authorization dates from 3.7; absent or cleared topic permissions leave topic operations unrestricted by that layer. | RabbitMQ documentation unknown; RabbitMQ topic authorization introduction 3.7.0 | REASONED |
+| topic-patterns: Topic write/read regexes gate publish/binding keys; tenant1 exact keys exclude wildcard bindings, not existing queued messages. | RabbitMQ documentation unknown | REASONED |
+| topic-bypass: Exchange relay can bypass direct topic-write checks; strong isolation needs admin-owned routes, no configure and queue-only read grants. | RabbitMQ documentation unknown | REASONED |
+| verify-accounts: Inspect migrated vhost grants, observer tags/empty patterns and guest removal; failed listings prove nothing. | RabbitMQ documentation unknown | REASONED |
+| verify-inventory: Inventory all listeners and cookie ownership/mode; local binds and mode do not establish isolation or secrecy. | RabbitMQ documentation unknown | REASONED |
+| verify-network: Forbidden external connections must fail while allowed private peers connect; confirm plaintext 5672 removal with live AMQPS. | RabbitMQ documentation unknown | REASONED |
+| verify-distribution: Allowed CLI host must authenticate ping to the actual node with matching cookie; TCP reachability alone is insufficient. | RabbitMQ documentation unknown | REASONED |
+| verify-loopback: Authenticated loopback /api/overview must return 200 while private HTTP 15672 is unreachable. | RabbitMQ documentation unknown; curl documentation unknown | REASONED |
+| verify-management: Observer overview and ops user listing return 200; anonymous overview and observer user listing refuse with actual auth errors. | RabbitMQ documentation unknown; curl documentation unknown | REASONED |
+| verify-mtls: Certificate-present handshake succeeds and absent certificate gets broker-attributed rejection; server Verification: OK is insufficient. | RabbitMQ documentation unknown | REASONED |
+| queue-default: RabbitMQ 4.3 disables transient non-exclusive queues by default; the protocol fixture uses a durable queue. | RabbitMQ documentation unknown | REASONED |
+| verify-amqp: Pika 1.x fixture requires app round trip, observer authentication and resource-specific 403 ACCESS_REFUSED; log connection refusal reasons. | RabbitMQ documentation unknown; Pika documentation unknown | REASONED |
+| verify-definitions: Compare approved blank-node users/grants and reduced versus private full exports; empty selected sections do not prove secrecy. | RabbitMQ documentation unknown; rabbitmqadmin v2 | REASONED |
+| verify-distribution-tls: TLS CLI/nodes succeed; plaintext and missing/untrusted certificate peers fail with TLS evidence, not cookie/DNS errors. | RabbitMQ documentation unknown; Erlang/OTP distribution 27 | REASONED |
+| verify-topic: Tenant1 operations succeed; other keys/wildcards fail; compare relay bypass with hardened route-creation denial. | RabbitMQ documentation unknown | REASONED |
+<!-- version-basis:end -->
+
 RabbitMQ's default `guest`/`guest` account can only connect from localhost, which protects fresh installs exactly until someone "fixes" it. The official Docker image ships that fix: its `/etc/rabbitmq/conf.d/10-defaults.conf` sets `loopback_users.guest = false`, so in a container from that image as shipped (a later configuration layer can set it back) the default `guest`/`guest` administrator, wherever it exists, can log in from any address that reaches the broker. The documented recommendation is to create real users and delete `guest` or change its password.
 
 The settings below were checked against the current RabbitMQ 4.3 documentation in September 2026. These controls are available in open source RabbitMQ; no commercial edition is required. The export command specifically requires a current `rabbitmqadmin` v2, not v1.
@@ -13414,6 +13653,7 @@ Use Bash and paste whole guarded blocks. Substitute inside the single quotes on 
 **1. Accounts and roles - REASONED: no `rabbitmqctl` or broker is available.** Run after migration and reconnecting clients:
 
 ```bash
+# REASONED: accounts and roles; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 sudo rabbitmqctl list_users
 sudo rabbitmqctl list_user_permissions 'app'
 sudo rabbitmqctl list_permissions -p 'app-prod'
@@ -13425,6 +13665,7 @@ Compare the exposed state's unrestricted `/` grant and excessive operator privil
 **2. Listener and cookie inventory - REASONED: no RabbitMQ node, epmd, or deployed cookie is available.** After the restart:
 
 ```bash
+# REASONED: listener and cookie inventory; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 sudo rabbitmq-diagnostics -s listeners
 ss -tlnp
 epmd -names
@@ -13440,6 +13681,7 @@ On the conventional installation above, the cookie should be owned by `rabbitmq`
 From an external non-peer host, target the broker's public address:
 
 ```bash
+# REASONED: external reachability; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BROKER_PUBLIC_ADDR'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
@@ -13461,6 +13703,7 @@ From an external non-peer host, target the broker's public address:
 From hosts allowed by the corresponding firewall rules, target the private address. Execute the cluster, application, and administration commands on their respective allowed hosts if those roles are separate:
 
 ```bash
+# REASONED: allowed-peer controls; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BROKER_PRIVATE_ADDR'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
@@ -13485,6 +13728,7 @@ From hosts allowed by the corresponding firewall rules, target the private addre
 From an allowed CLI host with its owner-only matching cookie file, also require an authenticated distribution connection to the same broker. Supply its actual node name, such as the deployed `rabbit@` name. This form assumes short node names; add `--longnames` for a deployment using long names. The documented [diagnostics ping](https://www.rabbitmq.com/docs/man/rabbitmq-diagnostics.8) checks authentication as well as reachability:
 
 ```bash
+# REASONED: authenticated distribution ping; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BROKER_NODE_NAME'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
@@ -13502,6 +13746,7 @@ From an allowed CLI host with its owner-only matching cookie file, also require 
 On the broker itself, confirm that the retained HTTP management listener works with authentication:
 
 ```bash
+# REASONED: loopback management control; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 curl -q -g --noproxy '*' --connect-timeout 5 --max-time 20 \
   -sS --user observer -o /dev/null \
   -w 'loopback http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
@@ -13515,6 +13760,7 @@ For removed plaintext AMQP, first demonstrate a connection to its old listener i
 **4. Management authentication and roles - REASONED: no broker or management endpoint is available.** From an allowed administration host, use the management certificate's hostname:
 
 ```bash
+# REASONED: management authentication and roles; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_MANAGEMENT_HOSTNAME'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
@@ -13555,6 +13801,7 @@ An exposed management listener can still require authentication: external reacha
 **5. Mutual TLS - REASONED: no broker, trusted test certificates, or broker logs are available.** From an allowed application host, place `ca.pem`, `client.pem`, and the protected `client.key` in the working directory. Use a valid client certificate with `clientAuth`, not a server-only certificate:
 
 ```bash
+# REASONED: mutual TLS; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_AMQP_HOSTNAME'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
@@ -13595,6 +13842,7 @@ Keeping stdin open helps expose delayed TLS 1.3 alerts; ten seconds is a timing-
 The positive control declares, binds, publishes, and retrieves a message as `app`. Separate channels test resource denials. The shared queue is durable because RabbitMQ 4.3 disables transient non-exclusive queues by default; an exclusive queue would make the observer's read test ambiguous. The script uses the [documented permission model](https://www.rabbitmq.com/docs/access-control), [channel error codes](https://www.rabbitmq.com/docs/channels), [queue rules](https://www.rabbitmq.com/docs/queues), and [Pika's blocking client](https://pika.readthedocs.io/en/stable/modules/adapters/blocking.html).
 
 ```bash
+# REASONED: AMQP authentication and authorization; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_AMQP_HOSTNAME' 'REPLACE_WITH_EXISTING_UNGRANTED_VHOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
@@ -13722,6 +13970,7 @@ For the exposed comparison, use an isolated fixture with unrestricted applicatio
 **7. Definitions provisioning and export - REASONED: no blank broker, `rabbitmqadmin`, or exported definitions file is available.** Boot an isolated blank node using the approved file and boot settings from section 1, then run:
 
 ```bash
+# REASONED: definitions provisioning and export; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 sudo rabbitmqctl list_users
 sudo rabbitmqctl list_permissions -p 'app-prod'
 
@@ -13747,6 +13996,7 @@ Run section 1's reduced export and compare it with a private untransformed expor
 **8. Inter-node and CLI distribution TLS - REASONED: no Erlang runtime, RabbitMQ broker, or multi-node cluster is available.** On an authorized test cluster with the section 6 configuration, from an authorized CLI host holding the matching cookie and substituting the deployed long node name for `rabbit@node1.internal`:
 
 ```bash
+# REASONED: distribution TLS; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 sudo rabbitmq-diagnostics --longnames -n rabbit@node1.internal ping
 sudo rabbitmqctl --longnames -n rabbit@node1.internal cluster_status
 ```
@@ -13756,6 +14006,7 @@ With plaintext distribution a plaintext CLI authenticates; with TLS required, a 
 **9. Topic-exchange routing-key authorization - REASONED: no RabbitMQ broker or AMQP client is available.** On an authorized broker with an administrator-provisioned `app.shared.topic` exchange, hold the section 1 resource permissions constant and vary only whether the section 7 topic permission exists:
 
 ```bash
+# REASONED: topic routing-key authorization; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 sudo rabbitmqctl list_topic_permissions -p 'app-prod'
 ```
 
@@ -13869,6 +14120,62 @@ The write pattern gates publishing and the read pattern gates the routing keys a
 ======================================================================
 
 # Mosquitto (MQTT): no anonymous clients, TLS listener
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| loopback-default: 2.0+ without listeners binds loopback and permits anonymous clients; it is not authenticated. | Mosquitto documentation unknown | REASONED |
+| listener-default: Explicit 2.0 listeners default to rejecting unauthenticated clients; an unspecified bind address is wildcard. | Mosquitto documentation unknown; Mosquitto v2.0.22 | REASONED |
+| image21: Recorded 2.1.2 Alpine tags ship anonymous MQTT 1883 and HTTP API/dashboard 9883; override configuration and restrict publication. | Mosquitto image catalogue 920b00976e6e8335bab0a3fd293b95b6b2404ce3; Mosquitto image source 5b74cce8a4fe2a73b57df6c703bfde2cfd535d60 | REASONED |
+| image-api: 2.1.2 HTTP API uses a dual-stack socket and exposes systree/listeners JSON and version text without shipped credentials/ACLs. | Mosquitto v2.1.2 | REASONED |
+| image16: Recorded 1.6.15 image tags ship commented upstream config: wildcard 1883 and anonymous access. | Mosquitto image source 5b74cce8a4fe2a73b57df6c703bfde2cfd535d60; Mosquitto legacy v1.6.15 | REASONED |
+| image20: Recorded 2.0.22 image tags ship commented upstream config and retain loopback-only defaults. | Mosquitto image source 5b74cce8a4fe2a73b57df6c703bfde2cfd535d60; Mosquitto v2.0.22 | REASONED |
+| deprecation: File-based examples target 2.0.22; password_file, acl_file and per_listener_settings are deprecated in 2.1, removal announced for 3.0. | Mosquitto documentation unknown | REASONED |
+| password-file: Prompt for distinct device credentials; -c overwrites, and -D edits the file without terminating connections by itself. | Mosquitto documentation unknown | REASONED |
+| reload: Reload changed credentials/ACLs; manual says connections unaffected, but 2.0.22 rechecks credentials; confirm deployed termination. | Mosquitto documentation unknown; Mosquitto v2.0.22 | REASONED |
+| shared-policy: per_listener_settings false shares authentication/ACL policy; flipping it is neither separation nor 2.1 migration. | Mosquitto v2.0.22 | REASONED |
+| tls: 8883 TLS needs CA/certificate/key; optional require_certificate adds machine possession, not human MFA. | Mosquitto documentation unknown; Mosquitto v2.0.22 | REASONED |
+| listener-apply: Remove/firewall plaintext; confirm include_dir and restart for listener changes, which reload does not apply. | Mosquitto documentation unknown | REASONED |
+| acl-default: Password authentication alone leaves application topics unrestricted without an authorization mechanism. | Mosquitto documentation unknown; Mosquitto v2.0.22 | REASONED |
+| acl-users: Unlisted access is denied; user means username; pre-user topic rules apply only to anonymous clients. | Mosquitto documentation unknown; Mosquitto v2.0.22 | REASONED |
+| acl-patterns: Patterns apply to all users; %u/%c must occupy a whole topic level; prefer authenticated usernames over chosen client IDs. | Mosquitto documentation unknown | REASONED |
+| sys: deny was added in 2.0; repeat $SYS denial per user and probe $SYS/# explicitly because # excludes it. | Mosquitto documentation unknown | REASONED |
+| subscription: File ACLs filter message access, not SUBSCRIBE acceptance; accepted # alone is no bypass. | Mosquitto v2.0.22; Mosquitto v2.1.2 | REASONED |
+| connection-default: Per-listener max_connections defaults to -1, unlimited by this setting. | Mosquitto v2.0.22 | REASONED |
+| packet-default: max_packet_size is unset in 2.0.22 and 2,000,000 bytes in 2.1; explicit 2.0.22 values must be at least 20. | Mosquitto v2.0.22; Mosquitto v2.1.2; Mosquitto documentation unknown | REASONED |
+| payload-default: message_size_limit defaults to 0; payload rejection follows reception and completes QoS acknowledgements. | Mosquitto v2.0.22 | REASONED |
+| inflight-default: max_inflight_messages defaults to 20 per client for outgoing QoS 1/2; it is not a message-rate limit. | Mosquitto v2.0.22 | REASONED |
+| queue-default: max_queued_messages defaults to 1000 in 2.x, 100 earlier; queue overflow can lose messages. | Mosquitto v2.0.22; Mosquitto documentation unknown | REASONED |
+| queue-bytes: max_queued_bytes defaults to 0; when both queue limits are set the first reached stops further queuing. | Mosquitto v2.0.22 | REASONED |
+| keepalive: max_keepalive defaults to 0 in 2.0.22/2.1.2; positive limits override MQTT 5 and reject incompatible MQTT 3.1.1. | Mosquitto v2.0.22; Mosquitto v2.1.2 | REASONED |
+| packet-boundary: 2.0.22 TCP checks size before body allocation; 2.0.22/2.1.2 libwebsockets allocate without that check; require an independent boundary. | Mosquitto v2.0.22 | REASONED |
+| global-limits: 2.1 global_max_connections/global_max_clients default to -1; the latter also counts disconnected persistent sessions. | Mosquitto documentation unknown; Mosquitto v2.1.2 | REASONED |
+| session-expiry: 2.0 persistent-session growth needs identity/client-ID limits; persistent_client_expiration is not a hard population cap. | Mosquitto v2.0.22 | REASONED |
+| listener-policy: 2.0 per-listener settings must precede listeners/security options; place each listener's auth, ACL and TLS in its scope. | Mosquitto v2.0.22 | REASONED |
+| websockets: Local 9001 needs separate auth/ACL/TLS; 2.0.22 WebSockets connection cap is ineffective; 2.1.1 fix needs deployed-build testing. | Mosquitto v2.0.22 | REASONED |
+| persistent-policy: Listeners share topic/session namespaces; disconnected persistent clients retain their most recent listener's ACL policy. | Mosquitto v2.0.22 | REASONED |
+| client-id: use_username_as_clientid is per-listener and needs restart; globally consistent usernames prevent cross-identity ID takeover, not same-user displacement. | Mosquitto v2.0.22 | REASONED |
+| migration: 2.1 listener_allow_anonymous and plugin_load/plugin_use replace listener policy; attach password-file and ACL-file plugins explicitly. | Mosquitto documentation unknown | REASONED |
+| bridge-tls: Port 8883 alone enables no bridge TLS; require CA/hostname verification, protected remote password and optional client certificate. | Mosquitto v2.0.22 | REASONED |
+| bridge-topics: Bridge contexts bypass local ACLs and 2.1.2 accepts unmatched ingress topics; narrow routes/remote ACLs do not contain malicious upstream. | Mosquitto v2.0.22; Mosquitto v2.1.2 | REASONED |
+| bridge-options: try_private aids bridge handling, not auth; restart_timeout supplies backoff; notifications false suppresses default $SYS status writes. | Mosquitto v2.0.22 | REASONED |
+| runtime: Dedicated runtime identity needs readable security files and writable protected state/log paths after the early 2.0 privilege drop. | Mosquitto documentation unknown | REASONED |
+| persistence: Persistence defaults false; persistence_location alone does not enable it; protect data, logs, secrets and backups. | Mosquitto documentation unknown | REASONED |
+| client-config: Verify uses protected 2.1 client -o files; 2.0 lacks -o and needs isolated default configurations. | Mosquitto documentation unknown | REASONED |
+| verify-auth: Authenticated CONNACK succeeds and anonymous CONNECT rejects; timeout exit 27, SUBACK and transport failures prove no authentication. | Mosquitto documentation unknown; Mosquitto v2.1.2 | REASONED |
+| verify-mtls: Missing certificate must fail at TLS while trusted certificate succeeds; then separately test MQTT credentials. | Mosquitto documentation unknown | REASONED |
+| verify-network: Inspect actual namespace and external IPv4/IPv6/NAT paths; removed plaintext/WebSocket endpoints must not answer. | Mosquitto documentation unknown; Mosquitto v2.0.22 | REASONED |
+| verify-delivery: Require own telemetry, cross-device isolation and controller before/after markers around denied injection; inspect PUBACK and delivery. | Mosquitto documentation unknown; Mosquitto v2.0.22; Mosquitto v2.1.2 | REASONED |
+| verify-sys: Require exposed telemetry plus authorized marker control; fixed devices receive no $SYS messages. | Mosquitto documentation unknown | REASONED |
+| verify-resources: Separate packet allocation, payload, queue, inflight, keepalive, connection and session tests need matched healthy controls. | Mosquitto v2.0.22; Mosquitto v2.1.2 | REASONED |
+| verify-bridges: Test scoped delivery, TLS identity, remote ACLs and malicious-upstream containment independently; inspect runtime permissions and persistence. | Mosquitto v2.0.22 | REASONED |
+<!-- version-basis:end -->
 
 MQTT brokers back IoT and agent projects, and open brokers leak live telemetry and accept injected commands. Mosquitto's defaults are sane on version 2.0 and later (with a listener defined, anonymous access is off; without any listener it binds the loopback interface only); the job is to keep them sane while adding real listeners.
 
@@ -14154,6 +14461,8 @@ Use Mosquitto 2.1 client tools for the commands below, including when testing a 
 
 Prepare an owner-readable file, mode 0600 inside a private directory, for each test identity. For example, `device-01.conf` contains:
 
+REASONED: protected client credential configuration; no broker/client binaries or deployment fixtures. Expected outcomes and vendor sources are recorded in this section.
+
 ```
 -u device-01
 -P REPLACE_WITH_DEVICE_PASSWORD
@@ -14254,6 +14563,7 @@ With `use_username_as_clientid true`, a separate publisher using an observer's u
 Otherwise, run this observer block in separate terminals once with `device-01.conf` and once with `device-02.conf`. Where client-ID authorization is enforced, give each observer and publisher a distinct authorized ID in its protected test configuration, as an explicit exception to the preparation rule against fixed IDs. Wait for successful CONNACK and SUBACK in both observers before publishing. Keep both running throughout each comparison; repeat the window if either exits.
 
 ```bash
+# REASONED: topic-delivery observer; no broker/client binaries or deployment fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_BROKER_PUBLIC_HOST' \
     'REPLACE_WITH_CA_FILE' 'REPLACE_WITH_OBSERVER_CONFIG'
@@ -14282,6 +14592,7 @@ Otherwise, run this observer block in separate terminals once with `device-01.co
 Run this publisher block for each row below, substituting the selected credential-file path, topic, and a distinct non-secret marker for this run. It does not retain messages.
 
 ```bash
+# REASONED: topic-delivery publisher; no broker/client binaries or deployment fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_BROKER_PUBLIC_HOST' \
     'REPLACE_WITH_CA_FILE' 'REPLACE_WITH_PUBLISHER_CONFIG' \
@@ -14363,6 +14674,57 @@ The explicit `$SYS/#` subscription should receive broker telemetry in the expose
 ======================================================================
 
 # Apache Kafka: SASL_SSL listeners, SCRAM credentials, and ACLs
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| plaintext: Default listener is PLAINTEXT://:9092 as of 4.3.1. | Kafka listener default 4.3.1 | REASONED |
+| internal-default: security.inter.broker.protocol defaults to PLAINTEXT. | Kafka documentation unknown | REASONED |
+| authorizer-default: No authorizer by default; reachable clients can read, write, create and delete topics. | Kafka documentation unknown | REASONED |
+| roles: Examples target 4.3; 4.0+ is KRaft-only; critical deployments should separate broker/controller roles. | Kafka documentation unknown | REASONED |
+| listeners: CLIENT 9093 uses SASL_SSL; private INTERNAL 9095 and CONTROLLER 9094 use mutual TLS; remove plaintext. | Kafka documentation unknown; Kafka source 4.3.0 | REASONED |
+| advertise: Advertise broker CLIENT/INTERNAL only; broker-only nodes still need outbound controller security. | Kafka documentation unknown | REASONED |
+| listener-selection: Use inter.broker.listener.name without security.inter.broker.protocol; lowercase listener prefixes must match. | Kafka documentation unknown | REASONED |
+| quorum: Dynamic quorum bootstrap is not static-voter migration; reuse cluster ID and use the documented membership workflow. | Kafka documentation unknown | REASONED |
+| controller-scram: KAFKA-15513 lists 3.5.1/3.6.0 and no fix; it does not prove failure on every 4.3 deployment. | Kafka documentation unknown | REASONED |
+| tls-files: Protect per-node keystores, truststores, keys and properties before writing secrets; require matching SANs. | Kafka documentation unknown | REASONED |
+| pem: PEM is supported since 2.7.0; PKCS#8 key passwords use ssl.key.password, not PEM store passwords. | Kafka documentation unknown | REASONED |
+| hostname: Hostname verification defaults on since 2.0.0; leave it enabled. | Kafka documentation unknown | REASONED |
+| client-cert: SASL_SSL needs listener-prefixed ssl.client.auth; none is default, requested is optional, required enforces mTLS. | Kafka documentation unknown; Kafka source 4.3.0 | REASONED |
+| tls-protocols: Generated 4.3 reference defaults ssl.enabled.protocols to TLSv1.2,TLSv1.3. | Kafka documentation unknown | REASONED |
+| scram: Use distinct SCRAM-SHA-512 identities only over TLS; KRaft credentials reside in the metadata log. | Kafka documentation unknown | REASONED |
+| scram-files: Bootstrap through authorized internal mTLS; protected --add-config-file values omit brackets and need Java escaping. | Kafka source 4.3.0 | REASONED |
+| bootstrap-acl: StandardAuthorizer on every broker/controller denies by default; authorize exact node/admin principals before quorum startup. | Kafka documentation unknown | REASONED |
+| legacy-authorizer: Legacy 3.9 ZooKeeper uses kafka.security.authorizer.AclAuthorizer, not SimpleAclAuthorizer or the KRaft class. | Kafka legacy authorization 3.9 | REASONED |
+| topic-grants: Separate writer Write/Describe from reader Read/Describe and app-workers group Read; remove broader old grants. | Kafka documentation unknown | REASONED |
+| topic-create: Disable auto.create.topics.enable; this does not revoke explicit Create rights. | Kafka documentation unknown | REASONED |
+| producer-grants: --producer includes Create; use explicit writer grants and inspect wildcard, prefix and cluster ACLs. | Kafka documentation unknown | REASONED |
+| transactions: Grant the specific transactional ID; 4.3.0 non-transactional initialization also accepts topic Write without IdempotentWrite. | Kafka documentation unknown; Kafka source 4.3.0 | REASONED |
+| quotas: Per-broker user byte quotas and request_percentage (one thread's time) need sizing; user/client overrides take precedence. | Kafka documentation unknown | REASONED |
+| connections: Client listener connection and connection-creation limits are separate from traffic quotas and internal health. | Kafka documentation unknown | REASONED |
+| mutation-quota: Conditional controller_mutation_rate bounds partition mutations, not throughput or permissions. | Kafka documentation unknown | REASONED |
+| logging: 4.0+ uses Log4j2; requested denials log at INFO, allows at DEBUG, some evaluations at TRACE; collect authentication separately. | Kafka documentation unknown; Kafka source 4.3.0 | REASONED |
+| clients: Protect separate client properties; 4.3 CLI uses --command-config, including console producer/consumer. | Kafka documentation unknown; Kafka source 4.3.0 | REASONED |
+| mfa: Kafka has no second-factor dialogue; client mTLS is a machine possession control; human access needs an MFA layer. | Kafka documentation unknown; Kafka source 4.3.0 | REASONED |
+| redpanda: Protocol controls carry over, but Redpanda uses redpanda.yaml/rpk; check its own quotas, listeners and logging. | Redpanda documentation unknown | REASONED |
+| console: Console login needs configured OIDC/basic auth and enterprise licence; enabled features without valid licence show an expiry page. | Redpanda documentation unknown | REASONED |
+| verify-tls: Inventory role-specific listeners and verify hostname/chain; TLS errors differ from inconclusive DNS/local failures. | Kafka documentation unknown; OpenSSL documentation 3.5 | REASONED |
+| verify-internal: Valid internal certificate must permit Kafka access; missing/untrusted certificates need TLS-attributed rejection. | Kafka documentation unknown; Kafka source 4.3.0 | REASONED |
+| verify-controller: Controller valid/missing/untrusted certificate and allowed/disallowed-network pairs need logs; TLS alone proves no quorum health. | Kafka documentation unknown; OpenSSL documentation 3.5 | REASONED |
+| verify-password: Authenticated control succeeds; plaintext is refused and wrong password reports SaslAuthenticationException, not merely nonzero exit. | Kafka documentation unknown; Kafka source 4.3.0 | REASONED |
+| verify-acl: Require marker delivery and opposite-role operation denials; an empty consumer result is inconclusive. | Kafka documentation unknown; Kafka source 4.3.0 | REASONED |
+| verify-default-deny: Authenticated low-user access to a fixture with no matching ACL must yield TopicAuthorizationException; inspect effective authorizer. | Kafka documentation unknown | REASONED |
+| verify-create: Application creation must be denied while administrator creation succeeds; inspect old literal Create grants too. | Kafka documentation unknown; Kafka source 4.3.0 | REASONED |
+| verify-inspection: Inspect matching ACLs, user/client quotas and every broker's effective limits; listings do not establish enforcement. | Kafka documentation unknown; Kafka source 4.3.0 | REASONED |
+| verify-quota: Matched bounded producer runs must deliver records and discriminate nonzero throttle metrics; other limits need separate workloads. | Kafka documentation unknown; Kafka source 4.3.0 | REASONED |
+| verify-logs: Matched INFO/DEBUG requests need correlated denial/allow records; missing denial means collection failed. | Kafka source 4.3.0; Kafka documentation unknown | REASONED |
+<!-- version-basis:end -->
 
 Kafka's broker defaults are `listeners=PLAINTEXT://:9092` (as of Kafka 4.3.1), `security.inter.broker.protocol=PLAINTEXT`, and no authorizer, so anyone who reaches port 9092 can read every topic, produce to it, and create or delete topics with no credential and no encryption. Property names below come from the Kafka 4.x documentation (KRaft mode).
 
@@ -14700,6 +15062,7 @@ Use an isolated test deployment with an administratively created `orders` fixtur
 The client TLS positive control must validate the broker hostname and certificate chain. A plaintext endpoint cannot complete this TLS exchange. A certificate error is a TLS defect; a DNS or local failure is inconclusive. Sources: [listener configuration](https://kafka.apache.org/43/security/listener-configuration/), [Kafka SSL](https://kafka.apache.org/43/security/encryption-and-authentication-using-ssl/), and [OpenSSL s_client](https://docs.openssl.org/3.5/man1/openssl-s_client/).
 
 ```bash
+# REASONED: listener inventory and client TLS; no live Kafka cluster, certificate fixtures or external test hosts. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BROKER_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
@@ -14729,6 +15092,7 @@ This probe matches the default client listener above, which does not require cli
 On the same allowed private path, the valid administrator certificate must permit the positive Kafka control. Missing and untrusted client certificates must fail at TLS. With client-certificate enforcement absent, the TLS handshake may succeed even if the authorizer subsequently rejects an anonymous principal; an authorization failure is not proof of mutual TLS. Inspect the TLS diagnostic and broker logs. Source: [Kafka SSL client authentication](https://kafka.apache.org/43/security/encryption-and-authentication-using-ssl/).
 
 ```bash
+# REASONED: internal mutual TLS; no live Kafka cluster, certificate fixtures or external test hosts. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_INTERNAL_BROKER_HOST:9095'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
@@ -14795,6 +15159,8 @@ Also repeat with an untrusted node certificate and from disallowed networks. Ins
 
 Create `plain.properties` containing only:
 
+REASONED: plaintext client fixture; no live Kafka cluster, certificate fixtures or external test hosts. Expected outcomes and vendor sources are recorded in this section.
+
 ```properties
 security.protocol=PLAINTEXT
 ```
@@ -14806,6 +15172,7 @@ Create `wrong.properties` from `orders-reader.properties`, changing only its pas
 Kafka 4.3.0's [ConsoleConsumer implementation](https://github.com/apache/kafka/blob/4.3.0/tools/src/main/java/org/apache/kafka/tools/consumer/ConsoleConsumer.java) catches and logs exceptions from `receive()` inside `process()`, then returns; only exceptions escaping to `main()` cause its explicit exit with status 1. A consumer's exit status therefore does not prove denial. Both consumer denial checks below inspect the specific exception in stderr, regardless of exit status; records returned by a denied probe are a finding.
 
 ```bash
+# REASONED: plaintext refusal and password rejection; no live Kafka cluster, certificate fixtures or external test hosts. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BROKER_HOST:9093'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
@@ -14860,6 +15227,7 @@ Kafka 4.3.0's [ConsoleConsumer implementation](https://github.com/apache/kafka/b
 Only the negative producer probe disables idempotence, so a producer-ID authorization check does not mask the topic-write check. This is a test override, not an application configuration recommendation. Sources: [ACL operations](https://kafka.apache.org/43/security/authorization-and-acls/), [producer configuration](https://kafka.apache.org/43/configuration/producer-configs/), and the tagged console-tool sources in Sources.
 
 ```bash
+# REASONED: writer/reader separation; no live Kafka cluster, certificate fixtures or external test hosts. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BROKER_HOST:9093'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
@@ -14922,6 +15290,7 @@ Provision `low` through the same restricted-file SCRAM procedure as step 3. Its 
 After ACL propagation, the fixed state must report `TopicAuthorizationException`. In an isolated exposed configuration with no matching topic ACL and `allow.everyone.if.no.acl.found=true`, the marker can be read. A group error tests the wrong boundary. Empty output, offsets, and timeouts remain inconclusive. Source: [behavior without ACLs and matching resource patterns](https://kafka.apache.org/43/security/authorization-and-acls/).
 
 ```bash
+# REASONED: deny-by-default ACLs; no live Kafka cluster, certificate fixtures or external test hosts. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BROKER_HOST:9093'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
@@ -15043,6 +15412,7 @@ Repeat for the reader identity. This new-name probe must be combined with ACL in
 The successful administrative descriptions establish that the inspection path works; the marker and denial comparisons above test application behavior. Sources: [ACL listing](https://kafka.apache.org/43/security/authorization-and-acls/), [quota description](https://kafka.apache.org/43/operations/basic-kafka-operations/), and [broker configuration](https://kafka.apache.org/43/configuration/broker-configs/).
 
 ```bash
+# REASONED: ACL/quota/connection inspection; no live Kafka cluster, certificate fixtures or external test hosts. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BROKER_HOST:9093'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
@@ -15086,6 +15456,7 @@ Inspect every broker's effective values and their configuration sources. For a t
 Both runs must deliver the requested records without authorization or delivery errors. With no applicable quota, quota throttle time should remain zero; with the workload exceeding the fixed quota, `produce-throttle-time-avg` or `produce-throttle-time-max` should become nonzero. Inspect request-quota metrics separately to distinguish request-time throttling from bandwidth throttling. A low-rate successful marker round trip is the positive control that the fixed system still serves the application. Sources: [quota enforcement](https://kafka.apache.org/43/design/design/), [monitoring metrics](https://kafka.apache.org/43/operations/monitoring/), and [ProducerPerformance options](https://github.com/apache/kafka/blob/4.3.0/tools/src/main/java/org/apache/kafka/tools/ProducerPerformance.java).
 
 ```bash
+# REASONED: bounded producer quota comparison; no live Kafka cluster, certificate fixtures or external test hosts. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BROKER_HOST:9093'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
@@ -15113,6 +15484,7 @@ This producer workload does not demonstrate consumer quotas, controller mutation
 At INFO, the requested denial should be present while the allowed write is absent. At DEBUG, both should be present. If the denied record is also absent, logger routing or collection has failed; absence of an allowed record alone is not proof of the intended INFO behavior. Sources: [StandardAuthorizer audit messages](https://github.com/apache/kafka/blob/4.3.0/metadata/src/main/java/org/apache/kafka/metadata/authorizer/StandardAuthorizerData.java) and [the logging configuration](https://github.com/apache/kafka/blob/4.3.0/config/log4j2.yaml).
 
 ```bash
+# REASONED: authorization logging; no live Kafka cluster, certificate fixtures or external test hosts. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_COLLECTED_AUTHORIZER_LOG'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
@@ -15199,6 +15571,70 @@ The checks below remain REASONED from the cited Kafka documentation and pinned s
 ======================================================================
 
 # ClickHouse: listen address, the default user, and TLS ports
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| listen-default: Shipped config tries IPv4/IPv6 localhost; widening listen_host can expose services; inspect merged overrides. | ClickHouse documentation unknown; ClickHouse server config source 9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6 | REASONED |
+| default-user: Upstream default has empty password, ::/0 origins and access_management; full bootstrap needs additional capabilities. | ClickHouse users source b40982f9416bb4bc2d423d7e75ec384e79494b99 | REASONED |
+| docker-default: Official image disables default network access when all three documented initialization variables are unset. | ClickHouse documentation unknown | REASONED |
+| ports: 8123 HTTP, 9000 native, 9004 MySQL, 9005 PostgreSQL and 9009 interserver are documented, not necessarily active. | ClickHouse documentation unknown | REASONED |
+| interserver-bind: interserver_listen_host defaults to listen_host but can independently widen replica exposure. | ClickHouse documentation unknown | REASONED |
+| xml-merge: config.d/users.d retain clickhouse roots; remove/replace inherited entries explicitly and inspect merged configuration. | ClickHouse documentation unknown | REASONED |
+| passwords: Replace inherited password with protected SHA-256 hash and loopback origins; SQL bcrypt has a 72-character limit. | ClickHouse documentation unknown | REASONED |
+| bootstrap: Complete administrator bootstrap needs access_management, named_collection_control and show_named_collections_secrets. | ClickHouse documentation unknown | REASONED |
+| access-storage: Persist SQL access storage; configured user_directories takes precedence over access_control_path. | ClickHouse documentation unknown | REASONED |
+| admin: Separate SQL administrator gets global grants and restricted HOST IP; host restrictions do not enforce TLS. | ClickHouse documentation unknown | REASONED |
+| reader: Table-scoped reader role combines with direct/inherited grants; remove excessive privileges and separate ingestion. | ClickHouse documentation unknown | REASONED |
+| retire-default: After matched replacement login and dependency migration, remove temporary bootstrap and inherited default definition. | ClickHouse documentation unknown | REASONED |
+| profiles: Bind locked settings directly to the account so disabling roles cannot remove them; review overlapping profiles. | ClickHouse documentation unknown | REASONED |
+| memory: Query/per-user memory limits apply per server, are incompletely tracked, and do not bound all process memory. | ClickHouse documentation unknown | REASONED |
+| timeout: Zero speed-check delay makes timeout elapsed-time based; cancellation checkpoints can exceed the example 30 seconds. | ClickHouse documentation unknown | REASONED |
+| quota: Username-keyed cumulative quotas are receiving-server local, reset on restart, and do not limit concurrency; some reads are exempt. | ClickHouse documentation unknown | REASONED |
+| readonly: readonly/allow_ddl do not replace grants; readonly=2 permits more operations and is not a READONLY constraint. | ClickHouse documentation unknown | REASONED |
+| tls-ports: Enable HTTPS 8443/native TLS 9440 and remove plaintext 8123/9000; baseline removes both replication listeners. | ClickHouse documentation unknown | REASONED |
+| replica-tls: Replica variant uses private HTTPS 9010, matching advertised hostname and verified outbound TLS, while removing 9009. | ClickHouse documentation unknown | REASONED |
+| replica-auth: Omitted interserver credentials disable auth; allow_empty true admits anonymous peers; match protected secrets across replicas. | ClickHouse documentation unknown | REASONED |
+| cluster-tls: Distributed-query and Keeper paths require separate TLS configuration beyond replication data HTTPS. | ClickHouse documentation unknown | REASONED |
+| emulation: Remove unused 9004/9005 listeners; PostgreSQL emulation can support TLS. | ClickHouse documentation unknown | REASONED |
+| client-tls: Explicit client trust file and certificate hostname are required; extendedVerification defaults false, so enable it. | ClickHouse documentation unknown | REASONED |
+| certificate-auth: ssl_certificate CN authentication supplies a machine possession factor, separate from human MFA. | ClickHouse documentation unknown | REASONED |
+| totp: 26.2 introduced XML-user TOTP with password auth; SQL access control lacks it and each code is accepted at most once. | ClickHouse documentation unknown; ClickHouse TOTP introduction 26.2 | REASONED |
+| source-grants: Withhold all source privileges and inherited grants; separate READ/WRITE needs 25.7+, filtering 25.8+, and enable_read_write_grants. | ClickHouse documentation unknown; ClickHouse privilege registry 37c6c8c9bfc1de323e9a27711c5649352364bcba | REASONED |
+| source-interfaces: url/HTTP dictionaries fetch remote data, file reads under user_files_path, and remote reaches other servers. | ClickHouse documentation unknown | REASONED |
+| url-default: Omitted remote_url_allow_hosts allows covered URL hosts; hostname-only permits every port. | ClickHouse server config source 9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6; ClickHouse documentation unknown | REASONED |
+| url-matching: Host matching precedes DNS and applies on redirects; host:port does not require HTTPS or constrain every protocol. | ClickHouse documentation unknown | REASONED |
+| engine-grants: OSS engine enforcement defaults disabled; enable it and grant only required engines alongside scoped CREATE TABLE. | ClickHouse documentation unknown | REASONED |
+| dictionaries: Separate dictionary management from scoped dictGet use; ordinary readers need no management privilege. | ClickHouse documentation unknown | REASONED |
+| executables: Administrator-controlled script/UDF discovery paths restrict modification; existing executable objects still need review. | ClickHouse documentation unknown | REASONED |
+| direct-exec: execute_direct runs the approved program directly; zero invokes a shell; neither is a sandbox. | ClickHouse documentation unknown | REASONED |
+| log-retention: Configure query/session logs and explicit 30-day TTL; deprecated database option is omitted; custom engine conflicts need review. | ClickHouse documentation unknown | REASONED |
+| log-profile: Lock query logging and sampling settings for each relevant account; overlapping profiles can conflict. | ClickHouse documentation unknown | REASONED |
+| log-events: Query log records activity/errors, not results; session log records login/logout/failure; inspect every serving interface/node. | ClickHouse documentation unknown | REASONED |
+| log-access: Require system-table grants, withhold application log access, mask sensitive query text and export to independent storage. | ClickHouse documentation unknown | REASONED |
+| log-upgrades: Upgrades can rename old log tables; inspect their retention; no separate immutable OSS audit_log or imported Cloud retention is established. | ClickHouse documentation unknown | REASONED |
+| verify-inventory: Inventory intended 8443/9440 and optional private 9010; removed listeners absent; local ss proves no remote isolation/authentication. | ClickHouse documentation unknown | REASONED |
+| verify-http: Matched no_password fixture accepts supplied/empty/wrong passwords; fixed HTTPS requires correct password and returns 1. | ClickHouse documentation unknown; curl documentation unknown | REASONED |
+| verify-plaintext: Any HTTP status on 8123 proves reachability; HTTP 000 needs inventory and successful TLS controls. | ClickHouse documentation unknown | REASONED |
+| verify-native: Native wrong password needs authentication error/nonzero exit; correct credentials return 1; transport failures are inconclusive. | ClickHouse documentation unknown | REASONED |
+| verify-tables: Fixed reader reads populated events and rejects private_events; test allowed/disallowed origins with matched reachable controls. | ClickHouse documentation unknown | REASONED |
+| verify-retirement: Fresh default login fails after retirement on native/HTTPS while same-origin sql_admin still succeeds. | ClickHouse documentation unknown | REASONED |
+| verify-settings: Reject unlocked override; inspect four limits and require successful SET ROLE NONE/DEFAULT with account profile retained. | ClickHouse role source 1163c482760fb0204e40f8fb5d81ffa1272bc9ea; ClickHouse documentation unknown | REASONED |
+| verify-memory: Calibrated aggregation fails at lower memory limit while simple read succeeds; test concurrent user budget and timeout separately. | ClickHouse documentation unknown | REASONED |
+| verify-quota: Fresh fixture accepts first two application reads and rejects the third; test restart reset and independent server counters. | ClickHouse documentation unknown | REASONED |
+| verify-file: Isolate FILE privilege with existing fixture and constant prerequisites; missing-file/readonly errors prove no source denial. | ClickHouse documentation unknown | REASONED |
+| verify-url: Approved HTTPS fixture succeeds and unlisted host gets allow-list rejection; other errors are inconclusive. | ClickHouse documentation unknown | REASONED |
+| verify-engine: With engine enforcement enabled MergeTree succeeds and TinyLog gets engine-privilege denial; remove fixtures between runs. | ClickHouse documentation unknown | REASONED |
+| verify-logs: Require new marker/login-failure records, locked logging, reader denial and admin/collector success with correlated provenance. | ClickHouse documentation unknown | REASONED |
+| verify-retention: Inspect table TTLs and historical tables; expired records disappear while recent ones remain in isolated retention test. | ClickHouse documentation unknown | REASONED |
+| verify-totp: Fixed XML human account rejects missing/invalid OTP and accepts password with fresh code; do not reuse positive code. | ClickHouse documentation unknown | REASONED |
+<!-- version-basis:end -->
 
 ClickHouse listens on localhost only until you set `listen_host`, but the upstream base configuration ships a `default` user that has an empty password, may connect from any address (`<ip>::/0</ip>`), and holds `access_management`, so widening `listen_host` to `::` or `0.0.0.0` can publish a passwordless administrative account on plaintext HTTP 8123 and native TCP 9000. Packaging, container initialization, and configuration overrides can change these defaults (the official Docker image, for one, disables the `default` user's network access when none of `CLICKHOUSE_USER`, `CLICKHOUSE_PASSWORD`, or `CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT` is set), so inspect the effective configuration of the version you run rather than assuming either behaviour. Complete the account and TLS setup before widening access. The full administrator bootstrap needs the additional capabilities in step 2. [Access control](https://clickhouse.com/docs/concepts/features/security/access-rights), [Docker default-user behaviour](https://clickhouse.com/docs/get-started/setup/self-managed/docker#managing-default-user).
 
@@ -15676,6 +16112,7 @@ In the deliberately authentication-disabled fixture, empty, wrong, and supplied 
 **REASONED: table authorization requires the missing runtime and two populated fixture tables.** In the isolated deployment, have the administrator provision both `appdb.events` and `appdb.private_events`. Run these individually as `app_reader`:
 
 ```sql
+-- REASONED: table authorization; no server/client runtime or deployment fixtures. Expected outcomes and vendor sources are recorded in this section.
 SELECT * FROM appdb.events LIMIT 1;
 SELECT * FROM appdb.private_events LIMIT 1;
 ```
@@ -15703,6 +16140,7 @@ An unconstrained baseline accepts the override. The fixed account rejects it and
 For a memory discriminator, give the isolated `events` fixture an `x UInt64` column with a finite, recorded number of distinct values. Use:
 
 ```sql
+-- REASONED: bounded memory comparison; no server/client runtime or deployment fixtures. Expected outcomes and vendor sources are recorded in this section.
 SELECT uniqExact(x) FROM appdb.events;
 ```
 
@@ -15720,6 +16158,7 @@ TO quota_reader;
 Through the guarded connection as `quota_reader`, issue these individually without intervening application queries:
 
 ```sql
+-- REASONED: quota enforcement; no server/client runtime or deployment fixtures. Expected outcomes and vendor sources are recorded in this section.
 SELECT * FROM appdb.events LIMIT 1;
 SELECT * FROM appdb.events LIMIT 1;
 SELECT * FROM appdb.events LIMIT 1;
@@ -15738,6 +16177,7 @@ A source-authorized baseline reads the fixture; `app_reader` must not. To isolat
 For URL allow-list enforcement, use a separately source-authorized test account with the required table-function permissions and two harmless, certificate-valid HTTPS fixtures. Substitute the actual hosts before executing:
 
 ```sql
+-- REASONED: URL allow-list; no server/client runtime or deployment fixtures. Expected outcomes and vendor sources are recorded in this section.
 SELECT * FROM url(
     'https://REPLACE_WITH_APPROVED_SOURCE_HOST:443/probe.tsv',
     'TSV',
@@ -15781,6 +16221,7 @@ The disabled-logging baseline lacks new matching records. The fixed state record
 As administrator, inspect the current table definitions:
 
 ```sql
+-- REASONED: log retention; no server/client runtime or deployment fixtures. Expected outcomes and vendor sources are recorded in this section.
 SHOW CREATE TABLE system.query_log;
 SHOW CREATE TABLE system.session_log;
 ```
@@ -16557,6 +16998,54 @@ The comparisons below are REASONED from the cited Neo4j documentation and pinned
 
 # Memcached: bind privately; authentication and TLS are optional builds
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| default: Stock memcached has no authentication and binds INADDR_ANY on TCP11211; isolate it from the internet and untrusted users. | memcached documentation unknown; memcached source 1.6.45 | REASONED |
+| releases: Recorded current stable is 1.6.45 with further fixes after security-focused 1.6.42; check backports and canary upgrades, not feature-minimum releases. | memcached source 1.6.45; memcached security release 1.6.42; memcached documentation unknown | REASONED |
+| bind: Use loopback or an intended private address with firewall restrictions; repeated -l/address-specific ports can add listeners that require inspection. | memcached source 1.6.45; memcached documentation unknown | REASONED |
+| ports: Set -p 11211 -U 0 explicitly; zero disables the corresponding transport and changing TCP port provides no access control. | memcached source 1.6.45 | REASONED |
+| udp-default: UDP defaults disabled since 1.5.6; keep -U 0 against inherited settings and reflection/amplification exposure. | memcached documentation unknown | REASONED |
+| account: Run a dedicated unprivileged account; -u changes identity only when launched as root and does not create the account. | memcached source 1.6.45 | REASONED |
+| syscalls: Optional drop_privileges adds build/platform-dependent syscall restrictions, defaults disabled and needs deployment testing. | memcached source 1.6.45 | REASONED |
+| connections: -c bounds connections, not request rate; upstream default 1024, example 256 with operational headroom. | memcached source 1.6.45; memcached documentation unknown | REASONED |
+| memory: -m budgets item memory, not total process memory; upstream default 64 MB, example 256 with extra process overhead. | memcached source 1.6.45; memcached documentation unknown | REASONED |
+| idle: Optional idle_timeout defaults zero/no timeout in 1.6.45; choose pool-compatible values; binary handling was fixed in 1.5.15. | memcached source 1.6.45; memcached ASCII auth minimum 1.5.15 | REASONED |
+| sasl-build: SASL support dates from 1.4.3 and requires --enable-sasl, advertised -S and compatible Cyrus mechanism/client; SASL PLAIN needs TLS. | memcached documentation unknown | REASONED |
+| sasl-secrets: saslpasswd2 prompts; protect the Cyrus password database for the service account. SASL authenticates without encryption and does not justify public exposure. | memcached documentation unknown | REASONED |
+| sasl-protocol: -S gates binary protected operations but permits VERSION/negotiation; ASCII per-listener overrides or negotiation bypass SASL, so test every listener. | memcached source 1.6.45 | REASONED |
+| ascii-auth: Deprecated binary protocol has an alternative: -Y service-only username:password file and a client fake-SET token exchange over TLS, without per-user authorization. | memcached documentation unknown; memcached protocol source 7278bdee96329915bbc87731ba005095453f5c2f; memcached ASCII auth minimum 1.5.15 | REASONED |
+| ascii-limits: -Y remains experimental in 1.6.45, needs no SASL dependency, excludes binary operation and rejects nonzero UDP at startup. | memcached ASCII auth minimum 1.5.15; memcached source 1.6.45 | REASONED |
+| tls: TLS dates from 1.5.13, needs --enable-tls/OpenSSL1.1.1+ and compatible clients; default off, runtime -Z uses PEM chain/key extended options. | memcached documentation unknown | REASONED |
+| mtls: ssl_verify_mode defaults 0/no required client cert; mode 2 with ssl_ca_cert requires certificates, adding machine possession, not human MFA. | memcached documentation unknown | REASONED |
+| notls: A notls loopback listener bypasses TLS but does not remove -S binary requirements; do not add plaintext merely for text administration. | memcached documentation unknown; memcached source 1.6.45 | REASONED |
+| reload: Text refresh_certs/settings do not apply directly to -S; 1.6.45 SIGHUP reloads configured paths and authenticated binary STAT inspects settings; existing sessions persist. | memcached TLS design 4b9e6198fc44c9eb3ae80802a1b0dcbaf9602969; memcached source 1.6.45 | REASONED |
+| flush: -F blocks cache-wide invalidation but preserves ordinary writes/deletes; rejected flush increments cmd_flush, so inspect response and retained item. | memcached source 1.6.45; memcached protocol source 7278bdee96329915bbc87731ba005095453f5c2f | REASONED |
+| shutdown: Leave -A absent to keep ASCII shutdown disabled; inspect inherited arguments. | memcached source 1.6.45; memcached protocol source 7278bdee96329915bbc87731ba005095453f5c2f | REASONED |
+| dump: 1.6.45 -X blocks cachedump, stats detail and crawler meta/mgdump; ordinary statistics and known-key reads remain available. | memcached source 1.6.45 | REASONED |
+| watch: -W blocks watch and dates from 1.5.21; preserve network/authentication protection for other remaining capabilities. | memcached watch-control minimum 1.5.21; memcached source 1.6.45 | REASONED |
+| crawler: no_lru_crawler is not an authorization boundary; protocol commands can re-enable the background crawler. | memcached protocol source 7278bdee96329915bbc87731ba005095453f5c2f | REASONED |
+| verify-inventory: Check executable/build capabilities, process account and every TCP/UDP/publication listener; pair intended listeners with allowed-client protected operations. | memcached source 1.6.45; memcached documentation unknown | REASONED |
+| verify-budgets: Effective example maxconns/maxbytes are 256/268435456 versus upstream 1024/67108864; verify disabled UDP/shutdown/flush/dump and matched SET/GET, not workload capacity. | memcached source 1.6.45 | REASONED |
+| verify-isolation: Disallowed observer must lose TCP11211 while allowed observer still completes a protected request; timeout alone is inconclusive without target/listener/firewall evidence. | memcached documentation unknown | REASONED |
+| verify-text: Loopback plaintext stats/settings end with END only in the applicable text configuration; SASL/TLS/private-bind failures prove none of those controls independently. | memcached protocol source 7278bdee96329915bbc87731ba005095453f5c2f; memcached source 1.6.45 | REASONED |
+| verify-tls: Plaintext cannot complete TLS; fixed endpoint must verify CA and IP/DNS identity and support application operations; chain-only trust is insufficient. | memcached documentation unknown | REASONED |
+| verify-mtls: Under verify mode 2, only a valid client certificate completes the application request; server Verification: OK can precede client rejection. | memcached documentation unknown | REASONED |
+| verify-reload: After replacing material and SIGHUP, new connections must present the new certificate and complete an application request; errors or old certificates fail. | memcached TLS design 4b9e6198fc44c9eb3ae80802a1b0dcbaf9602969; memcached source 1.6.45 | REASONED |
+| verify-flush: Disposable text/binary comparisons change flush success and lost item to explicit refusal and retained item; initial SET/GET and ordinary operations stay usable. | memcached source 1.6.45; memcached documentation unknown | REASONED |
+| verify-dump: Populated disposable fixtures must change dump acceptance to explicit refusal; empty dumps, crawler problems and protocol failures do not prove -X. | memcached source 1.6.45; memcached protocol source 7278bdee96329915bbc87731ba005095453f5c2f | REASONED |
+| verify-watch: Exposed watch acceptance must become explicit refusal; watcher timeout alone does not demonstrate -W. | memcached source 1.6.45 | REASONED |
+| verify-shutdown: Disposable -A baseline stops; fixed state refuses shutdown while the same process answers statistics; disable restart masking and never use a live cache. | memcached protocol source 7278bdee96329915bbc87731ba005095453f5c2f; memcached source 1.6.45 | REASONED |
+| verify-auth: Fresh no-auth/wrong-password protected GETs must fail while correct SASL or ASCII token login returns a known item; binary SASL auth-required status is 0x20. | memcached documentation unknown; memcached source 1.6.45; memcached protocol source 7278bdee96329915bbc87731ba005095453f5c2f | REASONED |
+| local-guards: Historical shell/scanner checks and invalid-input rejection exercised guards and instrumented dispatch, not memcached startup or service behavior. | memcached source 1.6.45; memcached documentation unknown | DEMONSTRATED |
+<!-- version-basis:end -->
+
 Memcached has no authentication by default, and its `-l` option defaults to `INADDR_ANY`, so a stock start listens on every interface on TCP 11211 and serves any client that connects. The project's own wording: memcached "does not spend much, if any, effort in ensuring its defensibility from random internet connections", so it "must not" be exposed to the internet or to untrusted users. The practical control is network isolation; SASL and TLS exist, but each needs a build compiled with that feature. SASL adds no encryption; SASL PLAIN credentials need TLS. See the [server configuration documentation](https://docs.memcached.org/serverguide/configuring/) and [SASL documentation](https://docs.memcached.org/protocols/binarysasl/).
 
 Use a maintained package carrying current security fixes. Feature introduction dates below describe availability, not a recommended deployment version. At the time of writing, [upstream lists 1.6.45 as current stable](https://memcached.org/). [1.6.42](https://github.com/memcached/memcached/wiki/ReleaseNotes1642) was explicitly security-focused and included SASL, authentication, and protocol fixes; [1.6.45](https://github.com/memcached/memcached/wiki/ReleaseNotes1645) contains further security and crash fixes. Review distribution backports and test upgrades on a canary before rollout.
@@ -16797,7 +17286,7 @@ The example matches the default server behavior, which does not require client c
 
 For certificate reload, replace the certificate material at the configured paths, send SIGHUP through the service manager to the verified process, and repeat on a new connection. Expect the new certificate and a successful application request; retaining the old certificate or reporting a reload error is not success. See the [TLS documentation](https://docs.memcached.org/features/tls/) and [reload design](https://raw.githubusercontent.com/memcached/memcached/4b9e6198fc44c9eb3ae80802a1b0dcbaf9602969/doc/tls.txt).
 
-### V5. Exercise flush, dump, watch, and shutdown restrictions
+### V5. Exercise flush, dump, watch, and shutdown restrictions (REASONED: restriction comparisons from cited pinned memcached sources; no disposable runtime.)
 
 **REASONED:** no disposable memcached runtime is available. This block deliberately sends `flush_all` and `shutdown`. Run it only against an otherwise empty disposable loopback instance, never a live application cache.
 
@@ -17586,6 +18075,82 @@ These are local syntax and guard results only. SQL policies were source-traced b
 
 # NATS and JetStream: authentication, TLS, and the monitoring port
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| baseline: v2.14.7 and its recorded commit are the review baseline, not a latest-release claim. | NATS Server v2.14.7; NATS baseline commit 8d8b69a8c46a46a150eabb7f312607c4d9c58faf | REASONED |
+| client-default: Client port 4222 defaults to no authentication and wildcard host; select loopback or a private interface. | NATS Server v2.14.7 | REASONED |
+| image-config: Published 2.14/2.15 variants load bundled configuration only with the recorded default command, working directory and mounts. | NATS image catalogue dcd3db677d8919c3a42d369bd48a6f1c234b3ae8; NATS image source 0e72748d3cb553ccdb8c2da7c75ec3b767be51a5 | REASONED |
+| image-client: Bundled images enable unauthenticated client 4222; mount and explicitly select protected configuration. | NATS image source 0e72748d3cb553ccdb8c2da7c75ec3b767be51a5 | REASONED |
+| image-monitor: Bundled images enable unauthenticated monitoring 8222; remove or bind privately. | NATS image source 0e72748d3cb553ccdb8c2da7c75ec3b767be51a5 | REASONED |
+| image-route: Bundled route 6222 uses published ruser/T0pS3cr3t and my_cluster; remove or replace with private credentials. | NATS image source 0e72748d3cb553ccdb8c2da7c75ec3b767be51a5 | REASONED |
+| image-bind: Bundled listeners without hosts use 0.0.0.0, dual-stack where IPv4-mapped IPv6 is supported; restrict publication. | NATS image listener source v2.15.0; Go socket source go1.26.8 | REASONED |
+| static-auth: Separate password/NKey users may coexist; a user's NKey replaces its password pair, without requiring JWT mode. | NATS Server v2.14.7 | REASONED |
+| passwords: Generate bcrypt interactively; protect seeds and password inputs; hashes do not replace TLS. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
+| anonymous: no_auth_user admits anonymous clients as a named identity; omit unless deliberate. | NATS Server v2.14.7 | REASONED |
+| operator: Operator signs account JWTs, accounts sign users; preload resolver accounts and protect signing seeds off the broker. | NATS Server v2.14.7 | REASONED |
+| jwt-proof: Non-bearer users prove seed possession by nonce signature; bearer JWT possession is sufficient. | NATS Server v2.14.7 | REASONED |
+| permissions-default: Absent user/default permissions means unrestricted account access; explicit permissions replace defaults. | NATS Server v2.14.7 | REASONED |
+| allow-lists: Publish/subscribe lists are independent; nonempty allows restrict, empty allows do not; matching static deny wins. | NATS Server v2.14.7 | REASONED |
+| inboxes: Use identity-specific reply inboxes; broad _INBOX.&gt; exposes other clients' replies. | NATS Server v2.14.7 | REASONED |
+| queues: Require the assigned queue in subscription permissions; a bare subject grant defeats queue-only restriction. | NATS Server v2.14.7 | REASONED |
+| responses: allow_responses can override static publish denial for tracked replies; bound count/expiry, not an absolute subject allow-list. | NATS Server v2.14.7 | REASONED |
+| tls: Client TLS validates endpoint identity; verify requires client certificates but password requirements come from authentication. | NATS Server v2.14.7 | REASONED |
+| tls-map: verify_and_map derives configured identity from certificate attributes and enables verification itself. | NATS Server v2.14.7 | REASONED |
+| monitor-default: Native monitoring is off unless enabled, conventionally 8222; HTTPS adds transport security, not NATS login or client mTLS. | NATS Server v2.14.7 | REASONED |
+| monitor-data: /varz, /connz, /routez and JetStream /jsz disclose metadata; subs/auth query options add details, not authentication. | NATS Server v2.14.7 | REASONED |
+| monitor-boundary: Bind monitoring privately; an authenticating proxy needs direct-backend bypass prevention. | NATS Server v2.14.7 | REASONED |
+| jetstream-port: JetStream shares the server and monitoring endpoint; it adds no listener of its own. | NATS Server v2.14.7 | REASONED |
+| cluster: Conditional private 6222 routes have separate credentials/TLS; explicit URLs need credentials; cluster TLS verifies peers. | NATS Server v2.14.7 | REASONED |
+| gateway: Conditional private 7222 gateways verify peers; reject_unknown_cluster supplements credentials, not replaces them. | NATS Server v2.14.7 | REASONED |
+| peer-urls: Match SANs, advertisements and URLs; keep insecure disabled; known-URL certificate checks constrain dynamic growth. | NATS Server v2.14.7 | REASONED |
+| leaf: Conditional 7422 leaf auth/TLS is independent; static password and operator credentials recipes are alternatives. | NATS Server v2.14.7 | REASONED |
+| leaf-accounts: Outbound account is local; remote credentials select hub account; remotes-only creates no inbound listener. | NATS Server v2.14.7 | REASONED |
+| connection-default: Documented client-connection default is 65,536; configured limits are capacities, not attempt-rate limits. | NATS Server v2.14.7 | REASONED |
+| payload-default: Documented payload default is 1 MiB; max_payload must not exceed max_pending. | NATS Server v2.14.7 | REASONED |
+| runtime-budgets: Set per-server/account connections, per-client subscriptions, control-line/pending limits and TLS/auth/write deadlines for workload. | NATS Server v2.14.7 | REASONED |
+| accounts: Top-level users share $G; separate account spaces and restrict exports to intended importing accounts. | NATS Server v2.14.7 | REASONED |
+| system-account: Default system name is $SYS; selected SYS contains administrative identities, not application users. | NATS Server v2.14.7 | REASONED |
+| jetstream-server: Conditional store_dir and memory/file budgets bound storage, not all process memory or filesystem use. | NATS Server v2.14.7 | REASONED |
+| jetstream-queue: request_queue_limit bounds pending JetStream API work, not connection attempts. | NATS Server v2.14.7 | REASONED |
+| jetstream-account: Set account memory/file, stream count, required max_bytes, per-stream byte and acknowledgement ceilings; inspect effective reload results. | NATS Server v2.14.7 | REASONED |
+| consumer-limit: v2.14.7 account max_consumers is enforced per stream, not as a total account consumer count. | NATS Server v2.14.7 | REASONED |
+| jetstream-auth: Core-only users deny API subjects; legitimate JetStream apps need reviewed resource, reply and acknowledgement permissions. | NATS Server v2.14.7 | REASONED |
+| domains: EDGE/HUB domains select independent JetStream systems, not tenant authorization boundaries. | NATS Server v2.14.7 | REASONED |
+| encryption: Conditional server-wide file-store encryption uses protected key material, recommended at least 32 bytes; aes selects AES-GCM. | NATS Server v2.14.7 | REASONED |
+| rotation: Previous-key transition needs restart and recovery tests; protect keys and backups separately. | NATS Server v2.14.7 | REASONED |
+| mqtt: Optional private MQTT TLS needs JetStream, scoped translated subjects, protocol-restricted users and reviewed anonymous overrides. | NATS Server v2.14.7 | REASONED |
+| mqtt-jwt: Operator-mode MQTT uses explicitly permitted bearer JWT passwords, not normal NKey nonce proof. | NATS Server v2.14.7 | REASONED |
+| websocket: Optional 8443 WSS needs scoped users/inboxes and origin policy; non-browser Origin is not authentication. | NATS Server v2.14.7 | REASONED |
+| websocket-tls: WebSocket TLS is required unless no_tls disables it; protect proxy backends and review listener auth overrides. | NATS Server v2.14.7 | REASONED |
+| callout: Conditional auth callout needs dedicated AUTH account, narrow bypass users, signed responses and encrypted XKey exchanges. | NATS Server v2.14.7 | REASONED |
+| callout-mode: Static and operator workflows differ; allowed_accounts is mode-dependent; unavailable authenticator must reject admission. | NATS Server v2.14.7 | REASONED |
+| files: Dedicated non-root broker reads necessary secrets and writes state; application/signing seeds stay with their owners. | NATS Server v2.14.7 | REASONED |
+| verify-offline: Native parsing/key generation remain unobserved; pair valid parsing fixtures with malformed controls and separately scan placeholders. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
+| verify-identity: Inspect running identity, effective config/limits, every listener namespace and host publication; file inspection alone is insufficient. | NATS Server v2.14.7 | REASONED |
+| cli-input: Clear inherited NATS_* and saved contexts; password uses guarded one-command environment input, still locally readable. | natscli v0.4.0 | REASONED |
+| verify-auth: Require allowed publish, missing/wrong-password rejection, certificate/hostname discrimination and forbidden subject errors. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
+| verify-delivery: Require exact live markers; quiet subscribers and publish success alone prove no delivery. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
+| verify-queue: Assigned queue receives marker; wrong/no queue rejects with matched positive delivery. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
+| verify-response: Same worker connection sends one timely reply; extra, expired and unrelated replies must fail. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
+| verify-accounts: Created marker stays in ORDERS; shipped marker reaches ANALYTICS; keep count controls live and reject third-account imports. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
+| verify-system: sys-admin gets system response; tenant gets corresponding publish-permission rejection. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
+| verify-js-auth: Provisioner creates, inspects, retrieves and deletes fixtures; Core-only identity must receive API-subject denials. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
+| verify-js-limits: Test byte reservations, stored bytes, stream/consumer counts and ack ceiling independently with below-limit controls. | NATS Server v2.14.7 | REASONED |
+| verify-recovery: Copied encrypted store must recover with correct key and fail with missing/wrong key; test rotation, not just marker absence. | NATS Server v2.14.7 | REASONED |
+| verify-peers: Actual links need cross-server delivery plus credential/certificate/network denials; client-port/TCP/TLS checks do not substitute. | NATS Server v2.14.7 | REASONED |
+| verify-monitor: Collector retrieves expected JSON; unauthorized direct backend cannot answer; pair refusal with identity/inventory and live control. | NATS Server v2.14.7 | REASONED |
+| verify-proxy: Conditional proxy needs anonymous refusal, authenticated JSON success and direct-backend bypass denial. | NATS Server v2.14.7 | REASONED |
+| verify-optional: Test MQTT translated subjects/bearer identity, WSS origins versus auth, and callout outage, grants and XKey failures separately. | NATS Server v2.14.7 | REASONED |
+| verify-pressure: Bounded workloads distinguish connection/subscription/payload/control-line/timeouts/slow-consumer/API limits with healthy controls. | NATS Server v2.14.7 | REASONED |
+<!-- version-basis:end -->
+
 NATS accepts client connections on 4222 with no authentication configured by default. A separately enabled HTTP monitoring endpoint, conventionally 8222, reveals connection metadata, subscription subjects, and message/byte counters without a login of its own. Both need explicit configuration. JetStream, the persistence layer for streams and consumers, runs in the same server process: it adds no listening port of its own, and its state surfaces through the same monitoring endpoint at `/jsz`.
 
 The official Docker images open more than these defaults. Every published `nats` tag (2.14 and 2.15; scratch, Alpine, Nano Server and Windows Server Core at the pinned commit), run with its default command, its default working directory (scratch and Windows name the file by a relative path, so it loads only when the working directory is where the image copies it: `/` on scratch, `C:\` on Windows) and no configuration mounted over the bundled one (`/nats-server.conf` on scratch, `/etc/nats/nats-server.conf` on Alpine, `C:\nats-server.conf` on Windows), loads a bundled `nats-server.conf` that sets `port: 4222` with no client authorization, `monitor_port: 8222`, and a `cluster` block on port 6222 whose route authorization is user `ruser` with password `T0pS3cr3t`, which the image source publishes along with the cluster name `my_cluster`. None of the three sets a host, so each listens on `0.0.0.0`, which the Go runtime opens as a dual-stack socket where the host supports IPv4-mapped IPv6 addresses. Anything that can reach the container on those ports (another container on its network, a published port, or host networking) therefore gets unauthenticated client access, unauthenticated monitoring, and route connections authorized by public credentials. Passing arguments replaces the default command, so the bundled configuration is not loaded unless the arguments name it again with `--config` or `-c`. Mount your own configuration and pass it with `--config`: set client authentication, bind monitoring to `127.0.0.1` or remove it, and drop the `cluster` block unless its route credentials are private. Publish only 4222, and only to host loopback or a private network.
@@ -18347,6 +18912,7 @@ Paste the whole subshell after substituting all four values. These probes accept
 The first publish is the allowed control. The subsequent operations deliberately test missing credentials, a wrong password, a missing client certificate, and forbidden publish/subscribe subjects. Inspect each command's diagnostics; the block's final exit status is not a combined verdict.
 
 ```bash
+# REASONED: authentication, TLS and subject permissions; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -18410,6 +18976,7 @@ A successful publish message or a quiet subscriber is insufficient proof of deli
 Terminal 1 is self-contained and reads its password inside the guarded subshell. Piping a password to `nats sub` does not configure authentication; in CLI v0.4.0, a username without a password is treated as a token.
 
 ```bash
+# REASONED: subscriber delivery control; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -18445,6 +19012,7 @@ Terminal 1 is self-contained and reads its password inside the guarded subshell.
 Terminal 2 independently establishes its target, TLS configuration, and credentials; it cannot inherit variables from terminal 1's subshell:
 
 ```bash
+# REASONED: publisher delivery control; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -18487,6 +19055,7 @@ For queue comparisons, rerun the complete consumer block with the `order-worker`
 The following self-contained request block is also used by V4 and V5. Its last three inputs are identity, subject, and JSON body. Keep subjects such as `$SYS.REQ.SERVER.PING` and `$JS.API.INFO` single-quoted on the `set --` line. The inbox prefix matches the selected identity.
 
 ```bash
+# REASONED: request/reply, account and JetStream checks; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -18616,6 +19185,7 @@ A client-port test, TCP connection alone, or successful TLS handshake without me
 First complete the listener inventory in V1. Run this whole block from the intended collector with its permitted target, then from the unauthorized observer with the inventoried externally reachable address. For the selected loopback binding, the collector runs on the broker host and targets `127.0.0.1`.
 
 ```bash
+# REASONED: monitoring reachability; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_MONITOR_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
