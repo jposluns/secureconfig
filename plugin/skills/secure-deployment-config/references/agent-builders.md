@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "ef68d1e77a944605baa80eaf8c7e927a673f48b77506b9be670b8108fe9e0c5a",
+  "body_sha256": "0f9eff25a1850ccb008ceb6dfe028342a335a23d2ef93112e35e3caf8bdee585",
   "components": {
     "dify": {
       "name": "Dify documentation",
@@ -144,7 +144,8 @@ version_basis: {
         "s8e20b988ea0b": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/pkg/entities/requests/model.go#L9-L34",
         "s191317bdf3a7": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/types/app/config.go#L101-L106",
         "s32b7d021da01": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/control_panel/watch_dog.go#L32-L46",
-        "sb19f8717ed1f": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/server/http_server.go#L130-L134"
+        "sb19f8717ed1f": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/server/http_server.go#L130-L134",
+        "s2efeb062db27": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/debugging_runtime/hooks.go#L132-L153"
       }
     },
     "daemon-source": {
@@ -165,7 +166,7 @@ version_basis: {
     "docker-firewall": {"text": "Docker published traffic can bypass UFW; removing or narrowing publications is required.", "components": ["docker"], "sources": ["docker:s351180c6678f"], "status": "REASONED"},
     "dify-ports": {"text": "Dify publishes nginx 80/443 and plugin debugging 5003, with more vector-profile ports; EXPOSE_NGINX_SSL_PORT remains published when HTTPS serving is off.", "components": ["dify-console", "dify-compose"], "sources": ["dify-console:sb28809d177bf", "dify-compose:s517af9c43635", "dify-console:s1e4c822a36b1"], "status": "REASONED"},
     "dify-debug-bind": {"text": "Compose pins daemon 0.6.10-local, publishes 5003 on all host interfaces; EXPOSE_PLUGIN_DEBUGGING_HOST is client destination, not bind control.", "components": ["dify-console"], "sources": ["dify-console:s1e4c822a36b1", "dify-console:sb28809d177bf"], "status": "REASONED"},
-    "daemon-listener": {"text": "Daemon 0.6.10 uses plaintext newline-delimited JSON TCP; PLUGIN_DEBUGGING_HOST/PORT map to remote-installing listener, default 0.0.0.0:5003.", "components": ["dify-console", "daemon"], "sources": ["dify-console:s1e4c822a36b1", "daemon:scb80ef9b341b", "daemon:sbb1558888c1a", "daemon:sbccc30db5bfe"], "status": "REASONED"},
+    "daemon-listener": {"text": "Daemon 0.6.10 uses plaintext newline-delimited JSON TCP; PLUGIN_DEBUGGING_HOST/PORT map to remote-installing listener, default 0.0.0.0:5003.", "components": ["dify-console", "daemon"], "sources": ["dify-console:s1e4c822a36b1", "daemon:scb80ef9b341b", "daemon:sbb1558888c1a", "daemon:sbccc30db5bfe", "daemon:s2efeb062db27"], "status": "REASONED"},
     "daemon-key": {"text": "Per-tenant UUID debugging key has Redis bidirectional mappings with two-hour expiry; retrieval refreshes expiry, not key, and expiry leaves authenticated runtime connected.", "components": ["daemon"], "sources": ["daemon:s6490d756c639", "daemon:sa0aa7e953ee0", "daemon:sfabe22af22d6"], "status": "REASONED"},
     "daemon-rejection": {"text": "Wrong key yields handshake failed, invalid key and closes; lookup is Redis-based and TCP key guessing has no rate limiter.", "components": ["daemon"], "sources": ["daemon:s1d0863ded6ed", "daemon:sfabe22af22d6", "daemon:sbccc30db5bfe"], "status": "REASONED"},
     "daemon-preauth": {"text": "Non-handshake messages can parse/store declarations and buffer assets before authentication.", "components": ["daemon-source"], "sources": ["daemon-source:s629f3bfbae72", "daemon-source:s07045a0003da", "daemon-source:s2b36558b0078"], "status": "REASONED"},
@@ -525,7 +526,7 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 - LibreChat v0.7.7 changelog (two-factor authentication): https://www.librechat.ai/changelog/v0.7.7
 - Docker Compose merge rules (sequences merge rather than replace; the `!reset` tag): https://docs.docker.com/reference/compose-file/merge/
 - Dify Compose at d39d9ddb7430522e0c828c6953afdf773ba6e675 (daemon image, container bind and host publication): https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/docker/docker-compose.yaml#L573-L644
-- Dify plugin daemon 0.6.10, commit 1310a18b2f6bc6f18768a0a6265484830891433c (TCP listener and newline framing): https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/debugging_runtime/server.go#L109-L134 ; https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/debugging_runtime/codec.go#L14-L49
+- Dify plugin daemon 0.6.10, commit 1310a18b2f6bc6f18768a0a6265484830891433c (TCP listener and newline framing): https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/debugging_runtime/server.go#L109-L134 ; https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/debugging_runtime/codec.go#L14-L49 ; each decoded line passed to the message handler: https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/debugging_runtime/hooks.go#L132-L153
 - Dify plugin daemon 0.6.10 (handshake lookup, invalid-key rejection and connection handling): https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/debugging_runtime/runtime_intialization_handlers.go#L18-L42 ; https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/debugging_runtime/hooks.go#L51-L90 ; https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/debugging_runtime/hooks.go#L158-L240
 - Dify plugin daemon 0.6.10 (pre-handshake dispatch, declaration storage and exact asset accounting): https://github.com/langgenius/dify-plugin-daemon/blob/1310a18b2f6bc6f18768a0a6265484830891433c/internal/core/debugging_runtime/hooks.go#L158-L237 ; https://github.com/langgenius/dify-plugin-daemon/blob/1310a18b2f6bc6f18768a0a6265484830891433c/internal/core/debugging_runtime/runtime_intialization_handlers.go#L44-L75 ; https://github.com/langgenius/dify-plugin-daemon/blob/1310a18b2f6bc6f18768a0a6265484830891433c/internal/core/debugging_runtime/runtime_intialization_handlers.go#L139-L183
 - Dify plugin daemon 0.6.10 (key generation, Redis mappings, expiry refresh and lookup): https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/service/debugging_service/connection_key.go#L23-L123 ; https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/pkg/utils/cache/redis.go#L208-L230

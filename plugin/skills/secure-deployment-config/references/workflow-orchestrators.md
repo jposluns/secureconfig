@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "4efe4ed5977c9047c1868a1e1ac9bdb39f5bb6127cfd3a2502aa8dc04f3d187d",
+  "body_sha256": "93d9586414c6c9af19aa44238b1cb6db303689d12c0e94cb152eff6455d740ef",
   "components": {
     "prefect": {
       "name": "Prefect Basic Auth minimum",
@@ -163,7 +163,8 @@ version_basis: {
         "s48db5ba07d23": "https://github.com/argoproj/argo-workflows/blob/v3.7.18/manifests/quick-start/base/kustomization.yaml#L4-L5",
         "se3ffdf2973a6": "https://github.com/argoproj/argo-workflows/blob/v3.7.18/manifests/namespace-install/argo-server-rbac/argo-server-role.yaml#L1-L65",
         "sb901e7f87b54": "https://github.com/argoproj/argo-workflows/blob/v3.7.18/manifests/namespace-install/argo-server-rbac/argo-server-rolebinding.yaml#L1-L11",
-        "s49a8855b6da2": "https://github.com/argoproj/argo-workflows/blob/v3.7.18/docs/argo-server-auth-mode.md#L3-L9"
+        "s49a8855b6da2": "https://github.com/argoproj/argo-workflows/blob/v3.7.18/docs/argo-server-auth-mode.md#L3-L9",
+        "s64e74b0dbe95": "https://github.com/argoproj/argo-workflows/blob/v3.7.18/server/auth/gatekeeper.go#L106-L121"
       }
     },
     "argo-four": {
@@ -191,7 +192,8 @@ version_basis: {
         "s3be9b03e29be": "https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/cluster-install-no-crds/argo-server-rbac/argo-server-clusterolebinding.yaml#L1-L11",
         "sc263bd937cf0": "https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/quick-start/base/kustomization.yaml#L4-L5",
         "s1b134f96428f": "https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/namespace-install/argo-server-rbac/argo-server-role.yaml#L1-L67",
-        "s2418ee1aa49d": "https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/namespace-install/argo-server-rbac/argo-server-rolebinding.yaml#L1-L11"
+        "s2418ee1aa49d": "https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/namespace-install/argo-server-rbac/argo-server-rolebinding.yaml#L1-L11",
+        "se758d83aaf1f": "https://github.com/argoproj/argo-workflows/blob/v4.1.4/server/auth/gatekeeper.go#L133-L148"
       }
     },
     "argo-docs": {
@@ -253,7 +255,7 @@ version_basis: {
     "argo-sso": {"text": "Enable sso.rbac.enabled and map groups to narrow ServiceAccounts through rbac-rule/precedence; without SSO RBAC, authenticated users share server permissions.", "components": ["argo-docs", "argo-three", "argo-four"], "sources": ["argo-docs:s9898d4653a47", "argo-three:s2ca4f14c3164", "argo-four:sb284f93cde9c"], "status": "REASONED"},
     "argo-secrets": {"text": "Store SSO OAuth credentials in referenced Kubernetes Secrets and supply API tokens through protected input, not argv.", "components": ["argo-docs"], "sources": ["argo-docs:s9898d4653a47", "argo-docs:s96145eacf345"], "status": "REASONED"},
     "argo-tls": {"text": "Keep TLS enabled with a trusted certificate Secret; no name generates a self-signed certificate, failed named-Secret loading fails startup, secure=false is plaintext and defeats HSTS.", "components": ["argo-three", "argo-four"], "sources": ["argo-three:sdb4a0c18b7c6", "argo-four:s0b16f1ac50df", "argo-three:s36759aec55fa", "argo-four:sa120f74372eb"], "status": "REASONED"},
-    "argo-metrics": {"text": "/metrics shares the server listener and auth gate unless ARGO_SERVER_METRICS_AUTH=false; server mode also admits anonymous metrics.", "components": ["argo-three", "argo-four"], "sources": ["argo-three:s36759aec55fa", "argo-four:sa120f74372eb", "argo-three:s49cdaf0691c0", "argo-three:s2ca4f14c3164", "argo-four:s4613c15c72af", "argo-four:sb284f93cde9c"], "status": "REASONED"},
+    "argo-metrics": {"text": "/metrics shares the server listener and auth gate unless ARGO_SERVER_METRICS_AUTH=false; server mode also admits anonymous metrics.", "components": ["argo-three", "argo-four"], "sources": ["argo-three:s36759aec55fa", "argo-four:sa120f74372eb", "argo-three:s49cdaf0691c0", "argo-three:s2ca4f14c3164", "argo-four:s4613c15c72af", "argo-four:sb284f93cde9c", "argo-three:s64e74b0dbe95", "argo-four:se758d83aaf1f"], "status": "REASONED"},
     "argo-network": {"text": "Keep 2746 private behind authenticated HTTPS; restrict direct Pod/Service access and scope server, SSO and execution-account permissions. Workflow submission permits arbitrary containers unless constrained.", "components": ["argo-docs"], "sources": ["argo-docs:s6c8e78288632"], "status": "REASONED"},
     "verify-inventory": {"text": "ss inventories only the current namespace, not publication, routing or authentication; inspect publications and external reachability separately.", "components": ["prefect", "flower", "argo-three", "linux"], "sources": ["prefect:sbe64d51110a2", "flower:s25760fae7152", "argo-three:sbddb9f07a301", "linux:sfc58f455acfa", "linux:sca11a98a52fa"], "status": "REASONED", "verify": [1]},
     "verify-prefect": {"text": "Anonymous POST /api/flows/filter returning a JSON list is exposed; fixed is 401 with an authorized list on the same origin. Health/ready GET exemptions are version-dependent.", "components": ["prefect", "prefect-source"], "sources": ["prefect:s0ef73a227667", "prefect-source:sa4574c7ed80f"], "status": "REASONED", "verify": [1]},
@@ -745,6 +747,7 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
 - Argo namespace server Role binding: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/manifests/namespace-install/argo-server-rbac/argo-server-rolebinding.yaml#L1-L11), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/namespace-install/argo-server-rbac/argo-server-rolebinding.yaml#L1-L11).
 - Argo quick-start base resources, which include `cluster-install-no-crds`: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/manifests/quick-start/base/kustomization.yaml#L4-L5), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/quick-start/base/kustomization.yaml#L4-L5).
 - Argo additional quick-start cluster-template permissions and bindings: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/manifests/quick-start/base/cluster-workflow-template-rbac.yaml#L1-L58), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/quick-start/base/cluster-workflow-template-rbac.yaml#L1-L58).
+- Argo gatekeeper `Context` path to the same client selection: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/server/auth/gatekeeper.go#L106-L121), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/server/auth/gatekeeper.go#L133-L148).
 - Argo metrics auth and conditional HSTS: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/server/apiserver/argoserver.go#L430-L449), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/server/apiserver/argoserver.go#L476-L494).
 - Argo quick-start purpose and production warning: [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/docs/quick-start.md#L3-L34), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/docs/quick-start.md#L3-L34).
 - Argo auth-mode history and hosted/local identities (v4.1.4 also documents the Kubernetes 1.28 requirement): [v3.7.18](https://github.com/argoproj/argo-workflows/blob/v3.7.18/docs/argo-server-auth-mode.md#L3-L9), [v4.1.4](https://github.com/argoproj/argo-workflows/blob/v4.1.4/docs/argo-server-auth-mode.md#L3-L9).
