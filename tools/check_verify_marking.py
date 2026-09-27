@@ -118,15 +118,14 @@ def html_block(lines, start, first, offset, owner, terminator):
     return Token("html", start, end, "\n".join(body), owner)
 
 
-def comment_lines(text):
-    """Locate comment openers outside matched, equal-length code spans.
+def code_spans(text):
+    """Yield (start, end, body) for equal-length backtick spans.
 
-    Only this literal-code exemption is implemented, not general inline parsing.
-    Spans can cross paragraph lines; unmatched runs cannot hide a comment.
-    Backslashes escape opening backticks but are literal inside a code span.
+    Spans can cross paragraph lines; backslashes escape opening backticks
+    but are literal inside a span. Offsets refer to the unnormalized text.
     """
     runs = list(re.finditer(r"`+", text))
-    visible, position, i = [], 0, 0
+    i = 0
     while i < len(runs):
         opening = runs[i]
         before = text[:opening.start()]
@@ -137,12 +136,18 @@ def comment_lines(text):
         if not width or closing is None:
             i += 1
             continue
-        # An escape consumes only the first backtick of an opening run.
-        begin = opening.start() + escaped
-        visible.append(text[position:begin])
-        visible.append("\n" * text[begin:runs[closing].end()].count("\n"))
-        position = runs[closing].end()
+        yield (opening.start() + escaped, runs[closing].end(),
+               text[opening.end():runs[closing].start()])
         i = closing + 1
+
+
+def comment_lines(text):
+    """Locate comment openers outside matched, equal-length code spans."""
+    visible, position = [], 0
+    for begin, end, _body in code_spans(text):
+        visible.append(text[position:begin])
+        visible.append("\n" * text[begin:end].count("\n"))
+        position = end
     visible.append(text[position:])
     return [number for number, line in enumerate("".join(visible).split("\n"))
             if "<!--" in line]
@@ -388,22 +393,14 @@ def declaration(text):
     return match[1].upper(), direction
 
 
-def scan_guide(text, in_verify=False, in_quote=False, *, enrolled=False,
-               with_status=False):
-    """Return (line, fingerprint, marked) units and findings.
-
-    with_status returns the parsed status (or None) instead of the boolean.
-    Callers must reject findings before using these statuses as declarations.
-    """
+def guide_context(text, in_verify=False, in_quote=False, *, enrolled=False):
+    """Share scan_guide's metadata masking, tokens and Verify selection."""
     # Only a document's leading, strictly parsed metadata is opaque. Recursive
     # quote scans must never gain a front-matter or generated-summary exemption.
     if not in_quote:
         text = text.replace("\r\n", "\n").replace("\r", "\n")
         from version_basis import split
-        try:
-            data, body = split(text)
-        except ValueError as exc:
-            return [], [f"line 1: [unsupported-container] invalid front matter: {exc}"]
+        data, body = split(text)
         if data is not None:
             text = "\n" * text[:len(text) - len(body)].count("\n") + body
     lines, heads, tokens = tokenize(text, in_quote)
@@ -429,6 +426,21 @@ def scan_guide(text, in_verify=False, in_quote=False, *, enrolled=False,
                 tokens.sort(key=lambda t: t.start)
     selected = (set(range(len(lines))) if in_verify else
                 {i for a, b in verify_ranges(heads) for i in range(a, b)})
+    return lines, heads, tokens, selected
+
+
+def scan_guide(text, in_verify=False, in_quote=False, *, enrolled=False,
+               with_status=False):
+    """Return (line, fingerprint, marked) units and findings.
+
+    with_status returns the parsed status (or None) instead of the boolean.
+    Callers must reject findings before using these statuses as declarations.
+    """
+    try:
+        lines, heads, tokens, selected = guide_context(
+            text, in_verify, in_quote, enrolled=enrolled)
+    except ValueError as exc:
+        return [], [f"line 1: [unsupported-container] invalid front matter: {exc}"]
     ancestry, paths = [], {}
     for i, head in enumerate(heads):
         if head:
