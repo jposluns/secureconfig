@@ -177,15 +177,30 @@ without touching it, but the pinned tree has no Dockerfile, so which script the 
 verified. The block reports only whether the key is non-empty and never prints it. Substitute the
 container name inside the single quotes.
 
+This check assumes a clean host Bash shell, trusted container image and startup files, and a
+container shell whose `[` is a builtin. It intentionally tests an existing container environment
+value: prompting for a key or supplying a file would test that replacement, not the deployed
+configuration. Docker's documented `exec`
+environment inheritance and the pinned NocoDB startup scripts cited below are the trace for this
+assumption. The host sends only the literal variable name and test program, never the key, in argv.
+The container shell's builtin `[` tests the value without starting a child process with it in argv.
+The key remains in the container's configured environment and is inherited by this extra shell;
+the same account and root may read it through `/proc/<pid>/environ` for those processes' lifetimes,
+and Docker-socket holders can read the configured value with `docker inspect`. This presence check
+does not remove that exposure, prove encryption is working, or establish what the server process
+actually received. Do not use `docker exec -e` to inject a key for this check.
+
 ```bash
 (
+  trap - DEBUG RETURN ERR
+  set +x +a +e
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NOCODB_CONTAINER_NAME'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not checking"; exit; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not checking"; exit; }
   case "$1" in *REPLACE_WITH_*|""|-*|*[[:cntrl:]]*) echo "substitute the container name on the set -- line above; not checking"; exit ;; esac
   # shellcheck disable=SC2016  # the single-quoted script is meant to expand inside the container
-  docker exec "$1" sh -c 'if [ -n "${NC_CONNECTION_ENCRYPT_KEY-}" ]; then exit 0; else exit 3; fi'
+  docker exec "$1" sh -c 'set +x; if [ -n "${NC_CONNECTION_ENCRYPT_KEY-}" ]; then exit 0; else exit 3; fi'
   case "$?" in
     0) echo "NC_CONNECTION_ENCRYPT_KEY is non-empty in the container's configured environment" ;;
     3) echo "NC_CONNECTION_ENCRYPT_KEY is EMPTY or unset in the container's configured environment" ;;

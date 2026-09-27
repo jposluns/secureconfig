@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.175**, **2.48**, **3.27**, **4.12**.
+Next ids: **1.175**, **2.48**, **3.31**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -42,7 +42,6 @@ many.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 1.135 | Secret-bearing blocks that a trap line cannot fix, found by the #340 review, on the maintainer's 2026-09-25 ruling: fix per block, argv breaches first. Remaining: `ray.md:125` (a prefix assignment without rule 7's guard), `egress-metadata.md` (the commented IMDSv2 token recipes keep the token in a shell variable) and `low-code-builders.md` (`NC_CONNECTION_ENCRYPT_KEY` tested in a container shell). For each, prompt for the secret, read it from a file, or state the assumption. (H, M) | `[gap]` |
 | 1.143 | `image-gen-uis.md`: confirm on a live AUTOMATIC1111 v1.10.1 instance what the guide states as read from the code, not run, on the maintainer's 2026-09-25 "Disclose + row" ruling: that `GET /internal/sysinfo` and `/internal/sysinfo-download` (`modules/ui.py:1223-1232`) answer without a login while the Gradio login is on, and return `COMMANDLINE_ARGS` unredacted (`modules/sysinfo.py:33`, `:130-131`) and a `--gradio-auth=user:pass` argv element unhidden (`get_argv()`, `:134-148`). Use dummy credentials and a loopback bind; record the unauthenticated request and response, and the proxy refusal of `/internal/sysinfo*` as the fixed state. Also confirm the unhidden `--api-auth=user:pass` argv form under the same conditions (`modules/sysinfo.py:142-148`, v1.10.1). Also confirm that `GET /sdapi/v1/cmd-flags` returns the `--gradio-auth` and `--api-auth` values (`modules/api/api.py:689-690`, `modules/api/models.py:221-231`), with no credential when `--api-auth` is unset and with any API user's credential when it is set. Then replace the "read from the code, not run" wording with the observation, or correct the disclosure. (H, S) | `[gap]` |
 
 ## Priority 2: Deepen existing guides
@@ -137,7 +136,10 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 3.20 | Verify-marking convention: every Verify step states explicitly whether it was demonstrated or reasoned, enforced corpus-wide (maintainer ruling, 2026-09-25). (M, L) | `[gap]` |
+| 3.27 | Migrate the grandfathered Verify fences guide by guide: attach canonical DEMONSTRATED or REASONED declarations with audited scope and provenance, retain rule 5 demonstration debt, and remove matching entries from tools/verify_marking_baseline.txt. Never invent evidence or a missing prerequisite to clear the gate. (M, L) | `[gap]` |
+| 3.28 | Restrict the shared file walker used by prose conventions, no-dashes and other gates to tracked files, so an unreadable untracked directory cannot make them error; #372 already does this for its own gate. (L, S) | `[gap]` |
+| 3.29 | Follow up #387's C3-TOOL-ARGV gate to close its disclosed bounded misses: clustered short options (`mysql -Bp"$PW"`, `turnutils_uclient -vw"$PW"`), `vault login -method=... password=`, `env VAR=secret tool`, `openssl dgst -macopt key:`/`hexkey:`, and secrets in URIs. (L, M) | `[gap]` |
+| 3.30 | Extend the fenced-block Verify-marking gate planned in #389 to list items, table rows and prose units, with the same baseline-and-ratchet mechanism (maintainer ruling, 2026-09-26). (M, L) | `[gap]` |
 
 ## Decisions
 

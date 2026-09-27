@@ -32,7 +32,8 @@ The word boundary excludes only ASCII letters and digits, so Markdown emphasis a
 the word still matches -- `_reasoned_`, `__reasoned__`, `**REASONED**`, `(reasoned)`,
 `REASONED:` all count -- while a longer word does not: `unreasoned`, `reasonedness`,
 `reasoning`, `reasonable` are NOT the marker. A Verify section begins at any ATX heading
-whose title matches the word "verify" and runs to the next heading of the same or a
+whose whole title is "Verify", "Verification checklist" or "Quick checks"
+(with optional numbering and status suffix) and runs to the next heading of the same or a
 shallower level (or end of file), so it captures a `## Verify` section with its `###`
 subsections and each per-tool `### Verify` subsection in a catalogue guide. Text outside
 every Verify section is ignored, so the word used in an intro or rationale does not
@@ -92,6 +93,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _markdown import Fences  # noqa: E402  one definition of a fenced block
+from _verify_sections import verify_ranges  # noqa: E402
 
 # Root-level Markdown that is not a guide: the adapters, the changelogs, the backlog,
 # and the contributor/decision records whose prose defines the "reasoned" marker. This
@@ -115,8 +117,6 @@ DEMONSTRATE = re.compile(r"(?i)\b(?:demonstrate|demonstration)\b")
 # end of the line (an empty heading) or a space/tab before the title. Group 1 is the #
 # run (its length is the level); group 2 is the title, absent for an empty heading.
 HEADING = re.compile(r"^ {0,3}(#{1,6})(?:[ \t]+(.*?))?[ \t]*$")
-# A heading whose title names a Verify step (whole word, case-insensitive).
-VERIFY_TITLE = re.compile(r"(?i)\bverify\b")
 # A basename names a file only as a complete token: no filename character may touch it.
 # A filename character is a word character (Unicode \w: letters, digits and other numeric
 # characters such as a vulgar fraction), `_`, `-`, `~`
@@ -163,42 +163,18 @@ def atx_headings(lines):
 
 
 def verify_sections_text(text: str) -> str:
-    """Concatenate the title and body of every Verify section in the guide.
+    """Concatenate disjoint canonical Verify roots, including their descendants.
 
-    Lines are parsed as ATX headings, fence-aware (see atx_headings): a `#` line inside
-    a fenced code block is not a heading. A Verify section begins at a heading whose
-    title contains the word 'verify' and runs from that heading's OWN title text through
-    the lines after it up to (but not including) the next heading whose level is <= the
-    Verify heading's level, or the end of the file. Including the heading's title means a
-    marker in the heading itself (`## Verify (reasoned)`) is scanned. This captures a
-    `## Verify` section with its deeper subsections and each per-tool `### Verify`
-    subsection in a catalogue guide. Returns the joined text of all such sections; a
-    guide with no Verify heading yields the empty string.
+    The shared selector includes Verification checklist and Quick checks, optional
+    numbering and status suffixes. Setup headings merely mentioning verify do not
+    start roots. Including the title retains detection of heading markers.
     """
-    # split("\n"), not splitlines(): splitlines() also breaks on U+2028/U+2029 and other
-    # characters that Markdown treats as ordinary text, so a paragraph carrying one could
-    # fake a heading line. read_text() has already normalized CRLF and CR to "\n".
     lines = text.split("\n")
     heads = atx_headings(lines)
-    collected = []
-    i = 0
-    n = len(lines)
-    while i < n:
-        h = heads[i]
-        if h and VERIFY_TITLE.search(h[1]):
-            level = h[0]
-            collected.append(h[1])  # the Verify heading's own title text
-            j = i + 1
-            while j < n:
-                hj = heads[j]
-                if hj and hj[0] <= level:
-                    break
-                collected.append(lines[j])
-                j += 1
-            i = j
-        else:
-            i += 1
-    return "\n".join(collected)
+    return "\n".join(
+        "\n".join([heads[start][1], *lines[start + 1:end]])
+        for start, end in verify_ranges(heads)
+    )
 
 
 def has_reasoned_step(path: Path) -> bool:

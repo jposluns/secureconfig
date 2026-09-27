@@ -789,6 +789,25 @@ if [ $? -eq 0 ] && ! printf '%s\n' "$rr_st" | grep -q '^  FAIL  '; then
 else
   bad "reasoned-row self-test failed: $(printf '%s' "$rr_st" | tail -1)"
 fi
+echo "== Verify fences declare demonstration or reasoning =="
+# Keep retained exemptions visible; a baseline pass is not full corpus compliance.
+if vm_st=$(python3 -I -B tools/test_verify_marking.py 2>&1); then
+  printf '%s\n' "$vm_st"
+  if grep -q '^  FAIL  ' <<< "$vm_st" || ! grep -qE '^  ok    [0-9]+ Verify-marking fixture cases$' <<< "$vm_st"; then
+    bad "Verify-marking self-test exited 0 without a clean result"
+  elif vm=$(python3 -I -B tools/check_verify_marking.py --strict 2>&1); then
+    printf '%s\n' "$vm"
+    if grep -q '^  FAIL  ' <<< "$vm" || ! grep -q '^  ok    Verify marking:' <<< "$vm"; then
+      bad "Verify-marking gate exited 0 without a clean result"
+    fi
+  else
+    printf '%s\n' "$vm"
+    bad "Verify-marking gate failed"
+  fi
+else
+  printf '%s\n' "$vm_st"
+  bad "Verify-marking self-test failed"
+fi
 echo "== every port a guide names is mapped by the exposure index =="
 # tools/check_exposure_index.py: a guide that documents a listener exposure-index.md never maps leaves a
 # reader holding a scan result with nothing to search on. A fixed set of port shapes (listed in the
