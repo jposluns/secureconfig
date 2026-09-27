@@ -36622,7 +36622,7 @@ missing files, authentication failures, connection failures, and timeouts are in
 - browserless 2.51.0 changelog (Playwright WebSocket file-protocol fix): https://raw.githubusercontent.com/browserless/browserless/v2.51.0/CHANGELOG.md
 - browserless pinned Playwright file-protocol fix a18a1231ead2ecc4114347d5d1fafd69bffeb735 (PR #5407): https://github.com/browserless/browserless/commit/a18a1231ead2ecc4114347d5d1fafd69bffeb735
 - browserless 2.51.0 Playwright WebSocket enforcement and blocked-URL policy close: https://raw.githubusercontent.com/browserless/browserless/v2.51.0/src/browsers/browsers.playwright.ts
-- browserless 2.56.7 TOKEN initialization: https://github.com/browserless/browserless/blob/v2.56.7/src/config.ts#L231-L234
+- browserless 2.56.7 TOKEN initialization: https://github.com/browserless/browserless/blob/v2.56.7/src/config.ts#L250
 - browserless 2.56.7 HTTP authentication rejection: https://github.com/browserless/browserless/blob/v2.56.7/src/server.ts#L98-L110
 - browserless 2.56.7 route authentication dispatch: https://github.com/browserless/browserless/blob/v2.56.7/src/server.ts#L248-L254
 - browserless open-source Docker default and management endpoints: https://docs.browserless.io/enterprise/open-source
