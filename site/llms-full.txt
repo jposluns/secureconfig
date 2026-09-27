@@ -442,14 +442,14 @@ maintaining a private assessment indefinitely.
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
 | public-trust: ACME CAs such as Let's Encrypt and ZeroSSL issue free publicly trusted certificates; prefer these for public DNS names, including private hosts using DNS-01. | Let's Encrypt documentation unknown; ZeroSSL unknown | REASONED |
 | http-challenge: HTTP-01 needs a public A/AAAA or CNAME pointing to the server and inbound internet access to port 80. | Let's Encrypt documentation unknown | REASONED |
 | alpn-challenge: TLS-ALPN-01 needs a public DNS record and inbound port 443; the guide names Caddy and Traefik without direct vendor Sources entries. | Let's Encrypt documentation unknown | REASONED |
-| dns-challenge: DNS-01 needs control of the challenge TXT record, no public address record or inbound port, and supports wildcards; the guide additionally requires DNS API access and a DNS plugin. | Let's Encrypt documentation unknown; Certbot documentation unknown | REASONED |
+| dns-challenge: DNS-01 needs control of the challenge TXT record, no public address record or inbound port, and supports wildcards; provider API access and a DNS plugin apply to automated issuance and renewal, while manual DNS-01 is possible. | Let's Encrypt documentation unknown; Certbot documentation unknown | REASONED |
 | certbot-install: Install Certbot and nginx/Apache plugins from the distribution, or the classic snap with /usr/bin/certbot pointing to /snap/bin/certbot. | Certbot documentation unknown | REASONED |
 | server-plugins: certbot --nginx or --apache issues and installs certificates for the supplied domain names when the server is supported. | Certbot documentation unknown | REASONED |
 | standalone: certonly --standalone binds port 80; stop its current owner and arrange webroot, a server plugin or port-freeing hooks for unattended renewal. | Certbot documentation unknown | REASONED |
@@ -475,6 +475,8 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-https: Use the deployment's public hostname rather than example.com; curl HTTPS should succeed without -k. A curl source and version are not recorded. | Let's Encrypt documentation unknown | REASONED |
 | verify-certificate: The OpenSSL probe targets the hostname on port 443 with SNI, hostname verification and verification errors enabled, then displays issuer and dates; an OpenSSL source and version are not recorded. | Let's Encrypt documentation unknown | REASONED |
 | authentication: A certificate alone is insufficient protection; continue with server controls and authentication. | Let's Encrypt documentation unknown | REASONED |
+| dns-automation: For automated DNS-01 issuance and renewal, use a provider DNS plugin and least-privilege API credentials; manual TXT entry is a separate path. | Certbot documentation unknown | REASONED |
+| dns-manual: certbot certonly --manual --preferred-challenges dns permits hand-created TXT records; these certificates do not auto-renew without a --manual-auth-hook that automates the challenge. | Certbot documentation unknown | REASONED |
 <!-- version-basis:end -->
 
 Publicly trusted certificates are free through ACME certificate authorities such as Let's Encrypt and ZeroSSL. Browsers and libraries accept them without any client-side configuration, which makes them the correct choice for every service with a public DNS name. Use [self-signed.md](self-signed.md) only when no public domain exists; a host that cannot accept inbound connections can still get a publicly trusted certificate through the DNS-01 challenge (below), or serve behind [cloudflare.md](cloudflare.md).
@@ -484,7 +486,7 @@ Publicly trusted certificates are free through ACME certificate authorities such
 - A public DNS record (`A`/`AAAA` or `CNAME`) pointing at the server, for the HTTP-01 and TLS-ALPN-01 challenges; the DNS-01 challenge instead needs only control of the challenge `TXT` record and can certify a host with no public address record or inbound port.
 - For the HTTP-01 challenge: inbound port 80 reachable from the internet.
 - For the TLS-ALPN-01 challenge (used by Caddy and Traefik): inbound port 443.
-- For the DNS-01 challenge (required for wildcard certificates): API access to the DNS provider.
+- For the DNS-01 challenge (required for wildcard certificates), automated issuance and renewal need API access to the DNS provider. Manual DNS-01 is also possible with `certbot certonly --manual --preferred-challenges dns`, creating the TXT record by hand; certificates obtained this way do not auto-renew without an authentication hook (`--manual-auth-hook`) that automates the challenge.
 
 If none of these is possible, use [cloudflare.md](cloudflare.md) instead.
 
@@ -518,7 +520,7 @@ sudo certbot certonly --standalone -d example.com
 sudo certbot certonly --webroot -w /var/www/html -d example.com
 ```
 
-Wildcard certificates require the DNS-01 challenge through a DNS plugin (for example `python3-certbot-dns-cloudflare`), with provider API credentials scoped to least privilege (a Cloudflare API token with `Zone:DNS:Edit` on only the required zones, never the account-wide Global API Key) in a file readable only by root (`chmod 600` the file in a `700` directory; Certbot warns when other users can read it):
+Wildcard certificates require the DNS-01 challenge. For automated issuance and renewal, use a DNS plugin (for example `python3-certbot-dns-cloudflare`), with provider API credentials scoped to least privilege (a Cloudflare API token with `Zone:DNS:Edit` on only the required zones, never the account-wide Global API Key) in a file readable only by root (`chmod 600` the file in a `700` directory; Certbot warns when other users can read it):
 
 ```bash
 sudo certbot certonly --dns-cloudflare \
@@ -580,6 +582,8 @@ A certificate alone does not protect anything: continue with the server guide fo
 
 - Let's Encrypt documentation: https://letsencrypt.org/docs/
 - Certbot instructions (reconfigure: 2.3.0 and later): https://certbot.eff.org/
+- Certbot manual DNS-01 and renewal hooks: https://eff-certbot.readthedocs.io/en/stable/using.html#manual
+- Certbot DNS plugins: https://eff-certbot.readthedocs.io/en/stable/using.html#dns-plugins
 - ZeroSSL: https://zerossl.com/
 - acme.sh: https://github.com/acmesh-official/acme.sh
 - Let's Encrypt certificate lifetimes: https://letsencrypt.org/docs/cert-lifetimes/
@@ -733,13 +737,13 @@ Self-signed certificates have no revocation and no third-party accountability, a
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
 | outbound: cloudflared opens an outbound-only encrypted tunnel; edge HTTPS needs no inbound firewall ports. | Cloudflare Zero Trust unknown | REASONED |
 | prerequisites: Cloudflare DNS domain and Zero Trust organization required; the guide records a free tier of 50 users, subject to current limits. | Cloudflare Zero Trust unknown | REASONED |
-| remote: Dashboard tunnel token installs cloudflared as a service; a published hostname routes to http://localhost:3000. | Cloudflare Zero Trust unknown | REASONED |
+| remote: Copy the dashboard tunnel token to a protected file and configure the OS service to use it; publish the hostname route to http://localhost:3000 only after Access is in place. | Cloudflare Zero Trust unknown; cloudflared token-file minimum 2025.4.0 | REASONED |
 | publish-order: Create Access before publishing the route, or keep the app stopped; routing alone exposes it without login and a stopped origin still has public DNS. | Cloudflare Zero Trust unknown | REASONED |
 | tls-hops: Edge terminates TLS, the tunnel is encrypted, and HTTP to localhost:3000 stays on the host. | Cloudflare Zero Trust unknown | REASONED |
 | local: Locally managed login/create/route dns, tunnel UUID and credentials-file configure app ingress followed by http_status:404. | Cloudflare Zero Trust unknown | REASONED |
@@ -748,7 +752,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | access: Self-hosted Access application plus Allow policy limits login to listed emails or domains. | Cloudflare Zero Trust unknown | REASONED |
 | otp: One-time PIN proves mailbox control; SSO can inherit IdP MFA. | Cloudflare Zero Trust unknown | REASONED |
 | mfa-bypass: When PIN and an IdP coexist, either can be chosen; remove PIN or enforce Access MFA across methods for sensitive apps. | Cloudflare Zero Trust unknown | REASONED |
-| service-token: Machine access needs a service token and Service Auth policy; send Client-Id and Client-Secret headers on stdin, not argv. | Cloudflare Zero Trust unknown | REASONED |
+| service-token: Machine access needs a service token and Service Auth policy. Read the secret at a hidden prompt in a fresh trusted Bash shell, keep it unexported in a subshell, and pipe Client-Id and Client-Secret headers to curl --header @-; this avoids argv/history exposure but not access by the account owner or root. | Cloudflare Zero Trust unknown; curl manual unknown | REASONED |
 | loopback: Bind the same-host app to 127.0.0.1 so direct public requests cannot bypass Access. | Cloudflare Zero Trust unknown | REASONED |
 | jwt: Validate Cf-Access-Jwt-Assertion signature, issuer and application audience; origin reachability, SSRF and another route can bypass the front door. | Cloudflare Zero Trust unknown | REASONED |
 | route-coverage: Every added tunnel hostname/path needs an Access application and policy, including coverage by a wildcard application. | Cloudflare Zero Trust unknown | REASONED |
@@ -760,11 +764,13 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | aop-zone: Global AOP proves only Cloudflare network membership; prefer a zone certificate and its issuing CA, removing shared-CA trust. | Cloudflare Zero Trust unknown | REASONED |
 | origin-ports: For a no-tunnel origin, restrict 443 to Cloudflare IP ranges and close 80 or redirect only; mTLS cannot authenticate plaintext HTTP. | Cloudflare Zero Trust unknown | REASONED |
 | verify-login: Private browsing must show Access login; anonymous HEAD must redirect to the team's cloudflareaccess.com login, never app content. | Cloudflare Zero Trust unknown | REASONED |
-| verify-token: A service-token GET must return application content instead of the login. | Cloudflare Zero Trust unknown | REASONED |
+| verify-token: On a route known to serve application content with HTTP 200, send the hidden-prompt service token through curl --header @- and expect http=200 location=. Login redirects, denials and transport errors fail; compare anonymous denial because token success alone does not prove Access enforcement. The probe discards the body, so 200 alone cannot identify content. | Cloudflare Zero Trust unknown; curl manual unknown | REASONED |
 | verify-policy: Inspect loopback binding and effective inbound policy, including existing allows and container NAT; permitted sources depend on topology. | Cloudflare Zero Trust unknown | REASONED |
 | verify-origin: From another host, probe the actual origin port 3000: remote refusal/timeout is expected; any HTTP reply exposes bypass, resolver/local errors are inconclusive. | Cloudflare Zero Trust unknown | REASONED |
 | verify-aop: Trust the origin server CA when probing 443 directly: missing-client-certificate refusal proves AOP; firewall drops and app 401/403 prove different layers. | Cloudflare Zero Trust unknown | REASONED |
 | verify-http: Separately confirm the no-tunnel origin's port 80 never serves the app. | Cloudflare Zero Trust unknown | REASONED |
+| token-file: cloudflared 2025.4.0 or later supports tunnel run --token-file /absolute/path/to/token; restrict the file to the service account with mode 0600 on Linux/macOS or a restricted Windows ACL. | cloudflared token-file minimum 2025.4.0; Cloudflare Zero Trust unknown | REASONED |
+| token-install-argv: Avoid cloudflared service install &lt;TOKEN&gt;: the token is exposed on the installer argv, even though the cited 2026.9.3 installer runs the service with --token-file. | cloudflared service installer 2026.9.3; cloudflared token-file minimum 2025.4.0 | REASONED |
 <!-- version-basis:end -->
 
 This is the recommended path when the host cannot or should not accept inbound connections: home labs, NATed machines, cloud VMs you want to keep closed, and any project without its own TLS setup. `cloudflared` opens an outbound-only tunnel to Cloudflare's edge, the edge serves your hostname over HTTPS with a Cloudflare-managed certificate, and Cloudflare Access places authentication (SSO or emailed one-time PIN) in front of the app without any application changes. No inbound firewall ports are opened at all.
@@ -780,7 +786,7 @@ This is the recommended path when the host cannot or should not accept inbound c
 Per the Cloudflare docs as of June 2026 (menu locations change; the sources below are authoritative):
 
 1. In the Cloudflare dashboard go to **Networking > Tunnels** and create a tunnel (connector type `cloudflared`).
-2. Copy the installation command the dashboard shows for your OS and run it on the host. It embeds a tunnel token and installs `cloudflared` as a service (`cloudflared service install <TOKEN>` on Linux).
+2. Copy only the tunnel token from the dashboard into a file readable only by the account running `cloudflared` (mode `0600` on Linux/macOS; a restricted ACL on Windows). With `cloudflared` **2025.4.0 or later**, configure your OS service to run `cloudflared tunnel run --token-file /absolute/path/to/token`, substituting your token-file path ([run parameters](https://developers.cloudflare.com/tunnel/reference/run-parameters/#token-file)). Do not run the dashboard's `cloudflared service install <TOKEN>` command: it exposes the token in the installer's command line.
 3. Last, and only after step 4 below: add a route: **Routes > Add route > Published application**, choose the subdomain (for example `app.example.com`), and set the service URL to the local service, for example `http://localhost:3000`.
 
 The moment that route exists the app is reachable at `https://app.example.com`, by anyone, with no login in front of it. Access is what adds the login and it is step 4, so doing these steps in the order they are numbered leaves a window in which the application is published and unauthenticated, however short you make it. Close it rather than racing it. Either complete step 4 first and add the route afterwards, which works if Cloudflare accepts an Access application for a hostname you have not routed yet; or leave the local service stopped until Access is in place, which always works. With the route created and the service stopped the hostname still resolves, because the route is a proxied DNS record, and a visitor gets an error page from Cloudflare's edge rather than your application: the point is that nothing of yours is being served, not that the name is invisible. [deployment-lifecycle.md](deployment-lifecycle.md) makes the same point about previews and first deployments.
@@ -826,16 +832,38 @@ For APIs and machine clients, create a **service token** in the Zero Trust dashb
 
 ```bash
 (
-  # Feed the service-token headers to curl on stdin (curl --header @-), never in
-  # argv: the Client-Secret in -H is readable in ps / /proc/<pid>/cmdline.
+  # Use Bash in a fresh, trusted shell. Replace the URL and client ID inside
+  # the quotes; paste only the secret at the hidden prompt, never into the command.
+  # The prompted secret reaches curl on stdin, outside argv and shell history;
+  # it remains accessible to the account owner or root.
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLIENT_ID' 'REPLACE_WITH_CLIENT_SECRET'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  set +x +a +e
+  { unset -n HDR && unset -v HDR; } 2>/dev/null ||
+    { echo 'cannot clear HDR in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
+  set -- PASTE_WHOLE_BLOCK 'https://app.example.com/api' 'REPLACE_WITH_CLIENT_ID'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
-  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Client-Id on the set -- line above; not probing"; exit ;; esac
-  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Client-Secret on the set -- line above; not probing"; exit ;; esac
-  printf 'CF-Access-Client-Id: %s\nCF-Access-Client-Secret: %s\n' "$1" "$2" | curl -q -H @- https://app.example.com/api
+  [ "$#" -eq 2 ] || { echo 'the set -- line needs a URL and client ID; not probing'; exit 2; }
+  case "$1" in
+    ''|*REPLACE_WITH_*|*example.com*|*example.net*|*example.org*|*[[:cntrl:]]*)
+      echo 'substitute your own application URL inside the quotes; not probing'; exit 2 ;;
+    https://*) ;;
+    *) echo 'use an https:// URL; not probing'; exit 2 ;;
+  esac
+  case "$2" in
+    ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'supply the client ID without control characters; not probing'; exit 2 ;;
+  esac
+  IFS= read -r -s -p 'Client secret (input hidden): ' HDR ||
+    { echo 'secret input failed; not probing'; exit 2; }
+  printf '\n'
+  case "$HDR" in
+    ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'supply the secret without control characters; not probing'; exit 2 ;;
+  esac
+  HDR="CF-Access-Client-Secret: $HDR"
+  printf '%s\n' "CF-Access-Client-Id: $2" "$HDR" |
+    curl -q -g -sS --connect-timeout 5 --max-time 20 --header @- "$1" || exit 2
+  unset -v HDR
 )
 ```
 
@@ -851,7 +879,45 @@ For APIs and machine clients, create a **service token** in the Zero Trust dashb
 
 - A private-browsing visit to `https://app.example.com` shows the Access login page, not the app.
 - `curl -q -sI https://app.example.com/` returns a 302 whose `location` is your team's `*.cloudflareaccess.com` login, never a 200 or your application's own content.
-- With a service token, a GET returns your application content, not the login: `curl -q -s -H 'CF-Access-Client-Id: REPLACE_WITH_CLIENT_ID' -H 'CF-Access-Client-Secret: REPLACE_WITH_CLIENT_SECRET' https://app.example.com/`.
+- With a service token, a GET returns your application content, not the Access login. Use a route known to serve your application's content with HTTP 200. Expect `http=200 location=`; an Access login redirect, denial or transport error is not a pass. Compare with the anonymous check above: an exposed app serves the route anonymously too, so token success alone does not prove Access is enforced.
+
+Use Bash in a fresh, trusted shell and replace the URL and client ID inside the quotes. Paste only the secret at the hidden prompt, never into the command. The block discards the body and prints only the status and redirect destination; a 200 alone cannot identify the content. The secret stays in an unexported subshell variable and reaches curl on stdin, which does not hide it from the account owner or root.
+
+```bash
+# REASONED: no live Cloudflare account is available; not demonstrated against exposed and protected apps. The cited Cloudflare service-token documentation specifies the two headers and Service Auth policy.
+(
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  set +x +a +e
+  { unset -n HDR && unset -v HDR; } 2>/dev/null ||
+    { echo 'cannot clear HDR in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_APP_URL' 'REPLACE_WITH_CLIENT_ID'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
+  shift
+  [ "$#" -eq 2 ] || { echo 'the set -- line needs a URL and client ID; not probing'; exit 2; }
+  case "$1" in
+    ''|*REPLACE_WITH_*|*example.com*|*example.net*|*example.org*|*[[:cntrl:]]*)
+      echo 'substitute your own application URL inside the quotes; not probing'; exit 2 ;;
+    https://*) ;;
+    *) echo 'use an https:// URL; not probing'; exit 2 ;;
+  esac
+  case "$2" in
+    ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'supply the client ID without control characters; not probing'; exit 2 ;;
+  esac
+  IFS= read -r -s -p 'Client secret (input hidden): ' HDR ||
+    { echo 'secret input failed; not probing'; exit 2; }
+  printf '\n'
+  case "$HDR" in
+    ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'supply the secret without control characters; not probing'; exit 2 ;;
+  esac
+  HDR="CF-Access-Client-Secret: $HDR"
+  printf '%s\n' "CF-Access-Client-Id: $2" "$HDR" |
+    curl -q -g -sS --connect-timeout 5 --max-time 20 --output /dev/null \
+      --write-out 'http=%{http_code} location=%{redirect_url}\n' --header @- "$1" || exit 2
+  unset -v HDR
+)
+```
+
 - `ss -tlnp` shows the app on `127.0.0.1` only for a same-host tunnel. Do not settle for "no inbound rule added": confirm the port's effective inbound policy, since a default-accept policy, a pre-existing broad allow, or a container publishing through its own NAT can leave it open. The policy differs by topology: a same-host tunnel app is on loopback, a remote tunnel origin accepts only the `cloudflared` host, and a no-tunnel HTTPS origin accepts only Cloudflare's IP ranges (plus AOP).
 - The load-bearing check: from another host, confirm the origin is not reachable directly on the app's own port (`3000` in this example; substitute yours). For a tunnel there is no public inbound, so this must refuse or time out.
 
@@ -884,6 +950,11 @@ Read err, not the number: for a tunnel a refusal or timeout naming your own addr
 - Cloudflare IP ranges (origin firewall allowlist): https://www.cloudflare.com/ips/
 - cloudflared as a Linux service (pass --config under sudo): https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/do-more-with-tunnels/local-management/as-a-service/linux/
 - Cloudflare Access One-time PIN (login methods coexist with an IdP): https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/one-time-pin/
+- Cloudflare Access service tokens (request headers and Service Auth policy): https://developers.cloudflare.com/cloudflare-one/access-controls/service-credentials/service-tokens/
+- curl manual (stdin headers, output and redirect reporting): https://curl.se/docs/manpage.html
+- cloudflared run parameters (`--token-file`, requires 2025.4.0 or later): https://developers.cloudflare.com/tunnel/reference/run-parameters/#token-file
+- Tunnel tokens (retrieving the token from the dashboard installation command without running it): https://developers.cloudflare.com/tunnel/reference/tunnel-tokens/
+- cloudflared 2026.9.3 service installer (runs `tunnel run --token-file`): https://github.com/cloudflare/cloudflared/blob/2026.9.3/cmd/cloudflared/common_service.go
 
 ======================================================================
 ==> tailscale.md
@@ -5537,14 +5608,14 @@ ss -tlnp   # every listener: loopback for a same-host reverse proxy, or the plat
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
 | publish: Omitting the host address publishes 3000:3000 on 0.0.0.0 and [::]. | Docker Engine networking unknown | REASONED |
 | host-firewall: Docker programs firewall rules directly; UFW or firewalld blocking a host port does not establish published-port isolation. | Docker Engine networking unknown | REASONED |
 | private-network: Omit app/database ports; Compose peers use service names. The example uses postgres:17 at db:5432; no PostgreSQL source is listed. | Compose networking unknown | REASONED |
-| loopback: Publish local access as 127.0.0.1:3000:3000; check the running server version, with Engine 28.0 as the stated boundary. | Docker Engine networking unknown; Docker Engine minimum boundary 28.0 | REASONED |
+| loopback: Publish local access as 127.0.0.1:3000:3000; check the running server version. Engine 28.0 is the minimum boundary, with 28.3.3 or later required where firewalld is used. | Docker Engine networking unknown; Docker Engine minimum boundary 28.0; Docker firewalld reload fix 28.3.3 | REASONED |
 | old-loopback: Before 28.0, same-L2 neighbours could reach loopback publications under the default bridge configuration. | Docker Engine minimum boundary 28.0 | REASONED |
 | old-host-bind: Before 28.0, remote hosts could reach published container ports despite the host-IP binding. | Docker Engine minimum boundary 28.0 | REASONED |
 | old-unpublished: Before 28.0, direct routing could reach unpublished container ports; 28.0 fixed the stated default-bridge exposures. | Docker Engine minimum boundary 28.0 | REASONED |
@@ -5564,6 +5635,9 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-redirect: HTTP should redirect to HTTPS; the guide records an expected result, with no direct proxy citation or run. | Compose networking unknown | REASONED |
 | verify-auth: Unauthenticated HTTPS /api should return 401 or 403, never 200; confirm authorized success separately. The proxy discriminator has no direct source here. | Compose networking unknown | REASONED |
 | verify-isolation: Probe each restricted host address and publication from allowed/disallowed sources in both families; backend isolation must coexist with proxy reachability. | Docker Engine networking unknown | REASONED |
+| firewalld-reload: Engine 28.2.x and 28.3.0 through 28.3.2 fail to restore container-address filtering after firewalld reload; 28.3.3 fixes CVE-2025-54388 (GHSA-x4rx-4gw3-53p4). | Docker firewalld reload fix 28.3.3 | REASONED |
+| firewalld-scope: The regression affects Linux Engine in the host network namespace with firewalld: routed remote hosts can reach published container ports, including loopback publications; unpublished ports stay filtered. Rootless Mode and Docker Desktop are unaffected. | Docker firewalld reload fix 28.3.3 | REASONED |
+| verify-firewalld-reload: Confirm local backend health, then curl the container address from a second host with a bridge-subnet route before and after sudo firewall-cmd --reload. Without masking controls, affected hosts change from blocked to connectable; fixed hosts stay blocked. Any TCP connection, including HTTP 401/403, shows reachability; failure alone does not prove patching. Check route, target, IPv6, restricted host publications and continued proxy reachability. | Docker firewalld reload fix 28.3.3 | REASONED |
 <!-- version-basis:end -->
 
 Containers are where accidental exposure happens most. Two Docker behaviours cause it:
@@ -5592,7 +5666,9 @@ Where a host-published port is genuinely needed for local access:
       - "127.0.0.1:3000:3000"
 ```
 
-That host-IP restriction is a reliable boundary only on Docker Engine 28.0 and later. Before 28.0, under the default bridge configuration, a neighbour on the same layer-2 segment could reach a port mapped to a loopback address, a remote host could reach a container on a published port despite the host-IP binding, and an unpublished container port was reachable by routing directly to the container; 28.0 fixed all three. Check the running Engine version (`docker version --format '{{.Server.Version}}'`, not the client's); on an older engine, treat the address in a publish string as a convenience, not a boundary, and restrict the port in the `DOCKER-USER` chain below or upstream of the host (a cloud security group or a network ACL), since a host firewall like UFW or firewalld does not reach a published port (see the top of this guide).
+That host-IP restriction requires Docker Engine 28.0 or later, with the firewalld-reload caveat below. Before 28.0, under the default bridge configuration, a neighbour on the same layer-2 segment could reach a port mapped to a loopback address, a remote host could reach a container on a published port despite the host-IP binding, and an unpublished container port was reachable by routing directly to the container if the host's forwarding policy allowed it; 28.0 fixed all three. Check the running Engine version (`docker version --format '{{.Server.Version}}'`, not the client's); on an older engine, treat the address in a publish string as a convenience, not a boundary, and restrict the port in the `DOCKER-USER` chain below or upstream of the host (a cloud security group or a network ACL), since a host firewall like UFW or firewalld does not reach a published port (see the top of this guide).
+
+On Linux, when Docker Engine runs in the host's network namespace with firewalld running, Engine 28.2.x and 28.3.0 through 28.3.2 failed to restore container-address filtering rules after a firewalld reload. A remote host with a route to the bridge network could then reach published ports at container addresses, including loopback-only publications; unpublished ports remained filtered. Where firewalld is used, run Engine 28.3.3 or later, which fixes this regression (CVE-2025-54388, GHSA-x4rx-4gw3-53p4). Rootless Mode and Docker Desktop are unaffected by this regression.
 
 Where a port must be published on a routable interface, because other hosts need it but the whole internet does not, the most reliable restriction is upstream of the host, in a cloud security group or a network ACL: it does not depend on Docker's firewall backend, its userland proxy, or the host's boot order. On the host itself, filter it in the `DOCKER-USER` iptables chain (Docker's iptables backend only; its nftables backend has no such chain), whose rules Docker evaluates before its own accept rules. Match only new connections, so the rule does not also drop the replies to connections your own containers open, which arrive on the same interface and would otherwise lose their outbound access:
 
@@ -5657,11 +5733,15 @@ curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' https://app.e
 
 Test from a second machine on a different network where possible; the UFW bypass means testing the firewall from the host itself proves nothing about published ports. The `curl` checks above exercise the proxy's redirect and auth, not the backend, so also probe each restricted host address and published port directly (for example port 3000) from an allowed and a disallowed source, IPv4 and IPv6 separately: a loopback-bound or firewalled backend must show unreachable while the proxy stays reachable.
 
+REASONED: this firewalld reload check follows the Impact section of GHSA-x4rx-4gw3-53p4 and the pinned v28.3.3 rule-restoration source. It has not been demonstrated here because the authoring environment has no Docker runtime, firewalld or external test host. For a loopback-published HTTP backend using default NAT bridge filtering, confirm that the backend answers locally. From a second host with a route through the Docker host to the bridge subnet, run `curl -q -g --noproxy '*' --connect-timeout 3 --max-time 5 -v http://172.17.0.2:3000/`, replacing the address and port with the actual container address and container port. Repeat with a fresh connection after running `sudo firewall-cmd --reload` on the Docker host. Without another control masking the regression, an affected host changes from blocked to connectable; a fixed host remains blocked. Any successful TCP connection, including an HTTP 401 or 403 response, demonstrates reachability. A failed probe alone does not establish that the Engine is patched: confirm the route, target and backend health. Repeat for configured IPv6 addresses and the restricted host-address publications, and confirm that the TLS proxy remains reachable.
+
 ## Sources (checked September 2026)
 
 - Docker packet filtering and firewalls: https://docs.docker.com/engine/network/packet-filtering-firewalls/
 - Docker with iptables, for the `DOCKER-USER` chain (processed before Docker's own rules; matches container addresses after DNAT): https://docs.docker.com/engine/network/firewall-iptables/
 - Docker Engine 28.0 release notes, for the published-port and loopback-mapping hardening: https://docs.docker.com/engine/release-notes/28/
+- Docker Engine 28.3.3 security fix: https://docs.docker.com/engine/release-notes/28/#2833 and affected-version advisory: https://github.com/moby/moby/security/advisories/GHSA-x4rx-4gw3-53p4
+- Moby v28.3.3, `reapplyPerPortIptables` restores endpoint rules after firewalld reload: https://raw.githubusercontent.com/moby/moby/v28.3.3/libnetwork/drivers/bridge/port_mapping_linux.go
 - Compose networking: https://docs.docker.com/compose/how-tos/networking/
 - Docker port publishing (with no host address, "the Docker daemon publishes ports to all host addresses (0.0.0.0 and [::])"): https://docs.docker.com/engine/network/port-publishing/
 
@@ -7534,12 +7614,12 @@ curl -q -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redi
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
 | tls: Direct TLS listens on :443 using the leaf-plus-intermediates certificate and private key; ReadHeaderTimeout is 10 seconds. | Go net/http documentation unknown; Go crypto/tls documentation unknown | REASONED |
-| redirect: Port :80 sends a 301 HTTPS redirect built from r.Host and the request URI. | Go net/http documentation unknown | REASONED |
+| redirect: Port :80 sends a 301 to https:// plus the fixed canonicalHost and an origin-form request path; empty or non-path RequestURI values fall back to /. Never build the destination from r.Host. | Go net/http documentation unknown; Go Request.Host source 1.27.0 | REASONED |
 | tls-min: crypto/tls defaults to TLS 1.2 minimum as of September 2026; explicitly set MinVersion=VersionTLS12. | Go crypto/tls documentation unknown | REASONED |
 | privilege: Linux privileged-port threshold defaults to 1024 but is configurable per namespace; root or CAP_NET_BIND_SERVICE is needed below it in the usual configuration. | Linux port-threshold documentation unknown | REASONED |
 | proxy: Bind 127.0.0.1:8080 behind a TLS proxy; net/http has no proxy trust setting, so accept forwarded headers only from the isolated, overwriting proxy. | Go net/http documentation unknown | REASONED |
@@ -7575,6 +7655,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-diag-local: A local 6060/debug/pprof/ response of 200 establishes local availability only. | Go pprof documentation unknown | REASONED |
 | verify-diag-route: The public application /debug/pprof/ route should return 404, never 200. | Go net/http documentation unknown; Go pprof documentation unknown | REASONED |
 | verify-diag-external: From outside the server network, the actual public IP on 6060 must be unreachable; the guide expects refusal or timeout, never 200. | Go net/http documentation unknown; Go pprof documentation unknown | REASONED |
+| request-host: Go 1.27.0 Request.Host is supplied by the client; a fixed canonical hostname plus an origin-form path prevents forged Host or crafted request targets from selecting the redirect destination. | Go Request.Host source 1.27.0 | REASONED |
 <!-- version-basis:end -->
 
 Preferred production layout: bind the Go server to `127.0.0.1` and terminate TLS in a reverse proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)) or behind [cloudflare.md](cloudflare.md). `net/http` can also terminate TLS itself, shown below. Certificates: [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).
@@ -7582,8 +7663,14 @@ Preferred production layout: bind the Go server to `127.0.0.1` and terminate TLS
 ## 1. HTTPS directly in Go
 
 ```go
+const canonicalHost = "app.example.com"   // r.Host comes from the client; never reflect it in the redirect.
 go http.ListenAndServe(":80", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {   // port 80 only redirects
-    http.Redirect(w, r, "https://"+r.Host+r.URL.RequestURI(), http.StatusMovedPermanently)
+    target := r.URL.RequestURI()
+    // Opaque or absolute-form targets can yield non-path values; only append an origin-form path.
+    if len(target) == 0 || target[0] != '/' {
+        target = "/"
+    }
+    http.Redirect(w, r, "https://"+canonicalHost+target, http.StatusMovedPermanently)
 }))
 srv := &http.Server{
     Addr:              ":443",
@@ -7593,6 +7680,8 @@ srv := &http.Server{
 }
 log.Fatal(srv.ListenAndServeTLS("/etc/ssl/certs/server.crt", "/etc/ssl/private/server.key"))   // cert file: leaf, then intermediates
 ```
+
+Set `canonicalHost` to your canonical hostname (no scheme or path) and append only an origin-form path (falling back to `/` for non-path values from opaque or absolute-form targets), so neither a forged Host nor a crafted request target can turn this into an open redirect.
 
 crypto/tls already defaults to a TLS 1.2 minimum (as of September 2026); setting `MinVersion` keeps that true when a config is copied or a default shifts. Binding ports below 1024 needs root or `CAP_NET_BIND_SERVICE` on Linux's usual configuration (the per-namespace `net.ipv4.ip_unprivileged_port_start` defaults to 1024 but is configurable), one more reason to prefer the proxy layout.
 
@@ -7748,6 +7837,7 @@ curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/debug/pprof/   
 ## Sources (checked September 2026)
 
 - net/http (Server, ListenAndServeTLS, Cookie, SameSite, Redirect, Transport.TLSClientConfig): https://pkg.go.dev/net/http
+- net/http Request.Host (Go 1.27.0, supplied by the client): https://pkg.go.dev/net/http@go1.27.0#Request
 - crypto/tls (Config.MinVersion, InsecureSkipVerify, RootCAs): https://pkg.go.dev/crypto/tls
 - crypto/x509 (SystemCertPool, SSL_CERT_FILE, AppendCertsFromPEM) (Go 1.27): https://pkg.go.dev/crypto/x509
 - golang.org/x/crypto/bcrypt: https://pkg.go.dev/golang.org/x/crypto/bcrypt
@@ -12209,7 +12299,7 @@ Verification scope:
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -12275,8 +12365,8 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-qe-range: Test range separately with queryType: range on int, long, double, decimal or date, not a string, and documents inside/outside the interval; missing results or connection errors do not establish confidentiality. | MongoDB documentation 8.0 | REASONED |
 | audit-destination: Enterprise auditing covers mongod and mongos; Community has no equivalent and diagnostic logs are not a substitute. Configure a destination on every process; the example selects a JSON file. | MongoDB documentation 8.0 | REASONED |
 | audit-write: A failed audit write can terminate the process; validate that the destination is writable. | MongoDB documentation 8.0 | REASONED |
-| audit-filter: Omitting auditLog.filter records every auditable event; an authenticate-only filter deliberately excludes all other event types. | MongoDB documentation 8.0 | REASONED |
-| audit-success-default: auditAuthorizationSuccess defaults false for authorization-success recording; enabling it records successful checks at a performance cost. | MongoDB documentation 8.0 | REASONED |
+| audit-filter: Omitting auditLog.filter permits all auditable event types, but successful authCheck events still require auditAuthorizationSuccess: true; an authenticate-only filter excludes other event types. | MongoDB documentation 8.0 | REASONED |
+| audit-success-default: In MongoDB 8.0, auditAuthorizationSuccess defaults false, so authCheck records only authorization failures; enabling it adds successful checks at a performance cost. | MongoDB documentation 8.0 | REASONED |
 | diagnostic-redaction: Enterprise-only redactClientLogData uses a startup flag or security.redactClientLogData; document values become ### while metadata remains. Its documented scope is diagnostic logs, not audit logs; combine with TLS and storage encryption. | MongoDB documentation 8.0 | REASONED |
 | storage-encryption: Enterprise 3.2 introduced native WiredTiger encryption; Community depends on host/filesystem encryption. security.enableEncryption defaults false. | MongoDB documentation 8.0 | REASONED |
 | storage-migration: Native encryption does not encrypt existing data in place; use a fresh member and initial sync or the documented migration. | MongoDB documentation 8.0 | REASONED |
@@ -12293,6 +12383,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | qe-client: Automatic QE uses autoEncryption with key-vault namespace, KMS providers and local encryptedFieldsMap; Community explicit QE uses bypassQueryAnalysis: true and ClientEncryption. | MongoDB documentation 8.0 | REASONED |
 | qe-topology: QE supports replica sets and sharded clusters, not standalone servers. | MongoDB documentation 8.0 | REASONED |
 | qe-range-preview: rangePreview was removed in 8.0; do not carry legacy rangePreview recipes forward. | MongoDB documentation 8.0 | REASONED |
+| audit-other-events: With MongoDB 8.0 Enterprise/Atlas auditing enabled and the filter permitting them, authentication, schema (DDL) and replica-set events are recorded independently of auditAuthorizationSuccess. | MongoDB documentation 8.0 | REASONED |
 <!-- version-basis:end -->
 
 MongoDB's history of mass data leaks comes from 2 settings: binding to all interfaces and running with authorization off. Fix both before anything else, then add TLS. Use a supported MongoDB release and its current security patches. MongoDB 4.2 reached end of life on April 30, 2023; it is not a deployment recommendation. Compatibility note: these examples use `tls` options; older configurations used `ssl` names. Check the [vendor lifecycle schedule](https://www.mongodb.com/legal/support-policy/lifecycles) before deploying.
@@ -12886,14 +12977,14 @@ auditLog:
 
 A failed audit write can terminate the process, so confirm the destination is writable during deployment validation. Omitting a filter records every auditable event; a filter such as `auditLog.filter: '{"atype": "authenticate"}'` records only that event type and deliberately excludes the rest. See [configure auditing](https://www.mongodb.com/docs/v8.0/tutorial/configure-auditing/) and [audit filters](https://www.mongodb.com/docs/v8.0/tutorial/configure-audit-filters/).
 
-Recording successful authorization checks is a separate decision. `auditAuthorizationSuccess` defaults to `false`, so the audit system logs only authorization failures until it is enabled, and enabling it carries a performance cost:
+Recording successful authorization checks is a separate decision. In MongoDB 8.0, `auditAuthorizationSuccess` defaults to `false`, so `authCheck` events are logged only for authorization failures. Other auditable events, such as authentication, schema (DDL), and replica-set changes, do not depend on this setting and are recorded when auditing is enabled and the filter permits them. Enabling successful `authCheck` events carries a performance cost:
 
 ```yaml
 setParameter:
   auditAuthorizationSuccess: true
 ```
 
-Set it only where the accountability requirement justifies the overhead. See the [auditAuthorizationSuccess parameter](https://www.mongodb.com/docs/v8.0/reference/parameters/).
+Set it only where the accountability requirement justifies the overhead. See the [auditAuthorizationSuccess parameter](https://www.mongodb.com/docs/v8.0/reference/parameters/#mongodb-parameter-param.auditAuthorizationSuccess).
 
 ## 6. Redact document values from the diagnostic log
 
@@ -32037,7 +32128,7 @@ From outside the network, every panel URL is unreachable or shows a login; a pag
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -32051,8 +32142,9 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | fastapi-credentials: The FastAPI example enables allow_credentials=True. | FastAPI CORSMiddleware unknown | REASONED |
 | fastapi-methods: The FastAPI example allows only GET and POST through allow_methods. | FastAPI CORSMiddleware unknown | REASONED |
 | fastapi-headers: The FastAPI example allows Authorization and Content-Type through allow_headers. | FastAPI CORSMiddleware unknown | REASONED |
-| verify-hostile: The hostile-Origin probe should not return Access-Control-Allow-Origin echoing https://evil.example; no actual response is recorded. | MDN CORS documentation unknown; Express cors middleware unknown; FastAPI CORSMiddleware unknown | REASONED |
-| verify-allowed: The allowed-Origin probe should return the app origin, with Allow-Credentials only if cookies are used as stated in the guide; no actual response is recorded. | MDN CORS documentation unknown; Express cors middleware unknown; FastAPI CORSMiddleware unknown | REASONED |
+| verify-hostile: The exposed API echoes https://evil.example in Access-Control-Allow-Origin; the fixed API omits that hostile origin. No deployed API or browser run is recorded. | MDN CORS documentation unknown; Express cors middleware unknown; FastAPI CORSMiddleware unknown; Fetch Standard credentials unknown | REASONED |
+| verify-allowed: The allowed-Origin probe should return the listed app origin, with Allow-Credentials only where the browser must send cookies, HTTP authentication or TLS client certificates; no actual response is recorded. | MDN CORS documentation unknown; Express cors middleware unknown; FastAPI CORSMiddleware unknown; Fetch Standard credentials unknown | REASONED |
+| credential-types: Browser credentials include cookies, HTTP authentication and TLS client certificates; Access-Control-Allow-Credentials: true is needed only where the browser must send credentials. | Fetch Standard credentials unknown; MDN CORS documentation unknown | REASONED |
 <!-- version-basis:end -->
 
 CORS misconfiguration does not expose a port; it lets hostile websites use your users' browsers, cookies included, against your API. AI assistants reach for `Access-Control-Allow-Origin: *` the moment a browser console shows a CORS error; that is the wrong fix for any API that authenticates.
@@ -32093,18 +32185,19 @@ Keep the origin list in configuration per environment rather than hardcoding loc
 
 ## Verify
 
-REASONED: hostile- and allowed-Origin response checks follow the cited MDN CORS, Express cors and FastAPI CORSMiddleware documentation. No deployed API endpoint was supplied for live checks, and this guide records no run; expected response headers are stated in the following block.
+**REASONED:** not demonstrated here: the authoring host forbids opening listeners without an isolated network namespace, and has none, so no deployed API or browser session could be run; this rests on the Fetch Standard and MDN's CORS guide (Sources). An exposed API echoes `https://evil.example` in `Access-Control-Allow-Origin`; the fixed API omits it for that origin and returns only your listed origin, with `Access-Control-Allow-Credentials: true` only where the browser must send credentials.
 
 ```bash
 curl -q -s -o /dev/null -D - https://api.example.com/data -H "Origin: https://evil.example" | grep -i access-control
 # expect: no Access-Control-Allow-Origin echoing the hostile origin
 curl -q -s -o /dev/null -D - https://api.example.com/data -H "Origin: https://app.example.com" | grep -i access-control
-# expect: your origin, and Allow-Credentials only if you use cookies
+# expect: your origin, and Allow-Credentials only if the browser must send credentials: cookies, HTTP authentication, or TLS client certificates
 ```
 
 ## Sources (checked September 2026)
 
 - MDN: Cross-Origin Resource Sharing, for the protocol itself: https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS
+- Fetch Standard, definition of credentials: https://fetch.spec.whatwg.org/#credentials
 - Express `cors` middleware, for the `origin` and `credentials` options used above: https://expressjs.com/en/resources/middleware/cors/
 - FastAPI CORS, for `CORSMiddleware` and its parameters: https://fastapi.tiangolo.com/tutorial/cors/
 

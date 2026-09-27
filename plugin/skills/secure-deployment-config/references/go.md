@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "3144786bb38df69b619d163fb7692c0cfc8cb629f0c99e28bef9268cb391f338",
+  "body_sha256": "5be85c88fe20d36d397ca2ac0f7fa7b739f2529627f21caa5f6db89497421497",
   "components": {
     "http": {
       "name": "Go net/http documentation",
@@ -89,11 +89,18 @@ version_basis: {
       "sources": {
         "s12e5a0911ec2": "https://docs.kernel.org/networking/ip-sysctl.html#ip-unprivileged-port-start"
       }
+    },
+    "request": {
+      "name": "Go Request.Host source",
+      "basis": "1.27.0",
+      "sources": {
+        "sfdeabbeca746": "https://pkg.go.dev/net/http@go1.27.0#Request"
+      }
     }
   },
   "claims": {
     "tls": {"text": "Direct TLS listens on :443 using the leaf-plus-intermediates certificate and private key; ReadHeaderTimeout is 10 seconds.", "components": ["http", "tls"], "sources": ["http:s75405f80decc", "tls:se2152a9c28fc"], "status": "REASONED"},
-    "redirect": {"text": "Port :80 sends a 301 HTTPS redirect built from r.Host and the request URI.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED"},
+    "redirect": {"text": "Port :80 sends a 301 to https:// plus the fixed canonicalHost and an origin-form request path; empty or non-path RequestURI values fall back to /. Never build the destination from r.Host.", "components": ["http", "request"], "sources": ["http:s75405f80decc", "request:sfdeabbeca746"], "status": "REASONED"},
     "tls-min": {"text": "crypto/tls defaults to TLS 1.2 minimum as of September 2026; explicitly set MinVersion=VersionTLS12.", "components": ["tls"], "sources": ["tls:se2152a9c28fc"], "status": "REASONED"},
     "privilege": {"text": "Linux privileged-port threshold defaults to 1024 but is configurable per namespace; root or CAP_NET_BIND_SERVICE is needed below it in the usual configuration.", "components": ["linux"], "sources": ["linux:s12e5a0911ec2"], "status": "REASONED"},
     "proxy": {"text": "Bind 127.0.0.1:8080 behind a TLS proxy; net/http has no proxy trust setting, so accept forwarded headers only from the isolated, overwriting proxy.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED"},
@@ -128,7 +135,8 @@ version_basis: {
     "verify-bind": {"text": "Inspect every listener for loopback-only application binding behind the proxy.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED", "verify": [1]},
     "verify-diag-local": {"text": "A local 6060/debug/pprof/ response of 200 establishes local availability only.", "components": ["pprof"], "sources": ["pprof:s0246034dddd1"], "status": "REASONED", "verify": [1]},
     "verify-diag-route": {"text": "The public application /debug/pprof/ route should return 404, never 200.", "components": ["http", "pprof"], "sources": ["http:s75405f80decc", "pprof:s0246034dddd1"], "status": "REASONED", "verify": [1]},
-    "verify-diag-external": {"text": "From outside the server network, the actual public IP on 6060 must be unreachable; the guide expects refusal or timeout, never 200.", "components": ["http", "pprof"], "sources": ["http:s75405f80decc", "pprof:s0246034dddd1"], "status": "REASONED", "verify": [2]}
+    "verify-diag-external": {"text": "From outside the server network, the actual public IP on 6060 must be unreachable; the guide expects refusal or timeout, never 200.", "components": ["http", "pprof"], "sources": ["http:s75405f80decc", "pprof:s0246034dddd1"], "status": "REASONED", "verify": [2]},
+    "request-host": {"text": "Go 1.27.0 Request.Host is supplied by the client; a fixed canonical hostname plus an origin-form path prevents forged Host or crafted request targets from selecting the redirect destination.", "components": ["request"], "sources": ["request:sfdeabbeca746"], "status": "REASONED"}
   }
 }
 ---
@@ -139,12 +147,12 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
 | tls: Direct TLS listens on :443 using the leaf-plus-intermediates certificate and private key; ReadHeaderTimeout is 10 seconds. | Go net/http documentation unknown; Go crypto/tls documentation unknown | REASONED |
-| redirect: Port :80 sends a 301 HTTPS redirect built from r.Host and the request URI. | Go net/http documentation unknown | REASONED |
+| redirect: Port :80 sends a 301 to https:// plus the fixed canonicalHost and an origin-form request path; empty or non-path RequestURI values fall back to /. Never build the destination from r.Host. | Go net/http documentation unknown; Go Request.Host source 1.27.0 | REASONED |
 | tls-min: crypto/tls defaults to TLS 1.2 minimum as of September 2026; explicitly set MinVersion=VersionTLS12. | Go crypto/tls documentation unknown | REASONED |
 | privilege: Linux privileged-port threshold defaults to 1024 but is configurable per namespace; root or CAP_NET_BIND_SERVICE is needed below it in the usual configuration. | Linux port-threshold documentation unknown | REASONED |
 | proxy: Bind 127.0.0.1:8080 behind a TLS proxy; net/http has no proxy trust setting, so accept forwarded headers only from the isolated, overwriting proxy. | Go net/http documentation unknown | REASONED |
@@ -180,6 +188,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-diag-local: A local 6060/debug/pprof/ response of 200 establishes local availability only. | Go pprof documentation unknown | REASONED |
 | verify-diag-route: The public application /debug/pprof/ route should return 404, never 200. | Go net/http documentation unknown; Go pprof documentation unknown | REASONED |
 | verify-diag-external: From outside the server network, the actual public IP on 6060 must be unreachable; the guide expects refusal or timeout, never 200. | Go net/http documentation unknown; Go pprof documentation unknown | REASONED |
+| request-host: Go 1.27.0 Request.Host is supplied by the client; a fixed canonical hostname plus an origin-form path prevents forged Host or crafted request targets from selecting the redirect destination. | Go Request.Host source 1.27.0 | REASONED |
 <!-- version-basis:end -->
 
 Preferred production layout: bind the Go server to `127.0.0.1` and terminate TLS in a reverse proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)) or behind [cloudflare.md](cloudflare.md). `net/http` can also terminate TLS itself, shown below. Certificates: [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).

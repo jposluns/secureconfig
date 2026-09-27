@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "9e9abd4af1684b644bf1bdc1e4cf84a0be849eb0edeff32c1c8de692075071c3",
+  "body_sha256": "f25fc1e12ee34c914cd1b25af81371cc8ba483b42a455d3ef5476755ebfbe764",
   "components": {
     "engine": {
       "name": "Docker Engine networking",
@@ -27,13 +27,22 @@ version_basis: {
       "sources": {
         "sae565a19136c": "https://docs.docker.com/compose/how-tos/networking/"
       }
+    },
+    "reload": {
+      "name": "Docker firewalld reload fix",
+      "basis": "28.3.3",
+      "sources": {
+        "s567a65842b29": "https://docs.docker.com/engine/release-notes/28/#2833",
+        "sdd6228bb7825": "https://github.com/moby/moby/security/advisories/GHSA-x4rx-4gw3-53p4",
+        "seaf4197aafaa": "https://raw.githubusercontent.com/moby/moby/v28.3.3/libnetwork/drivers/bridge/port_mapping_linux.go"
+      }
     }
   },
   "claims": {
     "publish": {"text": "Omitting the host address publishes 3000:3000 on 0.0.0.0 and [::].", "components": ["engine"], "sources": ["engine:s1e53417c513d"], "status": "REASONED"},
     "host-firewall": {"text": "Docker programs firewall rules directly; UFW or firewalld blocking a host port does not establish published-port isolation.", "components": ["engine"], "sources": ["engine:s351180c6678f"], "status": "REASONED"},
     "private-network": {"text": "Omit app/database ports; Compose peers use service names. The example uses postgres:17 at db:5432; no PostgreSQL source is listed.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
-    "loopback": {"text": "Publish local access as 127.0.0.1:3000:3000; check the running server version, with Engine 28.0 as the stated boundary.", "components": ["engine", "boundary"], "sources": ["engine:s1e53417c513d", "boundary:s50eb099eac95"], "status": "REASONED"},
+    "loopback": {"text": "Publish local access as 127.0.0.1:3000:3000; check the running server version. Engine 28.0 is the minimum boundary, with 28.3.3 or later required where firewalld is used.", "components": ["engine", "boundary", "reload"], "sources": ["engine:s1e53417c513d", "boundary:s50eb099eac95", "reload:s567a65842b29", "reload:sdd6228bb7825"], "status": "REASONED"},
     "old-loopback": {"text": "Before 28.0, same-L2 neighbours could reach loopback publications under the default bridge configuration.", "components": ["boundary"], "sources": ["boundary:s50eb099eac95"], "status": "REASONED"},
     "old-host-bind": {"text": "Before 28.0, remote hosts could reach published container ports despite the host-IP binding.", "components": ["boundary"], "sources": ["boundary:s50eb099eac95"], "status": "REASONED"},
     "old-unpublished": {"text": "Before 28.0, direct routing could reach unpublished container ports; 28.0 fixed the stated default-bridge exposures.", "components": ["boundary"], "sources": ["boundary:s50eb099eac95"], "status": "REASONED"},
@@ -52,7 +61,10 @@ version_basis: {
     "verify-publish": {"text": "Compose ps is project-scoped; inventory every host container and TCP/UDP socket, including IPv6. Socket visibility alone does not prove reachability.", "components": ["compose", "engine"], "sources": ["compose:sae565a19136c", "engine:s1e53417c513d"], "status": "REASONED", "verify": [1]},
     "verify-redirect": {"text": "HTTP should redirect to HTTPS; the guide records an expected result, with no direct proxy citation or run.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED", "verify": [1]},
     "verify-auth": {"text": "Unauthenticated HTTPS /api should return 401 or 403, never 200; confirm authorized success separately. The proxy discriminator has no direct source here.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED", "verify": [1]},
-    "verify-isolation": {"text": "Probe each restricted host address and publication from allowed/disallowed sources in both families; backend isolation must coexist with proxy reachability.", "components": ["engine"], "sources": ["engine:s351180c6678f", "engine:s2fecb6db5480", "engine:s1e53417c513d"], "status": "REASONED", "verify": [1]}
+    "verify-isolation": {"text": "Probe each restricted host address and publication from allowed/disallowed sources in both families; backend isolation must coexist with proxy reachability.", "components": ["engine"], "sources": ["engine:s351180c6678f", "engine:s2fecb6db5480", "engine:s1e53417c513d"], "status": "REASONED", "verify": [1]},
+    "firewalld-reload": {"text": "Engine 28.2.x and 28.3.0 through 28.3.2 fail to restore container-address filtering after firewalld reload; 28.3.3 fixes CVE-2025-54388 (GHSA-x4rx-4gw3-53p4).", "components": ["reload"], "sources": ["reload:s567a65842b29", "reload:sdd6228bb7825", "reload:seaf4197aafaa"], "status": "REASONED"},
+    "firewalld-scope": {"text": "The regression affects Linux Engine in the host network namespace with firewalld: routed remote hosts can reach published container ports, including loopback publications; unpublished ports stay filtered. Rootless Mode and Docker Desktop are unaffected.", "components": ["reload"], "sources": ["reload:s567a65842b29", "reload:sdd6228bb7825"], "status": "REASONED"},
+    "verify-firewalld-reload": {"text": "Confirm local backend health, then curl the container address from a second host with a bridge-subnet route before and after sudo firewall-cmd --reload. Without masking controls, affected hosts change from blocked to connectable; fixed hosts stay blocked. Any TCP connection, including HTTP 401/403, shows reachability; failure alone does not prove patching. Check route, target, IPv6, restricted host publications and continued proxy reachability.", "components": ["reload"], "sources": ["reload:sdd6228bb7825", "reload:seaf4197aafaa"], "status": "REASONED"}
   }
 }
 ---
@@ -63,14 +75,14 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
 | publish: Omitting the host address publishes 3000:3000 on 0.0.0.0 and [::]. | Docker Engine networking unknown | REASONED |
 | host-firewall: Docker programs firewall rules directly; UFW or firewalld blocking a host port does not establish published-port isolation. | Docker Engine networking unknown | REASONED |
 | private-network: Omit app/database ports; Compose peers use service names. The example uses postgres:17 at db:5432; no PostgreSQL source is listed. | Compose networking unknown | REASONED |
-| loopback: Publish local access as 127.0.0.1:3000:3000; check the running server version, with Engine 28.0 as the stated boundary. | Docker Engine networking unknown; Docker Engine minimum boundary 28.0 | REASONED |
+| loopback: Publish local access as 127.0.0.1:3000:3000; check the running server version. Engine 28.0 is the minimum boundary, with 28.3.3 or later required where firewalld is used. | Docker Engine networking unknown; Docker Engine minimum boundary 28.0; Docker firewalld reload fix 28.3.3 | REASONED |
 | old-loopback: Before 28.0, same-L2 neighbours could reach loopback publications under the default bridge configuration. | Docker Engine minimum boundary 28.0 | REASONED |
 | old-host-bind: Before 28.0, remote hosts could reach published container ports despite the host-IP binding. | Docker Engine minimum boundary 28.0 | REASONED |
 | old-unpublished: Before 28.0, direct routing could reach unpublished container ports; 28.0 fixed the stated default-bridge exposures. | Docker Engine minimum boundary 28.0 | REASONED |
@@ -90,6 +102,9 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-redirect: HTTP should redirect to HTTPS; the guide records an expected result, with no direct proxy citation or run. | Compose networking unknown | REASONED |
 | verify-auth: Unauthenticated HTTPS /api should return 401 or 403, never 200; confirm authorized success separately. The proxy discriminator has no direct source here. | Compose networking unknown | REASONED |
 | verify-isolation: Probe each restricted host address and publication from allowed/disallowed sources in both families; backend isolation must coexist with proxy reachability. | Docker Engine networking unknown | REASONED |
+| firewalld-reload: Engine 28.2.x and 28.3.0 through 28.3.2 fail to restore container-address filtering after firewalld reload; 28.3.3 fixes CVE-2025-54388 (GHSA-x4rx-4gw3-53p4). | Docker firewalld reload fix 28.3.3 | REASONED |
+| firewalld-scope: The regression affects Linux Engine in the host network namespace with firewalld: routed remote hosts can reach published container ports, including loopback publications; unpublished ports stay filtered. Rootless Mode and Docker Desktop are unaffected. | Docker firewalld reload fix 28.3.3 | REASONED |
+| verify-firewalld-reload: Confirm local backend health, then curl the container address from a second host with a bridge-subnet route before and after sudo firewall-cmd --reload. Without masking controls, affected hosts change from blocked to connectable; fixed hosts stay blocked. Any TCP connection, including HTTP 401/403, shows reachability; failure alone does not prove patching. Check route, target, IPv6, restricted host publications and continued proxy reachability. | Docker firewalld reload fix 28.3.3 | REASONED |
 <!-- version-basis:end -->
 
 Containers are where accidental exposure happens most. Two Docker behaviours cause it:

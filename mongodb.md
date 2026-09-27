@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "4bf686e0600893958df154b5e8ee8297f0e29cd9c03de1efc4de277de1ff973d",
+  "body_sha256": "043ff670d0709d57fd2ea6cc6916028b62d4daa4b172e56755a40c4c2fbf3823",
   "components": {
     "docker": {
       "name": "Official MongoDB Docker images",
@@ -168,8 +168,8 @@ version_basis: {
     "verify-qe-range": {"text": "Test range separately with queryType: range on int, long, double, decimal or date, not a string, and documents inside/outside the interval; missing results or connection errors do not establish confidentiality.", "components": ["v8"], "sources": ["v8:sd08442f8ff38"], "status": "REASONED"},
     "audit-destination": {"text": "Enterprise auditing covers mongod and mongos; Community has no equivalent and diagnostic logs are not a substitute. Configure a destination on every process; the example selects a JSON file.", "components": ["v8"], "sources": ["v8:s6f1f3f56616d", "v8:seedf77aa3e73"], "status": "REASONED"},
     "audit-write": {"text": "A failed audit write can terminate the process; validate that the destination is writable.", "components": ["v8"], "sources": ["v8:s6f1f3f56616d", "v8:seedf77aa3e73"], "status": "REASONED"},
-    "audit-filter": {"text": "Omitting auditLog.filter records every auditable event; an authenticate-only filter deliberately excludes all other event types.", "components": ["v8"], "sources": ["v8:s9fcdc05982a6"], "status": "REASONED"},
-    "audit-success-default": {"text": "auditAuthorizationSuccess defaults false for authorization-success recording; enabling it records successful checks at a performance cost.", "components": ["v8"], "sources": ["v8:s1f3040d0fe4c"], "status": "REASONED"},
+    "audit-filter": {"text": "Omitting auditLog.filter permits all auditable event types, but successful authCheck events still require auditAuthorizationSuccess: true; an authenticate-only filter excludes other event types.", "components": ["v8"], "sources": ["v8:s9fcdc05982a6", "v8:s1f3040d0fe4c"], "status": "REASONED"},
+    "audit-success-default": {"text": "In MongoDB 8.0, auditAuthorizationSuccess defaults false, so authCheck records only authorization failures; enabling it adds successful checks at a performance cost.", "components": ["v8"], "sources": ["v8:s1f3040d0fe4c", "v8:s9e86819e68db"], "status": "REASONED"},
     "diagnostic-redaction": {"text": "Enterprise-only redactClientLogData uses a startup flag or security.redactClientLogData; document values become ### while metadata remains. Its documented scope is diagnostic logs, not audit logs; combine with TLS and storage encryption.", "components": ["v8"], "sources": ["v8:s1f3040d0fe4c", "v8:s4ffa7b653364", "v8:sc9621a9507cc"], "status": "REASONED"},
     "storage-encryption": {"text": "Enterprise 3.2 introduced native WiredTiger encryption; Community depends on host/filesystem encryption. security.enableEncryption defaults false.", "components": ["v8"], "sources": ["v8:s3b7dabf8f41b", "v8:see769a1a1e2b"], "status": "REASONED"},
     "storage-migration": {"text": "Native encryption does not encrypt existing data in place; use a fresh member and initial sync or the documented migration.", "components": ["v8"], "sources": ["v8:s3b7dabf8f41b", "v8:sf88108a9609d"], "status": "REASONED"},
@@ -185,7 +185,8 @@ version_basis: {
     "qe-collection": {"text": "QE requires a new encryptedFields collection, cannot be enabled in place, and cannot share a collection with CSFLE.", "components": ["v8"], "sources": ["v8:s1d229cb03243"], "status": "REASONED"},
     "qe-client": {"text": "Automatic QE uses autoEncryption with key-vault namespace, KMS providers and local encryptedFieldsMap; Community explicit QE uses bypassQueryAnalysis: true and ClientEncryption.", "components": ["v8"], "sources": ["v8:se55ecf8e7f85", "v8:s47b976aa1f45"], "status": "REASONED"},
     "qe-topology": {"text": "QE supports replica sets and sharded clusters, not standalone servers.", "components": ["v8"], "sources": ["v8:s1d229cb03243"], "status": "REASONED"},
-    "qe-range-preview": {"text": "rangePreview was removed in 8.0; do not carry legacy rangePreview recipes forward.", "components": ["v8"], "sources": ["v8:s09f3af996812"], "status": "REASONED"}
+    "qe-range-preview": {"text": "rangePreview was removed in 8.0; do not carry legacy rangePreview recipes forward.", "components": ["v8"], "sources": ["v8:s09f3af996812"], "status": "REASONED"},
+    "audit-other-events": {"text": "With MongoDB 8.0 Enterprise/Atlas auditing enabled and the filter permitting them, authentication, schema (DDL) and replica-set events are recorded independently of auditAuthorizationSuccess.", "components": ["v8"], "sources": ["v8:s6f1f3f56616d", "v8:s9e86819e68db", "v8:s1f3040d0fe4c"], "status": "REASONED"}
   }
 }
 ---
@@ -196,7 +197,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -262,8 +263,8 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-qe-range: Test range separately with queryType: range on int, long, double, decimal or date, not a string, and documents inside/outside the interval; missing results or connection errors do not establish confidentiality. | MongoDB documentation 8.0 | REASONED |
 | audit-destination: Enterprise auditing covers mongod and mongos; Community has no equivalent and diagnostic logs are not a substitute. Configure a destination on every process; the example selects a JSON file. | MongoDB documentation 8.0 | REASONED |
 | audit-write: A failed audit write can terminate the process; validate that the destination is writable. | MongoDB documentation 8.0 | REASONED |
-| audit-filter: Omitting auditLog.filter records every auditable event; an authenticate-only filter deliberately excludes all other event types. | MongoDB documentation 8.0 | REASONED |
-| audit-success-default: auditAuthorizationSuccess defaults false for authorization-success recording; enabling it records successful checks at a performance cost. | MongoDB documentation 8.0 | REASONED |
+| audit-filter: Omitting auditLog.filter permits all auditable event types, but successful authCheck events still require auditAuthorizationSuccess: true; an authenticate-only filter excludes other event types. | MongoDB documentation 8.0 | REASONED |
+| audit-success-default: In MongoDB 8.0, auditAuthorizationSuccess defaults false, so authCheck records only authorization failures; enabling it adds successful checks at a performance cost. | MongoDB documentation 8.0 | REASONED |
 | diagnostic-redaction: Enterprise-only redactClientLogData uses a startup flag or security.redactClientLogData; document values become ### while metadata remains. Its documented scope is diagnostic logs, not audit logs; combine with TLS and storage encryption. | MongoDB documentation 8.0 | REASONED |
 | storage-encryption: Enterprise 3.2 introduced native WiredTiger encryption; Community depends on host/filesystem encryption. security.enableEncryption defaults false. | MongoDB documentation 8.0 | REASONED |
 | storage-migration: Native encryption does not encrypt existing data in place; use a fresh member and initial sync or the documented migration. | MongoDB documentation 8.0 | REASONED |
@@ -280,6 +281,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | qe-client: Automatic QE uses autoEncryption with key-vault namespace, KMS providers and local encryptedFieldsMap; Community explicit QE uses bypassQueryAnalysis: true and ClientEncryption. | MongoDB documentation 8.0 | REASONED |
 | qe-topology: QE supports replica sets and sharded clusters, not standalone servers. | MongoDB documentation 8.0 | REASONED |
 | qe-range-preview: rangePreview was removed in 8.0; do not carry legacy rangePreview recipes forward. | MongoDB documentation 8.0 | REASONED |
+| audit-other-events: With MongoDB 8.0 Enterprise/Atlas auditing enabled and the filter permitting them, authentication, schema (DDL) and replica-set events are recorded independently of auditAuthorizationSuccess. | MongoDB documentation 8.0 | REASONED |
 <!-- version-basis:end -->
 
 MongoDB's history of mass data leaks comes from 2 settings: binding to all interfaces and running with authorization off. Fix both before anything else, then add TLS. Use a supported MongoDB release and its current security patches. MongoDB 4.2 reached end of life on April 30, 2023; it is not a deployment recommendation. Compatibility note: these examples use `tls` options; older configurations used `ssl` names. Check the [vendor lifecycle schedule](https://www.mongodb.com/legal/support-policy/lifecycles) before deploying.

@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "a9994c70c664b12d544047fe092a7617fb7e8416ce5cb3ffd44c09a1abaab584",
+  "body_sha256": "45ec84d5a7d3bc1b864b2d93774bdec5b38fc27486764e61a028d186359c511d",
   "components": {
     "protocol": {
       "name": "MDN CORS documentation",
@@ -25,6 +25,13 @@ version_basis: {
       "sources": {
         "s4f1cea92e7bc": "https://fastapi.tiangolo.com/tutorial/cors/"
       }
+    },
+    "fetch": {
+      "name": "Fetch Standard credentials",
+      "basis": "unknown",
+      "sources": {
+        "s028c38ebd452": "https://fetch.spec.whatwg.org/#credentials"
+      }
     }
   },
   "claims": {
@@ -38,8 +45,9 @@ version_basis: {
     "fastapi-credentials": {"text": "The FastAPI example enables allow_credentials=True.", "components": ["fastapi"], "sources": ["fastapi:s4f1cea92e7bc"], "status": "REASONED"},
     "fastapi-methods": {"text": "The FastAPI example allows only GET and POST through allow_methods.", "components": ["fastapi"], "sources": ["fastapi:s4f1cea92e7bc"], "status": "REASONED"},
     "fastapi-headers": {"text": "The FastAPI example allows Authorization and Content-Type through allow_headers.", "components": ["fastapi"], "sources": ["fastapi:s4f1cea92e7bc"], "status": "REASONED"},
-    "verify-hostile": {"text": "The hostile-Origin probe should not return Access-Control-Allow-Origin echoing https://evil.example; no actual response is recorded.", "components": ["protocol", "express", "fastapi"], "sources": ["protocol:s6265cf028385", "express:sb6448b9a443d", "fastapi:s4f1cea92e7bc"], "status": "REASONED", "verify": [1]},
-    "verify-allowed": {"text": "The allowed-Origin probe should return the app origin, with Allow-Credentials only if cookies are used as stated in the guide; no actual response is recorded.", "components": ["protocol", "express", "fastapi"], "sources": ["protocol:s6265cf028385", "express:sb6448b9a443d", "fastapi:s4f1cea92e7bc"], "status": "REASONED", "verify": [1]}
+    "verify-hostile": {"text": "The exposed API echoes https://evil.example in Access-Control-Allow-Origin; the fixed API omits that hostile origin. No deployed API or browser run is recorded.", "components": ["protocol", "express", "fastapi", "fetch"], "sources": ["protocol:s6265cf028385", "express:sb6448b9a443d", "fastapi:s4f1cea92e7bc", "fetch:s028c38ebd452"], "status": "REASONED", "verify": [1]},
+    "verify-allowed": {"text": "The allowed-Origin probe should return the listed app origin, with Allow-Credentials only where the browser must send cookies, HTTP authentication or TLS client certificates; no actual response is recorded.", "components": ["protocol", "express", "fastapi", "fetch"], "sources": ["protocol:s6265cf028385", "express:sb6448b9a443d", "fastapi:s4f1cea92e7bc", "fetch:s028c38ebd452"], "status": "REASONED", "verify": [1]},
+    "credential-types": {"text": "Browser credentials include cookies, HTTP authentication and TLS client certificates; Access-Control-Allow-Credentials: true is needed only where the browser must send credentials.", "components": ["fetch", "protocol"], "sources": ["fetch:s028c38ebd452", "protocol:s6265cf028385"], "status": "REASONED"}
   }
 }
 ---
@@ -50,7 +58,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -64,8 +72,9 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | fastapi-credentials: The FastAPI example enables allow_credentials=True. | FastAPI CORSMiddleware unknown | REASONED |
 | fastapi-methods: The FastAPI example allows only GET and POST through allow_methods. | FastAPI CORSMiddleware unknown | REASONED |
 | fastapi-headers: The FastAPI example allows Authorization and Content-Type through allow_headers. | FastAPI CORSMiddleware unknown | REASONED |
-| verify-hostile: The hostile-Origin probe should not return Access-Control-Allow-Origin echoing https://evil.example; no actual response is recorded. | MDN CORS documentation unknown; Express cors middleware unknown; FastAPI CORSMiddleware unknown | REASONED |
-| verify-allowed: The allowed-Origin probe should return the app origin, with Allow-Credentials only if cookies are used as stated in the guide; no actual response is recorded. | MDN CORS documentation unknown; Express cors middleware unknown; FastAPI CORSMiddleware unknown | REASONED |
+| verify-hostile: The exposed API echoes https://evil.example in Access-Control-Allow-Origin; the fixed API omits that hostile origin. No deployed API or browser run is recorded. | MDN CORS documentation unknown; Express cors middleware unknown; FastAPI CORSMiddleware unknown; Fetch Standard credentials unknown | REASONED |
+| verify-allowed: The allowed-Origin probe should return the listed app origin, with Allow-Credentials only where the browser must send cookies, HTTP authentication or TLS client certificates; no actual response is recorded. | MDN CORS documentation unknown; Express cors middleware unknown; FastAPI CORSMiddleware unknown; Fetch Standard credentials unknown | REASONED |
+| credential-types: Browser credentials include cookies, HTTP authentication and TLS client certificates; Access-Control-Allow-Credentials: true is needed only where the browser must send credentials. | Fetch Standard credentials unknown; MDN CORS documentation unknown | REASONED |
 <!-- version-basis:end -->
 
 CORS misconfiguration does not expose a port; it lets hostile websites use your users' browsers, cookies included, against your API. AI assistants reach for `Access-Control-Allow-Origin: *` the moment a browser console shows a CORS error; that is the wrong fix for any API that authenticates.
