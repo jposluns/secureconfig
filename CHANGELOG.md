@@ -4,13 +4,15 @@ secureconfig is published continuously and versions as `1.0.<pull request number
 that of the most recently merged pull request. The current value is in the `VERSION` file at the
 repository root. There is no release artifact, so the version names a state of `main` rather than a
 downloadable build, and each guide remains dated by its own "Sources (checked <month year>)" section.
-Entries here are grouped by the date the change landed on `main`. Note that nothing in the gate suite
-can check `VERSION` against GitHub: no gate reaches the network, by design, so that no outside service
-can change a gate's answer, and a pull request number is only knowable from outside. Keeping `VERSION`
-in step with the merged pull request is therefore an authoring obligation, not an enforced one.
+Entries here are grouped by the UTC date the change landed on `main`. That rule applies from 2026-09-27;
+earlier headings were not held to one timezone and are left as recorded. Note that nothing in the gate
+suite can check `VERSION` against GitHub: no gate reaches the network, by design, so that no outside
+service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
+`VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
 ## 2026-09-27
 
+- Record the maintainer's ruling that CHANGELOG headings use the UTC merge date from 2026-09-27, leaving earlier headings as recorded (#410).
 - Disclose shell-history exposure at 14 secret-bearing `set --` substitution sites across 12 guides, including credential headers, passwords, API keys, tokens and signed URLs. Preserve commands and existing disclosures. Row 1.186. (#412)
 - Narrow the frontend-frameworks secret scan to client assets and prerendered pages, preserve its secret-input and grep-status guards, and document custom and SSR output paths. Row 1.185. (#411)
 - Pin the Browserless TOKEN default to open-source 2.56.7, distinguish Enterprise documentation from source evidence, and align the authentication probe and version-basis claims; add the CVE-2026-92811 file-protocol fix requirement, conflicting affected-range caveat, and Playwright canary check. Row 1.178. (#409)

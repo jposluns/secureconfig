@@ -17,6 +17,11 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **CHANGELOG dates, 2026-09-27 (#410).** The maintainer ruled, through AskUser, that CHANGELOG headings use
+  the UTC date of the merge to `main`, going forward only. An audit found that the earlier headings follow
+  neither UTC nor America/Toronto dates consistently. Those headings stay as recorded, and #408's move of the
+  ten 2026-09-27 bullets stands.
+
 - **Four rulings, 2026-09-27 (#408).** The maintainer ruled, through AskUser:
   (a) `VERSION` on out-of-order merges: CONTRIBUTING's rule stands, so a pull request that merges after a
   higher-numbered one leaves `VERSION` alone; the 2026-09-26 #360 ruling was a one-off.
