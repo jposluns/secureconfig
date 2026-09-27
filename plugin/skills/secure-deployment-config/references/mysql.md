@@ -643,11 +643,12 @@ In the isolated exposed state without validation, a deliberately weak test value
 
 For reuse, set two distinct policy-compliant test passwords in sequence, then attempt the first again. Without reuse protection the third change succeeds; with protection enabled and history recorded under that policy, it must fail. A third fresh password must succeed. Keep the authentication plugin unchanged throughout, and do not use production credentials. These tests distinguish validation and history enforcement from a general inability to change passwords. [MySQL validation behavior](https://dev.mysql.com/doc/refman/8.4/en/validate-password.html), [MySQL password reuse](https://dev.mysql.com/doc/refman/8.4/en/password-management.html), [MariaDB password changes](https://mariadb.com/docs/server/reference/plugins/authentication-plugins/authentication-plugin-ed25519), [MariaDB reuse behavior](https://mariadb.com/docs/server/reference/plugins/password-validation-plugins/password-reuse-check-plugin).
 
-Verification debt:
+Verification scope:
 
-| ID | Status | Required demonstration |
+| Check scope | Status | Deployment comparison and prerequisites |
 | --- | --- | --- |
-| MYSQL-LIVE-1 | Open; REASONED | Provide isolated writable MySQL 8.4 and MariaDB 10.11/11.4 deployments, compatible clients, administrative access, certificates, files, and disposable accounts/tables. Demonstrate exposed and fixed outcomes for TLS and account requirements, listeners, scoped grants, cleanup, file loading, and password policies; run native configuration checks and restart tests. Record versions, requests, positive controls, refusals, and observed outcomes before removing REASONED labels. |
+| Service checks | REASONED from the cited MySQL and MariaDB documentation; not demonstrated | Provide isolated writable MySQL 8.4 and MariaDB 10.11/11.4 deployments, compatible clients, administrative access, certificates, files, and disposable accounts/tables. Demonstrate exposed and fixed outcomes for TLS and account requirements, listeners, scoped grants, cleanup, file loading, and password policies; run restart tests. Record versions, requests, positive controls, refusals, and observed outcomes. |
+| Native configuration checks | Not run; retained local work | Run native configuration checks with the applicable MySQL 8.4 and MariaDB 10.11/11.4 binaries and fixtures. |
 
 ## Common mistakes
 

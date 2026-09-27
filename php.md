@@ -175,7 +175,7 @@ PHP 8.x's built-in `session.sid_length` and `session.sid_bits_per_character` def
 
 ## Verify
 
-**REASONED: deployment checks have not been demonstrated.** The authoring environment has no PHP or PHP-FPM runtime, no Docker or Podman, and no supplied PHP/Laravel deployment. The listener, TLS, cookie, authentication, banner, and error-disclosure checks require a real deployment. Demonstration debt is tracked as `PHP-VERIFY` in `TODO.md`.
+**REASONED: deployment checks have not been demonstrated.** The authoring environment has no PHP or PHP-FPM runtime, no Docker or Podman, and no supplied PHP/Laravel deployment. The listener, TLS, cookie, authentication, banner, and error-disclosure checks require a real deployment. Expected outcomes are REASONED from the cited PHP, Laravel, and fronting-server documentation.
 
 Paste each guarded block whole. Substitute a full HTTPS URL inside the single quotes on its `set --` line; use a URL without a literal apostrophe or embedded credentials. The fixed `app.example.com` examples are illustrations. For deployment requests, use the guarded blocks with the application's actual URL. Curl's `http`, `exit`, and `err` write-out fields require curl 7.75.0 or later. The trailing `|| true` keeps a failed probe from ending the shell; it does not indicate success.
 

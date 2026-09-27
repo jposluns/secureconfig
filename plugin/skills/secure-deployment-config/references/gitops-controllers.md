@@ -188,11 +188,17 @@ platform git sources that feed the privileged controllers.
 Every probe below is REASONED, not demonstrated: the authoring environment has no container runtime;
 also, the authoring host forbids opening listeners without an isolated network namespace, and has none;
 there is no Kubernetes cluster. None was stood up in its exposed and fixed states. Each names its expected exposed and fixed result
-so it discriminates against a live install; backlog row 2.28 tracks demonstrating them. A login page, a
+so it discriminates against a live install, based on the cited vendor documentation and pinned source readings. A login page, a
 redirect, a `404`, an HTML body, a TLS error, a `kubectl` `Forbidden`, or a missing-CRD error is
 inconclusive, never the fixed state.
 
+Backlog row 2.28 retains only the missing-source audits: controller binds, repo-server RPC authorization
+and certificate fallback, Dex runtime authentication and authorization, the Redis image bind and
+password initializer, and the RBAC fallback. Those implementations are not fully traced here.
+
 ```bash
+# REASONED: Argo CD API and cluster inventory checks follow the cited documentation and pinned sources;
+# no container runtime, isolated network namespace or Kubernetes cluster is available.
 # Argo CD API auth, matched pair against the SAME endpoint. Use your real CA, never -k. Anonymous (no
 # token) must answer 401 fixed (application JSON exposed); with a valid bearer token it must return JSON
 # listing the expected application - the positive control a fronting proxy's 401 cannot fake. Repeat both
@@ -234,8 +240,7 @@ sudo ss -tlnp    # speaks only for the node and network namespace it runs in, no
 For internal isolation, inventory actual sockets in each component's network namespace with
 `ss -tlnp`, including ports absent from container declarations. Review rendered policies and CNI
 enforcement; a NetworkPolicy object's presence alone proves neither reachability nor denial.
-The following probe is REASONED for the same missing isolation and cluster capabilities above
-(backlog row 2.28). Run it inside an authorized monitoring pod and an unrelated pod in another
+The following probe is REASONED for the same missing isolation and cluster capabilities above. Run it inside an authorized monitoring pod and an unrelated pod in another
 namespace, against the same actual repo-server pod IP. With the base metrics allowance, expect HTTP
 200 and Prometheus metrics from both. After narrowing the allowance, expect no HTTP response from
 the unrelated pod while the monitoring pod still receives those metrics. A timeout alone, a missing
@@ -243,6 +248,8 @@ curl binary, or a failed positive control is inconclusive. The pinned repo-serve
 NetworkPolicy below supply the exposed-state basis.
 
 ```bash
+# REASONED: repo-server metrics isolation follows the cited pinned mux and NetworkPolicy;
+# no isolated network namespace or Kubernetes cluster is available.
 (
   set -- secureconfig-probe REPLACE_WITH_REPO_SERVER_POD_IP
   [ "${1-}" = secureconfig-probe ] && [ "$#" -eq 2 ] || { echo 'incomplete probe; not probing'; exit 2; }
@@ -257,7 +264,7 @@ NetworkPolicy below supply the exposed-state basis.
 
 For server metrics, repeat the guarded pod-IP probe above with the actual server pod IP and
 port `8083`, keeping `/metrics`. This check is also REASONED for the missing isolated network
-namespace and Kubernetes cluster (TODO 2.28). Before narrowing the server's allow-all policy,
+namespace and Kubernetes cluster. Before narrowing the server's allow-all policy,
 expect HTTP 200 and Prometheus metrics without credentials from both pods; afterwards only the
 authorized monitoring pod should receive them. From that allowed pod, repeat with
 `/debug/pprof/cmdline`: expect `401` with profiling disabled, then HTTP 200 and the process command
@@ -275,7 +282,8 @@ signature is `X-Signature: sha256=<hex HMAC of the exact body under the receiver
 bytes without it (must be rejected) and then with it (must be accepted and trigger the reconciliation):
 
 ```bash
-# Reasoned, not demonstrated (no live Flux; backlog row 2.28). Read the HMAC key without echo.
+# REASONED: Flux webhook checks follow the cited receiver documentation; no live Flux is available.
+# Read the HMAC key without echo.
 # Python's hmac reads the key from stdin; only the non-secret request body is passed in argv.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias

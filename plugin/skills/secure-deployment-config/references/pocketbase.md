@@ -10,7 +10,8 @@ token from the startup log, not merely an ordinary user's registration.
 The source checks below target **PocketBase v0.40.4** and **Appwrite 2.2.0**, with documentation
 checked in September 2026. Defaults refer to those releases unless stated otherwise. Live behavior
 has not been demonstrated in this authoring environment. Some pin-specific source checks remain
-incomplete; the verification backlog records those separately from the live-test debt.
+incomplete; the source-work table below records those. Live comparisons are REASONED from the
+cited vendor documentation and the pinned sources that were available.
 
 ## PocketBase
 
@@ -558,16 +559,16 @@ remove it and repeat. Exact matching does not detect every encoded or split repr
 )
 ```
 
-### Demonstration backlog
+### Verification status and source work
 
 All three bash blocks passed ShellCheck 0.11.0 and `bash -n` during authoring. Local guard tests
 refused embedded `REPLACE_WITH_` placeholders, `example.com`, angle brackets, empty arguments,
 and omitted or shortened `set --` lines. These checks establish shell behavior only. No live
 service result or deployed-bundle scan is claimed.
 
-| ID | Required exposed/fixed demonstration | Status |
+| Check scope or source-work ID | Procedure and prerequisites | Status |
 | --- | --- | --- |
-| SELFHOSTED-BACKEND-LIVE-1 | Demonstrate every REASONED comparison above on PocketBase v0.40.4 and Appwrite 2.2.0, recording binary/image identity, commands, response bodies, denied and allowed identities, disposable-data cleanup, and effective settings. Requires writable service fixtures, a container runtime, controlled accounts and mailboxes, S3 and backup fixtures, ClamAV, function execution, a second-host ingress fixture, and the actual client build. Include all five PocketBase actions, manageRule, file-token issuance versus protected downloads (unrelated-user and unsigned-guest denial, permitted-user bytes), realtime, bootstrap-token handling, MFA, verification, retained-token behavior, additive Appwrite permissions, server-key scopes, registration, console MFA (fresh password-only denial and successful TOTP completion), TLS, proxy trust, limits, encrypted recovery, uploads, and executor privacy. | Open; live behavior is reasoned, not demonstrated. |
+| Service comparisons | Demonstrate every REASONED comparison above on PocketBase v0.40.4 and Appwrite 2.2.0, recording binary/image identity, commands, response bodies, denied and allowed identities, disposable-data cleanup, and effective settings. Requires writable service fixtures, a container runtime, controlled accounts and mailboxes, S3 and backup fixtures, ClamAV, function execution, a second-host ingress fixture, and the actual client build. Include all five PocketBase actions, manageRule, file-token issuance versus protected downloads (unrelated-user and unsigned-guest denial, permitted-user bytes), realtime, bootstrap-token handling, MFA, verification, retained-token behavior, additive Appwrite permissions, server-key scopes, registration, console MFA (fresh password-only denial and successful TOTP completion), TLS, proxy trust, limits, encrypted recovery, uploads, and executor privacy. | REASONED from the cited vendor documentation and available pinned sources; live behavior is not demonstrated. |
 | SELFHOSTED-BACKEND-SOURCE-1 | Complete pin-specific tracing for the Appwrite legacy collection/document implementation and creator permission defaults, and the PocketBase CLI wrapper and backup archive implementation. Vendor documentation was opened for these controls, but the corresponding implementation files could not all be retrieved at the requested tags. Do not infer the documentSecurity or --dev flag default. | Open; complete pinned-source verification is not claimed. |
 
 ## Sources (checked September 2026)

@@ -310,9 +310,9 @@ Also test an intentionally incorrect password on a fresh connection and confirm 
 
 Binary VERSION and SASL negotiation success are not substitutes for GET. A missing key, closed connection, or unavailable server without the matched successful request is inconclusive. See the [binary protocol](https://docs.memcached.org/protocols/binary/), [SASL status codes](https://docs.memcached.org/protocols/binarysasl/), [binary enforcement](https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_bin.c), and [ASCII token exchange](https://raw.githubusercontent.com/memcached/memcached/7278bdee96329915bbc87731ba005095453f5c2f/doc/protocol.txt).
 
-| Backlog ID | Status | Required demonstration |
+| Check scope | Status | Deployment comparison and prerequisites |
 | --- | --- | --- |
-| MEMCACHED-LIVE-1 | Open; REASONED, not demonstrated | Obtain an authorized memcached runtime, SASL/TLS client and certificate fixtures, and allowed/disallowed network observers. Run V1-V6 against matched exposed and fixed states; record package/build identity, service arguments, process ownership, listeners, effective budgets, requests, responses, and positive controls. Validate startup parsing and certificate reload. If optional idle timeout or privilege dropping is adopted, include its platform and application checks before claiming it effective. |
+| V1-V6 | REASONED from the cited memcached documentation and pinned protocol sources; not demonstrated | Obtain an authorized memcached runtime, SASL/TLS client and certificate fixtures, and allowed/disallowed network observers. Run V1-V6 against matched exposed and fixed states; record package/build identity, service arguments, process ownership, listeners, effective budgets, requests, responses, and positive controls. Validate startup parsing and certificate reload. If optional idle timeout or privilege dropping is adopted, include its platform and application checks before claiming it effective. |
 
 ## Common mistakes
 

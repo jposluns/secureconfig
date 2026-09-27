@@ -90,9 +90,10 @@ Unverified until checked in your deployment: the default service state and effec
 
 ## Verify
 
-Every probe below is reasoned, not demonstrated: the authoring environment has no container runtime, so the outcomes are derived from the cited vendor sources rather than observed, and backlog row 1.105 tracks demonstrating them against live instances in the exposed and fixed states. A redirect, a `404`, a timeout, or a TLS error is inconclusive, never proof of the fixed state; every negative check needs a working positive control.
+Every probe below is reasoned, not demonstrated: the authoring environment has no container runtime, so the outcomes are derived from the cited vendor sources rather than observed. A redirect, a `404`, a timeout, or a TLS error is inconclusive, never proof of the fixed state; every negative check needs a working positive control.
 
 ```bash
+# REASONED: listener expectations follow the cited vendor sources; no container runtime is available.
 sudo ss -tlnp    # Read the bind address per port, do not just confirm the port. LiveKit signaling 7880
 sudo ss -aunp    # should be on loopback (behind the proxy); RTC 7881 and coturn 3478/5349 are expected
                  # PUBLIC (a relay and media are useless if unreachable), so their public bind is normal,

@@ -32,7 +32,7 @@ files=(
 if [ "${1:-}" = "--list-inputs" ] || [ "${1:-}" = "--list-guides" ]; then
   printf '%s\n' "${files[@]}"
   if [ "${1:-}" = "--list-inputs" ]; then
-    printf '%s\n' tools/version_basis.py tools/version_basis_guides.txt tools/_markdown.py tools/check_guide_shape.py tools/check_verify_marking.py tools/_verify_sections.py tools/check_reasoned_rows.py CHANGELOG.md
+    printf '%s\n' tools/version_basis.py tools/version_basis_guides.txt tools/_markdown.py tools/check_guide_shape.py tools/check_verify_marking.py tools/_verify_sections.py CHANGELOG.md
   fi
   exit 0
 fi
