@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "9169ed0a69f1cee559a8c11bb34cd1d48219de06af1bdbf3015f1d2613b15d18",
+  "body_sha256": "77f2ee070793314e12d1cc5e53353e2181bbe17c796016da7401fa4eb65866b5",
   "components": {
     "adapter": {
       "name": "SvelteKit adapter-node",
@@ -40,8 +40,8 @@ version_basis: {
       "name": "Vite bind source",
       "basis": "v8.3.1",
       "sources": {
-        "s4b7c35b93a62": "https://github.com/vitejs/vite/blob/v8.3.1/packages/vite/src/node/utils.ts#L1010-L1016",
-        "s151e8dbf59a2": "https://github.com/vitejs/vite/blob/v8.3.1/packages/vite/src/node/config.ts#L390",
+        "s36532f775f7f": "https://github.com/vitejs/vite/blob/v8.3.1/packages/vite/src/node/utils.ts#L1010-L1022",
+        "s8ba1c2b868b7": "https://github.com/vitejs/vite/blob/v8.3.1/packages/vite/src/node/config.ts#L388-L396",
         "s484948ac14b6": "https://github.com/vitejs/vite/blob/v8.3.1/packages/vite/src/node/build.ts#L395"
       }
     },
@@ -68,8 +68,8 @@ version_basis: {
       "name": "Nuxt output source",
       "basis": "v4.0.0",
       "sources": {
-        "s793a18962748": "https://github.com/nuxt/nuxt/blob/v4.0.0/packages/nuxt/src/core/nitro.ts#L167",
-        "sdd39f0826f92": "https://github.com/nuxt/nuxt/blob/v4.0.0/packages/nuxt/src/core/nitro.ts#L657"
+        "sa65d64f55ca1": "https://github.com/nuxt/nuxt/blob/v4.0.0/packages/nuxt/src/core/nitro.ts#L163-L170",
+        "se1cb3e5b4959": "https://github.com/nuxt/nuxt/blob/v4.0.0/packages/nuxt/src/core/nitro.ts#L653-L659"
       }
     },
     "nitro-output": {
@@ -97,10 +97,10 @@ version_basis: {
     "nuxt-private": {"text": "Direct runtimeConfig keys are server-only with NUXT_ overrides; rendering or passing to useState can disclose them.", "components": ["nuxt"], "sources": ["nuxt:s32e447cb5ef4"], "status": "REASONED"},
     "nuxt-public": {"text": "runtimeConfig.public is client-exposed with NUXT_PUBLIC_ overrides, not proxy/cookie configuration.", "components": ["nuxt"], "sources": ["nuxt:s32e447cb5ef4"], "status": "REASONED"},
     "vite-production": {"text": "Vite dev/preview is development tooling; deploy dist through a production server, CDN or platform.", "components": ["vite"], "sources": ["vite:s16927b810cff"], "status": "REASONED"},
-    "vite-bind": {"text": "Vite 8.3.1 server.host defaults localhost; true/0.0.0.0 exposes all addresses and should not remain beyond trusted-network tests.", "components": ["vite-pin", "vite"], "sources": ["vite-pin:s4b7c35b93a62", "vite:sae9dd90908fc"], "status": "REASONED"},
+    "vite-bind": {"text": "Vite 8.3.1 server.host defaults localhost; true/0.0.0.0 exposes all addresses and should not remain beyond trusted-network tests.", "components": ["vite-pin", "vite"], "sources": ["vite-pin:s36532f775f7f", "vite:sae9dd90908fc"], "status": "REASONED"},
     "vite-hosts": {"text": "server.allowedHosts defaults empty with localhost, .localhost and IPs allowed; true disables protection and permits DNS rebinding. Prefer explicit names.", "components": ["vite"], "sources": ["vite:sae9dd90908fc"], "status": "REASONED"},
     "verify-private": {"text": "Guide expects anonymous /api/private 401; enforcement needs app/server handlers, not client redirects.", "components": ["nuxt", "svelte"], "sources": ["nuxt:se2d1e4a2e433", "svelte:s329dda89ba78"], "status": "REASONED", "verify": [1]},
-    "verify-secret": {"text": "Scan browser-served output: adapter-node build/client and build/prerendered, Nuxt .output/public, plain Vite dist. Adjust paths for custom layouts/SSR; reject absence. Prompt full literal secret; grep stdin: 0 finding, 1 no match, others errors. Clean cannot rule out transformed secrets or runtime responses; input protects argv only.", "components": ["grep", "adapter", "nuxt-output", "nitro-output", "vite-pin", "vite"], "sources": ["grep:sea43e82b0753", "grep:s2c1251092e66", "grep:sd00017f70dae", "adapter:s200d6e800c74", "adapter:sf17c5646623c", "adapter:s1ffeda9bbb37", "adapter:s8d4fa8e7426b", "nuxt-output:s793a18962748", "nuxt-output:sdd39f0826f92", "nitro-output:sbe9fd1f61fe0", "nitro-output:s47fff9b24fba", "nitro-output:s51e38e411bfa", "vite-pin:s151e8dbf59a2", "vite-pin:s484948ac14b6", "vite:s7c70a12e43ed", "vite:sba6dbfdd7590"], "status": "REASONED", "verify": [1]},
+    "verify-secret": {"text": "Scan browser-served output: adapter-node build/client and build/prerendered, Nuxt .output/public, plain Vite dist. Adjust paths for custom layouts/SSR; reject absence. Prompt full literal secret; grep stdin: 0 finding, 1 no match, others errors. Clean cannot rule out transformed secrets or runtime responses; input protects argv only.", "components": ["grep", "adapter", "nuxt-output", "nitro-output", "vite-pin", "vite"], "sources": ["grep:sea43e82b0753", "grep:s2c1251092e66", "grep:sd00017f70dae", "adapter:s200d6e800c74", "adapter:sf17c5646623c", "adapter:s1ffeda9bbb37", "adapter:s8d4fa8e7426b", "nuxt-output:sa65d64f55ca1", "nuxt-output:se1cb3e5b4959", "nitro-output:sbe9fd1f61fe0", "nitro-output:s47fff9b24fba", "nitro-output:s51e38e411bfa", "vite-pin:s8ba1c2b868b7", "vite-pin:s484948ac14b6", "vite:s7c70a12e43ed", "vite:sba6dbfdd7590"], "status": "REASONED", "verify": [1]},
     "verify-host": {"text": "Spoofed Host must not be trusted; supplied allowlist reference is Vite-specific.", "components": ["vite"], "sources": ["vite:sae9dd90908fc"], "status": "REASONED", "verify": [1]},
     "verify-proxy": {"text": "Check Secure cookies and HTTPS redirects with SvelteKit ORIGIN; verify Nuxt for its preset/platform, not NUXT_PUBLIC_.", "components": ["svelte", "nuxt"], "sources": ["svelte:s59abf03bae6a", "nuxt:s32e447cb5ef4"], "status": "REASONED", "verify": [1]}
   }
@@ -238,13 +238,13 @@ Behind a reverse proxy, confirm cookies still carry `Secure` and redirects use a
 - SvelteKit adapter-node server chunks under build/server (pinned tag @sveltejs/adapter-node@5.5.7): https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/index.js#L118
 - SvelteKit adapter-node serves the separate prerendered directory (pinned tag @sveltejs/adapter-node@5.5.7): https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/handler.js#L69
 - SvelteKit adapter-node serves client files and prerendered pages before SSR (pinned tag @sveltejs/adapter-node@5.5.7): https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/handler.js#L243
-- Nuxt 4.x public build assets passed to Nitro (additional source pin v4.0.0): https://github.com/nuxt/nuxt/blob/v4.0.0/packages/nuxt/src/core/nitro.ts#L167
-- Nuxt static dist alias targets Nitro public output (additional source pin v4.0.0): https://github.com/nuxt/nuxt/blob/v4.0.0/packages/nuxt/src/core/nitro.ts#L657
+- Nuxt 4.x public build assets passed to Nitro (additional source pin v4.0.0): https://github.com/nuxt/nuxt/blob/v4.0.0/packages/nuxt/src/core/nitro.ts#L163-L170
+- Nuxt static dist alias targets Nitro public output (additional source pin v4.0.0): https://github.com/nuxt/nuxt/blob/v4.0.0/packages/nuxt/src/core/nitro.ts#L653-L659
 - Nitro 2.12.0, the nitropack version Nuxt v4.0.0 pins, output defaults .output, .output/server and .output/public (published build, lines 67 to 69): https://cdn.jsdelivr.net/npm/nitropack@2.12.0/dist/core/index.mjs
 - Nitro output defaults and prerender destination (supplementary, unversioned documentation): https://nitro.build/config
 - Nitro public assets copied to production public output (supplementary, unversioned documentation): https://nitro.build/docs/assets
 - Vite default build.outDir 'dist' (pinned tag v8.3.1): https://github.com/vitejs/vite/blob/v8.3.1/packages/vite/src/node/build.ts#L395
-- Vite public assets copied to build output (pinned tag v8.3.1): https://github.com/vitejs/vite/blob/v8.3.1/packages/vite/src/node/config.ts#L390
+- Vite public assets copied to build output (pinned tag v8.3.1): https://github.com/vitejs/vite/blob/v8.3.1/packages/vite/src/node/config.ts#L388-L396
 - Vite build output directory and public-copy defaults: https://vite.dev/config/build-options
 - Vite SSR uses separate client and server builds: https://vite.dev/guide/ssr
 - SvelteKit adapter-node: https://svelte.dev/docs/kit/adapter-node
@@ -255,6 +255,6 @@ Behind a reverse proxy, confirm cookies still carry `Secure` and redirects use a
 - Nuxt server directory structure: https://nuxt.com/docs/4.x/directory-structure/server
 - Vite server options (`server.host`, `server.allowedHosts`): https://vite.dev/config/server-options
 - Vite CLI (`vite preview`): https://vite.dev/guide/cli
-- Vite resolves an unset `server.host` to `'localhost'` (pinned tag v8.3.1): https://github.com/vitejs/vite/blob/v8.3.1/packages/vite/src/node/utils.ts#L1010-L1016
+- Vite resolves an unset `server.host` to `'localhost'` (pinned tag v8.3.1): https://github.com/vitejs/vite/blob/v8.3.1/packages/vite/src/node/utils.ts#L1010-L1022
 - SvelteKit adapter-node `host = env('HOST', '0.0.0.0')` and `port = env('PORT', !path && '3000')`, with `path = env('SOCKET_PATH', false)`, where `env()` returns a variable's value whenever it is present, even empty, and the socket-activation branch that listens on the passed descriptor instead (pinned tag @sveltejs/adapter-node@5.5.7): https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/index.js#L10-L12, https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/env.js#L46-L50 and https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/index.js#L57-L60
 - GNU grep `-f -` ("When file is '-', read patterns from standard input"), `-l` ("print the name of each input file from which output would normally have been printed") and its exit status (0 if a line is selected, 1 if none, 2 on error): https://www.gnu.org/software/grep/manual/html_node/Matching-Control.html , https://www.gnu.org/software/grep/manual/html_node/General-Output-Control.html and https://www.gnu.org/software/grep/manual/html_node/Exit-Status.html

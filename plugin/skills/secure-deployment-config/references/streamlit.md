@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "287e605fc7e37e3247bec3926889f19e8e2019e8534e8428da35a44b8396fbd2",
+  "body_sha256": "cbaffa703b4ee95858a735479259c5d933467ae27a9b5b58e63c099cf5f97385",
   "components": {
     "streamlit": {
       "name": "Streamlit",
@@ -14,6 +14,7 @@ version_basis: {
         "s7e4fdd54875d": "https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L80-L98",
         "s41a3660b1c7b": "https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L139-L160",
         "s50b333f0759f": "https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L363-L400",
+        "sa98504c29424": "https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server_config.py#L55-L57",
         "s5b7392df2d3a": "https://docs.streamlit.io/develop/concepts/connections/authentication",
         "s3f8bf05ddb38": "https://docs.streamlit.io/develop/api-reference/user/st.user",
         "s6f6f9b0b14c2": "https://docs.streamlit.io/develop/quick-reference/release-notes",
@@ -57,7 +58,7 @@ version_basis: {
   },
   "claims": {
     "bind-default": {"text": "server.address is unset and binds wildcard: try :: when IPv6 is supported, then 0.0.0.0 if unavailable; wildcard behavior was not demonstrated.", "components": ["streamlit"], "sources": ["streamlit:s208ef00c9507", "streamlit:s7e4fdd54875d", "streamlit:s41a3660b1c7b"], "status": "REASONED"},
-    "port-default": {"text": "server.port defaults 8501 and may try 100 following ports when not explicitly set; explicitly configure 8501 to prevent that fallback.", "components": ["streamlit"], "sources": ["streamlit:s208ef00c9507", "streamlit:s50b333f0759f"], "status": "REASONED"},
+    "port-default": {"text": "server.port defaults 8501 and may try 100 following ports when not explicitly set; explicitly configure 8501 to prevent that fallback.", "components": ["streamlit"], "sources": ["streamlit:s208ef00c9507", "streamlit:s50b333f0759f", "streamlit:sa98504c29424"], "status": "REASONED"},
     "private-bind": {"text": "Loopback proxy configuration keeps Streamlit on 127.0.0.1:8501; observed inventory is local, not proof of external isolation.", "components": ["streamlit"], "sources": ["streamlit:s560ba59f10f9", "streamlit:s208ef00c9507"], "status": "DEMONSTRATED", "evidence": "On the loopback runs, with `server.address` set to `127.0.0.1`, `ss` showed Streamlit only on `127.0.0.1:8501`."},
     "proxy-websocket": {"text": "Proxy authentication must cover WebSocket upgrades as well as HTTP; a separately unprotected /_stcore/stream can expose app output despite index/health 401.", "components": ["streamlit"], "sources": ["streamlit:s5b7392df2d3a", "streamlit:s66e514173b37"], "status": "DEMONSTRATED", "evidence": "the index and the health route still returned `401`, but an anonymous client that opened `/_stcore/stream` and asked for a script run received the app's output, the canary."},
     "native-tls": {"text": "sslCertFile/sslKeyFile provide native TLS for development; vendor recommends a production reverse proxy, with WebSocket upgrade and browser Origin preserved.", "components": ["streamlit"], "sources": ["streamlit:s560ba59f10f9"], "status": "REASONED"},
@@ -323,7 +324,7 @@ Source-checked on 2026-09-18 against Streamlit 1.64.0, the current release at th
 - Streamlit `server.address` default unset and `server.port` default `8501` (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/config.py#L1016-L1036
 - Streamlit's unset address falls back to `DEFAULT_SERVER_ADDRESS` `0.0.0.0` and is tried as `::` when `socket.has_ipv6` (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L80-L98
 - Streamlit retries `0.0.0.0` when binding `::` fails with an IPv6-unavailable error (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L139-L160
-- Streamlit's port search: `configured_port + attempt` for up to `MAX_PORT_SEARCH_RETRIES` (100) retries after the configured port, exiting instead on a busy (`EADDRINUSE`) or permission-denied (`EACCES`) port that was set explicitly (a value from `config.toml` counts; `config.py` `is_manually_set`) (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L363-L400
+- Streamlit's port search: `configured_port + attempt` for up to `MAX_PORT_SEARCH_RETRIES` (100) retries after the configured port, exiting instead on a busy (`EADDRINUSE`) or permission-denied (`EACCES`) port that was set explicitly (a value from `config.toml` counts; `config.py` `is_manually_set`) (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L363-L400, with `MAX_PORT_SEARCH_RETRIES: Final = 100` defined in `starlette_server_config.py`: https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server_config.py#L55-L57
 - Authentication concepts (st.login, st.logout, st.user, [auth] keys, default scope, stated limitations): https://docs.streamlit.io/develop/concepts/connections/authentication
 - st.user API reference (claims copied from the ID token, `st.user.email`): https://docs.streamlit.io/develop/api-reference/user/st.user
 - Streamlit release notes (1.64.0 current; st.login since the 1.42.0 series): https://docs.streamlit.io/develop/quick-reference/release-notes

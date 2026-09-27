@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "f06b61afb03842d1626747e93b21a25a1255a39d656614ed04fda12562e7b8ff",
+  "body_sha256": "62daadfa5bcf41caa24a460cee2a7f93f4a452b926f9c48e4b2845329f94ab42",
   "components": {
     "mongo": {
       "name": "mongo-express",
@@ -60,7 +60,7 @@ version_basis: {
       "name": "Grafana",
       "basis": "v13.2.2",
       "sources": {
-        "s2ade1bcff9aa": "https://github.com/grafana/grafana/blob/v13.2.2/conf/defaults.ini#L50",
+        "s4c6ff3174e7e": "https://github.com/grafana/grafana/blob/v13.2.2/conf/defaults.ini#L49-L50",
         "sb00e234d0ddd": "https://github.com/grafana/grafana/blob/v13.2.2/pkg/api/http_server.go#L467-L469",
         "sf14b29976adb": "https://github.com/grafana/grafana/blob/v13.2.2/pkg/api/http_server.go#L568"
       }
@@ -81,7 +81,7 @@ version_basis: {
     "grafana-admin": {"text": "First login uses admin/admin and prompts for replacement; use strong credentials and individual accounts.", "components": ["grafana"], "sources": ["grafana:s7aa447405cc5"], "status": "REASONED"},
     "grafana-anonymous": {"text": "Disable Grafana anonymous access if enabled.", "components": ["grafana"], "sources": ["grafana:s7aa447405cc5"], "status": "REASONED"},
     "grafana-mfa": {"text": "Prefer SSO with MFA at the identity provider.", "components": ["grafana"], "sources": ["grafana:s7aa447405cc5"], "status": "REASONED"},
-    "grafana-bind": {"text": "Empty http_addr joins the port and binds all interfaces; set 127.0.0.1.", "components": ["grafana-pin", "go"], "sources": ["grafana-pin:s2ade1bcff9aa", "grafana-pin:sb00e234d0ddd", "grafana-pin:sf14b29976adb", "go:s37204ff1b27c"], "status": "REASONED"},
+    "grafana-bind": {"text": "Empty http_addr joins the port and binds all interfaces; set 127.0.0.1.", "components": ["grafana-pin", "go"], "sources": ["grafana-pin:s4c6ff3174e7e", "grafana-pin:sb00e234d0ddd", "grafana-pin:sf14b29976adb", "go:s37204ff1b27c"], "status": "REASONED"},
     "grafana-tls": {"text": "Native HTTPS uses server protocol=https, cert_file and cert_key.", "components": ["grafana"], "sources": ["grafana:s7aa447405cc5", "grafana:sc241e0772095"], "status": "REASONED"},
     "prometheus-auth": {"text": "Authentication defaults off; web.config.file supplies basic_auth_users with bcrypt hashes.", "components": ["prometheus"], "sources": ["prometheus:scce074c47e9c"], "status": "REASONED"},
     "prometheus-bcrypt": {"text": "Use htpasswd -nB -C 12; the guide's bare -B cost 5 versus OWASP minimum 10 lacks an OWASP citation here.", "components": ["prometheus"], "sources": ["prometheus:scce074c47e9c"], "status": "REASONED"},
@@ -91,7 +91,7 @@ version_basis: {
     "pgadmin-login": {"text": "pgAdmin server mode has its own accounts/login.", "components": ["pgadmin"], "sources": ["pgadmin:s2f7e33714435"], "status": "REASONED"},
     "adminer-login": {"text": "Adminer uses database credentials, not a separate account store; server-side connections expose even private databases to login attempts.", "components": ["adminer"], "sources": ["adminer:sb5eda9397b18"], "status": "REASONED"},
     "adminer-file": {"text": "Renaming Adminer is no access control; require private access or proxy TLS/auth/MFA, updates and removal of unused copies.", "components": ["adminer"], "sources": ["adminer:sb5eda9397b18"], "status": "REASONED"},
-    "verify-listeners": {"text": "Inventory sockets and Docker publications; a protected frontend or absent socket does not prove backend isolation.", "components": ["grafana-pin", "prometheus-pin"], "sources": ["grafana-pin:s2ade1bcff9aa", "prometheus-pin:s6d5f308b02a2"], "status": "REASONED", "verify": [1]},
+    "verify-listeners": {"text": "Inventory sockets and Docker publications; a protected frontend or absent socket does not prove backend isolation.", "components": ["grafana-pin", "prometheus-pin"], "sources": ["grafana-pin:s4c6ff3174e7e", "prometheus-pin:s6d5f308b02a2"], "status": "REASONED", "verify": [1]},
     "verify-login": {"text": "Anonymous dashboard data is a finding; require denial or verified login challenge. Arbitrary redirects and DNS/TLS/proxy errors are inconclusive.", "components": ["mongo", "grafana", "prometheus", "phpmyadmin", "pgadmin", "adminer"], "sources": ["mongo:s69ec4eee2c85", "grafana:s7aa447405cc5", "prometheus:scce074c47e9c", "phpmyadmin:s5f6c8965c539", "pgadmin:s2f7e33714435", "adminer:sb5eda9397b18"], "status": "REASONED", "verify": [1]},
     "verify-data": {"text": "A 200 login shell proves nothing; require a known data route to succeed authorized and deny anonymous access; 404/server errors are inconclusive.", "components": ["mongo", "grafana", "prometheus", "phpmyadmin", "pgadmin", "adminer"], "sources": ["mongo:s69ec4eee2c85", "grafana:s7aa447405cc5", "prometheus:scce074c47e9c", "phpmyadmin:s5f6c8965c539", "pgadmin:s2f7e33714435", "adminer:sb5eda9397b18"], "status": "REASONED", "verify": [1]}
   }
@@ -218,7 +218,7 @@ Run these from a second network against each panel's real hostname; a 200 that r
 - phpMyAdmin documentation: https://www.phpmyadmin.net/docs/ and pgAdmin documentation: https://www.pgadmin.org/docs/
 - Adminer, database management in a single PHP file (login uses the database server's own credentials): https://www.adminer.org/
 - Prometheus `--web.listen-address` default `0.0.0.0:9090` (pinned tag v3.14.0): https://github.com/prometheus/prometheus/blob/v3.14.0/cmd/prometheus/main.go#L424-L425
-- Grafana default `http_addr` is empty (pinned tag v13.2.2): https://github.com/grafana/grafana/blob/v13.2.2/conf/defaults.ini#L50
+- Grafana default `http_addr` is empty (pinned tag v13.2.2): https://github.com/grafana/grafana/blob/v13.2.2/conf/defaults.ini#L49-L50
 - Grafana joins `http_addr` with the port into the server address (pinned tag v13.2.2): https://github.com/grafana/grafana/blob/v13.2.2/pkg/api/http_server.go#L467-L469
 - Grafana listens on that address with `net.Listen("tcp", ...)` (pinned tag v13.2.2): https://github.com/grafana/grafana/blob/v13.2.2/pkg/api/http_server.go#L568
 - Go `net.Listen` with an empty host listens on all available unicast and anycast addresses of the local system: https://pkg.go.dev/net#Listen

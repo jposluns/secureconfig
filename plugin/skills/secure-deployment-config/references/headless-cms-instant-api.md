@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "1ef5ca87b6b98f7ff97243ca046fc8585cffceb1b9872d9c4bb2b805f772dead",
+  "body_sha256": "7b8680d226ef7439db68fc8ed5ca93eca52358e55c0e9f5d85392a6e07510b6e",
   "components": {
     "strapi": {
       "name": "Strapi documentation",
@@ -90,7 +90,9 @@ version_basis: {
       "name": "PostgREST listener source",
       "basis": "v16.4",
       "sources": {
-        "sf27352fc3094": "https://github.com/PostgREST/postgrest/blob/v16.4/src/library/PostgREST/Config.hs#L556"
+        "sf27352fc3094": "https://github.com/PostgREST/postgrest/blob/v16.4/src/library/PostgREST/Config.hs#L556",
+        "sb8d27dc6392b": "https://github.com/PostgREST/postgrest/blob/v16.4/src/library/PostgREST/Config.hs#L386",
+        "sb1cd23c9b7eb": "https://github.com/PostgREST/postgrest/blob/v16.4/src/library/PostgREST/Config.hs#L357-L360"
       }
     },
     "apollo": {
@@ -138,7 +140,7 @@ version_basis: {
     "postgrest-grants": {"text": "GRANT/REVOKE govern API access; PUBLIC function EXECUTE, DEFINER functions and owner-privileged views can widen it.", "components": ["postgrest"], "sources": ["postgrest:s212cf1cff4a4"], "status": "REASONED"},
     "postgrest-schema": {"text": "db-schemas defaults public; expose a deliberate API schema and note that root OpenAPI output follows the requesting role privileges.", "components": ["postgrest"], "sources": ["postgrest:sa30c7678f706", "postgrest:seeda43197f99"], "status": "REASONED"},
     "postgrest-secret": {"text": "Set random jwt-secret of at least 32 characters; a supplied token with no secret configured fails with 500 PGRST300.", "components": ["postgrest"], "sources": ["postgrest:sa30c7678f706", "postgrest:sf64f1c1843f0"], "status": "REASONED"},
-    "postgrest-bind": {"text": "At v16.4 server-host defaults !4 on 3000; optional admin server inherits that host unless overridden. Isolate both and terminate TLS in front.", "components": ["postgrest", "postgrest-bind"], "sources": ["postgrest:sa30c7678f706", "postgrest-bind:sf27352fc3094", "postgrest:s94a52b2c0adb"], "status": "REASONED"},
+    "postgrest-bind": {"text": "At v16.4 server-host defaults !4 on 3000; optional admin server inherits that host unless overridden. Isolate both and terminate TLS in front.", "components": ["postgrest", "postgrest-bind"], "sources": ["postgrest:sa30c7678f706", "postgrest-bind:sf27352fc3094", "postgrest-bind:sb8d27dc6392b", "postgrest-bind:sb1cd23c9b7eb", "postgrest:s94a52b2c0adb"], "status": "REASONED"},
     "egress": {"text": "Restrict webhook, Flow, trigger, remote-schema and database-function egress after DNS resolution and redirects; IMPORT_IP_DENY_LIST covers imports only.", "components": ["strapi", "directus", "hasura", "postgrest"], "sources": ["strapi:s14bc6df86824", "directus:sdb5770dacce9", "hasura:s5a2b2f9a72fa", "postgrest:s212cf1cff4a4"], "status": "REASONED"},
     "database-boundary": {"text": "Protect database credentials, use dedicated minimal database roles, private listeners and verified encrypted remote database transport.", "components": ["strapi", "directus", "hasura", "postgrest"], "sources": ["strapi:s98b50551124e", "directus:sf46f66d9d647", "hasura:s5a2b2f9a72fa", "postgrest:sa30c7678f706"], "status": "REASONED"},
     "human-machine-auth": {"text": "Use MFA at human administrative boundaries, with separately scoped, expiring and revocable machine credentials.", "components": ["strapi", "directus", "hasura", "postgrest"], "sources": ["strapi:s5525cacf37f3", "strapi:sb599a80b159b", "directus:sdb5770dacce9", "hasura:scf6fdeea5567", "postgrest:s212cf1cff4a4"], "status": "REASONED"},
@@ -149,7 +151,7 @@ version_basis: {
     "verify-console": {"text": "Enabled Hasura / and /console serve HTML; disabled engine returns JSON not-found. Proxy 404 or a failed positive control is inconclusive.", "components": ["hasura"], "sources": ["hasura:s5a2b2f9a72fa"], "status": "REASONED"},
     "verify-introspection": {"text": "Require an introspection-specific rejection while an ordinary permitted GraphQL query still succeeds.", "components": ["strapi", "apollo", "directus", "hasura"], "sources": ["strapi:sd2464531df4e", "apollo:sda3bf614c4c1", "directus:sdb5770dacce9", "hasura:sdd8563e06e4c"], "status": "REASONED"},
     "verify-other-controls": {"text": "Test writes, registration, private files, MFA and outbound fetches separately with authorized/unauthorized fixtures and persisted effects.", "components": ["strapi", "directus", "hasura", "postgrest"], "sources": ["strapi:s14bc6df86824", "strapi:se877faf6af5f", "strapi:s138b6fa1d39d", "directus:s95b4deed4c04", "directus:sb8f67532c865", "directus:sbbbbd61b0406", "directus:sdb5770dacce9", "hasura:scf6fdeea5567", "postgrest:s212cf1cff4a4"], "status": "REASONED"},
-    "verify-isolation": {"text": "Inventory host/container listeners and mappings; probe every direct IPv4/IPv6 origin with an allowed control. Any HTTP response proves reachability; failures alone do not prove isolation.", "components": ["strapi", "directus-bind", "hasura", "postgrest-bind", "postgrest"], "sources": ["strapi:s98b50551124e", "directus-bind:se00954e49d12", "directus-bind:s48e8715d5555", "hasura:s5a2b2f9a72fa", "postgrest-bind:sf27352fc3094", "postgrest:s94a52b2c0adb"], "status": "REASONED", "verify": [2]}
+    "verify-isolation": {"text": "Inventory host/container listeners and mappings; probe every direct IPv4/IPv6 origin with an allowed control. Any HTTP response proves reachability; failures alone do not prove isolation.", "components": ["strapi", "directus-bind", "hasura", "postgrest-bind", "postgrest"], "sources": ["strapi:s98b50551124e", "directus-bind:se00954e49d12", "directus-bind:s48e8715d5555", "hasura:s5a2b2f9a72fa", "postgrest-bind:sf27352fc3094", "postgrest-bind:sb8d27dc6392b", "postgrest-bind:sb1cd23c9b7eb", "postgrest:s94a52b2c0adb"], "status": "REASONED", "verify": [2]}
   }
 }
 ---
@@ -556,7 +558,7 @@ Version boundary at the time of writing: Strapi 5 documentation; current Directu
 - Hasura securing the GraphQL endpoint: https://hasura.io/docs/2.0/deployment/securing-graphql-endpoint/
 - Hasura GraphQL Engine flags reference (SERVER_HOST, ENABLE_CONSOLE, ENABLED_APIS, DEV_MODE, UNAUTHORIZED_ROLE): https://hasura.io/docs/2.0/deployment/graphql-engine-flags/reference/
 - PostgREST configuration reference (db-anon-role, db-schemas, server-host, jwt-secret): https://postgrest.org/en/stable/references/configuration.html
-- PostgREST `server-host` default `!4` (L556), `server-port` default 3000 (L386), and `admin-server-host` falling back to `server-host` (L357-L360) (pinned tag v16.4): https://github.com/PostgREST/postgrest/blob/v16.4/src/library/PostgREST/Config.hs#L556
+- PostgREST `server-host` default `!4` (L556), `server-port` default 3000 (L386), and `admin-server-host` falling back to `server-host` (L357-L360) (pinned tag v16.4): https://github.com/PostgREST/postgrest/blob/v16.4/src/library/PostgREST/Config.hs#L556, https://github.com/PostgREST/postgrest/blob/v16.4/src/library/PostgREST/Config.hs#L386 and https://github.com/PostgREST/postgrest/blob/v16.4/src/library/PostgREST/Config.hs#L357-L360
 - PostgREST authentication and roles: https://postgrest.org/en/stable/references/auth.html
 - PostgREST error codes (PGRST300 to PGRST303): https://postgrest.org/en/stable/references/errors.html
 - PostgREST OpenAPI output at the root path: https://postgrest.org/en/stable/references/api/openapi.html
