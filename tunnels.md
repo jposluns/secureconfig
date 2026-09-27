@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "5e6a7fa16b96e77590582966345cb2475a2bf9ff03931695ae776003e1982f8a",
+  "body_sha256": "562e73405aadc7b8981fd70da8260a9f520c3f19b0b3c50dfb28bd2f55f77a91",
   "components": {
     "frp": {
       "name": "frp documentation",
@@ -21,10 +21,18 @@ version_basis: {
       "sources": {
         "s89885e642b0b": "https://github.com/fatedier/frp/blob/v0.71.0/pkg/config/v1/server.go#L110-L114",
         "s2cbb0ac0ce1d": "https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/tcp.go#L76",
-        "s2b43386a8d37": "https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/udp.go#L92",
-        "sa609b94a97a1": "https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L303",
         "s0d14a82746a7": "https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L193-L194",
-        "s4660388fcc97": "https://github.com/fatedier/frp/blob/v0.71.0/server/visitor/visitor.go#L49-L57"
+        "s4660388fcc97": "https://github.com/fatedier/frp/blob/v0.71.0/server/visitor/visitor.go#L49-L57",
+        "sf9bd235cd56f": "https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/udp.go#L92-L97",
+        "sf34f64f9f242": "https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L303-L321",
+        "scc414a949e04": "https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L329-L340",
+        "sc8820327b4be": "https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L229-L235",
+        "s4ee7a04bc22b": "https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/stcp.go#L43-L46",
+        "s1ab713dcffdf": "https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/sudp.go#L43-L46",
+        "sba4684b85dea": "https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/proxy.go#L202-L215",
+        "sb5db43210eff": "https://github.com/fatedier/frp/blob/v0.71.0/pkg/util/net/listener.go#L25-L37",
+        "sa3237f5cd553": "https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/xtcp.go#L63",
+        "s9bcd6f277557": "https://github.com/fatedier/frp/blob/v0.71.0/pkg/nathole/controller.go#L125-L139"
       }
     },
     "tls-min": {
@@ -65,11 +73,11 @@ version_basis: {
     "frp-oidc": {"text": "auth.method=oidc uses Client Credentials Grant for frpc-to-frps authentication; set issuer and nonempty audience because an empty audience skips validation.", "components": ["frp"], "sources": ["frp:s7479bbde986d"], "status": "REASONED"},
     "proxy-bind": {"text": "proxyBindAddr defaults to bindAddr, whose default is 0.0.0.0.", "components": ["frps"], "sources": ["frps:s89885e642b0b"], "status": "REASONED"},
     "proxy-tcp": {"text": "Registered TCP proxies listen on proxyBindAddr.", "components": ["frps"], "sources": ["frps:s2cbb0ac0ce1d"], "status": "REASONED"},
-    "proxy-udp": {"text": "Registered UDP proxies listen on proxyBindAddr.", "components": ["frps"], "sources": ["frps:s2b43386a8d37"], "status": "REASONED"},
-    "proxy-http": {"text": "HTTP and HTTPS proxy listeners bind proxyBindAddr.", "components": ["frps"], "sources": ["frps:sa609b94a97a1"], "status": "REASONED"},
+    "proxy-udp": {"text": "Registered UDP proxies listen on proxyBindAddr.", "components": ["frps"], "sources": ["frps:sf9bd235cd56f"], "status": "REASONED"},
+    "proxy-http": {"text": "HTTP and HTTPS proxy listeners bind proxyBindAddr.", "components": ["frps"], "sources": ["frps:sf34f64f9f242", "frps:scc414a949e04", "frps:sc8820327b4be"], "status": "REASONED"},
     "proxy-tcpmux": {"text": "tcpmux proxies listen on proxyBindAddr.", "components": ["frps"], "sources": ["frps:s0d14a82746a7"], "status": "REASONED"},
-    "proxy-visitors": {"text": "stcp, sudp and xtcp open no listener of their own on frps.", "components": ["frps"], "sources": ["frps:s4660388fcc97"], "status": "REASONED"},
-    "service-auth": {"text": "frp token/OIDC authenticates tunnel clients, not service callers; add app auth or a loopback authenticated TLS proxy.", "components": ["frp", "frps"], "sources": ["frp:s7479bbde986d", "frps:s2cbb0ac0ce1d", "frps:s2b43386a8d37", "frps:sa609b94a97a1", "frps:s0d14a82746a7"], "status": "REASONED"},
+    "proxy-visitors": {"text": "stcp, sudp and xtcp open no listener of their own on frps.", "components": ["frps"], "sources": ["frps:s4660388fcc97", "frps:s4ee7a04bc22b", "frps:s1ab713dcffdf", "frps:sba4684b85dea", "frps:sb5db43210eff", "frps:sa3237f5cd553", "frps:s9bcd6f277557"], "status": "REASONED"},
+    "service-auth": {"text": "frp token/OIDC authenticates tunnel clients, not service callers; add app auth or a loopback authenticated TLS proxy.", "components": ["frp", "frps"], "sources": ["frp:s7479bbde986d", "frps:s2cbb0ac0ce1d", "frps:sf9bd235cd56f", "frps:sf34f64f9f242", "frps:s0d14a82746a7"], "status": "REASONED"},
     "tls-default": {"text": "transport.tls.enable defaults true from v0.50.0, encrypting frpc-to-frps traffic.", "components": ["tls-min"], "sources": ["tls-min:sdd126f42c07d"], "status": "REASONED"},
     "tls-verify": {"text": "frpc does not verify frps certificates by default; configure server certFile/keyFile and client trustedCaFile.", "components": ["frp"], "sources": ["frp:sdd126f42c07d"], "status": "REASONED"},
     "tls-force": {"text": "Set server transport.tls.force=true to reject clients that do not negotiate TLS.", "components": ["frp"], "sources": ["frp:seaee50f5c2ba", "frp:sdd126f42c07d"], "status": "REASONED"},
@@ -275,7 +283,7 @@ ss -tlnp   # read every listener; 8080: only a loopback address unless you delib
 - nftables manual (forward/input hooks, verdicts, and rule counters): https://netfilter.org/projects/nftables/manpage.html
 - frps `bindAddr` default `0.0.0.0` and `bindPort` default `7000`, and an empty `proxyBindAddr` takes `bindAddr` (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/pkg/config/v1/server.go#L110-L114
 - frps TCP proxies listen on `proxyBindAddr` (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/tcp.go#L76
-- frps UDP proxies listen on `proxyBindAddr` (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/udp.go#L92
-- frps HTTP and HTTPS vhost listeners bind `proxyBindAddr` (L303 and L334), sharing the main listener only when `bindAddr` equals `proxyBindAddr` (L229-L235) (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L303
+- frps UDP proxies listen on `proxyBindAddr` (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/udp.go#L92-L97
+- frps HTTP and HTTPS vhost listeners bind `proxyBindAddr` (L303 and L334), sharing the main listener only when `bindAddr` equals `proxyBindAddr` (L229-L235) (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L303-L321, https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L329-L340 and https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L229-L235
 - frps tcpmux HTTP CONNECT listener binds `proxyBindAddr` at `tcpmuxHTTPConnectPort` (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L193-L194
-- frps stcp and sudp proxies register an in-process visitor listener (`server/visitor/visitor.go` L49-L57, `NewInternalListener`), and xtcp registers with the NAT-hole controller (`server/proxy/xtcp.go` L63); none opens a socket (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/visitor/visitor.go#L49-L57
+- frps stcp and sudp proxies register an in-process visitor listener (`server/visitor/visitor.go` L49-L57, `NewInternalListener`), and xtcp registers with the NAT-hole controller (`server/proxy/xtcp.go` L63); none opens a socket (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/visitor/visitor.go#L49-L57, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/stcp.go#L43-L46, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/sudp.go#L43-L46, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/proxy.go#L202-L215, https://github.com/fatedier/frp/blob/v0.71.0/pkg/util/net/listener.go#L25-L37, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/xtcp.go#L63 and https://github.com/fatedier/frp/blob/v0.71.0/pkg/nathole/controller.go#L125-L139
