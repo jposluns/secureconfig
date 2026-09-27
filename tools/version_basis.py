@@ -105,26 +105,35 @@ def verify_blocks(body, with_status=False):
     return blocks
 
 
-def citation_counts(text):
-    """Count each URL occurrence once per spelling it cites.
+# CommonMark decodes backslash escapes of ASCII punctuation and semicolon-terminated
+# character references in text and link targets, so a guide can spell one URL many
+# ways. html.unescape() alone would also decode legacy names without the semicolon
+# (&copy=), which CommonMark leaves literal, so decode only what CommonMark decodes.
+_ESCAPE = re.compile(r'\\([!-/:-@\[-`{-~])'
+                     r'|&(?:#[0-9]{1,7}|#[xX][0-9a-fA-F]{1,6}|[A-Za-z][A-Za-z0-9]{1,31});')
+# A citation cannot start right after a letter, digit or URL-internal character
+# (?u=https://..., /https://...), but may after * _ ~, quotes, brackets or , ; : !.
+_OPENS = r'(?<![^\W_])(?<![/.%?#&=+@$-])'
+# After the known URL: an optional run of trailing punctuation (GFM's autolink set,
+# plus ;) that continues the URL only when a URL character follows it, so u. and
+# u_** cite u but u.json, u_v2, u/v2, u-x, ux and u?q=1 do not.
+_CLOSES = r'(?![?!.,:;*_~]*(?:[^\W_]|[/%#&=+@$(-]))'
 
-    Preserve explicit Markdown targets. From bare URLs, trim sentence punctuation
-    and Markdown delimiters (**url**, `url`, _url_, <url>), in any interleaving, so
-    presence, item ownership and container counts all see the same spelling.
+
+def decoded(text):
+    """Text as rendered, for matching: backslash escapes and entities decoded."""
+    return _ESCAPE.sub(lambda match: match[1] or html.unescape(match[0]), text)
+
+
+def cites(text, url):
+    """Occurrences of the exact known URL in decoded(text), at URL boundaries.
+
+    Match each component URL; never extract URLs from the text. An extractor
+    reads [url](url), <a href="url"> and **url** as other spellings and so
+    misses the citation. The URL itself is not decoded; validate() rejects one
+    that decoding would change.
     """
-    counts = Counter()
-    for match in re.finditer(r'https?://[^\s<>\)]+', text):
-        # rstrip removes every trailing member of the set, so the result is stable.
-        # The class excludes < and >, so an autolink yields neither delimiter.
-        forms = {match[0].rstrip('.,;*_~`>')}
-        if text[max(0, match.start() - 2):match.start()] == '](' and text[match.end():match.end() + 1] == ')':
-            forms.add(match[0])
-        counts.update(forms)
-    return counts
-
-
-def citation_urls(text):
-    return set(citation_counts(text))
+    return len(re.findall(_OPENS + re.escape(url) + _CLOSES, decoded(text)))
 
 
 def source_entries(sources):
@@ -145,14 +154,13 @@ def source_fingerprint(component, basis, url, entry):
 
 def source_violations(data, entries):
     """Yield (fingerprint, diagnostic) for each violating URL/item occurrence."""
-    cited = [(entry, citation_urls(entry)) for entry in entries]
     for name, component in data['components'].items():
         basis = component['basis']
         if basis == 'unknown':
             continue
         pattern = r'(?<![A-Za-z0-9.])' + re.escape(basis) + r'(?![A-Za-z0-9.])'
         for url in component['sources'].values():
-            own = [entry for entry, urls in cited if url in urls]
+            own = [entry for entry in entries if cites(entry, url)]
             # A known source outside a list item cannot borrow a list's basis.
             for entry in own or ['']:
                 if not own or not re.search(pattern, entry):
@@ -207,19 +215,16 @@ def container_violations(data, sources, entries):
     check. Compare raw occurrences (sources: raw_sources(), not section_body())
     with parsed-entry occurrences instead.
     """
-    raw = citation_counts(sources)
-    parsed = Counter()
-    for entry in entries:
-        parsed.update(citation_counts(entry))
     for name, component in data['components'].items():
         if component['basis'] == 'unknown':
             continue
         for url in component['sources'].values():
-            if raw[url] > parsed[url]:
+            raw, parsed = cites(sources, url), sum(cites(entry, url) for entry in entries)
+            if raw > parsed:
                 yield (f'{name}: {url} cited in an unsupported Sources container '
                        '(nested compact list, heading, quote...); '
                        'put each citation in its own list item '
-                       f'({raw[url]} in Sources, {parsed[url]} in list items)')
+                       f'({raw} in Sources, {parsed} in list items)')
 
 
 def check_source_bases(data, sources, entries, guide, baseline=None):
@@ -280,7 +285,6 @@ def validate(data, body, guide='GUIDE.md', baseline=None):
                 SOURCES_RE.match(title).group(1).lower() == documentation.strftime('%B').lower() and
                 int(SOURCES_RE.match(title).group(2)) == documentation.year
                 for _, _, title, _ in heads), 'documentation month differs from Sources')
-    source_urls = citation_urls(sources)
     identifiers(data['components'])
     for component in data['components'].values():
         keys(component, ('name', 'basis', 'sources'))
@@ -292,7 +296,9 @@ def validate(data, body, guide='GUIDE.md', baseline=None):
             require(key == source_id(url), 'source ID must bind its URL')
             require(urlsplit(url).scheme in ('http', 'https') and urlsplit(url).hostname,
                     'source must be an absolute HTTP(S) URL')
-            require(url in source_urls, 'source URL absent from Sources: ' + url)
+            # A reference in the URL itself would never match decoded Sources text.
+            require(decoded(url) == url, 'source URL contains an escape or entity: ' + url)
+            require(cites(sources, url), 'source URL absent from Sources: ' + url)
     # The container count uses ATX-bounded text; see raw_sources().
     check_source_bases(data, raw_sources(body, heads), entries, guide, baseline)
     identifiers(data['claims'])

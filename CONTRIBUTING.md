@@ -77,8 +77,14 @@ Schema 1 requires exactly these top-level fields:
   heading of the same or higher level; a Setext underline never ends it. Basis matching is
   literal and case-sensitive, with no adjacent ASCII letter, digit or dot: `v2.51.0` and
   `2.51.0` are not interchangeable. A matching literal inside the cited URL counts too.
-  Components with basis `unknown` are exempt from the basis requirement. Every check reads a
-  bare URL without trailing `.,;` or Markdown delimiters (`*`, `_`, `~`, a backtick, `>`).
+  Components with basis `unknown` are exempt from the basis requirement. No check extracts
+  URLs: each matches every component URL exactly in Sources text whose character references
+  and backslash escapes are decoded, so a URL counts as link text, as a link target, in an
+  HTML `href` and when spelled with `&#47;`. The component URL is never decoded and must
+  contain neither. A match cannot follow a letter, digit or URL character such as `/`, `=` or
+  `.`, and cannot run into a longer URL: trailing `?!.,:;*_~` are punctuation unless a URL
+  character follows them, so `url.` and `**url**` cite `url`, but `url.json`, `url/v2` and
+  `url_v2` do not.
   `tools/version_basis_sources_baseline.txt` grandfathers existing violations by guide and a
   counted SHA-256 fingerprint of component ID, basis, URL and item paragraph text. New, changed
   or excess occurrences fail, and fixed or removed occurrences require removing their stale

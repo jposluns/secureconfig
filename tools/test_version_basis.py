@@ -93,8 +93,8 @@ class VersionBasisTests(unittest.TestCase):
                             vb.updated(document(data, body))
 
     def test_citation_punctuation(self):
-        self.assertEqual(vb.citation_urls(URL + ', ' + URL + '; ' + URL + '.'), {URL})
-        self.assertIn(URL + ',', vb.citation_urls('[explicit](' + URL + ',)'))
+        self.assertEqual(vb.cites(URL + ', ' + URL + '; ' + URL + '.', URL), 3)
+        self.assertEqual(vb.cites('[explicit](' + URL + ',)', URL + ','), 1)
         data = fixture()
         data['components']['product']['sources'] = {vb.source_id(URL + ','): URL + ','}
         data['claims']['control']['sources'] = ['product:' + vb.source_id(URL + ',')]
@@ -223,6 +223,15 @@ class SourcesBasisTests(unittest.TestCase):
         data['body_sha256'] = vb.digest(body)
         return vb.updated(document(data, body), 'fixture.md', baseline)
 
+    def check_urls(self, sources, urls):
+        """Like check(), with the claim citing urls[0] instead of self.url."""
+        data = fixture()
+        data['components']['product']['sources'] = {vb.source_id(url): url for url in urls}
+        data['claims']['control']['sources'] = ['product:' + vb.source_id(urls[0])]
+        body = BODY[:BODY.index('- Product')] + sources + '\n'
+        data['body_sha256'] = vb.digest(body)
+        return vb.updated(document(data, body), 'fixture.md')
+
     def test_each_url_needs_its_own_basis(self):
         with self.assertRaisesRegex(ValueError, 'basis.*absent.*' + self.other):
             self.check(f'- Product v1.0: {self.url}\n- Other: {self.other}',
@@ -298,13 +307,76 @@ class SourcesBasisTests(unittest.TestCase):
                  f'*_{self.url}_*.', f'~~{self.url}~~;', f'`{self.url}`**,')
         for form in forms:
             with self.subTest(form=form):
-                self.assertEqual(vb.citation_urls(form), {self.url})
+                self.assertEqual(vb.cites(form, self.url), 1)
                 self.check(f'- Product v1.0: {form}')
                 with self.assertRaisesRegex(
                         ValueError, re.escape(self.url) + ' cited in an unsupported Sources container'):
                     self.check(f'- Product v1.0: {self.url}\n- - Again: {form}')
-        # Explicit Markdown targets keep their exact spelling as well.
-        self.assertEqual(vb.citation_urls(f'[x]({self.url}_)'), {self.url, self.url + '_'})
+        # An explicit target keeps its exact spelling; like GFM's autolinks, a
+        # trailing _ before a non-URL character also reads as citing the shorter URL.
+        self.assertEqual(vb.cites(f'[x]({self.url}_)', self.url + '_'), 1)
+        self.assertEqual(vb.cites(f'[x]({self.url}_)', self.url), 1)
+
+    def test_known_urls_match_exactly_in_any_spelling(self):
+        # Round 3: URL extraction read these spellings as other URLs, so the
+        # known URL was counted zero times and the basis-less item escaped.
+        u = self.url
+        encoded = u.replace('/control', '&#47;control')
+        forms = (f'[{u}]({u})', f'[**{u}**]({u})', f'[text]({u})', f'<a href="{u}">t</a>',
+                 encoded, u.replace('https', '&#x68;ttps'), u.replace('://', '&colon;//'),
+                 f'[t]({encoded})', u.replace('/control', '\\/control'))
+        for form in forms:
+            with self.subTest(form=form):
+                self.assertGreaterEqual(vb.cites(form, u), 1)
+                with self.assertRaisesRegex(ValueError, 'basis.*absent'):
+                    self.check(f'- Product v1.0: {u}\n- Again: {form}')
+                with self.assertRaisesRegex(
+                        ValueError, re.escape(u) + ' cited in an unsupported Sources container'):
+                    self.check(f'- Product v1.0: {u}\n- - Again: {form}')
+                self.check(f'- Product v1.0: {form}')
+        self.assertEqual(vb.cites(f'[{u}]({u})', u), 2)
+        self.assertEqual(vb.cites(f'[**{u}**]({u})', u), 2)
+        # CommonMark leaves a legacy name without its semicolon literal.
+        self.assertEqual(vb.cites(u.replace('/control', '&sol/control'), u), 0)
+
+    def test_known_url_is_not_a_prefix_match(self):
+        u = self.url
+        for longer in (u + '/v2', u + '.json', u + 'x', u + '_v2', u + '~x', u + '-x', u + '?q=1',
+                       u + '#frag', u + '%20', u + '.,x', u + '&amp;x=1', u + '&#46;json',
+                       'https://proxy.example/?u=' + u,
+                       'https://archive.example/' + u, 'x' + u):
+            with self.subTest(longer=longer):
+                self.assertEqual(vb.cites(longer, u), 0)
+                with self.assertRaisesRegex(ValueError, 'source URL absent'):
+                    self.check(f'- Product v1.0: {longer}')
+        with self.assertRaisesRegex(ValueError, 'basis.*absent'):
+            self.check(f'- Product: {u}\n- Other v1.0: {u}/v2 and {u}.json')
+
+    def test_known_url_before_punctuation_and_delimiters(self):
+        u = self.url
+        for text in (u + '.', u + ',', u + ';', u + ':', u + '?', u + '!', u + ')', f'({u})',
+                     f'({u}).', f'"{u}"', f"'{u}'", f'**{u}**', f'`{u}`', f'<{u}>', f'[{u}]',
+                     u + '...', u + '. Next', u + ',\nwrapped', f'_{u}_', f'~~{u}~~', u + '\n'):
+            with self.subTest(text=text):
+                self.assertEqual(vb.cites(text, u), 1)
+                self.check(f'- Product v1.0: {text}')
+                with self.assertRaisesRegex(ValueError, 'basis.*absent'):
+                    self.check(f'- Product v1.0: {u}\n- Again: {text}')
+
+    def test_known_url_ending_in_delimiter_passes(self):
+        # Round 2 stripped trailing _ ~ * from bare URLs, so these never matched.
+        for url in (self.url + '_', self.url + '~', self.url + '*', self.url + '_(x)'):
+            for text in (url, url + '.', f'**{url}**', f'[t]({url})'):
+                with self.subTest(url=url, text=text):
+                    self.assertEqual(vb.cites(text, url), 1)
+                    self.check_urls(f'- Product v1.0: {text}', [url])
+                    with self.assertRaisesRegex(ValueError, 'basis.*absent'):
+                        self.check_urls(f'- Product v1.0: {text}\n- Again: {text}', [url])
+
+    def test_url_with_character_reference_is_refused(self):
+        url = self.url + '?a=1&amp;b=2'
+        with self.assertRaisesRegex(ValueError, 'escape or entity'):
+            self.check_urls(f'- Product v1.0: {url}', [url])
 
     def test_setext_lookalike_does_not_truncate_sources(self):
         # Codex round 2: "- item" over a marker-only "-" reads as a Setext heading
