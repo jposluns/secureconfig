@@ -29,10 +29,15 @@ files=(
 # happen ABOVE it, or the list reported here would not be the list built from below. A
 # reviewer demonstrated exactly that drift with an append placed after an earlier position
 # of this block.
-if [ "${1:-}" = "--list-inputs" ]; then
+if [ "${1:-}" = "--list-inputs" ] || [ "${1:-}" = "--list-guides" ]; then
   printf '%s\n' "${files[@]}"
+  if [ "${1:-}" = "--list-inputs" ]; then
+    printf '%s\n' tools/version_basis.py tools/version_basis_guides.txt tools/_markdown.py tools/check_guide_shape.py tools/check_verify_marking.py tools/_verify_sections.py CHANGELOG.md
+  fi
   exit 0
 fi
+
+python3 tools/version_basis.py --check
 
 {
   echo "# secureconfig.ai: all guides in one file"
@@ -45,7 +50,9 @@ fi
     echo "==> ${f}"
     echo "======================================================================"
     echo
-    cat "$f"
+    # A concatenated document cannot carry several YAML front matters.
+    # Keep the complete generated summary and guide body in each guide.
+    python3 tools/version_basis.py --bundle "$f"
   done
 } > "$out"
 

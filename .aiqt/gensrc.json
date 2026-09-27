@@ -108,7 +108,14 @@
         "headless-browser-services.md",
         "headless-cms-instant-api.md",
         "exposure-index.md",
-        "common-mistakes.md"
+        "common-mistakes.md",
+        "tools/version_basis.py",
+        "tools/version_basis_guides.txt",
+        "tools/_markdown.py",
+        "tools/check_guide_shape.py",
+        "tools/check_verify_marking.py",
+        "tools/_verify_sections.py",
+        "CHANGELOG.md"
       ],
       "target": "site/llms-full.txt"
     },
@@ -223,7 +230,14 @@
         "tunnels.md",
         "vector-databases.md",
         "web-exposure.md",
-        "workflow-orchestrators.md"
+        "workflow-orchestrators.md",
+        "tools/version_basis.py",
+        "tools/version_basis_guides.txt",
+        "tools/_markdown.py",
+        "tools/check_guide_shape.py",
+        "tools/check_verify_marking.py",
+        "tools/_verify_sections.py",
+        "CHANGELOG.md"
       ]
     }
   ]

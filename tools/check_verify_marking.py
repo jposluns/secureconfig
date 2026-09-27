@@ -29,6 +29,11 @@ including mid-paragraph openers and indented code samples. Code-span matching
 handles equal-length backtick runs across paragraph lines and escaped openers.
 https://spec.commonmark.org/0.31.2/
 
+A leading version-basis front matter is masked only after strict parsing.
+An enrolled guide may carry exactly one standalone generated summary pair
+before its first level-2 heading. The pair is opaque to section selection;
+headings, fences and other HTML comments inside still fail closed.
+
 This is not a full CommonMark parser: link-reference definitions, full list
 semantics and general inline parsing are not implemented. Status emphasis uses
 the declaration grammar, not a general emphasis parser. Quoted declarations
@@ -379,8 +384,45 @@ def declaration(text):
     return match[1].upper(), direction
 
 
-def scan_guide(text, in_verify=False, in_quote=False):
+def scan_guide(text, in_verify=False, in_quote=False, *, enrolled=False,
+               with_status=False):
+    """Return (line, fingerprint, marked) units and findings.
+
+    with_status returns the parsed status (or None) instead of the boolean.
+    Callers must reject findings before using these statuses as declarations.
+    """
+    # Only a document's leading, strictly parsed metadata is opaque. Recursive
+    # quote scans must never gain a front-matter or generated-summary exemption.
+    if not in_quote:
+        text = text.replace("\r\n", "\n").replace("\r", "\n")
+        from version_basis import split
+        try:
+            data, body = split(text)
+        except ValueError as exc:
+            return [], [f"line 1: [unsupported-container] invalid front matter: {exc}"]
+        if data is not None:
+            text = "\n" * text[:len(text) - len(body)].count("\n") + body
     lines, heads, tokens = tokenize(text, in_quote)
+    if enrolled and not in_quote:
+        from version_basis import START, END
+        # Count exact physical lines, never substrings or stripped spellings.
+        if lines.count(START) == lines.count(END) == 1:
+            start, end = lines.index(START), lines.index(END)
+            boundaries = {t.start for t in tokens if t.kind == "html"
+                          and not t.owner and t.end == t.start + 1}
+            if start < end and {start, end} <= boundaries:
+                first_h2 = next((i for i, head in enumerate(heads)
+                                 if head and head[0] == 2), len(lines))
+                kind = "summary" if end < first_h2 else "html"
+                summary = Token(kind, start, end + 1,
+                                "\n".join(lines[start:end + 1]), ())
+                # Quarantine even a misplaced pair. Report its comments below,
+                # but never let enclosed headings change section selection.
+                masked = lines[:start] + [""] * (end - start + 1) + lines[end + 1:]
+                _, heads, tokens = tokenize("\n".join(masked), in_quote)
+                tokens = [t for t in tokens if not start <= t.start <= end]
+                tokens.append(summary)
+                tokens.sort(key=lambda t: t.start)
     selected = (set(range(len(lines))) if in_verify else
                 {i for a, b in verify_ranges(heads) for i in range(a, b)})
     ancestry, paths = [], {}
@@ -394,14 +436,21 @@ def scan_guide(text, in_verify=False, in_quote=False):
     blocks = [t for t in tokens if t.kind != "break" or t.text.strip()]
     units, errors = [], []
     for k, token in enumerate(blocks):
+        if (token.kind == "break" and token.text == "---"
+                and token.start + 1 < len(lines)
+                and lines[token.start + 1].startswith("version_basis:")):
+            errors.append(f"line {token.start + 1}: "
+                          "[unsupported-container] non-leading front matter")
         if token.kind not in {"fence", "unclosed", "quote"}:
             comments = ([n for n, line in enumerate(token.text.split("\n"))
-                         if "<!--" in line] if token.kind == "html"
+                         if "<!--" in line] if token.kind in {"html", "summary"}
                         else comment_lines(token.text))
             for number in comments:
+                if token.kind == "summary" and number in {0, token.end - token.start - 1}:
+                    continue
                 errors.append(f"line {token.start + number + 1}: "
                               "[unsupported-container] HTML comment outside fence or code span")
-        if token.kind == "html":
+        if token.kind in {"html", "summary"}:
             for number, kind, _ in unsupported_features(token.text):
                 errors.append(f"line {token.start + number + 1}: "
                               f"[unsupported-container] {kind} in HTML block")
@@ -475,15 +524,19 @@ def scan_guide(text, in_verify=False, in_quote=False):
         payload = [paths[token.start], token.text, context]
         digest = hashlib.sha256(json.dumps(payload, ensure_ascii=False,
                                           separators=(",", ":")).encode("utf-8")).hexdigest()
-        units.append((token.start + 1, digest, bool(statuses)))
+        status = statuses[0] if statuses else None
+        units.append((token.start + 1, digest, status if with_status else bool(statuses)))
     return units, errors
 
 
 def scan(root):
     counts, locations, errors, marked = Counter(), {}, [], 0
+    enrolled = set((root / "tools/version_basis_guides.txt").read_text(
+        encoding="utf-8").splitlines())
     for path in guides(root):
         try:
-            units, findings = scan_guide(path.read_text(encoding="utf-8"))
+            units, findings = scan_guide(path.read_text(encoding="utf-8"),
+                                         enrolled=path.name in enrolled)
         except ValueError as exc:
             # UnicodeError is handled by main as an input error, not a convention.
             if isinstance(exc, UnicodeError):

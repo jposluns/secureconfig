@@ -36,9 +36,10 @@ def main():
     with tempfile.TemporaryDirectory(prefix="verify-marking-test-") as directory:
         root = Path(directory)
         (root / "tools").mkdir()
-        for name in ("check_verify_marking.py",
-                     "_markdown.py", "_verify_sections.py"):
+        for name in ("check_verify_marking.py", "_markdown.py",
+                     "_verify_sections.py", "version_basis.py"):
             shutil.copyfile(TOOLS / name, root / "tools" / name)
+        (root / "tools/version_basis_guides.txt").write_text("guide.md\n", encoding="utf-8")
         guide = root / "guide.md"
         baseline = root / "tools/verify_marking_baseline.txt"
 
@@ -178,6 +179,97 @@ def main():
         run(PLAIN + "\n> unsupported quote\n", 1, "quoted prose does not mark fence", "new/changed/excess")
         run("# Guide\n\n## Verify\n\n- prose check\n\n| Check | Result |\n"
             "| --- | --- |\n| A | B |\n", 0, "lists tables prose not gated")
+
+        # Version-basis integration: parser and summary exceptions stay narrow.
+        from version_basis import START, END
+        marked_pilot = PLAIN.replace("echo ok", "# " + MARK + "\necho ok")
+        front = '---\nversion_basis: {"schema": 1}\n---\n'
+        summary = START + "\n**Version basis**\n\n| Claim | Status |\n" + END + "\n\n"
+        pilot = marked_pilot.replace("## Verify", summary + "## Verify")
+        run(front + pilot, 0, "leading strict front matter and generated pair")
+        run(front + marked_pilot, 0, "front matter closing delimiter is not Setext")
+        units, errors = scan_guide(front + marked_pilot)
+        check("masked metadata preserves fence lines",
+              not errors and units[0][0] == 8)
+        run(pilot, 0, "enrolled exact pair without front matter")
+        units, errors = scan_guide((front + pilot).replace("\n", "\r\n"), enrolled=True)
+        check("direct CRLF scan", len(units) == 1 and not errors)
+        run((front + pilot).replace("\n", "\r\n"), 0, "pilot CRLF")
+        run(front + marked_pilot.replace("echo ok", "echo ok\u2028## Setup"), 0,
+            "front matter preserves Unicode line separator")
+        for name, raw in (
+            ("foreign key", "---\ntitle: Example\n---\n"),
+            ("invalid JSON", "---\nversion_basis: {bad}\n---\n"),
+            ("duplicate key", '---\nversion_basis: {"x":1,"x":2}\n---\n'),
+            ("non-object", "---\nversion_basis: []\n---\n"),
+            ("alias", "---\nversion_basis: &alias {}\n---\n"),
+            ("tag", "---\nversion_basis: !!map {}\n---\n"),
+            ("comment", "---\nversion_basis: {} # comment\n---\n"),
+            ("trailing comma", '---\nversion_basis: {"x":1,}\n---\n'),
+            ("non-JSON number", '---\nversion_basis: {"x":NaN}\n---\n'),
+            ("unclosed", "---\nversion_basis: {}\n"),
+            ("first close wins", "---\nversion_basis: {\n---\n}\n---\n"),
+            ("non-leading", "\n" + front),
+            ("non-leading with blank before close", "\n---\nversion_basis: {}\n\n---\n"),
+            ("after title", "# Guide\n\n" + front),
+            ("indented opener", " " + front),
+        ):
+            run(raw + marked_pilot, 1, "front matter refusal " + name,
+                "[unsupported-container]")
+        for name, changed in (
+            ("start spelling", pilot.replace(START, "<!-- version_basis:start -->")),
+            ("end spelling", pilot.replace(END, "<!-- version_basis:end -->")),
+            ("case", pilot.replace(START, "<!-- Version-basis:start -->")),
+            ("inner spacing", pilot.replace(END, "<!--version-basis:end-->")),
+            ("indent", pilot.replace(START, " " + START)),
+            ("trailing space", pilot.replace(END, END + " ")),
+            ("text before", pilot.replace(START, "text " + START)),
+            ("text after", pilot.replace(END, END + " text")),
+            ("same line", pilot.replace(summary, START + END + "\n\n")),
+            ("second pair", pilot.replace(summary, summary + summary)),
+            ("duplicate start", pilot.replace(START, START + "\n" + START)),
+            ("duplicate end", pilot.replace(END, END + "\n" + END)),
+            ("missing start", pilot.replace(START, "")),
+            ("missing end", pilot.replace(END, "")),
+            ("reversed", pilot.replace(START, "TEMP").replace(END, START).replace("TEMP", END)),
+            ("after H2", pilot.replace(summary, "").replace("## Verify", "## Verify\n" + summary)),
+            ("straddles H2", pilot.replace(END, "## Setup\n\n" + END)),
+            ("ordinary comment", pilot.replace(END, "<!-- other -->\n" + END)),
+        ):
+            run(changed, 1, "summary refusal " + name, "HTML comment outside")
+        for heading in ("  ## Setup", "##\tSetup"):
+            run(heading + "\n\n" + pilot, 1, "pair after alternate H2 " + heading,
+                "HTML comment outside")
+        run(pilot.replace(END, END + "\n\n```text\n" + START + "\n" + END + "\n```"),
+            1, "literal duplicate does not authorize the real pair", "HTML comment outside")
+        listing = root / "tools/version_basis_guides.txt"
+        listing.write_text("other.md\n", encoding="utf-8")
+        run(front + pilot, 1, "pair in non-enrolled guide", "HTML comment outside")
+        listing.unlink()
+        run(marked_pilot, 2, "missing enrollment list fails closed", "input error")
+        listing.write_text("guide.md\n", encoding="utf-8")
+        for content in ("## Verify", "### Verify", "# Other", "Details\n---",
+                        "```bash\necho hidden\n```"):
+            changed = pilot.replace("**Version basis**", content)
+            run(changed, 1, "summary content cannot select sections " + content,
+                "[unsupported-container]")
+            units, errors = scan_guide(changed, enrolled=True)
+            check("summary quarantined " + content, len(units) == 1 and bool(errors))
+        # A pair after Verify must not let an enclosed peer heading hide a fence.
+        changed = marked_pilot.replace("```sh", START + "\n## Setup\n" + END + "\n\n```sh")
+        units, errors = scan_guide(changed, enrolled=True)
+        check("misplaced summary cannot close Verify", len(units) == 1 and bool(errors))
+        run(marked_pilot + "\n## Samples\n\n```text\n" + START + "\n" + END
+            + "\n```\n", 0, "markers inside a literal fence")
+        run(marked_pilot + "\n`" + START + " " + END + "`\n", 0,
+            "markers inside a matched code span")
+        run("> ---\n> version_basis: {}\n> ---\n", 1,
+            "quoted metadata is not a document header", "[unsupported-container]")
+        for body in (
+            marked_pilot.replace("# " + MARK, "# ordinary\n# " + MARK),
+            marked_pilot.replace("# " + MARK, "echo first\n# " + MARK),
+        ):
+            run(body, 1, "per-command comment is not a fence declaration", "new/changed/excess")
 
         # Round-2: unsupported containers must fail closed even when their
         # contents look marked, or a nested heading would hide the Verify root.
