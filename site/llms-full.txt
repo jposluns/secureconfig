@@ -5074,6 +5074,67 @@ allowed ranges out of the provider's own configuration rather than inferring the
 
 # GitOps controllers: Argo CD and Flux
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| git-boundary: Repository writers exercise reconciliation permissions; review platform changes, separate tenants and scope credentials. | Argo CD documentation unknown; Flux documentation unknown | REASONED |
+| secret-storage: Protect bootstrap, registry, cluster, webhook and decryption credentials; commit only encrypted secrets and keep SOPS/age keys out of Git. | Argo CD documentation unknown; Flux documentation unknown | REASONED |
+| egress: Restrict fetch, API, identity and notification egress; Argo repository allowlists do not constrain remote bases or Helm dependencies. | Argo CD documentation unknown; Flux documentation unknown | REASONED |
+| argo-bootstrap: Rotate the initial admin password before deleting argocd-initial-admin-secret; deletion alone does not rotate it. | Argo CD documentation unknown | REASONED |
+| argo-sso: The built-in admin is unrestricted; configure named SSO roles and IdP MFA, then set admin.enabled=false. | Argo CD documentation unknown | REASONED |
+| argo-origin: Keep the ClusterIP origin private behind authenticated TLS and protect both REST/browser and CLI/gRPC routes. | Argo CD documentation unknown; Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| argo-server: Server defaults to 0.0.0.0:8080; the Service maps 80 and 443 to it. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| argo-tls: Server --insecure/server.insecure defaults false and disables backend TLS, not authentication; use only behind protected TLS termination. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; Argo CD documentation unknown | REASONED |
+| argo-client-tls: argocd login --insecure skips client certificate verification; the server initially uses a self-signed certificate. | Argo CD documentation unknown | REASONED |
+| argo-metrics: Server HTTP metrics on 8083 are unauthenticated and bind to --address, not --metrics-address. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| argo-profiler: Server and repo-server pprof paths return 401 unless the profiler file contains exactly true with no newline; enabled profiling has no caller authentication. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| argo-profiler-file: ARGOCD_ENABLE_PROFILER_FILE_PATH defaults to /home/argocd/params/profiler.enabled; the server mounts ConfigMap key server.profile.enabled there. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| repo-grpc: Repo-server gRPC binds 0.0.0.0:8081 with TLS by default; mTLS is skipped without the client CA, separate from the serving certificate. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| repo-http: Repo-server HTTP metrics and health bind 0.0.0.0:8084 without an authentication wrapper. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| repo-limits: Repo-server RPC authorization and certificate fallback implementations were absent from the inspected subset; isolate cached manifests and operations. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; Argo CD documentation unknown | REASONED |
+| controller-metrics: Application-controller metrics and health use 8082; the inspected subset does not establish the bind address. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| applicationset-webhook: ApplicationSet webhook binds :7000; its container and Service declare 7000. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| applicationset-metrics: ApplicationSet metrics bind :8080; its container and Service declare 8080. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| applicationset-health: ApplicationSet health probes bind :8081 without a container or Service port declaration; missing declarations do not close sockets. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| notifications: Notifications HTTP metrics bind 0.0.0.0:9001 without authentication; a metrics Service and TCP liveness probe exist without containerPort. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| dex-http: Dex starts only with nonempty generated configuration; HTTP defaults to TLS on 0.0.0.0:5556 using /tmp/tls.crt and /tmp/tls.key. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| dex-grpc: Generated Dex gRPC uses 0.0.0.0:5557 with no TLS or client-auth settings; runtime authentication and authorization remain unverified. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| dex-telemetry: Dex telemetry uses HTTP on 0.0.0.0:5558; all three Dex ports have Services. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| redis-password: Redis 6379 receives --requirepass from argocd-redis/auth, initialized by secret-init; image bind and initializer implementation were not inspected. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| redis-tls: Base manifests configure no Redis TLS and the Argo Redis client defaults --redis-use-tls=false; protect traffic, Secret and cache. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| component-policies: Base policies restrict repo gRPC, Redis and Dex callers by component; enforcement needs a supporting CNI. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| broad-policies: Server policy allows all ingress; other metrics and ApplicationSet webhook allowances admit every namespace. Narrow existing additive allowances and egress separately. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| argo-anonymous: users.anonymous.enabled defaults off; anonymous callers otherwise inherit policy.default. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; Argo CD documentation unknown | REASONED |
+| argo-disable-auth: server.disable.auth defaults false; inspect effective args and environment because anonymous-off does not compensate for disabled authentication. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| argo-default-role: Base RBAC ConfigMap omits policy.default; keep it empty and grant explicit policy.csv roles/groups. Default-role grants cannot be revoked by later subject rules; fallback was not traced. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; Argo CD documentation unknown | REASONED |
+| argo-webhook: /api/webhook accepts unauthenticated refresh events without a shared secret; configure one to limit spoofed reconciliation and resource exhaustion. | Argo CD documentation unknown | REASONED |
+| argo-projects: Restrict AppProjects including the built-in default project; project constraints do not reduce a compromised controller's Kubernetes credentials. | Argo CD documentation unknown | REASONED |
+| argo-cluster-rbac: Reduce controller and registered-cluster argocd-manager write permissions to needed namespaces/resources while retaining required read access. | Argo CD documentation unknown | REASONED |
+| flux-api: Flux has no standalone management login/API; Kubernetes authenticates its custom-resource operations, while separate dashboards need their own controls. | Flux documentation unknown | REASONED |
+| flux-bootstrap: GitHub bootstrap --token-auth retains a PAT in flux-system; --token-auth=false creates a read-only SSH deploy key by default. Protect bootstrap input and Secrets. | Flux documentation unknown | REASONED |
+| flux-writeback: Image automation needs Git write access, including --read-write-key=true for the bootstrap key; scope the repository and protect update branches and objects. | Flux documentation unknown | REASONED |
+| flux-artifacts: Source-controller serves fetched artifacts over internal HTTP; enforced NetworkPolicy, not ClusterIP alone, isolates them. | Flux documentation unknown | REASONED |
+| flux-receiver-port: Webhook receiver listens on 9292 behind Service port 80; external exposure needs a route and TLS termination. | Flux documentation unknown | REASONED |
+| flux-receiver-types: generic validates nothing; generic-hmac, GitHub, Bitbucket and Nexus use HMAC, while gitlab compares X-Gitlab-Token. | Flux documentation unknown | REASONED |
+| flux-oidc: generic-oidc, introduced in Flux 2.9, rejects secretRef and validates bearer tokens; constrain issuer validations and audience, whose default is notification-controller. | Flux documentation unknown; Flux OIDC introduction v2.9 | REASONED |
+| flux-rbac: Only kustomize-controller and helm-controller hold cluster-admin; other controllers still have meaningful permissions including Secret access. | Flux documentation unknown | REASONED |
+| flux-lockdown: Use scoped reconciliation ServiceAccounts, --no-cross-namespace-refs and --no-remote-bases; --default-service-account fills an omission, not an explicit serviceAccountName. | Flux documentation unknown | REASONED |
+| verify-argo: Anonymous application listing should fail with 401 while a valid token lists the expected application; repeat at origin and CLI/gRPC and inspect effective RBAC. | Argo CD documentation unknown; Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| verify-bootstrap: Absence of the bootstrap Secret proves removal of that material, not password rotation. | Argo CD documentation unknown | REASONED |
+| verify-inventory: Inventory Services, routes, host ports, policies and component sockets; node-local ss and policy objects alone do not establish cluster isolation. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; Flux documentation unknown | REASONED |
+| verify-repo-metrics: Base policy permits HTTP 200 metrics to monitoring and unrelated pods; narrowed policy should admit only monitoring, with a successful positive control. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| verify-server-metrics: Repeat on server 8083: only authorized monitoring should receive metrics after narrowing ingress; a failed control is inconclusive. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| verify-profiler: From an allowed pod, pprof cmdline should return 401 disabled, 200 for exact true, then 401 for true plus newline; keep metrics as control. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| verify-flux: Identical generic-hmac bodies without and with X-Signature should be rejected and accepted with reconciliation; status is type/version dependent. | Flux documentation unknown; Python documentation unknown | REASONED |
+| verify-receiver-status: Read receiver name and Ready condition without exposing webhookPath or condition messages; origin checks distinguish receiver rejection from proxy rejection. | Flux documentation unknown | REASONED |
+<!-- version-basis:end -->
+
 Argo CD and Flux reconcile a git repository into a Kubernetes cluster, so both hold
 cluster-admin-equivalent power: whoever can drive the controller, or change what it reconciles, can
 deploy anything it can reach, across the clusters it is registered against and to the extent the controller's Kubernetes RBAC, its registered-cluster credentials, and project restrictions allow. Three exposures follow
@@ -24860,6 +24921,40 @@ An unauthenticated editor in a private browser window means whoever finds the UR
 
 # Self-hosted error trackers: Sentry and GlitchTip
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| dsn: Client DSNs authorize event submission, not reading tracker data. | Sentry documentation unknown | REASONED |
+| sentry-bind: SENTRY_BIND=9000 publishes nginx on all interfaces; set 127.0.0.1:9000 behind a TLS proxy. | Sentry and self-hosted distribution 26.8.0 | REASONED |
+| sentry-stores: Leave web, relay and backing stores unpublished; their internal credentials are not a public boundary. | Sentry and self-hosted distribution 26.8.0 | REASONED |
+| sentry-registration: auth.allow-registration defaults False; keep it false on an internet-facing tracker. | Sentry and self-hosted distribution 26.8.0 | REASONED |
+| sentry-admin: createuser --superuser explicitly creates an administrator; plain createuser defaults its superuser prompt to no. | Sentry and self-hosted distribution 26.8.0 | REASONED |
+| sentry-url: Set system.url-prefix to the public HTTPS origin. | Sentry and self-hosted distribution 26.8.0 | REASONED |
+| sentry-secret: Generate system.secret-key once and keep it out of version control; the generator command lacks a direct Sources citation. | Sentry and self-hosted distribution 26.8.0 | REASONED |
+| sentry-cookies: Enable forwarded scheme/host recognition and secure session/CSRF cookies; bundled settings are commented out. | Sentry and self-hosted distribution 26.8.0 | REASONED |
+| sentry-nginx: Bundled nginx overwrites X-Forwarded-Proto with its scheme; terminate TLS there or propagate the real scheme. Its nginx config is not cited. | Sentry and self-hosted distribution 26.8.0 | REASONED |
+| sentry-mfa: Enforce organization member MFA with require2FA. | Sentry documentation unknown | REASONED |
+| sentry-scrubbing: Use dataScrubber, dataScrubberDefaults and scrubIPAddresses to reduce sensitive intake. | Sentry documentation unknown | REASONED |
+| sentry-precedence: auth.allow-registration prioritizes config.yml over the database; verify SSO provisioning and effective scrubbing separately. | Sentry and self-hosted distribution 26.8.0; Sentry documentation unknown | REASONED |
+| glitchtip-port: GlitchTip Compose publishes 8000; bind privately behind TLS and verify the actual sample host bind. | GlitchTip documentation unknown | REASONED |
+| glitchtip-registration: ENABLE_USER_REGISTRATION defaults True; False disables self-signup after the first user exists. | GlitchTip documentation unknown | REASONED |
+| glitchtip-secret: Use a unique SECRET_KEY for Django signing and keep it out of version control. | GlitchTip documentation unknown | REASONED |
+| glitchtip-mfa: Two-factor authentication is available since v1.8; confirm enforcement and SSO registration paths in the deployed version. | GlitchTip two-factor introduction v1.8 | REASONED |
+| glitchtip-stores: Keep PostgreSQL and optional Valkey or Redis internal. | GlitchTip documentation unknown | REASONED |
+| membership: Sentry single-organization signups join the default organization; GlitchTip accounts and membership differ. Membership implementations are not cited. | Sentry and self-hosted distribution 26.8.0; GlitchTip documentation unknown | REASONED |
+| verify-listeners: Inventory private 9000/8000 and backing ports; Docker forwarding can expose ports without host sockets. | Sentry and self-hosted distribution 26.8.0; GlitchTip documentation unknown | REASONED |
+| verify-sentry: Follow the single-organization login redirect and inspect the create-account path; HTTP 200 alone cannot distinguish registration. | Sentry and self-hosted distribution 26.8.0 | REASONED |
+| verify-glitchtip: On an operator-controlled fixture, signup succeeds with registration True and is refused with False after the first user. | GlitchTip documentation unknown | REASONED |
+| verify-stores: Off-host backing-port probes judge TCP connection outcomes, not HTTP codes; distinguish the public HTTPS proxy and backend ports. | Sentry and self-hosted distribution 26.8.0; GlitchTip documentation unknown | REASONED |
+| verify-https: Confirm plaintext web requests redirect to the HTTPS proxy; login pages, 404s and TLS errors do not prove controls. | Sentry and self-hosted distribution 26.8.0; GlitchTip documentation unknown | REASONED |
+<!-- version-basis:end -->
+
 An error tracker exists to collect what your application would otherwise hide: stack traces, the source lines around each frame, request bodies and headers, environment variables, release and server names, and whatever user context the SDK attaches. That makes an exposed tracker one of the richest leaks in a deployment, because it aggregates secrets, tokens, and personal data that were never meant to leave the app, and it does so in a searchable UI. The two common self-hosted choices behave differently at their most important default, so the guide takes them one at a time. [fronting-auth.md](fronting-auth.md) is the reverse-proxy pattern both rely on for TLS, [secrets.md](secrets.md) covers the signing keys, and [mfa.md](mfa.md) is the account layer. Values below are illustrative; replace them.
 
 One thing both share: the DSN a client uses to send events is a public, client-side key by design, not a secret. It authorizes event submission and nothing else, so finding one in shipped JavaScript is expected and is not the exposure this guide is about. The exposure is the tracker's own web and API, and the data they hold.
@@ -24934,6 +25029,8 @@ Every probe below is reasoned, not demonstrated: the authoring environment has n
 sudo ss -tlnp    # the tracker's own port only, on a private address: 9000 for Sentry, 8000 for
                  # GlitchTip; and no PostgreSQL, Redis, Kafka, or ClickHouse port published beside it
 ```
+
+REASONED: following block; registration and backing-port checks follow the cited Sentry and GlitchTip sources; no container runtime is available.
 
 ```bash
 # Registration discriminator against the plaintext listener. Substitute the URL inside the single
@@ -25829,6 +25926,63 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 ======================================================================
 
 # Ray: dashboard, Jobs, and Client ports execute code
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| boundary: Dashboard, Jobs and Client access permits arbitrary code execution; use an isolated cluster network and separate clusters for mutually untrusted jobs. | Ray documentation unknown | REASONED |
+| dashboard: Dashboard defaults to resolved localhost, IPv4 before IPv6 then 127.0.0.1, on port 8265; state loopback explicitly. | Ray pinned source ray-2.58.0 | REASONED |
+| docker: Bridge publishing uses host loopback and container-interface bind; loopback isolation assumes Docker 28.0.0+ and normal NAT. The Sources entry does not record that minimum. | Docker publishing documentation unknown | REASONED |
+| access: Reach Dashboard/Jobs through loopback SSH forwarding, launcher forwarding, KubeRay forwarding or a private tailnet; public browser access needs an authenticating TLS proxy. | Ray documentation unknown; KubeRay authentication documentation unknown | REASONED |
+| head-ports: Head GCS uses 6379 and Client 10001; worker ports default 10002-19999 plus randomized listeners. | Ray documentation unknown | REASONED |
+| core-bind: Core gRPC source binds all interfaces unless node address is exactly 127.0.0.1, ::1 or localhost; private node IP does not imply private bind. | Ray pinned source ray-2.58.0 | REASONED |
+| gcs-observation: Four attempted Ray 2.58.0 loopback starts still showed GCS *:6379; the cause was not established and the watcher stopped the runs. | Ray pinned source ray-2.58.0 | DEMONSTRATED |
+| client-bind: Ray Client server/proxier listen on the supplied node address plus loopback; restrict access and prefer Jobs over publishing Client. | Ray pinned source ray-2.58.0 | REASONED |
+| serve-replica: Serve inter-deployment gRPC binds [::] on an OS-chosen port; this is source reasoning, not a run. | Ray pinned source ray-2.58.0 | REASONED |
+| agents: --include-dashboard=false does not stop dashboard/runtime-env agents; head dashboard itself is reduced to usage stats. | Ray pinned source ray-2.58.0 | REASONED |
+| minimal: Missing optional imports select minimal mode: no agent HTTP/gRPC or metrics reporter; runtime-env HTTP remains. Base installs may have full dependencies. | Ray pinned source ray-2.58.0 | REASONED |
+| agent-http: Non-minimal agent HTTP defaults 52365, including ray.init; --dashboard-agent-listen-port changes it, with node-IP plus conditional localhost binds. | Ray pinned source ray-2.58.0 | REASONED |
+| agent-jobs: Direct /api/job_agent/jobs/ submission and stop/delete/log routes bypass a proxy on 8265; head forwarding reaches its agent job manager. | Ray pinned source ray-2.58.0 | REASONED |
+| agent-placement: Worker agents accept cluster submissions with their own managers; drivers normally use the head unless resources, labels or worker-placement override permit workers. | Ray pinned source ray-2.58.0 | REASONED |
+| agent-logs: Agent static /logs exposes the node log directory and index. | Ray pinned source ray-2.58.0 | REASONED |
+| agent-http-auth: Without token mode a browser heuristic is the only filter; token mode guards all agent HTTP paths except two health endpoints. | Ray pinned source ray-2.58.0 | REASONED |
+| agent-grpc: Agent gRPC defaults OS-assigned with --dashboard-agent-grpc-port override; localhost or wildcard bind serves log/profiling RPCs with optional token interception. | Ray pinned source ray-2.58.0 | REASONED |
+| runtime-agent: Runtime-env HTTP defaults OS-assigned on node IP with --runtime-env-agent-port override; create/delete installs packages, and token middleware exempts no route. | Ray pinned source ray-2.58.0 | REASONED |
+| metrics-agent: Metrics default enabled; non-minimal reporter uses an OS-assigned port or --metrics-export-port, outside all token middleware. | Ray pinned source ray-2.58.0 | REASONED |
+| metrics-ipv4: WSGI metrics uses AF_INET: empty address is IPv4 wildcard, localhost is used for local node addresses, and resolved ::1 cannot bind this socket. | Ray pinned source ray-2.58.0; CPython WSGI server v3.11.0 | REASONED |
+| node-normalization: Both CLI and ray.init normalize localhost node arguments to a discovered address; cluster-mode setting changes whole-node selection, not independent agent binds. | Ray pinned source ray-2.58.0 | REASONED |
+| agent-family: Agent gRPC wildcard selection is 0.0.0.0 or :: based on resolved localhost, independently of node address family. | Ray pinned source ray-2.58.0 | REASONED |
+| gcs-not-redis: 6379 is GCS, not Redis; Redis stopped being launched by default in 1.11. | Ray Redis default change 1.11; Ray documentation unknown | REASONED |
+| redis-backend: External Redis is opt-in GCS fault-tolerance storage; Redis credentials do not authenticate GCS clients and RAY_REDIS_PASSWORD is not a head flag substitute. | Ray documentation unknown | REASONED |
+| token-default: Shared token authentication exists since 2.52.0 but is disabled by default as of 2.58.0; it supplements network isolation and does not protect Serve apps. | Ray token authentication introduction 2.52.0; Ray pinned source ray-2.58.0 | REASONED |
+| token-input: Enable RAY_AUTH_MODE=token; precedence is RAY_AUTH_TOKEN, RAY_AUTH_TOKEN_PATH then ~/.ray/auth_token, shared by every node/client. | Ray pinned source ray-2.58.0 | REASONED |
+| token-storage: Generate/protect token files and copy before startup; tokens are plaintext, do not expire and must never be committed. | Ray pinned source ray-2.58.0 | REASONED |
+| token-transport: Token HTTP headers require a trusted tunnel or TLS; plaintext HTTP exposes them on the network. | Ray documentation unknown; Ray pinned source ray-2.58.0 | REASONED |
+| kuberay-token: KubeRay authOptions provisions a Secret and Ray-container token variables; the body states v1.6.0+, absent from its Sources entry. | KubeRay authentication documentation unknown | REASONED |
+| mfa: Ray has no user accounts; MFA belongs on SSH, tailnet or identity-aware proxy access. | Ray documentation unknown | REASONED |
+| grpc-tls: RAY_USE_TLS defaults 0; export it and server certificate/key/CA variables on every node before startup for internal gRPC mutual TLS. | Ray documentation unknown | REASONED |
+| tls-scope: gRPC TLS can cost performance and does not replace isolation or the dashboard/Jobs HTTP TLS proxy. | Ray documentation unknown | REASONED |
+| runtime-code: Job runtime_env installs before entrypoint; ray.init environments apply to child tasks/actors. Packages, archives, py_executable and setup hooks execute submitted code. | Ray documentation unknown | REASONED |
+| runtime-policy: No built-in package/URI/hook admission policy; eager_install and setup_timeout_seconds control timing, not trust. Prebuild reviewed dependencies. | Ray documentation unknown | REASONED |
+| serve-bind: Serve HTTP defaults port 8000, Python host 127.0.0.1 but config-file host 0.0.0.0; EveryNode puts proxies on nodes with replicas. | Ray documentation unknown | REASONED |
+| serve-auth: Serve apps have no built-in application auth and are outside cluster token mode; restrict origins and add proxy or FastAPI authentication. | Ray documentation unknown | REASONED |
+| serve-tls: Serve ssl_keyfile/ssl_certfile/ssl_ca_certs default None; supplying a CA does not itself require client certificates. | Ray documentation unknown | REASONED |
+| serve-grpc: Optional Serve gRPC uses 9000 only with configured servicer functions; its dedicated gRPC option reference is not cited. | Ray documentation unknown | REASONED |
+| image-privilege: Official image ray UID 1000/GID 100 has passwordless sudo; non-root startup alone does not prevent root escalation. | Ray pinned source ray-2.58.0 | REASONED |
+| pod-security: KubeRay v1.7.0 head/worker pod/container contexts default empty; enforce non-root UID/GID, no privilege escalation, dropped capabilities and RuntimeDefault seccomp. | KubeRay chart v1.7.0; Kubernetes security contexts unknown | REASONED |
+| verify-inventory: Inventory every head/worker and actual randomized agent ports after restarts; expected missing listeners need explanation. No isolated multi-node cluster was available. | Ray pinned source ray-2.58.0 | REASONED |
+| verify-external: Probe every routed IPv4/IPv6 origin and inventoried port; completed TCP, even HTTP 401 or non-HTTP, proves exposure. Resolver/local errors are inconclusive. | Ray documentation unknown; curl minimum write-out version 7.75.0 | REASONED |
+| verify-jobs: Through the trusted tunnel valid-token submission must succeed and token-free submission must fail authentication with 401, not a connection error. | Ray pinned source ray-2.58.0; KubeRay authentication documentation unknown | REASONED |
+| verify-grpc-tls: ray health-check must pass with the correct CA and fail certificate verification with a wrong CA/name; local config errors are inconclusive. | Ray documentation unknown | REASONED |
+| verify-agent: Direct non-browser /logs/ must expose an index with token mode off, allow a valid token with it on and reject absent tokens with 401; health exemptions cannot discriminate. | Ray pinned source ray-2.58.0 | REASONED |
+| verify-token-secret: Trusted-path hidden prompt and stdin header avoid new token argv/history exposure; account owner/root can still read memory. | Ray pinned source ray-2.58.0; curl minimum write-out version 7.75.0 | REASONED |
+<!-- version-basis:end -->
 
 Ray's own security page is blunt: if you expose the Ray Dashboard, Ray Jobs, or Ray Client services, "anybody who can access the associated ports can execute arbitrary code on your Ray Cluster", explicitly by submitting a Job or connecting a Client, indirectly through the Dashboard REST API, and implicitly because Ray deserializes arbitrary Python objects with cloudpickle. Ray "doesn't implement access controls for developers interacting with a given cluster"; security and isolation "must be enforced outside of the Ray Cluster". The head ports in question are the dashboard (and Jobs API) on `8265`, the Ray Client server on `10001`, and the head node port `6379`, all plain HTTP or gRPC with no login of their own unless you enable token authentication (step 3). The per-node agent listeners in step 2 add independent paths to job submission, logs, profiling, runtime environments and metrics.
 
@@ -27147,6 +27301,64 @@ The service facts come from the maintainer's vendor-source verification record d
 
 # Realtime voice and video infrastructure: LiveKit and coturn
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| livekit-ports: Signaling/API use 7880, RTC TCP 7881 and normal UDP media 50000-60000; development uses UDP mux 7882. | LiveKit v1.13.7; LiveKit documentation unknown | REASONED |
+| livekit-bind: Unset signaling/RTC TCP binds are wildcard; UDP uses eligible interfaces independently of signaling restrictions. | LiveKit v1.13.7; LiveKit documentation unknown | REASONED |
+| livekit-turn: Embedded TURN defaults off and needs explicit ports when enabled. | LiveKit v1.13.7; LiveKit documentation unknown | REASONED |
+| livekit-keys: Normal mode refuses an empty key map; API secrets sign HS256 room and administrative JWT grants. | LiveKit v1.13.7; LiveKit documentation unknown | REASONED |
+| livekit-dev: Development mode supplies devkey/secret when keys are empty and defaults signaling to loopback only when no bind is supplied. | LiveKit v1.13.7 | REASONED |
+| livekit-samples: Remove the sample key1/secret1 and key2/secret2 pairs from every effective key set. | LiveKit v1.13.7 | REASONED |
+| livekit-length: Outside development, secrets shorter than 32 characters only log an error; generate long random secrets. | LiveKit v1.13.7 | REASONED |
+| livekit-grants: canPublish and canSubscribe default true; signing secrets mint any grant, so deliberately scope issued tokens. | LiveKit documentation unknown | REASONED |
+| livekit-keyfile: Use key_file with service-owned mode 0600; world permissions reject startup, but group-readable 0640 passes the server check. | LiveKit v1.13.7 | REASONED |
+| livekit-tls: Front signaling with TLS/WSS; the guide describes no native signaling TLS and calls Serve, but the server implementation is not cited. | LiveKit documentation unknown | REASONED |
+| livekit-metrics: Enabled metrics are unauthenticated unless prometheus.username/password are set. | LiveKit v1.13.7 | REASONED |
+| livekit-debug: Debug/pprof, goroutine and room routes lack grant checks and can use debug_handler.port; route implementations are not cited. | LiveKit v1.13.7 | REASONED |
+| livekit-turn-secret: Embedded TURN derives credentials from the API secret; the derivation implementation is not cited. | LiveKit v1.13.7 | REASONED |
+| livekit-webhook: Webhook receivers must verify the signing token and SHA-256 body hash; the webhook verifier is not cited. | LiveKit documentation unknown | REASONED |
+| coturn-listeners: STUN/TURN use UDP/TCP 3478 and TLS 5349; enabled interfaces are enumerated, not loopback-only. | coturn 4.18.0 | REASONED |
+| coturn-dtls: DTLS on 5349 is opt-in since 4.17.0 and requires dtls. | coturn DTLS opt-in introduction 4.17.0 | REASONED |
+| coturn-relays: On-demand relay endpoints use min-port/max-port 49152-65535. | coturn 4.18.0 | REASONED |
+| coturn-cli: CLI 5766 defaults off and uses loopback plus cli-password when enabled; use cli=false, since --no-cli retired in 4.18.0. | coturn 4.18.0 | REASONED |
+| coturn-admin: Web admin 8080 defaults off/loopback and uses separate admin accounts; keep web-admin-listen-on-workers off. | coturn 4.18.0 | REASONED |
+| coturn-metrics: Prometheus 9641 defaults off but binds wildcard without authentication when enabled; set prometheus-address=127.0.0.1. | coturn 4.18.0 | REASONED |
+| coturn-anonymous: Stock example with no users and no credential mechanism permits anonymous allocation; static users imply long-term auth. The Docker exception lacks its own citation. | coturn 4.18.0 | REASONED |
+| coturn-longterm: Enable lt-cred-mech, a stable realm and generated user credentials; set certificate/key paths for TLS. | coturn 4.18.0 | REASONED |
+| coturn-secret: For timed application credentials use use-auth-secret/static-auth-secret instead of static user lines; never distribute the shared secret. | coturn 4.18.0 | REASONED |
+| coturn-realm: Missing realm warns rather than preventing startup; set it explicitly for either credential mode. | coturn 4.18.0 | REASONED |
+| coturn-encryption: TLS availability does not require encryption: plaintext can use 3478 or 5349. no-tcp/no-udp remove plaintext; enable dtls for encrypted UDP clients. | coturn 4.18.0; coturn DTLS opt-in introduction 4.17.0 | REASONED |
+| coturn-loopback: Loopback peers are blocked unless allow-loopback-peers is set; leave it off. | coturn 4.18.0 | REASONED |
+| coturn-private: RFC 1918 peers are not denied by default; explicitly deny all private ranges and enforce network controls. | coturn 4.18.0 | REASONED |
+| coturn-linklocal: 4.18.0 scope checks reject IPv4 link-local and IPv6 link-local/ULA; explicit denies remain defense in depth across older/modified builds. | coturn 4.18.0 | REASONED |
+| coturn-multicast: Multicast is permitted unless no-multicast-peers is set. | coturn 4.18.0 | REASONED |
+| coturn-exceptions: allowed-peer-ip adds exceptions rather than establishing a default-deny allowlist. | coturn 4.18.0 | REASONED |
+| coturn-binding: STUN Binding stays anonymous with TURN auth; secure-stun requests authenticated Binding. | coturn 4.18.0 | REASONED |
+| coturn-reflection: Anonymous 401 challenges still reflect traffic; unauthorized-ratelimit defaults off and bounds it when enabled. | coturn 4.18.0 | REASONED |
+| coturn-rfc5780: RFC 5780 is disabled by default; leave this response-enlarging feature off. | coturn 4.18.0 | REASONED |
+| coturn-permissions: Do not enable server-relay, which removes relay permission checks. | coturn 4.18.0 | REASONED |
+| turn-plaintext: Plain TURN hides the long-term password itself but exposes usernames/metadata and enables offline guesses against weak passwords. | coturn 4.18.0 | REASONED |
+| verify-listeners: Inventory TCP/UDP and actual allocations: media/TURN may be public, signaling/admin/metrics must be restricted; separately test off-host reachability. | LiveKit documentation unknown; LiveKit v1.13.7; coturn 4.18.0 | REASONED |
+| verify-livekit: Unauthenticated rtc/validate 401 only tests token requirement, not removal of a known signing key; its handler is not cited. | LiveKit documentation unknown; curl minimum write-out version 7.75.0 | REASONED |
+| verify-rotation: Accept an old-key token on an isolated fixture, reject that same unexpired correctly scoped token after rotation, and accept a new-key token. | LiveKit documentation unknown; livekit-cli v2.18.2 | REASONED |
+| verify-extra: Separately probe metrics, debug routes/port and embedded TURN from untrusted networks; a healthy root path proves no protection. | LiveKit v1.13.7; LiveKit documentation unknown | REASONED |
+| verify-allocation: Anonymous Allocate must challenge with no relay address; valid throwaway credentials on a private plaintext fixture must allocate. Read output, not exit status. | coturn 4.18.0 | REASONED |
+| verify-peers: Authenticated CreatePermission/ChannelBind to owned denied peers must return 403 with no traffic; cover denied ranges and both families. | coturn 4.18.0 | REASONED |
+| uclient-argv: turnutils_uclient has only argv password inputs -w/-W at 4.18.0; use a prompted throwaway user, never a production password or -W shared secret. | coturn 4.18.0 | REASONED |
+| uclient-lifetime: Run on a trusted host, remove the test user afterwards and omit -h, which keeps the password-bearing process alive indefinitely. | coturn 4.18.0 | REASONED |
+| lk-inputs: lk reads argv or environment credentials, not stdin; explicit project/subdomain outrank environment, which outranks local/default projects. | livekit-cli v2.18.2 | REASONED |
+| lk-storage: Saved projects retain plaintext api_secret in ~/.livekit/cli-config.yaml, written 0600. | livekit-cli v2.18.2 | REASONED |
+| lk-mint: Prompt and prefix environment assignments keep secrets out of argv/history but expose them to same-account/root environment readers; printed short-lived tokens are secrets. | livekit-cli v2.18.2 | REASONED |
+| verify-tls: Fatal hostname/CA verification tests only TURN certificate/handshake; separately test plaintext rejection on 3478 and 5349. OpenSSL syntax is not cited. | coturn 4.18.0 | REASONED |
+<!-- version-basis:end -->
+
 AI voice agents run on self-hosted realtime backends that carry live media, and two of them sit at the network edge: LiveKit, a WebRTC SFU that routes participants' audio, video, and data, and coturn, a TURN/STUN server that relays media when a direct peer path cannot be found. The relay is the sharp edge. A TURN server proxies traffic on a client's behalf, so an unauthenticated or misconfigured one is an *open relay*: an attacker uses it to launder traffic, to reach services on the host's own loopback and private network, and to reflect and amplify UDP toward a victim. LiveKit's edge is different: it will not start without API keys, so the danger is not an anonymous join but a *known or weak* signing secret, which lets anyone mint a token and enter any room to eavesdrop or inject media. LiveKit terminates no TLS on its signaling, so [fronting-auth.md](fronting-auth.md) is the reverse-proxy pattern it needs for `wss://`; coturn terminates TLS and DTLS natively from its own certificate. [secrets.md](secrets.md) covers generating and holding the signing material. Values below are illustrative; replace them.
 
 ## LiveKit
@@ -27251,6 +27463,8 @@ sudo ss -aunp    # should be on loopback (behind the proxy); RTC 7881 and coturn
                  # off-host separately, since NAT or Docker forwarding can publish a loopback-bound port.
 ```
 
+REASONED: following block; LiveKit token expectations follow the cited token guidance; no container runtime is available.
+
 ```bash
 # LiveKit reachability/auth diagnostic against the direct listener. This ONLY shows the endpoint requires
 # a token; it does NOT prove the dev/known secret is gone (see the rotation test below). Substitute the
@@ -27282,6 +27496,8 @@ For coturn, the discriminator is a TURN **Allocate** exchange, not an HTTP reque
 - Run the block from a host with no untrusted local users.
 
 Read the verbose output, not the exit status: the anonymous run must show a `401` challenge and no relayed address, and the credentialed run, the positive control, must show a relayed address. Substitute the test user, the peer and the TURN host inside the single quotes, and paste the whole block. It assumes a clean shell (CONTRIBUTING rule 7).
+
+REASONED: following block; Allocate and peer-policy outcomes follow the cited coturn 4.18.0 sources; no container runtime is available.
 
 ```bash
 (
@@ -27315,6 +27531,8 @@ For the LiveKit rotation test, mint each token with `livekit-cli` (`lk`). `lk` t
 
 The block prompts for the secret, so it stays out of shell history, and hands it and the key to the one `lk` command as a prefix assignment, never exported. That moves the secret out of argv, not out of reach: while `lk` runs, the same account and root can read it from `/proc/<pid>/environ`. Run the block once with the old key and once with the new. For the public development pair the key is `devkey` and the secret typed at the prompt is `secret`. Each printed token is a bearer credential for its grants until it expires, so keep `--valid-for` short and treat the terminal output as a secret. Keep the old-key token: the same token must be accepted on the isolated development fixture and rejected by the deployment after rotation, and the new-key token must be accepted. Substitute the key inside the single quotes, and paste the whole block. It assumes a clean shell (CONTRIBUTING rule 7).
 
+REASONED: following block; token minting and rotation follow the cited LiveKit and livekit-cli sources; no container runtime is available.
+
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
@@ -27340,6 +27558,8 @@ The block prompts for the secret, so it stays out of shell history, and hands it
 ```
 
 Verify TLS separately, and require verification to be fatal so a diagnostic tool does not continue past a bad certificate:
+
+REASONED: following block; TURN TLS expectations follow the cited coturn configuration; no container runtime is available.
 
 ```bash
 openssl s_client -connect turn.example.com:5349 -servername turn.example.com \
@@ -28810,6 +29030,74 @@ Run these from a second network against each panel's real hostname; a 200 that r
 
 # Self-hosted observability components: node_exporter, Alertmanager, Pushgateway, Jaeger, and Loki
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| node-bind: node_exporter defaults to :9100 on all interfaces; private binds are required. | node_exporter v1.12.1; Go documentation unknown | REASONED |
+| node-open: Unconfigured loopback metrics and pprof both returned 200 without credentials. | node_exporter v1.12.1 | DEMONSTRATED |
+| toolkit-config: --web.config.file enables TLS and bcrypt Basic auth across HTTP paths; the format is experimental and not every exporter uses it. | Exporter toolkit v0.17.1; node_exporter v1.12.1; Alertmanager v0.34.1; Pushgateway v1.11.3 | REASONED |
+| node-tls: Loopback HTTP returned 400; HTTPS metrics/pprof rejected absent credentials and accepted correct ones. | node_exporter v1.12.1; Exporter toolkit v0.17.1 | DEMONSTRATED |
+| toolkit-mtls: Use RequireAndVerifyClientCert with client_ca_file for verified clients; other client_auth_type values are called insecure by the toolkit. | Exporter toolkit v0.17.1 | REASONED |
+| toolkit-reload: The toolkit rereads web configuration per request; password/certificate changes apply without restart. | Exporter toolkit v0.17.1 | REASONED |
+| toolkit-clients: Basic auth suits a few users; supply matching credentials/CA to scrapers, pushers and Alertmanager clients, or use client certificates/proxy login. | Exporter toolkit v0.17.1; Alertmanager v0.34.1; Pushgateway v1.11.3 | REASONED |
+| alert-bind: Alertmanager HTTP defaults :9093; HA gossip defaults 0.0.0.0:9094 and needs both TCP and UDP. | Alertmanager v0.34.1; Go documentation unknown | REASONED |
+| alert-api: Loopback anonymous status, silence creation, reload and pprof succeeded; status carried wildcard CORS. | Alertmanager v0.34.1; Prometheus security model a0d29881382ad1ea20597d34fc4229984b326576 | DEMONSTRATED |
+| alert-auth: Web configuration rejected anonymous silence creation and absent/wrong status passwords; valid status credentials succeeded. | Alertmanager v0.34.1; Exporter toolkit v0.17.1 | DEMONSTRATED |
+| alert-gossip-off: An empty --cluster.listen-address disabled both gossip socket protocols in the loopback run. | Alertmanager v0.34.1 | DEMONSTRATED |
+| alert-gossip-tls: HA gossip is plaintext without experimental --cluster.tls-config; restrict it to peers and configure server/client TLS sections. | Alertmanager v0.34.1 | REASONED |
+| alert-proxy: Proxy mutating routes/CORS to reduce CSRF; send Prometheus traffic to every Alertmanager rather than load-balancing it. | Prometheus security model a0d29881382ad1ea20597d34fc4229984b326576; Alertmanager v0.34.1 | REASONED |
+| push-bind: Pushgateway defaults :9091; reachable users can forge trusted series, particularly with honor_labels. | Pushgateway v1.11.3; Prometheus security model a0d29881382ad1ea20597d34fc4229984b326576 | REASONED |
+| push-write: Anonymous loopback POST wrote a series visible on metrics and DELETE removed the group. | Pushgateway v1.11.3 | DEMONSTRATED |
+| push-pprof: pprof is registered outside flag checks and returned 200 on loopback. | Pushgateway v1.11.3 | DEMONSTRATED |
+| push-admin: Admin wipe defaults off; loopback PUT /api/v1/admin/wipe returned 404 without --web.enable-admin-api. | Pushgateway v1.11.3 | DEMONSTRATED |
+| push-lifecycle: Lifecycle shutdown defaults off; leave --web.enable-lifecycle and the admin API disabled. | Pushgateway v1.11.3 | REASONED |
+| push-auth: Web configuration covers all HTTP endpoints; anonymous push returned 401 and authenticated push 200. | Pushgateway v1.11.3; Exporter toolkit v0.17.1 | DEMONSTRATED |
+| jaeger-config: No --config selects in-memory all-in-one; receiver/diagnostic hosts use JAEGER_LISTEN_HOST with localhost fallback. | Jaeger v2.21.0; Jaeger documentation 4d150659ee4ed3ccc69253ec77c368392f59e625 | REASONED |
+| jaeger-receivers: All-in-one maps OTLP 4317/4318, Jaeger 14250/14268 and UDP 6831/6832, Zipkin 9411 and sampling 5778/5779. | Jaeger v2.21.0 | REASONED |
+| jaeger-diagnostics: Health 13133, expvar 27777, zpages 27778 and metrics 8888 follow JAEGER_LISTEN_HOST. | Jaeger v2.21.0 | REASONED |
+| jaeger-loopback: The overridden loopback run showed every listed receiver/diagnostic listener, including UDP, on 127.0.0.1. | Jaeger v2.21.0 | DEMONSTRATED |
+| jaeger-image: The official image sets JAEGER_LISTEN_HOST=0.0.0.0, exposing these listeners to its interfaces and published ports. | Jaeger v2.21.0 | REASONED |
+| jaeger-query: Query HTTP 16686 and gRPC 16685 default wildcard independently of JAEGER_LISTEN_HOST; bind both explicitly. | Jaeger v2.21.0; Jaeger documentation 4d150659ee4ed3ccc69253ec77c368392f59e625 | REASONED |
+| jaeger-mcp: All-in-one enables ai.mcp on the query HTTP port at /api/ai/mcp/; remove mcp from ai when unused. | Jaeger v2.21.0 | REASONED |
+| jaeger-open: Anonymous loopback v3 services, UI and MCP initialize returned 200; removed v1 services returned 404, not proof of protection. | Jaeger v2.21.0 | DEMONSTRATED |
+| jaeger-basic: Query basicauth/server with htpasswd rejected absent/wrong credentials on services, UI and MCP; correct credentials returned 200. | Jaeger v2.21.0; OpenTelemetry basicauth extension v0.160.0 | DEMONSTRATED |
+| jaeger-tls: Query HTTP TLS cert_file/key_file gave HTTPS 401/200 and plaintext 400; inferred wiring was tested locally and needs upgrade retesting. | Jaeger v2.21.0; OpenTelemetry configtls v1.66.0 | DEMONSTRATED |
+| jaeger-grpc: Query gRPC auth exists but was not demonstrated; restrict it, authenticate remote collectors separately and front human UI access. | Jaeger v2.21.0; Jaeger documentation 4d150659ee4ed3ccc69253ec77c368392f59e625 | REASONED |
+| loki-listeners: Empty TCP listen addresses yield wildcard HTTP 3100 and gRPC 9095; IPv4/IPv6 depends on Go/OS support. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742; Go documentation unknown | REASONED |
+| loki-samples: Local sample uses gRPC 9096/auth_enabled false; production Docker config uses wildcard 3100/9095/auth_enabled true. | Loki v3.7.8 | REASONED |
+| memberlist-bind: With the memberlist store, TCP gossip defaults 0.0.0.0:7946; an empty list selects wildcard and an empty list entry is invalid. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
+| memberlist-label: Cluster labels reject mismatches unless verification is disabled, but matching labels are not credentials; no SecretKey/keyring setting is wired. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
+| memberlist-updates: Without TLS, reachable matching-label peers can submit KV/ring state subject to codecs/merge rules; disruption is inferred, not demonstrated. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
+| memberlist-tls: TLS defaults off; enabled transport verifies outgoing servers but leaves incoming ClientAuth at NoClientCert, so it is not mutual peer authentication. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742; Go documentation unknown | REASONED |
+| memberlist-policy: Keep tls-insecure-skip-verify false, set expected server name as needed, bind privately and restrict trusted peers even with TLS. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
+| memberlist-advertise: Advertise address/port affect discovery, not bind; absent overrides derive an address from the first bind and actual port. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
+| loki-tenants: auth_enabled defaults true and requires tenant headers, not credentials; false uses fake, and tenant validation checks syntax/length only. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
+| loki-grpc-auth: Default dskit interceptors lack credentials; Loki has tenant exemptions, and the supplied subset omits full auth-helper implementation. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742; Loki v3.7.8 | REASONED |
+| loki-push-query: Reachable clients can push/query without credentials subject to tenant headers and ingest/query policies. | Loki v3.7.8 | REASONED |
+| loki-config: GET /config exposes configuration without a tenant-auth wrapper. | Loki v3.7.8 | REASONED |
+| loki-diagnostics: Metrics and pprof routes are registered by default without a tenant-auth wrapper. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
+| loki-maintenance: Ingester flush/shutdown accept GET/POST; prepare_shutdown accepts POST/GET/DELETE, without tenant-auth wrappers. | Loki v3.7.8 | REASONED |
+| loki-delete: Non-worker compactor deletion routes need a supported shipper index, retention and delete-request-store; tenant/policy middleware applies and omitted handlers limit the trace. | Loki v3.7.8 | REASONED |
+| loki-grpc-bridge: Single-binary ingester RPC and HTTP-over-gRPC expose paths that HTTP-only TLS/proxying does not protect. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
+| loki-mtls: HTTP/gRPC TLS defaults empty and requires a cert/key pair; configure client CA plus RequireAndVerifyClientCert, not CA alone. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
+| loki-ring: Single-binary overlay uses inmemory ring, loopback instance address and replication_factor 1 instead of default 3; check no gossip listener remains. | Loki v3.7.8 | REASONED |
+| loki-internal: Loopback gRPC is a configuration-specific recommendation; verify advertised/dial addresses and successful internal worker, ingester and compactor calls. | Loki v3.7.8 | REASONED |
+| loki-grpc-tls: gRPC TLS requires compatible TLS on every internal client; local users can reach plaintext loopback and mTLS does not supply tenant headers. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742; Loki v3.7.8 | REASONED |
+| loki-proxy: An authenticating proxy must overwrite X-Scope-OrgID with its identity and be the only caller that can reach Loki. | Loki v3.7.8 | REASONED |
+| verify-inventory: Inventory every TCP/UDP listener; wildcard defaults, all Loki listeners and off-host isolation were not observed. | node_exporter v1.12.1; Alertmanager v0.34.1; Pushgateway v1.11.3; Jaeger v2.21.0; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
+| verify-external: External 200 exposes unauthenticated HTTP; HTTPS 401 shows auth, not isolation. Confirm connection failures and a permitted positive control. | Prometheus security model a0d29881382ad1ea20597d34fc4229984b326576; Exporter toolkit v0.17.1; Jaeger documentation 4d150659ee4ed3ccc69253ec77c368392f59e625 | REASONED |
+| verify-loki: A tenant-header rejection is not authentication; repeat with an arbitrary X-Scope-OrgID and test both families, gRPC and internal RPCs. | Loki v3.7.8 | REASONED |
+| verify-basic: Loopback HTTPS GETs on node/Pushgateway metrics, Alertmanager status and Jaeger v3 services gave no-credential 401 and credentialed 200. | node_exporter v1.12.1; Pushgateway v1.11.3; Alertmanager v0.34.1; Jaeger v2.21.0; Exporter toolkit v0.17.1 | DEMONSTRATED |
+| verify-loki-mtls: Authorized HTTP mTLS should succeed, untrusted/missing client certs fail handshake and plaintext fail; no Loki listener/TLS run occurred. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
+| verify-secret: Basic-auth stdin closes argv exposure only; shell history and tracing can still leak the password. curl diagnostics lack a Sources citation. | Exporter toolkit v0.17.1 | REASONED |
+<!-- version-basis:end -->
+
 The Prometheus server has its own section in [admin-uis.md](admin-uis.md). This guide covers the pieces
 that usually run next to it, and each of them is an unauthenticated HTTP service by default. node_exporter
 hands out a map of the host and a Go profiler. Alertmanager lets anyone create silences, so a real
@@ -29122,6 +29410,8 @@ Exposed, the reasoned expectation is `*:9100` (or `0.0.0.0:`/`[::]:`) for an unc
 and likewise for the others. Fixed means a loopback or private address. Then probe from a host that
 should not have access. The block refuses to run until you substitute the address.
 
+REASONED: following block; external probes follow the cited listener and authentication sources; the authoring environment had no second host and no Loki listener was run.
+
 ```bash
 (                              # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_SERVICE_ADDRESS'
@@ -29149,6 +29439,8 @@ with `-H 'X-Scope-OrgID: anyone'` added, and treat a `200` as exposure.
 Run the positive control from a host that should have access, so a dead service is not read as fixed.
 The password reaches curl on stdin, not argv. Substitute inside the quotes, and add
 `--cacert /path/to/ca.crt` if the certificate is private.
+
+DEMONSTRATED: following block; the recorded loopback HTTPS GETs for node_exporter, Pushgateway, Alertmanager and Jaeger returned 401 without credentials and 200 with them.
 
 ```bash
 (
@@ -29549,6 +29841,87 @@ In a real browser, log in, open an authenticated page, then log out and press th
 ======================================================================
 
 # Firebase and Supabase: the rules are the security
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| public-config: Firebase API keys/config and Supabase publishable/anon keys are public identifiers, not authorization; hosted endpoints handle TLS. | Firebase documentation unknown; Supabase documentation unknown | REASONED |
+| firebase-ownership: Require authentication and ownership separately in Firestore, RTDB and Storage; authentication-only rules do not isolate users. | Firebase documentation unknown | REASONED |
+| firebase-starting: Firestore production and RTDB locked modes deny clients; test templates expose data for about a month. Inspect expiry and replace open rules. | Firebase documentation unknown | REASONED |
+| firestore-rules: Rules version 2 recursive wildcards include the user document and descendants; version 1 excludes the parent. Unmatched paths deny and overlapping grants can reopen access. | Firebase documentation unknown | REASONED |
+| rtdb-rules: Owner rules under users.$uid need ancestor grants removed; child rules cannot revoke parent grants or filter parent reads. | Firebase documentation unknown | REASONED |
+| firebase-storage: Storage has separate rules; conflicting default prose/example warrants explicit deny-all followed by deliberate owner-path access. | Firebase documentation unknown | REASONED |
+| firebase-download: Storage download URLs are non-expiring bearer credentials unaffected by tighter Rules; revoke tokens and use authorized getBlob/getBytes direct downloads. | Firebase documentation unknown | REASONED |
+| firebase-rule-deploy: Inspect and test deployed rules for every database/bucket/instance; keep local and deployed definitions synchronized. | Firebase documentation unknown | REASONED |
+| firebase-server: Admin SDK/server credentials bypass client Rules; keep credentials server-side and apply IAM and caller authorization. | Firebase documentation unknown | REASONED |
+| firebase-callable: Callable ID-token validation is optional authentication; reject missing request.auth, use its UID and validate resource access. First-generation handlers use context.auth. | Firebase documentation unknown | REASONED |
+| firebase-callable-appcheck: onCall enforceAppCheck needs firebase-functions 4.0.0 or newer; App Check does not replace caller/resource authorization. | Firebase documentation unknown | REASONED |
+| firebase-http: onRequest does not inherit callable auth; verify end-user tokens with verifyIdToken or restrict IAM invokers, then authorize the intended principal. | Firebase documentation unknown | REASONED |
+| firebase-appcheck: Register compatible clients and inspect metrics, then enforce App Check per product and per callable; registration alone enforces nothing. | Firebase documentation unknown | REASONED |
+| firebase-key-restrictions: Apply one app-restriction type per key plus API restrictions; separate platforms and unrelated billable APIs, using the full Firebase product table. | Firebase documentation unknown | REASONED |
+| firebase-anonymous: Anonymous sign-in is opt-in; disable unused providers because anonymous accounts still satisfy authentication-only Rules. | Firebase documentation unknown | REASONED |
+| firebase-enumeration: Email enumeration protection defaults on only for projects created from September 15, 2023; signup can still return EMAIL_EXISTS. | Firebase documentation unknown | REASONED |
+| firebase-emulators: Emulators default to localhost but missing Firestore/RTDB/Storage Rules configuration means open data; keep listeners, UI, hub, proxies and tunnels private. | Firebase documentation unknown | REASONED |
+| supabase-network: Restrict hosted database/pooler client IPs with Network Restrictions, enforce SSL and protect database-role passwords. | Supabase documentation unknown | REASONED |
+| supabase-grants: Data API access needs grants plus RLS; automatic-grant defaults are transitioning. Table Editor enables RLS, while SQL creation needs explicit enablement. | Supabase documentation unknown | REASONED |
+| supabase-select: The profiles baseline enables RLS, revokes broad grants and permits authenticated owners SELECT; audit inherited/column grants and existing policies. | Supabase documentation unknown; PostgreSQL documentation unknown | REASONED |
+| supabase-bypass: With RLS enabled and no policy, ordinary subject roles get no rows; owners normally bypass, as do superusers/BYPASSRLS roles. TRUNCATE is outside RLS. | PostgreSQL documentation unknown | REASONED |
+| supabase-writes: Grant and policy INSERT/UPDATE/DELETE only when intended; UPDATE checks old/new ownership and needs applicable SELECT when reading columns. | Supabase documentation unknown; PostgreSQL documentation unknown | REASONED |
+| supabase-schemas: public is exposed by default; restrict exposed schemas and deliberately grant schema/object access. Schema selection does not replace RLS. | Supabase documentation unknown | REASONED |
+| supabase-api-disable: Disable an unused Data API to close generated REST endpoints; this does not disable all other services. | Supabase documentation unknown | REASONED |
+| supabase-keys: Publishable keys select anon or authenticated by session; secret and legacy service_role keys bypass RLS and belong only on trusted servers. | Supabase documentation unknown | REASONED |
+| supabase-key-retire: Replacement keys do not disable legacy keys; migrate consumers then explicitly deactivate legacy keys, or delete compromised secret keys. | Supabase documentation unknown | REASONED |
+| supabase-jwt-retire: Rotation changes the signing key but retains previous trust until revocation; account for verifier caches and propagation. | Supabase documentation unknown | REASONED |
+| supabase-view-owner: Views use owner privileges/policies by default; disclosure depends on reachable schemas, grants, query and owner privileges, not anon-key possession alone. | PostgreSQL documentation unknown; Supabase documentation unknown | REASONED |
+| supabase-view-invoker: PostgreSQL 15+ security_invoker views apply caller policies and require underlying privileges. | PostgreSQL invoker-view minimum 15; PostgreSQL documentation unknown | REASONED |
+| supabase-view-legacy: PostgreSQL 14 and earlier require revoking all view privileges from PUBLIC/anon/authenticated or unexposing the schema; updatable views can bypass RLS for writes. | PostgreSQL documentation unknown | REASONED |
+| supabase-functions: Prefer INVOKER; restrict DEFINER execution, use empty search_path with qualified references and enforce caller authorization including required MFA. | Supabase documentation unknown; PostgreSQL documentation unknown | REASONED |
+| supabase-function-defaults: New functions grant PUBLIC execution; create privileged functions and restrict grants transactionally. Global/default revocations are creator-specific and do not fix existing functions. | PostgreSQL documentation unknown | REASONED |
+| supabase-http: Audit http/pg_net wrappers and revoke unneeded execute grants; constrain callers/destinations/data. Extension enablement alone does not prove exploitable SSRF. | Supabase documentation unknown | REASONED |
+| supabase-vault: Restrict vault.decrypted_secrets and privileged wrappers and keep Vault unexposed; at-rest encryption cannot prevent authorized plaintext queries. | Supabase documentation unknown | REASONED |
+| supabase-buckets: Private downloads need authorized access or time-limited signed URLs; public buckets bypass retrieval checks but not upload/delete/move/copy controls. | Supabase documentation unknown | REASONED |
+| supabase-storage-policies: Authorize storage.objects separately by bucket and owner path; upload needs INSERT, upsert also SELECT/UPDATE, and deletion needs deliberate permission. | Supabase documentation unknown | REASONED |
+| supabase-realtime-default: Public Realtime channels are allowed by default; disable them project-wide and also set client config.private. | Supabase documentation unknown | REASONED |
+| supabase-realtime-policy: Broadcast/Presence receive/send need separate SELECT/INSERT policies on realtime.messages, constrained by topic ownership and extension. | Supabase documentation unknown | REASONED |
+| supabase-changes: Postgres Changes uses source-table authorization; private-channel policies are not universal and DELETE has separate limitations. | Supabase documentation unknown | REASONED |
+| supabase-signup: Disable signup, anonymous sign-ins and unused providers when unwanted; inspect hosted settings instead of assuming universal defaults. | Supabase documentation unknown | REASONED |
+| supabase-cli-auth: CLI enable_signup defaults true and enable_anonymous_sign_ins false; local config edits do not prove hosted settings changed. | Supabase documentation unknown | REASONED |
+| supabase-mfa: TOTP is available on every plan at writing; enrollment alone does not constrain data. Require aal2 using a restrictive policy alongside permissive ownership policies. | Supabase documentation unknown; PostgreSQL documentation unknown | REASONED |
+| supabase-edge-jwt: Per-function verify_jwt defaults true; --no-verify-jwt disables platform checking and requires handler authentication before protected work. | Supabase documentation unknown | REASONED |
+| supabase-edge-auth: Platform JWT success is not resource authorization and API-key compatibility can pass it; separately authorize users or verify webhook signatures. | Supabase documentation unknown | REASONED |
+| supabase-edge-secrets: Edge environments contain privileged credentials including SUPABASE_SERVICE_ROLE_KEY; protect managed/local secrets, responses, logs and client bundles. | Supabase documentation unknown | REASONED |
+| verify-firestore: Compare unsigned/A/B reads and writes to user documents and descendants, with a successful owner control; test parent documents to distinguish recursive-rule versions. | Firebase documentation unknown | REASONED |
+| verify-rtdb: Compare unsigned/A/B reads/writes to seeded RTDB owner paths; ancestor grants expose them while ownership rules deny unauthorized callers. | Firebase documentation unknown | REASONED |
+| verify-firebase-storage: Compare unsigned/A/B object reads and uploads; ownership rules must deny unrelated callers while owner operations succeed. | Firebase documentation unknown | REASONED |
+| verify-download-token: Same sessionless download URL works after Rules tightening but must lose bytes after token revocation; owner getBytes remains successful and network/CORS failures are inconclusive. | Firebase documentation unknown | REASONED |
+| verify-tables: Pair unsigned/A/B profiles GETs against seeded rows, using ordinary credentials and required MFA; test intended writes and persisted effects separately. | Supabase documentation unknown; PostgreSQL documentation unknown | REASONED |
+| verify-views: Compare view reads with table boundaries; owner-privileged exposure must close under invoker/revoked access while intended reads or deliberate removal are confirmed. | PostgreSQL documentation unknown | REASONED |
+| verify-rpc: Test every API function overload with valid harmless arguments as unsigned/A/B; unauthorized data or operations must be denied while the intended caller succeeds. | Supabase documentation unknown | REASONED |
+| verify-http: Probe HTTP wrappers with a controlled collector and marker; unauthorized fixed calls must emit no request. Commit pg_net fixture transactions before expecting delivery. | Supabase documentation unknown | REASONED |
+| verify-vault: Use a disposable Vault canary to compare exposed/fixed wrappers; inspect function and table privileges as supporting evidence. | Supabase documentation unknown; PostgreSQL documentation unknown | REASONED |
+| verify-storage: Compare public URL and A/B private downloads plus intended uploads/upserts; unauthorized callers must receive no bytes or cross-owner writes. | Supabase documentation unknown | REASONED |
+| verify-realtime: Compare A/B join, Broadcast and Presence delivery; public-disabled clients lacking private=true must fail, and connection alone is insufficient. | Supabase documentation unknown | REASONED |
+| verify-changes: Observe A/B INSERT/UPDATE subscription events against seeded rows; fixed table authorization withholds unrelated events. Evaluate DELETE separately. | Supabase documentation unknown | REASONED |
+| verify-edge: Compare no/invalid Bearer without apikey, authorized owners and valid webhook signatures; distinguish platform 401 from handler authorization and inspect effects/secrets. | Supabase documentation unknown | REASONED |
+| verify-firebase-functions: Compare callable requests with valid App Check but missing user auth and A/B operations; HTTP endpoints need separate invalid/valid user or IAM comparisons. | Firebase documentation unknown | REASONED |
+| verify-appcheck: Repeat owner requests with/without App Check per product/callable; enforcement must deny missing attestation while compatible clients work. | Firebase documentation unknown | REASONED |
+| verify-api-restrictions: Test intended versus excluded apps/referrers after key restrictions, retaining successful intended product traffic. | Firebase documentation unknown | REASONED |
+| verify-emulators: Enumerate hub /emulators and sockets, compare missing versus loaded Rules and second-host connectivity, and retain local owner controls. | Firebase documentation unknown | REASONED |
+| verify-firebase-accounts: Sign out before each Anonymous signup test and check isNewUser; disabled providers must reject creation. Enumeration tests compare sign-in errors, not EMAIL_EXISTS signup behavior. | Firebase documentation unknown | REASONED |
+| verify-supabase-accounts: Fresh signup and anonymous creation must fail under invite-only/anonymous-disabled settings while an invited account still signs in. | Supabase documentation unknown | REASONED |
+| verify-mfa: Owner profiles GET with aal1 must yield no protected rows under the restrictive policy, while fresh aal2 returns the seeded owner row. | Supabase documentation unknown | REASONED |
+| verify-key-retirement: Compare old/new API keys after explicit deactivation and old/new JWTs after revocation, accounting for propagation and caches. | Supabase documentation unknown | REASONED |
+| verify-api-removal: Previously successful profiles requests must stop returning fixtures after schema removal or Data API disabling; retained schemas need authorized controls. | Supabase documentation unknown | REASONED |
+| verify-bundle: Filename-only service_role/eyJ/sb_secret_ scanning yields review candidates, not proof of leaks; public anon JWTs are legitimate. Use a marker control and inspect encoded/split secrets separately. | Supabase documentation unknown | REASONED |
+| local-guards: Historical local guard tests rejected placeholders and malformed set lines; this demonstrates shell behavior only, not live authorization. Shell/tool versions are not sourced. | Supabase documentation unknown | DEMONSTRATED |
+| local-syntax: Recorded ShellCheck/bash and JSON/TOML/JavaScript parsing passed; these checks do not compile Firebase Rules, execute SQL or demonstrate services. | Firebase documentation unknown; Supabase documentation unknown | DEMONSTRATED |
+<!-- version-basis:end -->
 
 These platforms handle TLS for you on their hosted endpoints; the exposure works differently.
 Client SDKs talk to the backend using keys that ship in your frontend code and are **public by
@@ -30175,6 +30548,8 @@ fixture data. Credentials enter curl through stdin, not process arguments; that 
 a carelessly created header file, shell history, or tracing. The write-out fields require curl
 7.75.0 or newer.
 
+REASONED: following block; ordinary-user profiles and MFA comparisons follow the cited Supabase/PostgreSQL documentation; no disposable project or controlled user sessions were supplied.
+
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_REQUEST_URL' 'REPLACE_WITH_PROTECTED_HEADERS_FILE'
@@ -30366,6 +30741,8 @@ remove the exposure and rotate or revoke the confirmed credential, not just dele
 tree. Do not rotate credentials merely because a source-code word matched. See
 [API-key handling](https://supabase.com/docs/guides/api/api-keys) and [secrets.md](secrets.md).
 
+REASONED: following block; credential-candidate review follows the cited Supabase API-key documentation; no deployed client bundle or credential inventory was supplied.
+
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLIENT_BUNDLE_DIRECTORY'
@@ -30495,6 +30872,45 @@ was not installed in the repository, and no whole-corpus gate result is claimed.
 
 # Self-hosted Supabase
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| release: Guide names self-hosted/v0.8.1, Envoy v1.39.1 and Auth v2.196.0; compare installed releases and overrides with the separately pinned environment and Compose sources. | Supabase documentation unknown; Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
+| jwt-secrets: Replace demo JWT_SECRET and derived ANON_KEY/SERVICE_ROLE_KEY together; the public signing secret permits forged roles even after merely replacing API keys. | Supabase documentation unknown; Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801 | REASONED |
+| dashboard-secret: Replace shipped supabase / this_password_is_insecure_and_should_be_updated dashboard credentials before first start. | Supabase documentation unknown; Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801 | REASONED |
+| postgres-secret: Replace your-super-secret-and-long-postgres-password; initialized databases require utils/db-passwd.sh and service recreation, not an env-only edit. | Supabase documentation unknown; Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801 | REASONED |
+| s3-secrets: Replace both demo S3_PROTOCOL_ACCESS_KEY_ID and S3_PROTOCOL_ACCESS_KEY_SECRET. | Supabase documentation unknown; Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801 | REASONED |
+| encryption-secrets: Regenerate SECRET_KEY_BASE (at least 64), REALTIME_DB_ENC_KEY (16), VAULT_ENC_KEY (32) and PG_META_CRYPTO_KEY (at least 32); VAULT_ENC_KEY protects Supavisor configuration. | Supabase documentation unknown; Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801 | REASONED |
+| key-generation: Use generate-keys.sh and add-new-auth-keys.sh, including JWT_KEYS/JWT_JWKS where present, and protect the resulting env file outside source control. | Supabase documentation unknown | REASONED |
+| key-retirement: Recreate affected services; remove old signing keys from every verifier. Opaque API-key rotation alone does not retire JWT signing keys or user sessions. | Supabase documentation unknown | REASONED |
+| gateway-port: Default Envoy gateway publishes HTTP 8000 on every interface and fronts API services plus Studio; bind host publication to loopback or firewall it. | Supabase documentation unknown; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
+| pooler-ports: Supavisor publishes 5432 and 6543 on every interface; unpublished db ports remain reachable from the Docker host. Isolate database access independently. | Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
+| kong-port: Optional Kong additionally publishes HTTPS 8443; include that mapping in isolation checks. | Supabase documentation unknown | REASONED |
+| network-check: Docker NAT can bypass UFW and lack matching host sockets; inspect effective mappings and test IPv4/IPv6 externally with a working allowed-vantage control. | Supabase documentation unknown; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
+| transport: Default Envoy and Supavisor supply no TLS termination; HTTPS proxy protects the API, while PostgreSQL wire traffic needs its own TLS or encrypted tunnel. | Supabase documentation unknown; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
+| egress: Constrain Edge Function and Storage URL-fetching egress; inbound JWT verification does not restrict outbound requests. | Supabase documentation unknown | REASONED |
+| role-secret: service_role bypasses RLS but remains subject to SQL privileges; keep service credentials server-side and never ship them to clients. | Supabase documentation unknown | REASONED |
+| anon-rls: Public anon access requires SQL privileges and applicable RLS policies; enabled RLS without a policy returns no rows, missing grants error, and disabled RLS does not constrain granted operations. | Supabase documentation unknown | REASONED |
+| views: Enable RLS on every exposed table and review owner-privileged views that can disclose rows beyond caller policies. | Supabase documentation unknown | REASONED |
+| gateway-routes: Studio uses Basic auth; REST/GraphQL/Realtime and protected Auth routes require API keys. Some Auth routes are open; Storage and Functions enforce their own controls. | Supabase documentation unknown; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
+| functions: FUNCTIONS_VERIFY_JWT defaults false; main worker then performs no JWT check, although individual functions can authenticate. Choose each function policy deliberately. | Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
+| studio-port: Studio listens internally on 3000 without host publication; never route around gateway dashboard authentication. | Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
+| signup: DISABLE_SIGNUP=false ships registration open; ENABLE_PHONE_SIGNUP and ENABLE_PHONE_AUTOCONFIRM=true permit self-confirmed phone signup. | Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
+| mfa: Application-user TOTP needs assurance-level enforcement; it adds no factor to Studio Basic auth, which needs a private or MFA-enforcing administrative boundary. | Supabase documentation unknown | REASONED |
+| verify-isolation: Any external HTTP/database response proves publication; refusal is vantage-specific and timeout inconclusive. Corroborate with mappings and a live allowed control. | Supabase documentation unknown; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
+| verify-function: Known unauthenticated canary responds to both requests with JWT checking off; with it on, missing Bearer gets 401 and current legacy anon JWT returns the known response. | Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
+| verify-api-keys: Compare shipped and current API keys at /auth/v1/settings; current key must return settings JSON. This tests gateway acceptance, not signing-key retirement. | Supabase documentation unknown | REASONED |
+| verify-signing: Compare equivalent unexpired service_role JWTs signed by current versus demo secret against one REST canary, retaining a valid apikey; require JWT signature rejection. | Supabase documentation unknown | REASONED |
+| verify-dashboard: Default Basic credentials must fail with 401 after replacement, while a current credential retrieves a known Studio response. | Supabase documentation unknown; Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801 | REASONED |
+| verify-database: Check pooler 5432/6543 as postgres.your-tenant-id against postgres using SELECT current_user, current_database(); require demo-password authentication failure and a working control. | Supabase documentation unknown; Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
+<!-- version-basis:end -->
+
 The self-hosted Supabase Docker stack ships a `.env.example` full of demo secrets, and its own
 documentation says plainly: "you should never start your self-hosted Supabase using these defaults."
 An unedited `docker compose up` publishes two surfaces to the host. The API gateway (Envoy by default,
@@ -30615,6 +31031,8 @@ authentication. With `FUNCTIONS_VERIFY_JWT=false`, both requests should reach it
 enabled, the credential-free request should receive `401` and the Bearer-authenticated request should
 return its known response. An arbitrary function can return its own `401`, so that status alone does not
 identify the main worker's policy.
+
+REASONED: following block; the canary function comparison follows the cited environment and Compose sources; no container runtime was available for exposed/fixed service runs.
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
@@ -30841,6 +31259,53 @@ Any backup path known to have existed on the server should also 404 at the deplo
 
 # WebSockets, server-sent events, and webhooks: authenticating the non-page endpoints
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| private: Restrict application origins to intended proxies; separately inventory containers, IPv6 and management endpoints. | OWASP guidance unknown | REASONED |
+| tls: Use WSS and HTTPS with certificate verification; protect untrusted proxy-to-app hops with authenticated TLS. | WebSocket protocol RFC 6455; OWASP guidance unknown; GitHub webhooks documentation unknown | REASONED |
+| credentials: Disable anonymous/default credentials and separate minimally scoped publisher, subscriber, sender and admin identities. | OWASP guidance unknown | REASONED |
+| mfa: Keep admin UIs private with IdP or fronting MFA; machine webhook deliveries use signatures. | OWASP guidance unknown; GitHub webhooks documentation unknown | REASONED |
+| ws-headers: Browser WebSocket accepts a URL and protocols, with no custom Authorization-header argument. | Browser API and living standards unknown | REASONED |
+| ws-origin: Eligible cookies may accompany handshakes; reject missing or non-allowlisted Origin before protected logic to prevent CSWSH. | OWASP guidance unknown; WebSocket protocol RFC 6455 | REASONED |
+| ws-token: Authenticate a short-lived first-message token before protected use; rotate it and keep credentials out of URLs and subprotocols. | OWASP guidance unknown; Browser API and living standards unknown | REASONED |
+| ws-identity: Origin is forgeable outside browsers; independently authenticate, and do not let a stolen cookie alone obtain the first-message token. | OWASP guidance unknown; WebSocket protocol RFC 6455 | REASONED |
+| ws-deadline: Allow no protected operation before authentication and impose a bounded authentication deadline. | OWASP guidance unknown | REASONED |
+| authorization: Authorize each channel, tenant and operation, including SSE subscriptions; revalidate and terminate expired or revoked long-lived access. | OWASP guidance unknown | REASONED |
+| sse: EventSource uses GET without custom Authorization headers; eligible cookies and cross-origin withCredentials remain browser-policy dependent. | Browser API and living standards unknown | REASONED |
+| sse-origin: Authenticate subscriptions and allow only trusted credentialed CORS origins; legitimate same-origin GET may omit Origin. | Browser API and living standards unknown; OWASP guidance unknown | REASONED |
+| sse-fetch: Keep SSE GET side-effect free; use fetch with a ReadableStream when header tokens are needed. | Browser API and living standards unknown | REASONED |
+| github-signature: Verify raw-body HMAC-SHA256 using X-Hub-Signature-256 and constant-time comparison. | GitHub webhooks documentation unknown | REASONED |
+| signature-shape: Reject missing/malformed sha256= plus 64-hex signatures; timingSafeEqual needs equal buffer lengths and exceptions must fail closed. | GitHub webhooks documentation unknown; Node.js crypto documentation unknown | REASONED |
+| stripe-signature: Stripe signs timestamp, dot and raw body with the endpoint secret; use official verification libraries. | Stripe webhooks documentation unknown | REASONED |
+| stripe-tolerance: stripe-node v18.5.0 and stripe-python v12.5.0 default to 300 seconds; set a positive tolerance and test stale requests because zero handling differs. | stripe-node v18.5.0; stripe-python v12.5.0 | REASONED |
+| github-replay: GitHub signs neither a timestamp nor X-GitHub-Delivery; changed delivery IDs retain valid signatures, so ID deduplication cannot establish freshness. | GitHub webhooks documentation unknown | REASONED |
+| idempotency: Use atomic durable idempotency from authenticated payload data; body-digest caches only suppress identical bodies during retention and can suppress legitimate repeats. | GitHub webhooks documentation unknown | REASONED |
+| stripe-replay: A signed timestamp limits age, not replay inside the window; deduplicate authenticated event IDs after signature and timestamp validation. | Stripe webhooks documentation unknown | REASONED |
+| raw-body: Verify exact received bytes before JSON reserialization or handler effects. | GitHub webhooks documentation unknown; Stripe webhooks documentation unknown | REASONED |
+| csrf: Scope any webhook CSRF exemption to the one route and method. | Stripe webhooks documentation unknown | REASONED |
+| webhook-secret: Require a configured strong GitHub secret, reject unsigned delivery, and use distinct protected, rotated endpoint secrets kept out of URLs and logs. | GitHub webhooks documentation unknown; OWASP guidance unknown | REASONED |
+| stripe-secrets: Stripe test/live and Dashboard/CLI-forwarding endpoint secrets differ. | Stripe webhooks documentation unknown | REASONED |
+| sender-ip: Provider IP allowlists supplement signatures; trust forwarded client addresses only through a configured proxy chain. | GitHub webhooks documentation unknown | REASONED |
+| proxy-limits: Bound HTTP body size, concurrency and timeouts separately; proxy capability summaries refer to local guides and need current vendor confirmation. | Traefik timeout reference v3.5; Caddy and nginx timeout documentation unknown | REASONED |
+| message-limits: After WebSocket upgrade, enforce per-message authorization and rate limits; connection limits do not bound messages or jobs. | OWASP guidance unknown | REASONED |
+| ssrf: Allowlist relay destinations and enforce worker egress for schemes, ports and resolved addresses; revalidate redirects and never forward inbound credentials. | OWASP guidance unknown | REASONED |
+| verify-handshake: Cookie handshake positive is 101; missing cookie and disallowed/missing Origin must reject, never 101. Failed controls and unrelated errors are inconclusive. | OWASP guidance unknown; WebSocket protocol RFC 6455 | REASONED |
+| verify-sse: With a cookie require 200, text/event-stream and the protected event; without it require rejection. A timeout alone proves nothing. | Browser API and living standards unknown; OWASP guidance unknown | REASONED |
+| verify-messages: Using the real client, compare valid, missing, invalid and expired tokens, pre-auth operations, cross-channel denial and revocation on an open connection. | OWASP guidance unknown | REASONED |
+| verify-defaults: Pair a legitimate login with the deployed component default credentials; a no-credential request does not test defaults. | OWASP guidance unknown | REASONED |
+| verify-webhook: Wrong/unsigned signatures must have no effect; valid events must act once and replay must not act twice, even with changed GitHub delivery IDs. | GitHub webhooks documentation unknown; Stripe webhooks documentation unknown | REASONED |
+| verify-stale: On a synchronized Stripe fixture with 300-second tolerance, a request backdated 600 seconds must fail timestamp validation. | stripe-node v18.5.0; stripe-python v12.5.0 | REASONED |
+| verify-secrets: Hidden prompts and stdin headers avoid new secret argv/history/environment exposure; Python reads and closes secret pipe fd 3. Process memory remains readable. | curl minimum write-out version 7.75.0; Python os documentation unknown | REASONED |
+| verify-origin: Compare allowed and external vantage points using connect-to and correct Host/TLS name; HTTP or TLS responses prove reachability, errors alone do not prove isolation. | curl minimum write-out version 7.75.0 | REASONED |
+<!-- version-basis:end -->
+
 Streaming an LLM response commonly rides a WebSocket or an SSE stream, and integrations commonly call back through a webhook. All three are transports, not authentication mechanisms, and each is routinely shipped wide open. [authentication.md](authentication.md) rule 15 already says each transport needs its own check; this guide is that check for these three.
 
 ## 1. Restrict listeners and encrypt each transport
@@ -30947,6 +31412,8 @@ First-message-token and default-credential authentication need the application's
 
 For the webhook route, use an isolated test endpoint and a fresh, valid JSON event fixture that produces an observable effect. Enter its endpoint secret at the hidden prompt, and for GitHub export only the fixture's non-secret event type as `AUDIT_GITHUB_EVENT`; these are probe inputs, not vendor configuration. This block assumes a clean shell. It reads `AUDIT_WEBHOOK_SECRET` into an unexported subshell variable and unsets it on exit; Python reads the secret bytes from a pipe on file descriptor 3 and closes that descriptor before starting curl. Neither the secret nor the signed headers enter argv or the environment. The secret remains readable in process memory by the same account and root, and a previously exported value is not erased. The wrong-signature and unsigned requests must be rejected by signature validation with no effect, the correctly signed request must reach the handler and produce the effect, and its repetition must produce no second effect (a success acknowledgement for an already-processed event is fine). For this Stripe probe, confirm that the isolated receiver uses a 300-second tolerance and that the sender and receiver clocks are synchronized; the harness backdates the stale request by 600 seconds, so that request must fail timestamp validation. Confirm the rejecting component in the application logs; transport errors and timeouts are inconclusive. These endpoint outcomes are reasoned, not demonstrated here.
 
+REASONED: following block; signature, replay and timestamp expectations follow the cited GitHub and Stripe sources; no endpoint or event fixtures were supplied.
+
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
@@ -31017,6 +31484,8 @@ PY
 ```
 
 Finally, authentication rejection is not evidence of network isolation, so test direct reachability of each listener. Inventory every application and management listener, including published container ports and IPv6, and for each HTTP listener set the connect-to mapping to `URL_HOST:URL_PORT:ACTUAL_ORIGIN_ADDRESS:ACTUAL_LISTENER_PORT` (bracket IPv6 addresses where curl requires them) while the URL keeps the intended Host and TLS server name. Run it first from an allowed location to establish that the origin answers, then from an external one against the same origin: any HTTP response (including `401`, `403` or `404`), or a TLS handshake or certificate error, proves external reachability, while a timeout, DNS error, or local socket error does not prove isolation and must be corroborated with the listener and network-policy configuration. Never use `-k`. This comparison stays reasoned until both vantage points and the real origin inventory are available.
+
+REASONED: following block; origin reachability follows the cited curl documentation; both vantage points and the real listener inventory are unavailable.
 
 ```bash
 (
@@ -32027,6 +32496,59 @@ give the server's public address. A "connected" on a port you did not mean to ex
 
 # Nomad and Consul: the scheduler and service-mesh APIs
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| nomad-bind: Nomad defaults bind_addr=0.0.0.0 and all three listeners fall back to it; setting only addresses.http leaves RPC and gossip on bind_addr. | Nomad Community Edition 2.0.7 | REASONED |
+| nomad-http: Nomad HTTP API/UI uses 4646; UI defaults enabled at /ui/. | Nomad Community Edition 2.0.7 | REASONED |
+| nomad-rpc: Nomad RPC uses 4647; keep it on private or management addresses. | Nomad Community Edition 2.0.7 | REASONED |
+| nomad-gossip: Nomad Serf uses 4648 TCP/UDP; gossip is unencrypted until encrypt is configured. | Nomad Community Edition 2.0.7 | REASONED |
+| nomad-dev: Linux -dev binds 127.0.0.1 except -dev-connect, which binds 0.0.0.0. Wildcard behavior was not observed. | Nomad Community Edition 2.0.7 | REASONED |
+| nomad-acl-default: ACLs default disabled; enable acl.enabled on every agent before exposing the API. | Nomad Community Edition 2.0.7 | REASONED |
+| nomad-debug: Debug endpoints still require enable_debug with ACLs off; -dev enables it. | Nomad Community Edition 2.0.7 | REASONED |
+| nomad-exec: On a root Linux client, exec uses a chroot and task user, default nobody, with root refused by the default exec denylist; no client job was run. | Nomad Community Edition 2.0.7 | REASONED |
+| nomad-raw-exec: raw_exec has no isolation and defaults off, but -dev enables it. | Nomad Community Edition 2.0.7 | REASONED |
+| nomad-remote-exec: Remote task execution defaults enabled through disable_remote_exec=false. | Nomad Community Edition 2.0.7 | REASONED |
+| nomad-tls: HTTP/RPC TLS defaults off; enable both tls.http and tls.rpc. | Nomad Community Edition 2.0.7 | REASONED |
+| nomad-bootstrap-reset: Unauthenticated PUT /v1/acl/bootstrap claims the first management token after ACL enablement; repeat is blocked until the operator reset file in data_dir/server. | Nomad Community Edition 2.0.7 | REASONED |
+| consul-client-bind: Consul client_addr defaults 127.0.0.1; widening it or addresses.http makes the API reachable. | Consul Community Edition 2.0.4 | REASONED |
+| consul-http: Consul HTTP API is 8500; UI defaults off and -dev enables /ui/ on that port. | Consul Community Edition 2.0.4 | REASONED |
+| consul-dns: Consul DNS uses 8600 TCP/UDP on client_addr. | Consul Community Edition 2.0.4 | REASONED |
+| consul-rpc: Consul server RPC uses 8300 on bind_addr, default 0.0.0.0. | Consul Community Edition 2.0.4 | REASONED |
+| consul-lan: Consul LAN Serf uses 8301 TCP/UDP on bind_addr. | Consul Community Edition 2.0.4 | REASONED |
+| consul-wan: Consul WAN Serf uses 8302 TCP/UDP on bind_addr. | Consul Community Edition 2.0.4 | REASONED |
+| consul-https: Consul HTTPS defaults disabled. | Consul Community Edition 2.0.4 | REASONED |
+| consul-grpc: Plaintext gRPC defaults disabled; servers open TLS gRPC on 8503 on client_addr. | Consul Community Edition 2.0.4 | REASONED |
+| consul-acl-default: Consul ACLs default off and disabled ACL resolution grants management rights; with ACLs enabled default_policy still defaults allow. | Consul Community Edition 2.0.4 | REASONED |
+| consul-bootstrap-reset: Bootstrap is unauthenticated and one-time until an operator writes acl-bootstrap-reset; bootstrap privately before exposing the API. | Consul Community Edition 2.0.4 | REASONED |
+| consul-script: enable_script_checks defaults off; enabling without ACLs or allow_write_http_from only warns. Prefer enable_local_script_checks if needed. | Consul Community Edition 2.0.4 | REASONED |
+| consul-remote-exec: consul exec defaults disabled through disable_remote_exec=true. | Consul Community Edition 2.0.4 | REASONED |
+| consul-tls-gossip: TLS verification defaults off and gossip is unencrypted without encrypt. | Consul Community Edition 2.0.4 | REASONED |
+| verify-inventory: Inventory TCP/UDP on private or management addresses; wildcard exposed binds and actual external isolation remain reasoned. | Nomad Community Edition 2.0.7; Consul Community Edition 2.0.4 | REASONED |
+| loopback-listeners: Loopback runs used substitute TCP/Serf UDP ports; Consul DNS, WAN and gRPC were disabled, so their live listeners were not demonstrated. | Nomad Community Edition 2.0.7; Consul Community Edition 2.0.4 | DEMONSTRATED |
+| nomad-acl-probe: Loopback anonymous self/jobs/agent probes distinguished ACLs-off from ACLs-on; self remains 200 but changes AccessorID, while jobs and agent become 403. | Nomad Community Edition 2.0.7 | DEMONSTRATED |
+| nomad-agent-acl: Server-handled paths can conceal a client with ACLs off; local /v1/agent/self exposed that client with 200 while the server returned 403. | Nomad Community Edition 2.0.7 | DEMONSTRATED |
+| nomad-bootstrap-run: ACL probe rejection did not prove bootstrap complete; first bootstrap issued management credentials and the second returned already-done. | Nomad Community Edition 2.0.7 | DEMONSTRATED |
+| nomad-anonymous-policy: Anonymous rights come from the named anonymous policy; historical exported-token inspection found it absent, then present with submit-job despite unchanged probe results. | Nomad Community Edition 2.0.7 | DEMONSTRATED |
+| nomad-job-registration: Anonymous registration succeeded with ACLs off and failed with ACLs on and no anonymous policy; registration is not a demonstrated job execution. | Nomad Community Edition 2.0.7 | DEMONSTRATED |
+| nomad-token-input: CLI accepts -token or NOMAD_TOKEN, not stdin; the current prompted one-command prefix avoids argv/history but retains same-user/root environment visibility. That form has no recorded run. | Nomad Community Edition 2.0.7 | REASONED |
+| consul-acl-probe: Loopback ACLs-off gave self 401/agent 200; enabled allow gave self 403/agent 200; enabled deny gave agent 403 with anonymous-permission text. | Consul Community Edition 2.0.4 | DEMONSTRATED |
+| consul-agent-acl: Each agent applies its own enabled/default_policy; mixed server/client configurations gave different results on their own APIs. | Consul Community Edition 2.0.4 | DEMONSTRATED |
+| consul-bootstrap-run: Deny results appeared before bootstrap; first bootstrap issued a token and the second refused with bootstrap no longer allowed. | Consul Community Edition 2.0.4 | DEMONSTRATED |
+| consul-anonymous-token: Inspect anonymous accessor 00000000-0000-0000-0000-000000000002 for policies, roles and identities; its recorded read listed none. | Consul Community Edition 2.0.4 | DEMONSTRATED |
+| consul-default-token: An agent default token substitutes for anonymous requests; recorded key-write default token yielded self 200 and agent 403 yet allowed an unauthenticated KV write. | Consul Community Edition 2.0.4 | DEMONSTRATED |
+| consul-kv: Anonymous KV writes succeeded with ACLs off and allow policy, and were refused under deny. | Consul Community Edition 2.0.4 | DEMONSTRATED |
+| consul-script-run: With default script-check settings, remote script registration was refused. | Consul Community Edition 2.0.4 | DEMONSTRATED |
+| verify-tcp: Probe each actual public IP with a known-open control; connected establishes reachability, refused/timeout only local nonreachability. This guide cross-references another guide's run; UDP is not tested. | Nomad Community Edition 2.0.7; Consul Community Edition 2.0.4 | REASONED |
+| verify-address-limits: TCP guard refuses zero/dotted-IPv6 forms but permits loopback and some hex forms reaching the probing host; use public addresses and corroborate surprising connections with host sockets. | Nomad Community Edition 2.0.7; Consul Community Edition 2.0.4 | REASONED |
+<!-- version-basis:end -->
+
 Nomad schedules and runs workloads, and Consul holds a cluster's service catalog, health checks and
 key-value store. Both are controlled through an HTTP API that also serves a web UI, and both ship
 with access control lists (ACLs) turned off. With ACLs off, anyone who reaches Nomad's API can
@@ -32109,6 +32631,8 @@ The TCP reachability probe is the block demonstrated on loopback in
 
 On each host, list the listeners, TCP and UDP:
 
+REASONED: following block; default and external listener expectations follow the pinned Nomad and Consul sources; only the reduced loopback inventory below was observed, and wildcard binding was forbidden.
+
 ```bash
 sudo ss -tlnp   # 4646, 4647, 4648 (Nomad); 8500, 8600, 8300, 8301, 8302, 8503 (Consul): private or management addresses only
 sudo ss -ulnp   # Serf gossip on UDP 4648 (Nomad) and 8301, 8302 (Consul); Consul DNS on UDP 8600
@@ -32121,6 +32645,8 @@ and 8301 (the runs turned off Consul's DNS, Serf WAN and gRPC), and on UDP on th
 
 For Nomad, send three requests without a token, to every agent's API, servers and clients. Substitute the API URL (for example
 `http://10.0.0.5:4646`) inside the single quotes, and paste the whole block.
+
+DEMONSTRATED: following block; the recorded Nomad 2.0.7 loopback runs observed the ACL-off/on and per-agent HTTP results below on test ports, without running a client job.
 
 ```bash
 (
@@ -32161,6 +32687,8 @@ and hands it to the one `nomad` command as a prefix assignment, never exported. 
 out of argv, not out of reach: while `nomad` runs, it can be read from `/proc/<pid>/environ` by the
 same account and by root.
 
+REASONED: following block; token input follows the pinned Nomad 2.0.7 CLI source; the recorded policy inspection used the earlier exported-token form, not this prompt and prefix assignment.
+
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
@@ -32193,6 +32721,8 @@ For Consul, send two requests without a token, to every agent's HTTP API, server
 an agent whose `client_addr` is loopback, the default, from its own host (for example
 `http://127.0.0.1:8500`). Substitute the HTTP API URL (for example
 `http://10.0.0.5:8500`) inside the single quotes, and paste the whole block.
+
+DEMONSTRATED: following block; the recorded Consul 2.0.4 loopback runs observed disabled, allow, deny and per-agent/default-token HTTP outcomes below on test ports.
 
 ```bash
 (
@@ -32251,6 +32781,8 @@ one IP address rather than a host name, so that a name with both IPv4 and IPv6 a
 one behind a timeout on the other: run it once for each public address of the host. It also takes a
 port you know is open on that address from this host (for example SSH on 22) as the positive control,
 and stops if the control does not connect. Substitute both inside the single quotes.
+
+REASONED: following block; port targets follow the pinned Nomad and Consul defaults; the guide cross-references a loopback demonstration elsewhere, while external isolation was not demonstrated here.
 
 ```bash
 (
@@ -32327,6 +32859,89 @@ give the host's public address. A "connected" on a port you did not mean to expo
 ======================================================================
 
 # Self-hosted backends: PocketBase and Appwrite
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| pb-bootstrap: Privately bootstrap through the logged installer URL; superuser create EMAIL PASS exposes passwords in argv. Ordinary registration does not grant superuser rights. | PocketBase v0.40.4 | REASONED |
+| pb-installer: Installer system-superuser token lasts about 30 minutes; protect its URL and startup logs as credentials. | PocketBase v0.40.4 | REASONED |
+| pb-ips: Superuser IP allowlists are available from v0.38.0; superuserIPs defaults empty and restricts authenticated requests, not /_/ static assets. | PocketBase v0.40.4 | REASONED |
+| pb-tls: serve with a domain provides native HTTPS/ACME; alternatively terminate TLS at a reverse proxy. | PocketBase v0.40.4 | REASONED |
+| pb-bind: Without a domain serve defaults to 127.0.0.1:8090; with a domain it uses 0.0.0.0:80/443. Behind a local proxy omit the domain and set --http loopback. | PocketBase v0.40.4 | REASONED |
+| pb-origins: --origins defaults * and accepts comma-separated allowed origins; CORS does not authorize records. | PocketBase v0.40.4 | REASONED |
+| pb-proxy: Trust only headers the proxy overwrites, review useLeftmostIP ordering and block direct backend access to protect IP/rate controls. | PocketBase v0.40.4 | REASONED |
+| pb-dev: --dev adds diagnostics including SQL on stderr, not an auth bypass; its flag default remains unverified. | PocketBase v0.40.4 | REASONED |
+| pb-rules: Each list/view/create/update/delete rule defaults null (superuser-only); empty opens to guests and nonempty filters. Superusers bypass rules. | PocketBase v0.40.4 | REASONED |
+| pb-manage: Top-level manageRule defaults null and permits privileged auth-record changes alongside create/update rules; its validator rejects empty-string rules. | PocketBase v0.40.4 | REASONED |
+| pb-files: File fields default unprotected despite locked record rules; Protected plus an authorized viewRule gates downloads, while a public viewRule still permits public access. | PocketBase v0.40.4 | REASONED |
+| pb-file-token: Short-lived file tokens provide identity context, not file authorization; viewRule decides. Protect token-bearing file URLs. | PocketBase v0.40.4 | REASONED |
+| pb-realtime: Collection subscriptions use listRule and individual-record subscriptions viewRule; SSE/subscription success does not prove event authorization. | PocketBase v0.40.4 | REASONED |
+| pb-password: Auth initialization enables password authentication with email as the identity field. | PocketBase v0.40.4 | REASONED |
+| pb-oauth: OAuth2 defaults disabled and is unsupported for _superusers. | PocketBase v0.40.4 | REASONED |
+| pb-mfa-default: MFA defaults disabled with duration 600 seconds. | PocketBase v0.40.4 | REASONED |
+| pb-otp-default: OTP defaults disabled with duration 180 seconds and length 8. | PocketBase v0.40.4 | REASONED |
+| pb-alerts: Authentication alerts default enabled; retain alerts and provide working email. | PocketBase v0.40.4 | REASONED |
+| pb-auth-token: Auth token duration defaults to 432000 seconds. | PocketBase v0.40.4 | REASONED |
+| pb-file-duration: File token duration defaults to 180 seconds. | PocketBase v0.40.4 | REASONED |
+| pb-auth-rule: authRule defaults empty; verified-only collections can require verified = true after email verification works. | PocketBase v0.40.4 | REASONED |
+| pb-mfa: For superusers retain password auth and enable both OTP and MFA; empty mfa.rule applies to everyone. OTP alone is not a second factor. | PocketBase v0.40.4 | REASONED |
+| pb-logout: Stateless authentication means clearing pb.authStore removes only the local copy, not a stolen token. | PocketBase v0.40.4 | REASONED |
+| pb-encryption: Settings default to plaintext JSON; select a 32-character environment secret with --encryptionEnv. This encrypts settings, not the whole database or files. | PocketBase v0.40.4 | REASONED |
+| pb-backups: Backups default local with empty cron (automatic backups off); schedule/retain deliberately, protect archives and back up S3 objects separately. | PocketBase v0.40.4 | REASONED |
+| pb-backup-auth: Backup downloads require a superuser file token and obey superuser IP restrictions; ordinary auth/file tokens do not suffice. | PocketBase v0.40.4 | REASONED |
+| pb-limiter: Native limits exist from v0.23.0 but default disabled at v0.40.4; enable rateLimits.enabled. | PocketBase v0.40.4 | REASONED |
+| pb-limit-rules: Seeded limits are *:auth 2/3s, *:create 20/5s, /api/batch 3/1s and /api/ 300/10s. | PocketBase v0.40.4 | REASONED |
+| pb-limit-bypass: Superusers and rateLimits.excludedIPs bypass limits; test ordinary non-excluded clients. | PocketBase v0.40.4 | REASONED |
+| pb-smtp: smtp.enabled and smtp.tls default false; disabled SMTP falls back to sendmail. Configure protected transport and test actual delivery. | PocketBase v0.40.4 | REASONED |
+| appwrite-https: API FORCE_HTTPS and function/site ROUTER_FORCE_HTTPS default disabled at 2.2.0; explicitly enable both despite conflicting rolling deprecation/default documentation. | Appwrite 2.2.0 | REASONED |
+| appwrite-hosts: ROUTER_PROTECTION defaults disabled; configure actual domains and enable rejection of unknown hostnames. | Appwrite 2.2.0 | REASONED |
+| appwrite-registration: Console root-only registration defaults enabled with empty email/IP allowlists; these restrict account creation, not dashboard reachability or login. | Appwrite 2.2.0 | REASONED |
+| appwrite-console: Claim the first operator privately and use a separate network/access boundary for a private dashboard. | Appwrite 2.2.0 | REASONED |
+| appwrite-mfa: Enroll and verify operator TOTP, protect recovery codes; at 2.2.0 enabled MFA with a verified factor requires a second session factor. | Appwrite 2.2.0 | REASONED |
+| appwrite-dev-env: Development env disables root-only registration, abuse and router protection and carries placeholders; do not inherit it for production. | Appwrite 2.2.0 | REASONED |
+| appwrite-recreate: Apply env/Compose changes with docker compose up -d from the install directory, then check effective behavior. | Appwrite 2.2.0 | REASONED |
+| appwrite-permissions: Collection and document grants are additive; explicitly enable documentSecurity for document grants, whose default remains unverified. | Appwrite 2.2.0 | REASONED |
+| appwrite-creation: Omitted Client SDK permissions can grant creator read/update/delete; Server SDK/Console omission grants no ordinary access. Use specific users/teams for private data. | Appwrite 2.2.0 | REASONED |
+| appwrite-keys: Properly scoped server API keys bypass resource permissions but still obey operation scopes; keys.write is admin-equivalent and keys never belong in clients. | Appwrite 2.2.0 | REASONED |
+| appwrite-encryption: Replace _APP_OPENSSL_KEY_V1=your-secret-key before production data; preserve the exact key separately, since replacement/loss strands encrypted secrets. | Appwrite 2.2.0 | REASONED |
+| appwrite-backups: Back up database, persistent storage and deployment configuration; restrict access and test restoration in a separate installation. | Appwrite 2.2.0 | REASONED |
+| appwrite-abuse: _APP_OPTIONS_ABUSE defaults enabled but dev env disables it; server API-key requests are exempt, so test with ordinary clients. | Appwrite 2.2.0 | REASONED |
+| appwrite-smtp: SMTP host/port/secure/username/password default empty and empty host disables sending; configure the provider and confirm message receipt/use. | Appwrite 2.2.0 | REASONED |
+| appwrite-storage: Storage defaults local, upload limit 30000000 and server antivirus disabled; enabling scanning requires configured reachable ClamAV. | Appwrite 2.2.0 | REASONED |
+| appwrite-bucket: New bucket permissions are empty and fileSecurity=false; enable per-file security deliberately, since bucket grants also permit access. | Appwrite 2.2.0 | REASONED |
+| appwrite-bucket-options: Bucket encryption and antivirus default true; bucket antivirus does not enable the server scanner. | Appwrite 2.2.0 | REASONED |
+| appwrite-size: Encryption/scanning skip files above 20000000 bytes; cap maximumFileSize at that threshold when either is mandatory and test the boundary. | Appwrite 2.2.0 | REASONED |
+| appwrite-functions: Function execute roles and execution-key scopes default empty; grant narrowly. Disabled functions still admit authorized Server SDK API keys. | Appwrite 2.2.0 | REASONED |
+| appwrite-executor: Keep executor/orchestrator private, protect Docker-socket authority and replace _APP_EXECUTOR_SECRET; container execution is not demonstrated hostile-tenant isolation. | Appwrite 2.2.0 | REASONED |
+| verify-pb-records: Public rules allow guest reads; locked rules deny with 403, unsatisfied list filters can return empty 200 and view rules 404. Retain owner and separate superuser controls. | PocketBase v0.40.4 | REASONED |
+| verify-appwrite-records: Broad collection grants defeat document restrictions; removing them must deny unrelated users while document grantees succeed. Compare client/server creation defaults. | Appwrite 2.2.0 | REASONED |
+| verify-appwrite-keys: A correctly scoped server key reads despite empty permissions, while a key without scope fails; neither substitutes for an ordinary-user control. | Appwrite 2.2.0 | REASONED |
+| verify-registration: On disposable Appwrite fixtures compare open signup 201 with root-only account-limit failure and independent email/IP restrictions; retain login/invitation controls. | Appwrite 2.2.0 | REASONED |
+| verify-pb-bootstrap: Guest and ordinary-user _superusers record creation must fail while a valid installer token creates the private operator; static dashboard assets prove no admin access. | PocketBase v0.40.4 | REASONED |
+| verify-appwrite-mfa: Console account GET succeeds without MFA, fails with user_more_factors_required for a fresh password-only MFA session, and succeeds after TOTP completion. | Appwrite 2.2.0 | REASONED |
+| verify-pb-writes: Compare intended/unauthorized POST/PATCH/DELETE and privileged auth-record management; locked manageRule grants no management and empty-string configuration must fail. | PocketBase v0.40.4 | REASONED |
+| verify-pb-files: Before protection unsigned file GET works; Protected plus private viewRule rejects guests/unrelated-user file tokens with 404 while permitted-user bytes still arrive. | PocketBase v0.40.4 | REASONED |
+| verify-pb-realtime: Mutate a fixture while comparing collection and record subscriptions; deny unauthorized event delivery, retaining authorized delivery. PB_CONNECT/acknowledgment alone is insufficient. | PocketBase v0.40.4 | REASONED |
+| verify-pb-mfa: Compare password-only completion with password-plus-OTP MFA and verified/unverified authRule logins; clearing authStore must not revoke a retained valid token. | PocketBase v0.40.4 | REASONED |
+| verify-pb-ips: Compare allowed/excluded superuser sources and forged forwarded headers; excluded sources must get 403 and direct backend access must fail with a working proxy control. | PocketBase v0.40.4 | REASONED |
+| verify-transport: Compare HTTP/HTTPS and certificates, Appwrite API/function/site domains and configured/unknown Host; compare browser origins separately from record authorization. | PocketBase v0.40.4; Appwrite 2.2.0 | REASONED |
+| verify-abuse: Cross each configured threshold with ordinary non-excluded clients and compare disabled/enabled controls; PocketBase limiting yields 429 with later successful recovery. | PocketBase v0.40.4; Appwrite 2.2.0 | REASONED |
+| verify-email: Request OTP, verification and recovery messages and confirm receipt and use; request success alone is not delivery evidence. | PocketBase v0.40.4; Appwrite 2.2.0 | REASONED |
+| verify-pb-recovery: Compare plaintext/encrypted persisted settings, restart with retained key and restore local/S3 data; only permitted superuser file tokens may download backups. | PocketBase v0.40.4 | REASONED |
+| verify-appwrite-recovery: Restore encrypted fixtures with the original key; a separate wrong-key fixture must not recover encrypted values. | Appwrite 2.2.0 | REASONED |
+| verify-uploads: Compare permitted/unrelated uploads and size-boundary fixtures; mandatory processing requires rejecting over-limit files and confirming accepted-file encryption/scanning. | Appwrite 2.2.0 | REASONED |
+| verify-functions: Compare intended execute roles, unrelated users and privileged server keys, including disabled functions; confirm executor/orchestrator privacy from a second host. | Appwrite 2.2.0 | REASONED |
+| verify-bundle: Search filenames using protected exact-secret patterns with a disposable marker control; client bundles must contain neither superuser tokens nor Appwrite API keys, and encoded/split forms can evade scanning. | PocketBase v0.40.4; Appwrite 2.2.0 | REASONED |
+| local-guards: Recorded guard tests rejected placeholders and omitted/shortened arguments; this demonstrates shell behavior only, not service access or deployed-bundle scanning. | PocketBase v0.40.4; Appwrite 2.2.0 | DEMONSTRATED |
+| local-syntax: All three bash fences have recorded local lint/syntax success, not live service evidence; ShellCheck version is recorded only in the body. | PocketBase v0.40.4; Appwrite 2.2.0 | DEMONSTRATED |
+| source-limits: Pin-specific Appwrite legacy permissions/creator defaults and PocketBase CLI/backup archive tracing remain incomplete; documentSecurity and --dev defaults are not established. | Appwrite 2.2.0; PocketBase v0.40.4 | REASONED |
+<!-- version-basis:end -->
 
 Like Firebase and Supabase ([firebase-supabase.md](firebase-supabase.md)), these backends hand a
 public API endpoint to your client code; the collection or resource rules you write gate access
@@ -32731,6 +33346,8 @@ inside those quotes. The guards assume ordinary shell builtins. Credentials are 
 stdin; this does not protect against shell tracing, unsafe file permissions, or the account
 owner reading those files. Never place a token-bearing URL in this block.
 
+REASONED: following block; resource and scope comparisons follow the cited vendor documentation and available pins; live backend fixtures and controlled accounts were unavailable.
+
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'https://REPLACE_WITH_BACKEND/REPLACE_WITH_RESOURCE_PATH' 'REPLACE_WITH_PROTECTED_HEADERS_FILE'
@@ -32780,6 +33397,8 @@ the deployment's password policy:
 The request can create an account on a misconfigured instance. Run it only on the disposable
 fixture or an explicitly designated registration-test deployment. Use the API origin serving
 the console project, not a guessed `/console` UI path.
+
+REASONED: following block; console registration comparisons follow the pinned Appwrite handler; no disposable Appwrite installation or controlled signup fixture was available.
 
 ```bash
 (
@@ -32859,6 +33478,8 @@ not appear. Prepare a protected, nonempty patterns file containing one exact cre
 line, outside the bundle directory. The command prints matching filenames, not secret-bearing
 lines. Establish a positive control using a disposable dummy credential in a test bundle, then
 remove it and repeat. Exact matching does not detect every encoded or split representation.
+
+REASONED: following block; privileged-credential scanning follows the cited authentication/API-key documentation; no deployed client bundle or credential inventory was supplied.
 
 ```bash
 (
@@ -32944,6 +33565,47 @@ service result or deployed-bundle scan is claimed.
 ======================================================================
 
 # Headless browser services: Chrome DevTools Protocol, Selenium Grid, browserless, and Playwright server
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| cdp-bind: Command-line DevTools binds 127.0.0.1, falling back to ::1; stock browser and headless shell have no remote-debugging-address switch. | Chromium 154.0.8037.57 | REASONED |
+| cdp-port: Explicit nonzero DevTools ports do not fall back to another port; port 0 requests an ephemeral port. | Chromium 154.0.8037.57 | REASONED |
+| cdp-approval: Feature-gated approval mode uses DevToolsActivePort or 9222, with requested/ephemeral IPv4 then IPv6 fallback; command-line modes take precedence. | Chromium 154.0.8037.57 | REASONED |
+| cdp-discovery: Command-line /json and /json/version disclose debugger URLs; approval-mode 404 does not establish isolation. | Chromium 154.0.8037.57 | REASONED |
+| cdp-auth: Command-line CDP has no client authentication or password flag; Host and Origin checks do not authenticate clients. | Chromium 154.0.8037.57 | REASONED |
+| cdp-capabilities: CDP grants page JavaScript, cookie/credential and tab control; restrict ingress, browser egress and local-file reach. | Chrome DevTools Protocol unknown | REASONED |
+| cdp-private: Keep DevTools loopback/private behind authenticated access; inspect forwarders and container namespaces, since publishing cannot reach container loopback. | Chromium 154.0.8037.57 | REASONED |
+| cdp-profile: Chrome 136 requires non-default user data; pinned desktop branding check excludes normal Chromium, and Chrome for Testing exemption rests on the announcement. | Chrome profile restriction 136; Chromium 154.0.8037.57 | REASONED |
+| cdp-policy: RemoteDebuggingAllowed gates browser command-line and approval modes; headless-shell startup lacks the corresponding profile/policy check. | Chromium 154.0.8037.57 | REASONED |
+| cdp-pipe: Pipe mode alone opens no TCP port; supplying a port too can start an independent listener, and pipe access still grants browser control. | Chromium 154.0.8037.57 | REASONED |
+| grid-auth: Router username/password are unset by default, including Docker SE_ROUTER_USERNAME and SE_ROUTER_PASSWORD. | Selenium Grid unknown; Selenium Docker images aafe4d6136f3bb5afcd9b7cb691c624516d06e1b | REASONED |
+| grid-bind: Grid host is usually autodetected; Docker SE_BIND_HOST is unset and historical Grid 3 binds 0.0.0.0. Set and observe a private host with bind-host. | Selenium Grid unknown; Selenium Docker images aafe4d6136f3bb5afcd9b7cb691c624516d06e1b | REASONED |
+| grid-ports: Router, Hub, Standalone and UI use 4444; Nodes use 5555. Keep all private. | Selenium Grid unknown | REASONED |
+| grid-distributed: Distributed event bus uses 4442/4443; Distributor, Session Map, bus HTTP and New Session Queue add 5553/5556/5557/5559. | Selenium Grid unknown | REASONED |
+| grid-bus: Router Basic auth does not protect the bus; registration-secret validates event messages without encrypting transport, so isolate every participant. | Selenium Grid unknown | REASONED |
+| grid-vnc: Docker enables VNC by default on 5900 and noVNC on 7900; replace the example secret password or disable VNC, and avoid passwordless mode. | Selenium Docker images aafe4d6136f3bb5afcd9b7cb691c624516d06e1b | REASONED |
+| grid-tls: Native https-certificate/https-private-key or a TLS proxy protects Router Basic credentials; TLS is not on by default. | Selenium Grid unknown | REASONED |
+| browserless-auth: Guide records optional TOKEN and unauthenticated endpoints when unset; this historical claim conflicts with the current destination of its rolling citation. | browserless unknown | REASONED |
+| browserless-bind: browserless uses 3000; publish 127.0.0.1:3000:3000 or keep an internal network with no host mapping. | browserless unknown | REASONED |
+| browserless-token: Use a randomized TOKEN, protect token-bearing connection URLs and logs, and terminate TLS at the fronting layer. | browserless unknown | REASONED |
+| browserless-file: Guide records ALLOW_FILE_PROTOCOL=false as the default file-navigation block. | browserless unknown | REASONED |
+| playwright-auth: Playwright server has no password/user model; reachable endpoints grant OS-user control, so bind 127.0.0.1 and protect endpoint URLs. | Playwright unknown | REASONED |
+| playwright-discovery: Guide records run-server path / and launchServer random paths discoverable through GET /json; a secret path is not an access boundary. | Playwright unknown | REASONED |
+| playwright-tls: Authenticate WebSocket upgrades and discovery at a wss proxy; connect accepts custom headers and the server supplies no native TLS. | Playwright unknown | REASONED |
+| debug-bypass: A separately forwarded Chromium debug endpoint bypasses front-tool authentication; keep 9222 unpublished and restrict browser egress. | Chrome DevTools Protocol unknown; Selenium Grid unknown; browserless unknown; Playwright unknown | REASONED |
+| verify-listeners: Inventory every listener, including distributed Grid and configured Playwright ports, and require intended loopback/private addresses. | Chromium 154.0.8037.57; Selenium Grid unknown; Selenium Docker images aafe4d6136f3bb5afcd9b7cb691c624516d06e1b; browserless unknown; Playwright unknown | REASONED |
+| verify-cdp: External command-line CDP returns 200 with webSocketDebuggerUrl when forwarded; fixed isolation retains a working local control. Approval-mode 404 is inconclusive. | Chromium 154.0.8037.57 | REASONED |
+| verify-grid: Grid /status returns ready/node JSON when exposed; Router 401 with Basic challenge shows auth but still proves reachability. Probe Nodes separately. | Selenium Grid unknown | REASONED |
+| verify-browserless: Guide expects /pressure load JSON without TOKEN and rejection with missing/wrong tokens when configured; verify image-specific status and a correct-token control. | browserless unknown | REASONED |
+| verify-playwright: Any HTTP answer proves Playwright reachability; launchServer uses an ephemeral port unless set, while run-server takes --port. | Playwright unknown | REASONED |
+<!-- version-basis:end -->
 
 Agent and scraping stacks run these to drive a real browser, and that is exactly the exposure: whoever
 reaches the endpoint gets JavaScript execution inside the pages the browser opens, the profile's cookie
@@ -33100,6 +33762,8 @@ inside the browser's network namespace with its actual loopback address and DevT
 Substitute an IP literal, not a name, for the DevTools probe, because the endpoint rejects a forwarded
 `Host` that is not an address or localhost.
 
+REASONED: following block; external discovery/authentication probes and local positive controls follow the cited vendor documentation and pinned sources; the authoring host has no isolated network namespace for authorized live listeners.
+
 ```bash
 (                              # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'
@@ -33157,6 +33821,65 @@ is already the finding. The distinguishing behaviour for each is in the cited ve
 ======================================================================
 
 # Instant API backends: Strapi, Directus, Hasura, and PostgREST
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| strapi-bootstrap: No default admin password: privately register the first administrator before exposing /admin or management routes. | Strapi documentation 5 | REASONED |
+| strapi-bind: Documented localhost differs from generated HOST=0.0.0.0; use host loopback or Docker 127.0.0.1:1337:1337 without binding container loopback. | Strapi documentation 5 | REASONED |
+| strapi-mfa: Strapi admin has no native MFA; protect UI and backend management routes with MFA proxy or available SSO, closing local-login bypasses. | Strapi documentation 5 | REASONED |
+| strapi-public: Content types are private by default; Public-role grants determine anonymous access and denied requests normally return 403. | Strapi documentation 5 | REASONED |
+| strapi-files: Local Media Library files use unauthenticated static serving despite private content types; use access-controlled storage for confidential files. | Strapi documentation 5 | REASONED |
+| strapi-signup: Disable unneeded POST /api/auth/local/register signups; the initial sign-up setting remains unconfirmed, and new users receive the configured Default role. | Strapi documentation 5 | REASONED |
+| strapi-tokens: Review pre-generated Full access/Read-only Content API tokens, delete unused tokens and bound lifetimes; use Custom scopes when find/findOne is too broad. | Strapi documentation 5 | REASONED |
+| strapi-secrets: Protect and rotate APP_KEYS, ADMIN_JWT_SECRET, API_TOKEN_SALT, TRANSFER_TOKEN_SALT, JWT_SECRET and configured ENCRYPTION_KEY; salts are not bearer tokens. | Strapi documentation 5 | REASONED |
+| strapi-graphql: Optional /graphql shadowCRUD generates operations; disable unnecessary apolloServer.introspection and landingPage without replacing resolver authorization. | Strapi documentation 5; Apollo Server 4-5 | REASONED |
+| apollo-default: Apollo introspection is enabled unless NODE_ENV=production. | Apollo Server 4-5 | REASONED |
+| strapi-tls: Front Strapi with TLS and authentication; the guide records no native TLS termination. | Strapi documentation 5 | REASONED |
+| directus-bootstrap: ADMIN_EMAIL/PASSWORD and optional ADMIN_TOKEN bootstrap admin access; 12.0.2 quickstart also allows browser onboarding, so claim the instance privately. | Directus documentation unknown; Directus quickstart 12.0.2 | REASONED |
+| directus-secret: Set a unique protected SECRET; omission generates a random value that does not persist consistently across restarts or replicas. | Directus documentation unknown | REASONED |
+| directus-cookies: SESSION_COOKIE_SECURE and REFRESH_TOKEN_COOKIE_SECURE default false; set both true behind HTTPS. | Directus documentation unknown | REASONED |
+| directus-token: ADMIN_TOKEN is an unexpiring admin credential independent of interactive MFA; omit unless needed and prefer scoped machine credentials. | Directus documentation unknown | REASONED |
+| directus-mfa: Require two-factor authentication for Directus administrator accounts. | Directus documentation unknown | REASONED |
+| directus-public: Public permissions are off by default; audit actual collection and /assets grants, including separate upload/import/update/delete rights and storage bypasses. | Directus documentation unknown | REASONED |
+| verify-directus: The paired private-collection request must return the known canary to its authorized identity and 403 with FORBIDDEN to the anonymous caller. | Directus documentation unknown | REASONED |
+| directus-import: IMPORT_IP_DENY_LIST defaults to 0.0.0.0,169.254.169.254; this import-specific setting does not establish Flow or extension egress protection. | Directus documentation unknown | REASONED |
+| directus-signup: Registration is disabled by default; empty 204 responses do not establish rejection or account creation. | Directus documentation unknown | REASONED |
+| directus-introspection: GRAPHQL_INTROSPECTION defaults true; disable unnecessary discovery and apply the same roles and policies as REST. | Directus documentation unknown | REASONED |
+| directus-bind: At v12.4.1 HOST defaults 0.0.0.0 and PORT 8055; UNIX_SOCKET_PATH replaces both. Use private binding or loopback publication. | Directus listener source v12.4.1 | REASONED |
+| directus-studio: Root redirects to /admin; SERVE_APP hides Studio without replacing API authorization. Terminate TLS in front. | Directus documentation unknown | REASONED |
+| hasura-admin: An unset HASURA_GRAPHQL_ADMIN_SECRET permits full admin rights; keep the configured bearer secret server-side and use scoped JWT/webhook client auth. | Hasura GraphQL Engine documentation unknown | REASONED |
+| hasura-bind: HASURA_GRAPHQL_SERVER_HOST defaults * on 8080; bind privately and terminate TLS in front. | Hasura GraphQL Engine documentation unknown | REASONED |
+| hasura-console: Binary console default is false, but 2.46.0 quickstart enables / and /console; disable console where unnecessary. | Hasura GraphQL Engine documentation unknown; Hasura quickstart image 2.46.0 | REASONED |
+| hasura-dev: Keep HASURA_GRAPHQL_DEV_MODE=false in production. | Hasura GraphQL Engine documentation unknown | REASONED |
+| hasura-agent: Quickstart publishes data-connector 8081 and literal Postgres credentials; isolate the additional listener and replace credentials. | Hasura quickstart image 2.46.0 | REASONED |
+| hasura-apis: ENABLED_APIS defaults metadata, graphql, pgdump, config; narrow unused APIs and protect them with the admin secret. | Hasura GraphQL Engine documentation unknown | REASONED |
+| hasura-anon: Leave UNAUTHORIZED_ROLE unset unless deliberately granting anonymous access. | Hasura GraphQL Engine documentation unknown | REASONED |
+| hasura-introspection: Introspection is enabled by default; its documented per-role disabling control is self-hosted Enterprise, not assumed available in Community. | Hasura GraphQL Engine documentation unknown | REASONED |
+| postgrest-anon: Unset db-anon-role refuses missing JWTs with 401 PGRST302; intended anonymous access needs a dedicated minimal NOLOGIN role. | PostgREST documentation unknown | REASONED |
+| postgrest-invalid: Malformed/bad-signature JWTs return 401 PGRST301; expired or invalid-claims JWTs return 401 PGRST303 instead of anonymous fallback. | PostgREST documentation unknown | REASONED |
+| postgrest-grants: GRANT/REVOKE govern API access; PUBLIC function EXECUTE, DEFINER functions and owner-privileged views can widen it. | PostgREST documentation unknown | REASONED |
+| postgrest-schema: db-schemas defaults public; expose a deliberate API schema and note that root OpenAPI output follows the requesting role privileges. | PostgREST documentation unknown | REASONED |
+| postgrest-secret: Set random jwt-secret of at least 32 characters; a supplied token with no secret configured fails with 500 PGRST300. | PostgREST documentation unknown | REASONED |
+| postgrest-bind: At v16.4 server-host defaults !4 on 3000; optional admin server inherits that host unless overridden. Isolate both and terminate TLS in front. | PostgREST documentation unknown; PostgREST listener source v16.4 | REASONED |
+| egress: Restrict webhook, Flow, trigger, remote-schema and database-function egress after DNS resolution and redirects; IMPORT_IP_DENY_LIST covers imports only. | Strapi documentation 5; Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown | REASONED |
+| database-boundary: Protect database credentials, use dedicated minimal database roles, private listeners and verified encrypted remote database transport. | Strapi documentation 5; Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown | REASONED |
+| human-machine-auth: Use MFA at human administrative boundaries, with separately scoped, expiring and revocable machine credentials. | Strapi documentation 5; Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown | REASONED |
+| verify-canary: Pair authorized canary retrieval with identical anonymous requests; empty/missing/unrelated responses and transport errors are inconclusive. | Strapi documentation 5; Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown | REASONED |
+| verify-hasura: Hasura defaults to HTTP 200 even for auth errors; inspect admin-secret-required JSON. PRESERVE_401_ERRORS requires Community 2.48.0, beyond quickstart 2.46.0. | Hasura GraphQL Engine documentation unknown; Hasura authentication-status minimum 2.48.0; Hasura quickstart image 2.46.0 | REASONED |
+| verify-retirement: Repeat the same successful canary with retired credentials; require authentication failure, not permission/proxy errors. Bootstrap ADMIN_TOKEN edits do not rotate existing users. | Strapi documentation 5; Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown | REASONED |
+| verify-password: Fresh admin login must accept operator-controlled credentials and reject actual old/copied passwords; missing OTP or lockout does not prove retirement. | Strapi documentation 5; Directus documentation unknown | REASONED |
+| verify-console: Enabled Hasura / and /console serve HTML; disabled engine returns JSON not-found. Proxy 404 or a failed positive control is inconclusive. | Hasura GraphQL Engine documentation unknown | REASONED |
+| verify-introspection: Require an introspection-specific rejection while an ordinary permitted GraphQL query still succeeds. | Strapi documentation 5; Apollo Server 4-5; Directus documentation unknown; Hasura GraphQL Engine documentation unknown | REASONED |
+| verify-other-controls: Test writes, registration, private files, MFA and outbound fetches separately with authorized/unauthorized fixtures and persisted effects. | Strapi documentation 5; Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown | REASONED |
+| verify-isolation: Inventory host/container listeners and mappings; probe every direct IPv4/IPv6 origin with an allowed control. Any HTTP response proves reachability; failures alone do not prove isolation. | Strapi documentation 5; Directus listener source v12.4.1; Hasura GraphQL Engine documentation unknown; PostgREST listener source v16.4; PostgREST documentation unknown | REASONED |
+<!-- version-basis:end -->
 
 These tools turn a database or a schema into a ready-made API with little or no code, which is
 exactly why AI-assisted projects reach for them. That convenience is also the exposure: one
@@ -33348,6 +34071,8 @@ never as the fixed state. Substitute your own host for the `example.com` placeho
 | Hasura | `/v1/graphql` | `{"query":"query { secureconfig_probe(where: {marker: {_eq: \"secureconfig-canary\"}}) { marker } }"}` | admin-secret-required JSON error |
 | PostgREST | `/secureconfig_probe?select=marker&marker=eq.secureconfig-canary` | empty | 401 with `PGRST302` when the anonymous role is unset |
 
+REASONED: following block; paired canary, token and credential-retirement probes follow the cited vendor documentation; the authoring environment has no container runtime for exposed/fixed service fixtures.
+
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
@@ -33455,6 +34180,8 @@ origin responds from an allowed one, then probe each configured origin and port 
 below, over IPv4 and IPv6 (put a literal IPv6 address in brackets). Any HTTP response, including 401, 403 or
 404, proves reachability; a timeout, DNS failure or TLS error does not prove isolation. Keep the optional
 PostgREST admin server private independently of application JWT permissions.
+
+REASONED: following block; direct-origin isolation probes follow the cited listener documentation and pins; the authoring environment has no container runtime for exposed/fixed service fixtures.
 
 ```bash
 (

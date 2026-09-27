@@ -31,3 +31,15 @@ gradio.md
 streamlit.md
 code-server.md
 n8n.md
+headless-browser-services.md
+headless-cms-instant-api.md
+supabase-self-hosted.md
+firebase-supabase.md
+pocketbase.md
+observability-components.md
+self-hosted-error-trackers.md
+realtime-webhooks.md
+realtime-voice-infra.md
+ray.md
+gitops-controllers.md
+nomad-consul.md

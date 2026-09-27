@@ -1,4 +1,183 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "79b55bdca752fcc16f38c5303f7069a6cff6c7bfcff29afd99be32c7bebcab7e",
+  "components": {
+    "livekit": {
+      "name": "LiveKit",
+      "basis": "v1.13.7",
+      "sources": {
+        "s15a5a2b0b78b": "https://raw.githubusercontent.com/livekit/livekit/v1.13.7/pkg/config/config.go",
+        "s75f8e517e920": "https://raw.githubusercontent.com/livekit/livekit/v1.13.7/cmd/server/main.go",
+        "sc52b46730181": "https://raw.githubusercontent.com/livekit/livekit/v1.13.7/config-sample.yaml"
+      }
+    },
+    "livekit-docs": {
+      "name": "LiveKit documentation",
+      "basis": "unknown",
+      "sources": {
+        "s66f19d919eb5": "https://docs.livekit.io/transport/self-hosting/ports-firewall/",
+        "sb6a31fba4f62": "https://docs.livekit.io/frontends/reference/tokens-grants/",
+        "s38432c6e3577": "https://docs.livekit.io/transport/self-hosting/deployment/"
+      }
+    },
+    "lk": {
+      "name": "livekit-cli",
+      "basis": "v2.18.2",
+      "sources": {
+        "sa42f9b5ed5d4": "https://raw.githubusercontent.com/livekit/livekit-cli/v2.18.2/cmd/lk/utils.go",
+        "s6a98a324f01b": "https://raw.githubusercontent.com/livekit/livekit-cli/v2.18.2/cmd/lk/token.go",
+        "sf8b161b60423": "https://raw.githubusercontent.com/livekit/livekit-cli/v2.18.2/pkg/config/config.go"
+      }
+    },
+    "coturn": {
+      "name": "coturn",
+      "basis": "4.18.0",
+      "sources": {
+        "sc4178412962b": "https://raw.githubusercontent.com/coturn/coturn/4.18.0/examples/etc/turnserver.conf",
+        "s5ec265938c96": "https://raw.githubusercontent.com/coturn/coturn/4.18.0/README.turnserver",
+        "s0728ef023209": "https://github.com/coturn/coturn/releases/tag/4.18.0",
+        "s7eb31b944cf1": "https://raw.githubusercontent.com/coturn/coturn/4.18.0/src/server/ns_turn_server.c",
+        "se7856434c3d0": "https://raw.githubusercontent.com/coturn/coturn/4.18.0/src/apps/uclient/mainuclient.c",
+        "s1942d0158590": "https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/uclient.h#L132",
+        "s0e40b57274d6": "https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/mainuclient.c#L553-L554",
+        "sdd3c00ef7290": "https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/uclient.c#L3109",
+        "s414c246eed7f": "https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/uclient.c#L3132",
+        "s6ba3cc5d04ea": "https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/mainuclient.c#L381",
+        "sed853e8fb3e3": "https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/startuclient.c",
+        "se9819d0c6412": "https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/startuclient.h",
+        "s51a288a4b86e": "https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/session.h",
+        "s790c96d8eed7": "https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/CMakeLists.txt",
+        "s0c57f0580b5c": "https://raw.githubusercontent.com/coturn/coturn/4.18.0/README.turnutils"
+      }
+    },
+    "dtls": {
+      "name": "coturn DTLS opt-in introduction",
+      "basis": "4.17.0",
+      "sources": {
+        "s24abe2486071": "https://github.com/coturn/coturn/releases/tag/4.17.0"
+      }
+    },
+    "curl": {
+      "name": "curl minimum write-out version",
+      "basis": "7.75.0",
+      "sources": {
+        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
+      }
+    }
+  },
+  "claims": {
+    "livekit-ports": {"text": "Signaling/API use 7880, RTC TCP 7881 and normal UDP media 50000-60000; development uses UDP mux 7882.", "components": ["livekit", "livekit-docs"], "sources": ["livekit:s15a5a2b0b78b", "livekit-docs:s66f19d919eb5"], "status": "REASONED"},
+    "livekit-bind": {"text": "Unset signaling/RTC TCP binds are wildcard; UDP uses eligible interfaces independently of signaling restrictions.", "components": ["livekit", "livekit-docs"], "sources": ["livekit:s15a5a2b0b78b", "livekit-docs:s66f19d919eb5"], "status": "REASONED"},
+    "livekit-turn": {"text": "Embedded TURN defaults off and needs explicit ports when enabled.", "components": ["livekit", "livekit-docs"], "sources": ["livekit:sc52b46730181", "livekit-docs:s66f19d919eb5"], "status": "REASONED"},
+    "livekit-keys": {"text": "Normal mode refuses an empty key map; API secrets sign HS256 room and administrative JWT grants.", "components": ["livekit", "livekit-docs"], "sources": ["livekit:s15a5a2b0b78b", "livekit-docs:sb6a31fba4f62"], "status": "REASONED"},
+    "livekit-dev": {"text": "Development mode supplies devkey/secret when keys are empty and defaults signaling to loopback only when no bind is supplied.", "components": ["livekit"], "sources": ["livekit:s75f8e517e920"], "status": "REASONED"},
+    "livekit-samples": {"text": "Remove the sample key1/secret1 and key2/secret2 pairs from every effective key set.", "components": ["livekit"], "sources": ["livekit:sc52b46730181"], "status": "REASONED"},
+    "livekit-length": {"text": "Outside development, secrets shorter than 32 characters only log an error; generate long random secrets.", "components": ["livekit"], "sources": ["livekit:s15a5a2b0b78b"], "status": "REASONED"},
+    "livekit-grants": {"text": "canPublish and canSubscribe default true; signing secrets mint any grant, so deliberately scope issued tokens.", "components": ["livekit-docs"], "sources": ["livekit-docs:sb6a31fba4f62"], "status": "REASONED"},
+    "livekit-keyfile": {"text": "Use key_file with service-owned mode 0600; world permissions reject startup, but group-readable 0640 passes the server check.", "components": ["livekit"], "sources": ["livekit:s15a5a2b0b78b"], "status": "REASONED"},
+    "livekit-tls": {"text": "Front signaling with TLS/WSS; the guide describes no native signaling TLS and calls Serve, but the server implementation is not cited.", "components": ["livekit-docs"], "sources": ["livekit-docs:s38432c6e3577"], "status": "REASONED"},
+    "livekit-metrics": {"text": "Enabled metrics are unauthenticated unless prometheus.username/password are set.", "components": ["livekit"], "sources": ["livekit:s15a5a2b0b78b", "livekit:sc52b46730181"], "status": "REASONED"},
+    "livekit-debug": {"text": "Debug/pprof, goroutine and room routes lack grant checks and can use debug_handler.port; route implementations are not cited.", "components": ["livekit"], "sources": ["livekit:s15a5a2b0b78b", "livekit:sc52b46730181"], "status": "REASONED"},
+    "livekit-turn-secret": {"text": "Embedded TURN derives credentials from the API secret; the derivation implementation is not cited.", "components": ["livekit"], "sources": ["livekit:sc52b46730181"], "status": "REASONED"},
+    "livekit-webhook": {"text": "Webhook receivers must verify the signing token and SHA-256 body hash; the webhook verifier is not cited.", "components": ["livekit-docs"], "sources": ["livekit-docs:sb6a31fba4f62"], "status": "REASONED"},
+    "coturn-listeners": {"text": "STUN/TURN use UDP/TCP 3478 and TLS 5349; enabled interfaces are enumerated, not loopback-only.", "components": ["coturn"], "sources": ["coturn:sc4178412962b", "coturn:s5ec265938c96"], "status": "REASONED"},
+    "coturn-dtls": {"text": "DTLS on 5349 is opt-in since 4.17.0 and requires dtls.", "components": ["dtls"], "sources": ["dtls:s24abe2486071"], "status": "REASONED"},
+    "coturn-relays": {"text": "On-demand relay endpoints use min-port/max-port 49152-65535.", "components": ["coturn"], "sources": ["coturn:s5ec265938c96"], "status": "REASONED"},
+    "coturn-cli": {"text": "CLI 5766 defaults off and uses loopback plus cli-password when enabled; use cli=false, since --no-cli retired in 4.18.0.", "components": ["coturn"], "sources": ["coturn:sc4178412962b", "coturn:s5ec265938c96", "coturn:s0728ef023209"], "status": "REASONED"},
+    "coturn-admin": {"text": "Web admin 8080 defaults off/loopback and uses separate admin accounts; keep web-admin-listen-on-workers off.", "components": ["coturn"], "sources": ["coturn:sc4178412962b", "coturn:s5ec265938c96"], "status": "REASONED"},
+    "coturn-metrics": {"text": "Prometheus 9641 defaults off but binds wildcard without authentication when enabled; set prometheus-address=127.0.0.1.", "components": ["coturn"], "sources": ["coturn:s5ec265938c96"], "status": "REASONED"},
+    "coturn-anonymous": {"text": "Stock example with no users and no credential mechanism permits anonymous allocation; static users imply long-term auth. The Docker exception lacks its own citation.", "components": ["coturn"], "sources": ["coturn:sc4178412962b", "coturn:s5ec265938c96"], "status": "REASONED"},
+    "coturn-longterm": {"text": "Enable lt-cred-mech, a stable realm and generated user credentials; set certificate/key paths for TLS.", "components": ["coturn"], "sources": ["coturn:sc4178412962b", "coturn:s5ec265938c96"], "status": "REASONED"},
+    "coturn-secret": {"text": "For timed application credentials use use-auth-secret/static-auth-secret instead of static user lines; never distribute the shared secret.", "components": ["coturn"], "sources": ["coturn:s5ec265938c96"], "status": "REASONED"},
+    "coturn-realm": {"text": "Missing realm warns rather than preventing startup; set it explicitly for either credential mode.", "components": ["coturn"], "sources": ["coturn:s5ec265938c96"], "status": "REASONED"},
+    "coturn-encryption": {"text": "TLS availability does not require encryption: plaintext can use 3478 or 5349. no-tcp/no-udp remove plaintext; enable dtls for encrypted UDP clients.", "components": ["coturn", "dtls"], "sources": ["coturn:sc4178412962b", "coturn:s5ec265938c96", "dtls:s24abe2486071"], "status": "REASONED"},
+    "coturn-loopback": {"text": "Loopback peers are blocked unless allow-loopback-peers is set; leave it off.", "components": ["coturn"], "sources": ["coturn:sc4178412962b", "coturn:s7eb31b944cf1"], "status": "REASONED"},
+    "coturn-private": {"text": "RFC 1918 peers are not denied by default; explicitly deny all private ranges and enforce network controls.", "components": ["coturn"], "sources": ["coturn:sc4178412962b", "coturn:s7eb31b944cf1"], "status": "REASONED"},
+    "coturn-linklocal": {"text": "4.18.0 scope checks reject IPv4 link-local and IPv6 link-local/ULA; explicit denies remain defense in depth across older/modified builds.", "components": ["coturn"], "sources": ["coturn:s7eb31b944cf1"], "status": "REASONED"},
+    "coturn-multicast": {"text": "Multicast is permitted unless no-multicast-peers is set.", "components": ["coturn"], "sources": ["coturn:sc4178412962b", "coturn:s7eb31b944cf1"], "status": "REASONED"},
+    "coturn-exceptions": {"text": "allowed-peer-ip adds exceptions rather than establishing a default-deny allowlist.", "components": ["coturn"], "sources": ["coturn:s5ec265938c96", "coturn:s7eb31b944cf1"], "status": "REASONED"},
+    "coturn-binding": {"text": "STUN Binding stays anonymous with TURN auth; secure-stun requests authenticated Binding.", "components": ["coturn"], "sources": ["coturn:s5ec265938c96"], "status": "REASONED"},
+    "coturn-reflection": {"text": "Anonymous 401 challenges still reflect traffic; unauthorized-ratelimit defaults off and bounds it when enabled.", "components": ["coturn"], "sources": ["coturn:s5ec265938c96"], "status": "REASONED"},
+    "coturn-rfc5780": {"text": "RFC 5780 is disabled by default; leave this response-enlarging feature off.", "components": ["coturn"], "sources": ["coturn:s5ec265938c96"], "status": "REASONED"},
+    "coturn-permissions": {"text": "Do not enable server-relay, which removes relay permission checks.", "components": ["coturn"], "sources": ["coturn:s5ec265938c96"], "status": "REASONED"},
+    "turn-plaintext": {"text": "Plain TURN hides the long-term password itself but exposes usernames/metadata and enables offline guesses against weak passwords.", "components": ["coturn"], "sources": ["coturn:s5ec265938c96"], "status": "REASONED"},
+    "verify-listeners": {"text": "Inventory TCP/UDP and actual allocations: media/TURN may be public, signaling/admin/metrics must be restricted; separately test off-host reachability.", "components": ["livekit-docs", "livekit", "coturn"], "sources": ["livekit-docs:s66f19d919eb5", "livekit:sc52b46730181", "coturn:s5ec265938c96"], "status": "REASONED", "verify": [1]},
+    "verify-livekit": {"text": "Unauthenticated rtc/validate 401 only tests token requirement, not removal of a known signing key; its handler is not cited.", "components": ["livekit-docs", "curl"], "sources": ["livekit-docs:sb6a31fba4f62", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [2]},
+    "verify-rotation": {"text": "Accept an old-key token on an isolated fixture, reject that same unexpired correctly scoped token after rotation, and accept a new-key token.", "components": ["livekit-docs", "lk"], "sources": ["livekit-docs:sb6a31fba4f62", "lk:s6a98a324f01b"], "status": "REASONED", "verify": [4]},
+    "verify-extra": {"text": "Separately probe metrics, debug routes/port and embedded TURN from untrusted networks; a healthy root path proves no protection.", "components": ["livekit", "livekit-docs"], "sources": ["livekit:sc52b46730181", "livekit-docs:s66f19d919eb5"], "status": "REASONED"},
+    "verify-allocation": {"text": "Anonymous Allocate must challenge with no relay address; valid throwaway credentials on a private plaintext fixture must allocate. Read output, not exit status.", "components": ["coturn"], "sources": ["coturn:s5ec265938c96", "coturn:s0c57f0580b5c"], "status": "REASONED", "verify": [3]},
+    "verify-peers": {"text": "Authenticated CreatePermission/ChannelBind to owned denied peers must return 403 with no traffic; cover denied ranges and both families.", "components": ["coturn"], "sources": ["coturn:s7eb31b944cf1", "coturn:s0c57f0580b5c"], "status": "REASONED", "verify": [3]},
+    "uclient-argv": {"text": "turnutils_uclient has only argv password inputs -w/-W at 4.18.0; use a prompted throwaway user, never a production password or -W shared secret.", "components": ["coturn"], "sources": ["coturn:se7856434c3d0", "coturn:s1942d0158590", "coturn:s0e40b57274d6", "coturn:sdd3c00ef7290", "coturn:s414c246eed7f", "coturn:s6ba3cc5d04ea", "coturn:sed853e8fb3e3", "coturn:se9819d0c6412", "coturn:s51a288a4b86e", "coturn:s790c96d8eed7"], "status": "REASONED", "verify": [3]},
+    "uclient-lifetime": {"text": "Run on a trusted host, remove the test user afterwards and omit -h, which keeps the password-bearing process alive indefinitely.", "components": ["coturn"], "sources": ["coturn:s0c57f0580b5c"], "status": "REASONED", "verify": [3]},
+    "lk-inputs": {"text": "lk reads argv or environment credentials, not stdin; explicit project/subdomain outrank environment, which outranks local/default projects.", "components": ["lk"], "sources": ["lk:sa42f9b5ed5d4"], "status": "REASONED"},
+    "lk-storage": {"text": "Saved projects retain plaintext api_secret in ~/.livekit/cli-config.yaml, written 0600.", "components": ["lk"], "sources": ["lk:sf8b161b60423"], "status": "REASONED"},
+    "lk-mint": {"text": "Prompt and prefix environment assignments keep secrets out of argv/history but expose them to same-account/root environment readers; printed short-lived tokens are secrets.", "components": ["lk"], "sources": ["lk:sa42f9b5ed5d4", "lk:s6a98a324f01b"], "status": "REASONED", "verify": [4]},
+    "verify-tls": {"text": "Fatal hostname/CA verification tests only TURN certificate/handshake; separately test plaintext rejection on 3478 and 5349. OpenSSL syntax is not cited.", "components": ["coturn"], "sources": ["coturn:sc4178412962b"], "status": "REASONED", "verify": [5]}
+  }
+}
+---
 # Realtime voice and video infrastructure: LiveKit and coturn
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| livekit-ports: Signaling/API use 7880, RTC TCP 7881 and normal UDP media 50000-60000; development uses UDP mux 7882. | LiveKit v1.13.7; LiveKit documentation unknown | REASONED |
+| livekit-bind: Unset signaling/RTC TCP binds are wildcard; UDP uses eligible interfaces independently of signaling restrictions. | LiveKit v1.13.7; LiveKit documentation unknown | REASONED |
+| livekit-turn: Embedded TURN defaults off and needs explicit ports when enabled. | LiveKit v1.13.7; LiveKit documentation unknown | REASONED |
+| livekit-keys: Normal mode refuses an empty key map; API secrets sign HS256 room and administrative JWT grants. | LiveKit v1.13.7; LiveKit documentation unknown | REASONED |
+| livekit-dev: Development mode supplies devkey/secret when keys are empty and defaults signaling to loopback only when no bind is supplied. | LiveKit v1.13.7 | REASONED |
+| livekit-samples: Remove the sample key1/secret1 and key2/secret2 pairs from every effective key set. | LiveKit v1.13.7 | REASONED |
+| livekit-length: Outside development, secrets shorter than 32 characters only log an error; generate long random secrets. | LiveKit v1.13.7 | REASONED |
+| livekit-grants: canPublish and canSubscribe default true; signing secrets mint any grant, so deliberately scope issued tokens. | LiveKit documentation unknown | REASONED |
+| livekit-keyfile: Use key_file with service-owned mode 0600; world permissions reject startup, but group-readable 0640 passes the server check. | LiveKit v1.13.7 | REASONED |
+| livekit-tls: Front signaling with TLS/WSS; the guide describes no native signaling TLS and calls Serve, but the server implementation is not cited. | LiveKit documentation unknown | REASONED |
+| livekit-metrics: Enabled metrics are unauthenticated unless prometheus.username/password are set. | LiveKit v1.13.7 | REASONED |
+| livekit-debug: Debug/pprof, goroutine and room routes lack grant checks and can use debug_handler.port; route implementations are not cited. | LiveKit v1.13.7 | REASONED |
+| livekit-turn-secret: Embedded TURN derives credentials from the API secret; the derivation implementation is not cited. | LiveKit v1.13.7 | REASONED |
+| livekit-webhook: Webhook receivers must verify the signing token and SHA-256 body hash; the webhook verifier is not cited. | LiveKit documentation unknown | REASONED |
+| coturn-listeners: STUN/TURN use UDP/TCP 3478 and TLS 5349; enabled interfaces are enumerated, not loopback-only. | coturn 4.18.0 | REASONED |
+| coturn-dtls: DTLS on 5349 is opt-in since 4.17.0 and requires dtls. | coturn DTLS opt-in introduction 4.17.0 | REASONED |
+| coturn-relays: On-demand relay endpoints use min-port/max-port 49152-65535. | coturn 4.18.0 | REASONED |
+| coturn-cli: CLI 5766 defaults off and uses loopback plus cli-password when enabled; use cli=false, since --no-cli retired in 4.18.0. | coturn 4.18.0 | REASONED |
+| coturn-admin: Web admin 8080 defaults off/loopback and uses separate admin accounts; keep web-admin-listen-on-workers off. | coturn 4.18.0 | REASONED |
+| coturn-metrics: Prometheus 9641 defaults off but binds wildcard without authentication when enabled; set prometheus-address=127.0.0.1. | coturn 4.18.0 | REASONED |
+| coturn-anonymous: Stock example with no users and no credential mechanism permits anonymous allocation; static users imply long-term auth. The Docker exception lacks its own citation. | coturn 4.18.0 | REASONED |
+| coturn-longterm: Enable lt-cred-mech, a stable realm and generated user credentials; set certificate/key paths for TLS. | coturn 4.18.0 | REASONED |
+| coturn-secret: For timed application credentials use use-auth-secret/static-auth-secret instead of static user lines; never distribute the shared secret. | coturn 4.18.0 | REASONED |
+| coturn-realm: Missing realm warns rather than preventing startup; set it explicitly for either credential mode. | coturn 4.18.0 | REASONED |
+| coturn-encryption: TLS availability does not require encryption: plaintext can use 3478 or 5349. no-tcp/no-udp remove plaintext; enable dtls for encrypted UDP clients. | coturn 4.18.0; coturn DTLS opt-in introduction 4.17.0 | REASONED |
+| coturn-loopback: Loopback peers are blocked unless allow-loopback-peers is set; leave it off. | coturn 4.18.0 | REASONED |
+| coturn-private: RFC 1918 peers are not denied by default; explicitly deny all private ranges and enforce network controls. | coturn 4.18.0 | REASONED |
+| coturn-linklocal: 4.18.0 scope checks reject IPv4 link-local and IPv6 link-local/ULA; explicit denies remain defense in depth across older/modified builds. | coturn 4.18.0 | REASONED |
+| coturn-multicast: Multicast is permitted unless no-multicast-peers is set. | coturn 4.18.0 | REASONED |
+| coturn-exceptions: allowed-peer-ip adds exceptions rather than establishing a default-deny allowlist. | coturn 4.18.0 | REASONED |
+| coturn-binding: STUN Binding stays anonymous with TURN auth; secure-stun requests authenticated Binding. | coturn 4.18.0 | REASONED |
+| coturn-reflection: Anonymous 401 challenges still reflect traffic; unauthorized-ratelimit defaults off and bounds it when enabled. | coturn 4.18.0 | REASONED |
+| coturn-rfc5780: RFC 5780 is disabled by default; leave this response-enlarging feature off. | coturn 4.18.0 | REASONED |
+| coturn-permissions: Do not enable server-relay, which removes relay permission checks. | coturn 4.18.0 | REASONED |
+| turn-plaintext: Plain TURN hides the long-term password itself but exposes usernames/metadata and enables offline guesses against weak passwords. | coturn 4.18.0 | REASONED |
+| verify-listeners: Inventory TCP/UDP and actual allocations: media/TURN may be public, signaling/admin/metrics must be restricted; separately test off-host reachability. | LiveKit documentation unknown; LiveKit v1.13.7; coturn 4.18.0 | REASONED |
+| verify-livekit: Unauthenticated rtc/validate 401 only tests token requirement, not removal of a known signing key; its handler is not cited. | LiveKit documentation unknown; curl minimum write-out version 7.75.0 | REASONED |
+| verify-rotation: Accept an old-key token on an isolated fixture, reject that same unexpired correctly scoped token after rotation, and accept a new-key token. | LiveKit documentation unknown; livekit-cli v2.18.2 | REASONED |
+| verify-extra: Separately probe metrics, debug routes/port and embedded TURN from untrusted networks; a healthy root path proves no protection. | LiveKit v1.13.7; LiveKit documentation unknown | REASONED |
+| verify-allocation: Anonymous Allocate must challenge with no relay address; valid throwaway credentials on a private plaintext fixture must allocate. Read output, not exit status. | coturn 4.18.0 | REASONED |
+| verify-peers: Authenticated CreatePermission/ChannelBind to owned denied peers must return 403 with no traffic; cover denied ranges and both families. | coturn 4.18.0 | REASONED |
+| uclient-argv: turnutils_uclient has only argv password inputs -w/-W at 4.18.0; use a prompted throwaway user, never a production password or -W shared secret. | coturn 4.18.0 | REASONED |
+| uclient-lifetime: Run on a trusted host, remove the test user afterwards and omit -h, which keeps the password-bearing process alive indefinitely. | coturn 4.18.0 | REASONED |
+| lk-inputs: lk reads argv or environment credentials, not stdin; explicit project/subdomain outrank environment, which outranks local/default projects. | livekit-cli v2.18.2 | REASONED |
+| lk-storage: Saved projects retain plaintext api_secret in ~/.livekit/cli-config.yaml, written 0600. | livekit-cli v2.18.2 | REASONED |
+| lk-mint: Prompt and prefix environment assignments keep secrets out of argv/history but expose them to same-account/root environment readers; printed short-lived tokens are secrets. | livekit-cli v2.18.2 | REASONED |
+| verify-tls: Fatal hostname/CA verification tests only TURN certificate/handshake; separately test plaintext rejection on 3478 and 5349. OpenSSL syntax is not cited. | coturn 4.18.0 | REASONED |
+<!-- version-basis:end -->
 
 AI voice agents run on self-hosted realtime backends that carry live media, and two of them sit at the network edge: LiveKit, a WebRTC SFU that routes participants' audio, video, and data, and coturn, a TURN/STUN server that relays media when a direct peer path cannot be found. The relay is the sharp edge. A TURN server proxies traffic on a client's behalf, so an unauthenticated or misconfigured one is an *open relay*: an attacker uses it to launder traffic, to reach services on the host's own loopback and private network, and to reflect and amplify UDP toward a victim. LiveKit's edge is different: it will not start without API keys, so the danger is not an anonymous join but a *known or weak* signing secret, which lets anyone mint a token and enter any room to eavesdrop or inject media. LiveKit terminates no TLS on its signaling, so [fronting-auth.md](fronting-auth.md) is the reverse-proxy pattern it needs for `wss://`; coturn terminates TLS and DTLS natively from its own certificate. [secrets.md](secrets.md) covers generating and holding the signing material. Values below are illustrative; replace them.
 
@@ -104,6 +283,8 @@ sudo ss -aunp    # should be on loopback (behind the proxy); RTC 7881 and coturn
                  # off-host separately, since NAT or Docker forwarding can publish a loopback-bound port.
 ```
 
+REASONED: following block; LiveKit token expectations follow the cited token guidance; no container runtime is available.
+
 ```bash
 # LiveKit reachability/auth diagnostic against the direct listener. This ONLY shows the endpoint requires
 # a token; it does NOT prove the dev/known secret is gone (see the rotation test below). Substitute the
@@ -135,6 +316,8 @@ For coturn, the discriminator is a TURN **Allocate** exchange, not an HTTP reque
 - Run the block from a host with no untrusted local users.
 
 Read the verbose output, not the exit status: the anonymous run must show a `401` challenge and no relayed address, and the credentialed run, the positive control, must show a relayed address. Substitute the test user, the peer and the TURN host inside the single quotes, and paste the whole block. It assumes a clean shell (CONTRIBUTING rule 7).
+
+REASONED: following block; Allocate and peer-policy outcomes follow the cited coturn 4.18.0 sources; no container runtime is available.
 
 ```bash
 (
@@ -168,6 +351,8 @@ For the LiveKit rotation test, mint each token with `livekit-cli` (`lk`). `lk` t
 
 The block prompts for the secret, so it stays out of shell history, and hands it and the key to the one `lk` command as a prefix assignment, never exported. That moves the secret out of argv, not out of reach: while `lk` runs, the same account and root can read it from `/proc/<pid>/environ`. Run the block once with the old key and once with the new. For the public development pair the key is `devkey` and the secret typed at the prompt is `secret`. Each printed token is a bearer credential for its grants until it expires, so keep `--valid-for` short and treat the terminal output as a secret. Keep the old-key token: the same token must be accepted on the isolated development fixture and rejected by the deployment after rotation, and the new-key token must be accepted. Substitute the key inside the single quotes, and paste the whole block. It assumes a clean shell (CONTRIBUTING rule 7).
 
+REASONED: following block; token minting and rotation follow the cited LiveKit and livekit-cli sources; no container runtime is available.
+
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
@@ -193,6 +378,8 @@ The block prompts for the secret, so it stays out of shell history, and hands it
 ```
 
 Verify TLS separately, and require verification to be fatal so a diagnostic tool does not continue past a bad certificate:
+
+REASONED: following block; TURN TLS expectations follow the cited coturn configuration; no container runtime is available.
 
 ```bash
 openssl s_client -connect turn.example.com:5349 -servername turn.example.com \
