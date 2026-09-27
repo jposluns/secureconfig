@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "90f825a664650a6d9c454599120b36faf2c5fb43977d6b542d9e81a695f90ea6",
+  "body_sha256": "e4d324e797e99f8f3866696df35f6843f107dc8df2ef3e66827377fe8911f6af",
   "components": {
     "adapter": {
       "name": "SvelteKit adapter-node",
@@ -193,12 +193,12 @@ ls -d build/client build/prerendered .output/public dist 2>/dev/null  # confirm 
 # Use the browser-served paths above; adapt both lists for custom output or SSR before running.
 # Search client assets and prerendered pages for the literal secret with a fixed-string match. The secret is prompted
 # (input hidden) and reaches grep on stdin (-f - reads the patterns from stdin), never grep's argv; -l prints only
-# file names, so a finding does not echo the secret. -R follows symlinks, so a linked asset is searched too.
-# Only the listed directories that exist are searched; adapter-node can produce two. The block refuses when none
-# exists. grep's exit status is read separately, so an inherited `set -e` cannot abort on a clean result: 0 is a
-# finding, 1 is clean, anything else is an error, with grep's own diagnostics left visible. Paste this subshell by
-# itself: without bracketed paste, a line pasted after its closing ) becomes the search value instead, and its clean
-# result then means nothing.
+# file names, so a finding does not echo the secret. -R follows symlinks, so a linked asset is searched too; -D skip
+# skips FIFOs, sockets and devices, so a linked pipe cannot stall the scan. Only the listed directories that exist
+# are searched; adapter-node can produce two. The block refuses when none exists. grep's exit status is read
+# separately, so an inherited `set -e` cannot abort on a clean result: 0 is a finding, 1 is clean, anything else is
+# an error, with grep's own diagnostics left visible. Paste this subshell by itself: without bracketed paste, a line
+# pasted after its closing ) becomes the search value instead, and its clean result then means nothing.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -214,7 +214,7 @@ ls -d build/client build/prerendered .output/public dist 2>/dev/null  # confirm 
     ''|*[[:cntrl:]]*) echo 'the full secret value is required; not scanning'; exit 2 ;;
   esac
   # File names are not secret: capture them so matches under dist/server/ (a Vite SSR server build) are reported apart.
-  if hits=$(printf '%s\n' "$client_secret" | grep -RlF -f - -- "$@"); then rc=0; else rc=$?; fi
+  if hits=$(printf '%s\n' "$client_secret" | grep -RlF -D skip -f - -- "$@"); then rc=0; else rc=$?; fi
   case "$rc" in
     0)
       # FINDING is the default; only a positively classified all-dist/server/ result is reported as server output.
