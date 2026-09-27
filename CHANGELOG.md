@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-09-27
 
+- Re-anchor mlflow.md's two MLflow v3.16.1 CSRF-key citations to the lines that show the static secret key and its forwarding to workers; open rows 1.187 (full line-anchor audit) and 1.188 (Vite SSR scan path) (#413).
 - Record the maintainer's ruling that CHANGELOG headings use the UTC merge date from 2026-09-27, leaving earlier headings as recorded (#410).
 - Disclose shell-history exposure at 14 secret-bearing `set --` substitution sites across 12 guides, including credential headers, passwords, API keys, tokens and signed URLs. Preserve commands and existing disclosures. Row 1.186. (#412)
 - Narrow the frontend-frameworks secret scan to client assets and prerendered pages, preserve its secret-input and grep-status guards, and document custom and SSR output paths. Row 1.185. (#411)

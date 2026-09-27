@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.187**, **2.48**, **3.38**, **4.12**.
+Next ids: **1.189**, **2.48**, **3.38**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -42,6 +42,8 @@ many.
 
 | ID | Item | Tags |
 | --- | --- | --- |
+| 1.187 | F-LINE-ANCHORS: audit every line-anchored GitHub citation (1029 distinct at 440c6f3, 45 guides) against its pinned raw file. A 60-anchor sample found mlflow.md:299 wrong (fixed in #413) plus a second wrong anchor on the same line; this session's fresh drafts had eight wrong anchors, all caught before merge. Fetch spans mechanically, judge in batches, fix OFFSET and WRONG entries. (M, M) | `[gap]` |
+| 1.188 | frontend-frameworks.md Verify secret scan: in a Vite SSR layout (`dist/client` beside `dist/server`) the loop still scans all of `dist`, a false positive the prose warns about. Prefer `dist/client` automatically when it exists. Suggested by #411's review. (L, S) | `[gap]` |
 
 ## Priority 2: Deepen existing guides
 
