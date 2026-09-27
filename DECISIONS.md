@@ -17,6 +17,17 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Four rulings, 2026-09-27 (#408).** The maintainer ruled, through AskUser:
+  (a) `VERSION` on out-of-order merges: CONTRIBUTING's rule stands, so a pull request that merges after a
+  higher-numbered one leaves `VERSION` alone; the 2026-09-26 #360 ruling was a one-off.
+  (b) Rows 1.143 and 1.138 are retired: they need a live instance and there is no isolation capability, so
+  the guide text stays REASONED.
+  (c) `README.md`, `common-mistakes.md` and `exposure-index.md` carry no version-basis metadata: they are
+  index or pointer pages whose facts live in the cited guides.
+  (d) Confirmed: Sources-line version annotations that state versions the body already states, and the
+  Verify-marking exemption for strictly parsed version-basis front matter and the exact paired generated
+  markers. No other reasoning was recorded.
+
 - **Isolation capability, 2026-09-26: full retirement of live-demonstration rows.** The maintainer ruled:
   "Isolation capability: RETIRE the live-demonstration rows; REASONED is the end state. Scope, FULL retirement: move
   every demonstration row to DONE as "Retired (maintainer ruling 2026-09-26)", drop CONTRIBUTING rule 5's
@@ -25,7 +36,8 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   cannot be worked. This supersedes the demonstration-backlog requirements in earlier rulings below,
   including the 2026-09-24 isolation ruling and the 2026-09-19 rule 5 carve-out. Their historical records
   remain; the prohibition on unauthorized listeners still applies. Doable non-demonstration work stays
-  open under its existing id. Row 1.143's separate "Disclose + row" ruling remains in force.
+  open under its existing id. Row 1.143, kept open by its separate "Disclose + row" ruling, was retired
+  on 2026-09-27 (see that day's entry above).
 
 - **Container ports behind remapped publications, 2026-09-26: allowlist.** This supersedes P4
   option A below. A container-internal port published on a different host port is not the host
