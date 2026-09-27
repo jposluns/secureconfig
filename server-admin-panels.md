@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "ad4e678700a70620ed705a45b599224a166de38542c77e7cb3950eb3de417bd0",
+  "body_sha256": "7000a7669afac6b5a67d4ea04cc952b150fe64a4dd6ed2e01bfd684c22a5ba61",
   "components": {
     "cockpit": {
       "name": "Cockpit",
@@ -448,8 +448,8 @@ give the server's public address. A "connected" on a port you did not mean to ex
 - Webmin documentation (configuration, security advisories): https://github.com/webmin/webmin.com/blob/8ceae26c5a074053905cbcc6c0053be573633f3a/content/docs/Modules/webmin-configuration.md and https://github.com/webmin/webmin.com/blob/8ceae26c5a074053905cbcc6c0053be573633f3a/content/security.md
 - Usermin 2.570 installer: https://github.com/webmin/usermin/blob/2.570/setup.sh
 - Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pveproxy.adoc
-- Proxmox VE user management (root@pam, two-factor, lockout, API tokens): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pveum.adoc
-- Proxmox VE firewall: https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pve-firewall.adoc
-- Proxmox VE certificates: https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=certificate-management.adoc
+- Proxmox VE user management (root@pam, two-factor, lockout, API tokens) (Proxmox VE 9.2, pve-docs 9.2.12): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pveum.adoc
+- Proxmox VE firewall (Proxmox VE 9.2, pve-docs 9.2.12): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pve-firewall.adoc
+- Proxmox VE certificates (Proxmox VE 9.2, pve-docs 9.2.12): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=certificate-management.adoc
 - Proxmox VE node shell (`/bin/login -f root`) (pve-manager 9.2.20): https://git.proxmox.com/?p=pve-manager.git;a=blob_plain;hb=49318c671b82f31e6b273b79447526161739b97a;f=PVE/API2/Nodes.pm
 - Proxmox VE HTTP server (three-second delay on unauthorized responses): https://git.proxmox.com/?p=pve-http-server.git;a=blob_plain;hb=5119ff9bec08c69584c0c98bea3edd0098179e5f;f=src/PVE/APIServer/AnyEvent.pm

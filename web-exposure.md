@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "bb7bd932ab88b864157dc6819d7d5b2034705f61bd38ec565e65c5815c23bc41",
+  "body_sha256": "419b6061f1f1399f548c58cd975bdc27d6cee1b5c0129417c61699e3743a8fe5",
   "components": {
     "nginx": {
       "name": "nginx documentation",
@@ -346,8 +346,8 @@ done
 - Apache core `Options` (the `Indexes` option triggers a listing when there is no `DirectoryIndex`; the `-Indexes` relative form and the +/- merge rules): https://httpd.apache.org/docs/2.4/mod/core.html#options
 - Apache mod_autoindex (the generated listing, and `ShowForbidden`, which by default hides entries a subrequest forbids): https://httpd.apache.org/docs/2.4/mod/mod_autoindex.html
 - nginx autoindex module (`autoindex` is `off` by default): https://nginx.org/en/docs/http/ngx_http_autoindex_module.html
-- Caddy `respond` directive: https://caddyserver.com/docs/caddyfile/directives/respond
-- Caddy matchers (`path`, `path_regexp`, `not`, named matcher sets): https://caddyserver.com/docs/caddyfile/matchers
+- Caddy v2.11.4 `respond` directive: https://caddyserver.com/docs/caddyfile/directives/respond
+- Caddy v2.11.4 matchers (`path`, `path_regexp`, `not`, named matcher sets): https://caddyserver.com/docs/caddyfile/matchers
 - Caddy v2.11.4 matcher implementation (`MatchPath`, `MatchPathRE`, `MatchNot`): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/matchers.go
 - GNU coreutils `mktemp` (`--suffix`): https://www.gnu.org/s/coreutils/manual/html_node/mktemp-invocation.html
 - Next.js environment variables (`NEXT_PUBLIC_`): https://nextjs.org/docs/pages/guides/environment-variables

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "b6f475d01b9b9b02da6c714d18c5327af2e172484bda2a27270cd05be2badf02",
+  "body_sha256": "6de2dedd681eb935c2363f727d0a89222bb5761a2e4e07d1500ccbe173c768d0",
   "components": {
     "comfy": {
       "name": "ComfyUI",
@@ -391,9 +391,9 @@ curl -q -g -sI https://imagegen.example.com/                # via the proxy: TLS
 
 ## Sources (checked September 2026)
 
-- ComfyUI Startup Flags (`--listen`, `--port` defaults): https://docs.comfy.org/development/comfyui-server/startup-flags
-- ComfyUI custom node security standards (eval/exec prohibited): https://docs.comfy.org/registry/standards
-- ComfyUI 2025 Jan Security Update (custom node code-execution risk): https://blog.comfy.org/p/comfyui-2025-jan-security-update
+- ComfyUI v0.37.0 Startup Flags (`--listen`, `--port` defaults): https://docs.comfy.org/development/comfyui-server/startup-flags
+- ComfyUI v0.37.0 custom node security standards (eval/exec prohibited): https://docs.comfy.org/registry/standards
+- ComfyUI 2025 Jan Security Update (custom node code-execution risk) (guide basis v0.37.0): https://blog.comfy.org/p/comfyui-2025-jan-security-update
 - ComfyUI-Manager security advisory, CVE-2025-67303, GHSA-95pq-hr8p-f5g7 (minimums ComfyUI v0.3.76 and Manager v3.38): https://github.com/Comfy-Org/ComfyUI-Manager/security/advisories/GHSA-95pq-hr8p-f5g7
 - AUTOMATIC1111 Command Line Arguments and Settings wiki: https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Command-Line-Arguments-and-Settings
 - AUTOMATIC1111 `--gradio-auth-path` ("set gradio authentication file path"), `--gradio-auth`, `--api-auth` and `--server-name` definitions (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L87-L113
@@ -417,8 +417,8 @@ curl -q -g -sI https://imagegen.example.com/                # via the proxy: TLS
 - Gradio 3.41.2 checks the login per route, with `dependencies=[Depends(login_check)]` (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/routes.py#L193-L305
 - Gradio 3.41.2 turns a list `auth` into a dictionary keyed by user name, so a later password for the same user name replaces an earlier one (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/routes.py#L128-L133
 - InvokeAI YAML Config (6.14.1, schema 4.0.2, as recorded above; host/port defaults): https://invoke.ai/configuration/invokeai-yaml/
-- InvokeAI Multi-User Administrator Guide: https://invoke.ai/features/multi-user-mode/admin-guide/
-- InvokeAI Multi-User API Guide (boards endpoint and missing-token `401`): https://invoke.ai/features/multi-user-mode/api-guide/
+- InvokeAI 6.14.1 Multi-User Administrator Guide: https://invoke.ai/features/multi-user-mode/admin-guide/
+- InvokeAI 6.14.1 Multi-User API Guide (boards endpoint and missing-token `401`): https://invoke.ai/features/multi-user-mode/api-guide/
 - Fooocus README, UI access and authentication (`--listen`, `--port`, `--share`, `auth.json`; pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/readme.md#L296-L301
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
 - ComfyUI `--listen` default `127.0.0.1`, `0.0.0.0,::` when given without a value, and `--port` default `8188` (pinned tag v0.37.0): https://github.com/Comfy-Org/ComfyUI/blob/v0.37.0/comfy/cli_args.py#L63-L64

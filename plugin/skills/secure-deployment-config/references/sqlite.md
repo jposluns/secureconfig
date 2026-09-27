@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "01d0440e5e448976350a7d19a9673d0f8084974066d99220fc7d901291519c3a",
+  "body_sha256": "f997ffcde26766059e0a6af1b769fe6c5f9345dbe0413241388e3f727bbb8f7c",
   "components": {
     "sqlite": {
       "name": "SQLite documentation",
@@ -456,11 +456,11 @@ Applicability checked on 2026-09-18: SQLite 3.x documentation (local file tests 
 - Litestream guides (supported replica destinations): https://litestream.io/guides/
 - Litestream S3 guide (credentials, scoped IAM policy): https://litestream.io/guides/s3/
 - LiteFS overview (cluster replication, pre-1.0 status, backup recommendation): https://fly.io/docs/litefs/
-- SQLite serverless architecture (no server process; OS and filesystem only): https://www.sqlite.org/serverless.html
-- SQLite temporary and sidecar file naming (-wal, -shm, -journal) (local file tests on SQLite 3.46.1): https://www.sqlite.org/tempfiles.html
+- SQLite serverless architecture (no server process; OS and filesystem only) (SQLite 3.x documentation): https://www.sqlite.org/serverless.html
+- SQLite temporary and sidecar file naming (-wal, -shm, -journal) (local file tests on SQLite 3.46.1) (SQLite 3.x documentation): https://www.sqlite.org/tempfiles.html
 - SQLite Encryption Extension (licensed; the public build cannot read an encrypted file): https://www.sqlite.org/see/doc/trunk/www/readme.wiki
 - SQLCipher (third-party encrypted-SQLite build): https://www.zetetic.net/sqlcipher/
-- SQLite extension loading (disabled by default; enabled in the CLI): https://sqlite.org/loadext.html
+- SQLite extension loading (disabled by default; enabled in the CLI) (SQLite 3.x documentation): https://sqlite.org/loadext.html
 - LiteFS configuration (http.addr, lease.advertise-url, default port 20202): https://fly.io/docs/litefs/config/
 - LiteFS listener and configuration (pinned tag v0.5.14): default address, plain TCP and h2c server, h2c-only client, mount flags, environment expansion, default config search and explicit path, and example API bind: https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L32-L35, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/config.go#L57, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L76-L99, https://github.com/superfly/litefs/blob/v0.5.14/http/client.go#L32-L43, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/mount_linux.go#L76-L110, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/config.go#L219-L233, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/config.go#L288-L333, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/etc/litefs.yml#L54-L58
 - LiteFS route dispatch and reads (pinned tag v0.5.14): no credential gate, export including WAL pages, primary-only HTTP/2 stream, database enumeration and filtering, snapshots, position-map decoding, info, events, and unconditional debug routes including rand: https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L134-L268, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L320-L346, https://github.com/superfly/litefs/blob/v0.5.14/db.go#L2682-L2776, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L495-L520, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L526-L585, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L686-L699, https://github.com/superfly/litefs/blob/v0.5.14/http/http.go#L15-L43, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L271-L292, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L779-L803, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/mount_linux.go#L487-L488, https://github.com/superfly/litefs/blob/v0.5.14/store.go#L1661-L1713

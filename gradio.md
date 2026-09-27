@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "cd2de018e313f5f8a042b335b93206fc5109a0c6498ae22f1eefd68122a65c67",
+  "body_sha256": "a34234eac2ef6d32ff856d723a8aed926cdeb153a438133e54fa504048958fd8",
   "components": {
     "gradio": {
       "name": "Gradio",
@@ -479,18 +479,18 @@ The checks below remain REASONED from the cited Gradio 6.28.0 source and documen
 
 ## Sources (checked September 2026)
 
-- [Gradio Blocks.launch() parameters](https://gradio.app/docs/gradio/blocks): auth, auth_message, ssl_certfile, ssl_keyfile, ssl_keyfile_password, ssl_verify, server_name, and share; also auth_dependency, root_path, queue/launch limits, footer_links, run_history, and analytics.
-- [Gradio file access](https://www.gradio.app/guides/file-access): the `/gradio_api/file=` route; the default set is `set_static_paths`, `allowed_paths`, and the cache; eligible returned paths in `allowed_paths`, the working directory, or the temp directory; working-directory dotfile exclusion; `blocked_paths` precedence; cache sharing across users; and `GRADIO_TEMP_DIR`.
+- [Gradio 6.28.0 Blocks.launch() parameters](https://gradio.app/docs/gradio/blocks): auth, auth_message, ssl_certfile, ssl_keyfile, ssl_keyfile_password, ssl_verify, server_name, and share; also auth_dependency, root_path, queue/launch limits, footer_links, run_history, and analytics.
+- [Gradio 6.28.0 file access](https://www.gradio.app/guides/file-access): the `/gradio_api/file=` route; the default set is `set_static_paths`, `allowed_paths`, and the cache; eligible returned paths in `allowed_paths`, the working directory, or the temp directory; working-directory dotfile exclusion; `blocked_paths` precedence; cache sharing across users; and `GRADIO_TEMP_DIR`.
 - Gradio security advisories: [the `/file` traversal and SSRF fixed in 4.11.0](https://github.com/gradio-app/gradio/security/advisories/GHSA-6qm2-wpxq-7qh2) and [the case-handling blocklist bypass](https://github.com/gradio-app/gradio/security/advisories/GHSA-j2jg-fq62-7c3h). Historical evidence for keeping a current release and minimizing the process filesystem and additional allowed paths; no precise fix version is assigned here to the case-handling advisory.
 - [Gradio 6.28.0 release](https://github.com/gradio-app/gradio/releases/tag/gradio%406.28.0).
 - [Gradio 6.28.0 Blocks source](https://raw.githubusercontent.com/gradio-app/gradio/gradio%406.28.0/gradio/blocks.py): launch and queue signatures/defaults, off-Spaces api_open default, vibe-mode truthiness, path environment fallback, sharing behavior, component cache downloads, API names, and history settings.
 - [Gradio 6.28.0 routes source](https://raw.githubusercontent.com/gradio-app/gradio/gradio%406.28.0/gradio/routes.py): login checks, native tokens/cookies/logout, auth_dependency, vibe handlers, conditional MCP setup, direct queue-bypass refusal, multipart limits, and SSRF-protected file streaming.
-- [Gradio event reference](https://gradio.app/docs/gradio/button): api_visibility, api_name, queue, and listener concurrency.
-- [Gradio 6 migration guide](https://www.gradio.app/guides/gradio-6-migration-guide): footer_links and the replacement event visibility API; read its visibility wording with the current reference and HTTP source.
-- [Gradio development and vibe-mode warning](https://gradio.app/guides/developing-faster-with-reload-mode).
-- [Gradio MCP server documentation](https://gradio.app/guides/building-mcp-server-with-gradio): tool publication, `/gradio_api/mcp/`, and URL file inputs.
+- [Gradio 6.28.0 event reference](https://gradio.app/docs/gradio/button): api_visibility, api_name, queue, and listener concurrency.
+- [Gradio 6 migration guide (6.28.0 basis)](https://www.gradio.app/guides/gradio-6-migration-guide): footer_links and the replacement event visibility API; read its visibility wording with the current reference and HTTP source.
+- [Gradio 6.28.0 development and vibe-mode warning](https://gradio.app/guides/developing-faster-with-reload-mode).
+- [Gradio 6.28.0 MCP server documentation](https://gradio.app/guides/building-mcp-server-with-gradio): tool publication, `/gradio_api/mcp/`, and URL file inputs.
 - [Gradio 6.16.0 release](https://github.com/gradio-app/gradio/releases/tag/gradio%406.16.0): FileExplorer traversal and Image/Gallery SVG and Audio streaming SSRF fixes.
 - [Gradio 6.20.0 release](https://github.com/gradio-app/gradio/releases/tag/gradio%406.20.0): multipart `/component_server` max_file_size enforcement and the SSRF-protected file streaming proxy.
-- [Gradio load reference](https://gradio.app/docs/gradio/load): trusted targets, src, token, HF_TOKEN inheritance, and loaded-Space token disclosure.
-- [Gradio Interface reference](https://gradio.app/docs/gradio/interface): flagging_mode, GRADIO_FLAGGING_MODE, CSVLogger, `.gradio/flagged`, and analytics_enabled.
-- [Gradio flagging guide](https://www.gradio.app/guides/flagging): persistence of flagged inputs, outputs, and file data.
+- [Gradio 6.28.0 load reference](https://gradio.app/docs/gradio/load): trusted targets, src, token, HF_TOKEN inheritance, and loaded-Space token disclosure.
+- [Gradio 6.28.0 Interface reference](https://gradio.app/docs/gradio/interface): flagging_mode, GRADIO_FLAGGING_MODE, CSVLogger, `.gradio/flagged`, and analytics_enabled.
+- [Gradio 6.28.0 flagging guide](https://www.gradio.app/guides/flagging): persistence of flagged inputs, outputs, and file data.

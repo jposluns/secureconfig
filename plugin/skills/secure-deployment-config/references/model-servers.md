@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "f71bd95ff9ce613505400874532744b7e9f59c002e0eda9d09beddc5f8f6b2ad",
+  "body_sha256": "18e118308947ffbf4910e17edd2ea776e93920ad7a116f9e07ddef8dcfa05dfe",
   "components": {
     "llama": {
       "name": "llama.cpp",
@@ -821,8 +821,8 @@ For cross-node endpoints in an intentionally exposed test deployment, the outsid
 - TGI router: a `--hostname` that does not parse as an IP address logs "Invalid hostname, defaulting to 0.0.0.0" and binds `0.0.0.0` (pinned tag v3.3.7): https://github.com/huggingface/text-generation-inference/blob/v3.3.7/router/src/server.rs#L1906-L1910
 - TGI router source (what --api-key enforces): https://github.com/huggingface/text-generation-inference/blob/24ee40d143d8d046039f12f76940a85886cbe152/router/src/server.rs
 - TGI repository (maintenance-mode notice, archived 2026-03-21): https://github.com/huggingface/text-generation-inference
-- SGLang server arguments (--host, --port, --api-key, --admin-api-key, SSL flags; docs.sglang.ai redirects here): https://docs.sglang.io/docs/advanced_features/server_arguments
-- Triton secure deployment considerations: https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/customization_guide/deploy.html
+- SGLang v0.5.20 server arguments (--host, --port, --api-key, --admin-api-key, SSL flags; docs.sglang.ai redirects here): https://docs.sglang.io/docs/advanced_features/server_arguments
+- Triton secure deployment considerations (source basis commit 546a78766fb112128aa0b10a70c55f4f39c3b1df): https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/customization_guide/deploy.html
 - Triton listener defaults: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.h#L191-L219 and https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/grpc/grpc_server.h#L51-L67
 - Triton gRPC TLS flags and restricted protocols: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L558-L576 and https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L632-L640
 - Triton command line parser (HTTP address and port, restricted APIs): https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L477-L516
@@ -843,7 +843,7 @@ For cross-node endpoints in an intentionally exposed test deployment, the outsid
 - LM Studio server settings: https://lmstudio.ai/docs/developer/core/server/settings
 - LM Studio authentication: https://lmstudio.ai/docs/developer/core/authentication
 - LM Studio OpenAI compatibility (localhost:1234 examples): https://lmstudio.ai/docs/developer/openai-compat
-- text-generation-webui README, command-line flags: https://github.com/oobabooga/text-generation-webui#command-line-flags
+- text-generation-webui README, command-line flags (source basis commit c022565b1257a9c7d9a5128c8b4c03587559cf08): https://github.com/oobabooga/text-generation-webui#command-line-flags
 - text-generation-webui, OpenAI-compatible API documentation: https://github.com/oobabooga/text-generation-webui/blob/ceade2eb1ba3f84518076270df2240b6bbb01da0/docs/12%20-%20OpenAI%20API.md
 - text-generation-webui, flag definitions and defaults (modules/shared.py): https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py
 - text-generation-webui, `--user-data-dir` and the in-process `CMD_FLAGS.txt` loader (lines whose first non-space character is `#` skipped, the rest split as shell words and spliced into Python's `sys.argv` before parsing): https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py#L50 and https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py#L221-L236, with the directory resolved at https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/paths.py#L5-L21

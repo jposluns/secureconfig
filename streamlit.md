@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "cbaffa703b4ee95858a735479259c5d933467ae27a9b5b58e63c099cf5f97385",
+  "body_sha256": "9b1418b6992717640d9af034c0bcf51b8c4d313a1441d11d3063d4ac035550fe",
   "components": {
     "streamlit": {
       "name": "Streamlit",
@@ -320,21 +320,21 @@ REASONED from the cited Streamlit 1.64.0 source and the recorded loopback observ
 
 Source-checked on 2026-09-18 against Streamlit 1.64.0, the current release at the time of writing; `server.address` defaults to unset (all interfaces) and `server.port` to `8501`, and the explicit loopback setting above is required for the fronting-proxy pattern. `st.login()` has been available since the 1.42.0 series.
 
-- config.toml reference (server.address, server.sslCertFile, server.sslKeyFile, and the production warning): https://docs.streamlit.io/develop/api-reference/configuration/config.toml
+- config.toml reference (server.address, server.sslCertFile, server.sslKeyFile, and the production warning) (Streamlit 1.64.0): https://docs.streamlit.io/develop/api-reference/configuration/config.toml
 - Streamlit `server.address` default unset and `server.port` default `8501` (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/config.py#L1016-L1036
 - Streamlit's unset address falls back to `DEFAULT_SERVER_ADDRESS` `0.0.0.0` and is tried as `::` when `socket.has_ipv6` (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L80-L98
 - Streamlit retries `0.0.0.0` when binding `::` fails with an IPv6-unavailable error (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L139-L160
 - Streamlit's port search: `configured_port + attempt` for up to `MAX_PORT_SEARCH_RETRIES` (100) retries after the configured port, exiting instead on a busy (`EADDRINUSE`) or permission-denied (`EACCES`) port that was set explicitly (a value from `config.toml` counts; `config.py` `is_manually_set`) (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L363-L400, with `MAX_PORT_SEARCH_RETRIES: Final = 100` defined in `starlette_server_config.py`: https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server_config.py#L55-L57
-- Authentication concepts (st.login, st.logout, st.user, [auth] keys, default scope, stated limitations): https://docs.streamlit.io/develop/concepts/connections/authentication
-- st.user API reference (claims copied from the ID token, `st.user.email`): https://docs.streamlit.io/develop/api-reference/user/st.user
+- Authentication concepts (st.login, st.logout, st.user, [auth] keys, default scope, stated limitations) (Streamlit 1.64.0): https://docs.streamlit.io/develop/concepts/connections/authentication
+- st.user API reference (claims copied from the ID token, `st.user.email`) (Streamlit 1.64.0): https://docs.streamlit.io/develop/api-reference/user/st.user
 - Streamlit release notes (1.64.0 current; st.login since the 1.42.0 series): https://docs.streamlit.io/develop/quick-reference/release-notes
-- st.login reference (OIDC, Authlib 1.3.2+ dependency): https://docs.streamlit.io/develop/api-reference/user/st.login
+- st.login reference (OIDC, Authlib 1.3.2+ dependency) (Streamlit 1.64.0): https://docs.streamlit.io/develop/api-reference/user/st.login
 - Streamlit 1.64.0 package metadata (the `auth` extra requires `Authlib>=1.3.2` and `httpx>=0.24.1`): https://pypi.org/project/streamlit/1.64.0/
-- Configuration options and precedence (command line over env over project over global; restart on server changes): https://docs.streamlit.io/develop/concepts/configuration/options
-- config.toml (enableCORS, enableXsrfProtection, maxUploadSize, enableStaticServing, showErrorDetails): https://docs.streamlit.io/develop/api-reference/configuration/config.toml
-- Static file serving (server.enableStaticServing default false, served by the server not the script): https://docs.streamlit.io/develop/concepts/configuration/serving-static-files
-- st.file_uploader (maxUploadSize per-file limit; filters are not content validation): https://docs.streamlit.io/develop/api-reference/widgets/st.file_uploader
-- Secrets management and security reminders (never render or log secrets): https://docs.streamlit.io/develop/concepts/connections/security-reminders
-- App health endpoint (/_stcore/health, no authentication): https://docs.streamlit.io/deploy/tutorials/docker
+- Configuration options and precedence (command line over env over project over global; restart on server changes) (Streamlit 1.64.0): https://docs.streamlit.io/develop/concepts/configuration/options
+- config.toml (enableCORS, enableXsrfProtection, maxUploadSize, enableStaticServing, showErrorDetails) (Streamlit 1.64.0): https://docs.streamlit.io/develop/api-reference/configuration/config.toml
+- Static file serving (server.enableStaticServing default false, served by the server not the script) (Streamlit 1.64.0): https://docs.streamlit.io/develop/concepts/configuration/serving-static-files
+- st.file_uploader (maxUploadSize per-file limit; filters are not content validation) (Streamlit 1.64.0): https://docs.streamlit.io/develop/api-reference/widgets/st.file_uploader
+- Secrets management and security reminders (never render or log secrets) (Streamlit 1.64.0): https://docs.streamlit.io/develop/concepts/connections/security-reminders
+- App health endpoint (/_stcore/health, no authentication) (Streamlit 1.64.0): https://docs.streamlit.io/deploy/tutorials/docker
 - OWASP SSRF Prevention Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
 - curl manual (write-out variables require 7.75.0+): https://curl.se/docs/manpage.html

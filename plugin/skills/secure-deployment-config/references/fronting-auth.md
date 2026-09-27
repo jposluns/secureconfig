@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "515345dee167967a432a70f4daad9b02782e2122a6a8032c3f7069b92d625959",
+  "body_sha256": "583ea07817f64f590a503bb283195b7d05fb590d50c2f7818775f1b6b6467f71",
   "components": {
     "oauth": {
       "name": "oauth2-proxy",
@@ -309,16 +309,16 @@ After a real login through the proxy, confirm a session reaches the app and the 
 
 ## Sources (checked September 2026)
 
-- oauth2-proxy configuration overview (flags, cookie-secret length): https://oauth2-proxy.github.io/oauth2-proxy/configuration/overview
-- oauth2-proxy nginx integration: https://oauth2-proxy.github.io/oauth2-proxy/configuration/integrations/nginx/
-- oauth2-proxy Traefik integration: https://oauth2-proxy.github.io/oauth2-proxy/configuration/integrations/traefik/
+- oauth2-proxy v7.15.4 configuration overview (flags, cookie-secret length): https://oauth2-proxy.github.io/oauth2-proxy/configuration/overview
+- oauth2-proxy v7.15.4 nginx integration: https://oauth2-proxy.github.io/oauth2-proxy/configuration/integrations/nginx/
+- oauth2-proxy v7.15.4 Traefik integration: https://oauth2-proxy.github.io/oauth2-proxy/configuration/integrations/traefik/
 - Traefik forwardAuth middleware (authResponseHeaders replaces only the listed headers; others pass through): https://doc.traefik.io/traefik/reference/routing-configuration/http/middlewares/forwardauth/
-- Authelia proxy integration introduction: https://www.authelia.com/integration/proxies/introduction/
-- Authelia proxy support matrix (Apache and IIS unsupported) (Caddy 2.5.1+): https://www.authelia.com/integration/proxies/support/
-- Authelia nginx integration: https://www.authelia.com/integration/proxies/nginx/
-- Authelia Traefik integration: https://www.authelia.com/integration/proxies/traefik/
-- Authelia Caddy integration: https://www.authelia.com/integration/proxies/caddy/
-- Authelia second-factor introduction: https://www.authelia.com/configuration/second-factor/introduction/
+- Authelia v4.39.28 proxy integration introduction: https://www.authelia.com/integration/proxies/introduction/
+- Authelia v4.39.28 proxy support matrix (Apache and IIS unsupported) (Caddy 2.5.1+): https://www.authelia.com/integration/proxies/support/
+- Authelia v4.39.28 nginx integration: https://www.authelia.com/integration/proxies/nginx/
+- Authelia v4.39.28 Traefik integration: https://www.authelia.com/integration/proxies/traefik/
+- Authelia v4.39.28 Caddy integration: https://www.authelia.com/integration/proxies/caddy/
+- Authelia v4.39.28 second-factor introduction: https://www.authelia.com/configuration/second-factor/introduction/
 - Pomerium identity provider settings: https://www.pomerium.com/docs/reference/identity-provider-settings
 - Pomerium documentation: https://www.pomerium.com/docs
 - oauth2-proxy `--http-address` default `127.0.0.1:4180` (pinned tag v7.15.4): https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/pkg/apis/options/legacy_options.go#L494

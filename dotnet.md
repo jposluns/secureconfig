@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "f9e22b5f0a46d21dad56de3a9f5f34cdb679afedf706253a488a810305c3f833",
+  "body_sha256": "c8a76b797641e2c56e3be4e36e8309fdeddde4516837ae61807faf7462ecfd05",
   "components": {
     "docs": {
       "name": "ASP.NET Core documentation",
@@ -687,19 +687,19 @@ Also retain an antiforgery token and its accompanying cookie across a restart, t
 - .NET 10 environment selection and Production default: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/environments?view=aspnetcore-10.0
 - WebApplicationBuilder environment-variable precedence change in .NET 7: https://learn.microsoft.com/en-us/aspnet/core/breaking-changes/7/environment-variable-precedence?view=aspnetcore-10.0
 - .NET 10 UseMigrationsEndPoint API: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.builder.migrationsendpointextensions.usemigrationsendpoint?view=aspnetcore-10.0
-- Kestrel request-size enforcement, per-request overrides, IIS exception, and debugger behavior: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/options?view=aspnetcore-10.0
+- .NET 10 Kestrel request-size enforcement, per-request overrides, IIS exception, and debugger behavior: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/options?view=aspnetcore-10.0
 - .NET 10 KestrelServerLimits defaults: https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Servers/Kestrel/Core/src/KestrelServerLimits.cs
 - .NET 10 Http2Limits defaults: https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Servers/Kestrel/Core/src/Http2Limits.cs
 - .NET 10 FormOptions multipart limits: https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Http/Http/src/Features/FormOptions.cs
 - .NET 10 DisableRequestSizeLimitAttribute: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.mvc.disablerequestsizelimitattribute?view=aspnetcore-10.0
 - .NET 10 upload limits and IIS request filtering: https://learn.microsoft.com/en-us/aspnet/core/mvc/models/file-uploads?view=aspnetcore-10.0
-- IIS in-process hosting and IISServerOptions.MaxRequestBodySize: https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/iis/in-process-hosting?view=aspnetcore-10.0
+- .NET 10 IIS in-process hosting and IISServerOptions.MaxRequestBodySize: https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/iis/in-process-hosting?view=aspnetcore-10.0
 - .NET 10 Data Protection persistence, application names, encryption, and isolation: https://learn.microsoft.com/en-us/aspnet/core/security/data-protection/configuration/overview?view=aspnetcore-10.0
 - .NET 10 environment-dependent key storage and key lifetime: https://learn.microsoft.com/en-us/aspnet/core/security/data-protection/configuration/default-settings?view=aspnetcore-10.0
 - .NET 10 ProtectKeysWithCertificate overloads: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.dataprotection.dataprotectionbuilderextensions.protectkeyswithcertificate?view=aspnetcore-10.0
-- Cookie sharing requirements for key rings, application names, and authentication schemes: https://learn.microsoft.com/en-us/aspnet/core/security/cookie-sharing?view=aspnetcore-10.0
+- .NET 10 Cookie sharing requirements for key rings, application names, and authentication schemes: https://learn.microsoft.com/en-us/aspnet/core/security/cookie-sharing?view=aspnetcore-10.0
 - .NET 10 KestrelServerOptions.AddServerHeader default: https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Servers/Kestrel/Core/src/KestrelServerOptions.cs
-- IIS custom response headers and X-Powered-By: https://learn.microsoft.com/en-us/iis/configuration/system.webserver/httpprotocol/customheaders/
+- IIS 10 custom response headers and X-Powered-By: https://learn.microsoft.com/en-us/iis/configuration/system.webserver/httpprotocol/customheaders/
 - IIS removeServerHeader requirements and request filtering (IIS 10; Windows Server version 1709 or Windows 10 version 1709): https://learn.microsoft.com/en-us/iis/configuration/system.webserver/security/requestfiltering/
 - .NET 10 OpenAPI document generation and endpoint authorization: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/aspnetcore-openapi?view=aspnetcore-10.0
 - .NET 10 OpenAPI documents with Development-only Swagger UI: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/using-openapi-documents?view=aspnetcore-10.0

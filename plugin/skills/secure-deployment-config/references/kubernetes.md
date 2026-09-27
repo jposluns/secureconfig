@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "39e9f5e1695253697328be2698a6e5d5cda76cca767d8adf61afa63c8e251d91",
+  "body_sha256": "7e9c37235c767ce4c97180557f7fc13cbc1a6ae20c76c63b13e8575c55ffab75",
   "components": {
     "kubernetes": {
       "name": "Kubernetes documentation",
@@ -645,7 +645,7 @@ allowed ranges out of the provider's own configuration rather than inferring the
 - Ingress NGINX: Statement from the Kubernetes Steering and Security Response Committees (retirement, detection command): https://kubernetes.io/blog/2026/01/29/ingress-nginx-statement/ ; Kubernetes docs, Gateway API (migration guide from Ingress): https://kubernetes.io/docs/concepts/services-networking/gateway/ ; Kubernetes docs, Ingress (the project recommends Gateway; the Ingress API is frozen): https://kubernetes.io/docs/concepts/services-networking/ingress/
 - Gateway API getting started (CRD install): https://gateway-api.sigs.k8s.io/guides/getting-started/introduction/ ; TLS: https://gateway-api.sigs.k8s.io/guides/user-guides/tls/ ; HTTP routing: https://gateway-api.sigs.k8s.io/guides/user-guides/http-routing/ ; redirects: https://gateway-api.sigs.k8s.io/guides/user-guides/http-redirect-rewrite/
 - Envoy Gateway: https://gateway.envoyproxy.io/ ; Helm install: https://gateway.envoyproxy.io/docs/install/install-helm/ ; quickstart and its manifest (GatewayClass `controllerName`): https://gateway.envoyproxy.io/docs/tasks/quickstart/ , https://github.com/envoyproxy/gateway/releases/download/v1.9.1/quickstart.yaml
-- Envoy Gateway tasks, secure gateways (TLS listener): https://gateway.envoyproxy.io/docs/tasks/security/secure-gateways/ ; basic auth: https://gateway.envoyproxy.io/docs/tasks/security/basic-auth/ ; OIDC: https://gateway.envoyproxy.io/docs/tasks/security/oidc/ ; external authorization (`extAuth`): https://gateway.envoyproxy.io/docs/tasks/security/ext-auth/ ; HTTP redirect: https://gateway.envoyproxy.io/docs/tasks/traffic/http-redirect/
+- Envoy Gateway v1.9.1 tasks, secure gateways (TLS listener): https://gateway.envoyproxy.io/docs/tasks/security/secure-gateways/ ; basic auth: https://gateway.envoyproxy.io/docs/tasks/security/basic-auth/ ; OIDC: https://gateway.envoyproxy.io/docs/tasks/security/oidc/ ; external authorization (`extAuth`): https://gateway.envoyproxy.io/docs/tasks/security/ext-auth/ ; HTTP redirect: https://gateway.envoyproxy.io/docs/tasks/traffic/http-redirect/
 - htpasswd, for `-i` rather than `-b` and what SHA-1 costs: https://httpd.apache.org/docs/2.4/programs/htpasswd.html
 - Authelia: proxy integration (the proxy calls the authorization endpoint): https://www.authelia.com/integration/proxies/introduction/ ; Envoy Gateway `SecurityPolicy` example: https://www.authelia.com/integration/kubernetes/envoy/gateway/
 - kubectl JSONPath filter syntax: https://kubernetes.io/docs/reference/kubectl/jsonpath/

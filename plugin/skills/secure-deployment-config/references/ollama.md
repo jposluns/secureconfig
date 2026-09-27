@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "ec8586c5e5a4366db53dbb0e76bd9a9261ba4771938712cd2633ce82c91570b0",
+  "body_sha256": "3ca408e19c97949a24d27b95616528408562fce24e50191e8aee772ba655604d",
   "components": {
     "ollama": {
       "name": "Ollama",
@@ -1045,7 +1045,7 @@ These commands validate configuration acceptance; they do not prove authenticati
 - Ollama repository at the reviewed tag: https://github.com/ollama/ollama/tree/v0.34.2
 - Ollama FAQ: https://docs.ollama.com/faq
 - Pinned FAQ, service environment, proxy examples, overrides, and cloud disablement: https://github.com/ollama/ollama/blob/v0.34.2/docs/faq.mdx
-- Local API authentication: https://docs.ollama.com/api/authentication
+- Local API authentication (Ollama v0.34.2): https://docs.ollama.com/api/authentication
 - Official Docker image wildcard listener: https://github.com/ollama/ollama/blob/v0.34.2/Dockerfile
 - Linux service instructions: https://github.com/ollama/ollama/blob/v0.34.2/docs/linux.mdx
 - Linux installer and service account: https://github.com/ollama/ollama/blob/v0.34.2/scripts/install.sh
@@ -1059,8 +1059,8 @@ These commands validate configuration acceptance; they do not prove authenticati
 - Registry transfers and redirect restrictions: https://github.com/ollama/ollama/blob/v0.34.2/server/images.go
 - Registry and model-name parsing: https://github.com/ollama/ollama/blob/v0.34.2/types/model/name.go
 - Modelfile reference: https://github.com/ollama/ollama/blob/v0.34.2/docs/modelfile.mdx
-- Model inventory and digests: https://docs.ollama.com/api/tags
-- Model details: https://docs.ollama.com/api-reference/show-model-details
+- Model inventory and digests (Ollama v0.34.2): https://docs.ollama.com/api/tags
+- Model details (Ollama v0.34.2): https://docs.ollama.com/api-reference/show-model-details
 - Scheduler: https://github.com/ollama/ollama/blob/v0.34.2/server/sched.go
 - VRAM-dependent context defaults: https://github.com/ollama/ollama/blob/v0.34.2/docs/context-length.mdx
 - Request options and overrides: https://github.com/ollama/ollama/blob/v0.34.2/api/types.go

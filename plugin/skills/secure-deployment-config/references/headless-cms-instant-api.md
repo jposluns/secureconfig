@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "7b8680d226ef7439db68fc8ed5ca93eca52358e55c0e9f5d85392a6e07510b6e",
+  "body_sha256": "e70fdabc3e391df26775dc67440996085492841d9f907190dc188db9459a946f",
   "components": {
     "strapi": {
       "name": "Strapi documentation",
@@ -544,14 +544,14 @@ REASONED: following block; direct-origin isolation probes follow the cited liste
 
 Version boundary at the time of writing: Strapi 5 documentation; current Directus documentation (its quickstart uses 12.0.2); Hasura GraphQL Engine v2.x (the quickstart Compose names 2.46.0, and the authentication-status option requires Community Edition 2.48.0); PostgREST documentation identifying itself as version 16. These documentation URLs are rolling references unless a release is named; the Strapi sign-up default is left explicitly unconfirmed until a release-specific source establishes it.
 
-- Strapi Users and Permissions (public role, sign-up): https://docs.strapi.io/cms/features/users-permissions
-- Strapi REST API (content types private by default): https://docs.strapi.io/cms/api/rest
-- Strapi quick start (first administrator): https://docs.strapi.io/cms/quick-start
-- Strapi server configuration (HOST, PORT, APP_KEYS): https://docs.strapi.io/cms/configurations/server
-- Strapi admin-panel configuration (ADMIN_JWT_SECRET, API_TOKEN_SALT, TRANSFER_TOKEN_SALT): https://docs.strapi.io/cms/configurations/admin-panel
-- Strapi Users and Permissions security configuration (`JWT_SECRET`): https://docs.strapi.io/cms/features/users-permissions#security-configuration
-- Strapi middlewares (public static file serving via koa-static): https://docs.strapi.io/cms/configurations/middlewares
-- Strapi Media Library (upload providers): https://docs.strapi.io/cms/features/media-library
+- Strapi 5 Users and Permissions (public role, sign-up): https://docs.strapi.io/cms/features/users-permissions
+- Strapi 5 REST API (content types private by default): https://docs.strapi.io/cms/api/rest
+- Strapi 5 quick start (first administrator): https://docs.strapi.io/cms/quick-start
+- Strapi 5 server configuration (HOST, PORT, APP_KEYS): https://docs.strapi.io/cms/configurations/server
+- Strapi 5 admin-panel configuration (ADMIN_JWT_SECRET, API_TOKEN_SALT, TRANSFER_TOKEN_SALT): https://docs.strapi.io/cms/configurations/admin-panel
+- Strapi 5 Users and Permissions security configuration (`JWT_SECRET`): https://docs.strapi.io/cms/features/users-permissions#security-configuration
+- Strapi 5 middlewares (public static file serving via koa-static): https://docs.strapi.io/cms/configurations/middlewares
+- Strapi 5 Media Library (upload providers): https://docs.strapi.io/cms/features/media-library
 - Directus configuration, first admin user (ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_TOKEN; PORT default 8055): https://directus.com/docs/configuration/general
 - Directus `HOST` default `0.0.0.0` and `PORT` default 8055, and the branch that replaces them when `UNIX_SOCKET_PATH` names a socket path (pinned tag v12.4.1): https://github.com/directus/directus/blob/v12.4.1/packages/env/src/constants/defaults.ts#L9-L10 and https://github.com/directus/directus/blob/v12.4.1/api/src/server.ts#L169-L182
 - Directus access control (public permissions off by default): https://directus.com/docs/guides/auth/access-control
@@ -563,8 +563,8 @@ Version boundary at the time of writing: Strapi 5 documentation; current Directu
 - PostgREST error codes (PGRST300 to PGRST303): https://postgrest.org/en/stable/references/errors.html
 - PostgREST OpenAPI output at the root path: https://postgrest.org/en/stable/references/api/openapi.html
 - PostgREST admin server (optional health/metrics listener): https://postgrest.org/en/stable/references/admin_server.html
-- Strapi API tokens (pre-generated Full access and Read-only tokens, scopes, lifetime): https://docs.strapi.io/cms/features/api-tokens
-- Strapi SSO (administrator single sign-on): https://docs.strapi.io/cms/features/sso
+- Strapi 5 API tokens (pre-generated Full access and Read-only tokens, scopes, lifetime): https://docs.strapi.io/cms/features/api-tokens
+- Strapi 5 SSO (administrator single sign-on): https://docs.strapi.io/cms/features/sso
 - Directus security and limits (`SECRET`, cookie flags, `IMPORT_IP_DENY_LIST`): https://directus.com/docs/configuration/security-limits
 - Directus file access (asset permissions and storage bypass): https://directus.com/docs/guides/files/access
 - Hasura disable GraphQL introspection (self-hosted Enterprise control): https://hasura.io/docs/2.0/security/disable-graphql-introspection/

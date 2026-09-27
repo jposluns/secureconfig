@@ -3913,16 +3913,16 @@ After a real login through the proxy, confirm a session reaches the app and the 
 
 ## Sources (checked September 2026)
 
-- oauth2-proxy configuration overview (flags, cookie-secret length): https://oauth2-proxy.github.io/oauth2-proxy/configuration/overview
-- oauth2-proxy nginx integration: https://oauth2-proxy.github.io/oauth2-proxy/configuration/integrations/nginx/
-- oauth2-proxy Traefik integration: https://oauth2-proxy.github.io/oauth2-proxy/configuration/integrations/traefik/
+- oauth2-proxy v7.15.4 configuration overview (flags, cookie-secret length): https://oauth2-proxy.github.io/oauth2-proxy/configuration/overview
+- oauth2-proxy v7.15.4 nginx integration: https://oauth2-proxy.github.io/oauth2-proxy/configuration/integrations/nginx/
+- oauth2-proxy v7.15.4 Traefik integration: https://oauth2-proxy.github.io/oauth2-proxy/configuration/integrations/traefik/
 - Traefik forwardAuth middleware (authResponseHeaders replaces only the listed headers; others pass through): https://doc.traefik.io/traefik/reference/routing-configuration/http/middlewares/forwardauth/
-- Authelia proxy integration introduction: https://www.authelia.com/integration/proxies/introduction/
-- Authelia proxy support matrix (Apache and IIS unsupported) (Caddy 2.5.1+): https://www.authelia.com/integration/proxies/support/
-- Authelia nginx integration: https://www.authelia.com/integration/proxies/nginx/
-- Authelia Traefik integration: https://www.authelia.com/integration/proxies/traefik/
-- Authelia Caddy integration: https://www.authelia.com/integration/proxies/caddy/
-- Authelia second-factor introduction: https://www.authelia.com/configuration/second-factor/introduction/
+- Authelia v4.39.28 proxy integration introduction: https://www.authelia.com/integration/proxies/introduction/
+- Authelia v4.39.28 proxy support matrix (Apache and IIS unsupported) (Caddy 2.5.1+): https://www.authelia.com/integration/proxies/support/
+- Authelia v4.39.28 nginx integration: https://www.authelia.com/integration/proxies/nginx/
+- Authelia v4.39.28 Traefik integration: https://www.authelia.com/integration/proxies/traefik/
+- Authelia v4.39.28 Caddy integration: https://www.authelia.com/integration/proxies/caddy/
+- Authelia v4.39.28 second-factor introduction: https://www.authelia.com/configuration/second-factor/introduction/
 - Pomerium identity provider settings: https://www.pomerium.com/docs/reference/identity-provider-settings
 - Pomerium documentation: https://www.pomerium.com/docs
 - oauth2-proxy `--http-address` default `127.0.0.1:4180` (pinned tag v7.15.4): https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/pkg/apis/options/legacy_options.go#L494
@@ -6191,7 +6191,7 @@ allowed ranges out of the provider's own configuration rather than inferring the
 - Ingress NGINX: Statement from the Kubernetes Steering and Security Response Committees (retirement, detection command): https://kubernetes.io/blog/2026/01/29/ingress-nginx-statement/ ; Kubernetes docs, Gateway API (migration guide from Ingress): https://kubernetes.io/docs/concepts/services-networking/gateway/ ; Kubernetes docs, Ingress (the project recommends Gateway; the Ingress API is frozen): https://kubernetes.io/docs/concepts/services-networking/ingress/
 - Gateway API getting started (CRD install): https://gateway-api.sigs.k8s.io/guides/getting-started/introduction/ ; TLS: https://gateway-api.sigs.k8s.io/guides/user-guides/tls/ ; HTTP routing: https://gateway-api.sigs.k8s.io/guides/user-guides/http-routing/ ; redirects: https://gateway-api.sigs.k8s.io/guides/user-guides/http-redirect-rewrite/
 - Envoy Gateway: https://gateway.envoyproxy.io/ ; Helm install: https://gateway.envoyproxy.io/docs/install/install-helm/ ; quickstart and its manifest (GatewayClass `controllerName`): https://gateway.envoyproxy.io/docs/tasks/quickstart/ , https://github.com/envoyproxy/gateway/releases/download/v1.9.1/quickstart.yaml
-- Envoy Gateway tasks, secure gateways (TLS listener): https://gateway.envoyproxy.io/docs/tasks/security/secure-gateways/ ; basic auth: https://gateway.envoyproxy.io/docs/tasks/security/basic-auth/ ; OIDC: https://gateway.envoyproxy.io/docs/tasks/security/oidc/ ; external authorization (`extAuth`): https://gateway.envoyproxy.io/docs/tasks/security/ext-auth/ ; HTTP redirect: https://gateway.envoyproxy.io/docs/tasks/traffic/http-redirect/
+- Envoy Gateway v1.9.1 tasks, secure gateways (TLS listener): https://gateway.envoyproxy.io/docs/tasks/security/secure-gateways/ ; basic auth: https://gateway.envoyproxy.io/docs/tasks/security/basic-auth/ ; OIDC: https://gateway.envoyproxy.io/docs/tasks/security/oidc/ ; external authorization (`extAuth`): https://gateway.envoyproxy.io/docs/tasks/security/ext-auth/ ; HTTP redirect: https://gateway.envoyproxy.io/docs/tasks/traffic/http-redirect/
 - htpasswd, for `-i` rather than `-b` and what SHA-1 costs: https://httpd.apache.org/docs/2.4/programs/htpasswd.html
 - Authelia: proxy integration (the proxy calls the authorization endpoint): https://www.authelia.com/integration/proxies/introduction/ ; Envoy Gateway `SecurityPolicy` example: https://www.authelia.com/integration/kubernetes/envoy/gateway/
 - kubectl JSONPath filter syntax: https://kubernetes.io/docs/reference/kubectl/jsonpath/
@@ -8402,19 +8402,19 @@ Also retain an antiforgery token and its accompanying cookie across a restart, t
 - .NET 10 environment selection and Production default: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/environments?view=aspnetcore-10.0
 - WebApplicationBuilder environment-variable precedence change in .NET 7: https://learn.microsoft.com/en-us/aspnet/core/breaking-changes/7/environment-variable-precedence?view=aspnetcore-10.0
 - .NET 10 UseMigrationsEndPoint API: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.builder.migrationsendpointextensions.usemigrationsendpoint?view=aspnetcore-10.0
-- Kestrel request-size enforcement, per-request overrides, IIS exception, and debugger behavior: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/options?view=aspnetcore-10.0
+- .NET 10 Kestrel request-size enforcement, per-request overrides, IIS exception, and debugger behavior: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/options?view=aspnetcore-10.0
 - .NET 10 KestrelServerLimits defaults: https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Servers/Kestrel/Core/src/KestrelServerLimits.cs
 - .NET 10 Http2Limits defaults: https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Servers/Kestrel/Core/src/Http2Limits.cs
 - .NET 10 FormOptions multipart limits: https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Http/Http/src/Features/FormOptions.cs
 - .NET 10 DisableRequestSizeLimitAttribute: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.mvc.disablerequestsizelimitattribute?view=aspnetcore-10.0
 - .NET 10 upload limits and IIS request filtering: https://learn.microsoft.com/en-us/aspnet/core/mvc/models/file-uploads?view=aspnetcore-10.0
-- IIS in-process hosting and IISServerOptions.MaxRequestBodySize: https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/iis/in-process-hosting?view=aspnetcore-10.0
+- .NET 10 IIS in-process hosting and IISServerOptions.MaxRequestBodySize: https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/iis/in-process-hosting?view=aspnetcore-10.0
 - .NET 10 Data Protection persistence, application names, encryption, and isolation: https://learn.microsoft.com/en-us/aspnet/core/security/data-protection/configuration/overview?view=aspnetcore-10.0
 - .NET 10 environment-dependent key storage and key lifetime: https://learn.microsoft.com/en-us/aspnet/core/security/data-protection/configuration/default-settings?view=aspnetcore-10.0
 - .NET 10 ProtectKeysWithCertificate overloads: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.dataprotection.dataprotectionbuilderextensions.protectkeyswithcertificate?view=aspnetcore-10.0
-- Cookie sharing requirements for key rings, application names, and authentication schemes: https://learn.microsoft.com/en-us/aspnet/core/security/cookie-sharing?view=aspnetcore-10.0
+- .NET 10 Cookie sharing requirements for key rings, application names, and authentication schemes: https://learn.microsoft.com/en-us/aspnet/core/security/cookie-sharing?view=aspnetcore-10.0
 - .NET 10 KestrelServerOptions.AddServerHeader default: https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Servers/Kestrel/Core/src/KestrelServerOptions.cs
-- IIS custom response headers and X-Powered-By: https://learn.microsoft.com/en-us/iis/configuration/system.webserver/httpprotocol/customheaders/
+- IIS 10 custom response headers and X-Powered-By: https://learn.microsoft.com/en-us/iis/configuration/system.webserver/httpprotocol/customheaders/
 - IIS removeServerHeader requirements and request filtering (IIS 10; Windows Server version 1709 or Windows 10 version 1709): https://learn.microsoft.com/en-us/iis/configuration/system.webserver/security/requestfiltering/
 - .NET 10 OpenAPI document generation and endpoint authorization: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/aspnetcore-openapi?view=aspnetcore-10.0
 - .NET 10 OpenAPI documents with Development-only Swagger UI: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/using-openapi-documents?view=aspnetcore-10.0
@@ -22333,11 +22333,11 @@ Applicability checked on 2026-09-18: SQLite 3.x documentation (local file tests 
 - Litestream guides (supported replica destinations): https://litestream.io/guides/
 - Litestream S3 guide (credentials, scoped IAM policy): https://litestream.io/guides/s3/
 - LiteFS overview (cluster replication, pre-1.0 status, backup recommendation): https://fly.io/docs/litefs/
-- SQLite serverless architecture (no server process; OS and filesystem only): https://www.sqlite.org/serverless.html
-- SQLite temporary and sidecar file naming (-wal, -shm, -journal) (local file tests on SQLite 3.46.1): https://www.sqlite.org/tempfiles.html
+- SQLite serverless architecture (no server process; OS and filesystem only) (SQLite 3.x documentation): https://www.sqlite.org/serverless.html
+- SQLite temporary and sidecar file naming (-wal, -shm, -journal) (local file tests on SQLite 3.46.1) (SQLite 3.x documentation): https://www.sqlite.org/tempfiles.html
 - SQLite Encryption Extension (licensed; the public build cannot read an encrypted file): https://www.sqlite.org/see/doc/trunk/www/readme.wiki
 - SQLCipher (third-party encrypted-SQLite build): https://www.zetetic.net/sqlcipher/
-- SQLite extension loading (disabled by default; enabled in the CLI): https://sqlite.org/loadext.html
+- SQLite extension loading (disabled by default; enabled in the CLI) (SQLite 3.x documentation): https://sqlite.org/loadext.html
 - LiteFS configuration (http.addr, lease.advertise-url, default port 20202): https://fly.io/docs/litefs/config/
 - LiteFS listener and configuration (pinned tag v0.5.14): default address, plain TCP and h2c server, h2c-only client, mount flags, environment expansion, default config search and explicit path, and example API bind: https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L32-L35, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/config.go#L57, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L76-L99, https://github.com/superfly/litefs/blob/v0.5.14/http/client.go#L32-L43, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/mount_linux.go#L76-L110, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/config.go#L219-L233, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/config.go#L288-L333, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/etc/litefs.yml#L54-L58
 - LiteFS route dispatch and reads (pinned tag v0.5.14): no credential gate, export including WAL pages, primary-only HTTP/2 stream, database enumeration and filtering, snapshots, position-map decoding, info, events, and unconditional debug routes including rand: https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L134-L268, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L320-L346, https://github.com/superfly/litefs/blob/v0.5.14/db.go#L2682-L2776, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L495-L520, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L526-L585, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L686-L699, https://github.com/superfly/litefs/blob/v0.5.14/http/http.go#L15-L43, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L271-L292, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L779-L803, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/mount_linux.go#L487-L488, https://github.com/superfly/litefs/blob/v0.5.14/store.go#L1661-L1713
@@ -24662,7 +24662,7 @@ These commands validate configuration acceptance; they do not prove authenticati
 - Ollama repository at the reviewed tag: https://github.com/ollama/ollama/tree/v0.34.2
 - Ollama FAQ: https://docs.ollama.com/faq
 - Pinned FAQ, service environment, proxy examples, overrides, and cloud disablement: https://github.com/ollama/ollama/blob/v0.34.2/docs/faq.mdx
-- Local API authentication: https://docs.ollama.com/api/authentication
+- Local API authentication (Ollama v0.34.2): https://docs.ollama.com/api/authentication
 - Official Docker image wildcard listener: https://github.com/ollama/ollama/blob/v0.34.2/Dockerfile
 - Linux service instructions: https://github.com/ollama/ollama/blob/v0.34.2/docs/linux.mdx
 - Linux installer and service account: https://github.com/ollama/ollama/blob/v0.34.2/scripts/install.sh
@@ -24676,8 +24676,8 @@ These commands validate configuration acceptance; they do not prove authenticati
 - Registry transfers and redirect restrictions: https://github.com/ollama/ollama/blob/v0.34.2/server/images.go
 - Registry and model-name parsing: https://github.com/ollama/ollama/blob/v0.34.2/types/model/name.go
 - Modelfile reference: https://github.com/ollama/ollama/blob/v0.34.2/docs/modelfile.mdx
-- Model inventory and digests: https://docs.ollama.com/api/tags
-- Model details: https://docs.ollama.com/api-reference/show-model-details
+- Model inventory and digests (Ollama v0.34.2): https://docs.ollama.com/api/tags
+- Model details (Ollama v0.34.2): https://docs.ollama.com/api-reference/show-model-details
 - Scheduler: https://github.com/ollama/ollama/blob/v0.34.2/server/sched.go
 - VRAM-dependent context defaults: https://github.com/ollama/ollama/blob/v0.34.2/docs/context-length.mdx
 - Request options and overrides: https://github.com/ollama/ollama/blob/v0.34.2/api/types.go
@@ -26174,8 +26174,8 @@ For cross-node endpoints in an intentionally exposed test deployment, the outsid
 - TGI router: a `--hostname` that does not parse as an IP address logs "Invalid hostname, defaulting to 0.0.0.0" and binds `0.0.0.0` (pinned tag v3.3.7): https://github.com/huggingface/text-generation-inference/blob/v3.3.7/router/src/server.rs#L1906-L1910
 - TGI router source (what --api-key enforces): https://github.com/huggingface/text-generation-inference/blob/24ee40d143d8d046039f12f76940a85886cbe152/router/src/server.rs
 - TGI repository (maintenance-mode notice, archived 2026-03-21): https://github.com/huggingface/text-generation-inference
-- SGLang server arguments (--host, --port, --api-key, --admin-api-key, SSL flags; docs.sglang.ai redirects here): https://docs.sglang.io/docs/advanced_features/server_arguments
-- Triton secure deployment considerations: https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/customization_guide/deploy.html
+- SGLang v0.5.20 server arguments (--host, --port, --api-key, --admin-api-key, SSL flags; docs.sglang.ai redirects here): https://docs.sglang.io/docs/advanced_features/server_arguments
+- Triton secure deployment considerations (source basis commit 546a78766fb112128aa0b10a70c55f4f39c3b1df): https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/customization_guide/deploy.html
 - Triton listener defaults: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.h#L191-L219 and https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/grpc/grpc_server.h#L51-L67
 - Triton gRPC TLS flags and restricted protocols: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L558-L576 and https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L632-L640
 - Triton command line parser (HTTP address and port, restricted APIs): https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L477-L516
@@ -26196,7 +26196,7 @@ For cross-node endpoints in an intentionally exposed test deployment, the outsid
 - LM Studio server settings: https://lmstudio.ai/docs/developer/core/server/settings
 - LM Studio authentication: https://lmstudio.ai/docs/developer/core/authentication
 - LM Studio OpenAI compatibility (localhost:1234 examples): https://lmstudio.ai/docs/developer/openai-compat
-- text-generation-webui README, command-line flags: https://github.com/oobabooga/text-generation-webui#command-line-flags
+- text-generation-webui README, command-line flags (source basis commit c022565b1257a9c7d9a5128c8b4c03587559cf08): https://github.com/oobabooga/text-generation-webui#command-line-flags
 - text-generation-webui, OpenAI-compatible API documentation: https://github.com/oobabooga/text-generation-webui/blob/ceade2eb1ba3f84518076270df2240b6bbb01da0/docs/12%20-%20OpenAI%20API.md
 - text-generation-webui, flag definitions and defaults (modules/shared.py): https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py
 - text-generation-webui, `--user-data-dir` and the in-process `CMD_FLAGS.txt` loader (lines whose first non-space character is `#` skipped, the rest split as shell words and spliced into Python's `sys.argv` before parsing): https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py#L50 and https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py#L221-L236, with the directory resolved at https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/paths.py#L5-L21
@@ -26587,21 +26587,21 @@ The checks below remain REASONED from the cited Gradio 6.28.0 source and documen
 
 ## Sources (checked September 2026)
 
-- [Gradio Blocks.launch() parameters](https://gradio.app/docs/gradio/blocks): auth, auth_message, ssl_certfile, ssl_keyfile, ssl_keyfile_password, ssl_verify, server_name, and share; also auth_dependency, root_path, queue/launch limits, footer_links, run_history, and analytics.
-- [Gradio file access](https://www.gradio.app/guides/file-access): the `/gradio_api/file=` route; the default set is `set_static_paths`, `allowed_paths`, and the cache; eligible returned paths in `allowed_paths`, the working directory, or the temp directory; working-directory dotfile exclusion; `blocked_paths` precedence; cache sharing across users; and `GRADIO_TEMP_DIR`.
+- [Gradio 6.28.0 Blocks.launch() parameters](https://gradio.app/docs/gradio/blocks): auth, auth_message, ssl_certfile, ssl_keyfile, ssl_keyfile_password, ssl_verify, server_name, and share; also auth_dependency, root_path, queue/launch limits, footer_links, run_history, and analytics.
+- [Gradio 6.28.0 file access](https://www.gradio.app/guides/file-access): the `/gradio_api/file=` route; the default set is `set_static_paths`, `allowed_paths`, and the cache; eligible returned paths in `allowed_paths`, the working directory, or the temp directory; working-directory dotfile exclusion; `blocked_paths` precedence; cache sharing across users; and `GRADIO_TEMP_DIR`.
 - Gradio security advisories: [the `/file` traversal and SSRF fixed in 4.11.0](https://github.com/gradio-app/gradio/security/advisories/GHSA-6qm2-wpxq-7qh2) and [the case-handling blocklist bypass](https://github.com/gradio-app/gradio/security/advisories/GHSA-j2jg-fq62-7c3h). Historical evidence for keeping a current release and minimizing the process filesystem and additional allowed paths; no precise fix version is assigned here to the case-handling advisory.
 - [Gradio 6.28.0 release](https://github.com/gradio-app/gradio/releases/tag/gradio%406.28.0).
 - [Gradio 6.28.0 Blocks source](https://raw.githubusercontent.com/gradio-app/gradio/gradio%406.28.0/gradio/blocks.py): launch and queue signatures/defaults, off-Spaces api_open default, vibe-mode truthiness, path environment fallback, sharing behavior, component cache downloads, API names, and history settings.
 - [Gradio 6.28.0 routes source](https://raw.githubusercontent.com/gradio-app/gradio/gradio%406.28.0/gradio/routes.py): login checks, native tokens/cookies/logout, auth_dependency, vibe handlers, conditional MCP setup, direct queue-bypass refusal, multipart limits, and SSRF-protected file streaming.
-- [Gradio event reference](https://gradio.app/docs/gradio/button): api_visibility, api_name, queue, and listener concurrency.
-- [Gradio 6 migration guide](https://www.gradio.app/guides/gradio-6-migration-guide): footer_links and the replacement event visibility API; read its visibility wording with the current reference and HTTP source.
-- [Gradio development and vibe-mode warning](https://gradio.app/guides/developing-faster-with-reload-mode).
-- [Gradio MCP server documentation](https://gradio.app/guides/building-mcp-server-with-gradio): tool publication, `/gradio_api/mcp/`, and URL file inputs.
+- [Gradio 6.28.0 event reference](https://gradio.app/docs/gradio/button): api_visibility, api_name, queue, and listener concurrency.
+- [Gradio 6 migration guide (6.28.0 basis)](https://www.gradio.app/guides/gradio-6-migration-guide): footer_links and the replacement event visibility API; read its visibility wording with the current reference and HTTP source.
+- [Gradio 6.28.0 development and vibe-mode warning](https://gradio.app/guides/developing-faster-with-reload-mode).
+- [Gradio 6.28.0 MCP server documentation](https://gradio.app/guides/building-mcp-server-with-gradio): tool publication, `/gradio_api/mcp/`, and URL file inputs.
 - [Gradio 6.16.0 release](https://github.com/gradio-app/gradio/releases/tag/gradio%406.16.0): FileExplorer traversal and Image/Gallery SVG and Audio streaming SSRF fixes.
 - [Gradio 6.20.0 release](https://github.com/gradio-app/gradio/releases/tag/gradio%406.20.0): multipart `/component_server` max_file_size enforcement and the SSRF-protected file streaming proxy.
-- [Gradio load reference](https://gradio.app/docs/gradio/load): trusted targets, src, token, HF_TOKEN inheritance, and loaded-Space token disclosure.
-- [Gradio Interface reference](https://gradio.app/docs/gradio/interface): flagging_mode, GRADIO_FLAGGING_MODE, CSVLogger, `.gradio/flagged`, and analytics_enabled.
-- [Gradio flagging guide](https://www.gradio.app/guides/flagging): persistence of flagged inputs, outputs, and file data.
+- [Gradio 6.28.0 load reference](https://gradio.app/docs/gradio/load): trusted targets, src, token, HF_TOKEN inheritance, and loaded-Space token disclosure.
+- [Gradio 6.28.0 Interface reference](https://gradio.app/docs/gradio/interface): flagging_mode, GRADIO_FLAGGING_MODE, CSVLogger, `.gradio/flagged`, and analytics_enabled.
+- [Gradio 6.28.0 flagging guide](https://www.gradio.app/guides/flagging): persistence of flagged inputs, outputs, and file data.
 
 ======================================================================
 ==> streamlit.md
@@ -26832,22 +26832,22 @@ REASONED from the cited Streamlit 1.64.0 source and the recorded loopback observ
 
 Source-checked on 2026-09-18 against Streamlit 1.64.0, the current release at the time of writing; `server.address` defaults to unset (all interfaces) and `server.port` to `8501`, and the explicit loopback setting above is required for the fronting-proxy pattern. `st.login()` has been available since the 1.42.0 series.
 
-- config.toml reference (server.address, server.sslCertFile, server.sslKeyFile, and the production warning): https://docs.streamlit.io/develop/api-reference/configuration/config.toml
+- config.toml reference (server.address, server.sslCertFile, server.sslKeyFile, and the production warning) (Streamlit 1.64.0): https://docs.streamlit.io/develop/api-reference/configuration/config.toml
 - Streamlit `server.address` default unset and `server.port` default `8501` (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/config.py#L1016-L1036
 - Streamlit's unset address falls back to `DEFAULT_SERVER_ADDRESS` `0.0.0.0` and is tried as `::` when `socket.has_ipv6` (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L80-L98
 - Streamlit retries `0.0.0.0` when binding `::` fails with an IPv6-unavailable error (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L139-L160
 - Streamlit's port search: `configured_port + attempt` for up to `MAX_PORT_SEARCH_RETRIES` (100) retries after the configured port, exiting instead on a busy (`EADDRINUSE`) or permission-denied (`EACCES`) port that was set explicitly (a value from `config.toml` counts; `config.py` `is_manually_set`) (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L363-L400, with `MAX_PORT_SEARCH_RETRIES: Final = 100` defined in `starlette_server_config.py`: https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server_config.py#L55-L57
-- Authentication concepts (st.login, st.logout, st.user, [auth] keys, default scope, stated limitations): https://docs.streamlit.io/develop/concepts/connections/authentication
-- st.user API reference (claims copied from the ID token, `st.user.email`): https://docs.streamlit.io/develop/api-reference/user/st.user
+- Authentication concepts (st.login, st.logout, st.user, [auth] keys, default scope, stated limitations) (Streamlit 1.64.0): https://docs.streamlit.io/develop/concepts/connections/authentication
+- st.user API reference (claims copied from the ID token, `st.user.email`) (Streamlit 1.64.0): https://docs.streamlit.io/develop/api-reference/user/st.user
 - Streamlit release notes (1.64.0 current; st.login since the 1.42.0 series): https://docs.streamlit.io/develop/quick-reference/release-notes
-- st.login reference (OIDC, Authlib 1.3.2+ dependency): https://docs.streamlit.io/develop/api-reference/user/st.login
+- st.login reference (OIDC, Authlib 1.3.2+ dependency) (Streamlit 1.64.0): https://docs.streamlit.io/develop/api-reference/user/st.login
 - Streamlit 1.64.0 package metadata (the `auth` extra requires `Authlib>=1.3.2` and `httpx>=0.24.1`): https://pypi.org/project/streamlit/1.64.0/
-- Configuration options and precedence (command line over env over project over global; restart on server changes): https://docs.streamlit.io/develop/concepts/configuration/options
-- config.toml (enableCORS, enableXsrfProtection, maxUploadSize, enableStaticServing, showErrorDetails): https://docs.streamlit.io/develop/api-reference/configuration/config.toml
-- Static file serving (server.enableStaticServing default false, served by the server not the script): https://docs.streamlit.io/develop/concepts/configuration/serving-static-files
-- st.file_uploader (maxUploadSize per-file limit; filters are not content validation): https://docs.streamlit.io/develop/api-reference/widgets/st.file_uploader
-- Secrets management and security reminders (never render or log secrets): https://docs.streamlit.io/develop/concepts/connections/security-reminders
-- App health endpoint (/_stcore/health, no authentication): https://docs.streamlit.io/deploy/tutorials/docker
+- Configuration options and precedence (command line over env over project over global; restart on server changes) (Streamlit 1.64.0): https://docs.streamlit.io/develop/concepts/configuration/options
+- config.toml (enableCORS, enableXsrfProtection, maxUploadSize, enableStaticServing, showErrorDetails) (Streamlit 1.64.0): https://docs.streamlit.io/develop/api-reference/configuration/config.toml
+- Static file serving (server.enableStaticServing default false, served by the server not the script) (Streamlit 1.64.0): https://docs.streamlit.io/develop/concepts/configuration/serving-static-files
+- st.file_uploader (maxUploadSize per-file limit; filters are not content validation) (Streamlit 1.64.0): https://docs.streamlit.io/develop/api-reference/widgets/st.file_uploader
+- Secrets management and security reminders (never render or log secrets) (Streamlit 1.64.0): https://docs.streamlit.io/develop/concepts/connections/security-reminders
+- App health endpoint (/_stcore/health, no authentication) (Streamlit 1.64.0): https://docs.streamlit.io/deploy/tutorials/docker
 - OWASP SSRF Prevention Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
 - curl manual (write-out variables require 7.75.0+): https://curl.se/docs/manpage.html
 
@@ -30117,9 +30117,9 @@ curl -q -g -sI https://imagegen.example.com/                # via the proxy: TLS
 
 ## Sources (checked September 2026)
 
-- ComfyUI Startup Flags (`--listen`, `--port` defaults): https://docs.comfy.org/development/comfyui-server/startup-flags
-- ComfyUI custom node security standards (eval/exec prohibited): https://docs.comfy.org/registry/standards
-- ComfyUI 2025 Jan Security Update (custom node code-execution risk): https://blog.comfy.org/p/comfyui-2025-jan-security-update
+- ComfyUI v0.37.0 Startup Flags (`--listen`, `--port` defaults): https://docs.comfy.org/development/comfyui-server/startup-flags
+- ComfyUI v0.37.0 custom node security standards (eval/exec prohibited): https://docs.comfy.org/registry/standards
+- ComfyUI 2025 Jan Security Update (custom node code-execution risk) (guide basis v0.37.0): https://blog.comfy.org/p/comfyui-2025-jan-security-update
 - ComfyUI-Manager security advisory, CVE-2025-67303, GHSA-95pq-hr8p-f5g7 (minimums ComfyUI v0.3.76 and Manager v3.38): https://github.com/Comfy-Org/ComfyUI-Manager/security/advisories/GHSA-95pq-hr8p-f5g7
 - AUTOMATIC1111 Command Line Arguments and Settings wiki: https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Command-Line-Arguments-and-Settings
 - AUTOMATIC1111 `--gradio-auth-path` ("set gradio authentication file path"), `--gradio-auth`, `--api-auth` and `--server-name` definitions (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L87-L113
@@ -30143,8 +30143,8 @@ curl -q -g -sI https://imagegen.example.com/                # via the proxy: TLS
 - Gradio 3.41.2 checks the login per route, with `dependencies=[Depends(login_check)]` (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/routes.py#L193-L305
 - Gradio 3.41.2 turns a list `auth` into a dictionary keyed by user name, so a later password for the same user name replaces an earlier one (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/routes.py#L128-L133
 - InvokeAI YAML Config (6.14.1, schema 4.0.2, as recorded above; host/port defaults): https://invoke.ai/configuration/invokeai-yaml/
-- InvokeAI Multi-User Administrator Guide: https://invoke.ai/features/multi-user-mode/admin-guide/
-- InvokeAI Multi-User API Guide (boards endpoint and missing-token `401`): https://invoke.ai/features/multi-user-mode/api-guide/
+- InvokeAI 6.14.1 Multi-User Administrator Guide: https://invoke.ai/features/multi-user-mode/admin-guide/
+- InvokeAI 6.14.1 Multi-User API Guide (boards endpoint and missing-token `401`): https://invoke.ai/features/multi-user-mode/api-guide/
 - Fooocus README, UI access and authentication (`--listen`, `--port`, `--share`, `auth.json`; pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/readme.md#L296-L301
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
 - ComfyUI `--listen` default `127.0.0.1`, `0.0.0.0,::` when given without a value, and `--port` default `8188` (pinned tag v0.37.0): https://github.com/Comfy-Org/ComfyUI/blob/v0.37.0/comfy/cli_args.py#L63-L64
@@ -31238,25 +31238,25 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
 
 - Prefect, security settings (`PREFECT_SERVER_API_AUTH_STRING`, `PREFECT_API_AUTH_STRING`, Cloud API keys
   taking precedence and causing 401) (Prefect 3.1.8 Basic Auth minimum): https://docs.prefect.io/v3/advanced/security-settings
-- Prefect, self-hosted server (default port 4200): https://docs.prefect.io/v3/how-to-guides/self-hosted/server-cli
-- Dagster, webserver and UI (default local port, no documented built-in auth): https://docs.dagster.io/guides/operate/webserver
+- Prefect, self-hosted server (default port 4200) (Prefect 3.1.8 Basic Auth minimum): https://docs.prefect.io/v3/how-to-guides/self-hosted/server-cli
+- Dagster, webserver and UI (default local port, no documented built-in auth) (Dagster 1.13.24 documentation): https://docs.dagster.io/guides/operate/webserver
 - Dagster webserver `DEFAULT_WEBSERVER_HOST` "127.0.0.1" and port 3000 with the free-port fallback, `dagster dev` forwarding `--host` only when one is given, its environment-variable routes (`DAGSTER_WEBSERVER_*` through `auto_envvar_prefix`, legacy `DAGIT_*` copied onto them, and the `dagster` CLI's `DAGSTER_CLI` prefix, which Click extends per subcommand, so `dagster dev` reads `DAGSTER_CLI_DEV_*`), and the Helm chart's webserver command, which hardcodes `-h 0.0.0.0` and takes the port from `dagsterWebserver.service.port` (80 by default, Service type `ClusterIP` by default) (pinned tag 1.13.24): https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L41-L42, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L81-L96, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L306-L311, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster/dagster/_cli/dev.py#L251-L252, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L339-L351, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster/dagster/_cli/__init__.py#L45-L50, Click's subcommand prefix rule (pinned tag 8.5.0) https://github.com/pallets/click/blob/8.5.0/src/click/core.py#L476-L484, https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_deployment-webserver.tpl#L86-L90, https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_helpers.tpl#L55 and https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/values.yaml#L54-L58
-- Apache Airflow, security overview: https://airflow.apache.org/docs/apache-airflow/stable/security/
+- Apache Airflow, security overview (Airflow 3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/stable/security/
 - Apache Airflow, auth manager selection (`[core] auth_manager`, `airflow config get-value core auth_manager`) (Airflow 3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/auth-manager/index.html
 - Apache Airflow FAB provider, API authentication (`[fab] auth_backends`, independent of the auth manager) (FAB provider 3.9.0 documentation): https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/api-authentication.html
 - Prefect server source (health and ready paths exempted from the auth string on GET): https://github.com/PrefectHQ/prefect/blob/9e560c9b6df4e19a5109a66e66d461f9facb538d/src/prefect/server/api/server.py
 - Apache Airflow, quickstart (default port 8080): https://airflow.apache.org/docs/apache-airflow/stable/start.html
-- Apache Airflow, running Airflow in Docker (the `docker-compose.yaml` default `airflow`/`airflow` web user via `_AIRFLOW_WWW_USER_*`, `AIRFLOW__API_AUTH__JWT_SECRET` default `airflow_jwt_secret`, FAB auth manager, port 8080 published on all interfaces, "for local development. Do not use it in a production deployment"; checked 2026-09-14): https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html
+- Apache Airflow, running Airflow in Docker (the `docker-compose.yaml` default `airflow`/`airflow` web user via `_AIRFLOW_WWW_USER_*`, `AIRFLOW__API_AUTH__JWT_SECRET` default `airflow_jwt_secret`, FAB auth manager, port 8080 published on all interfaces, "for local development. Do not use it in a production deployment"; checked 2026-09-14) (Airflow 3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html
 - Apache Airflow, security model ("doesn't support unauthenticated users", "not designed to be exposed... to
-  untrusted users on the public internet"): https://airflow.apache.org/docs/apache-airflow/stable/security/security_model.html
+  untrusted users on the public internet") (Airflow 3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/stable/security/security_model.html
 - Apache Airflow, Simple auth manager (default, dev/test only, `simple_auth_manager_users`, generated
-  passwords): https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/auth-manager/simple/index.html
+  passwords) (Airflow 3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/auth-manager/simple/index.html
 - Temporal, self-hosted security (`noopAuthorizer` default, `Authorizer`, `ClaimMapper`) (Temporal Server 1.28.x documentation): https://docs.temporal.io/self-hosted-guide/security
 - Temporal, Web UI configuration reference (`auth.providers`, `enabled`, `type: oidc`, `providerUrl`,
   `clientId`, `clientSecret`, `callbackUrl`, `scopes`) (Temporal UI Server 2.34.x documentation): https://docs.temporal.io/references/web-ui-configuration
-- Temporal, CLI server reference (default frontend gRPC port 7233, Web UI port 8233): https://docs.temporal.io/cli/command-reference/server
+- Temporal, CLI server reference (default frontend gRPC port 7233, Web UI port 8233) (Temporal Server 1.28.x; Temporal UI Server 2.34.x): https://docs.temporal.io/cli/command-reference/server
 - Flower, configuration (`--address`, `--port` 5555 default, `--basic-auth`, `--auth_provider`, `--oauth2_key`,
-  `--oauth2_secret`, `--oauth2_redirect_uri`, `--auth`): https://flower.readthedocs.io/en/latest/config.html
+  `--oauth2_secret`, `--oauth2_redirect_uri`, `--auth`) (Flower v2.2.0): https://flower.readthedocs.io/en/latest/config.html
 - Flower `port` default 5555, `address` default `''` and the `unix_socket` branch, the `FLOWER_` environment variables, and the implicit `flowerconfig.py` load from the working directory (pinned tag v2.2.0), with Tornado's `bind_sockets` treating an empty address as all interfaces (pinned tag v6.5.10): https://github.com/mher/flower/blob/v2.2.0/flower/options.py#L7-L15, https://github.com/mher/flower/blob/v2.2.0/flower/options.py#L56-L57, https://github.com/mher/flower/blob/v2.2.0/flower/command.py#L39-L91, https://github.com/mher/flower/blob/v2.2.0/flower/app.py#L71-L76 and https://github.com/tornadoweb/tornado/blob/v6.5.10/tornado/netutil.py#L72-L73
 - Flower `--unix_socket` passes the fixed mode `0o777` (pinned tag v2.2.0); Tornado's `bind_unix_socket` removes an existing socket at a filesystem path, binds, then applies that mode, and binds a name with a leading NUL with no mode (pinned tag v6.5.10); on Linux, connecting to a stream socket needs write permission on it, and file permissions have no meaning for abstract sockets; path lookup needs search permission on each directory, `CAP_DAC_OVERRIDE` overrides permission checks and `CAP_DAC_READ_SEARCH` grants search on directories; in a user namespace, file permission checks compare IDs mapped back to the initial namespace, and a capability applies only to a file whose owner and group are mapped there; Docker's default capability set includes `CAP_DAC_OVERRIDE` (moby docker-v29.8.1); an idmapped mount changes ownership for that mount only; `RuntimeDirectoryMode=` defaults to `0755` (systemd v257); files under `/run` must be cleared at the beginning of the boot process (FHS 3.0); named ACL entries grant access only up to the mask, changing a file's group permission bits sets its `ACL_MASK` entry, a directory's default ACL governs the initial ACL of objects created within it, and `getfacl` marks a limited entry `#effective:`; `stat -c` format sequences: https://github.com/mher/flower/blob/v2.2.0/flower/app.py#L85-L89, https://github.com/tornadoweb/tornado/blob/v6.5.10/tornado/netutil.py#L215-L228, https://man7.org/linux/man-pages/man7/unix.7.html, https://man7.org/linux/man-pages/man7/path_resolution.7.html, https://man7.org/linux/man-pages/man7/user_namespaces.7.html, https://www.kernel.org/doc/html/latest/filesystems/idmappings.html, https://github.com/moby/moby/blob/docker-v29.8.1/daemon/pkg/oci/caps/defaults.go#L4-L7, https://github.com/systemd/systemd/blob/v257/man/systemd.exec.xml#L1630-L1640, https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch03s15.html, https://man7.org/linux/man-pages/man5/acl.5.html, https://man7.org/linux/man-pages/man1/getfacl.1.html and https://man7.org/linux/man-pages/man1/stat.1.html
 - Linux `ss` socket statistics (`iproute2` v6.15.0), with `-N`/`--net` to switch network namespace: https://github.com/iproute2/iproute2/blob/v6.15.0/man/man8/ss.8#L7-L12 and https://github.com/iproute2/iproute2/blob/v6.15.0/man/man8/ss.8#L358-L359; network namespaces isolating network devices, protocol stacks and port numbers (Linux man-pages-5.13): https://github.com/mkerrisk/man-pages/blob/man-pages-5.13/man7/network_namespaces.7#L30-L40
@@ -33873,8 +33873,8 @@ done
 - Apache core `Options` (the `Indexes` option triggers a listing when there is no `DirectoryIndex`; the `-Indexes` relative form and the +/- merge rules): https://httpd.apache.org/docs/2.4/mod/core.html#options
 - Apache mod_autoindex (the generated listing, and `ShowForbidden`, which by default hides entries a subrequest forbids): https://httpd.apache.org/docs/2.4/mod/mod_autoindex.html
 - nginx autoindex module (`autoindex` is `off` by default): https://nginx.org/en/docs/http/ngx_http_autoindex_module.html
-- Caddy `respond` directive: https://caddyserver.com/docs/caddyfile/directives/respond
-- Caddy matchers (`path`, `path_regexp`, `not`, named matcher sets): https://caddyserver.com/docs/caddyfile/matchers
+- Caddy v2.11.4 `respond` directive: https://caddyserver.com/docs/caddyfile/directives/respond
+- Caddy v2.11.4 matchers (`path`, `path_regexp`, `not`, named matcher sets): https://caddyserver.com/docs/caddyfile/matchers
 - Caddy v2.11.4 matcher implementation (`MatchPath`, `MatchPathRE`, `MatchNot`): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/matchers.go
 - GNU coreutils `mktemp` (`--suffix`): https://www.gnu.org/s/coreutils/manual/html_node/mktemp-invocation.html
 - Next.js environment variables (`NEXT_PUBLIC_`): https://nextjs.org/docs/pages/guides/environment-variables
@@ -35321,9 +35321,9 @@ give the server's public address. A "connected" on a port you did not mean to ex
 - Webmin documentation (configuration, security advisories): https://github.com/webmin/webmin.com/blob/8ceae26c5a074053905cbcc6c0053be573633f3a/content/docs/Modules/webmin-configuration.md and https://github.com/webmin/webmin.com/blob/8ceae26c5a074053905cbcc6c0053be573633f3a/content/security.md
 - Usermin 2.570 installer: https://github.com/webmin/usermin/blob/2.570/setup.sh
 - Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pveproxy.adoc
-- Proxmox VE user management (root@pam, two-factor, lockout, API tokens): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pveum.adoc
-- Proxmox VE firewall: https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pve-firewall.adoc
-- Proxmox VE certificates: https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=certificate-management.adoc
+- Proxmox VE user management (root@pam, two-factor, lockout, API tokens) (Proxmox VE 9.2, pve-docs 9.2.12): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pveum.adoc
+- Proxmox VE firewall (Proxmox VE 9.2, pve-docs 9.2.12): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pve-firewall.adoc
+- Proxmox VE certificates (Proxmox VE 9.2, pve-docs 9.2.12): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=certificate-management.adoc
 - Proxmox VE node shell (`/bin/login -f root`) (pve-manager 9.2.20): https://git.proxmox.com/?p=pve-manager.git;a=blob_plain;hb=49318c671b82f31e6b273b79447526161739b97a;f=PVE/API2/Nodes.pm
 - Proxmox VE HTTP server (three-second delay on unauthorized responses): https://git.proxmox.com/?p=pve-http-server.git;a=blob_plain;hb=5119ff9bec08c69584c0c98bea3edd0098179e5f;f=src/PVE/APIServer/AnyEvent.pm
 
@@ -37093,14 +37093,14 @@ REASONED: following block; direct-origin isolation probes follow the cited liste
 
 Version boundary at the time of writing: Strapi 5 documentation; current Directus documentation (its quickstart uses 12.0.2); Hasura GraphQL Engine v2.x (the quickstart Compose names 2.46.0, and the authentication-status option requires Community Edition 2.48.0); PostgREST documentation identifying itself as version 16. These documentation URLs are rolling references unless a release is named; the Strapi sign-up default is left explicitly unconfirmed until a release-specific source establishes it.
 
-- Strapi Users and Permissions (public role, sign-up): https://docs.strapi.io/cms/features/users-permissions
-- Strapi REST API (content types private by default): https://docs.strapi.io/cms/api/rest
-- Strapi quick start (first administrator): https://docs.strapi.io/cms/quick-start
-- Strapi server configuration (HOST, PORT, APP_KEYS): https://docs.strapi.io/cms/configurations/server
-- Strapi admin-panel configuration (ADMIN_JWT_SECRET, API_TOKEN_SALT, TRANSFER_TOKEN_SALT): https://docs.strapi.io/cms/configurations/admin-panel
-- Strapi Users and Permissions security configuration (`JWT_SECRET`): https://docs.strapi.io/cms/features/users-permissions#security-configuration
-- Strapi middlewares (public static file serving via koa-static): https://docs.strapi.io/cms/configurations/middlewares
-- Strapi Media Library (upload providers): https://docs.strapi.io/cms/features/media-library
+- Strapi 5 Users and Permissions (public role, sign-up): https://docs.strapi.io/cms/features/users-permissions
+- Strapi 5 REST API (content types private by default): https://docs.strapi.io/cms/api/rest
+- Strapi 5 quick start (first administrator): https://docs.strapi.io/cms/quick-start
+- Strapi 5 server configuration (HOST, PORT, APP_KEYS): https://docs.strapi.io/cms/configurations/server
+- Strapi 5 admin-panel configuration (ADMIN_JWT_SECRET, API_TOKEN_SALT, TRANSFER_TOKEN_SALT): https://docs.strapi.io/cms/configurations/admin-panel
+- Strapi 5 Users and Permissions security configuration (`JWT_SECRET`): https://docs.strapi.io/cms/features/users-permissions#security-configuration
+- Strapi 5 middlewares (public static file serving via koa-static): https://docs.strapi.io/cms/configurations/middlewares
+- Strapi 5 Media Library (upload providers): https://docs.strapi.io/cms/features/media-library
 - Directus configuration, first admin user (ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_TOKEN; PORT default 8055): https://directus.com/docs/configuration/general
 - Directus `HOST` default `0.0.0.0` and `PORT` default 8055, and the branch that replaces them when `UNIX_SOCKET_PATH` names a socket path (pinned tag v12.4.1): https://github.com/directus/directus/blob/v12.4.1/packages/env/src/constants/defaults.ts#L9-L10 and https://github.com/directus/directus/blob/v12.4.1/api/src/server.ts#L169-L182
 - Directus access control (public permissions off by default): https://directus.com/docs/guides/auth/access-control
@@ -37112,8 +37112,8 @@ Version boundary at the time of writing: Strapi 5 documentation; current Directu
 - PostgREST error codes (PGRST300 to PGRST303): https://postgrest.org/en/stable/references/errors.html
 - PostgREST OpenAPI output at the root path: https://postgrest.org/en/stable/references/api/openapi.html
 - PostgREST admin server (optional health/metrics listener): https://postgrest.org/en/stable/references/admin_server.html
-- Strapi API tokens (pre-generated Full access and Read-only tokens, scopes, lifetime): https://docs.strapi.io/cms/features/api-tokens
-- Strapi SSO (administrator single sign-on): https://docs.strapi.io/cms/features/sso
+- Strapi 5 API tokens (pre-generated Full access and Read-only tokens, scopes, lifetime): https://docs.strapi.io/cms/features/api-tokens
+- Strapi 5 SSO (administrator single sign-on): https://docs.strapi.io/cms/features/sso
 - Directus security and limits (`SECRET`, cookie flags, `IMPORT_IP_DENY_LIST`): https://directus.com/docs/configuration/security-limits
 - Directus file access (asset permissions and storage bypass): https://directus.com/docs/guides/files/access
 - Hasura disable GraphQL introspection (self-hosted Enterprise control): https://hasura.io/docs/2.0/security/disable-graphql-introspection/

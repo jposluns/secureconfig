@@ -38,54 +38,10 @@ chat-uis.md	8537cd1d798e3cac70053000e5dc6eb4390163fc20f4673be695aedad85eaf5b	1
 code-server.md	ca2a04815f806a6f24604a63af33dc919cd78c989e5f8d25e2696ac439f9071c	1
 # reload | 28.3.3 | https://raw.githubusercontent.com/moby/moby/v28.3.3/libnetwork/drivers/bridge/port_mapping_linux.go | - Moby v28.3.3, `reapplyPerPortIptables` restores endpoint rules after firewall...
 docker.md	49c61ed8b0dd954a96a04e0285ba282053484e3a349300d569c4ff0960b5daa5	1
-# net10 | .NET 10 | https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/options?view=aspnetcore-10.0 | - Kestrel request-size enforcement, per-request overrides, IIS exception, and d...
-dotnet.md	b3cf75b4a2ab2aed2d37d931dcace3db4cdd57d6671b53dabfd49a39c36df925	1
-# net10 | .NET 10 | https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/iis/in-process-hosting?view=aspnetcore-10.0 | - IIS in-process hosting and IISServerOptions.MaxRequestBodySize:
-dotnet.md	83b94169a820ba108a94acb832caadffe6fe76851eaf64c08f3e6d083f912ec9	1
-# net10 | .NET 10 | https://learn.microsoft.com/en-us/aspnet/core/security/cookie-sharing?view=aspnetcore-10.0 | - Cookie sharing requirements for key rings, application names, and authenticat...
-dotnet.md	97da134c8722680441494f34c0a27a3f20cc721ae3ac6eff3e7c4a7f6a9fc96b	1
-# iis | IIS 10 | https://learn.microsoft.com/en-us/iis/configuration/system.webserver/httpprotocol/customheaders/ | - IIS custom response headers and X-Powered-By:
-dotnet.md	10eee27bb7519c204005490f9b9bf91d2229f940469dd2ad3e07b7c9a720cc92	1
 # nitro-output | 2.12.0 | https://nitro.build/config | - Nitro output defaults and prerender destination (supplementary, unversioned d...
 frontend-frameworks.md	b4a758430df9c449bc1fb868fd17c81b10bafeda9323ce48e4eea17f49a06846	1
 # nitro-output | 2.12.0 | https://nitro.build/docs/assets | - Nitro public assets copied to production public output (supplementary, unvers...
 frontend-frameworks.md	b7bd0fcdc574608cc8f82daee3f18a55d200a7b288b54a8a22b5657c1cc50b88	1
-# oauth | v7.15.4 | https://oauth2-proxy.github.io/oauth2-proxy/configuration/overview | - oauth2-proxy configuration overview (flags, cookie-secret length):
-fronting-auth.md	8fbf1e4e441ac65a07e0aa59ade86755430f1f83207a9dd677cd7f45c9da6086	1
-# oauth | v7.15.4 | https://oauth2-proxy.github.io/oauth2-proxy/configuration/integrations/nginx/ | - oauth2-proxy nginx integration:
-fronting-auth.md	49b32fb375fdf8dd392fbb600b686a469a909da0c2f34151b50e5de511217f58	1
-# oauth | v7.15.4 | https://oauth2-proxy.github.io/oauth2-proxy/configuration/integrations/traefik/ | - oauth2-proxy Traefik integration:
-fronting-auth.md	ad9514b4f510e7618fb82a07d3b7ef4e2bb188b06bd06f6d9ae6fd33ed208a68	1
-# authelia | v4.39.28 | https://www.authelia.com/integration/proxies/introduction/ | - Authelia proxy integration introduction:
-fronting-auth.md	652d77bfab8351aaa92b7dd7a20d544a2db4eb94cd3ec0a9e02e32103fab87bb	1
-# authelia | v4.39.28 | https://www.authelia.com/integration/proxies/support/ | - Authelia proxy support matrix (Apache and IIS unsupported) (Caddy 2.5.1+):
-fronting-auth.md	ec6ae9cdae7efbdd96d814aa6a792b48fd40e07ed39f54b6456f3c271b35b87b	1
-# authelia | v4.39.28 | https://www.authelia.com/integration/proxies/nginx/ | - Authelia nginx integration:
-fronting-auth.md	ec4317a7dec190e03d5c2aa452ccc8367761f4535e9960a8c599c980a2e10e8e	1
-# authelia | v4.39.28 | https://www.authelia.com/integration/proxies/traefik/ | - Authelia Traefik integration:
-fronting-auth.md	8160f254a85591a6e1673af72355b80f0beef6a57fc6a520af92b6b8df1ea1c4	1
-# authelia | v4.39.28 | https://www.authelia.com/integration/proxies/caddy/ | - Authelia Caddy integration:
-fronting-auth.md	765e586608d399e35a356a5c513f343cfa02a82d831b80f7485d24fbeed195b4	1
-# authelia | v4.39.28 | https://www.authelia.com/configuration/second-factor/introduction/ | - Authelia second-factor introduction:
-fronting-auth.md	d9ab12876c30d98b23a8f4363858f274919c2f417fb5e38eafaccda5a41f7739	1
-# gradio | 6.28.0 | https://gradio.app/docs/gradio/blocks | - [Gradio Blocks.launch() parameters](
-gradio.md	30368555a6f068df2e87c40bcfaf1d3ccc36d55a93d392f0651ab0f5db403d9b	1
-# gradio | 6.28.0 | https://www.gradio.app/guides/file-access | - [Gradio file access](
-gradio.md	5d0e7384544b50d1f2c1ab2b4ceb161f6585068999fd966d5846bcea9deaf898	1
-# gradio | 6.28.0 | https://gradio.app/docs/gradio/button | - [Gradio event reference](
-gradio.md	a9ea14810dd3ba89cc78af6665ad69a7973c55801da9a065f82f0a86b1157c3b	1
-# gradio | 6.28.0 | https://www.gradio.app/guides/gradio-6-migration-guide | - [Gradio 6 migration guide](
-gradio.md	d7cfd123ff4f19e52684ee245408e15a04ccfd22ef2b8e2b4671b29f146c97c0	1
-# gradio | 6.28.0 | https://gradio.app/guides/developing-faster-with-reload-mode | - [Gradio development and vibe-mode warning](
-gradio.md	3575a53367283e1e7e856973c8e756f387f2f19f69168c68c780bae1914fe21e	1
-# gradio | 6.28.0 | https://gradio.app/guides/building-mcp-server-with-gradio | - [Gradio MCP server documentation](
-gradio.md	dec7f344dfb9f449139199a93c446cad5856b7d91fc8d70120164f96f4e1f687	1
-# gradio | 6.28.0 | https://gradio.app/docs/gradio/load | - [Gradio load reference](
-gradio.md	020002fdb7b0f2347fea9e58ab509bcf133761f766c6f0b5c4723f2499d49677	1
-# gradio | 6.28.0 | https://gradio.app/docs/gradio/interface | - [Gradio Interface reference](
-gradio.md	a0ba8c88adc778ec2928ff2312fdf329c77f26e3ecf7370d97faa567e5ae7fbc	1
-# gradio | 6.28.0 | https://www.gradio.app/guides/flagging | - [Gradio flagging guide](
-gradio.md	a0914aa754b08f337cdf5bc0d496dedc5c6d50ca99c2e04d7c1d523d97df70ef	1
 # chromium | 154.0.8037.57 | https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L325-L417 | - Browser command-line pipe/port startup and precedence over approval mode:
 headless-browser-services.md	6dd27e852bc71aa1af6df444460dbcb95d68142be8f01a6bf437d5fd45e8a585	1
 # chromium | 154.0.8037.57 | https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/headless/lib/browser/headless_devtools.cc#L31-L145 | - Headless-shell loopback factory and pipe/port startup:
@@ -110,36 +66,6 @@ headless-browser-services.md	678340081be904cdc16e74f5ddfa1335e979fff5d1b58c2568f
 headless-browser-services.md	926d2d19a7c85142683afa72768c846e3181a9ca722438394f4eff2434364e40	1
 # browserless-file-fix | 2.51.0 | https://github.com/browserless/browserless/commit/a18a1231ead2ecc4114347d5d1fafd69bffeb735 | - browserless pinned Playwright file-protocol fix a18a1231ead2ecc4114347d5d1faf...
 headless-browser-services.md	8aad858eb028b52a0f16fd6c38a126d63b3cda41705b915aa20c131c48b64b65	1
-# strapi | 5 | https://docs.strapi.io/cms/features/users-permissions | - Strapi Users and Permissions (public role, sign-up):
-headless-cms-instant-api.md	6f3ed584ffcb3052c93b57f26bcddb96948daffeea18426c3220bf9b8eeb507c	1
-# strapi | 5 | https://docs.strapi.io/cms/api/rest | - Strapi REST API (content types private by default):
-headless-cms-instant-api.md	61518ceabab9a8b656eb67e13edb4f2587ed3298447a3d0623b67c651261ba32	1
-# strapi | 5 | https://docs.strapi.io/cms/quick-start | - Strapi quick start (first administrator):
-headless-cms-instant-api.md	ed42eb5512cf7264f4667888f67e0042faedd517e35cd9409783bd76e5d4f3e4	1
-# strapi | 5 | https://docs.strapi.io/cms/configurations/server | - Strapi server configuration (HOST, PORT, APP_KEYS):
-headless-cms-instant-api.md	6943be0c7853ddd3762718cbd7361bfb6a84867c10e7bc342f9118e316e1fc37	1
-# strapi | 5 | https://docs.strapi.io/cms/configurations/admin-panel | - Strapi admin-panel configuration (ADMIN_JWT_SECRET, API_TOKEN_SALT, TRANSFER_...
-headless-cms-instant-api.md	6b1031387ce6e802cf2818b9bdfbe64e3bd378420b42a834307925003318e7fa	1
-# strapi | 5 | https://docs.strapi.io/cms/features/users-permissions#security-configuration | - Strapi Users and Permissions security configuration (`JWT_SECRET`):
-headless-cms-instant-api.md	a825ac97983e1fe6a274f2d3333bbbc8d4c2350105cef5e845fb58914560df86	1
-# strapi | 5 | https://docs.strapi.io/cms/configurations/middlewares | - Strapi middlewares (public static file serving via koa-static):
-headless-cms-instant-api.md	483f638b8cdc949277631ef3c1a6c7a44736f1fc0219ddb9ddbe4ed0afdb8449	1
-# strapi | 5 | https://docs.strapi.io/cms/features/media-library | - Strapi Media Library (upload providers):
-headless-cms-instant-api.md	b041b1694bbf485b84beeed3d7cf462e22c057a37c4e4cf27b822d1b3f4e33cc	1
-# strapi | 5 | https://docs.strapi.io/cms/features/api-tokens | - Strapi API tokens (pre-generated Full access and Read-only tokens, scopes, li...
-headless-cms-instant-api.md	742831ba381dfe0b4efdd543fe4ac4ebf4a548f9468dcef76b765004ad0d17f2	1
-# strapi | 5 | https://docs.strapi.io/cms/features/sso | - Strapi SSO (administrator single sign-on):
-headless-cms-instant-api.md	c587bd460b1099dcc965b34b53c1ae1bcb7cb495637d47db409535cb43cc6555	1
-# comfy | v0.37.0 | https://docs.comfy.org/development/comfyui-server/startup-flags | - ComfyUI Startup Flags (`--listen`, `--port` defaults):
-image-gen-uis.md	b7787f4f93aaa3816bfc7d6989cc112f343f0351168a0ffd7e42a901b893af3a	1
-# comfy | v0.37.0 | https://blog.comfy.org/p/comfyui-2025-jan-security-update | - ComfyUI 2025 Jan Security Update (custom node code-execution risk):
-image-gen-uis.md	bf8af786cc29059c424ef75167678a727acb80b9962f6b8023bc70edaac3b45c	1
-# comfy | v0.37.0 | https://docs.comfy.org/registry/standards | - ComfyUI custom node security standards (eval/exec prohibited):
-image-gen-uis.md	e55f698bf6c351eeec96e0f4db83d0a8197789649ba17d6ecf9ccbcbfbfb04bb	1
-# invoke | 6.14.1 | https://invoke.ai/features/multi-user-mode/admin-guide/ | - InvokeAI Multi-User Administrator Guide:
-image-gen-uis.md	c3e21569fb994ba9aa0c3ec4f8bb4dab9a3d03f17c19339f51f29156c57342f6	1
-# invoke | 6.14.1 | https://invoke.ai/features/multi-user-mode/api-guide/ | - InvokeAI Multi-User API Guide (boards endpoint and missing-token `401`):
-image-gen-uis.md	9398e55a434d533cd7b261c2910fed2c67eda3e7a6c3fc9f789b49ebb05946c6	1
 # server | 2.18.0 | https://jupyter-server.readthedocs.io/en/latest/operators/public-server.html | - Jupyter Server public server guide and password/TLS setup:
 jupyter.md	bfe41ca4754cbcafd21bbe07ed9e37afebbf8e8b1d285519e2f1ba4f5bb0c59f	1
 # server | 2.18.0 | https://jupyter-server.readthedocs.io/en/latest/operators/security.html | - Jupyter Server security and token/password authentication:
@@ -170,22 +96,6 @@ jupyter.md	3b153b80cf97ea73888257d2e59090110c8e6d4d80450f087b0dd9487a411b41	1
 jupyter.md	6aa0b593a4e1f4053d1ef0c6c7b9444bdd77dab3f0746eb5ff14521c391579e4	1
 # hub | 5.5.2 | https://jupyterhub.readthedocs.io/en/stable/howto/configuration/config-proxy.html | - JupyterHub HTTPS reverse-proxy example:
 jupyter.md	171f324b5c526d9a478a6e7705548a68a9c9b0fecc81ced96ac936017c45a4ea	1
-# envoy | v1.9.1 | https://gateway.envoyproxy.io/docs/tasks/security/secure-gateways/ | - Envoy Gateway tasks, secure gateways (TLS listener):
-kubernetes.md	92fec5de1951d6425a34c2f768ec455d98ebd27b4ad7d76a74f7873e00eac15b	1
-# envoy | v1.9.1 | https://gateway.envoyproxy.io/docs/tasks/traffic/http-redirect/ | - Envoy Gateway tasks, secure gateways (TLS listener):
-kubernetes.md	3e1c220339f1cfadc7a36c052ea28623d74387a42b46fa161e1be59d1e8bd8af	1
-# envoy | v1.9.1 | https://gateway.envoyproxy.io/docs/tasks/security/basic-auth/ | - Envoy Gateway tasks, secure gateways (TLS listener):
-kubernetes.md	386321374e970202c56a1f8937b9193600de387c0e2a7e6d438adcdc8f5c4376	1
-# envoy | v1.9.1 | https://gateway.envoyproxy.io/docs/tasks/security/oidc/ | - Envoy Gateway tasks, secure gateways (TLS listener):
-kubernetes.md	ab362cea4580e5c9d45278d5d491fccf6e5f8241f3ea5fe1328d8ebff3581575	1
-# envoy | v1.9.1 | https://gateway.envoyproxy.io/docs/tasks/security/ext-auth/ | - Envoy Gateway tasks, secure gateways (TLS listener):
-kubernetes.md	2c9bbc4c9b189df4535e74fa30b0c0f1365ff4375bb21bd10b8b5ac7e700396e	1
-# sglang | v0.5.20 | https://docs.sglang.io/docs/advanced_features/server_arguments | - SGLang server arguments (--host, --port, --api-key, --admin-api-key, SSL flag...
-model-servers.md	7742a3618668306e4d5d30daf055c225555f29b731f123ec67d826190b96b0d2	1
-# triton | 546a78766fb112128aa0b10a70c55f4f39c3b1df | https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/customization_guide/deploy.html | - Triton secure deployment considerations:
-model-servers.md	60e300d82e9225f6c50fb067bed6ae0a98873655eaece8312be6d7467da4e8ec	1
-# webui | c022565b1257a9c7d9a5128c8b4c03587559cf08 | https://github.com/oobabooga/text-generation-webui#command-line-flags | - text-generation-webui README, command-line flags:
-model-servers.md	e7a67d0903f6da3ed387bd4e2f426c105312d5cc96e63a1322d83b2dac3f5d6d	1
 # server | v2.14.7 | https://docs.nats.io/learn/security/authentication-basics | - Authentication basics, password hashes, NKeys, tokens, and anonymous admission:
 nats.md	df50ec2ead91c3e4cb19321c827998bcf46ed57486958ef90cc885c18bdc5e33	1
 # server | v2.14.7 | https://docs.nats.io/reference/config | - Runtime configuration, defaults, bindings, and system account:
@@ -256,12 +166,6 @@ nats.md	cefc7a8b91444cb66d91b365b5986b42aa065626fe3df2d4ac8007cad9c99d3f	1
 nats.md	51ef0ff93da7d3ce9893a8b7c359c99c4b064d7d32d006da73617ea121265177	1
 # server | v2.14.7 | https://docs.nats.io/reference/config/authorization/auth_callout | - Auth callout configuration:
 nats.md	2182e310d6293b9912392010355e88ebb41ad1e4243c0950484c29bd7f2ee619	1
-# ollama | v0.34.2 | https://docs.ollama.com/api/authentication | - Local API authentication:
-ollama.md	ded207b896f49bd85b7e7db6b551d6e2ad28806fba14ddf83823d12c4b4f0fca	1
-# ollama | v0.34.2 | https://docs.ollama.com/api/tags | - Model inventory and digests:
-ollama.md	ecb2c56014c8c7d3a5ef6c907a945c4266ce1e5e46d7df2db3db53e524dc44b2	1
-# ollama | v0.34.2 | https://docs.ollama.com/api-reference/show-model-details | - Model details:
-ollama.md	fd3acd7b4671f52750b00647a7df41586daaca9ac62c1552a98e24b58cac7909	1
 # webui | 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | https://docs.openwebui.com/reference/env-configuration | - Open WebUI environment configuration reference:
 open-webui.md	28df040b110ade3d52fd5425f95185e99da136e37472b8b5948cad8a45c36127	1
 # webui | 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | https://docs.openwebui.com/getting-started/advanced-topics/hardening/ | - [Open WebUI hardening: registration lifecycle, execution controls, network li...
@@ -336,12 +240,6 @@ search-engines.md	6105c7d120bb22ad7164edaa786026e7b33d1608c259a96f55c00ac3853dbc
 search-engines.md	26808df9c25a21ad6852ece8fadab38c5e2ae165a6267aaf6db3a3c0bfec228a	1
 # typesense | 30.2 | https://raw.githubusercontent.com/typesense/typesense/v30.2/src/core_api.cpp | - Typesense v30.2 collection creation success (201):
 search-engines.md	2c91aae4ce9297421d69eac1ddbe85dbbdbb53517fe2df935b29425e31da066c	1
-# pve-docs | 9.2.12 | https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pveum.adoc | - Proxmox VE user management (root@pam, two-factor, lockout, API tokens):
-server-admin-panels.md	022cac653791031dcac071e7f2d4912e1e9802264b7adae37fba9acd94362f72	1
-# pve-docs | 9.2.12 | https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pve-firewall.adoc | - Proxmox VE firewall:
-server-admin-panels.md	a708408625dcf12e7d2c81ea2a08264f639cc5c33cb3429547bcf2dea2a017fb	1
-# pve-docs | 9.2.12 | https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=certificate-management.adoc | - Proxmox VE certificates:
-server-admin-panels.md	06d8a5139695460758d3cbe5f9d7664981d186a61322a9101cc7c47e2604a88f	1
 # datasette | 0.65.5 | https://docs.datasette.io/en/stable/changelog.html | - Datasette changelog and security fixes (Datasette core hash_urls removed in 0...
 sqlite-http-frontends.md	459429b602dd554e43d730bc454138994054e66888616da1f85f1f031bb7d62b	1
 # datasette | 0.65.5 | https://docs.datasette.io/en/stable/performance.html | - Datasette immutable mode and hashed URLs:
@@ -366,53 +264,5 @@ sqlite-http-frontends.md	a43ab2d89df56769326ddd62ca11712b1585033730d406b41be3354
 sqlite-http-frontends.md	a87b3afdfa8f6feb5fab1bb1ee822d02b41cdc29ddac13c7047ac4cb62d89c19	1
 # datasette | 0.65.5 | https://docs.datasette.io/en/stable/deploying.html | - Datasette proxy deployment:
 sqlite-http-frontends.md	7d0435728d7103a1e9fe2e69979dcb494c065333e270cec5ea3da1eeb368866f	1
-# sqlite | 3.x | https://www.sqlite.org/serverless.html | - SQLite serverless architecture (no server process; OS and filesystem only):
-sqlite.md	b118b5db9504679120fd866bc8db80f2952de474a39128fc185d7b0aaf68d16a	1
-# sqlite | 3.x | https://sqlite.org/loadext.html | - SQLite extension loading (disabled by default; enabled in the CLI):
-sqlite.md	82cf96a6b97a7bcd9dbd9facea0cd7bcfa4bf0ad24a93786f5debb615b49dc51	1
-# sqlite | 3.x | https://www.sqlite.org/tempfiles.html | - SQLite temporary and sidecar file naming (-wal, -shm, -journal) (local file t...
-sqlite.md	61d824f12f0f984c36000d08141d1a8016c035bd4a03ed38e7ee536f17313236	1
-# streamlit | 1.64.0 | https://docs.streamlit.io/develop/api-reference/configuration/config.toml | - config.toml reference (server.address, server.sslCertFile, server.sslKeyFile,...
-streamlit.md	7f49c70b0566dbf5df1a7ced1214dcc7c3252750f6c2cbdde062260ccb9aba1d	1
-# streamlit | 1.64.0 | https://docs.streamlit.io/develop/api-reference/configuration/config.toml | - config.toml (enableCORS, enableXsrfProtection, maxUploadSize, enableStaticSer...
-streamlit.md	c45a8fce9f37c35286ac4aae8049eae2389ca9f1ebdb771916437de0291a934f	1
-# streamlit | 1.64.0 | https://docs.streamlit.io/develop/concepts/connections/authentication | - Authentication concepts (st.login, st.logout, st.user, [auth] keys, default s...
-streamlit.md	28fbe4a1d8997d31d385188faaa0578e7bf0ee10b2f43515ceda7f693fa64fcb	1
-# streamlit | 1.64.0 | https://docs.streamlit.io/develop/api-reference/user/st.user | - st.user API reference (claims copied from the ID token, `st.user.email`):
-streamlit.md	92b6e1f6aeab587b6627c36c4f09335fb6e744dd71030c2c6e52a3e04072862d	1
-# streamlit | 1.64.0 | https://docs.streamlit.io/develop/api-reference/user/st.login | - st.login reference (OIDC, Authlib 1.3.2+ dependency):
-streamlit.md	4d308658185b337253cc7c24b4580beecaf5c20e0b208bd16928dec921ccb0f0	1
-# streamlit | 1.64.0 | https://docs.streamlit.io/develop/concepts/configuration/options | - Configuration options and precedence (command line over env over project over...
-streamlit.md	ca53f841290e16a62c49e3afb419b48ece5e035411caa665dac6eb7ff0cbe6e7	1
-# streamlit | 1.64.0 | https://docs.streamlit.io/develop/concepts/configuration/serving-static-files | - Static file serving (server.enableStaticServing default false, served by the ...
-streamlit.md	7dc1f3da598d16c3283c70430964f8fff10e91d67312b7774643f8a88bae53b5	1
-# streamlit | 1.64.0 | https://docs.streamlit.io/develop/api-reference/widgets/st.file_uploader | - st.file_uploader (maxUploadSize per-file limit; filters are not content valid...
-streamlit.md	d901af7cd2ef929a3546d7287c30b0bd99f428ab4269b50d0bcaf7210b1dce1f	1
-# streamlit | 1.64.0 | https://docs.streamlit.io/develop/concepts/connections/security-reminders | - Secrets management and security reminders (never render or log secrets):
-streamlit.md	abbec91f818ab3de2e47ca03bd5bcf71ab8fea774ea657d7280f430db5da1ca9	1
-# streamlit | 1.64.0 | https://docs.streamlit.io/deploy/tutorials/docker | - App health endpoint (/_stcore/health, no authentication):
-streamlit.md	5743fb6e6fbd3aa790cfaa4249923167d86b9891a1dde227d0333c502e2c8154	1
 # curl | 7.75.0 | https://curl.se/docs/manpage.html#-f | - Milvus `/healthz` handler, v2.6.24 (commit 08c637c14373ec904dcac08e4df67279de...
 vector-databases.md	147eb7a992179ef5909445ae97781e4f81a870367230576abb1e1d3ec8692245	1
-# caddy | v2.11.4 | https://caddyserver.com/docs/caddyfile/directives/respond | - Caddy `respond` directive:
-web-exposure.md	37872aef1433fdb3708bcf8a787e59a3ccaa1c1195a9a423657740059c4c4dfe	1
-# caddy | v2.11.4 | https://caddyserver.com/docs/caddyfile/matchers | - Caddy matchers (`path`, `path_regexp`, `not`, named matcher sets):
-web-exposure.md	1e0e05bfc2b216e8c3ee6e5c2a57d3f82c18df15686b6f3e716e5e259fb1f2ea	1
-# prefect | 3.1.8 | https://docs.prefect.io/v3/how-to-guides/self-hosted/server-cli | - Prefect, self-hosted server (default port 4200):
-workflow-orchestrators.md	f77ab527758d0ead377eb3e2d4cb9527253d5caf110fca7df64391437ee6f7af	1
-# dagster | 1.13.24 | https://docs.dagster.io/guides/operate/webserver | - Dagster, webserver and UI (default local port, no documented built-in auth):
-workflow-orchestrators.md	3b37148a0b5254e6b16d450c21c164b58d82c1df28b0f0d8c39c826b5d012929	1
-# airflow | 3.3.2 | https://airflow.apache.org/docs/apache-airflow/stable/security/security_model.html | - Apache Airflow, security model ("doesn't support unauthenticated users", "not...
-workflow-orchestrators.md	0141a62841dced75ab33c705ca509470beddf92aeaea4d1b5dbdc25a5796d6eb	1
-# airflow | 3.3.2 | https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/auth-manager/simple/index.html | - Apache Airflow, Simple auth manager (default, dev/test only, `simple_auth_man...
-workflow-orchestrators.md	a31f812197b44fa648dfbfbc4e3d598a777e0b20ad925a7622cf093f7d758c63	1
-# airflow | 3.3.2 | https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html | - Apache Airflow, running Airflow in Docker (the `docker-compose.yaml` default ...
-workflow-orchestrators.md	8f70a68f5c04cf38e191e38ee1fe28eb1486fa04fba0694f9f0d637f8f426cf9	1
-# airflow | 3.3.2 | https://airflow.apache.org/docs/apache-airflow/stable/security/ | - Apache Airflow, security overview:
-workflow-orchestrators.md	91c0f6634c3806ecf509a312b8397be819155304efe07173946224411796618f	1
-# temporal | 1.28.x | https://docs.temporal.io/cli/command-reference/server | - Temporal, CLI server reference (default frontend gRPC port 7233, Web UI port ...
-workflow-orchestrators.md	927fd5be9cfa75a61bd26dd9049b2e0be8412e35cacb050ca74cf01f85b53eb7	1
-# temporal-ui | 2.34.x | https://docs.temporal.io/cli/command-reference/server | - Temporal, CLI server reference (default frontend gRPC port 7233, Web UI port ...
-workflow-orchestrators.md	9c2bf9080afba7d05a53e4f3dbb38df11f1169ecd51962c7b214f9e77989b123	1
-# flower | v2.2.0 | https://flower.readthedocs.io/en/latest/config.html | - Flower, configuration (`--address`, `--port` 5555 default, `--basic-auth`, `-...
-workflow-orchestrators.md	01424fcc87bddcb2cb733e1d42286eb77d6b4ffee3bfeac6a8308f2ed8ffbf99	1
