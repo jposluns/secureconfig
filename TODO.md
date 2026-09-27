@@ -42,7 +42,6 @@ many.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 1.178 | F-BROWSERLESS-TOKEN: `headless-browser-services.md:86` records Browserless's token as optional by default. The vendor documentation disagrees with itself: the older quickstart (https://docs.browserless.io/enterprise/docker/quickstart) says an omitted token is generated, while the current configuration reference (https://docs.browserless.io/enterprise/docker/config) says endpoints remain unauthenticated. Pin a Browserless release and verify its default before deciding which guide wording to change. (M, S) | `[gap]` |
 
 ## Priority 2: Deepen existing guides
 
