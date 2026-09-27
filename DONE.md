@@ -10,7 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
-| 1.188 | frontend-frameworks.md Verify secret scan: in a Vite SSR layout (`dist/client` beside `dist/server`) the loop still scans all of `dist`, a false positive the prose warns about. Prefer `dist/client` automatically when it exists. Suggested by #411's review. (L, S) | Done, #N. |
+| 1.188 | frontend-frameworks.md Verify secret scan: in a Vite SSR layout (`dist/client` beside `dist/server`) the loop still scans all of `dist`, a false positive the prose warns about. Prefer `dist/client` automatically when it exists. Suggested by #411's review. (L, S) | Done, #414. |
 | 1.186 | Audit secret substitutions on `set --` lines and disclose shell-history exposure at 14 sites in `agent-builders.md`, `ai-infra-services.md`, `caddy.md`, `gpu-clouds.md`, `llm-observability.md`, `mlflow.md`, `model-servers.md`, `nginx.md`, `object-storage.md`, `observability-components.md`, `traefik.md`, `vector-databases.md`. Preserve existing disclosures and generated or prompted secret inputs. | Done, #412. |
 | 1.185 | Narrow the frontend-frameworks secret scan to browser-served assets and prerendered pages, excluding server-only build output; document custom and SSR output paths. (L, S) | Done, #411. |
 | 1.178 | F-BROWSERLESS-TOKEN: pin the open-source TOKEN default to 2.56.7, reconcile the conflicting Docker documentation, qualify the uninspected Enterprise image, and align the authentication probe and version-basis claims; add the CVE-2026-92811 file-protocol fix requirement, conflicting affected-range caveat, and Playwright canary check. (M, S) | Done, #409. |
