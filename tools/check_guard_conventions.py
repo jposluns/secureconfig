@@ -62,7 +62,11 @@ WHAT THIS CATCHES
                  false-positive it.
 
   C3-TOOL-ARGV  a known non-curl credential flag or credential positional
-                 argument carries a value in argv. Literal values,
+                 argument, env assignment or URI carries a value in argv.
+                 Whole REPLACE_WITH_ userinfo passwords are exempt, but
+                 query credentials are checked independently. Visible shell
+                 builtin URI delivery is exempt; external wrappers are not.
+                 Other literal values,
                  placeholders and expansions are all checked, independently
                  of C2's network-probe roster. The allowlist and bounded
                  argument ownership are in _tool_credential_flags. Prompt,
@@ -539,7 +543,8 @@ def _expand(line):
     return texts
 
 
-def _strip_wrappers(cmd):
+def _strip_wrappers(cmd, env_credentials=None):
+    # C3 opts into env option ownership; C1/C2 keep their existing walk.
     toks = list(cmd)
     while toks:
         t = toks[0]
@@ -549,7 +554,16 @@ def _strip_wrappers(cmd):
             toks = toks[2:]; continue
         if FD_RE.match(t) and len(toks) > 1 and toks[1] in REDIRECTS:
             toks = toks[3:]; continue
-        if t in WRAPPERS:
+        if t.rsplit("/", 1)[-1] == "env" and env_credentials is not None:
+            # The outermost env already owns every nested env URI operand.
+            seen_uri = "URI credential" in env_credentials
+            env_credentials.extend(
+                flag for flag in _env_credential_flags(toks[1:])
+                if flag != "URI credential" or not seen_uri)
+            toks = _drop_redirections(toks[1:])
+            toks = toks[_env_operand_start(toks):]
+            continue
+        if t in WRAPPERS or t.rsplit("/", 1)[-1] == "env":
             toks.pop(0)
             opts = []
             while toks and toks[0].startswith("-") and toks[0] != "--":
@@ -808,6 +822,7 @@ def _credential_codes(a):
 # https://docs.openssl.org/3.5/man1/openssl-s_client/
 # https://docs.openssl.org/3.5/man1/openssl-s_server/
 # https://docs.openssl.org/3.5/man1/openssl-cmp/
+# https://docs.openssl.org/3.5/man1/openssl-dgst/ (-macopt key:/hexkey:)
 # "inline" options prompt without an attached value; "optional" options prompt
 # without a following value. A dash is stdin ONLY for documented consumers.
 _TOOL_SECRET_OPTS = {
@@ -871,17 +886,226 @@ _TOOL_SKIP_OPTS = {
 }
 
 
-def _tool_credential_flags(word, args):
+# Only known no-argument letters may precede a credential-taking short option.
+# MySQL no-argument options; MariaDB uses the shared batch/quiet forms.
+# https://dev.mysql.com/doc/refman/8.4/en/mysql-command-options.html
+# https://mariadb.com/docs/server/clients-and-utilities/mariadb-client/mariadb-command-line-client
+# Coturn 4.6.3 getopt string:
+# https://github.com/coturn/coturn/blob/4.6.3/src/apps/uclient/mainuclient.c
+_TOOL_CLUSTER_NOARG = {
+    "mysql": "?ABCEGHLNTUVWXbcfijnoqrstvw", "mariadb": "BNsv",
+    "turnutils_uclient": "bZvsyhcxXgtTSAPDNOUMRIGBJ",
+}
+# Vault login K=V credentials. '-' and '@path' use stdin and files.
+# https://developer.hashicorp.com/vault/docs/commands#passing-command-arguments
+# https://developer.hashicorp.com/vault/docs/auth/userpass
+# https://developer.hashicorp.com/vault/docs/auth/github
+# https://developer.hashicorp.com/vault/docs/auth/ldap
+# https://developer.hashicorp.com/vault/docs/auth/okta
+# https://developer.hashicorp.com/vault/docs/auth/radius
+_VAULT_LOGIN_KEY = dict.fromkeys(("userpass", "ldap", "okta", "radius"), "password")
+_VAULT_LOGIN_KEY.update(token="token", github="token")
+
+
+# Whole URI arguments only. Mask simple shell parameter expansions before
+# looking for URI delimiters, so ${PW:?} does not start a query.
+_URI_PARAMETER_RE = re.compile(r"\$\{[^{}]*\}")
+_URI_SCHEME_RE = re.compile(r"^[a-z][a-z0-9+.-]*://", re.I)
+_URI_QUERY_KEYS = frozenset((
+    "password", "passwd", "pass", "pwd", "sslpassword", "token", "secret",
+    "accesstoken", "refreshtoken", "sessiontoken", "authtoken", "clientsecret",
+    "apikey", "accesskey", "secretkey", "signature", "sig",
+    "xamzsignature", "xgoogsignature",
+))
+# libpq accepts password and sslpassword in URI queries:
+# https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING-URIS
+
+
+def _uri_credential(value):
+    """Visible URI userinfo or query credentials, without value dataflow.
+
+    Only whole userinfo REPLACE_WITH_ passwords are exempt. Query credentials
+    are checked independently, including when userinfo contains a placeholder.
+    """
+    value = _URI_PARAMETER_RE.sub("__PARAM__", value)
+    if not _URI_SCHEME_RE.match(value):
+        return False
+    match = URL_USERINFO_RE.match(value)
+    if match:
+        password = match.group().split("://", 1)[1][:-1].split(":", 1)[1]
+        if not re.fullmatch(re.escape(SENTINEL) + r"[A-Z0-9_]+", password):
+            return True
+    query = value.split("#", 1)[0].partition("?")[2]
+    for pair in re.split(r"[&;]", query):
+        key, eq, val = pair.partition("=")
+        key = key.lower().replace("_", "").replace("-", "")
+        if eq and val and key in _URI_QUERY_KEYS:
+            return True
+    return False
+
+
+_ENV_CREDENTIAL_NAMES = frozenset((
+    "MYSQL_PWD", "REDISCLI_AUTH", "PGPASSWORD",
+    "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN",
+))
+_ENV_SECRET_RE = re.compile(
+    r"(?:^|_)(?:SECRET|PASSWORD|PASSWD|TOKEN|PWD|PASS)(?:_|$)|"
+    r"(?:^|_)(?:API|PRIVATE|ACCESS)_KEY$")
+_ENV_NONSECRET_RE = re.compile(
+    r"(?:_URL|_URI|_ENDPOINT|_HOST|_PORT|_PATH|_FILE|_DIR|_NAME|"
+    r"_KEY_ID|_PUBLIC_KEY|_TTL|_TTL_SECONDS)$")
+_ENV_VALUE_OPTS = frozenset(("-u", "--unset", "-C", "--chdir",
+                            "-a", "--argv0", "-f", "--file"))
+_ENV_NOARG_OPTS = frozenset((
+    "-i", "--ignore-environment", "-v", "--debug", "-0", "--null",
+    "--list-signal-handling", "--block-signal", "--default-signal",
+    "--ignore-signal",
+))
+# env's lone '-' ends option processing like '-i --'. Signal names are
+# optional attached values; -u/-C/-a/-f take required values.
+# https://www.gnu.org/software/coreutils/manual/html_node/env-invocation.html
+# -f/--file is a uutils extension:
+# https://uutils.org/coreutils/docs/utils/env.html
+
+
+def _env_operand_start(args):
+    """Locate assignments without treating option values as assignments.
+
+    Unknown options and split strings stop resolution: their ownership or
+    injected command cannot be inferred. Never execute or expand a split string.
+    """
+    i = 0
+    while i < len(args):
+        t = args[i]
+        if t in ("--", "-"):
+            return i + 1
+        if not t.startswith("-"):
+            break
+        opt, eq, _tail = t.partition("=")
+        if opt in _ENV_VALUE_OPTS:
+            i += 1 if eq else 2
+        elif opt in _ENV_NOARG_OPTS:
+            i += 1
+        elif not t.startswith("--"):
+            j = 1
+            while j < len(t) and t[j] in "iv0":
+                j += 1
+            if j == len(t):
+                i += 1
+            elif "-" + t[j] in _ENV_VALUE_OPTS:
+                i += 1 if j + 1 < len(t) else 2
+            else:
+                return len(args)
+        else:
+            return len(args)
+    return i
+
+
+def _env_credential_flags(args):
+    """Check visible env argv URIs before resolving assignment ownership."""
+    a = _drop_redirections(args)
+    flags = [
+        "URI credential" for t in a
+        if _uri_credential(t) or ("=" in t and _uri_credential(t.split("=", 1)[1]))]
+    for t in a[_env_operand_start(a):]:
+        if not ASSIGNMENT_RE.match(t):
+            break
+        name, _, value = t.partition("=")
+        upper = name.upper()
+        secret_name = (
+            upper not in ("KEY_ID", "PUBLIC_KEY", "PWD")
+            and not _ENV_NONSECRET_RE.search(upper)
+            and (upper in _ENV_CREDENTIAL_NAMES
+                 or _ENV_SECRET_RE.search(upper)
+                 or BODY_SECRET_RE.fullmatch(name + "=")
+                 or CREDENTIAL_HEADER_RE.fullmatch(name.replace("_", "-"))))
+        # A URI value was already counted, even under a credential name.
+        if value and secret_name and not _uri_credential(value):
+            flags.append(name)
+    return flags
+
+
+_URI_BUILTINS = frozenset(("printf", "echo", ":", "read"))
+
+
+def _uri_builtin_context(cmd):
+    """Credit only a visible shell builtin, never an external wrapper/path."""
+    a = _drop_redirections(cmd)
+    while a and (a[0] in KEYWORDS or ASSIGNMENT_RE.match(a[0])):
+        a.pop(0)
+    while a and a[0] in ("command", "builtin"):
+        wrapper = a.pop(0)
+        if wrapper == "command" and a[:1] == ["-p"]:
+            a.pop(0)
+        if a[:1] == ["--"]:
+            a.pop(0)
+    return bool(a) and a[0] in _URI_BUILTINS
+
+
+def _uri_builtins_uncertain(records):
+    """Visible shell mutation or builtin definitions deny fence-wide credit."""
+    flat = [t for _line, _raw, lines, _waived in records
+            for toks in lines for t in toks]
+    for i, t in enumerate(flat):
+        if t in ("enable", "alias", "unalias", "eval", "source", ".", "function"):
+            return True
+        if t in _URI_BUILTINS or t in ("command", "builtin"):
+            tail = flat[i + 1:i + 3]
+            if tail[:1] == ["()"] or tail == ["(", ")"]:
+                return True
+    return False
+
+
+def _tool_credential_flags(word, args, shell_builtin=False):
     """Return flag names, never secret values. Reuse C3's value/redirection
     helpers and the shared command walk, wrappers, heredocs and waivers.
 
-    Deliberately bounded: unknown option ownership, most short clusters,
-    secret-bearing URIs, arbitrary positional secrets, expanded option names,
-    aliases, shell strings and array-built commands remain outside this rule.
-    In particular, sudo -u, timeout -s, mysql -Bp"$PW" and
-    turnutils_uclient -vw"$PW" are unresolved; Vault non-token login methods,
-    secret assignments passed to the env binary, and OpenSSL -macopt are not
-    checked. A shell assignment prefix is distinct from an env argv value.
+    Deliberately bounded: unknown option ownership, short clusters outside
+    _TOOL_CLUSTER_NOARG, arbitrary positional
+    secrets, expanded option names, aliases, shell strings and array-built
+    commands remain outside this rule.
+    In particular, sudo -u and timeout -s remain unresolved. env handles
+    -/--, -i/-v/-0 clusters, --ignore-environment/--debug/--null,
+    --list-signal-handling, --block-signal/--default-signal/--ignore-signal
+    (optional =SIGNAL), and -u/-C/-a/-f or --unset/--chdir/--argv0/--file
+    (separate or attached values). Unknown options, abbreviated long options,
+    -S/--split-string and assignments from env files remain unresolved.
+    Visible URI operands on env's own argv are checked before child resolution,
+    including when split-string resolution stops the command walk.
+    Env names match whole body names, header names and the explicit
+    _ENV_CREDENTIAL_NAMES; generic _ENV_SECRET_RE words must be underscore-
+    delimited components (case-insensitive).
+    Bare AUTH, CREDENTIAL, CREDENTIALS, KEY and arbitrary application names
+    are not covered. PWD (working directory), *_URL, *_URI, *_ENDPOINT,
+    *_HOST, *_PORT, *_PATH, *_FILE, *_DIR, *_NAME, KEY_ID, *_KEY_ID,
+    PUBLIC_KEY, *_PUBLIC_KEY, *_TTL and *_TTL_SECONDS are treated as metadata,
+    unless their value visibly contains a credential URI. Other *_ID names
+    retain credential-name matching, including SECRET_ID and TOKEN_ID.
+    No value dataflow is done.
+    Vault login checks only _VAULT_LOGIN_KEY's methods/keys; its known
+    value-taking flags accept one/two dashes and =/separate values. Other
+    flags, abbreviated names and options supplied through expansion are not
+    parsed for ownership.
+    URI checks cover whole arguments and NAME=URI/--option=URI values, not
+    opaque URL variables, attached short-option URIs, schemeless userinfo,
+    nested parameter expansions or URIs embedded in larger payloads.
+    Simple ${...} expansions are masked before parsing delimiters. Query
+    keys are exactly _URI_QUERY_KEYS, ignoring case, hyphens and underscores;
+    percent-encoded keys, other key names and non-&/; separators are not
+    recognized. Empty query values pass; query placeholders are not exempt.
+    Userinfo requires a nonempty password and forbids literal /?#@ or space
+    within it; encoded password characters are accepted without decoding.
+    User-only URIs pass. Curl retains its existing URI policy and limits.
+    URI operands of visible printf/echo/:/read builtins (also command -p/--
+    and builtin --) pass, assuming ordinary shell builtins on entry. Paths
+    and external wrappers remain checked. Visible alias/enable/eval/source,
+    any function-keyword definition, printf/echo/:/read/command/builtin ()
+    definitions and unparseable lines deny builtin credit for the whole fence;
+    inherited shell redefinitions cannot be determined.
+    Heredoc/herestring data follows the shared scanner's limits above.
+    OpenSSL -macopt checks literal key:/hexkey: prefixes, not opaque values.
+    Non-shell configuration fences retain the shared scanner's scope limit.
+    A shell assignment prefix is distinct from an env argv value.
     Redis/Mosquitto and OpenSSL options require separate values (or the
     explicit equals form recognized here). Other supported short value options
     accept attached values. htpasswd handles -b clusters.
@@ -892,12 +1116,16 @@ def _tool_credential_flags(word, args):
     file:/env:/fd: prefix or stdin establishes an out-of-argv input.
     """
     name = word.rsplit("/", 1)[-1]
-    if name not in _TOOL_SKIP_OPTS:
-        return []
     a = _drop_redirections(args)
+    # Curl keeps its existing C3-URL-ARGV policy and diagnostics.
+    uri_flags = [] if name == "curl" or shell_builtin else [
+        "URI credential" for t in a
+        if _uri_credential(t) or ("=" in t and _uri_credential(t.split("=", 1)[1]))]
+    if name not in _TOOL_SKIP_OPTS:
+        return uri_flags
     specs = _TOOL_SECRET_OPTS.get(name, {})
     skip = _TOOL_SKIP_OPTS[name].split()
-    flags, positional, batch = [], [], ""
+    flags, positional, batch = list(uri_flags), [], ""
     method = "token"
     redis_cluster = False
     i = 0
@@ -920,7 +1148,26 @@ def _tool_credential_flags(word, args):
             positional.extend(a[i + 1:])
             break
         opt, eq, tail = t.partition("=")
+        # Vault uses Go flag syntax, accepting one or two leading dashes.
+        # https://pkg.go.dev/flag#hdr-Command_line_flag_syntax
+        if name == "vault" and opt.startswith("--"):
+            opt = opt[1:]
         mode = specs.get(opt)
+        if name == "openssl" and opt == "-macopt":
+            val, i = _cred_value(a, i, bool(eq), tail)
+            if val:
+                key, colon, value = val.partition(":")
+                if colon and key in ("key", "hexkey") and value:
+                    flags.append("-macopt " + key)
+            continue
+        if not mode and name in _TOOL_CLUSTER_NOARG and t.startswith("-"):
+            j = 1
+            while j < len(t) and t[j] in _TOOL_CLUSTER_NOARG[name]:
+                j += 1
+            short = "-" + t[j:j + 1]
+            if j > 1 and short in specs:
+                opt, mode, tail = short, specs[short], t[j + 1:]
+                eq = bool(tail)  # required values may be the next word
         if not mode and t.startswith("-") and not t.startswith("--"):
             # Do not confuse OpenSSL's single-dash long options with shorts.
             short = t[:2]
@@ -958,18 +1205,21 @@ def _tool_credential_flags(word, args):
             positional.append(t)
         i += 1
     if name == "docker" and (not positional or positional[0] != "login"):
-        return []  # docker run -p is port publication
+        return uri_flags  # docker run -p is port publication
     if name == "mc" and positional[:2] == ["alias", "set"]:
         flags.extend(label for label, val in zip(
             ("ACCESSKEY", "SECRETKEY"), positional[4:6]) if val)
-    if name == "vault" and positional[:1] == ["login"] and method == "token":
+    if name == "vault" and positional[:1] == ["login"]:
+        credential = _VAULT_LOGIN_KEY.get(method)
         for val in positional[1:]:
-            if val.startswith("token="):
-                val = val[len("token="):]
-            elif "=" in val:
+            if "=" in val:
+                key, _, val = val.partition("=")
+                if key != credential:
+                    continue
+            elif method != "token":
                 continue
             if val and val != "-" and not val.startswith("@"):
-                flags.append("token")
+                flags.append(credential)
     if name in ("htpasswd", "mosquitto_passwd") and "b" in batch:
         at = 1 if name == "htpasswd" and "n" in batch else 2
         if len(positional) > at and positional[at]:
@@ -1194,6 +1444,7 @@ def _c2_shadows_termination(records):
 
 def _analyze_fence(path, lang, start, body, findings, stats, opts):
     stats.fences += 1
+    unparseable_before = stats.unparseable
     shell_heredoc_bodies = []
     if lang in CONSOLE_INFOS:
         lls = _logical_lines(_console_pairs(body, start), stats,
@@ -1243,6 +1494,9 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
             pending_waiver = False
 
     termination_shadowed = _c2_shadows_termination(records)
+    uri_builtins_uncertain = (
+        stats.unparseable > unparseable_before
+        or _uri_builtins_uncertain(records))
 
     # The shared command walk and sequence numbering are retained. Everything
     # added to its structural bookkeeping below belongs to C2.
@@ -1417,15 +1671,28 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
                     arm["uses_return"] = (
                         arm["uses_return"] or cmd[0] == "return")
 
+        env_credentials = []
+        stripped = _strip_wrappers(cmd, env_credentials)
+        if not waived:
+            for flag in env_credentials:
+                findings.append((path, line, "C3-TOOL-ARGV",
+                                 " (tool: env, argument: %s)" % flag))
+        if stripped:
+            word = stripped[0]
+            shell_builtin = (not uri_builtins_uncertain
+                             and _uri_builtin_context(cmd))
+            for flag in _tool_credential_flags(word, stripped[1:], shell_builtin):
+                if flag == "URI credential" and flag in env_credentials:
+                    continue  # already checked on the outer env's argv
+                if not waived:
+                    findings.append((path, line, "C3-TOOL-ARGV",
+                                     " (tool: %s, argument: %s)"
+                                     % (word.rsplit("/", 1)[-1], flag)))
+        # The broader env resolution above belongs only to C3-TOOL-ARGV.
         stripped = _strip_wrappers(cmd)
         if not stripped:
             return
         word = stripped[0]
-        for flag in _tool_credential_flags(word, stripped[1:]):
-            if not waived:
-                findings.append((path, line, "C3-TOOL-ARGV",
-                                 " (tool: %s, argument: %s)"
-                                 % (word.rsplit("/", 1)[-1], flag)))
         if _cmd_is(word, ("curl",)):
             stats.curls += 1
             for code in _check_curl(stripped[1:], opts.q_anywhere):
@@ -3121,6 +3388,326 @@ for _subcommand, _option in (
         _TOOL_ARGV_CASES.append(
             ("openssl %s %s %s" % (_subcommand, _option, _source), _count))
 
+# Row 3.29: formerly passing accidental exposures and adjacent safe forms.
+_TOOL_ARGV_CASES += [
+    ('mysql -Bp"$PW"', 1),
+    ('mysql -BNpsecret', 1),
+    ('mysql -ABNrp"$PW"', 1),
+    ('mysql -Bhpsecret', 0),
+    ('mysql -svpREPLACE_WITH_PASSWORD', 1),
+    ('mariadb -BNp"$PW"', 1),
+    ('mysql -Bp db', 0),
+    ('mysql -BNp"" db', 0),
+    ('mysql -BN --password', 0),
+    ('mysql -e "-Bpsecret"', 0),
+    ('mysql -Bepublic', 0),
+    ('mysql -- -Bpsecret', 0),
+    ('turnutils_uclient -vw"$PW" host', 1),
+    ('turnutils_uclient -tvW"$SECRET" host', 1),
+    ('turnutils_uclient -vwREPLACE_WITH_PASSWORD host', 1),
+    ('turnutils_uclient -v host', 0),
+    ('turnutils_uclient -u "-vwpublic" host', 0),
+    ('turnutils_uclient -vepeerwpublic host', 0),
+    ('turnutils_uclient -- -vwpublic', 0),
+    ('env API_KEY=secret tool', 1),
+    ('env API_KEY="$KEY" tool', 1),
+    ('env PASSWORD="$(cat private)" tool', 1),
+    ('env VAULT_TOKEN="$TOKEN" vault status', 1),
+    ('sudo env -i -- DB_PASSWORD="$PW" tool', 1),
+    ('/usr/bin/env --ignore-environment CLIENT_SECRET=secret tool', 1),
+    ('env API_KEY=secret env TOKEN=secret tool', 2),
+    ('env API_KEY=secret', 1),
+    ('env API_KEY=REPLACE_WITH_KEY tool', 1),
+    ('env API_KEY=@private tool', 1),
+    ('env API_KEY=- tool', 1),
+    ('env API_KEY= tool', 0),
+    ('env API_KEY="" tool', 0),
+    ('env PUBLIC_PORT=443 tool', 0),
+    ('env PASSWORD_FILE=/run/private tool', 0),
+    ('env TOKEN_TTL_SECONDS=60 tool', 0),
+    ('env tool API_KEY=ordinary-data', 0),
+    ('API_KEY="$KEY" tool', 0),
+    ('export API_KEY="$KEY"', 0),
+    ('command -v env', 0),
+    ('env -u API_KEY tool', 0),
+    ('openssl dgst -mac HMAC -macopt key:secret', 1),
+    ('openssl dgst -mac HMAC -macopt "key:$KEY"', 1),
+    ('openssl dgst -mac HMAC -macopt hexkey:0123abcd', 1),
+    ('openssl dgst -macopt="hexkey:$HEXKEY"', 1),
+    ('openssl dgst -macopt key:REPLACE_WITH_KEY', 1),
+    ('openssl dgst -macopt key:env:KEY', 1),
+    ('openssl dgst -macopt key: -macopt hexkey:', 0),
+    ('openssl dgst -macopt digest:SHA256', 0),
+    ('openssl dgst -macopt', 0),
+    ('openssl dgst -out "-macopt" key:public', 0),
+    ('openssl dgst -macopt digest:SHA256 -macopt key:secret', 1),
+    ('psql "postgresql://user:secret@db/app"', 1),
+    ('mongosh "mongodb://user:$PW@db/app"', 1),
+    ('redis-cli -u "redis://user:secret@db"', 1),
+    ('tool --url="https://user:secret@example.com/"', 1),
+    ('tool URI="custom+tls://user:secret@host/path"', 1),
+    ('tool "https://REPLACE_WITH_USER:secret@REPLACE_WITH_HOST/"', 1),
+    ('tool "https://user:prefixREPLACE_WITH_PASSWORD@host/"', 1),
+    ('tool "https://user:REPLACE_WITH_PASSWORD-suffix@host/"', 1),
+    ('env DATABASE_URL="postgresql://user:secret@db/app" tool', 1),
+    ('psql "postgresql://user:REPLACE_WITH_PASSWORD@db/app"', 0),
+    ('tool --uri="nats-route://route:REPLACE_WITH_URL_ENCODED_ROUTE_PASSWORD@host"', 0),
+    ('tool "https://user:$REPLACE_WITH_PASSWORD@host/"', 1),
+    ('psql "postgresql://user@db/app"', 0),
+    ('tool "https://user:@host/"', 0),
+    ('tool "https://host/path/user:pass@data"', 0),
+    ('tool "$URL"', 0),
+    ('URL="postgresql://user:secret@db/app" tool', 0),
+    ('tool > "https://user:pass@host"', 0),
+    ('echo "psql postgresql://user:secret@db/app"', 0),
+]
+for _method, _key in (
+    ("userpass", "password"), ("ldap", "password"), ("okta", "password"),
+    ("radius", "password"), ("github", "token"), ("token", "token"),
+):
+    for _value, _count in (
+        ("secret", 1), ('"$SECRET"', 1), ("REPLACE_WITH_SECRET", 1),
+        ("", 0), ("-", 0), ("@private.txt", 0),
+    ):
+        _TOOL_ARGV_CASES.append((
+            "vault login -method=%s %s=%s" % (_method, _key, _value), _count))
+_TOOL_ARGV_CASES += [
+    ('vault login -method userpass -path employees username=user password="$PW"', 1),
+    ('vault login -method=ldap username=user', 0),
+    ('vault login -method=github', 0),
+    ('vault login -method=cert -client-key private.pem', 0),
+    ('vault login -method=cert password=unused token=unused', 0),
+    ('vault status password=ordinary-data', 0),
+    ('vault login -method=userpass username=password=public', 0),
+    ('vault login -method=userpass -path password=public username=user', 0),
+]
+# The shared wrapper/waiver path must apply to every new form.
+for _cmd in (
+    'mysql -Bp"$PW"', 'turnutils_uclient -vw"$PW" host',
+    'vault login -method=userpass password="$PW"',
+    'env API_KEY="$KEY" tool', 'openssl dgst -macopt "key:$KEY"',
+    'psql "postgresql://user:$PW@db/app"',
+):
+    SELF_TEST_CASES.extend((
+        ("c3-gap-wrapped-" + _cmd, "~~~sh\nsudo " + _cmd + "\n~~~\n",
+         ["C3-TOOL-ARGV"], ()),
+        ("c3-gap-waived-" + _cmd,
+         "~~~sh\n# guard-conventions: allow documented exception\n"
+         + _cmd + "\n~~~\n", [], ()),
+    ))
+
+
+# Round-1 QA: required/optional values, spelling siblings and URI context.
+_ROUND1_ARGV_CASES = [
+    ('turnutils_uclient -w "$PW" host', 1),
+    ('turnutils_uclient -W "$S" host', 1),
+    ('turnutils_uclient -vw "$PW" host', 1),
+    ('turnutils_uclient -vW "$S" host', 1),
+    ('turnutils_uclient -tvW "-secret" host', 1),
+    ('turnutils_uclient -vw "" host', 0),
+    ('turnutils_uclient -vW "" host', 0),
+    ('turnutils_uclient -u "-vw" host', 0),
+    ('turnutils_uclient -vewpublic host', 0),
+    ('turnutils_uclient -- -vw "$PW"', 0),
+    ('mysql -p "$DB"', 0),
+    ('mysql -BNp "$DB"', 0),
+    ('mariadb -BNp "$DB"', 0),
+    ('mysql -BNp"$PW" db', 1),
+]
+for _spelling in ("-method=", "--method=", "-method ", "--method "):
+    for _method, _key in (("ldap", "password"), ("userpass", "password"),
+                          ("okta", "password"), ("radius", "password"),
+                          ("github", "token"), ("token", "token")):
+        for _value, _count in (('"$PW"', 1), ("-", 0), ("@private.txt", 0)):
+            _ROUND1_ARGV_CASES.append((
+                "vault login %s%s username=user %s=%s"
+                % (_spelling, _method, _key, _value), _count))
+        _ROUND1_ARGV_CASES.append((
+            "vault login %s%s username=user" % (_spelling, _method), 0))
+_ROUND1_ARGV_CASES += [
+    ('vault login --method ldap --path password=public username=user', 0),
+    ('vault login --method=cert --client-key private.pem', 0),
+    ('vault login --method token "$TOKEN"', 1),
+    ('vault login --method token -', 0),
+]
+for _name in (
+    "MYSQL_PWD", "REDISCLI_AUTH", "PGPASSWORD", "AWS_SECRET_ACCESS_KEY",
+    "AWS_SESSION_TOKEN", "SECRET_KEY", "PRIVATE_KEY", "ACCESS_KEY",
+    "APP_SECRET_VALUE", "APP_PASSWORD_VALUE", "APP_PASSWD_VALUE",
+    "APP_PWD_VALUE", "APP_TOKEN_VALUE", "RABBITMQ_PASS", "OPENAI_API_KEY",
+):
+    _ROUND1_ARGV_CASES.extend((
+        ('env %s="$PW" tool' % _name, 1),
+        ('env %s= tool' % _name, 0),
+        ('%s="$PW" tool' % _name, 0),
+    ))
+for _name in (
+    "MYSQL_PWD_FILE", "REDISCLI_AUTH_PATH", "PASSWORD_FILE", "TOKEN_PATH",
+    "SECRET_KEY_FILE", "PRIVATE_KEY_PATH", "KEY_ID", "PUBLIC_KEY",
+    "AWS_ACCESS_KEY_ID", "APP_PUBLIC_KEY", "SECRET_KEY_ID",
+    "TOKEN_TTL_SECONDS", "TOKEN_TTL", "LANG", "PORT", "PWD", "UPWD", "UPWD_HASH",
+):
+    _ROUND1_ARGV_CASES.append(('env %s=public tool' % _name, 0))
+for _options in (
+    "-", "--debug", "-iv", "--ignore-environment --debug",
+    "-u OLD", "--unset OLD", "--unset=OLD", "-uOLD", "-ivuOLD",
+    "-C /work", "--chdir=/work", "-a tool", "--argv0=tool",
+    "-f settings", "--file=settings", "--ignore-signal=PIPE",
+    "--default-signal --block-signal=INT --list-signal-handling", "--",
+):
+    _ROUND1_ARGV_CASES.extend((
+        ('env %s MYSQL_PWD="$PW" tool' % _options, 1),
+        ('env %s LANG=C tool' % _options, 0),
+        ('env %s mysql -p"$PW"' % _options, 1),
+    ))
+_ROUND1_ARGV_CASES += [
+    ('env -u PASSWORD=public tool', 0),
+    ('env --unset=PASSWORD=public tool', 0),
+    ('env -C PASSWORD=public tool', 0),
+    ('env --argv0 MYSQL_PWD=public tool', 0),
+    ('env tool MYSQL_PWD=public', 0),
+    ('env --debug MYSQL_PWD_FILE="/run/mysql" mysql', 0),
+    ('sudo /usr/bin/env --debug MYSQL_PWD="$PW" mysql', 1),
+    ('env PASSWORD_FILE="postgresql://user:$PW@db/app" tool', 1),
+]
+for _password in ('${PW:?}', '${PW:-x}', '${PW:?missing password}',
+                  '${PW:-https://fallback}', '$PW', 'literal%3Fpassword'):
+    _ROUND1_ARGV_CASES.append((
+        'psql "postgresql://user:%s@db/app"' % _password, 1))
+for _key in (
+    "password", "pass", "pwd", "passwd", "sslpassword", "token", "secret",
+    "access_token", "refresh-token", "sessionToken", "authToken",
+    "client_secret", "api_key", "access_key", "secret_key",
+    "signature", "sig", "X-Amz-Signature", "X-Goog-Signature",
+):
+    _ROUND1_ARGV_CASES.extend((
+        ('psql "postgresql://db/app?user=app&%s=${PW:?}"' % _key, 1),
+        ('psql "postgresql://user:REPLACE_WITH_PASSWORD@db/app?%s=$PW"'
+         % _key, 1),
+        ('psql "postgresql://db/app?%s="' % _key, 0),
+    ))
+_ROUND1_ARGV_CASES += [
+    ('psql "postgresql://db/app?password=REPLACE_WITH_PASSWORD"', 1),
+    ('psql "postgresql://db/app?user=app;password=$PW"', 1),
+    ('psql "postgresql://user:REPLACE_WITH_PASSWORD@db/app?sslmode=require"', 0),
+    ('psql "postgresql://db/app?user=app&connect_timeout=10"', 0),
+    ('psql "postgresql://db/app#password=$PW"', 0),
+    ('tool --uri="postgresql://db/app?password=$PW"', 1),
+    ('env DATABASE_URL="postgresql://db/app?password=$PW" tool', 1),
+]
+for _command in (
+    "printf '%s\\n'", "echo", ":", "read -r -p",
+    "command printf '%s\\n'", "command -p -- echo", "builtin printf '%s\\n'",
+    "VALUE=public printf '%s\\n'", ">connection.txt printf '%s\\n'",
+):
+    _ROUND1_ARGV_CASES.append((
+        _command + ' "postgresql://user:${PW:?}@db/app" >connection.txt', 0))
+for _command in (
+    "/usr/bin/printf '%s\\n'", "/bin/echo", "env echo", "sudo printf '%s\\n'",
+    "command /bin/echo", "nohup echo", "timeout 1 echo", "exec echo",
+):
+    _ROUND1_ARGV_CASES.append((
+        _command + ' "postgresql://user:$PW@db/app" >connection.txt', 1))
+_ROUND1_ARGV_CASES += [
+    ('printf "%s\\n" "postgresql://db/app?password=$PW" | cat >connection.txt', 0),
+    ('cat <<<"postgresql://user:$PW@db/app" >connection.txt', 0),
+    ('read -r URI <<<"postgresql://db/app?password=$PW"', 0),
+    ("cat <<'EOF' >connection.txt\npostgresql://user:$PW@db/app\nEOF", 0),
+    ('cat <<EOF >connection.txt\npostgresql://db/app?password=$PW\nEOF', 0),
+    ('bash <<EOF\npsql "postgresql://db/app?password=$PW"\nEOF', 1),
+    ('printf "%s" "$(psql "postgresql://db/app?password=$PW")"', 1),
+    ('enable -n echo\necho "postgresql://user:$PW@db/app"', 1),
+    ('echo() { /bin/echo "$@"; }\necho "postgresql://user:$PW@db/app"', 1),
+    ('alias echo=/bin/echo\necho "postgresql://user:$PW@db/app"', 1),
+    ('source settings\necho "postgresql://user:$PW@db/app"', 1),
+]
+_TOOL_ARGV_CASES.extend(_ROUND1_ARGV_CASES)
+SELF_TEST_CASES.append((
+    "c3-env-resolution-keeps-c2-scope",
+    "~~~bash\ncase $1 in\n*REPLACE_WITH_*) echo substitute ;;\nesac\n"
+    "env -u OLD curl -q https://203.0.113.10/\n~~~\n", [], ()))
+
+
+# Round-2 QA: env's own argv, wrapper definitions and name components.
+_ROUND2_ARGV_CASES = []
+for _options in ("-S echo", "--split-string echo", "--split-string=echo",
+                 "-Secho", "-iS echo"):
+    for _operand, _count in (
+        ('"postgresql://user:$PW@db/app"', 1),
+        ('"postgresql://db/app?password=$PW"', 1),
+        ('URI="postgresql://user:$PW@db/app"', 1),
+        ('--url="postgresql://user:$PW@db/app"', 1),
+        ('PASSWORD_FILE="postgresql://user:$PW@db/app"', 1),
+        ('"postgresql://user:REPLACE_WITH_PASSWORD@db/app"', 0),
+        ('"postgresql://user@db/app"', 0),
+        ('> "postgresql://user:$PW@db/app"', 0),
+        ('<<< "postgresql://user:$PW@db/app"', 0),
+    ):
+        _ROUND2_ARGV_CASES.append(('env %s %s' % (_options, _operand), _count))
+_ROUND2_ARGV_CASES += [
+    ('sudo /usr/bin/env -S echo "postgresql://user:$PW@db/app"', 1),
+    ('env -S echo "postgresql://user:$PW@db/app" "redis://user:$PW@db"', 2),
+    ('env PASSWORD="postgresql://user:$PW@db/app" tool', 1),
+    ('env env echo "postgresql://user:$PW@db/app"', 1),
+    ('env -S echo <<<"postgresql://user:$PW@db/app"', 0),
+    ('env MYSQL_PWD="$PW" env -S echo "postgresql://user:$PW@db/app"', 2),
+    ('env TOKENIZERS_PARALLELISM=false python3 app.py', 0),
+]
+for _wrapper, _builtin in (("command", "printf '%s\\n'"), ("builtin", "echo")):
+    for _definition in (
+        '%s() { /bin/echo "$@"; }',
+        '%s () { /bin/echo "$@"; }',
+        'function %s { /bin/echo "$@"; }',
+        'function %s() { /bin/echo "$@"; }',
+    ):
+        _ROUND2_ARGV_CASES.append((
+            (_definition % _wrapper) + '\n' + _wrapper + ' ' + _builtin
+            + ' "postgresql://user:$PW@db/app"', 1))
+    _ROUND2_ARGV_CASES.append((
+        _wrapper + ' ' + _builtin + ' "postgresql://user:$PW@db/app"', 0))
+for _name in (
+    "TOKENIZER_CACHE", "APP_TOKENIZER_CACHE", "TOKENIZERS_PARALLELISM",
+    "MYTOKEN", "APP_MYTOKEN", "TOKENIZATION", "APP_TOKENIZATION_MODE",
+    "SECRETARY", "APP_SECRETARY", "PASSWORDLESS", "APP_PASSWORDLESS",
+    "PASSWDDB", "APP_PASSWDDB",
+):
+    _ROUND2_ARGV_CASES.append(('env %s=false tool' % _name, 0))
+for _name in (
+    "PGPASSWORD", "MYSQL_PWD", "REDISCLI_AUTH", "AWS_SECRET_ACCESS_KEY",
+    "AWS_SESSION_TOKEN", "GITHUB_TOKEN", "API_TOKEN", "APP_TOKEN", "TOKEN",
+    "APP_TOKEN_VALUE", "TOKEN_VALUE", "APP_SECRET_VALUE", "APP_PASSWORD_VALUE",
+    "APP_PASSWD_VALUE", "APP_PWD_VALUE", "APP_PASS_VALUE", "github_token",
+):
+    _ROUND2_ARGV_CASES.append(('env %s="$PW" tool' % _name, 1))
+_TOOL_ARGV_CASES.extend(_ROUND2_ARGV_CASES)
+
+# Round-3 QA: final locator components do not hide credential-bearing URIs.
+_ROUND3_ARGV_CASES = []
+for _suffix in ("URL", "URI", "ENDPOINT", "HOST", "PORT", "PATH", "FILE",
+                "DIR", "NAME"):
+    for _value, _count in (
+        ("https://example.com/token", 0),
+        ("https://u:$PW@h/token", 1),
+        ("https://example.com/token?access_token=$T", 1),
+    ):
+        _ROUND3_ARGV_CASES.append((
+            'env X_TOKEN_%s=%s tool' % (_suffix, _value), _count))
+_ROUND3_ARGV_CASES += [
+    ('env OAUTH_TOKEN_ENDPOINT=https://example.com/token tool', 0),
+    ('env app_password_url=https://example.com/login tool', 0),
+    ('env OPENAI_API_KEY_FILE=/run/key tool', 0),
+    ('env TOKENIZERS_PARALLELISM=false tool', 0),
+    ('env X_TOKEN_URL_VALUE="$T" tool', 1),
+    ('env SECRET_ID="$T" tool', 1),
+    ('env TOKEN_ID="$T" tool', 1),
+    ('env APP_ID=public tool', 0),
+    ('env AWS_ACCESS_KEY_ID=public tool', 0),
+]
+for _name in ("GITHUB_TOKEN", "HF_TOKEN", "API_TOKEN", "TOKEN",
+              "AWS_SESSION_TOKEN"):
+    _ROUND3_ARGV_CASES.append(('env %s=$T tool' % _name, 1))
+_TOOL_ARGV_CASES.extend(_ROUND3_ARGV_CASES)
+
 for _i, (_cmd, _count) in enumerate(_TOOL_ARGV_CASES):
     SELF_TEST_CASES.append((
         "c3-tool-%d" % _i, "~~~bash\n" + _cmd + "\n~~~\n",
@@ -3159,6 +3746,29 @@ SELF_TEST_CASES += [
     ("c3-tool-wrapper-limit-disclosed",
      "~~~bash\nsudo -u user lk --api-secret secret\n~~~\n", [], ()),
 ]
+
+
+# Exercise new forms through console and waiver boundaries.
+_ROUND1_CONTEXT_CASES = []
+for _cmd in (
+    'turnutils_uclient -vw "$PW" host',
+    'vault login --method ldap username=user password="$PW"',
+    'env --debug MYSQL_PWD="$PW" mysql',
+    'psql "postgresql://user:${PW:?}@db/app"',
+    'psql "postgresql://db/app?password=$PW"',
+):
+    _ROUND1_CONTEXT_CASES.extend((
+        ("round1-console-" + _cmd, "~~~console\n$ " + _cmd + "\n~~~\n",
+         ["C3-TOOL-ARGV"], ()),
+        ("round1-waiver-" + _cmd,
+         "~~~bash\n# guard-conventions: allow documented exception\n"
+         + _cmd + "\n~~~\n", [], ()),
+    ))
+SELF_TEST_CASES.extend(_ROUND1_CONTEXT_CASES)
+SELF_TEST_CASES.append((
+    "c3-unknown-env-option-keeps-c1-scope",
+    "~~~bash\nenv --future-option curl https://example.com/\n~~~\n",
+    ["C1-MISSING-Q"], ()))
 
 
 def run_self_test():

@@ -10,6 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 3.29 | Follow up #387's C3-TOOL-ARGV gate to close its disclosed bounded misses: clustered short options (`mysql -Bp"$PW"`, `turnutils_uclient -vw"$PW"`), `vault login -method=... password=`, `env VAR=secret tool`, `openssl dgst -macopt key:`/`hexkey:`, and secrets in URIs. (L, M) | Done, #399. |
 | 3.34 | Isolate fixture Git environments in the placeholder and changelog self-tests, and verify external staged indexes survive both Git selectors. (L, XS) | Done, #398. |
 | 3.33 | Fail the whole-tree secrets scan on grep read errors, retain path diagnostics, and test clean, secret-bearing and unreadable trees. (M, XS) | Done, #398. |
 | 1.173 | Demonstrate the REASONED live checks in `self-hosted-idp.md` (#382), including authentik `version/2026.8.3` shipped versus loopback publications, an untrusted-client refusal with a working local browser, anonymous setup through the root, post-setup refusal in a fresh session, bootstrap password/hash/token outcomes and metrics reachability/authentication. The authoring host forbids opening listeners without an isolated network namespace, and has none. Record exposed/fixed commands, browser outcomes and both address families in an authorized isolated environment before removing REASONED marks. (H, M) | Retired (maintainer ruling 2026-09-26); only the live checks. The remaining work stays in TODO.md under 1.173. |
