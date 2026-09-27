@@ -11,6 +11,7 @@ in step with the merged pull request is therefore an authoring obligation, not a
 
 ## 2026-09-27
 
+- Keep the Cloudflare Access Verify service-token secret out of curl argv and shell history with a guarded hidden prompt and stdin headers; report only HTTP status and redirect destination. Apply the same hidden prompt and stdin headers to the section-4 service-token request. Replace the dashboard-managed tunnel step that ran `cloudflared service install <TOKEN>`, which put the tunnel token in the installer's argv, with a protected token file and `cloudflared tunnel run --token-file` (2025.4.0 or later). Row 1.182. (#403)
 - Correct MongoDB 8.0 auditing scope: the failures-only default applies to `authCheck` events, while other auditable events do not depend on `auditAuthorizationSuccess`. Row 1.177. (#404)
 - Clarify manual DNS-01 and its renewal limits, and include HTTP authentication and TLS client certificates in CORS credential guidance. Row 1.181. (#402)
 - Reject leading or trailing whitespace in version-basis strings and test each component-name, basis, claim-text and evidence field. Replace CONTRIBUTING rule 8's drifting corpus counts with a reference to gate output. Row 3.35. (#400)
