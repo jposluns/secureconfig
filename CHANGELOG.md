@@ -11,6 +11,7 @@ in step with the merged pull request is therefore an authoring obligation, not a
 
 ## 2026-09-27
 
+- Re-anchor mlflow.md's two MLflow v3.16.1 CSRF-key citations to the lines that show the static secret key and its forwarding to workers; open rows 1.187 (full line-anchor audit) and 1.188 (Vite SSR scan path) (#N).
 - Pin the Browserless TOKEN default to open-source 2.56.7, distinguish Enterprise documentation from source evidence, and align the authentication probe and version-basis claims; add the CVE-2026-92811 file-protocol fix requirement, conflicting affected-range caveat, and Playwright canary check. Row 1.178. (#409)
 - Move the #389 and #391 to #399 bullets to their UTC merge date, rename the version-basis gate label after the rollout, and extend the source-gap and follow-up backlog, with rows 1.143 and 1.138 retired (maintainer ruling 2026-09-27), and record the day's four rulings in DECISIONS.md. Row 3.37. (#408)
 - Deny dotfiles and common backup and dump suffixes in the Caddy web-exposure example, align nginx and Apache suffix rules, and add planted-file probes for the added classes. Row 1.184. (#406)
