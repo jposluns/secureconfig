@@ -17,6 +17,10 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Vite SSR secret scan, 2026-09-27 (#414).** The maintainer ruled, through AskUser, that
+  frontend-frameworks.md's Verify secret scan always searches all of `dist` and reports matches under
+  `dist/server/` separately, because review found that no directory-existence test can distinguish a Vite
+  SSR build from a multi-page SPA with copied `public/client/` or `public/server/` folders.
 - **CHANGELOG dates, 2026-09-27 (#410).** The maintainer ruled, through AskUser, that CHANGELOG headings use
   the UTC date of the merge to `main`, going forward only. An audit found that the earlier headings follow
   neither UTC nor America/Toronto dates consistently. Those headings stay as recorded, and #408's move of the
