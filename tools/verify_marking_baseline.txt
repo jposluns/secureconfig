@@ -1,4 +1,2 @@
 # Explicit one-time seed; remove exemptions as fences are marked.
 # guide<TAB>fence<TAB>sha256<TAB>count; no automatic refresh.
-exposure-index.md	fence	1fdf9fb70afe37f3136a5d8cf447f9a56a5307dd98f0035652ff1d52ebbcf886	1
-exposure-index.md	fence	bbe9d9b4c111009691478504b4360be4aabdabf3e0799c872571a4302bbd1111	1

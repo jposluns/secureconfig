@@ -253,6 +253,13 @@ It establishes nothing at all about whether those services are safe to expose, a
 index page can. That claim belongs to each service's own guide, and even there the Verify blocks are
 worked examples over sampled URLs, not an enumeration of your application's sensitive routes.
 
+**REASONED:** following block; not demonstrated, and this page records no run. The block rests on the
+cited `ss` manual and Docker `container ls` reference, and on this index's consistency with the guides
+it cites; it is not an observation. A discriminating run needs a service bound on every interface (the
+exposed state, a `0.0.0.0` or `[::]` local address) and the same service bound to loopback (the fixed
+state, `127.0.0.1` or `::1`), and the authoring host forbids opening listeners without an isolated
+network namespace, and has none.
+
 ```bash
 sudo ss -tlnp                    # listening TCP sockets, with the owning process
 sudo ss -tlunp                   # again including UDP, which Memcached and WireGuard answer on
@@ -273,6 +280,14 @@ interfaces or a NAT address beside an elastic address has several inbound paths.
 address, and check the target Nmap prints before you read the result: the
 placeholder below is a hostname as far as Nmap is concerned, and if it resolves in your environment
 Nmap will scan whatever it resolved to.
+
+**REASONED:** following block; not demonstrated, and this page records no run. The block rests on the
+cited Nmap port-specification, host-discovery, target-specification and scan-technique pages, and on
+this index's consistency with the guides it cites; it is not an observation. A discriminating run needs
+a publicly bound listener that the scan reports `open` (exposed) and the same port reported `closed` or
+`filtered` once it is bound privately (fixed), probed from a second network. The authoring host forbids
+opening listeners without an isolated network namespace, and has none, and no second network was
+available.
 
 ```bash
 sudo nmap -Pn -p- REPLACE_WITH_A_LITERAL_IPV4_ADDRESS            # TCP over IPv4
