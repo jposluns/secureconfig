@@ -61,6 +61,35 @@ class VersionBasisTests(unittest.TestCase):
                          [(level, title) for _, level, title, _ in headings(BODY)])
         self.assertEqual(vb.split(BODY), (None, BODY))
 
+
+    def test_normal_string_fields(self):
+        data = fixture()
+        data['claims']['control'].update(
+            status='DEMONSTRATED', evidence='Observed refusal, then successful authorized request.')
+        body = BODY.replace('# REASONED: no isolated listener available.',
+                            '# DEMONSTRATED: observed refusal and authorized request.')
+        data['body_sha256'] = vb.digest(body)
+        rendered = vb.updated(document(data, body))
+        self.assertEqual(vb.updated(rendered), rendered)
+
+    def test_string_fields_reject_edge_whitespace(self):
+        for field in ('name', 'basis', 'text', 'evidence'):
+            for whitespace in (' ', '\u00a0', '\u2003'):
+                for edge in ('leading', 'trailing'):
+                    data = fixture()
+                    claim = data['claims']['control']
+                    claim.update(status='DEMONSTRATED',
+                                 evidence='Observed refusal, then successful authorized request.')
+                    body = BODY.replace('# REASONED: no isolated listener available.',
+                                        '# DEMONSTRATED: observed refusal and authorized request.')
+                    data['body_sha256'] = vb.digest(body)
+                    target = data['components']['product'] if field in ('name', 'basis') else claim
+                    value = target[field]
+                    target[field] = whitespace + value if edge == 'leading' else value + whitespace
+                    with self.subTest(field=field, whitespace=repr(whitespace), edge=edge):
+                        with self.assertRaisesRegex(ValueError, 'leading or trailing whitespace'):
+                            vb.updated(document(data, body))
+
     def test_citation_punctuation(self):
         self.assertEqual(vb.citation_urls(URL + ', ' + URL + '; ' + URL + '.'), {URL})
         self.assertIn(URL + ',', vb.citation_urls('[explicit](' + URL + ',)'))
