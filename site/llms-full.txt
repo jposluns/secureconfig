@@ -733,7 +733,45 @@ For APIs and machine clients, create a **service token** in the Zero Trust dashb
 
 - A private-browsing visit to `https://app.example.com` shows the Access login page, not the app.
 - `curl -q -sI https://app.example.com/` returns a 302 whose `location` is your team's `*.cloudflareaccess.com` login, never a 200 or your application's own content.
-- With a service token, a GET returns your application content, not the login: `curl -q -s -H 'CF-Access-Client-Id: REPLACE_WITH_CLIENT_ID' -H 'CF-Access-Client-Secret: REPLACE_WITH_CLIENT_SECRET' https://app.example.com/`.
+- With a service token, a GET returns your application content, not the Access login. Use a route known to serve your application's content with HTTP 200. Expect `http=200 location=`; an Access login redirect, denial or transport error is not a pass. Compare with the anonymous check above: an exposed app serves the route anonymously too, so token success alone does not prove Access is enforced.
+
+Use Bash in a fresh, trusted shell and replace the URL and client ID inside the quotes. Paste only the secret at the hidden prompt, never into the command. The block discards the body and prints only the status and redirect destination; a 200 alone cannot identify the content. The secret stays in an unexported subshell variable and reaches curl on stdin, which does not hide it from the account owner or root.
+
+```bash
+# REASONED: no live Cloudflare account is available; not demonstrated against exposed and protected apps. The cited Cloudflare service-token documentation specifies the two headers and Service Auth policy.
+(
+  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  set +x +a +e
+  { unset -n HDR && unset -v HDR; } 2>/dev/null ||
+    { echo 'cannot clear HDR in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_APP_URL' 'REPLACE_WITH_CLIENT_ID'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
+  shift
+  [ "$#" -eq 2 ] || { echo 'the set -- line needs a URL and client ID; not probing'; exit 2; }
+  case "$1" in
+    ''|*REPLACE_WITH_*|*example.com*|*example.net*|*example.org*|*[[:cntrl:]]*)
+      echo 'substitute your own application URL inside the quotes; not probing'; exit 2 ;;
+    https://*) ;;
+    *) echo 'use an https:// URL; not probing'; exit 2 ;;
+  esac
+  case "$2" in
+    ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'supply the client ID without control characters; not probing'; exit 2 ;;
+  esac
+  IFS= read -r -s -p 'Client secret (input hidden): ' HDR ||
+    { echo 'secret input failed; not probing'; exit 2; }
+  printf '\n'
+  case "$HDR" in
+    ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'supply the secret without control characters; not probing'; exit 2 ;;
+  esac
+  HDR="CF-Access-Client-Secret: $HDR"
+  printf '%s\n' "CF-Access-Client-Id: $2" "$HDR" |
+    curl -q -g -sS --connect-timeout 5 --max-time 20 --output /dev/null \
+      --write-out 'http=%{http_code} location=%{redirect_url}\n' --header @- "$1" || exit 2
+  unset -v HDR
+)
+```
+
 - `ss -tlnp` shows the app on `127.0.0.1` only for a same-host tunnel. Do not settle for "no inbound rule added": confirm the port's effective inbound policy, since a default-accept policy, a pre-existing broad allow, or a container publishing through its own NAT can leave it open. The policy differs by topology: a same-host tunnel app is on loopback, a remote tunnel origin accepts only the `cloudflared` host, and a no-tunnel HTTPS origin accepts only Cloudflare's IP ranges (plus AOP).
 - The load-bearing check: from another host, confirm the origin is not reachable directly on the app's own port (`3000` in this example; substitute yours). For a tunnel there is no public inbound, so this must refuse or time out.
 
@@ -764,6 +802,8 @@ Read err, not the number: for a tunnel a refusal or timeout naming your own addr
 - Cloudflare IP ranges (origin firewall allowlist): https://www.cloudflare.com/ips/
 - cloudflared as a Linux service (pass --config under sudo): https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/do-more-with-tunnels/local-management/as-a-service/linux/
 - Cloudflare Access One-time PIN (login methods coexist with an IdP): https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/one-time-pin/
+- Cloudflare Access service tokens (request headers and Service Auth policy): https://developers.cloudflare.com/cloudflare-one/access-controls/service-credentials/service-tokens/
+- curl manual (stdin headers, output and redirect reporting): https://curl.se/docs/manpage.html
 
 ======================================================================
 ==> tailscale.md
