@@ -10,7 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
-| 1.178 | F-BROWSERLESS-TOKEN: pin the open-source TOKEN default to 2.56.7, reconcile the conflicting Docker documentation, qualify the uninspected Enterprise image, and align the authentication probe and version-basis claims. (M, S) | Done, #409. |
+| 1.178 | F-BROWSERLESS-TOKEN: pin the open-source TOKEN default to 2.56.7, reconcile the conflicting Docker documentation, qualify the uninspected Enterprise image, and align the authentication probe and version-basis claims; add the CVE-2026-92811 file-protocol fix requirement, conflicting affected-range caveat, and Playwright canary check. (M, S) | Done, #409. |
 | 1.184 | Align `web-exposure.md` deny rules and Verify expectations for dotfiles, backups, and dumps across Caddy, nginx, and Apache. Add planted probes for the suffix classes. (M, S) | Done, #406. |
 | 3.32 | Roll version-basis metadata out to every remaining guide in one generated PR (maintainer ruling 2026-09-26): generate candidate claims from pinned Sources, explicit versions, controls, endpoint mappings, Verify markers and recorded observations; review by guide family with a coverage matrix (claim, body passage, source, version qualification, evidence); never infer DEMONSTRATED from an unmarked fence; enrol each guide in tools/version_basis_guides.txt. Depends on #395. (M, L) | Done, #407. |
 | 3.27 | Migrate the grandfathered Verify fences guide by guide: attach canonical DEMONSTRATED or REASONED declarations with audited scope and provenance, and remove matching entries from tools/verify_marking_baseline.txt. Never invent evidence or a missing prerequisite to clear the gate. (M, L) | Done, #407. |
