@@ -17,7 +17,7 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
-- **CHANGELOG dates, 2026-09-27 (#NNN).** The maintainer ruled, through AskUser, that CHANGELOG headings use
+- **CHANGELOG dates, 2026-09-27 (#410).** The maintainer ruled, through AskUser, that CHANGELOG headings use
   the UTC date of the merge to `main`, going forward only. An audit had found the earlier headings mixed: 59
   bullets differ from their UTC merge date and 27 from their America/Toronto date. Those headings stay as
   recorded, and #408's move of the ten 2026-09-27 bullets stands.
