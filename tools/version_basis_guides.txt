@@ -21,3 +21,13 @@ mcp-clients.md
 llm-observability.md
 agent-builders.md
 ai-infra-services.md
+vector-databases.md
+search-engines.md
+elasticsearch.md
+minio.md
+object-storage.md
+jupyter.md
+gradio.md
+streamlit.md
+code-server.md
+n8n.md

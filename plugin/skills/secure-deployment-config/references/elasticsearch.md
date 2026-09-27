@@ -1,4 +1,365 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "14f0e62423b78397f98cf117151ca99c9e8b4696f56c072b6ddc7464993c2b48",
+  "components": {
+    "es": {
+      "name": "Elasticsearch documentation",
+      "basis": "unknown",
+      "sources": {
+        "sad43b70af67a": "https://www.elastic.co/subscriptions",
+        "s64e4e307f36c": "https://www.elastic.co/docs/deploy-manage/security/self-auto-setup",
+        "se8bbf661f24e": "https://www.elastic.co/docs/reference/elasticsearch/command-line-tools/reset-password",
+        "sce3095052f8d": "https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/security-settings",
+        "s38b60fd8e2bf": "https://www.elastic.co/docs/deploy-manage/deploy/self-managed/install-elasticsearch-docker-configure",
+        "sc3d6362bc8f4": "https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/ldap",
+        "s0c10cfba4d6b": "https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-security-put-role-mapping",
+        "s204396515260": "https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/anonymous-access",
+        "s0f65658e7273": "https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/networking-settings",
+        "s2882d7d6f2fc": "https://www.elastic.co/docs/deploy-manage/security/logging-configuration/enabling-audit-logs",
+        "s5603a653318d": "https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/auding-settings",
+        "s4fb9bf780cf5": "https://www.elastic.co/pdf/subscriptions-2025-07-29.pdf",
+        "see6eaa520863": "https://www.elastic.co/docs/reference/elasticsearch/security-privileges",
+        "sfc6fef9020b3": "https://www.elastic.co/docs/reference/elasticsearch/elasticsearch-audit-events"
+      }
+    },
+    "es-api": {
+      "name": "Elasticsearch API",
+      "basis": "8.x",
+      "sources": {
+        "s088db4f93f33": "https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-security-put-role",
+        "s0c10cfba4d6b": "https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-security-put-role-mapping",
+        "sb82b2da8da5d": "https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-security-put-user",
+        "sbec1f2938348": "https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-security-create-api-key"
+      }
+    },
+    "es819": {
+      "name": "Elasticsearch reference",
+      "basis": "8.19",
+      "sources": {
+        "s805957cad810": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/field-level-security.html",
+        "s52adbc714b10": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/document-level-security.html",
+        "s15feb5b3e00c": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/field-and-document-access-control.html",
+        "se332a9504a82": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/security-limitations.html",
+        "s03b37cd41154": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/tune-for-search-speed.html",
+        "s1ce03cd781c3": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/path-settings-overview.html",
+        "s3cac63e6ba14": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-s3.html",
+        "s28a1fe315963": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-gcs.html",
+        "s6279b842bc10": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-azure.html",
+        "sb98bd971e2f6": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-take-snapshot.html",
+        "s93987af8201d": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshot-restore.html",
+        "s3e5630e4430d": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-restore-snapshot.html"
+      }
+    },
+    "es8": {
+      "name": "Elasticsearch listener source",
+      "basis": "8.19.22",
+      "sources": {
+        "sa56cdc9270ea": "https://github.com/elastic/elasticsearch/blob/3b2a41103de35e0af4064d647974032fcc1bcde9/server/src/main/java/org/elasticsearch/common/network/NetworkService.java#L112-L121",
+        "s46c7adfdc6c4": "https://github.com/elastic/elasticsearch/blob/3b2a41103de35e0af4064d647974032fcc1bcde9/server/src/main/java/org/elasticsearch/common/network/NetworkService.java#L233-L239",
+        "s8ca2413b2af3": "https://github.com/elastic/elasticsearch/blob/3b2a41103de35e0af4064d647974032fcc1bcde9/server/src/main/java/org/elasticsearch/common/network/NetworkService.java#L28-L42",
+        "s59c2dd10f083": "https://github.com/elastic/elasticsearch/blob/3b2a41103de35e0af4064d647974032fcc1bcde9/server/src/main/java/org/elasticsearch/http/HttpTransportSettings.java#L70-L89",
+        "s0310c5c2e42f": "https://github.com/elastic/elasticsearch/blob/3b2a41103de35e0af4064d647974032fcc1bcde9/server/src/main/java/org/elasticsearch/transport/TransportSettings.java#L34-L62",
+        "s6e6cf4d739bd": "https://github.com/elastic/elasticsearch/blob/3b2a41103de35e0af4064d647974032fcc1bcde9/x-pack/plugin/security/cli/src/main/java/org/elasticsearch/xpack/security/cli/AutoConfigureNode.java#L788-L821",
+        "s70c493fe7770": "https://github.com/elastic/elasticsearch/blob/3b2a41103de35e0af4064d647974032fcc1bcde9/x-pack/plugin/security/cli/src/main/java/org/elasticsearch/xpack/security/cli/AutoConfigureNode.java#L876-L891",
+        "s8d4c513fdf84": "https://github.com/elastic/elasticsearch/blob/3b2a41103de35e0af4064d647974032fcc1bcde9/distribution/docker/src/docker/config/elasticsearch.yml#L1-L2"
+      }
+    },
+    "es9": {
+      "name": "Elasticsearch listener source",
+      "basis": "9.5.4",
+      "sources": {
+        "s666c63ad2a02": "https://github.com/elastic/elasticsearch/blob/9170df19cae1adb107b7b489b4d82dec66d7a337/server/src/main/java/org/elasticsearch/common/network/NetworkService.java#L112-L121",
+        "s429c675c1092": "https://github.com/elastic/elasticsearch/blob/9170df19cae1adb107b7b489b4d82dec66d7a337/server/src/main/java/org/elasticsearch/common/network/NetworkService.java#L233-L239",
+        "sa27fc323d90c": "https://github.com/elastic/elasticsearch/blob/9170df19cae1adb107b7b489b4d82dec66d7a337/server/src/main/java/org/elasticsearch/common/network/NetworkService.java#L28-L42",
+        "s8fded6a7640c": "https://github.com/elastic/elasticsearch/blob/9170df19cae1adb107b7b489b4d82dec66d7a337/server/src/main/java/org/elasticsearch/http/HttpTransportSettings.java#L64-L83",
+        "s1f0a06e68675": "https://github.com/elastic/elasticsearch/blob/9170df19cae1adb107b7b489b4d82dec66d7a337/server/src/main/java/org/elasticsearch/transport/TransportSettings.java#L34-L57",
+        "scf100fafec80": "https://github.com/elastic/elasticsearch/blob/9170df19cae1adb107b7b489b4d82dec66d7a337/x-pack/plugin/security/cli/src/main/java/org/elasticsearch/xpack/security/cli/AutoConfigureNode.java#L800-L833",
+        "s0ba542d80d53": "https://github.com/elastic/elasticsearch/blob/9170df19cae1adb107b7b489b4d82dec66d7a337/x-pack/plugin/security/cli/src/main/java/org/elasticsearch/xpack/security/cli/AutoConfigureNode.java#L888-L903",
+        "sa4fd281c6186": "https://github.com/elastic/elasticsearch/blob/9170df19cae1adb107b7b489b4d82dec66d7a337/distribution/docker/src/docker/config/elasticsearch.yml#L1-L2"
+      }
+    },
+    "images": {
+      "name": "Elasticsearch Docker library",
+      "basis": "8480a06d8ca03ca7da29a469fdbddb5f9f31df61",
+      "sources": {
+        "s09177781dc63": "https://github.com/docker-library/official-images/blob/8480a06d8ca03ca7da29a469fdbddb5f9f31df61/library/elasticsearch#L2-L19",
+        "sae45a2b7731f": "https://github.com/elastic/dockerfiles/blob/0208be14db8ebd2e40442d328e8f79921368c5a9/elasticsearch/config/elasticsearch.yml",
+        "sab290cdf87a1": "https://github.com/elastic/dockerfiles/blob/18bba4670aa9212cd0c5e8aeff5aa2f23d7f652a/elasticsearch/config/elasticsearch.yml",
+        "s7088372053e9": "https://github.com/elastic/dockerfiles/blob/25fdea1109a231cedf9d1d3cf78bbb7fce488561/elasticsearch/config/elasticsearch.yml",
+        "s0c3512f7e923": "https://github.com/elastic/dockerfiles/blob/0208be14db8ebd2e40442d328e8f79921368c5a9/elasticsearch/Dockerfile#L123",
+        "s1683d032b409": "https://github.com/elastic/dockerfiles/blob/0208be14db8ebd2e40442d328e8f79921368c5a9/elasticsearch/Dockerfile#L38",
+        "s6c51d507efec": "https://github.com/elastic/dockerfiles/blob/18bba4670aa9212cd0c5e8aeff5aa2f23d7f652a/elasticsearch/Dockerfile#L57",
+        "s5c4452cc7b82": "https://github.com/elastic/dockerfiles/blob/18bba4670aa9212cd0c5e8aeff5aa2f23d7f652a/elasticsearch/Dockerfile#L99",
+        "s849d2f17dbc8": "https://github.com/elastic/dockerfiles/blob/25fdea1109a231cedf9d1d3cf78bbb7fce488561/elasticsearch/Dockerfile#L57",
+        "s30233ea32bf6": "https://github.com/elastic/dockerfiles/blob/25fdea1109a231cedf9d1d3cf78bbb7fce488561/elasticsearch/Dockerfile#L99"
+      }
+    },
+    "os": {
+      "name": "OpenSearch documentation",
+      "basis": "unknown",
+      "sources": {
+        "s6e10cf9ec35a": "https://github.com/opensearch-project/security/blob/4ba3cc0e2ebec61b726b227fdf51e55f4a502182/LICENSE.txt",
+        "s73e416ebf765": "https://docs.opensearch.org/latest/security/configuration/demo-configuration/",
+        "se8c473c01153": "https://github.com/opensearch-project/security/blob/03a224d16045a8f561e2d7d84b8765c95309524c/config/internal_users.yml",
+        "s4e3281cb3d23": "https://docs.opensearch.org/latest/security/configuration/tls/",
+        "s07ddf2781a70": "https://docs.opensearch.org/latest/security/access-control/users-roles/",
+        "s204396515260": "https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/anonymous-access",
+        "sc3d6362bc8f4": "https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/ldap",
+        "s0e349fff0934": "https://docs.opensearch.org/latest/security/api/roles/create-role/",
+        "s4f63d2563816": "https://docs.opensearch.org/latest/security/api/users/create-user/",
+        "s1a9aa4907daf": "https://docs.opensearch.org/latest/security/api/role-mappings/create-role-mapping/",
+        "sfbdd4a41adf5": "https://docs.opensearch.org/latest/security/access-control/api-keys/",
+        "sa596b3a14984": "https://docs.opensearch.org/latest/security/api/api-keys/create/",
+        "s40051274ea31": "https://docs.opensearch.org/latest/security/configuration/security-admin/",
+        "sc921fd158473": "https://docs.opensearch.org/latest/security/configuration/configuration/",
+        "s4142fe7a4236": "https://docs.opensearch.org/latest/security/authentication-backends/basic-authc/",
+        "s3f64f7b4cf84": "https://docs.opensearch.org/latest/install-and-configure/configuring-opensearch/network-settings/",
+        "s2f39d5e48027": "https://docs.opensearch.org/latest/security/audit-logs/index/",
+        "seafbd3b9677e": "https://docs.opensearch.org/latest/security/api/audit/patch-audit-configuration/",
+        "s0d675c5ecd3c": "https://docs.opensearch.org/latest/security/api/audit/update-audit-configuration/",
+        "seafc6e5e5595": "https://docs.opensearch.org/latest/security/api/audit/get-audit-configuration/",
+        "s9ddd20a83871": "https://docs.opensearch.org/3.0/troubleshoot/#encryption-at-rest",
+        "sbd093eef861b": "https://docs.opensearch.org/latest/security/access-control/permissions/",
+        "s7d28cfa527a1": "https://docs.opensearch.org/latest/security/access-control/anonymous-authentication/",
+        "sbad13e007c8f": "https://docs.opensearch.org/latest/security/audit-logs/field-reference/"
+      }
+    },
+    "os36": {
+      "name": "OpenSearch reference",
+      "basis": "3.6",
+      "sources": {
+        "s42d975e3cd92": "https://docs.opensearch.org/3.6/security/access-control/field-level-security/",
+        "sade7ff6b2bb3": "https://docs.opensearch.org/3.6/security/access-control/document-level-security/",
+        "sf0940d73ed6e": "https://docs.opensearch.org/3.6/tuning-your-cluster/availability-and-recovery/snapshots/snapshot-restore/"
+      }
+    },
+    "os31": {
+      "name": "OpenSearch S3 reference",
+      "basis": "3.1",
+      "sources": {
+        "s089decb3330d": "https://docs.opensearch.org/3.1/api-reference/snapshots/create-repository/"
+      }
+    },
+    "os38": {
+      "name": "OpenSearch S3 source",
+      "basis": "3.8.0",
+      "sources": {
+        "sc57180db39be": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-s3/src/main/java/org/opensearch/repositories/s3/S3Repository.java"
+      }
+    },
+    "kb": {
+      "name": "Kibana reference",
+      "basis": "8.19",
+      "sources": {
+        "s0fe3c0d2e958": "https://www.elastic.co/guide/en/kibana/8.19/settings.html",
+        "sf71765842118": "https://www.elastic.co/guide/en/kibana/8.19/docker.html"
+      }
+    },
+    "kb8": {
+      "name": "Kibana source",
+      "basis": "8.19.22",
+      "sources": {
+        "sd77254a631b1": "https://github.com/elastic/kibana/blob/fd8e6f336cd7a18d0fd805de4608e1e38e0da163/config/kibana.yml#L4-L11",
+        "s14662915ed7e": "https://github.com/elastic/kibana/blob/fd8e6f336cd7a18d0fd805de4608e1e38e0da163/src/dev/build/tasks/os_packages/docker_generator/templates/kibana_yml.template.ts#L22-L26"
+      }
+    },
+    "kb9": {
+      "name": "Kibana source",
+      "basis": "9.5.4",
+      "sources": {
+        "sd0f70697a909": "https://github.com/elastic/kibana/blob/abf4eb613d64cdb3a6290671ce1cb67399677ab3/src/core/packages/http/server-internal/src/http_config.ts#L146-L155",
+        "s39aaa733de4b": "https://github.com/elastic/kibana/blob/abf4eb613d64cdb3a6290671ce1cb67399677ab3/src/dev/build/tasks/os_packages/docker_generator/templates/kibana_yml.template.ts#L22-L26"
+      }
+    },
+    "dash": {
+      "name": "OpenSearch Dashboards",
+      "basis": "3.8.0",
+      "sources": {
+        "sae1b7f23ca6c": "https://raw.githubusercontent.com/opensearch-project/OpenSearch-Dashboards/3.8.0/config/opensearch_dashboards.yml"
+      }
+    },
+    "dash36": {
+      "name": "Dashboards TLS reference",
+      "basis": "3.6",
+      "sources": {
+        "sea686fca5804": "https://docs.opensearch.org/3.6/install-and-configure/install-dashboards/tls/"
+      }
+    },
+    "cloud": {
+      "name": "Cloud provider documentation",
+      "basis": "unknown",
+      "sources": {
+        "s710600aeb168": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/default-encryption-faq.html",
+        "sdc6a5af591ff": "https://docs.cloud.google.com/storage/docs/encryption",
+        "saeb8db497f20": "https://learn.microsoft.com/en-us/azure/storage/common/storage-service-encryption",
+        "se1e1c91f80b4": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingKMSEncryption.html",
+        "se54783905d19": "https://docs.aws.amazon.com/cli/latest/reference/s3api/head-object.html",
+        "sc53339f5429f": "https://docs.aws.amazon.com/cli/latest/reference/s3api/get-object.html"
+      }
+    },
+    "host": {
+      "name": "Host inspection documentation",
+      "basis": "unknown",
+      "sources": {
+        "s2b2686afaf41": "https://curl.se/docs/manpage.html",
+        "s64522c42b5bc": "https://man7.org/linux/man-pages/man5/systemd.unit.5.html",
+        "s1b4e67e38127": "https://manpages.ubuntu.com/manpages/noble/man8/ss.8.html",
+        "s42b4720299f5": "https://man7.org/linux/man-pages/man8/findmnt.8.html",
+        "sd23c3d0f42a7": "https://man7.org/linux/man-pages/man8/lsblk.8.html",
+        "s252144371961": "https://man7.org/linux/man-pages/man8/cryptsetup-status.8.html",
+        "s9823c4e9efa4": "https://man7.org/linux/man-pages/man1/systemctl.1.html"
+      }
+    }
+  },
+  "claims": {
+    "es-tier": {"text": "Self-managed 8.x TLS, native users, RBAC, REST keys, anonymous controls and CORS are free Basic; LDAP/audit and FLS/DLS require Platinum/Enterprise, with current Platinum restricted to existing customers.", "components": ["es"], "sources": ["es:sad43b70af67a"], "status": "REASONED"},
+    "es-auto": {"text": "Eligible initial startup enables auth, HTTP/transport TLS and elastic password; redirected output, unwritable config or existing settings can skip setup, with stated discovery exceptions; packages require password reset.", "components": ["es"], "sources": ["es:s64e4e307f36c", "es:se8bbf661f24e"], "status": "REASONED"},
+    "es-tls": {"text": "Keep xpack.security.enabled and HTTP TLS enabled; repair CA trust/certificates instead of disabling protection.", "components": ["es"], "sources": ["es:sce3095052f8d"], "status": "REASONED"},
+    "es-bind": {"text": "network.host defaults _local_ on up interfaces across available families; family-specific tokens and HTTP/profile bind overrides apply before network fallback.", "components": ["es8", "es9"], "sources": ["es8:sa56cdc9270ea", "es8:s46c7adfdc6c4", "es8:s8ca2413b2af3", "es9:s666c63ad2a02", "es9:s429c675c1092", "es9:sa27fc323d90c"], "status": "REASONED"},
+    "es-http-range": {"text": "HTTP defaults to an available port in 9200-9300, subject to effective host/bind/publish settings.", "components": ["es8", "es9"], "sources": ["es8:s59c2dd10f083", "es9:s8fded6a7640c"], "status": "REASONED"},
+    "es-transport-range": {"text": "Transport defaults to an available port in 9300-9399; inspect effective profile and actual listener ports.", "components": ["es8", "es9"], "sources": ["es8:s0310c5c2e42f", "es9:s1f0a06e68675"], "status": "REASONED"},
+    "es-auto-http": {"text": "Auto-configuration writes http.host=0.0.0.0 only when none of the three HTTP or three network address settings has a value, including enrollment.", "components": ["es8", "es9"], "sources": ["es8:s6e6cf4d739bd", "es8:s70c493fe7770", "es9:scf100fafec80", "es9:s0ba542d80d53"], "status": "REASONED"},
+    "es-auto-transport": {"text": "Transport address guard respects existing settings; new-cluster wildcard is commented and enrollment activates it only for a discovered nonlocal, nonloopback publish address.", "components": ["es8", "es9"], "sources": ["es8:s6e6cf4d739bd", "es8:s70c493fe7770", "es9:scf100fafec80", "es9:s0ba542d80d53"], "status": "REASONED"},
+    "es-docker": {"text": "Pinned image map covers 8.19.22/9.4.6/9.5.3; shipped network.host=0.0.0.0 widens API and transport unless overridden. EXPOSE includes 9300, so avoid -P, host networking and untrusted peers.", "components": ["images", "es"], "sources": ["images:s09177781dc63", "images:sae45a2b7731f", "images:sab290cdf87a1", "images:s7088372053e9", "images:s0c3512f7e923", "images:s1683d032b409", "images:s6c51d507efec", "images:s5c4452cc7b82", "images:s849d2f17dbc8", "images:s30233ea32bf6", "es:s38b60fd8e2bf"], "status": "REASONED"},
+    "es-source-docker": {"text": "Source configurations at 8.19.22/9.5.4 also set network.host wildcard, making both auto-configuration address guards false.", "components": ["es8", "es9"], "sources": ["es8:s8d4c513fdf84", "es9:sa4fd281c6186"], "status": "REASONED"},
+    "es-role": {"text": "Give each app an index-read role and dedicated native user; manage_own_api_key permits self-issued keys without broader index access, and superuser is not an app role.", "components": ["es-api"], "sources": ["es-api:s088db4f93f33", "es-api:s0c10cfba4d6b", "es-api:sb82b2da8da5d"], "status": "REASONED"},
+    "credential-files": {"text": "Use protected 0600 header/request/response files and verified CA input; base64 Basic is not encryption and file input does not prevent file readers or tracing.", "components": ["host"], "sources": ["host:s2b2686afaf41"], "status": "REASONED"},
+    "es-key": {"text": "Explicit API-key role descriptors intersect creator permissions; omitted descriptors inherit a snapshot, omitted expiration never expires, and an API key cannot create another privileged key.", "components": ["es-api"], "sources": ["es-api:sbec1f2938348"], "status": "REASONED"},
+    "es-ldap": {"text": "Optional paid LDAP mapping binds the specific realm and group DN; native-user roles are assigned through the user API.", "components": ["es"], "sources": ["es:sc3d6362bc8f4", "es:s0c10cfba4d6b"], "status": "REASONED"},
+    "es-fls": {"text": "8.19 field_security.grant restricts concrete fields, not aliases; metadata remains accessible and omission grants all fields. Minimum guide scope 8.0 is not an introduction claim.", "components": ["es819"], "sources": ["es819:s805957cad810"], "status": "REASONED"},
+    "es-dls": {"text": "8.19 query restricts documents; omission removes DLS. Keep tenant readers read-only and remove unrestricted roles that combine to defeat restrictions.", "components": ["es819"], "sources": ["es819:s52adbc714b10", "es819:s15feb5b3e00c"], "status": "REASONED"},
+    "es-fls-limits": {"text": "DLS has aggregate/scoring inference channels and query/API restrictions including joins, lookups, percolate and date now; test actual queries and prefer separate indices for stronger isolation.", "components": ["es819"], "sources": ["es819:se332a9504a82"], "status": "REASONED"},
+    "es-key-review": {"text": "Review previously issued key permission snapshots separately after changing roles; role edits alone do not establish repaired key restrictions.", "components": ["es819"], "sources": ["es819:s15feb5b3e00c"], "status": "REASONED"},
+    "es-anonymous": {"text": "Remove anonymous.roles from every effective node configuration and restart; no roles disables anonymous access. A tested 401 alone cannot prove it is globally off.", "components": ["es"], "sources": ["es:s204396515260"], "status": "REASONED"},
+    "es-cors": {"text": "CORS defaults disabled; if needed configure exact origin, methods and headers, restart nodes and retain authorization.", "components": ["es"], "sources": ["es:s0f65658e7273"], "status": "REASONED"},
+    "es-audit": {"text": "Audit defaults disabled; enable on each 8.x node with restart and collect CLUSTERNAME_audit.json independently. Dynamic enablement documented for 9.5+ does not apply to 8.x.", "components": ["es"], "sources": ["es:s2882d7d6f2fc"], "status": "REASONED"},
+    "es-audit-body": {"text": "Request-body emission defaults false; keep it off and avoid event exclusions/ignore policies suppressing authentication_failed.", "components": ["es"], "sources": ["es:s5603a653318d"], "status": "REASONED"},
+    "os-tier": {"text": "OpenSearch Security is free Apache-2.0 with no paid security tier; keep authentication and TLS enabled.", "components": ["os"], "sources": ["os:s6e10cf9ec35a"], "status": "REASONED"},
+    "os-demo-users": {"text": "From 2.12 demo setup requires initial admin password but only changes admin; six other seeded users retain demo credentials until removed/replaced and applied to the live security index.", "components": ["os"], "sources": ["os:s73e416ebf765", "os:se8c473c01153"], "status": "REASONED"},
+    "os-tls": {"text": "Replace demo certificates; REST TLS defaults false underneath demo setup and requires plugins.security.ssl.http.enabled=true with production certificates.", "components": ["os"], "sources": ["os:s4e3281cb3d23"], "status": "REASONED"},
+    "os-rbac": {"text": "Create a custom index-read role and internal user with explicit mapping; Security REST administration requires its own authorization and other mappings may add grants.", "components": ["os"], "sources": ["os:s07ddf2781a70", "os:s204396515260", "os:sc3d6362bc8f4", "os:s0e349fff0934", "os:s4f63d2563816", "os:s1a9aa4907daf"], "status": "REASONED"},
+    "os-api-key": {"text": "Native scoped keys require 3.7+ and security administrators; enable api_tokens and explicit lifetime/count limits, using index_pattern and duration_seconds rather than Elasticsearch fields.", "components": ["os"], "sources": ["os:sfbdd4a41adf5", "os:sa596b3a14984"], "status": "REASONED"},
+    "os-key-default": {"text": "Omitted token duration uses max_duration_seconds, documented default 7776000; example caps at 86400 with 100 tokens, and returned token is retrievable only once.", "components": ["os"], "sources": ["os:sa596b3a14984"], "status": "REASONED"},
+    "os-apply": {"text": "securityadmin applies local configuration to the live index; back up first, use file/type-limited upload, production CA/admin certificate and hostname verification because stale files overwrite live changes.", "components": ["os"], "sources": ["os:s40051274ea31"], "status": "REASONED"},
+    "os-fls": {"text": "3.6 FLS/DLS recipe uses JSON-string dls and visible tenant_id in fls; review all roles and inclusion/exclusion interactions, not Elasticsearch role-combination assumptions.", "components": ["os36"], "sources": ["os36:s42d975e3cd92", "os36:sade7ff6b2bb3"], "status": "REASONED"},
+    "os-dls": {"text": "dfm_empty_overrides_all affects unrestricted-role precedence; DLS does not constrain writes and adaptive filter-level DLS limits APIs/cross-cluster search. Tokens need independent restriction tests.", "components": ["os36"], "sources": ["os36:sade7ff6b2bb3"], "status": "REASONED"},
+    "os-anonymous": {"text": "Set live anonymous_auth_enabled=false while preserving authentication domains; update through securityadmin, not just local YAML.", "components": ["os"], "sources": ["os:sc921fd158473", "os:s4142fe7a4236"], "status": "REASONED"},
+    "os-cors": {"text": "CORS defaults false; exact-origin static settings go in opensearch.yml and require restart, independently of authentication.", "components": ["os"], "sources": ["os:s3f64f7b4cf84"], "status": "REASONED"},
+    "os-audit": {"text": "Auditing needs destination and enabled config; internal_opensearch stores daily audit indexes, while shipped enabled=true alone records nothing without storage type.", "components": ["os"], "sources": ["os:s2f39d5e48027"], "status": "REASONED"},
+    "os-audit-body": {"text": "Read live audit config, enable REST and disable request-body logging via admin-certificate PATCH; preserve defaults and do not suppress FAILED_LOGIN.", "components": ["os"], "sources": ["os:seafbd3b9677e", "os:s0d675c5ecd3c"], "status": "REASONED"},
+    "os-audit-headers": {"text": "exclude_sensitive_headers defaults true; readonly REST fields require complete audit-file application. Read back enabled, REST, body=false and headers=true separately.", "components": ["os"], "sources": ["os:seafc6e5e5595", "os:s0d675c5ecd3c"], "status": "REASONED"},
+    "storage": {"text": "Use OS/provider encryption below path.data, including logs/swap/local snapshots; path.data only selects a directory and encryption-at-rest support is not a product encryption switch.", "components": ["es819", "os"], "sources": ["es819:s03b37cd41154", "es819:s1ce03cd781c3", "os:s9ddd20a83871"], "status": "REASONED"},
+    "mount-enforcement": {"text": "RequiresMountsFor plus AssertPathIsMountPoint prevents ordinary-directory fallback with systemd; reload manager and verify encrypted device chain separately.", "components": ["host"], "sources": ["host:s64522c42b5bc"], "status": "REASONED"},
+    "snapshot-boundary": {"text": "Ordinary snapshots use free Basic/OpenSearch; remote repository encryption is independent of node disks and authorized server-side downloads are decrypted.", "components": ["es", "os31", "cloud"], "sources": ["es:s4fb9bf780cf5", "os31:s089decb3330d", "cloud:s710600aeb168"], "status": "REASONED"},
+    "cloud-defaults": {"text": "New AWS S3, GCS and Azure objects are encrypted server-side by default; assess historical objects and customer key ownership separately.", "components": ["cloud"], "sources": ["cloud:s710600aeb168", "cloud:sdc6a5af591ff", "cloud:saeb8db497f20"], "status": "REASONED"},
+    "es-s3": {"text": "8.19 server_side_encryption defaults false; true requests AES256 SSE-S3, not client encryption. Omit it when using bucket-default KMS and verify resulting metadata.", "components": ["es819"], "sources": ["es819:s3cac63e6ba14"], "status": "REASONED"},
+    "os-s3": {"text": "3.1 removed server_side_encryption; server_side_encryption_type accepts AES256/aws:kms/bucket_default. Default changed from bucket_default to AES256 in 3.8; explicitly select intended mode.", "components": ["os31", "os38"], "sources": ["os31:s089decb3330d", "os38:sc57180db39be"], "status": "REASONED"},
+    "os-s3-kms": {"text": "Explicit KMS repository mode uses server_side_encryption_kms_key_id ARN with object/KMS permissions; this is server-side encryption and settings are not Elasticsearch-compatible.", "components": ["os31", "cloud"], "sources": ["os31:s089decb3330d", "cloud:se1e1c91f80b4"], "status": "REASONED"},
+    "es-gcs-azure": {"text": "8.19 GCS/Azure setting lists document no client-side-encryption switch; configure provider key policy and access. GCS supplied keys remain server-side and Azure keys/SAS are authentication.", "components": ["es819"], "sources": ["es819:s28a1fe315963", "es819:s6279b842bc10"], "status": "REASONED"},
+    "os-gcs-azure": {"text": "Follow 3.6 plugin/credential workflow; tag-pinned GCS/Azure client-side-encryption capability and minimum versions remain unestablished.", "components": ["os36"], "sources": ["os36:sf0940d73ed6e"], "status": "REASONED"},
+    "snapshot-integrity": {"text": "Keep repositories private and keys recoverable; do not rewrite active repository files. Configuration backups are separate and security-state snapshots are sensitive.", "components": ["es819"], "sources": ["es819:sb98bd971e2f6", "es819:s93987af8201d"], "status": "REASONED"},
+    "kibana-default": {"text": "Kibana defaults HTTP localhost:5601 with server TLS disabled; 8.19.22/9.5.4 Docker templates explicitly use wildcard host, requiring override/publication review.", "components": ["kb", "kb8", "kb9"], "sources": ["kb:s0fe3c0d2e958", "kb8:sd77254a631b1", "kb8:s14662915ed7e", "kb9:sd0f70697a909", "kb9:s39aaa733de4b"], "status": "REASONED"},
+    "kibana-tls": {"text": "Free Basic 8.19 server.ssl certificate/key protects incoming UI traffic; elasticsearch.ssl CA/full verification protects the separate backend hop.", "components": ["kb"], "sources": ["kb:s0fe3c0d2e958"], "status": "REASONED"},
+    "dash-default": {"text": "Dashboards 3.8.0 sample defaults localhost:5601 with server TLS disabled; inspect installation/container overrides.", "components": ["dash"], "sources": ["dash:sae1b7f23ca6c"], "status": "REASONED"},
+    "dash-tls": {"text": "Dashboards server.ssl protects UI, cookie.secure restricts session cookie to HTTPS, and opensearch.ssl CA/full verification protects the backend hop; restart after changes.", "components": ["dash36"], "sources": ["dash36:sea686fca5804"], "status": "REASONED"},
+    "ui-network": {"text": "UI binding is independent of 9200/9300; loopback suits only a same-namespace proxy, while private access requires intended interface, matching certificates and network restrictions.", "components": ["kb", "dash36"], "sources": ["kb:sf71765842118", "dash36:sea686fca5804"], "status": "REASONED"},
+    "verify-rbac": {"text": "Known app-data/other-data documents distinguish broad access from scoped 200/403 for user and key; 401/404/errors are inconclusive and pre-3.7 OpenSearch uses the user only.", "components": ["es", "os"], "sources": ["es:see6eaa520863", "os:sbd093eef861b"], "status": "REASONED", "verify": [1]},
+    "verify-anonymous": {"text": "Require effective anonymous settings on every node plus a formerly anonymous-readable known document becoming 401 while admin still gets 200; endpoint-specific 401 alone is insufficient.", "components": ["es", "os"], "sources": ["es:s204396515260", "os:s7d28cfa527a1"], "status": "REASONED", "verify": [1]},
+    "verify-tls": {"text": "Admin HTTPS must return 200/cluster JSON before interpreting plaintext; TLS listener must return no HTTP status, with DNS/timeouts/unreachable states inconclusive.", "components": ["es", "os"], "sources": ["es:sce3095052f8d", "os:s4e3281cb3d23"], "status": "REASONED", "verify": [1]},
+    "verify-cors": {"text": "Inspect preflight headers: no grant to untrusted origin, exact grant for trusted enabled origin; with CORS disabled neither is granted.", "components": ["es", "os"], "sources": ["es:s0f65658e7273", "os:s3f64f7b4cf84"], "status": "REASONED", "verify": [1]},
+    "verify-audit": {"text": "Fresh failed-authentication probe must correlate with new authentication_failed/FAILED_LOGIN in node and independent collector records; 401 alone proves no delivery.", "components": ["es", "os"], "sources": ["es:sfc6fef9020b3", "os:sbad13e007c8f"], "status": "REASONED", "verify": [1]},
+    "verify-audit-body": {"text": "Compare unique marker present with body logging enabled and absent from a new matching event when disabled; independently verify header exclusion and effective configuration.", "components": ["es", "os"], "sources": ["es:s5603a653318d", "os:sbad13e007c8f"], "status": "REASONED", "verify": [1]},
+    "verify-listeners": {"text": "Locate actual running listeners/ports and inspect publication; intentional bridge-container wildcard differs from host-network exposure and no output alone is inconclusive.", "components": ["es8", "es9", "host"], "sources": ["es8:s59c2dd10f083", "es9:s1f0a06e68675", "host:s1b4e67e38127"], "status": "REASONED", "verify": [2]},
+    "verify-fls-dls": {"text": "Two-tenant fixture compares unrestricted and actual restricted credentials through search, GET, requested fields and aggregations, with allowed-field and administrator controls; no inference-proof claim.", "components": ["es819", "os36"], "sources": ["es819:s805957cad810", "es819:s52adbc714b10", "os36:s42d975e3cd92", "os36:sade7ff6b2bb3"], "status": "REASONED", "verify": [3]},
+    "verify-storage": {"text": "Data-path device chain must traverse intended encryption mapping; unrelated mapping or successful unlocked reads proves nothing, and provider volumes need their own metadata.", "components": ["host"], "sources": ["host:s42b4720299f5", "host:sd23c3d0f42a7", "host:s252144371961"], "status": "REASONED", "verify": [4]},
+    "verify-mount": {"text": "Isolated unavailable-mount fixture must fail startup for that reason without writes to the ordinary directory; restored encrypted mount must start successfully.", "components": ["host"], "sources": ["host:s64522c42b5bc", "host:s9823c4e9efa4"], "status": "REASONED", "verify": [5]},
+    "verify-snapshot": {"text": "Harmless explicit-index snapshot/restore must complete and preserve both fixtures without global/security state; timeouts need operation-state inspection before retry.", "components": ["es819", "os36"], "sources": ["es819:sb98bd971e2f6", "es819:s3e5630e4430d", "os36:sf0940d73ed6e"], "status": "REASONED", "verify": [3]},
+    "verify-object-key": {"text": "Inspect actual new/retained repository object mode/key; controlled object-read and KMS-only denial need provider evidence plus authorized controls. Repository verify proves neither encryption nor isolation.", "components": ["cloud"], "sources": ["cloud:se54783905d19", "cloud:sc53339f5429f", "cloud:se1e1c91f80b4"], "status": "REASONED", "verify": [6]},
+    "verify-ui": {"text": "Require expected CA-validated HTTPS and rejected plaintext UI after an exposed HTTP fixture; verify prohibited-network denial with authorized success and effective private binding.", "components": ["kb", "dash36", "host"], "sources": ["kb:s0fe3c0d2e958", "dash36:sea686fca5804", "host:s1b4e67e38127"], "status": "REASONED", "verify": [7, 8]},
+    "verify-ui-backend": {"text": "Browser TLS does not prove backend full verification or Dashboards Secure cookie; inspect both separately with effective settings and publication.", "components": ["kb", "dash36"], "sources": ["kb:s0fe3c0d2e958", "dash36:sea686fca5804"], "status": "REASONED", "verify": [7, 8]}
+  }
+}
+---
 # Elasticsearch and OpenSearch: keep security switched on
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| es-tier: Self-managed 8.x TLS, native users, RBAC, REST keys, anonymous controls and CORS are free Basic; LDAP/audit and FLS/DLS require Platinum/Enterprise, with current Platinum restricted to existing customers. | Elasticsearch documentation unknown | REASONED |
+| es-auto: Eligible initial startup enables auth, HTTP/transport TLS and elastic password; redirected output, unwritable config or existing settings can skip setup, with stated discovery exceptions; packages require password reset. | Elasticsearch documentation unknown | REASONED |
+| es-tls: Keep xpack.security.enabled and HTTP TLS enabled; repair CA trust/certificates instead of disabling protection. | Elasticsearch documentation unknown | REASONED |
+| es-bind: network.host defaults _local_ on up interfaces across available families; family-specific tokens and HTTP/profile bind overrides apply before network fallback. | Elasticsearch listener source 8.19.22; Elasticsearch listener source 9.5.4 | REASONED |
+| es-http-range: HTTP defaults to an available port in 9200-9300, subject to effective host/bind/publish settings. | Elasticsearch listener source 8.19.22; Elasticsearch listener source 9.5.4 | REASONED |
+| es-transport-range: Transport defaults to an available port in 9300-9399; inspect effective profile and actual listener ports. | Elasticsearch listener source 8.19.22; Elasticsearch listener source 9.5.4 | REASONED |
+| es-auto-http: Auto-configuration writes http.host=0.0.0.0 only when none of the three HTTP or three network address settings has a value, including enrollment. | Elasticsearch listener source 8.19.22; Elasticsearch listener source 9.5.4 | REASONED |
+| es-auto-transport: Transport address guard respects existing settings; new-cluster wildcard is commented and enrollment activates it only for a discovered nonlocal, nonloopback publish address. | Elasticsearch listener source 8.19.22; Elasticsearch listener source 9.5.4 | REASONED |
+| es-docker: Pinned image map covers 8.19.22/9.4.6/9.5.3; shipped network.host=0.0.0.0 widens API and transport unless overridden. EXPOSE includes 9300, so avoid -P, host networking and untrusted peers. | Elasticsearch Docker library 8480a06d8ca03ca7da29a469fdbddb5f9f31df61; Elasticsearch documentation unknown | REASONED |
+| es-source-docker: Source configurations at 8.19.22/9.5.4 also set network.host wildcard, making both auto-configuration address guards false. | Elasticsearch listener source 8.19.22; Elasticsearch listener source 9.5.4 | REASONED |
+| es-role: Give each app an index-read role and dedicated native user; manage_own_api_key permits self-issued keys without broader index access, and superuser is not an app role. | Elasticsearch API 8.x | REASONED |
+| credential-files: Use protected 0600 header/request/response files and verified CA input; base64 Basic is not encryption and file input does not prevent file readers or tracing. | Host inspection documentation unknown | REASONED |
+| es-key: Explicit API-key role descriptors intersect creator permissions; omitted descriptors inherit a snapshot, omitted expiration never expires, and an API key cannot create another privileged key. | Elasticsearch API 8.x | REASONED |
+| es-ldap: Optional paid LDAP mapping binds the specific realm and group DN; native-user roles are assigned through the user API. | Elasticsearch documentation unknown | REASONED |
+| es-fls: 8.19 field_security.grant restricts concrete fields, not aliases; metadata remains accessible and omission grants all fields. Minimum guide scope 8.0 is not an introduction claim. | Elasticsearch reference 8.19 | REASONED |
+| es-dls: 8.19 query restricts documents; omission removes DLS. Keep tenant readers read-only and remove unrestricted roles that combine to defeat restrictions. | Elasticsearch reference 8.19 | REASONED |
+| es-fls-limits: DLS has aggregate/scoring inference channels and query/API restrictions including joins, lookups, percolate and date now; test actual queries and prefer separate indices for stronger isolation. | Elasticsearch reference 8.19 | REASONED |
+| es-key-review: Review previously issued key permission snapshots separately after changing roles; role edits alone do not establish repaired key restrictions. | Elasticsearch reference 8.19 | REASONED |
+| es-anonymous: Remove anonymous.roles from every effective node configuration and restart; no roles disables anonymous access. A tested 401 alone cannot prove it is globally off. | Elasticsearch documentation unknown | REASONED |
+| es-cors: CORS defaults disabled; if needed configure exact origin, methods and headers, restart nodes and retain authorization. | Elasticsearch documentation unknown | REASONED |
+| es-audit: Audit defaults disabled; enable on each 8.x node with restart and collect CLUSTERNAME_audit.json independently. Dynamic enablement documented for 9.5+ does not apply to 8.x. | Elasticsearch documentation unknown | REASONED |
+| es-audit-body: Request-body emission defaults false; keep it off and avoid event exclusions/ignore policies suppressing authentication_failed. | Elasticsearch documentation unknown | REASONED |
+| os-tier: OpenSearch Security is free Apache-2.0 with no paid security tier; keep authentication and TLS enabled. | OpenSearch documentation unknown | REASONED |
+| os-demo-users: From 2.12 demo setup requires initial admin password but only changes admin; six other seeded users retain demo credentials until removed/replaced and applied to the live security index. | OpenSearch documentation unknown | REASONED |
+| os-tls: Replace demo certificates; REST TLS defaults false underneath demo setup and requires plugins.security.ssl.http.enabled=true with production certificates. | OpenSearch documentation unknown | REASONED |
+| os-rbac: Create a custom index-read role and internal user with explicit mapping; Security REST administration requires its own authorization and other mappings may add grants. | OpenSearch documentation unknown | REASONED |
+| os-api-key: Native scoped keys require 3.7+ and security administrators; enable api_tokens and explicit lifetime/count limits, using index_pattern and duration_seconds rather than Elasticsearch fields. | OpenSearch documentation unknown | REASONED |
+| os-key-default: Omitted token duration uses max_duration_seconds, documented default 7776000; example caps at 86400 with 100 tokens, and returned token is retrievable only once. | OpenSearch documentation unknown | REASONED |
+| os-apply: securityadmin applies local configuration to the live index; back up first, use file/type-limited upload, production CA/admin certificate and hostname verification because stale files overwrite live changes. | OpenSearch documentation unknown | REASONED |
+| os-fls: 3.6 FLS/DLS recipe uses JSON-string dls and visible tenant_id in fls; review all roles and inclusion/exclusion interactions, not Elasticsearch role-combination assumptions. | OpenSearch reference 3.6 | REASONED |
+| os-dls: dfm_empty_overrides_all affects unrestricted-role precedence; DLS does not constrain writes and adaptive filter-level DLS limits APIs/cross-cluster search. Tokens need independent restriction tests. | OpenSearch reference 3.6 | REASONED |
+| os-anonymous: Set live anonymous_auth_enabled=false while preserving authentication domains; update through securityadmin, not just local YAML. | OpenSearch documentation unknown | REASONED |
+| os-cors: CORS defaults false; exact-origin static settings go in opensearch.yml and require restart, independently of authentication. | OpenSearch documentation unknown | REASONED |
+| os-audit: Auditing needs destination and enabled config; internal_opensearch stores daily audit indexes, while shipped enabled=true alone records nothing without storage type. | OpenSearch documentation unknown | REASONED |
+| os-audit-body: Read live audit config, enable REST and disable request-body logging via admin-certificate PATCH; preserve defaults and do not suppress FAILED_LOGIN. | OpenSearch documentation unknown | REASONED |
+| os-audit-headers: exclude_sensitive_headers defaults true; readonly REST fields require complete audit-file application. Read back enabled, REST, body=false and headers=true separately. | OpenSearch documentation unknown | REASONED |
+| storage: Use OS/provider encryption below path.data, including logs/swap/local snapshots; path.data only selects a directory and encryption-at-rest support is not a product encryption switch. | Elasticsearch reference 8.19; OpenSearch documentation unknown | REASONED |
+| mount-enforcement: RequiresMountsFor plus AssertPathIsMountPoint prevents ordinary-directory fallback with systemd; reload manager and verify encrypted device chain separately. | Host inspection documentation unknown | REASONED |
+| snapshot-boundary: Ordinary snapshots use free Basic/OpenSearch; remote repository encryption is independent of node disks and authorized server-side downloads are decrypted. | Elasticsearch documentation unknown; OpenSearch S3 reference 3.1; Cloud provider documentation unknown | REASONED |
+| cloud-defaults: New AWS S3, GCS and Azure objects are encrypted server-side by default; assess historical objects and customer key ownership separately. | Cloud provider documentation unknown | REASONED |
+| es-s3: 8.19 server_side_encryption defaults false; true requests AES256 SSE-S3, not client encryption. Omit it when using bucket-default KMS and verify resulting metadata. | Elasticsearch reference 8.19 | REASONED |
+| os-s3: 3.1 removed server_side_encryption; server_side_encryption_type accepts AES256/aws:kms/bucket_default. Default changed from bucket_default to AES256 in 3.8; explicitly select intended mode. | OpenSearch S3 reference 3.1; OpenSearch S3 source 3.8.0 | REASONED |
+| os-s3-kms: Explicit KMS repository mode uses server_side_encryption_kms_key_id ARN with object/KMS permissions; this is server-side encryption and settings are not Elasticsearch-compatible. | OpenSearch S3 reference 3.1; Cloud provider documentation unknown | REASONED |
+| es-gcs-azure: 8.19 GCS/Azure setting lists document no client-side-encryption switch; configure provider key policy and access. GCS supplied keys remain server-side and Azure keys/SAS are authentication. | Elasticsearch reference 8.19 | REASONED |
+| os-gcs-azure: Follow 3.6 plugin/credential workflow; tag-pinned GCS/Azure client-side-encryption capability and minimum versions remain unestablished. | OpenSearch reference 3.6 | REASONED |
+| snapshot-integrity: Keep repositories private and keys recoverable; do not rewrite active repository files. Configuration backups are separate and security-state snapshots are sensitive. | Elasticsearch reference 8.19 | REASONED |
+| kibana-default: Kibana defaults HTTP localhost:5601 with server TLS disabled; 8.19.22/9.5.4 Docker templates explicitly use wildcard host, requiring override/publication review. | Kibana reference 8.19; Kibana source 8.19.22; Kibana source 9.5.4 | REASONED |
+| kibana-tls: Free Basic 8.19 server.ssl certificate/key protects incoming UI traffic; elasticsearch.ssl CA/full verification protects the separate backend hop. | Kibana reference 8.19 | REASONED |
+| dash-default: Dashboards 3.8.0 sample defaults localhost:5601 with server TLS disabled; inspect installation/container overrides. | OpenSearch Dashboards 3.8.0 | REASONED |
+| dash-tls: Dashboards server.ssl protects UI, cookie.secure restricts session cookie to HTTPS, and opensearch.ssl CA/full verification protects the backend hop; restart after changes. | Dashboards TLS reference 3.6 | REASONED |
+| ui-network: UI binding is independent of 9200/9300; loopback suits only a same-namespace proxy, while private access requires intended interface, matching certificates and network restrictions. | Kibana reference 8.19; Dashboards TLS reference 3.6 | REASONED |
+| verify-rbac: Known app-data/other-data documents distinguish broad access from scoped 200/403 for user and key; 401/404/errors are inconclusive and pre-3.7 OpenSearch uses the user only. | Elasticsearch documentation unknown; OpenSearch documentation unknown | REASONED |
+| verify-anonymous: Require effective anonymous settings on every node plus a formerly anonymous-readable known document becoming 401 while admin still gets 200; endpoint-specific 401 alone is insufficient. | Elasticsearch documentation unknown; OpenSearch documentation unknown | REASONED |
+| verify-tls: Admin HTTPS must return 200/cluster JSON before interpreting plaintext; TLS listener must return no HTTP status, with DNS/timeouts/unreachable states inconclusive. | Elasticsearch documentation unknown; OpenSearch documentation unknown | REASONED |
+| verify-cors: Inspect preflight headers: no grant to untrusted origin, exact grant for trusted enabled origin; with CORS disabled neither is granted. | Elasticsearch documentation unknown; OpenSearch documentation unknown | REASONED |
+| verify-audit: Fresh failed-authentication probe must correlate with new authentication_failed/FAILED_LOGIN in node and independent collector records; 401 alone proves no delivery. | Elasticsearch documentation unknown; OpenSearch documentation unknown | REASONED |
+| verify-audit-body: Compare unique marker present with body logging enabled and absent from a new matching event when disabled; independently verify header exclusion and effective configuration. | Elasticsearch documentation unknown; OpenSearch documentation unknown | REASONED |
+| verify-listeners: Locate actual running listeners/ports and inspect publication; intentional bridge-container wildcard differs from host-network exposure and no output alone is inconclusive. | Elasticsearch listener source 8.19.22; Elasticsearch listener source 9.5.4; Host inspection documentation unknown | REASONED |
+| verify-fls-dls: Two-tenant fixture compares unrestricted and actual restricted credentials through search, GET, requested fields and aggregations, with allowed-field and administrator controls; no inference-proof claim. | Elasticsearch reference 8.19; OpenSearch reference 3.6 | REASONED |
+| verify-storage: Data-path device chain must traverse intended encryption mapping; unrelated mapping or successful unlocked reads proves nothing, and provider volumes need their own metadata. | Host inspection documentation unknown | REASONED |
+| verify-mount: Isolated unavailable-mount fixture must fail startup for that reason without writes to the ordinary directory; restored encrypted mount must start successfully. | Host inspection documentation unknown | REASONED |
+| verify-snapshot: Harmless explicit-index snapshot/restore must complete and preserve both fixtures without global/security state; timeouts need operation-state inspection before retry. | Elasticsearch reference 8.19; OpenSearch reference 3.6 | REASONED |
+| verify-object-key: Inspect actual new/retained repository object mode/key; controlled object-read and KMS-only denial need provider evidence plus authorized controls. Repository verify proves neither encryption nor isolation. | Cloud provider documentation unknown | REASONED |
+| verify-ui: Require expected CA-validated HTTPS and rejected plaintext UI after an exposed HTTP fixture; verify prohibited-network denial with authorized success and effective private binding. | Kibana reference 8.19; Dashboards TLS reference 3.6; Host inspection documentation unknown | REASONED |
+| verify-ui-backend: Browser TLS does not prove backend full verification or Dashboards Secure cookie; inspect both separately with effective settings and publication. | Kibana reference 8.19; Dashboards TLS reference 3.6 | REASONED |
+<!-- version-basis:end -->
 
 Open Elasticsearch instances produced some of the largest data leaks on record. Modern versions ship secure; the failure mode today is deliberately switching protection off to make an error message go away.
 
@@ -518,6 +879,8 @@ The expected distinctions are:
 | CORS | An overly broad policy grants the untrusted origin. | No `Access-Control-Allow-Origin` grant for the untrusted origin. If CORS is enabled, the trusted-origin positive control succeeds and grants exactly that origin. If CORS is disabled, neither origin is granted. Judge the headers, not just the status. See [Elasticsearch CORS](https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/networking-settings) and [OpenSearch CORS](https://docs.opensearch.org/latest/install-and-configure/configuring-opensearch/network-settings/). |
 | Audit | Failed authentication returns `401`, but disabled or suppressed auditing produces no corresponding audit event. | The same failure produces a new Elasticsearch `authentication_failed` or OpenSearch `FAILED_LOGIN` event. A `401` alone does not prove auditing. Elasticsearch requires the paid audit tier. See [Elasticsearch audit events](https://www.elastic.co/docs/reference/elasticsearch/elasticsearch-audit-events) and [OpenSearch audit fields](https://docs.opensearch.org/latest/security/audit-logs/field-reference/). |
 
+REASONED: following block; cluster authorization, TLS, CORS and audit expectations follow the cited vendor documentation; no target cluster, runtime, node or audit collector was available.
+
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_SEARCH_HOST' '/path/http_ca.crt' '9200'
@@ -656,6 +1019,8 @@ Use isolated test deployments for exposed-state fixtures. Substitute values insi
 
 For the REST request tables below, save each JSON body in a protected file. Run this block once per request, setting the method, path, and body-file arguments. Use `/dev/null` for a request with no body. Select the administrator or application header file as directed:
 
+REASONED: following block; REST fixture comparisons follow the cited product APIs and restriction rules; no target cluster, eligible Elasticsearch licence or repository access was available.
+
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_SEARCH_HOST' 'REPLACE_WITH_CA_FILE' '9200' 'REPLACE_WITH_HEADER_FILE' 'GET' '/REPLACE_WITH_REQUEST_PATH' '/dev/null'
@@ -724,6 +1089,8 @@ These checks exercise ordinary retrieval and aggregations; they do not prove abs
 
 Run on the node, with sufficient permission to inspect the intended dm-crypt mapping:
 
+REASONED: following block; storage inspection follows the cited findmnt, lsblk and cryptsetup manuals; target-node and storage access were unavailable.
+
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DATA_PATH' 'REPLACE_WITH_CRYPT_MAPPING'
@@ -744,6 +1111,8 @@ Run on the node, with sufficient permission to inspect the intended dm-crypt map
 Compare the exposed unencrypted volume with the fixed volume. Require the actual data path's mount/device chain to traverse the intended encrypted mapping. An unrelated active mapping is insufficient. For provider-managed volume encryption, inspect the actual attached volume's encryption and key metadata instead; the guest may not expose a dm-crypt device. Successful reads through an unlocked filesystem neither prove nor disprove encryption at rest. See [findmnt](https://man7.org/linux/man-pages/man8/findmnt.8.html), [lsblk](https://man7.org/linux/man-pages/man8/lsblk.8.html), and [cryptsetup status](https://man7.org/linux/man-pages/man8/cryptsetup-status.8.html).
 
 **REASONED, not demonstrated:** in an isolated systemd fixture, stop the service and make the required test mount unavailable, including preventing automatic remount. Run the following with the test service unit. Do not perform this fault injection on production storage.
+
+REASONED: following block; startup comparison follows the cited systemd assertions; no isolated service and unavailable-mount fixture was available.
 
 ```bash
 (
@@ -777,6 +1146,8 @@ Using the administrator header and REST block, snapshot only the harmless fixtur
 Require snapshot success, completed restore, and both original fixture documents. A client timeout does not establish failure or success; inspect operation state before retrying. The explicit index selection and `include_global_state: false` avoid restoring security state in this fixture. See [Elasticsearch 8.19 snapshot creation](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-take-snapshot.html), [restore](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-restore-snapshot.html), and [OpenSearch 3.6 snapshot/restore](https://docs.opensearch.org/3.6/tuning-your-cluster/availability-and-recovery/snapshots/snapshot-restore/).
 
 For AWS S3, identify actual newly written repository objects through the provider inventory or console. With AWS CLI v2 and preconfigured profiles, inspect a known object and attempt a download:
+
+REASONED: following block; object encryption and access comparisons follow the cited AWS APIs and KMS permissions; repository, provider and KMS test identities were unavailable.
 
 ```bash
 (
@@ -812,6 +1183,8 @@ Inspect retained objects as well as newly written ones; changing a default does 
 
 In an isolated exposed fixture, record an HTTP login page or redirect on the actual UI port. After applying the fixed configuration, run:
 
+REASONED: following block; UI TLS comparison follows the cited Kibana and Dashboards settings; no running UI, certificates or network test paths were available.
+
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_UI_HOST' 'REPLACE_WITH_UI_CA_FILE' '5601'
@@ -838,6 +1211,8 @@ On the authorized path, require successful CA-validated HTTPS with the expected 
 For loopback deployments, test locally using a certificate hostname that resolves to the UI's loopback listener. Separately test the real deployment address from the prohibited network, not that client's own loopback. Require the prohibited connection to fail while the authorized path still works, and retain network-control evidence.
 
 On the UI host, inspect the actual listener:
+
+REASONED: following block; UI listener inspection follows the cited UI settings and ss manual; target-host access was unavailable.
 
 ```bash
 (

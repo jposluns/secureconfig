@@ -1,4 +1,258 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "76ec91700e39b1daf3c339e17cefe83114b0cbdd6c7632da7cb53b585983ee71",
+  "components": {
+    "s3": {
+      "name": "Amazon S3 documentation",
+      "basis": "unknown",
+      "sources": {
+        "se628d1970eb5": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingBucket.html",
+        "s403772d7da93": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/about-object-ownership.html",
+        "s3402cc49aabf": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html",
+        "sa1216f9e4a19": "https://docs.aws.amazon.com/cli/latest/reference/s3control/get-public-access-block.html",
+        "sd883ca72fcc3": "https://docs.aws.amazon.com/cli/latest/reference/s3api/get-public-access-block.html",
+        "s742ac34f928a": "https://docs.aws.amazon.com/cli/latest/reference/s3api/get-bucket-ownership-controls.html",
+        "s42f66d943112": "https://docs.aws.amazon.com/cli/latest/reference/s3api/get-bucket-policy-status.html",
+        "s1b0317b11178": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-analyzer.html",
+        "sa45a1ad70632": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/example-policies-s3.html",
+        "s15a0fd0f91bc": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/amazon-s3-policy-keys.html",
+        "s75d763bbc87d": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/example-bucket-policies-vpc-endpoint.html",
+        "s492da65d00aa": "https://docs.aws.amazon.com/cli/latest/reference/s3/presign.html",
+        "s3a070b6e701f": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-presigned-url.html",
+        "s2c093f4a6ecc": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucket-encryption.html",
+        "s13bc14c030aa": "https://docs.aws.amazon.com/cli/latest/reference/s3api/put-bucket-encryption.html",
+        "s1fd64086bfb0": "https://docs.aws.amazon.com/AmazonS3/latest/API/API_ServerSideEncryptionRule.html",
+        "s4e5f400aef98": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucket-key.html",
+        "sd1400721c9b8": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/Versioning.html",
+        "sb105a845c1ae": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html",
+        "se3a6a0837037": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock-configure.html",
+        "seb4472df7637": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/MultiFactorAuthenticationDelete.html",
+        "saebd5e9383a5": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/ServerLogs.html",
+        "s3629ed4a70bb": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/cloudtrail-logging-s3-info.html",
+        "sa284fcc5d680": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/enable-server-access-logging.html"
+      }
+    },
+    "r2": {
+      "name": "Cloudflare R2 documentation",
+      "basis": "unknown",
+      "sources": {
+        "sb7a759b2ebe8": "https://developers.cloudflare.com/r2/buckets/public-buckets/",
+        "s8d6c268180c2": "https://developers.cloudflare.com/r2/tutorials/cloudflare-access/",
+        "sa2c9f0cbf3e8": "https://developers.cloudflare.com/r2/api/tokens/",
+        "sb94531314aa1": "https://developers.cloudflare.com/r2/api/s3/presigned-urls/",
+        "s148e84e6f9c5": "https://developers.cloudflare.com/r2/buckets/cors/",
+        "se07bc6a61135": "https://developers.cloudflare.com/r2/buckets/object-lifecycles/"
+      }
+    },
+    "gcs": {
+      "name": "Google Cloud Storage documentation",
+      "basis": "unknown",
+      "sources": {
+        "s42c2205b0738": "https://docs.cloud.google.com/storage/docs/uniform-bucket-level-access",
+        "scda488e40bbb": "https://docs.cloud.google.com/storage/docs/using-uniform-bucket-level-access",
+        "sd33bc897974f": "https://docs.cloud.google.com/sdk/gcloud/reference/storage/buckets/create",
+        "sb9d61cebffa0": "https://docs.cloud.google.com/storage/docs/public-access-prevention",
+        "sc3765b42a898": "https://docs.cloud.google.com/storage/docs/using-public-access-prevention",
+        "s457c739204db": "https://docs.cloud.google.com/storage/docs/json_api/v1/buckets",
+        "sbcc8696a4e01": "https://docs.cloud.google.com/sdk/gcloud/reference/storage/buckets/update",
+        "sd970d5152bda": "https://docs.cloud.google.com/sdk/gcloud/reference/storage/buckets/describe",
+        "sdb7089445e31": "https://docs.cloud.google.com/storage/docs/access-control/iam",
+        "sf76bc0245839": "https://docs.cloud.google.com/storage/docs/access-control/using-iam-permissions",
+        "s685c316007d5": "https://docs.cloud.google.com/sdk/gcloud/reference/storage/sign-url",
+        "sd1c119f40d43": "https://docs.cloud.google.com/storage/docs/access-control/signing-urls-with-helpers",
+        "sfb023872a25b": "https://docs.cloud.google.com/docs/security/compliance/restrict-tls-versions",
+        "s4f89c95012ff": "https://docs.cloud.google.com/storage/docs/encryption/default-keys",
+        "s86e4b23db573": "https://docs.cloud.google.com/storage/docs/encryption/using-customer-managed-keys",
+        "sabd7f559ae65": "https://docs.cloud.google.com/storage/docs/encryption/customer-managed-keys"
+      }
+    },
+    "azure": {
+      "name": "Azure Blob documentation",
+      "basis": "unknown",
+      "sources": {
+        "sfd92831c28db": "https://learn.microsoft.com/en-us/azure/storage/blobs/anonymous-read-access-prevent",
+        "s4717f9763b79": "https://learn.microsoft.com/en-us/javascript/api/%40azure/arm-storage/storageaccountpropertiesupdateparameters?view=azure-node-latest",
+        "scda1e91df2fe": "https://learn.microsoft.com/en-us/azure/storage/blobs/assign-azure-role-data-access",
+        "seb224abe947c": "https://learn.microsoft.com/en-us/azure/storage/common/shared-key-authorization-prevent",
+        "s484800a6e4ba": "https://learn.microsoft.com/en-us/azure/storage/common/storage-require-secure-transfer",
+        "se38a28ad1bae": "https://learn.microsoft.com/en-us/azure/storage/common/transport-layer-security-configure-migrate-to-tls2",
+        "sc38fd7e9cefd": "https://learn.microsoft.com/en-us/azure/storage/common/storage-network-security",
+        "sbd8fe80e3ff8": "https://learn.microsoft.com/en-us/azure/storage/common/storage-private-endpoints",
+        "s67193cefbdea": "https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blob-user-delegation-sas-create-cli",
+        "s42b2c8ea840f": "https://learn.microsoft.com/en-us/cli/azure/storage/blob",
+        "s6c70f60b7985": "https://learn.microsoft.com/en-us/rest/api/storageservices/create-user-delegation-sas",
+        "s353dcd86e363": "https://learn.microsoft.com/en-us/azure/storage/common/sas-expiration-policy",
+        "s2ac1ebafc5e6": "https://learn.microsoft.com/en-us/rest/api/storageservices/define-stored-access-policy",
+        "s8d876227c708": "https://learn.microsoft.com/en-us/cli/azure/storage/account",
+        "sb8cabf5ab8ba": "https://learn.microsoft.com/en-us/azure/storage/blobs/immutable-storage-overview",
+        "s7dcf19862de9": "https://learn.microsoft.com/en-us/azure/storage/blobs/immutable-policy-configure-container-scope",
+        "s853e642c5356": "https://learn.microsoft.com/en-us/azure/storage/blobs/anonymous-read-access-configure"
+      }
+    },
+    "supabase": {
+      "name": "Supabase Storage documentation",
+      "basis": "unknown",
+      "sources": {
+        "s1567fb838f20": "https://supabase.com/docs/guides/storage/buckets/fundamentals",
+        "sd6febfd9d2f6": "https://supabase.com/docs/reference/javascript/file-buckets-createbucket",
+        "s60e4fb6418a0": "https://supabase.com/docs/guides/storage/security/ownership",
+        "s46cff2590323": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+        "sdba7d7b6dcf8": "https://supabase.com/docs/guides/storage/security/access-control",
+        "s9e1484f46eff": "https://supabase.com/docs/guides/storage/schema/helper-functions",
+        "s4473d833575f": "https://supabase.com/docs/reference/javascript/file-buckets-copy",
+        "s759f4328cacd": "https://supabase.com/docs/reference/javascript/file-buckets-move",
+        "s93f79ed28789": "https://supabase.com/docs/reference/javascript/file-buckets-remove",
+        "s702e2dd69bbf": "https://supabase.com/docs/reference/javascript/file-buckets-createsignedurl",
+        "sc29febbb230e": "https://supabase.com/docs/guides/storage/serving/downloads",
+        "s73d939b4644e": "https://supabase.com/docs/guides/api/api-keys"
+      }
+    }
+  },
+  "claims": {
+    "s3-default": {"text": "New general purpose buckets/objects are private, Bucket owner enforced disables ACLs and all four bucket Block Public Access flags default enabled; inspect existing/account/organization settings.", "components": ["s3"], "sources": ["s3:se628d1970eb5", "s3:s403772d7da93", "s3:s3402cc49aabf"], "status": "REASONED"},
+    "s3-public-block": {"text": "Enable all four public-access flags at account and bucket; most restrictive access-point/bucket/account/organization combination applies, but stored grants survive and can reactivate.", "components": ["s3"], "sources": ["s3:s3402cc49aabf"], "status": "REASONED"},
+    "s3-acl-migration": {"text": "Migrate ACL grants/clients before BucketOwnerEnforced; no-ACL and bucket-owner-full-control uploads work, unsupported ACLs fail and stored ACLs are not erased.", "components": ["s3"], "sources": ["s3:s403772d7da93"], "status": "REASONED"},
+    "s3-readback": {"text": "Read back account/bucket flags, ownership and attached policy IsPublic=false; missing policy differs from denied or failed inspection.", "components": ["s3"], "sources": ["s3:sa1216f9e4a19", "s3:sd883ca72fcc3", "s3:s742ac34f928a", "s3:s42f66d943112"], "status": "REASONED"},
+    "s3-public-meaning": {"text": "Wildcard-principal Allow is public without a qualifying fixed restriction; broad Deny is not a public grant.", "components": ["s3"], "sources": ["s3:s3402cc49aabf"], "status": "REASONED"},
+    "s3-analyzer": {"text": "S3 external-access view needs account-level analyzers in each bucket Region; findings are asynchronous and archived findings need review, so an empty view proves no privacy.", "components": ["s3"], "sources": ["s3:s1b0317b11178"], "status": "REASONED"},
+    "s3-app": {"text": "Scope GetObject/PutObject to uploads/* and ListBucket through prefix conditions; omit unused write/list permissions and inspect additive effective grants.", "components": ["s3"], "sources": ["s3:sa45a1ad70632", "s3:s15a0fd0f91bc"], "status": "REASONED"},
+    "s3-transport": {"text": "SecureTransport=false Deny covers bucket/objects; PrincipalIsAWSService=false avoids redacted-context service breakage without granting access.", "components": ["s3"], "sources": ["s3:s15a0fd0f91bc"], "status": "REASONED"},
+    "s3-endpoint": {"text": "Optional SourceVpce Deny restricts all consumers to the chosen endpoint, including signed URLs, and can block console/integrations; establish recovery first.", "components": ["s3"], "sources": ["s3:s75d763bbc87d"], "status": "REASONED"},
+    "s3-presign": {"text": "CLI GET presigning defaults 3600 seconds, maximum 604800; signer needs object permission and temporary credentials can expire sooner; use short explicit expiry.", "components": ["s3"], "sources": ["s3:s492da65d00aa", "s3:s3a070b6e701f"], "status": "REASONED"},
+    "s3-signature-age": {"text": "signatureAge above 600000 ms can deny a still-unexpired URL; credential revocation or effective policy denial stops access, without Azure-style stored access policies.", "components": ["s3"], "sources": ["s3:s3a070b6e701f"], "status": "REASONED"},
+    "s3-encryption": {"text": "New writes receive SSE-S3 unless another supported mode applies; optional SSE-KMS needs key policy/permissions and default changes do not rewrite historical objects.", "components": ["s3"], "sources": ["s3:s2c093f4a6ecc", "s3:s13bc14c030aa"], "status": "REASONED"},
+    "s3-bucket-key": {"text": "BucketKeyEnabled defaults disabled for general purpose buckets; enabling reduces KMS request costs and does not restrict public access.", "components": ["s3"], "sources": ["s3:s1fd64086bfb0", "s3:s4e5f400aef98"], "status": "REASONED"},
+    "s3-versioning": {"text": "Versioning defaults disabled; once enabled it can be suspended but cannot return to unversioned state.", "components": ["s3"], "sources": ["s3:sd1400721c9b8"], "status": "REASONED"},
+    "s3-lock": {"text": "Object Lock requires versioning and cannot be disabled; versioning cannot then be suspended. Locks protect versions, not reads, new versions or delete markers.", "components": ["s3"], "sources": ["s3:sb105a845c1ae", "s3:se3a6a0837037"], "status": "REASONED"},
+    "s3-retention": {"text": "GOVERNANCE permits explicit authorized bypass; COMPLIANCE cannot be shortened/bypassed by ordinary admin or root; test before irreversible retention.", "components": ["s3"], "sources": ["s3:sb105a845c1ae"], "status": "REASONED"},
+    "s3-mfa-delete": {"text": "Only bucket-owner root enables MFA Delete through CLI/API; it gates permanent version deletion and versioning changes, not reads, and conflicts with lifecycle configurations.", "components": ["s3"], "sources": ["s3:seb4472df7637"], "status": "REASONED"},
+    "s3-audit": {"text": "Server access logging and CloudTrail object data events default off; management history is not an object log. Enable independent log destinations and selected data events.", "components": ["s3"], "sources": ["s3:saebd5e9383a5", "s3:s3629ed4a70bb"], "status": "REASONED"},
+    "s3-log-delivery": {"text": "With ACLs disabled grant logging service PutObject on a constrained prefix; destination must share account/Region, lack Object Lock and avoid recursive logging; delivery is delayed.", "components": ["s3"], "sources": ["s3:sa284fcc5d680"], "status": "REASONED"},
+    "r2-routes": {"text": "R2 defaults private; disable development r2.dev and review every custom/application route independently. Access/WAF on a custom domain does not protect an enabled r2.dev bypass.", "components": ["r2"], "sources": ["r2:sb7a759b2ebe8", "r2:s8d6c268180c2"], "status": "REASONED"},
+    "r2-tokens": {"text": "Use bucket-scoped Object Read only/Read & Write tokens; admin permissions are broader. Account/User ownership is separate from resource scope and secret key is shown once.", "components": ["r2"], "sources": ["r2:sa2c9f0cbf3e8"], "status": "REASONED"},
+    "r2-presign": {"text": "SigV4 URLs support 1-604800 seconds with explicit expiresIn and work only on the S3 API domain, not custom domains.", "components": ["r2"], "sources": ["r2:sb94531314aa1"], "status": "REASONED"},
+    "r2-cors": {"text": "Dashboard CORS specifies exact origins, methods and headers; Wrangler format differs and CORS cannot stop a non-browser with a valid signature.", "components": ["r2"], "sources": ["r2:s148e84e6f9c5"], "status": "REASONED"},
+    "r2-lifecycle": {"text": "Default rule expires incomplete multipart uploads after seven days, not complete objects; object expiry is asynchronous, typically about 24 hours, and is not immediate revocation.", "components": ["r2"], "sources": ["r2:se07bc6a61135"], "status": "REASONED"},
+    "gcs-uniform": {"text": "Uniform access disables ACLs and becomes irreversible after 90 consecutive days; CLI bucket creation defaults its flag false, so migrate ACL grants explicitly.", "components": ["gcs"], "sources": ["gcs:s42c2205b0738", "gcs:scda488e40bbb", "gcs:sd33bc897974f"], "status": "REASONED"},
+    "gcs-public": {"text": "Enforce bucket/organization public-access prevention; inherited API default needs effective organization enforcement. Public grants fail 412 and anonymous reads get 401/403; signed URLs remain usable.", "components": ["gcs"], "sources": ["gcs:sb9d61cebffa0", "gcs:sc3765b42a898", "gcs:s457c739204db"], "status": "REASONED"},
+    "gcs-readback": {"text": "Boolean update flags enable uniform access and prevention; verify enabled=true and prevention=enforced in bucket description.", "components": ["gcs"], "sources": ["gcs:sbcc8696a4e01", "gcs:sd970d5152bda", "gcs:scda488e40bbb"], "status": "REASONED"},
+    "gcs-conditions": {"text": "Prefix/time IAM conditions require uniform access; merge policy version 3 with current etag and required bindings, checking independent project grants.", "components": ["gcs"], "sources": ["gcs:sdb7089445e31", "gcs:sf76bc0245839"], "status": "REASONED"},
+    "gcs-list": {"text": "Object-prefix conditions do not filter bucket-level objects.list; avoid an independent unrestricted listing grant when names are private.", "components": ["gcs"], "sources": ["gcs:sdb7089445e31"], "status": "REASONED"},
+    "gcs-sign": {"text": "sign-url requires service-account signing and object permission, not ordinary user login alone; default 1h, system-managed maximum 12h, private-key/activated-account maximum 7d.", "components": ["gcs"], "sources": ["gcs:s685c316007d5", "gcs:sd1c119f40d43"], "status": "REASONED"},
+    "gcs-tls": {"text": "Use HTTPS and optionally deny TLS 1/1.1 through organization policy; this establishes no bucket HTTP-deny switch and excludes public objects served from Google Front End cache.", "components": ["gcs"], "sources": ["gcs:sfb023872a25b"], "status": "REASONED"},
+    "gcs-encryption": {"text": "Google-managed encryption is default; CMEK needs compatible location and Storage service-agent encrypter/decrypter role before setting default key; only subsequent writes change absent rewrite.", "components": ["gcs"], "sources": ["gcs:s4f89c95012ff", "gcs:s86e4b23db573", "gcs:sabd7f559ae65"], "status": "REASONED"},
+    "azure-anonymous": {"text": "Resource Manager accounts and containers default private; account allowBlobPublicAccess=false overrides public containers, with Azure Policy available to audit/deny broader settings.", "components": ["azure"], "sources": ["azure:sfd92831c28db", "azure:s4717f9763b79"], "status": "REASONED"},
+    "azure-identity": {"text": "Before denying Shared Key, grant and test narrow Entra Blob data roles; management-plane roles do not replace data permissions.", "components": ["azure"], "sources": ["azure:scda1e91df2fe"], "status": "REASONED"},
+    "azure-shared-key": {"text": "Unset/null Shared Key permits use; false rejects account-key, service SAS and account SAS authorization but permits authorized user delegation SAS and does not prevent offline signing.", "components": ["azure"], "sources": ["azure:seb224abe947c"], "status": "REASONED"},
+    "azure-transport": {"text": "Require supportsHttpsTrafficOnly and TLS1_2; CLI uses https-only/enableHttpsTrafficOnly. TLS 1.2 service minimum is documented from February 3, 2026.", "components": ["azure"], "sources": ["azure:s484800a6e4ba", "azure:se38a28ad1bae"], "status": "REASONED"},
+    "azure-network": {"text": "Use defaultAction=Deny with narrow rules or publicNetworkAccess=Disabled for private endpoints; review exceptions and external SAS consumers.", "components": ["azure"], "sources": ["azure:sc38fd7e9cefd"], "status": "REASONED"},
+    "azure-private-endpoint": {"text": "Approve blob private endpoint and private DNS while retaining normal Blob hostname; private endpoint alone leaves the public route available.", "components": ["azure"], "sources": ["azure:sbd8fe80e3ff8"], "status": "REASONED"},
+    "azure-sas": {"text": "Prefer user delegation SAS via login/as-user with least permissions, HTTPS, explicit start/expiry; maximum seven days and delegation-key lifetime both apply.", "components": ["azure"], "sources": ["azure:s67193cefbdea", "azure:s42b2c8ea840f"], "status": "REASONED"},
+    "azure-signer": {"text": "Signer needs object data permission plus generateUserDelegationKey at account scope or above; a separate Blob Delegator role avoids broadening container data access.", "components": ["azure"], "sources": ["azure:s6c70f60b7985"], "status": "REASONED"},
+    "azure-sas-policy": {"text": "Expiration Log default does not enforce and needs diagnostics; Block denies supported excess-duration/missing-start requests. Key creation times may require rotation first.", "components": ["azure"], "sources": ["azure:s353dcd86e363"], "status": "REASONED"},
+    "azure-sas-exceptions": {"text": "SAS expiration action excludes stored-policy service SAS and HDFS user-delegation requests; account policy cannot extend user-delegation seven-day maximum.", "components": ["azure"], "sources": ["azure:s353dcd86e363"], "status": "REASONED"},
+    "azure-revoke": {"text": "Stored policy revokes only associated service SAS; revoke-delegation-keys affects all account delegation keys with caching delays; account-key SAS needs rotation or Shared Key denial.", "components": ["azure"], "sources": ["azure:s2ac1ebafc5e6", "azure:s6c70f60b7985", "azure:s8d876227c708", "azure:seb224abe947c"], "status": "REASONED"},
+    "azure-retention": {"text": "Time-based container retention starts unlocked; locking prevents deletion/shortening irreversibly but permits extensions and does not restrict reads.", "components": ["azure"], "sources": ["azure:sb8cabf5ab8ba", "azure:s7dcf19862de9"], "status": "REASONED"},
+    "supabase-private": {"text": "Buckets default public=false; public reads bypass access control while mutations still check it. A restrictive SELECT policy cannot protect public asset URLs.", "components": ["supabase"], "sources": ["supabase:s1567fb838f20", "supabase:sd6febfd9d2f6"], "status": "REASONED"},
+    "supabase-select": {"text": "Private Storage uses storage.objects RLS, not application-table policies; scope SELECT to bucket and owner JWT subject and review additive grants and service-created ownership.", "components": ["supabase"], "sources": ["supabase:s60e4fb6418a0", "supabase:s46cff2590323"], "status": "REASONED"},
+    "supabase-insert": {"text": "Uploads need separate INSERT checks for bucket, user UUID path and owner; without policies Storage grants no uploads.", "components": ["supabase"], "sources": ["supabase:sdba7d7b6dcf8", "supabase:s9e1484f46eff"], "status": "REASONED"},
+    "supabase-mutations": {"text": "Optional UPDATE checks existing and proposed bucket/owner state; upsert/move need SELECT+UPDATE, copy SELECT+INSERT and removal SELECT+DELETE.", "components": ["supabase"], "sources": ["supabase:sdba7d7b6dcf8", "supabase:s4473d833575f", "supabase:s759f4328cacd", "supabase:s93f79ed28789"], "status": "REASONED"},
+    "supabase-sign": {"text": "Authorize caller before createSignedUrl with explicit seconds; 3600 is an example. Public URL construction cannot authorize private reads; Auth-key rotation does not revoke Storage URLs.", "components": ["supabase"], "sources": ["supabase:s702e2dd69bbf", "supabase:sc29febbb230e"], "status": "REASONED"},
+    "supabase-privileged": {"text": "Service-role/server secret keys bypass end-user restrictions and remain server-side; privileged signing endpoints must enforce bucket/object/caller access themselves.", "components": ["supabase"], "sources": ["supabase:s73d939b4644e"], "status": "REASONED"},
+    "verify-s3": {"text": "Known-object authorized GET must return 200, same unsigned URL 403 after fixing public grants, then the saved 60-second URL must expire; errors or missing objects are inconclusive.", "components": ["s3"], "sources": ["s3:s3a070b6e701f", "s3:s3402cc49aabf"], "status": "REASONED", "verify": [1]},
+    "verify-r2": {"text": "Compare the same fixture through signed S3 API, r2.dev and all custom routes; fixed development route cannot serve it and protected domain denies/challenges while authorized flow succeeds.", "components": ["r2"], "sources": ["r2:sb7a759b2ebe8", "r2:s8d6c268180c2"], "status": "REASONED", "verify": [2]},
+    "verify-gcs": {"text": "Compare exposed anonymous fixture with enforced prevention 401/403 and a successful valid signed control; signed success does not mean prevention failed.", "components": ["gcs"], "sources": ["gcs:sb9d61cebffa0", "gcs:sc3765b42a898"], "status": "REASONED", "verify": [2]},
+    "verify-azure": {"text": "Require anonymous denial and authorized success on the same blob; documented 401/409/403 depends on request/service version, so inspect errors and bytes.", "components": ["azure"], "sources": ["azure:sfd92831c28db", "azure:s853e642c5356"], "status": "REASONED", "verify": [2]},
+    "verify-supabase": {"text": "Public fixture URL serves bytes before privacy and returns an error afterwards while authorized private/signed download works; test actual user operation/bucket boundaries separately.", "components": ["supabase"], "sources": ["supabase:s1567fb838f20", "supabase:sdba7d7b6dcf8"], "status": "REASONED", "verify": [2]},
+    "verify-expiry": {"text": "For every provider repeat the same saved short-lived GET URL before and after expiry, retaining a working object/identity control; do not substitute a fresh URL for the expiry test.", "components": ["s3", "r2", "gcs", "azure", "supabase"], "sources": ["s3:s3a070b6e701f", "r2:sb94531314aa1", "gcs:s685c316007d5", "azure:s67193cefbdea", "supabase:sc29febbb230e"], "status": "REASONED", "verify": [2]},
+    "verify-effective": {"text": "Inspect effective public-access settings and inherited grants with exposed fixtures; inventory and deployed-bundle inspection remain unobserved.", "components": ["s3", "r2", "gcs", "azure", "supabase"], "sources": ["s3:s1b0317b11178", "r2:sb7a759b2ebe8", "gcs:sc3765b42a898", "azure:sfd92831c28db", "supabase:s73d939b4644e"], "status": "REASONED"},
+    "verify-scope-transport": {"text": "Compare allowed/forbidden prefixes, buckets, operations and time windows; test real HTTP/TLS/endpoint denials with positive controls, not local TLS-library failures.", "components": ["s3", "r2", "gcs", "azure", "supabase"], "sources": ["s3:s15a0fd0f91bc", "r2:s148e84e6f9c5", "gcs:sfb023872a25b", "azure:sbd8fe80e3ff8", "supabase:sdba7d7b6dcf8"], "status": "REASONED"},
+    "verify-revocation": {"text": "Repeat saved URLs after applicable revocation propagation; Azure Log/Block needs an unexpired excessive-duration fixture and exceptions, while Supabase Auth rotation is no Storage revocation.", "components": ["s3", "azure", "supabase"], "sources": ["s3:s3a070b6e701f", "azure:s353dcd86e363", "supabase:sc29febbb230e"], "status": "REASONED", "verify": [2]},
+    "verify-encryption-retention": {"text": "Inspect new versus historical object encryption; compare unlocked deletion with retention and explicit governance bypass, and Azure editable versus locked policy with current ETags.", "components": ["s3", "gcs", "azure"], "sources": ["s3:s2c093f4a6ecc", "s3:s13bc14c030aa", "s3:sb105a845c1ae", "gcs:sabd7f559ae65", "azure:s7dcf19862de9"], "status": "REASONED"},
+    "verify-mfa-delete": {"text": "Compare permanent deletion and versioning changes without MFA versus valid root MFA through CLI/API; unrelated failures do not establish enforcement.", "components": ["s3"], "sources": ["s3:seb4472df7637"], "status": "REASONED"},
+    "verify-signature-age": {"text": "An older signature still within URL expiry must fail the age policy while a fresh URL to the same object succeeds.", "components": ["s3"], "sources": ["s3:s3a070b6e701f"], "status": "REASONED"},
+    "verify-audit-lifecycle": {"text": "Locate S3 fixture GET/PUT data events and access logs after delivery; observe R2 eventual expiry without equating its deadline to revocation.", "components": ["s3", "r2"], "sources": ["s3:s3629ed4a70bb", "s3:sa284fcc5d680", "r2:se07bc6a61135"], "status": "REASONED"}
+  }
+}
+---
 # Object storage: S3, Cloudflare R2, Google Cloud Storage, Azure Blob, Supabase Storage
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| s3-default: New general purpose buckets/objects are private, Bucket owner enforced disables ACLs and all four bucket Block Public Access flags default enabled; inspect existing/account/organization settings. | Amazon S3 documentation unknown | REASONED |
+| s3-public-block: Enable all four public-access flags at account and bucket; most restrictive access-point/bucket/account/organization combination applies, but stored grants survive and can reactivate. | Amazon S3 documentation unknown | REASONED |
+| s3-acl-migration: Migrate ACL grants/clients before BucketOwnerEnforced; no-ACL and bucket-owner-full-control uploads work, unsupported ACLs fail and stored ACLs are not erased. | Amazon S3 documentation unknown | REASONED |
+| s3-readback: Read back account/bucket flags, ownership and attached policy IsPublic=false; missing policy differs from denied or failed inspection. | Amazon S3 documentation unknown | REASONED |
+| s3-public-meaning: Wildcard-principal Allow is public without a qualifying fixed restriction; broad Deny is not a public grant. | Amazon S3 documentation unknown | REASONED |
+| s3-analyzer: S3 external-access view needs account-level analyzers in each bucket Region; findings are asynchronous and archived findings need review, so an empty view proves no privacy. | Amazon S3 documentation unknown | REASONED |
+| s3-app: Scope GetObject/PutObject to uploads/* and ListBucket through prefix conditions; omit unused write/list permissions and inspect additive effective grants. | Amazon S3 documentation unknown | REASONED |
+| s3-transport: SecureTransport=false Deny covers bucket/objects; PrincipalIsAWSService=false avoids redacted-context service breakage without granting access. | Amazon S3 documentation unknown | REASONED |
+| s3-endpoint: Optional SourceVpce Deny restricts all consumers to the chosen endpoint, including signed URLs, and can block console/integrations; establish recovery first. | Amazon S3 documentation unknown | REASONED |
+| s3-presign: CLI GET presigning defaults 3600 seconds, maximum 604800; signer needs object permission and temporary credentials can expire sooner; use short explicit expiry. | Amazon S3 documentation unknown | REASONED |
+| s3-signature-age: signatureAge above 600000 ms can deny a still-unexpired URL; credential revocation or effective policy denial stops access, without Azure-style stored access policies. | Amazon S3 documentation unknown | REASONED |
+| s3-encryption: New writes receive SSE-S3 unless another supported mode applies; optional SSE-KMS needs key policy/permissions and default changes do not rewrite historical objects. | Amazon S3 documentation unknown | REASONED |
+| s3-bucket-key: BucketKeyEnabled defaults disabled for general purpose buckets; enabling reduces KMS request costs and does not restrict public access. | Amazon S3 documentation unknown | REASONED |
+| s3-versioning: Versioning defaults disabled; once enabled it can be suspended but cannot return to unversioned state. | Amazon S3 documentation unknown | REASONED |
+| s3-lock: Object Lock requires versioning and cannot be disabled; versioning cannot then be suspended. Locks protect versions, not reads, new versions or delete markers. | Amazon S3 documentation unknown | REASONED |
+| s3-retention: GOVERNANCE permits explicit authorized bypass; COMPLIANCE cannot be shortened/bypassed by ordinary admin or root; test before irreversible retention. | Amazon S3 documentation unknown | REASONED |
+| s3-mfa-delete: Only bucket-owner root enables MFA Delete through CLI/API; it gates permanent version deletion and versioning changes, not reads, and conflicts with lifecycle configurations. | Amazon S3 documentation unknown | REASONED |
+| s3-audit: Server access logging and CloudTrail object data events default off; management history is not an object log. Enable independent log destinations and selected data events. | Amazon S3 documentation unknown | REASONED |
+| s3-log-delivery: With ACLs disabled grant logging service PutObject on a constrained prefix; destination must share account/Region, lack Object Lock and avoid recursive logging; delivery is delayed. | Amazon S3 documentation unknown | REASONED |
+| r2-routes: R2 defaults private; disable development r2.dev and review every custom/application route independently. Access/WAF on a custom domain does not protect an enabled r2.dev bypass. | Cloudflare R2 documentation unknown | REASONED |
+| r2-tokens: Use bucket-scoped Object Read only/Read &amp; Write tokens; admin permissions are broader. Account/User ownership is separate from resource scope and secret key is shown once. | Cloudflare R2 documentation unknown | REASONED |
+| r2-presign: SigV4 URLs support 1-604800 seconds with explicit expiresIn and work only on the S3 API domain, not custom domains. | Cloudflare R2 documentation unknown | REASONED |
+| r2-cors: Dashboard CORS specifies exact origins, methods and headers; Wrangler format differs and CORS cannot stop a non-browser with a valid signature. | Cloudflare R2 documentation unknown | REASONED |
+| r2-lifecycle: Default rule expires incomplete multipart uploads after seven days, not complete objects; object expiry is asynchronous, typically about 24 hours, and is not immediate revocation. | Cloudflare R2 documentation unknown | REASONED |
+| gcs-uniform: Uniform access disables ACLs and becomes irreversible after 90 consecutive days; CLI bucket creation defaults its flag false, so migrate ACL grants explicitly. | Google Cloud Storage documentation unknown | REASONED |
+| gcs-public: Enforce bucket/organization public-access prevention; inherited API default needs effective organization enforcement. Public grants fail 412 and anonymous reads get 401/403; signed URLs remain usable. | Google Cloud Storage documentation unknown | REASONED |
+| gcs-readback: Boolean update flags enable uniform access and prevention; verify enabled=true and prevention=enforced in bucket description. | Google Cloud Storage documentation unknown | REASONED |
+| gcs-conditions: Prefix/time IAM conditions require uniform access; merge policy version 3 with current etag and required bindings, checking independent project grants. | Google Cloud Storage documentation unknown | REASONED |
+| gcs-list: Object-prefix conditions do not filter bucket-level objects.list; avoid an independent unrestricted listing grant when names are private. | Google Cloud Storage documentation unknown | REASONED |
+| gcs-sign: sign-url requires service-account signing and object permission, not ordinary user login alone; default 1h, system-managed maximum 12h, private-key/activated-account maximum 7d. | Google Cloud Storage documentation unknown | REASONED |
+| gcs-tls: Use HTTPS and optionally deny TLS 1/1.1 through organization policy; this establishes no bucket HTTP-deny switch and excludes public objects served from Google Front End cache. | Google Cloud Storage documentation unknown | REASONED |
+| gcs-encryption: Google-managed encryption is default; CMEK needs compatible location and Storage service-agent encrypter/decrypter role before setting default key; only subsequent writes change absent rewrite. | Google Cloud Storage documentation unknown | REASONED |
+| azure-anonymous: Resource Manager accounts and containers default private; account allowBlobPublicAccess=false overrides public containers, with Azure Policy available to audit/deny broader settings. | Azure Blob documentation unknown | REASONED |
+| azure-identity: Before denying Shared Key, grant and test narrow Entra Blob data roles; management-plane roles do not replace data permissions. | Azure Blob documentation unknown | REASONED |
+| azure-shared-key: Unset/null Shared Key permits use; false rejects account-key, service SAS and account SAS authorization but permits authorized user delegation SAS and does not prevent offline signing. | Azure Blob documentation unknown | REASONED |
+| azure-transport: Require supportsHttpsTrafficOnly and TLS1_2; CLI uses https-only/enableHttpsTrafficOnly. TLS 1.2 service minimum is documented from February 3, 2026. | Azure Blob documentation unknown | REASONED |
+| azure-network: Use defaultAction=Deny with narrow rules or publicNetworkAccess=Disabled for private endpoints; review exceptions and external SAS consumers. | Azure Blob documentation unknown | REASONED |
+| azure-private-endpoint: Approve blob private endpoint and private DNS while retaining normal Blob hostname; private endpoint alone leaves the public route available. | Azure Blob documentation unknown | REASONED |
+| azure-sas: Prefer user delegation SAS via login/as-user with least permissions, HTTPS, explicit start/expiry; maximum seven days and delegation-key lifetime both apply. | Azure Blob documentation unknown | REASONED |
+| azure-signer: Signer needs object data permission plus generateUserDelegationKey at account scope or above; a separate Blob Delegator role avoids broadening container data access. | Azure Blob documentation unknown | REASONED |
+| azure-sas-policy: Expiration Log default does not enforce and needs diagnostics; Block denies supported excess-duration/missing-start requests. Key creation times may require rotation first. | Azure Blob documentation unknown | REASONED |
+| azure-sas-exceptions: SAS expiration action excludes stored-policy service SAS and HDFS user-delegation requests; account policy cannot extend user-delegation seven-day maximum. | Azure Blob documentation unknown | REASONED |
+| azure-revoke: Stored policy revokes only associated service SAS; revoke-delegation-keys affects all account delegation keys with caching delays; account-key SAS needs rotation or Shared Key denial. | Azure Blob documentation unknown | REASONED |
+| azure-retention: Time-based container retention starts unlocked; locking prevents deletion/shortening irreversibly but permits extensions and does not restrict reads. | Azure Blob documentation unknown | REASONED |
+| supabase-private: Buckets default public=false; public reads bypass access control while mutations still check it. A restrictive SELECT policy cannot protect public asset URLs. | Supabase Storage documentation unknown | REASONED |
+| supabase-select: Private Storage uses storage.objects RLS, not application-table policies; scope SELECT to bucket and owner JWT subject and review additive grants and service-created ownership. | Supabase Storage documentation unknown | REASONED |
+| supabase-insert: Uploads need separate INSERT checks for bucket, user UUID path and owner; without policies Storage grants no uploads. | Supabase Storage documentation unknown | REASONED |
+| supabase-mutations: Optional UPDATE checks existing and proposed bucket/owner state; upsert/move need SELECT+UPDATE, copy SELECT+INSERT and removal SELECT+DELETE. | Supabase Storage documentation unknown | REASONED |
+| supabase-sign: Authorize caller before createSignedUrl with explicit seconds; 3600 is an example. Public URL construction cannot authorize private reads; Auth-key rotation does not revoke Storage URLs. | Supabase Storage documentation unknown | REASONED |
+| supabase-privileged: Service-role/server secret keys bypass end-user restrictions and remain server-side; privileged signing endpoints must enforce bucket/object/caller access themselves. | Supabase Storage documentation unknown | REASONED |
+| verify-s3: Known-object authorized GET must return 200, same unsigned URL 403 after fixing public grants, then the saved 60-second URL must expire; errors or missing objects are inconclusive. | Amazon S3 documentation unknown | REASONED |
+| verify-r2: Compare the same fixture through signed S3 API, r2.dev and all custom routes; fixed development route cannot serve it and protected domain denies/challenges while authorized flow succeeds. | Cloudflare R2 documentation unknown | REASONED |
+| verify-gcs: Compare exposed anonymous fixture with enforced prevention 401/403 and a successful valid signed control; signed success does not mean prevention failed. | Google Cloud Storage documentation unknown | REASONED |
+| verify-azure: Require anonymous denial and authorized success on the same blob; documented 401/409/403 depends on request/service version, so inspect errors and bytes. | Azure Blob documentation unknown | REASONED |
+| verify-supabase: Public fixture URL serves bytes before privacy and returns an error afterwards while authorized private/signed download works; test actual user operation/bucket boundaries separately. | Supabase Storage documentation unknown | REASONED |
+| verify-expiry: For every provider repeat the same saved short-lived GET URL before and after expiry, retaining a working object/identity control; do not substitute a fresh URL for the expiry test. | Amazon S3 documentation unknown; Cloudflare R2 documentation unknown; Google Cloud Storage documentation unknown; Azure Blob documentation unknown; Supabase Storage documentation unknown | REASONED |
+| verify-effective: Inspect effective public-access settings and inherited grants with exposed fixtures; inventory and deployed-bundle inspection remain unobserved. | Amazon S3 documentation unknown; Cloudflare R2 documentation unknown; Google Cloud Storage documentation unknown; Azure Blob documentation unknown; Supabase Storage documentation unknown | REASONED |
+| verify-scope-transport: Compare allowed/forbidden prefixes, buckets, operations and time windows; test real HTTP/TLS/endpoint denials with positive controls, not local TLS-library failures. | Amazon S3 documentation unknown; Cloudflare R2 documentation unknown; Google Cloud Storage documentation unknown; Azure Blob documentation unknown; Supabase Storage documentation unknown | REASONED |
+| verify-revocation: Repeat saved URLs after applicable revocation propagation; Azure Log/Block needs an unexpired excessive-duration fixture and exceptions, while Supabase Auth rotation is no Storage revocation. | Amazon S3 documentation unknown; Azure Blob documentation unknown; Supabase Storage documentation unknown | REASONED |
+| verify-encryption-retention: Inspect new versus historical object encryption; compare unlocked deletion with retention and explicit governance bypass, and Azure editable versus locked policy with current ETags. | Amazon S3 documentation unknown; Google Cloud Storage documentation unknown; Azure Blob documentation unknown | REASONED |
+| verify-mfa-delete: Compare permanent deletion and versioning changes without MFA versus valid root MFA through CLI/API; unrelated failures do not establish enforcement. | Amazon S3 documentation unknown | REASONED |
+| verify-signature-age: An older signature still within URL expiry must fail the age policy while a fresh URL to the same object succeeds. | Amazon S3 documentation unknown | REASONED |
+| verify-audit-lifecycle: Locate S3 fixture GET/PUT data events and access logs after delivery; observe R2 eventual expiry without equating its deadline to revocation. | Amazon S3 documentation unknown; Cloudflare R2 documentation unknown | REASONED |
+<!-- version-basis:end -->
 
 AI projects put user uploads, datasets, and model files in buckets, and one public bucket or one over-broad policy leaks every object in it, silently, to anyone who guesses or scrapes a URL. Every provider below now defaults new buckets to private; the work is keeping them that way, granting access per principal, and sharing objects through short-lived signed URLs rather than by making anything public. Self-hosted MinIO is covered in [minio.md](minio.md).
 
@@ -494,6 +748,8 @@ These comparisons require controlled cloud resources and harmless fixture object
 **REASONED:** No S3 account, signing role, or known object was supplied. On a deliberately exposed disposable fixture, an unsigned GET returns its bytes; after the public-access baseline, that same unsigned GET must be denied while an authorized HTTPS GET succeeds. The saved signed URL must subsequently fail after expiry. See [public-access behavior](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html) and [presigned URL behavior](https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-presigned-url.html).
 
 Use the same bucket and object in both arguments, with the correct regional endpoint. First prove the object exists and is readable WITH authorization, so a later anonymous denial is about access, not a missing object. S3 also returns `403` for an object you cannot list. Presigning signs a GET, so test with GET.
+
+REASONED: following block; S3 public-access and presigned-URL documentation supply the expected outcomes; no authorized S3 account, signing role or known object was supplied.
 
 ```bash
 (

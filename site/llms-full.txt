@@ -12028,6 +12028,82 @@ The tagged configuration files below pin syntax and historical behaviour; they a
 
 # Elasticsearch and OpenSearch: keep security switched on
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| es-tier: Self-managed 8.x TLS, native users, RBAC, REST keys, anonymous controls and CORS are free Basic; LDAP/audit and FLS/DLS require Platinum/Enterprise, with current Platinum restricted to existing customers. | Elasticsearch documentation unknown | REASONED |
+| es-auto: Eligible initial startup enables auth, HTTP/transport TLS and elastic password; redirected output, unwritable config or existing settings can skip setup, with stated discovery exceptions; packages require password reset. | Elasticsearch documentation unknown | REASONED |
+| es-tls: Keep xpack.security.enabled and HTTP TLS enabled; repair CA trust/certificates instead of disabling protection. | Elasticsearch documentation unknown | REASONED |
+| es-bind: network.host defaults _local_ on up interfaces across available families; family-specific tokens and HTTP/profile bind overrides apply before network fallback. | Elasticsearch listener source 8.19.22; Elasticsearch listener source 9.5.4 | REASONED |
+| es-http-range: HTTP defaults to an available port in 9200-9300, subject to effective host/bind/publish settings. | Elasticsearch listener source 8.19.22; Elasticsearch listener source 9.5.4 | REASONED |
+| es-transport-range: Transport defaults to an available port in 9300-9399; inspect effective profile and actual listener ports. | Elasticsearch listener source 8.19.22; Elasticsearch listener source 9.5.4 | REASONED |
+| es-auto-http: Auto-configuration writes http.host=0.0.0.0 only when none of the three HTTP or three network address settings has a value, including enrollment. | Elasticsearch listener source 8.19.22; Elasticsearch listener source 9.5.4 | REASONED |
+| es-auto-transport: Transport address guard respects existing settings; new-cluster wildcard is commented and enrollment activates it only for a discovered nonlocal, nonloopback publish address. | Elasticsearch listener source 8.19.22; Elasticsearch listener source 9.5.4 | REASONED |
+| es-docker: Pinned image map covers 8.19.22/9.4.6/9.5.3; shipped network.host=0.0.0.0 widens API and transport unless overridden. EXPOSE includes 9300, so avoid -P, host networking and untrusted peers. | Elasticsearch Docker library 8480a06d8ca03ca7da29a469fdbddb5f9f31df61; Elasticsearch documentation unknown | REASONED |
+| es-source-docker: Source configurations at 8.19.22/9.5.4 also set network.host wildcard, making both auto-configuration address guards false. | Elasticsearch listener source 8.19.22; Elasticsearch listener source 9.5.4 | REASONED |
+| es-role: Give each app an index-read role and dedicated native user; manage_own_api_key permits self-issued keys without broader index access, and superuser is not an app role. | Elasticsearch API 8.x | REASONED |
+| credential-files: Use protected 0600 header/request/response files and verified CA input; base64 Basic is not encryption and file input does not prevent file readers or tracing. | Host inspection documentation unknown | REASONED |
+| es-key: Explicit API-key role descriptors intersect creator permissions; omitted descriptors inherit a snapshot, omitted expiration never expires, and an API key cannot create another privileged key. | Elasticsearch API 8.x | REASONED |
+| es-ldap: Optional paid LDAP mapping binds the specific realm and group DN; native-user roles are assigned through the user API. | Elasticsearch documentation unknown | REASONED |
+| es-fls: 8.19 field_security.grant restricts concrete fields, not aliases; metadata remains accessible and omission grants all fields. Minimum guide scope 8.0 is not an introduction claim. | Elasticsearch reference 8.19 | REASONED |
+| es-dls: 8.19 query restricts documents; omission removes DLS. Keep tenant readers read-only and remove unrestricted roles that combine to defeat restrictions. | Elasticsearch reference 8.19 | REASONED |
+| es-fls-limits: DLS has aggregate/scoring inference channels and query/API restrictions including joins, lookups, percolate and date now; test actual queries and prefer separate indices for stronger isolation. | Elasticsearch reference 8.19 | REASONED |
+| es-key-review: Review previously issued key permission snapshots separately after changing roles; role edits alone do not establish repaired key restrictions. | Elasticsearch reference 8.19 | REASONED |
+| es-anonymous: Remove anonymous.roles from every effective node configuration and restart; no roles disables anonymous access. A tested 401 alone cannot prove it is globally off. | Elasticsearch documentation unknown | REASONED |
+| es-cors: CORS defaults disabled; if needed configure exact origin, methods and headers, restart nodes and retain authorization. | Elasticsearch documentation unknown | REASONED |
+| es-audit: Audit defaults disabled; enable on each 8.x node with restart and collect CLUSTERNAME_audit.json independently. Dynamic enablement documented for 9.5+ does not apply to 8.x. | Elasticsearch documentation unknown | REASONED |
+| es-audit-body: Request-body emission defaults false; keep it off and avoid event exclusions/ignore policies suppressing authentication_failed. | Elasticsearch documentation unknown | REASONED |
+| os-tier: OpenSearch Security is free Apache-2.0 with no paid security tier; keep authentication and TLS enabled. | OpenSearch documentation unknown | REASONED |
+| os-demo-users: From 2.12 demo setup requires initial admin password but only changes admin; six other seeded users retain demo credentials until removed/replaced and applied to the live security index. | OpenSearch documentation unknown | REASONED |
+| os-tls: Replace demo certificates; REST TLS defaults false underneath demo setup and requires plugins.security.ssl.http.enabled=true with production certificates. | OpenSearch documentation unknown | REASONED |
+| os-rbac: Create a custom index-read role and internal user with explicit mapping; Security REST administration requires its own authorization and other mappings may add grants. | OpenSearch documentation unknown | REASONED |
+| os-api-key: Native scoped keys require 3.7+ and security administrators; enable api_tokens and explicit lifetime/count limits, using index_pattern and duration_seconds rather than Elasticsearch fields. | OpenSearch documentation unknown | REASONED |
+| os-key-default: Omitted token duration uses max_duration_seconds, documented default 7776000; example caps at 86400 with 100 tokens, and returned token is retrievable only once. | OpenSearch documentation unknown | REASONED |
+| os-apply: securityadmin applies local configuration to the live index; back up first, use file/type-limited upload, production CA/admin certificate and hostname verification because stale files overwrite live changes. | OpenSearch documentation unknown | REASONED |
+| os-fls: 3.6 FLS/DLS recipe uses JSON-string dls and visible tenant_id in fls; review all roles and inclusion/exclusion interactions, not Elasticsearch role-combination assumptions. | OpenSearch reference 3.6 | REASONED |
+| os-dls: dfm_empty_overrides_all affects unrestricted-role precedence; DLS does not constrain writes and adaptive filter-level DLS limits APIs/cross-cluster search. Tokens need independent restriction tests. | OpenSearch reference 3.6 | REASONED |
+| os-anonymous: Set live anonymous_auth_enabled=false while preserving authentication domains; update through securityadmin, not just local YAML. | OpenSearch documentation unknown | REASONED |
+| os-cors: CORS defaults false; exact-origin static settings go in opensearch.yml and require restart, independently of authentication. | OpenSearch documentation unknown | REASONED |
+| os-audit: Auditing needs destination and enabled config; internal_opensearch stores daily audit indexes, while shipped enabled=true alone records nothing without storage type. | OpenSearch documentation unknown | REASONED |
+| os-audit-body: Read live audit config, enable REST and disable request-body logging via admin-certificate PATCH; preserve defaults and do not suppress FAILED_LOGIN. | OpenSearch documentation unknown | REASONED |
+| os-audit-headers: exclude_sensitive_headers defaults true; readonly REST fields require complete audit-file application. Read back enabled, REST, body=false and headers=true separately. | OpenSearch documentation unknown | REASONED |
+| storage: Use OS/provider encryption below path.data, including logs/swap/local snapshots; path.data only selects a directory and encryption-at-rest support is not a product encryption switch. | Elasticsearch reference 8.19; OpenSearch documentation unknown | REASONED |
+| mount-enforcement: RequiresMountsFor plus AssertPathIsMountPoint prevents ordinary-directory fallback with systemd; reload manager and verify encrypted device chain separately. | Host inspection documentation unknown | REASONED |
+| snapshot-boundary: Ordinary snapshots use free Basic/OpenSearch; remote repository encryption is independent of node disks and authorized server-side downloads are decrypted. | Elasticsearch documentation unknown; OpenSearch S3 reference 3.1; Cloud provider documentation unknown | REASONED |
+| cloud-defaults: New AWS S3, GCS and Azure objects are encrypted server-side by default; assess historical objects and customer key ownership separately. | Cloud provider documentation unknown | REASONED |
+| es-s3: 8.19 server_side_encryption defaults false; true requests AES256 SSE-S3, not client encryption. Omit it when using bucket-default KMS and verify resulting metadata. | Elasticsearch reference 8.19 | REASONED |
+| os-s3: 3.1 removed server_side_encryption; server_side_encryption_type accepts AES256/aws:kms/bucket_default. Default changed from bucket_default to AES256 in 3.8; explicitly select intended mode. | OpenSearch S3 reference 3.1; OpenSearch S3 source 3.8.0 | REASONED |
+| os-s3-kms: Explicit KMS repository mode uses server_side_encryption_kms_key_id ARN with object/KMS permissions; this is server-side encryption and settings are not Elasticsearch-compatible. | OpenSearch S3 reference 3.1; Cloud provider documentation unknown | REASONED |
+| es-gcs-azure: 8.19 GCS/Azure setting lists document no client-side-encryption switch; configure provider key policy and access. GCS supplied keys remain server-side and Azure keys/SAS are authentication. | Elasticsearch reference 8.19 | REASONED |
+| os-gcs-azure: Follow 3.6 plugin/credential workflow; tag-pinned GCS/Azure client-side-encryption capability and minimum versions remain unestablished. | OpenSearch reference 3.6 | REASONED |
+| snapshot-integrity: Keep repositories private and keys recoverable; do not rewrite active repository files. Configuration backups are separate and security-state snapshots are sensitive. | Elasticsearch reference 8.19 | REASONED |
+| kibana-default: Kibana defaults HTTP localhost:5601 with server TLS disabled; 8.19.22/9.5.4 Docker templates explicitly use wildcard host, requiring override/publication review. | Kibana reference 8.19; Kibana source 8.19.22; Kibana source 9.5.4 | REASONED |
+| kibana-tls: Free Basic 8.19 server.ssl certificate/key protects incoming UI traffic; elasticsearch.ssl CA/full verification protects the separate backend hop. | Kibana reference 8.19 | REASONED |
+| dash-default: Dashboards 3.8.0 sample defaults localhost:5601 with server TLS disabled; inspect installation/container overrides. | OpenSearch Dashboards 3.8.0 | REASONED |
+| dash-tls: Dashboards server.ssl protects UI, cookie.secure restricts session cookie to HTTPS, and opensearch.ssl CA/full verification protects the backend hop; restart after changes. | Dashboards TLS reference 3.6 | REASONED |
+| ui-network: UI binding is independent of 9200/9300; loopback suits only a same-namespace proxy, while private access requires intended interface, matching certificates and network restrictions. | Kibana reference 8.19; Dashboards TLS reference 3.6 | REASONED |
+| verify-rbac: Known app-data/other-data documents distinguish broad access from scoped 200/403 for user and key; 401/404/errors are inconclusive and pre-3.7 OpenSearch uses the user only. | Elasticsearch documentation unknown; OpenSearch documentation unknown | REASONED |
+| verify-anonymous: Require effective anonymous settings on every node plus a formerly anonymous-readable known document becoming 401 while admin still gets 200; endpoint-specific 401 alone is insufficient. | Elasticsearch documentation unknown; OpenSearch documentation unknown | REASONED |
+| verify-tls: Admin HTTPS must return 200/cluster JSON before interpreting plaintext; TLS listener must return no HTTP status, with DNS/timeouts/unreachable states inconclusive. | Elasticsearch documentation unknown; OpenSearch documentation unknown | REASONED |
+| verify-cors: Inspect preflight headers: no grant to untrusted origin, exact grant for trusted enabled origin; with CORS disabled neither is granted. | Elasticsearch documentation unknown; OpenSearch documentation unknown | REASONED |
+| verify-audit: Fresh failed-authentication probe must correlate with new authentication_failed/FAILED_LOGIN in node and independent collector records; 401 alone proves no delivery. | Elasticsearch documentation unknown; OpenSearch documentation unknown | REASONED |
+| verify-audit-body: Compare unique marker present with body logging enabled and absent from a new matching event when disabled; independently verify header exclusion and effective configuration. | Elasticsearch documentation unknown; OpenSearch documentation unknown | REASONED |
+| verify-listeners: Locate actual running listeners/ports and inspect publication; intentional bridge-container wildcard differs from host-network exposure and no output alone is inconclusive. | Elasticsearch listener source 8.19.22; Elasticsearch listener source 9.5.4; Host inspection documentation unknown | REASONED |
+| verify-fls-dls: Two-tenant fixture compares unrestricted and actual restricted credentials through search, GET, requested fields and aggregations, with allowed-field and administrator controls; no inference-proof claim. | Elasticsearch reference 8.19; OpenSearch reference 3.6 | REASONED |
+| verify-storage: Data-path device chain must traverse intended encryption mapping; unrelated mapping or successful unlocked reads proves nothing, and provider volumes need their own metadata. | Host inspection documentation unknown | REASONED |
+| verify-mount: Isolated unavailable-mount fixture must fail startup for that reason without writes to the ordinary directory; restored encrypted mount must start successfully. | Host inspection documentation unknown | REASONED |
+| verify-snapshot: Harmless explicit-index snapshot/restore must complete and preserve both fixtures without global/security state; timeouts need operation-state inspection before retry. | Elasticsearch reference 8.19; OpenSearch reference 3.6 | REASONED |
+| verify-object-key: Inspect actual new/retained repository object mode/key; controlled object-read and KMS-only denial need provider evidence plus authorized controls. Repository verify proves neither encryption nor isolation. | Cloud provider documentation unknown | REASONED |
+| verify-ui: Require expected CA-validated HTTPS and rejected plaintext UI after an exposed HTTP fixture; verify prohibited-network denial with authorized success and effective private binding. | Kibana reference 8.19; Dashboards TLS reference 3.6; Host inspection documentation unknown | REASONED |
+| verify-ui-backend: Browser TLS does not prove backend full verification or Dashboards Secure cookie; inspect both separately with effective settings and publication. | Kibana reference 8.19; Dashboards TLS reference 3.6 | REASONED |
+<!-- version-basis:end -->
+
 Open Elasticsearch instances produced some of the largest data leaks on record. Modern versions ship secure; the failure mode today is deliberately switching protection off to make an error message go away.
 
 ## Elasticsearch (8.0 and later)
@@ -12546,6 +12622,8 @@ The expected distinctions are:
 | CORS | An overly broad policy grants the untrusted origin. | No `Access-Control-Allow-Origin` grant for the untrusted origin. If CORS is enabled, the trusted-origin positive control succeeds and grants exactly that origin. If CORS is disabled, neither origin is granted. Judge the headers, not just the status. See [Elasticsearch CORS](https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/networking-settings) and [OpenSearch CORS](https://docs.opensearch.org/latest/install-and-configure/configuring-opensearch/network-settings/). |
 | Audit | Failed authentication returns `401`, but disabled or suppressed auditing produces no corresponding audit event. | The same failure produces a new Elasticsearch `authentication_failed` or OpenSearch `FAILED_LOGIN` event. A `401` alone does not prove auditing. Elasticsearch requires the paid audit tier. See [Elasticsearch audit events](https://www.elastic.co/docs/reference/elasticsearch/elasticsearch-audit-events) and [OpenSearch audit fields](https://docs.opensearch.org/latest/security/audit-logs/field-reference/). |
 
+REASONED: following block; cluster authorization, TLS, CORS and audit expectations follow the cited vendor documentation; no target cluster, runtime, node or audit collector was available.
+
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_SEARCH_HOST' '/path/http_ca.crt' '9200'
@@ -12684,6 +12762,8 @@ Use isolated test deployments for exposed-state fixtures. Substitute values insi
 
 For the REST request tables below, save each JSON body in a protected file. Run this block once per request, setting the method, path, and body-file arguments. Use `/dev/null` for a request with no body. Select the administrator or application header file as directed:
 
+REASONED: following block; REST fixture comparisons follow the cited product APIs and restriction rules; no target cluster, eligible Elasticsearch licence or repository access was available.
+
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_SEARCH_HOST' 'REPLACE_WITH_CA_FILE' '9200' 'REPLACE_WITH_HEADER_FILE' 'GET' '/REPLACE_WITH_REQUEST_PATH' '/dev/null'
@@ -12752,6 +12832,8 @@ These checks exercise ordinary retrieval and aggregations; they do not prove abs
 
 Run on the node, with sufficient permission to inspect the intended dm-crypt mapping:
 
+REASONED: following block; storage inspection follows the cited findmnt, lsblk and cryptsetup manuals; target-node and storage access were unavailable.
+
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DATA_PATH' 'REPLACE_WITH_CRYPT_MAPPING'
@@ -12772,6 +12854,8 @@ Run on the node, with sufficient permission to inspect the intended dm-crypt map
 Compare the exposed unencrypted volume with the fixed volume. Require the actual data path's mount/device chain to traverse the intended encrypted mapping. An unrelated active mapping is insufficient. For provider-managed volume encryption, inspect the actual attached volume's encryption and key metadata instead; the guest may not expose a dm-crypt device. Successful reads through an unlocked filesystem neither prove nor disprove encryption at rest. See [findmnt](https://man7.org/linux/man-pages/man8/findmnt.8.html), [lsblk](https://man7.org/linux/man-pages/man8/lsblk.8.html), and [cryptsetup status](https://man7.org/linux/man-pages/man8/cryptsetup-status.8.html).
 
 **REASONED, not demonstrated:** in an isolated systemd fixture, stop the service and make the required test mount unavailable, including preventing automatic remount. Run the following with the test service unit. Do not perform this fault injection on production storage.
+
+REASONED: following block; startup comparison follows the cited systemd assertions; no isolated service and unavailable-mount fixture was available.
 
 ```bash
 (
@@ -12805,6 +12889,8 @@ Using the administrator header and REST block, snapshot only the harmless fixtur
 Require snapshot success, completed restore, and both original fixture documents. A client timeout does not establish failure or success; inspect operation state before retrying. The explicit index selection and `include_global_state: false` avoid restoring security state in this fixture. See [Elasticsearch 8.19 snapshot creation](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-take-snapshot.html), [restore](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-restore-snapshot.html), and [OpenSearch 3.6 snapshot/restore](https://docs.opensearch.org/3.6/tuning-your-cluster/availability-and-recovery/snapshots/snapshot-restore/).
 
 For AWS S3, identify actual newly written repository objects through the provider inventory or console. With AWS CLI v2 and preconfigured profiles, inspect a known object and attempt a download:
+
+REASONED: following block; object encryption and access comparisons follow the cited AWS APIs and KMS permissions; repository, provider and KMS test identities were unavailable.
 
 ```bash
 (
@@ -12840,6 +12926,8 @@ Inspect retained objects as well as newly written ones; changing a default does 
 
 In an isolated exposed fixture, record an HTTP login page or redirect on the actual UI port. After applying the fixed configuration, run:
 
+REASONED: following block; UI TLS comparison follows the cited Kibana and Dashboards settings; no running UI, certificates or network test paths were available.
+
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_UI_HOST' 'REPLACE_WITH_UI_CA_FILE' '5601'
@@ -12866,6 +12954,8 @@ On the authorized path, require successful CA-validated HTTPS with the expected 
 For loopback deployments, test locally using a certificate hostname that resolves to the UI's loopback listener. Separately test the real deployment address from the prohibited network, not that client's own loopback. Require the prohibited connection to fail while the authorized path still works, and retain network-control evidence.
 
 On the UI host, inspect the actual listener:
+
+REASONED: following block; UI listener inspection follows the cited UI settings and ss manual; target-host access was unavailable.
 
 ```bash
 (
@@ -13008,6 +13098,61 @@ The deployment checks below remain REASONED from the cited vendor documentation 
 ======================================================================
 
 # MinIO: credentials, TLS, encryption, and object protection
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| lifecycle: Community repository was archived 2026-04-25 and receives no fixes; guide settings target AIStor Free/Enterprise and call for migration. | AIStor documentation unknown | REASONED |
+| root-files: Root credentials come from protected regular 0600 files without whitespace/newlines; set only *_FILE paths, remove overriding direct values and start a fresh process. | AIStor documentation unknown | REASONED |
+| root-default: Without direct credentials or files, root defaults minioadmin/minioadmin; root is administrative and applications need scoped keys. | AIStor documentation unknown | REASONED |
+| tls: public.crt/private.key under HOME/.minio/certs or certs-dir enable HTTPS; clients trust the CA without disabling verification. | AIStor documentation unknown | REASONED |
+| api-bind: API address defaults :9000 across IPv4/IPv6 interfaces; bind explicit loopback/private and expose only intended TLS endpoints. | AIStor documentation unknown | REASONED |
+| console-bind: Console address is independent of API binding; unset chooses a logged dynamic port and a hostless address binds wildcard; set explicit private host/port. | AIStor documentation unknown; MinIO console source f0b91e5504663c4672da451877857b57c3345295 | REASONED |
+| anonymous: Buckets are private unless policy grants access; inspect complete anonymous JSON including uploads, prefixes and conditions, independently of identity policies. | AIStor documentation unknown | REASONED |
+| console-disable: MINIO_BROWSER=off disables embedded Console after restart on every node; disabling browser redirection alone does not. | AIStor documentation unknown | REASONED |
+| concurrency: Automatic API budget follows RAM; REQUESTS_MAX is cluster-wide concurrent S3/admin requests divided among nodes, not RPS or connections; 64 is only an illustrative choice. | AIStor documentation unknown | REASONED |
+| builtin-policies: readonly/writeonly cover deployment-wide object operations; readwrite grants all S3 actions, consoleAdmin adds admin access, and readonly does not list buckets. | AIStor documentation unknown | REASONED |
+| parent: Create a non-root app parent in Console with narrow user/group grants; documented mc admin user add requires a positional secret. | AIStor documentation unknown | REASONED |
+| policy: Custom app policy grants location/list plus object read/write for one bucket, without deletion/admin; remove unused actions and avoid replacing an existing policy inadvertently. | AIStor documentation unknown | REASONED |
+| access-key: Create an explicit-parent generated key with 24h expiry and protected output; inline policy only restricts inherited rights and is limited to 4096 bytes; rotate before expiry. | AIStor documentation unknown | REASONED |
+| alias: Alias import reads protected JSON from stdin; protect imported and mc configuration credentials, and prove authentication with a signed operation. | AIStor documentation unknown | REASONED |
+| oidc-role: RoleArn mapping assigns configured policies to every admitted identity using the role; choose a narrow existing role policy. | AIStor documentation unknown | REASONED |
+| oidc-claim: Claim mapping uses IdP-controlled policy names; role_policy and claim_name are mutually exclusive, named suffixes are case-sensitive, and only one provider can use claim mapping. | AIStor documentation unknown | REASONED |
+| oidc-unmapped: Unmapped identities gain no identity-based access, but anonymous bucket grants still apply. | AIStor documentation unknown | REASONED |
+| sts-duration: WebIdentity explicit DurationSeconds accepts 900-31536000 and can override JWT expiry; MINIO_STS_DURATION is a default, with sts:DurationSeconds available as a policy restriction. | AIStor documentation unknown | REASONED |
+| presign: Presigned URLs are credentials; mc share download defaults seven days, while the example requests five minutes and stores output privately. | AIStor documentation unknown | REASONED |
+| signature-age: Explicit deny for signatureAge above 600000 ms restricts the attached parent identity, not unrelated identities/OIDC/anonymous grants; AIStor behavior is reasoned from supported keys and AWS semantics. | AIStor documentation unknown; AWS signature-condition semantics unknown | REASONED |
+| kms: SSE-S3 uses the default external key and SSE-KMS selects a key; configure MinIO KMS endpoint/enclave/key/API key with trusted CA before restarting. | AIStor documentation unknown | REASONED |
+| kes: Legacy KES supports third-party KMS; use certificate/key together with CAPATH, mutually exclusive with KES API key and with MinIO KMS configuration. | AIStor documentation unknown | REASONED |
+| auto-encryption: AUTO_ENCRYPTION defaults on only with a configured key manager and encrypts new writes using SSE-KMS; off needs explicit bucket encryption. | AIStor documentation unknown | REASONED |
+| bucket-encryption: mc encrypt set selects SSE-KMS key or SSE-S3 default; settings affect subsequent writes, not historical objects or versions. | AIStor documentation unknown | REASONED |
+| backend-encryption: Enabling SSE encrypts IAM/configuration backend data irreversibly; startup depends on retained backend key and key-manager access, regardless of automatic object encryption. | AIStor documentation unknown | REASONED |
+| object-lock: New bucket with-lock enables versioning but no retention duration; AIStor RELEASE.2025-05-20T20-30-00Z+ can retrofit existing versioned buckets, not through Console. | AIStor documentation unknown | REASONED |
+| retention-modes: GOVERNANCE permits authorized bypass; COMPLIANCE prevents protected-version deletion even by root until expiry. Remove bypass permission from application identities. | AIStor documentation unknown | REASONED |
+| retention-default: Default retention ignores other flags including recursive and governs new objects without overrides; explicitly protect historical version IDs and inspect retain-until dates. | AIStor documentation unknown | REASONED |
+| legal-hold: Legal hold is indefinite and requires PutObjectLegalHold to set/lift; both hold release and retention expiry are needed when combined. | AIStor documentation unknown | REASONED |
+| delete-marker: Ordinary deletes can hide retained versions behind a delete marker; verify exact version IDs. | AIStor documentation unknown | REASONED |
+| audit-default: No audit destination is enabled by default; publish sensitive records to independently protected remote storage. | AIStor documentation unknown | REASONED |
+| audit-webhook: Enable HTTPS webhook with authentication value supplied verbatim, certificate verification and persistent audit queue; restart every node. | AIStor documentation unknown | REASONED |
+| audit-kafka: Kafka TLS defaults off; explicitly enable verified TLS and supported SASL with topic-scoped credentials; example PLAIN is only over TLS. | AIStor documentation unknown | REASONED |
+| audit-queue: Persistent per-node queue needs service read/write/list access; delivery retries can lose events when full, and webhook 2xx proves acknowledgement rather than durability. | AIStor documentation unknown | REASONED |
+| verify-exposure: Anonymous service/bucket/object reads must be denied at MinIO with known fixtures; full policy review and actual console-port external probes are independent controls. | AIStor documentation unknown | REASONED |
+| verify-scope: Root reads both known private fixtures; app reads/writes its own bucket but cannot read the other after anonymous grants are excluded. | AIStor documentation unknown | REASONED |
+| verify-encryption: New ordinary write must succeed with intended SSE/key metadata versus a successful unencrypted control; bucket info alone proves no historical-object state. | AIStor documentation unknown | REASONED |
+| verify-retention: Under the same root identity, unlocked exact-version deletion succeeds and COMPLIANCE-protected deletion fails while that version and future retention remain readable. | AIStor documentation unknown | REASONED |
+| verify-audit: Correlate successful write/read and denied read with persisted receiver events and durability; S3 success or webhook acknowledgement alone proves no stored audit. | AIStor documentation unknown | REASONED |
+| verify-oidc: Fresh mapped STS credentials must read only the app fixture versus a broad-policy control; also test an unmapped identity and explicit duration beyond shorter JWT/default. | AIStor documentation unknown | REASONED |
+| verify-url-expiry: Same five-minute URL succeeds immediately and fails after six minutes while a new URL works; protect URL stdin and correlate AIStor denial. | AIStor documentation unknown | REASONED |
+| verify-signature-age: One-hour URL should work after eleven minutes without age denial, fail then with the policy, and still work fresh; exclude expiry and transport errors. | AIStor documentation unknown; AWS signature-condition semantics unknown | REASONED |
+| verify-console: After BROWSER=off restart, verify effective setting, absent Console listener and successful S3 read; redirect-only disablement leaves direct UI available. | AIStor documentation unknown | REASONED |
+| verify-concurrency: Four-node budget 64 should constrain admission to 16 per node under saturating signed load; compare measured inflight/waiting metrics with automatic sizing, not RPS or a guessed rejection code. | AIStor documentation unknown | REASONED |
+<!-- version-basis:end -->
 
 MinIO serves S3-compatible object storage; an exposed instance with weak or well-known credentials hands over every bucket. Both the S3 API port and the web console need the same care.
 
@@ -13313,6 +13458,8 @@ REASONED in this authoring environment: the existing probes below are retained, 
 
 Prepare `/path/to/REPLACE_WITH_ADMIN_ALIAS.json` as an owner-only credential file with these fields:
 
+REASONED: following block; alias JSON follows the cited mc alias import schema; no minio or mc binary or live endpoint was available.
+
 ```json
 {
   "url": "https://s3.example.com:9000",
@@ -13324,6 +13471,8 @@ Prepare `/path/to/REPLACE_WITH_ADMIN_ALIAS.json` as an owner-only credential fil
 ```
 
 Use root credentials in `mys3` only for the administrative comparisons below. Protect both the imported file and the resulting local `mc` configuration. Importing an alias is configuration, not proof of working authentication; confirm signed operations against MinIO's own endpoint.
+
+REASONED: following block; exposure and alias-import expectations follow the cited server and anonymous-policy documentation; no minio, mc or container runtime was available.
 
 ```bash
 ss -tlnp   # read every listener; S3 API 9000 and the console (--console-address, ~9001); private unless deliberate
@@ -13340,6 +13489,8 @@ For the exposure probes, an anonymous grant can produce successful listing or ob
 
 **Scoped access, REASONED:** no `minio`, `mc`, or container runtime is available here. Prepare two different buckets containing known, harmless private objects. The application's policy must name only the application bucket. Build the app alias JSON with the generated scoped key and the same endpoint, `api`, and `path` fields as above.
 
+REASONED: following block; scoped-access comparisons follow the cited access-management and mc documentation; no minio, mc or container runtime was available.
+
 ```bash
 mc alias import app < /path/to/REPLACE_WITH_APP_ALIAS.json
 mc anonymous get-json mys3/REPLACE_WITH_APP_BUCKET
@@ -13355,6 +13506,8 @@ Confirm the policy reviews exclude anonymous access to both fixtures. Root must 
 
 **Encryption, REASONED:** no `minio`, `mc`, or KMS is available here. After configuring a working key manager and the intended bucket default, write a new object without a client encryption override:
 
+REASONED: following block; encryption comparison follows the cited KMS, encrypt and stat documentation; no live deployment or KMS was available.
+
 ```bash
 mc encrypt info mys3/REPLACE_WITH_BUCKET
 printf '%s\n' 'encryption probe' | mc pipe mys3/REPLACE_WITH_BUCKET/REPLACE_WITH_NEW_ENCRYPTION_PROBE
@@ -13365,6 +13518,8 @@ Confirm the bucket default and the newly written object's SSE metadata, includin
 
 **Retention, REASONED:** no `minio`, `mc`, or container runtime is available here. Use a newly created disposable bucket with locking enabled and no default retention. Stop if creation or either write fails. These fixtures compare an unlocked version with a protected version under the same root identity.
 
+REASONED: following block; retention fixtures follow the cited object-locking and mc documentation; no live deployment was available.
+
 ```bash
 mc mb --with-lock mys3/REPLACE_WITH_NEW_RETENTION_TEST_BUCKET
 printf '%s\n' 'unlocked control' | mc pipe mys3/REPLACE_WITH_NEW_RETENTION_TEST_BUCKET/control.txt
@@ -13374,6 +13529,8 @@ mc stat mys3/REPLACE_WITH_NEW_RETENTION_TEST_BUCKET/protected.txt
 ```
 
 Record the exact version IDs from the successful object inspections. Substitute them below. The protected fixture receives a one-day COMPLIANCE lock and cannot be deleted early, including by root.
+
+REASONED: following block; exact-version deletion comparison follows the cited retention, rm and stat documentation; no live deployment was available.
 
 ```bash
 mc retention set --version-id REPLACE_WITH_PROTECTED_VERSION COMPLIANCE 1d \
@@ -13398,6 +13555,8 @@ Before deletion, confirm the protected version has COMPLIANCE retention with a f
 
 **Audit delivery, REASONED:** no `minio`, `mc`, or audit receiver is available here. After enabling the chosen target and restarting AIStor, use a unique object name and record the test time. Reuse the proven private object in the forbidden bucket for the denied request.
 
+REASONED: following block; durable delivery comparison follows the cited audit documentation; no live deployment or receiver was available.
+
 ```bash
 printf '%s\n' 'audit delivery probe' | mc pipe app/REPLACE_WITH_APP_BUCKET/REPLACE_WITH_UNIQUE_AUDIT_OBJECT
 mc cat app/REPLACE_WITH_APP_BUCKET/REPLACE_WITH_UNIQUE_AUDIT_OBJECT
@@ -13417,6 +13576,8 @@ For the duration caveat, use a valid JWT expiring in approximately 20 minutes, `
 **Presigned URLs, REASONED:** no live AIStor deployment or `mc` is available here. Use a known private fixture and signing credentials that remain valid throughout the comparison. Confirm ordinary signed reads before and after each trial.
 
 Paste whole Bash blocks. Substitute inside the single quotes; values containing a literal apostrophe need proper shell quoting. Disable shell history recording and tracing before handling a real URL. The block keeps the URL out of curl's argv, but does not protect it from history, tracing, or the account owner.
+
+REASONED: following block; URL expiry and signature-age comparisons follow the cited share-download and policy documentation; no live AIStor or mc was available.
 
 ```bash
 (
@@ -13447,6 +13608,8 @@ Use URLs generated for the direct AIStor endpoint; do not alter their signed hos
 Correlate denials with AIStor's own request or audit evidence. A proxy error, expired signing key, missing object, or network failure does not establish either control.
 
 **Console disabled, REASONED:** no live AIStor deployment or `mc` is available here. Run this on each AIStor host with permission to inspect its listeners. Supply the direct Console URL established by section 3, without credentials or query parameters, and a proven application object:
+
+REASONED: following block; Console disablement follows the cited Console settings; no live AIStor or mc was available.
 
 ```bash
 (
@@ -17510,6 +17673,80 @@ Binary VERSION and SASL negotiation success are not substitutes for GET. A missi
 
 # Object storage: S3, Cloudflare R2, Google Cloud Storage, Azure Blob, Supabase Storage
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| s3-default: New general purpose buckets/objects are private, Bucket owner enforced disables ACLs and all four bucket Block Public Access flags default enabled; inspect existing/account/organization settings. | Amazon S3 documentation unknown | REASONED |
+| s3-public-block: Enable all four public-access flags at account and bucket; most restrictive access-point/bucket/account/organization combination applies, but stored grants survive and can reactivate. | Amazon S3 documentation unknown | REASONED |
+| s3-acl-migration: Migrate ACL grants/clients before BucketOwnerEnforced; no-ACL and bucket-owner-full-control uploads work, unsupported ACLs fail and stored ACLs are not erased. | Amazon S3 documentation unknown | REASONED |
+| s3-readback: Read back account/bucket flags, ownership and attached policy IsPublic=false; missing policy differs from denied or failed inspection. | Amazon S3 documentation unknown | REASONED |
+| s3-public-meaning: Wildcard-principal Allow is public without a qualifying fixed restriction; broad Deny is not a public grant. | Amazon S3 documentation unknown | REASONED |
+| s3-analyzer: S3 external-access view needs account-level analyzers in each bucket Region; findings are asynchronous and archived findings need review, so an empty view proves no privacy. | Amazon S3 documentation unknown | REASONED |
+| s3-app: Scope GetObject/PutObject to uploads/* and ListBucket through prefix conditions; omit unused write/list permissions and inspect additive effective grants. | Amazon S3 documentation unknown | REASONED |
+| s3-transport: SecureTransport=false Deny covers bucket/objects; PrincipalIsAWSService=false avoids redacted-context service breakage without granting access. | Amazon S3 documentation unknown | REASONED |
+| s3-endpoint: Optional SourceVpce Deny restricts all consumers to the chosen endpoint, including signed URLs, and can block console/integrations; establish recovery first. | Amazon S3 documentation unknown | REASONED |
+| s3-presign: CLI GET presigning defaults 3600 seconds, maximum 604800; signer needs object permission and temporary credentials can expire sooner; use short explicit expiry. | Amazon S3 documentation unknown | REASONED |
+| s3-signature-age: signatureAge above 600000 ms can deny a still-unexpired URL; credential revocation or effective policy denial stops access, without Azure-style stored access policies. | Amazon S3 documentation unknown | REASONED |
+| s3-encryption: New writes receive SSE-S3 unless another supported mode applies; optional SSE-KMS needs key policy/permissions and default changes do not rewrite historical objects. | Amazon S3 documentation unknown | REASONED |
+| s3-bucket-key: BucketKeyEnabled defaults disabled for general purpose buckets; enabling reduces KMS request costs and does not restrict public access. | Amazon S3 documentation unknown | REASONED |
+| s3-versioning: Versioning defaults disabled; once enabled it can be suspended but cannot return to unversioned state. | Amazon S3 documentation unknown | REASONED |
+| s3-lock: Object Lock requires versioning and cannot be disabled; versioning cannot then be suspended. Locks protect versions, not reads, new versions or delete markers. | Amazon S3 documentation unknown | REASONED |
+| s3-retention: GOVERNANCE permits explicit authorized bypass; COMPLIANCE cannot be shortened/bypassed by ordinary admin or root; test before irreversible retention. | Amazon S3 documentation unknown | REASONED |
+| s3-mfa-delete: Only bucket-owner root enables MFA Delete through CLI/API; it gates permanent version deletion and versioning changes, not reads, and conflicts with lifecycle configurations. | Amazon S3 documentation unknown | REASONED |
+| s3-audit: Server access logging and CloudTrail object data events default off; management history is not an object log. Enable independent log destinations and selected data events. | Amazon S3 documentation unknown | REASONED |
+| s3-log-delivery: With ACLs disabled grant logging service PutObject on a constrained prefix; destination must share account/Region, lack Object Lock and avoid recursive logging; delivery is delayed. | Amazon S3 documentation unknown | REASONED |
+| r2-routes: R2 defaults private; disable development r2.dev and review every custom/application route independently. Access/WAF on a custom domain does not protect an enabled r2.dev bypass. | Cloudflare R2 documentation unknown | REASONED |
+| r2-tokens: Use bucket-scoped Object Read only/Read &amp; Write tokens; admin permissions are broader. Account/User ownership is separate from resource scope and secret key is shown once. | Cloudflare R2 documentation unknown | REASONED |
+| r2-presign: SigV4 URLs support 1-604800 seconds with explicit expiresIn and work only on the S3 API domain, not custom domains. | Cloudflare R2 documentation unknown | REASONED |
+| r2-cors: Dashboard CORS specifies exact origins, methods and headers; Wrangler format differs and CORS cannot stop a non-browser with a valid signature. | Cloudflare R2 documentation unknown | REASONED |
+| r2-lifecycle: Default rule expires incomplete multipart uploads after seven days, not complete objects; object expiry is asynchronous, typically about 24 hours, and is not immediate revocation. | Cloudflare R2 documentation unknown | REASONED |
+| gcs-uniform: Uniform access disables ACLs and becomes irreversible after 90 consecutive days; CLI bucket creation defaults its flag false, so migrate ACL grants explicitly. | Google Cloud Storage documentation unknown | REASONED |
+| gcs-public: Enforce bucket/organization public-access prevention; inherited API default needs effective organization enforcement. Public grants fail 412 and anonymous reads get 401/403; signed URLs remain usable. | Google Cloud Storage documentation unknown | REASONED |
+| gcs-readback: Boolean update flags enable uniform access and prevention; verify enabled=true and prevention=enforced in bucket description. | Google Cloud Storage documentation unknown | REASONED |
+| gcs-conditions: Prefix/time IAM conditions require uniform access; merge policy version 3 with current etag and required bindings, checking independent project grants. | Google Cloud Storage documentation unknown | REASONED |
+| gcs-list: Object-prefix conditions do not filter bucket-level objects.list; avoid an independent unrestricted listing grant when names are private. | Google Cloud Storage documentation unknown | REASONED |
+| gcs-sign: sign-url requires service-account signing and object permission, not ordinary user login alone; default 1h, system-managed maximum 12h, private-key/activated-account maximum 7d. | Google Cloud Storage documentation unknown | REASONED |
+| gcs-tls: Use HTTPS and optionally deny TLS 1/1.1 through organization policy; this establishes no bucket HTTP-deny switch and excludes public objects served from Google Front End cache. | Google Cloud Storage documentation unknown | REASONED |
+| gcs-encryption: Google-managed encryption is default; CMEK needs compatible location and Storage service-agent encrypter/decrypter role before setting default key; only subsequent writes change absent rewrite. | Google Cloud Storage documentation unknown | REASONED |
+| azure-anonymous: Resource Manager accounts and containers default private; account allowBlobPublicAccess=false overrides public containers, with Azure Policy available to audit/deny broader settings. | Azure Blob documentation unknown | REASONED |
+| azure-identity: Before denying Shared Key, grant and test narrow Entra Blob data roles; management-plane roles do not replace data permissions. | Azure Blob documentation unknown | REASONED |
+| azure-shared-key: Unset/null Shared Key permits use; false rejects account-key, service SAS and account SAS authorization but permits authorized user delegation SAS and does not prevent offline signing. | Azure Blob documentation unknown | REASONED |
+| azure-transport: Require supportsHttpsTrafficOnly and TLS1_2; CLI uses https-only/enableHttpsTrafficOnly. TLS 1.2 service minimum is documented from February 3, 2026. | Azure Blob documentation unknown | REASONED |
+| azure-network: Use defaultAction=Deny with narrow rules or publicNetworkAccess=Disabled for private endpoints; review exceptions and external SAS consumers. | Azure Blob documentation unknown | REASONED |
+| azure-private-endpoint: Approve blob private endpoint and private DNS while retaining normal Blob hostname; private endpoint alone leaves the public route available. | Azure Blob documentation unknown | REASONED |
+| azure-sas: Prefer user delegation SAS via login/as-user with least permissions, HTTPS, explicit start/expiry; maximum seven days and delegation-key lifetime both apply. | Azure Blob documentation unknown | REASONED |
+| azure-signer: Signer needs object data permission plus generateUserDelegationKey at account scope or above; a separate Blob Delegator role avoids broadening container data access. | Azure Blob documentation unknown | REASONED |
+| azure-sas-policy: Expiration Log default does not enforce and needs diagnostics; Block denies supported excess-duration/missing-start requests. Key creation times may require rotation first. | Azure Blob documentation unknown | REASONED |
+| azure-sas-exceptions: SAS expiration action excludes stored-policy service SAS and HDFS user-delegation requests; account policy cannot extend user-delegation seven-day maximum. | Azure Blob documentation unknown | REASONED |
+| azure-revoke: Stored policy revokes only associated service SAS; revoke-delegation-keys affects all account delegation keys with caching delays; account-key SAS needs rotation or Shared Key denial. | Azure Blob documentation unknown | REASONED |
+| azure-retention: Time-based container retention starts unlocked; locking prevents deletion/shortening irreversibly but permits extensions and does not restrict reads. | Azure Blob documentation unknown | REASONED |
+| supabase-private: Buckets default public=false; public reads bypass access control while mutations still check it. A restrictive SELECT policy cannot protect public asset URLs. | Supabase Storage documentation unknown | REASONED |
+| supabase-select: Private Storage uses storage.objects RLS, not application-table policies; scope SELECT to bucket and owner JWT subject and review additive grants and service-created ownership. | Supabase Storage documentation unknown | REASONED |
+| supabase-insert: Uploads need separate INSERT checks for bucket, user UUID path and owner; without policies Storage grants no uploads. | Supabase Storage documentation unknown | REASONED |
+| supabase-mutations: Optional UPDATE checks existing and proposed bucket/owner state; upsert/move need SELECT+UPDATE, copy SELECT+INSERT and removal SELECT+DELETE. | Supabase Storage documentation unknown | REASONED |
+| supabase-sign: Authorize caller before createSignedUrl with explicit seconds; 3600 is an example. Public URL construction cannot authorize private reads; Auth-key rotation does not revoke Storage URLs. | Supabase Storage documentation unknown | REASONED |
+| supabase-privileged: Service-role/server secret keys bypass end-user restrictions and remain server-side; privileged signing endpoints must enforce bucket/object/caller access themselves. | Supabase Storage documentation unknown | REASONED |
+| verify-s3: Known-object authorized GET must return 200, same unsigned URL 403 after fixing public grants, then the saved 60-second URL must expire; errors or missing objects are inconclusive. | Amazon S3 documentation unknown | REASONED |
+| verify-r2: Compare the same fixture through signed S3 API, r2.dev and all custom routes; fixed development route cannot serve it and protected domain denies/challenges while authorized flow succeeds. | Cloudflare R2 documentation unknown | REASONED |
+| verify-gcs: Compare exposed anonymous fixture with enforced prevention 401/403 and a successful valid signed control; signed success does not mean prevention failed. | Google Cloud Storage documentation unknown | REASONED |
+| verify-azure: Require anonymous denial and authorized success on the same blob; documented 401/409/403 depends on request/service version, so inspect errors and bytes. | Azure Blob documentation unknown | REASONED |
+| verify-supabase: Public fixture URL serves bytes before privacy and returns an error afterwards while authorized private/signed download works; test actual user operation/bucket boundaries separately. | Supabase Storage documentation unknown | REASONED |
+| verify-expiry: For every provider repeat the same saved short-lived GET URL before and after expiry, retaining a working object/identity control; do not substitute a fresh URL for the expiry test. | Amazon S3 documentation unknown; Cloudflare R2 documentation unknown; Google Cloud Storage documentation unknown; Azure Blob documentation unknown; Supabase Storage documentation unknown | REASONED |
+| verify-effective: Inspect effective public-access settings and inherited grants with exposed fixtures; inventory and deployed-bundle inspection remain unobserved. | Amazon S3 documentation unknown; Cloudflare R2 documentation unknown; Google Cloud Storage documentation unknown; Azure Blob documentation unknown; Supabase Storage documentation unknown | REASONED |
+| verify-scope-transport: Compare allowed/forbidden prefixes, buckets, operations and time windows; test real HTTP/TLS/endpoint denials with positive controls, not local TLS-library failures. | Amazon S3 documentation unknown; Cloudflare R2 documentation unknown; Google Cloud Storage documentation unknown; Azure Blob documentation unknown; Supabase Storage documentation unknown | REASONED |
+| verify-revocation: Repeat saved URLs after applicable revocation propagation; Azure Log/Block needs an unexpired excessive-duration fixture and exceptions, while Supabase Auth rotation is no Storage revocation. | Amazon S3 documentation unknown; Azure Blob documentation unknown; Supabase Storage documentation unknown | REASONED |
+| verify-encryption-retention: Inspect new versus historical object encryption; compare unlocked deletion with retention and explicit governance bypass, and Azure editable versus locked policy with current ETags. | Amazon S3 documentation unknown; Google Cloud Storage documentation unknown; Azure Blob documentation unknown | REASONED |
+| verify-mfa-delete: Compare permanent deletion and versioning changes without MFA versus valid root MFA through CLI/API; unrelated failures do not establish enforcement. | Amazon S3 documentation unknown | REASONED |
+| verify-signature-age: An older signature still within URL expiry must fail the age policy while a fresh URL to the same object succeeds. | Amazon S3 documentation unknown | REASONED |
+| verify-audit-lifecycle: Locate S3 fixture GET/PUT data events and access logs after delivery; observe R2 eventual expiry without equating its deadline to revocation. | Amazon S3 documentation unknown; Cloudflare R2 documentation unknown | REASONED |
+<!-- version-basis:end -->
+
 AI projects put user uploads, datasets, and model files in buckets, and one public bucket or one over-broad policy leaks every object in it, silently, to anyone who guesses or scrapes a URL. Every provider below now defaults new buckets to private; the work is keeping them that way, granting access per principal, and sharing objects through short-lived signed URLs rather than by making anything public. Self-hosted MinIO is covered in [minio.md](minio.md).
 
 Documentation was checked in September 2026. Defaults below refer to the documented behavior at the time of writing; inspect existing resources and inherited policies rather than assuming they match new-resource defaults. These controls address separate questions: who can read an object, which network routes reach it, whether transport is encrypted, and whether an object can be deleted.
@@ -18004,6 +18241,8 @@ These comparisons require controlled cloud resources and harmless fixture object
 **REASONED:** No S3 account, signing role, or known object was supplied. On a deliberately exposed disposable fixture, an unsigned GET returns its bytes; after the public-access baseline, that same unsigned GET must be denied while an authorized HTTPS GET succeeds. The saved signed URL must subsequently fail after expiry. See [public-access behavior](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html) and [presigned URL behavior](https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-presigned-url.html).
 
 Use the same bucket and object in both arguments, with the correct regional endpoint. First prove the object exists and is readable WITH authorization, so a later anonymous denial is about access, not a missing object. S3 also returns `403` for an object you cannot list. Presigning signs a GET, so test with GET.
+
+REASONED: following block; S3 public-access and presigned-URL documentation supply the expected outcomes; no authorized S3 account, signing role or known object was supplied.
 
 ```bash
 (
@@ -19436,6 +19675,47 @@ The whole-corpus gate suite was not run for this drop-in generation. Shell check
 
 # Search engines for RAG: Meilisearch and Typesense
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| meili-mode: Development is keyless unless MEILI_MASTER_KEY is set; production requires a master key of at least 16 bytes. | Meilisearch release reference v1.53.2 | REASONED |
+| meili-bind: Binary defaults localhost:7700 unless implicit config.toml overrides it; environment and CLI override the file. | Meilisearch release reference v1.53.2 | REASONED |
+| meili-image: Official image sets MEILI_HTTP_ADDR=0.0.0.0:7700; publish only host loopback or use an unpublished private proxy network. | Meilisearch release reference v1.53.2 | REASONED |
+| meili-keys: Four default keys and their permissions are version-dependent; inspect GET /keys and keep admin, read-only admin and master keys server-side. | Meilisearch release reference v1.53.2 | REASONED |
+| meili-tenant: For confidential search, restrict indexes or issue tenant JWTs with enforced rules; keep the signing key server-side and set exp no later than parent expiry. | Meilisearch release reference v1.53.2 | REASONED |
+| meili-tls: Native HTTPS uses ssl-cert-path and ssl-key-path; the proxy pattern confines plaintext locally and verifies TLS across machines. | Meilisearch release reference v1.53.2 | REASONED |
+| typesense-bootstrap: Bootstrap api-key is required and controls all endpoints/data; supply it through TYPESENSE_API_KEY or a protected file and use a revocable operational key routinely. | Typesense 30.2 | REASONED |
+| typesense-api: API defaults 0.0.0.0:8108; set api-address=127.0.0.1 and api-port=8108 for a same-host proxy. | Typesense 30.2 | REASONED |
+| typesense-peer: Separate peering defaults to 8107; select a private address and admit only cluster members. | Typesense 30.2 | REASONED |
+| typesense-scope: Parent search key uses documents:search and named/regex collections; derive browser keys with filter_by and field restrictions, keeping the parent server-side. | Typesense 30.2 | REASONED |
+| typesense-expiry: Set expires_at on browser keys no later than parent expiry; collection scope alone does not isolate JOIN data. | Typesense 30.2 | REASONED |
+| typesense-tls: Self-managed native TLS uses ssl-certificate and ssl-certificate-key; cloud terminates TLS; restrict API and peering access independently. | Typesense 30.2 | REASONED |
+| admin-surface: Keep management UIs private or behind MFA; engine bearer keys are not a second factor and Meilisearch production disables the development preview. | Meilisearch release reference v1.53.2; Typesense 30.2 | REASONED |
+| backup: Protect and encrypt dumps, snapshots, volumes and backups; Typesense backs up snapshot output rather than the live directory and restores privately with auth. | Meilisearch release reference v1.53.2; Typesense 30.2 | REASONED |
+| meili-egress: Upgrade Meilisearch v1.8 through v1.34.0 for SSRF fixed in v1.34.1; avoid allowed-IP-networks=any and restrict remote/webhook administration and egress. | Meilisearch release reference v1.53.2 | REASONED |
+| typesense-egress: Remote embeddings send provider credentials outbound; restrict destinations and protect those secrets. | Typesense 30.2 | REASONED |
+| meili-functions: Leave experimental document-editing functions disabled unless needed; Rhai transformations belong to trusted workloads, not arbitrary OS execution. | Meilisearch release reference v1.53.2 | REASONED |
+| verify-meili-auth: Loopback keyless search returned 200; protected search returned anonymous 401 and keyed 200 with the fixture. | Meilisearch release reference v1.53.2 | DEMONSTRATED |
+| verify-meili-write: Search key was refused index creation with 403; Default Admin received 202 and the task succeeded. | Meilisearch release reference v1.53.2 | DEMONSTRATED |
+| verify-meili-production: Production startup without a master key was refused in the recorded run. | Meilisearch release reference v1.53.2 | DEMONSTRATED |
+| verify-typesense-auth: Loopback Typesense refused anonymous search with 401 and returned the fixture with a collection-scoped key and 200. | Typesense 30.2 | DEMONSTRATED |
+| verify-typesense-write: Search-key collection creation returned 401; bootstrap creation returned 201. | Typesense 30.2 | DEMONSTRATED |
+| verify-rotation: Disclosed Typesense operational key succeeded before deletion, failed after deletion, and its replacement succeeded. | Typesense 30.2 | DEMONSTRATED |
+| verify-tenant: Tenant token and scoped-key filters resisted other-tenant overrides while parent controls returned both fixtures. | Meilisearch release reference v1.53.2; Typesense 30.2 | DEMONSTRATED |
+| verify-join: Collection-scoped key leaked a joined billing field; an embedded exclude_fields restriction removed it. | Typesense 30.2 | DEMONSTRATED |
+| verify-proxy: Recorded same-host Caddy TLS proxy preserved anonymous/keyed auth distinctions for both engines; no external isolation is established. | Meilisearch release reference v1.53.2; Typesense 30.2 | DEMONSTRATED |
+| verify-request: Paired requests require Bash, curl 7.75.0+, verified HTTPS and identical origin/method/path/body; inspect engine JSON, not status alone. | curl minimum 7.75.0; Meilisearch release reference v1.53.2; Typesense 30.2 | REASONED |
+| verify-external: Inventory actual listeners, publications and IPv4/IPv6 rules; external TCP success fails, while refusal/timeout needs live private controls and policy evidence. | Meilisearch release reference v1.53.2; Typesense 30.2; OpenBSD-compatible netcat unknown | REASONED |
+| verify-local-tcp: Recorded netcat loopback reachable/refused shapes returned FAIL/exit 1 and INCONCLUSIVE/exit 2 respectively; external reachability remains unobserved. | OpenBSD-compatible netcat unknown | DEMONSTRATED |
+| verify-bundle: Credential-safe inspection of the real client bundle and history remains unobserved; use a dummy-credential positive control. | Meilisearch release reference v1.53.2; Typesense 30.2 | REASONED |
+<!-- version-basis:end -->
+
 Both back RAG pipelines and site search. Meilisearch ships a keyless development mode meant for a laptop and answers unauthenticated until you set a master key; Typesense requires an operator-supplied bootstrap key from the moment it starts, with no keyless mode. Meilisearch's default admin key is full access except key management, and Typesense's bootstrap key is admin over all endpoints and data; ship an unprotected dev-mode instance, or leak either engine's privileged key, and the whole corpus, every document your RAG pipeline embedded, is readable and writable by whoever has it.
 
 ## Meilisearch
@@ -19585,6 +19865,8 @@ embedding `exclude_fields=$companies(billing)` returned the same query without i
 (one host with no container runtime, no second network, and no root or `sudo` to read the rulesets, and
 the host forbids binding every interface):** proxy authentication does not prove the engine or
 peering ports are private. On the engine host inspect `ss -ltnp`, container port mappings, and the effective IPv4 and IPv6 firewall rules, and confirm the engine answers from its intended private client while running. From an external disallowed source, test every public address and actual published port; the block below covers the default ports with OpenBSD-compatible netcat and numeric addresses:
+
+REASONED: following block; external isolation follows the cited server configuration and OpenBSD netcat documentation; no second network, container runtime, or firewall-rule access was available. Recorded loopback outcomes do not establish external isolation.
 
 ```bash
 (
@@ -20608,6 +20890,80 @@ Run that block once per target, over `http://` against the default plaintext lis
 
 # Jupyter: password and TLS
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| native-auth: Generated tokens enable authentication by default; a password replaces the generated token by default, and configured token/password alternatives are not MFA. | Jupyter Server 2.18.0 | REASONED |
+| password: Standalone Server password prompt stores a hash in jupyter_server_config.json; generate-config writes jupyter_server_config.py under the operating account. | Jupyter Server 2.18.0 | REASONED |
+| endpoint-auth: Set allow_unauthenticated_access=False for unclassified Jupyter handlers; explicitly public handlers and third-party authentication need separate review. | Jupyter Server 2.18.0; Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca | REASONED |
+| endpoint-default: Reference lists allow_unauthenticated_access=True; feature appears under 2.13.0 and 2.18.0, with 2.18+ the guide baseline, not introduction date. | Jupyter Server 2.18.0 | REASONED |
+| metrics-auth: authenticate_prometheus=True independently requires authentication for metrics. | Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca; Jupyter Server 2.18.0 | REASONED |
+| migration: Notebook 7 uses Server; migrate NotebookApp to ServerApp and Server 2 password/token traits to PasswordIdentityProvider and IdentityProvider; avoid credential argv. | Jupyter Server 2.18.0 | REASONED |
+| root: allow_root=False refuses Unix root startup; use a dedicated unprivileged account for server and kernels; it neither changes UID nor sandboxes execution. | Jupyter Server startup source 9a4d6eea2b16815a493b11fffe0b51b1fe55a81b | REASONED |
+| terminals: terminals_enabled=False removes terminals but not kernel shell execution; reference False differs from the implementation's dynamic True subject to availability. | Jupyter Server 2.18.0; Jupyter Server startup source 9a4d6eea2b16815a493b11fffe0b51b1fe55a81b | REASONED |
+| native-tls: certfile/keyfile or --certfile/--keyfile enable native HTTPS; that listener no longer serves ordinary plaintext HTTP. | Jupyter Server 2.18.0 | REASONED |
+| private-bind: Retain loopback; do not expose 0.0.0.0 without authentication and HTTPS; disabling both password and token removes native authentication. | Jupyter Server 2.18.0 | REASONED |
+| proxy-tls: An authenticated HTTPS proxy before a loopback server can replace native TLS; authentication alone does not encrypt transport. | JupyterHub 5.5.2 | REASONED |
+| mfa: Standalone password is single-factor; fronting authentication or a Hub provider adds MFA only when explicitly enforced. | Jupyter Server 2.18.0; JupyterHub 5.5.2 | REASONED |
+| origins: Same-origin settings keep allow_origin and allow_origin_pat empty and allow_credentials=False; cross-origin clients require reviewed exceptions. | Jupyter Server 2.18.0 | REASONED |
+| xsrf: Keep disable_check_xsrf=False; disabling it removes browser-session request-forgery protection. | Jupyter Server 2.18.0; Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca | REASONED |
+| host: allow_remote_access=False retains Host checks; local_hostnames permits actual standalone hostnames; Hub servers need their generated hostnames. | Jupyter Server 2.18.0; Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca | REASONED |
+| token-exception: Token-authenticated requests bypass origin and XSRF checks; test browser protections with a cookie session and no token. | Jupyter Server identity source 3df9a70b8aea53557ad04510a63c95ce9d4c3abc; Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca | REASONED |
+| hub-admission: Hub 5+ PAM example disables allow_all and allow_existing_users, lists allowed_users and empties allowed_groups; other authenticators need separate review. | JupyterHub 5.5.2 | REASONED |
+| hub-accounts: LocalProcessSpawner needs matching Unix accounts; use separate users/servers, and avoid SimpleLocalProcessSpawner, which provides no user isolation. | Jupyter Server 2.18.0; JupyterHub 5.5.2 | REASONED |
+| hub-limits: Local processes are not containers; LocalProcessSpawner does not enforce generic CPU/memory limits, and PAM does not automatically provide MFA. | JupyterHub 5.5.2 | REASONED |
+| hub-domains: For mutually untrusted Hub users, subdomain_host separates browser origins; provide HTTPS/DNS for every user domain on a separate application domain. | JupyterHub 5.5.2 | REASONED |
+| hub-cookies: cookie_host_prefix_enabled requires Hub 4.1+, HTTPS and per-user domains; combined example targets Hub 5+. | JupyterHub 5.5.2 | REASONED |
+| hub-user-config: disable_user_config ignores home configuration; administrator-controlled server executables, environments and launch paths prevent replacement; kernel environments may remain writable. | JupyterHub 5.5.2 | REASONED |
+| server-prefix: Server base_url defaults to /; configure /jupyter/ consistently with the proxy so registered routes remain within the intended boundary. | Jupyter Server 2.18.0 | REASONED |
+| hub-prefix: Hub prefix defaults to /; bind_url=http://127.0.0.1:8000/jupyter/ sets both listener and base_url; conflicting URL settings or proxy prefix flags are not an auth boundary. | JupyterHub 5.5.2; configurable-http-proxy 5.3.0 | REASONED |
+| server-headers: Server trust_xheaders defaults False; enable only behind a private, sanitizing ingress owning forwarded address and scheme headers. | Jupyter Server 2.18.0 | REASONED |
+| hub-headers: Hub enables forwarded-header trust; hub_ip and trusted_downstream_ips constrain address selection, not which peers may send headers; empty trusted hops do not disable trust. | JupyterHub 5.5.2 | REASONED |
+| forwarded-scheme: Ingress must normalize Forwarded and both X- address/scheme forms and reject unintended Host values; Hub reads Forwarded first; public_url and host-prefixed cookies guard specified scheme paths. | JupyterHub 5.5.2 | REASONED |
+| forwarded-host: Forwarded-header handling rewrites address/scheme, not Host; Hub 5 ignores X-Forwarded-Host and its forwarded_host_header trait is inert. | JupyterHub 5.5.2 | REASONED |
+| internal-tls: internal_ssl defaults False; enable it with protected persistent internal_certs_location for mutual TLS on Hub/proxy/single-user and spawn-readiness connections. | JupyterHub 5.5.2 | REASONED |
+| internal-certs: Spawners must deliver certificates and trust bundles; LocalProcessSpawner relocates them, remote spawners need move_certs, and ssl_alt_names must match connection names. | JupyterHub 5.5.2 | REASONED |
+| internal-hostnames: Internal hostname verification defaults on from Hub 5.4, checked against 5.5.2; earlier 5.x left it disabled. | JupyterHub 5.5.2 | REASONED |
+| kernel-transport: Hub internal_ssl excludes server-to-kernel ZeroMQ; HMAC authenticates without encryption, local kernels bind loopback, and remote kernels need separate encrypted transport. | jupyter_client 8.6.3 | REASONED |
+| native-store: NativeAuthenticator replaces PAM credentials with bcrypt hashes in the Hub database, not the spawner's Unix account requirement; protect database/backups. | JupyterHub 5.5.2; NativeAuthenticator 1.3.0 | REASONED |
+| native-length: minimum_password_length effectively defaults 0 despite tag(default=1); set 12; zero admits empty passwords. | NativeAuthenticator 1.3.0 | REASONED |
+| native-common: check_common_password defaults False; True checks the bundled 10,000-entry list, not a breach corpus. | NativeAuthenticator 1.3.0 | REASONED |
+| native-lockout: allowed_failed_logins defaults 0, disabling lockout; set 5 consecutive failures per account. | NativeAuthenticator 1.3.0 | REASONED |
+| native-cooldown: seconds_before_next_try effectively defaults 0 despite the 600 annotation/help; set 1200 and distinguish by a correct password about two seconds after failure. | NativeAuthenticator 1.3.0 | REASONED |
+| native-counters: Failure counters are in memory and reset on restart; timedelta.seconds ignores days and can re-block at 24-hour multiples until success or restart. | NativeAuthenticator 1.3.0 | REASONED |
+| native-oracle: Pending accounts still disclose a distinct correct-password authorization-pending message during lockout; rate-limit the actual prefixed /hub/login route. | NativeAuthenticator 1.3.0 | REASONED |
+| native-policy-scope: Password strength applies at signup/password change; raising policy does not recheck existing passwords. | NativeAuthenticator 1.3.0 | REASONED |
+| native-approval: open_signup defaults False; new pending users need /hub/authorize approval; True pre-authorizes signup, still subject to Hub admission. | NativeAuthenticator 1.3.0 | REASONED |
+| native-preauthorization: allowed_users/admin_users names are pre-authorized at first signup even with open_signup=False; deliberate registration is required; later allowlisting does not approve an existing pending record. | NativeAuthenticator 1.3.0 | REASONED |
+| native-signup: enable_signup defaults True; False refuses signup GET/POST with 404; restrict signup to trusted users. | NativeAuthenticator 1.3.0 | REASONED |
+| verify-tls: Validated HTTPS must complete with exit=0; transport failures alone prove nothing; use real hostname and CA, retaining certificate validation. | curl documentation unknown | REASONED |
+| verify-api: Anonymous /api/kernels returns native 403 with auth, authenticated kernel JSON returns 200; fronting login may redirect, and password-only deployments need a browser positive control. | Jupyter Server 2.18.0; Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca | REASONED |
+| verify-host: Wrong-Host token request is refused with native 403 while normal Host succeeds; a fronting rejection alone does not demonstrate Server Host checks. | Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca | REASONED |
+| verify-metrics: Compare anonymous metrics with authenticate_prometheus off/on and authenticated metrics content; absent routes or generic errors are inconclusive. | Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca | REASONED |
+| verify-extension: Compare an actual unclassified extension route with allow_unauthenticated_access True/False and its authenticated content; protected kernel routes do not substitute. | Jupyter Server 2.18.0; Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca | REASONED |
+| verify-xsrf: Cookie-session same-origin POST without XSRF creates a kernel when checks are disabled; fixed missing header gives 403, matching header gives 201 with successful cookie GET. | Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca; Jupyter Server kernel source c8bbb1a77a1d482816bac0dfe5c14c08d37b59ac; Tornado documentation unknown | REASONED |
+| verify-origin: Wrong-Origin cookie GET returns kernel JSON with allow_origin=*; fixed APIHandler rejects with 404 while same-origin returns 200; also inspect browser CORS headers. | Jupyter Server 2.18.0; Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca | REASONED |
+| verify-cleanup: Record and shut down every disposable kernel created in either state through the authenticated UI. | JupyterLab documentation unknown | REASONED |
+| verify-root: Compare allowed versus refused root startup and inspect server/kernel ownership; fixed unprivileged execution must retain its intended nonzero UID. | Jupyter Server startup source 9a4d6eea2b16815a493b11fffe0b51b1fe55a81b | REASONED |
+| verify-terminals: Compare authenticated /api/terminals enabled/disabled, retaining a working /api/kernels positive control and kernel shell execution. | Jupyter Server 2.18.0; Jupyter Server startup source 9a4d6eea2b16815a493b11fffe0b51b1fe55a81b | REASONED |
+| verify-hub-admission: Compare valid extra and historical users against the allowlist, with allowed-user login and spawn as positive controls. | JupyterHub 5.5.2 | REASONED |
+| verify-hub-accounts: Two users' server/kernel UIDs must differ as intended, compared with a shared-account fixture. | JupyterHub 5.5.2 | REASONED |
+| verify-hub-origins: Compare shared versus distinct user origins and inspect __Host- cookies for Secure, path / and no Domain attribute. | JupyterHub 5.5.2 | REASONED |
+| verify-hub-config: Compare a user terminal override loading versus being ignored, deny server-environment writes, and retain a working notebook. | JupyterHub 5.5.2 | REASONED |
+| verify-listeners: ss inventories local binds, not firewall/NAT; confirm actual private listener and external entry point with a working positive control; failed netlink inventory proves no absence. | Jupyter Server startup source 9a4d6eea2b16815a493b11fffe0b51b1fe55a81b; Jupyter Server port source c5c452c3d5f3060557e57caaadce8f2fffc1c417 | REASONED |
+| port-default: Standalone port starts at 8888 but configuration and retries can change it; inventory the actual listener. | Jupyter Server startup source 9a4d6eea2b16815a493b11fffe0b51b1fe55a81b; Jupyter Server port source c5c452c3d5f3060557e57caaadce8f2fffc1c417 | REASONED |
+| verify-prefix: Probe prefixed and unprefixed Server/Hub routes; require no application alias outside the boundary and working authenticated prefixed access and kernel WebSocket. | JupyterHub 5.5.2; Jupyter Server 2.18.0 | REASONED |
+| verify-headers: Compare spoofed address/scheme/Forwarded headers through real ingress and direct backend access; inspect logs, redirects and cookies with login/WebSocket controls; test real Host separately. | JupyterHub 5.5.2; Jupyter Server 2.18.0 | REASONED |
+| verify-internal-tls: Compare each internal connection with TLS off/on; trusted client certificates succeed, untrusted certificates and wrong hostnames fail on Hub 5.4+; keep kernel ZeroMQ excluded. | JupyterHub 5.5.2; jupyter_client 8.6.3 | REASONED |
+| verify-native: Test length/common-password, threshold/cooldown and pending-account oracle independently; compare approval with allow_all and empty allowed_users, first-signup preauthorization, disabled signup and stored bcrypt. | NativeAuthenticator 1.3.0 | REASONED |
+<!-- version-basis:end -->
+
 An unauthenticated Jupyter server gives anyone who can reach it arbitrary code execution with the permissions of its server and kernel processes. Running those processes with administrative privileges gives an authenticated attacker those privileges too. Jupyter Server ships with authentication on through a generated token; keep authentication enabled. Setting a password replaces the automatically generated token by default. A token and a password can coexist as alternatives, but neither is a second factor. [Jupyter Server security](https://jupyter-server.readthedocs.io/en/latest/operators/security.html).
 
 Keep the default loopback bind when changing other settings. The Server examples below target Jupyter Server 2.18+, including the backend used by JupyterLab and Notebook 7. The multi-user examples target JupyterHub 5+ and belong in `jupyterhub_config.py`. Hub manages authentication for its single-user servers; the standalone password workflow below is for independently operated servers. [Server configuration](https://jupyter-server.readthedocs.io/en/latest/other/full-config.html), [Notebook configuration](https://jupyter-notebook.readthedocs.io/en/stable/configuring/config_overview.html), [Hub authenticators](https://jupyterhub.readthedocs.io/en/stable/reference/authenticators.html).
@@ -20981,6 +21337,7 @@ Root refusal and terminal behaviour are documented in the [Server implementation
 **REASONED for the deployed service: no Jupyter runtime is available here.** The locally feasible inventory command was attempted, but the authoring sandbox reported `Cannot open netlink socket: Operation not permitted`. Its otherwise empty output is not evidence that no listeners exist.
 
 ```bash
+# REASONED: deployed listener inventory; no Jupyter runtime here, and the recorded netlink attempt was denied. Expected binds and external controls follow the cited Server sources.
 ss -tlnp
 ```
 
@@ -23572,6 +23929,70 @@ For cross-node endpoints in an intentionally exposed test deployment, the outsid
 
 # Gradio: launch() authentication and TLS
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| bind: server_name=None resolves through GRADIO_SERVER_NAME to 127.0.0.1 when unset; set loopback explicitly behind the proxy; 0.0.0.0 exposes all interfaces. | Gradio 6.28.0 | REASONED |
+| port: With server_port=None, port search starts at 7860 unless GRADIO_SERVER_PORT changes it; native TLS example explicitly uses 8443. | Gradio 6.28.0 | REASONED |
+| password: auth accepts one tuple, a tuple list or a credential-checking callable; auth_message customizes login; keep credentials outside source. | Gradio 6.28.0 | REASONED |
+| login-limits: Native auth is single-factor without throttling, rate limiting or lockout; a TOTP callable also needs enrollment, secret custody and replay rejection. | Gradio 6.28.0 | REASONED |
+| external-auth: auth_dependency returns a user ID or None and cannot combine with auth; validate identity, sanitize proxy headers and prevent direct backend bypass. | Gradio 6.28.0 | REASONED |
+| sessions: Native bearer tokens live in process memory without server-side expiry; login issues HttpOnly Secure and insecure fallback cookies, and accepts either. | Gradio 6.28.0 | REASONED |
+| revocation: Restart clears native tokens; /logout defaults all_session=True, revoking all sessions for a username; cookie lifetime is not server revocation. | Gradio 6.28.0 | REASONED |
+| external-policy: Require HTTPS and externally enforced MFA, throttling, lockout and finite lifetime on every request; a copied native cookie must not bypass that boundary. | Gradio 6.28.0 | REASONED |
+| tls: ssl_certfile/ssl_keyfile enable HTTPS and ssl_keyfile_password supports encrypted keys; ssl_verify=False affects launcher self-checks and is only needed for self-signed certificates. | Gradio 6.28.0 | REASONED |
+| prefix: root_path builds URLs beneath the proxy prefix; it neither authenticates nor prevents direct backend access. | Gradio 6.28.0 | REASONED |
+| share: share=True publishes a public relay URL; omitted share may inherit GRADIO_SHARE=True or auto-enable in hosted notebooks; deploy with explicit False. | Gradio 6.28.0 | REASONED |
+| file-route: /gradio_api/file= serves registered static paths, allowed_paths and cache; returned file outputs can expose eligible working/temp paths to every app user. | Gradio 6.28.0 | REASONED |
+| allowed-paths: allowed_paths adds exposure, not a sandbox; empty lists do not disable cache or eligible outputs, and granted directories expose descendants. | Gradio 6.28.0 | REASONED |
+| dotfiles: Working-directory dotfiles are excluded from automatic caching unless explicitly permitted; this does not protect other eligible files or justify colocated secrets. | Gradio 6.28.0 | REASONED |
+| blocked-paths: blocked_paths overrides default/static/allowed grants but is a backstop; minimize the process filesystem and never return untrusted file paths. | Gradio 6.28.0; Gradio case-handling advisory unknown | REASONED |
+| path-environment: allowed_paths and blocked_paths default None; even [] falls back to comma-separated GRADIO_ALLOWED_PATHS and GRADIO_BLOCKED_PATHS. | Gradio 6.28.0 | REASONED |
+| cache: GRADIO_TEMP_DIR relocates cache; restrict permissions, quota and cleanup, but relocation and local permissions do not provide per-user download authorization. | Gradio 6.28.0 | REASONED |
+| upload-limit: max_file_size defaults None; set bytes or 5mb for a per-file limit, adding separate storage/rate controls. | Gradio 6.28.0 | REASONED |
+| multipart-fix: 6.20.0 fixed missing max_file_size enforcement on multipart /component_server uploads; retain the 6.28.0 deployment baseline. | Gradio 6.28.0; Gradio historical fixes 6.20.0 | REASONED |
+| historical-traversal: 4.11.0 fixed the historical /file traversal and associated SSRF; this is a historical floor, not the deployment baseline. | Gradio historical fix 4.11.0 | REASONED |
+| historical-files: 6.16.0 includes FileExplorer traversal fixes; the case-handling advisory has conflicting patched-version records and no precise fix version here. | Gradio case-handling advisory unknown; Gradio historical fixes 6.16.0 | REASONED |
+| vibe: GRADIO_VIBE_MODE defaults empty; any nonempty value including False or 0 enables unauthenticated source read/write handlers and arbitrary execution; leave unset and avoid --vibe. | Gradio 6.28.0 | REASONED |
+| mcp: mcp_server defaults None, consulting GRADIO_MCP_SERVER (False); explicitly disable unless tools beneath /gradio_api/mcp/ are deliberately protected and tested. | Gradio 6.28.0 | REASONED |
+| footer: footer_links can hide API documentation; it replaces show_api=False and does not disable the API. | Gradio 6.28.0 | REASONED |
+| visibility: api_visibility defaults public; undocumented hides docs and private blocks Gradio-client use, but direct HTTP remains subject to separate auth/queue policy. | Gradio 6.28.0 | REASONED |
+| api-name: api_name=None derives a function name; api_name=False is no longer a supported public argument and hiding names is not authorization. | Gradio 6.28.0 | REASONED |
+| protected-routes: Native auth/auth_dependency checks cover /config, /gradio_api/info, prediction and queue join/data routes; public assets and a login page do not prove API protection. | Gradio 6.28.0 | REASONED |
+| queue-bypass: queue(api_open=None) is effectively True off Spaces; False refuses direct run/api calls for queued functions, while queued API and queue=False events remain. | Gradio 6.28.0 | REASONED |
+| concurrency: default_concurrency_limit defaults 1 unless changed through GRADIO_DEFAULT_CONCURRENCY_LIMIT; listener overrides apply, not a global per-user limit. | Gradio 6.28.0 | REASONED |
+| queue-size: max_size defaults None with a ZeroGPU Spaces exception; 20 bounds waiting work but is not a per-user quota. | Gradio 6.28.0 | REASONED |
+| threads: max_threads defaults 40; the example sets 8, separately from queue and listener capacity. | Gradio 6.28.0 | REASONED |
+| egress: URL inputs and component/MCP fetches need application destination allowlists and deployment egress controls, including redirects/resolution; no general fetch allowlist covers all surfaces. | Gradio 6.28.0 | REASONED |
+| fetch-fixes: 6.16.0 fixed SVG/Audio SSRF; 6.20.0 changed /gradio_api/file=&lt;url&gt; from open redirect to SSRF-protected streaming proxy. | Gradio historical fixes 6.16.0; Gradio historical fixes 6.20.0 | REASONED |
+| load-token: Keep gr.load name/src trusted; token can inherit HF_TOKEN, model loading can use a saved token, and a loaded Space can read a supplied token. | Gradio 6.28.0 | REASONED |
+| flagging: Interface flagging_mode defaults through GRADIO_FLAGGING_MODE to manual; auto records every submission/output; never disables collection, not existing files. | Gradio 6.28.0 | REASONED |
+| flag-storage: Default CSVLogger writes .gradio/flagged including file data; required collection needs explicit access and retention policy. | Gradio 6.28.0 | REASONED |
+| history: run_history defaults None through GRADIO_RUN_HISTORY to True; False disables recording/page and removes saved browser history, not separately retained bucket data. | Gradio 6.28.0 | REASONED |
+| analytics: Blocks/Interface analytics_enabled defaults None through GRADIO_ANALYTICS_ENABLED to True; False disables basic telemetry independently of flagging/history and application logs. | Gradio 6.28.0 | REASONED |
+| verify-bind-share: Inventory bind and terminate the prior process/tunnel, set share=False, and inspect this fresh run's full startup output; loopback ss alone cannot exclude a relay. | Gradio 6.28.0 | REASONED |
+| verify-native: Compare /gradio_api/info without native cookies (200 exposed, native 401 fixed), retaining proxy authorization; fresh login cookie must restore 200 with app content. | Gradio 6.28.0 | REASONED |
+| verify-tls: Use validated HTTPS at the same host/port/prefix and trust the actual CA; TLS, DNS and connection failures do not demonstrate auth refusal. | Gradio 6.28.0 | REASONED |
+| verify-files: Both markers must serve before blocking; after restart use fresh cookies and confirm both files remain, with blocked 403 and allowed marker content; missing files also yield 403. | Gradio 6.28.0 | REASONED |
+| verify-environment: With allowed_paths=[], an environment-granted marker serves; remove grant and restart to require refusal with an allowed control; relocated cache remains readable across app users. | Gradio 6.28.0 | REASONED |
+| verify-upload: Compare valid below/above-limit uploads on upload and multipart component_server independently; malformed requests or proxy refusal do not demonstrate Gradio enforcement. | Gradio 6.28.0; Gradio historical fixes 6.20.0 | REASONED |
+| verify-vibe: Unauthenticated GET /gradio_api/vibe-code returns demo source with GRADIO_VIBE_MODE=False as a string; unset/restart requires handler 403, not merely a missing file. | Gradio 6.28.0 | REASONED |
+| verify-mcp: Enabled MCP must list/invoke a harmless tool; disabled MCP must stop both with ordinary app still working; published tools need their own anonymous/authorized comparison. | Gradio 6.28.0 | REASONED |
+| verify-visibility: Direct echo HTTP can still work with undocumented/private visibility; auth must reject missing cookies and fresh cookies restore marker content, including config/info/queue comparisons. | Gradio 6.28.0 | REASONED |
+| verify-queue: Authenticated queued run/echo and api/echo succeed with api_open=True and return 404 with False; call/echo plus its event URL must still complete. | Gradio 6.28.0 | REASONED |
+| verify-capacity: Fill 20 waiting slots with a bounded slow handler, compare queue-full refusal and overlap against controls, and inspect thread/listener settings separately. | Gradio 6.28.0 | REASONED |
+| verify-external: auth_dependency user ID permits prefixed config and None yields 401; forged headers/direct origin must fail, with a fresh authorized session as control. | Gradio 6.28.0 | REASONED |
+| verify-revocation: Create two native sessions, require logout to invalidate both, test restart separately, inspect both cookies, and test external lifetime/throttling at the enforcing layer. | Gradio 6.28.0 | REASONED |
+| verify-egress: Allowed markers must arrive; denied or redirected destinations must receive no request after policy enforcement; confirm with destination/egress logs across used fetch surfaces. | Gradio 6.28.0; Gradio historical fixes 6.16.0; Gradio historical fixes 6.20.0 | REASONED |
+| verify-collection: Compare manual/auto flag records against never, history runs/page on/off and telemetry on/off while predictions work; inspect old files and buckets separately. | Gradio 6.28.0 | REASONED |
+<!-- version-basis:end -->
+
 Gradio binds to `127.0.0.1` by default. Two launch choices create exposure: `server_name="0.0.0.0"` (all interfaces) and `share=True` (a public `*.gradio.live` URL through Gradio's relay). Neither is acceptable without authentication.
 
 At the time of writing, this guide targets **Gradio 6.28.0**, the recommended deployment baseline for these examples. Parameters and defaults were checked against the pinned source and vendor documentation in September 2026. Historical security fixes below explain why older minimum versions are insufficient. See the [6.28.0 release](https://github.com/gradio-app/gradio/releases/tag/gradio%406.28.0).
@@ -23762,6 +24183,7 @@ Keep the request otherwise identical to a real client, including any fronting-pr
 Substitute the actual base URL inside the quotes. For a fronting proxy this might be `https://gradio.example.com`; for a direct section-2 TLS launch use the actual host with `:8443`. Include any `root_path` prefix, and use the SAME base URL (host, port, prefix) for `/login` below. Do not put credentials or signed URLs in the substitution. A literal apostrophe requires proper shell quoting. Paste whole blocks; the marker and count checks do not protect fragments pasted below their guards or shells with shadowed builtins.
 
 ```bash
+# REASONED: native API authentication and TLS; no live HTTPS Gradio fixture or outside client here. Expected exposed/fixed outcomes follow the cited 6.28.0 handlers.
 (
   set -- PASTE_WHOLE_BLOCK 'https://REPLACE_WITH_GRADIO_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
@@ -23897,6 +24319,52 @@ The checks below remain REASONED from the cited Gradio 6.28.0 source and documen
 
 # Streamlit: TLS and authentication
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| bind-default: server.address is unset and binds wildcard: try :: when IPv6 is supported, then 0.0.0.0 if unavailable; wildcard behavior was not demonstrated. | Streamlit 1.64.0 | REASONED |
+| port-default: server.port defaults 8501 and may try 100 following ports when not explicitly set; explicitly configure 8501 to prevent that fallback. | Streamlit 1.64.0 | REASONED |
+| private-bind: Loopback proxy configuration keeps Streamlit on 127.0.0.1:8501; observed inventory is local, not proof of external isolation. | Streamlit 1.64.0 | DEMONSTRATED |
+| proxy-websocket: Proxy authentication must cover WebSocket upgrades as well as HTTP; a separately unprotected /_stcore/stream can expose app output despite index/health 401. | Streamlit 1.64.0 | DEMONSTRATED |
+| native-tls: sslCertFile/sslKeyFile provide native TLS for development; vendor recommends a production reverse proxy, with WebSocket upgrade and browser Origin preserved. | Streamlit 1.64.0 | REASONED |
+| xsrf: enableXsrfProtection defaults true; it does not enable CORS or require a token when opening a WebSocket. | Streamlit 1.64.0 | REASONED |
+| cors: enableCORS defaults true; disabling it permits cross-origin WebSockets even with XSRF; use corsAllowedOrigins and allowedHosts, and native auth separately enables both protections. | Streamlit 1.64.0 | REASONED |
+| config: Effective precedence is CLI, environment, project config relative to working directory, then global; restart for server changes and restrict deployment writes. | Streamlit 1.64.0 | REASONED |
+| toolbar: client.toolbarMode affects menu visibility, not authorization. | Streamlit 1.64.0 | REASONED |
+| oidc-versions: st.login/st.logout date from 1.42.0; st.user from 1.45.0 replaces experimental_user; 1.64.0 auth extra needs Authlib&gt;=1.3.2 and httpx&gt;=0.24.1. | Streamlit 1.64.0; Authlib minimum 1.3.2; httpx minimum 0.24.1 | REASONED |
+| oidc-dependencies: Recorded loopback login with Authlib but without httpx failed; install the complete auth extra. | Streamlit 1.64.0 | DEMONSTRATED |
+| oidc-config: secrets.toml auth config supplies redirect_uri, cookie_secret, client_id/client_secret and metadata URL; st.login authenticates identity, not resource authorization. | Streamlit 1.64.0 | REASONED |
+| page-gates: Gate protected pages before rendering/side effects, before st.navigation page execution, and recheck authorization inside privileged callbacks. | Streamlit 1.64.0 | REASONED |
+| native-gate: In the recorded Keycloak claim fixture, native login plus hd/email_verified checks admitted the allowed user and denied other-domain, missing-hd and unverified users. | Streamlit 1.64.0 | DEMONSTRATED |
+| email-gate: Recorded native gate denied unverified email; login without hd/email checks allowed the exposed fixture's other-domain and unverified users. | Streamlit 1.64.0 | DEMONSTRATED |
+| claims: st.user contains ID-token claims; Google hd identifies Workspace/Cloud accounts and is absent for consumer accounts; explicit address allowlisting is an alternative. | Streamlit 1.64.0 | REASONED |
+| cookie: Native identity cookie lasts 30 days and the lifetime is not configurable. | Streamlit 1.64.0 | REASONED |
+| secrets: Keep secrets.toml out of Git, build contexts and served directories; restrict access, never render/log st.secrets, and rotate exposed client/cookie secrets. | Streamlit 1.64.0 | REASONED |
+| errors: showErrorDetails defaults full; stacktrace/type/none are alternatives, deprecated true/false map to full/stacktrace; none hides browser details while console logs retain them. | Streamlit 1.64.0 | REASONED |
+| mfa: OIDC MFA must be enforced at the provider; Basic auth or emailed PIN alone is not MFA, and alternative login paths/direct origin must not bypass policy. | Streamlit 1.64.0 | REASONED |
+| password-widget: A plain text_input password comparison provides no session management, hashing or rate limiting. | Streamlit 1.64.0 | REASONED |
+| uploads: file_uploader defaults 200 MB per file via maxUploadSize; widget max_upload_size overrides it; filters are best-effort, not content validation; rate-limit and never execute uploads. | Streamlit 1.64.0 | REASONED |
+| static-default: enableStaticServing defaults false; enabled /app/static/ is served outside script login, so static/ must contain only public files. | Streamlit 1.64.0 | REASONED |
+| static-test: Recorded static serving bypassed st.stop; enabled returned marker text and disabled returned app HTML, both 200, so inspect the body. | Streamlit 1.64.0 | DEMONSTRATED |
+| execution-egress: TLS/login do not sandbox Python; use least privilege and minimal credentials, avoid executing inputs, and restrict URL-fetch egress including metadata/internal networks. | Streamlit 1.64.0; OWASP SSRF guidance unknown | REASONED |
+| verify-tls: Recorded native TLS returned 200 with the trusted test CA and failed trust with exit 60; never use -k. | Streamlit 1.64.0; curl minimum write-out version 7.75.0 | DEMONSTRATED |
+| verify-proxy: Recorded Caddy loopback Basic-auth comparison returned exposed health 200/ok versus fixed 401; wrong credentials also failed and valid sessions received the canary. | Streamlit 1.64.0 | DEMONSTRATED |
+| verify-oidc-proxy: Recorded oauth2-proxy/Keycloak fixture redirected anonymous health and WebSocket requests; an allowed user reached the canary after password/TOTP, with other-domain 403. | Streamlit 1.64.0 | DEMONSTRATED |
+| verify-native-browser: Native anonymous index is intentionally 200; browser comparisons must check protected content, valid users, domain/email denial and MFA rather than index status. | Streamlit 1.64.0 | DEMONSTRATED |
+| verify-mfa: Recorded allowed native user reached the canary after TOTP; wrong code retained the provider's code prompt, using a loopback Keycloak fixture rather than Google. | Streamlit 1.64.0 | DEMONSTRATED |
+| verify-external: From another host any direct 8501 HTTP response is an exposure; refusal/no-route is not proof and DNS/local errors/timeouts are inconclusive; second-host vantage was unavailable. | Streamlit 1.64.0; curl minimum write-out version 7.75.0 | REASONED |
+| verify-local-reachability: Recorded same-host probe distinguished a listening address from another loopback address; it does not demonstrate the external scenario. | Streamlit 1.64.0; curl minimum write-out version 7.75.0 | DEMONSTRATED |
+| verify-pages: Test every protected page and operation with anonymous, allowed and disallowed users, restoring an isolated exposed canary comparison; broken WebSockets or blank pages are not positive controls. | Streamlit 1.64.0 | REASONED |
+| curl-version: Use curl 7.75.0+ for diagnostic variables and keep certificate validation enabled. | curl minimum write-out version 7.75.0 | REASONED |
+| verify-fence: Combined fence remains REASONED because wildcard binding and second-host isolation were unavailable; the recorded loopback sub-results are separate historical demonstrated claims. | Streamlit 1.64.0; curl minimum write-out version 7.75.0 | REASONED |
+<!-- version-basis:end -->
+
 Streamlit apps have no access control unless you add it, and `streamlit run` listens on all interfaces on port `8501` by default (as of 1.64.0: `server.address` unset, which falls back to `0.0.0.0` and tries `::` first when Python supports IPv6, falling back to `0.0.0.0` if IPv6 is unavailable; `server.port` `8501`, and when that port is busy and was not set explicitly, Streamlit tries up to 100 following ports). Decide both layers before exposing an app.
 
 ## 1. TLS
@@ -23987,6 +24455,7 @@ Basic auth or an emailed one-time PIN alone is not a second factor: for a sensit
 Verification status: the checks below were demonstrated on loopback against Streamlit 1.64.0 (the PyPI wheel, its SHA-256 equal to PyPI's published digest), with native `st.login`, and behind Caddy v2.11.4 and oauth2-proxy v7.15.4, using Keycloak 26.7.4 as the OIDC provider, in the exposed and fixed states. The wildcard bind and block 3's external vantage are REASONED and marked at their steps; the end of this section records what was observed. Use curl 7.75.0 or newer; never add `-k`. Substitute the public HTTPS origin, without a trailing slash, and the server's public address inside the single quotes on their respective `set --` lines, and paste each complete subshell.
 
 ```bash
+# REASONED: whole-block scope includes wildcard binding and second-host reachability, unavailable in the recorded loopback runs; demonstrated sub-results and source reasoning are recorded below.
 ss -tlnp   # listeners on the origin host; 8501 must be 127.0.0.1 behind a proxy, not a public interface
            # (loopback runs saw 127.0.0.1:8501; the default wildcard bind is REASONED: the host forbids it)
 # 1) TLS on the public origin, then the fronting-proxy anonymous check. A transport error (nonzero exit,
@@ -24098,6 +24567,46 @@ Source-checked on 2026-09-18 against Streamlit 1.64.0, the current release at th
 
 # n8n: binding, TLS, and MFA
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| bind-default: n8n 2.40.6 defaults N8N_LISTEN_ADDRESS to :: and N8N_PORT to 5678, exposing all interfaces. | n8n listener source n8n@2.40.6 | REASONED |
+| protocol-default: N8N_PROTOCOL defaults http; private deployment sets listener, port and host explicitly. | n8n documentation unknown | REASONED |
+| container-bind: Host loopback is for a same-host proxy; container loopback blocks sibling/published access, so use a private network without publication or host-loopback 127.0.0.1:5678:5678. | n8n documentation unknown | REASONED |
+| other-ports: Keep Postgres and task-runner broker ports unpublished and publish only the HTTPS proxy. | n8n documentation unknown | REASONED |
+| public-url: Set N8N_PROTOCOL=https and the full N8N_WEBHOOK_URL; WEBHOOK_URL is deprecated from 2.35.0 but still warns and works. | n8n documentation unknown | REASONED |
+| secure-cookie: Retain N8N_SECURE_COOKIE=true, its default. Source gap: listed proxy page does not state this default. | n8n documentation unknown | REASONED |
+| proxy-hops: Set N8N_PROXY_HOPS to the trusted hop count for forwarded client IPs and rate limiting; public webhooks do not require a public editor. | n8n documentation unknown | REASONED |
+| native-tls: N8N_PROTOCOL=https with N8N_SSL_KEY/N8N_SSL_CERT enables native TLS. | n8n documentation unknown | REASONED |
+| owner: Complete first-run owner setup before publication; an unclaimed instance can be claimed by its first visitor. Source gap: listed security-policy page does not document owner setup. | n8n documentation unknown | REASONED |
+| user-mfa: Individual users can enable two-factor authentication, subject to version/licence availability. | n8n documentation unknown | REASONED |
+| mfa-enforcement: Enforce MFA through Settings &gt; Security or N8N_MFA_ENFORCED_ENABLED with N8N_SECURITY_POLICY_MANAGED_BY_ENV; env policy requires 2.18.0+ and self-hosted Business/Enterprise. | n8n environment policy minimum 2.18.0 | REASONED |
+| sso-mfa: Instance MFA enforcement excludes SSO logins; enforce their MFA at the identity provider. | n8n documentation unknown | REASONED |
+| encryption: Stored credentials are encrypted; unset N8N_ENCRYPTION_KEY generates a key under ~/.n8n, not plaintext; losing it makes retained credentials unrecoverable. | n8n documentation unknown | REASONED |
+| key-custody: Set the same encryption key across workers/replicas, back it up separately from the database and exclude it from source and images. | n8n documentation unknown | REASONED |
+| webhook-auth: Webhook None is open; controlled callers use per-node Basic, Header or JWT auth with the matching credential. | n8n documentation unknown | REASONED |
+| auth-boundaries: Editor sessions, /api/v1 with X-N8N-API-KEY and per-node webhook auth are separate boundaries. | n8n documentation unknown | REASONED |
+| signature: A None webhook must validate the provider signature before downstream processing when callers cannot supply native webhook credentials. | n8n documentation unknown | REASONED |
+| code-execution: Code executes JavaScript/Python; Execute Command runs shell commands inside the container under Docker and is disabled by default from 2.0. Source gap: listed task-runner page supports Code, not the Execute Command default. | n8n documentation unknown | REASONED |
+| runners: Use hardened external task runners; vendor describes internal mode as insecure by design. | n8n documentation unknown | REASONED |
+| environment: Set N8N_BLOCK_ENV_ACCESS_IN_NODE=true to block node access to the service environment, including encryption material. Source gap: listed task-runner page does not document this variable. | n8n documentation unknown | REASONED |
+| js-modules: Narrow NODE_FUNCTION_ALLOW_BUILTIN/NODE_FUNCTION_ALLOW_EXTERNAL in external launcher's /etc/n8n-task-runners.json env-overrides; main-container values are overridden. | n8n documentation unknown | REASONED |
+| python-modules: Set N8N_RUNNERS_STDLIB_ALLOW/N8N_RUNNERS_EXTERNAL_ALLOW explicitly; wildcard grants broad module access and version-dependent defaults need confirmation. | n8n documentation unknown | REASONED |
+| ssrf: Enable N8N_SSRF_PROTECTION_ENABLED from 2.12.0 and restrict network egress; the app filter does not contain arbitrary code/command networking. | n8n SSRF filter minimum 2.12.0 | REASONED |
+| verify-inventory: Confirm completed owner setup without creating an owner as a probe; ss is local inventory, not firewall/NAT proof; check actual public IPv4/IPv6 paths separately. | n8n documentation unknown | REASONED |
+| verify-tls: HTTPS reachability tests TLS, not authentication. | n8n documentation unknown | REASONED |
+| verify-api: At the same /api/v1/workflows URL, no key gives native 401 and valid key gives 200 workflow JSON; retain any proxy credentials and feed API key on stdin. Source gap: listed API page documents the header, not these exact status outcomes. | n8n documentation unknown | REASONED |
+| verify-editor: Confirm editor session login at /rest/login separately; a protected public API does not prove editor protection. Source gap: listed API page does not document /rest/login. | n8n documentation unknown | REASONED |
+| verify-webhook: Use each production /webhook/ method and valid payload with missing/wrong/valid credentials; Basic/JWT missing is 401, Header missing is 403; verify actions, not status alone. Source gap: listed node/credential pages do not establish the exact refusal codes. | n8n documentation unknown | REASONED |
+| verify-signature: For None plus workflow signature checks, unsigned calls must run no action; 404 from inactive/wrong path/method is not protection. | n8n documentation unknown | REASONED |
+<!-- version-basis:end -->
+
 n8n includes user management (complete the owner setup on first run), but its network defaults deserve attention: `N8N_LISTEN_ADDRESS` defaults to `::` and `N8N_PORT` to `5678` (both as of n8n 2.40.6), so n8n listens on **all interfaces** over plain HTTP.
 
 ## 1. Bind privately
@@ -24143,6 +24652,7 @@ N8N_SSL_CERT=/path/to/fullchain.pem
 ## 6. Verify
 
 ```bash
+# REASONED: listener, TLS, API and webhook comparisons have no recorded n8n run; no live n8n deployment is available in this read-only review. Expectations follow the listed sources, with sourcing gaps recorded in the claim table.
 # Owner setup must be COMPLETE before the instance is public: an unclaimed n8n hands admin to whoever
 # reaches it first. Confirm the owner exists (the first-run setup wizard no longer appears); do NOT POST
 # owner-creation data to a live instance as a "test".
@@ -24206,6 +24716,35 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
 ======================================================================
 
 # code-server: browser VS Code without giving away the machine
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| ssh: Vendor prefers SSH forwarding; bind the local 8080 forwarding listener to loopback and open the local browser URL. | code-server v4.137.0 | REASONED |
+| config: Edit generated config.yaml and retain a supported credential; precreating it suppresses random-password generation and password auth without either credential fails startup. | code-server v4.137.0 | REASONED |
+| bind: bind-addr 127.0.0.1:8080 keeps the editor private behind a proxy or tunnel. | code-server v4.137.0 | REASONED |
+| auth-default: auth defaults password; replace the generated value with a long random secret and protect config.yaml. | code-server v4.137.0 | REASONED |
+| rate-limit: Password attempts are limited to two per minute plus twelve per hour. | code-server v4.137.0 | REASONED |
+| credential-precedence: PASSWORD/HASHED_PASSWORD override file credentials and hashed form wins; --password is not a supported CLI flag. | code-server v4.137.0 | REASONED |
+| config-precedence: CLI flags override config; inspect --bind-addr, --config, CODE_SERVER_CONFIG and XDG_CONFIG_HOME for the effective launcher and file. | code-server v4.137.0 | REASONED |
+| tls-default: cert defaults false; public access needs authenticated encryption, normally a reverse proxy with a trusted certificate. | code-server v4.137.0 | REASONED |
+| tls-native: Bare --cert or cert:true generates ~/.local/share/code-server/self-signed.crt; --cert with --cert-key selects supplied material; retain certificate validation. | code-server v4.137.0 | REASONED |
+| mfa: Built-in login is single-factor; fronting MFA must cover every enabled path, subdomain and WebSocket. | code-server v4.137.0 | REASONED |
+| path-proxy: /proxy/&lt;port&gt;/ strips its prefix; /absproxy/&lt;port&gt;/ retains it; both use code-server authentication and auth:none exposes them. | code-server v4.137.0 | REASONED |
+| domain-proxy: --proxy-domain exposes per-port subdomains using code-server authentication; apply fronting policy to each. | code-server v4.137.0 | REASONED |
+| preflight: --skip-auth-preflight allows unauthenticated preflight requests. | code-server v4.137.0 | REASONED |
+| disable-proxy: --disable-proxy turns off unneeded port forwarding. | code-server v4.137.0 | REASONED |
+| least-privilege: Loopback limits inbound reach, not terminal/extension/proxied-service outbound access; minimize permissions and egress, including metadata/internal destinations. | code-server v4.137.0 | REASONED |
+| verify-origin: ss inventories only this namespace; probe each public IPv4/IPv6 and port directly with intended TLS hostname; any HTTP response is reachability, and http=000 is inconclusive. | code-server v4.137.0 | REASONED |
+| verify-editor: At the same editor URL, anonymous requests must reach login/challenge and valid-session requests the editor; a proxy 401 alone or failed positive control proves nothing. | code-server v4.137.0 | REASONED |
+| verify-mfa: Password-only access must not open the editor while completing the second factor must; also confirm in a fresh browser. | code-server v4.137.0 | REASONED |
+<!-- version-basis:end -->
 
 code-server runs a terminal in the browser, so exposure equals remote code execution. Its own documentation is blunt: never expose it directly to the internet without authentication and encryption.
 
@@ -24443,6 +24982,71 @@ Point that block at Sentry's `http://tracker.example.com:9000/`: because the bun
 
 # Vector databases: Qdrant, Weaviate, Milvus, Chroma, pgvector
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| private-publication: Bind privately and publish only a TLS proxy, tunnel or tailnet; Docker loopback mapping avoids default wildcard publication. | Docker documentation unknown | REASONED |
+| qdrant-ports: Qdrant REST 6333 and gRPC 6334 are client ports; internal gRPC 6335 opens only in distributed mode, including an initial single peer. | Qdrant security documentation unknown | REASONED |
+| qdrant-bind: Compiled host is 0.0.0.0; config/config, RUN_MODE (development default), config/local, deb config, config-path and QDRANT__ variables overlay in that order. | Qdrant source v1.19.1 | REASONED |
+| qdrant-image: Development overlay binds 127.0.0.1; official image sets RUN_MODE=production, keeps 0.0.0.0 and starts qdrant without arguments. | Qdrant source v1.19.1 | REASONED |
+| qdrant-client-auth: Self-deployed Qdrant defaults insecure; api_key and read_only_api_key gate client REST/gRPC through api-key or Bearer headers, with QDRANT__SERVICE__ environment equivalents. | Qdrant security documentation unknown | REASONED |
+| qdrant-client-tls: service.enable_tls with tls.cert/key enables client TLS; keys without TLS are insecure. | Qdrant security documentation unknown | REASONED |
+| qdrant-peer-auth: Through v1.17.x keys do not gate 6335; v1.18.0 adds enforce_internal_auth, off by default and deferred through rolling upgrades; retain peer-only network restriction. | Qdrant security documentation unknown | REASONED |
+| qdrant-peer-tls: cluster.p2p.enable_tls is separate from client TLS and needs a provisioned tls.ca_cert; compiled default path is not a substitute for provisioning. | Qdrant security documentation unknown | REASONED |
+| qdrant-rotation: alt_api_key accepts an additional client key from v1.17.0; rotate peer-by-peer, with internal use only under enforce_internal_auth from v1.18.0. | Qdrant security documentation unknown | REASONED |
+| weaviate-precedence: File, environment then flags override settings; environment reapplies gRPC/Raft port defaults when unset/empty and gossip/API defaults when unset; empty cluster port variables fail startup. | Weaviate source v1.39.6 | REASONED |
+| weaviate-rest: Default scheme is HTTPS requiring certificates or startup fails; TLS host falls back to host and TLS port is random. HTTP host defaults localhost unless HOST is exported empty; port defaults random; unix uses socket-path. | Weaviate source v1.39.6 | REASONED |
+| weaviate-image: Official image selects HTTP on 0.0.0.0:8080; documented proxy forwards both 8080 and gRPC 50051 with TLS at the proxy. | Weaviate source v1.39.6; Weaviate documentation unknown | REASONED |
+| weaviate-grpc: gRPC always starts on wildcard 50051 and ignores REST host; keep it unpublished except through the intended proxy. | Weaviate source v1.39.6 | REASONED |
+| weaviate-debug: Debug HTTP defaults wildcard 6060 unless GO_PROFILING_DISABLE is true; debug endpoints return 404 until enabled. | Weaviate source v1.39.6 | REASONED |
+| weaviate-metrics: Enabled Prometheus listener exposes metrics and tenant-activity on wildcard, default 2112 when enabled through environment; admit only scraper traffic. | Weaviate source v1.39.6 | REASONED |
+| weaviate-gossip: Even one node opens TCP/UDP gossip 7946 at CLUSTER_BIND_ADDR, defaulting to wildcard when unset/empty; admit only peers. | Weaviate source v1.39.6 | REASONED |
+| weaviate-cluster-api: Internal cluster API binds wildcard 7947, default gossip port plus one, independently of REST host. | Weaviate source v1.39.6 | REASONED |
+| weaviate-raft: Raft 8300 and RPC 8301 bind nonempty CLUSTER_BIND_ADDR, then CLUSTER_ADVERTISE_ADDR, then memberlist private advertise address; keep peer-only. | Weaviate source v1.39.6 | REASONED |
+| weaviate-auth: Anonymous access defaults true; disable it and enable API keys with positional key-to-user mapping. | Weaviate documentation unknown | REASONED |
+| weaviate-rbac: Enable RBAC, root only the admin, and scope app roles to collections; RBAC is stated generally available from v1.29 and cannot combine with admin-list authorization. | Weaviate documentation unknown | REASONED |
+| weaviate-oidc: OIDC issuer/client settings delegate human authentication and MFA to the IdP; authentication alone is not authorization. | Weaviate documentation unknown | REASONED |
+| milvus-config: Compose mounts only data; mount user.yaml and TLS files read-only under /milvus, accounting for MILVUSCONF and milvus.yaml/_test.yaml/default.yaml/user.yaml precedence. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
+| milvus-env: Environment formatter lowercases, strips leading milvus. and removes slash/underscore/dot; use COMMON_SECURITY_* and TLS_* names, remove conflicting sources and recreate changed mounts/environment. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
+| milvus-user: v3.0.2 Ubuntu image runs as milvus; make config/certificates readable and restrict the private key to the service and trusted administrators. | Milvus v3.0.2 | REASONED |
+| milvus-auth: Enable common.security.authorizationEnabled, replace built-in root/Milvus and create a per-app user; proxy auth does not protect internal services. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
+| milvus-tls: tls server/key/CA paths and common.security.tlsMode 1 enable server TLS; mode 2 requires client certificates; enable authentication independently. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
+| milvus-client: External client gRPC uses 19530; publish only that port privately, apart from the optional loopback management mapping. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
+| milvus-internal: Internal proxy 19529, query 21123, data 21124, mix coordinator 22125 and streaming 22222 bind wildcard; node ports can fall back randomly and advertised ip is not a bind. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
+| milvus-internal-auth: Internal routing interceptors pass calls without metadata and do not authenticate Search/Query; standalone runs all five components. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
+| milvus-internal-tls: internaltlsEnabled defaults off; internal TLS is one-way and failed certificate/key loading logs a warning then serves plaintext. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
+| milvus-isolation: Use a dedicated network, no host/shared namespace, and default-deny rules admitting peers by source including random fallback ports; exclude untrusted workloads/users from component hosts. | Docker documentation unknown; Kubernetes documentation unknown | REASONED |
+| milvus-minio-ports: Bundled MinIO publishes wildcard 9000 API and 9001 console while etcd remains internal; restrict both and replace default credentials. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
+| milvus-storage-credentials: Pinned Compose selects MinIO RELEASE.2024-05-28T17-19-04Z with MINIO_ACCESS_KEY/SECRET_KEY=minioadmin; Milvus uses MINIO_ACCESS_KEY_ID/SECRET_ACCESS_KEY; rotate matching pairs together. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
+| milvus-env-files: Use protected untracked env-files, delete overriding Compose environment credential entries, retain ETCD_ENDPOINTS/MINIO_ADDRESS/MINIO_REGION and recreate both services; container environment remains inspectable. | Docker documentation unknown | REASONED |
+| milvus-compose-images: Compose at v2.6.24 and v3.0.2 selects older Milvus images v2.6.23 and v3.0.1; explicitly choose and recheck the intended image. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
+| milvus-management: Management HTTP defaults wildcard 9091 with no bind-address control; METRICS_PORT parse failures fall back, 0 chooses random and other out-of-range values fail listen without stopping Milvus. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
+| milvus-control: Management routes bypass proxy authorization: log-level changes, process-role stop, GC/balancing/node controls and transfers remain exposed even with WebUI disabled. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
+| milvus-key-backup: Management encryption-zone backup returns the plugin backup for eligible databases; v3.0.2 also adds queued-read clearing and path-supplied backfill commit. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
+| milvus-coordinator: Activated mix coordinator adds mutable configuration and WAL changes alongside GC, balancing, suspension and transfer controls. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
+| milvus-profiling: proxy.http.enablePprof defaults true; disabling profiling omits pprof but leaves control routes registered. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
+| milvus-eventlog: First successful eventlog request opens an unauthenticated, non-TLS wildcard gRPC listener on a random port; repeat inventory after requests. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
+| milvus-health: Delete wildcard 9091 publication; in-container healthcheck needs none. Optional 127.0.0.1:9091 mapping still needs isolation; changed METRICS_PORT must update healthcheck and mappings. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
+| chroma-bind: Without a file chroma run defaults localhost; a config file defaults listen_address to 0.0.0.0 after CHROMA_ merges; official config sets only persist_path, yielding wildcard 8000. | Chroma source 1.5.9 | REASONED |
+| chroma-auth: Built-in authentication was removed in v1.0.0; obsolete AUTHN variables do not protect the server. Use private binding and authenticated TLS fronting. | Chroma migration documentation v1.0.0 | REASONED |
+| pgvector: pgvector is a PostgreSQL extension on 5432 for PostgreSQL 13+; use PostgreSQL TLS, hostssl/SCRAM, verify-full and least-privilege roles. | pgvector and PostgreSQL documentation unknown | REASONED |
+| pgvector-rls: Tenant RLS filters shared embeddings; prove tenant-B isolation with known rows and bypass controls, counting per tenant rather than trusting top-k. | pgvector and PostgreSQL documentation unknown | REASONED |
+| hosted-mfa: Hosted keys stay secret and clients use vendor HTTPS; human MFA belongs on hosted consoles, Weaviate OIDC or the fronting layer, not a self-hosted API key. | Qdrant security documentation unknown; Weaviate documentation unknown | REASONED |
+| verify-inventory: Read all listener rows, container namespaces and publications; expected-port grep and host ss alone can miss exposure. | Qdrant security documentation unknown; Docker documentation unknown | REASONED |
+| verify-peer: Probe real backend 6333/6334/6335 from non-peers; require connection failure with filtering evidence and a positive peer control for 6335; auth/TLS rejection is still reachability. | Qdrant security documentation unknown; curl minimum 7.75.0 | REASONED |
+| verify-curl: exit 3/6 is invalid input; 7 or a five-second 28 needs corroboration; nonzero HTTP, 52/56 or a twenty-second 28 indicates reachability, including HTTP 000 cases. | curl minimum 7.75.0 | REASONED |
+| verify-qdrant-auth: Frontend collections check expects anonymous 401/403 and keyed 200 over verified TLS; both can pass while peer port 6335 is exposed. | Qdrant security documentation unknown | REASONED |
+| verify-fronting: Weaviate schema rejects anonymous access and allows a valid key; Chroma requires fronting denial and authorized success because it has no native auth. | Weaviate documentation unknown; Chroma migration documentation v1.0.0 | REASONED |
+| verify-milvus-auth: MilvusClient without a token must fail after authorization is enabled, while the same operation with the application identity succeeds. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
+| verify-milvus-management: Outside-admin reachability fails; private control needs healthy Compose status and the milvus-owned listener, since healthz can pass before registration and bind failure is nonfatal. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
+<!-- version-basis:end -->
+
 A RAG store holds every document the application was given, often including private data, and it answers similarity queries that reconstruct that text. Several of these servers ship with no authentication enabled and none of them serves TLS out of the box, so an exposed default install is a searchable copy of your corpus. Keep the store on a private interface, turn on the native key or account control where one exists, and put TLS in front or on the server before any client crosses a network.
 
 ## 1. Bind privately
@@ -24617,6 +25221,8 @@ For 6335 specifically, in distributed mode, require two results. From a non-peer
 
 Keep the existing client-API key check, hardened, against the frontend hostname over TLS (never a backend IP, never `curl -k`, which a gate rejects). It confirms the key is enforced, but it **cannot** distinguish a keyed single-node deployment from a keyed distributed one with 6335 exposed, because both answer 401 then 200; only the port probes above catch an exposed 6335:
 
+REASONED: following block; client-key outcomes follow the cited Qdrant security documentation; no live frontend outcome is recorded in this guide.
+
 ```bash
 (                              # a subshell, so your own script arguments are untouched
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
@@ -24641,6 +25247,8 @@ Keep the existing client-API key check, hardened, against the frontend hostname 
 **Exposed:** without-key returns `http=200` (no key, or a proxy that does not enforce it), or a backend port is reachable from a non-peer. **Fixed:** without-key returns `401`/`403` and with-key returns `200`, and 6335 is refused from a non-peer while a peer connects.
 
 For Weaviate and Chroma, the fronted client checks still apply:
+
+REASONED: following block; Weaviate authentication and Chroma migration documentation distinguish native and fronting authorization; no live outcomes for these frontends are recorded.
 
 ```bash
 # --noproxy '*' so a forward proxy's CONNECT "200 Connection established" cannot masquerade as the
