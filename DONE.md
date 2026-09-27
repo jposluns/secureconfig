@@ -10,7 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
-| 1.177 | F-MONGODB-AUDIT-SCOPE: `mongodb.md:579` says auditing logs only authorization failures. The MongoDB 8.0 parameter reference for `auditAuthorizationSuccess` scopes the failures-only default to `authCheck` events. Verify at a pinned version and correct the guide's scope. (M, S) | Done, #NNN. |
+| 1.177 | F-MONGODB-AUDIT-SCOPE: `mongodb.md:579` says auditing logs only authorization failures. The MongoDB 8.0 parameter reference for `auditAuthorizationSuccess` scopes the failures-only default to `authCheck` events. Verify at a pinned version and correct the guide's scope. (M, S) | Done, #404. |
 | 3.35 | Reject leading or trailing whitespace in version-basis component names, bases, claim text and evidence, with per-field regression tests; replace CONTRIBUTING rule 8's drifting corpus counts with a reference to gate output. (L, S) | Done, #400. |
 | 1.180 | Correct the Docker publishing boundary for the firewalld-reload regression and add verification after reload with pinned source evidence. (H, S) | Done, #401. |
 | 3.29 | Follow up #387's C3-TOOL-ARGV gate to close its disclosed bounded misses: clustered short options (`mysql -Bp"$PW"`, `turnutils_uclient -vw"$PW"`), `vault login -method=... password=`, `env VAR=secret tool`, `openssl dgst -macopt key:`/`hexkey:`, and secrets in URIs. (L, M) | Done, #399. |
