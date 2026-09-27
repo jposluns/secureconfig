@@ -7,7 +7,7 @@ Publicly trusted certificates are free through ACME certificate authorities such
 - A public DNS record (`A`/`AAAA` or `CNAME`) pointing at the server, for the HTTP-01 and TLS-ALPN-01 challenges; the DNS-01 challenge instead needs only control of the challenge `TXT` record and can certify a host with no public address record or inbound port.
 - For the HTTP-01 challenge: inbound port 80 reachable from the internet.
 - For the TLS-ALPN-01 challenge (used by Caddy and Traefik): inbound port 443.
-- For the DNS-01 challenge (required for wildcard certificates): API access to the DNS provider.
+- For the DNS-01 challenge (required for wildcard certificates), automated issuance and renewal need API access to the DNS provider. Manual DNS-01 is also possible with `certbot certonly --manual --preferred-challenges dns`, creating the TXT record by hand; certificates obtained this way do not auto-renew without an authentication hook (`--manual-auth-hook`) that automates the challenge.
 
 If none of these is possible, use [cloudflare.md](cloudflare.md) instead.
 
@@ -41,7 +41,7 @@ sudo certbot certonly --standalone -d example.com
 sudo certbot certonly --webroot -w /var/www/html -d example.com
 ```
 
-Wildcard certificates require the DNS-01 challenge through a DNS plugin (for example `python3-certbot-dns-cloudflare`), with provider API credentials scoped to least privilege (a Cloudflare API token with `Zone:DNS:Edit` on only the required zones, never the account-wide Global API Key) in a file readable only by root (`chmod 600` the file in a `700` directory; Certbot warns when other users can read it):
+Wildcard certificates require the DNS-01 challenge. For automated issuance and renewal, use a DNS plugin (for example `python3-certbot-dns-cloudflare`), with provider API credentials scoped to least privilege (a Cloudflare API token with `Zone:DNS:Edit` on only the required zones, never the account-wide Global API Key) in a file readable only by root (`chmod 600` the file in a `700` directory; Certbot warns when other users can read it):
 
 ```bash
 sudo certbot certonly --dns-cloudflare \
@@ -101,6 +101,8 @@ A certificate alone does not protect anything: continue with the server guide fo
 
 - Let's Encrypt documentation: https://letsencrypt.org/docs/
 - Certbot instructions: https://certbot.eff.org/
+- Certbot manual DNS-01 and renewal hooks: https://eff-certbot.readthedocs.io/en/stable/using.html#manual
+- Certbot DNS plugins: https://eff-certbot.readthedocs.io/en/stable/using.html#dns-plugins
 - ZeroSSL: https://zerossl.com/
 - acme.sh: https://github.com/acmesh-official/acme.sh
 - Let's Encrypt certificate lifetimes: https://letsencrypt.org/docs/cert-lifetimes/
