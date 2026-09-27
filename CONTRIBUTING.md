@@ -68,7 +68,16 @@ Schema 1 requires exactly these top-level fields:
 - `components`: nonempty object keyed by IDs matching `[a-z][a-z0-9-]*`. Each component has exactly
   `name`, `basis` and `sources`. Use `unknown` when no version is recorded. Sources map
   `s` plus the first 12 lowercase SHA-256 hex digits of the exact URL to that absolute HTTP(S) URL.
-  Each URL must occur in Sources; a known basis must occur in its cited Sources entries.
+  Each URL must occur in Sources; a known basis must occur in every Sources list item citing
+  that URL. Wrapped lines and continuation paragraphs in the same item count together; separate
+  or nested items cannot supply each other's basis. Repeating a URL requires the basis in every
+  item that cites it. Matching is literal and case-sensitive, with no adjacent ASCII letter,
+  digit or dot: `v2.51.0` and `2.51.0` are not interchangeable. A matching literal inside the
+  cited URL counts too. Components with basis `unknown` are exempt from the basis requirement.
+  `tools/version_basis_sources_baseline.txt` grandfathers existing violations by guide and a
+  counted SHA-256 fingerprint of component ID, basis, URL and item paragraph text. New, changed
+  or excess occurrences fail, and fixed or removed occurrences require removing their stale
+  baseline entries. This baseline has no automatic refresh; retained counts remain visible.
 - `claims`: nonempty object with the same ID grammar. Each claim requires `text`, a nonempty unique
   `components` list, a nonempty `sources` list of `component-id:source-id` references, and `status`
   (`DEMONSTRATED` or `REASONED`). Every claim component needs a source; every component must be used.

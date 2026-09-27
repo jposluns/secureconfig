@@ -245,6 +245,9 @@ def tokenize(text, in_quote=False):
                 lazy = (tokens and tokens[-1].kind == "paragraph"
                         and tokens[-1].end == i
                         and tokens[-1].owner == tuple(item[1] for item in stack)
+                        # A dedented sibling item ends this item even when its
+                        # ordered marker is above 1; it is not lazy prose.
+                        and not re.match(r"^ *(?:[-+*]|[0-9]{1,9}[.)]) +", expanded)
                         and not interrupts_paragraph(expanded))
                 while stack and indent < stack[-1][0] and not lazy:
                     stack.pop()

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Mutation and integration tests for accidental metadata/summary drift."""
 import contextlib
+from collections import Counter
 import datetime
 import io
 import json
@@ -197,7 +198,7 @@ class VersionBasisTests(unittest.TestCase):
     def test_pilots_and_entry_points(self):
         for path in vb.paths():
             text = path.read_text(encoding='utf-8')
-            self.assertEqual(vb.updated(text), text)
+            self.assertEqual(vb.updated(text, path.name, vb.load_source_baseline()), text)
             result = subprocess.run([sys.executable, str(vb.ROOT / 'tools/version_basis.py'),
                                      '--bundle', str(path)], capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
@@ -206,6 +207,121 @@ class VersionBasisTests(unittest.TestCase):
         result = subprocess.run([sys.executable, str(vb.ROOT / 'tools/version_basis.py'), '--check'],
                                 capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
+
+
+class SourcesBasisTests(unittest.TestCase):
+    url = 'https://example.com/control'
+    other = 'https://example.com/other'
+
+    def check(self, sources, basis='v1.0', urls=None, baseline=None):
+        data = fixture()
+        data['components']['product'].update(
+            basis=basis, sources={vb.source_id(url): url for url in (urls or [self.url])})
+        data['claims']['control']['sources'] = ['product:' + vb.source_id(self.url)]
+        body = BODY[:BODY.index('- Product')] + sources + '\n'
+        data['body_sha256'] = vb.digest(body)
+        return vb.updated(document(data, body), 'fixture.md', baseline)
+
+    def test_each_url_needs_its_own_basis(self):
+        with self.assertRaisesRegex(ValueError, 'basis.*absent.*' + self.other):
+            self.check(f'- Product v1.0: {self.url}\n- Other: {self.other}',
+                       urls=[self.url, self.other])
+        self.check(f'- Product v1.0: {self.url}\n- Other v1.0: {self.other}',
+                   urls=[self.url, self.other])
+
+    def test_unknown_is_exempt_but_url_still_required(self):
+        self.check(f'- Product: {self.url}', basis='unknown')
+        with self.assertRaisesRegex(ValueError, 'source URL absent'):
+            self.check('- No citation', basis='unknown')
+
+    def test_wrapped_items_and_paragraphs(self):
+        for item in (f'- Product v1.0:\n  {self.url}',
+                     f'- Product: {self.url}\n  basis v1.0',
+                     f'- Product: {self.url}\nbasis v1.0',
+                     f'- Product: {self.url}\n\n  Basis v1.0',
+                     f'1. Product v1.0:\n   {self.url}'):
+            with self.subTest(item=item):
+                self.check(item)
+        with self.assertRaisesRegex(ValueError, 'basis.*absent'):
+            self.check(f'- Product: {self.url}\n  wrapped without basis\n- Other v1.0')
+
+    def test_numbered_siblings_do_not_share_basis(self):
+        for first, second in (('1.', '2.'), ('3)', '4)'), ('99.', '100.')):
+            sources = f'{first} Product v1.0: {self.url}\n{second} Other: {self.other}'
+            with self.subTest(first=first), self.assertRaisesRegex(ValueError, 'basis.*absent'):
+                self.check(sources, urls=[self.url, self.other])
+            self.check(sources.replace('Other:', 'Other v1.0:'), urls=[self.url, self.other])
+        with self.assertRaisesRegex(ValueError, 'basis.*absent'):
+            self.check(f'- Parent\n  1. Product v1.0: {self.url}\n  2. Other: {self.other}',
+                       urls=[self.url, self.other])
+
+    def test_every_repeated_item_must_qualify(self):
+        for items in ((f'- Product v1.0: {self.url}', f'- Again: {self.url}'),
+                      (f'- Again: {self.url}', f'- Product v1.0: {self.url}')):
+            with self.subTest(items=items), self.assertRaisesRegex(ValueError, 'basis.*absent'):
+                self.check('\n'.join(items))
+        self.check(f'- Product v1.0: {self.url}\n- Again v1.0: {self.url}')
+
+    def test_no_borrowing_from_nested_items_or_separate_prose(self):
+        for sources in (f'- Product: {self.url}\n  - Child v1.0',
+                        f'- Parent v1.0\n  - Child: {self.url}',
+                        f'- Product: {self.url}\n\nSeparate v1.0',
+                        f'Product v1.0: {self.url}'):
+            with self.subTest(sources=sources), self.assertRaisesRegex(ValueError, 'basis.*absent'):
+                self.check(sources)
+
+    def test_exact_urls_not_prefixes(self):
+        with self.assertRaisesRegex(ValueError, 'basis.*absent'):
+            self.check(f'- Product: {self.url}\n- Other v1.0: {self.url}-other')
+        self.check(f'- Product v1.0: [control]({self.url})')
+        self.check(f'- Product v1.0: {self.url}.')
+
+    def test_literal_tag_spelling_and_boundaries(self):
+        for basis, spelling in (('v2.51.0', '2.51.0'), ('2.51.0', 'v2.51.0'),
+                                ('2.51.0', '2.51.01'), ('2.51.0', '2.51.0.1')):
+            with self.subTest(basis=basis, spelling=spelling):
+                with self.assertRaisesRegex(ValueError, 'basis.*absent'):
+                    self.check(f'- Product {spelling}: {self.url}', basis=basis)
+        self.check(f'- Product `2.51.0`: {self.url}', basis='2.51.0')
+        # As before, a literal in the URL itself counts.
+        self.check(f'- Product: {self.url}/v1.0 and {self.url}')
+
+    def test_counted_baseline_and_stale_entries(self):
+        item = f'- Product: {self.url}'
+        fp = vb.source_fingerprint('product', 'v1.0', self.url, item)
+        baseline = Counter({('fixture.md', fp): 1})
+        self.check(item, baseline=baseline)
+        for sources in (item + '\n' + item, item + ' changed'):
+            with self.subTest(sources=sources), self.assertRaisesRegex(ValueError, 'new/changed/excess'):
+                self.check(sources, baseline=baseline)
+        for sources, basis in ((item.replace('Product:', 'Product v1.0:'), 'v1.0'),
+                               (item, 'unknown')):
+            with self.subTest(sources=sources), self.assertRaisesRegex(ValueError, 'stale Sources baseline'):
+                self.check(sources, basis=basis, baseline=baseline)
+        with self.assertRaisesRegex(ValueError, 'new/changed/excess'):
+            self.check(item, baseline=Counter({('other.md', fp): 1}))
+        self.assertEqual(len({vb.source_fingerprint(*args) for args in (
+            ('product', 'v1.0', self.url, item), ('other', 'v1.0', self.url, item),
+            ('product', 'v2.0', self.url, item), ('product', 'v1.0', self.other, item),
+            ('product', 'v1.0', self.url, item + ' changed'))}), 5)
+
+    def test_baseline_parser_fails_closed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'tools').mkdir()
+            path = root / 'tools/version_basis_sources_baseline.txt'
+            valid = 'fixture.md\t' + 'a' * 64 + '\t1\n'
+            with patch.object(vb, 'ROOT', root):
+                with self.assertRaises(OSError):
+                    vb.load_source_baseline()
+                for content in ('bad', valid + valid, valid.replace('\t1', '\t0'),
+                                valid.replace('fixture.md', '../fixture.md'),
+                                valid.replace('a' * 64, 'A' * 64)):
+                    path.write_text(content)
+                    with self.subTest(content=content), self.assertRaises(ValueError):
+                        vb.load_source_baseline()
+                path.write_text('# comment\n' + valid)
+                self.assertEqual(vb.load_source_baseline(), {('fixture.md', 'a' * 64): 1})
 
 
 class RoundTwoTests(unittest.TestCase):
@@ -259,6 +375,7 @@ class RoundTwoTests(unittest.TestCase):
             root = Path(directory)
             (root / 'tools').mkdir()
             (root / 'tools/version_basis_guides.txt').write_text('fixture.md\n')
+            (root / 'tools/version_basis_sources_baseline.txt').write_text('')
             (root / 'CHANGELOG.md').write_text('## 2026-09-26\n')
             path = root / 'fixture.md'
             raw = vb.updated(document(fixture())) + 'A reviewed qualification.\n'

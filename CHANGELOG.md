@@ -12,6 +12,8 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-09-27
 
+- Require each Sources URL item to carry its component's literal version basis; ratchet 207 existing violations with counted fingerprints and regression tests. Row 3.38. (#NNN)
+
 - Close row 1.187 (line-anchor audit, #415 to #417) and open rows 1.189 (its residuals) and 3.38 (per-line version-basis check) (#418).
 - Report Vite SSR server-build matches under dist/server/ separately in frontend-frameworks.md's Verify secret scan instead of as client leaks; the scan still covers all of dist, since automatic narrowing proved unsafe, and now follows symlinks. Row 1.188. (#414)
 - Correct version-basis claim sources in 6 guides found by the row 1.187 audit, part 2a (#417).

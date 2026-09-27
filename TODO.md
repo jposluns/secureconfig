@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.190**, **2.48**, **3.39**, **4.12**.
+Next ids: **1.191**, **2.48**, **3.39**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -43,6 +43,7 @@ many.
 | ID | Item | Tags |
 | --- | --- | --- |
 | 1.189 | Residuals of row 1.187's anchor audit: (a) `caddy.md`'s paragraph on bridge versus host network namespaces (near line 252) states Docker networking semantics with no source; cite pinned Docker documentation or narrow it. (b) `model-servers.md` claim `triton-secrets` "argv-only" is a negative resting on the trace described in its Sources line, not on a span. (c) `workflow-orchestrators.md` claim `verify-inventory` cites unpinned man7.org pages under a component with basis unknown. (L, S) | `[gap]` |
+| 1.190 | F-VBASIS-SOURCES-VERSION debt: state each component's literal basis version on every Sources list item that cites its URLs, clearing the baseline added by #N (207 items across 26 guides at 3e0cb90). The ratchet fails on new violations and on stale baseline entries, so burn-down is safe to do guide by guide. (L, M) | `[gap]` |
 
 ## Priority 2: Deepen existing guides
 
@@ -74,7 +75,6 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 3.38 | F-VBASIS-SOURCES-VERSION: `tools/version_basis.py --check` accepts a component's literal basis version when it appears in ANY Sources entry, not in the entry carrying each URL (found in #416's review). Require, per URL, that the Sources line containing it states its component's literal basis (components with basis `unknown` exempt), baseline current violations, and ratchet. (M, S) | `[gap]` |
 | 3.36 | Extend `tools/check_guard_conventions.py` credential scanning, including C3-TOOL-ARGV, from fenced shell to inline code spans in Verify sections, with the same waivers. A credential in a prose Verify bullet is currently unscanned; `cloudflare.md:87` was an example, fixed in #403. Related to row 3.30's broader Verify-marking coverage, but this row checks credential arguments. (M, M) | `[gap]` |
 | 3.30 | Extend the fenced-block Verify-marking gate planned in #389 to list items, table rows and prose units, with the same baseline-and-ratchet mechanism (maintainer ruling, 2026-09-26). (M, L) | `[gap]` |
 

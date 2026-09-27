@@ -5,6 +5,7 @@ Accept only version_basis: followed by a JSON object between --- delimiters.
 Semantic completeness and evidentiary sufficiency remain review obligations.
 """
 import argparse
+from collections import Counter
 import datetime
 import hashlib
 import html
@@ -111,6 +112,75 @@ def citation_urls(text):
     return explicit | bare
 
 
+def source_entries(sources):
+    """List-item paragraphs, including wrapped lines; nested items stay separate."""
+    from check_verify_marking import tokenize
+    lines, _, tokens = tokenize(sources)
+    entries = {}
+    for token in tokens:
+        if token.kind == 'paragraph' and token.owner:
+            entries.setdefault(token.owner, []).extend(lines[token.start:token.end])
+    return ['\n'.join(lines) for lines in entries.values()]
+
+
+def source_fingerprint(component, basis, url, entry):
+    # Bind every dimension, including exact item text; line numbers may move.
+    return digest(json.dumps([component, basis, url, entry], ensure_ascii=False))
+
+
+def source_violations(data, entries):
+    """Yield (fingerprint, diagnostic) for each violating URL/item occurrence."""
+    cited = [(entry, citation_urls(entry)) for entry in entries]
+    for name, component in data['components'].items():
+        basis = component['basis']
+        if basis == 'unknown':
+            continue
+        pattern = r'(?<![A-Za-z0-9.])' + re.escape(basis) + r'(?![A-Za-z0-9.])'
+        for url in component['sources'].values():
+            own = [entry for entry, urls in cited if url in urls]
+            # A known source outside a list item cannot borrow a list's basis.
+            for entry in own or ['']:
+                if not own or not re.search(pattern, entry):
+                    yield (source_fingerprint(name, basis, url, entry),
+                           f'{name}: basis {basis!r} absent from Sources item for {url}')
+
+
+def load_source_baseline():
+    """Counted fingerprints, like the Verify-marking ratchet; never auto-refresh."""
+    counts = Counter()
+    path = ROOT / 'tools/version_basis_sources_baseline.txt'
+    for number, line in enumerate(path.read_text(encoding='utf-8').splitlines(), 1):
+        if not line or line.startswith('#'):
+            continue
+        fields = line.split('\t')
+        require(len(fields) == 3 and re.fullmatch(r'[a-z][a-z0-9-]*\.md', fields[0])
+                and re.fullmatch(r'[0-9a-f]{64}', fields[1])
+                and re.fullmatch(r'[1-9][0-9]*', fields[2]),
+                f'Sources baseline line {number}: malformed entry')
+        key = tuple(fields[:2])
+        require(key not in counts, f'Sources baseline line {number}: duplicate key')
+        counts[key] = int(fields[2])
+    return counts
+
+
+def check_source_bases(data, entries, guide, baseline=None):
+    guide = Path(guide).name
+    current, details = Counter(), {}
+    for fingerprint, message in source_violations(data, entries):
+        current[fingerprint] += 1
+        details[fingerprint] = message
+    allowed = {fp: count for (name, fp), count in (baseline or {}).items() if name == guide}
+    errors = []
+    for fingerprint in sorted(current.keys() | allowed.keys()):
+        actual, limit = current[fingerprint], allowed.get(fingerprint, 0)
+        if actual > limit:
+            errors.append(f'{details[fingerprint]} (new/changed/excess: {actual} > {limit})')
+        if actual < limit:
+            errors.append(f'stale Sources baseline {fingerprint}: {actual} < {limit}; remove it')
+    require(not errors, '; '.join(errors))
+
+
+
 def latest_change():
     """Calendar bound from the checkout, never from the runner's clock."""
     dates = re.findall(r'^## ([0-9]{4}-[0-9]{2}-[0-9]{2})[ \t]*$',
@@ -119,7 +189,7 @@ def latest_change():
     return max(datetime.date.fromisoformat(value) for value in dates)
 
 
-def validate(data, body, guide='GUIDE.md'):
+def validate(data, body, guide='GUIDE.md', baseline=None):
     from check_guide_shape import headings, section_body, SOURCES_RE
     keys(data, ('schema', 'checked', 'documentation_checked', 'body_sha256', 'components', 'claims'))
     require(type(data['schema']) is int and data['schema'] == 1, 'unsupported schema')
@@ -142,8 +212,10 @@ def validate(data, body, guide='GUIDE.md'):
     require(body.startswith('# ') and sum(level == 1 for _, level, _, _ in headings(body)) == 1,
             'guide body must start with exactly one H1')
     heads = headings(body)
-    sources = '\n'.join(section_body(body, heads, start, level)
-                        for _, level, title, start in heads if SOURCES_RE.match(title))
+    sections = [section_body(body, heads, start, level)
+                for _, level, title, start in heads if SOURCES_RE.match(title)]
+    sources = '\n'.join(sections)
+    entries = [entry for section in sections for entry in source_entries(section)]
     require(any(SOURCES_RE.match(title) and
                 SOURCES_RE.match(title).group(1).lower() == documentation.strftime('%B').lower() and
                 int(SOURCES_RE.match(title).group(2)) == documentation.year
@@ -161,11 +233,7 @@ def validate(data, body, guide='GUIDE.md'):
             require(urlsplit(url).scheme in ('http', 'https') and urlsplit(url).hostname,
                     'source must be an absolute HTTP(S) URL')
             require(url in source_urls, 'source URL absent from Sources: ' + url)
-        cited_lines = '\n'.join(line for line in sources.splitlines()
-                                if any(url in line for url in component['sources'].values()))
-        require(component['basis'] == 'unknown' or re.search(r'(?<![A-Za-z0-9.])' + re.escape(component['basis']) +
-                          r'(?![A-Za-z0-9.])', cited_lines),
-                'basis absent from its Sources entries: ' + component['basis'])
+    check_source_bases(data, entries, guide, baseline)
     identifiers(data['claims'])
     blocks = verify_blocks(body, with_status=True)
     covered, used = set(), set()
@@ -253,7 +321,7 @@ def front_matter(data):
     return '\n'.join(lines + ['  }', '}', '---', ''])
 
 
-def rebound(text, guide='GUIDE.md'):
+def rebound(text, guide='GUIDE.md', baseline=None):
     """Validate the reviewed inventory and replace only the top-level digest token."""
     data, full_body = split(text)
     require(data is not None, 'missing version_basis front matter')
@@ -261,7 +329,7 @@ def rebound(text, guide='GUIDE.md'):
     string(data['body_sha256'])
     require(re.fullmatch(r'[0-9a-f]{64}', data['body_sha256']), 'bad body digest')
     data['body_sha256'] = digest(body)
-    validate(data, body, guide)
+    validate(data, body, guide, baseline)
     # split() already strictly parsed the object. Walk only its top-level members,
     # preserving all other bytes, even escaped keys or noncanonical whitespace.
     decoder = json.JSONDecoder()
@@ -278,11 +346,11 @@ def rebound(text, guide='GUIDE.md'):
         position = re.compile(r'\s*,\s*').match(text, position).end()
 
 
-def updated(text, guide='GUIDE.md'):
+def updated(text, guide='GUIDE.md', baseline=None):
     data, full_body = split(text)
     require(data is not None, 'missing version_basis front matter')
     body = without_summary(full_body)
-    validate(data, body, guide)
+    validate(data, body, guide, baseline)
     title, rest = body.split('\n\n', 1)
     prefix = front_matter(data)
     return prefix + title + '\n\n' + render(data) + '\n\n' + rest
@@ -310,13 +378,17 @@ def main():
                         help='optional enrolled guide for --check or --write')
     args = parser.parse_args()
     try:
+        selected = paths()
+        baseline = load_source_baseline()
+        require({name for name, _ in baseline} <= {path.name for path in selected},
+                'Sources baseline contains an unenrolled guide; remove it')
         require(args.guide is None or args.check or args.write,
                 'a positional guide requires --check or --write')
         if args.rebind:
             path = args.rebind.resolve()
-            require(path in paths(), '--rebind requires an enrolled guide')
+            require(path in selected, '--rebind requires an enrolled guide')
             text = path.read_bytes().decode('utf-8')
-            expected = rebound(text, path.name)
+            expected = rebound(text, path.name, baseline)
             path.write_bytes(expected.encode('utf-8'))
             print(f'  ok    {path.name}: rebound digest; this asserts the claim inventory '
                   'was reviewed, not that a demonstration was run. '
@@ -326,11 +398,10 @@ def main():
             text = args.bundle.read_text(encoding='utf-8')
             data, body = split(text)
             if data is not None:
-                require(updated(text, args.bundle) == text, 'stale summary')
+                require(updated(text, args.bundle, baseline) == text, 'stale summary')
             sys.stdout.write(body)
             return 0
         pending = []
-        selected = paths()
         if args.guide:
             path = args.guide.resolve()
             require(path in selected, 'expected an enrolled guide')
@@ -338,7 +409,7 @@ def main():
         for path in selected:
             text = path.read_text(encoding='utf-8')
             try:
-                expected = updated(text, path.name)
+                expected = updated(text, path.name, baseline)
                 require(args.write or text == expected, 'stale summary: run tools/version_basis.py --write')
             except (ValueError, TypeError, KeyError) as exc:
                 raise ValueError(f'{path.name}: {exc}') from exc
@@ -346,7 +417,10 @@ def main():
         if args.write:
             for path, expected in pending:
                 path.write_text(expected, encoding='utf-8')
-        print(f'  ok    version basis: {len(pending)} opted-in guides')
+        retained = sum(count for (name, _), count in baseline.items()
+                       if name in {path.name for path in selected})
+        print(f'  ok    version basis: {len(pending)} opted-in guides; '
+              f'{retained} grandfathered Sources URL/items retained')
         return 0
     except (OSError, ValueError, TypeError, KeyError) as exc:
         print(f'  FAIL  version basis: {exc}', file=sys.stderr)
