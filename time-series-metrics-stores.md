@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "fc6d9b11f3c0464ea416b8c52c97ebf7bff9342962307ba1264880dd3472243a",
+  "body_sha256": "74c6ccf1092408e465a15c8d90d540704f07d143b4c304db352d057c627ca74d",
   "components": {
     "influx2": {
       "name": "InfluxDB OSS",
@@ -93,7 +93,8 @@ version_basis: {
         "s3a0487771c1a": "https://questdb.com/docs/configuration/http-server/",
         "s9c38998f3725": "https://questdb.com/docs/configuration/postgres-wire-protocol/",
         "se0fda155b33d": "https://questdb.com/docs/configuration/ingestion/",
-        "s19f43451ff2b": "https://questdb.com/docs/configuration/http-min-server/"
+        "s19f43451ff2b": "https://questdb.com/docs/configuration/http-min-server/",
+        "s7ca922a2e0f5": "https://questdb.com/docs/configuration/tls/"
       }
     },
     "single-commit": {
@@ -146,7 +147,7 @@ version_basis: {
     "quest-http": {"text": "9000 HTTP/console/SQL defaults unauthenticated; set http.user/password in server.conf. 9003 health requires auth when HTTP does by default; http.health.check.authentication.required=false disables that health check requirement.", "components": ["quest"], "sources": ["quest:s3a0487771c1a", "quest:s19f43451ff2b"], "status": "REASONED"},
     "quest-pg": {"text": "8812 PostgreSQL wire defaults admin/quest; replace pg.user/password and protect its separate listener.", "components": ["quest"], "sources": ["quest:s9c38998f3725"], "status": "REASONED"},
     "quest-ilp": {"text": "9009 TCP writes default unauthenticated; line.tcp.auth.db.path selects P-256 public-key file.", "components": ["quest"], "sources": ["quest:se0fda155b33d"], "status": "REASONED"},
-    "quest-tls": {"text": "OSS requires proxy TLS; Enterprise uses RBAC/tls.enabled and rejects HTTP credential keys since stated Enterprise 4.0.0.", "components": ["quest", "enterprise"], "sources": ["quest:s3a0487771c1a", "enterprise:s3a0487771c1a"], "status": "REASONED"},
+    "quest-tls": {"text": "OSS requires proxy TLS; Enterprise uses RBAC/tls.enabled and rejects HTTP credential keys since stated Enterprise 4.0.0.", "components": ["quest", "enterprise"], "sources": ["quest:s3a0487771c1a", "enterprise:s3a0487771c1a", "quest:s7ca922a2e0f5"], "status": "REASONED"},
     "verify-inventory": {"text": "Inventory TCP/UDP and every enabled listener; local binds do not prove external isolation.", "components": ["influx1", "single", "cluster", "quest"], "sources": ["influx1:s5b36c54676cf", "single:s93fe4e7a4f06", "cluster:s3a9a2abdad17", "quest:s3a0487771c1a", "quest:s9c38998f3725", "quest:se0fda155b33d"], "status": "REASONED", "verify": [1]},
     "verify-rpc": {"text": "Actual storage IPs must refuse outside TCP while permitted hosts connect; protocol is not HTTP and failure alone proves no isolation.", "components": ["cluster", "rpc", "proxy"], "sources": ["cluster:s3a9a2abdad17", "cluster:s3e4eb7d48b66", "rpc:sca91785d878c", "proxy:s185272dd320f"], "status": "REASONED", "verify": [2]},
     "verify-http": {"text": "Setup body, Influx1 database list/401, VM query/401 and Quest SQL/401 discriminate per target; redirects/errors are inconclusive.", "components": ["influx2", "influx1", "single", "quest"], "sources": ["influx2:sc9e982673a2c", "influx1:s33366bcde097", "single:s79f8b1e8eaad", "quest:s3a0487771c1a"], "status": "REASONED", "verify": [3]},
@@ -429,3 +430,4 @@ Run that block once per target, over `http://` against the default plaintext lis
 - QuestDB ingestion / line protocol (`9009`, `line.tcp.auth.db.path` default none): https://questdb.com/docs/configuration/ingestion/
 
 - QuestDB minimal HTTP server (`9003`, `http.health.check.authentication.required` defaults to `true`; `false` permits unauthenticated health checks): https://questdb.com/docs/configuration/http-min-server/
+- QuestDB TLS encryption (Enterprise only; `tls.enabled`): https://questdb.com/docs/configuration/tls/
