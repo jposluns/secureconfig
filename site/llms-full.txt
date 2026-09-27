@@ -36627,8 +36627,9 @@ missing files, authentication failures, connection failures, and timeouts are in
 - browserless pinned Playwright file-protocol fix a18a1231ead2ecc4114347d5d1fafd69bffeb735 (PR #5407): https://github.com/browserless/browserless/commit/a18a1231ead2ecc4114347d5d1fafd69bffeb735
 - browserless 2.51.0 Playwright WebSocket enforcement and blocked-URL policy close: https://raw.githubusercontent.com/browserless/browserless/v2.51.0/src/browsers/browsers.playwright.ts
 - browserless 2.56.7 TOKEN initialization: https://github.com/browserless/browserless/blob/v2.56.7/src/config.ts#L250
-- browserless 2.56.7 HTTP authentication rejection: https://github.com/browserless/browserless/blob/v2.56.7/src/server.ts#L98-L110
-- browserless 2.56.7 route authentication dispatch: https://github.com/browserless/browserless/blob/v2.56.7/src/server.ts#L248-L254
+- browserless 2.56.7 HTTP and WebSocket authentication rejection: https://github.com/browserless/browserless/blob/v2.56.7/src/server.ts#L103-L117
+- browserless 2.56.7 HTTP route authentication dispatch: https://github.com/browserless/browserless/blob/v2.56.7/src/server.ts#L264-L271
+- browserless 2.56.7 WebSocket route authentication dispatch: https://github.com/browserless/browserless/blob/v2.56.7/src/server.ts#L445-L454
 - browserless open-source Docker default and management endpoints: https://docs.browserless.io/enterprise/open-source
 - browserless pressure API request and response: https://docs.browserless.io/enterprise/utility-functions/pressure
 - Playwright BrowserType.launchServer and connect: https://playwright.dev/docs/api/class-browsertype
