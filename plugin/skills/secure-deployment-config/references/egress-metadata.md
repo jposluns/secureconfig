@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "ec354e7856390374a23b7e1998f9d37152bc9d095115f14d5a0132d6bf29edee",
+  "body_sha256": "2e2cdb5c2144e56c008708384053af2e58c3a5a158a5251b6426a0a84385b56c",
   "components": {
     "aws": {
       "name": "AWS metadata and networking",
@@ -315,7 +315,7 @@ aws ec2 describe-instances --instance-ids i-0123456789abcdef0 \
 - AWS CLI `modify-instance-metadata-options`: https://docs.aws.amazon.com/cli/latest/reference/ec2/modify-instance-metadata-options.html
 - GCP metadata server overview: https://docs.cloud.google.com/compute/docs/metadata/overview
 - GCP VPC firewall (a VM reaches metadata regardless of firewall rules): https://docs.cloud.google.com/firewall/docs/firewalls#metadata-server
-- Azure Instance Metadata Service (2025-04-07): https://learn.microsoft.com/en-us/azure/virtual-machines/instance-metadata-service
+- Azure Instance Metadata Service (API version 2025-04-07): https://learn.microsoft.com/en-us/azure/virtual-machines/instance-metadata-service
 - Kubernetes NetworkPolicy: https://kubernetes.io/docs/concepts/services-networking/network-policies/
 - Docker network create (`--internal`): https://docs.docker.com/reference/cli/docker/network/create/
 - curl manual (exit 7 "Failed to connect to host", exit 28 "Operation timeout", `--connect-timeout`, and the `time_connect` write-out variable): https://curl.se/docs/manpage.html

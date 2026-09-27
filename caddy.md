@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "092ff4824961c8e279cbc6ff81a02d86e789e2adf1c3cbf544beb6eef91d3378",
+  "body_sha256": "a3fb02f8459e2b1c3c3acb2c2ce4c62d00557546d9bfaf5ebcae46415bed27f3",
   "components": {
     "docs": {
       "name": "Caddy documentation",
@@ -333,12 +333,12 @@ ls -l /run/caddy/admin.sock          # if you bound it to a unix socket: it exis
 - `request_body` directive (`max_size`): https://caddyserver.com/docs/caddyfile/directives/request_body
 - Caddyfile directive list, which carries no `rate_limit` entry: https://caddyserver.com/docs/caddyfile/directives
 - caddy-ratelimit, the community module that adds rate limiting: https://github.com/mholt/caddy-ratelimit
-- basic_auth directive (v2.8.0): https://caddyserver.com/docs/caddyfile/directives/basic_auth
+- basic_auth directive (renamed from basicauth in Caddy v2.8.0): https://caddyserver.com/docs/caddyfile/directives/basic_auth
 - tls directive: https://caddyserver.com/docs/caddyfile/directives/tls
 - reverse_proxy directive (X-Forwarded-* ignored from untrusted sources by default; `trusted_proxies`): https://caddyserver.com/docs/caddyfile/directives/reverse_proxy
 - Caddy conventions (unix socket default mode 0200, `|<mode>` suffix): https://caddyserver.com/docs/conventions
 - header directive (HSTS): https://caddyserver.com/docs/caddyfile/directives/header
-- forward_auth directive (2.5): https://caddyserver.com/docs/caddyfile/directives/forward_auth
+- forward_auth directive (Caddy 2.5 and later): https://caddyserver.com/docs/caddyfile/directives/forward_auth
 - Caddy command-line signals (SIGUSR1 reload conditions): https://caddyserver.com/docs/command-line#signals
 - Let's Encrypt ending expiration-notification emails (2025): https://letsencrypt.org/2025/01/22/ending-expiration-emails/
 - Request matchers (path, wildcards, multiple paths): https://caddyserver.com/docs/caddyfile/matchers

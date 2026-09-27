@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "8f56b613dff4786f4771bddb49668fc13e23a853167793f2f783a67d417eadf5",
+  "body_sha256": "4e0320534d6c0e20a0f7044b6dfe3cfdcdd3a35f15a4880858102fce5948fd5a",
   "components": {
     "apache": {
       "name": "Apache HTTP Server",
@@ -243,6 +243,6 @@ sudo apachectl -S                       # the vhost list, in Apache's own matchi
 - Apache SSL/TLS how-to: https://httpd.apache.org/docs/2.4/ssl/ssl_howto.html
 - Apache authentication how-to: https://httpd.apache.org/docs/2.4/howto/auth.html
 - Apache name-based virtual hosts, for which vhost answers an unmatched Host header: https://httpd.apache.org/docs/2.4/vhosts/name-based.html
-- Apache mod_ssl `SSLVHostSNIPolicy`, for the 421 a mismatched SNI and Host pairing can produce (Apache 2.4.36+, Apache 2.4.42+, OpenSSL 1.1.1+, Apache 2.4.8): https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslvhostsnipolicy
+- Apache mod_ssl `SSLVHostSNIPolicy`, for the 421 a mismatched SNI and Host pairing can produce (TLSv1.3: Apache 2.4.36+ with OpenSSL 1.1.1+; per-vhost SSLProtocol: Apache 2.4.42+ with OpenSSL 1.1.1+ and client SNI; chain in SSLCertificateFile: Apache 2.4.8+): https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslvhostsnipolicy
 - Apache virtual host matching in detail, for SNI selecting the vhost on a TLS connection: https://httpd.apache.org/docs/2.4/vhosts/details.html
 - Mozilla SSL Configuration Generator: https://ssl-config.mozilla.org/
