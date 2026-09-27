@@ -12,7 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-09-27
 
-- Resolve row 1.189: source Caddy's Docker namespace guidance, narrow Triton secret handling to pinned parser spans, and pin the workflow listener-inventory manuals and version bases (#NNN).
+- Resolve row 1.189: source Caddy's Docker namespace guidance, narrow Triton secret handling to pinned parser spans, and pin the workflow listener-inventory manuals and version bases (#421).
 - Check Verify inline commands for credential arguments with the shared fenced-shell checks, explicit code-specific waivers and regression fixtures. Row 3.36 (#419).
 - Close row 1.187 (line-anchor audit, #415 to #417) and open rows 1.189 (its residuals) and 3.38 (per-line version-basis check) (#418).
 - Report Vite SSR server-build matches under dist/server/ separately in frontend-frameworks.md's Verify secret scan instead of as client leaks; the scan still covers all of dist, since automatic narrowing proved unsafe, and now follows symlinks. Row 1.188. (#414)
