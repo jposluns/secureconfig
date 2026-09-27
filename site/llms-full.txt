@@ -28858,6 +28858,9 @@ challenge path is served before the dotfile deny is reached (`allow`/`deny`: `ng
 dot-prefixed path segments and paths ending in `.bak`, `.old`, `.orig`, `~`, `.sql`, `.sql.gz`, `.dump`,
 or `.tar.gz`. Put these regex locations before other regex locations that could serve the same paths;
 an exact location or another `^~` prefix can bypass them. Keep the challenge directory free of secrets.
+Unlike the Apache and Caddy configs below, which exempt all of `/.well-known/`, this config exempts only
+the ACME challenge prefix, so `/.well-known/security.txt` is denied; if you serve that file, add
+`location = /.well-known/security.txt {}`, because nginx selects an exact match before it checks regex locations.
 
 ## Apache
 
@@ -28916,7 +28919,7 @@ served directory even when their names match none of these patterns.
 
 ## Keep dumps and backups out of the served directory
 
-`.sql`, `.dump`, and backup archives should never land inside a directory a web root points at; the deny rules above are a backstop, not the control. Write exports and backups outside the document root, or to object storage ([object-storage.md](object-storage.md)), never `/var/www/html`.
+`.sql`, `.dump`, and backup archives should never land inside a directory a web root points at; the deny rules above are a backstop, not the control. Write exports and backups outside the document root, or to object storage ([object-storage.md](object-storage.md)), never `/var/www/html`. These rules also block intentionally public files with these suffixes, including release archives. Narrow the suffix policy for your site and verify that intended downloads remain accessible.
 
 ## Client bundles: secrets compiled into the browser
 
@@ -28932,6 +28935,8 @@ unpublish a `.map` you already deployed. Do not ship a source map, or leave one 
 meant to be public.
 
 ## Verify
+
+**REASONED:** No nginx, Apache, or Caddy server was run here; the expected 403 or 404 responses and the ACME exemption follow the nginx core and access modules, Apache core and mod_authz_core, and Caddy matcher and `respond` references in Sources.
 
 ```bash
 # Plant a real file at a denied dotfile path so a 403/404 proves the RULE fired, not that the file is
@@ -28996,7 +29001,7 @@ done
 # a bundler can split or encode a value, so scan for the literal secret as well
 ```
 
-Any backup path known to have existed on the server should also 404 at the deployed URL.
+Any backup path known to have existed on the server should also return 403 or 404, without the file contents, at the deployed URL.
 
 Also plant a readable file for each suffix and a generic dotfile, so the added classes are tested
 against real content. Use GNU `mktemp`, set `DOCROOT` to this host's document root, and replace
