@@ -1,4 +1,176 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "ad4e678700a70620ed705a45b599224a166de38542c77e7cb3950eb3de417bd0",
+  "components": {
+    "cockpit": {
+      "name": "Cockpit",
+      "basis": "368",
+      "sources": {
+        "sc42ba09017c7": "https://github.com/cockpit-project/cockpit/blob/368/src/systemd/cockpit.socket.in",
+        "s0c1e0db624a4": "https://github.com/cockpit-project/cockpit/blob/368/doc/modules/guide/pages/listen.adoc",
+        "sd0cb4ea3db56": "https://github.com/cockpit-project/cockpit/blob/368/doc/modules/guide/pages/https.adoc",
+        "sf157ab3a6f47": "https://github.com/cockpit-project/cockpit/blob/368/doc/modules/man/pages/cockpit.conf.5.adoc",
+        "s48ebdec28e10": "https://github.com/cockpit-project/cockpit/blob/368/doc/modules/guide/pages/authentication.adoc",
+        "s2432e599485f": "https://github.com/cockpit-project/cockpit/blob/368/doc/modules/guide/pages/privileges.adoc",
+        "sbdcd6e74a0c7": "https://github.com/cockpit-project/cockpit/blob/368/tools/cockpit.pam",
+        "sc20103cfb39b": "https://github.com/cockpit-project/cockpit/blob/368/tools/cockpit.spec"
+      }
+    },
+    "systemd": {
+      "name": "systemd",
+      "basis": "v262",
+      "sources": {
+        "s0a96457c713e": "https://github.com/systemd/systemd/blob/v262/man/systemd.socket.xml"
+      }
+    },
+    "webmin": {
+      "name": "Webmin",
+      "basis": "2.670",
+      "sources": {
+        "sa4f7ac343e85": "https://github.com/webmin/webmin/blob/2.670/setup.sh",
+        "sb8fec2baa0f2": "https://github.com/webmin/webmin/blob/2.670/miniserv.pl",
+        "sdd465cac1ff8": "https://github.com/webmin/webmin/blob/2.670/makedebian.pl",
+        "s9ecba8f15014": "https://github.com/webmin/webmin/blob/2.670/makerpm.pl",
+        "sdb2ef2bf9978": "https://github.com/webmin/webmin/blob/2.670/miniserv-lib.pl",
+        "s1a1dbd21dddd": "https://github.com/webmin/webmin/blob/2.670/shell/defaultacl",
+        "s2f3504ad1328": "https://github.com/webmin/webmin/blob/2.670/webmin/twofactor-funcs-lib.pl"
+      }
+    },
+    "webmin-docs": {
+      "name": "Webmin docs",
+      "basis": "8ceae26c5a074053905cbcc6c0053be573633f3a",
+      "sources": {
+        "s7a91f9f23044": "https://github.com/webmin/webmin.com/blob/8ceae26c5a074053905cbcc6c0053be573633f3a/content/docs/Modules/webmin-configuration.md",
+        "s8b072a3403d1": "https://github.com/webmin/webmin.com/blob/8ceae26c5a074053905cbcc6c0053be573633f3a/content/security.md"
+      }
+    },
+    "usermin": {
+      "name": "Usermin",
+      "basis": "2.570",
+      "sources": {
+        "s7fe74c9a3138": "https://github.com/webmin/usermin/blob/2.570/setup.sh"
+      }
+    },
+    "pve-docs": {
+      "name": "Proxmox VE 9.2 docs",
+      "basis": "9.2.12",
+      "sources": {
+        "s8538bab3d3fc": "https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pveproxy.adoc",
+        "sdbc681682e8f": "https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pveum.adoc",
+        "sc6bbbfe64d09": "https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pve-firewall.adoc",
+        "s31f242f10eaa": "https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=certificate-management.adoc"
+      }
+    },
+    "pve-manager": {
+      "name": "pve-manager",
+      "basis": "9.2.20",
+      "sources": {
+        "se4c11b901cf8": "https://git.proxmox.com/?p=pve-manager.git;a=blob_plain;hb=49318c671b82f31e6b273b79447526161739b97a;f=PVE/API2/Nodes.pm"
+      }
+    },
+    "pve-http": {
+      "name": "Proxmox HTTP server",
+      "basis": "5119ff9bec08c69584c0c98bea3edd0098179e5f",
+      "sources": {
+        "s753d88abe320": "https://git.proxmox.com/?p=pve-http-server.git;a=blob_plain;hb=5119ff9bec08c69584c0c98bea3edd0098179e5f;f=src/PVE/APIServer/AnyEvent.pm"
+      }
+    }
+  },
+  "claims": {
+    "private": {"text": "Keep root-capable panels off the internet, bound/restricted to management networks with private access and a second factor.", "components": ["cockpit", "webmin-docs", "pve-docs"], "sources": ["cockpit:s0c1e0db624a4", "webmin-docs:s7a91f9f23044", "pve-docs:s8538bab3d3fc", "pve-docs:sc6bbbfe64d09"], "status": "REASONED"},
+    "cockpit-bind": {"text": "Bare ListenStream=9090 binds IPv6 and, by default, IPv4 wildcard addresses.", "components": ["cockpit", "systemd"], "sources": ["cockpit:sc42ba09017c7", "systemd:s0a96457c713e"], "status": "REASONED"},
+    "cockpit-dropin": {"text": "Use a socket drop-in, not cockpit.conf: reset ListenStream, set 10.0.0.5:9090 and FreeBind=yes, then daemon-reload/restart.", "components": ["cockpit"], "sources": ["cockpit:s0c1e0db624a4"], "status": "REASONED"},
+    "cockpit-tls": {"text": "One port serves HTTP/HTTPS, redirecting HTTP except localhost; AllowUnencrypted defaults false and missing certificates cause self-signed creation.", "components": ["cockpit"], "sources": ["cockpit:sd0cb4ea3db56", "cockpit:sf157ab3a6f47"], "status": "REASONED"},
+    "cockpit-pam": {"text": "Local accounts use Cockpit PAM with normal SSH-equivalent privileges.", "components": ["cockpit"], "sources": ["cockpit:s48ebdec28e10"], "status": "REASONED"},
+    "cockpit-root": {"text": "First-install packages write root to disallowed-users; onerr=succeed permits root if that file is missing/unreadable.", "components": ["cockpit"], "sources": ["cockpit:sbdcd6e74a0c7", "cockpit:sc20103cfb39b"], "status": "REASONED"},
+    "cockpit-escalation": {"text": "Users allowed sudo/polkit escalation get an immediately elevated session and terminal.", "components": ["cockpit"], "sources": ["cockpit:s2432e599485f"], "status": "REASONED"},
+    "cockpit-mfa": {"text": "No built-in second factor; use PAM, Kerberos or client certificates.", "components": ["cockpit"], "sources": ["cockpit:s48ebdec28e10"], "status": "REASONED"},
+    "cockpit-rate": {"text": "MaxStartups defaults to 10 concurrent attempts, not repeated-password lockout.", "components": ["cockpit"], "sources": ["cockpit:sf157ab3a6f47"], "status": "REASONED"},
+    "cockpit-loginto": {"text": "Set LoginTo=false to prevent unauthenticated scanning of reachable private networks.", "components": ["cockpit"], "sources": ["cockpit:sf157ab3a6f47"], "status": "REASONED"},
+    "webmin-bind": {"text": "Webmin/Usermin TCP ports are 10000/20000; omitted bind makes miniserv listen on all IPv4/IPv6 addresses.", "components": ["webmin", "usermin"], "sources": ["webmin:sa4f7ac343e85", "webmin:sb8fec2baa0f2", "usermin:s7fe74c9a3138"], "status": "REASONED"},
+    "webmin-discovery": {"text": "Installed listen=10000/20000 opens discovery UDP on every IPv4 address; delete when unused.", "components": ["webmin", "usermin"], "sources": ["webmin:sa4f7ac343e85", "webmin:sb8fec2baa0f2", "usermin:s7fe74c9a3138"], "status": "REASONED"},
+    "webmin-access": {"text": "Set management bind and allow networks, then restart; empty allow admits all except denied clients.", "components": ["webmin", "webmin-docs"], "sources": ["webmin:sb8fec2baa0f2", "webmin:sdb2ef2bf9978", "webmin-docs:s7a91f9f23044"], "status": "REASONED"},
+    "webmin-tls": {"text": "Deb/RPM packages enable ssl=1 with a self-signed certificate.", "components": ["webmin"], "sources": ["webmin:sa4f7ac343e85", "webmin:sdd465cac1ff8", "webmin:s9ecba8f15014"], "status": "REASONED"},
+    "webmin-root": {"text": "Installed root crypt=x accepts the Unix root password with all modules; Command Shell defaults to root.", "components": ["webmin"], "sources": ["webmin:sdd465cac1ff8", "webmin:s9ecba8f15014", "webmin:s1a1dbd21dddd"], "status": "REASONED"},
+    "webmin-sudo": {"text": "Installed sudo=1 lets sudo-permitted Unix users log in effectively as root.", "components": ["webmin"], "sources": ["webmin:sdd465cac1ff8", "webmin:s9ecba8f15014", "webmin:sdb2ef2bf9978"], "status": "REASONED"},
+    "webmin-mfa": {"text": "TOTP/Authy exists but is not configured at install; enable and enrol every user.", "components": ["webmin"], "sources": ["webmin:s2f3504ad1328"], "status": "REASONED"},
+    "webmin-advisories": {"text": "Advisories list Basic-auth MFA bypasses CVE-2026-42210/CVE-2026-56022 under Webmin prior to 2.641; use a current release.", "components": ["webmin-docs"], "sources": ["webmin-docs:s8b072a3403d1"], "status": "REASONED"},
+    "webmin-rate": {"text": "Defaults blockhost_failures=5/blockhost_time=60 block a host for 60 seconds, not a user lockout; Basic-auth failures count only with installed passdelay=1.", "components": ["webmin"], "sources": ["webmin:sa4f7ac343e85", "webmin:sdb2ef2bf9978"], "status": "REASONED"},
+    "pve-bind": {"text": "pveproxy HTTPS API 8006 and spiceproxy 3128 default IPv4/IPv6 wildcard; both share LISTEN_IP in /etc/default/pveproxy.", "components": ["pve-docs"], "sources": ["pve-docs:s8538bab3d3fc"], "status": "REASONED"},
+    "pve-cluster": {"text": "LISTEN_IP is not recommended on clusters needing peer pveproxy access; use ACLs/firewall.", "components": ["pve-docs"], "sources": ["pve-docs:s8538bab3d3fc"], "status": "REASONED"},
+    "pve-acl": {"text": "Default allow policy admits unmatched clients; ALLOW_FROM needs DENY_FROM=all or POLICY=deny, not both because deny policy rejects dual matches.", "components": ["pve-docs"], "sources": ["pve-docs:s8538bab3d3fc"], "status": "REASONED"},
+    "pve-firewall": {"text": "Firewall defaults disabled; enable and restrict 8006/22/3128 to management addresses.", "components": ["pve-docs"], "sources": ["pve-docs:sc6bbbfe64d09"], "status": "REASONED"},
+    "pve-root": {"text": "root@pam can always log in as unconfined admin; installer sets the web-interface root password.", "components": ["pve-docs"], "sources": ["pve-docs:sdbc681682e8f"], "status": "REASONED"},
+    "pve-shell": {"text": "Node shell opens /bin/login -f root without another password.", "components": ["pve-manager"], "sources": ["pve-manager:se4c11b901cf8"], "status": "REASONED"},
+    "pve-mfa": {"text": "Configure TOTP, WebAuthn, recovery keys or realm-enforced TOTP/YubiKey OTP; no default second factor.", "components": ["pve-docs"], "sources": ["pve-docs:sdbc681682e8f"], "status": "REASONED"},
+    "pve-lockout": {"text": "Eight TOTP failures disable TOTP; 100 WebAuthn/recovery-key failures block all factors for an hour. These are second-factor lockouts.", "components": ["pve-docs"], "sources": ["pve-docs:sdbc681682e8f"], "status": "REASONED"},
+    "pve-password-delay": {"text": "Unauthorized API responses delay three seconds; this is not password lockout.", "components": ["pve-http"], "sources": ["pve-http:s753d88abe320"], "status": "REASONED"},
+    "pve-certificates": {"text": "Each cluster creates its own self-signed CA.", "components": ["pve-docs"], "sources": ["pve-docs:s31f242f10eaa"], "status": "REASONED"},
+    "pve-tokens": {"text": "API tokens default to separated privileges and cannot access VM/node consoles.", "components": ["pve-docs"], "sources": ["pve-docs:sdbc681682e8f"], "status": "REASONED"},
+    "verify-cockpit": {"text": "Inspect effective socket reset/address and root deny file; bare port or missing deny file exposes documented defaults.", "components": ["cockpit"], "sources": ["cockpit:sc42ba09017c7", "cockpit:s0c1e0db624a4", "cockpit:sbdcd6e74a0c7", "cockpit:sc20103cfb39b"], "status": "REASONED"},
+    "verify-pve": {"text": "Inspect LISTEN_IP/ACL policy, enabled/running firewall and management-only rules, and every admin's second factor including root@pam.", "components": ["pve-docs"], "sources": ["pve-docs:s8538bab3d3fc", "pve-docs:sdbc681682e8f", "pve-docs:sc6bbbfe64d09"], "status": "REASONED"},
+    "verify-external": {"text": "Probe each public IP with a reachable control; refusal/timeout is only consistent with isolation. TCP does not test Webmin UDP.", "components": ["cockpit", "webmin", "usermin", "pve-docs"], "sources": ["cockpit:sc42ba09017c7", "webmin:sb8fec2baa0f2", "usermin:s7fe74c9a3138", "pve-docs:s8538bab3d3fc"], "status": "REASONED"},
+    "webmin-loopback": {"text": "Loopback bind with no listen line produced one TCP socket and no UDP.", "components": ["webmin"], "sources": ["webmin:sb8fec2baa0f2"], "status": "DEMONSTRATED", "evidence": "its only socket was TCP `127.0.0.1` on the test port, with no UDP socket."},
+    "webmin-rate-run": {"text": "Fifth wrong password exceeded a five-second timeout; then even the right password received host-block 403.", "components": ["webmin"], "sources": ["webmin:sa4f7ac343e85", "webmin:sdb2ef2bf9978"], "status": "DEMONSTRATED", "evidence": "the fifth wrong password was delayed past a five-second client timeout by miniserv's growing failure delay, and the right password was then refused with `403` \"Access denied for 127.0.0.1\"."},
+    "verify-listeners": {"text": "Expect management TCP binds and no discovery UDP; clustered Proxmox may retain wildcards with ACL/firewall protection.", "components": ["cockpit", "webmin", "usermin", "pve-docs"], "sources": ["cockpit:sc42ba09017c7", "webmin:sb8fec2baa0f2", "usermin:s7fe74c9a3138", "pve-docs:s8538bab3d3fc"], "status": "REASONED", "verify": [1]},
+    "verify-webmin-parser": {"text": "Thirty fixtures matched miniserv parsing and bind/sockets/discovery/ACL outputs; unreadable paths were not checked. File inspection is not running-state proof.", "components": ["webmin"], "sources": ["webmin:sb8fec2baa0f2", "webmin:sdb2ef2bf9978"], "status": "DEMONSTRATED", "evidence": "On each, the copy's parsed values matched Webmin 2.670's own `read_config_file` run on the same file, and the block printed the outcomes above; it reported an unreadable path as not checked.", "verify": [2]},
+    "verify-tcp-loopback": {"text": "Copied probe has recorded loopback provenance, not live panel-isolation evidence; loopback and mapped hex addresses pass its guard.", "components": ["cockpit", "webmin", "usermin", "pve-docs"], "sources": ["cockpit:sc42ba09017c7", "webmin:sb8fec2baa0f2", "usermin:s7fe74c9a3138", "pve-docs:s8538bab3d3fc"], "status": "DEMONSTRATED", "evidence": "loopback addresses pass, and hex spellings such as `::ffff:0:0` connected to a listener bound to 127.0.0.1", "verify": [3]}
+  }
+}
+---
 # Server administration panels: Cockpit, Webmin, and Proxmox VE
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| private: Keep root-capable panels off the internet, bound/restricted to management networks with private access and a second factor. | Cockpit 368; Webmin docs 8ceae26c5a074053905cbcc6c0053be573633f3a; Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| cockpit-bind: Bare ListenStream=9090 binds IPv6 and, by default, IPv4 wildcard addresses. | Cockpit 368; systemd v262 | REASONED |
+| cockpit-dropin: Use a socket drop-in, not cockpit.conf: reset ListenStream, set 10.0.0.5:9090 and FreeBind=yes, then daemon-reload/restart. | Cockpit 368 | REASONED |
+| cockpit-tls: One port serves HTTP/HTTPS, redirecting HTTP except localhost; AllowUnencrypted defaults false and missing certificates cause self-signed creation. | Cockpit 368 | REASONED |
+| cockpit-pam: Local accounts use Cockpit PAM with normal SSH-equivalent privileges. | Cockpit 368 | REASONED |
+| cockpit-root: First-install packages write root to disallowed-users; onerr=succeed permits root if that file is missing/unreadable. | Cockpit 368 | REASONED |
+| cockpit-escalation: Users allowed sudo/polkit escalation get an immediately elevated session and terminal. | Cockpit 368 | REASONED |
+| cockpit-mfa: No built-in second factor; use PAM, Kerberos or client certificates. | Cockpit 368 | REASONED |
+| cockpit-rate: MaxStartups defaults to 10 concurrent attempts, not repeated-password lockout. | Cockpit 368 | REASONED |
+| cockpit-loginto: Set LoginTo=false to prevent unauthenticated scanning of reachable private networks. | Cockpit 368 | REASONED |
+| webmin-bind: Webmin/Usermin TCP ports are 10000/20000; omitted bind makes miniserv listen on all IPv4/IPv6 addresses. | Webmin 2.670; Usermin 2.570 | REASONED |
+| webmin-discovery: Installed listen=10000/20000 opens discovery UDP on every IPv4 address; delete when unused. | Webmin 2.670; Usermin 2.570 | REASONED |
+| webmin-access: Set management bind and allow networks, then restart; empty allow admits all except denied clients. | Webmin 2.670; Webmin docs 8ceae26c5a074053905cbcc6c0053be573633f3a | REASONED |
+| webmin-tls: Deb/RPM packages enable ssl=1 with a self-signed certificate. | Webmin 2.670 | REASONED |
+| webmin-root: Installed root crypt=x accepts the Unix root password with all modules; Command Shell defaults to root. | Webmin 2.670 | REASONED |
+| webmin-sudo: Installed sudo=1 lets sudo-permitted Unix users log in effectively as root. | Webmin 2.670 | REASONED |
+| webmin-mfa: TOTP/Authy exists but is not configured at install; enable and enrol every user. | Webmin 2.670 | REASONED |
+| webmin-advisories: Advisories list Basic-auth MFA bypasses CVE-2026-42210/CVE-2026-56022 under Webmin prior to 2.641; use a current release. | Webmin docs 8ceae26c5a074053905cbcc6c0053be573633f3a | REASONED |
+| webmin-rate: Defaults blockhost_failures=5/blockhost_time=60 block a host for 60 seconds, not a user lockout; Basic-auth failures count only with installed passdelay=1. | Webmin 2.670 | REASONED |
+| pve-bind: pveproxy HTTPS API 8006 and spiceproxy 3128 default IPv4/IPv6 wildcard; both share LISTEN_IP in /etc/default/pveproxy. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| pve-cluster: LISTEN_IP is not recommended on clusters needing peer pveproxy access; use ACLs/firewall. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| pve-acl: Default allow policy admits unmatched clients; ALLOW_FROM needs DENY_FROM=all or POLICY=deny, not both because deny policy rejects dual matches. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| pve-firewall: Firewall defaults disabled; enable and restrict 8006/22/3128 to management addresses. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| pve-root: root@pam can always log in as unconfined admin; installer sets the web-interface root password. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| pve-shell: Node shell opens /bin/login -f root without another password. | pve-manager 9.2.20 | REASONED |
+| pve-mfa: Configure TOTP, WebAuthn, recovery keys or realm-enforced TOTP/YubiKey OTP; no default second factor. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| pve-lockout: Eight TOTP failures disable TOTP; 100 WebAuthn/recovery-key failures block all factors for an hour. These are second-factor lockouts. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| pve-password-delay: Unauthorized API responses delay three seconds; this is not password lockout. | Proxmox HTTP server 5119ff9bec08c69584c0c98bea3edd0098179e5f | REASONED |
+| pve-certificates: Each cluster creates its own self-signed CA. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| pve-tokens: API tokens default to separated privileges and cannot access VM/node consoles. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| verify-cockpit: Inspect effective socket reset/address and root deny file; bare port or missing deny file exposes documented defaults. | Cockpit 368 | REASONED |
+| verify-pve: Inspect LISTEN_IP/ACL policy, enabled/running firewall and management-only rules, and every admin's second factor including root@pam. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| verify-external: Probe each public IP with a reachable control; refusal/timeout is only consistent with isolation. TCP does not test Webmin UDP. | Cockpit 368; Webmin 2.670; Usermin 2.570; Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| webmin-loopback: Loopback bind with no listen line produced one TCP socket and no UDP. | Webmin 2.670 | DEMONSTRATED |
+| webmin-rate-run: Fifth wrong password exceeded a five-second timeout; then even the right password received host-block 403. | Webmin 2.670 | DEMONSTRATED |
+| verify-listeners: Expect management TCP binds and no discovery UDP; clustered Proxmox may retain wildcards with ACL/firewall protection. | Cockpit 368; Webmin 2.670; Usermin 2.570; Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| verify-webmin-parser: Thirty fixtures matched miniserv parsing and bind/sockets/discovery/ACL outputs; unreadable paths were not checked. File inspection is not running-state proof. | Webmin 2.670 | DEMONSTRATED |
+| verify-tcp-loopback: Copied probe has recorded loopback provenance, not live panel-isolation evidence; loopback and mapped hex addresses pass its guard. | Cockpit 368; Webmin 2.670; Usermin 2.570; Proxmox VE 9.2 docs 9.2.12 | DEMONSTRATED |
+<!-- version-basis:end -->
 
 A server administration panel is root on the host behind a login form. Cockpit gives any user who can
 escalate with sudo or polkit an administrative session and a terminal. Webmin's packages make the host's
@@ -102,6 +274,8 @@ Those expected outcomes are REASONED from the cited vendor documentation and sou
 
 On the host, list the listeners, TCP and UDP:
 
+REASONED: following block; pinned Cockpit, Webmin/Usermin and Proxmox sources support this inventory. The recorded host lacks Cockpit systemd and Proxmox and forbids wildcard binds; exposed/fixed expectations follow.
+
 ```bash
 sudo ss -tlnp   # 9090 (Cockpit), 10000 (Webmin), 20000 (Usermin), 8006 and 3128 (Proxmox VE): a management address only
 sudo ss -ulnp   # Webmin's discovery socket on UDP 10000 (Usermin 20000) should be gone
@@ -125,6 +299,8 @@ and an empty `allow=` lets every client address try to log in, except those a `d
 `ss` above is the authority for what is listening now, and a change takes effect at
 `/etc/webmin/restart`. Substitute the file path inside the single quotes (the package default is
 `/etc/webmin/miniserv.conf`), and paste the whole block.
+
+DEMONSTRATED: following block; the parser matched Webmin 2.670 on thirty fixtures and printed the recorded outcomes below. This demonstrates file inspection, not running sockets or network isolation.
 
 ```bash
 (
@@ -202,6 +378,8 @@ hide one behind a timeout on the other: run it once for each public address of t
 takes a port you know is open on that address from this host (for example SSH on 22) as the positive
 control, and stops if the control does not connect. Substitute both inside the single quotes.
 
+DEMONSTRATED: following block; recorded reuse of the low-code-builders.md loopback probe with these ports includes the mapped-address connection below. This is probe evidence only; live panel reachability and firewall isolation remain reasoned.
+
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ONE_IP_ADDRESS' 'REPLACE_WITH_A_KNOWN_OPEN_PORT'
@@ -269,9 +447,9 @@ give the server's public address. A "connected" on a port you did not mean to ex
 - Webmin 2.670 two-factor providers: https://github.com/webmin/webmin/blob/2.670/webmin/twofactor-funcs-lib.pl
 - Webmin documentation (configuration, security advisories): https://github.com/webmin/webmin.com/blob/8ceae26c5a074053905cbcc6c0053be573633f3a/content/docs/Modules/webmin-configuration.md and https://github.com/webmin/webmin.com/blob/8ceae26c5a074053905cbcc6c0053be573633f3a/content/security.md
 - Usermin 2.570 installer: https://github.com/webmin/usermin/blob/2.570/setup.sh
-- Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pveproxy.adoc
+- Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pveproxy.adoc
 - Proxmox VE user management (root@pam, two-factor, lockout, API tokens): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pveum.adoc
 - Proxmox VE firewall: https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pve-firewall.adoc
 - Proxmox VE certificates: https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=certificate-management.adoc
-- Proxmox VE node shell (`/bin/login -f root`): https://git.proxmox.com/?p=pve-manager.git;a=blob_plain;hb=49318c671b82f31e6b273b79447526161739b97a;f=PVE/API2/Nodes.pm
+- Proxmox VE node shell (`/bin/login -f root`) (pve-manager 9.2.20): https://git.proxmox.com/?p=pve-manager.git;a=blob_plain;hb=49318c671b82f31e6b273b79447526161739b97a;f=PVE/API2/Nodes.pm
 - Proxmox VE HTTP server (three-second delay on unauthorized responses): https://git.proxmox.com/?p=pve-http-server.git;a=blob_plain;hb=5119ff9bec08c69584c0c98bea3edd0098179e5f;f=src/PVE/APIServer/AnyEvent.pm

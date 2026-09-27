@@ -1,4 +1,88 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "d5c32b0ec2f59b7c2c61c47d9da0f05b93c12e0ef7e9e7c252b383803cc7f759",
+  "components": {
+    "ts": {
+      "name": "Tailscale documentation",
+      "basis": "unknown",
+      "sources": {
+        "s8a8000573b13": "https://tailscale.com/kb/1242/tailscale-serve",
+        "sbe30f8121245": "https://tailscale.com/kb/1223/funnel",
+        "s42e5680f0b20": "https://tailscale.com/docs/reference/examples/acls",
+        "se0f0c1dd6af5": "https://tailscale.com/kb/1312/serve",
+        "se137a82d9873": "https://tailscale.com/docs/reference/syntax/policy-file#tests"
+      }
+    },
+    "cli": {
+      "name": "Tailscale CLI change",
+      "basis": "v1.52",
+      "sources": {
+        "s8a8000573b13": "https://tailscale.com/kb/1242/tailscale-serve"
+      }
+    },
+    "ss": {
+      "name": "ss",
+      "basis": "unknown",
+      "sources": {
+        "s8ff688d5d940": "https://manpages.ubuntu.com/manpages/noble/en/man8/ss.8.html"
+      }
+    }
+  },
+  "claims": {
+    "serve": {"text": "tailscale serve --bg localhost:3000 proxies to the app for tailnet devices, subject to identity and tailnet policy.", "components": ["ts"], "sources": ["ts:s8a8000573b13"], "status": "REASONED"},
+    "policy-default": {"text": "New tailnets allow all devices, plus node-share recipients; remove allow-all before granting intended users, groups or tags access to the Serve port.", "components": ["ts"], "sources": ["ts:s42e5680f0b20"], "status": "REASONED"},
+    "policy-additive": {"text": "Rules are additive accepts; a narrower rule cannot revoke allow-all. Grants are preferred and ACLs remain supported.", "components": ["ts"], "sources": ["ts:s42e5680f0b20"], "status": "REASONED"},
+    "app-auth": {"text": "Tailnet reach is not app authorization; the app needs login or deliberate use of Serve identity headers.", "components": ["ts"], "sources": ["ts:se0f0c1dd6af5"], "status": "REASONED"},
+    "header-trust": {"text": "Loopback limits identity-header spoofing to local processes; trusting Serve headers requires trusting every process on that host.", "components": ["ts"], "sources": ["ts:se0f0c1dd6af5"], "status": "REASONED"},
+    "tagged": {"text": "Tagged devices carry no user identity; reject them or supply another authentication method.", "components": ["ts"], "sources": ["ts:se0f0c1dd6af5"], "status": "REASONED"},
+    "bind": {"text": "Serve does not change the app bind; use 127.0.0.1:3000 because a wildcard app still answers directly on LAN/VPC addresses.", "components": ["ts"], "sources": ["ts:s8a8000573b13", "ts:se0f0c1dd6af5"], "status": "REASONED"},
+    "serve-tls": {"text": "Serve automatically provisions HTTPS certificates for the machine's tailnet name.", "components": ["ts"], "sources": ["ts:s8a8000573b13"], "status": "REASONED"},
+    "background": {"text": "--bg persists Serve in the background; without it the share ends with the session.", "components": ["ts"], "sources": ["ts:s8a8000573b13"], "status": "REASONED"},
+    "funnel": {"text": "tailscale funnel 3000 publishes the service to the internet at its ts.net hostname with TLS.", "components": ["ts"], "sources": ["ts:sbe30f8121245"], "status": "REASONED"},
+    "funnel-auth": {"text": "Funnel adds no per-request authentication and its relay does not decrypt traffic; the app needs login and human MFA.", "components": ["ts"], "sources": ["ts:sbe30f8121245"], "status": "REASONED"},
+    "funnel-prerequisites": {"text": "Funnel requires tailnet HTTPS certificates, a funnel node attribute and MagicDNS.", "components": ["ts"], "sources": ["ts:sbe30f8121245"], "status": "REASONED"},
+    "syntax": {"text": "Serve/Funnel command syntax changed in v1.52; older clients need their own --help.", "components": ["cli"], "sources": ["cli:s8a8000573b13"], "status": "REASONED"},
+    "verify-bind": {"text": "ss sport=:3000 must show 127.0.0.1:3000, not IPv4 or IPv6 wildcard.", "components": ["ss", "ts"], "sources": ["ss:s8ff688d5d940", "ts:se0f0c1dd6af5"], "status": "REASONED", "verify": [1]},
+    "verify-direct": {"text": "Probe from outside the host on the LAN/VPC: any HTTP reply proves bypass; failure alone does not prove loopback binding.", "components": ["ts"], "sources": ["ts:s8a8000573b13", "ts:se0f0c1dd6af5"], "status": "REASONED", "verify": [2]},
+    "verify-allowed": {"text": "Serve status and an allowed-device request check the intended path; success occurs under both allow-all and scoped policy.", "components": ["ts"], "sources": ["ts:s8a8000573b13", "ts:s42e5680f0b20"], "status": "REASONED", "verify": [3]},
+    "verify-policy": {"text": "Policy tests must accept the intended identity and deny an excluded one; failed assertions reject the policy file.", "components": ["ts"], "sources": ["ts:se137a82d9873"], "status": "REASONED"},
+    "verify-public": {"text": "From a non-tailnet network Serve is unreachable and Funnel reachable; the funneled app must authenticate every request.", "components": ["ts"], "sources": ["ts:s8a8000573b13", "ts:sbe30f8121245"], "status": "REASONED"}
+  }
+}
+---
 # Tailscale: serve and funnel
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| serve: tailscale serve --bg localhost:3000 proxies to the app for tailnet devices, subject to identity and tailnet policy. | Tailscale documentation unknown | REASONED |
+| policy-default: New tailnets allow all devices, plus node-share recipients; remove allow-all before granting intended users, groups or tags access to the Serve port. | Tailscale documentation unknown | REASONED |
+| policy-additive: Rules are additive accepts; a narrower rule cannot revoke allow-all. Grants are preferred and ACLs remain supported. | Tailscale documentation unknown | REASONED |
+| app-auth: Tailnet reach is not app authorization; the app needs login or deliberate use of Serve identity headers. | Tailscale documentation unknown | REASONED |
+| header-trust: Loopback limits identity-header spoofing to local processes; trusting Serve headers requires trusting every process on that host. | Tailscale documentation unknown | REASONED |
+| tagged: Tagged devices carry no user identity; reject them or supply another authentication method. | Tailscale documentation unknown | REASONED |
+| bind: Serve does not change the app bind; use 127.0.0.1:3000 because a wildcard app still answers directly on LAN/VPC addresses. | Tailscale documentation unknown | REASONED |
+| serve-tls: Serve automatically provisions HTTPS certificates for the machine's tailnet name. | Tailscale documentation unknown | REASONED |
+| background: --bg persists Serve in the background; without it the share ends with the session. | Tailscale documentation unknown | REASONED |
+| funnel: tailscale funnel 3000 publishes the service to the internet at its ts.net hostname with TLS. | Tailscale documentation unknown | REASONED |
+| funnel-auth: Funnel adds no per-request authentication and its relay does not decrypt traffic; the app needs login and human MFA. | Tailscale documentation unknown | REASONED |
+| funnel-prerequisites: Funnel requires tailnet HTTPS certificates, a funnel node attribute and MagicDNS. | Tailscale documentation unknown | REASONED |
+| syntax: Serve/Funnel command syntax changed in v1.52; older clients need their own --help. | Tailscale CLI change v1.52 | REASONED |
+| verify-bind: ss sport=:3000 must show 127.0.0.1:3000, not IPv4 or IPv6 wildcard. | ss unknown; Tailscale documentation unknown | REASONED |
+| verify-direct: Probe from outside the host on the LAN/VPC: any HTTP reply proves bypass; failure alone does not prove loopback binding. | Tailscale documentation unknown | REASONED |
+| verify-allowed: Serve status and an allowed-device request check the intended path; success occurs under both allow-all and scoped policy. | Tailscale documentation unknown | REASONED |
+| verify-policy: Policy tests must accept the intended identity and deny an excluded one; failed assertions reject the policy file. | Tailscale documentation unknown | REASONED |
+| verify-public: From a non-tailnet network Serve is unreachable and Funnel reachable; the funneled app must authenticate every request. | Tailscale documentation unknown | REASONED |
+<!-- version-basis:end -->
 
 Tailscale gives the same no-open-inbound-ports posture as [cloudflare.md](cloudflare.md), built on WireGuard with device identity as the access control. Two commands matter, and they differ in exactly one thing: who can reach the service.
 
@@ -33,12 +117,16 @@ Serve for anything private (most things). Funnel or [cloudflare.md](cloudflare.m
 
 ## 4. Verify
 
+REASONED: following block; the cited ss filter reference and Serve backend-isolation guidance define the loopback check. This read-only review cannot configure a Serve host; the guide records no listener observation.
+
 ```bash
 ss -tlnp 'sport = :3000'                          # ss's own filter, not a grep: the address column
                                                   # must read 127.0.0.1:3000, never 0.0.0.0:3000 or [::]:3000
 ```
 
 From another machine on the same LAN or VPC (run this from OUTSIDE the host), confirm the app does not answer its direct address:
+
+REASONED: following block; direct-backend isolation follows the cited Serve identity-header guidance. This read-only review cannot provision a Serve host and separate LAN/VPC probe machine; HTTP replies expose bypass and failed requests remain inconclusive as described below.
 
 ```bash
 (                                       # a subshell, so your own shell keeps its positional parameters and the guard's exit does not close it
@@ -57,6 +145,8 @@ From another machine on the same LAN or VPC (run this from OUTSIDE the host), co
 
 Then confirm the tailnet path works and that the section-1 restriction actually holds:
 
+REASONED: following block; Serve status and allowed-device access follow the cited Serve CLI and policy-test documentation. This read-only review cannot configure a tailnet with allowed and excluded devices; success alone does not prove policy restriction.
+
 ```bash
 tailscale serve status
 curl -q -sI https://host.tailnet.ts.net/            # from an ALLOWED tailnet device: works
@@ -66,7 +156,7 @@ An allowed device connects under both the default allow-all policy and a correct
 
 ## Sources (checked September 2026)
 
-- Tailscale serve: https://tailscale.com/kb/1242/tailscale-serve
+- Tailscale serve (CLI syntax changed in v1.52): https://tailscale.com/kb/1242/tailscale-serve
 - Tailscale funnel: https://tailscale.com/kb/1223/funnel
 - Tailscale ACL policy examples, for the default allow-all policy (`action` accept, `src` `*`, `dst` `*:*`) and scoping access from a source to a destination: https://tailscale.com/docs/reference/examples/acls
 - Tailscale serve identity headers, that binding the backend to localhost limits tampering to other services on the Serve device (it does not authenticate the calling process): https://tailscale.com/kb/1312/serve

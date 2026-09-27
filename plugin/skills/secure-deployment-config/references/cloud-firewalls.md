@@ -1,4 +1,80 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "e0b311b40e6ea58d7a06f881ad51b260ad36e741b08f3b27c387ebb78e6fb2b3",
+  "components": {
+    "aws": {
+      "name": "AWS security groups and CLI",
+      "basis": "unknown",
+      "sources": {
+        "s0c459e0aa7a1": "https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-security-group-rules.html",
+        "s5594f61a25d6": "https://docs.aws.amazon.com/vpc/latest/userguide/security-group-rules.html",
+        "sf8813f7c4057": "https://docs.aws.amazon.com/vpc/latest/userguide/managed-prefix-lists.html"
+      }
+    },
+    "gcp": {
+      "name": "Google Cloud firewall and CLI",
+      "basis": "unknown",
+      "sources": {
+        "s1c06c98a99c9": "https://docs.cloud.google.com/firewall/docs/using-firewalls",
+        "s3a90bf10d4eb": "https://docs.cloud.google.com/sdk/gcloud/reference/topic/formats"
+      }
+    },
+    "azure": {
+      "name": "Azure NSG and CLI",
+      "basis": "unknown",
+      "sources": {
+        "se217f16ce4c1": "https://learn.microsoft.com/en-us/cli/azure/network/nsg/rule",
+        "scde5b083d938": "https://learn.microsoft.com/en-us/rest/api/virtualnetwork/network-security-groups/get"
+      }
+    }
+  },
+  "claims": {
+    "public-front": {"text": "Allow internet sources only to the front TLS layer on 80 for redirects and 443; private sources alone reach databases/internal services, with TLS/authentication still required.", "components": ["aws", "gcp", "azure"], "sources": ["aws:s5594f61a25d6", "gcp:s1c06c98a99c9", "azure:scde5b083d938"], "status": "REASONED"},
+    "ssh": {"text": "Restrict 22 to named administrative addresses or documented broker sources, never unrestricted internet ranges.", "components": ["aws", "gcp", "azure"], "sources": ["aws:s5594f61a25d6", "gcp:s1c06c98a99c9", "azure:scde5b083d938"], "status": "REASONED"},
+    "ssm": {"text": "SSM Agent dials out and requires no inbound rule; no Session Manager source is listed.", "components": ["aws"], "sources": ["aws:s5594f61a25d6"], "status": "REASONED"},
+    "iap": {"text": "IAP needs TCP 22 ingress from 35.235.240.0/20; no IAP source is listed.", "components": ["gcp"], "sources": ["gcp:s1c06c98a99c9"], "status": "REASONED"},
+    "bastion": {"text": "Bastion needs target-VM ingress from AzureBastionSubnet; tailnet is another linked alternative. Direct broker sources are absent.", "components": ["azure"], "sources": ["azure:scde5b083d938"], "status": "REASONED"},
+    "least-access": {"text": "Start default-deny, add minimum allowances and retire obsolete rules; use security-group references where supported to survive app IP changes.", "components": ["aws", "gcp", "azure"], "sources": ["aws:s5594f61a25d6", "gcp:s1c06c98a99c9", "azure:scde5b083d938"], "status": "REASONED"},
+    "docker": {"text": "Cloud and host firewall layers both matter for Docker VMs; the linked Docker guide explains UFW bypass, with no Docker source in this Sources section.", "components": ["aws"], "sources": ["aws:s5594f61a25d6"], "status": "REASONED"},
+    "verify-aws": {"text": "Per region inspect all inbound rules, protocol/port ranges, IPv4/IPv6 CIDRs, resolved prefix lists and group references; combinations of narrower ranges can still expose the internet.", "components": ["aws"], "sources": ["aws:s0c459e0aa7a1", "aws:s5594f61a25d6", "aws:sf8813f7c4057"], "status": "REASONED", "verify": [1]},
+    "verify-gcp": {"text": "Per project read JSON classic VPC rules, including direction, disabled state, allowed/denied and source ranges; a table can hide whether enforcement is disabled.", "components": ["gcp"], "sources": ["gcp:s1c06c98a99c9", "gcp:s3a90bf10d4eb"], "status": "REASONED", "verify": [1]},
+    "gcp-policies": {"text": "Also list/describe hierarchical and network policies and their effective order; the guide says hierarchy precedes VPC and network policies follow by default. Policy-specific sources are absent.", "components": ["gcp"], "sources": ["gcp:s1c06c98a99c9"], "status": "REASONED", "verify": [1]},
+    "verify-azure": {"text": "Per NSG include default rules and read JSON direction/access plus singular/plural source prefixes; tables omit arrays and can conceal exposure.", "components": ["azure"], "sources": ["azure:se217f16ce4c1", "azure:scde5b083d938"], "status": "REASONED", "verify": [1]},
+    "azure-admin": {"text": "Review Virtual Network Manager security admin rules; the guide says Always allow bypasses NSGs. No security-admin-rule source is listed.", "components": ["azure"], "sources": ["azure:scde5b083d938"], "status": "REASONED", "verify": [1]},
+    "verify-ports": {"text": "Outside the admin range, spot-check 22, 3306, 5432, 6379 and 27017; refusal/timeout is expected, while netcat usage errors or silent local failure are inconclusive.", "components": ["aws", "gcp", "azure"], "sources": ["aws:s5594f61a25d6", "gcp:s1c06c98a99c9", "azure:scde5b083d938"], "status": "REASONED", "verify": [2]},
+    "verify-complete": {"text": "The spot-check omits RDP 3389 and apps such as 8080/9200; scan all public IPv4/IPv6 ports, distinguish open/closed/filtered, and correlate allowed/disallowed controls with effective rules.", "components": ["aws", "gcp", "azure"], "sources": ["aws:s5594f61a25d6", "gcp:s1c06c98a99c9", "azure:scde5b083d938"], "status": "REASONED", "verify": [2]}
+  }
+}
+---
 # Cloud firewalls: security groups and network rules
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| public-front: Allow internet sources only to the front TLS layer on 80 for redirects and 443; private sources alone reach databases/internal services, with TLS/authentication still required. | AWS security groups and CLI unknown; Google Cloud firewall and CLI unknown; Azure NSG and CLI unknown | REASONED |
+| ssh: Restrict 22 to named administrative addresses or documented broker sources, never unrestricted internet ranges. | AWS security groups and CLI unknown; Google Cloud firewall and CLI unknown; Azure NSG and CLI unknown | REASONED |
+| ssm: SSM Agent dials out and requires no inbound rule; no Session Manager source is listed. | AWS security groups and CLI unknown | REASONED |
+| iap: IAP needs TCP 22 ingress from 35.235.240.0/20; no IAP source is listed. | Google Cloud firewall and CLI unknown | REASONED |
+| bastion: Bastion needs target-VM ingress from AzureBastionSubnet; tailnet is another linked alternative. Direct broker sources are absent. | Azure NSG and CLI unknown | REASONED |
+| least-access: Start default-deny, add minimum allowances and retire obsolete rules; use security-group references where supported to survive app IP changes. | AWS security groups and CLI unknown; Google Cloud firewall and CLI unknown; Azure NSG and CLI unknown | REASONED |
+| docker: Cloud and host firewall layers both matter for Docker VMs; the linked Docker guide explains UFW bypass, with no Docker source in this Sources section. | AWS security groups and CLI unknown | REASONED |
+| verify-aws: Per region inspect all inbound rules, protocol/port ranges, IPv4/IPv6 CIDRs, resolved prefix lists and group references; combinations of narrower ranges can still expose the internet. | AWS security groups and CLI unknown | REASONED |
+| verify-gcp: Per project read JSON classic VPC rules, including direction, disabled state, allowed/denied and source ranges; a table can hide whether enforcement is disabled. | Google Cloud firewall and CLI unknown | REASONED |
+| gcp-policies: Also list/describe hierarchical and network policies and their effective order; the guide says hierarchy precedes VPC and network policies follow by default. Policy-specific sources are absent. | Google Cloud firewall and CLI unknown | REASONED |
+| verify-azure: Per NSG include default rules and read JSON direction/access plus singular/plural source prefixes; tables omit arrays and can conceal exposure. | Azure NSG and CLI unknown | REASONED |
+| azure-admin: Review Virtual Network Manager security admin rules; the guide says Always allow bypasses NSGs. No security-admin-rule source is listed. | Azure NSG and CLI unknown | REASONED |
+| verify-ports: Outside the admin range, spot-check 22, 3306, 5432, 6379 and 27017; refusal/timeout is expected, while netcat usage errors or silent local failure are inconclusive. | AWS security groups and CLI unknown; Google Cloud firewall and CLI unknown; Azure NSG and CLI unknown | REASONED |
+| verify-complete: The spot-check omits RDP 3389 and apps such as 8080/9200; scan all public IPv4/IPv6 ports, distinguish open/closed/filtered, and correlate allowed/disallowed controls with effective rules. | AWS security groups and CLI unknown; Google Cloud firewall and CLI unknown; Azure NSG and CLI unknown | REASONED |
+<!-- version-basis:end -->
 
 On AWS (security groups), Google Cloud (VPC firewall rules), and Azure (network security groups), the recurring hole is one rule wide open to the world: `0.0.0.0/0` (or `::/0`) on a database, admin, or SSH port, added once to unblock a remote connection and never removed.
 
@@ -13,6 +89,8 @@ On AWS (security groups), Google Cloud (VPC firewall rules), and Azure (network 
 ## Verify
 
 Enumerate every inbound rule, then, for each one whose source reaches the internet, confirm that the destination port is 80 or 443 on the front layer, nothing else. Rule 3's administrative SSH access is the one other source that may reach 22, and it is a named address or a documented broker range (an IAP `35.235.240.0/20` rule, or an Azure Bastion subnet rule, is expected), never `0.0.0.0/0`. These commands list rather than select, because no filter catches the exposure class.
+
+REASONED: cloud-rule inventory and external reachability checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited provider rule documentation; this read-only review has no authorized cloud accounts or allowed/disallowed probe hosts.
 
 ```bash
 # AWS, once per region. Every rule, not a selection: no filter catches the exposure class, because
@@ -58,6 +136,8 @@ az network nsg rule list \
 ```
 
 - From an address outside the range you administer from:
+
+  REASONED: cloud-rule inventory and external reachability checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited provider rule documentation; this read-only review has no authorized cloud accounts or allowed/disallowed probe hosts.
 
   ```bash
   (                                       # a subshell, so your own script arguments are untouched

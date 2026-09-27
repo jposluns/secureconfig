@@ -1,4 +1,124 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "cbe08d67f76cc5f8856168ef9334c73f84b1a9f7f940e66e80a7d2641a085965",
+  "components": {
+    "traefik": {
+      "name": "Traefik scope",
+      "basis": "v2 and v3",
+      "sources": {
+        "scbc0f2135c78": "https://doc.traefik.io/traefik/"
+      }
+    },
+    "docker": {
+      "name": "Traefik Docker provider",
+      "basis": "unknown",
+      "sources": {
+        "se23fe4fe79fa": "https://doc.traefik.io/traefik/reference/install-configuration/providers/docker/"
+      }
+    },
+    "swarm": {
+      "name": "Traefik Swarm provider",
+      "basis": "unknown",
+      "sources": {
+        "s256d46f3f558": "https://doc.traefik.io/traefik/reference/install-configuration/providers/swarm/"
+      }
+    },
+    "middleware": {
+      "name": "Traefik middleware documentation",
+      "basis": "unknown",
+      "sources": {
+        "sd987195d64dd": "https://doc.traefik.io/traefik/middlewares/http/buffering/",
+        "sd20dcba7ebca": "https://doc.traefik.io/traefik/middlewares/http/inflightreq/",
+        "scf1b1e35ef5d": "https://doc.traefik.io/traefik/middlewares/http/ratelimit/"
+      }
+    },
+    "curl": {
+      "name": "curl write-out minimum",
+      "basis": "7.75.0",
+      "sources": {
+        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
+      }
+    }
+  },
+  "claims": {
+    "entrypoints": {"text": "For Traefik v2/v3, web :80 redirects to HTTPS websecure :443 and an ACME resolver obtains/renews certificates.", "components": ["traefik"], "sources": ["traefik:scbc0f2135c78"], "status": "REASONED"},
+    "acme-storage": {"text": "Persist acme.json across restarts with mode 600 to retain certificates and avoid repeated issuance/rate limits.", "components": ["traefik"], "sources": ["traefik:scbc0f2135c78"], "status": "REASONED"},
+    "acme-challenges": {"text": "TLS-ALPN requires inbound 443; HTTP-01 uses 80, while DNS supports wildcards without inbound ports.", "components": ["traefik"], "sources": ["traefik:scbc0f2135c78"], "status": "REASONED"},
+    "docker-default": {"text": "Docker discovery defaults exposedByDefault to true; set false and opt each intended container in with traefik.enable=true.", "components": ["docker"], "sources": ["docker:se23fe4fe79fa"], "status": "REASONED"},
+    "docker-scope": {"text": "Discovery is daemon-wide, not Compose-project scoped; eligible unlabelled containers get routers unless excluded. Missing usable ports skip service creation.", "components": ["docker"], "sources": ["docker:se23fe4fe79fa"], "status": "REASONED"},
+    "docker-socket": {"text": "The Docker socket gives daemon control despite :ro; use a restricted socket proxy to limit API access.", "components": ["docker"], "sources": ["docker:se23fe4fe79fa"], "status": "REASONED"},
+    "tls-floor": {"text": "Dynamic default TLS options set minVersion VersionTLS12.", "components": ["traefik"], "sources": ["traefik:scbc0f2135c78"], "status": "REASONED"},
+    "route": {"text": "Docker labels select the app host, websecure, letsencrypt resolver and backend port 3000.", "components": ["traefik", "docker"], "sources": ["traefik:scbc0f2135c78", "docker:se23fe4fe79fa"], "status": "REASONED"},
+    "backend-isolation": {"text": "Publish only Traefik 80/443, not the app's 3000, to prevent middleware/TLS bypass.", "components": ["docker"], "sources": ["docker:se23fe4fe79fa"], "status": "REASONED"},
+    "basic": {"text": "Attach bcrypt basicAuth to the router; htpasswd -nB -C 12 selects cost 12 rather than bare cost 5; the OWASP minimum is not directly sourced here.", "components": ["traefik"], "sources": ["traefik:scbc0f2135c78"], "status": "REASONED"},
+    "compose-hash": {"text": "Double each dollar sign in Compose hash labels; file-provider hashes need no such escaping.", "components": ["traefik"], "sources": ["traefik:scbc0f2135c78"], "status": "REASONED"},
+    "file-provider": {"text": "Load dynamic files with providers.file.directory/filename and reference their middleware from Docker as app-auth@file.", "components": ["traefik"], "sources": ["traefik:scbc0f2135c78"], "status": "REASONED"},
+    "mfa": {"text": "Basic is single-factor; use forwardAuth with Authelia/oauth2-proxy or front the site with Cloudflare Access for human MFA.", "components": ["traefik"], "sources": ["traefik:scbc0f2135c78"], "status": "REASONED"},
+    "body-limit": {"text": "Attach buffering.maxRequestBodyBytes=10485760 alongside existing auth/routing labels; it bounds accepted body size.", "components": ["middleware"], "sources": ["middleware:sd987195d64dd"], "status": "REASONED"},
+    "buffer-storage": {"text": "memRequestBodyBytes defaults to 1048576 and controls the memory-to-disk threshold independently of maximum accepted body size.", "components": ["middleware"], "sources": ["middleware:sd987195d64dd"], "status": "REASONED"},
+    "rate-limit": {"text": "average=10 and burst=20 configure a rate cap, per source by default.", "components": ["middleware"], "sources": ["middleware:scf1b1e35ef5d"], "status": "REASONED"},
+    "inflight": {"text": "inflightreq.amount=10 bounds concurrent requests; sourceCriterion defaults to request host rather than client, so configure a per-client cap explicitly.", "components": ["middleware"], "sources": ["middleware:sd20dcba7ebca"], "status": "REASONED"},
+    "middleware-order": {"text": "Rate/inflight precede auth to count rejected logins; buffering follows admission controls to avoid buffering rejected uploads.", "components": ["traefik", "middleware"], "sources": ["traefik:scbc0f2135c78", "middleware:sd987195d64dd", "middleware:scf1b1e35ef5d", "middleware:sd20dcba7ebca"], "status": "REASONED"},
+    "dashboard": {"text": "Keep api.insecure and unprotected api@internal routers off public entry points or protect the dashboard with auth.", "components": ["traefik"], "sources": ["traefik:scbc0f2135c78"], "status": "REASONED"},
+    "swarm": {"text": "Standalone Docker guidance does not cover Swarm; v3 uses providers.swarm and its separate exposedByDefault also defaults true.", "components": ["swarm"], "sources": ["swarm:s256d46f3f558"], "status": "REASONED"},
+    "verify-redirect": {"text": "HTTP should redirect to HTTPS.", "components": ["traefik"], "sources": ["traefik:scbc0f2135c78"], "status": "REASONED", "verify": [1]},
+    "verify-auth": {"text": "Unauthenticated HTTPS should return 401 once auth is attached.", "components": ["traefik"], "sources": ["traefik:scbc0f2135c78"], "status": "REASONED", "verify": [1]},
+    "verify-size": {"text": "Authenticated 1M must reach the app and 11M return 413; 401/000 invalidate the control. Remove app-body in isolation to rule out backend refusal.", "components": ["middleware", "traefik"], "sources": ["middleware:sd987195d64dd", "traefik:scbc0f2135c78"], "status": "REASONED", "verify": [1]},
+    "observed-429": {"text": "The guide records only a 429 response; no limiter attribution or exposed/fixed demonstration is established.", "components": ["middleware"], "sources": ["middleware:scf1b1e35ef5d", "middleware:sd20dcba7ebca"], "status": "DEMONSTRATED", "evidence": "A 429 appeared. That is all this shows."},
+    "verify-rate": {"text": "Concurrent unauthenticated probes can reach pre-auth limiters; 429 alone cannot distinguish rate, inflight or upstream refusal. Compare each limiter alone against both disabled.", "components": ["middleware"], "sources": ["middleware:scf1b1e35ef5d", "middleware:sd20dcba7ebca"], "status": "REASONED", "verify": [1]},
+    "verify-isolation": {"text": "Compose ps covers one project; ss misses NAT-only publication without a userland proxy. Neither finds unintended routes through Traefik.", "components": ["docker"], "sources": ["docker:se23fe4fe79fa"], "status": "REASONED", "verify": [1]},
+    "verify-acme": {"text": "Inspect ACME startup errors; failed issuance can leave a self-signed TRAEFIK DEFAULT CERT.", "components": ["traefik"], "sources": ["traefik:scbc0f2135c78"], "status": "REASONED", "verify": [1]},
+    "canary-route": {"text": "On a disposable deployment, unlabelled traefik/whoami has one HTTP port; use its generated Host rule and plain HTTP even on :443 because the generated router requests no TLS.", "components": ["docker", "traefik"], "sources": ["docker:se23fe4fe79fa", "traefik:scbc0f2135c78"], "status": "REASONED", "verify": [2]},
+    "verify-canary": {"text": "Calibrate exposedByDefault true with 200 and the canary Hostname body; false should give 404. Missing discovery/provider also gives 404, unreachable backend 502/504.", "components": ["docker", "curl"], "sources": ["docker:se23fe4fe79fa", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [2]},
+    "verify-app-control": {"text": "In the same run, the app must return 401 or known authenticated 200 while the canary gives 404; app 401 proves routing, not proxy-auth attachment. Keep TLS verification.", "components": ["docker", "traefik", "curl"], "sources": ["docker:se23fe4fe79fa", "traefik:scbc0f2135c78", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [3]}
+  }
+}
+---
 # Traefik: automatic TLS and authentication middleware
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| entrypoints: For Traefik v2/v3, web :80 redirects to HTTPS websecure :443 and an ACME resolver obtains/renews certificates. | Traefik scope v2 and v3 | REASONED |
+| acme-storage: Persist acme.json across restarts with mode 600 to retain certificates and avoid repeated issuance/rate limits. | Traefik scope v2 and v3 | REASONED |
+| acme-challenges: TLS-ALPN requires inbound 443; HTTP-01 uses 80, while DNS supports wildcards without inbound ports. | Traefik scope v2 and v3 | REASONED |
+| docker-default: Docker discovery defaults exposedByDefault to true; set false and opt each intended container in with traefik.enable=true. | Traefik Docker provider unknown | REASONED |
+| docker-scope: Discovery is daemon-wide, not Compose-project scoped; eligible unlabelled containers get routers unless excluded. Missing usable ports skip service creation. | Traefik Docker provider unknown | REASONED |
+| docker-socket: The Docker socket gives daemon control despite :ro; use a restricted socket proxy to limit API access. | Traefik Docker provider unknown | REASONED |
+| tls-floor: Dynamic default TLS options set minVersion VersionTLS12. | Traefik scope v2 and v3 | REASONED |
+| route: Docker labels select the app host, websecure, letsencrypt resolver and backend port 3000. | Traefik scope v2 and v3; Traefik Docker provider unknown | REASONED |
+| backend-isolation: Publish only Traefik 80/443, not the app's 3000, to prevent middleware/TLS bypass. | Traefik Docker provider unknown | REASONED |
+| basic: Attach bcrypt basicAuth to the router; htpasswd -nB -C 12 selects cost 12 rather than bare cost 5; the OWASP minimum is not directly sourced here. | Traefik scope v2 and v3 | REASONED |
+| compose-hash: Double each dollar sign in Compose hash labels; file-provider hashes need no such escaping. | Traefik scope v2 and v3 | REASONED |
+| file-provider: Load dynamic files with providers.file.directory/filename and reference their middleware from Docker as app-auth@file. | Traefik scope v2 and v3 | REASONED |
+| mfa: Basic is single-factor; use forwardAuth with Authelia/oauth2-proxy or front the site with Cloudflare Access for human MFA. | Traefik scope v2 and v3 | REASONED |
+| body-limit: Attach buffering.maxRequestBodyBytes=10485760 alongside existing auth/routing labels; it bounds accepted body size. | Traefik middleware documentation unknown | REASONED |
+| buffer-storage: memRequestBodyBytes defaults to 1048576 and controls the memory-to-disk threshold independently of maximum accepted body size. | Traefik middleware documentation unknown | REASONED |
+| rate-limit: average=10 and burst=20 configure a rate cap, per source by default. | Traefik middleware documentation unknown | REASONED |
+| inflight: inflightreq.amount=10 bounds concurrent requests; sourceCriterion defaults to request host rather than client, so configure a per-client cap explicitly. | Traefik middleware documentation unknown | REASONED |
+| middleware-order: Rate/inflight precede auth to count rejected logins; buffering follows admission controls to avoid buffering rejected uploads. | Traefik scope v2 and v3; Traefik middleware documentation unknown | REASONED |
+| dashboard: Keep api.insecure and unprotected api@internal routers off public entry points or protect the dashboard with auth. | Traefik scope v2 and v3 | REASONED |
+| swarm: Standalone Docker guidance does not cover Swarm; v3 uses providers.swarm and its separate exposedByDefault also defaults true. | Traefik Swarm provider unknown | REASONED |
+| verify-redirect: HTTP should redirect to HTTPS. | Traefik scope v2 and v3 | REASONED |
+| verify-auth: Unauthenticated HTTPS should return 401 once auth is attached. | Traefik scope v2 and v3 | REASONED |
+| verify-size: Authenticated 1M must reach the app and 11M return 413; 401/000 invalidate the control. Remove app-body in isolation to rule out backend refusal. | Traefik middleware documentation unknown; Traefik scope v2 and v3 | REASONED |
+| observed-429: The guide records only a 429 response; no limiter attribution or exposed/fixed demonstration is established. | Traefik middleware documentation unknown | DEMONSTRATED |
+| verify-rate: Concurrent unauthenticated probes can reach pre-auth limiters; 429 alone cannot distinguish rate, inflight or upstream refusal. Compare each limiter alone against both disabled. | Traefik middleware documentation unknown | REASONED |
+| verify-isolation: Compose ps covers one project; ss misses NAT-only publication without a userland proxy. Neither finds unintended routes through Traefik. | Traefik Docker provider unknown | REASONED |
+| verify-acme: Inspect ACME startup errors; failed issuance can leave a self-signed TRAEFIK DEFAULT CERT. | Traefik scope v2 and v3 | REASONED |
+| canary-route: On a disposable deployment, unlabelled traefik/whoami has one HTTP port; use its generated Host rule and plain HTTP even on :443 because the generated router requests no TLS. | Traefik Docker provider unknown; Traefik scope v2 and v3 | REASONED |
+| verify-canary: Calibrate exposedByDefault true with 200 and the canary Hostname body; false should give 404. Missing discovery/provider also gives 404, unreachable backend 502/504. | Traefik Docker provider unknown; curl write-out minimum 7.75.0 | REASONED |
+| verify-app-control: In the same run, the app must return 401 or known authenticated 200 while the canary gives 404; app 401 proves routing, not proxy-auth attachment. Keep TLS verification. | Traefik Docker provider unknown; Traefik scope v2 and v3; curl write-out minimum 7.75.0 | REASONED |
+<!-- version-basis:end -->
 
 Applies to Traefik v2 and v3. Traefik obtains and renews certificates itself through ACME resolvers, which suits container deployments.
 
@@ -119,7 +239,7 @@ from memory to disk. Raising the first increases what you will buffer, not where
 in-flight requests rather than their rate, and its `sourceCriterion` defaults to the request host rather
 than the client, so set it explicitly if you want a per-client cap.
 
-## 5. Verify
+## 5. Verify (REASONED: all Verify scenarios follow the cited Traefik and curl documentation; no live Docker/Traefik canary demonstration is recorded. The recorded 429 alone does not demonstrate limiter attribution. This metadata-only review has no authorized deployment fixture.)
 
 ```bash
 # guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
@@ -223,7 +343,7 @@ With the authentication from section 3 in place, this unauthenticated probe retu
 
 ## Sources (checked September 2026)
 
-- Traefik documentation: https://doc.traefik.io/traefik/ (HTTPS/ACME, routers, and basicAuth middleware sections)
+- Traefik documentation (v2 and v3): https://doc.traefik.io/traefik/ (HTTPS/ACME, routers, and basicAuth middleware sections)
 - Docker provider (`exposedByDefault`, socket endpoint): https://doc.traefik.io/traefik/reference/install-configuration/providers/docker/
 - Swarm provider (`providers.swarm.exposedByDefault`): https://doc.traefik.io/traefik/reference/install-configuration/providers/swarm/
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html

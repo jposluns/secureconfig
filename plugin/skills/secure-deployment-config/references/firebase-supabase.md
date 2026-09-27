@@ -1,4 +1,267 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "9c0fea64646666ca61ce8bf6258f91cc73a4c6c8f26a23dc25402f0344ebad74",
+  "components": {
+    "firebase": {
+      "name": "Firebase documentation",
+      "basis": "unknown",
+      "sources": {
+        "s100c2cdbdd59": "https://firebase.google.com/docs/rules",
+        "s53bfe8b21868": "https://firebase.google.com/docs/rules/basics",
+        "s622d3bb0665b": "https://firebase.google.com/docs/firestore/quickstart",
+        "sb2c933c841ef": "https://firebase.google.com/docs/database/web/start",
+        "s75f018e0fac7": "https://firebase.google.com/support/releases",
+        "s7bd11c22c7ce": "https://firebase.google.com/docs/firestore/security/rules-structure",
+        "sa6b1c4933e6a": "https://firebase.google.com/docs/database/security/core-syntax",
+        "s0a7f54463abd": "https://firebase.google.com/docs/storage/security/core-syntax",
+        "sd6071548f6fe": "https://firebase.google.com/docs/firestore/security/get-started",
+        "s14872143a9e8": "https://firebase.google.com/docs/storage/security/get-started",
+        "sc8f214d059d2": "https://firebase.google.com/docs/functions/callable",
+        "s79da8f65f90a": "https://firebase.google.com/docs/functions/callable-reference",
+        "s9a86df9623a6": "https://firebase.google.com/docs/functions/1st-gen/callable-1st",
+        "s49f78d054708": "https://firebase.google.com/docs/auth/admin/verify-id-tokens",
+        "s1bb711c9afeb": "https://firebase.google.com/docs/functions/http-events",
+        "sc9f86ea271f6": "https://firebase.google.com/docs/reference/functions/2nd-gen/node/firebase-functions.https.httpsoptions",
+        "sb0ff8f1726f7": "https://firebase.google.com/docs/app-check/cloud-functions",
+        "sa71e958c99df": "https://firebase.google.com/docs/app-check/web/recaptcha-enterprise-provider",
+        "sba7129c83405": "https://firebase.google.com/docs/app-check/enable-enforcement",
+        "safeed4cd2b67": "https://firebase.google.com/docs/projects/api-keys",
+        "sc78d5eb59b65": "https://docs.cloud.google.com/api-keys/docs/add-restrictions-api-keys",
+        "sb0d26775f3b4": "https://firebase.google.com/docs/web/learn-more",
+        "s77e2cbd8a29a": "https://firebase.google.com/docs/auth/web/anonymous-auth",
+        "s06808e4b6965": "https://docs.cloud.google.com/identity-platform/docs/admin/email-enumeration-protection",
+        "sd8a1bda29f5c": "https://firebase.google.com/docs/emulator-suite/install_and_configure",
+        "s69d9721c7f29": "https://firebase.google.com/docs/emulator-suite/use_hosting",
+        "s8c90f9f6c7fa": "https://firebase.google.com/docs/reference/js/auth",
+        "s8c8336ec252e": "https://firebase.google.com/docs/reference/js/auth.additionaluserinfo",
+        "s142e56472093": "https://firebase.google.com/docs/auth/admin/manage-sessions",
+        "s9b7e57b472c7": "https://firebase.google.com/docs/storage/admin/start",
+        "sa0584b797732": "https://firebase.google.com/docs/reference/kotlin/com/google/firebase/storage/StorageReference",
+        "sfd1e7412abf6": "https://firebase.google.com/docs/storage/web/download-files"
+      }
+    },
+    "supabase": {
+      "name": "Supabase documentation",
+      "basis": "unknown",
+      "sources": {
+        "s73d939b4644e": "https://supabase.com/docs/guides/api/api-keys",
+        "s46cff2590323": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+        "s741468ff35a9": "https://supabase.com/docs/guides/auth/auth-mfa",
+        "s6d5cf2d4dbf3": "https://supabase.com/docs/guides/api/securing-your-api",
+        "s20ef046ac646": "https://supabase.com/docs/guides/api/using-custom-schemas",
+        "sa946354db383": "https://supabase.com/docs/guides/getting-started/migrating-to-new-api-keys",
+        "sfc2f9ae0232b": "https://supabase.com/docs/guides/auth/signing-keys",
+        "s8405a9fb4b74": "https://supabase.com/docs/guides/database/functions",
+        "s13da01bbbba5": "https://supabase.com/docs/guides/database/extensions/http",
+        "s76740bffcb32": "https://supabase.com/docs/guides/database/extensions/pg_net",
+        "s47bb8fa3e14e": "https://supabase.com/docs/guides/database/vault",
+        "s1567fb838f20": "https://supabase.com/docs/guides/storage/buckets/fundamentals",
+        "sdba7d7b6dcf8": "https://supabase.com/docs/guides/storage/security/access-control",
+        "s9e1484f46eff": "https://supabase.com/docs/guides/storage/schema/helper-functions",
+        "sc29febbb230e": "https://supabase.com/docs/guides/storage/serving/downloads",
+        "see2d3be99ebd": "https://supabase.com/docs/guides/storage/uploads/standard-uploads",
+        "s5674b1057e14": "https://supabase.com/docs/guides/realtime/settings",
+        "s84efad0ba39d": "https://supabase.com/docs/guides/realtime/authorization",
+        "s694eab64f2ec": "https://supabase.com/docs/guides/realtime/postgres-changes",
+        "sc797f0b63472": "https://supabase.com/docs/guides/auth/general-configuration",
+        "s3a5e39fe7b4d": "https://supabase.com/docs/guides/local-development/cli/config",
+        "sa2dd4637969e": "https://supabase.com/docs/guides/auth/passwords",
+        "sad79d4d1b6ee": "https://supabase.com/docs/guides/auth/auth-anonymous",
+        "s182755725d74": "https://supabase.com/docs/guides/auth/auth-mfa/totp",
+        "s92b405dc3c7e": "https://supabase.com/docs/reference/javascript/select",
+        "s087c8cf42ab0": "https://supabase.com/docs/reference/javascript/rpc",
+        "sf3246532dd18": "https://supabase.com/docs/guides/functions",
+        "s7dfbb47b5d20": "https://supabase.com/docs/reference/cli/supabase-functions-deploy",
+        "sf7d438b8c080": "https://supabase.com/docs/guides/functions/auth",
+        "se52bbd097033": "https://supabase.com/docs/guides/functions/auth-headers",
+        "sb3c4c0993e14": "https://supabase.com/docs/guides/functions/secrets",
+        "sb787b5d63633": "https://supabase.com/docs/guides/platform/network-restrictions",
+        "s83e15676e1ff": "https://supabase.com/docs/guides/platform/ssl-enforcement",
+        "sf69cafb4bc6c": "https://supabase.com/docs/guides/database/postgres/roles"
+      }
+    },
+    "postgres": {
+      "name": "PostgreSQL documentation",
+      "basis": "unknown",
+      "sources": {
+        "s13c54ab9cc6b": "https://www.postgresql.org/docs/current/sql-createview.html",
+        "saa99ef28f60f": "https://www.postgresql.org/docs/current/sql-alterview.html",
+        "sb6224f4ac866": "https://www.postgresql.org/docs/current/sql-revoke.html",
+        "se9846041ce1f": "https://www.postgresql.org/docs/current/ddl-rowsecurity.html",
+        "s8e65a2f3f2bb": "https://www.postgresql.org/docs/current/sql-createpolicy.html",
+        "sec39c317b06f": "https://www.postgresql.org/docs/current/sql-createfunction.html",
+        "s0fe66d71aa10": "https://www.postgresql.org/docs/current/sql-alterfunction.html",
+        "s04e81888353f": "https://www.postgresql.org/docs/current/sql-alterdefaultprivileges.html",
+        "sc39eceeac711": "https://www.postgresql.org/docs/current/functions-info.html"
+      }
+    },
+    "postgres-view": {
+      "name": "PostgreSQL invoker-view minimum",
+      "basis": "15",
+      "sources": {
+        "s14443e063ef1": "https://www.postgresql.org/docs/release/15.0/"
+      }
+    }
+  },
+  "claims": {
+    "public-config": {"text": "Firebase API keys/config and Supabase publishable/anon keys are public identifiers, not authorization; hosted endpoints handle TLS.", "components": ["firebase", "supabase"], "sources": ["firebase:safeed4cd2b67", "firebase:sb0d26775f3b4", "supabase:s73d939b4644e"], "status": "REASONED"},
+    "firebase-ownership": {"text": "Require authentication and ownership separately in Firestore, RTDB and Storage; authentication-only rules do not isolate users.", "components": ["firebase"], "sources": ["firebase:s100c2cdbdd59", "firebase:s53bfe8b21868"], "status": "REASONED"},
+    "firebase-starting": {"text": "Firestore production and RTDB locked modes deny clients; test templates expose data for about a month. Inspect expiry and replace open rules.", "components": ["firebase"], "sources": ["firebase:s622d3bb0665b", "firebase:sb2c933c841ef", "firebase:s75f018e0fac7"], "status": "REASONED"},
+    "firestore-rules": {"text": "Rules version 2 recursive wildcards include the user document and descendants; version 1 excludes the parent. Unmatched paths deny and overlapping grants can reopen access.", "components": ["firebase"], "sources": ["firebase:s7bd11c22c7ce"], "status": "REASONED"},
+    "rtdb-rules": {"text": "Owner rules under users.$uid need ancestor grants removed; child rules cannot revoke parent grants or filter parent reads.", "components": ["firebase"], "sources": ["firebase:sa6b1c4933e6a"], "status": "REASONED"},
+    "firebase-storage": {"text": "Storage has separate rules; conflicting default prose/example warrants explicit deny-all followed by deliberate owner-path access.", "components": ["firebase"], "sources": ["firebase:s53bfe8b21868", "firebase:s0a7f54463abd"], "status": "REASONED"},
+    "firebase-download": {"text": "Storage download URLs are non-expiring bearer credentials unaffected by tighter Rules; revoke tokens and use authorized getBlob/getBytes direct downloads.", "components": ["firebase"], "sources": ["firebase:s9b7e57b472c7", "firebase:sa0584b797732", "firebase:sfd1e7412abf6"], "status": "REASONED"},
+    "firebase-rule-deploy": {"text": "Inspect and test deployed rules for every database/bucket/instance; keep local and deployed definitions synchronized.", "components": ["firebase"], "sources": ["firebase:sd6071548f6fe", "firebase:s14872143a9e8"], "status": "REASONED"},
+    "firebase-server": {"text": "Admin SDK/server credentials bypass client Rules; keep credentials server-side and apply IAM and caller authorization.", "components": ["firebase"], "sources": ["firebase:s7bd11c22c7ce"], "status": "REASONED"},
+    "firebase-callable": {"text": "Callable ID-token validation is optional authentication; reject missing request.auth, use its UID and validate resource access. First-generation handlers use context.auth.", "components": ["firebase"], "sources": ["firebase:s79da8f65f90a", "firebase:sc8f214d059d2", "firebase:s9a86df9623a6"], "status": "REASONED"},
+    "firebase-callable-appcheck": {"text": "onCall enforceAppCheck needs firebase-functions 4.0.0 or newer; App Check does not replace caller/resource authorization.", "components": ["firebase"], "sources": ["firebase:sb0ff8f1726f7"], "status": "REASONED"},
+    "firebase-http": {"text": "onRequest does not inherit callable auth; verify end-user tokens with verifyIdToken or restrict IAM invokers, then authorize the intended principal.", "components": ["firebase"], "sources": ["firebase:s49f78d054708", "firebase:s1bb711c9afeb", "firebase:sc9f86ea271f6"], "status": "REASONED"},
+    "firebase-appcheck": {"text": "Register compatible clients and inspect metrics, then enforce App Check per product and per callable; registration alone enforces nothing.", "components": ["firebase"], "sources": ["firebase:sa71e958c99df", "firebase:sba7129c83405", "firebase:sb0ff8f1726f7"], "status": "REASONED"},
+    "firebase-key-restrictions": {"text": "Apply one app-restriction type per key plus API restrictions; separate platforms and unrelated billable APIs, using the full Firebase product table.", "components": ["firebase"], "sources": ["firebase:sc78d5eb59b65", "firebase:safeed4cd2b67"], "status": "REASONED"},
+    "firebase-anonymous": {"text": "Anonymous sign-in is opt-in; disable unused providers because anonymous accounts still satisfy authentication-only Rules.", "components": ["firebase"], "sources": ["firebase:s77e2cbd8a29a"], "status": "REASONED"},
+    "firebase-enumeration": {"text": "Email enumeration protection defaults on only for projects created from September 15, 2023; signup can still return EMAIL_EXISTS.", "components": ["firebase"], "sources": ["firebase:s06808e4b6965"], "status": "REASONED"},
+    "firebase-emulators": {"text": "Emulators default to localhost but missing Firestore/RTDB/Storage Rules configuration means open data; keep listeners, UI, hub, proxies and tunnels private.", "components": ["firebase"], "sources": ["firebase:sd8a1bda29f5c", "firebase:s69d9721c7f29"], "status": "REASONED"},
+    "supabase-network": {"text": "Restrict hosted database/pooler client IPs with Network Restrictions, enforce SSL and protect database-role passwords.", "components": ["supabase"], "sources": ["supabase:sb787b5d63633", "supabase:s83e15676e1ff", "supabase:sf69cafb4bc6c"], "status": "REASONED"},
+    "supabase-grants": {"text": "Data API access needs grants plus RLS; automatic-grant defaults are transitioning. Table Editor enables RLS, while SQL creation needs explicit enablement.", "components": ["supabase"], "sources": ["supabase:s6d5cf2d4dbf3"], "status": "REASONED"},
+    "supabase-select": {"text": "The profiles baseline enables RLS, revokes broad grants and permits authenticated owners SELECT; audit inherited/column grants and existing policies.", "components": ["supabase", "postgres"], "sources": ["supabase:s46cff2590323", "postgres:s8e65a2f3f2bb"], "status": "REASONED"},
+    "supabase-bypass": {"text": "With RLS enabled and no policy, ordinary subject roles get no rows; owners normally bypass, as do superusers/BYPASSRLS roles. TRUNCATE is outside RLS.", "components": ["postgres"], "sources": ["postgres:se9846041ce1f"], "status": "REASONED"},
+    "supabase-writes": {"text": "Grant and policy INSERT/UPDATE/DELETE only when intended; UPDATE checks old/new ownership and needs applicable SELECT when reading columns.", "components": ["supabase", "postgres"], "sources": ["supabase:s46cff2590323", "postgres:s8e65a2f3f2bb"], "status": "REASONED"},
+    "supabase-schemas": {"text": "public is exposed by default; restrict exposed schemas and deliberately grant schema/object access. Schema selection does not replace RLS.", "components": ["supabase"], "sources": ["supabase:s20ef046ac646"], "status": "REASONED"},
+    "supabase-api-disable": {"text": "Disable an unused Data API to close generated REST endpoints; this does not disable all other services.", "components": ["supabase"], "sources": ["supabase:s6d5cf2d4dbf3"], "status": "REASONED"},
+    "supabase-keys": {"text": "Publishable keys select anon or authenticated by session; secret and legacy service_role keys bypass RLS and belong only on trusted servers.", "components": ["supabase"], "sources": ["supabase:s73d939b4644e"], "status": "REASONED"},
+    "supabase-key-retire": {"text": "Replacement keys do not disable legacy keys; migrate consumers then explicitly deactivate legacy keys, or delete compromised secret keys.", "components": ["supabase"], "sources": ["supabase:sa946354db383"], "status": "REASONED"},
+    "supabase-jwt-retire": {"text": "Rotation changes the signing key but retains previous trust until revocation; account for verifier caches and propagation.", "components": ["supabase"], "sources": ["supabase:sfc2f9ae0232b"], "status": "REASONED"},
+    "supabase-view-owner": {"text": "Views use owner privileges/policies by default; disclosure depends on reachable schemas, grants, query and owner privileges, not anon-key possession alone.", "components": ["postgres", "supabase"], "sources": ["postgres:s13c54ab9cc6b", "supabase:s46cff2590323"], "status": "REASONED"},
+    "supabase-view-invoker": {"text": "PostgreSQL 15+ security_invoker views apply caller policies and require underlying privileges.", "components": ["postgres-view", "postgres"], "sources": ["postgres-view:s14443e063ef1", "postgres:saa99ef28f60f", "postgres:s13c54ab9cc6b"], "status": "REASONED"},
+    "supabase-view-legacy": {"text": "PostgreSQL 14 and earlier require revoking all view privileges from PUBLIC/anon/authenticated or unexposing the schema; updatable views can bypass RLS for writes.", "components": ["postgres"], "sources": ["postgres:s13c54ab9cc6b", "postgres:sb6224f4ac866", "postgres:sc39eceeac711"], "status": "REASONED"},
+    "supabase-functions": {"text": "Prefer INVOKER; restrict DEFINER execution, use empty search_path with qualified references and enforce caller authorization including required MFA.", "components": ["supabase", "postgres"], "sources": ["supabase:s8405a9fb4b74", "postgres:sec39c317b06f", "postgres:s0fe66d71aa10"], "status": "REASONED"},
+    "supabase-function-defaults": {"text": "New functions grant PUBLIC execution; create privileged functions and restrict grants transactionally. Global/default revocations are creator-specific and do not fix existing functions.", "components": ["postgres"], "sources": ["postgres:sec39c317b06f", "postgres:s04e81888353f"], "status": "REASONED"},
+    "supabase-http": {"text": "Audit http/pg_net wrappers and revoke unneeded execute grants; constrain callers/destinations/data. Extension enablement alone does not prove exploitable SSRF.", "components": ["supabase"], "sources": ["supabase:s13da01bbbba5", "supabase:s76740bffcb32"], "status": "REASONED"},
+    "supabase-vault": {"text": "Restrict vault.decrypted_secrets and privileged wrappers and keep Vault unexposed; at-rest encryption cannot prevent authorized plaintext queries.", "components": ["supabase"], "sources": ["supabase:s47bb8fa3e14e"], "status": "REASONED"},
+    "supabase-buckets": {"text": "Private downloads need authorized access or time-limited signed URLs; public buckets bypass retrieval checks but not upload/delete/move/copy controls.", "components": ["supabase"], "sources": ["supabase:s1567fb838f20"], "status": "REASONED"},
+    "supabase-storage-policies": {"text": "Authorize storage.objects separately by bucket and owner path; upload needs INSERT, upsert also SELECT/UPDATE, and deletion needs deliberate permission.", "components": ["supabase"], "sources": ["supabase:sdba7d7b6dcf8", "supabase:s9e1484f46eff", "supabase:see2d3be99ebd"], "status": "REASONED"},
+    "supabase-realtime-default": {"text": "Public Realtime channels are allowed by default; disable them project-wide and also set client config.private.", "components": ["supabase"], "sources": ["supabase:s5674b1057e14"], "status": "REASONED"},
+    "supabase-realtime-policy": {"text": "Broadcast/Presence receive/send need separate SELECT/INSERT policies on realtime.messages, constrained by topic ownership and extension.", "components": ["supabase"], "sources": ["supabase:s84efad0ba39d"], "status": "REASONED"},
+    "supabase-changes": {"text": "Postgres Changes uses source-table authorization; private-channel policies are not universal and DELETE has separate limitations.", "components": ["supabase"], "sources": ["supabase:s694eab64f2ec"], "status": "REASONED"},
+    "supabase-signup": {"text": "Disable signup, anonymous sign-ins and unused providers when unwanted; inspect hosted settings instead of assuming universal defaults.", "components": ["supabase"], "sources": ["supabase:sc797f0b63472"], "status": "REASONED"},
+    "supabase-cli-auth": {"text": "CLI enable_signup defaults true and enable_anonymous_sign_ins false; local config edits do not prove hosted settings changed.", "components": ["supabase"], "sources": ["supabase:s3a5e39fe7b4d"], "status": "REASONED"},
+    "supabase-mfa": {"text": "TOTP is available on every plan at writing; enrollment alone does not constrain data. Require aal2 using a restrictive policy alongside permissive ownership policies.", "components": ["supabase", "postgres"], "sources": ["supabase:s182755725d74", "supabase:s741468ff35a9", "postgres:s8e65a2f3f2bb"], "status": "REASONED"},
+    "supabase-edge-jwt": {"text": "Per-function verify_jwt defaults true; --no-verify-jwt disables platform checking and requires handler authentication before protected work.", "components": ["supabase"], "sources": ["supabase:s7dfbb47b5d20", "supabase:sf7d438b8c080", "supabase:se52bbd097033"], "status": "REASONED"},
+    "supabase-edge-auth": {"text": "Platform JWT success is not resource authorization and API-key compatibility can pass it; separately authorize users or verify webhook signatures.", "components": ["supabase"], "sources": ["supabase:sf7d438b8c080", "supabase:se52bbd097033"], "status": "REASONED"},
+    "supabase-edge-secrets": {"text": "Edge environments contain privileged credentials including SUPABASE_SERVICE_ROLE_KEY; protect managed/local secrets, responses, logs and client bundles.", "components": ["supabase"], "sources": ["supabase:sb3c4c0993e14"], "status": "REASONED"},
+    "verify-firestore": {"text": "Compare unsigned/A/B reads and writes to user documents and descendants, with a successful owner control; test parent documents to distinguish recursive-rule versions.", "components": ["firebase"], "sources": ["firebase:s7bd11c22c7ce"], "status": "REASONED"},
+    "verify-rtdb": {"text": "Compare unsigned/A/B reads/writes to seeded RTDB owner paths; ancestor grants expose them while ownership rules deny unauthorized callers.", "components": ["firebase"], "sources": ["firebase:sa6b1c4933e6a"], "status": "REASONED"},
+    "verify-firebase-storage": {"text": "Compare unsigned/A/B object reads and uploads; ownership rules must deny unrelated callers while owner operations succeed.", "components": ["firebase"], "sources": ["firebase:s0a7f54463abd"], "status": "REASONED"},
+    "verify-download-token": {"text": "Same sessionless download URL works after Rules tightening but must lose bytes after token revocation; owner getBytes remains successful and network/CORS failures are inconclusive.", "components": ["firebase"], "sources": ["firebase:s9b7e57b472c7", "firebase:sa0584b797732", "firebase:sfd1e7412abf6"], "status": "REASONED"},
+    "verify-tables": {"text": "Pair unsigned/A/B profiles GETs against seeded rows, using ordinary credentials and required MFA; test intended writes and persisted effects separately.", "components": ["supabase", "postgres"], "sources": ["supabase:s92b405dc3c7e", "postgres:se9846041ce1f", "supabase:s741468ff35a9"], "status": "REASONED", "verify": [1]},
+    "verify-views": {"text": "Compare view reads with table boundaries; owner-privileged exposure must close under invoker/revoked access while intended reads or deliberate removal are confirmed.", "components": ["postgres"], "sources": ["postgres:s13c54ab9cc6b"], "status": "REASONED"},
+    "verify-rpc": {"text": "Test every API function overload with valid harmless arguments as unsigned/A/B; unauthorized data or operations must be denied while the intended caller succeeds.", "components": ["supabase"], "sources": ["supabase:s087c8cf42ab0", "supabase:s8405a9fb4b74"], "status": "REASONED"},
+    "verify-http": {"text": "Probe HTTP wrappers with a controlled collector and marker; unauthorized fixed calls must emit no request. Commit pg_net fixture transactions before expecting delivery.", "components": ["supabase"], "sources": ["supabase:s76740bffcb32"], "status": "REASONED"},
+    "verify-vault": {"text": "Use a disposable Vault canary to compare exposed/fixed wrappers; inspect function and table privileges as supporting evidence.", "components": ["supabase", "postgres"], "sources": ["supabase:s47bb8fa3e14e", "postgres:sc39eceeac711"], "status": "REASONED"},
+    "verify-storage": {"text": "Compare public URL and A/B private downloads plus intended uploads/upserts; unauthorized callers must receive no bytes or cross-owner writes.", "components": ["supabase"], "sources": ["supabase:sc29febbb230e", "supabase:see2d3be99ebd", "supabase:s1567fb838f20"], "status": "REASONED"},
+    "verify-realtime": {"text": "Compare A/B join, Broadcast and Presence delivery; public-disabled clients lacking private=true must fail, and connection alone is insufficient.", "components": ["supabase"], "sources": ["supabase:s5674b1057e14", "supabase:s84efad0ba39d"], "status": "REASONED"},
+    "verify-changes": {"text": "Observe A/B INSERT/UPDATE subscription events against seeded rows; fixed table authorization withholds unrelated events. Evaluate DELETE separately.", "components": ["supabase"], "sources": ["supabase:s694eab64f2ec"], "status": "REASONED"},
+    "verify-edge": {"text": "Compare no/invalid Bearer without apikey, authorized owners and valid webhook signatures; distinguish platform 401 from handler authorization and inspect effects/secrets.", "components": ["supabase"], "sources": ["supabase:se52bbd097033", "supabase:sf7d438b8c080", "supabase:sb3c4c0993e14"], "status": "REASONED"},
+    "verify-firebase-functions": {"text": "Compare callable requests with valid App Check but missing user auth and A/B operations; HTTP endpoints need separate invalid/valid user or IAM comparisons.", "components": ["firebase"], "sources": ["firebase:s79da8f65f90a", "firebase:s49f78d054708"], "status": "REASONED"},
+    "verify-appcheck": {"text": "Repeat owner requests with/without App Check per product/callable; enforcement must deny missing attestation while compatible clients work.", "components": ["firebase"], "sources": ["firebase:sba7129c83405", "firebase:sb0ff8f1726f7"], "status": "REASONED"},
+    "verify-api-restrictions": {"text": "Test intended versus excluded apps/referrers after key restrictions, retaining successful intended product traffic.", "components": ["firebase"], "sources": ["firebase:safeed4cd2b67", "firebase:sc78d5eb59b65"], "status": "REASONED"},
+    "verify-emulators": {"text": "Enumerate hub /emulators and sockets, compare missing versus loaded Rules and second-host connectivity, and retain local owner controls.", "components": ["firebase"], "sources": ["firebase:sd8a1bda29f5c", "firebase:s69d9721c7f29"], "status": "REASONED"},
+    "verify-firebase-accounts": {"text": "Sign out before each Anonymous signup test and check isNewUser; disabled providers must reject creation. Enumeration tests compare sign-in errors, not EMAIL_EXISTS signup behavior.", "components": ["firebase"], "sources": ["firebase:s8c90f9f6c7fa", "firebase:s8c8336ec252e", "firebase:s142e56472093", "firebase:s77e2cbd8a29a", "firebase:s06808e4b6965"], "status": "REASONED"},
+    "verify-supabase-accounts": {"text": "Fresh signup and anonymous creation must fail under invite-only/anonymous-disabled settings while an invited account still signs in.", "components": ["supabase"], "sources": ["supabase:sc797f0b63472", "supabase:sa2dd4637969e", "supabase:sad79d4d1b6ee"], "status": "REASONED"},
+    "verify-mfa": {"text": "Owner profiles GET with aal1 must yield no protected rows under the restrictive policy, while fresh aal2 returns the seeded owner row.", "components": ["supabase"], "sources": ["supabase:s741468ff35a9"], "status": "REASONED", "verify": [1]},
+    "verify-key-retirement": {"text": "Compare old/new API keys after explicit deactivation and old/new JWTs after revocation, accounting for propagation and caches.", "components": ["supabase"], "sources": ["supabase:sa946354db383", "supabase:sfc2f9ae0232b"], "status": "REASONED"},
+    "verify-api-removal": {"text": "Previously successful profiles requests must stop returning fixtures after schema removal or Data API disabling; retained schemas need authorized controls.", "components": ["supabase"], "sources": ["supabase:s6d5cf2d4dbf3", "supabase:s20ef046ac646"], "status": "REASONED"},
+    "verify-bundle": {"text": "Filename-only service_role/eyJ/sb_secret_ scanning yields review candidates, not proof of leaks; public anon JWTs are legitimate. Use a marker control and inspect encoded/split secrets separately.", "components": ["supabase"], "sources": ["supabase:s73d939b4644e"], "status": "REASONED", "verify": [2]},
+    "local-guards": {"text": "Historical local guard tests rejected placeholders and malformed set lines; this demonstrates shell behavior only, not live authorization. Shell/tool versions are not sourced.", "components": ["supabase"], "sources": ["supabase:s92b405dc3c7e", "supabase:s73d939b4644e"], "status": "DEMONSTRATED", "evidence": "Local guard tests refused embedded `REPLACE_WITH_` placeholders, `example.com`, angle brackets, empty values, and omitted or shortened `set --` lines."},
+    "local-syntax": {"text": "Recorded ShellCheck/bash and JSON/TOML/JavaScript parsing passed; these checks do not compile Firebase Rules, execute SQL or demonstrate services.", "components": ["firebase", "supabase"], "sources": ["firebase:sa6b1c4933e6a", "firebase:sd8a1bda29f5c", "supabase:s3a5e39fe7b4d", "firebase:sc8f214d059d2"], "status": "DEMONSTRATED", "evidence": "The RTDB JSON, `firebase.json` fragment, Auth TOML, and callable JavaScript passed local parsing checks."}
+  }
+}
+---
 # Firebase and Supabase: the rules are the security
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| public-config: Firebase API keys/config and Supabase publishable/anon keys are public identifiers, not authorization; hosted endpoints handle TLS. | Firebase documentation unknown; Supabase documentation unknown | REASONED |
+| firebase-ownership: Require authentication and ownership separately in Firestore, RTDB and Storage; authentication-only rules do not isolate users. | Firebase documentation unknown | REASONED |
+| firebase-starting: Firestore production and RTDB locked modes deny clients; test templates expose data for about a month. Inspect expiry and replace open rules. | Firebase documentation unknown | REASONED |
+| firestore-rules: Rules version 2 recursive wildcards include the user document and descendants; version 1 excludes the parent. Unmatched paths deny and overlapping grants can reopen access. | Firebase documentation unknown | REASONED |
+| rtdb-rules: Owner rules under users.$uid need ancestor grants removed; child rules cannot revoke parent grants or filter parent reads. | Firebase documentation unknown | REASONED |
+| firebase-storage: Storage has separate rules; conflicting default prose/example warrants explicit deny-all followed by deliberate owner-path access. | Firebase documentation unknown | REASONED |
+| firebase-download: Storage download URLs are non-expiring bearer credentials unaffected by tighter Rules; revoke tokens and use authorized getBlob/getBytes direct downloads. | Firebase documentation unknown | REASONED |
+| firebase-rule-deploy: Inspect and test deployed rules for every database/bucket/instance; keep local and deployed definitions synchronized. | Firebase documentation unknown | REASONED |
+| firebase-server: Admin SDK/server credentials bypass client Rules; keep credentials server-side and apply IAM and caller authorization. | Firebase documentation unknown | REASONED |
+| firebase-callable: Callable ID-token validation is optional authentication; reject missing request.auth, use its UID and validate resource access. First-generation handlers use context.auth. | Firebase documentation unknown | REASONED |
+| firebase-callable-appcheck: onCall enforceAppCheck needs firebase-functions 4.0.0 or newer; App Check does not replace caller/resource authorization. | Firebase documentation unknown | REASONED |
+| firebase-http: onRequest does not inherit callable auth; verify end-user tokens with verifyIdToken or restrict IAM invokers, then authorize the intended principal. | Firebase documentation unknown | REASONED |
+| firebase-appcheck: Register compatible clients and inspect metrics, then enforce App Check per product and per callable; registration alone enforces nothing. | Firebase documentation unknown | REASONED |
+| firebase-key-restrictions: Apply one app-restriction type per key plus API restrictions; separate platforms and unrelated billable APIs, using the full Firebase product table. | Firebase documentation unknown | REASONED |
+| firebase-anonymous: Anonymous sign-in is opt-in; disable unused providers because anonymous accounts still satisfy authentication-only Rules. | Firebase documentation unknown | REASONED |
+| firebase-enumeration: Email enumeration protection defaults on only for projects created from September 15, 2023; signup can still return EMAIL_EXISTS. | Firebase documentation unknown | REASONED |
+| firebase-emulators: Emulators default to localhost but missing Firestore/RTDB/Storage Rules configuration means open data; keep listeners, UI, hub, proxies and tunnels private. | Firebase documentation unknown | REASONED |
+| supabase-network: Restrict hosted database/pooler client IPs with Network Restrictions, enforce SSL and protect database-role passwords. | Supabase documentation unknown | REASONED |
+| supabase-grants: Data API access needs grants plus RLS; automatic-grant defaults are transitioning. Table Editor enables RLS, while SQL creation needs explicit enablement. | Supabase documentation unknown | REASONED |
+| supabase-select: The profiles baseline enables RLS, revokes broad grants and permits authenticated owners SELECT; audit inherited/column grants and existing policies. | Supabase documentation unknown; PostgreSQL documentation unknown | REASONED |
+| supabase-bypass: With RLS enabled and no policy, ordinary subject roles get no rows; owners normally bypass, as do superusers/BYPASSRLS roles. TRUNCATE is outside RLS. | PostgreSQL documentation unknown | REASONED |
+| supabase-writes: Grant and policy INSERT/UPDATE/DELETE only when intended; UPDATE checks old/new ownership and needs applicable SELECT when reading columns. | Supabase documentation unknown; PostgreSQL documentation unknown | REASONED |
+| supabase-schemas: public is exposed by default; restrict exposed schemas and deliberately grant schema/object access. Schema selection does not replace RLS. | Supabase documentation unknown | REASONED |
+| supabase-api-disable: Disable an unused Data API to close generated REST endpoints; this does not disable all other services. | Supabase documentation unknown | REASONED |
+| supabase-keys: Publishable keys select anon or authenticated by session; secret and legacy service_role keys bypass RLS and belong only on trusted servers. | Supabase documentation unknown | REASONED |
+| supabase-key-retire: Replacement keys do not disable legacy keys; migrate consumers then explicitly deactivate legacy keys, or delete compromised secret keys. | Supabase documentation unknown | REASONED |
+| supabase-jwt-retire: Rotation changes the signing key but retains previous trust until revocation; account for verifier caches and propagation. | Supabase documentation unknown | REASONED |
+| supabase-view-owner: Views use owner privileges/policies by default; disclosure depends on reachable schemas, grants, query and owner privileges, not anon-key possession alone. | PostgreSQL documentation unknown; Supabase documentation unknown | REASONED |
+| supabase-view-invoker: PostgreSQL 15+ security_invoker views apply caller policies and require underlying privileges. | PostgreSQL invoker-view minimum 15; PostgreSQL documentation unknown | REASONED |
+| supabase-view-legacy: PostgreSQL 14 and earlier require revoking all view privileges from PUBLIC/anon/authenticated or unexposing the schema; updatable views can bypass RLS for writes. | PostgreSQL documentation unknown | REASONED |
+| supabase-functions: Prefer INVOKER; restrict DEFINER execution, use empty search_path with qualified references and enforce caller authorization including required MFA. | Supabase documentation unknown; PostgreSQL documentation unknown | REASONED |
+| supabase-function-defaults: New functions grant PUBLIC execution; create privileged functions and restrict grants transactionally. Global/default revocations are creator-specific and do not fix existing functions. | PostgreSQL documentation unknown | REASONED |
+| supabase-http: Audit http/pg_net wrappers and revoke unneeded execute grants; constrain callers/destinations/data. Extension enablement alone does not prove exploitable SSRF. | Supabase documentation unknown | REASONED |
+| supabase-vault: Restrict vault.decrypted_secrets and privileged wrappers and keep Vault unexposed; at-rest encryption cannot prevent authorized plaintext queries. | Supabase documentation unknown | REASONED |
+| supabase-buckets: Private downloads need authorized access or time-limited signed URLs; public buckets bypass retrieval checks but not upload/delete/move/copy controls. | Supabase documentation unknown | REASONED |
+| supabase-storage-policies: Authorize storage.objects separately by bucket and owner path; upload needs INSERT, upsert also SELECT/UPDATE, and deletion needs deliberate permission. | Supabase documentation unknown | REASONED |
+| supabase-realtime-default: Public Realtime channels are allowed by default; disable them project-wide and also set client config.private. | Supabase documentation unknown | REASONED |
+| supabase-realtime-policy: Broadcast/Presence receive/send need separate SELECT/INSERT policies on realtime.messages, constrained by topic ownership and extension. | Supabase documentation unknown | REASONED |
+| supabase-changes: Postgres Changes uses source-table authorization; private-channel policies are not universal and DELETE has separate limitations. | Supabase documentation unknown | REASONED |
+| supabase-signup: Disable signup, anonymous sign-ins and unused providers when unwanted; inspect hosted settings instead of assuming universal defaults. | Supabase documentation unknown | REASONED |
+| supabase-cli-auth: CLI enable_signup defaults true and enable_anonymous_sign_ins false; local config edits do not prove hosted settings changed. | Supabase documentation unknown | REASONED |
+| supabase-mfa: TOTP is available on every plan at writing; enrollment alone does not constrain data. Require aal2 using a restrictive policy alongside permissive ownership policies. | Supabase documentation unknown; PostgreSQL documentation unknown | REASONED |
+| supabase-edge-jwt: Per-function verify_jwt defaults true; --no-verify-jwt disables platform checking and requires handler authentication before protected work. | Supabase documentation unknown | REASONED |
+| supabase-edge-auth: Platform JWT success is not resource authorization and API-key compatibility can pass it; separately authorize users or verify webhook signatures. | Supabase documentation unknown | REASONED |
+| supabase-edge-secrets: Edge environments contain privileged credentials including SUPABASE_SERVICE_ROLE_KEY; protect managed/local secrets, responses, logs and client bundles. | Supabase documentation unknown | REASONED |
+| verify-firestore: Compare unsigned/A/B reads and writes to user documents and descendants, with a successful owner control; test parent documents to distinguish recursive-rule versions. | Firebase documentation unknown | REASONED |
+| verify-rtdb: Compare unsigned/A/B reads/writes to seeded RTDB owner paths; ancestor grants expose them while ownership rules deny unauthorized callers. | Firebase documentation unknown | REASONED |
+| verify-firebase-storage: Compare unsigned/A/B object reads and uploads; ownership rules must deny unrelated callers while owner operations succeed. | Firebase documentation unknown | REASONED |
+| verify-download-token: Same sessionless download URL works after Rules tightening but must lose bytes after token revocation; owner getBytes remains successful and network/CORS failures are inconclusive. | Firebase documentation unknown | REASONED |
+| verify-tables: Pair unsigned/A/B profiles GETs against seeded rows, using ordinary credentials and required MFA; test intended writes and persisted effects separately. | Supabase documentation unknown; PostgreSQL documentation unknown | REASONED |
+| verify-views: Compare view reads with table boundaries; owner-privileged exposure must close under invoker/revoked access while intended reads or deliberate removal are confirmed. | PostgreSQL documentation unknown | REASONED |
+| verify-rpc: Test every API function overload with valid harmless arguments as unsigned/A/B; unauthorized data or operations must be denied while the intended caller succeeds. | Supabase documentation unknown | REASONED |
+| verify-http: Probe HTTP wrappers with a controlled collector and marker; unauthorized fixed calls must emit no request. Commit pg_net fixture transactions before expecting delivery. | Supabase documentation unknown | REASONED |
+| verify-vault: Use a disposable Vault canary to compare exposed/fixed wrappers; inspect function and table privileges as supporting evidence. | Supabase documentation unknown; PostgreSQL documentation unknown | REASONED |
+| verify-storage: Compare public URL and A/B private downloads plus intended uploads/upserts; unauthorized callers must receive no bytes or cross-owner writes. | Supabase documentation unknown | REASONED |
+| verify-realtime: Compare A/B join, Broadcast and Presence delivery; public-disabled clients lacking private=true must fail, and connection alone is insufficient. | Supabase documentation unknown | REASONED |
+| verify-changes: Observe A/B INSERT/UPDATE subscription events against seeded rows; fixed table authorization withholds unrelated events. Evaluate DELETE separately. | Supabase documentation unknown | REASONED |
+| verify-edge: Compare no/invalid Bearer without apikey, authorized owners and valid webhook signatures; distinguish platform 401 from handler authorization and inspect effects/secrets. | Supabase documentation unknown | REASONED |
+| verify-firebase-functions: Compare callable requests with valid App Check but missing user auth and A/B operations; HTTP endpoints need separate invalid/valid user or IAM comparisons. | Firebase documentation unknown | REASONED |
+| verify-appcheck: Repeat owner requests with/without App Check per product/callable; enforcement must deny missing attestation while compatible clients work. | Firebase documentation unknown | REASONED |
+| verify-api-restrictions: Test intended versus excluded apps/referrers after key restrictions, retaining successful intended product traffic. | Firebase documentation unknown | REASONED |
+| verify-emulators: Enumerate hub /emulators and sockets, compare missing versus loaded Rules and second-host connectivity, and retain local owner controls. | Firebase documentation unknown | REASONED |
+| verify-firebase-accounts: Sign out before each Anonymous signup test and check isNewUser; disabled providers must reject creation. Enumeration tests compare sign-in errors, not EMAIL_EXISTS signup behavior. | Firebase documentation unknown | REASONED |
+| verify-supabase-accounts: Fresh signup and anonymous creation must fail under invite-only/anonymous-disabled settings while an invited account still signs in. | Supabase documentation unknown | REASONED |
+| verify-mfa: Owner profiles GET with aal1 must yield no protected rows under the restrictive policy, while fresh aal2 returns the seeded owner row. | Supabase documentation unknown | REASONED |
+| verify-key-retirement: Compare old/new API keys after explicit deactivation and old/new JWTs after revocation, accounting for propagation and caches. | Supabase documentation unknown | REASONED |
+| verify-api-removal: Previously successful profiles requests must stop returning fixtures after schema removal or Data API disabling; retained schemas need authorized controls. | Supabase documentation unknown | REASONED |
+| verify-bundle: Filename-only service_role/eyJ/sb_secret_ scanning yields review candidates, not proof of leaks; public anon JWTs are legitimate. Use a marker control and inspect encoded/split secrets separately. | Supabase documentation unknown | REASONED |
+| local-guards: Historical local guard tests rejected placeholders and malformed set lines; this demonstrates shell behavior only, not live authorization. Shell/tool versions are not sourced. | Supabase documentation unknown | DEMONSTRATED |
+| local-syntax: Recorded ShellCheck/bash and JSON/TOML/JavaScript parsing passed; these checks do not compile Firebase Rules, execute SQL or demonstrate services. | Firebase documentation unknown; Supabase documentation unknown | DEMONSTRATED |
+<!-- version-basis:end -->
 
 These platforms handle TLS for you on their hosted endpoints; the exposure works differently.
 Client SDKs talk to the backend using keys that ship in your frontend code and are **public by
@@ -625,6 +888,8 @@ fixture data. Credentials enter curl through stdin, not process arguments; that 
 a carelessly created header file, shell history, or tracing. The write-out fields require curl
 7.75.0 or newer.
 
+REASONED: following block; ordinary-user profiles and MFA comparisons follow the cited Supabase/PostgreSQL documentation; no disposable project or controlled user sessions were supplied.
+
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_REQUEST_URL' 'REPLACE_WITH_PROTECTED_HEADERS_FILE'
@@ -815,6 +1080,8 @@ A confirmed `sb_secret_...` key, legacy service-role credential, or private key 
 remove the exposure and rotate or revoke the confirmed credential, not just delete it from the
 tree. Do not rotate credentials merely because a source-code word matched. See
 [API-key handling](https://supabase.com/docs/guides/api/api-keys) and [secrets.md](secrets.md).
+
+REASONED: following block; credential-candidate review follows the cited Supabase API-key documentation; no deployed client bundle or credential inventory was supplied.
 
 ```bash
 (

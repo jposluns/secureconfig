@@ -1,4 +1,194 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "6173627e5970556f1150885b9f204488eb762c801296bb8bdcd326fecc39af38",
+  "components": {
+    "browser": {
+      "name": "Browser API and living standards",
+      "basis": "unknown",
+      "sources": {
+        "sb2011b7b2751": "https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket",
+        "scc66a82750c7": "https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events",
+        "sf47a21cc6a1c": "https://html.spec.whatwg.org/multipage/server-sent-events.html",
+        "s0fe3abea9d8d": "https://fetch.spec.whatwg.org/#append-a-request-origin-header"
+      }
+    },
+    "websocket": {
+      "name": "WebSocket protocol",
+      "basis": "RFC 6455",
+      "sources": {
+        "sbdde15b3166d": "https://www.rfc-editor.org/rfc/rfc6455.html"
+      }
+    },
+    "owasp": {
+      "name": "OWASP guidance",
+      "basis": "unknown",
+      "sources": {
+        "sfbb0cddfdc41": "https://cheatsheetseries.owasp.org/cheatsheets/WebSocket_Security_Cheat_Sheet.html",
+        "s7eb820e1e53b": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
+        "s10c2347db109": "https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html",
+        "sd95014c37d6f": "https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html",
+        "s26a987a1053b": "https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html"
+      }
+    },
+    "github": {
+      "name": "GitHub webhooks documentation",
+      "basis": "unknown",
+      "sources": {
+        "s54f0b41284b0": "https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries",
+        "seccc4a52ea14": "https://docs.github.com/en/webhooks/using-webhooks/best-practices-for-using-webhooks",
+        "s31c140d2cfa9": "https://docs.github.com/en/webhooks/webhook-events-and-payloads"
+      }
+    },
+    "stripe": {
+      "name": "Stripe webhooks documentation",
+      "basis": "unknown",
+      "sources": {
+        "s106b78b02797": "https://docs.stripe.com/webhooks#verify-official-libraries",
+        "s197f8ab6b63f": "https://docs.stripe.com/webhooks/signature"
+      }
+    },
+    "stripe-node": {
+      "name": "stripe-node",
+      "basis": "v18.5.0",
+      "sources": {
+        "s6cef5da6ee15": "https://raw.githubusercontent.com/stripe/stripe-node/v18.5.0/src/Webhooks.ts"
+      }
+    },
+    "stripe-python": {
+      "name": "stripe-python",
+      "basis": "v12.5.0",
+      "sources": {
+        "sa38abcfb0132": "https://raw.githubusercontent.com/stripe/stripe-python/v12.5.0/stripe/_webhook.py"
+      }
+    },
+    "node": {
+      "name": "Node.js crypto documentation",
+      "basis": "unknown",
+      "sources": {
+        "s215f593c0770": "https://nodejs.org/docs/latest-v22.x/api/crypto.html#cryptotimingsafeequala-b"
+      }
+    },
+    "traefik": {
+      "name": "Traefik timeout reference",
+      "basis": "v3.5",
+      "sources": {
+        "sd6ad276040b7": "https://doc.traefik.io/traefik/v3.5/reference/install-configuration/entrypoints/"
+      }
+    },
+    "proxy": {
+      "name": "Caddy and nginx timeout documentation",
+      "basis": "unknown",
+      "sources": {
+        "sf22449866dac": "https://caddyserver.com/docs/caddyfile/options#timeouts",
+        "s7cc695452ecc": "https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout"
+      }
+    },
+    "curl": {
+      "name": "curl minimum write-out version",
+      "basis": "7.75.0",
+      "sources": {
+        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
+      }
+    },
+    "python": {
+      "name": "Python os documentation",
+      "basis": "unknown",
+      "sources": {
+        "s767fa9623dba": "https://docs.python.org/3/library/os.html#os.fdopen"
+      }
+    }
+  },
+  "claims": {
+    "private": {"text": "Restrict application origins to intended proxies; separately inventory containers, IPv6 and management endpoints.", "components": ["owasp"], "sources": ["owasp:sfbb0cddfdc41"], "status": "REASONED"},
+    "tls": {"text": "Use WSS and HTTPS with certificate verification; protect untrusted proxy-to-app hops with authenticated TLS.", "components": ["websocket", "owasp", "github"], "sources": ["websocket:sbdde15b3166d", "owasp:sfbb0cddfdc41", "github:seccc4a52ea14"], "status": "REASONED"},
+    "credentials": {"text": "Disable anonymous/default credentials and separate minimally scoped publisher, subscriber, sender and admin identities.", "components": ["owasp"], "sources": ["owasp:s10c2347db109", "owasp:s26a987a1053b"], "status": "REASONED"},
+    "mfa": {"text": "Keep admin UIs private with IdP or fronting MFA; machine webhook deliveries use signatures.", "components": ["owasp", "github"], "sources": ["owasp:sd95014c37d6f", "github:s54f0b41284b0"], "status": "REASONED"},
+    "ws-headers": {"text": "Browser WebSocket accepts a URL and protocols, with no custom Authorization-header argument.", "components": ["browser"], "sources": ["browser:sb2011b7b2751"], "status": "REASONED"},
+    "ws-origin": {"text": "Eligible cookies may accompany handshakes; reject missing or non-allowlisted Origin before protected logic to prevent CSWSH.", "components": ["owasp", "websocket"], "sources": ["owasp:sfbb0cddfdc41", "websocket:sbdde15b3166d"], "status": "REASONED"},
+    "ws-token": {"text": "Authenticate a short-lived first-message token before protected use; rotate it and keep credentials out of URLs and subprotocols.", "components": ["owasp", "browser"], "sources": ["owasp:sfbb0cddfdc41", "browser:sb2011b7b2751"], "status": "REASONED"},
+    "ws-identity": {"text": "Origin is forgeable outside browsers; independently authenticate, and do not let a stolen cookie alone obtain the first-message token.", "components": ["owasp", "websocket"], "sources": ["owasp:sfbb0cddfdc41", "websocket:sbdde15b3166d"], "status": "REASONED"},
+    "ws-deadline": {"text": "Allow no protected operation before authentication and impose a bounded authentication deadline.", "components": ["owasp"], "sources": ["owasp:sfbb0cddfdc41"], "status": "REASONED"},
+    "authorization": {"text": "Authorize each channel, tenant and operation, including SSE subscriptions; revalidate and terminate expired or revoked long-lived access.", "components": ["owasp"], "sources": ["owasp:sfbb0cddfdc41", "owasp:s10c2347db109"], "status": "REASONED"},
+    "sse": {"text": "EventSource uses GET without custom Authorization headers; eligible cookies and cross-origin withCredentials remain browser-policy dependent.", "components": ["browser"], "sources": ["browser:scc66a82750c7", "browser:sf47a21cc6a1c"], "status": "REASONED"},
+    "sse-origin": {"text": "Authenticate subscriptions and allow only trusted credentialed CORS origins; legitimate same-origin GET may omit Origin.", "components": ["browser", "owasp"], "sources": ["browser:sf47a21cc6a1c", "browser:s0fe3abea9d8d", "owasp:s10c2347db109"], "status": "REASONED"},
+    "sse-fetch": {"text": "Keep SSE GET side-effect free; use fetch with a ReadableStream when header tokens are needed.", "components": ["browser"], "sources": ["browser:scc66a82750c7", "browser:sf47a21cc6a1c"], "status": "REASONED"},
+    "github-signature": {"text": "Verify raw-body HMAC-SHA256 using X-Hub-Signature-256 and constant-time comparison.", "components": ["github"], "sources": ["github:s54f0b41284b0"], "status": "REASONED"},
+    "signature-shape": {"text": "Reject missing/malformed sha256= plus 64-hex signatures; timingSafeEqual needs equal buffer lengths and exceptions must fail closed.", "components": ["github", "node"], "sources": ["github:s54f0b41284b0", "node:s215f593c0770"], "status": "REASONED"},
+    "stripe-signature": {"text": "Stripe signs timestamp, dot and raw body with the endpoint secret; use official verification libraries.", "components": ["stripe"], "sources": ["stripe:s106b78b02797", "stripe:s197f8ab6b63f"], "status": "REASONED"},
+    "stripe-tolerance": {"text": "stripe-node v18.5.0 and stripe-python v12.5.0 default to 300 seconds; set a positive tolerance and test stale requests because zero handling differs.", "components": ["stripe-node", "stripe-python"], "sources": ["stripe-node:s6cef5da6ee15", "stripe-python:sa38abcfb0132"], "status": "REASONED"},
+    "github-replay": {"text": "GitHub signs neither a timestamp nor X-GitHub-Delivery; changed delivery IDs retain valid signatures, so ID deduplication cannot establish freshness.", "components": ["github"], "sources": ["github:s54f0b41284b0", "github:s31c140d2cfa9"], "status": "REASONED"},
+    "idempotency": {"text": "Use atomic durable idempotency from authenticated payload data; body-digest caches only suppress identical bodies during retention and can suppress legitimate repeats.", "components": ["github"], "sources": ["github:s54f0b41284b0", "github:seccc4a52ea14"], "status": "REASONED"},
+    "stripe-replay": {"text": "A signed timestamp limits age, not replay inside the window; deduplicate authenticated event IDs after signature and timestamp validation.", "components": ["stripe"], "sources": ["stripe:s106b78b02797"], "status": "REASONED"},
+    "raw-body": {"text": "Verify exact received bytes before JSON reserialization or handler effects.", "components": ["github", "stripe"], "sources": ["github:s54f0b41284b0", "stripe:s197f8ab6b63f"], "status": "REASONED"},
+    "csrf": {"text": "Scope any webhook CSRF exemption to the one route and method.", "components": ["stripe"], "sources": ["stripe:s106b78b02797"], "status": "REASONED"},
+    "webhook-secret": {"text": "Require a configured strong GitHub secret, reject unsigned delivery, and use distinct protected, rotated endpoint secrets kept out of URLs and logs.", "components": ["github", "owasp"], "sources": ["github:seccc4a52ea14", "owasp:s26a987a1053b"], "status": "REASONED"},
+    "stripe-secrets": {"text": "Stripe test/live and Dashboard/CLI-forwarding endpoint secrets differ.", "components": ["stripe"], "sources": ["stripe:s197f8ab6b63f"], "status": "REASONED"},
+    "sender-ip": {"text": "Provider IP allowlists supplement signatures; trust forwarded client addresses only through a configured proxy chain.", "components": ["github"], "sources": ["github:seccc4a52ea14"], "status": "REASONED"},
+    "proxy-limits": {"text": "Bound HTTP body size, concurrency and timeouts separately; proxy capability summaries refer to local guides and need current vendor confirmation.", "components": ["traefik", "proxy"], "sources": ["traefik:sd6ad276040b7", "proxy:sf22449866dac", "proxy:s7cc695452ecc"], "status": "REASONED"},
+    "message-limits": {"text": "After WebSocket upgrade, enforce per-message authorization and rate limits; connection limits do not bound messages or jobs.", "components": ["owasp"], "sources": ["owasp:sfbb0cddfdc41"], "status": "REASONED"},
+    "ssrf": {"text": "Allowlist relay destinations and enforce worker egress for schemes, ports and resolved addresses; revalidate redirects and never forward inbound credentials.", "components": ["owasp"], "sources": ["owasp:s7eb820e1e53b"], "status": "REASONED"},
+    "verify-handshake": {"text": "Cookie handshake positive is 101; missing cookie and disallowed/missing Origin must reject, never 101. Failed controls and unrelated errors are inconclusive.", "components": ["owasp", "websocket"], "sources": ["owasp:sfbb0cddfdc41", "websocket:sbdde15b3166d"], "status": "REASONED", "verify": [1]},
+    "verify-sse": {"text": "With a cookie require 200, text/event-stream and the protected event; without it require rejection. A timeout alone proves nothing.", "components": ["browser", "owasp"], "sources": ["browser:scc66a82750c7", "owasp:s10c2347db109"], "status": "REASONED", "verify": [1]},
+    "verify-messages": {"text": "Using the real client, compare valid, missing, invalid and expired tokens, pre-auth operations, cross-channel denial and revocation on an open connection.", "components": ["owasp"], "sources": ["owasp:sfbb0cddfdc41", "owasp:s10c2347db109"], "status": "REASONED"},
+    "verify-defaults": {"text": "Pair a legitimate login with the deployed component default credentials; a no-credential request does not test defaults.", "components": ["owasp"], "sources": ["owasp:s26a987a1053b"], "status": "REASONED"},
+    "verify-webhook": {"text": "Wrong/unsigned signatures must have no effect; valid events must act once and replay must not act twice, even with changed GitHub delivery IDs.", "components": ["github", "stripe"], "sources": ["github:s54f0b41284b0", "github:s31c140d2cfa9", "stripe:s106b78b02797"], "status": "REASONED", "verify": [2]},
+    "verify-stale": {"text": "On a synchronized Stripe fixture with 300-second tolerance, a request backdated 600 seconds must fail timestamp validation.", "components": ["stripe-node", "stripe-python"], "sources": ["stripe-node:s6cef5da6ee15", "stripe-python:sa38abcfb0132"], "status": "REASONED", "verify": [2]},
+    "verify-secrets": {"text": "Hidden prompts and stdin headers avoid new secret argv/history/environment exposure; Python reads and closes secret pipe fd 3. Process memory remains readable.", "components": ["curl", "python"], "sources": ["curl:s2b2686afaf41", "python:s767fa9623dba"], "status": "REASONED", "verify": [1, 2]},
+    "verify-origin": {"text": "Compare allowed and external vantage points using connect-to and correct Host/TLS name; HTTP or TLS responses prove reachability, errors alone do not prove isolation.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED", "verify": [3]}
+  }
+}
+---
 # WebSockets, server-sent events, and webhooks: authenticating the non-page endpoints
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| private: Restrict application origins to intended proxies; separately inventory containers, IPv6 and management endpoints. | OWASP guidance unknown | REASONED |
+| tls: Use WSS and HTTPS with certificate verification; protect untrusted proxy-to-app hops with authenticated TLS. | WebSocket protocol RFC 6455; OWASP guidance unknown; GitHub webhooks documentation unknown | REASONED |
+| credentials: Disable anonymous/default credentials and separate minimally scoped publisher, subscriber, sender and admin identities. | OWASP guidance unknown | REASONED |
+| mfa: Keep admin UIs private with IdP or fronting MFA; machine webhook deliveries use signatures. | OWASP guidance unknown; GitHub webhooks documentation unknown | REASONED |
+| ws-headers: Browser WebSocket accepts a URL and protocols, with no custom Authorization-header argument. | Browser API and living standards unknown | REASONED |
+| ws-origin: Eligible cookies may accompany handshakes; reject missing or non-allowlisted Origin before protected logic to prevent CSWSH. | OWASP guidance unknown; WebSocket protocol RFC 6455 | REASONED |
+| ws-token: Authenticate a short-lived first-message token before protected use; rotate it and keep credentials out of URLs and subprotocols. | OWASP guidance unknown; Browser API and living standards unknown | REASONED |
+| ws-identity: Origin is forgeable outside browsers; independently authenticate, and do not let a stolen cookie alone obtain the first-message token. | OWASP guidance unknown; WebSocket protocol RFC 6455 | REASONED |
+| ws-deadline: Allow no protected operation before authentication and impose a bounded authentication deadline. | OWASP guidance unknown | REASONED |
+| authorization: Authorize each channel, tenant and operation, including SSE subscriptions; revalidate and terminate expired or revoked long-lived access. | OWASP guidance unknown | REASONED |
+| sse: EventSource uses GET without custom Authorization headers; eligible cookies and cross-origin withCredentials remain browser-policy dependent. | Browser API and living standards unknown | REASONED |
+| sse-origin: Authenticate subscriptions and allow only trusted credentialed CORS origins; legitimate same-origin GET may omit Origin. | Browser API and living standards unknown; OWASP guidance unknown | REASONED |
+| sse-fetch: Keep SSE GET side-effect free; use fetch with a ReadableStream when header tokens are needed. | Browser API and living standards unknown | REASONED |
+| github-signature: Verify raw-body HMAC-SHA256 using X-Hub-Signature-256 and constant-time comparison. | GitHub webhooks documentation unknown | REASONED |
+| signature-shape: Reject missing/malformed sha256= plus 64-hex signatures; timingSafeEqual needs equal buffer lengths and exceptions must fail closed. | GitHub webhooks documentation unknown; Node.js crypto documentation unknown | REASONED |
+| stripe-signature: Stripe signs timestamp, dot and raw body with the endpoint secret; use official verification libraries. | Stripe webhooks documentation unknown | REASONED |
+| stripe-tolerance: stripe-node v18.5.0 and stripe-python v12.5.0 default to 300 seconds; set a positive tolerance and test stale requests because zero handling differs. | stripe-node v18.5.0; stripe-python v12.5.0 | REASONED |
+| github-replay: GitHub signs neither a timestamp nor X-GitHub-Delivery; changed delivery IDs retain valid signatures, so ID deduplication cannot establish freshness. | GitHub webhooks documentation unknown | REASONED |
+| idempotency: Use atomic durable idempotency from authenticated payload data; body-digest caches only suppress identical bodies during retention and can suppress legitimate repeats. | GitHub webhooks documentation unknown | REASONED |
+| stripe-replay: A signed timestamp limits age, not replay inside the window; deduplicate authenticated event IDs after signature and timestamp validation. | Stripe webhooks documentation unknown | REASONED |
+| raw-body: Verify exact received bytes before JSON reserialization or handler effects. | GitHub webhooks documentation unknown; Stripe webhooks documentation unknown | REASONED |
+| csrf: Scope any webhook CSRF exemption to the one route and method. | Stripe webhooks documentation unknown | REASONED |
+| webhook-secret: Require a configured strong GitHub secret, reject unsigned delivery, and use distinct protected, rotated endpoint secrets kept out of URLs and logs. | GitHub webhooks documentation unknown; OWASP guidance unknown | REASONED |
+| stripe-secrets: Stripe test/live and Dashboard/CLI-forwarding endpoint secrets differ. | Stripe webhooks documentation unknown | REASONED |
+| sender-ip: Provider IP allowlists supplement signatures; trust forwarded client addresses only through a configured proxy chain. | GitHub webhooks documentation unknown | REASONED |
+| proxy-limits: Bound HTTP body size, concurrency and timeouts separately; proxy capability summaries refer to local guides and need current vendor confirmation. | Traefik timeout reference v3.5; Caddy and nginx timeout documentation unknown | REASONED |
+| message-limits: After WebSocket upgrade, enforce per-message authorization and rate limits; connection limits do not bound messages or jobs. | OWASP guidance unknown | REASONED |
+| ssrf: Allowlist relay destinations and enforce worker egress for schemes, ports and resolved addresses; revalidate redirects and never forward inbound credentials. | OWASP guidance unknown | REASONED |
+| verify-handshake: Cookie handshake positive is 101; missing cookie and disallowed/missing Origin must reject, never 101. Failed controls and unrelated errors are inconclusive. | OWASP guidance unknown; WebSocket protocol RFC 6455 | REASONED |
+| verify-sse: With a cookie require 200, text/event-stream and the protected event; without it require rejection. A timeout alone proves nothing. | Browser API and living standards unknown; OWASP guidance unknown | REASONED |
+| verify-messages: Using the real client, compare valid, missing, invalid and expired tokens, pre-auth operations, cross-channel denial and revocation on an open connection. | OWASP guidance unknown | REASONED |
+| verify-defaults: Pair a legitimate login with the deployed component default credentials; a no-credential request does not test defaults. | OWASP guidance unknown | REASONED |
+| verify-webhook: Wrong/unsigned signatures must have no effect; valid events must act once and replay must not act twice, even with changed GitHub delivery IDs. | GitHub webhooks documentation unknown; Stripe webhooks documentation unknown | REASONED |
+| verify-stale: On a synchronized Stripe fixture with 300-second tolerance, a request backdated 600 seconds must fail timestamp validation. | stripe-node v18.5.0; stripe-python v12.5.0 | REASONED |
+| verify-secrets: Hidden prompts and stdin headers avoid new secret argv/history/environment exposure; Python reads and closes secret pipe fd 3. Process memory remains readable. | curl minimum write-out version 7.75.0; Python os documentation unknown | REASONED |
+| verify-origin: Compare allowed and external vantage points using connect-to and correct Host/TLS name; HTTP or TLS responses prove reachability, errors alone do not prove isolation. | curl minimum write-out version 7.75.0 | REASONED |
+<!-- version-basis:end -->
 
 Streaming an LLM response commonly rides a WebSocket or an SSE stream, and integrations commonly call back through a webhook. All three are transports, not authentication mechanisms, and each is routinely shipped wide open. [authentication.md](authentication.md) rule 15 already says each transport needs its own check; this guide is that check for these three.
 
@@ -106,6 +296,8 @@ First-message-token and default-credential authentication need the application's
 
 For the webhook route, use an isolated test endpoint and a fresh, valid JSON event fixture that produces an observable effect. Enter its endpoint secret at the hidden prompt, and for GitHub export only the fixture's non-secret event type as `AUDIT_GITHUB_EVENT`; these are probe inputs, not vendor configuration. This block assumes a clean shell. It reads `AUDIT_WEBHOOK_SECRET` into an unexported subshell variable and unsets it on exit; Python reads the secret bytes from a pipe on file descriptor 3 and closes that descriptor before starting curl. Neither the secret nor the signed headers enter argv or the environment. The secret remains readable in process memory by the same account and root, and a previously exported value is not erased. The wrong-signature and unsigned requests must be rejected by signature validation with no effect, the correctly signed request must reach the handler and produce the effect, and its repetition must produce no second effect (a success acknowledgement for an already-processed event is fine). For this Stripe probe, confirm that the isolated receiver uses a 300-second tolerance and that the sender and receiver clocks are synchronized; the harness backdates the stale request by 600 seconds, so that request must fail timestamp validation. Confirm the rejecting component in the application logs; transport errors and timeouts are inconclusive. These endpoint outcomes are reasoned, not demonstrated here.
 
+REASONED: following block; signature, replay and timestamp expectations follow the cited GitHub and Stripe sources; no endpoint or event fixtures were supplied.
+
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
@@ -176,6 +368,8 @@ PY
 ```
 
 Finally, authentication rejection is not evidence of network isolation, so test direct reachability of each listener. Inventory every application and management listener, including published container ports and IPv6, and for each HTTP listener set the connect-to mapping to `URL_HOST:URL_PORT:ACTUAL_ORIGIN_ADDRESS:ACTUAL_LISTENER_PORT` (bracket IPv6 addresses where curl requires them) while the URL keeps the intended Host and TLS server name. Run it first from an allowed location to establish that the origin answers, then from an external one against the same origin: any HTTP response (including `401`, `403` or `404`), or a TLS handshake or certificate error, proves external reachability, while a timeout, DNS error, or local socket error does not prove isolation and must be corroborated with the listener and network-policy configuration. Never use `-k`. This comparison stays reasoned until both vantage points and the real origin inventory are available.
+
+REASONED: following block; origin reachability follows the cited curl documentation; both vantage points and the real listener inventory are unavailable.
 
 ```bash
 (

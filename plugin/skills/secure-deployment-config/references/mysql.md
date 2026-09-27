@@ -1,4 +1,279 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "c289bfecaec129c6b681c542036ea796076fa1ed5bb4887541ada215ba0ac3b4",
+  "components": {
+    "mysql": {
+      "name": "MySQL reference",
+      "basis": "8.4",
+      "sources": {
+        "s5735e0088e90": "https://dev.mysql.com/doc/refman/8.4/en/server-system-variables.html",
+        "s02467be75571": "https://dev.mysql.com/doc/refman/8.4/en/creating-ssl-rsa-files-using-mysql.html",
+        "sf426889734dd": "https://dev.mysql.com/doc/refman/8.4/en/x-plugin-options-system-variables.html",
+        "sa8e974b8e0d7": "https://dev.mysql.com/doc/refman/8.4/en/server-system-variables.html#sysvar_skip_networking",
+        "sac4976c6bd73": "https://dev.mysql.com/doc/refman/8.4/en/alter-user.html",
+        "scb682cfeeeca": "https://dev.mysql.com/doc/refman/8.4/en/account-names.html",
+        "s4009a8e12cba": "https://dev.mysql.com/doc/refman/8.4/en/create-user.html",
+        "sd25a34fe4ed0": "https://dev.mysql.com/doc/refman/8.4/en/grant.html",
+        "s156681123604": "https://dev.mysql.com/doc/refman/8.4/en/connection-options.html",
+        "sdde2cdb741bf": "https://dev.mysql.com/doc/refman/8.4/en/mysql-secure-installation.html",
+        "sa14ee7281ad5": "https://dev.mysql.com/doc/refman/8.4/en/grant-tables.html",
+        "s952465620b96": "https://dev.mysql.com/doc/refman/8.4/en/roles.html",
+        "s43872576f07a": "https://dev.mysql.com/doc/refman/8.4/en/privileges-provided.html",
+        "s06deabf43b11": "https://dev.mysql.com/doc/refman/8.4/en/mysql-nutshell.html",
+        "s2155b7025770": "https://dev.mysql.com/doc/refman/8.4/en/caching-sha2-pluggable-authentication.html",
+        "sb70c5dad340c": "https://dev.mysql.com/doc/refman/8.4/en/native-pluggable-authentication.html",
+        "sd2bc0b9cb818": "https://dev.mysql.com/doc/refman/8.4/en/validate-password-installation.html",
+        "saeede1fe7252": "https://dev.mysql.com/doc/refman/8.4/en/validate-password-transitioning.html",
+        "s84a5e3838b24": "https://dev.mysql.com/doc/refman/8.4/en/validate-password-options-variables.html",
+        "s79d05dce135c": "https://dev.mysql.com/doc/refman/8.4/en/set-variable.html",
+        "sf95e18b15977": "https://dev.mysql.com/doc/refman/8.4/en/password-management.html",
+        "s807a77fa8872": "https://dev.mysql.com/doc/refman/8.4/en/webauthn-pluggable-authentication.html",
+        "s09db2b328d11": "https://dev.mysql.com/doc/refman/8.4/en/load-data-local-security.html",
+        "s58e2db31fec2": "https://dev.mysql.com/doc/refman/8.4/en/option-files.html",
+        "s37e2128d2672": "https://dev.mysql.com/doc/refman/8.4/en/load-data.html",
+        "s2170f2fa1a36": "https://dev.mysql.com/doc/refman/8.4/en/using-encrypted-connections.html",
+        "s3005ba5afda3": "https://dev.mysql.com/doc/mysql-errors/8.4/en/server-error-reference.html",
+        "sf55a7efb90a1": "https://dev.mysql.com/doc/refman/8.4/en/server-status-variables.html#statvar_Ssl_cipher",
+        "seadf3241ca81": "https://dev.mysql.com/doc/refman/8.4/en/option-file-options.html",
+        "se2551ca67504": "https://dev.mysql.com/doc/refman/8.4/en/show-grants.html",
+        "sd3caefce406e": "https://dev.mysql.com/doc/refman/8.4/en/validate-password.html",
+        "s72c17cae9130": "https://dev.mysql.com/doc/refman/8.4/en/show-databases.html"
+      }
+    },
+    "mysql8": {
+      "name": "MySQL reference",
+      "basis": "8.0",
+      "sources": {
+        "se7e8af620a73": "https://dev.mysql.com/doc/mysql-secure-deployment-guide/8.0/en/secure-deployment-secure-connections.html",
+        "s5db5340a55f1": "https://dev.mysql.com/doc/refman/8.0/en/x-plugin-options-system-variables.html",
+        "se2dd61ae3974": "https://dev.mysql.com/doc/refman/8.0/en/caching-sha2-pluggable-authentication.html",
+        "scc31c12f1f93": "https://dev.mysql.com/doc/refman/8.0/en/validate-password.html",
+        "sa937d1361fe1": "https://dev.mysql.com/doc/refman/8.0/en/multifactor-authentication.html",
+        "s909bd51d0626": "https://dev.mysql.com/doc/refman/8.0/en/fido-pluggable-authentication.html"
+      }
+    },
+    "mysql9": {
+      "name": "MySQL reference",
+      "basis": "9.7",
+      "sources": {
+        "sf91257729cc8": "https://dev.mysql.com/doc/refman/9.7/en/x-plugin-options-system-variables.html",
+        "s64801c5527fc": "https://dev.mysql.com/doc/refman/9.7/en/server-system-variables.html#sysvar_bind_address"
+      }
+    },
+    "mysql26": {
+      "name": "MySQL reference",
+      "basis": "26.7",
+      "sources": {
+        "seedc84a3066a": "https://dev.mysql.com/doc/refman/26.7/en/x-plugin-options-system-variables.html",
+        "sf51fbc6f0ff1": "https://dev.mysql.com/doc/refman/26.7/en/server-system-variables.html#sysvar_bind_address"
+      }
+    },
+    "maria": {
+      "name": "MariaDB documentation",
+      "basis": "unknown",
+      "sources": {
+        "s3b01f389dd01": "https://mariadb.com/docs/server/security/encryption/data-in-transit-encryption/ssltls-system-variables",
+        "saedca564ea11": "https://mariadb.com/docs/server/server-management/variables-and-modes/server-system-variables",
+        "s3c643ec089e3": "https://mariadb.com/docs/server/security/encryption/data-in-transit-encryption/zero-configuration-ssl",
+        "sbfabc23dbaf0": "https://mariadb.com/docs/server/reference/clientserver-protocol/mariadb-protocol-differences-with-mysql",
+        "sa80a8ed71629": "https://mariadb.com/docs/server/server-management/starting-and-stopping-mariadb/what-to-do-if-mariadb-doesnt-start",
+        "s528037737579": "https://mariadb.com/docs/server/server-management/variables-and-modes/server-system-variables#skip_networking",
+        "s3243686162ad": "https://mariadb.com/docs/server/reference/sql-statements/account-management-sql-statements/alter-user",
+        "s1e467414669c": "https://mariadb.com/docs/server/reference/plugins/authentication-plugins/authentication-plugin-ed25519",
+        "s7c876d9fdf39": "https://mariadb.com/docs/server/reference/sql-statements/account-management-sql-statements/create-user",
+        "scff3a7165e15": "https://mariadb.com/docs/server/reference/sql-statements/account-management-sql-statements/grant",
+        "s368aa92bc449": "https://mariadb.com/docs/server/clients-and-utilities/mariadb-client/mariadb-command-line-client",
+        "sad2488929b7b": "https://mariadb.com/docs/server/clients-and-utilities/deployment-tools/mariadb-secure-installation",
+        "s390f967a4b54": "https://mariadb.com/docs/server/reference/system-tables/the-mysql-database-tables/mysql-user-table",
+        "s565ef2474582": "https://mariadb.com/docs/server/reference/sql-statements/account-management-sql-statements/set-default-role",
+        "s4790add18739": "https://mariadb.com/docs/server/reference/sql-statements/account-management-sql-statements/set-role",
+        "s475fb165ca34": "https://mariadb.com/docs/server/security/user-account-management/roles/system-users-roles-and-privileges",
+        "s441eb805b2fc": "https://mariadb.com/docs/server/reference/plugins/authentication-plugins/authentication-plugin-sha-256",
+        "s80ac7714220c": "https://mariadb.com/docs/server/security/user-account-management/user-password-expiry",
+        "s9e17c3adbc4f": "https://mariadb.com/docs/server/reference/plugins/password-validation-plugins/simple-password-check-plugin",
+        "sf9fb4aa4058e": "https://mariadb.com/docs/server/reference/plugins/password-validation-plugins/password-reuse-check-plugin",
+        "sc20911721ab4": "https://mariadb.com/docs/server/reference/plugins/password-validation-plugins/password_reuse_check_interval",
+        "sf1dfed44f8b4": "https://mariadb.com/docs/server/server-management/variables-and-modes/server-system-variables#secure_timestamp",
+        "se84c2903d176": "https://mariadb.com/docs/server/reference/sql-statements/data-manipulation/inserting-loading-data/load-data-into-tables-or-index/load-data-infile",
+        "s141c472ec645": "https://mariadb.com/docs/server/server-management/starting-and-stopping-mariadb/systemd/configuring",
+        "sf8dd7e9be0a6": "https://mariadb.com/docs/server/security/user-account-management/roles/roles_overview",
+        "sc0f88b0f035f": "https://mariadb.com/docs/server/reference/sql-statements/administrative-sql-statements/show/show-grants",
+        "s38f56f9ab3a3": "https://mariadb.com/docs/server/reference/system-tables/the-mysql-database-tables/mysql-db-table"
+      }
+    },
+    "image": {
+      "name": "MySQL image source",
+      "basis": "2f988f198f35d25b1454fa2504a0e4c348100549",
+      "sources": {
+        "s7554ea4715fb": "https://github.com/docker-library/mysql/blob/2f988f198f35d25b1454fa2504a0e4c348100549/8.4/Dockerfile.oracle#L61-L89",
+        "s0a0474927ded": "https://github.com/docker-library/mysql/blob/2f988f198f35d25b1454fa2504a0e4c348100549/8.4/docker-entrypoint.sh#L138-L147",
+        "s01efe3052035": "https://github.com/docker-library/mysql/blob/2f988f198f35d25b1454fa2504a0e4c348100549/8.4/docker-entrypoint.sh#L276-L285",
+        "s20a475be2b96": "https://github.com/docker-library/mysql/blob/2f988f198f35d25b1454fa2504a0e4c348100549/8.4/docker-entrypoint.sh#L223-L240",
+        "s2b7b9e5f4c61": "https://github.com/docker-library/mysql/blob/2f988f198f35d25b1454fa2504a0e4c348100549/8.4/docker-entrypoint.sh#L380-L390"
+      }
+    },
+    "package": {
+      "name": "MySQL Docker package",
+      "basis": "mysql-8.4.9",
+      "sources": {
+        "sc4b86a122d43": "https://github.com/mysql/mysql-server/blob/mysql-8.4.9/packaging/rpm-docker/my.cnf.in",
+        "scf03124d3cd4": "https://github.com/mysql/mysql-server/blob/mysql-8.4.9/plugin/x/src/ngs/socket_acceptors_task.cc#L145-L163"
+      }
+    },
+    "mimage": {
+      "name": "MariaDB image source",
+      "basis": "1a4c8e99f7816c8d97df11eee52098522dc770cf",
+      "sources": {
+        "sccf5a83a982a": "https://github.com/MariaDB/mariadb-docker/blob/1a4c8e99f7816c8d97df11eee52098522dc770cf/11.8/Dockerfile#L125-L127",
+        "sda3814070b7b": "https://github.com/MariaDB/mariadb-docker/blob/1a4c8e99f7816c8d97df11eee52098522dc770cf/docker.cnf",
+        "s737f66e148d0": "https://github.com/MariaDB/mariadb-docker/blob/1a4c8e99f7816c8d97df11eee52098522dc770cf/11.8/docker-entrypoint.sh#L44-L52",
+        "s88c31f952d76": "https://github.com/MariaDB/mariadb-docker/blob/1a4c8e99f7816c8d97df11eee52098522dc770cf/11.8/docker-entrypoint.sh#L269",
+        "sad402b095652": "https://github.com/MariaDB/mariadb-docker/blob/1a4c8e99f7816c8d97df11eee52098522dc770cf/11.8/docker-entrypoint.sh#L287-L288",
+        "s192c8bb1613e": "https://github.com/MariaDB/mariadb-docker/blob/1a4c8e99f7816c8d97df11eee52098522dc770cf/11.8/docker-entrypoint.sh#L394-L409",
+        "s7594bc3fbc3b": "https://github.com/MariaDB/mariadb-docker/blob/1a4c8e99f7816c8d97df11eee52098522dc770cf/11.8/docker-entrypoint.sh#L168-L170"
+      }
+    },
+    "mpackage": {
+      "name": "MariaDB package source",
+      "basis": "mariadb-11.8.9",
+      "sources": {
+        "s6443a34ade90": "https://github.com/MariaDB/server/blob/mariadb-11.8.9/debian/additions/mariadb.conf.d/50-server.cnf#L27",
+        "s4fda00559270": "https://github.com/MariaDB/server/blob/mariadb-11.8.9/sql/mysqld.cc#L2436-L2439",
+        "sbd05d481e581": "https://github.com/MariaDB/server/blob/mariadb-11.8.9/sql/mysqld.cc#L2482-L2493",
+        "s4afb7d28204b": "https://github.com/MariaDB/server/blob/mariadb-11.8.9/sql/mysqld.cc#L2540-L2552",
+        "sb92c4a37622f": "https://github.com/MariaDB/server/blob/mariadb-11.8.9/support-files/rpm/server.cnf#L40"
+      }
+    }
+  },
+  "claims": {
+    "classic-bind": {"text": "MySQL bind_address defaults to *; restrict classic TCP 3306 to loopback or deliberate private interfaces.", "components": ["mysql"], "sources": ["mysql:s5735e0088e90"], "status": "REASONED"},
+    "server-tls": {"text": "Configure CA/certificate/key, require_secure_transport and TLSv1.2/TLSv1.3, then restart; TLSv1.3 needs compatible libraries, MySQL 8.0.16+/OpenSSL 1.1.1+.", "components": ["mysql8", "maria"], "sources": ["mysql8:se7e8af620a73", "maria:s3b01f389dd01"], "status": "REASONED"},
+    "auto-cert": {"text": "MySQL can generate missing TLS files under documented conditions; generated server certificates lack the deployment hostname and fail VERIFY_IDENTITY.", "components": ["mysql"], "sources": ["mysql:s02467be75571"], "status": "REASONED"},
+    "socket": {"text": "Global require_secure_transport permits Unix sockets; MySQL account REQUIRE SSL takes precedence and disallows that account's socket connection.", "components": ["mysql"], "sources": ["mysql:s5735e0088e90"], "status": "REASONED"},
+    "maria-tls": {"text": "MariaDB require_secure_transport dates from 10.5.2; 11.4 automatic TLS needs compatible clients and plugins, so mixed deployments may still need explicit CA settings.", "components": ["maria"], "sources": ["maria:saedca564ea11", "maria:s3c643ec089e3"], "status": "REASONED"},
+    "x-listener": {"text": "MySQL 8.0/8.4/9.7/26.7 enable X Plugin with separate wildcard 33060; bind it separately or set mysqlx=OFF and restart.", "components": ["mysql8", "mysql", "mysql9", "mysql26"], "sources": ["mysql8:s5db5340a55f1", "mysql:sf426889734dd", "mysql9:sf91257729cc8", "mysql26:seedc84a3066a"], "status": "REASONED"},
+    "maria-protocol": {"text": "MariaDB has no MySQL X Protocol; omit X Plugin options because unknown options can prevent startup.", "components": ["maria"], "sources": ["maria:sbfabc23dbaf0", "maria:sa80a8ed71629"], "status": "REASONED"},
+    "image-listeners": {"text": "Pinned MySQL images install Docker packages with no bind setting, retaining wildcard classic/X listeners unless arguments or option files restrict them.", "components": ["image", "package", "mysql", "mysql9", "mysql26"], "sources": ["image:s7554ea4715fb", "package:sc4b86a122d43", "mysql:s5735e0088e90", "mysql:sf426889734dd", "mysql9:s64801c5527fc", "mysql26:sf51fbc6f0ff1"], "status": "REASONED"},
+    "mimage-listeners": {"text": "Pinned MariaDB 10.6-13.1 Ubuntu images comment out bind-address; UBI leaves it commented, enabling IPv4 wildcard and IPv6 where available.", "components": ["mimage", "mpackage"], "sources": ["mimage:sccf5a83a982a", "mimage:sda3814070b7b", "mpackage:s6443a34ade90", "mpackage:s4fda00559270", "mpackage:sbd05d481e581", "mpackage:s4afb7d28204b", "mpackage:sb92c4a37622f"], "status": "REASONED"},
+    "skip-networking": {"text": "skip_networking stops TCP listeners, including MySQL X; mounted options and mysqlx=OFF can restrict image exposure.", "components": ["package", "mysql", "maria"], "sources": ["package:scf03124d3cd4", "mysql:sa8e974b8e0d7", "maria:s528037737579"], "status": "REASONED"},
+    "image-root": {"text": "New-directory initialization defaults root host to %, accepting _FILE; empty files suppress remote root unless MariaDB's preferred variable supplies a value.", "components": ["image", "mimage"], "sources": ["image:s0a0474927ded", "image:s01efe3052035", "mimage:s737f66e148d0", "mimage:s88c31f952d76", "mimage:sad402b095652"], "status": "REASONED"},
+    "image-root-grants": {"text": "A nonempty non-localhost root host gets ALL on *.* WITH GRANT OPTION; MariaDB also grants PROXY. Prefer localhost and private publication.", "components": ["image", "mimage"], "sources": ["image:s20a475be2b96", "mimage:s192c8bb1613e"], "status": "REASONED"},
+    "image-empty-password": {"text": "Initialization needs a password/hash, random password or empty-password opt-in; any nonempty opt-in, even no, can create passwordless remote root.", "components": ["image", "mimage"], "sources": ["image:s2b7b9e5f4c61", "image:s20a475be2b96", "mimage:s7594bc3fbc3b", "mimage:s192c8bb1613e"], "status": "REASONED"},
+    "account-tls": {"text": "REQUIRE SSL or X509 independently constrains existing accounts; match the source address seen by the server and avoid deprecated MySQL host wildcards.", "components": ["mysql", "maria"], "sources": ["mysql:sac4976c6bd73", "mysql:scb682cfeeeca", "maria:s3243686162ad"], "status": "REASONED"},
+    "runtime": {"text": "Use separate table-scoped runtime accounts and migration administrators; MySQL caching_sha2_password and MariaDB ed25519 examples require compatible clients.", "components": ["mysql", "maria"], "sources": ["mysql:s4009a8e12cba", "mysql:sd25a34fe4ed0", "maria:s1e467414669c", "maria:s7c876d9fdf39", "maria:scff3a7165e15"], "status": "REASONED"},
+    "password-input": {"text": "Enter password-bearing SQL through authenticated client input, never shell or -e arguments; use an empty -p prompt for login.", "components": ["mysql", "maria"], "sources": ["mysql:s156681123604", "maria:s368aa92bc449"], "status": "REASONED"},
+    "maria-ed25519": {"text": "MariaDB 10.4+ supports ed25519 PASSWORD() form; install the plugin and check connectors; ordinary IDENTIFIED BY is not MySQL's default.", "components": ["maria"], "sources": ["maria:s1e467414669c"], "status": "REASONED"},
+    "cleanup": {"text": "Interactive hardening removes anonymous users, unused remote root and disposable test access; inventory grants and preserve administrative access.", "components": ["mysql", "maria"], "sources": ["mysql:sdde2cdb741bf", "mysql:sa14ee7281ad5", "maria:sad2488929b7b"], "status": "REASONED"},
+    "maria-root": {"text": "MariaDB 10.4+ normally supports socket-authenticated local root; mysql.user is a compatibility view, not a table to edit directly.", "components": ["maria"], "sources": ["maria:sad2488929b7b", "maria:s390f967a4b54"], "status": "REASONED"},
+    "roles": {"text": "Role assignment and activation differ; MariaDB default-role syntax uses FOR and one current role; MySQL supports multiple active roles.", "components": ["mysql", "maria"], "sources": ["mysql:s952465620b96", "maria:s565ef2474582", "maria:s4790add18739"], "status": "REASONED"},
+    "admin-privileges": {"text": "Withhold FILE, SUPER and account/global administration; MySQL 8.4 replaces SET_USER_ID with newer definer privileges; MariaDB SET USER dates from 10.5.", "components": ["mysql", "maria"], "sources": ["mysql:s43872576f07a", "mysql:s06deabf43b11", "maria:scff3a7165e15"], "status": "REASONED"},
+    "maria-public": {"text": "MariaDB 10.11+ PUBLIC grants apply to all users; inspect and revoke at their granted scope while preserving intended access.", "components": ["maria"], "sources": ["maria:s475fb165ca34", "maria:scff3a7165e15"], "status": "REASONED"},
+    "mysql-auth": {"text": "MySQL 8.0/8.4 default new accounts to caching_sha2_password; existing plugins persist. Native passwords deprecated in 8.0.34, disabled in 8.4, removed in 9.0.", "components": ["mysql8", "mysql"], "sources": ["mysql8:se2dd61ae3974", "mysql:s2155b7025770", "mysql:sb70c5dad340c"], "status": "REASONED"},
+    "maria-sha2": {"text": "MariaDB documents server caching_sha2_password in Community 12.1 and Enterprise 11.8; syntax/defaults are not interchangeable with MySQL.", "components": ["maria"], "sources": ["maria:s441eb805b2fc"], "status": "REASONED"},
+    "validation": {"text": "MySQL 8.0/8.4 validation component uses dotted settings; inspect installation and migrate old plugins before applying MEDIUM and example length values.", "components": ["mysql8", "mysql"], "sources": ["mysql8:scc31c12f1f93", "mysql:sd2bc0b9cb818", "mysql:saeede1fe7252", "mysql:s84a5e3838b24"], "status": "REASONED"},
+    "mysql-reuse": {"text": "SET PERSIST retains example password history/reuse policy across restart; account-specific settings override globals.", "components": ["mysql"], "sources": ["mysql:s79d05dce135c", "mysql:sf95e18b15977"], "status": "REASONED"},
+    "password-current": {"text": "PASSWORD REQUIRE CURRENT governs ordinary self-service changes, not privileged resets; external accounts use their identity system's policy.", "components": ["mysql"], "sources": ["mysql:sf95e18b15977"], "status": "REASONED"},
+    "expiry": {"text": "Use account expiration only with a working rotation process; MariaDB supports expiration too.", "components": ["mysql", "maria"], "sources": ["mysql:sf95e18b15977", "maria:s80ac7714220c"], "status": "REASONED"},
+    "maria-validation": {"text": "Install MariaDB Simple Password Check and reuse plugins; persist their distinct settings and strict validation so supplied hashes cannot bypass validators.", "components": ["maria"], "sources": ["maria:s9e17c3adbc4f", "maria:sf9fb4aa4058e", "maria:saedca564ea11"], "status": "REASONED"},
+    "maria-reuse": {"text": "MariaDB reuse checking dates from 10.7; use plugin 2.0. Interval zero retains history indefinitely; the format upgrade invalidated earlier history.", "components": ["maria"], "sources": ["maria:sf9fb4aa4058e", "maria:sc20911721ab4"], "status": "REASONED"},
+    "timestamp": {"text": "MariaDB secure_timestamp defaults NO, permitting session-clock expiration bypass; restart with YES or replication, choosing replication on replicas.", "components": ["maria"], "sources": ["maria:sf1dfed44f8b4", "maria:s80ac7714220c"], "status": "REASONED"},
+    "mfa": {"text": "MySQL 8.0.27+ supports up to three factors, with restrictions on later factors; Enterprise FIDO is deprecated from 8.0.35 and removed in 8.4; WebAuthn replaces it from 8.2.", "components": ["mysql8", "mysql"], "sources": ["mysql8:sa937d1361fe1", "mysql8:s909bd51d0626", "mysql:s807a77fa8872", "mysql:s06deabf43b11"], "status": "REASONED"},
+    "machine-cert": {"text": "Community REQUIRE X509 adds a machine-held certificate to password authentication, not human MFA; protect human entrypoints separately.", "components": ["mysql"], "sources": ["mysql:s4009a8e12cba"], "status": "REASONED"},
+    "local-loading": {"text": "Disable LOCAL on server and clients separately; MySQL 8.4 server default is OFF, MariaDB's is ON; CLI option groups do not configure application libraries.", "components": ["mysql", "maria"], "sources": ["mysql:s09db2b328d11", "maria:saedca564ea11", "mysql:s58e2db31fec2"], "status": "REASONED"},
+    "server-files": {"text": "MySQL secure_file_priv=NULL disables governed operations; empty removes restriction. MariaDB uses a directory, not NULL; both require restart.", "components": ["mysql", "maria"], "sources": ["mysql:s5735e0088e90", "maria:saedca564ea11"], "status": "REASONED"},
+    "file-privilege": {"text": "Withhold FILE from runtime users, but LOAD DATA LOCAL does not require MySQL FILE; test import/restore workflows before disabling LOCAL.", "components": ["mysql", "maria"], "sources": ["mysql:s37e2128d2672", "maria:se84c2903d176"], "status": "REASONED"},
+    "client-identity": {"text": "MySQL REQUIRED encrypts, VERIFY_CA checks chain, VERIFY_IDENTITY adds hostname; MariaDB uses --ssl --ssl-verify-server-cert with CA trust.", "components": ["mysql", "maria"], "sources": ["mysql:s2170f2fa1a36", "maria:s368aa92bc449"], "status": "REASONED"},
+    "client-cert": {"text": "X509 accounts also need the client certificate and protected key; CA trust alone is insufficient.", "components": ["mysql", "maria"], "sources": ["mysql:s2170f2fa1a36", "maria:s368aa92bc449"], "status": "REASONED"},
+    "verify-transport": {"text": "Matched TLS success identifies CURRENT_USER and a cipher; plaintext must succeed without restrictions and fail after enforcement. Error 3159 is specific; 1045 alone is not.", "components": ["mysql", "maria"], "sources": ["mysql:s5735e0088e90", "mysql:s3005ba5afda3", "mysql:sf55a7efb90a1", "maria:s368aa92bc449"], "status": "REASONED", "verify": [1]},
+    "verify-server-cert": {"text": "Wrong trusted identity or unrelated CA must fail verification while the correct CA/hostname succeeds against the same endpoint.", "components": ["mysql"], "sources": ["mysql:s2170f2fa1a36"], "status": "REASONED", "verify": [1]},
+    "verify-client-cert": {"text": "With option-file inheritance disabled, SSL-only permits certificate-free login; X509 rejects it while the certificate-bearing control succeeds; test subject/issuer separately.", "components": ["mysql", "maria"], "sources": ["mysql:s4009a8e12cba", "mysql:seadf3241ca81", "maria:s368aa92bc449"], "status": "REASONED", "verify": [2]},
+    "verify-listeners": {"text": "Inspect all classic/X listeners and nondefault ports; fixed interfaces retain permitted-client success. A stopped service is not proof of restriction.", "components": ["mysql"], "sources": ["mysql:s5735e0088e90", "mysql:sf426889734dd"], "status": "REASONED", "verify": [3]},
+    "socket-activation": {"text": "MariaDB systemd socket activation can bypass bind_address selection; configure the socket unit or disable activation and inspect listeners.", "components": ["maria"], "sources": ["maria:s141c472ec645"], "status": "REASONED"},
+    "verify-roles": {"text": "MySQL SHOW GRANTS omits mandatory roles and unexpanded role privileges; combine mandatory/explicit roles with USING and test SET ROLE ALL.", "components": ["mysql"], "sources": ["mysql:s952465620b96", "mysql:se2551ca67504"], "status": "REASONED"},
+    "verify-maria-roles": {"text": "MariaDB requires recursive role inspection and each role activated separately; PUBLIC applies independently, and USAGE ON *.* grants no data privileges.", "components": ["maria"], "sources": ["maria:sf8dd7e9be0a6", "maria:sc0f88b0f035f", "maria:s4790add18739", "maria:s475fb165ca34"], "status": "REASONED"},
+    "verify-grants": {"text": "Existing orders read stays allowed while private_probe changes from success under broad grants to privilege denial; test each available role.", "components": ["mysql", "maria"], "sources": ["mysql:sd25a34fe4ed0", "maria:scff3a7165e15"], "status": "REASONED"},
+    "verify-cleanup": {"text": "Before/after inventories must remove unintended anonymous, remote-root and test grants while preserving administrative and runtime positive controls.", "components": ["mysql", "maria"], "sources": ["mysql:sdde2cdb741bf", "mysql:sa14ee7281ad5", "maria:sad2488929b7b", "maria:s38f56f9ab3a3"], "status": "REASONED"},
+    "verify-local": {"text": "Disable LOCAL separately at client and server, keeping the other side enabled; a readable fixture loads in the exposed state, is refused fixed, and ordinary insertion succeeds.", "components": ["mysql", "maria"], "sources": ["mysql:s09db2b328d11", "mysql:s37e2128d2672", "maria:se84c2903d176"], "status": "REASONED"},
+    "verify-server-files": {"text": "MySQL NULL must refuse a previously successful readable-file load; MariaDB must deny an outside-directory fixture while permitting the allowed directory.", "components": ["mysql", "maria"], "sources": ["mysql:s5735e0088e90", "maria:saedca564ea11"], "status": "REASONED"},
+    "verify-policy": {"text": "Read global policy and account overrides, then repeat after restart; MariaDB plugins must be active, reuse version 2.0, and secure_timestamp REPLICATION or deliberate YES.", "components": ["mysql", "maria"], "sources": ["mysql:sf95e18b15977", "mysql:sa14ee7281ad5", "maria:s9e17c3adbc4f", "maria:sf9fb4aa4058e", "maria:sf1dfed44f8b4"], "status": "REASONED"},
+    "verify-weak": {"text": "Weak password accepted without validation must be rejected with validation while a fresh compliant password succeeds under the same auth plugin.", "components": ["mysql", "maria"], "sources": ["mysql:sd3caefce406e", "maria:s9e17c3adbc4f", "maria:s1e467414669c"], "status": "REASONED"},
+    "verify-reuse": {"text": "After two compliant passwords, reuse of the first must fail only with recorded protection; a third fresh password must succeed.", "components": ["mysql", "maria"], "sources": ["mysql:sf95e18b15977", "maria:sf9fb4aa4058e"], "status": "REASONED"},
+    "visibility": {"text": "SHOW DATABASES visibility follows privileges and can broaden through global grants; hiding names is not an access boundary.", "components": ["mysql"], "sources": ["mysql:s72c17cae9130"], "status": "REASONED"},
+    "local-guards": {"text": "Historical invalid-input and valid-dispatch checks tested guards only; no database behavior was simulated.", "components": ["mysql", "maria"], "sources": ["mysql:s156681123604", "maria:s368aa92bc449"], "status": "DEMONSTRATED", "evidence": "Each guard also accepted one valid dispatch case. These tests exercised guards only; no database behavior was simulated."},
+    "local-ini": {"text": "Historical in-memory INI parsing checked structure only; native configuration acceptance and restart behavior remain unobserved.", "components": ["mysql", "maria"], "sources": ["mysql:s58e2db31fec2", "maria:sa80a8ed71629"], "status": "DEMONSTRATED", "evidence": "All five INI fragments parsed with an in-memory INI parser. This checks basic structure, not vendor option acceptance."}
+  }
+}
+---
 # MySQL and MariaDB: TLS and authentication
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| classic-bind: MySQL bind_address defaults to *; restrict classic TCP 3306 to loopback or deliberate private interfaces. | MySQL reference 8.4 | REASONED |
+| server-tls: Configure CA/certificate/key, require_secure_transport and TLSv1.2/TLSv1.3, then restart; TLSv1.3 needs compatible libraries, MySQL 8.0.16+/OpenSSL 1.1.1+. | MySQL reference 8.0; MariaDB documentation unknown | REASONED |
+| auto-cert: MySQL can generate missing TLS files under documented conditions; generated server certificates lack the deployment hostname and fail VERIFY_IDENTITY. | MySQL reference 8.4 | REASONED |
+| socket: Global require_secure_transport permits Unix sockets; MySQL account REQUIRE SSL takes precedence and disallows that account's socket connection. | MySQL reference 8.4 | REASONED |
+| maria-tls: MariaDB require_secure_transport dates from 10.5.2; 11.4 automatic TLS needs compatible clients and plugins, so mixed deployments may still need explicit CA settings. | MariaDB documentation unknown | REASONED |
+| x-listener: MySQL 8.0/8.4/9.7/26.7 enable X Plugin with separate wildcard 33060; bind it separately or set mysqlx=OFF and restart. | MySQL reference 8.0; MySQL reference 8.4; MySQL reference 9.7; MySQL reference 26.7 | REASONED |
+| maria-protocol: MariaDB has no MySQL X Protocol; omit X Plugin options because unknown options can prevent startup. | MariaDB documentation unknown | REASONED |
+| image-listeners: Pinned MySQL images install Docker packages with no bind setting, retaining wildcard classic/X listeners unless arguments or option files restrict them. | MySQL image source 2f988f198f35d25b1454fa2504a0e4c348100549; MySQL Docker package mysql-8.4.9; MySQL reference 8.4; MySQL reference 9.7; MySQL reference 26.7 | REASONED |
+| mimage-listeners: Pinned MariaDB 10.6-13.1 Ubuntu images comment out bind-address; UBI leaves it commented, enabling IPv4 wildcard and IPv6 where available. | MariaDB image source 1a4c8e99f7816c8d97df11eee52098522dc770cf; MariaDB package source mariadb-11.8.9 | REASONED |
+| skip-networking: skip_networking stops TCP listeners, including MySQL X; mounted options and mysqlx=OFF can restrict image exposure. | MySQL Docker package mysql-8.4.9; MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| image-root: New-directory initialization defaults root host to %, accepting _FILE; empty files suppress remote root unless MariaDB's preferred variable supplies a value. | MySQL image source 2f988f198f35d25b1454fa2504a0e4c348100549; MariaDB image source 1a4c8e99f7816c8d97df11eee52098522dc770cf | REASONED |
+| image-root-grants: A nonempty non-localhost root host gets ALL on *.* WITH GRANT OPTION; MariaDB also grants PROXY. Prefer localhost and private publication. | MySQL image source 2f988f198f35d25b1454fa2504a0e4c348100549; MariaDB image source 1a4c8e99f7816c8d97df11eee52098522dc770cf | REASONED |
+| image-empty-password: Initialization needs a password/hash, random password or empty-password opt-in; any nonempty opt-in, even no, can create passwordless remote root. | MySQL image source 2f988f198f35d25b1454fa2504a0e4c348100549; MariaDB image source 1a4c8e99f7816c8d97df11eee52098522dc770cf | REASONED |
+| account-tls: REQUIRE SSL or X509 independently constrains existing accounts; match the source address seen by the server and avoid deprecated MySQL host wildcards. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| runtime: Use separate table-scoped runtime accounts and migration administrators; MySQL caching_sha2_password and MariaDB ed25519 examples require compatible clients. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| password-input: Enter password-bearing SQL through authenticated client input, never shell or -e arguments; use an empty -p prompt for login. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| maria-ed25519: MariaDB 10.4+ supports ed25519 PASSWORD() form; install the plugin and check connectors; ordinary IDENTIFIED BY is not MySQL's default. | MariaDB documentation unknown | REASONED |
+| cleanup: Interactive hardening removes anonymous users, unused remote root and disposable test access; inventory grants and preserve administrative access. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| maria-root: MariaDB 10.4+ normally supports socket-authenticated local root; mysql.user is a compatibility view, not a table to edit directly. | MariaDB documentation unknown | REASONED |
+| roles: Role assignment and activation differ; MariaDB default-role syntax uses FOR and one current role; MySQL supports multiple active roles. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| admin-privileges: Withhold FILE, SUPER and account/global administration; MySQL 8.4 replaces SET_USER_ID with newer definer privileges; MariaDB SET USER dates from 10.5. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| maria-public: MariaDB 10.11+ PUBLIC grants apply to all users; inspect and revoke at their granted scope while preserving intended access. | MariaDB documentation unknown | REASONED |
+| mysql-auth: MySQL 8.0/8.4 default new accounts to caching_sha2_password; existing plugins persist. Native passwords deprecated in 8.0.34, disabled in 8.4, removed in 9.0. | MySQL reference 8.0; MySQL reference 8.4 | REASONED |
+| maria-sha2: MariaDB documents server caching_sha2_password in Community 12.1 and Enterprise 11.8; syntax/defaults are not interchangeable with MySQL. | MariaDB documentation unknown | REASONED |
+| validation: MySQL 8.0/8.4 validation component uses dotted settings; inspect installation and migrate old plugins before applying MEDIUM and example length values. | MySQL reference 8.0; MySQL reference 8.4 | REASONED |
+| mysql-reuse: SET PERSIST retains example password history/reuse policy across restart; account-specific settings override globals. | MySQL reference 8.4 | REASONED |
+| password-current: PASSWORD REQUIRE CURRENT governs ordinary self-service changes, not privileged resets; external accounts use their identity system's policy. | MySQL reference 8.4 | REASONED |
+| expiry: Use account expiration only with a working rotation process; MariaDB supports expiration too. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| maria-validation: Install MariaDB Simple Password Check and reuse plugins; persist their distinct settings and strict validation so supplied hashes cannot bypass validators. | MariaDB documentation unknown | REASONED |
+| maria-reuse: MariaDB reuse checking dates from 10.7; use plugin 2.0. Interval zero retains history indefinitely; the format upgrade invalidated earlier history. | MariaDB documentation unknown | REASONED |
+| timestamp: MariaDB secure_timestamp defaults NO, permitting session-clock expiration bypass; restart with YES or replication, choosing replication on replicas. | MariaDB documentation unknown | REASONED |
+| mfa: MySQL 8.0.27+ supports up to three factors, with restrictions on later factors; Enterprise FIDO is deprecated from 8.0.35 and removed in 8.4; WebAuthn replaces it from 8.2. | MySQL reference 8.0; MySQL reference 8.4 | REASONED |
+| machine-cert: Community REQUIRE X509 adds a machine-held certificate to password authentication, not human MFA; protect human entrypoints separately. | MySQL reference 8.4 | REASONED |
+| local-loading: Disable LOCAL on server and clients separately; MySQL 8.4 server default is OFF, MariaDB's is ON; CLI option groups do not configure application libraries. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| server-files: MySQL secure_file_priv=NULL disables governed operations; empty removes restriction. MariaDB uses a directory, not NULL; both require restart. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| file-privilege: Withhold FILE from runtime users, but LOAD DATA LOCAL does not require MySQL FILE; test import/restore workflows before disabling LOCAL. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| client-identity: MySQL REQUIRED encrypts, VERIFY_CA checks chain, VERIFY_IDENTITY adds hostname; MariaDB uses --ssl --ssl-verify-server-cert with CA trust. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| client-cert: X509 accounts also need the client certificate and protected key; CA trust alone is insufficient. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| verify-transport: Matched TLS success identifies CURRENT_USER and a cipher; plaintext must succeed without restrictions and fail after enforcement. Error 3159 is specific; 1045 alone is not. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| verify-server-cert: Wrong trusted identity or unrelated CA must fail verification while the correct CA/hostname succeeds against the same endpoint. | MySQL reference 8.4 | REASONED |
+| verify-client-cert: With option-file inheritance disabled, SSL-only permits certificate-free login; X509 rejects it while the certificate-bearing control succeeds; test subject/issuer separately. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| verify-listeners: Inspect all classic/X listeners and nondefault ports; fixed interfaces retain permitted-client success. A stopped service is not proof of restriction. | MySQL reference 8.4 | REASONED |
+| socket-activation: MariaDB systemd socket activation can bypass bind_address selection; configure the socket unit or disable activation and inspect listeners. | MariaDB documentation unknown | REASONED |
+| verify-roles: MySQL SHOW GRANTS omits mandatory roles and unexpanded role privileges; combine mandatory/explicit roles with USING and test SET ROLE ALL. | MySQL reference 8.4 | REASONED |
+| verify-maria-roles: MariaDB requires recursive role inspection and each role activated separately; PUBLIC applies independently, and USAGE ON *.* grants no data privileges. | MariaDB documentation unknown | REASONED |
+| verify-grants: Existing orders read stays allowed while private_probe changes from success under broad grants to privilege denial; test each available role. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| verify-cleanup: Before/after inventories must remove unintended anonymous, remote-root and test grants while preserving administrative and runtime positive controls. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| verify-local: Disable LOCAL separately at client and server, keeping the other side enabled; a readable fixture loads in the exposed state, is refused fixed, and ordinary insertion succeeds. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| verify-server-files: MySQL NULL must refuse a previously successful readable-file load; MariaDB must deny an outside-directory fixture while permitting the allowed directory. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| verify-policy: Read global policy and account overrides, then repeat after restart; MariaDB plugins must be active, reuse version 2.0, and secure_timestamp REPLICATION or deliberate YES. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| verify-weak: Weak password accepted without validation must be rejected with validation while a fresh compliant password succeeds under the same auth plugin. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| verify-reuse: After two compliant passwords, reuse of the first must fail only with recorded protection; a third fresh password must succeed. | MySQL reference 8.4; MariaDB documentation unknown | REASONED |
+| visibility: SHOW DATABASES visibility follows privileges and can broaden through global grants; hiding names is not an access boundary. | MySQL reference 8.4 | REASONED |
+| local-guards: Historical invalid-input and valid-dispatch checks tested guards only; no database behavior was simulated. | MySQL reference 8.4; MariaDB documentation unknown | DEMONSTRATED |
+| local-ini: Historical in-memory INI parsing checked structure only; native configuration acceptance and restart behavior remain unobserved. | MySQL reference 8.4; MariaDB documentation unknown | DEMONSTRATED |
+<!-- version-basis:end -->
 
 Default posture: keep the server on `127.0.0.1` and open it to remote clients only deliberately, with TLS required. Oracle documents MySQL's `bind_address` default as `*`; do not assume a package has already restricted it. [MySQL server variables](https://dev.mysql.com/doc/refman/8.4/en/server-system-variables.html#sysvar_bind_address).
 
@@ -357,7 +632,7 @@ All five INI fragments parsed with an in-memory INI parser. This checks basic st
 
 The snapshot's C2 scanner does not classify `mysql`, `mariadb`, or `ss` as probes. A supplemental in-memory check added those command names, accepted these guarded blocks, and detected a deliberately unguarded probe before the guard. No gate or repository file was changed.
 
-### TLS and account requirements
+### TLS and account requirements (REASONED: TLS/account comparisons from cited vendor documentation; no writable deployment, clients, credentials or certificates.)
 
 **REASONED: missing a writable deployment, compatible clients, known-good credentials, and deployment certificates.**
 
@@ -475,7 +750,7 @@ The certificate-bearing positive must succeed as the intended `batch` account wi
 
 For MariaDB, adapt the whole block using `mariadb --no-defaults`, omit MySQL's `--no-login-paths`, and replace `--ssl-mode=VERIFY_IDENTITY` with `--ssl --ssl-verify-server-cert` in both commands. Retain the CA, certificate/key positive, certificate-free negative, password prompts, and guards. [MariaDB client options](https://mariadb.com/docs/server/clients-and-utilities/mariadb-client/mariadb-command-line-client).
 
-### Listeners
+### Listeners (REASONED: listener comparison from cited MySQL documentation; no server namespace or writable configuration.)
 
 **REASONED: missing access to the database server's network namespace and its writable listener configuration.**
 
@@ -501,7 +776,7 @@ Run on the database server, using its actual `hostname` output:
 
 Read every listener, including configured nondefault ports. In the exposed state, classic protocol or X Protocol listens on an unintended interface. In the fixed loopback deployment, classic protocol remains available on loopback, and X Protocol is either loopback-only or disabled. For deliberate remote access, require only the intended private interfaces. Pair this observation with a successful connection from the permitted location; no listener at all can mean a stopped service. [MySQL listener configuration](https://dev.mysql.com/doc/refman/8.4/en/server-system-variables.html#sysvar_bind_address), [X Plugin listener configuration](https://dev.mysql.com/doc/refman/8.4/en/x-plugin-options-system-variables.html).
 
-### Scoped grants and cleanup
+### Scoped grants and cleanup (REASONED: grant/cleanup comparisons from cited vendor documentation; no writable deployment, credentials or fixtures.)
 
 **REASONED: missing a writable deployment, administrative credentials, and disposable tables for exposed/fixed comparisons.**
 
@@ -548,7 +823,7 @@ The positive read of `orders` must succeed. With an exposed broad read grant, th
 
 Repeat the two installation inventories from section 2 before and after cleanup. The fixed inventory has no anonymous accounts, no unused remote root accounts, and no unintended anonymous or test-schema grants. Deliberately retained administrative accounts and similarly named application databases must remain identifiable. Preserve a successful administrative login and the runtime positive control across cleanup. [MySQL cleanup behavior](https://dev.mysql.com/doc/refman/8.4/en/mysql-secure-installation.html), [MariaDB cleanup behavior](https://mariadb.com/docs/server/clients-and-utilities/deployment-tools/mariadb-secure-installation).
 
-### File-loading restrictions
+### File-loading restrictions (REASONED: loading comparisons from cited vendor documentation; no writable deployment, files or import table.)
 
 **REASONED: missing a writable deployment, client/server fixture files, and a disposable import table.**
 
@@ -587,7 +862,7 @@ For MySQL, first require this known-readable file to load under a policy permitt
 
 For MariaDB, retain successful loading from the permitted directory and attempt the same statement with a known-readable fixture outside it. That outside-directory load must succeed in the isolated unrestricted baseline and fail under the directory restriction. Missing files, operating-system permission failures, and missing SQL privileges do not demonstrate `secure_file_priv`. [MySQL server-file policy](https://dev.mysql.com/doc/refman/8.4/en/server-system-variables.html#sysvar_secure_file_priv), [MariaDB server-file policy](https://mariadb.com/docs/server/server-management/variables-and-modes/server-system-variables#secure_file_priv).
 
-### Password validation and reuse
+### Password validation and reuse (REASONED: password comparisons from cited vendor documentation; no writable deployment, validation libraries or disposable account.)
 
 **REASONED: missing a writable deployment, installed validation libraries, and a disposable password-managed account.**
 

@@ -1,4 +1,183 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "07e4b6139c6bc6c7b605885dd1243d6cae7647b7d20c4f009ac063110f09622a",
+  "components": {
+    "docs": {
+      "name": "RabbitMQ documentation",
+      "basis": "unknown",
+      "sources": {
+        "s8f066afff416": "https://www.rabbitmq.com/docs/access-control",
+        "s348b5e1d08ae": "https://www.rabbitmq.com/docs/vhosts",
+        "sf81e470be6fa": "https://www.rabbitmq.com/docs/man/rabbitmqctl.8",
+        "s021280c36c46": "https://www.rabbitmq.com/docs/management",
+        "s62cc3cf19b55": "https://www.rabbitmq.com/docs/definitions",
+        "s59532e00cbad": "https://www.rabbitmq.com/docs/http-api-reference",
+        "sffc9f05633d5": "https://www.rabbitmq.com/docs/ssl",
+        "s7d28cf5cc259": "https://www.rabbitmq.com/docs/configure",
+        "s73c5514e15ab": "https://www.rabbitmq.com/docs/plugins",
+        "s5a539132e128": "https://www.rabbitmq.com/docs/man/rabbitmq-plugins.8",
+        "sc3e3083ffb2f": "https://www.rabbitmq.com/docs/networking",
+        "sa40d365d073f": "https://www.rabbitmq.com/docs/cli",
+        "s02ce3c777d63": "https://www.rabbitmq.com/docs/clustering-ssl",
+        "sf274b2ed7c10": "https://www.rabbitmq.com/docs/man/rabbitmq-diagnostics.8",
+        "sef3085ec2cc9": "https://www.rabbitmq.com/docs/queues",
+        "s008b12a42f70": "https://www.rabbitmq.com/docs/channels"
+      }
+    },
+    "source": {
+      "name": "RabbitMQ source",
+      "basis": "v4.3.6",
+      "sources": {
+        "sd358fada6993": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit/Makefile#L33-L38",
+        "s23753cce5d91": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L22",
+        "s776b41dfa37a": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L65-L71",
+        "s2373a87402c7": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L151-L154",
+        "scde094099cd2": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L178-L186",
+        "s429261f04d72": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit_common/src/rabbit_env.erl#L1206-L1233",
+        "s3db3e9410319": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit_common/src/rabbit_env.erl#L2008-L2025",
+        "s631a5974cf74": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit/scripts/rabbitmq-env#L143-L146",
+        "sb2136f9c4d1a": "https://raw.githubusercontent.com/rabbitmq/rabbitmq-server/v4.3.6/deps/rabbit/scripts/rabbitmq-env"
+      }
+    },
+    "image": {
+      "name": "RabbitMQ image source",
+      "basis": "76efb370838e36e4b120e252e75cf0dac70a7d55",
+      "sources": {
+        "s9d5790722619": "https://github.com/docker-library/rabbitmq/blob/76efb370838e36e4b120e252e75cf0dac70a7d55/4.3/ubuntu/10-defaults.conf#L8",
+        "s6e9f51045566": "https://github.com/docker-library/rabbitmq/blob/76efb370838e36e4b120e252e75cf0dac70a7d55/4.3/ubuntu/Dockerfile#L321",
+        "se5da6700ffd7": "https://github.com/docker-library/rabbitmq/blob/76efb370838e36e4b120e252e75cf0dac70a7d55/4.3/alpine/10-defaults.conf#L8",
+        "sb5b8462e18fd": "https://github.com/docker-library/rabbitmq/blob/76efb370838e36e4b120e252e75cf0dac70a7d55/4.3/alpine/Dockerfile#L327"
+      }
+    },
+    "admin": {
+      "name": "rabbitmqadmin",
+      "basis": "v2",
+      "sources": {
+        "sdd5688854073": "https://www.rabbitmq.com/docs/management-cli"
+      }
+    },
+    "otp": {
+      "name": "Erlang/OTP distribution",
+      "basis": "27",
+      "sources": {
+        "s18749583e522": "https://www.erlang.org/docs/27/apps/ssl/ssl_distribution.html",
+        "s2e4092cc0780": "https://raw.githubusercontent.com/erlang/otp/OTP-27.0/lib/ssl/src/inet_tls_dist.erl"
+      }
+    },
+    "topic-min": {
+      "name": "RabbitMQ topic authorization introduction",
+      "basis": "3.7.0",
+      "sources": {
+        "se34f4e7886f1": "https://github.com/rabbitmq/rabbitmq-server/releases/tag/v3.7.0"
+      }
+    },
+    "curl": {
+      "name": "curl documentation",
+      "basis": "unknown",
+      "sources": {
+        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
+      }
+    },
+    "pika": {
+      "name": "Pika documentation",
+      "basis": "unknown",
+      "sources": {
+        "s2cf9e4181462": "https://pika.readthedocs.io/en/stable/examples/tls_server_authentication.html",
+        "sbc29096927d1": "https://pika.readthedocs.io/en/stable/modules/parameters.html",
+        "sbe84810afdaa": "https://pika.readthedocs.io/en/stable/modules/adapters/blocking.html",
+        "s2bd3b0912faf": "https://pika.readthedocs.io/en/stable/modules/exceptions.html"
+      }
+    }
+  },
+  "claims": {
+    "guest": {"text": "Upstream guest/guest is an administrator restricted to localhost; create real users and delete or change guest.", "components": ["docs", "source"], "sources": ["docs:s8f066afff416", "source:sd358fada6993"], "status": "REASONED"},
+    "docker-guest": {"text": "Shipped official 4.3 images disable guest loopback restriction; later configuration can restore it.", "components": ["image"], "sources": ["image:s9d5790722619", "image:s6e9f51045566", "image:se5da6700ffd7", "image:sb5b8462e18fd"], "status": "REASONED"},
+    "vhosts": {"text": "Separate users/vhosts and remove old grants; vhosts isolate resources, not CPU or memory.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:s348b5e1d08ae", "docs:sf81e470be6fa"], "status": "REASONED"},
+    "resource-grants": {"text": "Configure/write/read regexes scope app.*; amq.default is excluded; binding needs queue write and exchange read.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:sf81e470be6fa"], "status": "REASONED"},
+    "roles": {"text": "Tags replace previous tags and grant management authority, not resource permissions; observer gets monitoring and empty grants.", "components": ["docs"], "sources": ["docs:s021280c36c46", "docs:sf81e470be6fa"], "status": "REASONED"},
+    "definitions-boot": {"text": "Reviewed local boot imports need no management plugin, do not overwrite existing definitions, and suppress blank-node default creation.", "components": ["docs"], "sources": ["docs:s62cc3cf19b55"], "status": "REASONED"},
+    "definitions-runtime": {"text": "Runtime imports merge, retain omitted objects and immutable conflicts, and can fail partially; they are not reconciliation.", "components": ["docs"], "sources": ["docs:s59532e00cbad", "docs:s62cc3cf19b55"], "status": "REASONED"},
+    "definitions-export": {"text": "v2 export transformations remove users, permissions and runtime parameters; protect TOML credentials and review remaining secrets.", "components": ["docs", "admin"], "sources": ["docs:s62cc3cf19b55", "admin:sdd5688854073"], "status": "REASONED"},
+    "amqp-tls": {"text": "Private 5671 requires trusted client certificates; remove plaintext 5672 after migration.", "components": ["docs"], "sources": ["docs:sffc9f05633d5"], "status": "REASONED"},
+    "tls-depth": {"text": "ssl_options.depth defaults to 1; clientAuth usage and intermediate-chain depth must fit deployed certificates.", "components": ["docs"], "sources": ["docs:sffc9f05633d5"], "status": "REASONED"},
+    "tls-identity": {"text": "mTLS does not map a RabbitMQ username; password auth remains unless certificate plugin/SASL EXTERNAL is configured.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:sffc9f05633d5"], "status": "REASONED"},
+    "management-bind": {"text": "Apply and restart with loopback HTTP 15672/private HTTPS 15671 before enabling management.", "components": ["docs"], "sources": ["docs:s021280c36c46", "docs:s7d28cf5cc259", "docs:s73c5514e15ab", "docs:s5a539132e128"], "status": "REASONED"},
+    "management-default": {"text": "v4.3.6 starts wildcard plain HTTP 15672 when no management listener is configured.", "components": ["source"], "sources": ["source:s23753cce5d91", "source:s776b41dfa37a", "source:s2373a87402c7", "source:scde094099cd2"], "status": "REASONED"},
+    "management-auth": {"text": "Management has separate TLS and RabbitMQ HTTP credentials; restrict admin networks and human access.", "components": ["docs"], "sources": ["docs:s021280c36c46", "docs:s59532e00cbad"], "status": "REASONED"},
+    "epmd": {"text": "epmd defaults to 4369; ERL_EPMD_ADDRESS requires broker and epmd restart, or socket-unit changes; loopback remains.", "components": ["docs"], "sources": ["docs:sc3e3083ffb2f"], "status": "REASONED"},
+    "distribution-port": {"text": "Distribution defaults to node port plus 20000 (25672); nonempty environment or configured range can replace it.", "components": ["source", "docs"], "sources": ["source:s429261f04d72", "source:s3db3e9410319", "docs:sc3e3083ffb2f"], "status": "REASONED"},
+    "cli-ports": {"text": "CLI defaults 35672-35682; prefixed variables fall back to unprefixed forms, treating empty as unset.", "components": ["source", "docs"], "sources": ["source:s631a5974cf74", "docs:sc3e3083ffb2f"], "status": "REASONED"},
+    "cookie": {"text": "Matching owner-only cookie files grant powerful node/CLI access; protect secret delivery and restrict peer reachability.", "components": ["docs"], "sources": ["docs:sa40d365d073f"], "status": "REASONED"},
+    "distribution-tls": {"text": "Use Erlang TLS distribution for server and CLI with matching launch arguments; 4.3 requires at least OTP 27.", "components": ["docs", "otp", "source"], "sources": ["docs:s02ce3c777d63", "otp:s18749583e522", "source:sb2136f9c4d1a"], "status": "REASONED"},
+    "distribution-identity": {"text": "Verify peer certificates both ways and outbound node hostnames; coordinate transport changes and retain cookie/firewall controls.", "components": ["otp"], "sources": ["otp:s18749583e522", "otp:s2e4092cc0780"], "status": "REASONED"},
+    "topic-default": {"text": "Topic authorization dates from 3.7; absent or cleared topic permissions leave topic operations unrestricted by that layer.", "components": ["docs", "topic-min"], "sources": ["docs:s8f066afff416", "topic-min:se34f4e7886f1"], "status": "REASONED"},
+    "topic-patterns": {"text": "Topic write/read regexes gate publish/binding keys; tenant1 exact keys exclude wildcard bindings, not existing queued messages.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:sf81e470be6fa"], "status": "REASONED"},
+    "topic-bypass": {"text": "Exchange relay can bypass direct topic-write checks; strong isolation needs admin-owned routes, no configure and queue-only read grants.", "components": ["docs"], "sources": ["docs:s8f066afff416"], "status": "REASONED"},
+    "verify-accounts": {"text": "Inspect migrated vhost grants, observer tags/empty patterns and guest removal; failed listings prove nothing.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:sf81e470be6fa"], "status": "REASONED", "verify": [1]},
+    "verify-inventory": {"text": "Inventory all listeners and cookie ownership/mode; local binds and mode do not establish isolation or secrecy.", "components": ["docs"], "sources": ["docs:sc3e3083ffb2f", "docs:sf274b2ed7c10", "docs:sa40d365d073f"], "status": "REASONED", "verify": [2]},
+    "verify-network": {"text": "Forbidden external connections must fail while allowed private peers connect; confirm plaintext 5672 removal with live AMQPS.", "components": ["docs"], "sources": ["docs:sc3e3083ffb2f"], "status": "REASONED", "verify": [3, 4]},
+    "verify-distribution": {"text": "Allowed CLI host must authenticate ping to the actual node with matching cookie; TCP reachability alone is insufficient.", "components": ["docs"], "sources": ["docs:sf274b2ed7c10", "docs:sa40d365d073f"], "status": "REASONED", "verify": [5]},
+    "verify-loopback": {"text": "Authenticated loopback /api/overview must return 200 while private HTTP 15672 is unreachable.", "components": ["docs", "curl"], "sources": ["docs:s021280c36c46", "docs:s59532e00cbad", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [6]},
+    "verify-management": {"text": "Observer overview and ops user listing return 200; anonymous overview and observer user listing refuse with actual auth errors.", "components": ["docs", "curl"], "sources": ["docs:s021280c36c46", "docs:s59532e00cbad", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [7]},
+    "verify-mtls": {"text": "Certificate-present handshake succeeds and absent certificate gets broker-attributed rejection; server Verification: OK is insufficient.", "components": ["docs"], "sources": ["docs:sffc9f05633d5"], "status": "REASONED", "verify": [8]},
+    "queue-default": {"text": "RabbitMQ 4.3 disables transient non-exclusive queues by default; the protocol fixture uses a durable queue.", "components": ["docs"], "sources": ["docs:sef3085ec2cc9"], "status": "REASONED"},
+    "verify-amqp": {"text": "Pika 1.x fixture requires app round trip, observer authentication and resource-specific 403 ACCESS_REFUSED; log connection refusal reasons.", "components": ["docs", "pika"], "sources": ["docs:s8f066afff416", "docs:sef3085ec2cc9", "docs:s008b12a42f70", "pika:s2cf9e4181462", "pika:sbc29096927d1", "pika:sbe84810afdaa", "pika:s2bd3b0912faf"], "status": "REASONED", "verify": [9]},
+    "verify-definitions": {"text": "Compare approved blank-node users/grants and reduced versus private full exports; empty selected sections do not prove secrecy.", "components": ["docs", "admin"], "sources": ["docs:sf81e470be6fa", "docs:s62cc3cf19b55", "admin:sdd5688854073", "docs:s59532e00cbad"], "status": "REASONED", "verify": [10]},
+    "verify-distribution-tls": {"text": "TLS CLI/nodes succeed; plaintext and missing/untrusted certificate peers fail with TLS evidence, not cookie/DNS errors.", "components": ["docs", "otp"], "sources": ["docs:s02ce3c777d63", "otp:s18749583e522"], "status": "REASONED", "verify": [11]},
+    "verify-topic": {"text": "Tenant1 operations succeed; other keys/wildcards fail; compare relay bypass with hardened route-creation denial.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:sf81e470be6fa"], "status": "REASONED", "verify": [12]}
+  }
+}
+---
 # RabbitMQ: users, TLS listener, and the guest account
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| guest: Upstream guest/guest is an administrator restricted to localhost; create real users and delete or change guest. | RabbitMQ documentation unknown; RabbitMQ source v4.3.6 | REASONED |
+| docker-guest: Shipped official 4.3 images disable guest loopback restriction; later configuration can restore it. | RabbitMQ image source 76efb370838e36e4b120e252e75cf0dac70a7d55 | REASONED |
+| vhosts: Separate users/vhosts and remove old grants; vhosts isolate resources, not CPU or memory. | RabbitMQ documentation unknown | REASONED |
+| resource-grants: Configure/write/read regexes scope app.*; amq.default is excluded; binding needs queue write and exchange read. | RabbitMQ documentation unknown | REASONED |
+| roles: Tags replace previous tags and grant management authority, not resource permissions; observer gets monitoring and empty grants. | RabbitMQ documentation unknown | REASONED |
+| definitions-boot: Reviewed local boot imports need no management plugin, do not overwrite existing definitions, and suppress blank-node default creation. | RabbitMQ documentation unknown | REASONED |
+| definitions-runtime: Runtime imports merge, retain omitted objects and immutable conflicts, and can fail partially; they are not reconciliation. | RabbitMQ documentation unknown | REASONED |
+| definitions-export: v2 export transformations remove users, permissions and runtime parameters; protect TOML credentials and review remaining secrets. | RabbitMQ documentation unknown; rabbitmqadmin v2 | REASONED |
+| amqp-tls: Private 5671 requires trusted client certificates; remove plaintext 5672 after migration. | RabbitMQ documentation unknown | REASONED |
+| tls-depth: ssl_options.depth defaults to 1; clientAuth usage and intermediate-chain depth must fit deployed certificates. | RabbitMQ documentation unknown | REASONED |
+| tls-identity: mTLS does not map a RabbitMQ username; password auth remains unless certificate plugin/SASL EXTERNAL is configured. | RabbitMQ documentation unknown | REASONED |
+| management-bind: Apply and restart with loopback HTTP 15672/private HTTPS 15671 before enabling management. | RabbitMQ documentation unknown | REASONED |
+| management-default: v4.3.6 starts wildcard plain HTTP 15672 when no management listener is configured. | RabbitMQ source v4.3.6 | REASONED |
+| management-auth: Management has separate TLS and RabbitMQ HTTP credentials; restrict admin networks and human access. | RabbitMQ documentation unknown | REASONED |
+| epmd: epmd defaults to 4369; ERL_EPMD_ADDRESS requires broker and epmd restart, or socket-unit changes; loopback remains. | RabbitMQ documentation unknown | REASONED |
+| distribution-port: Distribution defaults to node port plus 20000 (25672); nonempty environment or configured range can replace it. | RabbitMQ source v4.3.6; RabbitMQ documentation unknown | REASONED |
+| cli-ports: CLI defaults 35672-35682; prefixed variables fall back to unprefixed forms, treating empty as unset. | RabbitMQ source v4.3.6; RabbitMQ documentation unknown | REASONED |
+| cookie: Matching owner-only cookie files grant powerful node/CLI access; protect secret delivery and restrict peer reachability. | RabbitMQ documentation unknown | REASONED |
+| distribution-tls: Use Erlang TLS distribution for server and CLI with matching launch arguments; 4.3 requires at least OTP 27. | RabbitMQ documentation unknown; Erlang/OTP distribution 27; RabbitMQ source v4.3.6 | REASONED |
+| distribution-identity: Verify peer certificates both ways and outbound node hostnames; coordinate transport changes and retain cookie/firewall controls. | Erlang/OTP distribution 27 | REASONED |
+| topic-default: Topic authorization dates from 3.7; absent or cleared topic permissions leave topic operations unrestricted by that layer. | RabbitMQ documentation unknown; RabbitMQ topic authorization introduction 3.7.0 | REASONED |
+| topic-patterns: Topic write/read regexes gate publish/binding keys; tenant1 exact keys exclude wildcard bindings, not existing queued messages. | RabbitMQ documentation unknown | REASONED |
+| topic-bypass: Exchange relay can bypass direct topic-write checks; strong isolation needs admin-owned routes, no configure and queue-only read grants. | RabbitMQ documentation unknown | REASONED |
+| verify-accounts: Inspect migrated vhost grants, observer tags/empty patterns and guest removal; failed listings prove nothing. | RabbitMQ documentation unknown | REASONED |
+| verify-inventory: Inventory all listeners and cookie ownership/mode; local binds and mode do not establish isolation or secrecy. | RabbitMQ documentation unknown | REASONED |
+| verify-network: Forbidden external connections must fail while allowed private peers connect; confirm plaintext 5672 removal with live AMQPS. | RabbitMQ documentation unknown | REASONED |
+| verify-distribution: Allowed CLI host must authenticate ping to the actual node with matching cookie; TCP reachability alone is insufficient. | RabbitMQ documentation unknown | REASONED |
+| verify-loopback: Authenticated loopback /api/overview must return 200 while private HTTP 15672 is unreachable. | RabbitMQ documentation unknown; curl documentation unknown | REASONED |
+| verify-management: Observer overview and ops user listing return 200; anonymous overview and observer user listing refuse with actual auth errors. | RabbitMQ documentation unknown; curl documentation unknown | REASONED |
+| verify-mtls: Certificate-present handshake succeeds and absent certificate gets broker-attributed rejection; server Verification: OK is insufficient. | RabbitMQ documentation unknown | REASONED |
+| queue-default: RabbitMQ 4.3 disables transient non-exclusive queues by default; the protocol fixture uses a durable queue. | RabbitMQ documentation unknown | REASONED |
+| verify-amqp: Pika 1.x fixture requires app round trip, observer authentication and resource-specific 403 ACCESS_REFUSED; log connection refusal reasons. | RabbitMQ documentation unknown; Pika documentation unknown | REASONED |
+| verify-definitions: Compare approved blank-node users/grants and reduced versus private full exports; empty selected sections do not prove secrecy. | RabbitMQ documentation unknown; rabbitmqadmin v2 | REASONED |
+| verify-distribution-tls: TLS CLI/nodes succeed; plaintext and missing/untrusted certificate peers fail with TLS evidence, not cookie/DNS errors. | RabbitMQ documentation unknown; Erlang/OTP distribution 27 | REASONED |
+| verify-topic: Tenant1 operations succeed; other keys/wildcards fail; compare relay bypass with hardened route-creation denial. | RabbitMQ documentation unknown | REASONED |
+<!-- version-basis:end -->
 
 RabbitMQ's default `guest`/`guest` account can only connect from localhost, which protects fresh installs exactly until someone "fixes" it. The official Docker image ships that fix: its `/etc/rabbitmq/conf.d/10-defaults.conf` sets `loopback_users.guest = false`, so in a container from that image as shipped (a later configuration layer can set it back) the default `guest`/`guest` administrator, wherever it exists, can log in from any address that reaches the broker. The documented recommendation is to create real users and delete `guest` or change its password.
 
@@ -172,6 +351,7 @@ Use Bash and paste whole guarded blocks. Substitute inside the single quotes on 
 **1. Accounts and roles - REASONED: no `rabbitmqctl` or broker is available.** Run after migration and reconnecting clients:
 
 ```bash
+# REASONED: accounts and roles; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 sudo rabbitmqctl list_users
 sudo rabbitmqctl list_user_permissions 'app'
 sudo rabbitmqctl list_permissions -p 'app-prod'
@@ -183,6 +363,7 @@ Compare the exposed state's unrestricted `/` grant and excessive operator privil
 **2. Listener and cookie inventory - REASONED: no RabbitMQ node, epmd, or deployed cookie is available.** After the restart:
 
 ```bash
+# REASONED: listener and cookie inventory; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 sudo rabbitmq-diagnostics -s listeners
 ss -tlnp
 epmd -names
@@ -198,6 +379,7 @@ On the conventional installation above, the cookie should be owned by `rabbitmq`
 From an external non-peer host, target the broker's public address:
 
 ```bash
+# REASONED: external reachability; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BROKER_PUBLIC_ADDR'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
@@ -219,6 +401,7 @@ From an external non-peer host, target the broker's public address:
 From hosts allowed by the corresponding firewall rules, target the private address. Execute the cluster, application, and administration commands on their respective allowed hosts if those roles are separate:
 
 ```bash
+# REASONED: allowed-peer controls; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BROKER_PRIVATE_ADDR'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
@@ -243,6 +426,7 @@ From hosts allowed by the corresponding firewall rules, target the private addre
 From an allowed CLI host with its owner-only matching cookie file, also require an authenticated distribution connection to the same broker. Supply its actual node name, such as the deployed `rabbit@` name. This form assumes short node names; add `--longnames` for a deployment using long names. The documented [diagnostics ping](https://www.rabbitmq.com/docs/man/rabbitmq-diagnostics.8) checks authentication as well as reachability:
 
 ```bash
+# REASONED: authenticated distribution ping; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BROKER_NODE_NAME'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
@@ -260,6 +444,7 @@ From an allowed CLI host with its owner-only matching cookie file, also require 
 On the broker itself, confirm that the retained HTTP management listener works with authentication:
 
 ```bash
+# REASONED: loopback management control; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 curl -q -g --noproxy '*' --connect-timeout 5 --max-time 20 \
   -sS --user observer -o /dev/null \
   -w 'loopback http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
@@ -273,6 +458,7 @@ For removed plaintext AMQP, first demonstrate a connection to its old listener i
 **4. Management authentication and roles - REASONED: no broker or management endpoint is available.** From an allowed administration host, use the management certificate's hostname:
 
 ```bash
+# REASONED: management authentication and roles; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_MANAGEMENT_HOSTNAME'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
@@ -313,6 +499,7 @@ An exposed management listener can still require authentication: external reacha
 **5. Mutual TLS - REASONED: no broker, trusted test certificates, or broker logs are available.** From an allowed application host, place `ca.pem`, `client.pem`, and the protected `client.key` in the working directory. Use a valid client certificate with `clientAuth`, not a server-only certificate:
 
 ```bash
+# REASONED: mutual TLS; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_AMQP_HOSTNAME'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
@@ -353,6 +540,7 @@ Keeping stdin open helps expose delayed TLS 1.3 alerts; ten seconds is a timing-
 The positive control declares, binds, publishes, and retrieves a message as `app`. Separate channels test resource denials. The shared queue is durable because RabbitMQ 4.3 disables transient non-exclusive queues by default; an exclusive queue would make the observer's read test ambiguous. The script uses the [documented permission model](https://www.rabbitmq.com/docs/access-control), [channel error codes](https://www.rabbitmq.com/docs/channels), [queue rules](https://www.rabbitmq.com/docs/queues), and [Pika's blocking client](https://pika.readthedocs.io/en/stable/modules/adapters/blocking.html).
 
 ```bash
+# REASONED: AMQP authentication and authorization; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_AMQP_HOSTNAME' 'REPLACE_WITH_EXISTING_UNGRANTED_VHOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
@@ -480,6 +668,7 @@ For the exposed comparison, use an isolated fixture with unrestricted applicatio
 **7. Definitions provisioning and export - REASONED: no blank broker, `rabbitmqadmin`, or exported definitions file is available.** Boot an isolated blank node using the approved file and boot settings from section 1, then run:
 
 ```bash
+# REASONED: definitions provisioning and export; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 sudo rabbitmqctl list_users
 sudo rabbitmqctl list_permissions -p 'app-prod'
 
@@ -505,6 +694,7 @@ Run section 1's reduced export and compare it with a private untransformed expor
 **8. Inter-node and CLI distribution TLS - REASONED: no Erlang runtime, RabbitMQ broker, or multi-node cluster is available.** On an authorized test cluster with the section 6 configuration, from an authorized CLI host holding the matching cookie and substituting the deployed long node name for `rabbit@node1.internal`:
 
 ```bash
+# REASONED: distribution TLS; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 sudo rabbitmq-diagnostics --longnames -n rabbit@node1.internal ping
 sudo rabbitmqctl --longnames -n rabbit@node1.internal cluster_status
 ```
@@ -514,6 +704,7 @@ With plaintext distribution a plaintext CLI authenticates; with TLS required, a 
 **9. Topic-exchange routing-key authorization - REASONED: no RabbitMQ broker or AMQP client is available.** On an authorized broker with an administrator-provisioned `app.shared.topic` exchange, hold the section 1 resource permissions constant and vary only whether the section 7 topic permission exists:
 
 ```bash
+# REASONED: topic routing-key authorization; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 sudo rabbitmqctl list_topic_permissions -p 'app-prod'
 ```
 

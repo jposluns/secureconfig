@@ -1,4 +1,121 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "ee5a802e89059d503943e3aee3b1b63692f35a9271c7e59fe4ad445a67b2db38",
+  "components": {
+    "docs": {
+      "name": "n8n documentation",
+      "basis": "unknown",
+      "sources": {
+        "s2f99613ed917": "https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/use-environment-variables/deployment",
+        "s695f877f7b28": "https://docs.n8n.io/deploy/host-n8n/configure-n8n/security/set-up-ssl",
+        "se8f5861891dc": "https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/configuration-examples/set-a-custom-encryption-key",
+        "s290535cad2ea": "https://docs.n8n.io/deploy/host-n8n/configure-n8n/set-up-task-runners",
+        "se9dd39628347": "https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/configuration-examples/configure-webhook-urls-with-reverse-proxy",
+        "s7ce8bf5b35e8": "https://docs.n8n.io/connect/n8n-api/authentication",
+        "sab23639d9b2a": "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.webhook/",
+        "sa18a30d563bd": "https://docs.n8n.io/integrations/builtin/credentials/webhook/",
+        "scb2b0578a5a2": "https://docs.n8n.io/deploy/host-n8n/configure-n8n/security/manage-security-policies"
+      }
+    },
+    "server": {
+      "name": "n8n listener source",
+      "basis": "n8n@2.40.6",
+      "sources": {
+        "sd3ce4e1b39e5": "https://github.com/n8n-io/n8n/blob/n8n%402.40.6/packages/%40n8n/config/src/index.ts#L164-L171"
+      }
+    },
+    "policy": {
+      "name": "n8n environment policy minimum",
+      "basis": "2.18.0",
+      "sources": {
+        "scb2b0578a5a2": "https://docs.n8n.io/deploy/host-n8n/configure-n8n/security/manage-security-policies"
+      }
+    },
+    "ssrf": {
+      "name": "n8n SSRF filter minimum",
+      "basis": "2.12.0",
+      "sources": {
+        "s907260f38eee": "https://docs.n8n.io/deploy/host-n8n/configure-n8n/security/enable-ssrf-protection"
+      }
+    }
+  },
+  "claims": {
+    "bind-default": {"text": "n8n 2.40.6 defaults N8N_LISTEN_ADDRESS to :: and N8N_PORT to 5678, exposing all interfaces.", "components": ["server"], "sources": ["server:sd3ce4e1b39e5"], "status": "REASONED"},
+    "protocol-default": {"text": "N8N_PROTOCOL defaults http; private deployment sets listener, port and host explicitly.", "components": ["docs"], "sources": ["docs:s2f99613ed917"], "status": "REASONED"},
+    "container-bind": {"text": "Host loopback is for a same-host proxy; container loopback blocks sibling/published access, so use a private network without publication or host-loopback 127.0.0.1:5678:5678.", "components": ["docs"], "sources": ["docs:s2f99613ed917", "docs:s695f877f7b28"], "status": "REASONED"},
+    "other-ports": {"text": "Keep Postgres and task-runner broker ports unpublished and publish only the HTTPS proxy.", "components": ["docs"], "sources": ["docs:s695f877f7b28", "docs:s290535cad2ea"], "status": "REASONED"},
+    "public-url": {"text": "Set N8N_PROTOCOL=https and the full N8N_WEBHOOK_URL; WEBHOOK_URL is deprecated from 2.35.0 but still warns and works.", "components": ["docs"], "sources": ["docs:se9dd39628347"], "status": "REASONED"},
+    "secure-cookie": {"text": "Retain N8N_SECURE_COOKIE=true, its default. Source gap: listed proxy page does not state this default.", "components": ["docs"], "sources": ["docs:se9dd39628347"], "status": "REASONED"},
+    "proxy-hops": {"text": "Set N8N_PROXY_HOPS to the trusted hop count for forwarded client IPs and rate limiting; public webhooks do not require a public editor.", "components": ["docs"], "sources": ["docs:se9dd39628347"], "status": "REASONED"},
+    "native-tls": {"text": "N8N_PROTOCOL=https with N8N_SSL_KEY/N8N_SSL_CERT enables native TLS.", "components": ["docs"], "sources": ["docs:s2f99613ed917", "docs:s695f877f7b28"], "status": "REASONED"},
+    "owner": {"text": "Complete first-run owner setup before publication; an unclaimed instance can be claimed by its first visitor. Source gap: listed security-policy page does not document owner setup.", "components": ["docs"], "sources": ["docs:scb2b0578a5a2"], "status": "REASONED"},
+    "user-mfa": {"text": "Individual users can enable two-factor authentication, subject to version/licence availability.", "components": ["docs"], "sources": ["docs:scb2b0578a5a2"], "status": "REASONED"},
+    "mfa-enforcement": {"text": "Enforce MFA through Settings > Security or N8N_MFA_ENFORCED_ENABLED with N8N_SECURITY_POLICY_MANAGED_BY_ENV; env policy requires 2.18.0+ and self-hosted Business/Enterprise.", "components": ["policy"], "sources": ["policy:scb2b0578a5a2"], "status": "REASONED"},
+    "sso-mfa": {"text": "Instance MFA enforcement excludes SSO logins; enforce their MFA at the identity provider.", "components": ["docs"], "sources": ["docs:scb2b0578a5a2"], "status": "REASONED"},
+    "encryption": {"text": "Stored credentials are encrypted; unset N8N_ENCRYPTION_KEY generates a key under ~/.n8n, not plaintext; losing it makes retained credentials unrecoverable.", "components": ["docs"], "sources": ["docs:se8f5861891dc"], "status": "REASONED"},
+    "key-custody": {"text": "Set the same encryption key across workers/replicas, back it up separately from the database and exclude it from source and images.", "components": ["docs"], "sources": ["docs:se8f5861891dc"], "status": "REASONED"},
+    "webhook-auth": {"text": "Webhook None is open; controlled callers use per-node Basic, Header or JWT auth with the matching credential.", "components": ["docs"], "sources": ["docs:sab23639d9b2a", "docs:sa18a30d563bd"], "status": "REASONED"},
+    "auth-boundaries": {"text": "Editor sessions, /api/v1 with X-N8N-API-KEY and per-node webhook auth are separate boundaries.", "components": ["docs"], "sources": ["docs:s7ce8bf5b35e8", "docs:sab23639d9b2a", "docs:sa18a30d563bd"], "status": "REASONED"},
+    "signature": {"text": "A None webhook must validate the provider signature before downstream processing when callers cannot supply native webhook credentials.", "components": ["docs"], "sources": ["docs:sab23639d9b2a", "docs:sa18a30d563bd"], "status": "REASONED"},
+    "code-execution": {"text": "Code executes JavaScript/Python; Execute Command runs shell commands inside the container under Docker and is disabled by default from 2.0. Source gap: listed task-runner page supports Code, not the Execute Command default.", "components": ["docs"], "sources": ["docs:s290535cad2ea"], "status": "REASONED"},
+    "runners": {"text": "Use hardened external task runners; vendor describes internal mode as insecure by design.", "components": ["docs"], "sources": ["docs:s290535cad2ea"], "status": "REASONED"},
+    "environment": {"text": "Set N8N_BLOCK_ENV_ACCESS_IN_NODE=true to block node access to the service environment, including encryption material. Source gap: listed task-runner page does not document this variable.", "components": ["docs"], "sources": ["docs:s290535cad2ea"], "status": "REASONED"},
+    "js-modules": {"text": "Narrow NODE_FUNCTION_ALLOW_BUILTIN/NODE_FUNCTION_ALLOW_EXTERNAL in external launcher's /etc/n8n-task-runners.json env-overrides; main-container values are overridden.", "components": ["docs"], "sources": ["docs:s290535cad2ea"], "status": "REASONED"},
+    "python-modules": {"text": "Set N8N_RUNNERS_STDLIB_ALLOW/N8N_RUNNERS_EXTERNAL_ALLOW explicitly; wildcard grants broad module access and version-dependent defaults need confirmation.", "components": ["docs"], "sources": ["docs:s290535cad2ea"], "status": "REASONED"},
+    "ssrf": {"text": "Enable N8N_SSRF_PROTECTION_ENABLED from 2.12.0 and restrict network egress; the app filter does not contain arbitrary code/command networking.", "components": ["ssrf"], "sources": ["ssrf:s907260f38eee"], "status": "REASONED"},
+    "verify-inventory": {"text": "Confirm completed owner setup without creating an owner as a probe; ss is local inventory, not firewall/NAT proof; check actual public IPv4/IPv6 paths separately.", "components": ["docs"], "sources": ["docs:s2f99613ed917", "docs:s290535cad2ea"], "status": "REASONED", "verify": [1]},
+    "verify-tls": {"text": "HTTPS reachability tests TLS, not authentication.", "components": ["docs"], "sources": ["docs:s695f877f7b28"], "status": "REASONED", "verify": [1]},
+    "verify-api": {"text": "At the same /api/v1/workflows URL, no key gives native 401 and valid key gives 200 workflow JSON; retain any proxy credentials and feed API key on stdin. Source gap: listed API page documents the header, not these exact status outcomes.", "components": ["docs"], "sources": ["docs:s7ce8bf5b35e8"], "status": "REASONED", "verify": [1]},
+    "verify-editor": {"text": "Confirm editor session login at /rest/login separately; a protected public API does not prove editor protection. Source gap: listed API page does not document /rest/login.", "components": ["docs"], "sources": ["docs:s7ce8bf5b35e8"], "status": "REASONED", "verify": [1]},
+    "verify-webhook": {"text": "Use each production /webhook/ method and valid payload with missing/wrong/valid credentials; Basic/JWT missing is 401, Header missing is 403; verify actions, not status alone. Source gap: listed node/credential pages do not establish the exact refusal codes.", "components": ["docs"], "sources": ["docs:sab23639d9b2a", "docs:sa18a30d563bd"], "status": "REASONED", "verify": [1]},
+    "verify-signature": {"text": "For None plus workflow signature checks, unsigned calls must run no action; 404 from inactive/wrong path/method is not protection.", "components": ["docs"], "sources": ["docs:sab23639d9b2a", "docs:sa18a30d563bd"], "status": "REASONED", "verify": [1]}
+  }
+}
+---
 # n8n: binding, TLS, and MFA
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| bind-default: n8n 2.40.6 defaults N8N_LISTEN_ADDRESS to :: and N8N_PORT to 5678, exposing all interfaces. | n8n listener source n8n@2.40.6 | REASONED |
+| protocol-default: N8N_PROTOCOL defaults http; private deployment sets listener, port and host explicitly. | n8n documentation unknown | REASONED |
+| container-bind: Host loopback is for a same-host proxy; container loopback blocks sibling/published access, so use a private network without publication or host-loopback 127.0.0.1:5678:5678. | n8n documentation unknown | REASONED |
+| other-ports: Keep Postgres and task-runner broker ports unpublished and publish only the HTTPS proxy. | n8n documentation unknown | REASONED |
+| public-url: Set N8N_PROTOCOL=https and the full N8N_WEBHOOK_URL; WEBHOOK_URL is deprecated from 2.35.0 but still warns and works. | n8n documentation unknown | REASONED |
+| secure-cookie: Retain N8N_SECURE_COOKIE=true, its default. Source gap: listed proxy page does not state this default. | n8n documentation unknown | REASONED |
+| proxy-hops: Set N8N_PROXY_HOPS to the trusted hop count for forwarded client IPs and rate limiting; public webhooks do not require a public editor. | n8n documentation unknown | REASONED |
+| native-tls: N8N_PROTOCOL=https with N8N_SSL_KEY/N8N_SSL_CERT enables native TLS. | n8n documentation unknown | REASONED |
+| owner: Complete first-run owner setup before publication; an unclaimed instance can be claimed by its first visitor. Source gap: listed security-policy page does not document owner setup. | n8n documentation unknown | REASONED |
+| user-mfa: Individual users can enable two-factor authentication, subject to version/licence availability. | n8n documentation unknown | REASONED |
+| mfa-enforcement: Enforce MFA through Settings &gt; Security or N8N_MFA_ENFORCED_ENABLED with N8N_SECURITY_POLICY_MANAGED_BY_ENV; env policy requires 2.18.0+ and self-hosted Business/Enterprise. | n8n environment policy minimum 2.18.0 | REASONED |
+| sso-mfa: Instance MFA enforcement excludes SSO logins; enforce their MFA at the identity provider. | n8n documentation unknown | REASONED |
+| encryption: Stored credentials are encrypted; unset N8N_ENCRYPTION_KEY generates a key under ~/.n8n, not plaintext; losing it makes retained credentials unrecoverable. | n8n documentation unknown | REASONED |
+| key-custody: Set the same encryption key across workers/replicas, back it up separately from the database and exclude it from source and images. | n8n documentation unknown | REASONED |
+| webhook-auth: Webhook None is open; controlled callers use per-node Basic, Header or JWT auth with the matching credential. | n8n documentation unknown | REASONED |
+| auth-boundaries: Editor sessions, /api/v1 with X-N8N-API-KEY and per-node webhook auth are separate boundaries. | n8n documentation unknown | REASONED |
+| signature: A None webhook must validate the provider signature before downstream processing when callers cannot supply native webhook credentials. | n8n documentation unknown | REASONED |
+| code-execution: Code executes JavaScript/Python; Execute Command runs shell commands inside the container under Docker and is disabled by default from 2.0. Source gap: listed task-runner page supports Code, not the Execute Command default. | n8n documentation unknown | REASONED |
+| runners: Use hardened external task runners; vendor describes internal mode as insecure by design. | n8n documentation unknown | REASONED |
+| environment: Set N8N_BLOCK_ENV_ACCESS_IN_NODE=true to block node access to the service environment, including encryption material. Source gap: listed task-runner page does not document this variable. | n8n documentation unknown | REASONED |
+| js-modules: Narrow NODE_FUNCTION_ALLOW_BUILTIN/NODE_FUNCTION_ALLOW_EXTERNAL in external launcher's /etc/n8n-task-runners.json env-overrides; main-container values are overridden. | n8n documentation unknown | REASONED |
+| python-modules: Set N8N_RUNNERS_STDLIB_ALLOW/N8N_RUNNERS_EXTERNAL_ALLOW explicitly; wildcard grants broad module access and version-dependent defaults need confirmation. | n8n documentation unknown | REASONED |
+| ssrf: Enable N8N_SSRF_PROTECTION_ENABLED from 2.12.0 and restrict network egress; the app filter does not contain arbitrary code/command networking. | n8n SSRF filter minimum 2.12.0 | REASONED |
+| verify-inventory: Confirm completed owner setup without creating an owner as a probe; ss is local inventory, not firewall/NAT proof; check actual public IPv4/IPv6 paths separately. | n8n documentation unknown | REASONED |
+| verify-tls: HTTPS reachability tests TLS, not authentication. | n8n documentation unknown | REASONED |
+| verify-api: At the same /api/v1/workflows URL, no key gives native 401 and valid key gives 200 workflow JSON; retain any proxy credentials and feed API key on stdin. Source gap: listed API page documents the header, not these exact status outcomes. | n8n documentation unknown | REASONED |
+| verify-editor: Confirm editor session login at /rest/login separately; a protected public API does not prove editor protection. Source gap: listed API page does not document /rest/login. | n8n documentation unknown | REASONED |
+| verify-webhook: Use each production /webhook/ method and valid payload with missing/wrong/valid credentials; Basic/JWT missing is 401, Header missing is 403; verify actions, not status alone. Source gap: listed node/credential pages do not establish the exact refusal codes. | n8n documentation unknown | REASONED |
+| verify-signature: For None plus workflow signature checks, unsigned calls must run no action; 404 from inactive/wrong path/method is not protection. | n8n documentation unknown | REASONED |
+<!-- version-basis:end -->
 
 n8n includes user management (complete the owner setup on first run), but its network defaults deserve attention: `N8N_LISTEN_ADDRESS` defaults to `::` and `N8N_PORT` to `5678` (both as of n8n 2.40.6), so n8n listens on **all interfaces** over plain HTTP.
 
@@ -45,6 +162,7 @@ N8N_SSL_CERT=/path/to/fullchain.pem
 ## 6. Verify
 
 ```bash
+# REASONED: listener, TLS, API and webhook comparisons have no recorded n8n run; no live n8n deployment is available in this read-only review. Expectations follow the listed sources, with sourcing gaps recorded in the claim table.
 # Owner setup must be COMPLETE before the instance is public: an unclaimed n8n hands admin to whoever
 # reaches it first. Confirm the owner exists (the first-run setup wizard no longer appears); do NOT POST
 # owner-creation data to a live instance as a "test".

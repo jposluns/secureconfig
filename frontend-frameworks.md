@@ -1,4 +1,118 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "616490c0a6d8cccb4bffe94d8b31e7b87a79e230b53928a1a893603aa6db0509",
+  "components": {
+    "adapter": {
+      "name": "SvelteKit adapter-node",
+      "basis": "@sveltejs/adapter-node@5.5.7",
+      "sources": {
+        "s011f4e44c91a": "https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/env.js#L46-L50",
+        "s93f13e6b8d31": "https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/index.js#L10-L12",
+        "sd23cac9a730f": "https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/index.js#L57-L60"
+      }
+    },
+    "svelte": {
+      "name": "SvelteKit documentation",
+      "basis": "unknown",
+      "sources": {
+        "sc183fdb68165": "https://svelte.dev/docs/kit/$env-static-public",
+        "s59abf03bae6a": "https://svelte.dev/docs/kit/adapter-node",
+        "s329dda89ba78": "https://svelte.dev/docs/kit/configuration",
+        "se2fdc4fd5885": "https://svelte.dev/docs/kit/server-only-modules"
+      }
+    },
+    "nuxt": {
+      "name": "Nuxt documentation",
+      "basis": "4.x",
+      "sources": {
+        "se2d1e4a2e433": "https://nuxt.com/docs/4.x/directory-structure/server",
+        "s32e447cb5ef4": "https://nuxt.com/docs/4.x/guide/going-further/runtime-config"
+      }
+    },
+    "vite-pin": {
+      "name": "Vite bind source",
+      "basis": "v8.3.1",
+      "sources": {
+        "s4b7c35b93a62": "https://github.com/vitejs/vite/blob/v8.3.1/packages/vite/src/node/utils.ts#L1010-L1016"
+      }
+    },
+    "vite": {
+      "name": "Vite documentation",
+      "basis": "unknown",
+      "sources": {
+        "sae9dd90908fc": "https://vite.dev/config/server-options",
+        "s16927b810cff": "https://vite.dev/guide/cli"
+      }
+    },
+    "grep": {
+      "name": "GNU grep",
+      "basis": "unknown",
+      "sources": {
+        "sea43e82b0753": "https://www.gnu.org/software/grep/manual/html_node/Exit-Status.html",
+        "s2c1251092e66": "https://www.gnu.org/software/grep/manual/html_node/General-Output-Control.html",
+        "sd00017f70dae": "https://www.gnu.org/software/grep/manual/html_node/Matching-Control.html"
+      }
+    }
+  },
+  "claims": {
+    "adapter-bind": {"text": "adapter-node defaults 0.0.0.0:3000 only with SOCKET_PATH unset/empty and no systemd socket; set HOST=127.0.0.1 PORT=3000.", "components": ["adapter", "svelte"], "sources": ["adapter:s011f4e44c91a", "adapter:s93f13e6b8d31", "adapter:sd23cac9a730f", "svelte:s59abf03bae6a"], "status": "REASONED"},
+    "adapter-origin": {"text": "Set ORIGIN to external HTTPS origin; trust PROTOCOL_HEADER/HOST_HEADER only behind a trusted proxy.", "components": ["svelte"], "sources": ["svelte:s59abf03bae6a"], "status": "REASONED"},
+    "adapter-ip": {"text": "ADDRESS_HEADER and XFF_DEPTH configure proxy-derived client IP and require trusted proxy handling.", "components": ["svelte"], "sources": ["svelte:s59abf03bae6a"], "status": "REASONED"},
+    "csrf-check": {"text": "csrf.checkOrigin defaults true, deprecated; checks cross-origin POST/PUT/PATCH/DELETE form content types, not JSON/arbitrary content needing origin/session checks.", "components": ["svelte"], "sources": ["svelte:s329dda89ba78"], "status": "REASONED"},
+    "csrf-trust": {"text": "csrf.trustedOrigins defaults empty; list specific form origins, with wildcard trust discouraged.", "components": ["svelte"], "sources": ["svelte:s329dda89ba78"], "status": "REASONED"},
+    "svelte-public": {"text": "PUBLIC_ via env.publicPrefix exposes static public env values at build; keep secrets out.", "components": ["svelte"], "sources": ["svelte:sc183fdb68165", "svelte:s329dda89ba78"], "status": "REASONED"},
+    "svelte-private": {"text": "Private env modules, .server.js and lib/server are server-only; client import chains, including dynamic imports, fail builds.", "components": ["svelte"], "sources": ["svelte:se2fdc4fd5885"], "status": "REASONED"},
+    "svelte-routes": {"text": "Guide requires checks in page loads, form actions and endpoints rather than a layout; Sources omit a direct routing/auth citation.", "components": ["svelte"], "sources": ["svelte:s329dda89ba78"], "status": "REASONED"},
+    "svelte-handle": {"text": "Guide requires handle to block, not merely attach locals or redirect page navigation, and resource checks near data; Sources omit hook semantics/calling-page qualification.", "components": ["svelte"], "sources": ["svelte:s329dda89ba78"], "status": "REASONED"},
+    "nuxt-handlers": {"text": "Nuxt auto-registers server/api, server/routes and middleware; middleware runs first, but context.auth alone enforces nothing. Throw/end requests or check each handler.", "components": ["nuxt"], "sources": ["nuxt:se2d1e4a2e433"], "status": "REASONED"},
+    "nuxt-auth": {"text": "Nuxt ships no built-in authentication; enforce access server-side, not with client redirects.", "components": ["nuxt"], "sources": ["nuxt:se2d1e4a2e433"], "status": "REASONED"},
+    "nuxt-private": {"text": "Direct runtimeConfig keys are server-only with NUXT_ overrides; rendering or passing to useState can disclose them.", "components": ["nuxt"], "sources": ["nuxt:s32e447cb5ef4"], "status": "REASONED"},
+    "nuxt-public": {"text": "runtimeConfig.public is client-exposed with NUXT_PUBLIC_ overrides, not proxy/cookie configuration.", "components": ["nuxt"], "sources": ["nuxt:s32e447cb5ef4"], "status": "REASONED"},
+    "vite-production": {"text": "Vite dev/preview is development tooling; deploy dist through a production server, CDN or platform.", "components": ["vite"], "sources": ["vite:s16927b810cff"], "status": "REASONED"},
+    "vite-bind": {"text": "Vite 8.3.1 server.host defaults localhost; true/0.0.0.0 exposes all addresses and should not remain beyond trusted-network tests.", "components": ["vite-pin", "vite"], "sources": ["vite-pin:s4b7c35b93a62", "vite:sae9dd90908fc"], "status": "REASONED"},
+    "vite-hosts": {"text": "server.allowedHosts defaults empty with localhost, .localhost and IPs allowed; true disables protection and permits DNS rebinding. Prefer explicit names.", "components": ["vite"], "sources": ["vite:sae9dd90908fc"], "status": "REASONED"},
+    "verify-private": {"text": "Guide expects anonymous /api/private 401; enforcement needs app/server handlers, not client redirects.", "components": ["nuxt", "svelte"], "sources": ["nuxt:se2d1e4a2e433", "svelte:s329dda89ba78"], "status": "REASONED", "verify": [1]},
+    "verify-secret": {"text": "Identify actual build/dist/.output, reject absence, prompt full literal secret and use grep stdin: 0 finding, 1 no match, others errors. Clean does not rule out transformed secrets; input protects argv only.", "components": ["grep"], "sources": ["grep:sea43e82b0753", "grep:s2c1251092e66", "grep:sd00017f70dae"], "status": "REASONED", "verify": [1]},
+    "verify-host": {"text": "Spoofed Host must not be trusted; supplied allowlist reference is Vite-specific.", "components": ["vite"], "sources": ["vite:sae9dd90908fc"], "status": "REASONED", "verify": [1]},
+    "verify-proxy": {"text": "Check Secure cookies and HTTPS redirects with SvelteKit ORIGIN; verify Nuxt for its preset/platform, not NUXT_PUBLIC_.", "components": ["svelte", "nuxt"], "sources": ["svelte:s59abf03bae6a", "nuxt:s32e447cb5ef4"], "status": "REASONED", "verify": [1]}
+  }
+}
+---
 # Full-stack JS frameworks: SvelteKit, Nuxt, Vite
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| adapter-bind: adapter-node defaults 0.0.0.0:3000 only with SOCKET_PATH unset/empty and no systemd socket; set HOST=127.0.0.1 PORT=3000. | SvelteKit adapter-node @sveltejs/adapter-node@5.5.7; SvelteKit documentation unknown | REASONED |
+| adapter-origin: Set ORIGIN to external HTTPS origin; trust PROTOCOL_HEADER/HOST_HEADER only behind a trusted proxy. | SvelteKit documentation unknown | REASONED |
+| adapter-ip: ADDRESS_HEADER and XFF_DEPTH configure proxy-derived client IP and require trusted proxy handling. | SvelteKit documentation unknown | REASONED |
+| csrf-check: csrf.checkOrigin defaults true, deprecated; checks cross-origin POST/PUT/PATCH/DELETE form content types, not JSON/arbitrary content needing origin/session checks. | SvelteKit documentation unknown | REASONED |
+| csrf-trust: csrf.trustedOrigins defaults empty; list specific form origins, with wildcard trust discouraged. | SvelteKit documentation unknown | REASONED |
+| svelte-public: PUBLIC_ via env.publicPrefix exposes static public env values at build; keep secrets out. | SvelteKit documentation unknown | REASONED |
+| svelte-private: Private env modules, .server.js and lib/server are server-only; client import chains, including dynamic imports, fail builds. | SvelteKit documentation unknown | REASONED |
+| svelte-routes: Guide requires checks in page loads, form actions and endpoints rather than a layout; Sources omit a direct routing/auth citation. | SvelteKit documentation unknown | REASONED |
+| svelte-handle: Guide requires handle to block, not merely attach locals or redirect page navigation, and resource checks near data; Sources omit hook semantics/calling-page qualification. | SvelteKit documentation unknown | REASONED |
+| nuxt-handlers: Nuxt auto-registers server/api, server/routes and middleware; middleware runs first, but context.auth alone enforces nothing. Throw/end requests or check each handler. | Nuxt documentation 4.x | REASONED |
+| nuxt-auth: Nuxt ships no built-in authentication; enforce access server-side, not with client redirects. | Nuxt documentation 4.x | REASONED |
+| nuxt-private: Direct runtimeConfig keys are server-only with NUXT_ overrides; rendering or passing to useState can disclose them. | Nuxt documentation 4.x | REASONED |
+| nuxt-public: runtimeConfig.public is client-exposed with NUXT_PUBLIC_ overrides, not proxy/cookie configuration. | Nuxt documentation 4.x | REASONED |
+| vite-production: Vite dev/preview is development tooling; deploy dist through a production server, CDN or platform. | Vite documentation unknown | REASONED |
+| vite-bind: Vite 8.3.1 server.host defaults localhost; true/0.0.0.0 exposes all addresses and should not remain beyond trusted-network tests. | Vite bind source v8.3.1; Vite documentation unknown | REASONED |
+| vite-hosts: server.allowedHosts defaults empty with localhost, .localhost and IPs allowed; true disables protection and permits DNS rebinding. Prefer explicit names. | Vite documentation unknown | REASONED |
+| verify-private: Guide expects anonymous /api/private 401; enforcement needs app/server handlers, not client redirects. | Nuxt documentation 4.x; SvelteKit documentation unknown | REASONED |
+| verify-secret: Identify actual build/dist/.output, reject absence, prompt full literal secret and use grep stdin: 0 finding, 1 no match, others errors. Clean does not rule out transformed secrets; input protects argv only. | GNU grep unknown | REASONED |
+| verify-host: Spoofed Host must not be trusted; supplied allowlist reference is Vite-specific. | Vite documentation unknown | REASONED |
+| verify-proxy: Check Secure cookies and HTTPS redirects with SvelteKit ORIGIN; verify Nuxt for its preset/platform, not NUXT_PUBLIC_. | SvelteKit documentation unknown; Nuxt documentation 4.x | REASONED |
+<!-- version-basis:end -->
 
 SvelteKit, Nuxt, and Vite-based apps built by AI assistants inherit the same traps as [nextjs.md](nextjs.md): a server bind that can default wide open (SvelteKit's Node adapter binds `0.0.0.0` as of adapter-node 5.5.7, though Vite's dev server defaults to `localhost` as of Vite 8.3.1), a proxy that has to be explicitly trusted before secure cookies and correct origins work, and a public-env prefix that ships anything given it straight to the browser. Each framework also has more than one server entry point (endpoints, server routes, load functions), and a check placed in only one of them leaves the others open, exactly as with Next.js layouts versus Server Actions.
 
@@ -41,6 +155,8 @@ Both are development tooling, not a production server: the `vite preview` docs s
 `server.host` defaults to `'localhost'` (as of Vite 8.3.1); setting it to `true` or `0.0.0.0` makes the dev server listen on all addresses, including the LAN, which is fine for testing from a phone on a trusted network but should not be left on elsewhere. `server.allowedHosts` defaults to `[]`, which still auto-permits localhost, `.localhost`, and IP addresses; setting it to `true` disables the check entirely, and the docs warn this "allows any website to send requests to your dev server and download your source code and content" (DNS rebinding). Prefer an explicit hostname allowlist over `true`.
 
 ## Verify
+
+REASONED: following block; private-route denial, client-secret scanning, Host handling and proxy cookies/redirects. No deployed framework application or run outcome is recorded here; expectations are reasoned from the guide and its cited framework and grep documentation.
 
 ```bash
 curl -q -si https://app.example.com/api/private | head -1   # 401 with no session cookie, on all three frameworks

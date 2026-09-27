@@ -1,4 +1,120 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "7818b12bbc9a7750cc8a6c7f2a4656b60c99881a6bf4cc543f7633ca9c8a6985",
+  "components": {
+    "nginx": {
+      "name": "nginx documentation",
+      "basis": "unknown",
+      "sources": {
+        "s0e5162d1ce2b": "https://nginx.org/en/docs/http/ngx_http_access_module.html",
+        "sbd17bad53c9d": "https://nginx.org/en/docs/http/ngx_http_autoindex_module.html",
+        "s40bdf1af1596": "https://nginx.org/en/docs/http/ngx_http_core_module.html"
+      }
+    },
+    "apache": {
+      "name": "Apache documentation",
+      "basis": "2.4",
+      "sources": {
+        "s24f06763d14a": "https://httpd.apache.org/docs/2.4/mod/core.html#directorymatch",
+        "se24e9bbc0443": "https://httpd.apache.org/docs/2.4/mod/core.html#filesmatch",
+        "s97468bf1f299": "https://httpd.apache.org/docs/2.4/mod/core.html#options",
+        "s7313b1b624d5": "https://httpd.apache.org/docs/2.4/mod/mod_authz_core.html",
+        "sef5ff46eddf7": "https://httpd.apache.org/docs/2.4/mod/mod_autoindex.html"
+      }
+    },
+    "caddy": {
+      "name": "Caddy documentation",
+      "basis": "unknown",
+      "sources": {
+        "se9ab71afc4ba": "https://caddyserver.com/docs/caddyfile/directives/respond",
+        "s38b1b78ce980": "https://caddyserver.com/docs/caddyfile/matchers"
+      }
+    },
+    "next": {
+      "name": "Next.js documentation",
+      "basis": "unknown",
+      "sources": {
+        "sb98bee5b61c8": "https://nextjs.org/docs/pages/guides/environment-variables"
+      }
+    },
+    "vite": {
+      "name": "Vite documentation",
+      "basis": "unknown",
+      "sources": {
+        "s3fc0892e0f58": "https://vite.dev/guide/env-and-mode"
+      }
+    },
+    "cra": {
+      "name": "Create React App documentation",
+      "basis": "unknown",
+      "sources": {
+        "scfb24624addd": "https://create-react-app.dev/docs/adding-custom-environment-variables/"
+      }
+    }
+  },
+  "claims": {
+    "nginx-dotfiles": {"text": "Deny dot-prefixed paths by regex; ACME longest-prefix ^~ location skips regex matching.", "components": ["nginx"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596"], "status": "REASONED"},
+    "nginx-backups": {"text": "Dotfile regex misses dump.sql/backup.tar.gz; keep exports outside root or add explicit sql/dump/bak/tar.gz deny.", "components": ["nginx"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596"], "status": "REASONED"},
+    "apache-directories": {"text": "DirectoryMatch denies dot-prefixed filesystem segments; exact well-known exemption permits the whole directory, not well-known-backup lookalikes.", "components": ["apache"], "sources": ["apache:s24f06763d14a", "apache:s7313b1b624d5"], "status": "REASONED"},
+    "apache-files": {"text": "FilesMatch uses basenames, not enough for .git/config; retain for top-level dotfiles and sql/dump/bak files.", "components": ["apache"], "sources": ["apache:se24e9bbc0443", "apache:s7313b1b624d5"], "status": "REASONED"},
+    "apache-listing": {"text": "Guide records Debian/Ubuntu Indexes FollowSymLinks and DirectoryIndex defaults without a packaging citation; index-less directories can expose other filenames.", "components": ["apache"], "sources": ["apache:s97468bf1f299", "apache:sef5ff46eddf7"], "status": "REASONED"},
+    "apache-forbidden": {"text": "mod_autoindex hides 403 subrequests unless ShowForbidden is enabled; denies do not protect unrelated archives/CSV exports.", "components": ["apache"], "sources": ["apache:sef5ff46eddf7"], "status": "REASONED"},
+    "apache-options": {"text": "Options -Indexes removes listing, preserving inherited options; Apache 2.4 rejects mixing relative +/- and bare options.", "components": ["apache"], "sources": ["apache:s97468bf1f299"], "status": "REASONED"},
+    "nginx-listing": {"text": "nginx autoindex defaults off.", "components": ["nginx"], "sources": ["nginx:sbd17bad53c9d"], "status": "REASONED"},
+    "caddy-listing": {"text": "Guide says Caddy lists only with file_server browse; Sources omit a file_server reference.", "components": ["caddy"], "sources": ["caddy:se9ab71afc4ba", "caddy:s38b1b78ce980"], "status": "REASONED"},
+    "caddy-deny": {"text": "Caddy rules return 404 only for /.git/*, /.env and /.env.*; extend coverage or keep other sensitive files outside the served tree.", "components": ["caddy"], "sources": ["caddy:se9ab71afc4ba", "caddy:s38b1b78ce980"], "status": "REASONED"},
+    "caddy-acme": {"text": "Broader Caddy denies must exempt legitimate .well-known paths; independent ACME handling lacks a direct Sources citation.", "components": ["caddy"], "sources": ["caddy:se9ab71afc4ba", "caddy:s38b1b78ce980"], "status": "REASONED"},
+    "backup-storage": {"text": "Keep SQL dumps/backups outside document roots or in object storage; filename denies are only a backstop.", "components": ["nginx", "apache", "caddy"], "sources": ["nginx:s40bdf1af1596", "apache:s24f06763d14a", "caddy:s38b1b78ce980"], "status": "REASONED"},
+    "next-public": {"text": "NEXT_PUBLIC_ embeds values in browser JavaScript; keep provider keys server-side behind backend routes.", "components": ["next"], "sources": ["next:sb98bee5b61c8"], "status": "REASONED"},
+    "vite-public": {"text": "VITE_ embeds values in browser JavaScript; reserve for public values.", "components": ["vite"], "sources": ["vite:s3fc0892e0f58"], "status": "REASONED"},
+    "cra-public": {"text": "Deprecated Create React App embeds REACT_APP_ values in browser builds.", "components": ["cra"], "sources": ["cra:scfb24624addd"], "status": "REASONED"},
+    "source-maps": {"text": "Guide warns against external/inline maps for private code; removing sourceMappingURL does not unpublish deployed maps. Sources omit a direct map reference.", "components": ["next", "vite"], "sources": ["next:sb98bee5b61c8", "vite:s3fc0892e0f58"], "status": "REASONED"},
+    "verify-dotfiles": {"text": "Plant a real readable dotfile exclusively; expect 403/404 without planted content. Missing plants are inconclusive, other paths need real files; remove only created probes.", "components": ["nginx", "apache", "caddy"], "sources": ["nginx:s0e5162d1ce2b", "apache:s7313b1b624d5", "caddy:se9ab71afc4ba"], "status": "REASONED", "verify": [1]},
+    "verify-listing": {"text": "Existing nonempty index-less uploads must not produce 200 autoindex; absent/unwritable directories are inconclusive.", "components": ["apache"], "sources": ["apache:s97468bf1f299", "apache:sef5ff46eddf7"], "status": "REASONED", "verify": [1]},
+    "verify-acme": {"text": "Real readable challenge file should return probe over HTTPS and HTTP:80; Sources do not directly cite HTTP-01.", "components": ["nginx", "apache"], "sources": ["nginx:s40bdf1af1596", "nginx:s0e5162d1ce2b", "apache:s24f06763d14a"], "status": "REASONED", "verify": [1]},
+    "verify-lookalike": {"text": "Real .well-known-backup/config must be denied; bare 404 without a planted file proves nothing.", "components": ["apache"], "sources": ["apache:s24f06763d14a", "apache:s7313b1b624d5"], "status": "REASONED", "verify": [1]},
+    "verify-bundle": {"text": "Scan built client output for credential patterns/literal secrets; grep 0 match, 1 no match, 2 error. Clean does not exclude transformed secrets; no grep reference supplied.", "components": ["next", "vite", "cra"], "sources": ["next:sb98bee5b61c8", "vite:s3fc0892e0f58", "cra:scfb24624addd"], "status": "REASONED", "verify": [1]},
+    "verify-backup": {"text": "Known previously deployed backup URLs should return 404.", "components": ["nginx", "apache", "caddy"], "sources": ["nginx:s40bdf1af1596", "apache:s24f06763d14a", "caddy:s38b1b78ce980"], "status": "REASONED", "verify": [1]}
+  }
+}
+---
 # Files a web server must never serve: dotfiles, .git, dumps, backups, and client secrets
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| nginx-dotfiles: Deny dot-prefixed paths by regex; ACME longest-prefix ^~ location skips regex matching. | nginx documentation unknown | REASONED |
+| nginx-backups: Dotfile regex misses dump.sql/backup.tar.gz; keep exports outside root or add explicit sql/dump/bak/tar.gz deny. | nginx documentation unknown | REASONED |
+| apache-directories: DirectoryMatch denies dot-prefixed filesystem segments; exact well-known exemption permits the whole directory, not well-known-backup lookalikes. | Apache documentation 2.4 | REASONED |
+| apache-files: FilesMatch uses basenames, not enough for .git/config; retain for top-level dotfiles and sql/dump/bak files. | Apache documentation 2.4 | REASONED |
+| apache-listing: Guide records Debian/Ubuntu Indexes FollowSymLinks and DirectoryIndex defaults without a packaging citation; index-less directories can expose other filenames. | Apache documentation 2.4 | REASONED |
+| apache-forbidden: mod_autoindex hides 403 subrequests unless ShowForbidden is enabled; denies do not protect unrelated archives/CSV exports. | Apache documentation 2.4 | REASONED |
+| apache-options: Options -Indexes removes listing, preserving inherited options; Apache 2.4 rejects mixing relative +/- and bare options. | Apache documentation 2.4 | REASONED |
+| nginx-listing: nginx autoindex defaults off. | nginx documentation unknown | REASONED |
+| caddy-listing: Guide says Caddy lists only with file_server browse; Sources omit a file_server reference. | Caddy documentation unknown | REASONED |
+| caddy-deny: Caddy rules return 404 only for /.git/*, /.env and /.env.*; extend coverage or keep other sensitive files outside the served tree. | Caddy documentation unknown | REASONED |
+| caddy-acme: Broader Caddy denies must exempt legitimate .well-known paths; independent ACME handling lacks a direct Sources citation. | Caddy documentation unknown | REASONED |
+| backup-storage: Keep SQL dumps/backups outside document roots or in object storage; filename denies are only a backstop. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation unknown | REASONED |
+| next-public: NEXT_PUBLIC_ embeds values in browser JavaScript; keep provider keys server-side behind backend routes. | Next.js documentation unknown | REASONED |
+| vite-public: VITE_ embeds values in browser JavaScript; reserve for public values. | Vite documentation unknown | REASONED |
+| cra-public: Deprecated Create React App embeds REACT_APP_ values in browser builds. | Create React App documentation unknown | REASONED |
+| source-maps: Guide warns against external/inline maps for private code; removing sourceMappingURL does not unpublish deployed maps. Sources omit a direct map reference. | Next.js documentation unknown; Vite documentation unknown | REASONED |
+| verify-dotfiles: Plant a real readable dotfile exclusively; expect 403/404 without planted content. Missing plants are inconclusive, other paths need real files; remove only created probes. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation unknown | REASONED |
+| verify-listing: Existing nonempty index-less uploads must not produce 200 autoindex; absent/unwritable directories are inconclusive. | Apache documentation 2.4 | REASONED |
+| verify-acme: Real readable challenge file should return probe over HTTPS and HTTP:80; Sources do not directly cite HTTP-01. | nginx documentation unknown; Apache documentation 2.4 | REASONED |
+| verify-lookalike: Real .well-known-backup/config must be denied; bare 404 without a planted file proves nothing. | Apache documentation 2.4 | REASONED |
+| verify-bundle: Scan built client output for credential patterns/literal secrets; grep 0 match, 1 no match, 2 error. Clean does not exclude transformed secrets; no grep reference supplied. | Next.js documentation unknown; Vite documentation unknown; Create React App documentation unknown | REASONED |
+| verify-backup: Known previously deployed backup URLs should return 404. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation unknown | REASONED |
+<!-- version-basis:end -->
 
 Scanners request `/.env`, `/.git/config`, `/config.php.bak`, and `/db.sql` continuously, and any of these
 under a web root hands over credentials or source regardless of what the application itself authenticates.
@@ -87,6 +203,8 @@ unpublish a `.map` you already deployed. Do not ship a source map, or leave one 
 meant to be public.
 
 ## Verify
+
+REASONED: following block; planted-file denial, directory listing, ACME/lookalike paths and client-bundle scans. No configured web-server deployment or run outcome is recorded here; expectations are reasoned from the guide and its cited server and framework sources.
 
 ```bash
 # Plant a real file at a denied dotfile path so a 403/404 proves the RULE fired, not that the file is

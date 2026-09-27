@@ -1,4 +1,195 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-27",
+  "documentation_checked": "2026-09",
+  "body_sha256": "5be85c88fe20d36d397ca2ac0f7fa7b739f2529627f21caa5f6db89497421497",
+  "components": {
+    "http": {
+      "name": "Go net/http documentation",
+      "basis": "unknown",
+      "sources": {
+        "s75405f80decc": "https://pkg.go.dev/net/http",
+        "s6ab9e32b7795": "https://pkg.go.dev/net/http#Server"
+      }
+    },
+    "tls": {
+      "name": "Go crypto/tls documentation",
+      "basis": "unknown",
+      "sources": {
+        "se2152a9c28fc": "https://pkg.go.dev/crypto/tls"
+      }
+    },
+    "x509": {
+      "name": "Go certificate-store qualification",
+      "basis": "1.27",
+      "sources": {
+        "scbe5f68840c1": "https://pkg.go.dev/crypto/x509"
+      }
+    },
+    "bcrypt": {
+      "name": "Go bcrypt documentation",
+      "basis": "unknown",
+      "sources": {
+        "s99bb1157593c": "https://pkg.go.dev/golang.org/x/crypto/bcrypt"
+      }
+    },
+    "argon": {
+      "name": "Go Argon2 documentation",
+      "basis": "unknown",
+      "sources": {
+        "s95fa46eac674": "https://pkg.go.dev/golang.org/x/crypto/argon2"
+      }
+    },
+    "rate": {
+      "name": "Go rate documentation",
+      "basis": "unknown",
+      "sources": {
+        "s5c3fdae5a0af": "https://pkg.go.dev/golang.org/x/time/rate"
+      }
+    },
+    "oidc": {
+      "name": "go-oidc documentation",
+      "basis": "v3",
+      "sources": {
+        "s60cc1d7a8fe6": "https://pkg.go.dev/github.com/coreos/go-oidc/v3/oidc"
+      }
+    },
+    "pprof": {
+      "name": "Go pprof documentation",
+      "basis": "unknown",
+      "sources": {
+        "s0246034dddd1": "https://pkg.go.dev/net/http/pprof"
+      }
+    },
+    "headers": {
+      "name": "Go header-count qualification",
+      "basis": "1.27",
+      "sources": {
+        "s66a370c419d9": "https://pkg.go.dev/net/http#MaxBytesReader"
+      }
+    },
+    "deadlines": {
+      "name": "Go per-request deadline minimum",
+      "basis": "1.20+",
+      "sources": {
+        "s251e0db38b90": "https://pkg.go.dev/net/http#ResponseController"
+      }
+    },
+    "expvar": {
+      "name": "Go expvar documentation",
+      "basis": "unknown",
+      "sources": {
+        "se49529035a0c": "https://pkg.go.dev/expvar"
+      }
+    },
+    "linux": {
+      "name": "Linux port-threshold documentation",
+      "basis": "unknown",
+      "sources": {
+        "s12e5a0911ec2": "https://docs.kernel.org/networking/ip-sysctl.html#ip-unprivileged-port-start"
+      }
+    },
+    "request": {
+      "name": "Go Request.Host source",
+      "basis": "1.27.0",
+      "sources": {
+        "sfdeabbeca746": "https://pkg.go.dev/net/http@go1.27.0#Request"
+      }
+    }
+  },
+  "claims": {
+    "tls": {"text": "Direct TLS listens on :443 using the leaf-plus-intermediates certificate and private key; ReadHeaderTimeout is 10 seconds.", "components": ["http", "tls"], "sources": ["http:s75405f80decc", "tls:se2152a9c28fc"], "status": "REASONED"},
+    "redirect": {"text": "Port :80 sends a 301 to https:// plus the fixed canonicalHost and an origin-form request path; empty or non-path RequestURI values fall back to /. Never build the destination from r.Host.", "components": ["http", "request"], "sources": ["http:s75405f80decc", "request:sfdeabbeca746"], "status": "REASONED"},
+    "tls-min": {"text": "crypto/tls defaults to TLS 1.2 minimum as of September 2026; explicitly set MinVersion=VersionTLS12.", "components": ["tls"], "sources": ["tls:se2152a9c28fc"], "status": "REASONED"},
+    "privilege": {"text": "Linux privileged-port threshold defaults to 1024 but is configurable per namespace; root or CAP_NET_BIND_SERVICE is needed below it in the usual configuration.", "components": ["linux"], "sources": ["linux:s12e5a0911ec2"], "status": "REASONED"},
+    "proxy": {"text": "Bind 127.0.0.1:8080 behind a TLS proxy; net/http has no proxy trust setting, so accept forwarded headers only from the isolated, overwriting proxy.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED"},
+    "proxy-headers": {"text": "Set HSTS and other security headers at the proxy per the linked headers guide.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED"},
+    "bcrypt": {"text": "Use bcrypt cost 12; DefaultCost is 10, inputs over 72 bytes are rejected and CompareHashAndPassword returns nil on match.", "components": ["bcrypt"], "sources": ["bcrypt:s99bb1157593c"], "status": "REASONED"},
+    "argon": {"text": "IDKey returns raw bytes; retain random salt and parameters. RFC 9106 choices are time=1/memory=2 GiB/threads=4 or time=3/memory=64 MiB/threads=4.", "components": ["argon"], "sources": ["argon:s95fa46eac674"], "status": "REASONED"},
+    "cookies": {"text": "Set session cookie Path=/, Secure, HttpOnly and SameSite=Lax.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED"},
+    "login-limit": {"text": "A limiter every three seconds with burst five allows about 20/minute; use separate limiters keyed by trusted client address for per-client limits.", "components": ["rate"], "sources": ["rate:s5c3fdae5a0af"], "status": "REASONED"},
+    "tokens": {"text": "Load tokens from the environment and generate them per authentication.md; token generation and environment handling lack a listed source.", "components": ["oidc"], "sources": ["oidc:s60cc1d7a8fe6"], "status": "REASONED"},
+    "oidc": {"text": "NewProvider discovers the issuer; Verifier with ClientID checks ID-token signature, issuer, audience and expiry; apply separate allowlists.", "components": ["oidc"], "sources": ["oidc:s60cc1d7a8fe6"], "status": "REASONED"},
+    "mfa": {"text": "Use pquerna/otp or a fronting identity layer; TOTP and MFA lack a listed source.", "components": ["oidc"], "sources": ["oidc:s60cc1d7a8fe6"], "status": "REASONED"},
+    "client-validation": {"text": "InsecureSkipVerify accepts any certificate and hostname unless custom VerifyConnection/VerifyPeerCertificate checks replace validation.", "components": ["tls"], "sources": ["tls:se2152a9c28fc"], "status": "REASONED"},
+    "client-ca": {"text": "Use SystemCertPool plus a checked AppendCertsFromPEM result and RootCAs, or override CA locations with SSL_CERT_FILE/SSL_CERT_DIR.", "components": ["tls", "x509"], "sources": ["tls:se2152a9c28fc", "x509:scbe5f68840c1"], "status": "REASONED"},
+    "platform-ca": {"text": "Go 1.27 certificate-file/directory overrides bypass macOS/Windows platform verification unless GODEBUG=x509sslcertoverrideplatform=0 is also set.", "components": ["x509"], "sources": ["x509:scbe5f68840c1"], "status": "REASONED"},
+    "pprof": {"text": "Importing pprof registers /debug/pprof/ on DefaultServeMux; profiles, traces, cmdline and forced GC can disclose data or exhaust resources.", "components": ["pprof"], "sources": ["pprof:s0246034dddd1"], "status": "REASONED"},
+    "expvar": {"text": "Importing expvar registers /debug/vars with cmdline and memstats on DefaultServeMux.", "components": ["expvar"], "sources": ["expvar:se49529035a0c"], "status": "REASONED"},
+    "diag-bind": {"text": "Imports do not start listeners; nil handlers serve DefaultServeMux. Give the app its own mux and diagnostics a separate 127.0.0.1:6060 mux, never public proxy routing.", "components": ["http", "pprof", "expvar"], "sources": ["http:s75405f80decc", "pprof:s0246034dddd1", "expvar:se49529035a0c"], "status": "REASONED"},
+    "body-limit": {"text": "Wrap the body with MaxBytesReader before decoding; the example 1 MiB policy requires explicit MaxBytesError handling to return 413.", "components": ["headers"], "sources": ["headers:s66a370c419d9"], "status": "REASONED"},
+    "header-size": {"text": "MaxHeaderBytes defaults to 1 MiB for request line and headers, independently of body limits.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED"},
+    "header-count": {"text": "Go 1.27 adds MaxHeaderValueCount with default 500; this is separate from body limits.", "components": ["headers"], "sources": ["headers:s66a370c419d9"], "status": "REASONED"},
+    "read-timeout": {"text": "ReadTimeout bounds the whole request including body; example 30 seconds, zero or negative disables it.", "components": ["http"], "sources": ["http:s6ab9e32b7795"], "status": "REASONED"},
+    "write-timeout": {"text": "WriteTimeout bounds writing; example 60 seconds, zero or negative disables it.", "components": ["http"], "sources": ["http:s6ab9e32b7795"], "status": "REASONED"},
+    "header-timeout": {"text": "ReadHeaderTimeout bounds headers; example 10 seconds, zero falls back to ReadTimeout and negative disables it.", "components": ["http"], "sources": ["http:s6ab9e32b7795"], "status": "REASONED"},
+    "idle-timeout": {"text": "IdleTimeout bounds keep-alive idle time; example 60 seconds, zero falls back to ReadTimeout and negative disables it.", "components": ["http"], "sources": ["http:s6ab9e32b7795"], "status": "REASONED"},
+    "redirect-timeout": {"text": "Apply deadlines to the redirect server too; ListenAndServe sets none.", "components": ["http"], "sources": ["http:s75405f80decc", "http:s6ab9e32b7795"], "status": "REASONED"},
+    "request-deadlines": {"text": "For long uploads/streaming, use generous server budgets and Go 1.20+ ResponseController read/write deadlines, handling unsupported operations.", "components": ["deadlines"], "sources": ["deadlines:s251e0db38b90"], "status": "REASONED"},
+    "headers": {"text": "Install secure(mux) before response commit for nosniff and TLS-only HSTS max-age=63072000 with includeSubDomains.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED"},
+    "http2": {"text": "HTTPS enables HTTP/2 automatically; Server.HTTP2 tunes it on current releases; retain maintained cipher/curve defaults.", "components": ["http", "tls"], "sources": ["http:s75405f80decc", "tls:se2152a9c28fc"], "status": "REASONED"},
+    "verify-redirect": {"text": "HTTP should return 301 with an HTTPS Location.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED", "verify": [1]},
+    "verify-tls": {"text": "HTTPS must succeed without -k.", "components": ["http", "tls"], "sources": ["http:s75405f80decc", "tls:se2152a9c28fc"], "status": "REASONED", "verify": [1]},
+    "verify-auth": {"text": "The guide expects /api to return 401/403 without credentials; it records no valid-credential positive control.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED", "verify": [1]},
+    "verify-bind": {"text": "Inspect every listener for loopback-only application binding behind the proxy.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED", "verify": [1]},
+    "verify-diag-local": {"text": "A local 6060/debug/pprof/ response of 200 establishes local availability only.", "components": ["pprof"], "sources": ["pprof:s0246034dddd1"], "status": "REASONED", "verify": [1]},
+    "verify-diag-route": {"text": "The public application /debug/pprof/ route should return 404, never 200.", "components": ["http", "pprof"], "sources": ["http:s75405f80decc", "pprof:s0246034dddd1"], "status": "REASONED", "verify": [1]},
+    "verify-diag-external": {"text": "From outside the server network, the actual public IP on 6060 must be unreachable; the guide expects refusal or timeout, never 200.", "components": ["http", "pprof"], "sources": ["http:s75405f80decc", "pprof:s0246034dddd1"], "status": "REASONED", "verify": [2]},
+    "request-host": {"text": "Go 1.27.0 Request.Host is supplied by the client; a fixed canonical hostname plus an origin-form path prevents forged Host or crafted request targets from selecting the redirect destination.", "components": ["request"], "sources": ["request:sfdeabbeca746"], "status": "REASONED"}
+  }
+}
+---
 # Go: TLS and authentication with net/http
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| tls: Direct TLS listens on :443 using the leaf-plus-intermediates certificate and private key; ReadHeaderTimeout is 10 seconds. | Go net/http documentation unknown; Go crypto/tls documentation unknown | REASONED |
+| redirect: Port :80 sends a 301 to https:// plus the fixed canonicalHost and an origin-form request path; empty or non-path RequestURI values fall back to /. Never build the destination from r.Host. | Go net/http documentation unknown; Go Request.Host source 1.27.0 | REASONED |
+| tls-min: crypto/tls defaults to TLS 1.2 minimum as of September 2026; explicitly set MinVersion=VersionTLS12. | Go crypto/tls documentation unknown | REASONED |
+| privilege: Linux privileged-port threshold defaults to 1024 but is configurable per namespace; root or CAP_NET_BIND_SERVICE is needed below it in the usual configuration. | Linux port-threshold documentation unknown | REASONED |
+| proxy: Bind 127.0.0.1:8080 behind a TLS proxy; net/http has no proxy trust setting, so accept forwarded headers only from the isolated, overwriting proxy. | Go net/http documentation unknown | REASONED |
+| proxy-headers: Set HSTS and other security headers at the proxy per the linked headers guide. | Go net/http documentation unknown | REASONED |
+| bcrypt: Use bcrypt cost 12; DefaultCost is 10, inputs over 72 bytes are rejected and CompareHashAndPassword returns nil on match. | Go bcrypt documentation unknown | REASONED |
+| argon: IDKey returns raw bytes; retain random salt and parameters. RFC 9106 choices are time=1/memory=2 GiB/threads=4 or time=3/memory=64 MiB/threads=4. | Go Argon2 documentation unknown | REASONED |
+| cookies: Set session cookie Path=/, Secure, HttpOnly and SameSite=Lax. | Go net/http documentation unknown | REASONED |
+| login-limit: A limiter every three seconds with burst five allows about 20/minute; use separate limiters keyed by trusted client address for per-client limits. | Go rate documentation unknown | REASONED |
+| tokens: Load tokens from the environment and generate them per authentication.md; token generation and environment handling lack a listed source. | go-oidc documentation v3 | REASONED |
+| oidc: NewProvider discovers the issuer; Verifier with ClientID checks ID-token signature, issuer, audience and expiry; apply separate allowlists. | go-oidc documentation v3 | REASONED |
+| mfa: Use pquerna/otp or a fronting identity layer; TOTP and MFA lack a listed source. | go-oidc documentation v3 | REASONED |
+| client-validation: InsecureSkipVerify accepts any certificate and hostname unless custom VerifyConnection/VerifyPeerCertificate checks replace validation. | Go crypto/tls documentation unknown | REASONED |
+| client-ca: Use SystemCertPool plus a checked AppendCertsFromPEM result and RootCAs, or override CA locations with SSL_CERT_FILE/SSL_CERT_DIR. | Go crypto/tls documentation unknown; Go certificate-store qualification 1.27 | REASONED |
+| platform-ca: Go 1.27 certificate-file/directory overrides bypass macOS/Windows platform verification unless GODEBUG=x509sslcertoverrideplatform=0 is also set. | Go certificate-store qualification 1.27 | REASONED |
+| pprof: Importing pprof registers /debug/pprof/ on DefaultServeMux; profiles, traces, cmdline and forced GC can disclose data or exhaust resources. | Go pprof documentation unknown | REASONED |
+| expvar: Importing expvar registers /debug/vars with cmdline and memstats on DefaultServeMux. | Go expvar documentation unknown | REASONED |
+| diag-bind: Imports do not start listeners; nil handlers serve DefaultServeMux. Give the app its own mux and diagnostics a separate 127.0.0.1:6060 mux, never public proxy routing. | Go net/http documentation unknown; Go pprof documentation unknown; Go expvar documentation unknown | REASONED |
+| body-limit: Wrap the body with MaxBytesReader before decoding; the example 1 MiB policy requires explicit MaxBytesError handling to return 413. | Go header-count qualification 1.27 | REASONED |
+| header-size: MaxHeaderBytes defaults to 1 MiB for request line and headers, independently of body limits. | Go net/http documentation unknown | REASONED |
+| header-count: Go 1.27 adds MaxHeaderValueCount with default 500; this is separate from body limits. | Go header-count qualification 1.27 | REASONED |
+| read-timeout: ReadTimeout bounds the whole request including body; example 30 seconds, zero or negative disables it. | Go net/http documentation unknown | REASONED |
+| write-timeout: WriteTimeout bounds writing; example 60 seconds, zero or negative disables it. | Go net/http documentation unknown | REASONED |
+| header-timeout: ReadHeaderTimeout bounds headers; example 10 seconds, zero falls back to ReadTimeout and negative disables it. | Go net/http documentation unknown | REASONED |
+| idle-timeout: IdleTimeout bounds keep-alive idle time; example 60 seconds, zero falls back to ReadTimeout and negative disables it. | Go net/http documentation unknown | REASONED |
+| redirect-timeout: Apply deadlines to the redirect server too; ListenAndServe sets none. | Go net/http documentation unknown | REASONED |
+| request-deadlines: For long uploads/streaming, use generous server budgets and Go 1.20+ ResponseController read/write deadlines, handling unsupported operations. | Go per-request deadline minimum 1.20+ | REASONED |
+| headers: Install secure(mux) before response commit for nosniff and TLS-only HSTS max-age=63072000 with includeSubDomains. | Go net/http documentation unknown | REASONED |
+| http2: HTTPS enables HTTP/2 automatically; Server.HTTP2 tunes it on current releases; retain maintained cipher/curve defaults. | Go net/http documentation unknown; Go crypto/tls documentation unknown | REASONED |
+| verify-redirect: HTTP should return 301 with an HTTPS Location. | Go net/http documentation unknown | REASONED |
+| verify-tls: HTTPS must succeed without -k. | Go net/http documentation unknown; Go crypto/tls documentation unknown | REASONED |
+| verify-auth: The guide expects /api to return 401/403 without credentials; it records no valid-credential positive control. | Go net/http documentation unknown | REASONED |
+| verify-bind: Inspect every listener for loopback-only application binding behind the proxy. | Go net/http documentation unknown | REASONED |
+| verify-diag-local: A local 6060/debug/pprof/ response of 200 establishes local availability only. | Go pprof documentation unknown | REASONED |
+| verify-diag-route: The public application /debug/pprof/ route should return 404, never 200. | Go net/http documentation unknown; Go pprof documentation unknown | REASONED |
+| verify-diag-external: From outside the server network, the actual public IP on 6060 must be unreachable; the guide expects refusal or timeout, never 200. | Go net/http documentation unknown; Go pprof documentation unknown | REASONED |
+| request-host: Go 1.27.0 Request.Host is supplied by the client; a fixed canonical hostname plus an origin-form path prevents forged Host or crafted request targets from selecting the redirect destination. | Go Request.Host source 1.27.0 | REASONED |
+<!-- version-basis:end -->
 
 Preferred production layout: bind the Go server to `127.0.0.1` and terminate TLS in a reverse proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)) or behind [cloudflare.md](cloudflare.md). `net/http` can also terminate TLS itself, shown below. Certificates: [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).
 
@@ -151,7 +342,7 @@ func secure(next http.Handler) http.Handler {
 
 Defer the full header catalogue and values to [headers.md](headers.md); do not send HSTS over plain HTTP. Install it with `srv.Handler = secure(mux)` (or wrap your router); defining the wrapper alone adds no headers. (Go enables HTTP/2 automatically for HTTPS servers, and a `Server.HTTP2` field (`HTTP2Config`) tunes it on current releases, but leave the maintained cipher and curve defaults and the TLS 1.2 minimum from section 1 alone unless you have a specific requirement.)
 
-## 9. Verify
+## 9. Verify (REASONED: TLS, authentication, listener and diagnostic expectations follow the Go Sources below; no deployment run or outcome is recorded in this guide. This metadata-only review has no deployed Go service, proxy or outside-network probe host.)
 
 ```bash
 curl -q -sI http://example.com/         # expect 301 with a https:// Location
@@ -181,14 +372,14 @@ curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/debug/pprof/   
 - net/http (Server, ListenAndServeTLS, Cookie, SameSite, Redirect, Transport.TLSClientConfig): https://pkg.go.dev/net/http
 - net/http Request.Host (Go 1.27.0, supplied by the client): https://pkg.go.dev/net/http@go1.27.0#Request
 - crypto/tls (Config.MinVersion, InsecureSkipVerify, RootCAs): https://pkg.go.dev/crypto/tls
-- crypto/x509 (SystemCertPool, SSL_CERT_FILE, AppendCertsFromPEM): https://pkg.go.dev/crypto/x509
+- crypto/x509 (SystemCertPool, SSL_CERT_FILE, AppendCertsFromPEM) (Go 1.27): https://pkg.go.dev/crypto/x509
 - golang.org/x/crypto/bcrypt: https://pkg.go.dev/golang.org/x/crypto/bcrypt
 - golang.org/x/crypto/argon2: https://pkg.go.dev/golang.org/x/crypto/argon2
 - golang.org/x/time/rate: https://pkg.go.dev/golang.org/x/time/rate
 - go-oidc: https://pkg.go.dev/github.com/coreos/go-oidc/v3/oidc
 - net/http/pprof and expvar register on DefaultServeMux: https://pkg.go.dev/net/http/pprof
-- net/http MaxBytesReader, MaxBytesError, Server.MaxHeaderBytes / MaxHeaderValueCount: https://pkg.go.dev/net/http#MaxBytesReader
+- net/http MaxBytesReader, MaxBytesError, Server.MaxHeaderBytes / MaxHeaderValueCount (Go 1.27): https://pkg.go.dev/net/http#MaxBytesReader
 - net/http Server timeouts (ReadTimeout, WriteTimeout, IdleTimeout, ReadHeaderTimeout): https://pkg.go.dev/net/http#Server
-- net/http ResponseController (per-request deadlines): https://pkg.go.dev/net/http#ResponseController
+- net/http ResponseController (per-request deadlines) (Go 1.20+): https://pkg.go.dev/net/http#ResponseController
 - expvar (registers /debug/vars on the default mux): https://pkg.go.dev/expvar
 - Linux ip-sysctl, ip_unprivileged_port_start (the privileged-port threshold is configurable): https://docs.kernel.org/networking/ip-sysctl.html#ip-unprivileged-port-start

@@ -1,4 +1,112 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "c534ca39e3bda70610a30c73aacbdf0ef966daba2ed745d249763fae77b7a245",
+  "components": {
+    "haproxy": {
+      "name": "HAProxy",
+      "basis": "3.0",
+      "sources": {
+        "s5792e6ff4990": "https://docs.haproxy.org/3.0/configuration.html",
+        "s9c32621d6493": "https://docs.haproxy.org/3.0/management.html"
+      }
+    },
+    "hsts": {
+      "name": "HAProxy http-after-response minimum",
+      "basis": "2.2+",
+      "sources": {
+        "s5792e6ff4990": "https://docs.haproxy.org/3.0/configuration.html"
+      }
+    },
+    "docs": {
+      "name": "Supporting documentation",
+      "basis": "unknown",
+      "sources": {
+        "s2be90eb936bd": "https://www.haproxy.org/",
+        "sae992a8ac3a7": "https://www.haproxy.com/documentation/haproxy-configuration-tutorials/alerts-and-monitoring/statistics/",
+        "s192d42dd9feb": "https://www.authelia.com/integration/proxies/haproxy/",
+        "s529b0eabe2ed": "https://ssl-config.mozilla.org/"
+      }
+    }
+  },
+  "claims": {
+    "scope": {"text": "Examples target a maintained HAProxy 3.0 installation and treat frontend, stats, runtime API and direct backend as separate surfaces.", "components": ["haproxy", "docs"], "sources": ["haproxy:s5792e6ff4990", "haproxy:s9c32621d6493", "docs:s2be90eb936bd"], "status": "REASONED"},
+    "pem": {"text": "Use matching chain/key in a combined PEM, built via a root-only temporary file and rename; separate key loading is also supported.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
+    "renewal": {"text": "Rebuild the combined PEM on certificate renewal via a certbot deploy hook and reload HAProxy; Sources omit certbot hook syntax.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990", "haproxy:s9c32621d6493"], "status": "REASONED"},
+    "tls": {"text": "Frontend :443 loads the PEM with ssl and ssl-min-ver TLSv1.2; :80 redirects to HTTPS with 301.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
+    "ciphers": {"text": "ssl-default-bind-ciphers governs TLS 1.2 and -ciphersuites TLS 1.3; Mozilla is policy guidance, not HAProxy syntax authority.", "components": ["haproxy", "docs"], "sources": ["haproxy:s5792e6ff4990", "docs:s529b0eabe2ed"], "status": "REASONED"},
+    "privileges": {"text": "Preserve service hardening; root-started workers drop to haproxy user/group and chroot into a provisioned root-owned directory.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
+    "timeouts": {"text": "Set connect 5s, client/server 30s and http-request 10s timeouts.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
+    "hsts": {"text": "http-after-response (HAProxy 2.2+) covers generated 401/413 responses that http-response misses; includeSubDomains requires HTTPS on every affected subdomain.", "components": ["haproxy", "hsts"], "sources": ["haproxy:s5792e6ff4990", "hsts:s5792e6ff4990"], "status": "REASONED"},
+    "backend": {"text": "Example backend is plaintext 127.0.0.1:3000 with health checks; keep it private.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
+    "remote-backend": {"text": "Remote TLS backends require certificate verification, a trusted CA and verifyhost matching the backend name.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
+    "basic": {"text": "Use a crypt(3)-hashed userlist and http_auth condition; $6$ works on glibc Linux, while insecure-password stores plaintext. Sources omit openssl passwd -6.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
+    "mtls": {"text": "For machine access, bind verify required with ca-file requires trusted client certificates.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
+    "mfa": {"text": "Basic is single-factor; Authelia uses its HAProxy Lua integration, or use Cloudflare Access for human MFA.", "components": ["docs"], "sources": ["docs:s192d42dd9feb"], "status": "REASONED"},
+    "maxconn": {"text": "Global maxconn 4096 caps per-process concurrent connections; frontend maxconn 2000 caps that frontend.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
+    "body-guard": {"text": "No single request-body-size directive: req.body_size reads advertised Content-Length; deny_status 413 rejects values above 10485760 without buffering.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
+    "body-buffering": {"text": "Do not add http-buffer-request for this guard: it waits for a complete body or full request buffer.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
+    "chunked": {"text": "Chunked req.body_size reflects available data, so this unbuffered guard does not meaningfully bound chunked uploads; enforce the real limit in the app.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
+    "stats-default": {"text": "Stats is disabled until configured and enabling it adds no authentication; inventory every loaded config.", "components": ["haproxy", "docs"], "sources": ["haproxy:s5792e6ff4990", "docs:sae992a8ac3a7"], "status": "REASONED"},
+    "stats-admin": {"text": "stats admin permits backend enable/disable/drain; omit it for monitoring and keep any admin page private.", "components": ["haproxy", "docs"], "sources": ["haproxy:s5792e6ff4990", "docs:sae992a8ac3a7"], "status": "REASONED"},
+    "stats-auth": {"text": "Bind the example stats listener to TLS 127.0.0.1:8404 at /stats and use hashed-userlist auth instead of cleartext stats auth.", "components": ["haproxy", "docs"], "sources": ["haproxy:s5792e6ff4990", "docs:sae992a8ac3a7"], "status": "REASONED"},
+    "runtime-default": {"text": "Runtime API is not enabled by default; default command level is operator, and level admin grants authority rather than authentication.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990", "haproxy:s9c32621d6493"], "status": "REASONED"},
+    "runtime-isolation": {"text": "Keep /run/haproxy/admin.sock a root-owned mode-600 Unix socket; HTTP stats auth does not protect an exposed runtime TCP socket.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990", "haproxy:s9c32621d6493"], "status": "REASONED"},
+    "verify-config": {"text": "haproxy -c precedes reload; the guide records shell checks but no HAProxy runtime or exposed/fixed response demonstration.", "components": ["haproxy"], "sources": ["haproxy:s9c32621d6493"], "status": "REASONED", "verify": [1]},
+    "verify-redirect": {"text": "HTTP must return 301 with an HTTPS Location; transport/TLS/DNS errors are inconclusive.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED", "verify": [1]},
+    "verify-auth": {"text": "On one protected resource, absent and wrong credentials yield 401 while valid credentials reach the expected app response; credentials travel via stdin.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED", "verify": [1]},
+    "verify-size": {"text": "With valid credentials, 1M succeeds and 11M returns 413; remove only the deny rule in isolation to attribute refusal. These Content-Length probes do not test chunked bodies.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED", "verify": [1]},
+    "verify-backend": {"text": "Inventory all listeners: backend 3000 must be loopback-only even if frontend checks pass, and the runtime endpoint must not be TCP.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990", "haproxy:s9c32621d6493"], "status": "REASONED", "verify": [1]},
+    "verify-stats": {"text": "Probe the 8404 stats listener itself via loopback with the certificate hostname: no credentials refused, valid credentials return statistics.", "components": ["haproxy", "docs"], "sources": ["haproxy:s5792e6ff4990", "docs:sae992a8ac3a7"], "status": "REASONED", "verify": [2]},
+    "verify-mtls": {"text": "With verify required, no/untrusted client certificates must fail TLS and trusted ones pass; readable cert/key controls avoid local errors, and Basic may still return 401.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED", "verify": [2]},
+    "verify-runtime": {"text": "Check root/root mode 600 and root show info success versus nobody permission denial; reported admin command level is not proof of access control.", "components": ["haproxy"], "sources": ["haproxy:s9c32621d6493", "haproxy:s5792e6ff4990"], "status": "REASONED", "verify": [2]}
+  }
+}
+---
 # HAProxy: TLS termination and authentication
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| scope: Examples target a maintained HAProxy 3.0 installation and treat frontend, stats, runtime API and direct backend as separate surfaces. | HAProxy 3.0; Supporting documentation unknown | REASONED |
+| pem: Use matching chain/key in a combined PEM, built via a root-only temporary file and rename; separate key loading is also supported. | HAProxy 3.0 | REASONED |
+| renewal: Rebuild the combined PEM on certificate renewal via a certbot deploy hook and reload HAProxy; Sources omit certbot hook syntax. | HAProxy 3.0 | REASONED |
+| tls: Frontend :443 loads the PEM with ssl and ssl-min-ver TLSv1.2; :80 redirects to HTTPS with 301. | HAProxy 3.0 | REASONED |
+| ciphers: ssl-default-bind-ciphers governs TLS 1.2 and -ciphersuites TLS 1.3; Mozilla is policy guidance, not HAProxy syntax authority. | HAProxy 3.0; Supporting documentation unknown | REASONED |
+| privileges: Preserve service hardening; root-started workers drop to haproxy user/group and chroot into a provisioned root-owned directory. | HAProxy 3.0 | REASONED |
+| timeouts: Set connect 5s, client/server 30s and http-request 10s timeouts. | HAProxy 3.0 | REASONED |
+| hsts: http-after-response (HAProxy 2.2+) covers generated 401/413 responses that http-response misses; includeSubDomains requires HTTPS on every affected subdomain. | HAProxy 3.0; HAProxy http-after-response minimum 2.2+ | REASONED |
+| backend: Example backend is plaintext 127.0.0.1:3000 with health checks; keep it private. | HAProxy 3.0 | REASONED |
+| remote-backend: Remote TLS backends require certificate verification, a trusted CA and verifyhost matching the backend name. | HAProxy 3.0 | REASONED |
+| basic: Use a crypt(3)-hashed userlist and http_auth condition; $6$ works on glibc Linux, while insecure-password stores plaintext. Sources omit openssl passwd -6. | HAProxy 3.0 | REASONED |
+| mtls: For machine access, bind verify required with ca-file requires trusted client certificates. | HAProxy 3.0 | REASONED |
+| mfa: Basic is single-factor; Authelia uses its HAProxy Lua integration, or use Cloudflare Access for human MFA. | Supporting documentation unknown | REASONED |
+| maxconn: Global maxconn 4096 caps per-process concurrent connections; frontend maxconn 2000 caps that frontend. | HAProxy 3.0 | REASONED |
+| body-guard: No single request-body-size directive: req.body_size reads advertised Content-Length; deny_status 413 rejects values above 10485760 without buffering. | HAProxy 3.0 | REASONED |
+| body-buffering: Do not add http-buffer-request for this guard: it waits for a complete body or full request buffer. | HAProxy 3.0 | REASONED |
+| chunked: Chunked req.body_size reflects available data, so this unbuffered guard does not meaningfully bound chunked uploads; enforce the real limit in the app. | HAProxy 3.0 | REASONED |
+| stats-default: Stats is disabled until configured and enabling it adds no authentication; inventory every loaded config. | HAProxy 3.0; Supporting documentation unknown | REASONED |
+| stats-admin: stats admin permits backend enable/disable/drain; omit it for monitoring and keep any admin page private. | HAProxy 3.0; Supporting documentation unknown | REASONED |
+| stats-auth: Bind the example stats listener to TLS 127.0.0.1:8404 at /stats and use hashed-userlist auth instead of cleartext stats auth. | HAProxy 3.0; Supporting documentation unknown | REASONED |
+| runtime-default: Runtime API is not enabled by default; default command level is operator, and level admin grants authority rather than authentication. | HAProxy 3.0 | REASONED |
+| runtime-isolation: Keep /run/haproxy/admin.sock a root-owned mode-600 Unix socket; HTTP stats auth does not protect an exposed runtime TCP socket. | HAProxy 3.0 | REASONED |
+| verify-config: haproxy -c precedes reload; the guide records shell checks but no HAProxy runtime or exposed/fixed response demonstration. | HAProxy 3.0 | REASONED |
+| verify-redirect: HTTP must return 301 with an HTTPS Location; transport/TLS/DNS errors are inconclusive. | HAProxy 3.0 | REASONED |
+| verify-auth: On one protected resource, absent and wrong credentials yield 401 while valid credentials reach the expected app response; credentials travel via stdin. | HAProxy 3.0 | REASONED |
+| verify-size: With valid credentials, 1M succeeds and 11M returns 413; remove only the deny rule in isolation to attribute refusal. These Content-Length probes do not test chunked bodies. | HAProxy 3.0 | REASONED |
+| verify-backend: Inventory all listeners: backend 3000 must be loopback-only even if frontend checks pass, and the runtime endpoint must not be TCP. | HAProxy 3.0 | REASONED |
+| verify-stats: Probe the 8404 stats listener itself via loopback with the certificate hostname: no credentials refused, valid credentials return statistics. | HAProxy 3.0; Supporting documentation unknown | REASONED |
+| verify-mtls: With verify required, no/untrusted client certificates must fail TLS and trusted ones pass; readable cert/key controls avoid local errors, and Basic may still return 401. | HAProxy 3.0 | REASONED |
+| verify-runtime: Check root/root mode 600 and root show info success versus nobody permission denial; reported admin command level is not proof of access control. | HAProxy 3.0 | REASONED |
+<!-- version-basis:end -->
 
 HAProxy's public frontend, its stats interface, its runtime API, and any directly reachable backend are separate exposure surfaces; protect and verify each one you enable. These examples target a maintained HAProxy 3.0 installation.
 
@@ -220,7 +328,7 @@ sudo -u nobody socat - /run/haproxy/admin.sock < /dev/null         # unauthorize
 
 ## Sources (checked September 2026)
 
-- HAProxy 3.0 Configuration Manual (`bind ssl crt`/`verify`, `ssl-default-bind-options`/`-ciphers`/`-ciphersuites`, `maxconn`, `req.body_size`, `http-request deny deny_status`, `http-after-response`, `timeout http-request`, `stats enable`/`auth`/`admin`, `user`/`group`/`chroot`): https://docs.haproxy.org/3.0/configuration.html
+- HAProxy 3.0 Configuration Manual (`bind ssl crt`/`verify`, `ssl-default-bind-options`/`-ciphers`/`-ciphersuites`, `maxconn`, `req.body_size`, `http-request deny deny_status`, `http-after-response`, `timeout http-request`, `stats enable`/`auth`/`admin`, `user`/`group`/`chroot`) (http-after-response: HAProxy 2.2+): https://docs.haproxy.org/3.0/configuration.html
 - HAProxy 3.0 Management Guide (runtime API over the `stats socket`, command levels, reload): https://docs.haproxy.org/3.0/management.html
 - HAProxy supported releases: https://www.haproxy.org/
 - HAProxy statistics dashboard (`stats enable`/`auth`/`admin` capabilities): https://www.haproxy.com/documentation/haproxy-configuration-tutorials/alerts-and-monitoring/statistics/

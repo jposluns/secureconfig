@@ -1,4 +1,107 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "2979402af8c954d876d58cce26cf5d234970bf89fd110348da3cd4e352c2d2e9",
+  "components": {
+    "node": {
+      "name": "Node.js documentation",
+      "basis": "unknown",
+      "sources": {
+        "s87db42190978": "https://nodejs.org/api/https.html",
+        "sdb035b84e308": "https://nodejs.org/api/http.html"
+      }
+    },
+    "express": {
+      "name": "Express proxy documentation",
+      "basis": "unknown",
+      "sources": {
+        "s2acbdbd05858": "https://expressjs.com/en/guide/behind-proxies.html"
+      }
+    },
+    "session": {
+      "name": "express-session documentation",
+      "basis": "unknown",
+      "sources": {
+        "safd9f9d15304": "https://expressjs.com/en/resources/middleware/session/"
+      }
+    },
+    "helmet": {
+      "name": "Helmet documentation",
+      "basis": "unknown",
+      "sources": {
+        "sc1865315478e": "https://helmet.js.org/"
+      }
+    },
+    "rate": {
+      "name": "express-rate-limit minimum",
+      "basis": "v8",
+      "sources": {
+        "s303dcc57a0df": "https://express-rate-limit.mintlify.app/reference/changelog"
+      }
+    }
+  },
+  "claims": {
+    "tls": {"text": "Direct HTTPS uses a certificate plus chain and private key on all-interface 443.", "components": ["node"], "sources": ["node:s87db42190978"], "status": "REASONED"},
+    "redirect": {"text": "All-interface 80 redirects with 301 to required PUBLIC_HOST; only origin-form request paths are appended.", "components": ["node"], "sources": ["node:sdb035b84e308"], "status": "REASONED"},
+    "bind": {"text": "Same-host proxy uses 127.0.0.1; managed ingress uses platform-required addresses and ports with edge TLS and application auth. Platform mappings are cross-guide guidance, not covered by listed Sources.", "components": ["node", "express"], "sources": ["node:s87db42190978", "express:s2acbdbd05858"], "status": "REASONED"},
+    "privilege": {"text": "Ports below 1024 require root or CAP_NET_BIND_SERVICE as stated; listed Sources do not establish this operating-system qualification.", "components": ["node"], "sources": ["node:s87db42190978"], "status": "REASONED"},
+    "proxy": {"text": "Trust loopback or an exact remote proxy address/subnet; true and variable-length hop paths permit forged client IP, host and scheme unless headers are overwritten.", "components": ["express"], "sources": ["express:s2acbdbd05858"], "status": "REASONED"},
+    "headers": {"text": "Install helmet() for security headers including HSTS.", "components": ["helmet"], "sources": ["helmet:sc1865315478e"], "status": "REASONED"},
+    "password": {"text": "Prefer argon2id for new apps; existing bcrypt systems use hash cost 12 and compare. Password-library APIs are not covered by listed Sources.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED"},
+    "session-secret": {"text": "Load a long random SESSION_SECRET from the environment.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED"},
+    "session-save": {"text": "Set resave=false and saveUninitialized=false.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED"},
+    "cookies": {"text": "Set Secure, HttpOnly, SameSite=lax and an eight-hour cookie maxAge in milliseconds.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED"},
+    "store": {"text": "Default MemoryStore is development-only, leaks memory and cannot scale past one process; supply a production store.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED"},
+    "expiry": {"text": "No cookie maximum age is set by default; set cookie.maxAge.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED"},
+    "login-limit": {"text": "Use a 20-request, 15-minute login limit; v8 or newer defaults to IPv6 /56 grouping, closing the v7 rotation bypass; pair IP limits with account controls.", "components": ["rate"], "sources": ["rate:s303dcc57a0df"], "status": "REASONED"},
+    "tokens": {"text": "Load API tokens from process.env and compare with crypto.timingSafeEqual; these APIs are not covered by listed Sources.", "components": ["node"], "sources": ["node:s87db42190978"], "status": "REASONED"},
+    "mfa": {"text": "Use otplib plus qrcode for TOTP enrolment or a fronting identity layer; these cross-references are not covered by listed Sources.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED"},
+    "tls-validation": {"text": "Never disable validation with NODE_TLS_REJECT_UNAUTHORIZED=0 process-wide or rejectUnauthorized=false per connection/shared agent; the environment-variable rule lacks a listed source.", "components": ["node"], "sources": ["node:s87db42190978"], "status": "REASONED"},
+    "client-ca": {"text": "Use NODE_EXTRA_CA_CERTS for an internal CA; this variable is not covered by listed Sources.", "components": ["node"], "sources": ["node:s87db42190978"], "status": "REASONED"},
+    "verify-redirect": {"text": "HTTP should return 301 with an HTTPS Location.", "components": ["node"], "sources": ["node:sdb035b84e308"], "status": "REASONED", "verify": [1]},
+    "verify-tls": {"text": "HTTPS must succeed without -k and show Helmet headers.", "components": ["node", "helmet"], "sources": ["node:s87db42190978", "helmet:sc1865315478e"], "status": "REASONED", "verify": [1]},
+    "verify-auth": {"text": "A real protected route denies anonymous requests with 401/403 and accepts a valid session with 200; either app or fronting auth may enforce the denial.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED", "verify": [1]},
+    "verify-bind": {"text": "Inspect every listener for loopback behind a same-host proxy or the managed platform address and port.", "components": ["node", "express"], "sources": ["node:s87db42190978", "express:s2acbdbd05858"], "status": "REASONED", "verify": [1]},
+    "verify-proxy": {"text": "Temporary /whoami must not echo forged X-Forwarded-For; this checks req.ip only and an overwriting proxy can mask excessive trust.", "components": ["express"], "sources": ["express:s2acbdbd05858"], "status": "REASONED", "verify": [1]}
+  }
+}
+---
 # Node.js and Express: TLS and authentication
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| tls: Direct HTTPS uses a certificate plus chain and private key on all-interface 443. | Node.js documentation unknown | REASONED |
+| redirect: All-interface 80 redirects with 301 to required PUBLIC_HOST; only origin-form request paths are appended. | Node.js documentation unknown | REASONED |
+| bind: Same-host proxy uses 127.0.0.1; managed ingress uses platform-required addresses and ports with edge TLS and application auth. Platform mappings are cross-guide guidance, not covered by listed Sources. | Node.js documentation unknown; Express proxy documentation unknown | REASONED |
+| privilege: Ports below 1024 require root or CAP_NET_BIND_SERVICE as stated; listed Sources do not establish this operating-system qualification. | Node.js documentation unknown | REASONED |
+| proxy: Trust loopback or an exact remote proxy address/subnet; true and variable-length hop paths permit forged client IP, host and scheme unless headers are overwritten. | Express proxy documentation unknown | REASONED |
+| headers: Install helmet() for security headers including HSTS. | Helmet documentation unknown | REASONED |
+| password: Prefer argon2id for new apps; existing bcrypt systems use hash cost 12 and compare. Password-library APIs are not covered by listed Sources. | express-session documentation unknown | REASONED |
+| session-secret: Load a long random SESSION_SECRET from the environment. | express-session documentation unknown | REASONED |
+| session-save: Set resave=false and saveUninitialized=false. | express-session documentation unknown | REASONED |
+| cookies: Set Secure, HttpOnly, SameSite=lax and an eight-hour cookie maxAge in milliseconds. | express-session documentation unknown | REASONED |
+| store: Default MemoryStore is development-only, leaks memory and cannot scale past one process; supply a production store. | express-session documentation unknown | REASONED |
+| expiry: No cookie maximum age is set by default; set cookie.maxAge. | express-session documentation unknown | REASONED |
+| login-limit: Use a 20-request, 15-minute login limit; v8 or newer defaults to IPv6 /56 grouping, closing the v7 rotation bypass; pair IP limits with account controls. | express-rate-limit minimum v8 | REASONED |
+| tokens: Load API tokens from process.env and compare with crypto.timingSafeEqual; these APIs are not covered by listed Sources. | Node.js documentation unknown | REASONED |
+| mfa: Use otplib plus qrcode for TOTP enrolment or a fronting identity layer; these cross-references are not covered by listed Sources. | express-session documentation unknown | REASONED |
+| tls-validation: Never disable validation with NODE_TLS_REJECT_UNAUTHORIZED=0 process-wide or rejectUnauthorized=false per connection/shared agent; the environment-variable rule lacks a listed source. | Node.js documentation unknown | REASONED |
+| client-ca: Use NODE_EXTRA_CA_CERTS for an internal CA; this variable is not covered by listed Sources. | Node.js documentation unknown | REASONED |
+| verify-redirect: HTTP should return 301 with an HTTPS Location. | Node.js documentation unknown | REASONED |
+| verify-tls: HTTPS must succeed without -k and show Helmet headers. | Node.js documentation unknown; Helmet documentation unknown | REASONED |
+| verify-auth: A real protected route denies anonymous requests with 401/403 and accepts a valid session with 200; either app or fronting auth may enforce the denial. | express-session documentation unknown | REASONED |
+| verify-bind: Inspect every listener for loopback behind a same-host proxy or the managed platform address and port. | Node.js documentation unknown; Express proxy documentation unknown | REASONED |
+| verify-proxy: Temporary /whoami must not echo forged X-Forwarded-For; this checks req.ip only and an overwriting proxy can mask excessive trust. | Express proxy documentation unknown | REASONED |
+<!-- version-basis:end -->
 
 Preferred production layout: bind the Node app to `127.0.0.1` and terminate TLS in a reverse proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)) or behind [cloudflare.md](cloudflare.md). On a managed platform the platform terminates TLS at its edge and you bind the address it requires, not `127.0.0.1` ([paas.md](paas.md)). Node can also terminate TLS itself, shown below. Get a certificate per [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).
 
@@ -99,7 +202,7 @@ MFA: add TOTP with [otplib](https://github.com/yeojz/otplib) plus the [qrcode](h
 - Never set `NODE_TLS_REJECT_UNAUTHORIZED=0`, which disables certificate validation process-wide, and never pass `rejectUnauthorized: false`, which disables it for that connection and any connection sharing an agent configured with it.
 - For an internal CA or self-signed server, point Node at the CA instead: `NODE_EXTRA_CA_CERTS=/path/ca.crt` (see [self-signed.md](self-signed.md)).
 
-## 5. Verify
+## 5. Verify (REASONED: TLS, headers, authentication, listener and proxy-header expectations follow the Sources below and linked deployment guidance; no deployment run or outcome is recorded in this guide. This metadata-only review has no deployed Node application, proxy or managed ingress to test.)
 
 ```bash
 curl -q -g -sI --noproxy '*' http://example.com/    # expect 301 with an https:// Location
