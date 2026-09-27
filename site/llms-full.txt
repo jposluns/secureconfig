@@ -28671,7 +28671,7 @@ An authenticated user without permission on a resource gets `403`; a missing or 
 
 ## Sources (checked September 2026)
 
-- MLflow CSRF-key file input: [global `--env-file` option and existing-environment precedence](https://mlflow.org/docs/latest/api_reference/cli.html#mlflow), [v3.16.1 auth factory](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/auth/__init__.py#L6008-L6021), and [v3.16.1 worker environment](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/__init__.py#L400-L401).
+- MLflow CSRF-key file input: [global `--env-file` option and existing-environment precedence](https://mlflow.org/docs/latest/api_reference/cli.html#mlflow), [v3.16.1 auth factory](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/auth/__init__.py#L6008-L6021), and [v3.16.1 worker environment](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/__init__.py#L401-L402).
 - MLflow authentication with username and password (`--app-name basic-auth`, default admin credentials, `basic_auth.ini` keys, `MLFLOW_AUTH_CONFIG_PATH`, `MLFLOW_FLASK_SERVER_SECRET_KEY`, client variables, 403 on missing permission): https://mlflow.org/docs/latest/self-hosting/security/basic-http-auth/
 - MLflow authentication REST API (`2.0/mlflow/users/update-password` request fields): https://mlflow.org/docs/latest/api_reference/auth/rest-api.html
 - `mlflow server` CLI reference (`--host` default 127.0.0.1, `--port` 5000, `--app-name`, `--allowed-hosts`, `--cors-allowed-origins`, `--serve-artifacts`): https://mlflow.org/docs/latest/api_reference/cli.html

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "00d4855d6dd6bfee5b5eaecf0594b2a43417a0504498977bb3dee3dcf55dc15f",
+  "body_sha256": "616932f018d721011c5a9a6ffb7f0f456de56ff2666d0211d86fd9d8d23e18f7",
   "components": {
     "docs": {
       "name": "MLflow documentation",
@@ -24,7 +24,7 @@ version_basis: {
         "sf7285d252e29": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/utils/cli_args.py#L162-L180",
         "sa3993a9b625f": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L369-L541",
         "sd775f10c4d07": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/auth/__init__.py#L6008-L6021",
-        "sbc864216e3da": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/__init__.py#L400-L401"
+        "s349a81b9478e": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/__init__.py#L401-L402"
       }
     },
     "middleware-min": {
@@ -63,7 +63,7 @@ version_basis: {
     "auth-app": {"text": "Install mlflow[auth] and run --app-name basic-auth; client username/password variables alone enable no server authentication. The September 2026 documentation has no experimental label.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
     "csrf-key": {"text": "Provision a long random MLFLOW_FLASK_SERVER_SECRET_KEY identical on every replica through a protected server.env file, mode 0600, with protected directories and no other-account ACL access; keep file and backups out of source control.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
     "env-file": {"text": "Global --env-file loads dotenv before the server command without overriding existing environment; clear inherited key/config-path variables and require a readable regular non-symlink file before launching.", "components": ["docs"], "sources": ["docs:s559e7a8271b9"], "status": "REASONED"},
-    "key-exposure": {"text": "Only the file path reaches the launch command; MLflow v3.16.1 loads the key into its environment and forwards it to workers, retaining same-account/root memory and inheriting-process environment exposure.", "components": ["source", "docs"], "sources": ["source:sd775f10c4d07", "source:sbc864216e3da", "docs:s559e7a8271b9"], "status": "REASONED"},
+    "key-exposure": {"text": "Only the file path reaches the launch command; MLflow v3.16.1 loads the key into its environment and forwards it to workers, retaining same-account/root memory and inheriting-process environment exposure.", "components": ["source", "docs"], "sources": ["source:sd775f10c4d07", "source:s349a81b9478e", "docs:s559e7a8271b9"], "status": "REASONED"},
     "admin-bootstrap": {"text": "No default admin password: first start requires at least 12 characters from MLFLOW_AUTH_ADMIN_PASSWORD or admin_password, rejects password1234 and fails without a password; an already-bootstrapped admin needs no resupply.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
     "default-permission": {"text": "default_permission is READ on every resource; set NO_PERMISSIONS in the auth configuration to remove that default grant.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
     "auth-database": {"text": "database_uri defaults to basic_auth.db in the working directory; use a central database for multiple nodes, as in the PostgreSQL auth-database example.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
@@ -296,7 +296,7 @@ An authenticated user without permission on a resource gets `403`; a missing or 
 
 ## Sources (checked September 2026)
 
-- MLflow CSRF-key file input: [global `--env-file` option and existing-environment precedence](https://mlflow.org/docs/latest/api_reference/cli.html#mlflow), [v3.16.1 auth factory](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/auth/__init__.py#L6008-L6021), and [v3.16.1 worker environment](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/__init__.py#L400-L401).
+- MLflow CSRF-key file input: [global `--env-file` option and existing-environment precedence](https://mlflow.org/docs/latest/api_reference/cli.html#mlflow), [v3.16.1 auth factory](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/auth/__init__.py#L6008-L6021), and [v3.16.1 worker environment](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/__init__.py#L401-L402).
 - MLflow authentication with username and password (`--app-name basic-auth`, default admin credentials, `basic_auth.ini` keys, `MLFLOW_AUTH_CONFIG_PATH`, `MLFLOW_FLASK_SERVER_SECRET_KEY`, client variables, 403 on missing permission): https://mlflow.org/docs/latest/self-hosting/security/basic-http-auth/
 - MLflow authentication REST API (`2.0/mlflow/users/update-password` request fields): https://mlflow.org/docs/latest/api_reference/auth/rest-api.html
 - `mlflow server` CLI reference (`--host` default 127.0.0.1, `--port` 5000, `--app-name`, `--allowed-hosts`, `--cors-allowed-origins`, `--serve-artifacts`): https://mlflow.org/docs/latest/api_reference/cli.html
