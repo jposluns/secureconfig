@@ -92,7 +92,8 @@ def run(files, allow=None, index=INDEX):
     d = Path(tempfile.mkdtemp())
     try:
         (d / "tools").mkdir()
-        for name in ("check_exposure_index.py", "_markdown.py", "check_reasoned_rows.py"):
+        for name in ("check_exposure_index.py", "_markdown.py", "check_reasoned_rows.py",
+                     "_verify_sections.py"):
             shutil.copy(HERE / name, d / "tools" / name)
         if index is not None:
             (d / "exposure-index.md").write_text(index, encoding="utf-8")
