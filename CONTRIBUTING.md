@@ -68,7 +68,61 @@ Schema 1 requires exactly these top-level fields:
 - `components`: nonempty object keyed by IDs matching `[a-z][a-z0-9-]*`. Each component has exactly
   `name`, `basis` and `sources`. Use `unknown` when no version is recorded. Sources map
   `s` plus the first 12 lowercase SHA-256 hex digits of the exact URL to that absolute HTTP(S) URL.
-  Each URL must occur in Sources; a known basis must occur in its cited Sources entries.
+  Each URL must occur in Sources; a known basis must occur in every Sources list item citing
+  that URL. Wrapped lines and continuation paragraphs in the same item count together; separate
+  or nested items cannot supply each other's basis. Repeating a URL requires the basis in every
+  item that cites it. For a known basis, every citation of the URL must be parsed as its own
+  list item: one in a nested compact list (`- - ...`), a heading item, a quote or loose prose
+  fails, and such failures are never baselined. For that count, Sources runs to the next ATX
+  heading of the same or higher level with no leading whitespace; a Setext underline never
+  ends it. Basis matching is
+  literal and case-sensitive, with no adjacent ASCII letter, digit or dot: `v2.51.0` and
+  `2.51.0` are not interchangeable. A matching literal inside the cited URL counts too.
+  Components with basis `unknown` are exempt from the basis requirement. Enrolled guides cite
+  with inline links only: outside fences, any line CommonMark could read as a link reference
+  definition fails, that is, a bracketed label and then `:` at the start of a line (after any
+  list or quote markers). That includes a label that spans lines, a label followed by `:` with
+  the destination on a later line, and `[note]: text`, which is a definition because `text`
+  is a valid destination. So no bracketed label can become a link. Sources cite URLs only as
+  bare URLs, `<autolinks>` or inline links (bracketed text, then the URL in parentheses). In
+  an enrolled guide's Sources, outside fences, every line closes what it opens: each backtick
+  lies in a code span that ends on that line, and outside code spans each opening bracket is
+  closed on that line, with no stray closing bracket. A backslash-escaped bracket, parenthesis
+  or backtick fails on any Sources line below the heading, outside fences and HTML comments,
+  even in a code span. Anywhere in an enrolled guide outside fences, any `a`, `img`, `link` or
+  `area` element fails, even in a code span or HTML comment, and so does a line that could
+  open a CommonMark HTML block, because its lines are raw HTML, where backticks are literal:
+  after indentation and any list or quote markers, `<` followed by a letter, `/`, `!` or `?`,
+  unless the line starts with a whole autolink such as `<https://...>`. The only exemption is
+  the generated summary's marker pair, which the check removes before it scans. Also
+  guide-wide outside fences, an ATX heading with leading whitespace fails, since CommonMark
+  can keep it inside a list item, and outside code spans so does a link destination in angle
+  brackets, whose spaces and line breaks render percent-encoded. A Sources heading must be an
+  ATX heading with only words before `Sources` and nothing after `(checked <Month> <Year>)`.
+  In Sources, outside fences and code spans, these also fail, and none of these failures is
+  ever baselined: a raw HTML tag with attributes (a
+  `<PLACEHOLDER>` without attributes is fine); a reference-style link (bracketed text, then
+  a bracketed label); a character reference (`&amp;`, `&#47;`) or backslash escape on a line
+  with a URL or link; and, on such a line, a percent-encoded unreserved character (letter,
+  digit, `-`, `.`, `_` or `~`, such as `%61`). A component URL may not contain a character
+  reference, an escape or an encoded unreserved character either. No check extracts URLs: each
+  component URL is matched as written in the raw Sources text, as link text or as a link target.
+  The scheme and the host, with any userinfo and port, match case-insensitively and the rest
+  exactly, so `HTTPS://EXAMPLE.com/p` cites `https://example.com/p` but `https://example.com/P`
+  does not. Fragments and query strings are part of a URL's identity, so `url#frag` and
+  `url?q=1` cite different URLs than `url`. A match cannot follow a letter, digit or URL
+  character such as `/`, `=` or `.`, and cannot run into a longer URL: trailing `?!.,:;_` are
+  punctuation unless a URL character follows them, so `url.` cites `url`, but `url.json`,
+  `url/v2` and `url_v2` do not. A `*` or `~` right after the URL, or a `_` after a URL that a
+  `_` opened, always ends it, so `**url**x`, `~~url~~x` and `_url_x` cite `url`.
+  Known limits: after these grammar restrictions, the check matches known component URLs
+  textually. It does not render Markdown, so a construct outside CommonMark's common forms, or
+  renderer-specific URL normalization (for example IDNA or fullwidth host mapping), could
+  still cite a URL uncounted. Row 3.39 in `TODO.md` tracks a parser-based check.
+  `tools/version_basis_sources_baseline.txt` grandfathers existing violations by guide and a
+  counted SHA-256 fingerprint of component ID, basis, URL and item paragraph text. New, changed
+  or excess occurrences fail, and fixed or removed occurrences require removing their stale
+  baseline entries. This baseline has no automatic refresh; retained counts remain visible.
 - `claims`: nonempty object with the same ID grammar. Each claim requires `text`, a nonempty unique
   `components` list, a nonempty `sources` list of `component-id:source-id` references, and `status`
   (`DEMONSTRATED` or `REASONED`). Every claim component needs a source; every component must be used.

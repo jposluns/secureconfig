@@ -17,6 +17,10 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Version-basis per-item check scope, 2026-09-27 (#420).** The maintainer ruled, through AskUser,
+  to ship the per-item check with its line grammar, fix the cheap gaps found in review round 7,
+  document the remaining exotic-construct residuals in CONTRIBUTING, and track a parser-based check
+  as row 3.39, rather than add a Markdown parser dependency now or continue hardening the regex.
 - **Vite SSR secret scan, 2026-09-27 (#414).** The maintainer ruled, through AskUser, that
   frontend-frameworks.md's Verify secret scan always searches all of `dist` and reports matches under
   `dist/server/` separately, because review found that no directory-existence test can distinguish a Vite
