@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "173b5f9130c915df7f98792cac9c1713c42c30bcd991ea659e48392fb65421d7",
+  "body_sha256": "30661e96bd909783390fe7578c5ddd10469906a6237167bc76de6f9c2a4a0b8f",
   "components": {
     "searx": {
       "name": "SearxNG documentation",
@@ -546,6 +546,8 @@ REASONED: following block; native authentication follows the cited service sourc
 ```bash
 (                              # a subshell, so your own script arguments are untouched
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  # When you repeat this block with a valid credential header in $4, the secret
+  # on the set -- line enters shell history; clear that history line afterward.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' '' ''
   # $3 is the same harmless JSON body as checks 5 and 7 (keep the empty quotes if none is needed).
   # $4 is a credential header: leave it EMPTY for the anonymous run, put a WRONG credential for the
@@ -599,6 +601,8 @@ REASONED: following block; credentialed success follows the cited service and cu
 ```bash
 (                              # a subshell, so your own script arguments are untouched
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  # The credential you substitute on the set -- line enters shell history.
+  # Clear that history line afterward.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' '' 'REPLACE_WITH_HEADER_NAME: REPLACE_WITH_CREDENTIAL'
   # $3 is the same harmless JSON body as the anonymous check. Keep the empty quotes if none is needed.
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "616932f018d721011c5a9a6ffb7f0f456de56ff2666d0211d86fd9d8d23e18f7",
+  "body_sha256": "9d72131b8b1c350614ec53a9742182d0692fb8e195d1e43a21495df2a690b23f",
   "components": {
     "docs": {
       "name": "MLflow documentation",
@@ -189,6 +189,8 @@ admin_password = REPLACE_WITH_LONG_RANDOM_VALUE
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  # Both passwords you substitute on the set -- line enter shell history.
+  # Clear that history line afterward.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CURRENT_ADMIN_PASSWORD' 'REPLACE_WITH_LONG_RANDOM_VALUE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift

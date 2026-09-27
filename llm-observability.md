@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "985f7ee24cdda72195532cf7268d52ade05cb921c4744559493da9fab7ab1da4",
+  "body_sha256": "93bfdc4f83c4b909a31cccd0267de7afb7e8c5fbf7a04b4ebd5c018ba2e41dd4",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
@@ -445,6 +445,8 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 # of argv and /proc/<pid>/cmdline; still prefer a short-lived project key.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  # The secret key you substitute on the set -- line enters shell history.
+  # Use a short-lived project key or clear that history line afterward.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PUBLIC_KEY' 'REPLACE_WITH_SECRET_KEY'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
