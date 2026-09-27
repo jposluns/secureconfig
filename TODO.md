@@ -42,7 +42,6 @@ many.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 1.185 | `frontend-frameworks.md:59` and `:71` (before version-basis insertion; now :163 and :175) scan whole build directories for secrets, so server-only output can be reported as a client leak. Narrow the scan to each framework's client bundle directory. (L, S) | `[gap]` |
 
 ## Priority 2: Deepen existing guides
 
