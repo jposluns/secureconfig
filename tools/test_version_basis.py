@@ -321,10 +321,7 @@ class SourcesBasisTests(unittest.TestCase):
         # Round 3: URL extraction read these spellings as other URLs, so the
         # known URL was counted zero times and the basis-less item escaped.
         u = self.url
-        encoded = u.replace('/control', '&#47;control')
-        forms = (f'[{u}]({u})', f'[**{u}**]({u})', f'[text]({u})', f'<a href="{u}">t</a>',
-                 encoded, u.replace('https', '&#x68;ttps'), u.replace('://', '&colon;//'),
-                 f'[t]({encoded})', u.replace('/control', '\\/control'))
+        forms = (f'[{u}]({u})', f'[**{u}**]({u})', f'[text]({u})', f'<{u}>', u)
         for form in forms:
             with self.subTest(form=form):
                 self.assertGreaterEqual(vb.cites(form, u), 1)
@@ -339,10 +336,100 @@ class SourcesBasisTests(unittest.TestCase):
         # CommonMark leaves a legacy name without its semicolon literal.
         self.assertEqual(vb.cites(u.replace('/control', '&sol/control'), u), 0)
 
+    def test_sources_grammar_rejections(self):
+        # Round 4: raw HTML, reference links, references, escapes and encoded
+        # unreserved characters cite a URL the raw text does not spell. Each
+        # fails the grammar, even with the basis present; round 3 counted the
+        # &#47; and <a href> spellings instead.
+        u = self.url
+        html_forms = {f'<a href={u}>t</a>': '<a> element', f'<a href="{u}">t</a>': '<a> element',
+                      f'<A HREF={u}>t</A>': '<A> element', f'<img src={u}>': '<img> element',
+                      f'<link href={u}>': '<link> element', f'<area href={u}>': '<area> element',
+                      f'{u} <a': '<a> element', f'{u} <span title="x">t</span>':
+                      '<span> tag with attributes', f'{u} <span\n  title=x>t</span>':
+                      '<span> tag with attributes'}
+        reference_forms = {f'[t][r] {u}': 'reference-style link', f'[t][] {u}': 'reference-style link',
+                           f'{u}\n\n[r]: {u}': 'reference definition',
+                           f'{u}\n  [r]:\n  {u}': 'reference definition'}
+        entity = 'character reference or backslash escape'
+        encoded = 'percent-encoded unreserved character'
+        spelling_forms = {u.replace('/control', '&#47;control'): entity,
+                          u.replace('https', '&#x68;ttps'): entity,
+                          u.replace('://', '&colon;//'): entity,
+                          f'[t]({u.replace("/control", "&#47;control")})': entity,
+                          u.replace('/control', '\\/control'): entity,
+                          f'{u} AT&amp;T': entity, f'{u}&amp;x=1': entity,
+                          f'{u}&#46;json': entity, f'[t]&#40;{u})': entity,
+                          f'\\[t]({u})': entity,
+                          u.replace('control', 'c%6Fntrol'): encoded,
+                          u.replace('control', 'c%6fntrol'): encoded,
+                          f'{u} [t](m%61npage)': encoded, f'{u} https://x.example/%7Eu': encoded,
+                          f'{u} https://x.example/a%2Db': encoded,
+                          f'{u} https://x.example/a%2eb': encoded,
+                          f'{u} https://x.example/a%5Fb': encoded,
+                          f'{u} https://x.example/%30': encoded,
+                          f'{u} https://x.example/%5A': encoded}
+        for form, construct in {**html_forms, **reference_forms, **spelling_forms}.items():
+            with self.subTest(form=form), self.assertRaisesRegex(
+                    ValueError, r'Sources line \d+: .*' + re.escape(construct)
+                    + '.*cite URLs as bare URLs, <autolinks> or inline'):
+                self.check(f'- Product v1.0: {u}\n- Again v1.0: {form}')
+        # The message names the file line, and no baseline entry excuses it.
+        form = f'- Product v1.0: <a href={u}>t</a>'
+        fp = vb.source_fingerprint('product', 'v1.0', u, form)
+        with self.assertRaisesRegex(ValueError, r'^Sources line 19: raw HTML <a> element'):
+            self.check(form, baseline=Counter({('fixture.md', fp): 1}))
+
+    def test_shortcut_reference_to_a_definition_elsewhere_fails(self):
+        u = self.url
+        data = fixture()
+        data['components']['product']['sources'] = {vb.source_id(u): u}
+        data['claims']['control']['sources'] = ['product:' + vb.source_id(u)]
+        body = (BODY[:BODY.index('- Product')].replace(
+                    'A documented control.', f'A documented control.\n\n[Ref  Doc]: {u}')
+                + f'- Product v1.0: {u}\n- Again: [ref doc]\n')
+        data['body_sha256'] = vb.digest(body)
+        with self.assertRaisesRegex(ValueError, 'shortcut reference link'):
+            vb.updated(document(data, body), 'fixture.md')
+        # Without a definition, a bracketed word is literal text.
+        self.check(f'- Product v1.0: {u}; `loopback_users` [guest] and [::]')
+
+    def test_sources_grammar_allowed_forms(self):
+        u = self.url
+        for sources in (f'- Product v1.0: {u}', f'- Product v1.0: <{u}>',
+                        f'- Product v1.0: [text]({u})', f'- Product v1.0: [**{u}**]({u})',
+                        f'- Product v1.0 reads <VAR>_FILE and `<GRPC_PORT>`: {u}',
+                        f'- Product v1.0 (<PLACEHOLDER>, <br/>): {u}',
+                        f'- Product v1.0 (`a&amp;b`, `m%61npage`, `<a href=x>`, `[t][r]`): {u}',
+                        f'- Product v1.0: {u}\n  AT&amp;T and 50%41 on a line with no URL',
+                        f'- Product v1.0: {u}\n\n  ```\n  <a href="x">&amp;</a> %61 [r]: x\n  ```',
+                        f'- Product v1.0: {u} and https://x.example/pkg%40v1%20x%2F'):
+            with self.subTest(sources=sources):
+                self.check(sources)
+
+    def test_closing_emphasis_counts_as_citation(self):
+        # Round 4: _CLOSES read the closing delimiter plus a letter as URL continuation.
+        u = self.url
+        for text in (f'**{u}**x', f'~~{u}~~x', f'_{u}_x', f'*{u}*x', u + '~x', f'__{u}__x'):
+            with self.subTest(text=text):
+                self.assertEqual(vb.cites(text, u), 1)
+                with self.assertRaisesRegex(ValueError, 'basis.*absent'):
+                    self.check(f'- Product v1.0: {u}\n- Again: {text}')
+        for longer in (u + '_v2', f'**{u}_v2**', u + '_.x'):
+            with self.subTest(longer=longer):
+                self.assertEqual(vb.cites(longer, u), 0)
+        # A real URL ending in * still matches itself, and also cites the shorter URL.
+        star = u + '*'
+        for text in (star, f'{star}.', f'[t]({star})', f'**{star}**'):
+            with self.subTest(text=text):
+                self.assertEqual(vb.cites(text, star), 1)
+                self.check_urls(f'- Product v1.0: {text}', [star])
+        self.assertEqual(vb.cites(star, u), 1)
+
     def test_known_url_is_not_a_prefix_match(self):
         u = self.url
-        for longer in (u + '/v2', u + '.json', u + 'x', u + '_v2', u + '~x', u + '-x', u + '?q=1',
-                       u + '#frag', u + '%20', u + '.,x', u + '&amp;x=1', u + '&#46;json',
+        for longer in (u + '/v2', u + '.json', u + 'x', u + '_v2', u + '-x', u + '?q=1',
+                       u + '#frag', u + '%20', u + '.,x', u + '&x=1', u + '%2Fx',
                        'https://proxy.example/?u=' + u,
                        'https://archive.example/' + u, 'x' + u):
             with self.subTest(longer=longer):
@@ -375,8 +462,14 @@ class SourcesBasisTests(unittest.TestCase):
 
     def test_url_with_character_reference_is_refused(self):
         url = self.url + '?a=1&amp;b=2'
-        with self.assertRaisesRegex(ValueError, 'escape or entity'):
+        with self.assertRaisesRegex(ValueError, 'character reference or backslash escape'):
             self.check_urls(f'- Product v1.0: {url}', [url])
+        # A code span escapes the grammar, so the component URL is checked itself.
+        with self.assertRaisesRegex(ValueError, 'source URL contains an escape or entity'):
+            self.check_urls(f'- Product v1.0: `{url}`', [url])
+        url = self.url.replace('control', 'c%6Fntrol')
+        with self.assertRaisesRegex(ValueError, 'percent-encodes an unreserved character'):
+            self.check_urls(f'- Product v1.0: `{url}`', [url])
 
     def test_setext_lookalike_does_not_truncate_sources(self):
         # Codex round 2: "- item" over a marker-only "-" reads as a Setext heading

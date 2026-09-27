@@ -106,9 +106,8 @@ def verify_blocks(body, with_status=False):
 
 
 # CommonMark decodes backslash escapes of ASCII punctuation and semicolon-terminated
-# character references in text and link targets, so a guide can spell one URL many
-# ways. html.unescape() alone would also decode legacy names without the semicolon
-# (&copy=), which CommonMark leaves literal, so decode only what CommonMark decodes.
+# character references in text and link targets, so one URL has many spellings.
+# sources_grammar() refuses them on any line that, decoded, has a URL or link.
 _ESCAPE = re.compile(r'\\([!-/:-@\[-`{-~])'
                      r'|&(?:#[0-9]{1,7}|#[xX][0-9a-fA-F]{1,6}|[A-Za-z][A-Za-z0-9]{1,31});')
 # A citation cannot start right after a letter, digit or URL-internal character
@@ -116,24 +115,113 @@ _ESCAPE = re.compile(r'\\([!-/:-@\[-`{-~])'
 _OPENS = r'(?<![^\W_])(?<![/.%?#&=+@$-])'
 # After the known URL: an optional run of trailing punctuation (GFM's autolink set,
 # plus ;) that continues the URL only when a URL character follows it, so u. and
-# u_** cite u but u.json, u_v2, u/v2, u-x, ux and u?q=1 do not.
-_CLOSES = r'(?![?!.,:;*_~]*(?:[^\W_]|[/%#&=+@$(-]))'
+# u_** cite u but u.json, u_v2, u/v2, u-x, ux and u?q=1 do not. * and ~ are never
+# continuation (**u**x and ~~u~~x cite u), nor is _ after a URL that _ opened (_u_x).
+_CONTINUES = r'(?:[^\W_]|[/%#&=+@$(-])'
+_CLOSES = r'(?![?!.,:;_]*' + _CONTINUES + ')'
+_CLOSES_AFTER_UNDERSCORE = r'(?![?!.,:;]*' + _CONTINUES + ')'
 
 
 def decoded(text):
-    """Text as rendered, for matching: backslash escapes and entities decoded."""
+    """Text as rendered: backslash escapes and entities decoded.
+
+    Only sources_grammar() uses it, to find a URL or link that an escape or
+    entity spells, such as h&#116;tps:// or [t]&#40;u); it then refuses the line.
+    html.unescape() alone would also decode legacy names without the semicolon
+    (&copy=), which CommonMark leaves literal, so decode only what CommonMark does.
+    """
     return _ESCAPE.sub(lambda match: match[1] or html.unescape(match[0]), text)
 
 
 def cites(text, url):
-    """Occurrences of the exact known URL in decoded(text), at URL boundaries.
+    """Occurrences of the exact known URL in text, at URL boundaries.
 
     Match each component URL; never extract URLs from the text. An extractor
-    reads [url](url), <a href="url"> and **url** as other spellings and so
-    misses the citation. The URL itself is not decoded; validate() rejects one
-    that decoding would change.
+    reads [url](url) and **url** as other spellings and so misses the citation.
+    Text is not decoded: sources_grammar() first refuses the spellings (raw HTML
+    links, reference links, entities, escapes, percent-encoded unreserved
+    characters) whose rendered URL differs from the raw text.
     """
-    return len(re.findall(_OPENS + re.escape(url) + _CLOSES, decoded(text)))
+    escaped = re.escape(url)
+    return len(re.findall(_OPENS + '(?:(?<=_)' + escaped + _CLOSES_AFTER_UNDERSCORE
+                          + '|(?<!_)' + escaped + _CLOSES + ')', text))
+
+
+# The Sources grammar: bare URLs, <autolinks> and inline [text](url) links only.
+_URL_OR_LINK = re.compile(r'[A-Za-z][A-Za-z0-9+.-]*://|www\.|\]\(|<[A-Za-z][A-Za-z0-9+.-]*:')
+_TAG = re.compile(r'</?([A-Za-z][A-Za-z0-9-]*)(?![A-Za-z0-9-])')
+_LINK_TAGS = {'a', 'img', 'link', 'area'}
+_REFERENCE_USE = re.compile(r'\]\[')
+_REFERENCE_DEFINITION = re.compile(r'\[[^\]]*\]:')
+# A definition anywhere in the guide makes a Sources [ref] a shortcut reference link.
+_DEFINITION_LINE = re.compile(r'^[ \t]*(?:(?:[-*+]|[0-9]{1,9}[.)])[ \t]+|>[ \t]?)*\[([^\]]+)\]:')
+_SHORTCUT = re.compile(r'\[([^\]]+)\](?![(\[])')
+_UNRESERVED = re.compile(r'%(?:3[0-9]|4[1-9A-Fa-f]|5[0-9Aa]|6[1-9A-Fa-f]|7[0-9Aa]'
+                         r'|2[DdEe]|5[Ff]|7[Ee])')
+
+
+def without_code_spans(line):
+    """The line with each same-line code span blanked; code is shown literally."""
+    from check_verify_marking import code_spans
+    for start, end, _ in reversed(list(code_spans(line))):
+        line = line[:start] + ' ' * (end - start) + line[end:]
+    return line
+
+
+def label(text):
+    return ' '.join(text.split()).casefold()
+
+
+def grammar_violations(line, labels=frozenset()):
+    """Yield a construct description for each Sources grammar violation on one line.
+
+    labels: normalized reference-definition labels defined anywhere in the guide.
+    """
+    text = without_code_spans(line)
+    for match in _TAG.finditer(text):
+        rest = text[match.end():]
+        if match[1].lower() in _LINK_TAGS:
+            yield f'raw HTML <{match[1]}> element'
+        elif not re.match(r'[ \t]*/?>', rest) and (not rest or rest[0] in ' \t/'):
+            yield f'raw HTML <{match[1]}> tag with attributes'
+    if _REFERENCE_USE.search(text):
+        yield 'reference-style link ([text][ref] or [text][])'
+    if _REFERENCE_DEFINITION.search(text):
+        yield 'reference definition ([ref]: url)'
+    if any(label(match[1]) in labels for match in _SHORTCUT.finditer(text)):
+        yield 'shortcut reference link ([ref] with a definition elsewhere in the guide)'
+    if _URL_OR_LINK.search(decoded(text)):
+        if _ESCAPE.search(text):
+            yield 'character reference or backslash escape on a line with a URL or link'
+        if _UNRESERVED.search(text):
+            yield 'percent-encoded unreserved character on a line with a URL or link'
+
+
+def sources_grammar(body, heads, line_offset=0):
+    """Fail closed on Sources spellings outside the grammar; never baselined.
+
+    Sources cite URLs as bare URLs, <autolinks> or inline [text](url) links.
+    Raw HTML links, reference links, character references, backslash escapes and
+    percent-encoded unreserved characters render as a URL that the raw text
+    does not spell, so cites() would miss the citation. Scans the ATX-bounded
+    Sources lines of raw_sources(), outside fences and same-line code spans.
+    """
+    from check_guide_shape import scan
+    from check_verify_marking import tokenize
+    content, ranges = _sources_ranges(body, heads)
+    labels = {label(match[1]) for line in scan(body)[1].values()
+              for match in [_DEFINITION_LINE.match(line)] if match}
+    errors = []
+    for start, end in ranges:
+        lines, _, tokens = tokenize('\n'.join(content[start:end]))
+        code = {index for token in tokens if token.kind in ('fence', 'unclosed')
+                for index in range(token.start, token.end)}
+        for index, line in enumerate(lines):
+            if index not in code:
+                errors.extend(f'Sources line {start + index + 1 + line_offset}: {construct}; '
+                              'cite URLs as bare URLs, <autolinks> or inline [text](url) links'
+                              for construct in grammar_violations(line, labels))
+    require(not errors, '; '.join(errors))
 
 
 def source_entries(sources):
@@ -186,6 +274,21 @@ def load_source_baseline():
     return counts
 
 
+def _sources_ranges(body, heads):
+    """(content, [(start, end)]) of each ATX-bounded Sources section; see raw_sources()."""
+    from check_guide_shape import ATX_RE, SOURCES_RE, scan
+    content, visible = scan(body)
+    atx = [(index, len(match.group('hashes'))) for index, line in sorted(visible.items())
+           for match in [ATX_RE.match(line)] if match]
+    ranges = []
+    for _, level, title, start in heads:
+        if SOURCES_RE.match(title):
+            end = next((index for index, rank in atx if index >= start and rank <= level),
+                       len(content))
+            ranges.append((start, end))
+    return content, ranges
+
+
 def raw_sources(body, heads):
     """Sources text bounded only by ATX headings, for container_violations().
 
@@ -195,16 +298,8 @@ def raw_sources(body, heads):
     each Sources section runs to the next ATX heading of the same or higher rank
     (fence-aware, as in check_guide_shape), so hidden citations stay counted.
     """
-    from check_guide_shape import ATX_RE, SOURCES_RE, scan
-    content, visible = scan(body)
-    atx = [(index, len(match.group('hashes'))) for index, line in sorted(visible.items())
-           for match in [ATX_RE.match(line)] if match]
-    parts = []
-    for _, level, title, start in heads:
-        if SOURCES_RE.match(title):
-            end = next((index for index, rank in atx if index >= start and rank <= level), None)
-            parts.append('\n'.join(content[start:end]))
-    return '\n'.join(parts)
+    content, ranges = _sources_ranges(body, heads)
+    return '\n'.join('\n'.join(content[start:end]) for start, end in ranges)
 
 
 def container_violations(data, sources, entries):
@@ -254,7 +349,7 @@ def latest_change():
     return max(datetime.date.fromisoformat(value) for value in dates)
 
 
-def validate(data, body, guide='GUIDE.md', baseline=None):
+def validate(data, body, guide='GUIDE.md', baseline=None, line_offset=0):
     from check_guide_shape import headings, section_body, SOURCES_RE
     keys(data, ('schema', 'checked', 'documentation_checked', 'body_sha256', 'components', 'claims'))
     require(type(data['schema']) is int and data['schema'] == 1, 'unsupported schema')
@@ -285,6 +380,7 @@ def validate(data, body, guide='GUIDE.md', baseline=None):
                 SOURCES_RE.match(title).group(1).lower() == documentation.strftime('%B').lower() and
                 int(SOURCES_RE.match(title).group(2)) == documentation.year
                 for _, _, title, _ in heads), 'documentation month differs from Sources')
+    sources_grammar(body, heads, line_offset)
     identifiers(data['components'])
     for component in data['components'].values():
         keys(component, ('name', 'basis', 'sources'))
@@ -296,8 +392,10 @@ def validate(data, body, guide='GUIDE.md', baseline=None):
             require(key == source_id(url), 'source ID must bind its URL')
             require(urlsplit(url).scheme in ('http', 'https') and urlsplit(url).hostname,
                     'source must be an absolute HTTP(S) URL')
-            # A reference in the URL itself would never match decoded Sources text.
-            require(decoded(url) == url, 'source URL contains an escape or entity: ' + url)
+            # Sources may show such a URL only in a code span, which the grammar skips.
+            require(not _ESCAPE.search(url), 'source URL contains an escape or entity: ' + url)
+            require(not _UNRESERVED.search(url),
+                    'source URL percent-encodes an unreserved character: ' + url)
             require(cites(sources, url), 'source URL absent from Sources: ' + url)
     # The container count uses ATX-bounded text; see raw_sources().
     check_source_bases(data, raw_sources(body, heads), entries, guide, baseline)
@@ -388,6 +486,16 @@ def front_matter(data):
     return '\n'.join(lines + ['  }', '}', '---', ''])
 
 
+def body_line_offset(text, full_body):
+    """File lines before a body line: front matter and the removed summary.
+
+    The summary follows the H1, so the offset holds for every Sources line.
+    """
+    removed = full_body[full_body.index(START):full_body.index(END) + len(END) + 2] \
+        if START in full_body else ''
+    return text[:len(text) - len(full_body)].count('\n') + removed.count('\n')
+
+
 def rebound(text, guide='GUIDE.md', baseline=None):
     """Validate the reviewed inventory and replace only the top-level digest token."""
     data, full_body = split(text)
@@ -396,7 +504,7 @@ def rebound(text, guide='GUIDE.md', baseline=None):
     string(data['body_sha256'])
     require(re.fullmatch(r'[0-9a-f]{64}', data['body_sha256']), 'bad body digest')
     data['body_sha256'] = digest(body)
-    validate(data, body, guide, baseline)
+    validate(data, body, guide, baseline, body_line_offset(text, full_body))
     # split() already strictly parsed the object. Walk only its top-level members,
     # preserving all other bytes, even escaped keys or noncanonical whitespace.
     decoder = json.JSONDecoder()
@@ -417,7 +525,7 @@ def updated(text, guide='GUIDE.md', baseline=None):
     data, full_body = split(text)
     require(data is not None, 'missing version_basis front matter')
     body = without_summary(full_body)
-    validate(data, body, guide, baseline)
+    validate(data, body, guide, baseline, body_line_offset(text, full_body))
     title, rest = body.split('\n\n', 1)
     prefix = front_matter(data)
     return prefix + title + '\n\n' + render(data) + '\n\n' + rest

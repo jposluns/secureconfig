@@ -77,14 +77,23 @@ Schema 1 requires exactly these top-level fields:
   heading of the same or higher level; a Setext underline never ends it. Basis matching is
   literal and case-sensitive, with no adjacent ASCII letter, digit or dot: `v2.51.0` and
   `2.51.0` are not interchangeable. A matching literal inside the cited URL counts too.
-  Components with basis `unknown` are exempt from the basis requirement. No check extracts
-  URLs: each matches every component URL exactly in Sources text whose character references
-  and backslash escapes are decoded, so a URL counts as link text, as a link target, in an
-  HTML `href` and when spelled with `&#47;`. The component URL is never decoded and must
-  contain neither. A match cannot follow a letter, digit or URL character such as `/`, `=` or
-  `.`, and cannot run into a longer URL: trailing `?!.,:;*_~` are punctuation unless a URL
-  character follows them, so `url.` and `**url**` cite `url`, but `url.json`, `url/v2` and
-  `url_v2` do not.
+  Components with basis `unknown` are exempt from the basis requirement. Sources cite URLs
+  only as bare URLs, `<autolinks>` or inline links (bracketed text, then the URL in
+  parentheses). In an enrolled guide's Sources, outside fences and code spans, these fail and
+  are never baselined: a raw HTML tag with attributes, and any `a`, `img`, `link` or `area`
+  element (a `<PLACEHOLDER>` without attributes is fine); a reference-style link, a reference
+  definition, or a bracketed label that a definition elsewhere in the guide turns into a link;
+  a character reference (`&amp;`, `&#47;`) or backslash escape on a line with a URL or link;
+  and, on such a line, a percent-encoded unreserved character (letter, digit, `-`, `.`, `_` or
+  `~`, such as `%61`). A component URL may not contain a character reference, an escape or an
+  encoded unreserved character either. No check extracts URLs: each component URL is matched
+  exactly as written in the raw Sources text, as link text or as a link target. Fragments and
+  query strings are part of a URL's identity, so `url#frag` and `url?q=1` cite different URLs
+  than `url`. A match cannot follow a letter, digit or URL character such as `/`, `=` or `.`,
+  and cannot run into a longer URL: trailing `?!.,:;_` are punctuation unless a URL character
+  follows them, so `url.` cites `url`, but `url.json`, `url/v2` and `url_v2` do not. A `*` or
+  `~` right after the URL, or a `_` after a URL that a `_` opened, always ends it, so
+  `**url**x`, `~~url~~x` and `_url_x` cite `url`.
   `tools/version_basis_sources_baseline.txt` grandfathers existing violations by guide and a
   counted SHA-256 fingerprint of component ID, basis, URL and item paragraph text. New, changed
   or excess occurrences fail, and fixed or removed occurrences require removing their stale
