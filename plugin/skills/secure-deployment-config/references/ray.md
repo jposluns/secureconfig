@@ -29,7 +29,11 @@ Ray expects "a controlled, isolated network" between all its components. Beyond 
 - In Ray 2.58.0's source, the core gRPC servers (the GCS, the raylet, the object manager and every worker) listen on every interface whenever the node's address is anything other than `127.0.0.1`, `::1` or `localhost` ([`grpc_server.cc`](https://github.com/ray-project/ray/blob/ray-2.58.0/src/ray/rpc/grpc_server.cc#L67-L68), [`network_util.h`](https://github.com/ray-project/ray/blob/ray-2.58.0/src/ray/util/network_util.h#L111-L113)). On an ordinary cluster with a private node address, `6379` therefore listens on all interfaces.
 - Ray Serve replicas open an inter-deployment gRPC server on `[::]` with an OS-chosen port ([`replica.py`](https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/serve/_private/replica.py#L1778)).
 
-Those two points are read from the source and were not run. In each of four loopback runs with `--node-ip-address=127.0.0.1`, the GCS still listened on `*:6379`, and the cause was not established. Put every node of a cluster in one private network or security group that admits only the cluster's own members ([cloud-firewalls.md](cloud-firewalls.md), [host.md](host.md), [kubernetes.md](kubernetes.md)), and expose nothing from that group to the internet. The Ray Client port in particular is a remote code execution endpoint by design; use Ray Jobs over the forwarded dashboard port instead of publishing `10001`.
+Those two points are read from the source and were not run.
+
+**Observed on 2026-09-24 with Ray 2.58.0:** in each of four runs using `ray start --head --node-ip-address=127.0.0.1 --port=6379 --dashboard-host=127.0.0.1`, `ss` still showed the GCS listener as `*:6379`. The cause was not established. Do not rely on `--node-ip-address` alone to keep the GCS off other interfaces; restrict access with a host firewall or network namespace, and verify the listeners with `ss`.
+
+Put every node of a cluster in one private network or security group that admits only the cluster's own members ([cloud-firewalls.md](cloud-firewalls.md), [host.md](host.md), [kubernetes.md](kubernetes.md)), and expose nothing from that group to the internet. The Ray Client port in particular is a remote code execution endpoint by design; use Ray Jobs over the forwarded dashboard port instead of publishing `10001`.
 
 Every node also runs two agent processes, the dashboard agent and the runtime env agent, and `--include-dashboard=false` stops neither: that flag only decides whether the head's dashboard process serves its API and UI (the process itself still starts, reduced to a usage-stats module), while normal head and worker startup supplies both agent commands to the raylet. Their four listeners, read from the Ray 2.58.0 source and not run, are the agent HTTP server with a default port below and three of the "several randomized ports" above. Minimal mode is selected when the optional dashboard dependencies cannot be imported, not by which install command was used: a base installation with those dependencies already present can run the full agent. In minimal mode the dashboard agent has no HTTP or gRPC server, and its reporter module and metrics exporter are absent; only the runtime env agent HTTP listener remains among these four. With the optional dependencies present, all four normally run, but disabling metrics collection skips the metrics exporter (collection is enabled by default).
 
@@ -161,7 +165,25 @@ ss -tlnp   # if you run Ray Serve, keep 8000 (HTTP proxy) private too, and 9000 
 )
 # Through the SSH tunnel of step 1, with RAY_AUTH_MODE=token on the cluster.
 # POSITIVE control first: WITH the token the submit succeeds, proving the endpoint is live and reachable:
-RAY_AUTH_MODE=token RAY_AUTH_TOKEN="$(cat ~/.ray/auth_token)" ray job submit --address http://127.0.0.1:8265 -- python -c "print(1)"   # succeeds (RAY_AUTH_MODE=token on the CLIENT makes it send the token header)
+# Assumes a clean Bash shell with trusted startup files, and a token file owned by this account
+# under ~/.ray in directories no other account can write to or replace. Ray reads the file itself.
+(
+  trap - DEBUG RETURN ERR
+  set +x +a +e
+  { unset -n RAY_AUTH_TOKEN RAY_AUTH_TOKEN_PATH RAY_AUTH_MODE &&
+    unset -v RAY_AUTH_TOKEN RAY_AUTH_TOKEN_PATH RAY_AUTH_MODE; } 2>/dev/null ||
+    { echo 'cannot clear Ray authentication variables; not submitting'; exit 2; }
+  if [ ! -f "$HOME/.ray/auth_token" ] || [ -L "$HOME/.ray/auth_token" ] ||
+     [ ! -r "$HOME/.ray/auth_token" ] || [ ! -s "$HOME/.ray/auth_token" ]; then
+    echo 'need a readable, non-empty regular token file, not a symlink; not submitting'; exit 2
+  fi
+  chmod 600 -- "$HOME/.ray/auth_token" ||
+    { echo 'cannot protect the token file; not submitting'; exit 2; }
+  RAY_AUTH_MODE=token RAY_AUTH_TOKEN_PATH="$HOME/.ray/auth_token" \
+    ray job submit --address http://127.0.0.1:8265 -- python -c "print(1)"
+)
+# Only the path is in the environment; the token stays in the file and Ray's memory, readable by
+# this account and root. Clearing variables does not erase a token previously exported or logged.
 # NEGATIVE: from a client with NO token available (no RAY_AUTH_TOKEN or RAY_AUTH_TOKEN_PATH set and no
 # ~/.ray/auth_token file), the same submit must be refused for AUTHENTICATION (HTTP 401); a connection
 # error (tunnel down, wrong address) is INCONCLUSIVE, not a pass:
@@ -225,6 +247,7 @@ Service behaviour is not demonstrated here. A watcher stopped each of four loopb
 
 - Ray security guidelines (arbitrary code execution, network isolation, TLS is not a replacement, token auth from 2.52.0): https://docs.ray.io/en/latest/ray-security/index.html
 - Ray token authentication (`RAY_AUTH_MODE`, `RAY_AUTH_TOKEN`, `RAY_AUTH_TOKEN_PATH`, `ray get-auth-token`, plaintext-header caveat): https://docs.ray.io/en/latest/ray-security/token-auth.html
+- Ray 2.58.0 token input precedence and file-based job submission: https://github.com/ray-project/ray/blob/ray-2.58.0/doc/source/ray-security/token-auth.md
 - `ray start` CLI reference (`--dashboard-host` default, `--dashboard-port` 8265, `--port` 6379, `--ray-client-server-port` 10001): https://docs.ray.io/en/latest/cluster/cli.html
 - Configuring Ray (TLS environment variables, ports opened by nodes): https://docs.ray.io/en/latest/ray-core/configure.html
 - Configure Ray clusters to use token authentication (KubeRay `authOptions`, 401 without token): https://docs.ray.io/en/latest/cluster/kubernetes/user-guides/kuberay-auth.html
