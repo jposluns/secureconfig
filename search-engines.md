@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "4f657e29f202986d13ec01ac2a5eaf7c8f4c72c7dd93286982894c0bbf14aa05",
+  "body_sha256": "df81c2dd0c394ff67b9de276c7968f1823700f3a2e88ec9d34b2232b093eccc3",
   "components": {
     "meili": {
       "name": "Meilisearch release reference",
@@ -326,23 +326,23 @@ admin/master/bootstrap key; it should never appear outside the server-side secre
 
 Version scope: Typesense 30.2; Meilisearch current unversioned documentation checked 2026-09-18, with v1.53.2 as the release reference. The first release containing all four default keys and their exact permissions remains to be confirmed against the deployed release, so inspect `GET /keys`. The Verify commands require Bash, curl 7.75.0 or later, and OpenBSD-compatible netcat.
 
-- Meilisearch master API keys (MEILI_MASTER_KEY, the four default API keys): https://www.meilisearch.com/docs/resources/self_hosting/security/master_api_keys
-- Typesense data access control (bootstrap api-key, /keys, actions, collections, filter_by, include_fields/exclude_fields, expires_at): https://typesense.org/docs/guide/data-access-control.html
+- Meilisearch master API keys (MEILI_MASTER_KEY, the four default API keys) (release reference v1.53.2): https://www.meilisearch.com/docs/resources/self_hosting/security/master_api_keys
+- Typesense 30.2 data access control (bootstrap api-key, /keys, actions, collections, filter_by, include_fields/exclude_fields, expires_at): https://typesense.org/docs/guide/data-access-control.html
 - Typesense 30.2 server configuration (api-key required, api-address default 0.0.0.0, api-port 8108, peering-port 8107, ssl-certificate): https://typesense.org/docs/30.2/api/server-configuration.html
 - Typesense `api-address` default `0.0.0.0`, `api-port` default 8108 and `peering-port` default 8107 (pinned tag v30.2): https://github.com/typesense/typesense/blob/v30.2/src/typesense_server_utils.cpp#L81-L85
 - Typesense 30.2 API keys (parent search-only key, scoped-key derivation, description): https://typesense.org/docs/30.2/api/api-keys.html
 - Typesense 30.2 collections (collection creation and schema fields): https://typesense.org/docs/30.2/api/collections.html
-- Typesense v30.2 authorization failure (401): https://raw.githubusercontent.com/typesense/typesense/v30.2/src/http_server.cpp
-- Typesense v30.2 collection creation success (201): https://raw.githubusercontent.com/typesense/typesense/v30.2/src/core_api.cpp
-- Typesense backups (snapshot API, not the live data directory): https://typesense.org/docs/guide/backups.html
+- Typesense 30.2 authorization failure (401): https://raw.githubusercontent.com/typesense/typesense/v30.2/src/http_server.cpp
+- Typesense 30.2 collection creation success (201): https://raw.githubusercontent.com/typesense/typesense/v30.2/src/core_api.cpp
+- Typesense 30.2 backups (snapshot API, not the live data directory): https://typesense.org/docs/guide/backups.html
 - Typesense 30.2 remote embeddings (outbound requests with provider credentials): https://typesense.org/docs/30.2/api/vector-search.html
-- Meilisearch configuration reference (MEILI_HTTP_ADDR default localhost:7700; MEILI_EXPERIMENTAL_ALLOWED_IP_NETWORKS): https://www.meilisearch.com/docs/resources/self_hosting/configuration/reference
+- Meilisearch configuration reference (MEILI_HTTP_ADDR default localhost:7700; MEILI_EXPERIMENTAL_ALLOWED_IP_NETWORKS) (release reference v1.53.2): https://www.meilisearch.com/docs/resources/self_hosting/configuration/reference
 - Meilisearch `DEFAULT_HTTP_ADDR` "localhost:7700" and the `--http-addr` / `MEILI_HTTP_ADDR` option that defaults to it, and the implicit `./config.toml` read whose values yield to the environment and the command line (pinned tag v1.53.2): https://github.com/meilisearch/meilisearch/blob/v1.53.2/crates/meilisearch/src/option.rs#L95-L97, https://github.com/meilisearch/meilisearch/blob/v1.53.2/crates/meilisearch/src/option.rs#L221-L223 and https://github.com/meilisearch/meilisearch/blob/v1.53.2/crates/meilisearch/src/option.rs#L534-L560
 - Meilisearch v1.53.2 Dockerfile (image sets MEILI_HTTP_ADDR=0.0.0.0:7700): https://raw.githubusercontent.com/meilisearch/meilisearch/v1.53.2/Dockerfile
-- Meilisearch native TLS (--ssl-cert-path, --ssl-key-path): https://www.meilisearch.com/docs/resources/self_hosting/security/http2_ssl
-- Meilisearch tenant-token payload (exp is optional): https://www.meilisearch.com/docs/capabilities/security/advanced/tenant_token_payload
-- Meilisearch backups and dumps (documents across every index): https://www.meilisearch.com/docs/resources/self_hosting/data_backup/overview
-- Meilisearch SSRF advisory (authenticated blind SSRF fixed in v1.34.1): https://www.meilisearch.com/blog/CVE-update-Jan-2026
-- Meilisearch document-editing functions (Rhai; disabled unless enabled): https://www.meilisearch.com/docs/capabilities/indexing/how_to/edit_documents_with_functions
+- Meilisearch native TLS (--ssl-cert-path, --ssl-key-path) (release reference v1.53.2): https://www.meilisearch.com/docs/resources/self_hosting/security/http2_ssl
+- Meilisearch tenant-token payload (exp is optional) (release reference v1.53.2): https://www.meilisearch.com/docs/capabilities/security/advanced/tenant_token_payload
+- Meilisearch backups and dumps (documents across every index) (release reference v1.53.2): https://www.meilisearch.com/docs/resources/self_hosting/data_backup/overview
+- Meilisearch SSRF advisory (authenticated blind SSRF fixed in v1.34.1) (release reference v1.53.2): https://www.meilisearch.com/blog/CVE-update-Jan-2026
+- Meilisearch document-editing functions (Rhai; disabled unless enabled) (release reference v1.53.2): https://www.meilisearch.com/docs/capabilities/indexing/how_to/edit_documents_with_functions
 - curl options (write-out variables require 7.75.0+): https://curl.se/docs/manpage.html
 - OpenBSD netcat reference: https://man.openbsd.org/nc

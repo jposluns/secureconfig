@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "f25fc1e12ee34c914cd1b25af81371cc8ba483b42a455d3ef5476755ebfbe764",
+  "body_sha256": "a6b55d99968e663d09826762e44286066edeb1b17914a0cd89eb98d215ed9fb6",
   "components": {
     "engine": {
       "name": "Docker Engine networking",
@@ -208,6 +208,6 @@ REASONED: this firewalld reload check follows the Impact section of GHSA-x4rx-4g
 - Docker with iptables, for the `DOCKER-USER` chain (processed before Docker's own rules; matches container addresses after DNAT): https://docs.docker.com/engine/network/firewall-iptables/
 - Docker Engine 28.0 release notes, for the published-port and loopback-mapping hardening: https://docs.docker.com/engine/release-notes/28/
 - Docker Engine 28.3.3 security fix: https://docs.docker.com/engine/release-notes/28/#2833 and affected-version advisory: https://github.com/moby/moby/security/advisories/GHSA-x4rx-4gw3-53p4
-- Moby v28.3.3, `reapplyPerPortIptables` restores endpoint rules after firewalld reload: https://raw.githubusercontent.com/moby/moby/v28.3.3/libnetwork/drivers/bridge/port_mapping_linux.go
+- Moby 28.3.3 (pinned tag v28.3.3), `reapplyPerPortIptables` restores endpoint rules after firewalld reload: https://raw.githubusercontent.com/moby/moby/v28.3.3/libnetwork/drivers/bridge/port_mapping_linux.go
 - Compose networking: https://docs.docker.com/compose/how-tos/networking/
 - Docker port publishing (with no host address, "the Docker daemon publishes ports to all host addresses (0.0.0.0 and [::])"): https://docs.docker.com/engine/network/port-publishing/

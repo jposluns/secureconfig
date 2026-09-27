@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "4b7909609575ae28f5a11bc5fe3984e12f1f003ae3b474f77359b3d0bd667a50",
+  "body_sha256": "ecf4266e6955fc5f8463ba61d02ec95e5c9ecf57c99c1f35156ea74a76545ba8",
   "components": {
     "server": {
       "name": "code-server",
@@ -173,7 +173,7 @@ An unauthenticated editor in a private browser window means whoever finds the UR
 ## Sources (checked September 2026)
 
 - code-server v4.137.0 deployment guide (exposure, TLS and self-signed certificates, reverse proxy, `/proxy`+`/absproxy`+`--proxy-domain` routes, `--skip-auth-preflight`): https://raw.githubusercontent.com/coder/code-server/v4.137.0/docs/guide.md
-- code-server FAQ (config.yaml keys map to flags, `cert: false` default, `hashed-password` precedence, config path from `--config`/`CODE_SERVER_CONFIG`/`XDG_CONFIG_HOME`, flags override the file): https://coder.com/docs/code-server/FAQ
+- code-server v4.137.0 FAQ (config.yaml keys map to flags, `cert: false` default, `hashed-password` precedence, config path from `--config`/`CODE_SERVER_CONFIG`/`XDG_CONFIG_HOME`, flags override the file): https://coder.com/docs/code-server/FAQ
 - code-server v4.137.0 CLI (credentials, defaults, config generation, proxy flags, `--password` rejected on the CLI): https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/cli.ts
 - code-server v4.137.0 HTTP controls (authentication, proxy auth, `--disable-proxy`): https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/http.ts
 - code-server v4.137.0 path proxy (`/proxy`, `/absproxy` routing): https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/routes/pathProxy.ts

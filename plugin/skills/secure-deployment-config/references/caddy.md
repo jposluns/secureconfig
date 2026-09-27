@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "5488273918614a078e0317aed055aa3790d108a230c00b6d656406ec4e54a37a",
+  "body_sha256": "5bb9f8dcaceef5e7aaf74a8648b86c4acaa3e07a55dc108860fac1db5d71e4c4",
   "components": {
     "docs": {
       "name": "Caddy documentation",
@@ -339,19 +339,19 @@ ls -l /run/caddy/admin.sock          # if you bound it to a unix socket: it exis
 
 - Official Caddy Docker images: the tag map (library file pinned commit d82ca5102fa6735be29d5e1fc6ce03af77eb091e), and at image source pinned commit fba2853501d36e8a72f946ac8cb7ff64d07e48f2 each runtime image's Caddyfile download, `EXPOSE 2019` and `CMD`, with the default Caddyfile at caddyserver/dist pinned commit 33ae08ff08d168572df2956ed14fbc4949880d94 and the `CADDY_ADMIN` variable that sets the admin address (pinned tag v2.11.4): https://github.com/docker-library/official-images/blob/d82ca5102fa6735be29d5e1fc6ce03af77eb091e/library/caddy#L7-L65, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L17, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L59-L63, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2022/Dockerfile#L10, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2022/Dockerfile#L42-L47, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2025/Dockerfile#L10, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2025/Dockerfile#L42-L47, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2022/Dockerfile#L8, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2022/Dockerfile#L27-L32, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2025/Dockerfile#L8, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2025/Dockerfile#L27-L32, https://github.com/caddyserver/dist/blob/33ae08ff08d168572df2956ed14fbc4949880d94/config/Caddyfile and https://github.com/caddyserver/caddy/blob/v2.11.4/admin.go#L58-L67
 - Automatic HTTPS (Caddy 2): https://caddyserver.com/docs/automatic-https
-- Caddy admin API (default `localhost:2019`, `POST /load` and `/config/` replace or edit the whole config, requires no credentials with only Host/Origin header checks, the permissioned-unix-socket warning for untrusted-workload hosts): https://caddyserver.com/docs/api
-- Caddy `admin` global option (`admin off`, an address, or `admin unix//...`): https://caddyserver.com/docs/caddyfile/options
-- `request_body` directive (`max_size`): https://caddyserver.com/docs/caddyfile/directives/request_body
-- Caddyfile directive list, which carries no `rate_limit` entry: https://caddyserver.com/docs/caddyfile/directives
-- caddy-ratelimit, the community module that adds rate limiting: https://github.com/mholt/caddy-ratelimit
-- basic_auth directive (renamed from basicauth in Caddy v2.8.0): https://caddyserver.com/docs/caddyfile/directives/basic_auth
-- tls directive: https://caddyserver.com/docs/caddyfile/directives/tls
-- reverse_proxy directive (X-Forwarded-* ignored from untrusted sources by default; `trusted_proxies`): https://caddyserver.com/docs/caddyfile/directives/reverse_proxy
-- Caddy conventions (unix socket default mode 0200, `|<mode>` suffix): https://caddyserver.com/docs/conventions
-- header directive (HSTS): https://caddyserver.com/docs/caddyfile/directives/header
-- forward_auth directive (Caddy 2.5 and later): https://caddyserver.com/docs/caddyfile/directives/forward_auth
-- Caddy command-line signals (SIGUSR1 reload conditions): https://caddyserver.com/docs/command-line#signals
-- Let's Encrypt ending expiration-notification emails (2025): https://letsencrypt.org/2025/01/22/ending-expiration-emails/
-- Request matchers (path, wildcards, multiple paths): https://caddyserver.com/docs/caddyfile/matchers
+- Caddy admin API (default `localhost:2019`, `POST /load` and `/config/` replace or edit the whole config, requires no credentials with only Host/Origin header checks, the permissioned-unix-socket warning for untrusted-workload hosts) (Caddy 2): https://caddyserver.com/docs/api
+- Caddy `admin` global option (`admin off`, an address, or `admin unix//...`) (Caddy 2): https://caddyserver.com/docs/caddyfile/options
+- `request_body` directive (`max_size`) (Caddy 2): https://caddyserver.com/docs/caddyfile/directives/request_body
+- Caddyfile directive list, which carries no `rate_limit` entry (Caddy 2): https://caddyserver.com/docs/caddyfile/directives
+- caddy-ratelimit, the community module that adds rate limiting (Caddy 2): https://github.com/mholt/caddy-ratelimit
+- basic_auth directive (renamed from basicauth in Caddy v2.8.0) (Caddy 2): https://caddyserver.com/docs/caddyfile/directives/basic_auth
+- tls directive (Caddy 2): https://caddyserver.com/docs/caddyfile/directives/tls
+- reverse_proxy directive (X-Forwarded-* ignored from untrusted sources by default; `trusted_proxies`) (Caddy 2): https://caddyserver.com/docs/caddyfile/directives/reverse_proxy
+- Caddy conventions (unix socket default mode 0200, `|<mode>` suffix) (Caddy 2): https://caddyserver.com/docs/conventions
+- header directive (HSTS) (Caddy 2): https://caddyserver.com/docs/caddyfile/directives/header
+- forward_auth directive (Caddy 2.5 and later) (Caddy 2): https://caddyserver.com/docs/caddyfile/directives/forward_auth
+- Caddy command-line signals (SIGUSR1 reload conditions) (Caddy 2): https://caddyserver.com/docs/command-line#signals
+- Let's Encrypt ending expiration-notification emails (2025) (Caddy 2 context): https://letsencrypt.org/2025/01/22/ending-expiration-emails/
+- Request matchers (path, wildcards, multiple paths) (Caddy 2): https://caddyserver.com/docs/caddyfile/matchers
 - Caddy admin API default `DefaultAdminListen = "localhost:2019"` (pinned tag v2.11.4): https://github.com/caddyserver/caddy/blob/v2.11.4/admin.go#L1433
 - Docker networking documentation at 4e9a5751518ed8223a8dcde53693badddd72604f (container loopback, host namespace sharing, and the `--network container:` loopback example; the Linux bridge/host distinction above is inferred from these documented namespace semantics): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/_index.md#L286, https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/drivers/host.md#L11-L13, https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/_index.md#L302-L325

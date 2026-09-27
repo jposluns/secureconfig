@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "d8a257ce255adc2217b3a8a4f43134479e1f475337cb68fad361f57708ab2647",
+  "body_sha256": "ba049e88ba6a7b5e7dd9e2d8f1e7ebf13ae0e3ba5644108ed96cdf1ce4a19803",
   "components": {
     "datasette": {
       "name": "Datasette",
@@ -517,21 +517,21 @@ Applicability checked on 2026-09-18: Datasette stable documentation lists 0.65.5
 Every URL listed below was fetched during authoring. This list also records the source-fetch review.
 
 - Datasette CLI reference (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/cli-reference.html
-- Datasette authentication and permissions: https://docs.datasette.io/en/stable/authentication.html
-- Datasette settings: https://docs.datasette.io/en/stable/settings.html
-- Datasette SQL queries and writable canned queries: https://docs.datasette.io/en/stable/sql_queries.html
-- Datasette JSON API and CORS: https://docs.datasette.io/en/stable/json_api.html
-- Datasette introspection routes: https://docs.datasette.io/en/stable/introspection.html
-- Datasette Docker installation: https://docs.datasette.io/en/stable/installation.html
-- Datasette proxy deployment: https://docs.datasette.io/en/stable/deploying.html
-- Datasette publishing: https://docs.datasette.io/en/stable/publish.html
+- Datasette authentication and permissions (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/authentication.html
+- Datasette settings (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/settings.html
+- Datasette SQL queries and writable canned queries (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/sql_queries.html
+- Datasette JSON API and CORS (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/json_api.html
+- Datasette introspection routes (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/introspection.html
+- Datasette Docker installation (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/installation.html
+- Datasette proxy deployment (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/deploying.html
+- Datasette publishing (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/publish.html
 - Datasette container generator: https://raw.githubusercontent.com/simonw/datasette/caf238aac86ebe370959b25384d6e05f6a1e2359/datasette/utils/__init__.py
 - Datasette Cloud Run publisher: https://github.com/simonw/datasette/blob/e889403d3bbe143854262682161c98a57bdb6594/datasette/publish/cloudrun.py
 - Datasette Fly publishing plugin: https://github.com/simonw/datasette-publish-fly
-- Datasette immutable mode and hashed URLs: https://docs.datasette.io/en/stable/performance.html
-- Datasette CSRF protection: https://docs.datasette.io/en/stable/internals.html#csrf-protection
-- Datasette plugin secret configuration: https://docs.datasette.io/en/stable/plugins.html#secret-configuration-values
-- Datasette changelog and security fixes (Datasette core hash_urls removed in 0.61): https://docs.datasette.io/en/stable/changelog.html
+- Datasette immutable mode and hashed URLs (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/performance.html
+- Datasette CSRF protection (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/internals.html#csrf-protection
+- Datasette plugin secret configuration (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/plugins.html#secret-configuration-values
+- Datasette changelog and security fixes (Datasette core hash_urls removed in 0.61) (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/changelog.html
 - Datasette password authentication plugin (datasette-auth-passwords 1.1.1 used in the loopback demonstrations): https://github.com/simonw/datasette-auth-passwords
 - Datasette GitHub authentication plugin: https://github.com/simonw/datasette-auth-github
 - Datasette write plugin (datasette-write 0.4 used in the loopback demonstrations): https://github.com/simonw/datasette-write

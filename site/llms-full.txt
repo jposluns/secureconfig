@@ -4705,20 +4705,20 @@ ls -l /run/caddy/admin.sock          # if you bound it to a unix socket: it exis
 
 - Official Caddy Docker images: the tag map (library file pinned commit d82ca5102fa6735be29d5e1fc6ce03af77eb091e), and at image source pinned commit fba2853501d36e8a72f946ac8cb7ff64d07e48f2 each runtime image's Caddyfile download, `EXPOSE 2019` and `CMD`, with the default Caddyfile at caddyserver/dist pinned commit 33ae08ff08d168572df2956ed14fbc4949880d94 and the `CADDY_ADMIN` variable that sets the admin address (pinned tag v2.11.4): https://github.com/docker-library/official-images/blob/d82ca5102fa6735be29d5e1fc6ce03af77eb091e/library/caddy#L7-L65, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L17, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L59-L63, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2022/Dockerfile#L10, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2022/Dockerfile#L42-L47, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2025/Dockerfile#L10, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2025/Dockerfile#L42-L47, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2022/Dockerfile#L8, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2022/Dockerfile#L27-L32, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2025/Dockerfile#L8, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2025/Dockerfile#L27-L32, https://github.com/caddyserver/dist/blob/33ae08ff08d168572df2956ed14fbc4949880d94/config/Caddyfile and https://github.com/caddyserver/caddy/blob/v2.11.4/admin.go#L58-L67
 - Automatic HTTPS (Caddy 2): https://caddyserver.com/docs/automatic-https
-- Caddy admin API (default `localhost:2019`, `POST /load` and `/config/` replace or edit the whole config, requires no credentials with only Host/Origin header checks, the permissioned-unix-socket warning for untrusted-workload hosts): https://caddyserver.com/docs/api
-- Caddy `admin` global option (`admin off`, an address, or `admin unix//...`): https://caddyserver.com/docs/caddyfile/options
-- `request_body` directive (`max_size`): https://caddyserver.com/docs/caddyfile/directives/request_body
-- Caddyfile directive list, which carries no `rate_limit` entry: https://caddyserver.com/docs/caddyfile/directives
-- caddy-ratelimit, the community module that adds rate limiting: https://github.com/mholt/caddy-ratelimit
-- basic_auth directive (renamed from basicauth in Caddy v2.8.0): https://caddyserver.com/docs/caddyfile/directives/basic_auth
-- tls directive: https://caddyserver.com/docs/caddyfile/directives/tls
-- reverse_proxy directive (X-Forwarded-* ignored from untrusted sources by default; `trusted_proxies`): https://caddyserver.com/docs/caddyfile/directives/reverse_proxy
-- Caddy conventions (unix socket default mode 0200, `|<mode>` suffix): https://caddyserver.com/docs/conventions
-- header directive (HSTS): https://caddyserver.com/docs/caddyfile/directives/header
-- forward_auth directive (Caddy 2.5 and later): https://caddyserver.com/docs/caddyfile/directives/forward_auth
-- Caddy command-line signals (SIGUSR1 reload conditions): https://caddyserver.com/docs/command-line#signals
-- Let's Encrypt ending expiration-notification emails (2025): https://letsencrypt.org/2025/01/22/ending-expiration-emails/
-- Request matchers (path, wildcards, multiple paths): https://caddyserver.com/docs/caddyfile/matchers
+- Caddy admin API (default `localhost:2019`, `POST /load` and `/config/` replace or edit the whole config, requires no credentials with only Host/Origin header checks, the permissioned-unix-socket warning for untrusted-workload hosts) (Caddy 2): https://caddyserver.com/docs/api
+- Caddy `admin` global option (`admin off`, an address, or `admin unix//...`) (Caddy 2): https://caddyserver.com/docs/caddyfile/options
+- `request_body` directive (`max_size`) (Caddy 2): https://caddyserver.com/docs/caddyfile/directives/request_body
+- Caddyfile directive list, which carries no `rate_limit` entry (Caddy 2): https://caddyserver.com/docs/caddyfile/directives
+- caddy-ratelimit, the community module that adds rate limiting (Caddy 2): https://github.com/mholt/caddy-ratelimit
+- basic_auth directive (renamed from basicauth in Caddy v2.8.0) (Caddy 2): https://caddyserver.com/docs/caddyfile/directives/basic_auth
+- tls directive (Caddy 2): https://caddyserver.com/docs/caddyfile/directives/tls
+- reverse_proxy directive (X-Forwarded-* ignored from untrusted sources by default; `trusted_proxies`) (Caddy 2): https://caddyserver.com/docs/caddyfile/directives/reverse_proxy
+- Caddy conventions (unix socket default mode 0200, `|<mode>` suffix) (Caddy 2): https://caddyserver.com/docs/conventions
+- header directive (HSTS) (Caddy 2): https://caddyserver.com/docs/caddyfile/directives/header
+- forward_auth directive (Caddy 2.5 and later) (Caddy 2): https://caddyserver.com/docs/caddyfile/directives/forward_auth
+- Caddy command-line signals (SIGUSR1 reload conditions) (Caddy 2): https://caddyserver.com/docs/command-line#signals
+- Let's Encrypt ending expiration-notification emails (2025) (Caddy 2 context): https://letsencrypt.org/2025/01/22/ending-expiration-emails/
+- Request matchers (path, wildcards, multiple paths) (Caddy 2): https://caddyserver.com/docs/caddyfile/matchers
 - Caddy admin API default `DefaultAdminListen = "localhost:2019"` (pinned tag v2.11.4): https://github.com/caddyserver/caddy/blob/v2.11.4/admin.go#L1433
 - Docker networking documentation at 4e9a5751518ed8223a8dcde53693badddd72604f (container loopback, host namespace sharing, and the `--network container:` loopback example; the Linux bridge/host distinction above is inferred from these documented namespace semantics): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/_index.md#L286, https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/drivers/host.md#L11-L13, https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/_index.md#L302-L325
 
@@ -5748,7 +5748,7 @@ REASONED: this firewalld reload check follows the Impact section of GHSA-x4rx-4g
 - Docker with iptables, for the `DOCKER-USER` chain (processed before Docker's own rules; matches container addresses after DNAT): https://docs.docker.com/engine/network/firewall-iptables/
 - Docker Engine 28.0 release notes, for the published-port and loopback-mapping hardening: https://docs.docker.com/engine/release-notes/28/
 - Docker Engine 28.3.3 security fix: https://docs.docker.com/engine/release-notes/28/#2833 and affected-version advisory: https://github.com/moby/moby/security/advisories/GHSA-x4rx-4gw3-53p4
-- Moby v28.3.3, `reapplyPerPortIptables` restores endpoint rules after firewalld reload: https://raw.githubusercontent.com/moby/moby/v28.3.3/libnetwork/drivers/bridge/port_mapping_linux.go
+- Moby 28.3.3 (pinned tag v28.3.3), `reapplyPerPortIptables` restores endpoint rules after firewalld reload: https://raw.githubusercontent.com/moby/moby/v28.3.3/libnetwork/drivers/bridge/port_mapping_linux.go
 - Compose networking: https://docs.docker.com/compose/how-tos/networking/
 - Docker port publishing (with no host address, "the Docker daemon publishes ports to all host addresses (0.0.0.0 and [::])"): https://docs.docker.com/engine/network/port-publishing/
 
@@ -22032,24 +22032,24 @@ admin/master/bootstrap key; it should never appear outside the server-side secre
 
 Version scope: Typesense 30.2; Meilisearch current unversioned documentation checked 2026-09-18, with v1.53.2 as the release reference. The first release containing all four default keys and their exact permissions remains to be confirmed against the deployed release, so inspect `GET /keys`. The Verify commands require Bash, curl 7.75.0 or later, and OpenBSD-compatible netcat.
 
-- Meilisearch master API keys (MEILI_MASTER_KEY, the four default API keys): https://www.meilisearch.com/docs/resources/self_hosting/security/master_api_keys
-- Typesense data access control (bootstrap api-key, /keys, actions, collections, filter_by, include_fields/exclude_fields, expires_at): https://typesense.org/docs/guide/data-access-control.html
+- Meilisearch master API keys (MEILI_MASTER_KEY, the four default API keys) (release reference v1.53.2): https://www.meilisearch.com/docs/resources/self_hosting/security/master_api_keys
+- Typesense 30.2 data access control (bootstrap api-key, /keys, actions, collections, filter_by, include_fields/exclude_fields, expires_at): https://typesense.org/docs/guide/data-access-control.html
 - Typesense 30.2 server configuration (api-key required, api-address default 0.0.0.0, api-port 8108, peering-port 8107, ssl-certificate): https://typesense.org/docs/30.2/api/server-configuration.html
 - Typesense `api-address` default `0.0.0.0`, `api-port` default 8108 and `peering-port` default 8107 (pinned tag v30.2): https://github.com/typesense/typesense/blob/v30.2/src/typesense_server_utils.cpp#L81-L85
 - Typesense 30.2 API keys (parent search-only key, scoped-key derivation, description): https://typesense.org/docs/30.2/api/api-keys.html
 - Typesense 30.2 collections (collection creation and schema fields): https://typesense.org/docs/30.2/api/collections.html
-- Typesense v30.2 authorization failure (401): https://raw.githubusercontent.com/typesense/typesense/v30.2/src/http_server.cpp
-- Typesense v30.2 collection creation success (201): https://raw.githubusercontent.com/typesense/typesense/v30.2/src/core_api.cpp
-- Typesense backups (snapshot API, not the live data directory): https://typesense.org/docs/guide/backups.html
+- Typesense 30.2 authorization failure (401): https://raw.githubusercontent.com/typesense/typesense/v30.2/src/http_server.cpp
+- Typesense 30.2 collection creation success (201): https://raw.githubusercontent.com/typesense/typesense/v30.2/src/core_api.cpp
+- Typesense 30.2 backups (snapshot API, not the live data directory): https://typesense.org/docs/guide/backups.html
 - Typesense 30.2 remote embeddings (outbound requests with provider credentials): https://typesense.org/docs/30.2/api/vector-search.html
-- Meilisearch configuration reference (MEILI_HTTP_ADDR default localhost:7700; MEILI_EXPERIMENTAL_ALLOWED_IP_NETWORKS): https://www.meilisearch.com/docs/resources/self_hosting/configuration/reference
+- Meilisearch configuration reference (MEILI_HTTP_ADDR default localhost:7700; MEILI_EXPERIMENTAL_ALLOWED_IP_NETWORKS) (release reference v1.53.2): https://www.meilisearch.com/docs/resources/self_hosting/configuration/reference
 - Meilisearch `DEFAULT_HTTP_ADDR` "localhost:7700" and the `--http-addr` / `MEILI_HTTP_ADDR` option that defaults to it, and the implicit `./config.toml` read whose values yield to the environment and the command line (pinned tag v1.53.2): https://github.com/meilisearch/meilisearch/blob/v1.53.2/crates/meilisearch/src/option.rs#L95-L97, https://github.com/meilisearch/meilisearch/blob/v1.53.2/crates/meilisearch/src/option.rs#L221-L223 and https://github.com/meilisearch/meilisearch/blob/v1.53.2/crates/meilisearch/src/option.rs#L534-L560
 - Meilisearch v1.53.2 Dockerfile (image sets MEILI_HTTP_ADDR=0.0.0.0:7700): https://raw.githubusercontent.com/meilisearch/meilisearch/v1.53.2/Dockerfile
-- Meilisearch native TLS (--ssl-cert-path, --ssl-key-path): https://www.meilisearch.com/docs/resources/self_hosting/security/http2_ssl
-- Meilisearch tenant-token payload (exp is optional): https://www.meilisearch.com/docs/capabilities/security/advanced/tenant_token_payload
-- Meilisearch backups and dumps (documents across every index): https://www.meilisearch.com/docs/resources/self_hosting/data_backup/overview
-- Meilisearch SSRF advisory (authenticated blind SSRF fixed in v1.34.1): https://www.meilisearch.com/blog/CVE-update-Jan-2026
-- Meilisearch document-editing functions (Rhai; disabled unless enabled): https://www.meilisearch.com/docs/capabilities/indexing/how_to/edit_documents_with_functions
+- Meilisearch native TLS (--ssl-cert-path, --ssl-key-path) (release reference v1.53.2): https://www.meilisearch.com/docs/resources/self_hosting/security/http2_ssl
+- Meilisearch tenant-token payload (exp is optional) (release reference v1.53.2): https://www.meilisearch.com/docs/capabilities/security/advanced/tenant_token_payload
+- Meilisearch backups and dumps (documents across every index) (release reference v1.53.2): https://www.meilisearch.com/docs/resources/self_hosting/data_backup/overview
+- Meilisearch SSRF advisory (authenticated blind SSRF fixed in v1.34.1) (release reference v1.53.2): https://www.meilisearch.com/blog/CVE-update-Jan-2026
+- Meilisearch document-editing functions (Rhai; disabled unless enabled) (release reference v1.53.2): https://www.meilisearch.com/docs/capabilities/indexing/how_to/edit_documents_with_functions
 - curl options (write-out variables require 7.75.0+): https://curl.se/docs/manpage.html
 - OpenBSD netcat reference: https://man.openbsd.org/nc
 
@@ -22643,21 +22643,21 @@ Applicability checked on 2026-09-18: Datasette stable documentation lists 0.65.5
 Every URL listed below was fetched during authoring. This list also records the source-fetch review.
 
 - Datasette CLI reference (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/cli-reference.html
-- Datasette authentication and permissions: https://docs.datasette.io/en/stable/authentication.html
-- Datasette settings: https://docs.datasette.io/en/stable/settings.html
-- Datasette SQL queries and writable canned queries: https://docs.datasette.io/en/stable/sql_queries.html
-- Datasette JSON API and CORS: https://docs.datasette.io/en/stable/json_api.html
-- Datasette introspection routes: https://docs.datasette.io/en/stable/introspection.html
-- Datasette Docker installation: https://docs.datasette.io/en/stable/installation.html
-- Datasette proxy deployment: https://docs.datasette.io/en/stable/deploying.html
-- Datasette publishing: https://docs.datasette.io/en/stable/publish.html
+- Datasette authentication and permissions (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/authentication.html
+- Datasette settings (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/settings.html
+- Datasette SQL queries and writable canned queries (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/sql_queries.html
+- Datasette JSON API and CORS (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/json_api.html
+- Datasette introspection routes (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/introspection.html
+- Datasette Docker installation (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/installation.html
+- Datasette proxy deployment (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/deploying.html
+- Datasette publishing (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/publish.html
 - Datasette container generator: https://raw.githubusercontent.com/simonw/datasette/caf238aac86ebe370959b25384d6e05f6a1e2359/datasette/utils/__init__.py
 - Datasette Cloud Run publisher: https://github.com/simonw/datasette/blob/e889403d3bbe143854262682161c98a57bdb6594/datasette/publish/cloudrun.py
 - Datasette Fly publishing plugin: https://github.com/simonw/datasette-publish-fly
-- Datasette immutable mode and hashed URLs: https://docs.datasette.io/en/stable/performance.html
-- Datasette CSRF protection: https://docs.datasette.io/en/stable/internals.html#csrf-protection
-- Datasette plugin secret configuration: https://docs.datasette.io/en/stable/plugins.html#secret-configuration-values
-- Datasette changelog and security fixes (Datasette core hash_urls removed in 0.61): https://docs.datasette.io/en/stable/changelog.html
+- Datasette immutable mode and hashed URLs (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/performance.html
+- Datasette CSRF protection (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/internals.html#csrf-protection
+- Datasette plugin secret configuration (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/plugins.html#secret-configuration-values
+- Datasette changelog and security fixes (Datasette core hash_urls removed in 0.61) (stable documentation lists Datasette 0.65.5): https://docs.datasette.io/en/stable/changelog.html
 - Datasette password authentication plugin (datasette-auth-passwords 1.1.1 used in the loopback demonstrations): https://github.com/simonw/datasette-auth-passwords
 - Datasette GitHub authentication plugin: https://github.com/simonw/datasette-auth-github
 - Datasette write plugin (datasette-write 0.4 used in the loopback demonstrations): https://github.com/simonw/datasette-write
@@ -25123,7 +25123,7 @@ The original probes and the new controls are REASONED from the pinned source and
 
 ## Sources (checked September 2026)
 
-- Open WebUI environment configuration reference: https://docs.openwebui.com/reference/env-configuration
+- Open WebUI environment configuration reference (source basis: pinned commit 0a7c15832fb30b1903753e83f81dc7d27e5b0944): https://docs.openwebui.com/reference/env-configuration
 - Open WebUI FAQ (the first account created becomes the administrator): https://docs.openwebui.com/faq
 - Open WebUI repository (the Docker Quick Start `-v open-webui:/app/backend/data` data volume): https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/README.md
 - Docker port publishing (localhost publishing; releases older than 28.0.0 let a same-L2 host reach a localhost-published port): https://docs.docker.com/engine/network/port-publishing/
@@ -25139,16 +25139,16 @@ The original probes and the new controls are REASONED from the pinned source and
 - [Open WebUI chat router: administrative chat access and export checks](https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/routers/chats.py).
 - [Open WebUI file router: verified-user upload dependency and size enforcement](https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/routers/files.py).
 - [Open WebUI retrieval router: web and URL ingestion handlers](https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/routers/retrieval.py).
-- [Open WebUI hardening: registration lifecycle, execution controls, network limits, and outbound protections](https://docs.openwebui.com/getting-started/advanced-topics/hardening/).
-- [Open WebUI SSO: OAuth/OIDC, trusted headers, and OAuth persistence](https://docs.openwebui.com/features/authentication-access/auth/sso/).
-- [Open WebUI plugin loader: exec and server-process authority](https://docs.openwebui.com/features/extensibility/plugin/development/under-the-hood/).
-- [Open WebUI groups: additive permissions and private resource grants](https://docs.openwebui.com/features/authentication-access/rbac/groups/).
-- [Open WebUI permissions: workspace and sharing controls](https://docs.openwebui.com/features/authentication-access/rbac/permissions/).
-- [Open WebUI database schema: normalized access grants](https://docs.openwebui.com/reference/database-schema/).
-- [Open WebUI API keys: global enablement, group permissions, and inherited authority](https://docs.openwebui.com/features/authentication-access/api-keys/).
-- [Open WebUI Direct Connections: browser-to-provider inference](https://docs.openwebui.com/features/chat-conversations/direct-connections/).
-- [Open WebUI OpenAI-compatible connections: administrative provider configuration](https://docs.openwebui.com/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible/).
-- [Open WebUI API endpoints: model discovery, chat requests, ingestion, and development documentation](https://docs.openwebui.com/reference/api-endpoints/).
+- [Open WebUI hardening: registration lifecycle, execution controls, network limits, and outbound protections (source basis: pinned commit 0a7c15832fb30b1903753e83f81dc7d27e5b0944)](https://docs.openwebui.com/getting-started/advanced-topics/hardening/).
+- [Open WebUI SSO: OAuth/OIDC, trusted headers, and OAuth persistence (source basis: pinned commit 0a7c15832fb30b1903753e83f81dc7d27e5b0944)](https://docs.openwebui.com/features/authentication-access/auth/sso/).
+- [Open WebUI plugin loader: exec and server-process authority (source basis: pinned commit 0a7c15832fb30b1903753e83f81dc7d27e5b0944)](https://docs.openwebui.com/features/extensibility/plugin/development/under-the-hood/).
+- [Open WebUI groups: additive permissions and private resource grants (source basis: pinned commit 0a7c15832fb30b1903753e83f81dc7d27e5b0944)](https://docs.openwebui.com/features/authentication-access/rbac/groups/).
+- [Open WebUI permissions: workspace and sharing controls (source basis: pinned commit 0a7c15832fb30b1903753e83f81dc7d27e5b0944)](https://docs.openwebui.com/features/authentication-access/rbac/permissions/).
+- [Open WebUI database schema: normalized access grants (source basis: pinned commit 0a7c15832fb30b1903753e83f81dc7d27e5b0944)](https://docs.openwebui.com/reference/database-schema/).
+- [Open WebUI API keys: global enablement, group permissions, and inherited authority (source basis: pinned commit 0a7c15832fb30b1903753e83f81dc7d27e5b0944)](https://docs.openwebui.com/features/authentication-access/api-keys/).
+- [Open WebUI Direct Connections: browser-to-provider inference (source basis: pinned commit 0a7c15832fb30b1903753e83f81dc7d27e5b0944)](https://docs.openwebui.com/features/chat-conversations/direct-connections/).
+- [Open WebUI OpenAI-compatible connections: administrative provider configuration (source basis: pinned commit 0a7c15832fb30b1903753e83f81dc7d27e5b0944)](https://docs.openwebui.com/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible/).
+- [Open WebUI API endpoints: model discovery, chat requests, ingestion, and development documentation (source basis: pinned commit 0a7c15832fb30b1903753e83f81dc7d27e5b0944)](https://docs.openwebui.com/reference/api-endpoints/).
 
 ======================================================================
 ==> litellm.md
@@ -27138,7 +27138,7 @@ An unauthenticated editor in a private browser window means whoever finds the UR
 ## Sources (checked September 2026)
 
 - code-server v4.137.0 deployment guide (exposure, TLS and self-signed certificates, reverse proxy, `/proxy`+`/absproxy`+`--proxy-domain` routes, `--skip-auth-preflight`): https://raw.githubusercontent.com/coder/code-server/v4.137.0/docs/guide.md
-- code-server FAQ (config.yaml keys map to flags, `cert: false` default, `hashed-password` precedence, config path from `--config`/`CODE_SERVER_CONFIG`/`XDG_CONFIG_HOME`, flags override the file): https://coder.com/docs/code-server/FAQ
+- code-server v4.137.0 FAQ (config.yaml keys map to flags, `cert: false` default, `hashed-password` precedence, config path from `--config`/`CODE_SERVER_CONFIG`/`XDG_CONFIG_HOME`, flags override the file): https://coder.com/docs/code-server/FAQ
 - code-server v4.137.0 CLI (credentials, defaults, config generation, proxy flags, `--password` rejected on the CLI): https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/cli.ts
 - code-server v4.137.0 HTTP controls (authentication, proxy auth, `--disable-proxy`): https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/http.ts
 - code-server v4.137.0 path proxy (`/proxy`, `/absproxy` routing): https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/routes/pathProxy.ts
@@ -27622,7 +27622,7 @@ None of the checks above tests isolation between tenants. Where one embeddings t
 - Milvus management HTTP listener, v3.0.2 (commit 3c4448a2aee506ccd14851e742aba85f1c83188a): the same controls and listener inputs: https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/http/server.go#L37-L39, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/http/server.go#L82-L127, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/http/server.go#L230-L275, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/cmd/roles/roles.go#L500-L501, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/cmd/roles/roles.go#L575-L590 and https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/cmd/milvus/util.go#L123-L198
 - Milvus control and profiling routes on the same listener, v2.6.24 (commit 08c637c14373ec904dcac08e4df67279de421917) and v3.0.2 (commit 3c4448a2aee506ccd14851e742aba85f1c83188a): the proxy's management routes, registered with no credential check, the encryption-zone key backup among them, and the two v3.0.2 additions: https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/proxy/management.go#L42-L97, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/proxy/management.go#L594-L620, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/proxy/management.go#L42-L105, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/proxy/management.go#L198-L244, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/proxy/management.go#L427-L447 and https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/proxy/management.go#L700-L726; the mix coordinator's routes, registered on activation, including the node-status `PUT` that suspends or resumes a query node: https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/coordinator/restful_mgr_routes.go#L36-L74, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/coordinator/restful_mgr_routes.go#L881-L890, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/coordinator/restful_mgr_routes.go#L943-L1010, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/coordinator/mix_coord.go#L237-L240, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/coordinator/restful_mgr_routes.go#L33-L71, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/coordinator/restful_mgr_routes.go#L878-L887, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/coordinator/restful_mgr_routes.go#L940-L1007 and https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/coordinator/mix_coord.go#L242-L245; `authorizationEnabled` applied to the proxy's `/api/v1` group only: https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/distributed/proxy/service.go#L169-L186 and https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/distributed/proxy/service.go#L168-L185; the pprof import and its default: https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/metrics/metrics.go#L21, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/metrics/metrics.go#L21, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/util/paramtable/http_param.go#L71-L78 and https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/util/paramtable/http_param.go#L76-L83; the event-log listener: https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/eventlog/grpc.go#L113-L146 and https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/eventlog/grpc.go#L113-L146; `strconv.Atoi` range errors: https://pkg.go.dev/strconv#Atoi
 - Milvus encryption-zone key backup and event-log handler, v2.6.24 (commit 08c637c14373ec904dcac08e4df67279de421917) and v3.0.2 (commit 3c4448a2aee506ccd14851e742aba85f1c83188a): the backup refuses a database that is not an encryption zone and returns the plugin's backup otherwise: https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/rootcoord/root_coord.go#L3180-L3219, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/util/hookutil/cipher.go#L390-L401, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/util/hookutil/ez.go#L113-L125, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/rootcoord/root_coord.go#L3464-L3503, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/util/hookutil/cipher.go#L389-L400 and https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/util/hookutil/ez.go#L113-L125; the `/eventlog` handler creating the listener on request: https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/eventlog/handler.go#L50-L65 and https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/eventlog/handler.go#L48-L63; the Compose service's environment, which does not pass `METRICS_PORT`, and its healthcheck: https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/deployments/docker/standalone/docker-compose.yml#L39-L66 and https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/deployments/docker/standalone/docker-compose.yml#L39-L66
-- Milvus `/healthz` handler, v2.6.24 (commit 08c637c14373ec904dcac08e4df67279de421917) and v3.0.2 (commit 3c4448a2aee506ccd14851e742aba85f1c83188a): it answers 500 while any registered component is neither healthy nor on standby, and 200 otherwise, including before any component has registered: https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/http/healthz/healthz_handler.go#L89-L130 and https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/http/healthz/healthz_handler.go#L87-L128; curl's `--fail` exit on an HTTP error: https://curl.se/docs/manpage.html#-f; Docker's health status from the check's exit code: https://docs.docker.com/reference/dockerfile/#healthcheck
+- Milvus `/healthz` handler, v2.6.24 (commit 08c637c14373ec904dcac08e4df67279de421917) and v3.0.2 (commit 3c4448a2aee506ccd14851e742aba85f1c83188a): it answers 500 while any registered component is neither healthy nor on standby, and 200 otherwise, including before any component has registered: https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/http/healthz/healthz_handler.go#L89-L130 and https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/http/healthz/healthz_handler.go#L87-L128; curl's `--fail` exit on an HTTP error (curl 7.75.0 or later): https://curl.se/docs/manpage.html#-f; Docker's health status from the check's exit code: https://docs.docker.com/reference/dockerfile/#healthcheck
 - Milvus standalone Compose at v2.6.24 and v3.0.2: selected image tags, standalone command, localhost healthcheck, explicit publications of 19530 and 9091, and default network: https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/deployments/docker/standalone/docker-compose.yml#L39-L66 and https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/deployments/docker/standalone/docker-compose.yml#L39-L66
 - Milvus log-level handler dependency (zap v1.27.0, GET reads and PUT changes the level): https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/log/log.go#L278-L280, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/mlog/level.go#L72-L74, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/go.mod#L47, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/go.mod#L43 and https://github.com/uber-go/zap/blob/v1.27.0/http_handler.go#L69-L103
 - Docker port publication: default host binding, explicit loopback mapping, same-network and host access, direct-routing and older-engine caveats: https://docs.docker.com/engine/network/port-publishing/
@@ -36671,14 +36671,14 @@ missing files, authentication failures, connection failures, and timeouts are in
 
 - Chromium 154.0.8037.57 browser loopback factories and approval-mode port fallback: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L69-L158
 - Chromium 154.0.8037.57 browser branding/profile and policy checks; approval-mode startup, with the `kDefaultDevToolsPort` 9222 fallback: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L160-L282 and https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.h#L26
-- Browser command-line pipe/port startup and precedence over approval mode: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L325-L417
-- Headless-shell loopback factory and pipe/port startup: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/headless/lib/browser/headless_devtools.cc#L31-L145
-- Headless-shell command-line port and pipe handling: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/headless/lib/browser/command_line_handler.cc#L199-L206
-- Content pipe and port switch definitions: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/public/common/content_switches.cc#L596-L607
-- Actual bound address, stderr endpoint and DevToolsActivePort output: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L267-L312
-- Host check, JSON discovery, approval-mode 404 and browser WebSocket URL: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L459-L630
-- WebSocket Origin check, approval mode and unauthenticated command-line mode: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L811-L880
-- Target WebSocket URL serialization: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L1032-L1055
+- Browser command-line pipe/port startup and precedence over approval mode (Chromium 154.0.8037.57): https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L325-L417
+- Headless-shell loopback factory and pipe/port startup (Chromium 154.0.8037.57): https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/headless/lib/browser/headless_devtools.cc#L31-L145
+- Headless-shell command-line port and pipe handling (Chromium 154.0.8037.57): https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/headless/lib/browser/command_line_handler.cc#L199-L206
+- Content pipe and port switch definitions (Chromium 154.0.8037.57): https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/public/common/content_switches.cc#L596-L607
+- Actual bound address, stderr endpoint and DevToolsActivePort output (Chromium 154.0.8037.57): https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L267-L312
+- Host check, JSON discovery, approval-mode 404 and browser WebSocket URL (Chromium 154.0.8037.57): https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L459-L630
+- WebSocket Origin check, approval mode and unauthenticated command-line mode (Chromium 154.0.8037.57): https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L811-L880
+- Target WebSocket URL serialization (Chromium 154.0.8037.57): https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L1032-L1055
 - Chrome DevTools Protocol remote debugging: https://developer.chrome.com/docs/devtools/remote-debugging/
 - Chrome DevTools Protocol domains (Runtime, Network, Page): https://chromedevtools.github.io/devtools-protocol/
 - Chrome 136 user-data-dir change and Chrome for Testing exemption (existing vendor citation, not re-fetched offline): https://developer.chrome.com/blog/remote-debugging-port
@@ -36686,17 +36686,17 @@ missing files, authentication failures, connection failures, and timeouts are in
 - Selenium Grid getting started (components, ports, distributed topology): https://www.selenium.dev/documentation/grid/getting_started/
 - Selenium Docker images env vars (SE_START_VNC, SE_VNC_PASSWORD, SE_BIND_HOST, SE_ROUTER_USERNAME): https://github.com/SeleniumHQ/docker-selenium/blob/aafe4d6136f3bb5afcd9b7cb691c624516d06e1b/ENV_VARIABLES.md
 - browserless Docker configuration (TOKEN, ALLOW_FILE_PROTOCOL, port 3000): https://docs.browserless.io/enterprise/docker/config
-- CVE-2026-92811 record (affected range 1.44.0 through 2.56.7 inclusive, conflicting with the vendor fix): https://raw.githubusercontent.com/CVEProject/cvelistV5/b0b0976792a7c9d6d66ee553050c21cb088a0659/cves/2026/92xxx/CVE-2026-92811.json
+- CVE-2026-92811 record (affected range 1.44.0 through 2.56.7 inclusive, conflicting with the vendor fix in browserless 2.51.0): https://raw.githubusercontent.com/CVEProject/cvelistV5/b0b0976792a7c9d6d66ee553050c21cb088a0659/cves/2026/92xxx/CVE-2026-92811.json
 - browserless 2.51.0 Playwright WebSocket route table: https://github.com/browserless/browserless/blob/v2.51.0/src/http.ts#L91-L103
 - browserless 2.51.0 changelog (Playwright WebSocket file-protocol fix): https://raw.githubusercontent.com/browserless/browserless/v2.51.0/CHANGELOG.md
-- browserless pinned Playwright file-protocol fix a18a1231ead2ecc4114347d5d1fafd69bffeb735 (PR #5407): https://github.com/browserless/browserless/commit/a18a1231ead2ecc4114347d5d1fafd69bffeb735
+- browserless 2.51.0 pinned Playwright file-protocol fix a18a1231ead2ecc4114347d5d1fafd69bffeb735 (PR #5407): https://github.com/browserless/browserless/commit/a18a1231ead2ecc4114347d5d1fafd69bffeb735
 - browserless 2.51.0 Playwright WebSocket enforcement and blocked-URL policy close: https://raw.githubusercontent.com/browserless/browserless/v2.51.0/src/browsers/browsers.playwright.ts
 - browserless 2.56.7 TOKEN initialization: https://github.com/browserless/browserless/blob/v2.56.7/src/config.ts#L250
 - browserless 2.56.7 HTTP and WebSocket authentication rejection: https://github.com/browserless/browserless/blob/v2.56.7/src/server.ts#L103-L117
 - browserless 2.56.7 HTTP route authentication dispatch: https://github.com/browserless/browserless/blob/v2.56.7/src/server.ts#L264-L271
 - browserless 2.56.7 WebSocket route authentication dispatch: https://github.com/browserless/browserless/blob/v2.56.7/src/server.ts#L445-L454
-- browserless open-source Docker default and management endpoints: https://docs.browserless.io/enterprise/open-source
-- browserless pressure API request and response: https://docs.browserless.io/enterprise/utility-functions/pressure
+- browserless 2.56.7 open-source Docker default and management endpoints: https://docs.browserless.io/enterprise/open-source
+- browserless 2.56.7 pressure API request and response: https://docs.browserless.io/enterprise/utility-functions/pressure
 - Playwright BrowserType.launchServer and connect: https://playwright.dev/docs/api/class-browsertype
 - Playwright Docker (run-server remote connection): https://playwright.dev/docs/docker
 

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "3f24f0110135034ec3627a45219fbdbaa4ce1304f6ca10453d5f6ab42c029fe2",
+  "body_sha256": "a4375e368e52834ff46ca8b63ecb7759f068dbb00c4d18c8484f1e325b235cb4",
   "components": {
     "webui": {
       "name": "Open WebUI",
@@ -524,7 +524,7 @@ The original probes and the new controls are REASONED from the pinned source and
 
 ## Sources (checked September 2026)
 
-- Open WebUI environment configuration reference: https://docs.openwebui.com/reference/env-configuration
+- Open WebUI environment configuration reference (source basis: pinned commit 0a7c15832fb30b1903753e83f81dc7d27e5b0944): https://docs.openwebui.com/reference/env-configuration
 - Open WebUI FAQ (the first account created becomes the administrator): https://docs.openwebui.com/faq
 - Open WebUI repository (the Docker Quick Start `-v open-webui:/app/backend/data` data volume): https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/README.md
 - Docker port publishing (localhost publishing; releases older than 28.0.0 let a same-L2 host reach a localhost-published port): https://docs.docker.com/engine/network/port-publishing/
@@ -540,13 +540,13 @@ The original probes and the new controls are REASONED from the pinned source and
 - [Open WebUI chat router: administrative chat access and export checks](https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/routers/chats.py).
 - [Open WebUI file router: verified-user upload dependency and size enforcement](https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/routers/files.py).
 - [Open WebUI retrieval router: web and URL ingestion handlers](https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/routers/retrieval.py).
-- [Open WebUI hardening: registration lifecycle, execution controls, network limits, and outbound protections](https://docs.openwebui.com/getting-started/advanced-topics/hardening/).
-- [Open WebUI SSO: OAuth/OIDC, trusted headers, and OAuth persistence](https://docs.openwebui.com/features/authentication-access/auth/sso/).
-- [Open WebUI plugin loader: exec and server-process authority](https://docs.openwebui.com/features/extensibility/plugin/development/under-the-hood/).
-- [Open WebUI groups: additive permissions and private resource grants](https://docs.openwebui.com/features/authentication-access/rbac/groups/).
-- [Open WebUI permissions: workspace and sharing controls](https://docs.openwebui.com/features/authentication-access/rbac/permissions/).
-- [Open WebUI database schema: normalized access grants](https://docs.openwebui.com/reference/database-schema/).
-- [Open WebUI API keys: global enablement, group permissions, and inherited authority](https://docs.openwebui.com/features/authentication-access/api-keys/).
-- [Open WebUI Direct Connections: browser-to-provider inference](https://docs.openwebui.com/features/chat-conversations/direct-connections/).
-- [Open WebUI OpenAI-compatible connections: administrative provider configuration](https://docs.openwebui.com/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible/).
-- [Open WebUI API endpoints: model discovery, chat requests, ingestion, and development documentation](https://docs.openwebui.com/reference/api-endpoints/).
+- [Open WebUI hardening: registration lifecycle, execution controls, network limits, and outbound protections (source basis: pinned commit 0a7c15832fb30b1903753e83f81dc7d27e5b0944)](https://docs.openwebui.com/getting-started/advanced-topics/hardening/).
+- [Open WebUI SSO: OAuth/OIDC, trusted headers, and OAuth persistence (source basis: pinned commit 0a7c15832fb30b1903753e83f81dc7d27e5b0944)](https://docs.openwebui.com/features/authentication-access/auth/sso/).
+- [Open WebUI plugin loader: exec and server-process authority (source basis: pinned commit 0a7c15832fb30b1903753e83f81dc7d27e5b0944)](https://docs.openwebui.com/features/extensibility/plugin/development/under-the-hood/).
+- [Open WebUI groups: additive permissions and private resource grants (source basis: pinned commit 0a7c15832fb30b1903753e83f81dc7d27e5b0944)](https://docs.openwebui.com/features/authentication-access/rbac/groups/).
+- [Open WebUI permissions: workspace and sharing controls (source basis: pinned commit 0a7c15832fb30b1903753e83f81dc7d27e5b0944)](https://docs.openwebui.com/features/authentication-access/rbac/permissions/).
+- [Open WebUI database schema: normalized access grants (source basis: pinned commit 0a7c15832fb30b1903753e83f81dc7d27e5b0944)](https://docs.openwebui.com/reference/database-schema/).
+- [Open WebUI API keys: global enablement, group permissions, and inherited authority (source basis: pinned commit 0a7c15832fb30b1903753e83f81dc7d27e5b0944)](https://docs.openwebui.com/features/authentication-access/api-keys/).
+- [Open WebUI Direct Connections: browser-to-provider inference (source basis: pinned commit 0a7c15832fb30b1903753e83f81dc7d27e5b0944)](https://docs.openwebui.com/features/chat-conversations/direct-connections/).
+- [Open WebUI OpenAI-compatible connections: administrative provider configuration (source basis: pinned commit 0a7c15832fb30b1903753e83f81dc7d27e5b0944)](https://docs.openwebui.com/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible/).
+- [Open WebUI API endpoints: model discovery, chat requests, ingestion, and development documentation (source basis: pinned commit 0a7c15832fb30b1903753e83f81dc7d27e5b0944)](https://docs.openwebui.com/reference/api-endpoints/).
