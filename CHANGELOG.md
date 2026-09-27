@@ -11,7 +11,7 @@ in step with the merged pull request is therefore an authoring obligation, not a
 
 ## 2026-09-26
 
-- Close row 3.29's bounded C3-TOOL-ARGV gaps: attached credentials after known short-option clusters, Vault login credential pairs, env secret assignments, OpenSSL MAC keys, and URI userinfo. Preserve prompts, file/stdin inputs and shell assignment prefixes; exempt whole house placeholders only in the new URI rule. Add failing and safe fixtures and document remaining limits. (#NNN)
+- Close row 3.29's bounded C3-TOOL-ARGV gaps: attached credentials after known short-option clusters, Vault login credential pairs, env secret assignments, OpenSSL MAC keys, and URI userinfo. Preserve prompts, file/stdin inputs and shell assignment prefixes; exempt whole house placeholders only in the new URI rule. Add failing and safe fixtures and document remaining limits. (#399)
 
 - Restrict the shared gate walker to tracked working-tree files (#396), row 3.28. Preserve caller filters, fail closed when Git or selected tracked inputs are unavailable, and test unreadable untracked directories alongside untracked violations. Stage existing gate fixtures in temporary Git indexes.
 
