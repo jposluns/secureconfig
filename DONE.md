@@ -10,6 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 3.36 | Extend credential argv scanning to Verify inline command spans using the shared section selector and fenced checks, with code-specific preceding-line waivers and fixtures. (M, M) | Done, #NNN. |
 | 1.186 | Audit secret substitutions on `set --` lines and disclose shell-history exposure at 14 sites in `agent-builders.md`, `ai-infra-services.md`, `caddy.md`, `gpu-clouds.md`, `llm-observability.md`, `mlflow.md`, `model-servers.md`, `nginx.md`, `object-storage.md`, `observability-components.md`, `traefik.md`, `vector-databases.md`. Preserve existing disclosures and generated or prompted secret inputs. | Done, #412. |
 | 1.185 | Narrow the frontend-frameworks secret scan to browser-served assets and prerendered pages, excluding server-only build output; document custom and SSR output paths. (L, S) | Done, #411. |
 | 1.178 | F-BROWSERLESS-TOKEN: pin the open-source TOKEN default to 2.56.7, reconcile the conflicting Docker documentation, qualify the uninspected Enterprise image, and align the authentication probe and version-basis claims; add the CVE-2026-92811 file-protocol fix requirement, conflicting affected-range caveat, and Playwright canary check. (M, S) | Done, #409. |
