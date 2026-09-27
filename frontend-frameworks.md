@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "60616cd61628644e428f21f196f67fcdd63da150cb58f233b3fda6bba4100a5e",
+  "body_sha256": "fa353cbaacec1e11d4b189b9bb58ff4c608fdd6099118d96110bad3a4ed405c0",
   "components": {
     "adapter": {
       "name": "SvelteKit adapter-node",
@@ -100,7 +100,7 @@ version_basis: {
     "vite-bind": {"text": "Vite 8.3.1 server.host defaults localhost; true/0.0.0.0 exposes all addresses and should not remain beyond trusted-network tests.", "components": ["vite-pin", "vite"], "sources": ["vite-pin:s4b7c35b93a62", "vite:sae9dd90908fc"], "status": "REASONED"},
     "vite-hosts": {"text": "server.allowedHosts defaults empty with localhost, .localhost and IPs allowed; true disables protection and permits DNS rebinding. Prefer explicit names.", "components": ["vite"], "sources": ["vite:sae9dd90908fc"], "status": "REASONED"},
     "verify-private": {"text": "Guide expects anonymous /api/private 401; enforcement needs app/server handlers, not client redirects.", "components": ["nuxt", "svelte"], "sources": ["nuxt:se2d1e4a2e433", "svelte:s329dda89ba78"], "status": "REASONED", "verify": [1]},
-    "verify-secret": {"text": "Scan browser-served output: adapter-node build/client and build/prerendered, Nuxt .output/public, Vite dist, or only dist/client in an unambiguous SSR layout (dist/client and dist/server, no dist/index.html). Adjust paths for custom layouts/SSR; reject absence. Prompt full literal secret; grep stdin: 0 finding, 1 no match, others errors. Clean cannot rule out transformed secrets or runtime responses; input protects argv only.", "components": ["grep", "adapter", "nuxt-output", "nitro-output", "vite-pin", "vite"], "sources": ["grep:sea43e82b0753", "grep:s2c1251092e66", "grep:sd00017f70dae", "adapter:s200d6e800c74", "adapter:sf17c5646623c", "adapter:s1ffeda9bbb37", "adapter:s8d4fa8e7426b", "nuxt-output:s793a18962748", "nuxt-output:sdd39f0826f92", "nitro-output:sbe9fd1f61fe0", "nitro-output:s47fff9b24fba", "nitro-output:s51e38e411bfa", "vite-pin:s151e8dbf59a2", "vite-pin:s484948ac14b6", "vite:s7c70a12e43ed", "vite:sba6dbfdd7590"], "status": "REASONED", "verify": [1]},
+    "verify-secret": {"text": "Scan browser-served output: adapter-node build/client and build/prerendered, Nuxt .output/public, Vite dist, scanned whole, with matches under dist/server/ reported separately as server output. Adjust paths for custom layouts/SSR; reject absence. Prompt full literal secret; grep stdin: 0 finding, 1 no match, others errors. Clean cannot rule out transformed secrets or runtime responses; input protects argv only.", "components": ["grep", "adapter", "nuxt-output", "nitro-output", "vite-pin", "vite"], "sources": ["grep:sea43e82b0753", "grep:s2c1251092e66", "grep:sd00017f70dae", "adapter:s200d6e800c74", "adapter:sf17c5646623c", "adapter:s1ffeda9bbb37", "adapter:s8d4fa8e7426b", "nuxt-output:s793a18962748", "nuxt-output:sdd39f0826f92", "nitro-output:sbe9fd1f61fe0", "nitro-output:s47fff9b24fba", "nitro-output:s51e38e411bfa", "vite-pin:s151e8dbf59a2", "vite-pin:s484948ac14b6", "vite:s7c70a12e43ed", "vite:sba6dbfdd7590"], "status": "REASONED", "verify": [1]},
     "verify-host": {"text": "Spoofed Host must not be trusted; supplied allowlist reference is Vite-specific.", "components": ["vite"], "sources": ["vite:sae9dd90908fc"], "status": "REASONED", "verify": [1]},
     "verify-proxy": {"text": "Check Secure cookies and HTTPS redirects with SvelteKit ORIGIN; verify Nuxt for its preset/platform, not NUXT_PUBLIC_.", "components": ["svelte", "nuxt"], "sources": ["svelte:s59abf03bae6a", "nuxt:s32e447cb5ef4"], "status": "REASONED", "verify": [1]}
   }
@@ -134,7 +134,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | vite-bind: Vite 8.3.1 server.host defaults localhost; true/0.0.0.0 exposes all addresses and should not remain beyond trusted-network tests. | Vite bind source v8.3.1; Vite documentation unknown | REASONED |
 | vite-hosts: server.allowedHosts defaults empty with localhost, .localhost and IPs allowed; true disables protection and permits DNS rebinding. Prefer explicit names. | Vite documentation unknown | REASONED |
 | verify-private: Guide expects anonymous /api/private 401; enforcement needs app/server handlers, not client redirects. | Nuxt documentation 4.x; SvelteKit documentation unknown | REASONED |
-| verify-secret: Scan browser-served output: adapter-node build/client and build/prerendered, Nuxt .output/public, Vite dist, or only dist/client in an unambiguous SSR layout (dist/client and dist/server, no dist/index.html). Adjust paths for custom layouts/SSR; reject absence. Prompt full literal secret; grep stdin: 0 finding, 1 no match, others errors. Clean cannot rule out transformed secrets or runtime responses; input protects argv only. | GNU grep unknown; SvelteKit adapter-node @sveltejs/adapter-node@5.5.7; Nuxt output source v4.0.0; Nitro output defaults 2.12.0; Vite bind source v8.3.1; Vite documentation unknown | REASONED |
+| verify-secret: Scan browser-served output: adapter-node build/client and build/prerendered, Nuxt .output/public, Vite dist, scanned whole, with matches under dist/server/ reported separately as server output. Adjust paths for custom layouts/SSR; reject absence. Prompt full literal secret; grep stdin: 0 finding, 1 no match, others errors. Clean cannot rule out transformed secrets or runtime responses; input protects argv only. | GNU grep unknown; SvelteKit adapter-node @sveltejs/adapter-node@5.5.7; Nuxt output source v4.0.0; Nitro output defaults 2.12.0; Vite bind source v8.3.1; Vite documentation unknown | REASONED |
 | verify-host: Spoofed Host must not be trusted; supplied allowlist reference is Vite-specific. | Vite documentation unknown | REASONED |
 | verify-proxy: Check Secure cookies and HTTPS redirects with SvelteKit ORIGIN; verify Nuxt for its preset/platform, not NUXT_PUBLIC_. | SvelteKit documentation unknown; Nuxt documentation 4.x | REASONED |
 <!-- version-basis:end -->
@@ -183,13 +183,13 @@ Both are development tooling, not a production server: the `vite preview` docs s
 
 Run from the project root after a production build. The paths below cover default SvelteKit adapter-node output (`build/client` plus the separate `build/prerendered`), Nuxt/Nitro public output (`.output/public`, including copied public assets and prerendered pages), and a plain Vite client build (`dist`, including copied public assets). They exclude adapter-node server output and Nitro `.output/server`.
 
-Before running, adjust both path lists for your actual adapter, Nitro preset or configured output directories. When `dist/client` and `dist/server` both exist and there is no top-level `dist/index.html` (a Vite SSR layout), the block scans only `dist/client`. Any other `dist` is scanned whole: a plain SPA can contain `dist/client` copied from `public/client/`, and scanning all of `dist` may over-report a server secret but never misses a client file. Include any separately deployed static assets and prerendered HTML, and never select a parent containing server-only output. This file scan does not inspect dynamically rendered HTML or API responses.
+Before running, adjust both path lists for your actual adapter, Nitro preset or configured output directories. The block always scans all of `dist`, so it never misses a browser-served file. In a Vite SSR layout, where `dist/server` holds the server build, a match under `dist/server/` is reported separately as server output rather than as a client leak; confirm that `dist/server` is server-only in your deployment before treating it as clean. Include any separately deployed static assets and prerendered HTML, and never select a parent containing server-only output. This file scan does not inspect dynamically rendered HTML or API responses.
 
 REASONED: following block; private-route denial, client-secret scanning, Host handling and proxy cookies/redirects. No deployed framework application or run outcome is recorded here; expectations are reasoned from the guide and its cited framework and grep documentation.
 
 ```bash
 curl -q -si https://app.example.com/api/private | head -1   # 401 with no session cookie, on all three frameworks
-ls -d build/client build/prerendered .output/public dist/client dist 2>/dev/null  # confirm browser-served output paths
+ls -d build/client build/prerendered .output/public dist 2>/dev/null  # confirm browser-served output paths
 # Use the browser-served paths above; adapt both lists for custom output or SSR before running.
 # Search client assets and prerendered pages for the literal secret with a fixed-string match. The secret is prompted
 # (input hidden) and reaches grep on stdin (-f - reads the patterns from stdin), never grep's argv; -l prints only
@@ -202,9 +202,7 @@ ls -d build/client build/prerendered .output/public dist/client dist 2>/dev/null
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
   set --
-  for d in build/client build/prerendered .output/public; do [ -d "$d" ] && set -- "$@" "$d"; done
-  # Narrow to dist/client only for an unambiguous Vite SSR layout; anything else scans all of dist (over-reports, never misses).
-  if [ -d dist/client ] && [ -d dist/server ] && [ ! -e dist/index.html ]; then set -- "$@" dist/client; elif [ -d dist ]; then set -- "$@" dist; fi
+  for d in build/client build/prerendered .output/public dist; do [ -d "$d" ] && set -- "$@" "$d"; done
   [ "$#" -gt 0 ] || { echo 'inconclusive: no listed browser-served output directory here; build first and check the paths'; exit 2; }
   { unset -n client_secret && unset -v client_secret; } 2>/dev/null ||
     { echo 'cannot initialize secret input; not scanning'; exit 2; }
@@ -214,9 +212,15 @@ ls -d build/client build/prerendered .output/public dist/client dist 2>/dev/null
   case "$client_secret" in
     ''|*[[:cntrl:]]*) echo 'the full secret value is required; not scanning'; exit 2 ;;
   esac
-  if printf '%s\n' "$client_secret" | grep -rlF -f - -- "$@"; then rc=0; else rc=$?; fi
+  # File names are not secret: capture them so matches under dist/server/ (a Vite SSR server build) are reported apart.
+  if hits=$(printf '%s\n' "$client_secret" | grep -rlF -f - -- "$@"); then rc=0; else rc=$?; fi
   case "$rc" in
-    0) echo "FINDING: the secret is in the built client output" ;;
+    0)
+      client_hits=$(printf '%s\n' "$hits" | grep -v '^dist/server/')
+      server_hits=$(printf '%s\n' "$hits" | grep '^dist/server/')
+      [ -z "$client_hits" ] || { printf '%s\n' "$client_hits"; echo "FINDING: the secret is in the built client output"; }
+      [ -z "$server_hits" ] || { printf '%s\n' "$server_hits"; echo "server output: the secret is under dist/server/, which a Vite SSR build does not serve to browsers; confirm dist/server is server-only in your deployment before treating this as clean"; }
+      ;;
     1) echo "clean: secret not found in $*" ;;
     *) echo "error: grep exited $rc, result inconclusive" ;;
   esac
