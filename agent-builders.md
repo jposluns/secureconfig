@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "e435722103a330ef7cc2cb18f01a97b841fc5fa3847ac65f96e8d1be77c0e0b5",
+  "body_sha256": "ef68d1e77a944605baa80eaf8c7e927a673f48b77506b9be670b8108fe9e0c5a",
   "components": {
     "dify": {
       "name": "Dify documentation",
@@ -468,6 +468,8 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 # not that the endpoint is open. WITH a valid app key, 200 returning the app's parameters JSON.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  # The app key you substitute on the set -- line enters shell history.
+  # Use a short-lived key or clear that history line afterward.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DIFY_APP_KEY'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift

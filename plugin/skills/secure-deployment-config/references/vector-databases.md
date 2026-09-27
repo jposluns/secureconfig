@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "53aaa56b76ad71984d293afbde3a0b6d36c97e31fb9c4350debea1f3076cd6ef",
+  "body_sha256": "b7843af22c94a58930cd342b0749020d790c6db3f7da8c0fc90baa8ab12a3d2b",
   "components": {
     "q": {
       "name": "Qdrant source",
@@ -472,6 +472,8 @@ REASONED: following block; client-key outcomes follow the cited Qdrant security 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  # The API key (REPLACE_WITH_LONG_RANDOM_VALUE) on the set -- line enters shell
+  # history. Use a short-lived key or clear that history line afterward.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_FRONTEND_HOSTNAME' 'REPLACE_WITH_LONG_RANDOM_VALUE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "a3fb02f8459e2b1c3c3acb2c2ce4c62d00557546d9bfaf5ebcae46415bed27f3",
+  "body_sha256": "e4ea10976bad434d5112a09a1ea7f33d383b101ed29cdcc6da8d3e357b1deca7",
   "components": {
     "docs": {
       "name": "Caddy documentation",
@@ -288,6 +288,8 @@ head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
   # curl reads the admin password from a config stream on stdin (--config -),
   # never argv (-u admin:PASSWORD is readable in ps / /proc/<pid>/cmdline).
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  # The password you substitute on the set -- line enters shell history.
+  # Clear that history line afterward.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PASSWORD'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift

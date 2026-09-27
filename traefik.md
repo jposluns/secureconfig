@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "cbe08d67f76cc5f8856168ef9334c73f84b1a9f7f940e66e80a7d2641a085965",
+  "body_sha256": "476384fc20fff9b913a1d3041f29db0e454dffd93bf9cf221b91c8912c14a960",
   "components": {
     "traefik": {
       "name": "Traefik scope",
@@ -251,6 +251,8 @@ head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
   # curl reads the admin password from a config stream on stdin (--config -),
   # never argv (-u admin:PASSWORD is readable in ps / /proc/<pid>/cmdline).
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  # The password you substitute on the set -- line enters shell history.
+  # Clear that history line afterward.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PASSWORD'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
