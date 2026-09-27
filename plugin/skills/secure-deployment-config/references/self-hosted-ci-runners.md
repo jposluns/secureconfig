@@ -106,7 +106,8 @@ clients. Enable neither unless needed, and firewall each to the clients that nee
 Both runners are outbound-only job pollers, so most checks are posture and REST audits, not reachability
 probes. Every check that needs a live registered runner or worker is reasoned, not demonstrated: the authoring
 environment has no container runtime, registered test runner, or cloud test infrastructure, so those outcomes
-are derived from the cited vendor pages rather than observed, and backlog row 2.29 tracks demonstrating them.
+are derived from the cited vendor pages rather than observed. Backlog row 2.29 retains only the offline
+`tomllib` config inspection against exposed and fixed fixtures.
 Require successful, complete listings; authentication errors, unavailable endpoints, and incomplete pagination
 are inconclusive. Run the REST and config checks from an administrator workstation using stored CLI credentials.
 
@@ -127,12 +128,12 @@ posture and that workflow approval of pull requests is off unless required (a wo
 permissions with an explicit `permissions:` key, and OIDC `id-token` is separate):
 
 ```bash
+# REASONED: GitHub configuration audit follows the cited vendor pages; no registered test runner or cloud test infrastructure is available.
 gh api -H 'X-GitHub-Api-Version: 2026-03-10' /orgs/REPLACE_WITH_ORG/actions/permissions/workflow --jq '{default_workflow_permissions, can_approve_pull_request_reviews}'
 gh api -H 'X-GitHub-Api-Version: 2026-03-10' /repos/REPLACE_WITH_OWNER/REPLACE_WITH_REPO/actions/permissions/workflow --jq '{default_workflow_permissions, can_approve_pull_request_reviews}'
 ```
 
-The eligibility listing shows configuration; the behavioral proof is reasoned, not demonstrated (backlog row
-2.29): in an isolated test organization use a disposable runner with no sensitive credentials or internal
+REASONED: following block; the eligibility workflow's expected behavior follows the cited vendor pages and is not demonstrated. The eligibility listing shows configuration; in an isolated test organization use a disposable runner with no sensitive credentials or internal
 network access, install this workflow in a public test repository, and open a controlled fork pull request.
 
 ```yaml
@@ -189,13 +190,14 @@ to be `ref_protected`, comparing against an isolated control with unrestricted i
 `gitlab-runner verify` only confirms authentication, nothing about isolation.
 
 ```bash
+# REASONED: GitLab configuration audit follows the cited vendor pages; no registered test runner or cloud test infrastructure is available.
 glab api --hostname REPLACE_WITH_GITLAB_HOST projects/REPLACE_WITH_PROJECT_ID/job_token_scope
 glab api --hostname REPLACE_WITH_GITLAB_HOST --paginate projects/REPLACE_WITH_PROJECT_ID/job_token_scope/allowlist
 glab api --hostname REPLACE_WITH_GITLAB_HOST --paginate projects/REPLACE_WITH_PROJECT_ID/job_token_scope/groups_allowlist
 glab api --hostname REPLACE_WITH_GITLAB_HOST runners/REPLACE_WITH_RUNNER_ID
 ```
 
-Lifecycle and contamination are reasoned (backlog row 2.29): an ephemeral or JIT GitHub runner should be gone
+Lifecycle and contamination are REASONED from the cited vendor pages: an ephemeral or JIT GitHub runner should be gone
 from a fully paginated `gh api /orgs/REPLACE_WITH_ORG/actions/runners` after a harmless job, but deregistration
 is not proof the machine was destroyed, and a GitLab runner manager can stay registered while its workers are
 replaced, so verify termination and storage disposal through the infrastructure provider. Test reuse with two

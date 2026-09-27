@@ -105,8 +105,8 @@ access cannot bypass that gateway.
 ## Verify
 
 ```bash
-# REASONED, not demonstrated here: no SurrealDB runtime in the authoring environment; backlog row 1.82 tracks
-# running it live. A redirect, missing database, disabled route, proxy rejection, TLS or transport failure is
+# REASONED: expected server outcomes follow the cited SurrealDB documentation; no SurrealDB runtime is
+# available in the authoring environment. A redirect, missing database, disabled route, proxy rejection, TLS or transport failure is
 # inconclusive, never a pass.
 ss -tlnp   # inventory, on the host: 8000 on loopback or a private address, never 0.0.0.0
 # guard-conventions: allow fixed loopback health URL http://127.0.0.1:8000/health; no reader-substituted target
@@ -156,7 +156,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w '
 ```
 
 These server outcomes are reasoned, not demonstrated here (no SurrealDB runtime in the authoring environment);
-backlog row 1.82 tracks running the exposed and fixed states live. Confirm the TLS certificate chain wherever
+the expected exposed and fixed outcomes follow the cited SurrealDB documentation. Confirm the TLS certificate chain wherever
 TLS terminates with normal validation (a trusted CA for private PKI); never use `-k`.
 
 ## Sources (checked September 2026)

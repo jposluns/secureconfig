@@ -425,7 +425,7 @@ Repeat the valid-certificate control from a network that must not reach `INTERNA
 )
 ```
 
-Also repeat with an untrusted node certificate and from disallowed networks. Inspect the full exchange and server logs; `s_client` status and server-certificate verification alone are insufficient evidence of client acceptance. Successful TLS does not demonstrate quorum or replication health. Those comparisons remain in the backlog row below.
+Also repeat with an untrusted node certificate and from disallowed networks. Inspect the full exchange and server logs; `s_client` status and server-certificate verification alone are insufficient evidence of client acceptance. Successful TLS does not demonstrate quorum or replication health. Those comparisons remain REASONED from the cited Kafka TLS and quorum documentation, not observed here.
 
 ### Plaintext refusal and wrong-password rejection
 
@@ -771,13 +771,13 @@ At INFO, the requested denial should be present while the allowed write is absen
 
 The block checks the DEBUG outcome. Repeat the same requests at INFO to establish the matched comparison. Check controller log collection with known controller-authorized operations as well. The wrong-password probe belongs in the authentication-failure review of normal server logs, not in an expectation that the authorizer records failed authentication.
 
-### Demonstration backlog
+### REASONED service checks
 
-No existing Kafka live-demonstration row was found in the reviewed backlog. This single row carries the original probes and the new controls together.
+The checks below remain REASONED from the cited Kafka documentation and pinned sources. No live service behavior is claimed.
 
-| ID | Required exposed/fixed demonstration | Status |
+| Scope | Exposed/fixed checks and prerequisites | Status |
 | --- | --- | --- |
-| KAFKA-LIVE-1 | Demonstrate every REASONED check above on a pinned Kafka deployment. Cover namespace inventory and real IPv4/IPv6 exposure; client TLS and plaintext refusal; correct and wrong SCRAM credentials; marker round trip; authenticated low-user topic denial with no matching ACL; writer/reader separation and application-create denial with administrator success; allowed/disallowed networks for each listener; valid, missing, and untrusted internal certificates; healthy replication and controller quorum after bootstrap; producer, consumer, request-time, and conditional partition-mutation quotas with matched bounded workloads and throttle metrics; simultaneous-connection and connection-creation limits while internal traffic remains healthy; and INFO/DEBUG authorization records collected from brokers and controllers, plus authentication-failure records. Record commands, versions, diagnostics, matched positive controls, and cleanup. Configuration inspection alone does not close this row. | Open; service behavior is reasoned, not demonstrated. |
+| Kafka controls | Run every REASONED check above on a pinned Kafka deployment. Cover namespace inventory and real IPv4/IPv6 exposure; client TLS and plaintext refusal; correct and wrong SCRAM credentials; marker round trip; authenticated low-user topic denial with no matching ACL; writer/reader separation and application-create denial with administrator success; allowed/disallowed networks for each listener; valid, missing, and untrusted internal certificates; healthy replication and controller quorum after bootstrap; producer, consumer, request-time, and conditional partition-mutation quotas with matched bounded workloads and throttle metrics; simultaneous-connection and connection-creation limits while internal traffic remains healthy; and INFO/DEBUG authorization records collected from brokers and controllers, plus authentication-failure records. Record commands, versions, diagnostics, matched positive controls, and cleanup. Configuration inspection alone does not demonstrate service behavior. | REASONED from the cited documentation and pinned sources; service behavior is not demonstrated. |
 
 ## Common mistakes
 

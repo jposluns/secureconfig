@@ -722,7 +722,7 @@ system_account: SYS
 
 ## Verify
 
-Service behaviour has **not** been demonstrated here. `nats-server`, `nats`, `nk`, `nsc`, Docker, and Podman are unavailable on the authoring environment's `PATH`; no live broker, certificate fixtures, authentication service, or external peer environment was supplied. The filesystem restrictions prohibit provisioning binaries and writable credential fixtures. The live comparisons below are **REASONED**, and remain in `NATS-LIVE-1`.
+Service behaviour has **not** been demonstrated here. `nats-server`, `nats`, `nk`, `nsc`, Docker, and Podman are unavailable on the authoring environment's `PATH`; no live broker, certificate fixtures, authentication service, or external peer environment was supplied. The filesystem restrictions prohibit provisioning binaries and writable credential fixtures. The live comparisons below are **REASONED** from the cited documentation and pinned sources.
 
 Run exposed-state comparisons only in an authorized isolated fixture. Keep the target, identity, payload, and observation window matched while changing the control under test. Record diagnostics and positive controls without secrets. DNS failures, generic timeouts, and local fixture errors are inconclusive.
 
@@ -1088,13 +1088,14 @@ These are capacity tests, not proof of a connection-attempt rate limit. A client
 
 See [runtime limits](https://docs.nats.io/reference/config), [account limits](https://docs.nats.io/reference/config/accounts/limits/), and [JetStream request queues](https://docs.nats.io/reference/config/jetstream/request_queue_limit).
 
-### Demonstration backlog
+### Verification scope and local work
 
 The whole-corpus gate suite was not run for this drop-in generation. Shell checks do not demonstrate NATS configuration parsing or service behaviour.
 
-| ID | Status | Closure requirement |
+| Check scope | Status | Procedure and prerequisites |
 | --- | --- | --- |
-| NATS-LIVE-1 | OPEN: service behaviour REASONED; native parsing and key generation also outstanding in this environment | On an authorized deployment pinned to NATS Server v2.14.7 and natscli v0.4.0, run V0-V10 and every applicable conditional comparison against isolated exposed and fixed states. Record server/client/tool versions, complete substituted configurations, commands or protocol requests, responses, matching server logs, effective limits, positive controls, and cleanup without secrets. Cross-reference or replace existing demonstration row 1.81 so the original checks remain tracked. Configuration inspection or successful `-t` alone cannot close this row. |
+| Service behaviour | REASONED from the cited NATS Server v2.14.7 and natscli v0.4.0 sources and vendor documentation; not demonstrated | On an authorized deployment pinned to NATS Server v2.14.7 and natscli v0.4.0, run V0-V10 and every applicable conditional comparison against isolated exposed and fixed states. Record server/client/tool versions, complete substituted configurations, commands or protocol requests, responses, matching server logs, effective limits, positive controls, and cleanup without secrets. Configuration inspection or successful `-t` alone does not demonstrate service behaviour. |
+| Native parsing and key generation | Outstanding in this environment; retained local work | Run the offline-capable checks above with the pinned tools and readable certificate, JWT, include, and credential fixtures. |
 
 ## Common mistakes
 

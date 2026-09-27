@@ -87,9 +87,10 @@ BIMI is optional display metadata that shows a brand logo in supporting clients;
 
 ## Verify
 
-Every probe below is reasoned, not demonstrated: the authoring environment has no DNS control, no SMTP endpoint, and no container runtime, so the outcomes are derived from the cited RFCs rather than observed, and backlog row 2.31 tracks demonstrating them against a controlled domain. For the submission probes, a transport failure or a TLS error is inconclusive, never the fixed state.
+Every probe below is reasoned, not demonstrated: the authoring environment has no DNS control, no SMTP endpoint, and no container runtime, so the outcomes are derived from the cited RFCs rather than observed. For the submission probes, a transport failure or a TLS error is inconclusive, never the fixed state.
 
 ```bash
+# REASONED: DNS and TLS expectations follow the cited RFCs; no DNS control, SMTP endpoint, or container runtime is available.
 # Inspect the published records (replace names; take the DKIM selector from a real signature).
 # These read DNS and TLS state; they do not evaluate SPF or DMARC or prove a service listener.
 dig +noall +answer TXT bounce.example.com
@@ -114,7 +115,7 @@ openssl s_client -connect smtp.example.com:465 \
   -verify_return_error -min_protocol TLSv1.2 </dev/null
 ```
 
-Prove alignment by sending one benign message to a controlled recipient and reading the receiving system's trusted `Authentication-Results` header (RFC 8601), never a header the message itself supplied: require a passing, aligned SPF or DKIM result. Confirm the enforcement target is really `p=reject` with subdomain coverage and no testing or legacy sampling. Test open-relay rejection only in an operator-controlled environment (an external `MAIL FROM` and a non-local `RCPT TO` should draw a 5xx), and compare it against an authorized submission and ordinary local delivery. These checks inspect DNS, TLS, and message authentication, not an application listener; running them against live deployments in both the exposed and fixed states is tracked by backlog row 2.31.
+Prove alignment by sending one benign message to a controlled recipient and reading the receiving system's trusted `Authentication-Results` header (RFC 8601), never a header the message itself supplied: require a passing, aligned SPF or DKIM result. Confirm the enforcement target is really `p=reject` with subdomain coverage and no testing or legacy sampling. Test open-relay rejection only in an operator-controlled environment (an external `MAIL FROM` and a non-local `RCPT TO` should draw a 5xx), and compare it against an authorized submission and ordinary local delivery. These checks inspect DNS, TLS, and message authentication, not an application listener; their expected exposed and fixed outcomes are REASONED from the cited RFCs.
 
 ## Common mistakes
 

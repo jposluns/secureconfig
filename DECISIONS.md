@@ -17,6 +17,16 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Isolation capability, 2026-09-26: full retirement of live-demonstration rows.** The maintainer ruled:
+  "Isolation capability: RETIRE the live-demonstration rows; REASONED is the end state. Scope, FULL retirement: move
+  every demonstration row to DONE as "Retired (maintainer ruling 2026-09-26)", drop CONTRIBUTING rule 5's
+  demonstration-row requirement, and retire check_reasoned_rows.py, keeping the Verify-marking gate; one PR."
+  The authoring host cannot open listeners without an isolation capability, so these queued demonstrations
+  cannot be worked. This supersedes the demonstration-backlog requirements in earlier rulings below,
+  including the 2026-09-24 isolation ruling and the 2026-09-19 rule 5 carve-out. Their historical records
+  remain; the prohibition on unauthorized listeners still applies. Doable non-demonstration work stays
+  open under its existing id. Row 1.143's separate "Disclose + row" ruling remains in force.
+
 - **Container ports behind remapped publications, 2026-09-26: allowlist.** This supersedes P4
   option A below. A container-internal port published on a different host port is not the host
   listener the reader exposes; allowlist it with a reason naming the host-port row, following

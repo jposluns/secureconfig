@@ -98,7 +98,7 @@ Webmin 2.670's own on thirty test files, and the TCP reachability probe, which i
 on loopback in [low-code-builders.md](low-code-builders.md) with this guide's ports. Everything else
 is reasoned: the authoring host runs neither Cockpit's
 systemd socket nor Proxmox VE, and it forbids binding every interface, so no default bind was observed.
-Backlog row 1.110 tracks demonstrating the rest.
+Those expected outcomes are REASONED from the cited vendor documentation and source.
 
 On the host, list the listeners, TCP and UDP:
 

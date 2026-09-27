@@ -35,7 +35,7 @@ services:
     ports: !reset []   # an ordinary ports list would merge with the base file's list, not replace it
 ```
 
-**REASONED, not demonstrated:** the authoring host forbids opening listeners without an isolated network namespace, and has none; Docker is unavailable. Confirm the result against the merged model with `docker compose config`: without the override, expect the base host publication on port 5003 and no `PLUGIN_REMOTE_INSTALLING_ENABLED` entry (the daemon defaults it to `true`); with the override, expect `PLUGIN_REMOTE_INSTALLING_ENABLED: "false"` and no published port for `plugin_daemon`. Recreate the service with `docker compose up -d --force-recreate plugin_daemon`: the default starts the TCP listener, whereas `false` prevents its startup and removes the daemon debugging-key route. The switch alone leaves the Compose publication in place. These expectations follow the pinned Compose file, daemon startup and route conditions, and Docker [reset semantics](https://docs.docker.com/reference/compose-file/merge/#reset-value), cited in Sources. Live demonstration is tracked in TODO row 1.163.
+**REASONED, not demonstrated:** the authoring host forbids opening listeners without an isolated network namespace, and has none; Docker is unavailable. Confirm the result against the merged model with `docker compose config`: without the override, expect the base host publication on port 5003 and no `PLUGIN_REMOTE_INSTALLING_ENABLED` entry (the daemon defaults it to `true`); with the override, expect `PLUGIN_REMOTE_INSTALLING_ENABLED: "false"` and no published port for `plugin_daemon`. Recreate the service with `docker compose up -d --force-recreate plugin_daemon`: the default starts the TCP listener, whereas `false` prevents its startup and removes the daemon debugging-key route. The switch alone leaves the Compose publication in place. These expectations follow the pinned Compose file, daemon startup and route conditions, and Docker [reset semantics](https://docs.docker.com/reference/compose-file/merge/#reset-value), cited in Sources.
 
 ## 2. TLS
 
@@ -111,16 +111,18 @@ authority and contain it at the infrastructure layer, not with login alone:
 
 ## Verify
 
-**REASONED Dify publication and port 5003 checks, not demonstrated:** the authoring host forbids opening listeners without an isolated network namespace, and has none; Docker is unavailable. With the default listener enabled and published, expect a successful outside TCP connection; after the section 1 override and recreation, expect no host publication and a refusal or timeout, with a successful same-host positive control as described below. These outcomes follow the pinned Compose publication and daemon startup condition, Docker [reset semantics](https://docs.docker.com/reference/compose-file/merge/#reset-value), and the [Publishers fields](https://docs.docker.com/reference/cli/docker/compose/ps/). TODO row 1.163 tracks the live demonstration. The port 5003 probe tests TCP reachability, not debugging-key authentication. A successful connection proves exposure even if a later handshake would reject a key. Disabling the listener alone also cannot prove that Docker's publication was removed; check the merged Compose model and Publishers entries as well.
+**REASONED Dify publication and port 5003 checks, not demonstrated:** the authoring host forbids opening listeners without an isolated network namespace, and has none; Docker is unavailable. With the default listener enabled and published, expect a successful outside TCP connection; after the section 1 override and recreation, expect no host publication and a refusal or timeout, with a successful same-host positive control as described below. These outcomes follow the pinned Compose publication and daemon startup condition, Docker [reset semantics](https://docs.docker.com/reference/compose-file/merge/#reset-value), and the [Publishers fields](https://docs.docker.com/reference/cli/docker/compose/ps/). The port 5003 probe tests TCP reachability, not debugging-key authentication. A successful connection proves exposure even if a later handshake would reject a key. Disabling the listener alone also cannot prove that Docker's publication was removed; check the merged Compose model and Publishers entries as well.
 
 ```bash
+# REASONED: listener inventory, Dify publication and TCP checks follow the cited pinned Compose,
+# daemon startup and Docker sources; no isolated network namespace or Docker is available here.
 ss -tlnp                                        # read the whole list: app ports on 127.0.0.1; 80/443
                                                 # public only where Dify's own nginx is the TLS edge.
                                                 # A container port published by DNAT need not appear
                                                 # here at all, so this list cannot clear 5003 by itself
 # REASONED Dify publication check: the authoring host forbids opening listeners without an isolated
 # network namespace, and has none; Docker is unavailable. Base: expect PublishedPort 5003 on
-# plugin_daemon; after !reset and recreation: no host mapping. See the Compose and ps sources; TODO 1.163.
+# plugin_daemon; after !reset and recreation: no host mapping. See the Compose and ps sources.
 docker compose ps --format json                 # run in dify/docker: no Publishers entry on the
                                                 # plugin_daemon service may map it to a host port.
                                                 # Read the entries rather than the array's length:
@@ -129,7 +131,7 @@ docker compose ps --format json                 # run in dify/docker: no Publish
 # REASONED Dify TCP check: the authoring host forbids opening listeners without an isolated network
 # namespace, and has none; Docker is unavailable. Default enabled/published: expect connection success;
 # section 1 override and recreation: refusal/timeout with the positive control succeeding.
-# See the pinned Compose publication and daemon startup sources; TODO 1.163.
+# See the pinned Compose publication and daemon startup sources.
 (                                               # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }

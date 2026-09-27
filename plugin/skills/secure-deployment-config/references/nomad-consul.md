@@ -75,9 +75,8 @@ set `encrypt`.
 These checks were demonstrated on loopback, against Nomad 2.0.7 and Consul 2.0.4 agents whose every
 listener was bound to 127.0.0.1: the Nomad and Consul probes in each ACL state, the bootstrap and anonymous-policy checks, and the
 listener list.
-The exposed listener state is reasoned from source: the authoring host forbids binding every
-interface, so the default wildcard bind was not observed, and no Nomad client ran a job. Backlog row
-1.112 tracks demonstrating both.
+The exposed listener state is REASONED from source: the authoring host forbids binding every
+interface, so the default wildcard bind was not observed, and no Nomad client ran a job.
 The TCP reachability probe is the block demonstrated on loopback in
 [low-code-builders.md](low-code-builders.md) with this guide's ports.
 

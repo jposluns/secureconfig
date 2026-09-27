@@ -114,9 +114,11 @@ The runtime API (the `stats socket` added to `global` above) is not enabled by d
 ## 5. Verify
 
 ```bash
+# REASONED: configuration and exposed/fixed checks follow the cited HAProxy documentation;
+# no HAProxy runtime is available in the authoring environment.
 sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
 # REASONED, not demonstrated here: no HAProxy runtime in the authoring environment, so the shell was checked
-# but the exposed-vs-fixed responses were not. Backlog row 1.80 tracks running it live. A transport, TLS, or
+# but the exposed-vs-fixed responses were not. A transport, TLS, or
 # DNS error is inconclusive, never a pass.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
@@ -160,7 +162,7 @@ ss -tlnp   # inventory: the backend (3000) must be 127.0.0.1 only, never 0.0.0.0
            # socket is a root-owned mode-600 Unix socket (ls -l /run/haproxy/admin.sock), not a TCP listener.
 ```
 
-Verify each management surface you enabled, reasoned the same way (backlog row 1.80): the stats listener with
+Verify each management surface you enabled, REASONED from the cited HAProxy documentation: the stats listener with
 an unauthenticated request (refused) and a valid-credential request (returns the statistics) against that
 listener specifically; the runtime socket by its ownership and mode and an unauthorized local identity
 (permission denied), since `show cli level` reporting `admin` is the authorized level, not proof of access
@@ -168,6 +170,7 @@ control; and, where `verify required` is set, client certificates (no certificat
 rejected at TLS, a trusted one admitted with `--cert`/`--key`, server verification kept on).
 
 ```bash
+# REASONED: management-surface checks follow the cited HAProxy documentation; no HAProxy runtime is available.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e

@@ -94,7 +94,7 @@ or an identity-aware proxy that enforces MFA.
 
 Each probe below is reasoned, not demonstrated: the authoring environment has no container runtime, so
 none was stood up in its exposed and fixed states. Each names its expected exposed and fixed result so
-it discriminates against a live instance; backlog row 2.27 tracks demonstrating them, including forging
+it discriminates against a live instance. These expectations follow the cited vendor documentation, including the check that forges
 a token with the demo `JWT_SECRET`, which is the check that proves the secret itself was rotated rather
 than just the shipped keys swapped. There are two layers to check. First, from an external host none of these ports should answer at all: any HTTP or database response means the
 port is published and is itself the finding, whatever the credentials do next. A refused connection is a failed
@@ -108,6 +108,7 @@ front the gateway with a reverse proxy for HTTPS, aim the HTTP checks at that pr
 refusal from that vantage, and the write-out fields need curl 7.75.0 or newer.
 
 ```bash
+# REASONED: listener expectations follow the cited vendor documentation; no container runtime is available.
 # On the host: these published listeners should be bound to loopback or an internal interface.
 # Docker publishes through NAT, so also test each port from an external host over IPv4 and IPv6.
 ss -tlnp   # read every listener; 8000/5432/6543: loopback or internal only

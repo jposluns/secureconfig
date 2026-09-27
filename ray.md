@@ -105,14 +105,15 @@ For a plain `RayCluster`, the containers are at `spec.headGroupSpec.template.spe
 
 ## Verify
 
-**Per-node listener inventory, REASONED:** no isolated multi-node Ray cluster in the authoring environment (RAY-LIVE-1). Inventory listeners on **every head and worker**, in the network namespace where Ray runs. Use `sudo ss -tlnp` if needed to see their owning processes. Record the dashboard agent HTTP port (default 52365, or the configured `--dashboard-agent-listen-port`) and the actual dashboard agent gRPC, runtime env agent HTTP and metrics export ports from that inventory. The last three are OS-assigned by default, so repeat the inventory after a restart. Attribute each port to its agent process; do not guess from the worker-port range. In minimal mode only runtime env HTTP remains among these four; with metrics collection disabled the metrics exporter is absent. An expected listener missing without an established reason is inconclusive.
+**Per-node listener inventory, REASONED:** no isolated multi-node Ray cluster in the authoring environment; expected outcomes follow the cited Ray 2.58.0 sources. Inventory listeners on **every head and worker**, in the network namespace where Ray runs. Use `sudo ss -tlnp` if needed to see their owning processes. Record the dashboard agent HTTP port (default 52365, or the configured `--dashboard-agent-listen-port`) and the actual dashboard agent gRPC, runtime env agent HTTP and metrics export ports from that inventory. The last three are OS-assigned by default, so repeat the inventory after a restart. Attribute each port to its agent process; do not guess from the worker-port range. In minimal mode only runtime env HTTP remains among these four; with metrics collection disabled the metrics exporter is absent. An expected listener missing without an established reason is inconclusive.
 
 ```bash
+# REASONED: Ray listener, job and TLS checks follow the cited 2.58.0 sources; no isolated cluster is available. Earlier ss observations are recorded below.
 ss -tlnp   # 8265: 127.0.0.1 (or the tailnet IP), never wildcard; agent gRPC and metrics can show wildcard binds (step 2)
 ss -tlnp   # read every listener; per the source, 10001 shows the node IP address (private in step 2's layout) plus a loopback listener, but 6379 can show every
            # interface (see step 2), so only the network boundary keeps it private
 ss -tlnp   # if you run Ray Serve, keep 8000 (HTTP proxy) private too, and 9000 (gRPC) when configured
-# REASONED: no isolated multi-node Ray cluster in the authoring environment (RAY-LIVE-1).
+# REASONED: no isolated multi-node Ray cluster in the authoring environment; expected outcomes follow the cited Ray 2.58.0 sources.
 # From another network, repeat against every public IPv4 and IPv6 address of every head and worker
 # (enclose an IPv6 literal in square brackets). Check 8265 dashboard, 6379 head, 10001 Client and
 # 8000 if Ray Serve is deployed. The separate block below adds all four agent listeners.
@@ -139,7 +140,7 @@ ss -tlnp   # if you run Ray Serve, keep 8000 (HTTP proxy) private too, and 9000 
          -w 'port=8000 http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:8000/" || true ;;   # Ray Serve, if deployed; 9000 too when its gRPC proxy is configured
   esac
 )
-# REASONED: no isolated multi-node Ray cluster in the authoring environment (RAY-LIVE-1).
+# REASONED: no isolated multi-node Ray cluster in the authoring environment; expected outcomes follow the cited Ray 2.58.0 sources.
 # On EVERY head and worker, probe the default 52365 or its configured replacement first. Then run
 # this whole block again for EACH of the three actual agent ports recorded from ss above, where
 # present. Also repeat it for other inventoried listeners, including worker and Serve replica ports.
@@ -194,13 +195,14 @@ ray job submit --address http://127.0.0.1:8265 -- python -c "print(1)"   # must 
 # certificate-name mismatch), which must fail verification; a local configuration error is inconclusive.
 ```
 
-**Direct agent token control, REASONED:** no isolated multi-node Ray cluster in the authoring environment; tracked in RAY-LIVE-1. On every non-minimal head and worker, use a trusted path directly to that node's agent HTTP port, not the head dashboard or its proxy. Run on the node against its resolved localhost, or use a dedicated SSH forward to that agent; the step 1 forward for 8265 does not forward 52365. Substitute an origin such as `http://127.0.0.1:52365` (or its actual address and configured port), without a trailing slash. Send a token only over the trusted path.
+**Direct agent token control, REASONED:** no isolated multi-node Ray cluster in the authoring environment; expected outcomes follow the cited Ray 2.58.0 sources. On every non-minimal head and worker, use a trusted path directly to that node's agent HTTP port, not the head dashboard or its proxy. Run on the node against its resolved localhost, or use a dedicated SSH forward to that agent; the step 1 forward for 8265 does not forward 52365. Substitute an origin such as `http://127.0.0.1:52365` (or its actual address and configured port), without a trailing slash. Send a token only over the trusted path.
 
 In an isolated exposed state with token mode off, select `anonymous`: a non-browser GET to `/logs/` should return 200 and the log directory index. With token mode on, first select `token` and supply the valid cluster token: expect the same access. Then select `anonymous` against that same live agent: expect 401. A connection error, 404, redirect, unexpected body or failed positive control is inconclusive; 403 is not the expected missing-token result. `/api/healthz` and `/api/local_raylet_healthz` are exempt and cannot discriminate token enforcement. These expectations follow the pinned static route and app-wide token middleware cited in Sources.
 
 This block assumes a clean Bash shell with trusted startup files. The hidden prompt and stdin header keep the token out of curl's argv and the pasted command history; they do not hide it from the account owner or root. Do not put the token in the pasted text.
 
 ```bash
+# REASONED: direct agent token controls follow the cited Ray 2.58.0 sources; no isolated multi-node cluster is available.
 (
   trap - DEBUG RETURN ERR
   set +x +a +e
@@ -231,7 +233,7 @@ This block assumes a clean Bash shell with trusted startup files. The hidden pro
 )
 ```
 
-Service behaviour is not demonstrated here. A watcher stopped each of four loopback runs of Ray 2.58.0 on recording the GCS listening on every interface (`*:6379`), which the authoring host forbids. No isolated network namespace was available to contain the runs, and no isolated multi-node Ray cluster is available in the authoring environment. The `ss` command was run locally in the earlier attempts; the per-node agent inventory, external-reachability probes (including all four agent listeners), direct `/logs/` token controls, dashboard job-submission controls and gRPC-TLS health-check are **REASONED**, written to be run against a live cluster in both the exposed and fixed states, tracked as RAY-LIVE-1 (`TODO.md` row 2.40).
+Service behaviour is not demonstrated here. A watcher stopped each of four loopback runs of Ray 2.58.0 on recording the GCS listening on every interface (`*:6379`), which the authoring host forbids. No isolated network namespace was available to contain the runs, and no isolated multi-node Ray cluster is available in the authoring environment. The `ss` command was run locally in the earlier attempts; the per-node agent inventory, external-reachability probes (including all four agent listeners), direct `/logs/` token controls, dashboard job-submission controls and gRPC-TLS health-check are **REASONED**, with expected exposed and fixed outcomes derived from the cited Ray 2.58.0 sources and vendor documentation.
 
 ## Common mistakes
 
