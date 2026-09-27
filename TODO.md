@@ -43,7 +43,7 @@ many.
 | ID | Item | Tags |
 | --- | --- | --- |
 | 1.189 | Residuals of row 1.187's anchor audit: (a) `caddy.md`'s paragraph on bridge versus host network namespaces (near line 252) states Docker networking semantics with no source; cite pinned Docker documentation or narrow it. (b) `model-servers.md` claim `triton-secrets` "argv-only" is a negative resting on the trace described in its Sources line, not on a span. (c) `workflow-orchestrators.md` claim `verify-inventory` cites unpinned man7.org pages under a component with basis unknown. (L, S) | `[gap]` |
-| 1.190 | F-VBASIS-SOURCES-VERSION debt: state each component's literal basis version on every Sources list item that cites its URLs, clearing the baseline added by #420 (207 items across 26 guides at 3e0cb90). The ratchet fails on new violations and on stale baseline entries, so burn-down is safe to do guide by guide. (L, M) | `[gap]` |
+| 1.190 | F-VBASIS-SOURCES-VERSION debt: state each component's literal basis version on every Sources list item that cites its URLs, clearing the baseline added by #420 (207 component/URL/item violations in 202 list items across 26 guides at 3e0cb90). The ratchet fails on new violations and on stale baseline entries, so burn-down is safe to do guide by guide. (L, M) | `[gap]` |
 
 ## Priority 2: Deepen existing guides
 

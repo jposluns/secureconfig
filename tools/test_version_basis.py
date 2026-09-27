@@ -5,6 +5,7 @@ from collections import Counter
 import datetime
 import io
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -269,6 +270,43 @@ class SourcesBasisTests(unittest.TestCase):
                         f'Product v1.0: {self.url}'):
             with self.subTest(sources=sources), self.assertRaisesRegex(ValueError, 'basis.*absent'):
                 self.check(sources)
+
+    def test_unsupported_containers_fail_closed(self):
+        # Codex round 1: citations the item parser cannot see must not pass.
+        for sources in (f'- Product v1.0: {self.url}\n- - Again: {self.url}',
+                        f'- Product v1.0: {self.url}\n- # Again: {self.url}',
+                        f'- Product v1.0: {self.url}\n> - Again: {self.url}',
+                        f'- Product v1.0: {self.url}\n\n> Again: {self.url}',
+                        f'- Product v1.0: {self.url}\n\nAgain: {self.url}',
+                        f'- Product v1.0: {self.url}\n\n### Again {self.url}'):
+            with self.subTest(sources=sources), self.assertRaisesRegex(
+                    ValueError, re.escape(self.url) + ' cited in an unsupported Sources container'):
+                self.check(sources)
+        # The basis literal on the hidden citation does not rescue it.
+        with self.assertRaisesRegex(ValueError, 'unsupported Sources container'):
+            self.check(f'- Product v1.0: {self.url}\n- - Again v1.0: {self.url}')
+        # Passing controls: the same citations, each in its own list item.
+        self.check(f'- Product v1.0: {self.url}\n- Again v1.0: {self.url}')
+        self.check(f'- Product v1.0: {self.url}\n  - Again v1.0: {self.url}')
+        self.check(f'- Product v1.0: {self.url}\n- Product v1.0: [again]({self.url})')
+        # Unknown basis: URL presence stays mandatory, the container check is skipped.
+        self.check(f'- Product: {self.url}\n- - Again: {self.url}', basis='unknown')
+
+    def test_marker_only_items_start_new_items(self):
+        # Codex round 1: a marker-only line begins an item (CommonMark); it is
+        # not lazy prose that lets the previous item's basis cover the citation.
+        for marker in ('2.', '-', '2)', '2.  '):
+            sources = f'1. Product v1.0: {self.url}\n{marker}\n   Again: {self.url}'
+            with self.subTest(marker=marker), self.assertRaises(ValueError):
+                self.check(sources)
+        with self.assertRaisesRegex(ValueError, 'unsupported Sources container'):
+            self.check(f'1. Product v1.0: {self.url}\n2.\n   Again: {self.url}')
+        # Passing controls: marker with text, and genuine lazy continuation.
+        self.check(f'1. Product v1.0: {self.url}\n2. Again v1.0:\n   {self.url}')
+        self.check(f'1. Product v1.0:\n{self.url}')
+        from check_verify_marking import tokenize
+        _, _, tokens = tokenize('1. Product\n2.\n   Again')
+        self.assertEqual([token.kind for token in tokens], ['paragraph', 'unsupported'])
 
     def test_exact_urls_not_prefixes(self):
         with self.assertRaisesRegex(ValueError, 'basis.*absent'):

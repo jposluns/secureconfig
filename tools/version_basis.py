@@ -105,11 +105,22 @@ def verify_blocks(body, with_status=False):
     return blocks
 
 
+def citation_counts(text):
+    """Count each URL occurrence once per spelling it cites.
+
+    Preserve explicit Markdown targets; trim sentence punctuation from bare URLs.
+    """
+    counts = Counter()
+    for match in re.finditer(r'https?://[^\s<>\)]+', text):
+        forms = {match[0].rstrip('.,;')}
+        if text[max(0, match.start() - 2):match.start()] == '](' and text[match.end():match.end() + 1] == ')':
+            forms.add(match[0])
+        counts.update(forms)
+    return counts
+
+
 def citation_urls(text):
-    # Preserve explicit Markdown targets; trim sentence punctuation from bare URLs.
-    explicit = set(re.findall(r'\]\((https?://[^\s<>\)]+)\)', text))
-    bare = {url.rstrip('.,;') for url in re.findall(r'https?://[^\s<>\)]+', text)}
-    return explicit | bare
+    return set(citation_counts(text))
 
 
 def source_entries(sources):
@@ -163,14 +174,37 @@ def load_source_baseline():
     return counts
 
 
-def check_source_bases(data, entries, guide, baseline=None):
+def container_violations(data, sources, entries):
+    """Fail closed: every citation of a basis-bearing URL must be a parsed item.
+
+    source_entries() sees only list-item paragraphs, so a citation in a nested
+    compact list, a heading item, a quote or other prose would escape the basis
+    check. Compare raw occurrences with parsed-entry occurrences instead.
+    """
+    raw = citation_counts(sources)
+    parsed = Counter()
+    for entry in entries:
+        parsed.update(citation_counts(entry))
+    for name, component in data['components'].items():
+        if component['basis'] == 'unknown':
+            continue
+        for url in component['sources'].values():
+            if raw[url] > parsed[url]:
+                yield (f'{name}: {url} cited in an unsupported Sources container '
+                       '(nested compact list, heading, quote...); '
+                       'put each citation in its own list item '
+                       f'({raw[url]} in Sources, {parsed[url]} in list items)')
+
+
+def check_source_bases(data, sources, entries, guide, baseline=None):
     guide = Path(guide).name
     current, details = Counter(), {}
     for fingerprint, message in source_violations(data, entries):
         current[fingerprint] += 1
         details[fingerprint] = message
     allowed = {fp: count for (name, fp), count in (baseline or {}).items() if name == guide}
-    errors = []
+    # Never baselined: an unparsed citation has no reviewable item fingerprint.
+    errors = list(container_violations(data, sources, entries))
     for fingerprint in sorted(current.keys() | allowed.keys()):
         actual, limit = current[fingerprint], allowed.get(fingerprint, 0)
         if actual > limit:
@@ -233,7 +267,7 @@ def validate(data, body, guide='GUIDE.md', baseline=None):
             require(urlsplit(url).scheme in ('http', 'https') and urlsplit(url).hostname,
                     'source must be an absolute HTTP(S) URL')
             require(url in source_urls, 'source URL absent from Sources: ' + url)
-    check_source_bases(data, entries, guide, baseline)
+    check_source_bases(data, sources, entries, guide, baseline)
     identifiers(data['claims'])
     blocks = verify_blocks(body, with_status=True)
     covered, used = set(), set()
