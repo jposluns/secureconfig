@@ -53,11 +53,13 @@ def run_against(block, fence="```bash", env=None, path_prefix=None, raw=None, ho
         else:
             (d / "guide.md").write_text(body, encoding="utf-8")
         if unreadable_dir:
-            # A subtree the walk cannot list. The fail-closed walk refuses; a bare glob would
-            # not notice, and no case covered the difference.
+            # A tracked file beneath an inaccessible directory must still fail closed.
             blocked = d / "blocked"
             blocked.mkdir()
             (blocked / "x.md").write_text("# x\n", encoding="utf-8")
+        subprocess.run(["git", "init", "-q"], cwd=d, check=True, capture_output=True)
+        subprocess.run(["git", "add", "."], cwd=d, check=True, capture_output=True)
+        if unreadable_dir:
             blocked.chmod(0o000)
         run_env = dict(os.environ)
         if env:
@@ -89,6 +91,8 @@ def run_multi(guides, path_prefix=None):
             shutil.copy(TOOLS / f, d / "tools" / f)
         for name, body in guides.items():
             (d / name).write_text(body, encoding="utf-8")
+        subprocess.run(["git", "init", "-q"], cwd=d, check=True, capture_output=True)
+        subprocess.run(["git", "add", "."], cwd=d, check=True, capture_output=True)
         env = dict(os.environ)
         if path_prefix:
             env["PATH"] = f"{path_prefix}{os.pathsep}{env.get('PATH', '')}"

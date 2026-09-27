@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Flag commands in Verify blocks that skip TLS certificate verification.
 
+File enumeration uses the shared tracked-file walker. Untracked and ignored-only inputs
+are excluded; Git and a checkout are required, with no traversal fallback. Existing
+suffix, directory and per-gate filters still apply.
+
 WHAT THIS CATCHES: the patterns listed in CHECKS below, in a command inside any fenced
 code block in a guide. Indented code blocks are NOT scanned. An earlier version scanned
 them and flagged a four-space-indented prose bullet that warned readers against the very

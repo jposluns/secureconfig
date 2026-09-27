@@ -103,6 +103,8 @@ def run_against(files=None, no_workflows=False, gate=None):
                 p = d / rel
                 p.parent.mkdir(parents=True, exist_ok=True)
                 p.write_bytes(text if isinstance(text, bytes) else text.encode("utf-8"))
+        subprocess.run(["git", "init", "-q"], cwd=d, check=True, capture_output=True)
+        subprocess.run(["git", "add", "."], cwd=d, check=True, capture_output=True)
         r = subprocess.run([sys.executable, "tools/check_workflow_pins.py"], cwd=d,
                            capture_output=True, text=True)
         return r.returncode, (r.stdout + r.stderr).strip()

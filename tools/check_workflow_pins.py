@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 r"""Check that every `uses:` in the workflows, and in any action.yml they can call, is pinned to a commit.
 
+File enumeration uses the shared tracked-file walker. Untracked and ignored-only inputs
+are excluded; Git and a checkout are required, with no traversal fallback. Existing
+suffix, directory and per-gate filters still apply.
+
 WHY: a tag or branch is a pointer its owner can move, so `uses: actions/checkout@v4` runs whatever
 that pointer names on the day of the run. Row 3.17 (#348) replaced every floating tag in
 `.github/workflows/` with a full commit SHA and a trailing `# vX.Y.Z` naming the release the SHA was
@@ -22,8 +26,8 @@ WHAT IT ACCEPTS, and nothing else:
     repository to a workflow file or to an `action.yml`/`action.yaml` that this gate also reads,
     so a local composite action cannot carry a floating tag one hop away.
 
-WHICH FILES: every `.yml`/`.yaml` (any case) under `.github/workflows/`, subdirectories included,
-and every file named `action.yml`/`action.yaml` (any case) anywhere in the tree outside `.git`,
+WHICH FILES: every tracked `.yml`/`.yaml` (any case) under `.github/workflows/`, subdirectories included,
+and every tracked file named `action.yml`/`action.yaml` (any case) anywhere in the tree outside `.git`,
 `node_modules` and `__pycache__`. That is a superset of what GitHub reads, so a file GitHub ignores
 is still held to the rule, which costs nothing. No workflow directory, no workflow file, or no
 `uses:` anywhere, fails: a gate that checked nothing must not print a pass.
@@ -91,7 +95,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _walk import walk_files  # noqa: E402  fail-closed tree walk (os.walk, not rglob)
+from _walk import walk_files  # noqa: E402  fail-closed tracked-file enumeration
 
 WORKFLOWS = Path(".github") / "workflows"
 SKIP_DIRS = {".git", "node_modules", "__pycache__"}

@@ -77,6 +77,15 @@ allow any numeric major and minor components. The gate also rejects
 stale draft completion phrasing; record integrated work as "Done" with its assigned PR.
 It checks for leftover markers, not whether an assigned number is correct.
 
+The shared walker (`tools/_walk.py`) used by the prose, no-dashes, shell-block,
+bracket-range, TLS-bypass, workflow-pin, site and new-tab gates selects tracked
+working-tree files only, retaining each caller's suffix and directory exclusions.
+Untracked files and ignored files absent from the index are not scanned. Git and a
+readable checkout are required; enumeration errors fail closed, with no filesystem
+fallback. Selected tracked paths that are missing or inaccessible also fail closed.
+This does not change independent scanners or explicitly named inputs such as the
+no-dashes gate's optional `NOTICE` and `.aiqt/attribution.toml`.
+
 ## Licence
 
 Everything here is dedicated to the public domain under [CC0 1.0](LICENSE), except the AIQT Guardrails material that [`.aiqt/PIN`](.aiqt/PIN) lists (the files vendored under `.aiqt/` and `tools/`, and the AIQT sections adapted into `CLAUDE.md` and `AGENTS.md`), which is licensed under the Apache License 2.0 (see [`.aiqt/LICENSE`](.aiqt/LICENSE) and [`.aiqt/NOTICE`](.aiqt/NOTICE)). Submitting a contribution means dedicating it under CC0, except a change to that material, which is contributed under the Apache License 2.0 (section 5), carries a `LOCAL PATCH` notice in the file, and is recorded in `.aiqt/PIN`.
