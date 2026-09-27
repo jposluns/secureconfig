@@ -13,7 +13,7 @@ This is the recommended path when the host cannot or should not accept inbound c
 Per the Cloudflare docs as of June 2026 (menu locations change; the sources below are authoritative):
 
 1. In the Cloudflare dashboard go to **Networking > Tunnels** and create a tunnel (connector type `cloudflared`).
-2. Copy only the tunnel token from the dashboard into a file readable only by the account running `cloudflared` (mode `0600` on Linux/macOS; a restricted ACL on Windows). With `cloudflared` **2025.4.0 or later**, configure your OS service to run `cloudflared tunnel run --token-file /absolute/path/to/token`, substituting your token-file path ([run parameters](https://developers.cloudflare.com/tunnel/reference/run-parameters/#token-file)). Do not run the dashboard’s `cloudflared service install <TOKEN>` command: it exposes the token in the installer’s command line.
+2. Copy only the tunnel token from the dashboard into a file readable only by the account running `cloudflared` (mode `0600` on Linux/macOS; a restricted ACL on Windows). With `cloudflared` **2025.4.0 or later**, configure your OS service to run `cloudflared tunnel run --token-file /absolute/path/to/token`, substituting your token-file path ([run parameters](https://developers.cloudflare.com/tunnel/reference/run-parameters/#token-file)). Do not run the dashboard's `cloudflared service install <TOKEN>` command: it exposes the token in the installer's command line.
 3. Last, and only after step 4 below: add a route: **Routes > Add route > Published application**, choose the subdomain (for example `app.example.com`), and set the service URL to the local service, for example `http://localhost:3000`.
 
 The moment that route exists the app is reachable at `https://app.example.com`, by anyone, with no login in front of it. Access is what adds the login and it is step 4, so doing these steps in the order they are numbered leaves a window in which the application is published and unauthenticated, however short you make it. Close it rather than racing it. Either complete step 4 first and add the route afterwards, which works if Cloudflare accepts an Access application for a hostname you have not routed yet; or leave the local service stopped until Access is in place, which always works. With the route created and the service stopped the hostname still resolves, because the route is a proxied DNS record, and a visitor gets an error page from Cloudflare's edge rather than your application: the point is that nothing of yours is being served, not that the name is invisible. [deployment-lifecycle.md](deployment-lifecycle.md) makes the same point about previews and first deployments.
@@ -59,16 +59,38 @@ For APIs and machine clients, create a **service token** in the Zero Trust dashb
 
 ```bash
 (
-  # Feed the service-token headers to curl on stdin (curl --header @-), never in
-  # argv: the Client-Secret in -H is readable in ps / /proc/<pid>/cmdline.
+  # Use Bash in a fresh, trusted shell. Replace the URL and client ID inside
+  # the quotes; paste only the secret at the hidden prompt, never into the command.
+  # The prompted secret reaches curl on stdin, outside argv and shell history;
+  # it remains accessible to the account owner or root.
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLIENT_ID' 'REPLACE_WITH_CLIENT_SECRET'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  set +x +a +e
+  { unset -n HDR && unset -v HDR; } 2>/dev/null ||
+    { echo 'cannot clear HDR in this shell; not probing'; exit 2; }
+  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
+  set -- PASTE_WHOLE_BLOCK 'https://app.example.com/api' 'REPLACE_WITH_CLIENT_ID'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
-  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Client-Id on the set -- line above; not probing"; exit ;; esac
-  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Client-Secret on the set -- line above; not probing"; exit ;; esac
-  printf 'CF-Access-Client-Id: %s\nCF-Access-Client-Secret: %s\n' "$1" "$2" | curl -q -H @- https://app.example.com/api
+  [ "$#" -eq 2 ] || { echo 'the set -- line needs a URL and client ID; not probing'; exit 2; }
+  case "$1" in
+    ''|*REPLACE_WITH_*|*example.com*|*example.net*|*example.org*|*[[:cntrl:]]*)
+      echo 'substitute your own application URL inside the quotes; not probing'; exit 2 ;;
+    https://*) ;;
+    *) echo 'use an https:// URL; not probing'; exit 2 ;;
+  esac
+  case "$2" in
+    ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'supply the client ID without control characters; not probing'; exit 2 ;;
+  esac
+  IFS= read -r -s -p 'Client secret (input hidden): ' HDR ||
+    { echo 'secret input failed; not probing'; exit 2; }
+  printf '\n'
+  case "$HDR" in
+    ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'supply the secret without control characters; not probing'; exit 2 ;;
+  esac
+  HDR="CF-Access-Client-Secret: $HDR"
+  printf '%s\n' "CF-Access-Client-Id: $2" "$HDR" |
+    curl -q -g -sS --connect-timeout 5 --max-time 20 --header @- "$1" || exit 2
+  unset -v HDR
 )
 ```
 
