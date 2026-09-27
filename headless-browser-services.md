@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "d1196f26b35eaeb18ef7d6743897c0131aafe4bdd2b592d5733b80a1a6d0ade4",
+  "body_sha256": "a4a6934c4851c99f2e521377167be022204775606549a1e1cb8d1b70cbdcbb17",
   "components": {
     "chromium": {
       "name": "Chromium",
@@ -18,7 +18,8 @@ version_basis: {
         "s804c1266fb81": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L267-L312",
         "s66b210123ff8": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L459-L630",
         "s1044899c624a": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L811-L880",
-        "s1ca85f782546": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L1032-L1055"
+        "s1ca85f782546": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L1032-L1055",
+        "s0a2a5fec4975": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.h#L26"
       }
     },
     "cdp": {
@@ -93,7 +94,7 @@ version_basis: {
   "claims": {
     "cdp-bind": {"text": "Command-line DevTools binds 127.0.0.1, falling back to ::1; stock browser and headless shell have no remote-debugging-address switch.", "components": ["chromium"], "sources": ["chromium:s087ba883abe3", "chromium:s6e1b34a120d1", "chromium:s005d90d4912a"], "status": "REASONED"},
     "cdp-port": {"text": "Explicit nonzero DevTools ports do not fall back to another port; port 0 requests an ephemeral port.", "components": ["chromium"], "sources": ["chromium:s087ba883abe3", "chromium:s6e1b34a120d1"], "status": "REASONED"},
-    "cdp-approval": {"text": "Feature-gated approval mode uses DevToolsActivePort or 9222, with requested/ephemeral IPv4 then IPv6 fallback; command-line modes take precedence.", "components": ["chromium"], "sources": ["chromium:s087ba883abe3", "chromium:s65073710f8bd", "chromium:sc62d44c2dee6"], "status": "REASONED"},
+    "cdp-approval": {"text": "Feature-gated approval mode uses DevToolsActivePort or 9222, with requested/ephemeral IPv4 then IPv6 fallback; command-line modes take precedence.", "components": ["chromium"], "sources": ["chromium:s087ba883abe3", "chromium:s65073710f8bd", "chromium:sc62d44c2dee6", "chromium:s0a2a5fec4975"], "status": "REASONED"},
     "cdp-discovery": {"text": "Command-line /json and /json/version disclose debugger URLs; approval-mode 404 does not establish isolation.", "components": ["chromium"], "sources": ["chromium:s66b210123ff8", "chromium:s1ca85f782546"], "status": "REASONED", "verify": [2]},
     "cdp-auth": {"text": "Command-line CDP has no client authentication or password flag; Host and Origin checks do not authenticate clients.", "components": ["chromium"], "sources": ["chromium:s66b210123ff8", "chromium:s1044899c624a"], "status": "REASONED"},
     "cdp-capabilities": {"text": "CDP grants page JavaScript, cookie/credential and tab control; restrict ingress, browser egress and local-file reach.", "components": ["cdp"], "sources": ["cdp:s523649d3b233"], "status": "REASONED"},
@@ -395,7 +396,7 @@ missing files, authentication failures, connection failures, and timeouts are in
 ## Sources (checked September 2026)
 
 - Chromium 154.0.8037.57 browser loopback factories and approval-mode port fallback: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L69-L158
-- Browser branding/profile and policy checks; approval-mode startup: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L160-L282
+- Browser branding/profile and policy checks; approval-mode startup, with the `kDefaultDevToolsPort` 9222 fallback: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L160-L282 and https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.h#L26
 - Browser command-line pipe/port startup and precedence over approval mode: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L325-L417
 - Headless-shell loopback factory and pipe/port startup: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/headless/lib/browser/headless_devtools.cc#L31-L145
 - Headless-shell command-line port and pipe handling: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/headless/lib/browser/command_line_handler.cc#L199-L206
