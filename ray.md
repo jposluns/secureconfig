@@ -165,7 +165,25 @@ ss -tlnp   # if you run Ray Serve, keep 8000 (HTTP proxy) private too, and 9000 
 )
 # Through the SSH tunnel of step 1, with RAY_AUTH_MODE=token on the cluster.
 # POSITIVE control first: WITH the token the submit succeeds, proving the endpoint is live and reachable:
-RAY_AUTH_MODE=token RAY_AUTH_TOKEN="$(cat ~/.ray/auth_token)" ray job submit --address http://127.0.0.1:8265 -- python -c "print(1)"   # succeeds (RAY_AUTH_MODE=token on the CLIENT makes it send the token header)
+# Assumes a clean Bash shell with trusted startup files, and a token file owned by this account
+# under ~/.ray in directories no other account can write to or replace. Ray reads the file itself.
+(
+  trap - DEBUG RETURN ERR
+  set +x +a +e
+  { unset -n RAY_AUTH_TOKEN RAY_AUTH_TOKEN_PATH RAY_AUTH_MODE &&
+    unset -v RAY_AUTH_TOKEN RAY_AUTH_TOKEN_PATH RAY_AUTH_MODE; } 2>/dev/null ||
+    { echo 'cannot clear Ray authentication variables; not submitting'; exit 2; }
+  if [ ! -f "$HOME/.ray/auth_token" ] || [ -L "$HOME/.ray/auth_token" ] ||
+     [ ! -r "$HOME/.ray/auth_token" ] || [ ! -s "$HOME/.ray/auth_token" ]; then
+    echo 'need a readable, non-empty regular token file, not a symlink; not submitting'; exit 2
+  fi
+  chmod 600 -- "$HOME/.ray/auth_token" ||
+    { echo 'cannot protect the token file; not submitting'; exit 2; }
+  RAY_AUTH_MODE=token RAY_AUTH_TOKEN_PATH="$HOME/.ray/auth_token" \
+    ray job submit --address http://127.0.0.1:8265 -- python -c "print(1)"
+)
+# Only the path is in the environment; the token stays in the file and Ray's memory, readable by
+# this account and root. Clearing variables does not erase a token previously exported or logged.
 # NEGATIVE: from a client with NO token available (no RAY_AUTH_TOKEN or RAY_AUTH_TOKEN_PATH set and no
 # ~/.ray/auth_token file), the same submit must be refused for AUTHENTICATION (HTTP 401); a connection
 # error (tunnel down, wrong address) is INCONCLUSIVE, not a pass:
@@ -229,6 +247,7 @@ Service behaviour is not demonstrated here. A watcher stopped each of four loopb
 
 - Ray security guidelines (arbitrary code execution, network isolation, TLS is not a replacement, token auth from 2.52.0): https://docs.ray.io/en/latest/ray-security/index.html
 - Ray token authentication (`RAY_AUTH_MODE`, `RAY_AUTH_TOKEN`, `RAY_AUTH_TOKEN_PATH`, `ray get-auth-token`, plaintext-header caveat): https://docs.ray.io/en/latest/ray-security/token-auth.html
+- Ray 2.58.0 token input precedence and file-based job submission: https://github.com/ray-project/ray/blob/ray-2.58.0/doc/source/ray-security/token-auth.md
 - `ray start` CLI reference (`--dashboard-host` default, `--dashboard-port` 8265, `--port` 6379, `--ray-client-server-port` 10001): https://docs.ray.io/en/latest/cluster/cli.html
 - Configuring Ray (TLS environment variables, ports opened by nodes): https://docs.ray.io/en/latest/ray-core/configure.html
 - Configure Ray clusters to use token authentication (KubeRay `authOptions`, 401 without token): https://docs.ray.io/en/latest/cluster/kubernetes/user-guides/kuberay-auth.html
