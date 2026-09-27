@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "0fd69e44af18c747f99ddfcf60d11869012b1e25076ef7c9eca20e362ba0b0e2",
+  "body_sha256": "8933988c612e6a7a2db2a9e1dffec9aaa89de39b36908b3e51c268e8797d61bb",
   "components": {
     "docs": {
       "name": "LiteLLM documentation",
@@ -63,7 +63,7 @@ version_basis: {
       "name": "LiteLLM CLI",
       "basis": "v1.102.1",
       "sources": {
-        "sae60478c268a": "https://github.com/BerriAI/litellm/blob/v1.102.1/litellm/proxy/proxy_cli.py#L666"
+        "s2c55655e39fd": "https://github.com/BerriAI/litellm/blob/v1.102.1/litellm/proxy/proxy_cli.py#L666-L667"
       }
     }
   },
@@ -92,7 +92,7 @@ version_basis: {
     "delete": {"text": "POST /key/delete permanently revokes the listed keys; removing application configuration is not revocation.", "components": ["docs", "source"], "sources": ["docs:s135f0dce83d9", "source:s801396dd889f"], "status": "REASONED", "verify": [2]},
     "block": {"text": "POST /key/block suspends and /key/unblock restores; compare each operation on every worker with replacement-key positive controls.", "components": ["docs", "source"], "sources": ["docs:s135f0dce83d9", "source:s801396dd889f", "docs:s26fc2080e183"], "status": "REASONED", "verify": [2]},
     "rotation": {"text": "In-place /key/regenerate is Enterprise-gated; otherwise generate restricted replacement, deploy/test it, then delete old key while retaining team budget.", "components": ["docs", "source"], "sources": ["docs:s135f0dce83d9", "source:s801396dd889f"], "status": "REASONED"},
-    "bind": {"text": "CLI defaults 0.0.0.0:4000; use --host 127.0.0.1 --port 4000 --config config.yaml behind TLS.", "components": ["docs", "cli"], "sources": ["docs:sdbe6ab7362a0", "cli:sae60478c268a"], "status": "REASONED", "verify": [1]},
+    "bind": {"text": "CLI defaults 0.0.0.0:4000; use --host 127.0.0.1 --port 4000 --config config.yaml behind TLS.", "components": ["docs", "cli"], "sources": ["docs:sdbe6ab7362a0", "cli:s2c55655e39fd"], "status": "REASONED", "verify": [1]},
     "ip-filter": {"text": "allowed_ips is Enterprise; otherwise ingress filtering must be enforced independently.", "components": ["docs"], "sources": ["docs:sc420b1851bf6"], "status": "REASONED"},
     "ui-login": {"text": "UI_USERNAME defaults admin; without UI_PASSWORD the UI accepts the master key; remove fallback with disable_env_credential_login after personal login works.", "components": ["docs"], "sources": ["docs:sb980affae79d"], "status": "REASONED", "verify": [2]},
     "ui-cookie": {"text": "Set PROXY_BASE_URL to the actual HTTPS origin for Secure UI cookies and test in a fresh browser.", "components": ["docs"], "sources": ["docs:se991dc6f2424"], "status": "REASONED", "verify": [2]},
@@ -114,7 +114,7 @@ version_basis: {
     "spend-logging": {"text": "Either store_prompts_in_spend_logs or STORE_PROMPTS_IN_SPEND_LOGS enables payload storage; YAML false does not override environment true.", "components": ["source"], "sources": ["source:s6ce39f96b246"], "status": "REASONED", "verify": [2]},
     "debug-logging": {"text": "Avoid detailed_debug and LITELLM_LOG=DEBUG; inspect process, error, callback and proxy logs with canaries and positive log controls.", "components": ["docs"], "sources": ["docs:sdbe6ab7362a0", "docs:sf9c1840fffc9", "docs:s1fceb11a6977"], "status": "REASONED", "verify": [2]},
     "verify-auth": {"text": "Probe backend directly: absent/wrong keys must get 401 and valid key a model list; public proxy responses alone cannot prove backend auth.", "components": ["docs", "source"], "sources": ["docs:s135f0dce83d9", "source:sbe6fa0b81017"], "status": "REASONED", "verify": [1]},
-    "verify-network": {"text": "Inspect every listener and actual external backend reachability; refusal must be attributable to the intended remote path, not DNS/local errors.", "components": ["docs", "cli"], "sources": ["docs:sdbe6ab7362a0", "cli:sae60478c268a"], "status": "REASONED", "verify": [1]},
+    "verify-network": {"text": "Inspect every listener and actual external backend reachability; refusal must be attributable to the intended remote path, not DNS/local errors.", "components": ["docs", "cli"], "sources": ["docs:sdbe6ab7362a0", "cli:s2c55655e39fd"], "status": "REASONED", "verify": [1]},
     "verify-spend": {"text": "Use bounded uncached provider calls; exhaust key and aggregate team budgets separately with successful controls and record overshoot.", "components": ["docs"], "sources": ["docs:seb5042b85a02", "docs:sdc6aeba6f388"], "status": "REASONED", "verify": [2]},
     "verify-admin": {"text": "Application key must fail a valid management request that operator credentials complete; licensed/unlicensed admin-route cases are separate.", "components": ["docs", "source"], "sources": ["docs:sfe517a7be891", "source:s6632dfcab93a"], "status": "REASONED", "verify": [2]},
     "verify-forwarding": {"text": "Require anonymous refusal and permitted authenticated GET; wrong method/subpath must not reach the controlled upstream.", "components": ["docs", "source"], "sources": ["docs:s629597256553", "source:s4dac61a60fa2"], "status": "REASONED", "verify": [2]},
@@ -623,4 +623,4 @@ The checks below remain REASONED from the cited LiteLLM documentation and pinned
 - [LiteLLM pass-through authorization: required allowed_passthrough_routes for non-admin callers](https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/auth/route_checks.py).
 - [LiteLLM premium metadata fields: allowed_passthrough_routes](https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/_types.py).
 - [LiteLLM metadata setter: Enterprise licence enforcement](https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/management_endpoints/common_utils.py).
-- [LiteLLM proxy CLI `--host` default `0.0.0.0` (pinned tag v1.102.1)](https://github.com/BerriAI/litellm/blob/v1.102.1/litellm/proxy/proxy_cli.py#L666)
+- [LiteLLM proxy CLI `--host` default `0.0.0.0` (pinned tag v1.102.1)](https://github.com/BerriAI/litellm/blob/v1.102.1/litellm/proxy/proxy_cli.py#L666-L667)

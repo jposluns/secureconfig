@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "4bb7c73b0827de98b207263a74c87779c116cc04ec1d0f8f1fe969662a21c2f8",
+  "body_sha256": "f08ec22b34c406f453d633597feba6aabd55243dee5b5628b4b0bb8404bf6037",
   "components": {
     "comfy": {
       "name": "ComfyUI",
@@ -32,7 +32,7 @@ version_basis: {
         "sfa27f3a86456": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/launch_utils.py#L463-L464",
         "sebe977aeb6f3": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/sysinfo.py#L130-L148",
         "sc9117bccdef5": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/ui.py#L1223-L1232",
-        "sd9d51e2b2963": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/initialize_util.py#L10-L15",
+        "s370f032e0497": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/initialize_util.py#L10-L16",
         "saf69abeba189": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/requirements_versions.txt#L11",
         "sf3f6d5cafad0": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/shared_init.py#L17-L24",
         "sbfd3d01539c3": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/ui_loadsave.py#L14-L73",
@@ -140,7 +140,7 @@ version_basis: {
     "argv": {"text": "COMMANDLINE_ARGS becomes argv; launcher prints credentials and local argv/environment readers may read them.", "components": ["webui"], "sources": ["webui:s914278bcbf70", "webui:s5b2e23d1781d", "webui:sfa27f3a86456"], "status": "REASONED"},
     "file-create": {"text": "Create-once owner-only credential file uses hex password and clean-shell guards; ACLs, directory races, backups and plaintext storage limit protection. Shell/filesystem versions are unrecorded.", "components": ["webui"], "sources": ["webui:s0195caed3cb9"], "status": "REASONED"},
     "file-launch": {"text": "Clear inherited launch/bind variables, validate regular non-symlink credential file, reject empty/malformed/duplicate entries and read failures. Shell/grep/awk versions are unrecorded.", "components": ["webui", "gradio"], "sources": ["webui:s0195caed3cb9", "gradio:s2ec1c2a1d665"], "status": "REASONED"},
-    "webui-bind": {"text": "Explicit --server-name overrides Gradio environment-based bind; without it GRADIO_SERVER_NAME can replace loopback.", "components": ["webui", "gradio"], "sources": ["webui:sd9d51e2b2963", "webui:saf69abeba189", "gradio:s1bd30a313ec9"], "status": "REASONED"},
+    "webui-bind": {"text": "Explicit --server-name overrides Gradio environment-based bind; without it GRADIO_SERVER_NAME can replace loopback.", "components": ["webui", "gradio"], "sources": ["webui:s370f032e0497", "webui:saf69abeba189", "gradio:s1bd30a313ec9"], "status": "REASONED"},
     "sysinfo": {"text": "Unredacted environment and incomplete argv redaction in unauthenticated sysinfo routes are source-reasoned; proxy must deny the prefix.", "components": ["webui", "gradio"], "sources": ["webui:sebe977aeb6f3", "webui:sc9117bccdef5", "gradio:sf85e6083e02e"], "status": "REASONED"},
     "invoke-config": {"text": "Flat schema 4.0.2, host 127.0.0.1, port 9090 and INVOKEAI_HOST/PORT overrides; default single-user mode has no login.", "components": ["invoke"], "sources": ["invoke:sb0dc1b679ef2"], "status": "REASONED"},
     "invoke-login": {"text": "Experimental multiuser login/JWT and strict password checks; changing the stored JWT secret then restarting logs users out. Ordinary restart logout is not established; keep loopback and TLS.", "components": ["invoke"], "sources": ["invoke:s23a1a14da479"], "status": "REASONED"},
@@ -153,7 +153,7 @@ version_basis: {
     "image-build": {"text": "Build pinned source, not unchecked GHCR default; Compose build/image pull policy and --build determine selected/tagged image.", "components": ["fooocus", "compose", "compose-cli"], "sources": ["fooocus:s79380d927e3b", "fooocus:s431336fa6375", "compose:sfb1cd5e15347", "compose:s2d25c00e22f6", "compose:s16a4e1bb5e9f", "compose-cli:s0e2ca4d9b8c0"], "status": "REASONED"},
     "auth-mount": {"text": "Image excludes auth.json; mount read-only, use built image user UID and mode 0400; remapped/rootless ownership is unchecked.", "components": ["fooocus"], "sources": ["fooocus:s6157fae93872", "fooocus:scb18d8c421f5", "fooocus:s21eb28118a14"], "status": "REASONED"},
     "argparse": {"text": "Isolated argparse definition yields loopback with no flag and wildcard for bare --listen; this is not a server demonstration.", "components": ["fooocus"], "sources": ["fooocus:s63ce6f5a8fa9"], "status": "DEMONSTRATED", "evidence": "returns `127.0.0.1` with no flag and `0.0.0.0` for a bare `--listen`."},
-    "verify-network": {"text": "Inventory every service and port, confirm loopback service is up, probe actual IPv4/IPv6; container PORTS or host-network ss have different scope.", "components": ["comfy", "webui", "invoke", "fooocus", "engine", "curl"], "sources": ["comfy:sbd178d58a098", "webui:sd9d51e2b2963", "invoke:sb0dc1b679ef2", "fooocus:s63ce6f5a8fa9", "engine:s1e53417c513d", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
+    "verify-network": {"text": "Inventory every service and port, confirm loopback service is up, probe actual IPv4/IPv6; container PORTS or host-network ss have different scope.", "components": ["comfy", "webui", "invoke", "fooocus", "engine", "curl"], "sources": ["comfy:sbd178d58a098", "webui:s370f032e0497", "invoke:sb0dc1b679ef2", "fooocus:s63ce6f5a8fa9", "engine:s1e53417c513d", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
     "verify-invoke": {"text": "Unauthenticated /api/v1/boards/ should answer in single-user mode and reject with 401 in multi-user mode; exposed status is unrecorded and no listener demonstration was available.", "components": ["invoke"], "sources": ["invoke:s23a1a14da479", "invoke:s4c6175f3800d"], "status": "REASONED", "verify": [1]},
     "verify-proxy": {"text": "TLS/header and browser checks should require login before UI; no service/proxy listeners were run.", "components": ["comfy", "fooocus"], "sources": ["comfy:s8b2f213483c1", "fooocus:s38232435e83d"], "status": "REASONED", "verify": [1]}
   }
@@ -409,7 +409,7 @@ curl -q -g -sI https://imagegen.example.com/                # via the proxy: TLS
 - AUTOMATIC1111 system-information report: `COMMANDLINE_ARGS` on the environment whitelist, the unredacted environment dump, and the exact-value argv redaction (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/sysinfo.py#L33 and https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/sysinfo.py#L130-L148
 - AUTOMATIC1111 `/internal/sysinfo` and `/internal/sysinfo-download` routes, registered with no dependency (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/ui.py#L1223-L1232
 - AUTOMATIC1111 pins Gradio 3.41.2 and adds only GZip and CORS middleware (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/requirements_versions.txt#L11 and https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/initialize_util.py#L192-L214
-- AUTOMATIC1111 `gradio_server_name()`: `--server-name`, else `0.0.0.0` with `--listen`, else `None` (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/initialize_util.py#L10-L15
+- AUTOMATIC1111 `gradio_server_name()`: `--server-name`, else `0.0.0.0` with `--listen`, else `None` (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/initialize_util.py#L10-L16
 - Gradio 3.41.2 default bind, `LOCALHOST_NAME = os.getenv("GRADIO_SERVER_NAME", "127.0.0.1")` and `server_name = server_name or LOCALHOST_NAME` (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/networking.py#L28 and https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/networking.py#L120
 - Gradio 3.41.2 checks the login per route, with `dependencies=[Depends(login_check)]` (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/routes.py#L193-L305
 - Gradio 3.41.2 turns a list `auth` into a dictionary keyed by user name, so a later password for the same user name replaces an earlier one (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/routes.py#L128-L133

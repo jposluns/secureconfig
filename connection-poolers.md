@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "113ba06988db5799e83bedf95c20268a5fd5202f80c3a3cc4c87c1c34b2b2dfa",
+  "body_sha256": "f62b10d91b81e5f83e04d1a3a28e6645160e82920626bcaa866a6dc105707b90",
   "components": {
     "pgb": {
       "name": "PgBouncer documentation",
@@ -18,7 +18,7 @@ version_basis: {
       "name": "PgBouncer listener source",
       "basis": "pgbouncer_1_26_0",
       "sources": {
-        "s8dc535fd70f7": "https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/src/main.c#L292",
+        "s3bac1c857328": "https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/src/main.c#L292-L294",
         "sb926a3d2cba4": "https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/src/pooler.c#L495-L498",
         "s6910c5b38697": "https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/include/bouncer.h#L54-L62"
       }
@@ -89,7 +89,7 @@ version_basis: {
     "backend-fixes": {"text": "1.25.2 fixes CVE-2026-6665 from a malicious backend and CVE-2026-6666 from a backend error lacking SQLSTATE.", "components": ["pgb-source"], "sources": ["pgb-source:s2a1788c4296b"], "status": "REASONED"},
     "console-fix": {"text": "1.25.2 fixes CVE-2026-6667, which allowed any authorized console user to run KILL_CLIENT.", "components": ["pgb-source"], "sources": ["pgb-source:s2a1788c4296b"], "status": "REASONED"},
     "ini-comments": {"text": "PgBouncer ini comments must start their own line; trailing # or ; becomes part of the value.", "components": ["pgb"], "sources": ["pgb:sa5cdd62a9242"], "status": "REASONED"},
-    "pgb-listener": {"text": "Use private listen_addr and port 6432; the 1.26.0 unset default is Unix sockets only except systemd socket activation, whose ListenStream settings override listen_addr.", "components": ["pgb", "pgb-bind"], "sources": ["pgb:sa5cdd62a9242", "pgb-bind:s8dc535fd70f7", "pgb-bind:sb926a3d2cba4", "pgb-bind:s6910c5b38697"], "status": "REASONED"},
+    "pgb-listener": {"text": "Use private listen_addr and port 6432; the 1.26.0 unset default is Unix sockets only except systemd socket activation, whose ListenStream settings override listen_addr.", "components": ["pgb", "pgb-bind"], "sources": ["pgb:sa5cdd62a9242", "pgb-bind:s3bac1c857328", "pgb-bind:sb926a3d2cba4", "pgb-bind:s6910c5b38697"], "status": "REASONED"},
     "pgpool-listener": {"text": "Pgpool-II defaults to localhost:9999; listen_addresses is startup-only.", "components": ["pgpool"], "sources": ["pgpool:s7b1cbfaacbb8"], "status": "REASONED"},
     "pcp-listener": {"text": "PCP independently defaults to localhost:9898 through startup-only pcp_listen_addresses and pcp_port.", "components": ["pgpool"], "sources": ["pgpool:s7b1cbfaacbb8"], "status": "REASONED"},
     "pcp-credentials": {"text": "PCP uses separate username:MD5-digest entries in protected pcp.conf; pg_md5 -p prompts, and pool_passwd is not interchangeable.", "components": ["pgpool"], "sources": ["pgpool:sdc3d487af0ae"], "status": "REASONED"},
@@ -563,7 +563,7 @@ Put the human paths to the host behind MFA per [mfa.md](mfa.md).
 ## Sources (checked September 2026)
 
 - PgBouncer configuration, including the ini comment rule, `listen_addr`, `listen_port`, `client_tls_sslmode`, `server_tls_sslmode`, `auth_type`, `auth_file`, `auth_query`, `admin_users`, `stats_users`, `application_name_add_host`, and the `[databases]` `user` key (LDAP since 1.25.0; auth_query fix 1.24.1): https://www.pgbouncer.org/config.html
-- PgBouncer `listen_addr` default `""`, and the socket-activation path that ignores it (pinned tag pgbouncer_1_26_0): https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/src/main.c#L292 and https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/src/pooler.c#L495-L498, with `sd_listen_fds()` defined as `(0)` in builds without systemd support: https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/include/bouncer.h#L54-L62
+- PgBouncer `listen_addr` default `""`, and the socket-activation path that ignores it (pinned tag pgbouncer_1_26_0): https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/src/main.c#L292-L294 and https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/src/pooler.c#L495-L498, with `sd_listen_fds()` defined as `(0)` in builds without systemd support: https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/include/bouncer.h#L54-L62
 - PgBouncer usage, the admin console and its `SHOW` commands, including who `auth_type=any` admits and the passwordless Unix-socket login: https://www.pgbouncer.org/usage.html
 - PgBouncer changelog, for CVE-2026-6664, CVE-2026-6665, CVE-2026-6666 and CVE-2026-6667, all fixed in 1.25.2: https://www.pgbouncer.org/changelog.html
 - PgBouncer features and pooling modes: https://www.pgbouncer.org/features.html
