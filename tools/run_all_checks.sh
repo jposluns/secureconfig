@@ -839,11 +839,31 @@ echo "== no committed secrets =="
 # A guide that must show sample key output will trip this; allowlist it here
 # rather than widening the guides' exposure.
 secret_re='BEGIN (RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{22,}|xox[baprs]-[A-Za-z0-9-]{10,}'
-if hits=$(grep -rnIE "$secret_re" --exclude-dir=.git . 2>/dev/null) && [ -n "$hits" ]; then
-  bad "possible credential material in tracked files:"
-  printf '%s\n' "$hits" | sed 's/^/          /'
+hits=$(grep -rnIE "$secret_re" --exclude-dir=.git . 2>&1)
+secret_rc=$?
+case "$secret_rc" in
+  0)
+    bad "possible credential material in the working tree:"
+    printf '%s\n' "$hits" | sed 's/^/          /'
+    ;;
+  1)
+    ok "no private keys or provider tokens found"
+    ;;
+  *)
+    bad "cannot complete secrets scan (grep exit $secret_rc):"
+    printf '%s\n' "$hits" | sed '/^[[:space:]]*$/d; s/^/          /'
+    ;;
+esac
+
+echo "== secrets scan fails closed on read errors =="
+if secret_tests=$(python3 -I -B tools/test_secrets_scan.py 2>&1); then
+  printf '%s\n' "$secret_tests"
+  if grep -q '^  FAIL  ' <<< "$secret_tests" || ! grep -q '^  ok    ' <<< "$secret_tests"; then
+    bad "test_secrets_scan.py exited 0 without a clean ok result"
+  fi
 else
-  ok "no private keys or provider tokens found"
+  printf '%s\n' "$secret_tests"
+  bad "test_secrets_scan.py failed"
 fi
 
 echo "== site CSP pins every inline block by hash =="

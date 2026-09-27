@@ -157,6 +157,8 @@ def fixture_environment_cases():
         ("test_shell_blocks.py",),
         ("test_bracket_ranges.py",),
         ("test_workflow_pins.py",),
+        ("test_no_placeholders.py",),
+        ("test_changelog_prs.py",),
         # Exercise the walker fixtures without recursively launching this matrix.
         ("test_walk.py", "--fixtures-only"),
     )
@@ -197,7 +199,7 @@ def fixture_environment_cases():
         git(external, "add", "alternate.txt")
         assert list(walk_files(external)) == [external / "alternate.txt"]
         assert index.read_bytes() == before, "production scan changed the default index"
-    print("  ok    6 fixture entry points preserve external indexes under both Git selectors")
+    print(f"  ok    {len(commands)} fixture entry points preserve external indexes under both Git selectors")
 
 
 def main():
