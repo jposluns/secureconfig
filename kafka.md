@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "2704053017a6e44037e62a85fbe85430cd193767343643bd5ca842346ccd58d4",
+  "body_sha256": "66e7e958123c6577a097ca7d2040ff83f5d01cb0c2f77738bde96e1f34a1490a",
   "components": {
     "default": {
       "name": "Kafka listener default",
@@ -15,17 +15,15 @@ version_basis: {
     },
     "docs": {
       "name": "Kafka documentation",
-      "basis": "unknown",
+      "basis": "4.3",
       "sources": {
         "s580ea02caa84": "https://kafka.apache.org/43/configuration/broker-configs/",
         "sd24b0c4f4311": "https://kafka.apache.org/43/security/authorization-and-acls/",
         "s7fba6211f3a6": "https://kafka.apache.org/43/operations/kraft/",
         "s30363626e954": "https://kafka.apache.org/43/getting-started/upgrade/",
         "s4afda8ace175": "https://kafka.apache.org/43/security/listener-configuration/",
-        "s2083e6339454": "https://issues.apache.org/jira/browse/KAFKA-15513",
         "sd9b5ccc53563": "https://kafka.apache.org/43/security/encryption-and-authentication-using-ssl/",
         "s91a5821170c7": "https://kafka.apache.org/43/security/authentication-using-sasl/",
-        "sdeef4a8b642f": "https://cwiki.apache.org/confluence/spaces/KAFKA/pages/195728007/KIP-801+Implement+an+Authorizer+that+stores+metadata+in+__cluster_metadata",
         "sfba7bc13e360": "https://kafka.apache.org/43/operations/multi-tenancy/",
         "sbd4fe5c33a0a": "https://kafka.apache.org/43/configuration/producer-configs/",
         "sd350211459d4": "https://kafka.apache.org/43/operations/basic-kafka-operations/",
@@ -35,6 +33,14 @@ version_basis: {
         "s8e46d7864976": "https://kafka.apache.org/43/configuration/admin-configs/",
         "sc76c88a31320": "https://kafka.apache.org/43/security/security-overview/",
         "s4d4a39897877": "https://kafka.apache.org/43/operations/monitoring/"
+      }
+    },
+    "kafka-design": {
+      "name": "Apache Kafka issue tracker and KIPs",
+      "basis": "unknown",
+      "sources": {
+        "s2083e6339454": "https://issues.apache.org/jira/browse/KAFKA-15513",
+        "sdeef4a8b642f": "https://cwiki.apache.org/confluence/spaces/KAFKA/pages/195728007/KIP-801+Implement+an+Authorizer+that+stores+metadata+in+__cluster_metadata"
       }
     },
     "source": {
@@ -88,7 +94,7 @@ version_basis: {
     "advertise": {"text": "Advertise broker CLIENT/INTERNAL only; broker-only nodes still need outbound controller security.", "components": ["docs"], "sources": ["docs:s4afda8ace175", "docs:s580ea02caa84"], "status": "REASONED"},
     "listener-selection": {"text": "Use inter.broker.listener.name without security.inter.broker.protocol; lowercase listener prefixes must match.", "components": ["docs"], "sources": ["docs:s4afda8ace175", "docs:s580ea02caa84"], "status": "REASONED"},
     "quorum": {"text": "Dynamic quorum bootstrap is not static-voter migration; reuse cluster ID and use the documented membership workflow.", "components": ["docs"], "sources": ["docs:s7fba6211f3a6"], "status": "REASONED"},
-    "controller-scram": {"text": "KAFKA-15513 lists 3.5.1/3.6.0 and no fix; it does not prove failure on every 4.3 deployment.", "components": ["docs"], "sources": ["docs:s2083e6339454"], "status": "REASONED"},
+    "controller-scram": {"text": "KAFKA-15513 lists 3.5.1/3.6.0 and no fix; it does not prove failure on every 4.3 deployment.", "components": ["kafka-design"], "sources": ["kafka-design:s2083e6339454"], "status": "REASONED"},
     "tls-files": {"text": "Protect per-node keystores, truststores, keys and properties before writing secrets; require matching SANs.", "components": ["docs"], "sources": ["docs:sd9b5ccc53563"], "status": "REASONED"},
     "pem": {"text": "PEM is supported since 2.7.0; PKCS#8 key passwords use ssl.key.password, not PEM store passwords.", "components": ["docs"], "sources": ["docs:sd9b5ccc53563"], "status": "REASONED"},
     "hostname": {"text": "Hostname verification defaults on since 2.0.0; leave it enabled.", "components": ["docs"], "sources": ["docs:sd9b5ccc53563"], "status": "REASONED"},
@@ -96,7 +102,7 @@ version_basis: {
     "tls-protocols": {"text": "Generated 4.3 reference defaults ssl.enabled.protocols to TLSv1.2,TLSv1.3.", "components": ["docs"], "sources": ["docs:s580ea02caa84"], "status": "REASONED"},
     "scram": {"text": "Use distinct SCRAM-SHA-512 identities only over TLS; KRaft credentials reside in the metadata log.", "components": ["docs"], "sources": ["docs:s91a5821170c7"], "status": "REASONED"},
     "scram-files": {"text": "Bootstrap through authorized internal mTLS; protected --add-config-file values omit brackets and need Java escaping.", "components": ["source"], "sources": ["source:sf7d512582608"], "status": "REASONED"},
-    "bootstrap-acl": {"text": "StandardAuthorizer on every broker/controller denies by default; authorize exact node/admin principals before quorum startup.", "components": ["docs"], "sources": ["docs:sd24b0c4f4311", "docs:sdeef4a8b642f"], "status": "REASONED"},
+    "bootstrap-acl": {"text": "StandardAuthorizer on every broker/controller denies by default; authorize exact node/admin principals before quorum startup.", "components": ["docs", "kafka-design"], "sources": ["docs:sd24b0c4f4311", "kafka-design:sdeef4a8b642f"], "status": "REASONED"},
     "legacy-authorizer": {"text": "Legacy 3.9 ZooKeeper uses kafka.security.authorizer.AclAuthorizer, not SimpleAclAuthorizer or the KRaft class.", "components": ["legacy"], "sources": ["legacy:se10d0fcd0e46"], "status": "REASONED"},
     "topic-grants": {"text": "Separate writer Write/Describe from reader Read/Describe and app-workers group Read; remove broader old grants.", "components": ["docs"], "sources": ["docs:sd24b0c4f4311"], "status": "REASONED"},
     "topic-create": {"text": "Disable auto.create.topics.enable; this does not revoke explicit Create rights.", "components": ["docs"], "sources": ["docs:s580ea02caa84", "docs:sfba7bc13e360"], "status": "REASONED"},
@@ -115,6 +121,7 @@ version_basis: {
     "verify-controller": {"text": "Controller valid/missing/untrusted certificate and allowed/disallowed-network pairs need logs; TLS alone proves no quorum health.", "components": ["docs", "openssl"], "sources": ["docs:s4afda8ace175", "docs:sd9b5ccc53563", "openssl:s6338b4e2e47d", "openssl:sccd4f8550707"], "status": "REASONED", "verify": [3]},
     "verify-password": {"text": "Authenticated control succeeds; plaintext is refused and wrong password reports SaslAuthenticationException, not merely nonzero exit.", "components": ["docs", "source"], "sources": ["docs:s91a5821170c7", "source:s3d5d50816fb9", "source:s50461fdc2c6e", "source:s12ac0c3869f7"], "status": "REASONED", "verify": [4]},
     "verify-acl": {"text": "Require marker delivery and opposite-role operation denials; an empty consumer result is inconclusive.", "components": ["docs", "source"], "sources": ["docs:sd24b0c4f4311", "source:s3ee12f40f1fb", "source:s3d5d50816fb9", "source:s50461fdc2c6e"], "status": "REASONED", "verify": [5]},
+    "verify-idempotence": {"text": "Only the negative producer probe sets enable.idempotence=false, so IdempotentWrite authorization cannot mask the topic-write denial; test override only.", "components": ["docs", "source"], "sources": ["docs:sd24b0c4f4311", "docs:sbd4fe5c33a0a", "source:s3ee12f40f1fb"], "status": "REASONED", "verify": [5]},
     "verify-default-deny": {"text": "Authenticated low-user access to a fixture with no matching ACL must yield TopicAuthorizationException; inspect effective authorizer.", "components": ["docs"], "sources": ["docs:sd24b0c4f4311"], "status": "REASONED", "verify": [6]},
     "verify-create": {"text": "Application creation must be denied while administrator creation succeeds; inspect old literal Create grants too.", "components": ["docs", "source"], "sources": ["docs:sd24b0c4f4311", "docs:sd350211459d4", "source:s0f1e046e30fd"], "status": "REASONED", "verify": [7]},
     "verify-inspection": {"text": "Inspect matching ACLs, user/client quotas and every broker's effective limits; listings do not establish enforcement.", "components": ["docs", "source"], "sources": ["docs:sd24b0c4f4311", "docs:s580ea02caa84", "docs:sd350211459d4", "source:sf7d512582608"], "status": "REASONED", "verify": [8]},
@@ -135,45 +142,46 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | Claim | Basis | Status |
 | --- | --- | --- |
 | plaintext: Default listener is PLAINTEXT://:9092 as of 4.3.1. | Kafka listener default 4.3.1 | REASONED |
-| internal-default: security.inter.broker.protocol defaults to PLAINTEXT. | Kafka documentation unknown | REASONED |
-| authorizer-default: No authorizer by default; reachable clients can read, write, create and delete topics. | Kafka documentation unknown | REASONED |
-| roles: Examples target 4.3; 4.0+ is KRaft-only; critical deployments should separate broker/controller roles. | Kafka documentation unknown | REASONED |
-| listeners: CLIENT 9093 uses SASL_SSL; private INTERNAL 9095 and CONTROLLER 9094 use mutual TLS; remove plaintext. | Kafka documentation unknown; Kafka source 4.3.0 | REASONED |
-| advertise: Advertise broker CLIENT/INTERNAL only; broker-only nodes still need outbound controller security. | Kafka documentation unknown | REASONED |
-| listener-selection: Use inter.broker.listener.name without security.inter.broker.protocol; lowercase listener prefixes must match. | Kafka documentation unknown | REASONED |
-| quorum: Dynamic quorum bootstrap is not static-voter migration; reuse cluster ID and use the documented membership workflow. | Kafka documentation unknown | REASONED |
-| controller-scram: KAFKA-15513 lists 3.5.1/3.6.0 and no fix; it does not prove failure on every 4.3 deployment. | Kafka documentation unknown | REASONED |
-| tls-files: Protect per-node keystores, truststores, keys and properties before writing secrets; require matching SANs. | Kafka documentation unknown | REASONED |
-| pem: PEM is supported since 2.7.0; PKCS#8 key passwords use ssl.key.password, not PEM store passwords. | Kafka documentation unknown | REASONED |
-| hostname: Hostname verification defaults on since 2.0.0; leave it enabled. | Kafka documentation unknown | REASONED |
-| client-cert: SASL_SSL needs listener-prefixed ssl.client.auth; none is default, requested is optional, required enforces mTLS. | Kafka documentation unknown; Kafka source 4.3.0 | REASONED |
-| tls-protocols: Generated 4.3 reference defaults ssl.enabled.protocols to TLSv1.2,TLSv1.3. | Kafka documentation unknown | REASONED |
-| scram: Use distinct SCRAM-SHA-512 identities only over TLS; KRaft credentials reside in the metadata log. | Kafka documentation unknown | REASONED |
+| internal-default: security.inter.broker.protocol defaults to PLAINTEXT. | Kafka documentation 4.3 | REASONED |
+| authorizer-default: No authorizer by default; reachable clients can read, write, create and delete topics. | Kafka documentation 4.3 | REASONED |
+| roles: Examples target 4.3; 4.0+ is KRaft-only; critical deployments should separate broker/controller roles. | Kafka documentation 4.3 | REASONED |
+| listeners: CLIENT 9093 uses SASL_SSL; private INTERNAL 9095 and CONTROLLER 9094 use mutual TLS; remove plaintext. | Kafka documentation 4.3; Kafka source 4.3.0 | REASONED |
+| advertise: Advertise broker CLIENT/INTERNAL only; broker-only nodes still need outbound controller security. | Kafka documentation 4.3 | REASONED |
+| listener-selection: Use inter.broker.listener.name without security.inter.broker.protocol; lowercase listener prefixes must match. | Kafka documentation 4.3 | REASONED |
+| quorum: Dynamic quorum bootstrap is not static-voter migration; reuse cluster ID and use the documented membership workflow. | Kafka documentation 4.3 | REASONED |
+| controller-scram: KAFKA-15513 lists 3.5.1/3.6.0 and no fix; it does not prove failure on every 4.3 deployment. | Apache Kafka issue tracker and KIPs unknown | REASONED |
+| tls-files: Protect per-node keystores, truststores, keys and properties before writing secrets; require matching SANs. | Kafka documentation 4.3 | REASONED |
+| pem: PEM is supported since 2.7.0; PKCS#8 key passwords use ssl.key.password, not PEM store passwords. | Kafka documentation 4.3 | REASONED |
+| hostname: Hostname verification defaults on since 2.0.0; leave it enabled. | Kafka documentation 4.3 | REASONED |
+| client-cert: SASL_SSL needs listener-prefixed ssl.client.auth; none is default, requested is optional, required enforces mTLS. | Kafka documentation 4.3; Kafka source 4.3.0 | REASONED |
+| tls-protocols: Generated 4.3 reference defaults ssl.enabled.protocols to TLSv1.2,TLSv1.3. | Kafka documentation 4.3 | REASONED |
+| scram: Use distinct SCRAM-SHA-512 identities only over TLS; KRaft credentials reside in the metadata log. | Kafka documentation 4.3 | REASONED |
 | scram-files: Bootstrap through authorized internal mTLS; protected --add-config-file values omit brackets and need Java escaping. | Kafka source 4.3.0 | REASONED |
-| bootstrap-acl: StandardAuthorizer on every broker/controller denies by default; authorize exact node/admin principals before quorum startup. | Kafka documentation unknown | REASONED |
+| bootstrap-acl: StandardAuthorizer on every broker/controller denies by default; authorize exact node/admin principals before quorum startup. | Kafka documentation 4.3; Apache Kafka issue tracker and KIPs unknown | REASONED |
 | legacy-authorizer: Legacy 3.9 ZooKeeper uses kafka.security.authorizer.AclAuthorizer, not SimpleAclAuthorizer or the KRaft class. | Kafka legacy authorization 3.9 | REASONED |
-| topic-grants: Separate writer Write/Describe from reader Read/Describe and app-workers group Read; remove broader old grants. | Kafka documentation unknown | REASONED |
-| topic-create: Disable auto.create.topics.enable; this does not revoke explicit Create rights. | Kafka documentation unknown | REASONED |
-| producer-grants: --producer includes Create; use explicit writer grants and inspect wildcard, prefix and cluster ACLs. | Kafka documentation unknown | REASONED |
-| transactions: Grant the specific transactional ID; 4.3.0 non-transactional initialization also accepts topic Write without IdempotentWrite. | Kafka documentation unknown; Kafka source 4.3.0 | REASONED |
-| quotas: Per-broker user byte quotas and request_percentage (one thread's time) need sizing; user/client overrides take precedence. | Kafka documentation unknown | REASONED |
-| connections: Client listener connection and connection-creation limits are separate from traffic quotas and internal health. | Kafka documentation unknown | REASONED |
-| mutation-quota: Conditional controller_mutation_rate bounds partition mutations, not throughput or permissions. | Kafka documentation unknown | REASONED |
-| logging: 4.0+ uses Log4j2; requested denials log at INFO, allows at DEBUG, some evaluations at TRACE; collect authentication separately. | Kafka documentation unknown; Kafka source 4.3.0 | REASONED |
-| clients: Protect separate client properties; 4.3 CLI uses --command-config, including console producer/consumer. | Kafka documentation unknown; Kafka source 4.3.0 | REASONED |
-| mfa: Kafka has no second-factor dialogue; client mTLS is a machine possession control; human access needs an MFA layer. | Kafka documentation unknown; Kafka source 4.3.0 | REASONED |
+| topic-grants: Separate writer Write/Describe from reader Read/Describe and app-workers group Read; remove broader old grants. | Kafka documentation 4.3 | REASONED |
+| topic-create: Disable auto.create.topics.enable; this does not revoke explicit Create rights. | Kafka documentation 4.3 | REASONED |
+| producer-grants: --producer includes Create; use explicit writer grants and inspect wildcard, prefix and cluster ACLs. | Kafka documentation 4.3 | REASONED |
+| transactions: Grant the specific transactional ID; 4.3.0 non-transactional initialization also accepts topic Write without IdempotentWrite. | Kafka documentation 4.3; Kafka source 4.3.0 | REASONED |
+| quotas: Per-broker user byte quotas and request_percentage (one thread's time) need sizing; user/client overrides take precedence. | Kafka documentation 4.3 | REASONED |
+| connections: Client listener connection and connection-creation limits are separate from traffic quotas and internal health. | Kafka documentation 4.3 | REASONED |
+| mutation-quota: Conditional controller_mutation_rate bounds partition mutations, not throughput or permissions. | Kafka documentation 4.3 | REASONED |
+| logging: 4.0+ uses Log4j2; requested denials log at INFO, allows at DEBUG, some evaluations at TRACE; collect authentication separately. | Kafka documentation 4.3; Kafka source 4.3.0 | REASONED |
+| clients: Protect separate client properties; 4.3 CLI uses --command-config, including console producer/consumer. | Kafka documentation 4.3; Kafka source 4.3.0 | REASONED |
+| mfa: Kafka has no second-factor dialogue; client mTLS is a machine possession control; human access needs an MFA layer. | Kafka documentation 4.3; Kafka source 4.3.0 | REASONED |
 | redpanda: Protocol controls carry over, but Redpanda uses redpanda.yaml/rpk; check its own quotas, listeners and logging. | Redpanda documentation unknown | REASONED |
 | console: Console login needs configured OIDC/basic auth and enterprise licence; enabled features without valid licence show an expiry page. | Redpanda documentation unknown | REASONED |
-| verify-tls: Inventory role-specific listeners and verify hostname/chain; TLS errors differ from inconclusive DNS/local failures. | Kafka documentation unknown; OpenSSL documentation 3.5 | REASONED |
-| verify-internal: Valid internal certificate must permit Kafka access; missing/untrusted certificates need TLS-attributed rejection. | Kafka documentation unknown; Kafka source 4.3.0 | REASONED |
-| verify-controller: Controller valid/missing/untrusted certificate and allowed/disallowed-network pairs need logs; TLS alone proves no quorum health. | Kafka documentation unknown; OpenSSL documentation 3.5 | REASONED |
-| verify-password: Authenticated control succeeds; plaintext is refused and wrong password reports SaslAuthenticationException, not merely nonzero exit. | Kafka documentation unknown; Kafka source 4.3.0 | REASONED |
-| verify-acl: Require marker delivery and opposite-role operation denials; an empty consumer result is inconclusive. | Kafka documentation unknown; Kafka source 4.3.0 | REASONED |
-| verify-default-deny: Authenticated low-user access to a fixture with no matching ACL must yield TopicAuthorizationException; inspect effective authorizer. | Kafka documentation unknown | REASONED |
-| verify-create: Application creation must be denied while administrator creation succeeds; inspect old literal Create grants too. | Kafka documentation unknown; Kafka source 4.3.0 | REASONED |
-| verify-inspection: Inspect matching ACLs, user/client quotas and every broker's effective limits; listings do not establish enforcement. | Kafka documentation unknown; Kafka source 4.3.0 | REASONED |
-| verify-quota: Matched bounded producer runs must deliver records and discriminate nonzero throttle metrics; other limits need separate workloads. | Kafka documentation unknown; Kafka source 4.3.0 | REASONED |
-| verify-logs: Matched INFO/DEBUG requests need correlated denial/allow records; missing denial means collection failed. | Kafka source 4.3.0; Kafka documentation unknown | REASONED |
+| verify-tls: Inventory role-specific listeners and verify hostname/chain; TLS errors differ from inconclusive DNS/local failures. | Kafka documentation 4.3; OpenSSL documentation 3.5 | REASONED |
+| verify-internal: Valid internal certificate must permit Kafka access; missing/untrusted certificates need TLS-attributed rejection. | Kafka documentation 4.3; Kafka source 4.3.0 | REASONED |
+| verify-controller: Controller valid/missing/untrusted certificate and allowed/disallowed-network pairs need logs; TLS alone proves no quorum health. | Kafka documentation 4.3; OpenSSL documentation 3.5 | REASONED |
+| verify-password: Authenticated control succeeds; plaintext is refused and wrong password reports SaslAuthenticationException, not merely nonzero exit. | Kafka documentation 4.3; Kafka source 4.3.0 | REASONED |
+| verify-acl: Require marker delivery and opposite-role operation denials; an empty consumer result is inconclusive. | Kafka documentation 4.3; Kafka source 4.3.0 | REASONED |
+| verify-idempotence: Only the negative producer probe sets enable.idempotence=false, so IdempotentWrite authorization cannot mask the topic-write denial; test override only. | Kafka documentation 4.3; Kafka source 4.3.0 | REASONED |
+| verify-default-deny: Authenticated low-user access to a fixture with no matching ACL must yield TopicAuthorizationException; inspect effective authorizer. | Kafka documentation 4.3 | REASONED |
+| verify-create: Application creation must be denied while administrator creation succeeds; inspect old literal Create grants too. | Kafka documentation 4.3; Kafka source 4.3.0 | REASONED |
+| verify-inspection: Inspect matching ACLs, user/client quotas and every broker's effective limits; listings do not establish enforcement. | Kafka documentation 4.3; Kafka source 4.3.0 | REASONED |
+| verify-quota: Matched bounded producer runs must deliver records and discriminate nonzero throttle metrics; other limits need separate workloads. | Kafka documentation 4.3; Kafka source 4.3.0 | REASONED |
+| verify-logs: Matched INFO/DEBUG requests need correlated denial/allow records; missing denial means collection failed. | Kafka source 4.3.0; Kafka documentation 4.3 | REASONED |
 <!-- version-basis:end -->
 
 Kafka's broker defaults are `listeners=PLAINTEXT://:9092` (as of Kafka 4.3.1), `security.inter.broker.protocol=PLAINTEXT`, and no authorizer, so anyone who reaches port 9092 can read every topic, produce to it, and create or delete topics with no credential and no encryption. Property names below come from the Kafka 4.x documentation (KRaft mode).
@@ -978,33 +986,33 @@ The checks below remain REASONED from the cited Kafka documentation and pinned s
 
 ## Sources (checked September 2026)
 
-- Kafka security overview: https://kafka.apache.org/43/security/security-overview/
-- Listener configuration (controller listener, combined-node requirement, protocol map): https://kafka.apache.org/43/security/listener-configuration/
-- Encryption and authentication using SSL: https://kafka.apache.org/43/security/encryption-and-authentication-using-ssl/
-- Authentication using SASL (SCRAM): https://kafka.apache.org/43/security/authentication-using-sasl/
-- Authorization and ACLs (`allow.everyone.if.no.acl.found`, resource-pattern-type): https://kafka.apache.org/43/security/authorization-and-acls/
-- KRaft provisioning / storage formatting (`--standalone`, cluster ID reuse): https://kafka.apache.org/43/operations/kraft/
-- Broker configuration reference (defaults for `listeners`, `sasl.enabled.mechanisms`, `inter.broker.listener.name`): https://kafka.apache.org/43/configuration/broker-configs/
+- Kafka security overview (Kafka 4.3 documentation): https://kafka.apache.org/43/security/security-overview/
+- Listener configuration (controller listener, combined-node requirement, protocol map) (Kafka 4.3 documentation): https://kafka.apache.org/43/security/listener-configuration/
+- Encryption and authentication using SSL (Kafka 4.3 documentation): https://kafka.apache.org/43/security/encryption-and-authentication-using-ssl/
+- Authentication using SASL (SCRAM) (Kafka 4.3 documentation): https://kafka.apache.org/43/security/authentication-using-sasl/
+- Authorization and ACLs (`allow.everyone.if.no.acl.found`, resource-pattern-type) (Kafka 4.3 documentation): https://kafka.apache.org/43/security/authorization-and-acls/
+- KRaft provisioning / storage formatting (`--standalone`, cluster ID reuse) (Kafka 4.3 documentation): https://kafka.apache.org/43/operations/kraft/
+- Broker configuration reference (defaults for `listeners`, `sasl.enabled.mechanisms`, `inter.broker.listener.name`) (Kafka 4.3 documentation): https://kafka.apache.org/43/configuration/broker-configs/
 - SSL client authentication on `SASL_SSL` listeners needs the listener prefix (source, `ChannelBuilders.java`, tagged 4.3.0): https://raw.githubusercontent.com/apache/kafka/4.3.0/clients/src/main/java/org/apache/kafka/common/network/ChannelBuilders.java
 - Redpanda security documentation: https://docs.redpanda.com/streaming/current/manage/security/
 - Redpanda Console authentication (built-in login requires an enterprise licence): https://docs.redpanda.com/streaming/current/console/config/security/authentication/
 - Apache Kafka controller SCRAM bootstrap issue (KAFKA-15513): https://issues.apache.org/jira/browse/KAFKA-15513
 - Kafka 3.9 authorization and ZooKeeper AclAuthorizer: https://kafka.apache.org/39/security/authorization-and-acls/
 - KIP-801 authorizer bootstrapping and early-start listeners: https://cwiki.apache.org/confluence/spaces/KAFKA/pages/195728007/KIP-801+Implement+an+Authorizer+that+stores+metadata+in+__cluster_metadata
-- Basic Kafka operations, topic administration, and quota commands: https://kafka.apache.org/43/operations/basic-kafka-operations/
-- Multi-tenancy, topic-creation controls, and partition-mutation quotas: https://kafka.apache.org/43/operations/multi-tenancy/
-- Quota grouping, precedence, request-time accounting, and enforcement: https://kafka.apache.org/43/design/design/
-- Producer configuration, idempotence, and transactional identity: https://kafka.apache.org/43/configuration/producer-configs/
-- Consumer configuration and client security properties: https://kafka.apache.org/43/configuration/consumer-configs/
-- Admin client configuration and security properties: https://kafka.apache.org/43/configuration/admin-configs/
-- Kafka upgrades, ZooKeeper removal, and the Log4j2 migration: https://kafka.apache.org/43/getting-started/upgrade/
-- Kafka monitoring and quota-throttle metrics: https://kafka.apache.org/43/operations/monitoring/
+- Basic Kafka operations, topic administration, and quota commands (Kafka 4.3 documentation): https://kafka.apache.org/43/operations/basic-kafka-operations/
+- Multi-tenancy, topic-creation controls, and partition-mutation quotas (Kafka 4.3 documentation): https://kafka.apache.org/43/operations/multi-tenancy/
+- Quota grouping, precedence, request-time accounting, and enforcement (Kafka 4.3 documentation): https://kafka.apache.org/43/design/design/
+- Producer configuration, idempotence, and transactional identity (Kafka 4.3 documentation): https://kafka.apache.org/43/configuration/producer-configs/
+- Consumer configuration and client security properties (Kafka 4.3 documentation): https://kafka.apache.org/43/configuration/consumer-configs/
+- Admin client configuration and security properties (Kafka 4.3 documentation): https://kafka.apache.org/43/configuration/admin-configs/
+- Kafka upgrades, ZooKeeper removal, and the Log4j2 migration (Kafka 4.3 documentation): https://kafka.apache.org/43/getting-started/upgrade/
+- Kafka monitoring and quota-throttle metrics (Kafka 4.3 documentation): https://kafka.apache.org/43/operations/monitoring/
 - ConfigCommand file loading, SCRAM parsing, and configuration descriptions, tagged 4.3.0: https://github.com/apache/kafka/blob/4.3.0/core/src/main/scala/kafka/admin/ConfigCommand.scala
 - InitProducerId authorization, tagged 4.3.0: https://github.com/apache/kafka/blob/4.3.0/core/src/main/scala/kafka/server/KafkaApis.scala
 - Distribution server configuration and example listener ports, tagged 4.3.0: https://github.com/apache/kafka/blob/4.3.0/config/server.properties
 - Distribution Log4j2 configuration, authorizer appender, and log filenames, tagged 4.3.0: https://github.com/apache/kafka/blob/4.3.0/config/log4j2.yaml
 - StandardAuthorizer audit levels and message fields, tagged 4.3.0: https://github.com/apache/kafka/blob/4.3.0/metadata/src/main/java/org/apache/kafka/metadata/authorizer/StandardAuthorizerData.java
-- Authorizer Action audit-logging flags: https://kafka.apache.org/43/javadoc/org/apache/kafka/server/authorizer/Action.html
+- Authorizer Action audit-logging flags (Kafka 4.3 documentation): https://kafka.apache.org/43/javadoc/org/apache/kafka/server/authorizer/Action.html
 - Console producer options, configuration files, and synchronous sends, tagged 4.3.0: https://github.com/apache/kafka/blob/4.3.0/tools/src/main/java/org/apache/kafka/tools/ConsoleProducer.java
 - Console consumer options, configuration files, groups, and timeouts, tagged 4.3.0: https://github.com/apache/kafka/blob/4.3.0/tools/src/main/java/org/apache/kafka/tools/consumer/ConsoleConsumerOptions.java
 - Console consumer exception logging and exit behavior, tagged 4.3.0: https://github.com/apache/kafka/blob/4.3.0/tools/src/main/java/org/apache/kafka/tools/consumer/ConsoleConsumer.java
