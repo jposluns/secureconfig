@@ -4,13 +4,15 @@ secureconfig is published continuously and versions as `1.0.<pull request number
 that of the most recently merged pull request. The current value is in the `VERSION` file at the
 repository root. There is no release artifact, so the version names a state of `main` rather than a
 downloadable build, and each guide remains dated by its own "Sources (checked <month year>)" section.
-Entries here are grouped by the date the change landed on `main`. Note that nothing in the gate suite
-can check `VERSION` against GitHub: no gate reaches the network, by design, so that no outside service
-can change a gate's answer, and a pull request number is only knowable from outside. Keeping `VERSION`
-in step with the merged pull request is therefore an authoring obligation, not an enforced one.
+Entries here are grouped by the UTC date the change landed on `main`. That rule applies from 2026-09-27;
+earlier headings were not held to one timezone and are left as recorded. Note that nothing in the gate
+suite can check `VERSION` against GitHub: no gate reaches the network, by design, so that no outside
+service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
+`VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
 ## 2026-09-27
 
+- Record the maintainer's ruling that CHANGELOG headings use the UTC merge date from 2026-09-27, leaving earlier headings as recorded (#NNN).
 - Move the #389 and #391 to #399 bullets to their UTC merge date, rename the version-basis gate label after the rollout, and extend the source-gap and follow-up backlog, with rows 1.143 and 1.138 retired (maintainer ruling 2026-09-27), and record the day's four rulings in DECISIONS.md. Row 3.37. (#408)
 - Deny dotfiles and common backup and dump suffixes in the Caddy web-exposure example, align nginx and Apache suffix rules, and add planted-file probes for the added classes. Row 1.184. (#406)
 - Version basis for every guide: 100 guides carry version-basis front matter and a generated per-claim summary (versions, documentation date, DEMONSTRATED or REASONED), drafted in 20 batches under a body-identity check and reviewed in five two-family stages; every Verify fence is now marked. Rows 3.32 and 3.27. (#407)
