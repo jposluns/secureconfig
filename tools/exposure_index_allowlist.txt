@@ -1,6 +1,6 @@
 # Allowlist for tools/check_exposure_index.py: guide/port pairs that match a port pattern but are not
 # listeners that guide documents (an outbound destination, an illustrative number, a test rig, a
-# pointer to another guide), whether the mention is
+# pointer to another guide, a container port behind a remapped publication), whether the mention is
 # unmapped or uncited. One `<guide> <port>` pair per line, with the reason after `#`.
 # The gate fails on an entry that no longer matches any mention, so remove a line when its text goes.
 README.md 80  # README pointer: step 2 names the ports a public certificate host must expose and links free-certificates.md, which the 80, 443 row cites; not a listener
@@ -15,6 +15,7 @@ mcp-clients.md 3000  # illustrative number: the redirect URI in an illustrative 
 minio.md 7373  # outbound: MinIO connects to an external KMS server here (MINIO_KMS_SERVER; KES appears at minio.md:191); not a MinIO listener
 mlflow.md 5432  # outbound: the basic-auth database_uri connection to PostgreSQL on loopback; the database listener is postgresql.md's
 mongodb.md 5696  # outbound: MongoDB connects to an external KMIP server on this port; not a MongoDB listener
+open-webui.md 8080  # container port behind the 127.0.0.1:3000 publication; the host listener is row 3000
 pocketbase.md 587  # outbound: Appwrite's _APP_SMTP_PORT, the submission port of the external mail service; not an Appwrite listener
 search-engines.md 8443  # test rig: the Caddy listener on 127.0.0.1:8443 in the recorded verification run, not a deployment the guide configures
 sqlite-http-frontends.md 8443  # test rig: the Caddy listener on 127.0.0.1:8443 in the recorded verification run, not a deployment the guide configures
