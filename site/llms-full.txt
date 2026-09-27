@@ -3713,42 +3713,42 @@ API keys, client secrets, and client-certificate keys that cannot be federated a
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| isolate: Bind app and auth service to loopback or an unpublished private container network; only the fronting proxy may reach them. | oauth2-proxy v7.15.4; Authelia v4.39.28 | REASONED |
+| isolate: Bind app and auth service to loopback or an unpublished private container network; only the fronting proxy may reach them. | oauth2-proxy v7.15.4; oauth2-proxy documentation (rolling) unknown; Authelia documentation (rolling) unknown | REASONED |
 | oauth-bind: oauth2-proxy --http-address defaults to 127.0.0.1:4180. | oauth2-proxy v7.15.4 | REASONED |
 | authelia-bind: Authelia server.address defaults tcp://:9091/; its empty host reaches Go net.Listen and binds every local address. | Authelia v4.39.28; Go net.Listen unknown | REASONED |
-| authenticate: oauth2-proxy, Authelia or Pomerium must check the session before forwarding to the app. | oauth2-proxy v7.15.4; Authelia v4.39.28; Pomerium unknown | REASONED |
-| header-trust: The app must trust only headers overwritten from verified proxy responses; other client headers pass through, so isolation alone is insufficient. | oauth2-proxy v7.15.4; Authelia v4.39.28; Traefik unknown | REASONED |
+| authenticate: oauth2-proxy, Authelia or Pomerium must check the session before forwarding to the app. | Pomerium unknown; oauth2-proxy documentation (rolling) unknown; Authelia documentation (rolling) unknown | REASONED |
+| header-trust: The app must trust only headers overwritten from verified proxy responses; other client headers pass through, so isolation alone is insufficient. | oauth2-proxy v7.15.4; Traefik unknown; oauth2-proxy documentation (rolling) unknown; Authelia documentation (rolling) unknown | REASONED |
 | oauth-provider: OAUTH2_PROXY_ environment variables map core flags; configure provider and IdP client-id/client-secret. | oauth2-proxy v7.15.4 | REASONED |
 | oauth-domain: --email-domain restricts a domain; * admits any authenticated user. | oauth2-proxy v7.15.4 | REASONED |
 | oauth-upstream: --upstream targets the app, or static://202 when another proxy handles forwarding. | oauth2-proxy v7.15.4 | REASONED |
 | oauth-cookie: --cookie-secret must be 16, 24 or 32 bytes, optionally base64-encoded; generate randomly and do not reuse or commit it. | oauth2-proxy v7.15.4 | REASONED |
-| oauth-nginx: nginx auth_request at /oauth2/auth needs --reverse-proxy; --set-xauthrequest supplies User/Email response headers. | oauth2-proxy v7.15.4 | REASONED |
-| oauth-nginx-identity: nginx maps verified X-Auth-Request-User/Email to X-User/Email before forwarding to 127.0.0.1:3000. | oauth2-proxy v7.15.4 | REASONED |
-| oauth-signin: The nginx example forwards /oauth2/ to 127.0.0.1:4180 and redirects auth 401 to /oauth2/sign_in with the return URL. | oauth2-proxy v7.15.4 | REASONED |
+| oauth-nginx: nginx auth_request at /oauth2/auth needs --reverse-proxy; --set-xauthrequest supplies User/Email response headers. | oauth2-proxy documentation (rolling) unknown | REASONED |
+| oauth-nginx-identity: nginx maps verified X-Auth-Request-User/Email to X-User/Email before forwarding to 127.0.0.1:3000. | oauth2-proxy documentation (rolling) unknown | REASONED |
+| oauth-signin: The nginx example forwards /oauth2/ to 127.0.0.1:4180 and redirects auth 401 to /oauth2/sign_in with the return URL. | oauth2-proxy documentation (rolling) unknown | REASONED |
 | oauth-traefik: Traefik forwardAuth calls oauth2-proxy:4180/oauth2/auth with static://202, reverse-proxy and set-xauthrequest enabled. | oauth2-proxy v7.15.4 | REASONED |
 | traefik-headers: authResponseHeaders must include every trusted identity header; only those replace client values, with other headers forwarded unchanged. | Traefik unknown; oauth2-proxy v7.15.4 | REASONED |
 | traefik-attach: Attach oauth-auth to every protected router; defining middleware without a router reference protects nothing. | oauth2-proxy v7.15.4; Traefik unknown | REASONED |
-| authelia-support: Authelia supports the listed nginx, Traefik, Caddy, HAProxy/Lua, Envoy, Skipper, NGINX Proxy Manager and SWAG integrations, not Apache/IIS. | Authelia v4.39.28 | REASONED |
-| caddy-min: Authelia's documented Caddy support requires 2.5.1+. | Authelia Caddy support minimum 2.5.1+ | REASONED |
-| authelia-nginx: nginx uses the dedicated /api/authz/auth-request endpoint through an internal location with original method/URL and no request body. | Authelia v4.39.28 | REASONED |
-| authelia-dns: Variable proxy_pass needs runtime DNS resolution or a matching upstream; the shown 127.0.0.11 resolver assumes Docker DNS. | Authelia v4.39.28 | REASONED |
-| authelia-identity: nginx copies verified Remote-User/Groups/Name/Email and uses the auth Location for 401 redirection; trusted client headers must be overwritten. | Authelia v4.39.28 | REASONED |
-| authelia-traefik: Traefik calls authelia:9091/api/authz/forward-auth and copies the four Remote-* identity headers. | Authelia v4.39.28 | REASONED |
-| authelia-caddy: Caddy forward_auth calls authelia:9091 with /api/authz/forward-auth and copies the four Remote-* identity headers. | Authelia v4.39.28 | REASONED |
-| authelia-session: Authelia needs a random session secret and path access rules selecting one_factor or two_factor. | Authelia v4.39.28 | REASONED |
-| authelia-mfa: Authelia enforces TOTP, WebAuthn/passkeys or Duo push itself. | Authelia v4.39.28 | REASONED |
+| authelia-support: Authelia supports the listed nginx, Traefik, Caddy, HAProxy/Lua, Envoy, Skipper, NGINX Proxy Manager and SWAG integrations, not Apache/IIS. | Authelia documentation (rolling) unknown | REASONED |
+| caddy-min: Authelia's documented Caddy support requires 2.5.1+. | Authelia documentation (rolling) unknown | REASONED |
+| authelia-nginx: nginx uses the dedicated /api/authz/auth-request endpoint through an internal location with original method/URL and no request body. | Authelia documentation (rolling) unknown | REASONED |
+| authelia-dns: Variable proxy_pass needs runtime DNS resolution or a matching upstream; the shown 127.0.0.11 resolver assumes Docker DNS. | Authelia documentation (rolling) unknown | REASONED |
+| authelia-identity: nginx copies verified Remote-User/Groups/Name/Email and uses the auth Location for 401 redirection; trusted client headers must be overwritten. | Authelia documentation (rolling) unknown | REASONED |
+| authelia-traefik: Traefik calls authelia:9091/api/authz/forward-auth and copies the four Remote-* identity headers. | Authelia documentation (rolling) unknown | REASONED |
+| authelia-caddy: Caddy forward_auth calls authelia:9091 with /api/authz/forward-auth and copies the four Remote-* identity headers. | Authelia documentation (rolling) unknown | REASONED |
+| authelia-session: Authelia needs a random session secret and path access rules selecting one_factor or two_factor. | Authelia documentation (rolling) unknown | REASONED |
+| authelia-mfa: Authelia enforces TOTP, WebAuthn/passkeys or Duo push itself. | Authelia documentation (rolling) unknown | REASONED |
 | pomerium-idp: Pomerium combines routing, TLS and access control; configure idp_provider, idp_provider_url, idp_client_id and idp_client_secret. | Pomerium unknown | REASONED |
 | pomerium-policy: Each Pomerium route carries policy restricting users, domains or claims. | Pomerium unknown | REASONED |
 | idp-mfa: oauth2-proxy and Pomerium rely on MFA enforced by their identity provider. | oauth2-proxy v7.15.4; Pomerium unknown | REASONED |
 | verify-listeners: Inspect every listener: app 3000, oauth2-proxy 4180 and Authelia 9091 must be reachable only by the proxy. | oauth2-proxy v7.15.4; Authelia v4.39.28 | REASONED |
-| verify-direct: From another host, all three ports must refuse/time out at the actual address; HTTP proves exposure and local/resolver failures are inconclusive. | oauth2-proxy v7.15.4; Authelia v4.39.28; curl minimum write-out version 7.75.0 | REASONED |
-| verify-forged-direct: A forged X-User sent directly to app port 3000 must be refused by network isolation. | oauth2-proxy v7.15.4; curl minimum write-out version 7.75.0 | REASONED |
-| verify-login: Without a session, expect 401 or a 302 to the sign-in page; other redirects do not pass. A real session must reach the app. | oauth2-proxy v7.15.4; Authelia v4.39.28 | REASONED |
-| verify-overwrite: With a valid session, replay a forged trusted identity header through each proxy; the app log must show the real identity, not admin. | oauth2-proxy v7.15.4; Authelia v4.39.28; Traefik unknown | REASONED |
+| verify-direct: From another host, all three ports must refuse/time out at the actual address; HTTP proves exposure and local/resolver failures are inconclusive. | curl minimum write-out version 7.75.0; oauth2-proxy documentation (rolling) unknown; Authelia documentation (rolling) unknown | REASONED |
+| verify-forged-direct: A forged X-User sent directly to app port 3000 must be refused by network isolation. | curl minimum write-out version 7.75.0; oauth2-proxy documentation (rolling) unknown | REASONED |
+| verify-login: Without a session, expect 401 or a 302 to the sign-in page; other redirects do not pass. A real session must reach the app. | oauth2-proxy documentation (rolling) unknown; Authelia documentation (rolling) unknown | REASONED |
+| verify-overwrite: With a valid session, replay a forged trusted identity header through each proxy; the app log must show the real identity, not admin. | oauth2-proxy v7.15.4; Traefik unknown; oauth2-proxy documentation (rolling) unknown; Authelia documentation (rolling) unknown | REASONED |
 <!-- version-basis:end -->
 
 Many self-hosted apps (internal tools, dashboards, webhook receivers) ship with no login at all. The fix is the same shape every time: the app binds to loopback, a proxy in front does authentication and MFA, and it passes the app a verified identity, which the app must not accept from anywhere else. This guide is what [mfa.md](mfa.md), [nginx.md](nginx.md), [traefik.md](traefik.md), and [caddy.md](caddy.md) point at.
@@ -3913,16 +3913,16 @@ After a real login through the proxy, confirm a session reaches the app and the 
 
 ## Sources (checked September 2026)
 
-- oauth2-proxy v7.15.4 configuration overview (flags, cookie-secret length): https://oauth2-proxy.github.io/oauth2-proxy/configuration/overview
-- oauth2-proxy v7.15.4 nginx integration: https://oauth2-proxy.github.io/oauth2-proxy/configuration/integrations/nginx/
-- oauth2-proxy v7.15.4 Traefik integration: https://oauth2-proxy.github.io/oauth2-proxy/configuration/integrations/traefik/
+- oauth2-proxy configuration overview, flags and cookie-secret length (pinned tag v7.15.4): https://raw.githubusercontent.com/oauth2-proxy/oauth2-proxy/v7.15.4/docs/docs/configuration/overview.md
+- oauth2-proxy nginx integration (rolling documentation, checked September 2026): https://oauth2-proxy.github.io/oauth2-proxy/configuration/integrations/nginx/
+- oauth2-proxy Traefik integration (pinned tag v7.15.4): https://raw.githubusercontent.com/oauth2-proxy/oauth2-proxy/v7.15.4/docs/docs/configuration/integrations/traefik.md
 - Traefik forwardAuth middleware (authResponseHeaders replaces only the listed headers; others pass through): https://doc.traefik.io/traefik/reference/routing-configuration/http/middlewares/forwardauth/
-- Authelia v4.39.28 proxy integration introduction: https://www.authelia.com/integration/proxies/introduction/
-- Authelia v4.39.28 proxy support matrix (Apache and IIS unsupported) (Caddy 2.5.1+): https://www.authelia.com/integration/proxies/support/
-- Authelia v4.39.28 nginx integration: https://www.authelia.com/integration/proxies/nginx/
-- Authelia v4.39.28 Traefik integration: https://www.authelia.com/integration/proxies/traefik/
-- Authelia v4.39.28 Caddy integration: https://www.authelia.com/integration/proxies/caddy/
-- Authelia v4.39.28 second-factor introduction: https://www.authelia.com/configuration/second-factor/introduction/
+- Authelia proxy integration introduction (rolling documentation, checked September 2026): https://www.authelia.com/integration/proxies/introduction/
+- Authelia proxy support matrix, Apache and IIS unsupported; Caddy support minimum (rolling documentation, checked September 2026): https://www.authelia.com/integration/proxies/support/
+- Authelia nginx integration (rolling documentation, checked September 2026): https://www.authelia.com/integration/proxies/nginx/
+- Authelia Traefik integration (rolling documentation, checked September 2026): https://www.authelia.com/integration/proxies/traefik/
+- Authelia Caddy integration (rolling documentation, checked September 2026): https://www.authelia.com/integration/proxies/caddy/
+- Authelia second-factor introduction (rolling documentation, checked September 2026): https://www.authelia.com/configuration/second-factor/introduction/
 - Pomerium identity provider settings: https://www.pomerium.com/docs/reference/identity-provider-settings
 - Pomerium documentation: https://www.pomerium.com/docs
 - oauth2-proxy `--http-address` default `127.0.0.1:4180` (pinned tag v7.15.4): https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/pkg/apis/options/legacy_options.go#L494
@@ -5763,23 +5763,23 @@ REASONED: this firewalld reload check follows the Impact section of GHSA-x4rx-4g
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
 | ingress-migration: ingress-nginx retired in March 2026 with no subsequent updates; detect its labeled pods and migrate. Gateway API is recommended and Ingress API is frozen. | Kubernetes documentation unknown | REASONED |
 | gateway-install: Install Envoy Gateway chart v1.9.1 and its default Gateway CRDs; separately create GatewayClass eg with the documented controllerName and confirm Accepted=True. | Envoy Gateway v1.9.1; Gateway API documentation unknown | REASONED |
 | gateway-alternatives: Traefik uses providers.kubernetesGateway; Cilium uses gatewayAPI.enabled=true and requires kube-proxy replacement. | Traefik documentation unknown; Cilium documentation unknown | REASONED |
-| gateway-tls: Gateway HTTPS listener 443 terminates TLS using app-tls for app.example.com; HTTP 80 is for redirect and ACME challenges. | Gateway API documentation unknown; Envoy Gateway v1.9.1 | REASONED |
+| gateway-tls: Gateway HTTPS listener 443 terminates TLS using app-tls for app.example.com; HTTP 80 is for redirect and ACME challenges. | Gateway API documentation unknown; Envoy Gateway documentation (rolling) unknown | REASONED |
 | gateway-route: HTTPRoute app attaches only to the HTTPS listener via sectionName and forwards to the ClusterIP app Service on port 80. | Gateway API documentation unknown | REASONED |
-| gateway-redirect: The HTTP route uses RequestRedirect with scheme https and statusCode 301. | Gateway API documentation unknown; Envoy Gateway v1.9.1 | REASONED |
+| gateway-redirect: The HTTP route uses RequestRedirect with scheme https and statusCode 301. | Gateway API documentation unknown; Envoy Gateway documentation (rolling) unknown | REASONED |
 | cert-manager-enable: From cert-manager 1.15, enable config.gatewayAPI.enabled; install Gateway CRDs before startup or restart cert-manager afterwards. | cert-manager Gateway support minimum 1.15 | REASONED |
 | cert-manager-issue: Gateway issuer annotations produce Certificates per HTTPS-listener Secret using listener hostnames; ACME gatewayHTTPRoute parentRefs selects the challenge Gateway. | cert-manager Gateway support minimum 1.15 | REASONED |
-| basic-auth-policy: Gateway API has no standard auth filter; Envoy SecurityPolicy attaches Basic auth to Gateway/HTTPRoute/GRPCRoute using an htpasswd Secret. | Gateway API documentation unknown; Envoy Gateway v1.9.1 | REASONED |
-| basic-auth-hash: Envoy supports SHA hashes only; htpasswd -s is weak SHA-1, so use long random passwords over TLS and keep application login. | Envoy Gateway v1.9.1; Apache htpasswd documentation unknown | REASONED |
-| basic-auth-input: htpasswd -i reads stdin, unlike argv-exposing -b; confirm twice, create with -cis, verify with -vi and only then create the Kubernetes Secret. | Apache htpasswd documentation unknown; Envoy Gateway v1.9.1 | REASONED |
-| oidc: Envoy SecurityPolicy oidc uses issuer, clientID, clientSecret and redirectURL; enforce MFA at the identity provider. | Envoy Gateway v1.9.1 | REASONED |
-| external-auth: Authelia is an authorization endpoint, not a traffic proxy; Envoy extAuth.http targets its Service and /api/authz/ext-authz/. | Authelia documentation unknown; Envoy Gateway v1.9.1 | REASONED |
+| basic-auth-policy: Gateway API has no standard auth filter; Envoy SecurityPolicy attaches Basic auth to Gateway/HTTPRoute/GRPCRoute using an htpasswd Secret. | Gateway API documentation unknown; Envoy Gateway documentation (rolling) unknown | REASONED |
+| basic-auth-hash: Envoy supports SHA hashes only; htpasswd -s is weak SHA-1, so use long random passwords over TLS and keep application login. | Apache htpasswd documentation unknown; Envoy Gateway documentation (rolling) unknown | REASONED |
+| basic-auth-input: htpasswd -i reads stdin, unlike argv-exposing -b; confirm twice, create with -cis, verify with -vi and only then create the Kubernetes Secret. | Apache htpasswd documentation unknown; Envoy Gateway documentation (rolling) unknown | REASONED |
+| oidc: Envoy SecurityPolicy oidc uses issuer, clientID, clientSecret and redirectURL; enforce MFA at the identity provider. | Envoy Gateway documentation (rolling) unknown | REASONED |
+| external-auth: Authelia is an authorization endpoint, not a traffic proxy; Envoy extAuth.http targets its Service and /api/authz/ext-authz/. | Authelia documentation unknown; Envoy Gateway documentation (rolling) unknown | REASONED |
 | workload-exposure: Expose workloads only through the Gateway LoadBalancer; keep databases on ClusterIP without routes and enforce pod access with NetworkPolicies plus database TLS/auth. | Envoy Gateway v1.9.1; Kubernetes documentation unknown | REASONED |
 | secrets: Store credentials in Secrets or an external operator, not committed ConfigMaps or environment literals; kubeconfigs containing credentials also need secret handling. | Kubernetes documentation unknown | REASONED |
 | eks-endpoint: EKS API defaults public; restrict public CIDRs or use private access. Private-only endpoints can resolve publicly to private VPC addresses. | Amazon EKS documentation unknown | REASONED |
@@ -5810,7 +5810,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | gke-readonly: GKE disables the read-only port by default only for new clusters running 1.32+; inspect effective configuration on older or upgraded clusters. | GKE new-cluster read-only-port boundary 1.32 | REASONED |
 | verify-services: Only the Gateway should have NodePort/LoadBalancer exposure; verify its public address/DNS and Certificate Ready=True. | Kubernetes documentation unknown; Envoy Gateway v1.9.1; cert-manager Gateway support minimum 1.15 | REASONED |
 | verify-redirect: HTTP should return 301 to the HTTPS application URL. | Gateway API documentation unknown | REASONED |
-| verify-basic: Anonymous Basic-protected access should return 401; require SecurityPolicy Accepted=True and a valid credential reaching the app without the gateway Basic challenge. | Envoy Gateway v1.9.1; curl documentation unknown | REASONED |
+| verify-basic: Anonymous Basic-protected access should return 401; require SecurityPolicy Accepted=True and a valid credential reaching the app without the gateway Basic challenge. | curl documentation unknown; Envoy Gateway documentation (rolling) unknown | REASONED |
 | verify-api-target: Use the whole kubeconfig endpoint, preserving IPv6 and inferring a schemeless endpoint from both cluster and user TLS settings, not a hardcoded 6443. | Kubernetes documentation unknown | REASONED |
 | verify-proxies: Disable curl config and configured proxies for direct probes; a transparent TLS middlebox can still answer for an unreachable target. | curl documentation unknown | REASONED |
 | verify-api-tcp: Outside allowed ranges, nc success proves something accepted TCP; corroborate failed probes with provider ranges and multiple vantage points. | Kubernetes documentation unknown; Amazon EKS documentation unknown | REASONED |
@@ -6191,7 +6191,7 @@ allowed ranges out of the provider's own configuration rather than inferring the
 - Ingress NGINX: Statement from the Kubernetes Steering and Security Response Committees (retirement, detection command): https://kubernetes.io/blog/2026/01/29/ingress-nginx-statement/ ; Kubernetes docs, Gateway API (migration guide from Ingress): https://kubernetes.io/docs/concepts/services-networking/gateway/ ; Kubernetes docs, Ingress (the project recommends Gateway; the Ingress API is frozen): https://kubernetes.io/docs/concepts/services-networking/ingress/
 - Gateway API getting started (CRD install): https://gateway-api.sigs.k8s.io/guides/getting-started/introduction/ ; TLS: https://gateway-api.sigs.k8s.io/guides/user-guides/tls/ ; HTTP routing: https://gateway-api.sigs.k8s.io/guides/user-guides/http-routing/ ; redirects: https://gateway-api.sigs.k8s.io/guides/user-guides/http-redirect-rewrite/
 - Envoy Gateway: https://gateway.envoyproxy.io/ ; Helm install: https://gateway.envoyproxy.io/docs/install/install-helm/ ; quickstart and its manifest (GatewayClass `controllerName`): https://gateway.envoyproxy.io/docs/tasks/quickstart/ , https://github.com/envoyproxy/gateway/releases/download/v1.9.1/quickstart.yaml
-- Envoy Gateway v1.9.1 tasks, secure gateways (TLS listener): https://gateway.envoyproxy.io/docs/tasks/security/secure-gateways/ ; basic auth: https://gateway.envoyproxy.io/docs/tasks/security/basic-auth/ ; OIDC: https://gateway.envoyproxy.io/docs/tasks/security/oidc/ ; external authorization (`extAuth`): https://gateway.envoyproxy.io/docs/tasks/security/ext-auth/ ; HTTP redirect: https://gateway.envoyproxy.io/docs/tasks/traffic/http-redirect/
+- Envoy Gateway tasks, secure gateways and TLS listener (rolling documentation, checked September 2026): https://gateway.envoyproxy.io/docs/tasks/security/secure-gateways/ ; basic auth: https://gateway.envoyproxy.io/docs/tasks/security/basic-auth/ ; OIDC: https://gateway.envoyproxy.io/docs/tasks/security/oidc/ ; external authorization (`extAuth`): https://gateway.envoyproxy.io/docs/tasks/security/ext-auth/ ; HTTP redirect: https://gateway.envoyproxy.io/docs/tasks/traffic/http-redirect/
 - htpasswd, for `-i` rather than `-b` and what SHA-1 costs: https://httpd.apache.org/docs/2.4/programs/htpasswd.html
 - Authelia: proxy integration (the proxy calls the authorization endpoint): https://www.authelia.com/integration/proxies/introduction/ ; Envoy Gateway `SecurityPolicy` example: https://www.authelia.com/integration/kubernetes/envoy/gateway/
 - kubectl JSONPath filter syntax: https://kubernetes.io/docs/reference/kubectl/jsonpath/
@@ -7900,7 +7900,7 @@ curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/debug/pprof/   
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -7958,7 +7958,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | key-isolation: Separate repositories, permissions and certificate private keys for untrusted apps; SetApplicationName is not isolation from another holder of master keys. | ASP.NET Core .NET 10 | REASONED |
 | cookie-sharing: Cookie continuity also needs compatible cookie names, schemes, stores and identity-validation configuration. | ASP.NET Core .NET 10 | REASONED |
 | server-header: NET 10 AddServerHeader defaults true; set false and check all hosting layers since header removal does not control access. | ASP.NET Core source v10.0.0 | REASONED |
-| iis-headers: Remove IIS X-Powered-By and set removeServerHeader; the latter requires IIS 10 with Windows Server/Windows 10 version 1709 or later. | IIS documentation IIS 10 | REASONED |
+| iis-headers: Remove IIS X-Powered-By and set removeServerHeader; the latter requires IIS 10 with Windows Server/Windows 10 version 1709 or later. | IIS documentation IIS 10; IIS documentation (rolling) unknown | REASONED |
 | openapi: NET 10 built-in OpenAPI requires AddOpenApi before Build; map only in Development or RequireAuthorization with an appropriate policy. | ASP.NET Core .NET 10 | REASONED |
 | swagger: Built-in OpenAPI has no Swagger UI; keep separately added UseSwaggerUI in Development or protect it separately from the document. | ASP.NET Core .NET 10 | REASONED |
 | health: Register health checks and authorize /healthz; monitoring must authenticate or use a deliberately controlled minimal liveness route. | ASP.NET Core .NET 10 | REASONED |
@@ -7972,7 +7972,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-body: Body-consuming test route returns 204 at 1048576 bytes, 413 at 1048577; raised limit permits both. Isolate other limits and distinguish upstream rejection. | ASP.NET Core .NET 10 | REASONED |
 | verify-aux: Probe actual diagnostic/OpenAPI/UI/health routes anonymously, then authorized; Development-only routes should be absent and retained routes protected. Status alone does not prove authorization. | ASP.NET Core .NET 10 | REASONED |
 | verify-migrations: GET cannot prove migrations middleware absent; inspect registration and test actual behavior only in isolated database infrastructure. | ASP.NET Core .NET 10 | REASONED |
-| verify-headers: Inspect public success, redirect and error responses for absent Server/X-Powered-By after hosting-layer removal where supported. | ASP.NET Core source v10.0.0; IIS documentation IIS 10 | REASONED |
+| verify-headers: Inspect public success, redirect and error responses for absent Server/X-Powered-By after hosting-layer removal where supported. | ASP.NET Core source v10.0.0; IIS documentation IIS 10; IIS documentation (rolling) unknown | REASONED |
 | verify-cookie: Anonymous cookie API control returns 401; original cookie keeps the same identity with 200 before/after restart and across confirmed replicas, before expiry and without identity changes. | ASP.NET Core .NET 10 | REASONED |
 | verify-antiforgery: Retain an antiforgery token and cookie across restart and submit without replacement; key loss can invalidate it independently of login recovery. | ASP.NET Core .NET 10 | REASONED |
 <!-- version-basis:end -->
@@ -8414,7 +8414,7 @@ Also retain an antiforgery token and its accompanying cookie across a restart, t
 - .NET 10 ProtectKeysWithCertificate overloads: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.dataprotection.dataprotectionbuilderextensions.protectkeyswithcertificate?view=aspnetcore-10.0
 - .NET 10 Cookie sharing requirements for key rings, application names, and authentication schemes: https://learn.microsoft.com/en-us/aspnet/core/security/cookie-sharing?view=aspnetcore-10.0
 - .NET 10 KestrelServerOptions.AddServerHeader default: https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Servers/Kestrel/Core/src/KestrelServerOptions.cs
-- IIS 10 custom response headers and X-Powered-By: https://learn.microsoft.com/en-us/iis/configuration/system.webserver/httpprotocol/customheaders/
+- IIS custom response headers and X-Powered-By (rolling documentation, checked September 2026): https://learn.microsoft.com/en-us/iis/configuration/system.webserver/httpprotocol/customheaders/
 - IIS removeServerHeader requirements and request filtering (IIS 10; Windows Server version 1709 or Windows 10 version 1709): https://learn.microsoft.com/en-us/iis/configuration/system.webserver/security/requestfiltering/
 - .NET 10 OpenAPI document generation and endpoint authorization: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/aspnetcore-openapi?view=aspnetcore-10.0
 - .NET 10 OpenAPI documents with Development-only Swagger UI: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/using-openapi-documents?view=aspnetcore-10.0
@@ -22064,18 +22064,18 @@ Version scope: Typesense 30.2; Meilisearch current unversioned documentation che
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| filesystem: No server, network listener or database-side authentication; filesystem authority controls access, including ATTACH. Treat files writable across security domains as suspect. | SQLite documentation 3.x | REASONED |
-| extensions: Core extension loading defaults off, while the CLI enables it; enable only when required and load trusted libraries. | SQLite documentation 3.x | REASONED |
-| web-files: Keep databases, sidecars, temporary files, exports and backups outside web-served paths; inspect aliases, symlinks, download routes and publishing, and do not rely on hidden names. | SQLite documentation 3.x | REASONED |
-| git-files: Ignore database extensions and each -wal, -shm and -journal suffix before committing; ignore rules do not remove tracked files or history. | SQLite documentation 3.x | REASONED |
-| permissions: Dedicated account, directory 700, database and existing sidecars 600, and launch umask 077; same-account processes and privileged users remain outside this isolation. | SQLite documentation 3.x | REASONED |
-| temporary: Protect temporary files and backups; Unix SQLITE_TMPDIR needs an existing private directory and may fall back elsewhere. Do not delete live sidecars to repair permissions. | SQLite documentation 3.x | REASONED |
+| filesystem: No server, network listener or database-side authentication; filesystem authority controls access, including ATTACH. Treat files writable across security domains as suspect. | SQLite documentation 3.x; SQLite documentation (rolling) unknown | REASONED |
+| extensions: Core extension loading defaults off, while the CLI enables it; enable only when required and load trusted libraries. | SQLite documentation (rolling) unknown | REASONED |
+| web-files: Keep databases, sidecars, temporary files, exports and backups outside web-served paths; inspect aliases, symlinks, download routes and publishing, and do not rely on hidden names. | SQLite documentation (rolling) unknown | REASONED |
+| git-files: Ignore database extensions and each -wal, -shm and -journal suffix before committing; ignore rules do not remove tracked files or history. | SQLite documentation (rolling) unknown | REASONED |
+| permissions: Dedicated account, directory 700, database and existing sidecars 600, and launch umask 077; same-account processes and privileged users remain outside this isolation. | SQLite documentation (rolling) unknown | REASONED |
+| temporary: Protect temporary files and backups; Unix SQLITE_TMPDIR needs an existing private directory and may fall back elsewhere. Do not delete live sidecars to repair permissions. | SQLite documentation (rolling) unknown | REASONED |
 | encryption: Public-domain SQLite has no file encryption; SEE is licensed and SQLCipher is a third-party alternative, otherwise use filesystem or volume encryption. | SQLite Encryption Extension unknown; SQLCipher unknown | REASONED |
-| encryption-keys: Keep keys outside databases and backups; SEE TEMP tables can be unencrypted. Treat credential-bearing copies as secrets and rotate credentials after a leak. | SQLite Encryption Extension unknown; SQLite documentation 3.x | REASONED |
+| encryption-keys: Keep keys outside databases and backups; SEE TEMP tables can be unencrypted. Treat credential-bearing copies as secrets and rotate credentials after a leak. | SQLite Encryption Extension unknown; SQLite documentation (rolling) unknown | REASONED |
 | turso-http: Turso serves libSQL over HTTPS at the database/organization turso.io URL using bearer authentication; TURSO_DATABASE_URL and TURSO_AUTH_TOKEN belong in application configuration, never a client bundle or git. | Turso documentation unknown | REASONED |
 | turso-scope: db tokens create --read-only scopes away writes; --expiration accepts never or durations such as 7d3h. Prefer scoped, expiring tokens. | Turso documentation unknown | REASONED |
 | replicas: Litestream replicates to supported object stores; scope AWS credentials and IAM to the required bucket/prefix, keep replicas private, and restore with scoped credentials. | Litestream documentation unknown | REASONED |
@@ -22101,10 +22101,10 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | static-url: Static leasing uses lease.advertise-url as configured: the primary points at itself and each replica at the primary private API. | LiteFS source v0.5.14 | REASONED |
 | container: LiteFS image supplies no configuration or EXPOSE; default wildcard binding applies within its namespace. Peers, host/shared networking, routing, firewall and publication determine reachability. | LiteFS source v0.5.14; Docker documentation unknown | REASONED |
 | proxy: LiteFS application proxy is separate: proxy.target enables attempted startup, proxy.db and proxy.addr must be nonempty, example :8080; application TLS and authentication remain necessary. | LiteFS source v0.5.14 | REASONED |
-| verify-download: Probe actual database/sidecar paths only after a successful application control; timeouts, DNS and proxy failures do not establish non-publication. No served application was available. | SQLite documentation 3.x | REASONED |
+| verify-download: Probe actual database/sidecar paths only after a successful application control; timeouts, DNS and proxy failures do not establish non-publication. No served application was available. | SQLite documentation (rolling) unknown | REASONED |
 | verify-bundle: Local placeholder-token scan distinguished exposed and clean bundles and refused absent directories; readonly, nameref, lowercase and IFS cases are recorded. A clean scan covers only the searched forms and paths. | Turso documentation unknown | DEMONSTRATED |
-| verify-git: Local throwaway repositories showed tracked/history copies survive ignore rules and index removal; a never-committed ignored file produced only rule matches. Git version is unrecorded. | SQLite documentation 3.x | DEMONSTRATED |
-| verify-modes: SQLite 3.46.1 local WAL and rollback-journal runs showed umask 022 versus 077 modes; every file belonged to the test account, and separate application-account ownership was not exercised. | SQLite local file tests 3.46.1 | DEMONSTRATED |
+| verify-git: Local throwaway repositories showed tracked/history copies survive ignore rules and index removal; a never-committed ignored file produced only rule matches. Git version is unrecorded. | SQLite documentation (rolling) unknown | DEMONSTRATED |
+| verify-modes: SQLite 3.46.1 local WAL and rollback-journal runs showed umask 022 versus 077 modes; every file belonged to the test account, and separate application-account ownership was not exercised. | SQLite documentation (rolling) unknown | DEMONSTRATED |
 | verify-listeners: Compare authorized private control with untrusted reachability for LiteFS or enabled Litestream metrics/MCP; any HTTP response shows a listener, not every backend route. Transport errors and failed controls are inconclusive; no isolated listener environment was available. | LiteFS source v0.5.14; Litestream documentation unknown; Litestream MCP minimum v0.5.0 | REASONED |
 | verify-turso: Turso /v2/pipeline must return SELECT 1 with a valid bearer token and no successful result anonymously; HTTP 200 alone is insufficient and transport failure inconclusive. No database/token was available. | Turso documentation unknown | REASONED |
 | halt-expiration: LiteFS checks halt-lock expiration every 5 seconds. | LiteFS source v0.5.14 | REASONED |
@@ -22333,11 +22333,11 @@ Applicability checked on 2026-09-18: SQLite 3.x documentation (local file tests 
 - Litestream guides (supported replica destinations): https://litestream.io/guides/
 - Litestream S3 guide (credentials, scoped IAM policy): https://litestream.io/guides/s3/
 - LiteFS overview (cluster replication, pre-1.0 status, backup recommendation): https://fly.io/docs/litefs/
-- SQLite serverless architecture (no server process; OS and filesystem only) (SQLite 3.x documentation): https://www.sqlite.org/serverless.html
-- SQLite temporary and sidecar file naming (-wal, -shm, -journal) (local file tests on SQLite 3.46.1) (SQLite 3.x documentation): https://www.sqlite.org/tempfiles.html
+- SQLite serverless architecture, no server process; OS and filesystem only (rolling documentation, checked September 2026): https://www.sqlite.org/serverless.html
+- SQLite temporary and sidecar file naming, -wal, -shm and -journal (rolling documentation, checked September 2026): https://www.sqlite.org/tempfiles.html
 - SQLite Encryption Extension (licensed; the public build cannot read an encrypted file): https://www.sqlite.org/see/doc/trunk/www/readme.wiki
 - SQLCipher (third-party encrypted-SQLite build): https://www.zetetic.net/sqlcipher/
-- SQLite extension loading (disabled by default; enabled in the CLI) (SQLite 3.x documentation): https://sqlite.org/loadext.html
+- SQLite extension loading, disabled by default and enabled in the CLI (rolling documentation, checked September 2026): https://sqlite.org/loadext.html
 - LiteFS configuration (http.addr, lease.advertise-url, default port 20202): https://fly.io/docs/litefs/config/
 - LiteFS listener and configuration (pinned tag v0.5.14): default address, plain TCP and h2c server, h2c-only client, mount flags, environment expansion, default config search and explicit path, and example API bind: https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L32-L35, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/config.go#L57, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L76-L99, https://github.com/superfly/litefs/blob/v0.5.14/http/client.go#L32-L43, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/mount_linux.go#L76-L110, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/config.go#L219-L233, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/config.go#L288-L333, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/etc/litefs.yml#L54-L58
 - LiteFS route dispatch and reads (pinned tag v0.5.14): no credential gate, export including WAL pages, primary-only HTTP/2 stream, database enumeration and filtering, snapshots, position-map decoding, info, events, and unconditional debug routes including rand: https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L134-L268, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L320-L346, https://github.com/superfly/litefs/blob/v0.5.14/db.go#L2682-L2776, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L495-L520, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L526-L585, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L686-L699, https://github.com/superfly/litefs/blob/v0.5.14/http/http.go#L15-L43, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L271-L292, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L779-L803, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/mount_linux.go#L487-L488, https://github.com/superfly/litefs/blob/v0.5.14/store.go#L1661-L1713
@@ -23802,11 +23802,11 @@ Keep `open_signup` at its default `False`: with it off, a pending account waits 
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| local-auth: Local API has no inbound authentication; cloud keys and OLLAMA_AUTH concern upstream signing. | Ollama v0.34.2 | REASONED |
+| local-auth: Local API has no inbound authentication; cloud keys and OLLAMA_AUTH concern upstream signing. | Ollama v0.34.2; Ollama documentation (rolling) unknown | REASONED |
 | local-tls: Ollama serves plaintext; an https prefix in OLLAMA_HOST does not enable TLS. | Ollama v0.34.2 | REASONED |
 | host-bind: Standalone default is 127.0.0.1:11434; set OLLAMA_HOST in the service and reload/restart systemd. | Ollama v0.34.2; systemd v257 | REASONED |
 | container-bind: Official image sets 0.0.0.0:11434 internally; bridge publication and container binding are separate. | Ollama v0.34.2; Docker Engine localhost boundary 28.0 | REASONED |
@@ -23849,12 +23849,12 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | body-limit: Example body cap is 1 MiB; a larger valid fixture should get 413 without upstream work. | nginx unknown | REASONED |
 | parameters: Gateway must validate model, num_ctx, num_predict and keep_alive; defaults/path allowlists do not enforce JSON ceilings. | Ollama v0.34.2 | REASONED |
 | registry-names: Fully qualified registry names are supported; unqualified names select Ollama's registry and omitted tags select latest. | Ollama v0.34.2 | REASONED |
-| provenance: Compare deployed tags digests with independent approval; mutable tags/digest equality do not establish publisher trust. | Ollama v0.34.2 | REASONED |
+| provenance: Compare deployed tags digests with independent approval; mutable tags/digest equality do not establish publisher trust. | Ollama v0.34.2; Ollama documentation (rolling) unknown | REASONED |
 | local-import: CLI imports reviewed local GGUF through a Modelfile; artifact SHA-256 and manifest digest are different identifiers. | Ollama v0.34.2 | REASONED |
 | registry-egress: Restrict acquisition/export to administrators and constrain egress; compare approved and controlled disallowed transfers. | Ollama v0.34.2 | REASONED |
 | cloud: OLLAMA_NO_CLOUD=1 disables cloud models and web search after restart; it is not a no-network switch. | Ollama v0.34.2 | REASONED |
 | remotes: OLLAMA_REMOTES selects remote-model hosts, not a registry allowlist. | Ollama v0.34.2 | REASONED |
-| diagnostics: Keep root, version, status, tags, ps and show private; model details can disclose templates/system prompts. | Ollama v0.34.2 | REASONED |
+| diagnostics: Keep root, version, status, tags, ps and show private; model details can disclose templates/system prompts. | Ollama v0.34.2; Ollama documentation (rolling) unknown | REASONED |
 | request-logs: Disable OLLAMA_DEBUG and OLLAMA_DEBUG_LOG_REQUESTS; existing request captures/replay scripts need separate cleanup. | Ollama v0.34.2 | REASONED |
 | profiling: No metrics route was found in the main router; shipped pprof availability remains unestablished and cannot be inferred from debug settings. | Ollama v0.34.2 | REASONED |
 | verify-inventory: Inspect namespaces, publication, identity, store and ACLs; local ss output alone does not establish isolation. | Ollama v0.34.2; Docker Engine localhost boundary 28.0; systemd v257 | REASONED |
@@ -23862,7 +23862,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-auth: Absent/wrong credentials must refuse while correct credentials complete chat; streamed 200 alone is insufficient. | nginx unknown; Ollama v0.34.2; curl unknown | REASONED |
 | verify-tls: Correct trust/hostname succeeds; wrong trust/hostname and missing/untrusted mTLS certificates must fail before inference. | nginx unknown; curl unknown | REASONED |
 | verify-management: Public management must be denied without upstream mutation; private admin operations and public chat supply positive controls. | Ollama v0.34.2 | REASONED |
-| verify-tags: Public tags may return 404 with valid credentials; private tags should return model JSON; public 404 is not an authentication test. | Ollama v0.34.2; nginx unknown | REASONED |
+| verify-tags: Public tags may return 404 with valid credentials; private tags should return model JSON; public 404 is not an authentication test. | nginx unknown; Ollama documentation (rolling) unknown | REASONED |
 | verify-origins: Compare unwanted, required and built-in origins with actual browser calls; POST-only proxy preflight refusals differ by variant. | Ollama v0.34.2; nginx unknown; Caddy unknown | REASONED |
 | verify-rate: Eight bounded requests test admission with limiter/upstream evidence and recovery; the burst alone does not demonstrate both limiters. | nginx unknown | REASONED |
 | verify-concurrency: Hold four accepted requests active within the rate budget, reject another, then confirm a freed slot accepts work. | nginx unknown | REASONED |
@@ -24662,7 +24662,7 @@ These commands validate configuration acceptance; they do not prove authenticati
 - Ollama repository at the reviewed tag: https://github.com/ollama/ollama/tree/v0.34.2
 - Ollama FAQ: https://docs.ollama.com/faq
 - Pinned FAQ, service environment, proxy examples, overrides, and cloud disablement: https://github.com/ollama/ollama/blob/v0.34.2/docs/faq.mdx
-- Local API authentication (Ollama v0.34.2): https://docs.ollama.com/api/authentication
+- Ollama local API authentication (rolling documentation, checked September 2026): https://docs.ollama.com/api/authentication
 - Official Docker image wildcard listener: https://github.com/ollama/ollama/blob/v0.34.2/Dockerfile
 - Linux service instructions: https://github.com/ollama/ollama/blob/v0.34.2/docs/linux.mdx
 - Linux installer and service account: https://github.com/ollama/ollama/blob/v0.34.2/scripts/install.sh
@@ -24676,8 +24676,8 @@ These commands validate configuration acceptance; they do not prove authenticati
 - Registry transfers and redirect restrictions: https://github.com/ollama/ollama/blob/v0.34.2/server/images.go
 - Registry and model-name parsing: https://github.com/ollama/ollama/blob/v0.34.2/types/model/name.go
 - Modelfile reference: https://github.com/ollama/ollama/blob/v0.34.2/docs/modelfile.mdx
-- Model inventory and digests (Ollama v0.34.2): https://docs.ollama.com/api/tags
-- Model details (Ollama v0.34.2): https://docs.ollama.com/api-reference/show-model-details
+- Ollama model inventory and digests (rolling documentation, checked September 2026): https://docs.ollama.com/api/tags
+- Ollama model details (rolling documentation, checked September 2026): https://docs.ollama.com/api-reference/show-model-details
 - Scheduler: https://github.com/ollama/ollama/blob/v0.34.2/server/sched.go
 - VRAM-dependent context defaults: https://github.com/ollama/ollama/blob/v0.34.2/docs/context-length.mdx
 - Request options and overrides: https://github.com/ollama/ollama/blob/v0.34.2/api/types.go
@@ -25708,9 +25708,9 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | sglang-file: Protected YAML --config keeps both keys out of kernel argv; no documented stdin/environment input exists at the pin. | SGLang v0.5.20 | REASONED |
 | sglang-log: INFO startup logs all resolved server_args including both keys; protect the log. | SGLang v0.5.20 | REASONED |
 | sglang-info: server_info/get_server_info expose resolved keys and launch_command to ordinary API-key holders; exclude them or trust those holders with admin authority. | SGLang v0.5.20 | REASONED |
-| sglang-tls: ssl-keyfile/ssl-certfile/ssl-ca-certs provide native TLS; enable-ssl-refresh reloads renewed certificates. | SGLang v0.5.20 | REASONED |
+| sglang-tls: ssl-keyfile/ssl-certfile/ssl-ca-certs provide native TLS; enable-ssl-refresh reloads renewed certificates. | SGLang documentation (rolling) unknown | REASONED |
 | triton-listeners: Triton defaults to wildcard HTTP 8000, gRPC 8001 and metrics 8002; bind each privately. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
-| triton-protocols: HTTP/gRPC default enabled; disable unused protocols and metrics, while keeping gateway authorization. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-protocols: HTTP/gRPC default enabled; disable unused protocols and metrics, while keeping gateway authorization. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df; Triton documentation (rolling) unknown | REASONED |
 | triton-tls: gRPC supports TLS and mutual TLS with certificate/key flags; HTTP requires fronting TLS. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
 | triton-secrets: The restricted-API handlers pass getopt_long optarg to ParseRestrictedFeatureOption, which extracts the literal key/value from the argument; these flags put the secret in argv. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
 | triton-categories: All nine compiled categories default unrestricted; restrictions are per category/protocol, and groups must not overlap. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
@@ -25728,7 +25728,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | lmstudio-tls: Server settings list no TLS; use a tailnet or authenticated TLS proxy for remote access. | LM Studio documentation unknown | REASONED |
 | webui-listeners: Gradio defaults 127.0.0.1:7860; optional --api defaults 127.0.0.1:5000; both start unauthenticated. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08; text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f | REASONED |
 | webui-bind: --listen widens both enabled surfaces; listen-port/api-port move them and listen-host only works with listen. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08; text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f | REASONED |
-| webui-publication: --share publishes Gradio UI and --public-api publishes API through a Cloudflare tunnel; treat both as publication. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08; text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f | REASONED |
+| webui-publication: --share publishes Gradio UI and --public-api publishes API through a Cloudflare tunnel; treat both as publication. | text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f; text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08 | REASONED |
 | webui-ui-auth: gradio-auth-path protects UI only; file entries split on commas/newlines and every colon, so use permitted username and generated hex password. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08 | REASONED |
 | webui-api-auth: api-key protects OpenAI routes via bearer and Anthropic messages via x-api-key; admin-key protects administration and defaults to api-key, not vice versa. | text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f; text-generation-webui API documentation ceade2eb1ba3f84518076270df2240b6bbb01da0 | REASONED |
 | webui-key-logs: API startup logs api-key and distinct admin-key in plaintext at INFO; protect output and rotate after disclosure. | text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f; text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08 | REASONED |
@@ -26174,8 +26174,8 @@ For cross-node endpoints in an intentionally exposed test deployment, the outsid
 - TGI router: a `--hostname` that does not parse as an IP address logs "Invalid hostname, defaulting to 0.0.0.0" and binds `0.0.0.0` (pinned tag v3.3.7): https://github.com/huggingface/text-generation-inference/blob/v3.3.7/router/src/server.rs#L1906-L1910
 - TGI router source (what --api-key enforces): https://github.com/huggingface/text-generation-inference/blob/24ee40d143d8d046039f12f76940a85886cbe152/router/src/server.rs
 - TGI repository (maintenance-mode notice, archived 2026-03-21): https://github.com/huggingface/text-generation-inference
-- SGLang v0.5.20 server arguments (--host, --port, --api-key, --admin-api-key, SSL flags; docs.sglang.ai redirects here): https://docs.sglang.io/docs/advanced_features/server_arguments
-- Triton secure deployment considerations (source basis commit 546a78766fb112128aa0b10a70c55f4f39c3b1df): https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/customization_guide/deploy.html
+- SGLang server arguments, --host, --port, --api-key, --admin-api-key and SSL flags; docs.sglang.ai redirects here (rolling documentation, checked September 2026): https://docs.sglang.io/docs/advanced_features/server_arguments
+- Triton secure deployment considerations (rolling documentation, checked September 2026): https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/customization_guide/deploy.html
 - Triton listener defaults: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.h#L191-L219 and https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/grpc/grpc_server.h#L51-L67
 - Triton gRPC TLS flags and restricted protocols: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L558-L576 and https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L632-L640
 - Triton command line parser (HTTP address and port, restricted APIs): https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L477-L516
@@ -26196,7 +26196,6 @@ For cross-node endpoints in an intentionally exposed test deployment, the outsid
 - LM Studio server settings: https://lmstudio.ai/docs/developer/core/server/settings
 - LM Studio authentication: https://lmstudio.ai/docs/developer/core/authentication
 - LM Studio OpenAI compatibility (localhost:1234 examples): https://lmstudio.ai/docs/developer/openai-compat
-- text-generation-webui README, command-line flags (source basis commit c022565b1257a9c7d9a5128c8b4c03587559cf08): https://github.com/oobabooga/text-generation-webui#command-line-flags
 - text-generation-webui, OpenAI-compatible API documentation: https://github.com/oobabooga/text-generation-webui/blob/ceade2eb1ba3f84518076270df2240b6bbb01da0/docs/12%20-%20OpenAI%20API.md
 - text-generation-webui, flag definitions and defaults (modules/shared.py): https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py
 - text-generation-webui, `--user-data-dir` and the in-process `CMD_FLAGS.txt` loader (lines whose first non-space character is `#` skipped, the rest split as shell words and spliced into Python's `sys.argv` before parsing): https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py#L50 and https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py#L221-L236, with the directory resolved at https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/paths.py#L5-L21
@@ -26224,63 +26223,63 @@ For cross-node endpoints in an intentionally exposed test deployment, the outsid
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| bind: server_name=None resolves through GRADIO_SERVER_NAME to 127.0.0.1 when unset; set loopback explicitly behind the proxy; 0.0.0.0 exposes all interfaces. | Gradio 6.28.0 | REASONED |
-| port: With server_port=None, port search starts at 7860 unless GRADIO_SERVER_PORT changes it; native TLS example explicitly uses 8443. | Gradio 6.28.0 | REASONED |
-| password: auth accepts one tuple, a tuple list or a credential-checking callable; auth_message customizes login; keep credentials outside source. | Gradio 6.28.0 | REASONED |
-| login-limits: Native auth is single-factor without throttling, rate limiting or lockout; a TOTP callable also needs enrollment, secret custody and replay rejection. | Gradio 6.28.0 | REASONED |
-| external-auth: auth_dependency returns a user ID or None and cannot combine with auth; validate identity, sanitize proxy headers and prevent direct backend bypass. | Gradio 6.28.0 | REASONED |
+| bind: server_name=None resolves through GRADIO_SERVER_NAME to 127.0.0.1 when unset; set loopback explicitly behind the proxy; 0.0.0.0 exposes all interfaces. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
+| port: With server_port=None, port search starts at 7860 unless GRADIO_SERVER_PORT changes it; native TLS example explicitly uses 8443. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
+| password: auth accepts one tuple, a tuple list or a credential-checking callable; auth_message customizes login; keep credentials outside source. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
+| login-limits: Native auth is single-factor without throttling, rate limiting or lockout; a TOTP callable also needs enrollment, secret custody and replay rejection. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
+| external-auth: auth_dependency returns a user ID or None and cannot combine with auth; validate identity, sanitize proxy headers and prevent direct backend bypass. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
 | sessions: Native bearer tokens live in process memory without server-side expiry; login issues HttpOnly Secure and insecure fallback cookies, and accepts either. | Gradio 6.28.0 | REASONED |
 | revocation: Restart clears native tokens; /logout defaults all_session=True, revoking all sessions for a username; cookie lifetime is not server revocation. | Gradio 6.28.0 | REASONED |
-| external-policy: Require HTTPS and externally enforced MFA, throttling, lockout and finite lifetime on every request; a copied native cookie must not bypass that boundary. | Gradio 6.28.0 | REASONED |
-| tls: ssl_certfile/ssl_keyfile enable HTTPS and ssl_keyfile_password supports encrypted keys; ssl_verify=False affects launcher self-checks and is only needed for self-signed certificates. | Gradio 6.28.0 | REASONED |
-| prefix: root_path builds URLs beneath the proxy prefix; it neither authenticates nor prevents direct backend access. | Gradio 6.28.0 | REASONED |
+| external-policy: Require HTTPS and externally enforced MFA, throttling, lockout and finite lifetime on every request; a copied native cookie must not bypass that boundary. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
+| tls: ssl_certfile/ssl_keyfile enable HTTPS and ssl_keyfile_password supports encrypted keys; ssl_verify=False affects launcher self-checks and is only needed for self-signed certificates. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
+| prefix: root_path builds URLs beneath the proxy prefix; it neither authenticates nor prevents direct backend access. | Gradio documentation (rolling) unknown | REASONED |
 | share: share=True publishes a public relay URL; omitted share may inherit GRADIO_SHARE=True or auto-enable in hosted notebooks; deploy with explicit False. | Gradio 6.28.0 | REASONED |
-| file-route: /gradio_api/file= serves registered static paths, allowed_paths and cache; returned file outputs can expose eligible working/temp paths to every app user. | Gradio 6.28.0 | REASONED |
-| allowed-paths: allowed_paths adds exposure, not a sandbox; empty lists do not disable cache or eligible outputs, and granted directories expose descendants. | Gradio 6.28.0 | REASONED |
-| dotfiles: Working-directory dotfiles are excluded from automatic caching unless explicitly permitted; this does not protect other eligible files or justify colocated secrets. | Gradio 6.28.0 | REASONED |
-| blocked-paths: blocked_paths overrides default/static/allowed grants but is a backstop; minimize the process filesystem and never return untrusted file paths. | Gradio 6.28.0; Gradio case-handling advisory unknown | REASONED |
+| file-route: /gradio_api/file= serves registered static paths, allowed_paths and cache; returned file outputs can expose eligible working/temp paths to every app user. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
+| allowed-paths: allowed_paths adds exposure, not a sandbox; empty lists do not disable cache or eligible outputs, and granted directories expose descendants. | Gradio documentation (rolling) unknown | REASONED |
+| dotfiles: Working-directory dotfiles are excluded from automatic caching unless explicitly permitted; this does not protect other eligible files or justify colocated secrets. | Gradio documentation (rolling) unknown | REASONED |
+| blocked-paths: blocked_paths overrides default/static/allowed grants but is a backstop; minimize the process filesystem and never return untrusted file paths. | Gradio case-handling advisory unknown; Gradio documentation (rolling) unknown | REASONED |
 | path-environment: allowed_paths and blocked_paths default None; even [] falls back to comma-separated GRADIO_ALLOWED_PATHS and GRADIO_BLOCKED_PATHS. | Gradio 6.28.0 | REASONED |
-| cache: GRADIO_TEMP_DIR relocates cache; restrict permissions, quota and cleanup, but relocation and local permissions do not provide per-user download authorization. | Gradio 6.28.0 | REASONED |
-| upload-limit: max_file_size defaults None; set bytes or 5mb for a per-file limit, adding separate storage/rate controls. | Gradio 6.28.0 | REASONED |
+| cache: GRADIO_TEMP_DIR relocates cache; restrict permissions, quota and cleanup, but relocation and local permissions do not provide per-user download authorization. | Gradio documentation (rolling) unknown | REASONED |
+| upload-limit: max_file_size defaults None; set bytes or 5mb for a per-file limit, adding separate storage/rate controls. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
 | multipart-fix: 6.20.0 fixed missing max_file_size enforcement on multipart /component_server uploads; retain the 6.28.0 deployment baseline. | Gradio 6.28.0; Gradio historical fixes 6.20.0 | REASONED |
 | historical-traversal: 4.11.0 fixed the historical /file traversal and associated SSRF; this is a historical floor, not the deployment baseline. | Gradio historical fix 4.11.0 | REASONED |
 | historical-files: 6.16.0 includes FileExplorer traversal fixes; the case-handling advisory has conflicting patched-version records and no precise fix version here. | Gradio case-handling advisory unknown; Gradio historical fixes 6.16.0 | REASONED |
-| vibe: GRADIO_VIBE_MODE defaults empty; any nonempty value including False or 0 enables unauthenticated source read/write handlers and arbitrary execution; leave unset and avoid --vibe. | Gradio 6.28.0 | REASONED |
-| mcp: mcp_server defaults None, consulting GRADIO_MCP_SERVER (False); explicitly disable unless tools beneath /gradio_api/mcp/ are deliberately protected and tested. | Gradio 6.28.0 | REASONED |
-| footer: footer_links can hide API documentation; it replaces show_api=False and does not disable the API. | Gradio 6.28.0 | REASONED |
-| visibility: api_visibility defaults public; undocumented hides docs and private blocks Gradio-client use, but direct HTTP remains subject to separate auth/queue policy. | Gradio 6.28.0 | REASONED |
-| api-name: api_name=None derives a function name; api_name=False is no longer a supported public argument and hiding names is not authorization. | Gradio 6.28.0 | REASONED |
+| vibe: GRADIO_VIBE_MODE defaults empty; any nonempty value including False or 0 enables unauthenticated source read/write handlers and arbitrary execution; leave unset and avoid --vibe. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
+| mcp: mcp_server defaults None, consulting GRADIO_MCP_SERVER (False); explicitly disable unless tools beneath /gradio_api/mcp/ are deliberately protected and tested. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
+| footer: footer_links can hide API documentation; it replaces show_api=False and does not disable the API. | Gradio documentation (rolling) unknown | REASONED |
+| visibility: api_visibility defaults public; undocumented hides docs and private blocks Gradio-client use, but direct HTTP remains subject to separate auth/queue policy. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
+| api-name: api_name=None derives a function name; api_name=False is no longer a supported public argument and hiding names is not authorization. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
 | protected-routes: Native auth/auth_dependency checks cover /config, /gradio_api/info, prediction and queue join/data routes; public assets and a login page do not prove API protection. | Gradio 6.28.0 | REASONED |
 | queue-bypass: queue(api_open=None) is effectively True off Spaces; False refuses direct run/api calls for queued functions, while queued API and queue=False events remain. | Gradio 6.28.0 | REASONED |
-| concurrency: default_concurrency_limit defaults 1 unless changed through GRADIO_DEFAULT_CONCURRENCY_LIMIT; listener overrides apply, not a global per-user limit. | Gradio 6.28.0 | REASONED |
+| concurrency: default_concurrency_limit defaults 1 unless changed through GRADIO_DEFAULT_CONCURRENCY_LIMIT; listener overrides apply, not a global per-user limit. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
 | queue-size: max_size defaults None with a ZeroGPU Spaces exception; 20 bounds waiting work but is not a per-user quota. | Gradio 6.28.0 | REASONED |
-| threads: max_threads defaults 40; the example sets 8, separately from queue and listener capacity. | Gradio 6.28.0 | REASONED |
-| egress: URL inputs and component/MCP fetches need application destination allowlists and deployment egress controls, including redirects/resolution; no general fetch allowlist covers all surfaces. | Gradio 6.28.0 | REASONED |
+| threads: max_threads defaults 40; the example sets 8, separately from queue and listener capacity. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
+| egress: URL inputs and component/MCP fetches need application destination allowlists and deployment egress controls, including redirects/resolution; no general fetch allowlist covers all surfaces. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
 | fetch-fixes: 6.16.0 fixed SVG/Audio SSRF; 6.20.0 changed /gradio_api/file=&lt;url&gt; from open redirect to SSRF-protected streaming proxy. | Gradio historical fixes 6.16.0; Gradio historical fixes 6.20.0 | REASONED |
-| load-token: Keep gr.load name/src trusted; token can inherit HF_TOKEN, model loading can use a saved token, and a loaded Space can read a supplied token. | Gradio 6.28.0 | REASONED |
-| flagging: Interface flagging_mode defaults through GRADIO_FLAGGING_MODE to manual; auto records every submission/output; never disables collection, not existing files. | Gradio 6.28.0 | REASONED |
-| flag-storage: Default CSVLogger writes .gradio/flagged including file data; required collection needs explicit access and retention policy. | Gradio 6.28.0 | REASONED |
-| history: run_history defaults None through GRADIO_RUN_HISTORY to True; False disables recording/page and removes saved browser history, not separately retained bucket data. | Gradio 6.28.0 | REASONED |
-| analytics: Blocks/Interface analytics_enabled defaults None through GRADIO_ANALYTICS_ENABLED to True; False disables basic telemetry independently of flagging/history and application logs. | Gradio 6.28.0 | REASONED |
+| load-token: Keep gr.load name/src trusted; token can inherit HF_TOKEN, model loading can use a saved token, and a loaded Space can read a supplied token. | Gradio documentation (rolling) unknown | REASONED |
+| flagging: Interface flagging_mode defaults through GRADIO_FLAGGING_MODE to manual; auto records every submission/output; never disables collection, not existing files. | Gradio documentation (rolling) unknown | REASONED |
+| flag-storage: Default CSVLogger writes .gradio/flagged including file data; required collection needs explicit access and retention policy. | Gradio documentation (rolling) unknown | REASONED |
+| history: run_history defaults None through GRADIO_RUN_HISTORY to True; False disables recording/page and removes saved browser history, not separately retained bucket data. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
+| analytics: Blocks/Interface analytics_enabled defaults None through GRADIO_ANALYTICS_ENABLED to True; False disables basic telemetry independently of flagging/history and application logs. | Gradio documentation (rolling) unknown | REASONED |
 | verify-bind-share: Inventory bind and terminate the prior process/tunnel, set share=False, and inspect this fresh run's full startup output; loopback ss alone cannot exclude a relay. | Gradio 6.28.0 | REASONED |
 | verify-native: Compare /gradio_api/info without native cookies (200 exposed, native 401 fixed), retaining proxy authorization; fresh login cookie must restore 200 with app content. | Gradio 6.28.0 | REASONED |
-| verify-tls: Use validated HTTPS at the same host/port/prefix and trust the actual CA; TLS, DNS and connection failures do not demonstrate auth refusal. | Gradio 6.28.0 | REASONED |
-| verify-files: Both markers must serve before blocking; after restart use fresh cookies and confirm both files remain, with blocked 403 and allowed marker content; missing files also yield 403. | Gradio 6.28.0 | REASONED |
-| verify-environment: With allowed_paths=[], an environment-granted marker serves; remove grant and restart to require refusal with an allowed control; relocated cache remains readable across app users. | Gradio 6.28.0 | REASONED |
+| verify-tls: Use validated HTTPS at the same host/port/prefix and trust the actual CA; TLS, DNS and connection failures do not demonstrate auth refusal. | Gradio documentation (rolling) unknown | REASONED |
+| verify-files: Both markers must serve before blocking; after restart use fresh cookies and confirm both files remain, with blocked 403 and allowed marker content; missing files also yield 403. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
+| verify-environment: With allowed_paths=[], an environment-granted marker serves; remove grant and restart to require refusal with an allowed control; relocated cache remains readable across app users. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
 | verify-upload: Compare valid below/above-limit uploads on upload and multipart component_server independently; malformed requests or proxy refusal do not demonstrate Gradio enforcement. | Gradio 6.28.0; Gradio historical fixes 6.20.0 | REASONED |
 | verify-vibe: Unauthenticated GET /gradio_api/vibe-code returns demo source with GRADIO_VIBE_MODE=False as a string; unset/restart requires handler 403, not merely a missing file. | Gradio 6.28.0 | REASONED |
-| verify-mcp: Enabled MCP must list/invoke a harmless tool; disabled MCP must stop both with ordinary app still working; published tools need their own anonymous/authorized comparison. | Gradio 6.28.0 | REASONED |
-| verify-visibility: Direct echo HTTP can still work with undocumented/private visibility; auth must reject missing cookies and fresh cookies restore marker content, including config/info/queue comparisons. | Gradio 6.28.0 | REASONED |
+| verify-mcp: Enabled MCP must list/invoke a harmless tool; disabled MCP must stop both with ordinary app still working; published tools need their own anonymous/authorized comparison. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
+| verify-visibility: Direct echo HTTP can still work with undocumented/private visibility; auth must reject missing cookies and fresh cookies restore marker content, including config/info/queue comparisons. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
 | verify-queue: Authenticated queued run/echo and api/echo succeed with api_open=True and return 404 with False; call/echo plus its event URL must still complete. | Gradio 6.28.0 | REASONED |
-| verify-capacity: Fill 20 waiting slots with a bounded slow handler, compare queue-full refusal and overlap against controls, and inspect thread/listener settings separately. | Gradio 6.28.0 | REASONED |
-| verify-external: auth_dependency user ID permits prefixed config and None yields 401; forged headers/direct origin must fail, with a fresh authorized session as control. | Gradio 6.28.0 | REASONED |
+| verify-capacity: Fill 20 waiting slots with a bounded slow handler, compare queue-full refusal and overlap against controls, and inspect thread/listener settings separately. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
+| verify-external: auth_dependency user ID permits prefixed config and None yields 401; forged headers/direct origin must fail, with a fresh authorized session as control. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
 | verify-revocation: Create two native sessions, require logout to invalidate both, test restart separately, inspect both cookies, and test external lifetime/throttling at the enforcing layer. | Gradio 6.28.0 | REASONED |
-| verify-egress: Allowed markers must arrive; denied or redirected destinations must receive no request after policy enforcement; confirm with destination/egress logs across used fetch surfaces. | Gradio 6.28.0; Gradio historical fixes 6.16.0; Gradio historical fixes 6.20.0 | REASONED |
-| verify-collection: Compare manual/auto flag records against never, history runs/page on/off and telemetry on/off while predictions work; inspect old files and buckets separately. | Gradio 6.28.0 | REASONED |
+| verify-egress: Allowed markers must arrive; denied or redirected destinations must receive no request after policy enforcement; confirm with destination/egress logs across used fetch surfaces. | Gradio 6.28.0; Gradio historical fixes 6.16.0; Gradio historical fixes 6.20.0; Gradio documentation (rolling) unknown | REASONED |
+| verify-collection: Compare manual/auto flag records against never, history runs/page on/off and telemetry on/off while predictions work; inspect old files and buckets separately. | Gradio documentation (rolling) unknown | REASONED |
 <!-- version-basis:end -->
 
 Gradio binds to `127.0.0.1` by default. Two launch choices create exposure: `server_name="0.0.0.0"` (all interfaces) and `share=True` (a public `*.gradio.live` URL through Gradio's relay). Neither is acceptable without authentication.
@@ -26587,21 +26586,21 @@ The checks below remain REASONED from the cited Gradio 6.28.0 source and documen
 
 ## Sources (checked September 2026)
 
-- [Gradio 6.28.0 Blocks.launch() parameters](https://gradio.app/docs/gradio/blocks): auth, auth_message, ssl_certfile, ssl_keyfile, ssl_keyfile_password, ssl_verify, server_name, and share; also auth_dependency, root_path, queue/launch limits, footer_links, run_history, and analytics.
-- [Gradio 6.28.0 file access](https://www.gradio.app/guides/file-access): the `/gradio_api/file=` route; the default set is `set_static_paths`, `allowed_paths`, and the cache; eligible returned paths in `allowed_paths`, the working directory, or the temp directory; working-directory dotfile exclusion; `blocked_paths` precedence; cache sharing across users; and `GRADIO_TEMP_DIR`.
+- [Gradio Blocks.launch() parameters (rolling documentation, checked September 2026)](https://gradio.app/docs/gradio/blocks): auth, auth_message, ssl_certfile, ssl_keyfile, ssl_keyfile_password, ssl_verify, server_name, and share; also auth_dependency, root_path, queue/launch limits, footer_links, run_history, and analytics.
+- [Gradio file access (rolling documentation, checked September 2026)](https://www.gradio.app/guides/file-access): the `/gradio_api/file=` route; the default set is `set_static_paths`, `allowed_paths`, and the cache; eligible returned paths in `allowed_paths`, the working directory, or the temp directory; working-directory dotfile exclusion; `blocked_paths` precedence; cache sharing across users; and `GRADIO_TEMP_DIR`.
 - Gradio security advisories: [the `/file` traversal and SSRF fixed in 4.11.0](https://github.com/gradio-app/gradio/security/advisories/GHSA-6qm2-wpxq-7qh2) and [the case-handling blocklist bypass](https://github.com/gradio-app/gradio/security/advisories/GHSA-j2jg-fq62-7c3h). Historical evidence for keeping a current release and minimizing the process filesystem and additional allowed paths; no precise fix version is assigned here to the case-handling advisory.
 - [Gradio 6.28.0 release](https://github.com/gradio-app/gradio/releases/tag/gradio%406.28.0).
 - [Gradio 6.28.0 Blocks source](https://raw.githubusercontent.com/gradio-app/gradio/gradio%406.28.0/gradio/blocks.py): launch and queue signatures/defaults, off-Spaces api_open default, vibe-mode truthiness, path environment fallback, sharing behavior, component cache downloads, API names, and history settings.
 - [Gradio 6.28.0 routes source](https://raw.githubusercontent.com/gradio-app/gradio/gradio%406.28.0/gradio/routes.py): login checks, native tokens/cookies/logout, auth_dependency, vibe handlers, conditional MCP setup, direct queue-bypass refusal, multipart limits, and SSRF-protected file streaming.
-- [Gradio 6.28.0 event reference](https://gradio.app/docs/gradio/button): api_visibility, api_name, queue, and listener concurrency.
-- [Gradio 6 migration guide (6.28.0 basis)](https://www.gradio.app/guides/gradio-6-migration-guide): footer_links and the replacement event visibility API; read its visibility wording with the current reference and HTTP source.
-- [Gradio 6.28.0 development and vibe-mode warning](https://gradio.app/guides/developing-faster-with-reload-mode).
-- [Gradio 6.28.0 MCP server documentation](https://gradio.app/guides/building-mcp-server-with-gradio): tool publication, `/gradio_api/mcp/`, and URL file inputs.
+- [Gradio event reference (rolling documentation, checked September 2026)](https://gradio.app/docs/gradio/button): api_visibility, api_name, queue, and listener concurrency.
+- [Gradio 6 migration guide (rolling documentation, checked September 2026)](https://www.gradio.app/guides/gradio-6-migration-guide): footer_links and the replacement event visibility API; read its visibility wording with the current reference and HTTP source.
+- [Gradio development and vibe-mode warning (rolling documentation, checked September 2026)](https://gradio.app/guides/developing-faster-with-reload-mode).
+- [Gradio MCP server documentation (rolling documentation, checked September 2026)](https://gradio.app/guides/building-mcp-server-with-gradio): tool publication, `/gradio_api/mcp/`, and URL file inputs.
 - [Gradio 6.16.0 release](https://github.com/gradio-app/gradio/releases/tag/gradio%406.16.0): FileExplorer traversal and Image/Gallery SVG and Audio streaming SSRF fixes.
 - [Gradio 6.20.0 release](https://github.com/gradio-app/gradio/releases/tag/gradio%406.20.0): multipart `/component_server` max_file_size enforcement and the SSRF-protected file streaming proxy.
-- [Gradio 6.28.0 load reference](https://gradio.app/docs/gradio/load): trusted targets, src, token, HF_TOKEN inheritance, and loaded-Space token disclosure.
-- [Gradio 6.28.0 Interface reference](https://gradio.app/docs/gradio/interface): flagging_mode, GRADIO_FLAGGING_MODE, CSVLogger, `.gradio/flagged`, and analytics_enabled.
-- [Gradio 6.28.0 flagging guide](https://www.gradio.app/guides/flagging): persistence of flagged inputs, outputs, and file data.
+- [Gradio load reference (rolling documentation, checked September 2026)](https://gradio.app/docs/gradio/load): trusted targets, src, token, HF_TOKEN inheritance, and loaded-Space token disclosure.
+- [Gradio Interface reference (rolling documentation, checked September 2026)](https://gradio.app/docs/gradio/interface): flagging_mode, GRADIO_FLAGGING_MODE, CSVLogger, `.gradio/flagged`, and analytics_enabled.
+- [Gradio flagging guide (rolling documentation, checked September 2026)](https://www.gradio.app/guides/flagging): persistence of flagged inputs, outputs, and file data.
 
 ======================================================================
 ==> streamlit.md
@@ -26614,45 +26613,45 @@ The checks below remain REASONED from the cited Gradio 6.28.0 source and documen
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
 | bind-default: server.address is unset and binds wildcard: try :: when IPv6 is supported, then 0.0.0.0 if unavailable; wildcard behavior was not demonstrated. | Streamlit 1.64.0 | REASONED |
 | port-default: server.port defaults 8501 and may try 100 following ports when not explicitly set; explicitly configure 8501 to prevent that fallback. | Streamlit 1.64.0 | REASONED |
-| private-bind: Loopback proxy configuration keeps Streamlit on 127.0.0.1:8501; observed inventory is local, not proof of external isolation. | Streamlit 1.64.0 | DEMONSTRATED |
-| proxy-websocket: Proxy authentication must cover WebSocket upgrades as well as HTTP; a separately unprotected /_stcore/stream can expose app output despite index/health 401. | Streamlit 1.64.0 | DEMONSTRATED |
-| native-tls: sslCertFile/sslKeyFile provide native TLS for development; vendor recommends a production reverse proxy, with WebSocket upgrade and browser Origin preserved. | Streamlit 1.64.0 | REASONED |
-| xsrf: enableXsrfProtection defaults true; it does not enable CORS or require a token when opening a WebSocket. | Streamlit 1.64.0 | REASONED |
-| cors: enableCORS defaults true; disabling it permits cross-origin WebSockets even with XSRF; use corsAllowedOrigins and allowedHosts, and native auth separately enables both protections. | Streamlit 1.64.0 | REASONED |
-| config: Effective precedence is CLI, environment, project config relative to working directory, then global; restart for server changes and restrict deployment writes. | Streamlit 1.64.0 | REASONED |
-| toolbar: client.toolbarMode affects menu visibility, not authorization. | Streamlit 1.64.0 | REASONED |
-| oidc-versions: st.login/st.logout date from 1.42.0; st.user from 1.45.0 replaces experimental_user; 1.64.0 auth extra needs Authlib&gt;=1.3.2 and httpx&gt;=0.24.1. | Streamlit 1.64.0; Authlib minimum 1.3.2; httpx minimum 0.24.1 | REASONED |
+| private-bind: Loopback proxy configuration keeps Streamlit on 127.0.0.1:8501; observed inventory is local, not proof of external isolation. | Streamlit 1.64.0; Streamlit documentation (rolling) unknown | DEMONSTRATED |
+| proxy-websocket: Proxy authentication must cover WebSocket upgrades as well as HTTP; a separately unprotected /_stcore/stream can expose app output despite index/health 401. | Streamlit documentation (rolling) unknown | DEMONSTRATED |
+| native-tls: sslCertFile/sslKeyFile provide native TLS for development; vendor recommends a production reverse proxy, with WebSocket upgrade and browser Origin preserved. | Streamlit documentation (rolling) unknown | REASONED |
+| xsrf: enableXsrfProtection defaults true; it does not enable CORS or require a token when opening a WebSocket. | Streamlit documentation (rolling) unknown | REASONED |
+| cors: enableCORS defaults true; disabling it permits cross-origin WebSockets even with XSRF; use corsAllowedOrigins and allowedHosts, and native auth separately enables both protections. | Streamlit documentation (rolling) unknown | REASONED |
+| config: Effective precedence is CLI, environment, project config relative to working directory, then global; restart for server changes and restrict deployment writes. | Streamlit documentation (rolling) unknown | REASONED |
+| toolbar: client.toolbarMode affects menu visibility, not authorization. | Streamlit documentation (rolling) unknown | REASONED |
+| oidc-versions: st.login/st.logout date from 1.42.0; st.user from 1.45.0 replaces experimental_user; 1.64.0 auth extra needs Authlib&gt;=1.3.2 and httpx&gt;=0.24.1. | Streamlit 1.64.0; Authlib minimum 1.3.2; httpx minimum 0.24.1; Streamlit documentation (rolling) unknown | REASONED |
 | oidc-dependencies: Recorded loopback login with Authlib but without httpx failed; install the complete auth extra. | Streamlit 1.64.0 | DEMONSTRATED |
-| oidc-config: secrets.toml auth config supplies redirect_uri, cookie_secret, client_id/client_secret and metadata URL; st.login authenticates identity, not resource authorization. | Streamlit 1.64.0 | REASONED |
-| page-gates: Gate protected pages before rendering/side effects, before st.navigation page execution, and recheck authorization inside privileged callbacks. | Streamlit 1.64.0 | REASONED |
-| native-gate: In the recorded Keycloak claim fixture, native login plus hd/email_verified checks admitted the allowed user and denied other-domain, missing-hd and unverified users. | Streamlit 1.64.0 | DEMONSTRATED |
-| email-gate: Recorded native gate denied unverified email; login without hd/email checks allowed the exposed fixture's other-domain and unverified users. | Streamlit 1.64.0 | DEMONSTRATED |
-| claims: st.user contains ID-token claims; Google hd identifies Workspace/Cloud accounts and is absent for consumer accounts; explicit address allowlisting is an alternative. | Streamlit 1.64.0 | REASONED |
-| cookie: Native identity cookie lasts 30 days and the lifetime is not configurable. | Streamlit 1.64.0 | REASONED |
-| secrets: Keep secrets.toml out of Git, build contexts and served directories; restrict access, never render/log st.secrets, and rotate exposed client/cookie secrets. | Streamlit 1.64.0 | REASONED |
-| errors: showErrorDetails defaults full; stacktrace/type/none are alternatives, deprecated true/false map to full/stacktrace; none hides browser details while console logs retain them. | Streamlit 1.64.0 | REASONED |
-| mfa: OIDC MFA must be enforced at the provider; Basic auth or emailed PIN alone is not MFA, and alternative login paths/direct origin must not bypass policy. | Streamlit 1.64.0 | REASONED |
-| password-widget: A plain text_input password comparison provides no session management, hashing or rate limiting. | Streamlit 1.64.0 | REASONED |
-| uploads: file_uploader defaults 200 MB per file via maxUploadSize; widget max_upload_size overrides it; filters are best-effort, not content validation; rate-limit and never execute uploads. | Streamlit 1.64.0 | REASONED |
-| static-default: enableStaticServing defaults false; enabled /app/static/ is served outside script login, so static/ must contain only public files. | Streamlit 1.64.0 | REASONED |
-| static-test: Recorded static serving bypassed st.stop; enabled returned marker text and disabled returned app HTML, both 200, so inspect the body. | Streamlit 1.64.0 | DEMONSTRATED |
-| execution-egress: TLS/login do not sandbox Python; use least privilege and minimal credentials, avoid executing inputs, and restrict URL-fetch egress including metadata/internal networks. | Streamlit 1.64.0; OWASP SSRF guidance unknown | REASONED |
-| verify-tls: Recorded native TLS returned 200 with the trusted test CA and failed trust with exit 60; never use -k. | Streamlit 1.64.0; curl minimum write-out version 7.75.0 | DEMONSTRATED |
-| verify-proxy: Recorded Caddy loopback Basic-auth comparison returned exposed health 200/ok versus fixed 401; wrong credentials also failed and valid sessions received the canary. | Streamlit 1.64.0 | DEMONSTRATED |
-| verify-oidc-proxy: Recorded oauth2-proxy/Keycloak fixture redirected anonymous health and WebSocket requests; an allowed user reached the canary after password/TOTP, with other-domain 403. | Streamlit 1.64.0 | DEMONSTRATED |
-| verify-native-browser: Native anonymous index is intentionally 200; browser comparisons must check protected content, valid users, domain/email denial and MFA rather than index status. | Streamlit 1.64.0 | DEMONSTRATED |
-| verify-mfa: Recorded allowed native user reached the canary after TOTP; wrong code retained the provider's code prompt, using a loopback Keycloak fixture rather than Google. | Streamlit 1.64.0 | DEMONSTRATED |
-| verify-external: From another host any direct 8501 HTTP response is an exposure; refusal/no-route is not proof and DNS/local errors/timeouts are inconclusive; second-host vantage was unavailable. | Streamlit 1.64.0; curl minimum write-out version 7.75.0 | REASONED |
-| verify-local-reachability: Recorded same-host probe distinguished a listening address from another loopback address; it does not demonstrate the external scenario. | Streamlit 1.64.0; curl minimum write-out version 7.75.0 | DEMONSTRATED |
-| verify-pages: Test every protected page and operation with anonymous, allowed and disallowed users, restoring an isolated exposed canary comparison; broken WebSockets or blank pages are not positive controls. | Streamlit 1.64.0 | REASONED |
+| oidc-config: secrets.toml auth config supplies redirect_uri, cookie_secret, client_id/client_secret and metadata URL; st.login authenticates identity, not resource authorization. | Streamlit documentation (rolling) unknown | REASONED |
+| page-gates: Gate protected pages before rendering/side effects, before st.navigation page execution, and recheck authorization inside privileged callbacks. | Streamlit documentation (rolling) unknown | REASONED |
+| native-gate: In the recorded Keycloak claim fixture, native login plus hd/email_verified checks admitted the allowed user and denied other-domain, missing-hd and unverified users. | Streamlit documentation (rolling) unknown | DEMONSTRATED |
+| email-gate: Recorded native gate denied unverified email; login without hd/email checks allowed the exposed fixture's other-domain and unverified users. | Streamlit documentation (rolling) unknown | DEMONSTRATED |
+| claims: st.user contains ID-token claims; Google hd identifies Workspace/Cloud accounts and is absent for consumer accounts; explicit address allowlisting is an alternative. | Streamlit documentation (rolling) unknown | REASONED |
+| cookie: Native identity cookie lasts 30 days and the lifetime is not configurable. | Streamlit documentation (rolling) unknown | REASONED |
+| secrets: Keep secrets.toml out of Git, build contexts and served directories; restrict access, never render/log st.secrets, and rotate exposed client/cookie secrets. | Streamlit documentation (rolling) unknown | REASONED |
+| errors: showErrorDetails defaults full; stacktrace/type/none are alternatives, deprecated true/false map to full/stacktrace; none hides browser details while console logs retain them. | Streamlit documentation (rolling) unknown | REASONED |
+| mfa: OIDC MFA must be enforced at the provider; Basic auth or emailed PIN alone is not MFA, and alternative login paths/direct origin must not bypass policy. | Streamlit documentation (rolling) unknown | REASONED |
+| password-widget: A plain text_input password comparison provides no session management, hashing or rate limiting. | Streamlit documentation (rolling) unknown | REASONED |
+| uploads: file_uploader defaults 200 MB per file via maxUploadSize; widget max_upload_size overrides it; filters are best-effort, not content validation; rate-limit and never execute uploads. | Streamlit documentation (rolling) unknown | REASONED |
+| static-default: enableStaticServing defaults false; enabled /app/static/ is served outside script login, so static/ must contain only public files. | Streamlit documentation (rolling) unknown | REASONED |
+| static-test: Recorded static serving bypassed st.stop; enabled returned marker text and disabled returned app HTML, both 200, so inspect the body. | Streamlit documentation (rolling) unknown | DEMONSTRATED |
+| execution-egress: TLS/login do not sandbox Python; use least privilege and minimal credentials, avoid executing inputs, and restrict URL-fetch egress including metadata/internal networks. | OWASP SSRF guidance unknown; Streamlit documentation (rolling) unknown | REASONED |
+| verify-tls: Recorded native TLS returned 200 with the trusted test CA and failed trust with exit 60; never use -k. | curl minimum write-out version 7.75.0; Streamlit documentation (rolling) unknown | DEMONSTRATED |
+| verify-proxy: Recorded Caddy loopback Basic-auth comparison returned exposed health 200/ok versus fixed 401; wrong credentials also failed and valid sessions received the canary. | Streamlit documentation (rolling) unknown | DEMONSTRATED |
+| verify-oidc-proxy: Recorded oauth2-proxy/Keycloak fixture redirected anonymous health and WebSocket requests; an allowed user reached the canary after password/TOTP, with other-domain 403. | Streamlit documentation (rolling) unknown | DEMONSTRATED |
+| verify-native-browser: Native anonymous index is intentionally 200; browser comparisons must check protected content, valid users, domain/email denial and MFA rather than index status. | Streamlit documentation (rolling) unknown | DEMONSTRATED |
+| verify-mfa: Recorded allowed native user reached the canary after TOTP; wrong code retained the provider's code prompt, using a loopback Keycloak fixture rather than Google. | Streamlit documentation (rolling) unknown | DEMONSTRATED |
+| verify-external: From another host any direct 8501 HTTP response is an exposure; refusal/no-route is not proof and DNS/local errors/timeouts are inconclusive; second-host vantage was unavailable. | Streamlit 1.64.0; curl minimum write-out version 7.75.0; Streamlit documentation (rolling) unknown | REASONED |
+| verify-local-reachability: Recorded same-host probe distinguished a listening address from another loopback address; it does not demonstrate the external scenario. | curl minimum write-out version 7.75.0; Streamlit documentation (rolling) unknown | DEMONSTRATED |
+| verify-pages: Test every protected page and operation with anonymous, allowed and disallowed users, restoring an isolated exposed canary comparison; broken WebSockets or blank pages are not positive controls. | Streamlit documentation (rolling) unknown | REASONED |
 | curl-version: Use curl 7.75.0+ for diagnostic variables and keep certificate validation enabled. | curl minimum write-out version 7.75.0 | REASONED |
-| verify-fence: Combined fence remains REASONED because wildcard binding and second-host isolation were unavailable; the recorded loopback sub-results are separate historical demonstrated claims. | Streamlit 1.64.0; curl minimum write-out version 7.75.0 | REASONED |
+| verify-fence: Combined fence remains REASONED because wildcard binding and second-host isolation were unavailable; the recorded loopback sub-results are separate historical demonstrated claims. | Streamlit 1.64.0; curl minimum write-out version 7.75.0; Streamlit documentation (rolling) unknown | REASONED |
 <!-- version-basis:end -->
 
 Streamlit apps have no access control unless you add it, and `streamlit run` listens on all interfaces on port `8501` by default (as of 1.64.0: `server.address` unset, which falls back to `0.0.0.0` and tries `::` first when Python supports IPv6, falling back to `0.0.0.0` if IPv6 is unavailable; `server.port` `8501`, and when that port is busy and was not set explicitly, Streamlit tries up to 100 following ports). Decide both layers before exposing an app.
@@ -26832,22 +26831,22 @@ REASONED from the cited Streamlit 1.64.0 source and the recorded loopback observ
 
 Source-checked on 2026-09-18 against Streamlit 1.64.0, the current release at the time of writing; `server.address` defaults to unset (all interfaces) and `server.port` to `8501`, and the explicit loopback setting above is required for the fronting-proxy pattern. `st.login()` has been available since the 1.42.0 series.
 
-- config.toml reference (server.address, server.sslCertFile, server.sslKeyFile, and the production warning) (Streamlit 1.64.0): https://docs.streamlit.io/develop/api-reference/configuration/config.toml
+- Streamlit config.toml reference, server.address, server.sslCertFile, server.sslKeyFile and the production warning (rolling documentation, checked September 2026): https://docs.streamlit.io/develop/api-reference/configuration/config.toml
 - Streamlit `server.address` default unset and `server.port` default `8501` (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/config.py#L1016-L1036
 - Streamlit's unset address falls back to `DEFAULT_SERVER_ADDRESS` `0.0.0.0` and is tried as `::` when `socket.has_ipv6` (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L80-L98
 - Streamlit retries `0.0.0.0` when binding `::` fails with an IPv6-unavailable error (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L139-L160
 - Streamlit's port search: `configured_port + attempt` for up to `MAX_PORT_SEARCH_RETRIES` (100) retries after the configured port, exiting instead on a busy (`EADDRINUSE`) or permission-denied (`EACCES`) port that was set explicitly (a value from `config.toml` counts; `config.py` `is_manually_set`) (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L363-L400, with `MAX_PORT_SEARCH_RETRIES: Final = 100` defined in `starlette_server_config.py`: https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server_config.py#L55-L57
-- Authentication concepts (st.login, st.logout, st.user, [auth] keys, default scope, stated limitations) (Streamlit 1.64.0): https://docs.streamlit.io/develop/concepts/connections/authentication
-- st.user API reference (claims copied from the ID token, `st.user.email`) (Streamlit 1.64.0): https://docs.streamlit.io/develop/api-reference/user/st.user
+- Streamlit authentication concepts, st.login, st.logout, st.user, [auth] keys, default scope and stated limitations (rolling documentation, checked September 2026): https://docs.streamlit.io/develop/concepts/connections/authentication
+- Streamlit st.user API reference, claims copied from the ID token and `st.user.email` (rolling documentation, checked September 2026): https://docs.streamlit.io/develop/api-reference/user/st.user
 - Streamlit release notes (1.64.0 current; st.login since the 1.42.0 series): https://docs.streamlit.io/develop/quick-reference/release-notes
-- st.login reference (OIDC, Authlib 1.3.2+ dependency) (Streamlit 1.64.0): https://docs.streamlit.io/develop/api-reference/user/st.login
+- Streamlit st.login reference, OIDC and Authlib 1.3.2+ dependency (rolling documentation, checked September 2026): https://docs.streamlit.io/develop/api-reference/user/st.login
 - Streamlit 1.64.0 package metadata (the `auth` extra requires `Authlib>=1.3.2` and `httpx>=0.24.1`): https://pypi.org/project/streamlit/1.64.0/
-- Configuration options and precedence (command line over env over project over global; restart on server changes) (Streamlit 1.64.0): https://docs.streamlit.io/develop/concepts/configuration/options
-- config.toml (enableCORS, enableXsrfProtection, maxUploadSize, enableStaticServing, showErrorDetails) (Streamlit 1.64.0): https://docs.streamlit.io/develop/api-reference/configuration/config.toml
-- Static file serving (server.enableStaticServing default false, served by the server not the script) (Streamlit 1.64.0): https://docs.streamlit.io/develop/concepts/configuration/serving-static-files
-- st.file_uploader (maxUploadSize per-file limit; filters are not content validation) (Streamlit 1.64.0): https://docs.streamlit.io/develop/api-reference/widgets/st.file_uploader
-- Secrets management and security reminders (never render or log secrets) (Streamlit 1.64.0): https://docs.streamlit.io/develop/concepts/connections/security-reminders
-- App health endpoint (/_stcore/health, no authentication) (Streamlit 1.64.0): https://docs.streamlit.io/deploy/tutorials/docker
+- Streamlit configuration options and precedence, command line over env over project over global; restart on server changes (rolling documentation, checked September 2026): https://docs.streamlit.io/develop/concepts/configuration/options
+- Streamlit config.toml, enableCORS, enableXsrfProtection, maxUploadSize, enableStaticServing and showErrorDetails (rolling documentation, checked September 2026): https://docs.streamlit.io/develop/api-reference/configuration/config.toml
+- Streamlit static file serving, server.enableStaticServing default false; served by the server, not the script (rolling documentation, checked September 2026): https://docs.streamlit.io/develop/concepts/configuration/serving-static-files
+- Streamlit st.file_uploader, maxUploadSize per-file limit; filters are not content validation (rolling documentation, checked September 2026): https://docs.streamlit.io/develop/api-reference/widgets/st.file_uploader
+- Streamlit secrets management and security reminders, never render or log secrets (rolling documentation, checked September 2026): https://docs.streamlit.io/develop/concepts/connections/security-reminders
+- Streamlit app health endpoint, /_stcore/health without authentication (rolling documentation, checked September 2026): https://docs.streamlit.io/deploy/tutorials/docker
 - OWASP SSRF Prevention Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
 - curl manual (write-out variables require 7.75.0+): https://curl.se/docs/manpage.html
 
@@ -29894,15 +29893,15 @@ That proves the certificate and handshake only, not TURN authentication, peer po
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| comfy-bind: Default loopback:8188, bare --listen binds IPv4/IPv6 wildcards; explicit bind/port and proxy login. | ComfyUI v0.37.0 | REASONED |
-| comfy-nodes: ComfyUI has no built-in login; Python custom nodes run with server privileges. Trust nodes and apply container containment. | ComfyUI v0.37.0 | REASONED |
+| comfy-bind: Default loopback:8188, bare --listen binds IPv4/IPv6 wildcards; explicit bind/port and proxy login. | ComfyUI v0.37.0; ComfyUI documentation (rolling) unknown | REASONED |
+| comfy-nodes: ComfyUI has no built-in login; Python custom nodes run with server privileges. Trust nodes and apply container containment. | ComfyUI January 2025 security advisory unknown; ComfyUI Registry documentation (rolling) unknown; ComfyUI documentation (rolling) unknown | REASONED |
 | fooocus-login: Fooocus is unauthenticated by default and offers optional auth.json login; keep it off public interfaces. | Fooocus v2.5.5 | REASONED |
 | manager: Manager RCE advisory requires ComfyUI at least v0.3.76 and Manager at least v3.38 together. | ComfyUI advisory minimum v0.3.76; ComfyUI-Manager advisory minimum v3.38 | REASONED |
-| node-flags: --disable-all-custom-nodes and --whitelist-custom-nodes limit loaded nodes, not network exposure. | ComfyUI v0.37.0 | REASONED |
+| node-flags: --disable-all-custom-nodes and --whitelist-custom-nodes limit loaded nodes, not network exposure. | ComfyUI documentation (rolling) unknown | REASONED |
 | webui-auth: UI auth file/list syntax, API-only auth, colon/comma parsing differences and plaintext HTTP require a TLS proxy. | AUTOMATIC1111 v1.10.1 | REASONED |
 | webui-flags: --listen, --share relay and insecure extension access affect exposure. Without --port, Gradio searches from GRADIO_SERVER_PORT (7860 when unset) for up to GRADIO_NUM_PORTS ports (default 100); explicit --port 7860 pins the UI port. | AUTOMATIC1111 v1.10.1; Gradio 3.41.2 | REASONED |
 | api-input: API credentials have no shipped stdin/file/environment/prompt input; settings and UI config do not populate api_auth. | AUTOMATIC1111 v1.10.1 | REASONED |
@@ -29913,7 +29912,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | webui-bind: Explicit --server-name overrides Gradio environment-based bind; without it GRADIO_SERVER_NAME can replace loopback. | AUTOMATIC1111 v1.10.1; Gradio 3.41.2 | REASONED |
 | sysinfo: Unredacted environment and incomplete argv redaction in unauthenticated sysinfo routes are source-reasoned; proxy must deny the prefix. | AUTOMATIC1111 v1.10.1; Gradio 3.41.2 | REASONED |
 | invoke-config: Flat schema 4.0.2, host 127.0.0.1, port 9090 and INVOKEAI_HOST/PORT overrides; default single-user mode has no login. | InvokeAI 6.14.1 | REASONED |
-| invoke-login: Experimental multiuser login/JWT and strict password checks; changing the stored JWT secret then restarting logs users out. Ordinary restart logout is not established; keep loopback and TLS. | InvokeAI 6.14.1 | REASONED |
+| invoke-login: Experimental multiuser login/JWT and strict password checks; changing the stored JWT secret then restarting logs users out. Ordinary restart logout is not established; keep loopback and TLS. | InvokeAI documentation (rolling) unknown | REASONED |
 | fooocus-flags: Loopback by default, bare --listen wildcard, --share public relay; auth.json supplies optional login. | Fooocus v2.5.5 | REASONED |
 | fooocus-loader: Isolated loader returns credentials only for valid data; unreadable raises PermissionError, malformed/empty returns none. | Fooocus v2.5.5 | DEMONSTRATED |
 | fooocus-auth: Relative auth.json location, pass/hash SHA-256 handling, permissions and expected fail-open for malformed/empty data; no live server test. | Fooocus v2.5.5 | REASONED |
@@ -29924,8 +29923,8 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | auth-mount: Image excludes auth.json; mount read-only, use built image user UID and mode 0400; remapped/rootless ownership is unchecked. | Fooocus v2.5.5 | REASONED |
 | argparse: Isolated argparse definition yields loopback with no flag and wildcard for bare --listen; this is not a server demonstration. | Fooocus v2.5.5 | DEMONSTRATED |
 | verify-network: Inventory every service and port, confirm loopback service is up, probe actual IPv4/IPv6; container PORTS or host-network ss have different scope. | ComfyUI v0.37.0; AUTOMATIC1111 v1.10.1; InvokeAI 6.14.1; Fooocus v2.5.5; Docker Engine minimum loopback boundary 28.0; curl minimum write-out version 7.75.0 | REASONED |
-| verify-invoke: Unauthenticated /api/v1/boards/ should answer in single-user mode and reject with 401 in multi-user mode; exposed status is unrecorded and no listener demonstration was available. | InvokeAI 6.14.1 | REASONED |
-| verify-proxy: TLS/header and browser checks should require login before UI; no service/proxy listeners were run. | ComfyUI v0.37.0; Fooocus v2.5.5 | REASONED |
+| verify-invoke: Unauthenticated /api/v1/boards/ should answer in single-user mode and reject with 401 in multi-user mode; exposed status is unrecorded and no listener demonstration was available. | InvokeAI documentation (rolling) unknown | REASONED |
+| verify-proxy: TLS/header and browser checks should require login before UI; no service/proxy listeners were run. | Fooocus v2.5.5; ComfyUI documentation (rolling) unknown | REASONED |
 <!-- version-basis:end -->
 
 None of these tools ships real authentication by default, and each accepts arbitrary Python through custom nodes or extensions. **Binding one to a public interface is host compromise, not just data exposure.** Keep every instance on loopback and reach it only through a tunnel or an authenticated TLS proxy: [fronting-auth.md](fronting-auth.md), [cloudflare.md](cloudflare.md), [tailscale.md](tailscale.md), or a reverse proxy per [nginx.md](nginx.md)/[caddy.md](caddy.md).
@@ -30117,9 +30116,9 @@ curl -q -g -sI https://imagegen.example.com/                # via the proxy: TLS
 
 ## Sources (checked September 2026)
 
-- ComfyUI v0.37.0 Startup Flags (`--listen`, `--port` defaults): https://docs.comfy.org/development/comfyui-server/startup-flags
-- ComfyUI v0.37.0 custom node security standards (eval/exec prohibited): https://docs.comfy.org/registry/standards
-- ComfyUI 2025 Jan Security Update (custom node code-execution risk) (guide basis v0.37.0): https://blog.comfy.org/p/comfyui-2025-jan-security-update
+- ComfyUI Startup Flags, `--listen` and `--port` defaults (rolling documentation, checked September 2026): https://docs.comfy.org/development/comfyui-server/startup-flags
+- ComfyUI Registry custom node security standards, eval/exec prohibited (rolling documentation, checked September 2026): https://docs.comfy.org/registry/standards
+- ComfyUI 2025 Jan Security Update, custom node code-execution risk: https://blog.comfy.org/p/comfyui-2025-jan-security-update
 - ComfyUI-Manager security advisory, CVE-2025-67303, GHSA-95pq-hr8p-f5g7 (minimums ComfyUI v0.3.76 and Manager v3.38): https://github.com/Comfy-Org/ComfyUI-Manager/security/advisories/GHSA-95pq-hr8p-f5g7
 - AUTOMATIC1111 Command Line Arguments and Settings wiki: https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Command-Line-Arguments-and-Settings
 - AUTOMATIC1111 `--gradio-auth-path` ("set gradio authentication file path"), `--gradio-auth`, `--api-auth` and `--server-name` definitions (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L87-L113
@@ -30143,8 +30142,8 @@ curl -q -g -sI https://imagegen.example.com/                # via the proxy: TLS
 - Gradio 3.41.2 checks the login per route, with `dependencies=[Depends(login_check)]` (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/routes.py#L193-L305
 - Gradio 3.41.2 turns a list `auth` into a dictionary keyed by user name, so a later password for the same user name replaces an earlier one (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/routes.py#L128-L133
 - InvokeAI YAML Config (6.14.1, schema 4.0.2, as recorded above; host/port defaults): https://invoke.ai/configuration/invokeai-yaml/
-- InvokeAI 6.14.1 Multi-User Administrator Guide: https://invoke.ai/features/multi-user-mode/admin-guide/
-- InvokeAI 6.14.1 Multi-User API Guide (boards endpoint and missing-token `401`): https://invoke.ai/features/multi-user-mode/api-guide/
+- InvokeAI Multi-User Administrator Guide (rolling documentation, checked September 2026): https://invoke.ai/features/multi-user-mode/admin-guide/
+- InvokeAI Multi-User API Guide, boards endpoint and missing-token `401` (rolling documentation, checked September 2026): https://invoke.ai/features/multi-user-mode/api-guide/
 - Fooocus README, UI access and authentication (`--listen`, `--port`, `--share`, `auth.json`; pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/readme.md#L296-L301
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
 - ComfyUI `--listen` default `127.0.0.1`, `0.0.0.0,::` when given without a value, and `--port` default `8188` (pinned tag v0.37.0): https://github.com/Comfy-Org/ComfyUI/blob/v0.37.0/comfy/cli_args.py#L63-L64
@@ -30820,10 +30819,10 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | prefect-auth: Self-hosted Prefect defaults unauthenticated; Basic Auth from 3.1.8 uses matching server/client auth strings and prompts the UI. | Prefect Basic Auth minimum 3.1.8 | REASONED |
 | prefect-key: Cloud-only PREFECT_API_KEY takes precedence over PREFECT_API_AUTH_STRING and produces 401 against a self-hosted server. | Prefect Basic Auth minimum 3.1.8 | REASONED |
 | prefect-secrets: Protect the auth string and credential-bearing Blocks; block-document reads can request secrets, so masking is not authorization and workers need scoped credentials. | Prefect Basic Auth minimum 3.1.8 | REASONED |
-| prefect-port: The self-hosted Prefect server uses port 4200. | Prefect Basic Auth minimum 3.1.8 | REASONED |
+| prefect-port: The self-hosted Prefect server uses port 4200. | Prefect documentation (rolling) unknown | REASONED |
 | dagster-bind: Direct dagster-webserver/dev defaults to 127.0.0.1:3000, with flag/environment overrides and free-port fallback when the port is unset or 0; explicitly bind the private origin. | Dagster OSS 1.13.24 | REASONED |
 | dagster-helm: The chart passes -h 0.0.0.0 on the Service port, default 80, with ClusterIP Service by default. | Dagster OSS 1.13.24 | REASONED |
-| dagster-auth: OSS webserver has no built-in login or access control; protect all routes with an authenticating proxy. | Dagster OSS 1.13.24 | REASONED |
+| dagster-auth: OSS webserver has no built-in login or access control; protect all routes with an authenticating proxy. | Dagster documentation (rolling) unknown | REASONED |
 | airflow-boundary: Airflow assumes authenticated known users and is not designed for untrusted public exposure; deployment managers must keep it private. | Apache Airflow 3.3.2 | REASONED |
 | airflow-two-api: Airflow 2.11.0 uses [api] auth_backends with session default; before 2.3 the name was auth_backend and 2.2.5 defaulted to deny_all. | Apache Airflow historical configuration unknown; Apache Airflow historical default unknown | REASONED |
 | airflow-simple: Airflow 3 defaults to development-only Simple Auth Manager, with configured users/roles and generated passwords printed to logs unless supplied. | Apache Airflow 3.3.2 | REASONED |
@@ -30831,23 +30830,23 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | airflow-api: Airflow 3 public API uses JWT independently of [fab] auth_backends, which selects FAB API backends rather than the auth manager. | Apache Airflow 3.3.2; Airflow FAB provider 3.9.0 | REASONED |
 | airflow-all-admins: Keep simple_auth_manager_all_admins unset or False; enabling it disables login and grants every visitor admin. | Apache Airflow 3.3.2 | REASONED |
 | fab-public-role: Leave FAB AUTH_ROLE_PUBLIC unset; a configured role grants that access to anonymous visitors. | Airflow FAB provider 3.9.0 | REASONED |
-| airflow-compose-account: Development Compose selects FAB but defaults to airflow/airflow; set credentials before account creation and update/delete an existing account separately. | Apache Airflow 3.3.2; Airflow FAB provider 3.9.0 | REASONED |
-| airflow-jwt: Replace Compose fallback AIRFLOW__API_AUTH__JWT_SECRET=airflow_jwt_secret and share the strong value with all signers/validators; the public fallback permits token forgery. | Apache Airflow 3.3.2 | REASONED |
-| airflow-secret-key: Provision the independent secret_key too: [webserver] on 2.11.0 and [api] on 3.3.2. | Apache Airflow 3.3.2; Apache Airflow historical configuration unknown | REASONED |
-| airflow-config: Keep configuration exposure off with WEBSERVER__EXPOSE_CONFIG on 2.11.0 or API__EXPOSE_CONFIG on 3.3.2. | Apache Airflow 3.3.2; Apache Airflow historical configuration unknown | REASONED |
-| airflow-fernet: Protect Connections, Variables, database and Fernet key; an empty key disables new-value encryption, while removing an existing key prevents decryption. Authorized workloads still use secrets. | Apache Airflow 3.3.2 | REASONED |
-| airflow-port: Compose publishes 8080 on all interfaces; use 127.0.0.1:8080:8080 behind the fronting layer. | Apache Airflow 3.3.2 | REASONED |
+| airflow-compose-account: Development Compose selects FAB but defaults to airflow/airflow; set credentials before account creation and update/delete an existing account separately. | Airflow FAB provider 3.9.0; Apache Airflow documentation (rolling) unknown | REASONED |
+| airflow-jwt: Replace Compose fallback AIRFLOW__API_AUTH__JWT_SECRET=airflow_jwt_secret and share the strong value with all signers/validators; the public fallback permits token forgery. | Apache Airflow documentation (rolling) unknown | REASONED |
+| airflow-secret-key: Provision the independent secret_key too: [webserver] on 2.11.0 and [api] on 3.3.2. | Apache Airflow historical configuration unknown; Apache Airflow documentation (rolling) unknown | REASONED |
+| airflow-config: Keep configuration exposure off with WEBSERVER__EXPOSE_CONFIG on 2.11.0 or API__EXPOSE_CONFIG on 3.3.2. | Apache Airflow historical configuration unknown; Apache Airflow documentation (rolling) unknown | REASONED |
+| airflow-fernet: Protect Connections, Variables, database and Fernet key; an empty key disables new-value encryption, while removing an existing key prevents decryption. Authorized workloads still use secrets. | Apache Airflow documentation (rolling) unknown | REASONED |
+| airflow-port: Compose publishes 8080 on all interfaces; use 127.0.0.1:8080:8080 behind the fronting layer. | Apache Airflow documentation (rolling) unknown | REASONED |
 | temporal-authorizer: Empty authorizer selects noopAuthorizer allowing every API request, including administration; configure default authorization with trusted JWT keys and audience. | Temporal Server 1.28.x | REASONED |
 | temporal-claims: Empty claimMapper selects a no-op granting system-admin claims; configure both Authorizer and ClaimMapper, with frontend TLS. | Temporal Server 1.28.x | REASONED |
 | temporal-health: The built-in default authorizer permits health checks without claims; health is not an authorization discriminator. | Temporal Server 1.28.x | REASONED |
 | temporal-ui: UI OIDC auth.enabled is a sibling of providers; TEMPORAL_AUTH_ENABLED plus provider settings gates the UI only, with MFA at the IdP. | Temporal UI Server 2.34.x | REASONED |
 | temporal-tls: Internode and frontend mTLS are separate from UI login and API authorization. | Temporal Server 1.28.x | REASONED |
 | temporal-payloads: Keep plaintext credentials out of persisted inputs/results/history; payload encryption and an independently authenticated Codec Server form separate controls. | Temporal Server 1.28.x | REASONED |
-| temporal-ports: Frontend gRPC uses 7233 and the Web UI 8233 in the cited CLI server reference. | Temporal Server 1.28.x; Temporal UI Server 2.34.x | REASONED |
+| temporal-ports: Frontend gRPC uses 7233 and the Web UI 8233 in the cited CLI server reference. | Temporal documentation (rolling) unknown | REASONED |
 | flower-bind: Flower defaults to wildcard address and 5555 unless Unix socket, FLOWER_ variables or implicit working-directory flowerconfig.py override; bind loopback explicitly. | Flower v2.2.0; Tornado v6.5.10 | REASONED |
-| flower-api: Authentication defaults off; unauthenticated HTTP API is disabled unless FLOWER_UNAUTHENTICATED_API=true, which must not be mistaken for dashboard protection. | Flower v2.2.0 | REASONED |
-| flower-basic: Basic auth uses a comma-separated credential list; supply it through FLOWER_BASIC_AUTH or protected config rather than argv and retain private TLS fronting. | Flower v2.2.0 | REASONED |
-| flower-oauth: OAuth needs handler, client key/secret, redirect and allowed-email regex; protect the secret outside argv and prefer an MFA-enforcing provider. | Flower v2.2.0 | REASONED |
+| flower-api: Authentication defaults off; unauthenticated HTTP API is disabled unless FLOWER_UNAUTHENTICATED_API=true, which must not be mistaken for dashboard protection. | Flower documentation (rolling) unknown | REASONED |
+| flower-basic: Basic auth uses a comma-separated credential list; supply it through FLOWER_BASIC_AUTH or protected config rather than argv and retain private TLS fronting. | Flower documentation (rolling) unknown | REASONED |
+| flower-oauth: OAuth needs handler, client key/secret, redirect and allowed-email regex; protect the secret outside argv and prefer an MFA-enforcing provider. | Flower documentation (rolling) unknown | REASONED |
 | flower-socket: Flower passes fixed mode 0777; Tornado removes/recreates filesystem sockets on startup, so chmod does not persist. Abstract sockets have no filesystem permission boundary. | Flower v2.2.0; Tornado v6.5.10; Linux permissions and tools unknown | REASONED |
 | flower-directory: Restrict socket directory search with Flower ownership, proxy-only group, mode 0750 and no outsider ACL; directory access is essential because socket mode permits writes. | Linux permissions and tools unknown | REASONED |
 | flower-capabilities: Applicable DAC capabilities bypass directory search checks; Docker defaults include CAP_DAC_OVERRIDE, while user namespaces and idmapped mounts change identity interpretation. | Linux permissions and tools unknown; Moby Docker docker-v29.8.1 | REASONED |
@@ -30866,12 +30865,12 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | argo-tls: Keep TLS enabled with a trusted certificate Secret; no name generates a self-signed certificate, failed named-Secret loading fails startup, secure=false is plaintext and defeats HSTS. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
 | argo-metrics: /metrics shares the server listener and auth gate unless ARGO_SERVER_METRICS_AUTH=false; server mode also admits anonymous metrics. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
 | argo-network: Keep 2746 private behind authenticated HTTPS; restrict direct Pod/Service access and scope server, SSO and execution-account permissions. Workflow submission permits arbitrary containers unless constrained. | Argo Workflows documentation release-3.7 | REASONED |
-| verify-inventory: ss inventories only the current namespace, not publication, routing or authentication; inspect publications and external reachability separately. | Prefect Basic Auth minimum 3.1.8; Flower v2.2.0; Argo Workflows v3.7.18; iproute2 ss manual v6.15.0; Linux network namespaces manual man-pages-5.13 | REASONED |
+| verify-inventory: ss inventories only the current namespace, not publication, routing or authentication; inspect publications and external reachability separately. | Flower v2.2.0; Argo Workflows v3.7.18; iproute2 ss manual v6.15.0; Linux network namespaces manual man-pages-5.13; Prefect documentation (rolling) unknown | REASONED |
 | verify-prefect: Anonymous POST /api/flows/filter returning a JSON list is exposed; fixed is 401 with an authorized list on the same origin. Health/ready GET exemptions are version-dependent. | Prefect Basic Auth minimum 3.1.8; Prefect server source 9e560c9b6df4e19a5109a66e66d461f9facb538d | REASONED |
-| verify-dagster: A RepositoryConnection from /graphql is a read, including empty nodes; GraphQL/transport errors are inconclusive. Test proxy authentication and origin isolation separately. | Dagster OSS 1.13.24 | REASONED |
-| verify-airflow: FAB 3.9.0 returning 201 with access_token for airflow/airflow is exposed; pair a valid account and anonymous/authenticated API reads at proxy and origin. Airflow 2 uses its own API/auth. | Airflow FAB provider 3.9.0; Apache Airflow 3.3.2; Apache Airflow historical configuration unknown | REASONED |
-| verify-temporal: Credential-free workflow listing on 7233 is exposed; require rejection and a matched authorized call, not health, TLS errors or missing namespaces as proof of auth. | Temporal Server 1.28.x | REASONED |
-| verify-flower: Anonymous UI/API should yield Basic 401 or OAuth login redirect, with a valid-session control; API-disabled is not proof the dashboard is protected. | Flower v2.2.0 | REASONED |
+| verify-dagster: A RepositoryConnection from /graphql is a read, including empty nodes; GraphQL/transport errors are inconclusive. Test proxy authentication and origin isolation separately. | Dagster documentation (rolling) unknown | REASONED |
+| verify-airflow: FAB 3.9.0 returning 201 with access_token for airflow/airflow is exposed; pair a valid account and anonymous/authenticated API reads at proxy and origin. Airflow 2 uses its own API/auth. | Airflow FAB provider 3.9.0; Apache Airflow historical configuration unknown; Apache Airflow documentation (rolling) unknown | REASONED |
+| verify-temporal: Credential-free workflow listing on 7233 is exposed; require rejection and a matched authorized call, not health, TLS errors or missing namespaces as proof of auth. | Temporal Server 1.28.x; Temporal documentation (rolling) unknown | REASONED |
+| verify-flower: Anonymous UI/API should yield Basic 401 or OAuth login redirect, with a valid-session control; API-disabled is not proof the dashboard is protected. | Flower documentation (rolling) unknown | REASONED |
 | verify-socket: Directory/socket permissions, outsider denial, reboot persistence and container numeric IDs remain reasoned; no socket or Flower process ran. | Flower v2.2.0; Linux permissions and tools unknown | REASONED |
 | flower-stat-run: Tmpfs directory-only stat distinguished 0755 and 0750; the 0750 directory initially had only base ACL entries. | Linux permissions and tools unknown | DEMONSTRATED |
 | flower-acl-run: A named nobody search ACL remained invisible in stat mode 750; ls and getfacl exposed the entry. | Linux permissions and tools unknown | DEMONSTRATED |
@@ -31238,25 +31237,22 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
 
 - Prefect, security settings (`PREFECT_SERVER_API_AUTH_STRING`, `PREFECT_API_AUTH_STRING`, Cloud API keys
   taking precedence and causing 401) (Prefect 3.1.8 Basic Auth minimum): https://docs.prefect.io/v3/advanced/security-settings
-- Prefect, self-hosted server (default port 4200) (Prefect 3.1.8 Basic Auth minimum): https://docs.prefect.io/v3/how-to-guides/self-hosted/server-cli
-- Dagster, webserver and UI (default local port, no documented built-in auth) (Dagster 1.13.24 documentation): https://docs.dagster.io/guides/operate/webserver
+- Prefect self-hosted server, default port 4200 (rolling documentation, checked September 2026): https://docs.prefect.io/v3/how-to-guides/self-hosted/server-cli
+- Dagster webserver and UI, default local port and no documented built-in auth (rolling documentation, checked September 2026): https://docs.dagster.io/guides/operate/webserver
 - Dagster webserver `DEFAULT_WEBSERVER_HOST` "127.0.0.1" and port 3000 with the free-port fallback, `dagster dev` forwarding `--host` only when one is given, its environment-variable routes (`DAGSTER_WEBSERVER_*` through `auto_envvar_prefix`, legacy `DAGIT_*` copied onto them, and the `dagster` CLI's `DAGSTER_CLI` prefix, which Click extends per subcommand, so `dagster dev` reads `DAGSTER_CLI_DEV_*`), and the Helm chart's webserver command, which hardcodes `-h 0.0.0.0` and takes the port from `dagsterWebserver.service.port` (80 by default, Service type `ClusterIP` by default) (pinned tag 1.13.24): https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L41-L42, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L81-L96, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L306-L311, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster/dagster/_cli/dev.py#L251-L252, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L339-L351, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster/dagster/_cli/__init__.py#L45-L50, Click's subcommand prefix rule (pinned tag 8.5.0) https://github.com/pallets/click/blob/8.5.0/src/click/core.py#L476-L484, https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_deployment-webserver.tpl#L86-L90, https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_helpers.tpl#L55 and https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/values.yaml#L54-L58
-- Apache Airflow, security overview (Airflow 3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/stable/security/
+- Apache Airflow security overview (rolling documentation, checked September 2026): https://airflow.apache.org/docs/apache-airflow/stable/security/
 - Apache Airflow, auth manager selection (`[core] auth_manager`, `airflow config get-value core auth_manager`) (Airflow 3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/auth-manager/index.html
 - Apache Airflow FAB provider, API authentication (`[fab] auth_backends`, independent of the auth manager) (FAB provider 3.9.0 documentation): https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/api-authentication.html
 - Prefect server source (health and ready paths exempted from the auth string on GET): https://github.com/PrefectHQ/prefect/blob/9e560c9b6df4e19a5109a66e66d461f9facb538d/src/prefect/server/api/server.py
 - Apache Airflow, quickstart (default port 8080): https://airflow.apache.org/docs/apache-airflow/stable/start.html
-- Apache Airflow, running Airflow in Docker (the `docker-compose.yaml` default `airflow`/`airflow` web user via `_AIRFLOW_WWW_USER_*`, `AIRFLOW__API_AUTH__JWT_SECRET` default `airflow_jwt_secret`, FAB auth manager, port 8080 published on all interfaces, "for local development. Do not use it in a production deployment"; checked 2026-09-14) (Airflow 3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html
-- Apache Airflow, security model ("doesn't support unauthenticated users", "not designed to be exposed... to
-  untrusted users on the public internet") (Airflow 3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/stable/security/security_model.html
-- Apache Airflow, Simple auth manager (default, dev/test only, `simple_auth_manager_users`, generated
-  passwords) (Airflow 3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/auth-manager/simple/index.html
+- Apache Airflow running in Docker, development Compose defaults for credentials, JWT signing and port publication (rolling documentation, checked September 2026): https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html
+- Apache Airflow security model, authenticated users and private deployment (Airflow 3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/3.3.2/security/security_model.html
+- Apache Airflow Simple auth manager, default for development/testing, configured users and generated passwords (Airflow 3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/3.3.2/core-concepts/auth-manager/simple/index.html
 - Temporal, self-hosted security (`noopAuthorizer` default, `Authorizer`, `ClaimMapper`) (Temporal Server 1.28.x documentation): https://docs.temporal.io/self-hosted-guide/security
 - Temporal, Web UI configuration reference (`auth.providers`, `enabled`, `type: oidc`, `providerUrl`,
   `clientId`, `clientSecret`, `callbackUrl`, `scopes`) (Temporal UI Server 2.34.x documentation): https://docs.temporal.io/references/web-ui-configuration
-- Temporal, CLI server reference (default frontend gRPC port 7233, Web UI port 8233) (Temporal Server 1.28.x; Temporal UI Server 2.34.x): https://docs.temporal.io/cli/command-reference/server
-- Flower, configuration (`--address`, `--port` 5555 default, `--basic-auth`, `--auth_provider`, `--oauth2_key`,
-  `--oauth2_secret`, `--oauth2_redirect_uri`, `--auth`) (Flower v2.2.0): https://flower.readthedocs.io/en/latest/config.html
+- Temporal CLI server reference, default frontend gRPC port 7233 and Web UI port 8233 (rolling documentation, checked September 2026): https://docs.temporal.io/cli/command-reference/server
+- Flower configuration, `--address`, `--port` 5555 default, `--basic-auth`, `--auth_provider`, `--oauth2_key`, `--oauth2_secret`, `--oauth2_redirect_uri` and `--auth` (rolling documentation, checked September 2026): https://flower.readthedocs.io/en/latest/config.html
 - Flower `port` default 5555, `address` default `''` and the `unix_socket` branch, the `FLOWER_` environment variables, and the implicit `flowerconfig.py` load from the working directory (pinned tag v2.2.0), with Tornado's `bind_sockets` treating an empty address as all interfaces (pinned tag v6.5.10): https://github.com/mher/flower/blob/v2.2.0/flower/options.py#L7-L15, https://github.com/mher/flower/blob/v2.2.0/flower/options.py#L56-L57, https://github.com/mher/flower/blob/v2.2.0/flower/command.py#L39-L91, https://github.com/mher/flower/blob/v2.2.0/flower/app.py#L71-L76 and https://github.com/tornadoweb/tornado/blob/v6.5.10/tornado/netutil.py#L72-L73
 - Flower `--unix_socket` passes the fixed mode `0o777` (pinned tag v2.2.0); Tornado's `bind_unix_socket` removes an existing socket at a filesystem path, binds, then applies that mode, and binds a name with a leading NUL with no mode (pinned tag v6.5.10); on Linux, connecting to a stream socket needs write permission on it, and file permissions have no meaning for abstract sockets; path lookup needs search permission on each directory, `CAP_DAC_OVERRIDE` overrides permission checks and `CAP_DAC_READ_SEARCH` grants search on directories; in a user namespace, file permission checks compare IDs mapped back to the initial namespace, and a capability applies only to a file whose owner and group are mapped there; Docker's default capability set includes `CAP_DAC_OVERRIDE` (moby docker-v29.8.1); an idmapped mount changes ownership for that mount only; `RuntimeDirectoryMode=` defaults to `0755` (systemd v257); files under `/run` must be cleared at the beginning of the boot process (FHS 3.0); named ACL entries grant access only up to the mask, changing a file's group permission bits sets its `ACL_MASK` entry, a directory's default ACL governs the initial ACL of objects created within it, and `getfacl` marks a limited entry `#effective:`; `stat -c` format sequences: https://github.com/mher/flower/blob/v2.2.0/flower/app.py#L85-L89, https://github.com/tornadoweb/tornado/blob/v6.5.10/tornado/netutil.py#L215-L228, https://man7.org/linux/man-pages/man7/unix.7.html, https://man7.org/linux/man-pages/man7/path_resolution.7.html, https://man7.org/linux/man-pages/man7/user_namespaces.7.html, https://www.kernel.org/doc/html/latest/filesystems/idmappings.html, https://github.com/moby/moby/blob/docker-v29.8.1/daemon/pkg/oci/caps/defaults.go#L4-L7, https://github.com/systemd/systemd/blob/v257/man/systemd.exec.xml#L1630-L1640, https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch03s15.html, https://man7.org/linux/man-pages/man5/acl.5.html, https://man7.org/linux/man-pages/man1/getfacl.1.html and https://man7.org/linux/man-pages/man1/stat.1.html
 - Linux `ss` socket statistics (`iproute2` v6.15.0), with `-N`/`--net` to switch network namespace: https://github.com/iproute2/iproute2/blob/v6.15.0/man/man8/ss.8#L7-L12 and https://github.com/iproute2/iproute2/blob/v6.15.0/man/man8/ss.8#L358-L359; network namespaces isolating network devices, protocol stacks and port numbers (Linux man-pages-5.13): https://github.com/mkerrisk/man-pages/blob/man-pages-5.13/man7/network_namespaces.7#L30-L40
@@ -33641,22 +33637,22 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | apache-forbidden: mod_autoindex hides entries whose subrequests return 403 unless ShowForbidden is enabled; unmatched exports such as archive.zip and customers.csv can still be listed. | Apache documentation 2.4 | REASONED |
 | apache-options: Options -Indexes removes listing, preserving inherited options; Apache 2.4 rejects mixing relative +/- and bare options. | Apache documentation 2.4 | REASONED |
 | nginx-listing: nginx autoindex defaults off. | nginx documentation unknown | REASONED |
-| caddy-listing: Guide says Caddy lists only with file_server browse; Sources omit a file_server reference. | Caddy documentation v2.11.4 | REASONED |
-| caddy-deny: Caddy v2.11.4 matchers return 404 for dot-prefixed segments at any depth outside root /.well-known/*, and case-insensitive .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz suffixes everywhere. Server execution was not run. | Caddy documentation v2.11.4 | REASONED |
-| caddy-acme: ANDed path_regexp and not path matchers exempt the root /.well-known/ subtree only from dotfile denial; suffix denial still applies and .well-known-backup is not exempt. Keep the subtree free of secrets; independent ACME handling lacks a direct Sources citation. | Caddy documentation v2.11.4 | REASONED |
-| backup-storage: Keep dumps and backups outside the document root or in object storage; filename denies are a backstop and cannot recognize secrets or backups with unmatched names. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4 | REASONED |
-| suffix-policy: Suffix denies also block intended public downloads, including release archives; narrow the policy for the site and verify intended downloads remain accessible. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4 | REASONED |
+| caddy-listing: Guide says Caddy lists only with file_server browse; Sources omit a file_server reference. | Caddy documentation (rolling) unknown | REASONED |
+| caddy-deny: Caddy v2.11.4 matchers return 404 for dot-prefixed segments at any depth outside root /.well-known/*, and case-insensitive .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz suffixes everywhere. Server execution was not run. | Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
+| caddy-acme: ANDed path_regexp and not path matchers exempt the root /.well-known/ subtree only from dotfile denial; suffix denial still applies and .well-known-backup is not exempt. Keep the subtree free of secrets; independent ACME handling lacks a direct Sources citation. | Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
+| backup-storage: Keep dumps and backups outside the document root or in object storage; filename denies are a backstop and cannot recognize secrets or backups with unmatched names. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
+| suffix-policy: Suffix denies also block intended public downloads, including release archives; narrow the policy for the site and verify intended downloads remain accessible. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
 | next-public: NEXT_PUBLIC_ embeds values in browser JavaScript; keep provider keys server-side behind backend routes. | Next.js documentation unknown | REASONED |
 | vite-public: VITE_ embeds values in browser JavaScript; reserve for public values. | Vite documentation unknown | REASONED |
 | cra-public: Deprecated Create React App embeds REACT_APP_ values in browser builds. | Create React App documentation unknown | REASONED |
 | source-maps: Guide warns against external/inline maps for private code; removing sourceMappingURL does not unpublish deployed maps. Sources omit a direct map reference. | Next.js documentation unknown; Vite documentation unknown | REASONED |
-| verify-dotfiles: Plant an exclusive, readable .env.probe file; expect 403 or 404 without PLANTED-SECRET. Also probe .git/config, config.php.bak and db.sql; absent files are inconclusive, so plant real files to test each rule and remove only created probes. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4 | REASONED |
+| verify-dotfiles: Plant an exclusive, readable .env.probe file; expect 403 or 404 without PLANTED-SECRET. Also probe .git/config, config.php.bak and db.sql; absent files are inconclusive, so plant real files to test each rule and remove only created probes. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
 | verify-listing: Plant a throwaway file in an existing index-less uploads directory; Options -Indexes should yield 403 or 404, never a 200 listing. An absent or unwritable directory is inconclusive; remove the probe afterward. | Apache documentation 2.4 | REASONED |
 | verify-acme: Plant a readable challenge token; webroot requests over HTTPS and HTTP:80 should return probe, not 403. nginx exempts only the challenge prefix; Apache exempts .well-known segments. Failed preparation is inconclusive; Sources do not directly cite HTTP-01. | nginx documentation unknown; Apache documentation 2.4 | REASONED |
-| verify-lookalike: Probe .well-known-backup/config across nginx, Apache and Caddy; expect 403 or 404. Plant a real readable file to distinguish denial from absence, then remove it. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4 | REASONED |
+| verify-lookalike: Probe .well-known-backup/config across nginx, Apache and Caddy; expect 403 or 404. Plant a real readable file to distinguish denial from absence, then remove it. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
 | verify-bundle: Scan built client output for credential patterns/literal secrets; grep 0 match, 1 no match, 2 error. Clean does not exclude transformed secrets; no grep reference supplied. | Next.js documentation unknown; Vite documentation unknown; Create React App documentation unknown | REASONED |
-| verify-backup: Known previously deployed backup URLs should return 403 or 404 without the file contents. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4 | REASONED |
-| verify-suffixes: GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a generic dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive; only local shell syntax and suffix creation were checked, not server execution. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4; GNU coreutils documentation unknown | REASONED |
+| verify-backup: Known previously deployed backup URLs should return 403 or 404 without the file contents. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
+| verify-suffixes: GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a generic dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive; only local shell syntax and suffix creation were checked, not server execution. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4; GNU coreutils documentation unknown; Caddy documentation (rolling) unknown | REASONED |
 <!-- version-basis:end -->
 
 Scanners request `/.env`, `/.git/config`, `/config.php.bak`, and `/db.sql` continuously, and any of these
@@ -33873,8 +33869,8 @@ done
 - Apache core `Options` (the `Indexes` option triggers a listing when there is no `DirectoryIndex`; the `-Indexes` relative form and the +/- merge rules): https://httpd.apache.org/docs/2.4/mod/core.html#options
 - Apache mod_autoindex (the generated listing, and `ShowForbidden`, which by default hides entries a subrequest forbids): https://httpd.apache.org/docs/2.4/mod/mod_autoindex.html
 - nginx autoindex module (`autoindex` is `off` by default): https://nginx.org/en/docs/http/ngx_http_autoindex_module.html
-- Caddy v2.11.4 `respond` directive: https://caddyserver.com/docs/caddyfile/directives/respond
-- Caddy v2.11.4 matchers (`path`, `path_regexp`, `not`, named matcher sets): https://caddyserver.com/docs/caddyfile/matchers
+- Caddy `respond` directive (rolling documentation, checked September 2026): https://caddyserver.com/docs/caddyfile/directives/respond
+- Caddy matchers, `path`, `path_regexp`, `not` and named matcher sets (rolling documentation, checked September 2026): https://caddyserver.com/docs/caddyfile/matchers
 - Caddy v2.11.4 matcher implementation (`MatchPath`, `MatchPathRE`, `MatchNot`): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/matchers.go
 - GNU coreutils `mktemp` (`--suffix`): https://www.gnu.org/s/coreutils/manual/html_node/mktemp-invocation.html
 - Next.js environment variables (`NEXT_PUBLIC_`): https://nextjs.org/docs/pages/guides/environment-variables
@@ -35001,7 +34997,7 @@ mean to publish is the finding.
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -35321,7 +35317,7 @@ give the server's public address. A "connected" on a port you did not mean to ex
 - Webmin documentation (configuration, security advisories): https://github.com/webmin/webmin.com/blob/8ceae26c5a074053905cbcc6c0053be573633f3a/content/docs/Modules/webmin-configuration.md and https://github.com/webmin/webmin.com/blob/8ceae26c5a074053905cbcc6c0053be573633f3a/content/security.md
 - Usermin 2.570 installer: https://github.com/webmin/usermin/blob/2.570/setup.sh
 - Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pveproxy.adoc
-- Proxmox VE user management (root@pam, two-factor, lockout, API tokens) (Proxmox VE 9.2, pve-docs 9.2.12): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pveum.adoc
+- Proxmox VE user management (Proxmox VE 9.2, pve-docs 9.2.12; root@pam, two-factor, lockout and API tokens): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pveum.adoc
 - Proxmox VE firewall (Proxmox VE 9.2, pve-docs 9.2.12): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pve-firewall.adoc
 - Proxmox VE certificates (Proxmox VE 9.2, pve-docs 9.2.12): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=certificate-management.adoc
 - Proxmox VE node shell (`/bin/login -f root`) (pve-manager 9.2.20): https://git.proxmox.com/?p=pve-manager.git;a=blob_plain;hb=49318c671b82f31e6b273b79447526161739b97a;f=PVE/API2/Nodes.pm
@@ -36711,21 +36707,21 @@ missing files, authentication failures, connection failures, and timeouts are in
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| strapi-bootstrap: No default admin password: privately register the first administrator before exposing /admin or management routes. | Strapi documentation 5 | REASONED |
-| strapi-bind: Documented localhost differs from generated HOST=0.0.0.0; use host loopback or Docker 127.0.0.1:1337:1337 without binding container loopback. | Strapi documentation 5 | REASONED |
-| strapi-mfa: Strapi admin has no native MFA; protect UI and backend management routes with MFA proxy or available SSO, closing local-login bypasses. | Strapi documentation 5 | REASONED |
-| strapi-public: Content types are private by default; Public-role grants determine anonymous access and denied requests normally return 403. | Strapi documentation 5 | REASONED |
-| strapi-files: Local Media Library files use unauthenticated static serving despite private content types; use access-controlled storage for confidential files. | Strapi documentation 5 | REASONED |
-| strapi-signup: Disable unneeded POST /api/auth/local/register signups; the initial sign-up setting remains unconfirmed, and new users receive the configured Default role. | Strapi documentation 5 | REASONED |
-| strapi-tokens: Review pre-generated Full access/Read-only Content API tokens, delete unused tokens and bound lifetimes; use Custom scopes when find/findOne is too broad. | Strapi documentation 5 | REASONED |
-| strapi-secrets: Protect and rotate APP_KEYS, ADMIN_JWT_SECRET, API_TOKEN_SALT, TRANSFER_TOKEN_SALT, JWT_SECRET and configured ENCRYPTION_KEY; salts are not bearer tokens. | Strapi documentation 5 | REASONED |
+| strapi-bootstrap: No default admin password: privately register the first administrator before exposing /admin or management routes. | Strapi documentation (rolling) unknown | REASONED |
+| strapi-bind: Documented localhost differs from generated HOST=0.0.0.0; use host loopback or Docker 127.0.0.1:1337:1337 without binding container loopback. | Strapi documentation (rolling) unknown | REASONED |
+| strapi-mfa: Strapi admin has no native MFA; protect UI and backend management routes with MFA proxy or available SSO, closing local-login bypasses. | Strapi documentation 5; Strapi documentation (rolling) unknown | REASONED |
+| strapi-public: Content types are private by default; Public-role grants determine anonymous access and denied requests normally return 403. | Strapi documentation (rolling) unknown | REASONED |
+| strapi-files: Local Media Library files use unauthenticated static serving despite private content types; use access-controlled storage for confidential files. | Strapi documentation (rolling) unknown | REASONED |
+| strapi-signup: Disable unneeded POST /api/auth/local/register signups; the initial sign-up setting remains unconfirmed, and new users receive the configured Default role. | Strapi documentation (rolling) unknown | REASONED |
+| strapi-tokens: Review pre-generated Full access/Read-only Content API tokens, delete unused tokens and bound lifetimes; use Custom scopes when find/findOne is too broad. | Strapi documentation (rolling) unknown | REASONED |
+| strapi-secrets: Protect and rotate APP_KEYS, ADMIN_JWT_SECRET, API_TOKEN_SALT, TRANSFER_TOKEN_SALT, JWT_SECRET and configured ENCRYPTION_KEY; salts are not bearer tokens. | Strapi documentation (rolling) unknown | REASONED |
 | strapi-graphql: Optional /graphql shadowCRUD generates operations; disable unnecessary apolloServer.introspection and landingPage without replacing resolver authorization. | Strapi documentation 5; Apollo Server 4-5 | REASONED |
 | apollo-default: Apollo introspection is enabled unless NODE_ENV=production. | Apollo Server 4-5 | REASONED |
-| strapi-tls: Front Strapi with TLS and authentication; the guide records no native TLS termination. | Strapi documentation 5 | REASONED |
+| strapi-tls: Front Strapi with TLS and authentication; the guide records no native TLS termination. | Strapi documentation (rolling) unknown | REASONED |
 | directus-bootstrap: ADMIN_EMAIL/PASSWORD and optional ADMIN_TOKEN bootstrap admin access; 12.0.2 quickstart also allows browser onboarding, so claim the instance privately. | Directus documentation unknown; Directus quickstart 12.0.2 | REASONED |
 | directus-secret: Set a unique protected SECRET; omission generates a random value that does not persist consistently across restarts or replicas. | Directus documentation unknown | REASONED |
 | directus-cookies: SESSION_COOKIE_SECURE and REFRESH_TOKEN_COOKIE_SECURE default false; set both true behind HTTPS. | Directus documentation unknown | REASONED |
@@ -36752,17 +36748,17 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | postgrest-schema: db-schemas defaults public; expose a deliberate API schema and note that root OpenAPI output follows the requesting role privileges. | PostgREST documentation unknown | REASONED |
 | postgrest-secret: Set random jwt-secret of at least 32 characters; a supplied token with no secret configured fails with 500 PGRST300. | PostgREST documentation unknown | REASONED |
 | postgrest-bind: At v16.4 server-host defaults !4 on 3000; optional admin server inherits that host unless overridden. Isolate both and terminate TLS in front. | PostgREST documentation unknown; PostgREST listener source v16.4 | REASONED |
-| egress: Restrict webhook, Flow, trigger, remote-schema and database-function egress after DNS resolution and redirects; IMPORT_IP_DENY_LIST covers imports only. | Strapi documentation 5; Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown | REASONED |
-| database-boundary: Protect database credentials, use dedicated minimal database roles, private listeners and verified encrypted remote database transport. | Strapi documentation 5; Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown | REASONED |
-| human-machine-auth: Use MFA at human administrative boundaries, with separately scoped, expiring and revocable machine credentials. | Strapi documentation 5; Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown | REASONED |
-| verify-canary: Pair authorized canary retrieval with identical anonymous requests; empty/missing/unrelated responses and transport errors are inconclusive. | Strapi documentation 5; Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown | REASONED |
+| egress: Restrict webhook, Flow, trigger, remote-schema and database-function egress after DNS resolution and redirects; IMPORT_IP_DENY_LIST covers imports only. | Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown; Strapi documentation (rolling) unknown | REASONED |
+| database-boundary: Protect database credentials, use dedicated minimal database roles, private listeners and verified encrypted remote database transport. | Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown; Strapi documentation (rolling) unknown | REASONED |
+| human-machine-auth: Use MFA at human administrative boundaries, with separately scoped, expiring and revocable machine credentials. | Strapi documentation 5; Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown; Strapi documentation (rolling) unknown | REASONED |
+| verify-canary: Pair authorized canary retrieval with identical anonymous requests; empty/missing/unrelated responses and transport errors are inconclusive. | Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown; Strapi documentation (rolling) unknown | REASONED |
 | verify-hasura: Hasura defaults to HTTP 200 even for auth errors; inspect admin-secret-required JSON. PRESERVE_401_ERRORS requires Community 2.48.0, beyond quickstart 2.46.0. | Hasura GraphQL Engine documentation unknown; Hasura authentication-status minimum 2.48.0; Hasura quickstart image 2.46.0 | REASONED |
-| verify-retirement: Repeat the same successful canary with retired credentials; require authentication failure, not permission/proxy errors. Bootstrap ADMIN_TOKEN edits do not rotate existing users. | Strapi documentation 5; Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown | REASONED |
-| verify-password: Fresh admin login must accept operator-controlled credentials and reject actual old/copied passwords; missing OTP or lockout does not prove retirement. | Strapi documentation 5; Directus documentation unknown | REASONED |
+| verify-retirement: Repeat the same successful canary with retired credentials; require authentication failure, not permission/proxy errors. Bootstrap ADMIN_TOKEN edits do not rotate existing users. | Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown; Strapi documentation (rolling) unknown | REASONED |
+| verify-password: Fresh admin login must accept operator-controlled credentials and reject actual old/copied passwords; missing OTP or lockout does not prove retirement. | Directus documentation unknown; Strapi documentation (rolling) unknown | REASONED |
 | verify-console: Enabled Hasura / and /console serve HTML; disabled engine returns JSON not-found. Proxy 404 or a failed positive control is inconclusive. | Hasura GraphQL Engine documentation unknown | REASONED |
 | verify-introspection: Require an introspection-specific rejection while an ordinary permitted GraphQL query still succeeds. | Strapi documentation 5; Apollo Server 4-5; Directus documentation unknown; Hasura GraphQL Engine documentation unknown | REASONED |
-| verify-other-controls: Test writes, registration, private files, MFA and outbound fetches separately with authorized/unauthorized fixtures and persisted effects. | Strapi documentation 5; Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown | REASONED |
-| verify-isolation: Inventory host/container listeners and mappings; probe every direct IPv4/IPv6 origin with an allowed control. Any HTTP response proves reachability; failures alone do not prove isolation. | Strapi documentation 5; Directus listener source v12.4.1; Hasura GraphQL Engine documentation unknown; PostgREST listener source v16.4; PostgREST documentation unknown | REASONED |
+| verify-other-controls: Test writes, registration, private files, MFA and outbound fetches separately with authorized/unauthorized fixtures and persisted effects. | Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown; Strapi documentation (rolling) unknown | REASONED |
+| verify-isolation: Inventory host/container listeners and mappings; probe every direct IPv4/IPv6 origin with an allowed control. Any HTTP response proves reachability; failures alone do not prove isolation. | Directus listener source v12.4.1; Hasura GraphQL Engine documentation unknown; PostgREST listener source v16.4; PostgREST documentation unknown; Strapi documentation (rolling) unknown | REASONED |
 <!-- version-basis:end -->
 
 These tools turn a database or a schema into a ready-made API with little or no code, which is
@@ -37093,14 +37089,14 @@ REASONED: following block; direct-origin isolation probes follow the cited liste
 
 Version boundary at the time of writing: Strapi 5 documentation; current Directus documentation (its quickstart uses 12.0.2); Hasura GraphQL Engine v2.x (the quickstart Compose names 2.46.0, and the authentication-status option requires Community Edition 2.48.0); PostgREST documentation identifying itself as version 16. These documentation URLs are rolling references unless a release is named; the Strapi sign-up default is left explicitly unconfirmed until a release-specific source establishes it.
 
-- Strapi 5 Users and Permissions (public role, sign-up): https://docs.strapi.io/cms/features/users-permissions
-- Strapi 5 REST API (content types private by default): https://docs.strapi.io/cms/api/rest
-- Strapi 5 quick start (first administrator): https://docs.strapi.io/cms/quick-start
-- Strapi 5 server configuration (HOST, PORT, APP_KEYS): https://docs.strapi.io/cms/configurations/server
-- Strapi 5 admin-panel configuration (ADMIN_JWT_SECRET, API_TOKEN_SALT, TRANSFER_TOKEN_SALT): https://docs.strapi.io/cms/configurations/admin-panel
-- Strapi 5 Users and Permissions security configuration (`JWT_SECRET`): https://docs.strapi.io/cms/features/users-permissions#security-configuration
-- Strapi 5 middlewares (public static file serving via koa-static): https://docs.strapi.io/cms/configurations/middlewares
-- Strapi 5 Media Library (upload providers): https://docs.strapi.io/cms/features/media-library
+- Strapi Users and Permissions, public role and sign-up (rolling documentation, checked September 2026): https://docs.strapi.io/cms/features/users-permissions
+- Strapi REST API, content types private by default (rolling documentation, checked September 2026): https://docs.strapi.io/cms/api/rest
+- Strapi quick start, first administrator (rolling documentation, checked September 2026): https://docs.strapi.io/cms/quick-start
+- Strapi server configuration, HOST, PORT and APP_KEYS (rolling documentation, checked September 2026): https://docs.strapi.io/cms/configurations/server
+- Strapi admin-panel configuration, ADMIN_JWT_SECRET, API_TOKEN_SALT and TRANSFER_TOKEN_SALT (rolling documentation, checked September 2026): https://docs.strapi.io/cms/configurations/admin-panel
+- Strapi Users and Permissions security configuration, `JWT_SECRET` (rolling documentation, checked September 2026): https://docs.strapi.io/cms/features/users-permissions#security-configuration
+- Strapi middlewares, public static file serving via koa-static (rolling documentation, checked September 2026): https://docs.strapi.io/cms/configurations/middlewares
+- Strapi Media Library, upload providers (rolling documentation, checked September 2026): https://docs.strapi.io/cms/features/media-library
 - Directus configuration, first admin user (ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_TOKEN; PORT default 8055): https://directus.com/docs/configuration/general
 - Directus `HOST` default `0.0.0.0` and `PORT` default 8055, and the branch that replaces them when `UNIX_SOCKET_PATH` names a socket path (pinned tag v12.4.1): https://github.com/directus/directus/blob/v12.4.1/packages/env/src/constants/defaults.ts#L9-L10 and https://github.com/directus/directus/blob/v12.4.1/api/src/server.ts#L169-L182
 - Directus access control (public permissions off by default): https://directus.com/docs/guides/auth/access-control
@@ -37112,8 +37108,8 @@ Version boundary at the time of writing: Strapi 5 documentation; current Directu
 - PostgREST error codes (PGRST300 to PGRST303): https://postgrest.org/en/stable/references/errors.html
 - PostgREST OpenAPI output at the root path: https://postgrest.org/en/stable/references/api/openapi.html
 - PostgREST admin server (optional health/metrics listener): https://postgrest.org/en/stable/references/admin_server.html
-- Strapi 5 API tokens (pre-generated Full access and Read-only tokens, scopes, lifetime): https://docs.strapi.io/cms/features/api-tokens
-- Strapi 5 SSO (administrator single sign-on): https://docs.strapi.io/cms/features/sso
+- Strapi API tokens, pre-generated Full access and Read-only tokens, scopes and lifetime (rolling documentation, checked September 2026): https://docs.strapi.io/cms/features/api-tokens
+- Strapi SSO, administrator single sign-on (rolling documentation, checked September 2026): https://docs.strapi.io/cms/features/sso
 - Directus security and limits (`SECRET`, cookie flags, `IMPORT_IP_DENY_LIST`): https://directus.com/docs/configuration/security-limits
 - Directus file access (asset permissions and storage bypass): https://directus.com/docs/guides/files/access
 - Hasura disable GraphQL introspection (self-hosted Enterprise control): https://hasura.io/docs/2.0/security/disable-graphql-introspection/

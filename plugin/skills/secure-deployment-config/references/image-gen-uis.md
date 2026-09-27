@@ -1,18 +1,15 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "6de2dedd681eb935c2363f727d0a89222bb5761a2e4e07d1500ccbe173c768d0",
+  "body_sha256": "c806272af965a3df1bb721029a5f06f690a19f566228215d413c8cfab5f4787a",
   "components": {
     "comfy": {
       "name": "ComfyUI",
       "basis": "v0.37.0",
       "sources": {
-        "sbd178d58a098": "https://github.com/Comfy-Org/ComfyUI/blob/v0.37.0/comfy/cli_args.py#L63-L64",
-        "s8b2f213483c1": "https://docs.comfy.org/development/comfyui-server/startup-flags",
-        "sfde3f2261e67": "https://blog.comfy.org/p/comfyui-2025-jan-security-update",
-        "sb5912e72af4b": "https://docs.comfy.org/registry/standards"
+        "sbd178d58a098": "https://github.com/Comfy-Org/ComfyUI/blob/v0.37.0/comfy/cli_args.py#L63-L64"
       }
     },
     "webui": {
@@ -57,9 +54,7 @@ version_basis: {
       "name": "InvokeAI",
       "basis": "6.14.1",
       "sources": {
-        "sb0dc1b679ef2": "https://invoke.ai/configuration/invokeai-yaml/",
-        "s23a1a14da479": "https://invoke.ai/features/multi-user-mode/admin-guide/",
-        "s4c6175f3800d": "https://invoke.ai/features/multi-user-mode/api-guide/"
+        "sb0dc1b679ef2": "https://invoke.ai/configuration/invokeai-yaml/"
       }
     },
     "fooocus": {
@@ -127,14 +122,43 @@ version_basis: {
       "sources": {
         "s4ce66189c3c9": "https://github.com/Comfy-Org/ComfyUI-Manager/security/advisories/GHSA-95pq-hr8p-f5g7"
       }
+    },
+    "comfy-rolling": {
+      "name": "ComfyUI documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "s8b2f213483c1": "https://docs.comfy.org/development/comfyui-server/startup-flags"
+      }
+    },
+    "comfy-registry-rolling": {
+      "name": "ComfyUI Registry documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "sb5912e72af4b": "https://docs.comfy.org/registry/standards"
+      }
+    },
+    "comfy-advisory": {
+      "name": "ComfyUI January 2025 security advisory",
+      "basis": "unknown",
+      "sources": {
+        "sfde3f2261e67": "https://blog.comfy.org/p/comfyui-2025-jan-security-update"
+      }
+    },
+    "invoke-rolling": {
+      "name": "InvokeAI documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "s23a1a14da479": "https://invoke.ai/features/multi-user-mode/admin-guide/",
+        "s4c6175f3800d": "https://invoke.ai/features/multi-user-mode/api-guide/"
+      }
     }
   },
   "claims": {
-    "comfy-bind": {"text": "Default loopback:8188, bare --listen binds IPv4/IPv6 wildcards; explicit bind/port and proxy login.", "components": ["comfy"], "sources": ["comfy:sbd178d58a098", "comfy:s8b2f213483c1"], "status": "REASONED"},
-    "comfy-nodes": {"text": "ComfyUI has no built-in login; Python custom nodes run with server privileges. Trust nodes and apply container containment.", "components": ["comfy"], "sources": ["comfy:sfde3f2261e67", "comfy:sb5912e72af4b", "comfy:s8b2f213483c1"], "status": "REASONED"},
+    "comfy-bind": {"text": "Default loopback:8188, bare --listen binds IPv4/IPv6 wildcards; explicit bind/port and proxy login.", "components": ["comfy", "comfy-rolling"], "sources": ["comfy:sbd178d58a098", "comfy-rolling:s8b2f213483c1"], "status": "REASONED"},
+    "comfy-nodes": {"text": "ComfyUI has no built-in login; Python custom nodes run with server privileges. Trust nodes and apply container containment.", "components": ["comfy-advisory", "comfy-registry-rolling", "comfy-rolling"], "sources": ["comfy-advisory:sfde3f2261e67", "comfy-registry-rolling:sb5912e72af4b", "comfy-rolling:s8b2f213483c1"], "status": "REASONED"},
     "fooocus-login": {"text": "Fooocus is unauthenticated by default and offers optional auth.json login; keep it off public interfaces.", "components": ["fooocus"], "sources": ["fooocus:s38232435e83d"], "status": "REASONED"},
     "manager": {"text": "Manager RCE advisory requires ComfyUI at least v0.3.76 and Manager at least v3.38 together.", "components": ["comfy-min", "manager-min"], "sources": ["comfy-min:s4ce66189c3c9", "manager-min:s4ce66189c3c9"], "status": "REASONED"},
-    "node-flags": {"text": "--disable-all-custom-nodes and --whitelist-custom-nodes limit loaded nodes, not network exposure.", "components": ["comfy"], "sources": ["comfy:s8b2f213483c1"], "status": "REASONED"},
+    "node-flags": {"text": "--disable-all-custom-nodes and --whitelist-custom-nodes limit loaded nodes, not network exposure.", "components": ["comfy-rolling"], "sources": ["comfy-rolling:s8b2f213483c1"], "status": "REASONED"},
     "webui-auth": {"text": "UI auth file/list syntax, API-only auth, colon/comma parsing differences and plaintext HTTP require a TLS proxy.", "components": ["webui"], "sources": ["webui:s42a42cca605b", "webui:s0195caed3cb9", "webui:sd5f3496b66aa", "webui:s66a044b7666c"], "status": "REASONED"},
     "webui-flags": {"text": "--listen, --share relay and insecure extension access affect exposure. Without --port, Gradio searches from GRADIO_SERVER_PORT (7860 when unset) for up to GRADIO_NUM_PORTS ports (default 100); explicit --port 7860 pins the UI port.", "components": ["webui", "gradio"], "sources": ["webui:s7b714092036e", "webui:s23a49b75b6a1", "webui:saf69abeba189", "gradio:s6f6c16695b71", "gradio:s67ebd44760a7", "webui:s9a93a7fe8617", "webui:s72ec61fe38c9"], "status": "REASONED"},
     "api-input": {"text": "API credentials have no shipped stdin/file/environment/prompt input; settings and UI config do not populate api_auth.", "components": ["webui"], "sources": ["webui:s82803810022a", "webui:s914278bcbf70", "webui:sb59e633133f6", "webui:sf3f6d5cafad0", "webui:sbfd3d01539c3"], "status": "REASONED"},
@@ -145,7 +169,7 @@ version_basis: {
     "webui-bind": {"text": "Explicit --server-name overrides Gradio environment-based bind; without it GRADIO_SERVER_NAME can replace loopback.", "components": ["webui", "gradio"], "sources": ["webui:s370f032e0497", "webui:saf69abeba189", "gradio:s1bd30a313ec9"], "status": "REASONED"},
     "sysinfo": {"text": "Unredacted environment and incomplete argv redaction in unauthenticated sysinfo routes are source-reasoned; proxy must deny the prefix.", "components": ["webui", "gradio"], "sources": ["webui:sebe977aeb6f3", "webui:sc9117bccdef5", "gradio:sf85e6083e02e"], "status": "REASONED"},
     "invoke-config": {"text": "Flat schema 4.0.2, host 127.0.0.1, port 9090 and INVOKEAI_HOST/PORT overrides; default single-user mode has no login.", "components": ["invoke"], "sources": ["invoke:sb0dc1b679ef2"], "status": "REASONED"},
-    "invoke-login": {"text": "Experimental multiuser login/JWT and strict password checks; changing the stored JWT secret then restarting logs users out. Ordinary restart logout is not established; keep loopback and TLS.", "components": ["invoke"], "sources": ["invoke:s23a1a14da479"], "status": "REASONED"},
+    "invoke-login": {"text": "Experimental multiuser login/JWT and strict password checks; changing the stored JWT secret then restarting logs users out. Ordinary restart logout is not established; keep loopback and TLS.", "components": ["invoke-rolling"], "sources": ["invoke-rolling:s23a1a14da479"], "status": "REASONED"},
     "fooocus-flags": {"text": "Loopback by default, bare --listen wildcard, --share public relay; auth.json supplies optional login.", "components": ["fooocus"], "sources": ["fooocus:s38232435e83d", "fooocus:s63ce6f5a8fa9"], "status": "REASONED"},
     "fooocus-loader": {"text": "Isolated loader returns credentials only for valid data; unreadable raises PermissionError, malformed/empty returns none.", "components": ["fooocus"], "sources": ["fooocus:s21eb28118a14"], "status": "DEMONSTRATED", "evidence": "for a malformed file it printed `load_auth_data, e: ...` and returned no credentials; for an empty list (`[]`) it also returned none; and for a valid file it returned credentials."},
     "fooocus-auth": {"text": "Relative auth.json location, pass/hash SHA-256 handling, permissions and expected fail-open for malformed/empty data; no live server test.", "components": ["fooocus"], "sources": ["fooocus:s2eb7ac87bb1f", "fooocus:s170da4e26268", "fooocus:s21eb28118a14", "fooocus:sfcc14904297e", "fooocus:s2ef62a4cd853"], "status": "REASONED"},
@@ -156,8 +180,8 @@ version_basis: {
     "auth-mount": {"text": "Image excludes auth.json; mount read-only, use built image user UID and mode 0400; remapped/rootless ownership is unchecked.", "components": ["fooocus"], "sources": ["fooocus:s6157fae93872", "fooocus:scb18d8c421f5", "fooocus:s21eb28118a14"], "status": "REASONED"},
     "argparse": {"text": "Isolated argparse definition yields loopback with no flag and wildcard for bare --listen; this is not a server demonstration.", "components": ["fooocus"], "sources": ["fooocus:s63ce6f5a8fa9"], "status": "DEMONSTRATED", "evidence": "returns `127.0.0.1` with no flag and `0.0.0.0` for a bare `--listen`."},
     "verify-network": {"text": "Inventory every service and port, confirm loopback service is up, probe actual IPv4/IPv6; container PORTS or host-network ss have different scope.", "components": ["comfy", "webui", "invoke", "fooocus", "engine", "curl"], "sources": ["comfy:sbd178d58a098", "webui:s370f032e0497", "invoke:sb0dc1b679ef2", "fooocus:s63ce6f5a8fa9", "engine:s1e53417c513d", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
-    "verify-invoke": {"text": "Unauthenticated /api/v1/boards/ should answer in single-user mode and reject with 401 in multi-user mode; exposed status is unrecorded and no listener demonstration was available.", "components": ["invoke"], "sources": ["invoke:s23a1a14da479", "invoke:s4c6175f3800d"], "status": "REASONED", "verify": [1]},
-    "verify-proxy": {"text": "TLS/header and browser checks should require login before UI; no service/proxy listeners were run.", "components": ["comfy", "fooocus"], "sources": ["comfy:s8b2f213483c1", "fooocus:s38232435e83d"], "status": "REASONED", "verify": [1]}
+    "verify-invoke": {"text": "Unauthenticated /api/v1/boards/ should answer in single-user mode and reject with 401 in multi-user mode; exposed status is unrecorded and no listener demonstration was available.", "components": ["invoke-rolling"], "sources": ["invoke-rolling:s23a1a14da479", "invoke-rolling:s4c6175f3800d"], "status": "REASONED", "verify": [1]},
+    "verify-proxy": {"text": "TLS/header and browser checks should require login before UI; no service/proxy listeners were run.", "components": ["fooocus", "comfy-rolling"], "sources": ["comfy-rolling:s8b2f213483c1", "fooocus:s38232435e83d"], "status": "REASONED", "verify": [1]}
   }
 }
 ---
@@ -168,15 +192,15 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| comfy-bind: Default loopback:8188, bare --listen binds IPv4/IPv6 wildcards; explicit bind/port and proxy login. | ComfyUI v0.37.0 | REASONED |
-| comfy-nodes: ComfyUI has no built-in login; Python custom nodes run with server privileges. Trust nodes and apply container containment. | ComfyUI v0.37.0 | REASONED |
+| comfy-bind: Default loopback:8188, bare --listen binds IPv4/IPv6 wildcards; explicit bind/port and proxy login. | ComfyUI v0.37.0; ComfyUI documentation (rolling) unknown | REASONED |
+| comfy-nodes: ComfyUI has no built-in login; Python custom nodes run with server privileges. Trust nodes and apply container containment. | ComfyUI January 2025 security advisory unknown; ComfyUI Registry documentation (rolling) unknown; ComfyUI documentation (rolling) unknown | REASONED |
 | fooocus-login: Fooocus is unauthenticated by default and offers optional auth.json login; keep it off public interfaces. | Fooocus v2.5.5 | REASONED |
 | manager: Manager RCE advisory requires ComfyUI at least v0.3.76 and Manager at least v3.38 together. | ComfyUI advisory minimum v0.3.76; ComfyUI-Manager advisory minimum v3.38 | REASONED |
-| node-flags: --disable-all-custom-nodes and --whitelist-custom-nodes limit loaded nodes, not network exposure. | ComfyUI v0.37.0 | REASONED |
+| node-flags: --disable-all-custom-nodes and --whitelist-custom-nodes limit loaded nodes, not network exposure. | ComfyUI documentation (rolling) unknown | REASONED |
 | webui-auth: UI auth file/list syntax, API-only auth, colon/comma parsing differences and plaintext HTTP require a TLS proxy. | AUTOMATIC1111 v1.10.1 | REASONED |
 | webui-flags: --listen, --share relay and insecure extension access affect exposure. Without --port, Gradio searches from GRADIO_SERVER_PORT (7860 when unset) for up to GRADIO_NUM_PORTS ports (default 100); explicit --port 7860 pins the UI port. | AUTOMATIC1111 v1.10.1; Gradio 3.41.2 | REASONED |
 | api-input: API credentials have no shipped stdin/file/environment/prompt input; settings and UI config do not populate api_auth. | AUTOMATIC1111 v1.10.1 | REASONED |
@@ -187,7 +211,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | webui-bind: Explicit --server-name overrides Gradio environment-based bind; without it GRADIO_SERVER_NAME can replace loopback. | AUTOMATIC1111 v1.10.1; Gradio 3.41.2 | REASONED |
 | sysinfo: Unredacted environment and incomplete argv redaction in unauthenticated sysinfo routes are source-reasoned; proxy must deny the prefix. | AUTOMATIC1111 v1.10.1; Gradio 3.41.2 | REASONED |
 | invoke-config: Flat schema 4.0.2, host 127.0.0.1, port 9090 and INVOKEAI_HOST/PORT overrides; default single-user mode has no login. | InvokeAI 6.14.1 | REASONED |
-| invoke-login: Experimental multiuser login/JWT and strict password checks; changing the stored JWT secret then restarting logs users out. Ordinary restart logout is not established; keep loopback and TLS. | InvokeAI 6.14.1 | REASONED |
+| invoke-login: Experimental multiuser login/JWT and strict password checks; changing the stored JWT secret then restarting logs users out. Ordinary restart logout is not established; keep loopback and TLS. | InvokeAI documentation (rolling) unknown | REASONED |
 | fooocus-flags: Loopback by default, bare --listen wildcard, --share public relay; auth.json supplies optional login. | Fooocus v2.5.5 | REASONED |
 | fooocus-loader: Isolated loader returns credentials only for valid data; unreadable raises PermissionError, malformed/empty returns none. | Fooocus v2.5.5 | DEMONSTRATED |
 | fooocus-auth: Relative auth.json location, pass/hash SHA-256 handling, permissions and expected fail-open for malformed/empty data; no live server test. | Fooocus v2.5.5 | REASONED |
@@ -198,8 +222,8 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | auth-mount: Image excludes auth.json; mount read-only, use built image user UID and mode 0400; remapped/rootless ownership is unchecked. | Fooocus v2.5.5 | REASONED |
 | argparse: Isolated argparse definition yields loopback with no flag and wildcard for bare --listen; this is not a server demonstration. | Fooocus v2.5.5 | DEMONSTRATED |
 | verify-network: Inventory every service and port, confirm loopback service is up, probe actual IPv4/IPv6; container PORTS or host-network ss have different scope. | ComfyUI v0.37.0; AUTOMATIC1111 v1.10.1; InvokeAI 6.14.1; Fooocus v2.5.5; Docker Engine minimum loopback boundary 28.0; curl minimum write-out version 7.75.0 | REASONED |
-| verify-invoke: Unauthenticated /api/v1/boards/ should answer in single-user mode and reject with 401 in multi-user mode; exposed status is unrecorded and no listener demonstration was available. | InvokeAI 6.14.1 | REASONED |
-| verify-proxy: TLS/header and browser checks should require login before UI; no service/proxy listeners were run. | ComfyUI v0.37.0; Fooocus v2.5.5 | REASONED |
+| verify-invoke: Unauthenticated /api/v1/boards/ should answer in single-user mode and reject with 401 in multi-user mode; exposed status is unrecorded and no listener demonstration was available. | InvokeAI documentation (rolling) unknown | REASONED |
+| verify-proxy: TLS/header and browser checks should require login before UI; no service/proxy listeners were run. | Fooocus v2.5.5; ComfyUI documentation (rolling) unknown | REASONED |
 <!-- version-basis:end -->
 
 None of these tools ships real authentication by default, and each accepts arbitrary Python through custom nodes or extensions. **Binding one to a public interface is host compromise, not just data exposure.** Keep every instance on loopback and reach it only through a tunnel or an authenticated TLS proxy: [fronting-auth.md](fronting-auth.md), [cloudflare.md](cloudflare.md), [tailscale.md](tailscale.md), or a reverse proxy per [nginx.md](nginx.md)/[caddy.md](caddy.md).
@@ -391,9 +415,9 @@ curl -q -g -sI https://imagegen.example.com/                # via the proxy: TLS
 
 ## Sources (checked September 2026)
 
-- ComfyUI v0.37.0 Startup Flags (`--listen`, `--port` defaults): https://docs.comfy.org/development/comfyui-server/startup-flags
-- ComfyUI v0.37.0 custom node security standards (eval/exec prohibited): https://docs.comfy.org/registry/standards
-- ComfyUI 2025 Jan Security Update (custom node code-execution risk) (guide basis v0.37.0): https://blog.comfy.org/p/comfyui-2025-jan-security-update
+- ComfyUI Startup Flags, `--listen` and `--port` defaults (rolling documentation, checked September 2026): https://docs.comfy.org/development/comfyui-server/startup-flags
+- ComfyUI Registry custom node security standards, eval/exec prohibited (rolling documentation, checked September 2026): https://docs.comfy.org/registry/standards
+- ComfyUI 2025 Jan Security Update, custom node code-execution risk: https://blog.comfy.org/p/comfyui-2025-jan-security-update
 - ComfyUI-Manager security advisory, CVE-2025-67303, GHSA-95pq-hr8p-f5g7 (minimums ComfyUI v0.3.76 and Manager v3.38): https://github.com/Comfy-Org/ComfyUI-Manager/security/advisories/GHSA-95pq-hr8p-f5g7
 - AUTOMATIC1111 Command Line Arguments and Settings wiki: https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Command-Line-Arguments-and-Settings
 - AUTOMATIC1111 `--gradio-auth-path` ("set gradio authentication file path"), `--gradio-auth`, `--api-auth` and `--server-name` definitions (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L87-L113
@@ -417,8 +441,8 @@ curl -q -g -sI https://imagegen.example.com/                # via the proxy: TLS
 - Gradio 3.41.2 checks the login per route, with `dependencies=[Depends(login_check)]` (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/routes.py#L193-L305
 - Gradio 3.41.2 turns a list `auth` into a dictionary keyed by user name, so a later password for the same user name replaces an earlier one (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/routes.py#L128-L133
 - InvokeAI YAML Config (6.14.1, schema 4.0.2, as recorded above; host/port defaults): https://invoke.ai/configuration/invokeai-yaml/
-- InvokeAI 6.14.1 Multi-User Administrator Guide: https://invoke.ai/features/multi-user-mode/admin-guide/
-- InvokeAI 6.14.1 Multi-User API Guide (boards endpoint and missing-token `401`): https://invoke.ai/features/multi-user-mode/api-guide/
+- InvokeAI Multi-User Administrator Guide (rolling documentation, checked September 2026): https://invoke.ai/features/multi-user-mode/admin-guide/
+- InvokeAI Multi-User API Guide, boards endpoint and missing-token `401` (rolling documentation, checked September 2026): https://invoke.ai/features/multi-user-mode/api-guide/
 - Fooocus README, UI access and authentication (`--listen`, `--port`, `--share`, `auth.json`; pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/readme.md#L296-L301
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
 - ComfyUI `--listen` default `127.0.0.1`, `0.0.0.0,::` when given without a value, and `--port` default `8188` (pinned tag v0.37.0): https://github.com/Comfy-Org/ComfyUI/blob/v0.37.0/comfy/cli_args.py#L63-L64

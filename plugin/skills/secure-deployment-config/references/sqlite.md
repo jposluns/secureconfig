@@ -1,25 +1,15 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "f997ffcde26766059e0a6af1b769fe6c5f9345dbe0413241388e3f727bbb8f7c",
+  "body_sha256": "384660fa9f174c119a41dbb2df6be06f7bd3148d34150d845f6ee14fc67086c5",
   "components": {
     "sqlite": {
       "name": "SQLite documentation",
       "basis": "3.x",
       "sources": {
-        "s2721da91f8d2": "https://www.sqlite.org/serverless.html",
-        "sadf0431c1271": "https://www.sqlite.org/security.html",
-        "s742deb3338bb": "https://sqlite.org/loadext.html",
-        "sf3d7f8391994": "https://www.sqlite.org/tempfiles.html"
-      }
-    },
-    "run": {
-      "name": "SQLite local file tests",
-      "basis": "3.46.1",
-      "sources": {
-        "sf3d7f8391994": "https://www.sqlite.org/tempfiles.html"
+        "sadf0431c1271": "https://www.sqlite.org/security.html"
       }
     },
     "see": {
@@ -134,17 +124,26 @@ version_basis: {
         "s6732393fd414": "https://docs.docker.com/engine/network/drivers/host/",
         "s00095bd02553": "https://docs.docker.com/engine/network/#container-networks"
       }
+    },
+    "sqlite-rolling": {
+      "name": "SQLite documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "s2721da91f8d2": "https://www.sqlite.org/serverless.html",
+        "sf3d7f8391994": "https://www.sqlite.org/tempfiles.html",
+        "s742deb3338bb": "https://sqlite.org/loadext.html"
+      }
     }
   },
   "claims": {
-    "filesystem": {"text": "No server, network listener or database-side authentication; filesystem authority controls access, including ATTACH. Treat files writable across security domains as suspect.", "components": ["sqlite"], "sources": ["sqlite:s2721da91f8d2", "sqlite:sadf0431c1271"], "status": "REASONED"},
-    "extensions": {"text": "Core extension loading defaults off, while the CLI enables it; enable only when required and load trusted libraries.", "components": ["sqlite"], "sources": ["sqlite:s742deb3338bb"], "status": "REASONED"},
-    "web-files": {"text": "Keep databases, sidecars, temporary files, exports and backups outside web-served paths; inspect aliases, symlinks, download routes and publishing, and do not rely on hidden names.", "components": ["sqlite"], "sources": ["sqlite:s2721da91f8d2", "sqlite:sf3d7f8391994"], "status": "REASONED"},
-    "git-files": {"text": "Ignore database extensions and each -wal, -shm and -journal suffix before committing; ignore rules do not remove tracked files or history.", "components": ["sqlite"], "sources": ["sqlite:sf3d7f8391994"], "status": "REASONED"},
-    "permissions": {"text": "Dedicated account, directory 700, database and existing sidecars 600, and launch umask 077; same-account processes and privileged users remain outside this isolation.", "components": ["sqlite"], "sources": ["sqlite:s2721da91f8d2", "sqlite:sf3d7f8391994"], "status": "REASONED"},
-    "temporary": {"text": "Protect temporary files and backups; Unix SQLITE_TMPDIR needs an existing private directory and may fall back elsewhere. Do not delete live sidecars to repair permissions.", "components": ["sqlite"], "sources": ["sqlite:sf3d7f8391994"], "status": "REASONED"},
+    "filesystem": {"text": "No server, network listener or database-side authentication; filesystem authority controls access, including ATTACH. Treat files writable across security domains as suspect.", "components": ["sqlite", "sqlite-rolling"], "sources": ["sqlite-rolling:s2721da91f8d2", "sqlite:sadf0431c1271"], "status": "REASONED"},
+    "extensions": {"text": "Core extension loading defaults off, while the CLI enables it; enable only when required and load trusted libraries.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:s742deb3338bb"], "status": "REASONED"},
+    "web-files": {"text": "Keep databases, sidecars, temporary files, exports and backups outside web-served paths; inspect aliases, symlinks, download routes and publishing, and do not rely on hidden names.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:s2721da91f8d2", "sqlite-rolling:sf3d7f8391994"], "status": "REASONED"},
+    "git-files": {"text": "Ignore database extensions and each -wal, -shm and -journal suffix before committing; ignore rules do not remove tracked files or history.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:sf3d7f8391994"], "status": "REASONED"},
+    "permissions": {"text": "Dedicated account, directory 700, database and existing sidecars 600, and launch umask 077; same-account processes and privileged users remain outside this isolation.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:s2721da91f8d2", "sqlite-rolling:sf3d7f8391994"], "status": "REASONED"},
+    "temporary": {"text": "Protect temporary files and backups; Unix SQLITE_TMPDIR needs an existing private directory and may fall back elsewhere. Do not delete live sidecars to repair permissions.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:sf3d7f8391994"], "status": "REASONED"},
     "encryption": {"text": "Public-domain SQLite has no file encryption; SEE is licensed and SQLCipher is a third-party alternative, otherwise use filesystem or volume encryption.", "components": ["see", "cipher"], "sources": ["see:sda3d8876503d", "cipher:s57d83a42a74a"], "status": "REASONED"},
-    "encryption-keys": {"text": "Keep keys outside databases and backups; SEE TEMP tables can be unencrypted. Treat credential-bearing copies as secrets and rotate credentials after a leak.", "components": ["see", "sqlite"], "sources": ["see:sda3d8876503d", "sqlite:sf3d7f8391994"], "status": "REASONED"},
+    "encryption-keys": {"text": "Keep keys outside databases and backups; SEE TEMP tables can be unencrypted. Treat credential-bearing copies as secrets and rotate credentials after a leak.", "components": ["see", "sqlite-rolling"], "sources": ["see:sda3d8876503d", "sqlite-rolling:sf3d7f8391994"], "status": "REASONED"},
     "turso-http": {"text": "Turso serves libSQL over HTTPS at the database/organization turso.io URL using bearer authentication; TURSO_DATABASE_URL and TURSO_AUTH_TOKEN belong in application configuration, never a client bundle or git.", "components": ["turso"], "sources": ["turso:sb32fd9c679e1"], "status": "REASONED"},
     "turso-scope": {"text": "db tokens create --read-only scopes away writes; --expiration accepts never or durations such as 7d3h. Prefer scoped, expiring tokens.", "components": ["turso"], "sources": ["turso:sfec4e734f423"], "status": "REASONED"},
     "replicas": {"text": "Litestream replicates to supported object stores; scope AWS credentials and IAM to the required bucket/prefix, keep replicas private, and restore with scoped credentials.", "components": ["litestream"], "sources": ["litestream:sec3d72af1447", "litestream:s87fa51accafc"], "status": "REASONED"},
@@ -170,10 +169,10 @@ version_basis: {
     "static-url": {"text": "Static leasing uses lease.advertise-url as configured: the primary points at itself and each replica at the primary private API.", "components": ["litefs"], "sources": ["litefs:s8dfa3f10f3d3", "litefs:s83d8bd834347", "litefs:sb43f5d78723c"], "status": "REASONED"},
     "container": {"text": "LiteFS image supplies no configuration or EXPOSE; default wildcard binding applies within its namespace. Peers, host/shared networking, routing, firewall and publication determine reachability.", "components": ["litefs", "docker"], "sources": ["litefs:s3284d1a3ecad", "docker:s881082f899b2", "docker:s6732393fd414", "docker:s00095bd02553"], "status": "REASONED"},
     "proxy": {"text": "LiteFS application proxy is separate: proxy.target enables attempted startup, proxy.db and proxy.addr must be nonempty, example :8080; application TLS and authentication remain necessary.", "components": ["litefs"], "sources": ["litefs:s2b80fdf8adbe", "litefs:sc0568fe7e0ee", "litefs:sf0d31f900082"], "status": "REASONED"},
-    "verify-download": {"text": "Probe actual database/sidecar paths only after a successful application control; timeouts, DNS and proxy failures do not establish non-publication. No served application was available.", "components": ["sqlite"], "sources": ["sqlite:s2721da91f8d2", "sqlite:sf3d7f8391994"], "status": "REASONED", "verify": [1]},
+    "verify-download": {"text": "Probe actual database/sidecar paths only after a successful application control; timeouts, DNS and proxy failures do not establish non-publication. No served application was available.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:s2721da91f8d2", "sqlite-rolling:sf3d7f8391994"], "status": "REASONED", "verify": [1]},
     "verify-bundle": {"text": "Local placeholder-token scan distinguished exposed and clean bundles and refused absent directories; readonly, nameref, lowercase and IFS cases are recorded. A clean scan covers only the searched forms and paths.", "components": ["turso"], "sources": ["turso:sb32fd9c679e1"], "status": "DEMONSTRATED", "evidence": "A bundle carrying the placeholder printed `token-literal exit: 0` and `jwt-shape exit: 0`. - A clean bundle printed `1` for both.", "verify": [2]},
-    "verify-git": {"text": "Local throwaway repositories showed tracked/history copies survive ignore rules and index removal; a never-committed ignored file produced only rule matches. Git version is unrecorded.", "components": ["sqlite"], "sources": ["sqlite:sf3d7f8391994"], "status": "DEMONSTRATED", "evidence": "With `app.db` committed before an `app.db*` ignore rule was added, `git check-ignore -v` listed the sidecars but not the tracked `app.db`. `git ls-files` printed `app.db`, and `git log` printed its commit.", "verify": [3]},
-    "verify-modes": {"text": "SQLite 3.46.1 local WAL and rollback-journal runs showed umask 022 versus 077 modes; every file belonged to the test account, and separate application-account ownership was not exercised.", "components": ["run"], "sources": ["run:sf3d7f8391994"], "status": "DEMONSTRATED", "evidence": "Under umask `022` the directory was `755`, and `app.db`, `app.db-wal` and `app.db-shm` were `644`. - Under umask `077` they were `700` and `600`.", "verify": [4]},
+    "verify-git": {"text": "Local throwaway repositories showed tracked/history copies survive ignore rules and index removal; a never-committed ignored file produced only rule matches. Git version is unrecorded.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:sf3d7f8391994"], "status": "DEMONSTRATED", "evidence": "With `app.db` committed before an `app.db*` ignore rule was added, `git check-ignore -v` listed the sidecars but not the tracked `app.db`. `git ls-files` printed `app.db`, and `git log` printed its commit.", "verify": [3]},
+    "verify-modes": {"text": "SQLite 3.46.1 local WAL and rollback-journal runs showed umask 022 versus 077 modes; every file belonged to the test account, and separate application-account ownership was not exercised.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:sf3d7f8391994"], "status": "DEMONSTRATED", "evidence": "Under umask `022` the directory was `755`, and `app.db`, `app.db-wal` and `app.db-shm` were `644`. - Under umask `077` they were `700` and `600`.", "verify": [4]},
     "verify-listeners": {"text": "Compare authorized private control with untrusted reachability for LiteFS or enabled Litestream metrics/MCP; any HTTP response shows a listener, not every backend route. Transport errors and failed controls are inconclusive; no isolated listener environment was available.", "components": ["litefs", "litestream", "mcp"], "sources": ["litefs:s694a6ba8eafa", "litestream:sa5dddf04652c", "mcp:sa5dddf04652c"], "status": "REASONED", "verify": [5]},
     "verify-turso": {"text": "Turso /v2/pipeline must return SELECT 1 with a valid bearer token and no successful result anonymously; HTTP 200 alone is insufficient and transport failure inconclusive. No database/token was available.", "components": ["turso"], "sources": ["turso:se409838a474a"], "status": "REASONED", "verify": [6]},
     "halt-expiration": {"text": "LiteFS checks halt-lock expiration every 5 seconds.", "components": ["litefs"], "sources": ["litefs:se2add54cf935", "litefs:s59a2dfccd853"], "status": "REASONED"}
@@ -187,18 +186,18 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| filesystem: No server, network listener or database-side authentication; filesystem authority controls access, including ATTACH. Treat files writable across security domains as suspect. | SQLite documentation 3.x | REASONED |
-| extensions: Core extension loading defaults off, while the CLI enables it; enable only when required and load trusted libraries. | SQLite documentation 3.x | REASONED |
-| web-files: Keep databases, sidecars, temporary files, exports and backups outside web-served paths; inspect aliases, symlinks, download routes and publishing, and do not rely on hidden names. | SQLite documentation 3.x | REASONED |
-| git-files: Ignore database extensions and each -wal, -shm and -journal suffix before committing; ignore rules do not remove tracked files or history. | SQLite documentation 3.x | REASONED |
-| permissions: Dedicated account, directory 700, database and existing sidecars 600, and launch umask 077; same-account processes and privileged users remain outside this isolation. | SQLite documentation 3.x | REASONED |
-| temporary: Protect temporary files and backups; Unix SQLITE_TMPDIR needs an existing private directory and may fall back elsewhere. Do not delete live sidecars to repair permissions. | SQLite documentation 3.x | REASONED |
+| filesystem: No server, network listener or database-side authentication; filesystem authority controls access, including ATTACH. Treat files writable across security domains as suspect. | SQLite documentation 3.x; SQLite documentation (rolling) unknown | REASONED |
+| extensions: Core extension loading defaults off, while the CLI enables it; enable only when required and load trusted libraries. | SQLite documentation (rolling) unknown | REASONED |
+| web-files: Keep databases, sidecars, temporary files, exports and backups outside web-served paths; inspect aliases, symlinks, download routes and publishing, and do not rely on hidden names. | SQLite documentation (rolling) unknown | REASONED |
+| git-files: Ignore database extensions and each -wal, -shm and -journal suffix before committing; ignore rules do not remove tracked files or history. | SQLite documentation (rolling) unknown | REASONED |
+| permissions: Dedicated account, directory 700, database and existing sidecars 600, and launch umask 077; same-account processes and privileged users remain outside this isolation. | SQLite documentation (rolling) unknown | REASONED |
+| temporary: Protect temporary files and backups; Unix SQLITE_TMPDIR needs an existing private directory and may fall back elsewhere. Do not delete live sidecars to repair permissions. | SQLite documentation (rolling) unknown | REASONED |
 | encryption: Public-domain SQLite has no file encryption; SEE is licensed and SQLCipher is a third-party alternative, otherwise use filesystem or volume encryption. | SQLite Encryption Extension unknown; SQLCipher unknown | REASONED |
-| encryption-keys: Keep keys outside databases and backups; SEE TEMP tables can be unencrypted. Treat credential-bearing copies as secrets and rotate credentials after a leak. | SQLite Encryption Extension unknown; SQLite documentation 3.x | REASONED |
+| encryption-keys: Keep keys outside databases and backups; SEE TEMP tables can be unencrypted. Treat credential-bearing copies as secrets and rotate credentials after a leak. | SQLite Encryption Extension unknown; SQLite documentation (rolling) unknown | REASONED |
 | turso-http: Turso serves libSQL over HTTPS at the database/organization turso.io URL using bearer authentication; TURSO_DATABASE_URL and TURSO_AUTH_TOKEN belong in application configuration, never a client bundle or git. | Turso documentation unknown | REASONED |
 | turso-scope: db tokens create --read-only scopes away writes; --expiration accepts never or durations such as 7d3h. Prefer scoped, expiring tokens. | Turso documentation unknown | REASONED |
 | replicas: Litestream replicates to supported object stores; scope AWS credentials and IAM to the required bucket/prefix, keep replicas private, and restore with scoped credentials. | Litestream documentation unknown | REASONED |
@@ -224,10 +223,10 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | static-url: Static leasing uses lease.advertise-url as configured: the primary points at itself and each replica at the primary private API. | LiteFS source v0.5.14 | REASONED |
 | container: LiteFS image supplies no configuration or EXPOSE; default wildcard binding applies within its namespace. Peers, host/shared networking, routing, firewall and publication determine reachability. | LiteFS source v0.5.14; Docker documentation unknown | REASONED |
 | proxy: LiteFS application proxy is separate: proxy.target enables attempted startup, proxy.db and proxy.addr must be nonempty, example :8080; application TLS and authentication remain necessary. | LiteFS source v0.5.14 | REASONED |
-| verify-download: Probe actual database/sidecar paths only after a successful application control; timeouts, DNS and proxy failures do not establish non-publication. No served application was available. | SQLite documentation 3.x | REASONED |
+| verify-download: Probe actual database/sidecar paths only after a successful application control; timeouts, DNS and proxy failures do not establish non-publication. No served application was available. | SQLite documentation (rolling) unknown | REASONED |
 | verify-bundle: Local placeholder-token scan distinguished exposed and clean bundles and refused absent directories; readonly, nameref, lowercase and IFS cases are recorded. A clean scan covers only the searched forms and paths. | Turso documentation unknown | DEMONSTRATED |
-| verify-git: Local throwaway repositories showed tracked/history copies survive ignore rules and index removal; a never-committed ignored file produced only rule matches. Git version is unrecorded. | SQLite documentation 3.x | DEMONSTRATED |
-| verify-modes: SQLite 3.46.1 local WAL and rollback-journal runs showed umask 022 versus 077 modes; every file belonged to the test account, and separate application-account ownership was not exercised. | SQLite local file tests 3.46.1 | DEMONSTRATED |
+| verify-git: Local throwaway repositories showed tracked/history copies survive ignore rules and index removal; a never-committed ignored file produced only rule matches. Git version is unrecorded. | SQLite documentation (rolling) unknown | DEMONSTRATED |
+| verify-modes: SQLite 3.46.1 local WAL and rollback-journal runs showed umask 022 versus 077 modes; every file belonged to the test account, and separate application-account ownership was not exercised. | SQLite documentation (rolling) unknown | DEMONSTRATED |
 | verify-listeners: Compare authorized private control with untrusted reachability for LiteFS or enabled Litestream metrics/MCP; any HTTP response shows a listener, not every backend route. Transport errors and failed controls are inconclusive; no isolated listener environment was available. | LiteFS source v0.5.14; Litestream documentation unknown; Litestream MCP minimum v0.5.0 | REASONED |
 | verify-turso: Turso /v2/pipeline must return SELECT 1 with a valid bearer token and no successful result anonymously; HTTP 200 alone is insufficient and transport failure inconclusive. No database/token was available. | Turso documentation unknown | REASONED |
 | halt-expiration: LiteFS checks halt-lock expiration every 5 seconds. | LiteFS source v0.5.14 | REASONED |
@@ -456,11 +455,11 @@ Applicability checked on 2026-09-18: SQLite 3.x documentation (local file tests 
 - Litestream guides (supported replica destinations): https://litestream.io/guides/
 - Litestream S3 guide (credentials, scoped IAM policy): https://litestream.io/guides/s3/
 - LiteFS overview (cluster replication, pre-1.0 status, backup recommendation): https://fly.io/docs/litefs/
-- SQLite serverless architecture (no server process; OS and filesystem only) (SQLite 3.x documentation): https://www.sqlite.org/serverless.html
-- SQLite temporary and sidecar file naming (-wal, -shm, -journal) (local file tests on SQLite 3.46.1) (SQLite 3.x documentation): https://www.sqlite.org/tempfiles.html
+- SQLite serverless architecture, no server process; OS and filesystem only (rolling documentation, checked September 2026): https://www.sqlite.org/serverless.html
+- SQLite temporary and sidecar file naming, -wal, -shm and -journal (rolling documentation, checked September 2026): https://www.sqlite.org/tempfiles.html
 - SQLite Encryption Extension (licensed; the public build cannot read an encrypted file): https://www.sqlite.org/see/doc/trunk/www/readme.wiki
 - SQLCipher (third-party encrypted-SQLite build): https://www.zetetic.net/sqlcipher/
-- SQLite extension loading (disabled by default; enabled in the CLI) (SQLite 3.x documentation): https://sqlite.org/loadext.html
+- SQLite extension loading, disabled by default and enabled in the CLI (rolling documentation, checked September 2026): https://sqlite.org/loadext.html
 - LiteFS configuration (http.addr, lease.advertise-url, default port 20202): https://fly.io/docs/litefs/config/
 - LiteFS listener and configuration (pinned tag v0.5.14): default address, plain TCP and h2c server, h2c-only client, mount flags, environment expansion, default config search and explicit path, and example API bind: https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L32-L35, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/config.go#L57, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L76-L99, https://github.com/superfly/litefs/blob/v0.5.14/http/client.go#L32-L43, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/mount_linux.go#L76-L110, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/config.go#L219-L233, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/config.go#L288-L333, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/etc/litefs.yml#L54-L58
 - LiteFS route dispatch and reads (pinned tag v0.5.14): no credential gate, export including WAL pages, primary-only HTTP/2 stream, database enumeration and filtering, snapshots, position-map decoding, info, events, and unconditional debug routes including rand: https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L134-L268, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L320-L346, https://github.com/superfly/litefs/blob/v0.5.14/db.go#L2682-L2776, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L495-L520, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L526-L585, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L686-L699, https://github.com/superfly/litefs/blob/v0.5.14/http/http.go#L15-L43, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L271-L292, https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L779-L803, https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/mount_linux.go#L487-L488, https://github.com/superfly/litefs/blob/v0.5.14/store.go#L1661-L1713
