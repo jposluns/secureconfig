@@ -1,4 +1,223 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "0cd50f8008842262c1ad8033701c13325472154ad3203105e744b5db00446520",
+  "components": {
+    "php": {
+      "name": "PHP documentation",
+      "basis": "unknown",
+      "sources": {
+        "s09fdbeba0867": "https://www.php.net/manual/en/curl.constants.php",
+        "s5840a5a0a848": "https://www.php.net/manual/en/features.commandline.options.php",
+        "s3cbc65590d52": "https://www.php.net/manual/en/features.file-upload.common-pitfalls.php",
+        "s6f3e55d536e7": "https://www.php.net/manual/en/filesystem.configuration.php",
+        "s50f85ff4fbd1": "https://www.php.net/manual/en/function.password-hash.php",
+        "s625cd1d40655": "https://www.php.net/manual/en/function.session-regenerate-id.php",
+        "s2f1c806d037c": "https://www.php.net/manual/en/function.trigger-error.php",
+        "s7b2c2c19835d": "https://www.php.net/manual/en/security.hiding.php",
+        "s8664dc56a028": "https://www.php.net/manual/en/session.security.ini.php"
+      }
+    },
+    "php8": {
+      "name": "PHP native configuration",
+      "basis": "8.x",
+      "sources": {
+        "s89c799077b82": "https://www.php.net/manual/en/errorfunc.configuration.php",
+        "s5a3f7bde8338": "https://www.php.net/manual/en/info.configuration.php",
+        "sc9e417e2ad6f": "https://www.php.net/manual/en/ini.core.php",
+        "s2e692b7c86a6": "https://www.php.net/manual/en/install.fpm.configuration.php",
+        "s000e155a7b25": "https://www.php.net/manual/en/session.configuration.php"
+      }
+    },
+    "template84": {
+      "name": "PHP production template",
+      "basis": "8.4",
+      "sources": {
+        "sd72e3d69551f": "https://raw.githubusercontent.com/php/php-src/d313ad6098430f4e61f0121a9e7ab392d195e4e4/php.ini-production"
+      }
+    },
+    "template83": {
+      "name": "PHP production template",
+      "basis": "8.3",
+      "sources": {
+        "sea3d3a4ea486": "https://raw.githubusercontent.com/php/php-src/b94f9f68a610e0fca5f2fea5bfa7c7d6d3d5a847/php.ini-production"
+      }
+    },
+    "laravel": {
+      "name": "Laravel",
+      "basis": "12.x",
+      "sources": {
+        "sf0448f3d4665": "https://api.laravel.com/docs/12.x/Illuminate/Routing/UrlGenerator.html",
+        "s98db3429151c": "https://github.com/laravel/laravel/blob/f6b2e79bdbfc5bf4a37ad16466cc06ad79cc9e8f/config/session.php",
+        "s4e846bd588a8": "https://laravel.com/framework/docs/12.x/configuration",
+        "s6510c1aa8d96": "https://laravel.com/framework/docs/12.x/deployment",
+        "sb3e2d08bd07d": "https://laravel.com/framework/docs/12.x/encryption",
+        "s879d69d64852": "https://laravel.com/framework/docs/12.x/filesystem",
+        "sc58ba221e3cd": "https://laravel.com/framework/docs/12.x/fortify",
+        "sdf4ba04ddcda": "https://laravel.com/framework/docs/12.x/hashing",
+        "s517839d232ec": "https://laravel.com/framework/docs/12.x/requests",
+        "s248fef722141": "https://laravel.com/framework/docs/12.x/routing",
+        "s003198079bdd": "https://laravel.com/framework/docs/12.x/socialite",
+        "sb3e846095c54": "https://laravel.com/framework/docs/12.x/starter-kits",
+        "sd7d2287b5d35": "https://laravel.com/framework/docs/12.x/telescope"
+      }
+    },
+    "debugbar": {
+      "name": "Laravel Debugbar",
+      "basis": "unknown",
+      "sources": {
+        "s7099781fdf4a": "https://github.com/fruitcake/laravel-debugbar"
+      }
+    }
+  },
+  "claims": {
+    "fpm-private": {"text": "FPM requires listen per pool; exposed FastCGI permits code execution. Use a Unix socket or loopback TCP 9000; never publish container FPM.", "components": ["php8"], "sources": ["php8:s2e692b7c86a6"], "status": "REASONED"},
+    "fpm-clients": {"text": "listen.allowed_clients defaults unset, accepting any address; explicitly allow loopback for TCP.", "components": ["php8"], "sources": ["php8:s2e692b7c86a6"], "status": "REASONED"},
+    "fpm-socket": {"text": "Unix socket access uses listen.owner, listen.group and listen.mode, default 0660.", "components": ["php8"], "sources": ["php8:s2e692b7c86a6"], "status": "REASONED"},
+    "cookie-secure": {"text": "Native session.cookie_secure defaults 0; enable it.", "components": ["php8"], "sources": ["php8:s000e155a7b25"], "status": "REASONED"},
+    "cookie-httponly": {"text": "Native session.cookie_httponly defaults 0; enable it.", "components": ["php8"], "sources": ["php8:s000e155a7b25"], "status": "REASONED"},
+    "cookie-samesite": {"text": "Native session.cookie_samesite defaults empty; choose Lax or Strict.", "components": ["php8"], "sources": ["php8:s000e155a7b25"], "status": "REASONED"},
+    "session-strict": {"text": "session.use_strict_mode defaults 0; enable it.", "components": ["php8"], "sources": ["php8:s000e155a7b25"], "status": "REASONED"},
+    "session-regenerate": {"text": "Regenerate IDs after login/privilege changes; delete_old_session defaults false. Timestamp expiry avoids immediate deletion.", "components": ["php"], "sources": ["php:s625cd1d40655"], "status": "REASONED"},
+    "passwords": {"text": "PASSWORD_DEFAULT currently uses bcrypt; Argon2id needs an Argon2 build. Verify/rehash passwords and allow growing hashes, suggested 255 bytes.", "components": ["php"], "sources": ["php:s50f85ff4fbd1"], "status": "REASONED"},
+    "plain-auth": {"text": "Plain PHP rate limiting and MFA need application/proxy/identity controls; direct references are the linked guides, not PHP Sources.", "components": ["php"], "sources": ["php:s50f85ff4fbd1", "php:s8664dc56a028"], "status": "REASONED"},
+    "laravel-debug": {"text": "Set APP_ENV=production, APP_DEBUG=false and HTTPS APP_URL; debug mode exposes configuration values.", "components": ["laravel"], "sources": ["laravel:s4e846bd588a8", "laravel:s6510c1aa8d96"], "status": "REASONED"},
+    "laravel-key": {"text": "Generate APP_KEY with artisan key:generate; list old keys in APP_PREVIOUS_KEYS during rotation.", "components": ["laravel"], "sources": ["laravel:sb3e2d08bd07d"], "status": "REASONED"},
+    "laravel-secure": {"text": "Set SESSION_SECURE_COOKIE=true; the session secure configuration has no default.", "components": ["laravel"], "sources": ["laravel:s98db3429151c"], "status": "REASONED"},
+    "laravel-httponly": {"text": "SESSION_HTTP_ONLY defaults true; retain it.", "components": ["laravel"], "sources": ["laravel:s98db3429151c"], "status": "REASONED"},
+    "laravel-samesite": {"text": "SESSION_SAME_SITE defaults lax; strict suits admin-only apps.", "components": ["laravel"], "sources": ["laravel:s98db3429151c"], "status": "REASONED"},
+    "laravel-proxy": {"text": "Laravel 12.x trustProxies names proxies in bootstrap/app.php; wildcard trust requires exclusive proxy reachability.", "components": ["laravel"], "sources": ["laravel:s517839d232ec"], "status": "REASONED"},
+    "laravel-urls": {"text": "URL::forceHttps() or forceScheme(https) in a provider boot method forces generated HTTPS URLs.", "components": ["laravel"], "sources": ["laravel:sf0448f3d4665"], "status": "REASONED"},
+    "laravel-hashes": {"text": "Hash::make/check default to bcrypt; HASH_DRIVER=argon2id switches it and needsRehash detects upgrades. HASH_VERIFY=false disables rejection of other algorithms.", "components": ["laravel"], "sources": ["laravel:sdf4ba04ddcda"], "status": "REASONED"},
+    "laravel-limiter": {"text": "Define a five-per-minute login limiter keyed by email plus IP; attach throttle:login to the real route.", "components": ["laravel"], "sources": ["laravel:s248fef722141"], "status": "REASONED"},
+    "fortify-login": {"text": "12.x starter kits use Fortify, which throttles username plus IP and regenerates session IDs on login; standalone Fortify omits views.", "components": ["laravel"], "sources": ["laravel:sc58ba221e3cd", "laravel:sb3e846095c54"], "status": "REASONED"},
+    "fortify-mfa": {"text": "Fortify twoFactorAuthentication with confirm and confirmPassword supplies TOTP and recovery codes.", "components": ["laravel"], "sources": ["laravel:sc58ba221e3cd", "laravel:sb3e846095c54"], "status": "REASONED"},
+    "socialite": {"text": "Socialite supplies OAuth providers; community packages supply OIDC. Use HTTPS callbacks and linked allowlist/token checks.", "components": ["laravel"], "sources": ["laravel:s003198079bdd"], "status": "REASONED"},
+    "laravel-cache": {"text": "Keep plaintext .env untracked; build config/route caches after production inputs and rebuild on changes. Cached config does not load .env; use env only in config files.", "components": ["laravel"], "sources": ["laravel:s4e846bd588a8", "laravel:s6510c1aa8d96"], "status": "REASONED"},
+    "laravel-hosts": {"text": "Laravel accepts arbitrary Host headers by default; restrict hosts at the server and add anchored TrustHosts with subdomains:false.", "components": ["laravel"], "sources": ["laravel:s517839d232ec"], "status": "REASONED"},
+    "debug-tools": {"text": "Omit Telescope and Debugbar from production; Telescope local-only installation includes conditional provider registration.", "components": ["laravel", "debugbar"], "sources": ["laravel:sd7d2287b5d35", "debugbar:s7099781fdf4a"], "status": "REASONED"},
+    "curl-peer": {"text": "CURLOPT_SSL_VERIFYPEER defaults true; retain certificate verification.", "components": ["php"], "sources": ["php:s09fdbeba0867"], "status": "REASONED"},
+    "curl-host": {"text": "CURLOPT_SSL_VERIFYHOST defaults 2; retain hostname checks and use CURLOPT_CAINFO for an internal CA.", "components": ["php"], "sources": ["php:s09fdbeba0867"], "status": "REASONED"},
+    "display-errors": {"text": "PHP 8.x display_errors defaults On; set Off before execution. ini_set cannot hide a fatal error preventing it from running.", "components": ["php8"], "sources": ["php8:s89c799077b82"], "status": "REASONED"},
+    "startup-errors": {"text": "display_startup_errors defaults On since PHP 8.0.0, previously Off; set Off.", "components": ["php8"], "sources": ["php8:s89c799077b82"], "status": "REASONED"},
+    "log-errors": {"text": "log_errors defaults Off; enable it with a protected, pre-created, worker-writable log outside the document root and rotation. Unset error_log uses the SAPI logger.", "components": ["php8"], "sources": ["php8:s89c799077b82"], "status": "REASONED"},
+    "error-reporting": {"text": "error_reporting defaults E_ALL since PHP 8.0.0; retain reporting into logs. Package/template/deployment overrides can differ.", "components": ["php8"], "sources": ["php8:s89c799077b82"], "status": "REASONED"},
+    "php-banner": {"text": "expose_php defaults On; Off suppresses PHP own X-Powered-By header, not other layers or all application identification.", "components": ["php8", "php"], "sources": ["php8:sc9e417e2ad6f", "php:s7b2c2c19835d"], "status": "REASONED"},
+    "production-template": {"text": "PHP 8.4 production template disables display and enables logging, but uses E_ALL & ~E_DEPRECATED and leaves expose_php enabled.", "components": ["template84"], "sources": ["template84:sd72e3d69551f"], "status": "REASONED"},
+    "disable-functions": {"text": "disable_functions defaults empty; test the listed process-function restrictions. Since PHP 8.0 definitions disappear and userland can redefine them; internal functions only, not a security boundary.", "components": ["php8"], "sources": ["php8:sc9e417e2ad6f"], "status": "REASONED"},
+    "url-fopen": {"text": "allow_url_fopen defaults On; disable unnecessary URL wrappers after compatibility tests, not as a general egress policy.", "components": ["php"], "sources": ["php:s6f3e55d536e7"], "status": "REASONED"},
+    "url-include": {"text": "allow_url_include defaults Off, deprecated since PHP 7.4; retain Off. URL includes also require allow_url_fopen.", "components": ["php"], "sources": ["php:s6f3e55d536e7"], "status": "REASONED"},
+    "basedir": {"text": "open_basedir defaults NULL; allow required paths, retain OS isolation and account for disabled realpath caching. PHP 8.3 rejects runtime .. components.", "components": ["php8"], "sources": ["php8:sc9e417e2ad6f"], "status": "REASONED"},
+    "fpm-extensions": {"text": "PHP 8.x FPM security.limit_extensions defaults .php .phar; restrict to .php, which still permits uploaded PHP dispatched by the server.", "components": ["php8"], "sources": ["php8:s2e692b7c86a6"], "status": "REASONED"},
+    "upload-execution": {"text": "Separate writable uploads from code, preferably outside the document root; server mappings must forbid PHP execution, including aliases/symlinks.", "components": ["php8", "laravel"], "sources": ["php8:s2e692b7c86a6", "laravel:s879d69d64852"], "status": "REASONED"},
+    "laravel-storage": {"text": "Laravel 12.x local disk defaults storage/app/private; public disk uses storage/app/public via public/storage, which does not itself prevent PHP execution.", "components": ["laravel"], "sources": ["laravel:s879d69d64852"], "status": "REASONED"},
+    "upload-size": {"text": "upload_max_filesize defaults 2M per file; post_max_size must allow multipart overhead.", "components": ["php8"], "sources": ["php8:sc9e417e2ad6f"], "status": "REASONED"},
+    "post-size": {"text": "post_max_size defaults 8M; excess leaves POST and FILES empty and must be rejected by the app.", "components": ["php8"], "sources": ["php8:sc9e417e2ad6f"], "status": "REASONED"},
+    "upload-count": {"text": "max_file_uploads defaults 20; twenty maximum-sized files need not fit the POST limit.", "components": ["php8", "php"], "sources": ["php8:sc9e417e2ad6f", "php:s3cbc65590d52"], "status": "REASONED"},
+    "memory-limit": {"text": "memory_limit defaults 128M, should generally exceed post_max_size, and -1 removes the bound.", "components": ["php8"], "sources": ["php8:sc9e417e2ad6f"], "status": "REASONED"},
+    "input-vars": {"text": "max_input_vars defaults 1000 separately for GET, POST and COOKIE; excess is warned/truncated, not a general JSON limit.", "components": ["php8"], "sources": ["php8:s5a3f7bde8338"], "status": "REASONED"},
+    "execution-time": {"text": "max_execution_time defaults 30 for web and 0 for CLI; platform/build accounting can exclude I/O, not a portable wall-clock deadline.", "components": ["php8"], "sources": ["php8:s5a3f7bde8338"], "status": "REASONED"},
+    "input-time": {"text": "max_input_time defaults -1, using max_execution_time; 0 is unlimited. Example and production template select 60 seconds.", "components": ["php8", "template84"], "sources": ["php8:s5a3f7bde8338", "template84:sd72e3d69551f"], "status": "REASONED"},
+    "upload-time": {"text": "Test slow/multiple uploads and coordinate server size/time limits. Per-request bounds do not replace capacity controls or rate limiting.", "components": ["php"], "sources": ["php:s3cbc65590d52"], "status": "REASONED"},
+    "fpm-timeout": {"text": "request_terminate_timeout defaults 0, disabled; example selects 60s as app policy and kills overlong workers.", "components": ["php8"], "sources": ["php8:s2e692b7c86a6"], "status": "REASONED"},
+    "fpm-finished": {"text": "request_terminate_timeout_track_finished defaults no; yes extends the limit past fastcgi_finish_request and into shutdown work.", "components": ["php8"], "sources": ["php8:s2e692b7c86a6"], "status": "REASONED"},
+    "session-gc": {"text": "Native gc_maxlifetime defaults 1440 seconds; probabilistic collection is not auth expiry. Use timestamp expiry/cleanup; shared paths can inherit shorter lifetimes.", "components": ["php8", "php"], "sources": ["php8:s000e155a7b25", "php:s8664dc56a028"], "status": "REASONED"},
+    "session-lifetime": {"text": "Native cookie_lifetime defaults 0, a browser-session cookie; Laravel uses config/session.php rather than native storage/lifetime directives.", "components": ["php8", "laravel"], "sources": ["php8:s000e155a7b25", "laravel:s98db3429151c"], "status": "REASONED"},
+    "session-only-cookies": {"text": "session.use_only_cookies defaults 1; retain it to exclude GET/POST IDs. Disabling it is deprecated from PHP 8.4.", "components": ["php8"], "sources": ["php8:s000e155a7b25"], "status": "REASONED"},
+    "session-storage": {"text": "Default files handler needs a private worker-writable directory outside the document root; dedicated-account mode 0700, default file mode 0600, separate untrusted-app identities.", "components": ["php8"], "sources": ["php8:s000e155a7b25"], "status": "REASONED"},
+    "session-sid-length": {"text": "PHP 8.x session.sid_length defaults 32; changes are deprecated from 8.4. PHP 8.3 production template sets 26.", "components": ["php8", "template83"], "sources": ["php8:s000e155a7b25", "template83:sea3d3a4ea486"], "status": "REASONED"},
+    "session-sid-bits": {"text": "PHP 8.x session.sid_bits_per_character defaults 4; changes are deprecated from 8.4. PHP 8.3 production template sets 5.", "components": ["php8", "template83"], "sources": ["php8:s000e155a7b25", "template83:sea3d3a4ea486"], "status": "REASONED"},
+    "verify-listener": {"text": "Inventory all FPM listeners: Unix socket or loopback TCP 9000 only.", "components": ["php8"], "sources": ["php8:s2e692b7c86a6"], "status": "REASONED", "verify": [1]},
+    "verify-tls": {"text": "HTTPS should succeed without -k; linked fronting-server guides supply TLS configuration.", "components": ["php", "laravel"], "sources": ["php:s09fdbeba0867", "laravel:s6510c1aa8d96"], "status": "REASONED", "verify": [1]},
+    "verify-cookies": {"text": "Inspect login Set-Cookie for Secure, HttpOnly and SameSite=Lax.", "components": ["php8", "laravel"], "sources": ["php8:s000e155a7b25", "laravel:s98db3429151c"], "status": "REASONED", "verify": [1]},
+    "verify-auth": {"text": "Anonymous protected routes must deny or redirect to login without protected content; require authorized success and isolated auth-removal control. Unrelated redirects/errors and anonymous Set-Cookie do not establish authentication.", "components": ["laravel"], "sources": ["laravel:sc58ba221e3cd"], "status": "REASONED", "verify": [2]},
+    "verify-config": {"text": "Inspect CLI ini/settings against installed E_ALL; CLI does not establish web SAPI/FPM settings. Do not publish phpinfo.", "components": ["php", "php8"], "sources": ["php:s5840a5a0a848", "php8:s89c799077b82", "php8:s2e692b7c86a6"], "status": "REASONED", "verify": [3]},
+    "verify-banner": {"text": "Fixture should give HTTP 200; expose_php On should show PHP header unless stripped, Off must hide it. Proxy stripping in both states needs SAPI inspection.", "components": ["php"], "sources": ["php:s7b2c2c19835d", "php:s2f1c806d037c"], "status": "REASONED", "verify": [4]},
+    "verify-error": {"text": "Native warning fixture must disclose canary with display_errors On, then return reached marker without diagnostics and log the warning after hardening. Errors/missing logs/blank bodies are inconclusive; startup/parse errors untested.", "components": ["php8", "php"], "sources": ["php8:s89c799077b82", "php:s2f1c806d037c"], "status": "REASONED", "verify": [5]},
+    "verify-laravel-error": {"text": "Repeat body probe with controlled Laravel exception, rebuild config cache after APP_DEBUG changes, and require generic response plus protected log; native fixture does not test framework errors.", "components": ["laravel"], "sources": ["laravel:s4e846bd588a8", "laravel:s6510c1aa8d96"], "status": "REASONED", "verify": [5]},
+    "verify-curl-version": {"text": "Write-out fields require curl 7.75.0 or later; Sources cite PHP cURL constants, not the curl CLI minimum.", "components": ["php"], "sources": ["php:s09fdbeba0867"], "status": "REASONED", "verify": [2, 4, 5]}
+  }
+}
+---
 # PHP and Laravel: TLS and authentication
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| fpm-private: FPM requires listen per pool; exposed FastCGI permits code execution. Use a Unix socket or loopback TCP 9000; never publish container FPM. | PHP native configuration 8.x | REASONED |
+| fpm-clients: listen.allowed_clients defaults unset, accepting any address; explicitly allow loopback for TCP. | PHP native configuration 8.x | REASONED |
+| fpm-socket: Unix socket access uses listen.owner, listen.group and listen.mode, default 0660. | PHP native configuration 8.x | REASONED |
+| cookie-secure: Native session.cookie_secure defaults 0; enable it. | PHP native configuration 8.x | REASONED |
+| cookie-httponly: Native session.cookie_httponly defaults 0; enable it. | PHP native configuration 8.x | REASONED |
+| cookie-samesite: Native session.cookie_samesite defaults empty; choose Lax or Strict. | PHP native configuration 8.x | REASONED |
+| session-strict: session.use_strict_mode defaults 0; enable it. | PHP native configuration 8.x | REASONED |
+| session-regenerate: Regenerate IDs after login/privilege changes; delete_old_session defaults false. Timestamp expiry avoids immediate deletion. | PHP documentation unknown | REASONED |
+| passwords: PASSWORD_DEFAULT currently uses bcrypt; Argon2id needs an Argon2 build. Verify/rehash passwords and allow growing hashes, suggested 255 bytes. | PHP documentation unknown | REASONED |
+| plain-auth: Plain PHP rate limiting and MFA need application/proxy/identity controls; direct references are the linked guides, not PHP Sources. | PHP documentation unknown | REASONED |
+| laravel-debug: Set APP_ENV=production, APP_DEBUG=false and HTTPS APP_URL; debug mode exposes configuration values. | Laravel 12.x | REASONED |
+| laravel-key: Generate APP_KEY with artisan key:generate; list old keys in APP_PREVIOUS_KEYS during rotation. | Laravel 12.x | REASONED |
+| laravel-secure: Set SESSION_SECURE_COOKIE=true; the session secure configuration has no default. | Laravel 12.x | REASONED |
+| laravel-httponly: SESSION_HTTP_ONLY defaults true; retain it. | Laravel 12.x | REASONED |
+| laravel-samesite: SESSION_SAME_SITE defaults lax; strict suits admin-only apps. | Laravel 12.x | REASONED |
+| laravel-proxy: Laravel 12.x trustProxies names proxies in bootstrap/app.php; wildcard trust requires exclusive proxy reachability. | Laravel 12.x | REASONED |
+| laravel-urls: URL::forceHttps() or forceScheme(https) in a provider boot method forces generated HTTPS URLs. | Laravel 12.x | REASONED |
+| laravel-hashes: Hash::make/check default to bcrypt; HASH_DRIVER=argon2id switches it and needsRehash detects upgrades. HASH_VERIFY=false disables rejection of other algorithms. | Laravel 12.x | REASONED |
+| laravel-limiter: Define a five-per-minute login limiter keyed by email plus IP; attach throttle:login to the real route. | Laravel 12.x | REASONED |
+| fortify-login: 12.x starter kits use Fortify, which throttles username plus IP and regenerates session IDs on login; standalone Fortify omits views. | Laravel 12.x | REASONED |
+| fortify-mfa: Fortify twoFactorAuthentication with confirm and confirmPassword supplies TOTP and recovery codes. | Laravel 12.x | REASONED |
+| socialite: Socialite supplies OAuth providers; community packages supply OIDC. Use HTTPS callbacks and linked allowlist/token checks. | Laravel 12.x | REASONED |
+| laravel-cache: Keep plaintext .env untracked; build config/route caches after production inputs and rebuild on changes. Cached config does not load .env; use env only in config files. | Laravel 12.x | REASONED |
+| laravel-hosts: Laravel accepts arbitrary Host headers by default; restrict hosts at the server and add anchored TrustHosts with subdomains:false. | Laravel 12.x | REASONED |
+| debug-tools: Omit Telescope and Debugbar from production; Telescope local-only installation includes conditional provider registration. | Laravel 12.x; Laravel Debugbar unknown | REASONED |
+| curl-peer: CURLOPT_SSL_VERIFYPEER defaults true; retain certificate verification. | PHP documentation unknown | REASONED |
+| curl-host: CURLOPT_SSL_VERIFYHOST defaults 2; retain hostname checks and use CURLOPT_CAINFO for an internal CA. | PHP documentation unknown | REASONED |
+| display-errors: PHP 8.x display_errors defaults On; set Off before execution. ini_set cannot hide a fatal error preventing it from running. | PHP native configuration 8.x | REASONED |
+| startup-errors: display_startup_errors defaults On since PHP 8.0.0, previously Off; set Off. | PHP native configuration 8.x | REASONED |
+| log-errors: log_errors defaults Off; enable it with a protected, pre-created, worker-writable log outside the document root and rotation. Unset error_log uses the SAPI logger. | PHP native configuration 8.x | REASONED |
+| error-reporting: error_reporting defaults E_ALL since PHP 8.0.0; retain reporting into logs. Package/template/deployment overrides can differ. | PHP native configuration 8.x | REASONED |
+| php-banner: expose_php defaults On; Off suppresses PHP own X-Powered-By header, not other layers or all application identification. | PHP native configuration 8.x; PHP documentation unknown | REASONED |
+| production-template: PHP 8.4 production template disables display and enables logging, but uses E_ALL &amp; ~E_DEPRECATED and leaves expose_php enabled. | PHP production template 8.4 | REASONED |
+| disable-functions: disable_functions defaults empty; test the listed process-function restrictions. Since PHP 8.0 definitions disappear and userland can redefine them; internal functions only, not a security boundary. | PHP native configuration 8.x | REASONED |
+| url-fopen: allow_url_fopen defaults On; disable unnecessary URL wrappers after compatibility tests, not as a general egress policy. | PHP documentation unknown | REASONED |
+| url-include: allow_url_include defaults Off, deprecated since PHP 7.4; retain Off. URL includes also require allow_url_fopen. | PHP documentation unknown | REASONED |
+| basedir: open_basedir defaults NULL; allow required paths, retain OS isolation and account for disabled realpath caching. PHP 8.3 rejects runtime .. components. | PHP native configuration 8.x | REASONED |
+| fpm-extensions: PHP 8.x FPM security.limit_extensions defaults .php .phar; restrict to .php, which still permits uploaded PHP dispatched by the server. | PHP native configuration 8.x | REASONED |
+| upload-execution: Separate writable uploads from code, preferably outside the document root; server mappings must forbid PHP execution, including aliases/symlinks. | PHP native configuration 8.x; Laravel 12.x | REASONED |
+| laravel-storage: Laravel 12.x local disk defaults storage/app/private; public disk uses storage/app/public via public/storage, which does not itself prevent PHP execution. | Laravel 12.x | REASONED |
+| upload-size: upload_max_filesize defaults 2M per file; post_max_size must allow multipart overhead. | PHP native configuration 8.x | REASONED |
+| post-size: post_max_size defaults 8M; excess leaves POST and FILES empty and must be rejected by the app. | PHP native configuration 8.x | REASONED |
+| upload-count: max_file_uploads defaults 20; twenty maximum-sized files need not fit the POST limit. | PHP native configuration 8.x; PHP documentation unknown | REASONED |
+| memory-limit: memory_limit defaults 128M, should generally exceed post_max_size, and -1 removes the bound. | PHP native configuration 8.x | REASONED |
+| input-vars: max_input_vars defaults 1000 separately for GET, POST and COOKIE; excess is warned/truncated, not a general JSON limit. | PHP native configuration 8.x | REASONED |
+| execution-time: max_execution_time defaults 30 for web and 0 for CLI; platform/build accounting can exclude I/O, not a portable wall-clock deadline. | PHP native configuration 8.x | REASONED |
+| input-time: max_input_time defaults -1, using max_execution_time; 0 is unlimited. Example and production template select 60 seconds. | PHP native configuration 8.x; PHP production template 8.4 | REASONED |
+| upload-time: Test slow/multiple uploads and coordinate server size/time limits. Per-request bounds do not replace capacity controls or rate limiting. | PHP documentation unknown | REASONED |
+| fpm-timeout: request_terminate_timeout defaults 0, disabled; example selects 60s as app policy and kills overlong workers. | PHP native configuration 8.x | REASONED |
+| fpm-finished: request_terminate_timeout_track_finished defaults no; yes extends the limit past fastcgi_finish_request and into shutdown work. | PHP native configuration 8.x | REASONED |
+| session-gc: Native gc_maxlifetime defaults 1440 seconds; probabilistic collection is not auth expiry. Use timestamp expiry/cleanup; shared paths can inherit shorter lifetimes. | PHP native configuration 8.x; PHP documentation unknown | REASONED |
+| session-lifetime: Native cookie_lifetime defaults 0, a browser-session cookie; Laravel uses config/session.php rather than native storage/lifetime directives. | PHP native configuration 8.x; Laravel 12.x | REASONED |
+| session-only-cookies: session.use_only_cookies defaults 1; retain it to exclude GET/POST IDs. Disabling it is deprecated from PHP 8.4. | PHP native configuration 8.x | REASONED |
+| session-storage: Default files handler needs a private worker-writable directory outside the document root; dedicated-account mode 0700, default file mode 0600, separate untrusted-app identities. | PHP native configuration 8.x | REASONED |
+| session-sid-length: PHP 8.x session.sid_length defaults 32; changes are deprecated from 8.4. PHP 8.3 production template sets 26. | PHP native configuration 8.x; PHP production template 8.3 | REASONED |
+| session-sid-bits: PHP 8.x session.sid_bits_per_character defaults 4; changes are deprecated from 8.4. PHP 8.3 production template sets 5. | PHP native configuration 8.x; PHP production template 8.3 | REASONED |
+| verify-listener: Inventory all FPM listeners: Unix socket or loopback TCP 9000 only. | PHP native configuration 8.x | REASONED |
+| verify-tls: HTTPS should succeed without -k; linked fronting-server guides supply TLS configuration. | PHP documentation unknown; Laravel 12.x | REASONED |
+| verify-cookies: Inspect login Set-Cookie for Secure, HttpOnly and SameSite=Lax. | PHP native configuration 8.x; Laravel 12.x | REASONED |
+| verify-auth: Anonymous protected routes must deny or redirect to login without protected content; require authorized success and isolated auth-removal control. Unrelated redirects/errors and anonymous Set-Cookie do not establish authentication. | Laravel 12.x | REASONED |
+| verify-config: Inspect CLI ini/settings against installed E_ALL; CLI does not establish web SAPI/FPM settings. Do not publish phpinfo. | PHP documentation unknown; PHP native configuration 8.x | REASONED |
+| verify-banner: Fixture should give HTTP 200; expose_php On should show PHP header unless stripped, Off must hide it. Proxy stripping in both states needs SAPI inspection. | PHP documentation unknown | REASONED |
+| verify-error: Native warning fixture must disclose canary with display_errors On, then return reached marker without diagnostics and log the warning after hardening. Errors/missing logs/blank bodies are inconclusive; startup/parse errors untested. | PHP native configuration 8.x; PHP documentation unknown | REASONED |
+| verify-laravel-error: Repeat body probe with controlled Laravel exception, rebuild config cache after APP_DEBUG changes, and require generic response plus protected log; native fixture does not test framework errors. | Laravel 12.x | REASONED |
+| verify-curl-version: Write-out fields require curl 7.75.0 or later; Sources cite PHP cURL constants, not the curl CLI minimum. | PHP documentation unknown | REASONED |
+<!-- version-basis:end -->
 
 PHP normally runs behind a web server (Apache with php-fpm or mod_php, nginx or Caddy with php-fpm), so TLS terminates there: follow [apache.md](apache.md), [nginx.md](nginx.md), or [caddy.md](caddy.md) with a certificate from [free-certificates.md](free-certificates.md). The PHP-specific exposures are the php-fpm FastCGI socket (the PHP manual: "An exposed FastCGI endpoint allows arbitrary code execution"), session cookies that PHP ships without `Secure`, `HttpOnly`, or `SameSite` (all three default off), `APP_DEBUG=true` left on in production, and cURL calls with certificate checks turned off.
 
@@ -181,11 +400,15 @@ Paste each guarded block whole. Substitute a full HTTPS URL inside the single qu
 
 For the protected-route check, confirm the same route returns the expected protected content to an authorized session. In an isolated exposed-state test, removing the authentication requirement must make that content accessible anonymously; restoring it must produce the documented denial or login redirect. A missing route or an unrelated error is not evidence of authentication.
 
+REASONED: following block; FPM listener, HTTPS and cookie inspection. The guide records no PHP/PHP-FPM runtime, container runtime or supplied deployment; expectations follow its cited PHP and Laravel documentation, not a recorded run.
+
 ```bash
 ss -xlnp   # read every listener; php-fpm: Unix socket; with TCP, ss -tlnp shows 127.0.0.1:9000 only
 curl -q -g --noproxy '*' -sI https://app.example.com/                             # succeeds without -k
 curl -q -g --noproxy '*' -sI https://app.example.com/login | grep -i set-cookie   # secure; httponly; samesite=lax
 ```
+
+REASONED: following block; anonymous protected-route discrimination. The guide records no PHP/PHP-FPM runtime, container runtime or supplied deployment; expectations follow its cited PHP and Laravel documentation, not a recorded run.
 
 ```bash
 (
@@ -211,6 +434,8 @@ curl -q -g --noproxy '*' -sI https://app.example.com/login | grep -i set-cookie 
 
 **REASONED: inspect the loaded configuration locally.** No PHP executable was available in the authoring environment. On the deployment host, these commands identify CLI configuration and show the production error settings. [PHP command-line options](https://www.php.net/manual/en/features.commandline.options.php).
 
+REASONED: following block; loaded CLI configuration inspection. The guide records no PHP/PHP-FPM runtime, container runtime or supplied deployment; expectations follow its cited PHP and Laravel documentation, not a recorded run.
+
 ```bash
 php --ini
 php -i | grep -E '^(display_errors|display_startup_errors|log_errors|error_log|error_reporting|expose_php) =>'
@@ -221,6 +446,8 @@ Expect `display_errors=Off`, `display_startup_errors=Off`, `log_errors=On`, the 
 
 **REASONED: banner and native PHP error disclosure.** No web SAPI or deployment was available. In an isolated deployment matching production, temporarily serve this controlled fixture through the intended PHP handler and proxy. Use PHP's built-in error handler, without framework bootstrapping or application error-handler overrides. Restrict access to the test operator and remove the fixture afterwards. The fixed warning text contains no secret. [PHP `trigger_error()`](https://www.php.net/manual/en/function.trigger-error.php).
 
+REASONED: following block; controlled native PHP warning fixture. The guide records no PHP/PHP-FPM runtime, container runtime or supplied deployment; expectations follow its cited PHP and Laravel documentation, not a recorded run.
+
 ```php
 <?php
 trigger_error('SECURECONFIG_PHP_ERROR_CANARY', E_USER_WARNING);
@@ -228,6 +455,8 @@ echo "SECURECONFIG_PHP_REACHED\n";
 ```
 
 First inspect the fixture's response headers:
+
+REASONED: following block; PHP response-banner discrimination. The guide records no PHP/PHP-FPM runtime, container runtime or supplied deployment; expectations follow its cited PHP and Laravel documentation, not a recorded run.
 
 ```bash
 (
@@ -249,6 +478,8 @@ First inspect the fixture's response headers:
 With `expose_php=On`, the exposed-state response is expected to contain `X-Powered-By: PHP/...` unless another layer strips it. With `expose_php=Off`, it must be absent. Require a successful transfer and the fixture's expected HTTP 200 response. If the proxy strips the header in both states, this checks the externally visible response only; attribute the PHP setting through the active SAPI configuration. [PHP banner behavior](https://www.php.net/manual/en/security.hiding.php).
 
 Then inspect the body from the same fixture URL:
+
+REASONED: following block; native PHP and Laravel error-disclosure discrimination. The guide records no PHP/PHP-FPM runtime, container runtime or supplied deployment; expectations follow its cited PHP and Laravel documentation, not a recorded run.
 
 ```bash
 (
@@ -273,8 +504,8 @@ For Laravel 12.x, repeat the body probe against a controlled route that raises a
 
 ## Sources (checked September 2026)
 
-- PHP FPM configuration (`listen`, `listen.allowed_clients`, `listen.owner`): https://www.php.net/manual/en/install.fpm.configuration.php
-- PHP session runtime configuration: https://www.php.net/manual/en/session.configuration.php
+- PHP FPM configuration (`listen`, `listen.allowed_clients`, `listen.owner`) (PHP 8.x): https://www.php.net/manual/en/install.fpm.configuration.php
+- PHP session runtime configuration (PHP 8.x): https://www.php.net/manual/en/session.configuration.php
 - PHP `session_regenerate_id()`: https://www.php.net/manual/en/function.session-regenerate-id.php
 - PHP `password_hash()`: https://www.php.net/manual/en/function.password-hash.php
 - PHP cURL constants (`CURLOPT_SSL_VERIFYPEER`, `CURLOPT_SSL_VERIFYHOST`, `CURLOPT_CAINFO`): https://www.php.net/manual/en/curl.constants.php
@@ -289,12 +520,12 @@ For Laravel 12.x, repeat the body probe against a controlled route that raises a
 - Laravel 12.x Socialite: https://laravel.com/framework/docs/12.x/socialite
 - Laravel 12.x deployment (nginx example, `APP_DEBUG`): https://laravel.com/framework/docs/12.x/deployment
 - PHP 8.x error configuration (`display_errors`, `display_startup_errors`, `log_errors`, `error_log`, `error_reporting`): https://www.php.net/manual/en/errorfunc.configuration.php
-- PHP core directives (`disable_functions`, `open_basedir`, memory and upload limits): https://www.php.net/manual/en/ini.core.php
+- PHP core directives (`disable_functions`, `open_basedir`, memory and upload limits) (PHP 8.x): https://www.php.net/manual/en/ini.core.php
 - PHP hiding and `expose_php`: https://www.php.net/manual/en/security.hiding.php
 - PHP 8.4 bundled production template: https://raw.githubusercontent.com/php/php-src/d313ad6098430f4e61f0121a9e7ab392d195e4e4/php.ini-production
 - PHP 8.3 bundled production template (older session ID overrides): https://raw.githubusercontent.com/php/php-src/b94f9f68a610e0fca5f2fea5bfa7c7d6d3d5a847/php.ini-production
 - PHP filesystem and streams configuration (`allow_url_fopen`, `allow_url_include`): https://www.php.net/manual/en/filesystem.configuration.php
-- PHP execution and input limits (`max_execution_time`, `max_input_time`, `max_input_vars`): https://www.php.net/manual/en/info.configuration.php
+- PHP execution and input limits (`max_execution_time`, `max_input_time`, `max_input_vars`) (PHP 8.x): https://www.php.net/manual/en/info.configuration.php
 - PHP upload-limit interactions and pitfalls: https://www.php.net/manual/en/features.file-upload.common-pitfalls.php
 - PHP session security and lifetime management: https://www.php.net/manual/en/session.security.ini.php
 - PHP command-line inspection (`--ini`, `-i`, `-r`): https://www.php.net/manual/en/features.commandline.options.php

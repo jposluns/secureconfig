@@ -76,3 +76,17 @@ machine-auth.md
 connection-poolers.md
 neo4j.md
 surrealdb.md
+nodejs.md
+go.md
+java.md
+dotnet.md
+php.md
+ruby.md
+nextjs.md
+frontend-frameworks.md
+web-exposure.md
+admin-uis.md
+bi-dashboards.md
+devops-uis.md
+server-admin-panels.md
+low-code-builders.md

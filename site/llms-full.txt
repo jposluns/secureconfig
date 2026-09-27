@@ -5133,6 +5133,39 @@ With the authentication from section 3 in place, this unauthenticated probe retu
 
 # Node.js and Express: TLS and authentication
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| tls: Direct HTTPS uses a certificate plus chain and private key on all-interface 443. | Node.js documentation unknown | REASONED |
+| redirect: All-interface 80 redirects with 301 to required PUBLIC_HOST; only origin-form request paths are appended. | Node.js documentation unknown | REASONED |
+| bind: Same-host proxy uses 127.0.0.1; managed ingress uses platform-required addresses and ports with edge TLS and application auth. Platform mappings are cross-guide guidance, not covered by listed Sources. | Node.js documentation unknown; Express proxy documentation unknown | REASONED |
+| privilege: Ports below 1024 require root or CAP_NET_BIND_SERVICE as stated; listed Sources do not establish this operating-system qualification. | Node.js documentation unknown | REASONED |
+| proxy: Trust loopback or an exact remote proxy address/subnet; true and variable-length hop paths permit forged client IP, host and scheme unless headers are overwritten. | Express proxy documentation unknown | REASONED |
+| headers: Install helmet() for security headers including HSTS. | Helmet documentation unknown | REASONED |
+| password: Prefer argon2id for new apps; existing bcrypt systems use hash cost 12 and compare. Password-library APIs are not covered by listed Sources. | express-session documentation unknown | REASONED |
+| session-secret: Load a long random SESSION_SECRET from the environment. | express-session documentation unknown | REASONED |
+| session-save: Set resave=false and saveUninitialized=false. | express-session documentation unknown | REASONED |
+| cookies: Set Secure, HttpOnly, SameSite=lax and an eight-hour cookie maxAge in milliseconds. | express-session documentation unknown | REASONED |
+| store: Default MemoryStore is development-only, leaks memory and cannot scale past one process; supply a production store. | express-session documentation unknown | REASONED |
+| expiry: No cookie maximum age is set by default; set cookie.maxAge. | express-session documentation unknown | REASONED |
+| login-limit: Use a 20-request, 15-minute login limit; v8 or newer defaults to IPv6 /56 grouping, closing the v7 rotation bypass; pair IP limits with account controls. | express-rate-limit minimum v8 | REASONED |
+| tokens: Load API tokens from process.env and compare with crypto.timingSafeEqual; these APIs are not covered by listed Sources. | Node.js documentation unknown | REASONED |
+| mfa: Use otplib plus qrcode for TOTP enrolment or a fronting identity layer; these cross-references are not covered by listed Sources. | express-session documentation unknown | REASONED |
+| tls-validation: Never disable validation with NODE_TLS_REJECT_UNAUTHORIZED=0 process-wide or rejectUnauthorized=false per connection/shared agent; the environment-variable rule lacks a listed source. | Node.js documentation unknown | REASONED |
+| client-ca: Use NODE_EXTRA_CA_CERTS for an internal CA; this variable is not covered by listed Sources. | Node.js documentation unknown | REASONED |
+| verify-redirect: HTTP should return 301 with an HTTPS Location. | Node.js documentation unknown | REASONED |
+| verify-tls: HTTPS must succeed without -k and show Helmet headers. | Node.js documentation unknown; Helmet documentation unknown | REASONED |
+| verify-auth: A real protected route denies anonymous requests with 401/403 and accepts a valid session with 200; either app or fronting auth may enforce the denial. | express-session documentation unknown | REASONED |
+| verify-bind: Inspect every listener for loopback behind a same-host proxy or the managed platform address and port. | Node.js documentation unknown; Express proxy documentation unknown | REASONED |
+| verify-proxy: Temporary /whoami must not echo forged X-Forwarded-For; this checks req.ip only and an overwriting proxy can mask excessive trust. | Express proxy documentation unknown | REASONED |
+<!-- version-basis:end -->
+
 Preferred production layout: bind the Node app to `127.0.0.1` and terminate TLS in a reverse proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)) or behind [cloudflare.md](cloudflare.md). On a managed platform the platform terminates TLS at its edge and you bind the address it requires, not `127.0.0.1` ([paas.md](paas.md)). Node can also terminate TLS itself, shown below. Get a certificate per [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).
 
 ## 1. HTTPS directly in Node
@@ -5232,7 +5265,7 @@ MFA: add TOTP with [otplib](https://github.com/yeojz/otplib) plus the [qrcode](h
 - Never set `NODE_TLS_REJECT_UNAUTHORIZED=0`, which disables certificate validation process-wide, and never pass `rejectUnauthorized: false`, which disables it for that connection and any connection sharing an agent configured with it.
 - For an internal CA or self-signed server, point Node at the CA instead: `NODE_EXTRA_CA_CERTS=/path/ca.crt` (see [self-signed.md](self-signed.md)).
 
-## 5. Verify
+## 5. Verify (REASONED: TLS, headers, authentication, listener and proxy-header expectations follow the Sources below and linked deployment guidance; no deployment run or outcome is recorded in this guide. This metadata-only review has no deployed Node application, proxy or managed ingress to test.)
 
 ```bash
 curl -q -g -sI --noproxy '*' http://example.com/    # expect 301 with an https:// Location
@@ -6765,6 +6798,37 @@ Version boundary: GitHub.com documentation checked 18 September 2026, with REST 
 
 # Full-stack JS frameworks: SvelteKit, Nuxt, Vite
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| adapter-bind: adapter-node defaults 0.0.0.0:3000 only with SOCKET_PATH unset/empty and no systemd socket; set HOST=127.0.0.1 PORT=3000. | SvelteKit adapter-node @sveltejs/adapter-node@5.5.7; SvelteKit documentation unknown | REASONED |
+| adapter-origin: Set ORIGIN to external HTTPS origin; trust PROTOCOL_HEADER/HOST_HEADER only behind a trusted proxy. | SvelteKit documentation unknown | REASONED |
+| adapter-ip: ADDRESS_HEADER and XFF_DEPTH configure proxy-derived client IP and require trusted proxy handling. | SvelteKit documentation unknown | REASONED |
+| csrf-check: csrf.checkOrigin defaults true, deprecated; checks cross-origin POST/PUT/PATCH/DELETE form content types, not JSON/arbitrary content needing origin/session checks. | SvelteKit documentation unknown | REASONED |
+| csrf-trust: csrf.trustedOrigins defaults empty; list specific form origins, with wildcard trust discouraged. | SvelteKit documentation unknown | REASONED |
+| svelte-public: PUBLIC_ via env.publicPrefix exposes static public env values at build; keep secrets out. | SvelteKit documentation unknown | REASONED |
+| svelte-private: Private env modules, .server.js and lib/server are server-only; client import chains, including dynamic imports, fail builds. | SvelteKit documentation unknown | REASONED |
+| svelte-routes: Guide requires checks in page loads, form actions and endpoints rather than a layout; Sources omit a direct routing/auth citation. | SvelteKit documentation unknown | REASONED |
+| svelte-handle: Guide requires handle to block, not merely attach locals or redirect page navigation, and resource checks near data; Sources omit hook semantics/calling-page qualification. | SvelteKit documentation unknown | REASONED |
+| nuxt-handlers: Nuxt auto-registers server/api, server/routes and middleware; middleware runs first, but context.auth alone enforces nothing. Throw/end requests or check each handler. | Nuxt documentation 4.x | REASONED |
+| nuxt-auth: Nuxt ships no built-in authentication; enforce access server-side, not with client redirects. | Nuxt documentation 4.x | REASONED |
+| nuxt-private: Direct runtimeConfig keys are server-only with NUXT_ overrides; rendering or passing to useState can disclose them. | Nuxt documentation 4.x | REASONED |
+| nuxt-public: runtimeConfig.public is client-exposed with NUXT_PUBLIC_ overrides, not proxy/cookie configuration. | Nuxt documentation 4.x | REASONED |
+| vite-production: Vite dev/preview is development tooling; deploy dist through a production server, CDN or platform. | Vite documentation unknown | REASONED |
+| vite-bind: Vite 8.3.1 server.host defaults localhost; true/0.0.0.0 exposes all addresses and should not remain beyond trusted-network tests. | Vite bind source v8.3.1; Vite documentation unknown | REASONED |
+| vite-hosts: server.allowedHosts defaults empty with localhost, .localhost and IPs allowed; true disables protection and permits DNS rebinding. Prefer explicit names. | Vite documentation unknown | REASONED |
+| verify-private: Guide expects anonymous /api/private 401; enforcement needs app/server handlers, not client redirects. | Nuxt documentation 4.x; SvelteKit documentation unknown | REASONED |
+| verify-secret: Identify actual build/dist/.output, reject absence, prompt full literal secret and use grep stdin: 0 finding, 1 no match, others errors. Clean does not rule out transformed secrets; input protects argv only. | GNU grep unknown | REASONED |
+| verify-host: Spoofed Host must not be trusted; supplied allowlist reference is Vite-specific. | Vite documentation unknown | REASONED |
+| verify-proxy: Check Secure cookies and HTTPS redirects with SvelteKit ORIGIN; verify Nuxt for its preset/platform, not NUXT_PUBLIC_. | SvelteKit documentation unknown; Nuxt documentation 4.x | REASONED |
+<!-- version-basis:end -->
+
 SvelteKit, Nuxt, and Vite-based apps built by AI assistants inherit the same traps as [nextjs.md](nextjs.md): a server bind that can default wide open (SvelteKit's Node adapter binds `0.0.0.0` as of adapter-node 5.5.7, though Vite's dev server defaults to `localhost` as of Vite 8.3.1), a proxy that has to be explicitly trusted before secure cookies and correct origins work, and a public-env prefix that ships anything given it straight to the browser. Each framework also has more than one server entry point (endpoints, server routes, load functions), and a check placed in only one of them leaves the others open, exactly as with Next.js layouts versus Server Actions.
 
 ## SvelteKit (`adapter-node`)
@@ -6806,6 +6870,8 @@ Both are development tooling, not a production server: the `vite preview` docs s
 `server.host` defaults to `'localhost'` (as of Vite 8.3.1); setting it to `true` or `0.0.0.0` makes the dev server listen on all addresses, including the LAN, which is fine for testing from a phone on a trusted network but should not be left on elsewhere. `server.allowedHosts` defaults to `[]`, which still auto-permits localhost, `.localhost`, and IP addresses; setting it to `true` disables the check entirely, and the docs warn this "allows any website to send requests to your dev server and download your source code and content" (DNS rebinding). Prefer an explicit hostname allowlist over `true`.
 
 ## Verify
+
+REASONED: following block; private-route denial, client-secret scanning, Host handling and proxy cookies/redirects. No deployed framework application or run outcome is recorded here; expectations are reasoned from the guide and its cited framework and grep documentation.
 
 ```bash
 curl -q -si https://app.example.com/api/private | head -1   # 401 with no session cookie, on all three frameworks
@@ -7071,6 +7137,49 @@ kubectl run probe-forbidden --rm -it --restart=Never --image=busybox:1.36 --labe
 
 # Next.js: authentication that actually gates Route Handlers, Server Actions, and data
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| entrypoints: Pages, layouts, handlers and exported Actions are distinct entry points; Actions accept direct POST. Next.js 16 renamed middleware.ts to proxy.ts; session primitives are not login. | Next.js documentation unknown | REASONED |
+| start-default: v16.3.6 next start defaults 3000 and no hostname: Node binds :: when available, else 0.0.0.0 despite -H help. Pinned Commander leaves unspecified value options undefined. | Next.js listener source v16.3.6; Node.js listener source v22.22.1; Commander 12.1.0 | REASONED |
+| private-tls: Build then next start -H 127.0.0.1 -p 3000 with TLS proxy; PORT cannot be set in .env. Hosted TLS comes from the platform. | Next.js documentation unknown | REASONED |
+| dal: Call DAL verifySession for every data request, handler and Action; authorize resource ownership and return only needed fields. | Next.js documentation unknown | REASONED |
+| layouts: Layouts do not rerender on every navigation; returning null does not stop nested segments or Actions. | Next.js documentation unknown | REASONED |
+| proxy: Proxy is an optimistic cookie-only redirect layer, not sole authorization; avoid database lookups and account for matcher changes. | Next.js documentation unknown | REASONED |
+| role: Handler/action examples independently require admin; sensitive roles come from trusted user storage. Fragments need imports, data calls and real success responses. | Next.js documentation unknown | REASONED |
+| session-secret: Generate a 32-byte random SESSION_SECRET in server environment, never NEXT_PUBLIC_. | Next.js documentation unknown | REASONED |
+| session-jwt: jose session signs HS256 with seven-day expiry; decrypt verifies only HS256 and returns payload/undefined. User ID/role only, no PII; sensitive work uses database-verified sessions. | Next.js documentation unknown | REASONED |
+| session-cookie: Set HttpOnly, Secure, SameSite=Lax, path / and seven-day expiry; only Server Functions/handlers set/delete cookies, with logout deleting session. | Next.js documentation unknown | REASONED |
+| public-env: NEXT_PUBLIC_ is inlined at build; next.config.js env is client-inlined regardless of prefix. Read secrets only in DAL and ignore .env files. | Next.js documentation unknown | REASONED |
+| action-key: Self-hosted instances share NEXT_SERVER_ACTIONS_ENCRYPTION_KEY at build, base64 decoding to 16/24/32 bytes; closure encryption is not secret protection. | Next.js documentation unknown | REASONED |
+| action-origin: Actions abort when Origin mismatches Host/X-Forwarded-Host; proxies can configure experimental.serverActions.allowedOrigins. | Next.js documentation unknown | REASONED |
+| authjs-secret: AUTH_SECRET is mandatory; npx auth secret writes .env.local. | Auth.js unknown | REASONED |
+| authjs-providers: Configure provider ID/SECRET and OIDC ISSUER variables, real providers and linked allowlist checks. | Auth.js unknown | REASONED |
+| authjs-trust: Set AUTH_TRUST_HOST=true behind a reverse proxy; Vercel sets trust automatically. | Auth.js unknown | REASONED |
+| authjs-route: auth() reads sessions; wrapped handlers only populate req.auth and must deny missing sessions and failed authorization before data. | Auth.js unknown | REASONED |
+| authjs-proxy: auth as proxy with empty providers and no authorized callback permits all requests; add callback/wrapper and resource checks. Enforce MFA at the identity provider. | Auth.js unknown | REASONED |
+| better-secret: BETTER_AUTH_SECRET needs 32+ characters; production rejects the placeholder default. Set BETTER_AUTH_URL/baseURL explicitly, not request inference. | Better Auth unknown | REASONED |
+| better-origins: trustedOrigins scopes origin/CSRF and callbackURL checks, not app-route access; general checks skip GET/HEAD/OPTIONS with endpoint-specific GET callback checks. | Better Auth unknown | REASONED |
+| better-password: Better Auth emailAndPassword defaults disabled; enable explicitly when used. | Better Auth unknown | REASONED |
+| better-next: nextCookies enables Action session-cookie writes; toNextJsHandler exports auth GET/POST routes. | Better Auth unknown | REASONED |
+| better-session: Reject missing getSession before authorization: handler 401, component redirect/throw, action redirect/throw/serializable error. Discarding results or checking cookie existence gates nothing. | Better Auth unknown | REASONED |
+| better-mfa: twoFactor makes TOTP, emailed/SMS OTP and backups available, not enrolled/enforced; OTP needs sendOTP, client needs twoFactorClient and migration, operations need separate 2FA checks. | Better Auth unknown | REASONED |
+| vercel-methods: Deployment Protection admits project-authorized Vercel users; Passport, Password Protection and Trusted IPs need Enterprise/paid add-ons, not app-user authentication. | Vercel documentation unknown | REASONED |
+| vercel-scope: Standard Protection excludes production domains; enable All Deployments. Cited 9 September 2026 announcement makes Vercel Authentication production scope free on all plans including Hobby. | Vercel documentation unknown | REASONED |
+| verify-bind: ss inventories loopback 3000; it does not prove firewall/platform ingress isolation. | Next.js documentation unknown | REASONED |
+| verify-anonymous: Anonymous admin/dashboard must contain no protected data: login 3xx, chosen 401/403, or streamed 200 redirect shell require reading saved bodies. | Next.js documentation unknown | REASONED |
+| verify-authorized: Authorized dashboard/admin controls must return real content; non-admin must deny admin data, meaningful only after admin success. | Next.js documentation unknown | REASONED |
+| verify-cookie-input: Prompt cookie values without echo and send through curl stdin; avoids argv only, assumes clean shell and separate subshell pastes. | curl unknown | REASONED |
+| verify-secret: Require .next/static, prompt full literal secret and send to grep stdin: 0 leak, 1 no literal match, other codes inconclusive. Encoded/split secrets can escape. | Next.js documentation unknown; GNU grep unknown | REASONED |
+| verify-action: Fresh disposable record per Action attempt; authorized mutation changes store, anonymous/unauthorized replays deny without changes, not merely not-found. | Next.js documentation unknown | REASONED |
+<!-- version-basis:end -->
+
 A Next.js app has many entry points: pages, layouts, Route Handlers (`app/**/route.ts`), and every exported Server Action, which the Next.js docs describe as reachable by a direct POST whether or not your UI calls it. A check that lives only in a layout or in `proxy.ts` (the file Next.js 16 renamed from `middleware.ts`) leaves open the entry points it does not cover (a layout guards no Route Handler or Server Action; a `proxy.ts` matcher guards only the paths it matches), and authorization still belongs next to the data. Next.js supplies cookies and sessions as primitives, not a login system; the login is yours or a library's.
 
 ## 1. Bind privately; TLS comes from the platform or the proxy
@@ -7203,6 +7312,8 @@ Deployment Protection controls who can open a deployment URL: Vercel Authenticat
 
 ## Verify
 
+REASONED: following block; listener inventory, route/action authorization controls, cookie input and client-secret scan. No deployed application, session controls or run outcome is recorded here; expectations are reasoned from the cited Next.js, auth-library, curl and grep sources.
+
 ```bash
 ss -tlnp   # read every listener; 3000 on 127.0.0.1 only when self-hosted. ss shows the BIND, not the
            # firewall or the platform ingress, so confirm external reachability separately
@@ -7313,6 +7424,54 @@ curl -q -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redi
 ======================================================================
 
 # Go: TLS and authentication with net/http
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| tls: Direct TLS listens on :443 using the leaf-plus-intermediates certificate and private key; ReadHeaderTimeout is 10 seconds. | Go net/http documentation unknown; Go crypto/tls documentation unknown | REASONED |
+| redirect: Port :80 sends a 301 HTTPS redirect built from r.Host and the request URI. | Go net/http documentation unknown | REASONED |
+| tls-min: crypto/tls defaults to TLS 1.2 minimum as of September 2026; explicitly set MinVersion=VersionTLS12. | Go crypto/tls documentation unknown | REASONED |
+| privilege: Linux privileged-port threshold defaults to 1024 but is configurable per namespace; root or CAP_NET_BIND_SERVICE is needed below it in the usual configuration. | Linux port-threshold documentation unknown | REASONED |
+| proxy: Bind 127.0.0.1:8080 behind a TLS proxy; net/http has no proxy trust setting, so accept forwarded headers only from the isolated, overwriting proxy. | Go net/http documentation unknown | REASONED |
+| proxy-headers: Set HSTS and other security headers at the proxy per the linked headers guide. | Go net/http documentation unknown | REASONED |
+| bcrypt: Use bcrypt cost 12; DefaultCost is 10, inputs over 72 bytes are rejected and CompareHashAndPassword returns nil on match. | Go bcrypt documentation unknown | REASONED |
+| argon: IDKey returns raw bytes; retain random salt and parameters. RFC 9106 choices are time=1/memory=2 GiB/threads=4 or time=3/memory=64 MiB/threads=4. | Go Argon2 documentation unknown | REASONED |
+| cookies: Set session cookie Path=/, Secure, HttpOnly and SameSite=Lax. | Go net/http documentation unknown | REASONED |
+| login-limit: A limiter every three seconds with burst five allows about 20/minute; use separate limiters keyed by trusted client address for per-client limits. | Go rate documentation unknown | REASONED |
+| tokens: Load tokens from the environment and generate them per authentication.md; token generation and environment handling lack a listed source. | go-oidc documentation v3 | REASONED |
+| oidc: NewProvider discovers the issuer; Verifier with ClientID checks ID-token signature, issuer, audience and expiry; apply separate allowlists. | go-oidc documentation v3 | REASONED |
+| mfa: Use pquerna/otp or a fronting identity layer; TOTP and MFA lack a listed source. | go-oidc documentation v3 | REASONED |
+| client-validation: InsecureSkipVerify accepts any certificate and hostname unless custom VerifyConnection/VerifyPeerCertificate checks replace validation. | Go crypto/tls documentation unknown | REASONED |
+| client-ca: Use SystemCertPool plus a checked AppendCertsFromPEM result and RootCAs, or override CA locations with SSL_CERT_FILE/SSL_CERT_DIR. | Go crypto/tls documentation unknown; Go certificate-store qualification 1.27 | REASONED |
+| platform-ca: Go 1.27 certificate-file/directory overrides bypass macOS/Windows platform verification unless GODEBUG=x509sslcertoverrideplatform=0 is also set. | Go certificate-store qualification 1.27 | REASONED |
+| pprof: Importing pprof registers /debug/pprof/ on DefaultServeMux; profiles, traces, cmdline and forced GC can disclose data or exhaust resources. | Go pprof documentation unknown | REASONED |
+| expvar: Importing expvar registers /debug/vars with cmdline and memstats on DefaultServeMux. | Go expvar documentation unknown | REASONED |
+| diag-bind: Imports do not start listeners; nil handlers serve DefaultServeMux. Give the app its own mux and diagnostics a separate 127.0.0.1:6060 mux, never public proxy routing. | Go net/http documentation unknown; Go pprof documentation unknown; Go expvar documentation unknown | REASONED |
+| body-limit: Wrap the body with MaxBytesReader before decoding; the example 1 MiB policy requires explicit MaxBytesError handling to return 413. | Go header-count qualification 1.27 | REASONED |
+| header-size: MaxHeaderBytes defaults to 1 MiB for request line and headers, independently of body limits. | Go net/http documentation unknown | REASONED |
+| header-count: Go 1.27 adds MaxHeaderValueCount with default 500; this is separate from body limits. | Go header-count qualification 1.27 | REASONED |
+| read-timeout: ReadTimeout bounds the whole request including body; example 30 seconds, zero or negative disables it. | Go net/http documentation unknown | REASONED |
+| write-timeout: WriteTimeout bounds writing; example 60 seconds, zero or negative disables it. | Go net/http documentation unknown | REASONED |
+| header-timeout: ReadHeaderTimeout bounds headers; example 10 seconds, zero falls back to ReadTimeout and negative disables it. | Go net/http documentation unknown | REASONED |
+| idle-timeout: IdleTimeout bounds keep-alive idle time; example 60 seconds, zero falls back to ReadTimeout and negative disables it. | Go net/http documentation unknown | REASONED |
+| redirect-timeout: Apply deadlines to the redirect server too; ListenAndServe sets none. | Go net/http documentation unknown | REASONED |
+| request-deadlines: For long uploads/streaming, use generous server budgets and Go 1.20+ ResponseController read/write deadlines, handling unsupported operations. | Go per-request deadline minimum 1.20+ | REASONED |
+| headers: Install secure(mux) before response commit for nosniff and TLS-only HSTS max-age=63072000 with includeSubDomains. | Go net/http documentation unknown | REASONED |
+| http2: HTTPS enables HTTP/2 automatically; Server.HTTP2 tunes it on current releases; retain maintained cipher/curve defaults. | Go net/http documentation unknown; Go crypto/tls documentation unknown | REASONED |
+| verify-redirect: HTTP should return 301 with an HTTPS Location. | Go net/http documentation unknown | REASONED |
+| verify-tls: HTTPS must succeed without -k. | Go net/http documentation unknown; Go crypto/tls documentation unknown | REASONED |
+| verify-auth: The guide expects /api to return 401/403 without credentials; it records no valid-credential positive control. | Go net/http documentation unknown | REASONED |
+| verify-bind: Inspect every listener for loopback-only application binding behind the proxy. | Go net/http documentation unknown | REASONED |
+| verify-diag-local: A local 6060/debug/pprof/ response of 200 establishes local availability only. | Go pprof documentation unknown | REASONED |
+| verify-diag-route: The public application /debug/pprof/ route should return 404, never 200. | Go net/http documentation unknown; Go pprof documentation unknown | REASONED |
+| verify-diag-external: From outside the server network, the actual public IP on 6060 must be unreachable; the guide expects refusal or timeout, never 200. | Go net/http documentation unknown; Go pprof documentation unknown | REASONED |
+<!-- version-basis:end -->
 
 Preferred production layout: bind the Go server to `127.0.0.1` and terminate TLS in a reverse proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)) or behind [cloudflare.md](cloudflare.md). `net/http` can also terminate TLS itself, shown below. Certificates: [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).
 
@@ -7457,7 +7616,7 @@ func secure(next http.Handler) http.Handler {
 
 Defer the full header catalogue and values to [headers.md](headers.md); do not send HSTS over plain HTTP. Install it with `srv.Handler = secure(mux)` (or wrap your router); defining the wrapper alone adds no headers. (Go enables HTTP/2 automatically for HTTPS servers, and a `Server.HTTP2` field (`HTTP2Config`) tunes it on current releases, but leave the maintained cipher and curve defaults and the TLS 1.2 minimum from section 1 alone unless you have a specific requirement.)
 
-## 9. Verify
+## 9. Verify (REASONED: TLS, authentication, listener and diagnostic expectations follow the Go Sources below; no deployment run or outcome is recorded in this guide. This metadata-only review has no deployed Go service, proxy or outside-network probe host.)
 
 ```bash
 curl -q -sI http://example.com/         # expect 301 with a https:// Location
@@ -7486,15 +7645,15 @@ curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/debug/pprof/   
 
 - net/http (Server, ListenAndServeTLS, Cookie, SameSite, Redirect, Transport.TLSClientConfig): https://pkg.go.dev/net/http
 - crypto/tls (Config.MinVersion, InsecureSkipVerify, RootCAs): https://pkg.go.dev/crypto/tls
-- crypto/x509 (SystemCertPool, SSL_CERT_FILE, AppendCertsFromPEM): https://pkg.go.dev/crypto/x509
+- crypto/x509 (SystemCertPool, SSL_CERT_FILE, AppendCertsFromPEM) (Go 1.27): https://pkg.go.dev/crypto/x509
 - golang.org/x/crypto/bcrypt: https://pkg.go.dev/golang.org/x/crypto/bcrypt
 - golang.org/x/crypto/argon2: https://pkg.go.dev/golang.org/x/crypto/argon2
 - golang.org/x/time/rate: https://pkg.go.dev/golang.org/x/time/rate
 - go-oidc: https://pkg.go.dev/github.com/coreos/go-oidc/v3/oidc
 - net/http/pprof and expvar register on DefaultServeMux: https://pkg.go.dev/net/http/pprof
-- net/http MaxBytesReader, MaxBytesError, Server.MaxHeaderBytes / MaxHeaderValueCount: https://pkg.go.dev/net/http#MaxBytesReader
+- net/http MaxBytesReader, MaxBytesError, Server.MaxHeaderBytes / MaxHeaderValueCount (Go 1.27): https://pkg.go.dev/net/http#MaxBytesReader
 - net/http Server timeouts (ReadTimeout, WriteTimeout, IdleTimeout, ReadHeaderTimeout): https://pkg.go.dev/net/http#Server
-- net/http ResponseController (per-request deadlines): https://pkg.go.dev/net/http#ResponseController
+- net/http ResponseController (per-request deadlines) (Go 1.20+): https://pkg.go.dev/net/http#ResponseController
 - expvar (registers /debug/vars on the default mux): https://pkg.go.dev/expvar
 - Linux ip-sysctl, ip_unprivileged_port_start (the privileged-port threshold is configurable): https://docs.kernel.org/networking/ip-sysctl.html#ip-unprivileged-port-start
 
@@ -7503,6 +7662,88 @@ curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/debug/pprof/   
 ======================================================================
 
 # ASP.NET Core and Kestrel: TLS and authentication
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| tls: Kestrel serves wildcard HTTP 80 and HTTPS 443 with PKCS12 or PEM Path/KeyPath; supply certificate passwords from environment or a secret store. | ASP.NET Core documentation .NET 10; ASP.NET Core .NET 10 | REASONED |
+| tls-protocols: Default SslProtocols.None delegates to the OS; example explicitly permits only TLS 1.2 and 1.3. | ASP.NET Core .NET 10 | REASONED |
+| hsts-age: NET 10 HSTS defaults to 30 days; example selects 365 days outside Development. | ASP.NET Core source v10.0.0 | REASONED |
+| hsts-subdomains: HSTS IncludeSubDomains defaults false; example enables it only when all affected subdomains support HTTPS. | ASP.NET Core source v10.0.0 | REASONED |
+| hsts-preload: HSTS Preload defaults false. | ASP.NET Core source v10.0.0 | REASONED |
+| redirect: UseHttpsRedirection needs an HTTPS port via ASPNETCORE_HTTPS_PORT=443 or HttpsPort. | ASP.NET Core documentation .NET 10 | REASONED |
+| proxy-bind: ListenLocalhost(5000), or localhost:5000 URLs, binds behind a same-host proxy; process forwarded headers first. | ASP.NET Core documentation .NET 10; ASP.NET Core .NET 10 | REASONED |
+| proxy-default: NET 10 trusts ::1 and 127.0.0.0/8 by default; adding 127.0.0.1 does not narrow that list. | ASP.NET Core .NET 10; ASP.NET Core source v10.0.0 | REASONED |
+| proxy-networks: NET 10 replaces obsolete KnownNetworks with KnownIPNetworks/System.Net.IPNetwork; narrow both lists together and never leave both empty. | ASP.NET Core .NET 10; ASP.NET Core source v10.0.0 | REASONED |
+| proxy-hardening: Unknown-proxy headers are ignored in 8.0.17 and 9.0.6 and NET 10, even without X-Forwarded-For processing; register the real proxy. | ASP.NET Core .NET 10; ASP.NET Core proxy hardening 8.0.17 | REASONED |
+| proxy-https: When the proxy handles redirects/HSTS, omit the app middleware; missing forwarded-header handling can cause redirect loops. | ASP.NET Core documentation .NET 10 | REASONED |
+| password: Identity uses PBKDF2 with default 100000 iterations; keep its password hasher. | ASP.NET Core documentation .NET 10 | REASONED |
+| lockout: Configure five failures, five-minute lockout and allowance for new users; PasswordSignInAsync must use lockoutOnFailure=true, while the template uses false. | ASP.NET Core .NET 10 | REASONED |
+| cookies: Configure HttpOnly, SecurePolicy.Always, SameSite=Lax and eight-hour expiry; cookie-only auth uses the same options. | ASP.NET Core documentation .NET 10; ASP.NET Core .NET 10 | REASONED |
+| samesite: NET 10 auth cookie defaults Lax; Strict can suppress cross-site app cookies without universally breaking OAuth/OIDC callbacks. | ASP.NET Core .NET 10 | REASONED |
+| remote-cookies: Correlation and OIDC nonce cookies separately default None; preserve secure cross-site settings and avoid global rewriting. | ASP.NET Core .NET 10 | REASONED |
+| authorization: Run authentication before authorization and Map calls; use an authenticated fallback policy and explicitly AllowAnonymous on public pages. | ASP.NET Core documentation .NET 10 | REASONED |
+| login-limit: NET 7+ built-in rate limiting: login policy permits 20 per 15 minutes, no queue, 429 rejection; endpoint policies need UseRateLimiter after routing. | ASP.NET Core rate-limiter minimum .NET 7 | REASONED |
+| oidc: Configure OpenIdConnect code flow with cookie DefaultScheme and OIDC DefaultChallengeScheme; keep client secrets outside appsettings.json. | ASP.NET Core documentation .NET 10 | REASONED |
+| mfa: Enforce MFA at the provider or fronting identity layer per linked guides; provider MFA configuration lacks a direct listed source. | ASP.NET Core documentation .NET 10 | REASONED |
+| client-validation: Never accept every certificate through DangerousAcceptAnyServerCertificateValidator or an always-true callback. | ASP.NET Core documentation .NET 10 | REASONED |
+| client-ca: On Linux NET 10 install internal roots or use SSL_CERT_FILE for a PEM file and SSL_CERT_DIR for a certificate directory; preserve needed public roots. | ASP.NET Core documentation .NET 10; NET runtime source v10.0.0; OpenSSL documentation 3.0 | REASONED |
+| developer-errors: Development automatically enables the Developer Exception Page; production must exclude it and check the effective environment. | ASP.NET Core .NET 10 | REASONED |
+| error-handler: Install UseExceptionHandler early after forwarding; provide a generic /Error route supporting failed methods/anonymous requests and preserve intentional 413 responses. | ASP.NET Core .NET 10 | REASONED |
+| environment: Production is default absent overrides; NET 7+ WebApplicationBuilder prioritizes command-line/DOTNET_ over ASPNETCORE_, while older WebHost differs. | ASP.NET Core .NET 10; WebApplicationBuilder precedence .NET 7 | REASONED |
+| database-diagnostics: Register database developer exception filters before Build and migrations middleware after Build only in Development; migrations execute database changes. | ASP.NET Core .NET 10 | REASONED |
+| body-limit: NET 10 Kestrel total body default is 30000000 bytes, null unlimited; example lowers it to 1048576 bytes. | ASP.NET Core .NET 10; ASP.NET Core source v10.0.0 | REASONED |
+| body-override: RequestSizeLimit overrides before body reading; DisableRequestSizeLimit removes the protection. | ASP.NET Core .NET 10 | REASONED |
+| multipart: MultipartBodyLengthLimit defaults 134217728 bytes per parsed section; example uses 1048576. Framing consumes total allowance and parsing failure need not return 413. | ASP.NET Core source v10.0.0; ASP.NET Core .NET 10 | REASONED |
+| iis-body: In-process IISServerOptions body default is 30000000, separately from IIS maxAllowedContentLength default 30000000; out-of-process IIS disables Kestrel body limiting. | ASP.NET Core .NET 10 | REASONED |
+| keepalive: Kestrel KeepAliveTimeout defaults to 130 seconds; it is not a total execution deadline. | ASP.NET Core .NET 10; ASP.NET Core source v10.0.0 | REASONED |
+| header-timeout: Kestrel RequestHeadersTimeout defaults to 30 seconds; it is not a total execution deadline. | ASP.NET Core .NET 10; ASP.NET Core source v10.0.0 | REASONED |
+| connections: MaxConcurrentConnections defaults null/unlimited; example caps ordinary connections at 100. | ASP.NET Core source v10.0.0 | REASONED |
+| upgraded: Upgraded connections leave the ordinary count; MaxConcurrentUpgradedConnections separately defaults null. | ASP.NET Core .NET 10; ASP.NET Core source v10.0.0 | REASONED |
+| header-count: Kestrel MaxRequestHeaderCount defaults 100. | ASP.NET Core source v10.0.0 | REASONED |
+| header-size: Kestrel MaxRequestHeadersTotalSize defaults 32768 bytes. | ASP.NET Core source v10.0.0 | REASONED |
+| request-rate: MinRequestBodyDataRate defaults 240 bytes/second with five-second grace. | ASP.NET Core source v10.0.0 | REASONED |
+| response-rate: MinResponseDataRate defaults 240 bytes/second with five-second grace. | ASP.NET Core source v10.0.0 | REASONED |
+| rate-scope: HTTP/2 per-request rate adjustments differ from HTTP/1.x; several timeout/rate checks are disabled under a debugger. | ASP.NET Core .NET 10 | REASONED |
+| h2-streams: NET 10 HTTP/2 MaxStreamsPerConnection defaults 100. | ASP.NET Core source v10.0.0 | REASONED |
+| h2-table: NET 10 HTTP/2 HeaderTableSize defaults 4096 bytes. | ASP.NET Core source v10.0.0 | REASONED |
+| h2-frame: NET 10 HTTP/2 MaxFrameSize defaults 16384 bytes. | ASP.NET Core source v10.0.0 | REASONED |
+| h2-header: NET 10 HTTP/2 MaxRequestHeaderFieldSize defaults 32768 bytes, not the older 8192. | ASP.NET Core source v10.0.0 | REASONED |
+| h2-connection-window: NET 10 HTTP/2 InitialConnectionWindowSize defaults 1048576 bytes, not the older 131072. | ASP.NET Core source v10.0.0 | REASONED |
+| h2-stream-window: NET 10 HTTP/2 InitialStreamWindowSize defaults 786432 bytes, not the older 98304. | ASP.NET Core source v10.0.0 | REASONED |
+| h2-ping-delay: NET 10 HTTP/2 KeepAlivePingDelay defaults TimeSpan.MaxValue, disabling pings. | ASP.NET Core source v10.0.0 | REASONED |
+| h2-ping-timeout: NET 10 HTTP/2 KeepAlivePingTimeout defaults 20 seconds. | ASP.NET Core source v10.0.0 | REASONED |
+| h2-scope: Flow-control windows bound outstanding buffered data, not total bodies; Http2Limits do not configure HTTP/3. | ASP.NET Core .NET 10; ASP.NET Core source v10.0.0 | REASONED |
+| key-defaults: Data Protection key persistence depends on hosting: user profiles, IIS or Azure may persist; process-only fallback and disposable container layers can lose keys. | ASP.NET Core .NET 10 | REASONED |
+| key-persistence: Persist keys durably with restricted permissions; replicas share repository, application name and decryption certificates, not merely identical directory names. | ASP.NET Core .NET 10 | REASONED |
+| key-encryption: Choosing an explicit repository disables automatic at-rest encryption; configure ProtectKeysWithCertificate and retain needed keys/certificates. | ASP.NET Core .NET 10 | REASONED |
+| key-isolation: Separate repositories, permissions and certificate private keys for untrusted apps; SetApplicationName is not isolation from another holder of master keys. | ASP.NET Core .NET 10 | REASONED |
+| cookie-sharing: Cookie continuity also needs compatible cookie names, schemes, stores and identity-validation configuration. | ASP.NET Core .NET 10 | REASONED |
+| server-header: NET 10 AddServerHeader defaults true; set false and check all hosting layers since header removal does not control access. | ASP.NET Core source v10.0.0 | REASONED |
+| iis-headers: Remove IIS X-Powered-By and set removeServerHeader; the latter requires IIS 10 with Windows Server/Windows 10 version 1709 or later. | IIS documentation IIS 10 | REASONED |
+| openapi: NET 10 built-in OpenAPI requires AddOpenApi before Build; map only in Development or RequireAuthorization with an appropriate policy. | ASP.NET Core .NET 10 | REASONED |
+| swagger: Built-in OpenAPI has no Swagger UI; keep separately added UseSwaggerUI in Development or protect it separately from the document. | ASP.NET Core .NET 10 | REASONED |
+| health: Register health checks and authorize /healthz; monitoring must authenticate or use a deliberately controlled minimal liveness route. | ASP.NET Core .NET 10 | REASONED |
+| health-host: RequireHost checks a spoofable Host header and is not a network or authentication boundary. | ASP.NET Core .NET 10 | REASONED |
+| host-filter: AllowedHosts uses semicolon-separated names without ports; wildcard permits all. It neither authenticates nor binds interfaces; forwarded-host allowlisting is separate. | ASP.NET Core .NET 10 | REASONED |
+| verify-redirect: HTTP should return 307/308 with HTTPS Location. | ASP.NET Core documentation .NET 10 | REASONED |
+| verify-tls: HTTPS must validate without -k and show HSTS. | ASP.NET Core documentation .NET 10; ASP.NET Core .NET 10 | REASONED |
+| verify-api: Known protected NET 10 cookie API endpoints return 401 anonymous and 403 forbidden; pages/OIDC/custom handlers may redirect. Confirm authorized success first. | ASP.NET Core .NET 10 | REASONED |
+| verify-bind: Inspect every listener for 127.0.0.1 and ::1 behind the proxy. | ASP.NET Core documentation .NET 10; ASP.NET Core .NET 10 | REASONED |
+| verify-errors: Controlled exception should expose marker/detail under development and generic 500 under production; inspect plain/HTML bodies and correlate handler execution. | ASP.NET Core .NET 10 | REASONED |
+| verify-body: Body-consuming test route returns 204 at 1048576 bytes, 413 at 1048577; raised limit permits both. Isolate other limits and distinguish upstream rejection. | ASP.NET Core .NET 10 | REASONED |
+| verify-aux: Probe actual diagnostic/OpenAPI/UI/health routes anonymously, then authorized; Development-only routes should be absent and retained routes protected. Status alone does not prove authorization. | ASP.NET Core .NET 10 | REASONED |
+| verify-migrations: GET cannot prove migrations middleware absent; inspect registration and test actual behavior only in isolated database infrastructure. | ASP.NET Core .NET 10 | REASONED |
+| verify-headers: Inspect public success, redirect and error responses for absent Server/X-Powered-By after hosting-layer removal where supported. | ASP.NET Core source v10.0.0; IIS documentation IIS 10 | REASONED |
+| verify-cookie: Anonymous cookie API control returns 401; original cookie keeps the same identity with 200 before/after restart and across confirmed replicas, before expiry and without identity changes. | ASP.NET Core .NET 10 | REASONED |
+| verify-antiforgery: Retain an antiforgery token and cookie across restart and submit without replacement; key loss can invalidate it independently of login recovery. | ASP.NET Core .NET 10 | REASONED |
+<!-- version-basis:end -->
 
 Preferred production layout: bind Kestrel to loopback and terminate TLS in a reverse proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)) or behind [cloudflare.md](cloudflare.md). Kestrel can also terminate TLS itself, shown below. Certificates: [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).
 
@@ -7769,7 +8010,7 @@ For default ASP.NET Core hosting, merge an explicit host allowlist into `appsett
 
 Use semicolon-separated hostnames without ports. `*` permits all hosts. Host filtering validates the request host; it does not authenticate the caller or restrict listening interfaces. `ForwardedHeadersOptions.AllowedHosts` is a separate setting for forwarded host values when the proxy replaces the original Host header.
 
-## 9. Verify
+## 9. Verify (REASONED: redirect, TLS, cookie-API and listener expectations follow the Sources below; no deployment outcomes are recorded. The authoring environment has no .NET runtime, container runtime or deployed application, as recorded below.)
 
 ```bash
 curl -q -g --noproxy '*' -sI http://example.com/         # expect 307 or 308 with a https:// Location
@@ -7786,7 +8027,7 @@ For the `/api` check, the route must exist, require authorization, and use the a
 
 Paste each complete guarded block. Substitute the entire URL inside its single quotes; a literal apostrophe requires proper shell escaping. Run public-exposure checks from outside the application host and its trusted proxy network. Supply trusted CA configuration where needed; do not use `-k`. A DNS error, TLS failure, timeout, or HTTP `000` is not proof of an application-level rejection. The final `|| true` protects an enclosing shell from termination; it does not mean the check passed.
 
-#### Production error disclosure
+#### Production error disclosure (REASONED: the following block tests error representations against the cited error-handling documentation; no .NET runtime or deployed test application, as recorded below.)
 
 **REASONED: no .NET runtime or deployed test application.** In an isolated deployment, provide a controlled route that throws an exception containing the harmless marker `DOTNET_VERIFY_CANARY`. Confirm that the route is reached, rather than stopped by authentication or routing. Use the public URL of that route below.
 
@@ -7810,7 +8051,7 @@ With the Developer Exception Page exposed, expect a `500` response containing di
 ) || true
 ```
 
-#### Oversized-request rejection
+#### Oversized-request rejection (REASONED: the following block compares body sizes against the cited Kestrel limit; no .NET runtime or deployed body-reading endpoint, as recorded below.)
 
 **REASONED: no .NET runtime or deployed body-reading endpoint.** For the section-6 example, use an isolated deployment with a POST test endpoint that accepts `application/octet-stream`, consumes the entire body before returning `204`, and preserves body-limit failures as `413`. It must be reachable without an authentication challenge for these requests. Do not point this test at a business operation or an endpoint that ignores the body.
 
@@ -7838,7 +8079,7 @@ The fixed expectation is `204` at 1,048,576 bytes and `413` at 1,048,577 bytes. 
 ) || true
 ```
 
-#### Diagnostic, OpenAPI, and health access
+#### Diagnostic, OpenAPI, and health access (REASONED: the following block checks endpoint exposure against the cited OpenAPI and health documentation; no deployed endpoints or external test vantage, as recorded below.)
 
 **REASONED: no deployed endpoints or external test vantage.** The error probe above checks Developer Exception Page exposure. Inventory additional diagnostic routes and repeat the following GET probe for each applicable route, the OpenAPI document, any Swagger UI and its document route, and health checks. Common configured paths include `/openapi/v1.json`, `/swagger/index.html`, `/swagger/v1/swagger.json`, and `/healthz`; use the paths actually registered by the application.
 
@@ -7861,7 +8102,7 @@ For retained routes, pair the anonymous request with an authorized request throu
 ) || true
 ```
 
-#### Public response headers
+#### Public response headers (REASONED: the following block checks header removal against the cited Kestrel and IIS controls; no deployed Kestrel, IIS or proxy response, as recorded below.)
 
 **REASONED: no deployed Kestrel, IIS, or proxy response.** Probe a known working public route and repeat for representative redirects and errors. Before removal, direct Kestrel responses normally include `Server: Kestrel`; IIS or the proxy can supply their own identifiers. After the relevant hosting-layer changes, expect no public `Server` or `X-Powered-By` header where removal is supported and configured. Inspect all returned headers, not just the application's normal success response. The Kestrel option and IIS sources distinguish which layer controls each header.
 
@@ -7881,7 +8122,7 @@ For retained routes, pair the anonymous request with an authorized request throu
 ) || true
 ```
 
-#### Cookie continuity across restart and replicas
+#### Cookie continuity across restart and replicas (REASONED: the following block checks continuity against the cited key-lifetime and cookie-sharing documentation; no running cookie-authenticated application or replicas, as recorded below.)
 
 **REASONED: no running cookie-authenticated application or replicas.** Sign in with a test account through the application's actual login flow and save its cookies in a private Netscape-format curl cookie file named `dotnet-verify.cookies`. Use an existing protected `[ApiController]` endpoint that authenticates and challenges with the app's cookie scheme and returns the test user's identity.
 
@@ -7910,11 +8151,11 @@ Also retain an antiforgery token and its accompanying cookie across a restart, t
 
 ## Sources (checked September 2026)
 
-- Enforce HTTPS (UseHttpsRedirection, UseHsts, HttpsPort): https://learn.microsoft.com/en-us/aspnet/core/security/enforcing-ssl ; Kestrel endpoints (certificate config, ListenLocalhost, SslProtocols): https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints ; proxy servers (ForwardedHeadersOptions, KnownProxies): https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer
-- Introduction to Identity (lockout, ConfigureApplicationCookie): https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity ; PasswordHasherOptions: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.identity.passwordhasheroptions
-- Cookie authentication without Identity: https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie ; CookieSecurePolicy: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.cookiesecurepolicy
-- Rate limiting middleware: https://learn.microsoft.com/en-us/aspnet/core/performance/rate-limit ; OpenID Connect web authentication: https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-oidc-web-authentication
-- DangerousAcceptAnyServerCertificateValidator: https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclienthandler.dangerousacceptanyservercertificatevalidator ; trusted roots on Linux: https://learn.microsoft.com/en-us/dotnet/standard/security/cross-platform-cryptography
+- Enforce HTTPS (UseHttpsRedirection, UseHsts, HttpsPort) (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/enforcing-ssl ; Kestrel endpoints (certificate config, ListenLocalhost, SslProtocols): https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints ; proxy servers (ForwardedHeadersOptions, KnownProxies): https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer
+- Introduction to Identity (lockout, ConfigureApplicationCookie) (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity ; PasswordHasherOptions: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.identity.passwordhasheroptions
+- Cookie authentication without Identity (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie ; CookieSecurePolicy: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.cookiesecurepolicy
+- Rate limiting middleware (.NET 7; .NET 10): https://learn.microsoft.com/en-us/aspnet/core/performance/rate-limit ; OpenID Connect web authentication: https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-oidc-web-authentication
+- DangerousAcceptAnyServerCertificateValidator (.NET 10): https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclienthandler.dangerousacceptanyservercertificatevalidator ; trusted roots on Linux: https://learn.microsoft.com/en-us/dotnet/standard/security/cross-platform-cryptography
 - .NET 10 Kestrel TLS protocol selection: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-10.0
 - .NET 10 HstsOptions defaults: https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Middleware/HttpsPolicy/src/HstsOptions.cs
 - .NET 10 proxy trust configuration and loopback defaults: https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-10.0
@@ -7942,7 +8183,7 @@ Also retain an antiforgery token and its accompanying cookie across a restart, t
 - Cookie sharing requirements for key rings, application names, and authentication schemes: https://learn.microsoft.com/en-us/aspnet/core/security/cookie-sharing?view=aspnetcore-10.0
 - .NET 10 KestrelServerOptions.AddServerHeader default: https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Servers/Kestrel/Core/src/KestrelServerOptions.cs
 - IIS custom response headers and X-Powered-By: https://learn.microsoft.com/en-us/iis/configuration/system.webserver/httpprotocol/customheaders/
-- IIS removeServerHeader requirements and request filtering: https://learn.microsoft.com/en-us/iis/configuration/system.webserver/security/requestfiltering/
+- IIS removeServerHeader requirements and request filtering (IIS 10; Windows Server version 1709 or Windows 10 version 1709): https://learn.microsoft.com/en-us/iis/configuration/system.webserver/security/requestfiltering/
 - .NET 10 OpenAPI document generation and endpoint authorization: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/aspnetcore-openapi?view=aspnetcore-10.0
 - .NET 10 OpenAPI documents with Development-only Swagger UI: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/using-openapi-documents?view=aspnetcore-10.0
 - .NET 10 health-check authorization and Host-header spoofing: https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/health-checks?view=aspnetcore-10.0
@@ -7953,6 +8194,74 @@ Also retain an antiforgery token and its accompanying cookie across a restart, t
 ======================================================================
 
 # Spring Boot: TLS and authentication
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| tls: Direct HTTPS on 8443 uses PEM certificate/key or PKCS12 and TLSv1.2/TLSv1.3; older releases must confirm PEM property support. | Spring Boot documentation unknown; Spring Boot 3.5.16 | REASONED |
+| connector: Properties configure one HTTP or HTTPS connector; add the port-80 redirect connector in code, or let the proxy redirect. | Spring Boot documentation unknown | REASONED |
+| https-redirect: Spring Security 6.5+ redirectToHttps redirects insecure requests; trusted forwarded headers determine secure status behind TLS termination. | Spring Security documentation unknown; Spring Security HSTS 6.5 | REASONED |
+| hsts: Default HSTS writer runs only for secure requests; defaults are one year, includeSubDomains=true and preload=false. | Spring Security HSTS 6.5; Spring Security HSTS 7.1 | REASONED |
+| proxy-bind: Bind 127.0.0.1:8080 behind the TLS proxy. | Spring Boot documentation unknown; Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| forwarding: NATIVE delegates forwarded headers to the server, FRAMEWORK uses ForwardedHeaderFilter; outside supported cloud platforms the default is NONE. | Spring Boot documentation unknown | REASONED |
+| proxy-trust: Restrict Tomcat internal-proxies, strip inbound Forwarded/X-Forwarded-* at the edge and prevent direct listener bypass. | Spring Boot documentation unknown; Spring Framework documentation unknown | REASONED |
+| proxy-redirect: Tomcat redirect-context-root=false preserves HTTPS redirects behind TLS termination. | Spring Boot documentation unknown | REASONED |
+| server-import: ServerProperties moves from boot.autoconfigure.web in Boot 3.5 to boot.web.server.autoconfigure in Boot 4. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| default-web-auth: With starter-security and default web configuration, require authentication except Actuator health; form login, Basic, CSRF and security headers are enabled. | Spring Boot documentation unknown; Spring Security documentation unknown; Spring Boot 3.5.16 | REASONED |
+| custom-chain: Any custom SecurityFilterChain replaces Boot default web and Actuator rules; unmatched requests need a fallback chain or remain unprotected. | Spring Boot 3.5.16; Spring Security documentation unknown | REASONED |
+| default-user: Separate default-user auto-configuration creates user with a normally logged generated password; a custom chain alone does not remove it. Production needs deliberate authentication. | Spring Boot 3.5.16 | REASONED |
+| password: Use DelegatingPasswordEncoder, bcrypt by default with {bcrypt}; BCrypt strength defaults to 10 and is tuned to about one second; Argon2 v5_8 defaults are an alternative. | Spring Security documentation unknown | REASONED |
+| cookies: Set secure/http-only cookies, SameSite=lax and a 30m servlet session timeout. | Spring Boot documentation unknown; Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| login-limit: Checked references document no built-in login limiter; limit at the proxy or count failures and lock local accounts. | Spring Security documentation unknown | REASONED |
+| oidc-starter: Boot 3.5 uses starter-oauth2-client; Boot 4 uses starter-security-oauth2-client and deprecates the old name. | Spring Boot starter migration 4.0 | REASONED |
+| oidc: Configure client ID, environment-supplied secret, issuer discovery and openid/profile/email scopes with oauth2Login; without openid the login is OAuth2, not OIDC. | Spring Boot documentation unknown; Spring Security documentation unknown | REASONED |
+| mfa: Enforce MFA at the identity provider or a fronting layer per linked guides; these MFA controls lack a direct listed source. | Spring Security documentation unknown | REASONED |
+| csrf: Statelessness does not remove CSRF risk for automatically attached browser cookies or Basic credentials; retain appropriate protection. | Spring Security documentation unknown | REASONED |
+| session-fixation: Default fixation protection uses changeSessionId on Servlet 3.1+ containers; keep it enabled. | Spring Security documentation unknown | REASONED |
+| client-validation: Do not install trust-all TrustManager or hostname verifiers; this client-validation warning has no direct listed API source. | Spring Boot documentation unknown; JDK keytool documentation 21 | REASONED |
+| client-ca: Import an internal CA with keytool into cacerts and change its default changeit password, or configure and apply a named SSL bundle to the client. | Spring Boot documentation unknown; JDK keytool documentation 21 | REASONED |
+| client-import: RestClientSsl and WebClientSsl imports differ between Boot 3.5.16 and 4.1.1; apply ssl.fromBundle to the selected client. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| actuator-exposure: Boot 3.5.16/4.1.1 default web exposure is health; use an explicit allowlist. Exposure, access and authorization are separate. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| management-bind: Management binds 127.0.0.1:8081 separately; a distinct management address requires a distinct port and no public proxy forwarding. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| management-disable: management.server.port=-1 disables management HTTP, not JMX exposure. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| sanitize: env/configprops show-values default to never; sanitization does not justify exposing metadata. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| metadata-endpoints: beans, mappings and threaddump expose components, routes and thread stacks. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| heapdump: heapdump may expose secrets and consume resources; access defaults to none in specifically checked 3.5.16/4.1.1, and is explicitly disabled. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| loggers: loggers can read/change logging levels, increasing volume and possible information disclosure. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| shutdown: shutdown stops the application; access defaults to none and is explicitly disabled. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| management-auth: The first servlet chain requires ROLE_ENDPOINT_ADMIN for all exposed Actuator endpoints including health; the second authenticates application requests. Provision identities separately. | Spring Boot 3.5.16; Spring Boot 4.1.1; Spring Security documentation unknown | REASONED |
+| endpoint-import: EndpointRequest moves from boot.actuate.autoconfigure.security.servlet in Boot 3.5 to boot.security.autoconfigure.actuate.web.servlet in Boot 4. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| error-message: Error message inclusion defaults to never in checked releases; use server.error in Boot 3.5 and spring.web.error in Boot 4. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| error-stack: Stacktrace inclusion defaults to never in checked releases, using the version-appropriate error prefix. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| error-binding: Binding-error inclusion defaults to never in checked releases, using the version-appropriate error prefix. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| error-exception: Exception-class inclusion defaults to false in checked releases, using the version-appropriate error prefix. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| error-policy: on-param lets requesters request details; disabling whitelabel HTML alone does not protect JSON/custom/container errors. | Spring Boot 3.5.16 | REASONED |
+| h2: H2 console defaults disabled in checked releases; explicitly set spring.h2.console.enabled=false. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| devtools: Exclude production devtools; active development defaults enable H2 when components exist and set message/trace/binding errors to always. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| multipart-file: Servlet multipart max-file-size defaults to 1MB per file in checked releases. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| multipart-request: Servlet multipart max-request-size defaults to 10MB including parts and overhead in checked releases. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| form-limit: Tomcat max-http-form-post-size defaults to 2MB for form-to-parameter processing, not arbitrary request bodies. | Spring Boot 3.5.16; Spring Boot 4.1.1; Tomcat HTTP connector 10.1 | REASONED |
+| header-limit: max-http-request-header-size defaults to 8KB; Tomcat counts request line and all header names/values together. | Spring Boot 3.5.16; Spring Boot 4.1.1; Tomcat HTTP connector 10.1 | REASONED |
+| json-limit: These properties do not establish a universal JSON body limit; bound other bodies at the proxy/application and test the actual route and content type. | Spring Boot 3.5.16; Spring Boot 4.1.1; Tomcat HTTP connector 10.1 | REASONED |
+| verify-tls: HTTPS must succeed without -k and show HSTS. | Spring Boot documentation unknown; Spring Security HSTS 6.5; Spring Security HSTS 7.1 | REASONED |
+| verify-auth: Unauthenticated /api should return 401 or a 302 login redirect. | Spring Boot 3.5.16 | REASONED |
+| verify-bind: Inspect every listener for loopback-only Java binding behind the proxy. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| verify-user: Positive generated-password log count records generation; zero is inconclusive because logging or a configured password can hide the default account. | Spring Boot 3.5.16 | REASONED |
+| verify-public-management: Public origin must serve no Actuator content to anonymous or administrator identities; health-only exposure leaves other endpoints unavailable even to administrators. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| verify-management-auth: On private 8081, anonymous health should get 401, non-admin 403 and admin a health response that may be 503; sensitive routes normally 404 after successful authentication. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| verify-management-port: Any HTTP response on external 8081 proves reachability; corroborate failure with socket inventory and successful intended-path access. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| verify-dangerous: Inspect heapdump/shutdown access=none without invoking them; exposed behavior needs an isolated fixture. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| verify-errors: Controlled exception/binding markers appear with always/on-param but should disappear with production settings, including parameter requests; check JSON, HTML and custom responses after auth. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| verify-h2: Enabled console can return content or redirect; disabled console normally yields 404 after app authorization. Login/401/403 alone do not prove absence. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| verify-upload: 1024-byte file must succeed; 1048577-byte file must fail for size under the 1MB policy; both succeed with raised limits. Auth, CSRF, route and transport failures are inconclusive. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
+| verify-credentials: Use private mode-0600 header files via stdin, valid session/CSRF headers and curl 7.75.0+ diagnostics; transport errors do not prove secure configuration. | curl minimum diagnostics version 7.75.0 | REASONED |
+<!-- version-basis:end -->
 
 Preferred production layout: bind the embedded server to `127.0.0.1` and terminate TLS in a reverse proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)) or behind [cloudflare.md](cloudflare.md). Spring Boot can also terminate TLS itself, shown below. Certificates: [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).
 
@@ -8160,7 +8469,7 @@ The defaults and header qualifications appear in the [3.5.16 property reference]
 
 None of these properties establishes a universal JSON body limit. Bound other request bodies at the reverse proxy and, where necessary, in the application's request processing. Test the actual content type and route; an authentication failure does not demonstrate a size limit.
 
-## 8. Verify
+## 8. Verify (REASONED: TLS, authentication, listener and generated-user checks follow the Spring Sources below; no deployment outcomes are recorded. The authoring environment limitations are recorded below: no runnable Spring Boot fixture, Maven, Gradle or container runtime.)
 
 ```bash
 curl -q -g -sI --noproxy '*' https://example.com/        # succeeds without -k; shows Strict-Transport-Security
@@ -8177,7 +8486,7 @@ Paste each guarded block whole and substitute inside the single quotes. Supply U
 
 For authenticated requests, prepare `./java-verify-auth.headers` as a private, mode `0600` file containing the actual request headers for a test identity, one header per line. Use the application's authentication method, such as its session cookie or an accepted authorization header. For uploads, include the matching session and valid CSRF header where required. The blocks pass that file to curl through stdin, keeping credential values out of command arguments. Protect and remove the file after testing. Curl documents [header input and transfer diagnostics](https://curl.se/docs/manpage.html).
 
-### Management reachability and authorization
+### Management reachability and authorization (REASONED: public/private Actuator access and external-port checks follow the cited endpoint and management-listener references; no runnable Spring Boot fixture or external management test deployment is available, as recorded above.)
 
 Reasoned check: run this HTTPS sweep from outside the trusted management network against the public application origin to verify that it does not serve Actuator responses to either identity. Include any configured context or management base path in the substituted URL. Use an administrator identity for the authenticated pass.
 
@@ -8247,7 +8556,7 @@ Any HTTP response, including `401`, demonstrates that an HTTP listener is reacha
 
 The sweep deliberately omits heap-dump generation and shutdown. Verify their explicit `access=none` settings in the effective deployment configuration. Demonstrating their exposed behaviour belongs in an isolated fixture: a heap-dump request can allocate substantial resources, and a shutdown request can stop the process.
 
-### Error-body leakage
+### Error-body leakage (REASONED: error disclosure checks follow the cited error-inclusion references; the recorded authoring environment has no runnable Spring Boot fixture.)
 
 Reasoned check: use an isolated test deployment with a known route that triggers a controlled exception containing a recognizable, non-secret marker. Supply that route below, then repeat for a known binding-error case. Use credentials that allow the request to reach the handler. A missing URL alone does not exercise exception or binding-error disclosure.
 
@@ -8271,7 +8580,7 @@ Reasoned check: use an isolated test deployment with a known route that triggers
 
 In the exposed fixture, `always` or `on-param` inclusion can reveal the controlled message, trace, or binding details. With the production settings, Boot's standard error response should omit those details and the exception class even with these parameters. Confirm the expected error status and inspect the body for the marker, stack frames, internal paths, and rejected values. An authentication response does not test error handling. Repeat with `Accept: text/html` and check custom error responses separately. See the [error-inclusion semantics](https://docs.spring.io/spring-boot/3.5/api/java/org/springframework/boot/autoconfigure/web/ErrorProperties.IncludeAttribute.html) and [versioned production defaults](https://docs.spring.io/spring-boot/4.1/appendix/application-properties/index.html).
 
-### H2 console absence
+### H2 console absence (REASONED: console absence checks follow the cited console properties and devtools defaults; the recorded authoring environment has no runnable Spring Boot fixture.)
 
 Reasoned check: test both anonymously and with an identity allowed through application security. Substitute the configured console path if it differs from `/h2-console/`.
 
@@ -8296,7 +8605,7 @@ Reasoned check: test both anonymously and with an identity allowed through appli
 
 An enabled, reachable console can return H2 content or a redirect into it. With the console disabled, a request that passes application security should reach normal missing-route handling, typically `404`, without H2 content. A login redirect, `401`, or `403` alone does not establish absence. Confirm the effective `spring.h2.console.enabled=false` setting and absence of production devtools as well. See the [console properties](https://docs.spring.io/spring-boot/4.1/appendix/application-properties/index.html) and [devtools overrides](https://docs.spring.io/spring-boot/4.1/reference/using/devtools.html#using.devtools.property-defaults).
 
-### Over-limit upload
+### Over-limit upload (REASONED: multipart discrimination follows the cited multipart limits; the recorded authoring environment has no runnable Spring Boot upload fixture.)
 
 Reasoned check: use a test upload route that accepts a multipart file field named `file`. Prepare `./below-limit.bin` with 1,024 bytes and `./over-limit.bin` with 1,048,577 bytes of non-secret test data. These sizes bracket the configured `1MB` file limit while remaining below the `10MB` request limit. Supply valid authentication and CSRF headers for both requests, and adapt the field name to the real handler.
 
@@ -8359,13 +8668,89 @@ The small upload must reach and succeed at the intended handler. With a delibera
 - Spring Security CSRF and stateless browser applications: https://docs.spring.io/spring-security/reference/features/exploits/csrf.html
 - Spring Security session fixation protection and changeSessionId: https://docs.spring.io/spring-security/reference/servlet/authentication/session-management.html
 - Apache Tomcat HTTP connector, form parsing and request-header limits: https://tomcat.apache.org/tomcat-10.1-doc/config/http.html
-- curl manual, header input, multipart files, protocol restrictions, and transfer diagnostics: https://curl.se/docs/manpage.html
+- curl manual, header input, multipart files, protocol restrictions, and transfer diagnostics (7.75.0): https://curl.se/docs/manpage.html
 
 ======================================================================
 ==> php.md
 ======================================================================
 
 # PHP and Laravel: TLS and authentication
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| fpm-private: FPM requires listen per pool; exposed FastCGI permits code execution. Use a Unix socket or loopback TCP 9000; never publish container FPM. | PHP native configuration 8.x | REASONED |
+| fpm-clients: listen.allowed_clients defaults unset, accepting any address; explicitly allow loopback for TCP. | PHP native configuration 8.x | REASONED |
+| fpm-socket: Unix socket access uses listen.owner, listen.group and listen.mode, default 0660. | PHP native configuration 8.x | REASONED |
+| cookie-secure: Native session.cookie_secure defaults 0; enable it. | PHP native configuration 8.x | REASONED |
+| cookie-httponly: Native session.cookie_httponly defaults 0; enable it. | PHP native configuration 8.x | REASONED |
+| cookie-samesite: Native session.cookie_samesite defaults empty; choose Lax or Strict. | PHP native configuration 8.x | REASONED |
+| session-strict: session.use_strict_mode defaults 0; enable it. | PHP native configuration 8.x | REASONED |
+| session-regenerate: Regenerate IDs after login/privilege changes; delete_old_session defaults false. Timestamp expiry avoids immediate deletion. | PHP documentation unknown | REASONED |
+| passwords: PASSWORD_DEFAULT currently uses bcrypt; Argon2id needs an Argon2 build. Verify/rehash passwords and allow growing hashes, suggested 255 bytes. | PHP documentation unknown | REASONED |
+| plain-auth: Plain PHP rate limiting and MFA need application/proxy/identity controls; direct references are the linked guides, not PHP Sources. | PHP documentation unknown | REASONED |
+| laravel-debug: Set APP_ENV=production, APP_DEBUG=false and HTTPS APP_URL; debug mode exposes configuration values. | Laravel 12.x | REASONED |
+| laravel-key: Generate APP_KEY with artisan key:generate; list old keys in APP_PREVIOUS_KEYS during rotation. | Laravel 12.x | REASONED |
+| laravel-secure: Set SESSION_SECURE_COOKIE=true; the session secure configuration has no default. | Laravel 12.x | REASONED |
+| laravel-httponly: SESSION_HTTP_ONLY defaults true; retain it. | Laravel 12.x | REASONED |
+| laravel-samesite: SESSION_SAME_SITE defaults lax; strict suits admin-only apps. | Laravel 12.x | REASONED |
+| laravel-proxy: Laravel 12.x trustProxies names proxies in bootstrap/app.php; wildcard trust requires exclusive proxy reachability. | Laravel 12.x | REASONED |
+| laravel-urls: URL::forceHttps() or forceScheme(https) in a provider boot method forces generated HTTPS URLs. | Laravel 12.x | REASONED |
+| laravel-hashes: Hash::make/check default to bcrypt; HASH_DRIVER=argon2id switches it and needsRehash detects upgrades. HASH_VERIFY=false disables rejection of other algorithms. | Laravel 12.x | REASONED |
+| laravel-limiter: Define a five-per-minute login limiter keyed by email plus IP; attach throttle:login to the real route. | Laravel 12.x | REASONED |
+| fortify-login: 12.x starter kits use Fortify, which throttles username plus IP and regenerates session IDs on login; standalone Fortify omits views. | Laravel 12.x | REASONED |
+| fortify-mfa: Fortify twoFactorAuthentication with confirm and confirmPassword supplies TOTP and recovery codes. | Laravel 12.x | REASONED |
+| socialite: Socialite supplies OAuth providers; community packages supply OIDC. Use HTTPS callbacks and linked allowlist/token checks. | Laravel 12.x | REASONED |
+| laravel-cache: Keep plaintext .env untracked; build config/route caches after production inputs and rebuild on changes. Cached config does not load .env; use env only in config files. | Laravel 12.x | REASONED |
+| laravel-hosts: Laravel accepts arbitrary Host headers by default; restrict hosts at the server and add anchored TrustHosts with subdomains:false. | Laravel 12.x | REASONED |
+| debug-tools: Omit Telescope and Debugbar from production; Telescope local-only installation includes conditional provider registration. | Laravel 12.x; Laravel Debugbar unknown | REASONED |
+| curl-peer: CURLOPT_SSL_VERIFYPEER defaults true; retain certificate verification. | PHP documentation unknown | REASONED |
+| curl-host: CURLOPT_SSL_VERIFYHOST defaults 2; retain hostname checks and use CURLOPT_CAINFO for an internal CA. | PHP documentation unknown | REASONED |
+| display-errors: PHP 8.x display_errors defaults On; set Off before execution. ini_set cannot hide a fatal error preventing it from running. | PHP native configuration 8.x | REASONED |
+| startup-errors: display_startup_errors defaults On since PHP 8.0.0, previously Off; set Off. | PHP native configuration 8.x | REASONED |
+| log-errors: log_errors defaults Off; enable it with a protected, pre-created, worker-writable log outside the document root and rotation. Unset error_log uses the SAPI logger. | PHP native configuration 8.x | REASONED |
+| error-reporting: error_reporting defaults E_ALL since PHP 8.0.0; retain reporting into logs. Package/template/deployment overrides can differ. | PHP native configuration 8.x | REASONED |
+| php-banner: expose_php defaults On; Off suppresses PHP own X-Powered-By header, not other layers or all application identification. | PHP native configuration 8.x; PHP documentation unknown | REASONED |
+| production-template: PHP 8.4 production template disables display and enables logging, but uses E_ALL &amp; ~E_DEPRECATED and leaves expose_php enabled. | PHP production template 8.4 | REASONED |
+| disable-functions: disable_functions defaults empty; test the listed process-function restrictions. Since PHP 8.0 definitions disappear and userland can redefine them; internal functions only, not a security boundary. | PHP native configuration 8.x | REASONED |
+| url-fopen: allow_url_fopen defaults On; disable unnecessary URL wrappers after compatibility tests, not as a general egress policy. | PHP documentation unknown | REASONED |
+| url-include: allow_url_include defaults Off, deprecated since PHP 7.4; retain Off. URL includes also require allow_url_fopen. | PHP documentation unknown | REASONED |
+| basedir: open_basedir defaults NULL; allow required paths, retain OS isolation and account for disabled realpath caching. PHP 8.3 rejects runtime .. components. | PHP native configuration 8.x | REASONED |
+| fpm-extensions: PHP 8.x FPM security.limit_extensions defaults .php .phar; restrict to .php, which still permits uploaded PHP dispatched by the server. | PHP native configuration 8.x | REASONED |
+| upload-execution: Separate writable uploads from code, preferably outside the document root; server mappings must forbid PHP execution, including aliases/symlinks. | PHP native configuration 8.x; Laravel 12.x | REASONED |
+| laravel-storage: Laravel 12.x local disk defaults storage/app/private; public disk uses storage/app/public via public/storage, which does not itself prevent PHP execution. | Laravel 12.x | REASONED |
+| upload-size: upload_max_filesize defaults 2M per file; post_max_size must allow multipart overhead. | PHP native configuration 8.x | REASONED |
+| post-size: post_max_size defaults 8M; excess leaves POST and FILES empty and must be rejected by the app. | PHP native configuration 8.x | REASONED |
+| upload-count: max_file_uploads defaults 20; twenty maximum-sized files need not fit the POST limit. | PHP native configuration 8.x; PHP documentation unknown | REASONED |
+| memory-limit: memory_limit defaults 128M, should generally exceed post_max_size, and -1 removes the bound. | PHP native configuration 8.x | REASONED |
+| input-vars: max_input_vars defaults 1000 separately for GET, POST and COOKIE; excess is warned/truncated, not a general JSON limit. | PHP native configuration 8.x | REASONED |
+| execution-time: max_execution_time defaults 30 for web and 0 for CLI; platform/build accounting can exclude I/O, not a portable wall-clock deadline. | PHP native configuration 8.x | REASONED |
+| input-time: max_input_time defaults -1, using max_execution_time; 0 is unlimited. Example and production template select 60 seconds. | PHP native configuration 8.x; PHP production template 8.4 | REASONED |
+| upload-time: Test slow/multiple uploads and coordinate server size/time limits. Per-request bounds do not replace capacity controls or rate limiting. | PHP documentation unknown | REASONED |
+| fpm-timeout: request_terminate_timeout defaults 0, disabled; example selects 60s as app policy and kills overlong workers. | PHP native configuration 8.x | REASONED |
+| fpm-finished: request_terminate_timeout_track_finished defaults no; yes extends the limit past fastcgi_finish_request and into shutdown work. | PHP native configuration 8.x | REASONED |
+| session-gc: Native gc_maxlifetime defaults 1440 seconds; probabilistic collection is not auth expiry. Use timestamp expiry/cleanup; shared paths can inherit shorter lifetimes. | PHP native configuration 8.x; PHP documentation unknown | REASONED |
+| session-lifetime: Native cookie_lifetime defaults 0, a browser-session cookie; Laravel uses config/session.php rather than native storage/lifetime directives. | PHP native configuration 8.x; Laravel 12.x | REASONED |
+| session-only-cookies: session.use_only_cookies defaults 1; retain it to exclude GET/POST IDs. Disabling it is deprecated from PHP 8.4. | PHP native configuration 8.x | REASONED |
+| session-storage: Default files handler needs a private worker-writable directory outside the document root; dedicated-account mode 0700, default file mode 0600, separate untrusted-app identities. | PHP native configuration 8.x | REASONED |
+| session-sid-length: PHP 8.x session.sid_length defaults 32; changes are deprecated from 8.4. PHP 8.3 production template sets 26. | PHP native configuration 8.x; PHP production template 8.3 | REASONED |
+| session-sid-bits: PHP 8.x session.sid_bits_per_character defaults 4; changes are deprecated from 8.4. PHP 8.3 production template sets 5. | PHP native configuration 8.x; PHP production template 8.3 | REASONED |
+| verify-listener: Inventory all FPM listeners: Unix socket or loopback TCP 9000 only. | PHP native configuration 8.x | REASONED |
+| verify-tls: HTTPS should succeed without -k; linked fronting-server guides supply TLS configuration. | PHP documentation unknown; Laravel 12.x | REASONED |
+| verify-cookies: Inspect login Set-Cookie for Secure, HttpOnly and SameSite=Lax. | PHP native configuration 8.x; Laravel 12.x | REASONED |
+| verify-auth: Anonymous protected routes must deny or redirect to login without protected content; require authorized success and isolated auth-removal control. Unrelated redirects/errors and anonymous Set-Cookie do not establish authentication. | Laravel 12.x | REASONED |
+| verify-config: Inspect CLI ini/settings against installed E_ALL; CLI does not establish web SAPI/FPM settings. Do not publish phpinfo. | PHP documentation unknown; PHP native configuration 8.x | REASONED |
+| verify-banner: Fixture should give HTTP 200; expose_php On should show PHP header unless stripped, Off must hide it. Proxy stripping in both states needs SAPI inspection. | PHP documentation unknown | REASONED |
+| verify-error: Native warning fixture must disclose canary with display_errors On, then return reached marker without diagnostics and log the warning after hardening. Errors/missing logs/blank bodies are inconclusive; startup/parse errors untested. | PHP native configuration 8.x; PHP documentation unknown | REASONED |
+| verify-laravel-error: Repeat body probe with controlled Laravel exception, rebuild config cache after APP_DEBUG changes, and require generic response plus protected log; native fixture does not test framework errors. | Laravel 12.x | REASONED |
+| verify-curl-version: Write-out fields require curl 7.75.0 or later; Sources cite PHP cURL constants, not the curl CLI minimum. | PHP documentation unknown | REASONED |
+<!-- version-basis:end -->
 
 PHP normally runs behind a web server (Apache with php-fpm or mod_php, nginx or Caddy with php-fpm), so TLS terminates there: follow [apache.md](apache.md), [nginx.md](nginx.md), or [caddy.md](caddy.md) with a certificate from [free-certificates.md](free-certificates.md). The PHP-specific exposures are the php-fpm FastCGI socket (the PHP manual: "An exposed FastCGI endpoint allows arbitrary code execution"), session cookies that PHP ships without `Secure`, `HttpOnly`, or `SameSite` (all three default off), `APP_DEBUG=true` left on in production, and cURL calls with certificate checks turned off.
 
@@ -8548,11 +8933,15 @@ Paste each guarded block whole. Substitute a full HTTPS URL inside the single qu
 
 For the protected-route check, confirm the same route returns the expected protected content to an authorized session. In an isolated exposed-state test, removing the authentication requirement must make that content accessible anonymously; restoring it must produce the documented denial or login redirect. A missing route or an unrelated error is not evidence of authentication.
 
+REASONED: following block; FPM listener, HTTPS and cookie inspection. The guide records no PHP/PHP-FPM runtime, container runtime or supplied deployment; expectations follow its cited PHP and Laravel documentation, not a recorded run.
+
 ```bash
 ss -xlnp   # read every listener; php-fpm: Unix socket; with TCP, ss -tlnp shows 127.0.0.1:9000 only
 curl -q -g --noproxy '*' -sI https://app.example.com/                             # succeeds without -k
 curl -q -g --noproxy '*' -sI https://app.example.com/login | grep -i set-cookie   # secure; httponly; samesite=lax
 ```
+
+REASONED: following block; anonymous protected-route discrimination. The guide records no PHP/PHP-FPM runtime, container runtime or supplied deployment; expectations follow its cited PHP and Laravel documentation, not a recorded run.
 
 ```bash
 (
@@ -8578,6 +8967,8 @@ curl -q -g --noproxy '*' -sI https://app.example.com/login | grep -i set-cookie 
 
 **REASONED: inspect the loaded configuration locally.** No PHP executable was available in the authoring environment. On the deployment host, these commands identify CLI configuration and show the production error settings. [PHP command-line options](https://www.php.net/manual/en/features.commandline.options.php).
 
+REASONED: following block; loaded CLI configuration inspection. The guide records no PHP/PHP-FPM runtime, container runtime or supplied deployment; expectations follow its cited PHP and Laravel documentation, not a recorded run.
+
 ```bash
 php --ini
 php -i | grep -E '^(display_errors|display_startup_errors|log_errors|error_log|error_reporting|expose_php) =>'
@@ -8588,6 +8979,8 @@ Expect `display_errors=Off`, `display_startup_errors=Off`, `log_errors=On`, the 
 
 **REASONED: banner and native PHP error disclosure.** No web SAPI or deployment was available. In an isolated deployment matching production, temporarily serve this controlled fixture through the intended PHP handler and proxy. Use PHP's built-in error handler, without framework bootstrapping or application error-handler overrides. Restrict access to the test operator and remove the fixture afterwards. The fixed warning text contains no secret. [PHP `trigger_error()`](https://www.php.net/manual/en/function.trigger-error.php).
 
+REASONED: following block; controlled native PHP warning fixture. The guide records no PHP/PHP-FPM runtime, container runtime or supplied deployment; expectations follow its cited PHP and Laravel documentation, not a recorded run.
+
 ```php
 <?php
 trigger_error('SECURECONFIG_PHP_ERROR_CANARY', E_USER_WARNING);
@@ -8595,6 +8988,8 @@ echo "SECURECONFIG_PHP_REACHED\n";
 ```
 
 First inspect the fixture's response headers:
+
+REASONED: following block; PHP response-banner discrimination. The guide records no PHP/PHP-FPM runtime, container runtime or supplied deployment; expectations follow its cited PHP and Laravel documentation, not a recorded run.
 
 ```bash
 (
@@ -8616,6 +9011,8 @@ First inspect the fixture's response headers:
 With `expose_php=On`, the exposed-state response is expected to contain `X-Powered-By: PHP/...` unless another layer strips it. With `expose_php=Off`, it must be absent. Require a successful transfer and the fixture's expected HTTP 200 response. If the proxy strips the header in both states, this checks the externally visible response only; attribute the PHP setting through the active SAPI configuration. [PHP banner behavior](https://www.php.net/manual/en/security.hiding.php).
 
 Then inspect the body from the same fixture URL:
+
+REASONED: following block; native PHP and Laravel error-disclosure discrimination. The guide records no PHP/PHP-FPM runtime, container runtime or supplied deployment; expectations follow its cited PHP and Laravel documentation, not a recorded run.
 
 ```bash
 (
@@ -8640,8 +9037,8 @@ For Laravel 12.x, repeat the body probe against a controlled route that raises a
 
 ## Sources (checked September 2026)
 
-- PHP FPM configuration (`listen`, `listen.allowed_clients`, `listen.owner`): https://www.php.net/manual/en/install.fpm.configuration.php
-- PHP session runtime configuration: https://www.php.net/manual/en/session.configuration.php
+- PHP FPM configuration (`listen`, `listen.allowed_clients`, `listen.owner`) (PHP 8.x): https://www.php.net/manual/en/install.fpm.configuration.php
+- PHP session runtime configuration (PHP 8.x): https://www.php.net/manual/en/session.configuration.php
 - PHP `session_regenerate_id()`: https://www.php.net/manual/en/function.session-regenerate-id.php
 - PHP `password_hash()`: https://www.php.net/manual/en/function.password-hash.php
 - PHP cURL constants (`CURLOPT_SSL_VERIFYPEER`, `CURLOPT_SSL_VERIFYHOST`, `CURLOPT_CAINFO`): https://www.php.net/manual/en/curl.constants.php
@@ -8656,12 +9053,12 @@ For Laravel 12.x, repeat the body probe against a controlled route that raises a
 - Laravel 12.x Socialite: https://laravel.com/framework/docs/12.x/socialite
 - Laravel 12.x deployment (nginx example, `APP_DEBUG`): https://laravel.com/framework/docs/12.x/deployment
 - PHP 8.x error configuration (`display_errors`, `display_startup_errors`, `log_errors`, `error_log`, `error_reporting`): https://www.php.net/manual/en/errorfunc.configuration.php
-- PHP core directives (`disable_functions`, `open_basedir`, memory and upload limits): https://www.php.net/manual/en/ini.core.php
+- PHP core directives (`disable_functions`, `open_basedir`, memory and upload limits) (PHP 8.x): https://www.php.net/manual/en/ini.core.php
 - PHP hiding and `expose_php`: https://www.php.net/manual/en/security.hiding.php
 - PHP 8.4 bundled production template: https://raw.githubusercontent.com/php/php-src/d313ad6098430f4e61f0121a9e7ab392d195e4e4/php.ini-production
 - PHP 8.3 bundled production template (older session ID overrides): https://raw.githubusercontent.com/php/php-src/b94f9f68a610e0fca5f2fea5bfa7c7d6d3d5a847/php.ini-production
 - PHP filesystem and streams configuration (`allow_url_fopen`, `allow_url_include`): https://www.php.net/manual/en/filesystem.configuration.php
-- PHP execution and input limits (`max_execution_time`, `max_input_time`, `max_input_vars`): https://www.php.net/manual/en/info.configuration.php
+- PHP execution and input limits (`max_execution_time`, `max_input_time`, `max_input_vars`) (PHP 8.x): https://www.php.net/manual/en/info.configuration.php
 - PHP upload-limit interactions and pitfalls: https://www.php.net/manual/en/features.file-upload.common-pitfalls.php
 - PHP session security and lifetime management: https://www.php.net/manual/en/session.security.ini.php
 - PHP command-line inspection (`--ini`, `-i`, `-r`): https://www.php.net/manual/en/features.commandline.options.php
@@ -8676,6 +9073,43 @@ For Laravel 12.x, repeat the body probe against a controlled route that raises a
 ======================================================================
 
 # Ruby on Rails and Puma: TLS and authentication
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| puma-default: Puma v8.0.2 defaults plaintext 9292 on :: when non-loopback IPv6 exists, otherwise 0.0.0.0. | Puma defaults v8.0.2 | REASONED |
+| puma-private: Bind loopback TCP 3000 or Unix socket with proxy TLS; bind accepts tcp, unix and ssl URIs only. | Puma README aef89221e4d729c3133c723844382331ba3bbbd9; Puma DSL d70de8b4e926f1f5fa0269dc46cdfadf52562628 | REASONED |
+| puma-tls: Native ssl bind example uses 8443 with key/cert; ca and verify_mode configure client certificates. | Puma DSL d70de8b4e926f1f5fa0269dc46cdfadf52562628 | REASONED |
+| force-ssl: force_ssl enables HTTPS redirect and HSTS; ssl_options defaults hsts subdomains true. Encrypted cookies still need HTTPS. | Rails documentation unknown | REASONED |
+| assume-ssl: Rails 7.1+ assume_ssl says the proxy terminated TLS before forwarding HTTP. | Rails documentation unknown; Action Pack 7.1 | REASONED |
+| hosts: Add the application hostname to config.hosts for Host allowlisting. | Rails documentation unknown | REASONED |
+| session: CookieStore example selects Secure, HttpOnly, SameSite=Lax and 14-day expiry. | Rails documentation unknown | REASONED |
+| trusted-proxies: Defaults include loopback/private/link-local; public proxies require an enumerable. Without a proxy, client-controlled X-Forwarded-For makes remote_ip unsuitable for allowlists/rate limits. | Rails documentation unknown | REASONED |
+| same-site-default: cookies_same_site_protection defaults lax from load_defaults 6.1. | Rails documentation unknown | REASONED |
+| auth-generator: Rails 8.0+ authentication generator supplies users, sessions and password reset using has_secure_password. | Rails documentation unknown | REASONED |
+| passwords: has_secure_password needs bcrypt ~&gt; 3.1.7 and password_digest; authenticate returns user/false, validates presence and 72-byte limit, and needs an app minimum length. | Rails documentation unknown | REASONED |
+| rate-limit: Controller rate_limit allows ten attempts per three minutes for create; needs ActiveSupport::Cache, defaulting to action_controller.cache_store. | Rails documentation unknown | REASONED |
+| rack-attack: Rack::Attack supplies path throttles/blocklists; configure its initializer and Rails railtie installs middleware. | Rack::Attack unknown | REASONED |
+| credentials: Edit encrypted credentials with credentials:edit; RAILS_MASTER_KEY overrides master.key, which Rails gitignores. | Rails credentials source e4cd6ae6f1f0a847958b3aa846c9fd8a3014922a; Rails documentation unknown | REASONED |
+| require-key: require_master_key=true refuses boot without the decryption key. | Rails documentation unknown | REASONED |
+| mfa: Rails has no built-in second factor; add TOTP or an identity layer and use linked MFA/OIDC guidance. | Rails documentation unknown | REASONED |
+| sidekiq-open: Bare /sidekiq mount has no auth; reachable users can read job arguments and retry, kill or clear queues. | Sidekiq Web unknown | REASONED |
+| sidekiq-devise: Devise authenticate constraint requires a signed-in admin; keep Sidekiq off the public internet even with auth. | Sidekiq Web unknown | REASONED |
+| sidekiq-basic: Otherwise add Rack Basic auth with credentials outside source, equal-length SHA256 secure_compare inputs and non-short-circuit &amp;. | Sidekiq Web unknown | REASONED |
+| client-tls: Net::HTTP.start use_ssl defaults VERIFY_PEER; supply ca_file before handshake, not inside the opened block. Never use VERIFY_NONE. | Net::HTTP source 39cf5f648a9e5e25312909a2dc26681edaa2402c | REASONED |
+| client-store: Ruby SSLContext loads system trust through set_default_paths; SSL_CERT_FILE and SSL_CERT_DIR select an internal CA store. | Ruby OpenSSL source a77ed4b9908e179cea8f018f7e245535301746a8; OpenSSL documentation unknown | REASONED |
+| verify-bind: Inventory every listener; Puma should bind only 127.0.0.1:3000. | Puma README aef89221e4d729c3133c723844382331ba3bbbd9; Puma DSL d70de8b4e926f1f5fa0269dc46cdfadf52562628 | REASONED |
+| verify-https: HTTP should redirect 301 to HTTPS; inspect HSTS and Secure/HttpOnly/SameSite=Lax cookies. | Rails documentation unknown | REASONED |
+| verify-dashboard: Anonymous dashboard request should return login 302 or 401. | Rails documentation unknown | REASONED |
+| verify-sidekiq: Basic needs 401 plus WWW-Authenticate, Devise login 302; bare 404 is inconclusive, dashboard 200 is exposure. Require authorized success. | Sidekiq Web unknown | REASONED |
+| verify-key: git ls-files config/master.key should print nothing. | Rails credentials source e4cd6ae6f1f0a847958b3aa846c9fd8a3014922a | REASONED |
+<!-- version-basis:end -->
 
 Puma's default bind is `tcp://[::]:9292` when the host has a non-loopback IPv6 address, otherwise `tcp://0.0.0.0:9292` (as of v8.0.2): every interface, plain HTTP. Rails encrypts its session cookie but still sends it in clear unless HTTPS is enforced. Preferred layout: bind Puma to loopback and terminate TLS in a reverse proxy ([nginx.md](nginx.md), [caddy.md](caddy.md), [apache.md](apache.md)) or behind [cloudflare.md](cloudflare.md), with a certificate from [free-certificates.md](free-certificates.md). Puma can also terminate TLS itself, shown below.
 
@@ -8767,6 +9201,8 @@ end
 Never set `verify_mode = OpenSSL::SSL::VERIFY_NONE`. Ruby's default SSL context loads the system store through `set_default_paths`, and OpenSSL reads `SSL_CERT_FILE` and `SSL_CERT_DIR` to locate that store, so an internal CA goes there (see [self-signed.md](self-signed.md)) rather than into a disabled check.
 
 ## Verify
+
+REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial and master-key tracking. No application deployment or run outcome is recorded here; these checks are reasoned from the cited Puma, Rails and Sidekiq sources.
 
 ```bash
 ss -tlnp   # read every listener; puma/ruby: 127.0.0.1:3000 only
@@ -30314,6 +30750,37 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
 
 # Admin panels: phpMyAdmin, pgAdmin, mongo-express, Grafana, Prometheus
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| private: Keep panels private; public front doors need proxy TLS, authentication and MFA. RedisInsight has no dedicated source here. | Grafana docs unknown; Prometheus docs unknown; phpMyAdmin unknown; pgAdmin unknown; Adminer unknown | REASONED |
+| mongo-enable: Recent login defaults off; current ENABLED and deprecated BASICAUTH fallback differ from some 1.0.x username-triggered builds. Set both flags and verify. | mongo-express unknown | REASONED |
+| mongo-credentials: Set nonempty BASICAUTH_USERNAME/PASSWORD instead of admin/pass defaults. | mongo-express unknown | REASONED |
+| mongo-database: Web Basic auth is separate from MongoDB credentials in ME_CONFIG_MONGODB_URL. | mongo-express unknown | REASONED |
+| grafana-admin: First login uses admin/admin and prompts for replacement; use strong credentials and individual accounts. | Grafana docs unknown | REASONED |
+| grafana-anonymous: Disable Grafana anonymous access if enabled. | Grafana docs unknown | REASONED |
+| grafana-mfa: Prefer SSO with MFA at the identity provider. | Grafana docs unknown | REASONED |
+| grafana-bind: Empty http_addr joins the port and binds all interfaces; set 127.0.0.1. | Grafana v13.2.2; Go net unknown | REASONED |
+| grafana-tls: Native HTTPS uses server protocol=https, cert_file and cert_key. | Grafana docs unknown | REASONED |
+| prometheus-auth: Authentication defaults off; web.config.file supplies basic_auth_users with bcrypt hashes. | Prometheus docs unknown | REASONED |
+| prometheus-bcrypt: Use htpasswd -nB -C 12; the guide's bare -B cost 5 versus OWASP minimum 10 lacks an OWASP citation here. | Prometheus docs unknown | REASONED |
+| prometheus-bind: Default 0.0.0.0:9090; set --web.listen-address=127.0.0.1:9090. | Prometheus v3.14.0 | REASONED |
+| prometheus-tls: web.yml tls_server_config cert_file/key_file enable TLS; validate with promtool check web-config. | Prometheus docs unknown | REASONED |
+| database-panels: Keep phpMyAdmin/pgAdmin behind proxy TLS/auth, restrict source IPs where supported and keep updated. | phpMyAdmin unknown; pgAdmin unknown | REASONED |
+| pgadmin-login: pgAdmin server mode has its own accounts/login. | pgAdmin unknown | REASONED |
+| adminer-login: Adminer uses database credentials, not a separate account store; server-side connections expose even private databases to login attempts. | Adminer unknown | REASONED |
+| adminer-file: Renaming Adminer is no access control; require private access or proxy TLS/auth/MFA, updates and removal of unused copies. | Adminer unknown | REASONED |
+| verify-listeners: Inventory sockets and Docker publications; a protected frontend or absent socket does not prove backend isolation. | Grafana v13.2.2; Prometheus v3.14.0 | REASONED |
+| verify-login: Anonymous dashboard data is a finding; require denial or verified login challenge. Arbitrary redirects and DNS/TLS/proxy errors are inconclusive. | mongo-express unknown; Grafana docs unknown; Prometheus docs unknown; phpMyAdmin unknown; pgAdmin unknown; Adminer unknown | REASONED |
+| verify-data: A 200 login shell proves nothing; require a known data route to succeed authorized and deny anonymous access; 404/server errors are inconclusive. | mongo-express unknown; Grafana docs unknown; Prometheus docs unknown; phpMyAdmin unknown; pgAdmin unknown; Adminer unknown | REASONED |
+<!-- version-basis:end -->
+
 Database and monitoring panels are the most-scanned targets on the internet, and several ship with known default credentials. One rule dominates everything tool-specific below: **an admin panel is never reachable from the public internet.** Bind it to loopback and reach it through SSH port forwarding, a VPN or tailnet ([tailscale.md](tailscale.md)), or Cloudflare Access ([cloudflare.md](cloudflare.md)); anything public sits behind a TLS proxy with its own authentication ([nginx.md](nginx.md), [caddy.md](caddy.md)) plus MFA ([mfa.md](mfa.md)).
 
 ## mongo-express
@@ -30368,6 +30835,8 @@ Adminer is database management in a single PHP file, and a filename like `admine
 Keep them on loopback or a private network and reach them through the tunnels above. When in doubt, apply the generic pattern: loopback bind, TLS proxy, proxy or SSO authentication, MFA.
 
 ## Verify
+
+REASONED: following block; panel sources below support the listener and anonymous front-page/data-route checks. No panel deployment or external test network is available here; no live run is recorded. The comments give expected denial, exposure and inconclusive outcomes.
 
 ```bash
 # On the host: each panel listener should be loopback (127.0.0.1) or a deliberately chosen private address.
@@ -30921,6 +31390,79 @@ channel only. The password can still reach shell history or `set -x` output.
 
 # DevOps panels: Portainer, Coolify, Dokploy, Nginx Proxy Manager, Vaultwarden, Kubernetes Dashboard, Jenkins, Gitea, Uptime Kuma, and the Docker API
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| private: Keep panels private; public front doors need proxy TLS/auth and MFA. Complete first-run administration before exposure. | Portainer unknown; Docker Engine unknown | REASONED |
+| portainer-ports: UI HTTPS 9443 is self-signed by default; supply a certificate/proxy. Leave legacy HTTP 9000 unpublished; publish tunnel 8000 only for Edge Compute. | Portainer unknown | REASONED |
+| portainer-setup: Setup requires the logged setup_token; first user is admin with a password of at least 12 characters. | Portainer unknown | REASONED |
+| portainer-auth: Internal, LDAP, AD or OAuth login; no documented native second factor. Enforce MFA at the OAuth provider. | Portainer unknown | REASONED |
+| portainer-socket: Mounted docker.sock grants host-root power; treat a Portainer admin accordingly. | Portainer unknown; Docker Engine unknown | REASONED |
+| coolify-setup: HTTP dashboard starts on 8000; first registration claims server control, so create admin immediately. | Coolify unknown | REASONED |
+| coolify-tls: Custom domain in /settings lets Traefik/Caddy issue/renew TLS; dashboard ports 8000/6001/6002 can then close. | Coolify unknown | REASONED |
+| coolify-firewall: Docker bypasses UFW; restrict dashboard ports at the cloud firewall. | Coolify unknown | REASONED |
+| coolify-ssh: Server SSH keys require no passphrase; stored key material is the whole secret. | Coolify unknown | REASONED |
+| dokploy-ports: UI is 3000, Traefik 80/443; first setup creates admin. | Dokploy unknown | REASONED |
+| dokploy-tls: Configure a panel domain and Let's Encrypt/custom certificate, then remove published 3000. | Dokploy unknown | REASONED |
+| npm-ports: Admin is 81, proxy 80/443; publish 127.0.0.1:81:81 and tunnel in. | Nginx Proxy Manager unknown | REASONED |
+| npm-admin: Change default first-run admin credentials before other work. | Nginx Proxy Manager unknown | REASONED |
+| vaultwarden-tls: Web-vault crypto needs HTTPS; prefer proxy TLS over ROCKET_TLS and set DOMAIN=https://vault.example.com. | Vaultwarden docs unknown; Vaultwarden config 3347698712d3e99e652ad4394ef2fc0ce2800fdd | REASONED |
+| vaultwarden-signup: SIGNUPS_ALLOWED defaults true; set false to close registration. | Vaultwarden docs unknown; Vaultwarden config 3347698712d3e99e652ad4394ef2fc0ce2800fdd | REASONED |
+| vaultwarden-invites: INVITATIONS_ALLOWED=true still permits owner/admin invitations; SIGNUPS_DOMAINS_WHITELIST admits selected domains. | Vaultwarden docs unknown; Vaultwarden config 3347698712d3e99e652ad4394ef2fc0ce2800fdd | REASONED |
+| vaultwarden-admin: ADMIN_TOKEN enables the disabled admin page; enable HTTPS first, use vaultwarden hash argon2id PHC, and escape Compose dollars as $$. | Vaultwarden docs unknown; Vaultwarden config 3347698712d3e99e652ad4394ef2fc0ce2800fdd | REASONED |
+| vaultwarden-session: Admin sessions expire after 20 minutes by default. | Vaultwarden docs unknown; Vaultwarden config 3347698712d3e99e652ad4394ef2fc0ce2800fdd | REASONED |
+| vaultwarden-port: Container port 80 or non-Docker 8000; publish only to loopback/proxy network. | Vaultwarden config 3347698712d3e99e652ad4394ef2fc0ce2800fdd | REASONED |
+| dashboard-lifecycle: Recorded September 2026: deprecated/unmaintained, archived January 2026; Kubernetes points new installs to Headlamp. | Dashboard docs unknown | REASONED |
+| dashboard-forward: Avoid public LoadBalancer/Ingress; port-forward kong-proxy 8443:443 and use https://localhost:8443 on the operator machine. | Dashboard docs unknown | REASONED |
+| dashboard-token: Use minimally privileged ServiceAccount bearer tokens; sample cluster-admin is demonstration-only. | Dashboard docs unknown | REASONED |
+| dashboard-old-flags: Older 2.x enable-skip-login and enable-insecure-login default false; keep both false. | Dashboard arguments v2.7.0 | REASONED |
+| dashboard-mfa: API-server OIDC gives ServiceAccount tokens no MFA; enforce human MFA on the access path or an IdP-aware UI. | Dashboard docs unknown | REASONED |
+| jenkins-auth: Realm/authorization are separate; setup creates one local admin. Disable signup because strategy grants apply to new users too. | Jenkins unknown | REASONED |
+| jenkins-matrix: Use Matrix Authorization; grant nothing significant to anonymous/authenticated. Anonymous Overall/Administer is full control. | Jenkins unknown | REASONED |
+| jenkins-csrf: Keep CSRF enabled even privately; disabling uses hudson.security.csrf.GlobalCrumbIssuerConfiguration.DISABLE_CSRF_PROTECTION, not a UI switch. | Jenkins unknown | REASONED |
+| jenkins-agents: Inbound agents use fixed/random TCP or WebSocket on HTTPS; prefer WebSocket or isolate the extra port. | Jenkins unknown | REASONED |
+| jenkins-mfa: No native second factor; enforce MFA through SSO/fronting identity. | Jenkins unknown | REASONED |
+| gitea-bind: HTTP_ADDR=0.0.0.0 and HTTP_PORT=3000 default; set 127.0.0.1 behind a proxy. | Gitea listener v1.27.3 | REASONED |
+| gitea-tls: Native TLS uses PROTOCOL=https, CERT_FILE and KEY_FILE. | Gitea docs unknown | REASONED |
+| gitea-registration: Set service DISABLE_REGISTRATION=true; default false. | Gitea docs unknown | REASONED |
+| gitea-private: Set service REQUIRE_SIGNIN_VIEW=true for a private forge; default false. | Gitea docs unknown | REASONED |
+| gitea-mfa: Enrol TOTP/WebAuthn; security TWO_FACTOR_AUTH=enforced requires MFA in Gitea 1.24 and later. | Gitea docs unknown; Gitea MFA minimum 1.24 | REASONED |
+| gitea-tokens: With MFA, Git HTTP uses tokens that bypass MFA; scope and revoke unused tokens. | Gitea docs unknown | REASONED |
+| gitlab-root: Rotate generated initial_root_password; file deletion is on first restart after 24 hours. Alternatively preset through gitlab.rb/OMNIBUS_CONFIG. | GitLab CE unknown | REASONED |
+| gitlab-signup: signup_enabled defaults true; disable for a private forge. | GitLab CE unknown | REASONED |
+| gitlab-approval: New instances require admin approval after signup by default; do not rely on approval alone. | GitLab CE unknown | REASONED |
+| gitlab-visibility: Project/group visibility default private; internal admits every signed-in non-external user, including allowed registrants. | GitLab CE unknown | REASONED |
+| gitlab-mfa: Enforce two-factor authentication for every user; available on all tiers. | GitLab CE unknown | REASONED |
+| kuma-proxy: Port 3001 uses WebSockets; proxy Upgrade/Connection headers are required. | Uptime Kuma unknown | REASONED |
+| kuma-admin: Finish account setup before others, enable 2FA and keep dashboard private even if status pages are public. | Uptime Kuma unknown | REASONED |
+| docker-root: Docker socket grants host-root power; never expose unauthenticated 0.0.0.0:2375. | Docker Engine unknown | REASONED |
+| docker-ssh: DOCKER_HOST/context can select SSH to the Unix socket without a new listener. | Docker Engine unknown | REASONED |
+| docker-mtls: 2376 requires tlsverify, CA, server cert/key and client TLS settings. Without tlsverify clients are not authenticated; firewall source addresses too. | Docker Engine unknown | REASONED |
+| dozzle-socket: Docker-socket access has host-level power; keep Dozzle private with fronting MFA. | Dozzle unknown; Docker Engine unknown | REASONED |
+| dozzle-auth: Auth defaults off; generate users.yml with stdin password prompt and set simple auth, or delegate with forward-proxy. | Dozzle unknown | REASONED |
+| dozzle-actions: Leave optional container actions/shell off unless needed; either enables remote command execution. | Dozzle unknown | REASONED |
+| registry-auth: registry:2 defaults to unauthenticated push/pull; configure TLS before htpasswd/token auth or use an authenticated distribution. | Docker Registry registry:2 | REASONED |
+| registry-bcrypt: Native htpasswd accepts bcrypt only; use -B -C 12. Proxy hashing rules differ; OWASP cost minimum lacks a direct source here. | Docker Registry registry:2 | REASONED |
+| registry-private: Use private networking and tunnels/Access with fronting MFA. | Docker Registry registry:2 | REASONED |
+| filebrowser-admin: Change first-run admin credentials, historically admin/admin. Guide records September 1, 2026 archival and the warning against internet exposure. | Filebrowser unknown | REASONED |
+| filebrowser-private: Keep Filebrowser private through tunnel/tailnet/Access with fronting MFA. | Filebrowser unknown | REASONED |
+| nodered-default: Editor/admin API on 1880 defaults unauthenticated, permitting flow viewing/deployment/modification. | Node-RED unknown | REASONED |
+| nodered-auth: Set adminAuth with bcrypt passwords from node-red admin hash-pw. | Node-RED unknown | REASONED |
+| nodered-secret: Set credentialSecret yourself; otherwise generated, and stored credentials depend on it. | Node-RED unknown | REASONED |
+| nodered-private: Keep editor private with fronting MFA; it has the power of its flows. | Node-RED unknown | REASONED |
+| verify-listeners: Read every panel/API listener; expect loopback or absence, never wildcard exposure. | Portainer unknown; Dokploy unknown; Nginx Proxy Manager unknown; Uptime Kuma unknown; Docker Engine unknown | REASONED |
+| verify-panel: Expect denial/login redirect with valid TLS; anonymous host/container/repository data is a finding. No live panel outcome recorded. | Portainer unknown; Jenkins unknown; Gitea docs unknown | REASONED |
+| verify-docker-plain: Public-IP 2375 must be refused/filtered by the remote host; local client failure is inconclusive. | Docker Engine unknown | REASONED |
+| verify-docker-mtls: 2376 /_ping without a client certificate must fail client-certificate authentication; correct certificate/key must return 200. | Docker Engine unknown | REASONED |
+| verify-gitlab: Present initial_root_password requires rotation; absence does not prove rotation. Failed/unexpected docker exec output is not a result. | GitLab CE unknown | REASONED |
+<!-- version-basis:end -->
+
 These panels control hosts, containers, clusters, deploy keys, and secrets; a login to one of them is a login to everything it manages. One rule dominates everything tool-specific below: **a DevOps panel is never reachable from the public internet.** Bind it to loopback or a private interface and reach it through SSH port forwarding, a tailnet ([tailscale.md](tailscale.md)), or Cloudflare Access ([cloudflare.md](cloudflare.md)); anything that must be public sits behind a TLS proxy with its own authentication ([nginx.md](nginx.md), [caddy.md](caddy.md)) and the admin login gets MFA ([mfa.md](mfa.md)). Several of these tools create their administrator on first visit, so whoever reaches a fresh install first owns it: create the account before the port is reachable by anyone else.
 
 ## Portainer
@@ -31022,6 +31564,8 @@ Without `--tlsverify` the daemon does not check client certificates. Firewall 23
 
 ## Verify
 
+REASONED: following block; panel, Docker daemon and GitLab sources below support these listener/login, 2375/2376 and password-file checks. No deployed panels, certificate fixture or external test network is available here. Comments give expected outcomes and limits; no live run is recorded.
+
 ```bash
 ss -tlnp   # read every listener; 9443/9000/8000/3000/81/3001/2375/2376: 127.0.0.1 or absent, never 0.0.0.0
 # guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
@@ -31079,7 +31623,7 @@ From outside the network, every panel URL is unreachable or shows a login; a pag
 - Vaultwarden wiki: admin page and ADMIN_TOKEN https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page , registration https://github.com/dani-garcia/vaultwarden/wiki/Disable-registration-of-new-users , HTTPS https://github.com/dani-garcia/vaultwarden/wiki/Enabling-HTTPS , and the `.env.template` https://github.com/dani-garcia/vaultwarden/blob/3347698712d3e99e652ad4394ef2fc0ce2800fdd/.env.template
 - Kubernetes Dashboard (deprecation, port-forward, token login): https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/ ; 2.x arguments: https://github.com/kubernetes-retired/dashboard/blob/v2.7.0/docs/common/dashboard-arguments.md
 - Jenkins security: https://www.jenkins.io/doc/book/security/managing-security/ , https://www.jenkins.io/doc/book/security/access-control/ , https://www.jenkins.io/doc/book/security/csrf-protection/
-- Gitea config cheat sheet and MFA: https://docs.gitea.com/administration/config-cheat-sheet and https://docs.gitea.com/usage/user-setting/multi-factor-authentication/
+- Gitea config cheat sheet and MFA (Gitea 1.24 and later): https://docs.gitea.com/administration/config-cheat-sheet and https://docs.gitea.com/usage/user-setting/multi-factor-authentication/
 - GitLab CE initial root password (Docker install): https://docs.gitlab.com/install/docker/installation/
 - GitLab CE sign-up restrictions: https://docs.gitlab.com/administration/settings/sign_up_restrictions/
 - GitLab CE default visibility and access controls: https://docs.gitlab.com/administration/settings/visibility_and_access_controls/
@@ -31087,7 +31631,7 @@ From outside the network, every panel URL is unreachable or shows a login; a pag
 - Uptime Kuma README and reverse proxy wiki: https://github.com/louislam/uptime-kuma and https://github.com/louislam/uptime-kuma/wiki/Reverse-Proxy
 - Docker: protect the daemon socket https://docs.docker.com/engine/security/protect-access/ and remote access https://docs.docker.com/engine/daemon/remote-access/
 - Dozzle authentication (DOZZLE_AUTH_PROVIDER, users.yml, actions and shell): https://dozzle.dev/guide/authentication
-- Docker Registry deployment (default authentication, TLS requirement): https://distribution.github.io/distribution/about/deploying/
+- Docker Registry deployment (default authentication, TLS requirement) (registry:2): https://distribution.github.io/distribution/about/deploying/
 - Filebrowser: https://github.com/filebrowser/filebrowser
 - Node-RED securing the runtime (adminAuth, credentialSecret): https://nodered.org/docs/user-guide/runtime/securing-node-red
 - Gitea `HTTP_ADDR` default `0.0.0.0` and `HTTP_PORT` default `3000` (pinned tag v1.27.3): https://github.com/go-gitea/gitea/blob/v1.27.3/modules/setting/server.go#L121-L122
@@ -32530,6 +33074,39 @@ At the time of writing these deployment defaults are checked against `self-hoste
 
 # Files a web server must never serve: dotfiles, .git, dumps, backups, and client secrets
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| nginx-dotfiles: Deny dot-prefixed paths by regex; ACME longest-prefix ^~ location skips regex matching. | nginx documentation unknown | REASONED |
+| nginx-backups: Dotfile regex misses dump.sql/backup.tar.gz; keep exports outside root or add explicit sql/dump/bak/tar.gz deny. | nginx documentation unknown | REASONED |
+| apache-directories: DirectoryMatch denies dot-prefixed filesystem segments; exact well-known exemption permits the whole directory, not well-known-backup lookalikes. | Apache documentation 2.4 | REASONED |
+| apache-files: FilesMatch uses basenames, not enough for .git/config; retain for top-level dotfiles and sql/dump/bak files. | Apache documentation 2.4 | REASONED |
+| apache-listing: Guide records Debian/Ubuntu Indexes FollowSymLinks and DirectoryIndex defaults without a packaging citation; index-less directories can expose other filenames. | Apache documentation 2.4 | REASONED |
+| apache-forbidden: mod_autoindex hides 403 subrequests unless ShowForbidden is enabled; denies do not protect unrelated archives/CSV exports. | Apache documentation 2.4 | REASONED |
+| apache-options: Options -Indexes removes listing, preserving inherited options; Apache 2.4 rejects mixing relative +/- and bare options. | Apache documentation 2.4 | REASONED |
+| nginx-listing: nginx autoindex defaults off. | nginx documentation unknown | REASONED |
+| caddy-listing: Guide says Caddy lists only with file_server browse; Sources omit a file_server reference. | Caddy documentation unknown | REASONED |
+| caddy-deny: Caddy rules return 404 only for /.git/*, /.env and /.env.*; extend coverage or keep other sensitive files outside the served tree. | Caddy documentation unknown | REASONED |
+| caddy-acme: Broader Caddy denies must exempt legitimate .well-known paths; independent ACME handling lacks a direct Sources citation. | Caddy documentation unknown | REASONED |
+| backup-storage: Keep SQL dumps/backups outside document roots or in object storage; filename denies are only a backstop. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation unknown | REASONED |
+| next-public: NEXT_PUBLIC_ embeds values in browser JavaScript; keep provider keys server-side behind backend routes. | Next.js documentation unknown | REASONED |
+| vite-public: VITE_ embeds values in browser JavaScript; reserve for public values. | Vite documentation unknown | REASONED |
+| cra-public: Deprecated Create React App embeds REACT_APP_ values in browser builds. | Create React App documentation unknown | REASONED |
+| source-maps: Guide warns against external/inline maps for private code; removing sourceMappingURL does not unpublish deployed maps. Sources omit a direct map reference. | Next.js documentation unknown; Vite documentation unknown | REASONED |
+| verify-dotfiles: Plant a real readable dotfile exclusively; expect 403/404 without planted content. Missing plants are inconclusive, other paths need real files; remove only created probes. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation unknown | REASONED |
+| verify-listing: Existing nonempty index-less uploads must not produce 200 autoindex; absent/unwritable directories are inconclusive. | Apache documentation 2.4 | REASONED |
+| verify-acme: Real readable challenge file should return probe over HTTPS and HTTP:80; Sources do not directly cite HTTP-01. | nginx documentation unknown; Apache documentation 2.4 | REASONED |
+| verify-lookalike: Real .well-known-backup/config must be denied; bare 404 without a planted file proves nothing. | Apache documentation 2.4 | REASONED |
+| verify-bundle: Scan built client output for credential patterns/literal secrets; grep 0 match, 1 no match, 2 error. Clean does not exclude transformed secrets; no grep reference supplied. | Next.js documentation unknown; Vite documentation unknown; Create React App documentation unknown | REASONED |
+| verify-backup: Known previously deployed backup URLs should return 404. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation unknown | REASONED |
+<!-- version-basis:end -->
+
 Scanners request `/.env`, `/.git/config`, `/config.php.bak`, and `/db.sql` continuously, and any of these
 under a web root hands over credentials or source regardless of what the application itself authenticates.
 Anything a deploy step leaves inside the document root is served too, unless the server is told otherwise.
@@ -32617,6 +33194,8 @@ unpublish a `.map` you already deployed. Do not ship a source map, or leave one 
 meant to be public.
 
 ## Verify
+
+REASONED: following block; planted-file denial, directory listing, ACME/lookalike paths and client-bundle scans. No configured web-server deployment or run outcome is recorded here; expectations are reasoned from the guide and its cited server and framework sources.
 
 ```bash
 # Plant a real file at a denied dotfile path so a 403/404 proves the RULE fired, not that the file is
@@ -33137,6 +33716,42 @@ Prove alignment by sending one benign message to a controlled recipient and read
 
 # BI dashboards: Metabase, Superset, Redash
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| private: Keep BI tools private with fronting MFA and least-privilege read-only DB accounts unless write-back is needed. | Redash docs unknown; Metabase docs unknown | REASONED |
+| metabase-setup: First account is admin; finish setup before anyone else can reach it. | Metabase docs unknown | REASONED |
+| metabase-precedence: Settings merge .lein-env, .boot-env, environment and JVM properties in order; later empty values mask earlier settings. | Metabase v0.63.18; environ 1.2.0 | REASONED |
+| metabase-bind: Final nonblank MB_JETTY_HOST sets the jar host; otherwise Ring passes no host and Jetty binds wildcard. Use loopback behind a local proxy. | Metabase v0.63.18; Ring Jetty adapter 1.15.3; Jetty 12.1.13 | REASONED |
+| metabase-image: Image exports MB_JETTY_HOST=0.0.0.0 when unset/empty; publish 127.0.0.1:3000:3000 before first start. | Metabase v0.63.18; Docker publishing unknown | REASONED |
+| metabase-port: Port defaults 3000 unless the final MB_JETTY_PORT is nonblank. | Metabase v0.63.18 | REASONED |
+| metabase-sharing: Public links/embeds default enabled and expose view-only question/dashboard/document results without login; disable unneeded sharing. | Metabase docs unknown | REASONED |
+| metabase-embed: Public embed URLs are recoverable; embeds do not strengthen the public-link boundary. | Metabase docs unknown | REASONED |
+| metabase-sandbox: Row/column security is Pro/Enterprise; free-tier sharing exposes the rows/columns the question queries. | Metabase docs unknown | REASONED |
+| superset-secret: Set a unique complex random SECRET_KEY before exposure; it signs session cookies. | Superset docs unknown | REASONED |
+| superset-admin: Replace the first-run admin password before exposure. | Superset docs unknown; Superset Compose 3d01094d231712e3470eb625be3f9925aeaeadb5 | REASONED |
+| superset-public: Absent AUTH_ROLE_PUBLIC does not prove denial; inspect effective Public-role grants, which provide no data access by default. | Superset docs unknown | REASONED |
+| superset-copy: PUBLIC_ROLE_LIKE copies permissions at superset init; broad roles grant access without scoping datasets/dashboards. | Superset docs unknown | REASONED |
+| superset-compose: Example Compose is unsupported for production; use unique passwords/SECRET_KEY, not the example against production data. | Superset Compose 3d01094d231712e3470eb625be3f9925aeaeadb5 | REASONED |
+| redash-setup: Create the first-run admin before others reach setup. | Redash docs unknown | REASONED |
+| redash-https: Enforce HTTPS and the private-access pattern. | Redash docs unknown | REASONED |
+| redash-cookie: Use an instance-specific REDASH_COOKIE_SECRET; never commit or reuse it. | Redash docs unknown | REASONED |
+| redash-encryption: REDASH_SECRET_KEY encrypts data-source credentials; use a strong unique value outside version control. | Redash docs unknown | REASONED |
+| redash-bind: Default image server uses REDASH_GUNICORN_BIND or [::]:5000 when unset/empty; dual-stack may accept IPv4. Bind/publish privately. | Redash v26.9.0 | REASONED |
+| verify-credentials: Confirm no default admin/admin or example credentials work. | Metabase docs unknown; Superset Compose 3d01094d231712e3470eb625be3f9925aeaeadb5; Redash docs unknown | REASONED |
+| verify-db: Inspect effective/inherited DB grants; confirm reads and denied writes on a disposable object; scope needed write-back separately. | Metabase docs unknown | REASONED |
+| verify-listeners: Inventory application/proxy sockets and Docker NAT publications; probe direct origins over IPv4/IPv6/LAN/VPC. Absent ss entries do not prove isolation. | Metabase v0.63.18; Superset Compose 3d01094d231712e3470eb625be3f9925aeaeadb5; Redash v26.9.0; Docker publishing unknown | REASONED |
+| verify-ports: Verify lists Metabase/Superset/Redash defaults 3000/8088/5000, qualified as install-dependent. | Metabase v0.63.18; Superset Compose 3d01094d231712e3470eb625be3f9925aeaeadb5; Redash v26.9.0 | REASONED |
+| verify-data: Authorized data is the control; anonymous data fails. Denial/verified login challenge passes; SPA shells, 404/errors and arbitrary redirects are inconclusive. | Metabase docs unknown; Superset docs unknown; Redash docs unknown | REASONED |
+| verify-private: For tunnel-only access, confirm public isolation separately and test authorization on the permitted private path. | Redash docs unknown; Docker publishing unknown | REASONED |
+<!-- version-basis:end -->
+
 These tools hold live connections to your production databases and cache query results in their own
 storage. An exposed instance, or one still running default or example credentials, leaks both the
 dashboards themselves and the databases behind them. One rule dominates everything tool-specific
@@ -33209,6 +33824,8 @@ real data or API route, not the SPA HTML shell or a health endpoint): that is th
 Then, from OUTSIDE your network with no cookies, tokens, or Access credentials, run the whole block
 (substitute inside the quotes):
 
+REASONED: following block; Metabase, Superset, Redash and Docker sources below support socket/publication and anonymous data-route checks. No BI deployment or external test network is available here; no live run is recorded. Expected exposed, denied and inconclusive outcomes surround the block.
+
 ```bash
 ss -tlnp   # every application AND proxy listener; Metabase/Superset/Redash default to 3000/8088/5000 (ports
            # vary by install). ss shows host listeners, not Docker's NAT: for a container also inspect the
@@ -33266,6 +33883,68 @@ connection string or the tool's own login is not enough.
 ======================================================================
 
 # Low-code internal-tool builders: NocoDB, Baserow, Appsmith, Budibase, and Windmill
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| private: Keep builders private with fronting auth, claim admin early and protect databases storing connected-system credentials. | NocoDB 2026.09.0; Baserow 2.3.4; Appsmith v2.4.1; Budibase v3.46.0; Windmill v1.817.0 | REASONED |
+| nocodb-bind: PORT defaults 8080; listen omits host, so Node binds unspecified IPv6/IPv4. No application bind setting; restrict publication/firewall. | NocoDB 2026.09.0; Node.js v22.22.1 | REASONED |
+| nocodb-first: First signup becomes super-admin; claim first or seed NC_ADMIN_EMAIL/NC_ADMIN_PASSWORD. | NocoDB 2026.09.0 | REASONED |
+| nocodb-signup: invite_only_signup defaults false; enable to stop later self-signups. | NocoDB 2026.09.0 | REASONED |
+| nocodb-encryption: Unset NC_CONNECTION_ENCRYPT_KEY stores external DB credentials unchanged; set before adding sources, or startup encrypts existing sources when added later. | NocoDB 2026.09.0 | REASONED |
+| nocodb-jwt: Unset NC_AUTH_JWT_SECRET generates/stores a UUID as nc_auth_jwt_secret; replace README sample 569a1821-0a93-45e8-87ab-eb857f20a010. | NocoDB 2026.09.0 | REASONED |
+| nocodb-cors: Entry file allows every CORS origin. | NocoDB 2026.09.0 | REASONED |
+| nocodb-proxy: Startup resets trust proxy from NC_TRUST_PROXY, default no trust; restrict hops/subnets, never true with direct client access. | NocoDB 2026.09.0 | REASONED |
+| nocodb-packaging: README binaries are for local quick tests; guide records no 2026.09.0 release binaries and image/install-script production paths. | NocoDB 2026.09.0 | REASONED |
+| baserow-bind: Caddy publishes 80/443 on HOST_PUBLISH_IP default 0.0.0.0; set it or publish loopback. Docker wildcard publication bypasses UFW. | Baserow 2.3.4 | REASONED |
+| baserow-first: First signup becomes staff; claim before exposure. | Baserow 2.3.4 | REASONED |
+| baserow-signup: allow_new_signups defaults True; disable in admin settings, yielding Sign up is disabled. | Baserow 2.3.4 | REASONED |
+| baserow-secrets: Compose requires SECRET_KEY/DATABASE_PASSWORD/REDIS_PASSWORD; .env.example leaves them empty. Generate your own. | Baserow 2.3.4 | REASONED |
+| baserow-mfa: Core registers a TOTP provider. | Baserow 2.3.4 | REASONED |
+| appsmith-bind: Java defaults APPSMITH_SERVER_ADDRESS=127.0.0.1 and port 8080 inside the container. | Appsmith v2.4.1 | REASONED |
+| appsmith-publish: Bundled Caddy fronts port 80; development Compose publishes host 8080, AWS example 80/443. | Appsmith v2.4.1 | REASONED |
+| appsmith-first: First signup claims super-user while no users exist; claim before exposure. | Appsmith v2.4.1 | REASONED |
+| appsmith-signup: APPSMITH_SIGNUP_DISABLED defaults false; set true or restrict APPSMITH_SIGNUP_ALLOWED_DOMAINS. Refusal is SIGNUP_DISABLED. | Appsmith v2.4.1 | REASONED |
+| appsmith-encryption: Entrypoint generates 13-character encryption password/salt; external values override them. Development Compose sets both abcd; replace before first start. | Appsmith v2.4.1 | REASONED |
+| appsmith-rotation: Changing an existing abcd encryption pair presumably makes stored credentials unreadable; plan re-entry. Inferred, not tested. | Appsmith v2.4.1 | REASONED |
+| budibase-publish: Proxy publishes MAIN_PORT, sample 10000; LiteLLM publishes LITELLM_PORT default 4000. | Budibase v3.46.0 | REASONED |
+| budibase-couchdb: Proxy /db/ reaches CouchDB, exposing sample budibase/budibase login to anyone reaching it. | Budibase v3.46.0 | REASONED |
+| budibase-secrets: Sample JWT_SECRET/API_ENCRYPTION_KEY are testsecret; service passwords, INTERNAL_API_KEY and LITELLM_MASTER_KEY are budibase. Replace all. | Budibase v3.46.0 | REASONED |
+| budibase-sample-check: Recorded source search found no production rejection of testsecret; source reasoning, not a live safeguard test. | Budibase v3.46.0 | REASONED |
+| budibase-init: Unauthenticated POST /api/global/users/init creates first admin until a user exists; validation runs first, so no read-only claimed-state probe. | Budibase v3.46.0 | REASONED |
+| budibase-seed: Claim admin before exposure or seed BB_ADMIN_USER_EMAIL/BB_ADMIN_USER_PASSWORD. | Budibase v3.46.0 | REASONED |
+| windmill-code: Workers execute user scripts; a login enables code execution on worker hosts. | Windmill v1.817.0 | REASONED |
+| windmill-bind: Default 0.0.0.0:8000; SERVER_BIND_ADDR changes binary binding. Default wildcard bind was not observed. | Windmill v1.817.0 | REASONED |
+| windmill-compose: Compose exposes server 8000 internally; Caddy publishes 80/25 on all host interfaces. Bind publications privately; container loopback cutting Caddy off is inferred. | Windmill v1.817.0 | REASONED |
+| windmill-sandbox: DISABLE_NSJAIL defaults true; sandboxing is not enabled by default. | Windmill v1.817.0 | REASONED |
+| windmill-privileged: Shipped worker uses privileged=true. | Windmill v1.817.0 | REASONED |
+| windmill-smtp: Port 25 serves email triggers; do not publish unless used. | Windmill v1.817.0 | REASONED |
+| windmill-debugger: Vendor warns REQUIRE_SIGNED_DEBUG_REQUESTS=false exposes an unauthenticated code-execution debugger on reachable deployments. | Windmill v1.817.0 | REASONED |
+| verify-nocodb-signup: Controlled signup creation is exposed; invite-only refusal is fixed. Hidden links prove nothing; inspect backend setting and confirm admin login. | NocoDB 2026.09.0 | REASONED |
+| verify-baserow-signup: Controlled signup creation is exposed; Sign up is disabled is fixed. Inspect allow_new_signups and confirm admin login. | Baserow 2.3.4 | REASONED |
+| verify-appsmith-signup: Controlled signup creation is exposed; SIGNUP_DISABLED is fixed. Inspect backend settings, confirm admin login and delete test accounts. | Appsmith v2.4.1 | REASONED |
+| verify-external: Probe each public IP; control proves only its port, refusal/timeout may be local filtering, and unexpected connections need host confirmation. | Baserow 2.3.4; Budibase v3.46.0; Windmill v1.817.0 | REASONED |
+| windmill-default-login: Fresh loopback DB had only admin@windmill.dev as a password user/super-admin; changeme returned 200/token, then 400 after rotation while the new password returned 200. | Windmill v1.817.0 | DEMONSTRATED |
+| windmill-loopback: SERVER_BIND_ADDR=127.0.0.1 produced only a loopback listener on the test port. | Windmill v1.817.0 | DEMONSTRATED |
+| windmill-sandbox-run: Loopback worker without nsjail logged sandboxing unavailable; this does not demonstrate isolation. | Windmill v1.817.0 | DEMONSTRATED |
+| verify-inventory: Inventory host sockets and Docker publications; NAT may have no socket, so absent ss entries do not establish isolation. | Docker docs unknown; Baserow 2.3.4; Appsmith v2.4.1; Budibase v3.46.0; Windmill v1.817.0 | REASONED |
+| verify-port-display: IPv6 wildcard displays [::]: from v27.2.0 versus ::: through v27.1.2; both mean all host addresses unless filtered. | Docker docs unknown; Docker CLI v27.2.0; Docker CLI v27.1.2 | REASONED |
+| verify-sample-tokens: Whole-token search found sample secrets/variants, clean replaced copies and unreadable paths; harmless matches and external environment values limit scope. | NocoDB 2026.09.0; Appsmith v2.4.1; Budibase v3.46.0; Windmill v1.817.0 | DEMONSTRATED |
+| verify-nocodb-key: docker exec tests configured key presence without printing it or passing its value in argv; no real container run. Startup selection/process value remain unverified. | NocoDB 2026.09.0; Docker docs unknown | REASONED |
+| nocodb-key-limits: Trusted shells/startup assumed; environment remains readable to same-account/root or Docker-socket holders. Presence does not prove encryption; do not inject a replacement key. | NocoDB 2026.09.0; Docker docs unknown | REASONED |
+| nocodb-key-logic: A docker exec stand-in exercised set/empty/unset/missing-container branches only; no NocoDB deployment demonstrated. | Docker docs unknown | DEMONSTRATED |
+| verify-windmill-control: Before trusting default-login 400, confirm real credentials work so a dead service is not treated as fixed. | Windmill v1.817.0 | REASONED |
+| verify-couchdb: Sample login at /db/_session?basic=true should return 200 exposed and 401 after replacement; real credentials are the positive control. | Budibase v3.46.0; CouchDB 3.5.2 | REASONED |
+| verify-litellm: Sample Bearer budibase at /v1/models should return 200 exposed/401 fixed; confirm real credentials. Endpoint discrimination is cross-referenced to litellm.md, not directly sourced here. | Budibase v3.46.0 | REASONED |
+| verify-tcp-outcomes: Loopback observed connected/open, timeout/full accept queue, refused/closed and failed-control stopping; no real firewall demonstrated. | Baserow 2.3.4; Budibase v3.46.0; Windmill v1.817.0 | DEMONSTRATED |
+| verify-tcp-inputs: Guard tests reject named hosts, malformed IPv4, zero/dotted IPv6, invalid ports and absent timeout; loopback/hex-mapped IPv6 pass. Invalid hex may fail at control. | Baserow 2.3.4; Budibase v3.46.0; Windmill v1.817.0 | DEMONSTRATED |
+<!-- version-basis:end -->
 
 These tools sit on top of your databases and APIs and let people build internal apps, forms and
 automations quickly. That is also the exposure. Each one stores credentials for the systems it connects
@@ -33395,6 +34074,8 @@ The remaining checks are REASONED from the cited vendor documentation and pinned
 On the host, list the listeners, then read Docker's own publications, because a port published through
 Docker's NAT may have no host socket at all, so absence from `ss` is not proof of isolation:
 
+REASONED: following block; pinned Compose and Docker sources support listener/publication inventory. The recorded host has no container runtime and forbids wildcard binds; exposed/fixed expectations follow.
+
 ```bash
 sudo ss -tlnp   # 8080 (NocoDB; Appsmith dev Compose), 80/443 (Baserow, Windmill Caddy), 10000 and 4000 (Budibase), 8000 and 25 (Windmill): loopback or private only
 docker ps --format '{{.Names}}\t{{.Ports}}'   # every "0.0.0.0:" or "[::]:" (":::" before Docker CLI 27.2) publication accepts connections on every host address: reachable from outside unless a firewall rule (for example in DOCKER-USER) filters it
@@ -33407,6 +34088,8 @@ Check each environment and Compose file the deployment uses for the vendor sampl
 once per file, including every file an `env_file:` line names and the `.env` Compose reads for
 variable substitution. Substitute the file path inside the
 single quotes (a path containing an apostrophe needs other quoting), and paste the whole block.
+
+DEMONSTRATED: following block; recorded sample-token runs found vendor values and syntax variants, found none in replaced copies and refused an unreadable path, as detailed below. External environment values are outside this file check.
 
 ```bash
 (
@@ -33457,6 +34140,8 @@ and Docker-socket holders can read the configured value with `docker inspect`. T
 does not remove that exposure, prove encryption is working, or establish what the server process
 actually received. Do not use `docker exec -e` to inject a key for this check.
 
+REASONED: following block; Docker exec inheritance and pinned NocoDB start scripts support key-presence checking. No real container ran because the recorded host has no container runtime; only stand-in logic outcomes below were observed.
+
 ```bash
 (
   trap - DEBUG RETURN ERR
@@ -33485,6 +34170,8 @@ For Windmill, check whether the default login still works. The password below is
 published default, not a secret, so it is fine in the request body. Substitute the base URL (for
 example the Caddy address on port 80) inside the single quotes.
 
+DEMONSTRATED: following block; Windmill v1.817.0 loopback returned 200 for changeme before rotation, 400 afterwards and 200 for the replacement password. This does not demonstrate external isolation.
+
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_WINDMILL_BASE_URL'
@@ -33507,6 +34194,8 @@ service is not read as fixed.
 
 For Budibase, two reasoned requests use the published sample values, which are not secrets. Substitute
 the proxy URL (`http://HOST:10000` in the sample setup) and the LiteLLM URL inside the single quotes.
+
+REASONED: following block; Budibase samples, CouchDB session documentation and the litellm.md comparison support the 200/401 expectations below. No Budibase/LiteLLM containers ran; the recorded host has no container runtime.
 
 ```bash
 (
@@ -33551,6 +34240,8 @@ address rather than a host name, so that a name with both IPv4 and IPv6 addresse
 behind a timeout on the other: run it once for each public address of the host. It also takes a port you know
 is open on that address from this host (for example SSH on 22) as the positive control, and stops if
 the control does not connect. Substitute both inside the single quotes.
+
+DEMONSTRATED: following block; recorded loopback tests observed connected, refused, timeout/full accept queue, failed-control stopping and the input cases below. Public isolation remains reasoned; the timeout fixture was not a firewall.
 
 ```bash
 (
@@ -33659,6 +34350,55 @@ mean to publish is the finding.
 
 # Server administration panels: Cockpit, Webmin, and Proxmox VE
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| private: Keep root-capable panels off the internet, bound/restricted to management networks with private access and a second factor. | Cockpit 368; Webmin docs 8ceae26c5a074053905cbcc6c0053be573633f3a; Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| cockpit-bind: Bare ListenStream=9090 binds IPv6 and, by default, IPv4 wildcard addresses. | Cockpit 368; systemd v262 | REASONED |
+| cockpit-dropin: Use a socket drop-in, not cockpit.conf: reset ListenStream, set 10.0.0.5:9090 and FreeBind=yes, then daemon-reload/restart. | Cockpit 368 | REASONED |
+| cockpit-tls: One port serves HTTP/HTTPS, redirecting HTTP except localhost; AllowUnencrypted defaults false and missing certificates cause self-signed creation. | Cockpit 368 | REASONED |
+| cockpit-pam: Local accounts use Cockpit PAM with normal SSH-equivalent privileges. | Cockpit 368 | REASONED |
+| cockpit-root: First-install packages write root to disallowed-users; onerr=succeed permits root if that file is missing/unreadable. | Cockpit 368 | REASONED |
+| cockpit-escalation: Users allowed sudo/polkit escalation get an immediately elevated session and terminal. | Cockpit 368 | REASONED |
+| cockpit-mfa: No built-in second factor; use PAM, Kerberos or client certificates. | Cockpit 368 | REASONED |
+| cockpit-rate: MaxStartups defaults to 10 concurrent attempts, not repeated-password lockout. | Cockpit 368 | REASONED |
+| cockpit-loginto: Set LoginTo=false to prevent unauthenticated scanning of reachable private networks. | Cockpit 368 | REASONED |
+| webmin-bind: Webmin/Usermin TCP ports are 10000/20000; omitted bind makes miniserv listen on all IPv4/IPv6 addresses. | Webmin 2.670; Usermin 2.570 | REASONED |
+| webmin-discovery: Installed listen=10000/20000 opens discovery UDP on every IPv4 address; delete when unused. | Webmin 2.670; Usermin 2.570 | REASONED |
+| webmin-access: Set management bind and allow networks, then restart; empty allow admits all except denied clients. | Webmin 2.670; Webmin docs 8ceae26c5a074053905cbcc6c0053be573633f3a | REASONED |
+| webmin-tls: Deb/RPM packages enable ssl=1 with a self-signed certificate. | Webmin 2.670 | REASONED |
+| webmin-root: Installed root crypt=x accepts the Unix root password with all modules; Command Shell defaults to root. | Webmin 2.670 | REASONED |
+| webmin-sudo: Installed sudo=1 lets sudo-permitted Unix users log in effectively as root. | Webmin 2.670 | REASONED |
+| webmin-mfa: TOTP/Authy exists but is not configured at install; enable and enrol every user. | Webmin 2.670 | REASONED |
+| webmin-advisories: Advisories list Basic-auth MFA bypasses CVE-2026-42210/CVE-2026-56022 under Webmin prior to 2.641; use a current release. | Webmin docs 8ceae26c5a074053905cbcc6c0053be573633f3a | REASONED |
+| webmin-rate: Defaults blockhost_failures=5/blockhost_time=60 block a host for 60 seconds, not a user lockout; Basic-auth failures count only with installed passdelay=1. | Webmin 2.670 | REASONED |
+| pve-bind: pveproxy HTTPS API 8006 and spiceproxy 3128 default IPv4/IPv6 wildcard; both share LISTEN_IP in /etc/default/pveproxy. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| pve-cluster: LISTEN_IP is not recommended on clusters needing peer pveproxy access; use ACLs/firewall. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| pve-acl: Default allow policy admits unmatched clients; ALLOW_FROM needs DENY_FROM=all or POLICY=deny, not both because deny policy rejects dual matches. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| pve-firewall: Firewall defaults disabled; enable and restrict 8006/22/3128 to management addresses. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| pve-root: root@pam can always log in as unconfined admin; installer sets the web-interface root password. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| pve-shell: Node shell opens /bin/login -f root without another password. | pve-manager 9.2.20 | REASONED |
+| pve-mfa: Configure TOTP, WebAuthn, recovery keys or realm-enforced TOTP/YubiKey OTP; no default second factor. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| pve-lockout: Eight TOTP failures disable TOTP; 100 WebAuthn/recovery-key failures block all factors for an hour. These are second-factor lockouts. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| pve-password-delay: Unauthorized API responses delay three seconds; this is not password lockout. | Proxmox HTTP server 5119ff9bec08c69584c0c98bea3edd0098179e5f | REASONED |
+| pve-certificates: Each cluster creates its own self-signed CA. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| pve-tokens: API tokens default to separated privileges and cannot access VM/node consoles. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| verify-cockpit: Inspect effective socket reset/address and root deny file; bare port or missing deny file exposes documented defaults. | Cockpit 368 | REASONED |
+| verify-pve: Inspect LISTEN_IP/ACL policy, enabled/running firewall and management-only rules, and every admin's second factor including root@pam. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| verify-external: Probe each public IP with a reachable control; refusal/timeout is only consistent with isolation. TCP does not test Webmin UDP. | Cockpit 368; Webmin 2.670; Usermin 2.570; Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| webmin-loopback: Loopback bind with no listen line produced one TCP socket and no UDP. | Webmin 2.670 | DEMONSTRATED |
+| webmin-rate-run: Fifth wrong password exceeded a five-second timeout; then even the right password received host-block 403. | Webmin 2.670 | DEMONSTRATED |
+| verify-listeners: Expect management TCP binds and no discovery UDP; clustered Proxmox may retain wildcards with ACL/firewall protection. | Cockpit 368; Webmin 2.670; Usermin 2.570; Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| verify-webmin-parser: Thirty fixtures matched miniserv parsing and bind/sockets/discovery/ACL/sudo outputs; unreadable paths were not checked. File inspection is not running-state proof. | Webmin 2.670 | DEMONSTRATED |
+| verify-tcp-loopback: Copied probe has recorded loopback provenance, not live panel-isolation evidence; loopback and mapped hex addresses pass its guard. | Cockpit 368; Webmin 2.670; Usermin 2.570; Proxmox VE 9.2 docs 9.2.12 | DEMONSTRATED |
+<!-- version-basis:end -->
+
 A server administration panel is root on the host behind a login form. Cockpit gives any user who can
 escalate with sudo or polkit an administrative session and a terminal. Webmin's packages make the host's
 root password a Webmin login with every module, including a root shell. Proxmox VE's web interface is the
@@ -33761,6 +34501,8 @@ Those expected outcomes are REASONED from the cited vendor documentation and sou
 
 On the host, list the listeners, TCP and UDP:
 
+REASONED: following block; pinned Cockpit, Webmin/Usermin and Proxmox sources support this inventory. The recorded host lacks Cockpit systemd and Proxmox and forbids wildcard binds; exposed/fixed expectations follow.
+
 ```bash
 sudo ss -tlnp   # 9090 (Cockpit), 10000 (Webmin), 20000 (Usermin), 8006 and 3128 (Proxmox VE): a management address only
 sudo ss -ulnp   # Webmin's discovery socket on UDP 10000 (Usermin 20000) should be gone
@@ -33784,6 +34526,8 @@ and an empty `allow=` lets every client address try to log in, except those a `d
 `ss` above is the authority for what is listening now, and a change takes effect at
 `/etc/webmin/restart`. Substitute the file path inside the single quotes (the package default is
 `/etc/webmin/miniserv.conf`), and paste the whole block.
+
+DEMONSTRATED: following block; the parser matched Webmin 2.670 on thirty fixtures and printed the recorded outcomes below. This demonstrates file inspection, not running sockets or network isolation.
 
 ```bash
 (
@@ -33861,6 +34605,8 @@ hide one behind a timeout on the other: run it once for each public address of t
 takes a port you know is open on that address from this host (for example SSH on 22) as the positive
 control, and stops if the control does not connect. Substitute both inside the single quotes.
 
+DEMONSTRATED: following block; recorded reuse of the low-code-builders.md loopback probe with these ports includes the mapped-address connection below. This is probe evidence only; live panel reachability and firewall isolation remain reasoned.
+
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ONE_IP_ADDRESS' 'REPLACE_WITH_A_KNOWN_OPEN_PORT'
@@ -33928,11 +34674,11 @@ give the server's public address. A "connected" on a port you did not mean to ex
 - Webmin 2.670 two-factor providers: https://github.com/webmin/webmin/blob/2.670/webmin/twofactor-funcs-lib.pl
 - Webmin documentation (configuration, security advisories): https://github.com/webmin/webmin.com/blob/8ceae26c5a074053905cbcc6c0053be573633f3a/content/docs/Modules/webmin-configuration.md and https://github.com/webmin/webmin.com/blob/8ceae26c5a074053905cbcc6c0053be573633f3a/content/security.md
 - Usermin 2.570 installer: https://github.com/webmin/usermin/blob/2.570/setup.sh
-- Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pveproxy.adoc
+- Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pveproxy.adoc
 - Proxmox VE user management (root@pam, two-factor, lockout, API tokens): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pveum.adoc
 - Proxmox VE firewall: https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pve-firewall.adoc
 - Proxmox VE certificates: https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=certificate-management.adoc
-- Proxmox VE node shell (`/bin/login -f root`): https://git.proxmox.com/?p=pve-manager.git;a=blob_plain;hb=49318c671b82f31e6b273b79447526161739b97a;f=PVE/API2/Nodes.pm
+- Proxmox VE node shell (`/bin/login -f root`) (pve-manager 9.2.20): https://git.proxmox.com/?p=pve-manager.git;a=blob_plain;hb=49318c671b82f31e6b273b79447526161739b97a;f=PVE/API2/Nodes.pm
 - Proxmox VE HTTP server (three-second delay on unauthorized responses): https://git.proxmox.com/?p=pve-http-server.git;a=blob_plain;hb=5119ff9bec08c69584c0c98bea3edd0098179e5f;f=src/PVE/APIServer/AnyEvent.pm
 
 ======================================================================
