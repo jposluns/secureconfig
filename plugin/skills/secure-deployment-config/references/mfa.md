@@ -1,4 +1,98 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "fae8d4facf3bf1a3c7b0a51f89a9121093c350ae310700d03348f80219501dbc",
+  "components": {
+    "totp": {
+      "name": "TOTP standard",
+      "basis": "unknown",
+      "sources": {
+        "s3190460e5d2d": "https://www.rfc-editor.org/info/rfc6238/"
+      }
+    },
+    "hotp": {
+      "name": "HOTP standard",
+      "basis": "unknown",
+      "sources": {
+        "s05c8bf9b6329": "https://www.rfc-editor.org/info/rfc4226/"
+      }
+    },
+    "uri": {
+      "name": "Authenticator key URI format",
+      "basis": "unknown",
+      "sources": {
+        "s4c73b28585c7": "https://github.com/google/google-authenticator/wiki/Key-Uri-Format"
+      }
+    },
+    "webauthn": {
+      "name": "WebAuthn standard",
+      "basis": "unknown",
+      "sources": {
+        "sef2c27817118": "https://www.w3.org/TR/webauthn-2/"
+      }
+    },
+    "authelia": {
+      "name": "Authelia proxy support",
+      "basis": "unknown",
+      "sources": {
+        "s1409ac8fe3d9": "https://www.authelia.com/integration/proxies/support/"
+      }
+    },
+    "caddy-min": {
+      "name": "Caddy forward_auth minimum",
+      "basis": "2.5.1",
+      "sources": {
+        "s1409ac8fe3d9": "https://www.authelia.com/integration/proxies/support/"
+      }
+    },
+    "duo": {
+      "name": "Duo editions",
+      "basis": "unknown",
+      "sources": {
+        "sb2b87daf72f0": "https://duo.com/editions-and-pricing"
+      }
+    }
+  },
+  "claims": {
+    "totp-secret": {"text": "Generate a random per-user TOTP secret; verification requires the recoverable secret rather than its hash.", "components": ["totp"], "sources": ["totp:s3190460e5d2d"], "status": "REASONED"},
+    "totp-provisioning": {"text": "Provision the authenticator with an otpauth:// URI rendered as a QR code.", "components": ["uri"], "sources": ["uri:s4c73b28585c7"], "status": "REASONED"},
+    "totp-storage": {"text": "Encrypt TOTP secrets at rest and exclude them from the repository.", "components": ["totp"], "sources": ["totp:s3190460e5d2d"], "status": "REASONED"},
+    "totp-throttling": {"text": "Rate-limit code attempts; repeated wrong codes must hit a rate limit or lockout.", "components": ["hotp", "totp"], "sources": ["hotp:s05c8bf9b6329", "totp:s3190460e5d2d"], "status": "REASONED"},
+    "totp-replay": {"text": "Reject an already accepted code within its time step; Verify submits the same valid code twice and expects refusal on reuse.", "components": ["totp"], "sources": ["totp:s3190460e5d2d"], "status": "REASONED"},
+    "authelia-proxies": {"text": "Authelia integrates with nginx auth_request, Traefik forwardAuth, Caddy forward_auth from 2.5.1, HAProxy via Lua and Envoy; Apache and IIS are unsupported.", "components": ["authelia", "caddy-min"], "sources": ["authelia:s1409ac8fe3d9", "caddy-min:s1409ac8fe3d9"], "status": "REASONED"},
+    "duo-free": {"text": "Duo Free covers up to 10 users with MFA and Duo Mobile as recorded in September 2026; verify current terms.", "components": ["duo"], "sources": ["duo:sb2b87daf72f0"], "status": "REASONED"},
+    "webauthn-origin": {"text": "Prefer WebAuthn/passkeys and FIDO2 keys for phishing resistance: credentials are bound to the site origin.", "components": ["webauthn"], "sources": ["webauthn:sef2c27817118"], "status": "REASONED"},
+    "webauthn-verification": {"text": "Store the credential public key and sign count; require and verify UV server-side when a passkey stands alone.", "components": ["webauthn"], "sources": ["webauthn:sef2c27817118"], "status": "REASONED"},
+    "webauthn-counter": {"text": "Treat sign count as advisory, not a hard clone-block; many synced passkeys report zero.", "components": ["webauthn"], "sources": ["webauthn:sef2c27817118"], "status": "REASONED"},
+    "verify-secret-storage": {"text": "Check that no TOTP secret appears in the repository or its history.", "components": ["totp"], "sources": ["totp:s3190460e5d2d"], "status": "REASONED"}
+  }
+}
+---
 # Multi-factor authentication (MFA)
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| totp-secret: Generate a random per-user TOTP secret; verification requires the recoverable secret rather than its hash. | TOTP standard unknown | REASONED |
+| totp-provisioning: Provision the authenticator with an otpauth:// URI rendered as a QR code. | Authenticator key URI format unknown | REASONED |
+| totp-storage: Encrypt TOTP secrets at rest and exclude them from the repository. | TOTP standard unknown | REASONED |
+| totp-throttling: Rate-limit code attempts; repeated wrong codes must hit a rate limit or lockout. | HOTP standard unknown; TOTP standard unknown | REASONED |
+| totp-replay: Reject an already accepted code within its time step; Verify submits the same valid code twice and expects refusal on reuse. | TOTP standard unknown | REASONED |
+| authelia-proxies: Authelia integrates with nginx auth_request, Traefik forwardAuth, Caddy forward_auth from 2.5.1, HAProxy via Lua and Envoy; Apache and IIS are unsupported. | Authelia proxy support unknown; Caddy forward_auth minimum 2.5.1 | REASONED |
+| duo-free: Duo Free covers up to 10 users with MFA and Duo Mobile as recorded in September 2026; verify current terms. | Duo editions unknown | REASONED |
+| webauthn-origin: Prefer WebAuthn/passkeys and FIDO2 keys for phishing resistance: credentials are bound to the site origin. | WebAuthn standard unknown | REASONED |
+| webauthn-verification: Store the credential public key and sign count; require and verify UV server-side when a passkey stands alone. | WebAuthn standard unknown | REASONED |
+| webauthn-counter: Treat sign count as advisory, not a hard clone-block; many synced passkeys report zero. | WebAuthn standard unknown | REASONED |
+| verify-secret-storage: Check that no TOTP secret appears in the repository or its history. | TOTP standard unknown | REASONED |
+<!-- version-basis:end -->
 
 Passwords fail through phishing, reuse, and credential stuffing; a second factor keeps a stolen password from becoming access. This guide names the options and the references; it deliberately stops short of per-product walkthroughs, because an AI assistant that knows which option fits can implement it from the linked project documentation. The per-tool guides in this repository state what is viable for each stack.
 
@@ -66,5 +160,5 @@ Unattended machine connections (service-to-service database and model-server API
 - TOTP: https://www.rfc-editor.org/info/rfc6238/ ; HOTP: https://www.rfc-editor.org/info/rfc4226/
 - `otpauth://` key URI format: https://github.com/google/google-authenticator/wiki/Key-Uri-Format
 - WebAuthn: https://www.w3.org/TR/webauthn-2/
-- Authelia proxy support matrix: https://www.authelia.com/integration/proxies/support/
+- Authelia proxy support matrix (Caddy 2.5.1 and later): https://www.authelia.com/integration/proxies/support/
 - Duo editions and pricing: https://duo.com/editions-and-pricing

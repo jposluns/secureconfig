@@ -1,4 +1,149 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "5e6a7fa16b96e77590582966345cb2475a2bf9ff03931695ae776003e1982f8a",
+  "components": {
+    "frp": {
+      "name": "frp documentation",
+      "basis": "unknown",
+      "sources": {
+        "s7800b0cbd057": "https://gofrp.org/en/docs/",
+        "seaee50f5c2ba": "https://gofrp.org/en/docs/reference/server-configures/",
+        "s7479bbde986d": "https://gofrp.org/en/docs/features/common/authentication/",
+        "sdd126f42c07d": "https://gofrp.org/en/docs/features/common/network/network-tls/"
+      }
+    },
+    "frps": {
+      "name": "frps source",
+      "basis": "v0.71.0",
+      "sources": {
+        "s89885e642b0b": "https://github.com/fatedier/frp/blob/v0.71.0/pkg/config/v1/server.go#L110-L114",
+        "s2cbb0ac0ce1d": "https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/tcp.go#L76",
+        "s2b43386a8d37": "https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/udp.go#L92",
+        "sa609b94a97a1": "https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L303",
+        "s0d14a82746a7": "https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L193-L194",
+        "s4660388fcc97": "https://github.com/fatedier/frp/blob/v0.71.0/server/visitor/visitor.go#L49-L57"
+      }
+    },
+    "tls-min": {
+      "name": "frp TLS default minimum",
+      "basis": "v0.50.0",
+      "sources": {
+        "sdd126f42c07d": "https://gofrp.org/en/docs/features/common/network/network-tls/"
+      }
+    },
+    "wg": {
+      "name": "WireGuard",
+      "basis": "unknown",
+      "sources": {
+        "sd41c4b487466": "https://www.wireguard.com/quickstart/",
+        "sf75d6938d30e": "https://www.wireguard.com/"
+      }
+    },
+    "nft": {
+      "name": "nftables",
+      "basis": "unknown",
+      "sources": {
+        "s0defde7f202b": "https://netfilter.org/projects/nftables/manpage.html"
+      }
+    },
+    "ssh": {
+      "name": "OpenSSH",
+      "basis": "unknown",
+      "sources": {
+        "s0fdb398555df": "https://man.openbsd.org/sshd_config#GatewayPorts",
+        "s1f80cf6ae7f5": "https://man.openbsd.org/ssh#R"
+      }
+    }
+  },
+  "claims": {
+    "frps-port": {"text": "frps bindPort defaults to 7000.", "components": ["frps"], "sources": ["frps:s89885e642b0b"], "status": "REASONED"},
+    "frp-token": {"text": "Token authentication is the default; set the same long random auth.token on frps and every frpc.", "components": ["frp"], "sources": ["frp:seaee50f5c2ba", "frp:s7479bbde986d"], "status": "REASONED"},
+    "frp-empty": {"text": "Omitted auth defaults to an empty token and accepts empty-token clients; configure token or OIDC before exposure.", "components": ["frp"], "sources": ["frp:seaee50f5c2ba", "frp:s7479bbde986d"], "status": "REASONED"},
+    "frp-oidc": {"text": "auth.method=oidc uses Client Credentials Grant for frpc-to-frps authentication; set issuer and nonempty audience because an empty audience skips validation.", "components": ["frp"], "sources": ["frp:s7479bbde986d"], "status": "REASONED"},
+    "proxy-bind": {"text": "proxyBindAddr defaults to bindAddr, whose default is 0.0.0.0.", "components": ["frps"], "sources": ["frps:s89885e642b0b"], "status": "REASONED"},
+    "proxy-tcp": {"text": "Registered TCP proxies listen on proxyBindAddr.", "components": ["frps"], "sources": ["frps:s2cbb0ac0ce1d"], "status": "REASONED"},
+    "proxy-udp": {"text": "Registered UDP proxies listen on proxyBindAddr.", "components": ["frps"], "sources": ["frps:s2b43386a8d37"], "status": "REASONED"},
+    "proxy-http": {"text": "HTTP and HTTPS proxy listeners bind proxyBindAddr.", "components": ["frps"], "sources": ["frps:sa609b94a97a1"], "status": "REASONED"},
+    "proxy-tcpmux": {"text": "tcpmux proxies listen on proxyBindAddr.", "components": ["frps"], "sources": ["frps:s0d14a82746a7"], "status": "REASONED"},
+    "proxy-visitors": {"text": "stcp, sudp and xtcp open no listener of their own on frps.", "components": ["frps"], "sources": ["frps:s4660388fcc97"], "status": "REASONED"},
+    "service-auth": {"text": "frp token/OIDC authenticates tunnel clients, not service callers; add app auth or a loopback authenticated TLS proxy.", "components": ["frp", "frps"], "sources": ["frp:s7479bbde986d", "frps:s2cbb0ac0ce1d", "frps:s2b43386a8d37", "frps:sa609b94a97a1", "frps:s0d14a82746a7"], "status": "REASONED"},
+    "tls-default": {"text": "transport.tls.enable defaults true from v0.50.0, encrypting frpc-to-frps traffic.", "components": ["tls-min"], "sources": ["tls-min:sdd126f42c07d"], "status": "REASONED"},
+    "tls-verify": {"text": "frpc does not verify frps certificates by default; configure server certFile/keyFile and client trustedCaFile.", "components": ["frp"], "sources": ["frp:sdd126f42c07d"], "status": "REASONED"},
+    "tls-force": {"text": "Set server transport.tls.force=true to reject clients that do not negotiate TLS.", "components": ["frp"], "sources": ["frp:seaee50f5c2ba", "frp:sdd126f42c07d"], "status": "REASONED"},
+    "wg-keys": {"text": "WireGuard uses per-peer key pairs, not passwords; generate under umask 077 and share only public keys.", "components": ["wg"], "sources": ["wg:sd41c4b487466"], "status": "REASONED"},
+    "wg-endpoint": {"text": "wg set configures wg0 listen-port 51820, private key, peer public key, AllowedIPs and UDP endpoint 203.0.113.10:51820.", "components": ["wg"], "sources": ["wg:sd41c4b487466"], "status": "REASONED"},
+    "wg-send": {"text": "AllowedIPs selects the sending peer by destination; scope to the peer subnet, using 0.0.0.0/0 only for a full-tunnel gateway.", "components": ["wg"], "sources": ["wg:sf75d6938d30e"], "status": "REASONED"},
+    "wg-receive": {"text": "Receiving AllowedIPs checks the decrypted source address, not allowed destinations; enforce destination limits with a server firewall.", "components": ["wg", "nft"], "sources": ["wg:sf75d6938d30e", "nft:s0defde7f202b"], "status": "REASONED"},
+    "wg-forward": {"text": "The nftables drop matches the peer's whole allowed source prefix and destinations outside its permitted subnet.", "components": ["wg", "nft"], "sources": ["wg:sf75d6938d30e", "nft:s0defde7f202b"], "status": "REASONED"},
+    "nft-hook": {"text": "Use a forward base chain with IP forwarding enabled; append order matters because earlier accepts short-circuit the drop.", "components": ["nft"], "sources": ["nft:s0defde7f202b"], "status": "REASONED"},
+    "nft-input": {"text": "Forward rules do not restrict services on the server itself; those need input rules.", "components": ["nft"], "sources": ["nft:s0defde7f202b"], "status": "REASONED"},
+    "nft-ipv6": {"text": "The example matches IPv4 only; IPv6 AllowedIPs needs corresponding ip6 source/destination rules.", "components": ["nft"], "sources": ["nft:s0defde7f202b"], "status": "REASONED"},
+    "wg-port": {"text": "WireGuard is normally silent when idle; open only its configured UDP ListenPort and keep other inbound services closed.", "components": ["wg"], "sources": ["wg:sd41c4b487466"], "status": "REASONED"},
+    "ssh-map": {"text": "ssh -R 8080:localhost:3000 forwards server port 8080 to the client's localhost:3000.", "components": ["ssh"], "sources": ["ssh:s1f80cf6ae7f5"], "status": "REASONED"},
+    "ssh-no": {"text": "GatewayPorts defaults no: loopback-only remote forwarding overrides a requested wildcard bind.", "components": ["ssh"], "sources": ["ssh:s0fdb398555df", "ssh:s1f80cf6ae7f5"], "status": "REASONED"},
+    "ssh-yes": {"text": "GatewayPorts yes forces wildcard listening regardless of the requested bind.", "components": ["ssh"], "sources": ["ssh:s0fdb398555df"], "status": "REASONED"},
+    "ssh-client": {"text": "GatewayPorts clientspecified honours requested wildcard or loopback binding.", "components": ["ssh"], "sources": ["ssh:s0fdb398555df", "ssh:s1f80cf6ae7f5"], "status": "REASONED"},
+    "ssh-auth": {"text": "SSH authenticates the tunnel, not callers; retain GatewayPorts no and front localhost:8080 with authenticated TLS.", "components": ["ssh"], "sources": ["ssh:s0fdb398555df", "ssh:s1f80cf6ae7f5"], "status": "REASONED"},
+    "ssh-persist": {"text": "Use autossh for reconnection and a dedicated key on a restricted account for persistent forwarding.", "components": ["ssh"], "sources": ["ssh:s1f80cf6ae7f5"], "status": "REASONED"},
+    "verify-token": {"text": "Correct token must log login success; changed and empty tokens must fail authentication, not configuration, DNS, TLS or transport. Stop each foreground client.", "components": ["frp"], "sources": ["frp:s7479bbde986d"], "status": "REASONED", "verify": [1]},
+    "verify-wg": {"text": "wg show needs privilege; inspect handshake and listen-port, then ip link UP because configuration alone does not prove a running interface.", "components": ["wg"], "sources": ["wg:sd41c4b487466"], "status": "REASONED", "verify": [1]},
+    "verify-firewall": {"text": "Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw's view does not replace native nftables inspection.", "components": ["wg", "nft"], "sources": ["wg:sd41c4b487466", "nft:s0defde7f202b"], "status": "REASONED", "verify": [1]},
+    "verify-route": {"text": "An allowed ping must traverse WireGuard, not a local route; forbidden-destination loss alone does not identify the firewall cause.", "components": ["wg", "nft"], "sources": ["wg:sf75d6938d30e", "nft:s0defde7f202b"], "status": "REASONED", "verify": [1]},
+    "verify-counter": {"text": "Read the server's full-match drop counter before/after the peer's routed forbidden ping; increases aid attribution only on an otherwise-idle peer.", "components": ["wg", "nft"], "sources": ["wg:sf75d6938d30e", "nft:s0defde7f202b"], "status": "REASONED", "verify": [1]},
+    "verify-ssh": {"text": "On the SSH server, ss must show forwarded 8080 only on loopback with GatewayPorts no.", "components": ["ssh"], "sources": ["ssh:s0fdb398555df", "ssh:s1f80cf6ae7f5"], "status": "REASONED", "verify": [1]}
+  }
+}
+---
 # Self-hosted tunnels: frp, WireGuard, and ssh -R
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| frps-port: frps bindPort defaults to 7000. | frps source v0.71.0 | REASONED |
+| frp-token: Token authentication is the default; set the same long random auth.token on frps and every frpc. | frp documentation unknown | REASONED |
+| frp-empty: Omitted auth defaults to an empty token and accepts empty-token clients; configure token or OIDC before exposure. | frp documentation unknown | REASONED |
+| frp-oidc: auth.method=oidc uses Client Credentials Grant for frpc-to-frps authentication; set issuer and nonempty audience because an empty audience skips validation. | frp documentation unknown | REASONED |
+| proxy-bind: proxyBindAddr defaults to bindAddr, whose default is 0.0.0.0. | frps source v0.71.0 | REASONED |
+| proxy-tcp: Registered TCP proxies listen on proxyBindAddr. | frps source v0.71.0 | REASONED |
+| proxy-udp: Registered UDP proxies listen on proxyBindAddr. | frps source v0.71.0 | REASONED |
+| proxy-http: HTTP and HTTPS proxy listeners bind proxyBindAddr. | frps source v0.71.0 | REASONED |
+| proxy-tcpmux: tcpmux proxies listen on proxyBindAddr. | frps source v0.71.0 | REASONED |
+| proxy-visitors: stcp, sudp and xtcp open no listener of their own on frps. | frps source v0.71.0 | REASONED |
+| service-auth: frp token/OIDC authenticates tunnel clients, not service callers; add app auth or a loopback authenticated TLS proxy. | frp documentation unknown; frps source v0.71.0 | REASONED |
+| tls-default: transport.tls.enable defaults true from v0.50.0, encrypting frpc-to-frps traffic. | frp TLS default minimum v0.50.0 | REASONED |
+| tls-verify: frpc does not verify frps certificates by default; configure server certFile/keyFile and client trustedCaFile. | frp documentation unknown | REASONED |
+| tls-force: Set server transport.tls.force=true to reject clients that do not negotiate TLS. | frp documentation unknown | REASONED |
+| wg-keys: WireGuard uses per-peer key pairs, not passwords; generate under umask 077 and share only public keys. | WireGuard unknown | REASONED |
+| wg-endpoint: wg set configures wg0 listen-port 51820, private key, peer public key, AllowedIPs and UDP endpoint 203.0.113.10:51820. | WireGuard unknown | REASONED |
+| wg-send: AllowedIPs selects the sending peer by destination; scope to the peer subnet, using 0.0.0.0/0 only for a full-tunnel gateway. | WireGuard unknown | REASONED |
+| wg-receive: Receiving AllowedIPs checks the decrypted source address, not allowed destinations; enforce destination limits with a server firewall. | WireGuard unknown; nftables unknown | REASONED |
+| wg-forward: The nftables drop matches the peer's whole allowed source prefix and destinations outside its permitted subnet. | WireGuard unknown; nftables unknown | REASONED |
+| nft-hook: Use a forward base chain with IP forwarding enabled; append order matters because earlier accepts short-circuit the drop. | nftables unknown | REASONED |
+| nft-input: Forward rules do not restrict services on the server itself; those need input rules. | nftables unknown | REASONED |
+| nft-ipv6: The example matches IPv4 only; IPv6 AllowedIPs needs corresponding ip6 source/destination rules. | nftables unknown | REASONED |
+| wg-port: WireGuard is normally silent when idle; open only its configured UDP ListenPort and keep other inbound services closed. | WireGuard unknown | REASONED |
+| ssh-map: ssh -R 8080:localhost:3000 forwards server port 8080 to the client's localhost:3000. | OpenSSH unknown | REASONED |
+| ssh-no: GatewayPorts defaults no: loopback-only remote forwarding overrides a requested wildcard bind. | OpenSSH unknown | REASONED |
+| ssh-yes: GatewayPorts yes forces wildcard listening regardless of the requested bind. | OpenSSH unknown | REASONED |
+| ssh-client: GatewayPorts clientspecified honours requested wildcard or loopback binding. | OpenSSH unknown | REASONED |
+| ssh-auth: SSH authenticates the tunnel, not callers; retain GatewayPorts no and front localhost:8080 with authenticated TLS. | OpenSSH unknown | REASONED |
+| ssh-persist: Use autossh for reconnection and a dedicated key on a restricted account for persistent forwarding. | OpenSSH unknown | REASONED |
+| verify-token: Correct token must log login success; changed and empty tokens must fail authentication, not configuration, DNS, TLS or transport. Stop each foreground client. | frp documentation unknown | REASONED |
+| verify-wg: wg show needs privilege; inspect handshake and listen-port, then ip link UP because configuration alone does not prove a running interface. | WireGuard unknown | REASONED |
+| verify-firewall: Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw's view does not replace native nftables inspection. | WireGuard unknown; nftables unknown | REASONED |
+| verify-route: An allowed ping must traverse WireGuard, not a local route; forbidden-destination loss alone does not identify the firewall cause. | WireGuard unknown; nftables unknown | REASONED |
+| verify-counter: Read the server's full-match drop counter before/after the peer's routed forbidden ping; increases aid attribution only on an otherwise-idle peer. | WireGuard unknown; nftables unknown | REASONED |
+| verify-ssh: On the SSH server, ss must show forwarded 8080 only on loopback with GatewayPorts no. | OpenSSH unknown | REASONED |
+<!-- version-basis:end -->
 
 All three expose a private host to the internet without a public IP, the same job [cloudflare.md](cloudflare.md) and [tailscale.md](tailscale.md) do, but with no vendor edge: you run and secure both ends yourself, on a host still hardened per [host.md](host.md). frp with a weak or absent token lets anyone bind proxies through your server; WireGuard has no login at all, only key pairs and the traffic scoping you configure; and `ssh -R` forwards a local port through your own SSH login, kept on the server's loopback by default but reachable by anyone if `GatewayPorts` is widened.
 
@@ -61,6 +206,8 @@ With the default `GatewayPorts no`, the server binds the forwarded port to loopb
 To publish such an app, do not widen `GatewayPorts`. Leave it `no` so the forward stays on the server's loopback, and run a reverse proxy on the server that reads `localhost:8080` and exposes only an authenticated TLS listener ([caddy.md](caddy.md), [nginx.md](nginx.md)); the forwarded port itself never faces the network. Setting `GatewayPorts yes` would put port 8080 straight onto the public interface, in front of that proxy rather than behind it. For a persistent tunnel, run the `ssh -R` under `autossh` so it reconnects, and give the login its own key on a restricted account.
 
 ## Verify
+
+REASONED: following block; the cited frp authentication, WireGuard quickstart/Cryptokey Routing, nftables and OpenSSH documentation defines the checks below. This read-only review cannot provision paired tunnel hosts or privileged network/firewall control; the guide records no live run.
 
 ```bash
 # frp positive control: with the correct auth.token, frpc logs 'login to server success' (proving

@@ -1,4 +1,168 @@
+---
+version_basis: {
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "93dc3b887f323f2b32d821093d730abc3fb81d735e97a927af070af1728d1066",
+  "components": {
+    "keycloak": {
+      "name": "Keycloak documentation",
+      "basis": "unknown",
+      "sources": {
+        "sefec90245fa1": "https://www.keycloak.org/docs/latest/server_admin/index.html",
+        "sbbd55dcb81cd": "https://www.keycloak.org/server/bootstrap-admin-recovery",
+        "s44e24ad4e579": "https://www.keycloak.org/server/caching",
+        "s2f5f079c5e00": "https://www.keycloak.org/server/configuration-production",
+        "se5538391cf9f": "https://www.keycloak.org/server/hostname",
+        "s4b5df6f4ef2e": "https://www.keycloak.org/server/management-interface",
+        "sffc6123bea5c": "https://www.keycloak.org/server/reverseproxy"
+      }
+    },
+    "authentik": {
+      "name": "authentik source",
+      "basis": "version/2026.8.3",
+      "sources": {
+        "s0acea2a7f75f": "https://github.com/goauthentik/authentik/blob/version/2026.8.3/authentik/core/setup/signals.py#L18-L48",
+        "s865b0b9b23cc": "https://github.com/goauthentik/authentik/blob/version/2026.8.3/authentik/core/setup/views.py#L35-L92",
+        "s7ad14bbb32f2": "https://github.com/goauthentik/authentik/blob/version/2026.8.3/authentik/core/tests/test_setup.py#L168-L245",
+        "sd73827ef7cf2": "https://github.com/goauthentik/authentik/blob/version/2026.8.3/authentik/core/tests/test_setup.py#L26-L130",
+        "sd7afd3968b71": "https://github.com/goauthentik/authentik/blob/version/2026.8.3/authentik/core/urls.py#L59-L70",
+        "s34e83c639478": "https://github.com/goauthentik/authentik/blob/version/2026.8.3/authentik/core/views/interface.py#L44-L51",
+        "s9448abb2f46e": "https://github.com/goauthentik/authentik/blob/version/2026.8.3/authentik/flows/models.py#L183-L187",
+        "s14fd7774b1bc": "https://github.com/goauthentik/authentik/blob/version/2026.8.3/authentik/flows/planner.py#L261-L290",
+        "s9d78a6f8341a": "https://github.com/goauthentik/authentik/blob/version/2026.8.3/authentik/flows/views/executor.py#L175-L196",
+        "sb6abd20b147e": "https://github.com/goauthentik/authentik/blob/version/2026.8.3/authentik/lib/default.yml#L36-L48",
+        "s1703fbdd4af2": "https://github.com/goauthentik/authentik/blob/version/2026.8.3/blueprints/default/flow-oobe.yaml#L8-L194",
+        "safa24c359f2d": "https://github.com/goauthentik/authentik/blob/version/2026.8.3/internal/web/metrics.go#L22-L52",
+        "s20f8787bddf2": "https://github.com/goauthentik/authentik/blob/version/2026.8.3/lifecycle/container/compose.yml#L1-L67"
+      }
+    },
+    "authentik-docs": {
+      "name": "authentik operational documentation",
+      "basis": "unknown",
+      "sources": {
+        "sb44156cde339": "https://docs.goauthentik.io/install-config/install/docker-compose/",
+        "scc8077354dac": "https://docs.goauthentik.io/sys-mgmt/ops/monitoring"
+      }
+    },
+    "redis-removal": {
+      "name": "authentik Redis removal",
+      "basis": "2025.10",
+      "sources": {
+        "seaa0a9896153": "https://docs.goauthentik.io/releases/2025.10/"
+      }
+    },
+    "nginx": {
+      "name": "nginx documentation",
+      "basis": "unknown",
+      "sources": {
+        "sf7458f108aca": "https://nginx.org/en/docs/http/ngx_http_core_module.html#location",
+        "s8d8f3323b468": "https://nginx.org/en/docs/http/ngx_http_rewrite_module.html#return"
+      }
+    }
+  },
+  "claims": {
+    "private-boundary": {"text": "Bind the IdP privately behind a reverse proxy; keep the database inside the same protected boundary.", "components": ["keycloak", "authentik-docs"], "sources": ["keycloak:s2f5f079c5e00", "authentik-docs:sb44156cde339"], "status": "REASONED"},
+    "authentik-publications": {"text": "Shipped Compose publishes 9000:9000 and 9443:9443 by default without host addresses, exposing all host interfaces under Docker publishing defaults; it does not publish 9300.", "components": ["authentik"], "sources": ["authentik:s20f8787bddf2"], "status": "REASONED"},
+    "authentik-web-binds": {"text": "listen.http and listen.https default to [::]:9000 and [::]:9443 inside the container, independently of host publication.", "components": ["authentik"], "sources": ["authentik:sb6abd20b147e"], "status": "REASONED"},
+    "authentik-loopback": {"text": "Replace the Compose ports list with 127.0.0.1:9000:9000 and 127.0.0.1:9443:9443; adding entries can retain old publications.", "components": ["authentik", "authentik-docs"], "sources": ["authentik:s20f8787bddf2", "authentik-docs:sb44156cde339"], "status": "REASONED"},
+    "production-tls": {"text": "Keycloak production requires a secure channel; edge TLS termination needs a protected loopback or controlled private proxy hop.", "components": ["keycloak"], "sources": ["keycloak:s2f5f079c5e00", "keycloak:sffc6123bea5c"], "status": "REASONED"},
+    "hostname-defaults": {"text": "Production start requires explicit hostname or hostname-strict false; start-dev defaults hostname-strict false. Keep strict hostname resolution in production unless the proxy overwrites Host.", "components": ["keycloak"], "sources": ["keycloak:se5538391cf9f"], "status": "REASONED"},
+    "http-listener": {"text": "The example starts Keycloak with HTTPS frontend/admin hostnames, xforwarded parsing and http-enabled=true for backend 8080 on a protected proxy hop.", "components": ["keycloak"], "sources": ["keycloak:se5538391cf9f", "keycloak:sffc6123bea5c"], "status": "REASONED"},
+    "admin-hostname": {"text": "hostname-admin selects the console/API hostname but does not restrict the Administration REST API through the frontend URL.", "components": ["keycloak"], "sources": ["keycloak:se5538391cf9f"], "status": "REASONED"},
+    "admin-deny": {"text": "Deny /admin/ on the public hostname at the proxy; the sample returns 404.", "components": ["keycloak", "nginx"], "sources": ["keycloak:sffc6123bea5c", "nginx:s8d8f3323b468"], "status": "REASONED"},
+    "master-realm": {"text": "Restrict /realms/master/ by administrator source network while keeping application /realms/ exposed; a blanket denial locks out administrators.", "components": ["keycloak"], "sources": ["keycloak:s2f5f079c5e00", "keycloak:sffc6123bea5c"], "status": "REASONED"},
+    "admin-login-route": {"text": "Console API calls use hostname-admin but console authentication uses the frontend master realm; the private admin proxy also needs /admin/, /resources/, /.well-known/ and version-dependent /js/.", "components": ["keycloak"], "sources": ["keycloak:se5538391cf9f", "keycloak:sffc6123bea5c"], "status": "REASONED"},
+    "forwarded-headers": {"text": "Overwrite all five X-Forwarded-For/Proto/Host/Port/Prefix headers and Host; appending or passing client values permits spoofing.", "components": ["keycloak"], "sources": ["keycloak:sffc6123bea5c"], "status": "REASONED"},
+    "proxy-trust": {"text": "proxy-trusted-addresses limits accepted forwarded headers to proxy addresses but is weak protection, not a substitute for header overwriting.", "components": ["keycloak"], "sources": ["keycloak:sffc6123bea5c"], "status": "REASONED"},
+    "proxy-origin": {"text": "Without proxy-headers, non-passthrough proxied requests that perform origin checks return 403 by default.", "components": ["keycloak"], "sources": ["keycloak:sffc6123bea5c"], "status": "REASONED"},
+    "setup-routing": {"text": "Before setup, authentik root redirects via /setup to /if/flow/initial-setup/; a fresh direct flow visit lacks the public setup marker and is denied.", "components": ["authentik"], "sources": ["authentik:s34e83c639478", "authentik:sd7afd3968b71", "authentik:s865b0b9b23cc", "authentik:s1703fbdd4af2"], "status": "REASONED"},
+    "setup-claim": {"text": "Initial setup plans only when akadmin is absent or lacks a usable password, then prompts email/base URL/password, writes akadmin and logs in the visitor.", "components": ["authentik"], "sources": ["authentik:s1703fbdd4af2"], "status": "REASONED"},
+    "setup-completion": {"text": "Completion records setup done, disables OOBE blueprints and requires a superuser; planning-time checks do not promise revocation of already-started sessions.", "components": ["authentik"], "sources": ["authentik:s865b0b9b23cc", "authentik:s9448abb2f46e", "authentik:s14fd7774b1bc", "authentik:s9d78a6f8341a"], "status": "REASONED"},
+    "setup-isolation": {"text": "Keep both web ports and public proxy route closed to untrusted clients until setup is complete; use loopback or a private container network and confirm closure in a fresh session.", "components": ["authentik", "authentik-docs"], "sources": ["authentik:s20f8787bddf2", "authentik:s865b0b9b23cc", "authentik-docs:sb44156cde339"], "status": "REASONED"},
+    "bootstrap-inputs": {"text": "Before first startup, protected .env can provide AUTHENTIK_BOOTSTRAP_PASSWORD, PASSWORD_HASH or TOKEN; any nonempty input triggers bootstrap and successful blueprint application completes setup.", "components": ["authentik"], "sources": ["authentik:s0acea2a7f75f", "authentik:s20f8787bddf2"], "status": "REASONED"},
+    "bootstrap-lifecycle": {"text": "Hash form is validated; password forms set akadmin password and token form supplies an API token, not a browser password. Already-setup tenants are skipped, so these inputs are not rotation.", "components": ["authentik"], "sources": ["authentik:s0acea2a7f75f", "authentik:s7ad14bbb32f2"], "status": "REASONED"},
+    "bootstrap-cleanup": {"text": "Verify bootstrap and setup closure before publication, then remove the bootstrap secret from the startup environment and protect file/container-inspection access.", "components": ["authentik"], "sources": ["authentik:s0acea2a7f75f", "authentik:s20f8787bddf2"], "status": "REASONED"},
+    "keycloak-bootstrap": {"text": "Keycloak bootstrap admin is temporary but needs manual removal after establishing permanent, MFA-protected admin access; it does not expire automatically.", "components": ["keycloak"], "sources": ["keycloak:sbbd55dcb81cd", "keycloak:sefec90245fa1"], "status": "REASONED"},
+    "keycloak-management": {"text": "Enabled Keycloak health and metrics use management port 9000; keep it private and use /health/ready for the orchestrator.", "components": ["keycloak"], "sources": ["keycloak:s4b5df6f4ef2e"], "status": "REASONED"},
+    "management-mtls": {"text": "https-management-client-auth accepts none/request/required and inherits HTTP settings; this plaintext topology needs management TLS credentials and trust before client certificates can authenticate it.", "components": ["keycloak"], "sources": ["keycloak:s4b5df6f4ef2e"], "status": "REASONED"},
+    "authentik-metrics": {"text": "authentik server metrics use unauthenticated plain HTTP /metrics with default [::]:9300; absent host publication does not protect its container-network listener.", "components": ["authentik"], "sources": ["authentik:safa24c359f2d", "authentik:sb6abd20b147e", "authentik:s20f8787bddf2"], "status": "REASONED"},
+    "worker-outpost-metrics": {"text": "Unauthenticated 9300 metrics for workers and outposts remain documentation-backed; their handlers were not traced in the recorded audit. Restrict to monitoring clients.", "components": ["authentik-docs"], "sources": ["authentik-docs:scc8077354dac"], "status": "REASONED"},
+    "keycloak-mfa": {"text": "Enroll administrator TOTP or WebAuthn and require the factor in the realm authentication flow; registered devices alone do not enforce MFA.", "components": ["keycloak"], "sources": ["keycloak:sefec90245fa1"], "status": "REASONED"},
+    "brute-force-default": {"text": "Keycloak brute-force detection is disabled by default and must be enabled per realm.", "components": ["keycloak"], "sources": ["keycloak:sefec90245fa1"], "status": "REASONED"},
+    "redirect-wildcards": {"text": "Keycloak permits trailing redirect-URI wildcards and bare *; deliberately register exact URIs instead.", "components": ["keycloak"], "sources": ["keycloak:sefec90245fa1"], "status": "REASONED"},
+    "docker-socket": {"text": "authentik Compose mounts the worker Docker socket for outpost management; use a socket proxy or remove the mount and manage outposts manually.", "components": ["authentik-docs", "authentik"], "sources": ["authentik-docs:sb44156cde339", "authentik:s20f8787bddf2"], "status": "REASONED"},
+    "cache-ports": {"text": "Keycloak cache transport uses 7800 and failure detection 57800; TCP stacks enable TLS by default but still need private reachability.", "components": ["keycloak"], "sources": ["keycloak:s44e24ad4e579"], "status": "REASONED"},
+    "redis-history": {"text": "Redis 6379 is relevant to older authentik: tasks moved in 2025.8 and remaining uses in 2025.10, which removes Redis entirely.", "components": ["redis-removal"], "sources": ["redis-removal:seaa0a9896153"], "status": "REASONED"},
+    "verify-setup": {"text": "On a disposable instance, complete anonymous root-to-setup flow and confirm akadmin login; after setup or password bootstrap, fresh /setup visits must return to authentication. Source tests were read, not run.", "components": ["authentik"], "sources": ["authentik:sd73827ef7cf2", "authentik:s7ad14bbb32f2", "authentik:s865b0b9b23cc"], "status": "REASONED"},
+    "verify-publication": {"text": "Compare exposed and loopback publications: untrusted clients lose setup access while a local browser still reaches it. Neither configuration publishes 9300.", "components": ["authentik"], "sources": ["authentik:s20f8787bddf2", "authentik:sb6abd20b147e"], "status": "REASONED"},
+    "verify-inventory": {"text": "Inspect all listeners plus Compose publications: host ss misses container namespaces, Compose ps sees one project, and proxy 443 publication is expected.", "components": ["authentik", "keycloak"], "sources": ["authentik:s20f8787bddf2", "authentik:sb6abd20b147e", "keycloak:s44e24ad4e579", "keycloak:s4b5df6f4ef2e"], "status": "REASONED", "verify": [1]},
+    "verify-issuer": {"text": "From outside allowed networks, application-realm discovery must print the expected issuer before negative route checks are interpreted; an arbitrary 200 is insufficient.", "components": ["keycloak"], "sources": ["keycloak:se5538391cf9f", "keycloak:sffc6123bea5c"], "status": "REASONED", "verify": [1]},
+    "verify-console": {"text": "Public /admin/master/console/ must return 404; 2xx, 3xx, 401 and 403 do not show that the console path is closed.", "components": ["keycloak", "nginx"], "sources": ["keycloak:sffc6123bea5c", "nginx:s8d8f3323b468"], "status": "REASONED", "verify": [1]},
+    "verify-admin-api": {"text": "Public /admin/realms/master/users must return 404; 401 means the API still answers and requests a token.", "components": ["keycloak", "nginx"], "sources": ["keycloak:se5538391cf9f", "nginx:s8d8f3323b468"], "status": "REASONED", "verify": [1]},
+    "verify-master": {"text": "Outside allowed sources, master-realm discovery must return 403; 200 exposes it and 404 indicates blanket denial. Review effective locations beyond these sampled routes.", "components": ["keycloak", "nginx"], "sources": ["keycloak:s2f5f079c5e00", "nginx:sf7458f108aca"], "status": "REASONED", "verify": [1]},
+    "verify-admin-login": {"text": "An allowed administrator must complete real login through the private console and frontend master realm; outside sources must fail.", "components": ["keycloak"], "sources": ["keycloak:se5538391cf9f", "keycloak:sffc6123bea5c"], "status": "REASONED", "verify": [1]},
+    "verify-direct-ports": {"text": "Probe 8080/8443/9000/9300/9443 directly: curl exit 0 answers, 7 refuses, and 28 needs full diagnostics to distinguish accepted-then-stalled from unreachable.", "components": ["keycloak", "authentik"], "sources": ["keycloak:sffc6123bea5c", "authentik:s20f8787bddf2", "authentik:safa24c359f2d"], "status": "REASONED", "verify": [1]},
+    "verify-bootstrap-removal": {"text": "Look up the exact bootstrap username rather than a default 100-result user list, and separately check bootstrap service accounts.", "components": ["keycloak"], "sources": ["keycloak:sbbd55dcb81cd", "keycloak:sefec90245fa1"], "status": "REASONED", "verify": [1]},
+    "verify-address-coverage": {"text": "Repeat external checks for every public IPv4/IPv6 address and the origin; private admin, database and outposts need separate checks, and the listed ports are not a full inventory.", "components": ["keycloak", "authentik-docs"], "sources": ["keycloak:s2f5f079c5e00", "keycloak:sffc6123bea5c", "authentik-docs:sb44156cde339"], "status": "REASONED", "verify": [1]}
+  }
+}
+---
 # Self-hosted identity providers: Keycloak and authentik
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| private-boundary: Bind the IdP privately behind a reverse proxy; keep the database inside the same protected boundary. | Keycloak documentation unknown; authentik operational documentation unknown | REASONED |
+| authentik-publications: Shipped Compose publishes 9000:9000 and 9443:9443 by default without host addresses, exposing all host interfaces under Docker publishing defaults; it does not publish 9300. | authentik source version/2026.8.3 | REASONED |
+| authentik-web-binds: listen.http and listen.https default to [::]:9000 and [::]:9443 inside the container, independently of host publication. | authentik source version/2026.8.3 | REASONED |
+| authentik-loopback: Replace the Compose ports list with 127.0.0.1:9000:9000 and 127.0.0.1:9443:9443; adding entries can retain old publications. | authentik source version/2026.8.3; authentik operational documentation unknown | REASONED |
+| production-tls: Keycloak production requires a secure channel; edge TLS termination needs a protected loopback or controlled private proxy hop. | Keycloak documentation unknown | REASONED |
+| hostname-defaults: Production start requires explicit hostname or hostname-strict false; start-dev defaults hostname-strict false. Keep strict hostname resolution in production unless the proxy overwrites Host. | Keycloak documentation unknown | REASONED |
+| http-listener: The example starts Keycloak with HTTPS frontend/admin hostnames, xforwarded parsing and http-enabled=true for backend 8080 on a protected proxy hop. | Keycloak documentation unknown | REASONED |
+| admin-hostname: hostname-admin selects the console/API hostname but does not restrict the Administration REST API through the frontend URL. | Keycloak documentation unknown | REASONED |
+| admin-deny: Deny /admin/ on the public hostname at the proxy; the sample returns 404. | Keycloak documentation unknown; nginx documentation unknown | REASONED |
+| master-realm: Restrict /realms/master/ by administrator source network while keeping application /realms/ exposed; a blanket denial locks out administrators. | Keycloak documentation unknown | REASONED |
+| admin-login-route: Console API calls use hostname-admin but console authentication uses the frontend master realm; the private admin proxy also needs /admin/, /resources/, /.well-known/ and version-dependent /js/. | Keycloak documentation unknown | REASONED |
+| forwarded-headers: Overwrite all five X-Forwarded-For/Proto/Host/Port/Prefix headers and Host; appending or passing client values permits spoofing. | Keycloak documentation unknown | REASONED |
+| proxy-trust: proxy-trusted-addresses limits accepted forwarded headers to proxy addresses but is weak protection, not a substitute for header overwriting. | Keycloak documentation unknown | REASONED |
+| proxy-origin: Without proxy-headers, non-passthrough proxied requests that perform origin checks return 403 by default. | Keycloak documentation unknown | REASONED |
+| setup-routing: Before setup, authentik root redirects via /setup to /if/flow/initial-setup/; a fresh direct flow visit lacks the public setup marker and is denied. | authentik source version/2026.8.3 | REASONED |
+| setup-claim: Initial setup plans only when akadmin is absent or lacks a usable password, then prompts email/base URL/password, writes akadmin and logs in the visitor. | authentik source version/2026.8.3 | REASONED |
+| setup-completion: Completion records setup done, disables OOBE blueprints and requires a superuser; planning-time checks do not promise revocation of already-started sessions. | authentik source version/2026.8.3 | REASONED |
+| setup-isolation: Keep both web ports and public proxy route closed to untrusted clients until setup is complete; use loopback or a private container network and confirm closure in a fresh session. | authentik source version/2026.8.3; authentik operational documentation unknown | REASONED |
+| bootstrap-inputs: Before first startup, protected .env can provide AUTHENTIK_BOOTSTRAP_PASSWORD, PASSWORD_HASH or TOKEN; any nonempty input triggers bootstrap and successful blueprint application completes setup. | authentik source version/2026.8.3 | REASONED |
+| bootstrap-lifecycle: Hash form is validated; password forms set akadmin password and token form supplies an API token, not a browser password. Already-setup tenants are skipped, so these inputs are not rotation. | authentik source version/2026.8.3 | REASONED |
+| bootstrap-cleanup: Verify bootstrap and setup closure before publication, then remove the bootstrap secret from the startup environment and protect file/container-inspection access. | authentik source version/2026.8.3 | REASONED |
+| keycloak-bootstrap: Keycloak bootstrap admin is temporary but needs manual removal after establishing permanent, MFA-protected admin access; it does not expire automatically. | Keycloak documentation unknown | REASONED |
+| keycloak-management: Enabled Keycloak health and metrics use management port 9000; keep it private and use /health/ready for the orchestrator. | Keycloak documentation unknown | REASONED |
+| management-mtls: https-management-client-auth accepts none/request/required and inherits HTTP settings; this plaintext topology needs management TLS credentials and trust before client certificates can authenticate it. | Keycloak documentation unknown | REASONED |
+| authentik-metrics: authentik server metrics use unauthenticated plain HTTP /metrics with default [::]:9300; absent host publication does not protect its container-network listener. | authentik source version/2026.8.3 | REASONED |
+| worker-outpost-metrics: Unauthenticated 9300 metrics for workers and outposts remain documentation-backed; their handlers were not traced in the recorded audit. Restrict to monitoring clients. | authentik operational documentation unknown | REASONED |
+| keycloak-mfa: Enroll administrator TOTP or WebAuthn and require the factor in the realm authentication flow; registered devices alone do not enforce MFA. | Keycloak documentation unknown | REASONED |
+| brute-force-default: Keycloak brute-force detection is disabled by default and must be enabled per realm. | Keycloak documentation unknown | REASONED |
+| redirect-wildcards: Keycloak permits trailing redirect-URI wildcards and bare *; deliberately register exact URIs instead. | Keycloak documentation unknown | REASONED |
+| docker-socket: authentik Compose mounts the worker Docker socket for outpost management; use a socket proxy or remove the mount and manage outposts manually. | authentik operational documentation unknown; authentik source version/2026.8.3 | REASONED |
+| cache-ports: Keycloak cache transport uses 7800 and failure detection 57800; TCP stacks enable TLS by default but still need private reachability. | Keycloak documentation unknown | REASONED |
+| redis-history: Redis 6379 is relevant to older authentik: tasks moved in 2025.8 and remaining uses in 2025.10, which removes Redis entirely. | authentik Redis removal 2025.10 | REASONED |
+| verify-setup: On a disposable instance, complete anonymous root-to-setup flow and confirm akadmin login; after setup or password bootstrap, fresh /setup visits must return to authentication. Source tests were read, not run. | authentik source version/2026.8.3 | REASONED |
+| verify-publication: Compare exposed and loopback publications: untrusted clients lose setup access while a local browser still reaches it. Neither configuration publishes 9300. | authentik source version/2026.8.3 | REASONED |
+| verify-inventory: Inspect all listeners plus Compose publications: host ss misses container namespaces, Compose ps sees one project, and proxy 443 publication is expected. | authentik source version/2026.8.3; Keycloak documentation unknown | REASONED |
+| verify-issuer: From outside allowed networks, application-realm discovery must print the expected issuer before negative route checks are interpreted; an arbitrary 200 is insufficient. | Keycloak documentation unknown | REASONED |
+| verify-console: Public /admin/master/console/ must return 404; 2xx, 3xx, 401 and 403 do not show that the console path is closed. | Keycloak documentation unknown; nginx documentation unknown | REASONED |
+| verify-admin-api: Public /admin/realms/master/users must return 404; 401 means the API still answers and requests a token. | Keycloak documentation unknown; nginx documentation unknown | REASONED |
+| verify-master: Outside allowed sources, master-realm discovery must return 403; 200 exposes it and 404 indicates blanket denial. Review effective locations beyond these sampled routes. | Keycloak documentation unknown; nginx documentation unknown | REASONED |
+| verify-admin-login: An allowed administrator must complete real login through the private console and frontend master realm; outside sources must fail. | Keycloak documentation unknown | REASONED |
+| verify-direct-ports: Probe 8080/8443/9000/9300/9443 directly: curl exit 0 answers, 7 refuses, and 28 needs full diagnostics to distinguish accepted-then-stalled from unreachable. | Keycloak documentation unknown; authentik source version/2026.8.3 | REASONED |
+| verify-bootstrap-removal: Look up the exact bootstrap username rather than a default 100-result user list, and separately check bootstrap service accounts. | Keycloak documentation unknown | REASONED |
+| verify-address-coverage: Repeat external checks for every public IPv4/IPv6 address and the origin; private admin, database and outposts need separate checks, and the listed ports are not a full inventory. | Keycloak documentation unknown; authentik operational documentation unknown | REASONED |
+<!-- version-basis:end -->
 
 A self-hosted identity provider is the one service whose compromise is every other service's compromise. [identity-providers.md](identity-providers.md) covers choosing one and says plainly that running your own gives you a server to patch, back up, and keep available. This guide covers what that server exposes once it is running: an administration surface that does not move when you tell it to, a first-boot window in which an unauthenticated visitor can claim the administrator account, and a management port that, once you turn it on, answers without asking who you are.
 
@@ -135,6 +299,8 @@ Live checks here are **REASONED**: the authoring host forbids opening listeners 
 For authentik's setup check, use a disposable instance in an isolated test network and a fresh browser session. Open `http://127.0.0.1:9000/` locally or through the SSH forward. In the exposed state, with no bootstrap credentials and no usable `akadmin` password, expect the redirects through `/setup` to `/if/flow/initial-setup/`, then the setup form without a login. Complete it with test credentials and confirm those credentials log in as `akadmin`. After setup, a new anonymous session visiting `/setup` must return through the root to authentication rather than offer setup. Repeat on a fresh instance bootstrapped with `AUTHENTIK_BOOTSTRAP_PASSWORD`: expect login with the supplied password and no setup form. A direct visit to the flow is not a sufficient negative check because it is denied even before setup. The pinned root redirect, setup view, OOBE policy and source tests distinguish these outcomes; the tests were read, not executed here.
 
 For the network boundary, compare section 1's shipped publications with the loopback replacement using step 1 below. In the isolated exposed fixture, an untrusted test client can reach the setup route; with the loopback mappings and public proxy route closed, that client must not reach it, while the local browser still can. Retain this positive control so a stopped service cannot pass as an effective restriction. Confirm that neither configuration publishes 9300; its wildcard listener inside the container remains a separate monitoring-network boundary.
+
+REASONED: listener, routing, login, port-isolation and bootstrap-removal checks follow the vendor documentation and pinned sources below; the authoring host has no isolated network namespace for listeners and ran neither identity provider. Expected outcomes and positive controls are recorded in the block.
 
 ```bash
 # Steps 2 to 5 and 7 must run from a host OUTSIDE every network you have allowed, against a

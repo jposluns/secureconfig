@@ -728,6 +728,45 @@ Self-signed certificates have no revocation and no third-party accountability, a
 
 # Cloudflare Tunnel and Zero Trust Access
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| outbound: cloudflared opens an outbound-only encrypted tunnel; edge HTTPS needs no inbound firewall ports. | Cloudflare Zero Trust unknown | REASONED |
+| prerequisites: Cloudflare DNS domain and Zero Trust organization required; the guide records a free tier of 50 users, subject to current limits. | Cloudflare Zero Trust unknown | REASONED |
+| remote: Dashboard tunnel token installs cloudflared as a service; a published hostname routes to http://localhost:3000. | Cloudflare Zero Trust unknown | REASONED |
+| publish-order: Create Access before publishing the route, or keep the app stopped; routing alone exposes it without login and a stopped origin still has public DNS. | Cloudflare Zero Trust unknown | REASONED |
+| tls-hops: Edge terminates TLS, the tunnel is encrypted, and HTTP to localhost:3000 stays on the host. | Cloudflare Zero Trust unknown | REASONED |
+| local: Locally managed login/create/route dns, tunnel UUID and credentials-file configure app ingress followed by http_status:404. | Cloudflare Zero Trust unknown | REASONED |
+| service: Run by tunnel name or install with an explicit --config under sudo, whose HOME is /root. | Cloudflare Zero Trust unknown | REASONED |
+| secrets: Tunnel credentials JSON and tokens allow service publication on the hostname; keep them out of repositories. | Cloudflare Zero Trust unknown | REASONED |
+| access: Self-hosted Access application plus Allow policy limits login to listed emails or domains. | Cloudflare Zero Trust unknown | REASONED |
+| otp: One-time PIN proves mailbox control; SSO can inherit IdP MFA. | Cloudflare Zero Trust unknown | REASONED |
+| mfa-bypass: When PIN and an IdP coexist, either can be chosen; remove PIN or enforce Access MFA across methods for sensitive apps. | Cloudflare Zero Trust unknown | REASONED |
+| service-token: Machine access needs a service token and Service Auth policy; send Client-Id and Client-Secret headers on stdin, not argv. | Cloudflare Zero Trust unknown | REASONED |
+| loopback: Bind the same-host app to 127.0.0.1 so direct public requests cannot bypass Access. | Cloudflare Zero Trust unknown | REASONED |
+| jwt: Validate Cf-Access-Jwt-Assertion signature, issuer and application audience; origin reachability, SSRF and another route can bypass the front door. | Cloudflare Zero Trust unknown | REASONED |
+| route-coverage: Every added tunnel hostname/path needs an Access application and policy, including coverage by a wildcard application. | Cloudflare Zero Trust unknown | REASONED |
+| quick: Quick trycloudflare.com tunnels are unauthenticated and intended only for short-lived tests. | Cloudflare Zero Trust unknown | REASONED |
+| remote-origin: A remote origin needs HTTPS and a firewall allowing only the cloudflared host; TLS alone does not restrict callers. | Cloudflare Zero Trust unknown | REASONED |
+| origin-ca: Use originRequest.caPool for a self-signed origin; noTLSVerify discards server authentication. | Cloudflare Zero Trust unknown | REASONED |
+| full-strict: Full (strict) with an Origin CA certificate authenticates the origin to Cloudflare, not callers; browsers do not trust that certificate directly. | Cloudflare Zero Trust unknown | REASONED |
+| aop: AOP requires origin-side client-certificate enforcement; nginx uses ssl_verify_client on and ssl_client_certificate. | Cloudflare Zero Trust unknown | REASONED |
+| aop-zone: Global AOP proves only Cloudflare network membership; prefer a zone certificate and its issuing CA, removing shared-CA trust. | Cloudflare Zero Trust unknown | REASONED |
+| origin-ports: For a no-tunnel origin, restrict 443 to Cloudflare IP ranges and close 80 or redirect only; mTLS cannot authenticate plaintext HTTP. | Cloudflare Zero Trust unknown | REASONED |
+| verify-login: Private browsing must show Access login; anonymous HEAD must redirect to the team's cloudflareaccess.com login, never app content. | Cloudflare Zero Trust unknown | REASONED |
+| verify-token: A service-token GET must return application content instead of the login. | Cloudflare Zero Trust unknown | REASONED |
+| verify-policy: Inspect loopback binding and effective inbound policy, including existing allows and container NAT; permitted sources depend on topology. | Cloudflare Zero Trust unknown | REASONED |
+| verify-origin: From another host, probe the actual origin port 3000: remote refusal/timeout is expected; any HTTP reply exposes bypass, resolver/local errors are inconclusive. | Cloudflare Zero Trust unknown | REASONED |
+| verify-aop: Trust the origin server CA when probing 443 directly: missing-client-certificate refusal proves AOP; firewall drops and app 401/403 prove different layers. | Cloudflare Zero Trust unknown | REASONED |
+| verify-http: Separately confirm the no-tunnel origin's port 80 never serves the app. | Cloudflare Zero Trust unknown | REASONED |
+<!-- version-basis:end -->
+
 This is the recommended path when the host cannot or should not accept inbound connections: home labs, NATed machines, cloud VMs you want to keep closed, and any project without its own TLS setup. `cloudflared` opens an outbound-only tunnel to Cloudflare's edge, the edge serves your hostname over HTTPS with a Cloudflare-managed certificate, and Cloudflare Access places authentication (SSO or emailed one-time PIN) in front of the app without any application changes. No inbound firewall ports are opened at all.
 
 ## 1. Prerequisites
@@ -816,6 +855,8 @@ For APIs and machine clients, create a **service token** in the Zero Trust dashb
 - `ss -tlnp` shows the app on `127.0.0.1` only for a same-host tunnel. Do not settle for "no inbound rule added": confirm the port's effective inbound policy, since a default-accept policy, a pre-existing broad allow, or a container publishing through its own NAT can leave it open. The policy differs by topology: a same-host tunnel app is on loopback, a remote tunnel origin accepts only the `cloudflared` host, and a no-tunnel HTTPS origin accepts only Cloudflare's IP ranges (plus AOP).
 - The load-bearing check: from another host, confirm the origin is not reachable directly on the app's own port (`3000` in this example; substitute yours). For a tunnel there is no public inbound, so this must refuse or time out.
 
+REASONED: following block; direct-origin isolation follows the cited Cloudflare tunnel and origin-firewall documentation. This read-only review cannot provision a Cloudflare origin and external probe host; no live outcome is recorded. Expected refusal, exposure and inconclusive outcomes are stated below.
+
 ```bash
 (                                             # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_ORIGIN_IP'   # replace inside the quotes, keeping them
@@ -850,6 +891,35 @@ Read err, not the number: for a tunnel a refusal or timeout naming your own addr
 
 # Tailscale: serve and funnel
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| serve: tailscale serve --bg localhost:3000 proxies to the app for tailnet devices, subject to identity and tailnet policy. | Tailscale documentation unknown | REASONED |
+| policy-default: New tailnets allow all devices, plus node-share recipients; remove allow-all before granting intended users, groups or tags access to the Serve port. | Tailscale documentation unknown | REASONED |
+| policy-additive: Rules are additive accepts; a narrower rule cannot revoke allow-all. Grants are preferred and ACLs remain supported. | Tailscale documentation unknown | REASONED |
+| app-auth: Tailnet reach is not app authorization; the app needs login or deliberate use of Serve identity headers. | Tailscale documentation unknown | REASONED |
+| header-trust: Loopback limits identity-header spoofing to local processes; trusting Serve headers requires trusting every process on that host. | Tailscale documentation unknown | REASONED |
+| tagged: Tagged devices carry no user identity; reject them or supply another authentication method. | Tailscale documentation unknown | REASONED |
+| bind: Serve does not change the app bind; use 127.0.0.1:3000 because a wildcard app still answers directly on LAN/VPC addresses. | Tailscale documentation unknown | REASONED |
+| serve-tls: Serve automatically provisions HTTPS certificates for the machine's tailnet name. | Tailscale documentation unknown | REASONED |
+| background: --bg persists Serve in the background; without it the share ends with the session. | Tailscale documentation unknown | REASONED |
+| funnel: tailscale funnel 3000 publishes the service to the internet at its ts.net hostname with TLS. | Tailscale documentation unknown | REASONED |
+| funnel-auth: Funnel adds no per-request authentication and its relay does not decrypt traffic; the app needs login and human MFA. | Tailscale documentation unknown | REASONED |
+| funnel-prerequisites: Funnel requires tailnet HTTPS certificates, a funnel node attribute and MagicDNS. | Tailscale documentation unknown | REASONED |
+| syntax: Serve/Funnel command syntax changed in v1.52; older clients need their own --help. | Tailscale CLI change v1.52 | REASONED |
+| verify-bind: ss sport=:3000 must show 127.0.0.1:3000, not IPv4 or IPv6 wildcard. | ss unknown; Tailscale documentation unknown | REASONED |
+| verify-direct: Probe from outside the host on the LAN/VPC: any HTTP reply proves bypass; failure alone does not prove loopback binding. | Tailscale documentation unknown | REASONED |
+| verify-allowed: Serve status and an allowed-device request check the intended path; success occurs under both allow-all and scoped policy. | Tailscale documentation unknown | REASONED |
+| verify-policy: Policy tests must accept the intended identity and deny an excluded one; failed assertions reject the policy file. | Tailscale documentation unknown | REASONED |
+| verify-public: From a non-tailnet network Serve is unreachable and Funnel reachable; the funneled app must authenticate every request. | Tailscale documentation unknown | REASONED |
+<!-- version-basis:end -->
+
 Tailscale gives the same no-open-inbound-ports posture as [cloudflare.md](cloudflare.md), built on WireGuard with device identity as the access control. Two commands matter, and they differ in exactly one thing: who can reach the service.
 
 ## 1. tailscale serve: tailnet-only (authenticated by membership)
@@ -883,12 +953,16 @@ Serve for anything private (most things). Funnel or [cloudflare.md](cloudflare.m
 
 ## 4. Verify
 
+REASONED: following block; the cited ss filter reference and Serve backend-isolation guidance define the loopback check. This read-only review cannot configure a Serve host; the guide records no listener observation.
+
 ```bash
 ss -tlnp 'sport = :3000'                          # ss's own filter, not a grep: the address column
                                                   # must read 127.0.0.1:3000, never 0.0.0.0:3000 or [::]:3000
 ```
 
 From another machine on the same LAN or VPC (run this from OUTSIDE the host), confirm the app does not answer its direct address:
+
+REASONED: following block; direct-backend isolation follows the cited Serve identity-header guidance. This read-only review cannot provision a Serve host and separate LAN/VPC probe machine; HTTP replies expose bypass and failed requests remain inconclusive as described below.
 
 ```bash
 (                                       # a subshell, so your own shell keeps its positional parameters and the guard's exit does not close it
@@ -907,6 +981,8 @@ From another machine on the same LAN or VPC (run this from OUTSIDE the host), co
 
 Then confirm the tailnet path works and that the section-1 restriction actually holds:
 
+REASONED: following block; Serve status and allowed-device access follow the cited Serve CLI and policy-test documentation. This read-only review cannot configure a tailnet with allowed and excluded devices; success alone does not prove policy restriction.
+
 ```bash
 tailscale serve status
 curl -q -sI https://host.tailnet.ts.net/            # from an ALLOWED tailnet device: works
@@ -916,7 +992,7 @@ An allowed device connects under both the default allow-all policy and a correct
 
 ## Sources (checked September 2026)
 
-- Tailscale serve: https://tailscale.com/kb/1242/tailscale-serve
+- Tailscale serve (CLI syntax changed in v1.52): https://tailscale.com/kb/1242/tailscale-serve
 - Tailscale funnel: https://tailscale.com/kb/1223/funnel
 - Tailscale ACL policy examples, for the default allow-all policy (`action` accept, `src` `*`, `dst` `*:*`) and scoping access from a source to a destination: https://tailscale.com/docs/reference/examples/acls
 - Tailscale serve identity headers, that binding the backend to localhost limits tampering to other services on the Serve device (it does not authenticate the calling process): https://tailscale.com/kb/1312/serve
@@ -928,6 +1004,52 @@ An allowed device connects under both the default allow-all policy and a correct
 ======================================================================
 
 # Self-hosted tunnels: frp, WireGuard, and ssh -R
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| frps-port: frps bindPort defaults to 7000. | frps source v0.71.0 | REASONED |
+| frp-token: Token authentication is the default; set the same long random auth.token on frps and every frpc. | frp documentation unknown | REASONED |
+| frp-empty: Omitted auth defaults to an empty token and accepts empty-token clients; configure token or OIDC before exposure. | frp documentation unknown | REASONED |
+| frp-oidc: auth.method=oidc uses Client Credentials Grant for frpc-to-frps authentication; set issuer and nonempty audience because an empty audience skips validation. | frp documentation unknown | REASONED |
+| proxy-bind: proxyBindAddr defaults to bindAddr, whose default is 0.0.0.0. | frps source v0.71.0 | REASONED |
+| proxy-tcp: Registered TCP proxies listen on proxyBindAddr. | frps source v0.71.0 | REASONED |
+| proxy-udp: Registered UDP proxies listen on proxyBindAddr. | frps source v0.71.0 | REASONED |
+| proxy-http: HTTP and HTTPS proxy listeners bind proxyBindAddr. | frps source v0.71.0 | REASONED |
+| proxy-tcpmux: tcpmux proxies listen on proxyBindAddr. | frps source v0.71.0 | REASONED |
+| proxy-visitors: stcp, sudp and xtcp open no listener of their own on frps. | frps source v0.71.0 | REASONED |
+| service-auth: frp token/OIDC authenticates tunnel clients, not service callers; add app auth or a loopback authenticated TLS proxy. | frp documentation unknown; frps source v0.71.0 | REASONED |
+| tls-default: transport.tls.enable defaults true from v0.50.0, encrypting frpc-to-frps traffic. | frp TLS default minimum v0.50.0 | REASONED |
+| tls-verify: frpc does not verify frps certificates by default; configure server certFile/keyFile and client trustedCaFile. | frp documentation unknown | REASONED |
+| tls-force: Set server transport.tls.force=true to reject clients that do not negotiate TLS. | frp documentation unknown | REASONED |
+| wg-keys: WireGuard uses per-peer key pairs, not passwords; generate under umask 077 and share only public keys. | WireGuard unknown | REASONED |
+| wg-endpoint: wg set configures wg0 listen-port 51820, private key, peer public key, AllowedIPs and UDP endpoint 203.0.113.10:51820. | WireGuard unknown | REASONED |
+| wg-send: AllowedIPs selects the sending peer by destination; scope to the peer subnet, using 0.0.0.0/0 only for a full-tunnel gateway. | WireGuard unknown | REASONED |
+| wg-receive: Receiving AllowedIPs checks the decrypted source address, not allowed destinations; enforce destination limits with a server firewall. | WireGuard unknown; nftables unknown | REASONED |
+| wg-forward: The nftables drop matches the peer's whole allowed source prefix and destinations outside its permitted subnet. | WireGuard unknown; nftables unknown | REASONED |
+| nft-hook: Use a forward base chain with IP forwarding enabled; append order matters because earlier accepts short-circuit the drop. | nftables unknown | REASONED |
+| nft-input: Forward rules do not restrict services on the server itself; those need input rules. | nftables unknown | REASONED |
+| nft-ipv6: The example matches IPv4 only; IPv6 AllowedIPs needs corresponding ip6 source/destination rules. | nftables unknown | REASONED |
+| wg-port: WireGuard is normally silent when idle; open only its configured UDP ListenPort and keep other inbound services closed. | WireGuard unknown | REASONED |
+| ssh-map: ssh -R 8080:localhost:3000 forwards server port 8080 to the client's localhost:3000. | OpenSSH unknown | REASONED |
+| ssh-no: GatewayPorts defaults no: loopback-only remote forwarding overrides a requested wildcard bind. | OpenSSH unknown | REASONED |
+| ssh-yes: GatewayPorts yes forces wildcard listening regardless of the requested bind. | OpenSSH unknown | REASONED |
+| ssh-client: GatewayPorts clientspecified honours requested wildcard or loopback binding. | OpenSSH unknown | REASONED |
+| ssh-auth: SSH authenticates the tunnel, not callers; retain GatewayPorts no and front localhost:8080 with authenticated TLS. | OpenSSH unknown | REASONED |
+| ssh-persist: Use autossh for reconnection and a dedicated key on a restricted account for persistent forwarding. | OpenSSH unknown | REASONED |
+| verify-token: Correct token must log login success; changed and empty tokens must fail authentication, not configuration, DNS, TLS or transport. Stop each foreground client. | frp documentation unknown | REASONED |
+| verify-wg: wg show needs privilege; inspect handshake and listen-port, then ip link UP because configuration alone does not prove a running interface. | WireGuard unknown | REASONED |
+| verify-firewall: Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw's view does not replace native nftables inspection. | WireGuard unknown; nftables unknown | REASONED |
+| verify-route: An allowed ping must traverse WireGuard, not a local route; forbidden-destination loss alone does not identify the firewall cause. | WireGuard unknown; nftables unknown | REASONED |
+| verify-counter: Read the server's full-match drop counter before/after the peer's routed forbidden ping; increases aid attribution only on an otherwise-idle peer. | WireGuard unknown; nftables unknown | REASONED |
+| verify-ssh: On the SSH server, ss must show forwarded 8080 only on loopback with GatewayPorts no. | OpenSSH unknown | REASONED |
+<!-- version-basis:end -->
 
 All three expose a private host to the internet without a public IP, the same job [cloudflare.md](cloudflare.md) and [tailscale.md](tailscale.md) do, but with no vendor edge: you run and secure both ends yourself, on a host still hardened per [host.md](host.md). frp with a weak or absent token lets anyone bind proxies through your server; WireGuard has no login at all, only key pairs and the traffic scoping you configure; and `ssh -R` forwards a local port through your own SSH login, kept on the server's loopback by default but reachable by anyone if `GatewayPorts` is widened.
 
@@ -990,6 +1112,8 @@ With the default `GatewayPorts no`, the server binds the forwarded port to loopb
 To publish such an app, do not widen `GatewayPorts`. Leave it `no` so the forward stays on the server's loopback, and run a reverse proxy on the server that reads `localhost:8080` and exposes only an authenticated TLS listener ([caddy.md](caddy.md), [nginx.md](nginx.md)); the forwarded port itself never faces the network. Setting `GatewayPorts yes` would put port 8080 straight onto the public interface, in front of that proxy rather than behind it. For a persistent tunnel, run the `ssh -R` under `autossh` so it reconnects, and give the login its own key on a restricted account.
 
 ## Verify
+
+REASONED: following block; the cited frp authentication, WireGuard quickstart/Cryptokey Routing, nftables and OpenSSH documentation defines the checks below. This read-only review cannot provision paired tunnel hosts or privileged network/firewall control; the guide records no live run.
 
 ```bash
 # frp positive control: with the correct auth.token, frpc logs 'login to server success' (proving
@@ -1068,6 +1192,45 @@ ss -tlnp   # read every listener; 8080: only a loopback address unless you delib
 
 # Strong authentication baseline
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| tls: Protect the login page and whole session with TLS or equivalent strong transport; Basic and bearer credentials require HTTPS. | OWASP authentication and password storage unknown; OAuth security BCP RFC 9700 | REASONED |
+| password-hashing: Prefer argon2id, then scrypt; bcrypt is legacy and parameterized PBKDF2 serves FIPS requirements. Never use plaintext, unsalted or fast password hashes. | OWASP authentication and password storage unknown | REASONED |
+| bcrypt-length: bcrypt limits input to 72 bytes; Python bcrypt 5.0.0+ raises ValueError while earlier versions truncate. Prefer argon2id or scrypt for long passphrases. | Python bcrypt rejection threshold 5.0.0; Python bcrypt changelog 2b4ba9ac84df972e8e81311d09559af8dc82ef33; OWASP authentication and password storage unknown | REASONED |
+| bcrypt-prehash: If legacy bcrypt is unavoidable, pre-hash with peppered HMAC then base64, never a bare digest susceptible to password shucking. | OWASP authentication and password storage unknown | REASONED |
+| htpasswd-cost: htpasswd -B -C 12 selects bcrypt cost 12; bare -B defaults to 5, below the OWASP minimum of 10. | Apache htpasswd unknown; OWASP authentication and password storage unknown | REASONED |
+| federation: Prefer supported SSO/OIDC and enable MFA wherever available. | OWASP authentication and password storage unknown; OpenID Connect Core 1.0 | REASONED |
+| machine-tokens: Use separate least-privilege API tokens, exercise rotation and set expiry where supported. | OAuth security BCP RFC 9700 | REASONED |
+| session-identity: Use unpredictable session identifiers and regenerate on login or privilege change, invalidating the old identifier. | OWASP authentication and password storage unknown | REASONED |
+| session-revocation: Invalidate sessions server-side on logout and password change. | OWASP authentication and password storage unknown | REASONED |
+| login-throttling: Rate-limit authentication with account-aware and aggregate controls alongside source limits; lock or delay failures without enabling denial of access. | OWASP authentication and password storage unknown | REASONED |
+| enumeration: Keep login, registration and reset responses uniform in message and timing. | OWASP authentication and password storage unknown | REASONED |
+| auth-logging: Log authentication successes and failures with account and source address; retain logs for investigation. | OWASP authentication and password storage unknown | REASONED |
+| privilege: Separate administrative and daily-use accounts; restrict database and OS service accounts to the rights the application uses. | OWASP authentication and password storage unknown | REASONED |
+| authorization: A federated identity still needs an application allowlist before access is granted. | OpenID Connect Core 1.0; OAuth security BCP RFC 9700 | REASONED |
+| code-pkce: Use authorization code flow with PKCE S256, never plain. | OAuth security BCP RFC 9700 | REASONED |
+| redirects: Require exact-match redirect URIs. | OAuth security BCP RFC 9700 | REASONED |
+| state-nonce: Generate fresh state and nonce for each transaction, verify both and bind them to the initiating browser session. | OAuth security BCP RFC 9700; OpenID Connect Core 1.0 | REASONED |
+| id-token-signature: Validate ID-token signatures with provider JWKS and a pinned algorithm, never none. | OpenID Connect Core 1.0 | REASONED |
+| id-token-claims: Validate ID-token issuer, audience and expiry before accepting the identity. | OpenID Connect Core 1.0 | REASONED |
+| token-lifecycle: Use short-lived access tokens and refresh-token rotation; never put tokens in URLs. | OAuth security BCP RFC 9700 | REASONED |
+| account-linking: Link accounts by issuer plus subject, never by email alone. | OpenID Connect Core 1.0 | REASONED |
+| mfa-enforcement: Require MFA at the point of access in provider policy or the app; enrollment alone must not permit password-only access. | OWASP authentication and password storage unknown; NIST password guidance SP 800-63B-4 | REASONED |
+| control-plane: Require MFA on the Git host, cloud, DNS, deployment platform, secret manager and IdP administrator account. | OWASP authentication and password storage unknown; NIST password guidance SP 800-63B-4 | REASONED |
+| password-length: Require at least 8 password characters with enforced MFA, otherwise at least 15; allow long passphrases and all characters without composition or periodic-rotation rules. | NIST password guidance SP 800-63B-4 | REASONED |
+| breached-passwords: Screen new and changed passwords against known breaches; a valid breached password defeats hashing and per-IP limits. | NIST password guidance SP 800-63B-4; OWASP authentication and password storage unknown | REASONED |
+| recovery: Use random, single-use, short-lived, account-bound reset tokens and a pre-verified delivery channel; recovery must preserve MFA. | NIST password guidance SP 800-63B-4; OWASP authentication and password storage unknown | REASONED |
+| recovery-reauth: Reauthenticate for recovery-address or MFA-factor changes and invalidate outstanding sessions and unused reset tokens on completion. | NIST password guidance SP 800-63B-4; OWASP authentication and password storage unknown | REASONED |
+| verify-token-rejection: Negative tests reject missing, expired, wrong-issuer and wrong-audience tokens. | OpenID Connect Core 1.0; OAuth security BCP RFC 9700 | REASONED |
+<!-- version-basis:end -->
+
 TLS without authentication leaves a service open to the whole internet over an encrypted channel. These rules apply to every service in this repository's guides. Each rule is a requirement unless it is marked `should` or phrased as a preference.
 
 ## Rules
@@ -1121,6 +1284,28 @@ TLS without authentication leaves a service open to the whole internet over an e
 ======================================================================
 
 # Multi-factor authentication (MFA)
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| totp-secret: Generate a random per-user TOTP secret; verification requires the recoverable secret rather than its hash. | TOTP standard unknown | REASONED |
+| totp-provisioning: Provision the authenticator with an otpauth:// URI rendered as a QR code. | Authenticator key URI format unknown | REASONED |
+| totp-storage: Encrypt TOTP secrets at rest and exclude them from the repository. | TOTP standard unknown | REASONED |
+| totp-throttling: Rate-limit code attempts; repeated wrong codes must hit a rate limit or lockout. | HOTP standard unknown; TOTP standard unknown | REASONED |
+| totp-replay: Reject an already accepted code within its time step; Verify submits the same valid code twice and expects refusal on reuse. | TOTP standard unknown | REASONED |
+| authelia-proxies: Authelia integrates with nginx auth_request, Traefik forwardAuth, Caddy forward_auth from 2.5.1, HAProxy via Lua and Envoy; Apache and IIS are unsupported. | Authelia proxy support unknown; Caddy forward_auth minimum 2.5.1 | REASONED |
+| duo-free: Duo Free covers up to 10 users with MFA and Duo Mobile as recorded in September 2026; verify current terms. | Duo editions unknown | REASONED |
+| webauthn-origin: Prefer WebAuthn/passkeys and FIDO2 keys for phishing resistance: credentials are bound to the site origin. | WebAuthn standard unknown | REASONED |
+| webauthn-verification: Store the credential public key and sign count; require and verify UV server-side when a passkey stands alone. | WebAuthn standard unknown | REASONED |
+| webauthn-counter: Treat sign count as advisory, not a hard clone-block; many synced passkeys report zero. | WebAuthn standard unknown | REASONED |
+| verify-secret-storage: Check that no TOTP secret appears in the repository or its history. | TOTP standard unknown | REASONED |
+<!-- version-basis:end -->
 
 Passwords fail through phishing, reuse, and credential stuffing; a second factor keeps a stolen password from becoming access. This guide names the options and the references; it deliberately stops short of per-product walkthroughs, because an AI assistant that knows which option fits can implement it from the linked project documentation. The per-tool guides in this repository state what is viable for each stack.
 
@@ -1188,7 +1373,7 @@ Unattended machine connections (service-to-service database and model-server API
 - TOTP: https://www.rfc-editor.org/info/rfc6238/ ; HOTP: https://www.rfc-editor.org/info/rfc4226/
 - `otpauth://` key URI format: https://github.com/google/google-authenticator/wiki/Key-Uri-Format
 - WebAuthn: https://www.w3.org/TR/webauthn-2/
-- Authelia proxy support matrix: https://www.authelia.com/integration/proxies/support/
+- Authelia proxy support matrix (Caddy 2.5.1 and later): https://www.authelia.com/integration/proxies/support/
 - Duo editions and pricing: https://duo.com/editions-and-pricing
 
 ======================================================================
@@ -1196,6 +1381,39 @@ Unattended machine connections (service-to-service database and model-server API
 ======================================================================
 
 # Secrets: keeping keys out of repositories
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| gitignore: Ignore .env, .env.*, *.key and *.pem before committing; allow only a secret-free template. Already tracked files remain tracked. | OWASP secret handling unknown; Next.js unknown | REASONED |
+| runtime-storage: Load secrets from environment or a secret manager; keep them out of Dockerfile ENV/ARG, images and build logs. | OWASP secret handling unknown | REASONED |
+| random: Generate a random secret per service and environment with the shown OpenSSL or Python command; never share staging and production credentials. | OWASP secret handling unknown | REASONED |
+| scanners: Scan before every push and in CI; gitleaks git/dir require 8.19+, with detect and detect --no-git on older builds; TruffleHog is another scanner. | gitleaks command minimum 8.19+; TruffleHog unknown | REASONED |
+| argv: Arguments expose secrets through procfs, ps and shell history; hidepid or PID namespaces narrow process visibility without covering history. | Linux procfs unknown; htpasswd unknown | REASONED |
+| stdin: Use htpasswd -i, docker login --password-stdin or gh auth login --with-token to avoid secret arguments. | htpasswd unknown; Docker login unknown; GitHub CLI unknown | REASONED |
+| credential-files: Protect plaintext credential files with umask 077 and mode 0600; PostgreSQL ignores group/world-readable .pgpass. | PostgreSQL password file unknown; curl netrc unknown | REASONED |
+| shell-input: Hidden read input avoids history; disable tracing around expansion. The clean-Bash login block clears inherited attributes and allexport and removes TOKEN on exit. | Docker login unknown; Linux procfs unknown | REASONED |
+| shell-limits: The prompted token stays out of argv and environment; same-account/root memory access and earlier exports remain outside this protection. | Linux procfs unknown; Docker login unknown | REASONED |
+| argv-review: A ps/grep snapshot misses unlabelled secrets and short-lived processes; review secret-input paths instead of treating a clean snapshot as proof. | Linux procfs unknown | REASONED |
+| ci-store: Scope CI/CD platform secrets to the jobs needing them; never echo them into logs or artefacts. | OWASP secret handling unknown | REASONED |
+| prompt-secrets: Keep credentials out of all model prompts and customer data outside unapproved services; system prompts are disclosable and authorization belongs outside the model. | OWASP secret handling unknown | REASONED |
+| business-rules: Keep confidential business logic out of public repositories, browser-shipped code and public LLM prompts; public environment prefixes and source maps can expose it. | OWASP secret handling unknown; Next.js unknown | REASONED |
+| terraform-state: Default local Terraform state is plaintext and may contain sensitive values; ignore *.tfstate and *.tfstate.* including backups and workspace copies. | Terraform unknown | REASONED |
+| kubeconfig: Kubeconfig can embed a base64 client-key-data private key or bearer token; exclude credential-bearing files and copies from version control. | Kubernetes kubeconfig unknown | REASONED |
+| docker-store: Docker stores logins in its credential store or base64-encoded config.json; encoding is not encryption and scanners can miss encoded or unpatterned secrets. | Docker login unknown; OWASP secret handling unknown | REASONED |
+| leak-rotation: Revoke and replace a leaked credential before cleanup; deletion cannot undo public repository, chat, log or paste exposure. | OWASP secret handling unknown | REASONED |
+| history-cleanup: History rewriting with git-filter-repo is hygiene after rotation, not containment or unpublishing. | git-filter-repo unknown; OWASP secret handling unknown | REASONED |
+| leak-audit: Review provider logs for use of the leaked credential during its exposure window. | OWASP secret handling unknown | REASONED |
+| encrypted-git: SOPS with age encrypts YAML/JSON/ENV values while preserving structure for secrets that must be versioned; keep decryption keys outside the repository. | SOPS unknown; age unknown | REASONED |
+| verify-scan: gitleaks must exit 0 with no findings before clean is printed; this rule-based scan is the primary gate. | gitleaks command minimum 8.19+ | REASONED |
+| verify-patterns: Supplementary grep prints filenames only, skips binaries/excluded trees and treats read errors as failure; empty output is not proof of no secret. No grep manual is cited. | OWASP secret handling unknown | REASONED |
+<!-- version-basis:end -->
 
 Leaked API keys and credentials in public repositories are the most common security incident in AI-assisted projects, and scanners harvest fresh commits within minutes. [authentication.md](authentication.md) states the baseline; this guide covers the handling.
 
@@ -1251,7 +1469,7 @@ Order matters:
 
 When a team needs configuration secrets in git (for example GitOps deployments), encrypt them: [sops](https://github.com/getsops/sops) with [age](https://github.com/FiloSottile/age) keys encrypts the values inside YAML/JSON/ENV files while leaving the structure diffable. The decryption key itself stays out of the repository.
 
-## Verify
+## Verify (REASONED: scanner outcomes follow the cited gitleaks documentation and secret-handling guidance; no exposed/fixed scan run is recorded)
 
 ```bash
 gitleaks git . && echo clean
@@ -1263,7 +1481,7 @@ On every push, gitleaks must exit 0 with no findings (the `&& echo clean` then p
 ## Sources (checked September 2026)
 
 - OWASP Secrets Management Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html
-- gitleaks: https://github.com/gitleaks/gitleaks
+- gitleaks (git/dir need 8.19+): https://github.com/gitleaks/gitleaks
 - trufflehog: https://github.com/trufflesecurity/trufflehog
 - sops: https://github.com/getsops/sops and age: https://github.com/FiloSottile/age
 - git-filter-repo: https://github.com/newren/git-filter-repo
@@ -2373,6 +2591,46 @@ See [production firewall guidance](https://developer.hashicorp.com/vault/docs/co
 
 # Identity providers: hosted login and MFA for your app and your team
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| entra-free: Entra Free includes MFA and unlimited SaaS SSO as recorded in September 2026. | Microsoft Entra documentation unknown | REASONED |
+| entra-defaults: Security defaults require MFA registration for everyone, enforce it for admins and prompt others when Microsoft judges necessary. | Microsoft Entra documentation unknown | REASONED |
+| entra-paid: September 2026 USD annual-commitment prices: P1 $7/user/month adds Conditional Access; P2 $10 adds risk-based policies. Verify current pricing. | Microsoft Entra documentation unknown | REASONED |
+| google-free: Cloud Identity Free exists; its default license count was not checked for this guide. | Google Cloud Identity pricing unknown | REASONED |
+| okta-commercial: Okta Workforce has a $1,500 annual contract minimum and no free production tier, as recorded in September 2026. | Okta pricing unknown | REASONED |
+| external-id-free: Entra External ID core features cover the first 50,000 MAU free; keep customer and workforce tenants separate. | Microsoft Entra documentation unknown | REASONED |
+| external-id-addons: External ID SMS MFA and machine-to-machine client credentials are billed per transaction as add-ons. | Microsoft Entra documentation unknown | REASONED |
+| firebase-base: Base Firebase Authentication provides free email, password and social sign-in; Identity Platform unlocks TOTP MFA. | Firebase documentation unknown | REASONED |
+| firebase-blaze: With Identity Platform, Blaze has 50,000 free MAU and 50 SAML/OIDC MAU; SMS is billed per message. | Firebase documentation unknown | REASONED |
+| firebase-spark: Spark instead caps use at 3,000 daily active users and 2 SAML/OIDC daily active users; do not confuse these with Blaze MAU allowances. | Firebase documentation unknown | REASONED |
+| auth0-free: Auth0 Free has 25,000 MAU, passkeys and unlimited social connections, but no separately licensed MFA factors or enforced step-up policy. | Auth0 documentation unknown | REASONED |
+| auth0-paid: MFA factors start on Essentials; B2C Essentials is $35/month for 500 MAU. Adaptive MFA requires Enterprise plus its add-on. | Auth0 documentation unknown | REASONED |
+| cognito-free: Cognito Lite and Essentials provide 10,000 free direct-sign-in MAU and 50 free SAML/OIDC MAU. | Amazon Cognito pricing unknown | REASONED |
+| cognito-grandfather: Lite pools created by 10:00 a.m. Pacific on 22 November 2024, and qualifying new Lite pools in those accounts, retain 50,000 free MAU. | Amazon Cognito pricing unknown | REASONED |
+| cognito-passkeys: Cognito Essentials includes passkeys and costs $0.015/MAU beyond its allowance; Lite lacks passkeys and SNS SMS is separately billed. | Amazon Cognito pricing unknown | REASONED |
+| clerk-free: Clerk Hobby covers 50,000 monthly retained users, meaning users returning at least 24 hours after signup, not MAU. | Clerk pricing unknown | REASONED |
+| clerk-mfa: Clerk MFA requires Pro or above: $25/month, or $20 with annual billing, as recorded in September 2026. | Clerk pricing unknown | REASONED |
+| workos-users: WorkOS AuthKit user management covers the first 1,000,000 MAU free. | WorkOS pricing unknown | REASONED |
+| workos-enterprise: WorkOS Enterprise SSO and Directory Sync are separately priced at $125/connection/month for each product's first 15 connections. | WorkOS pricing unknown | REASONED |
+| supabase-free: Supabase Free includes 50,000 MAU and TOTP MFA. | Supabase pricing unknown | REASONED |
+| supabase-phone: Supabase phone MFA is a paid add-on at $75/month for the first project. | Supabase pricing unknown | REASONED |
+| github-membership: GitHub OAuth login must be followed by an organization or team allowlist; OAuth login alone admits any GitHub user. | GitHub OAuth apps unknown | REASONED |
+| aws-workforce: IAM Identity Center is a free workforce directory for AWS console and CLI, not a general ALB OIDC provider; use Cognito or an OIDC provider for ALB app login. | AWS IAM Identity Center and ALB unknown | REASONED |
+| duo-free: Duo Free supports up to 10 users with MFA and Duo Mobile. | Duo documentation unknown | REASONED |
+| duo-proxy: Duo Authentication Proxy supports RADIUS and LDAP for VPNs and other compatible services. | Duo documentation unknown | REASONED |
+| duo-failmode: Set failmode=secure for mandatory MFA; default safe admits a primary-authenticated user when Duo is unreachable. Keep a separately controlled emergency path. | Duo documentation unknown | REASONED |
+| verify-mfa: A fresh password-only or social-login-only session must fail at an MFA-protected admin function; completing MFA must permit that same function. | Microsoft Entra documentation unknown | REASONED |
+| verify-allowlist: An authenticated outside account must be denied while an allowed account reaches the application. | GitHub OAuth apps unknown; AWS IAM Identity Center and ALB unknown | REASONED |
+| verify-logs: Correlate provider sign-in records with application authorization decisions; Entra Sign-in logs record logins and Audit logs record configuration changes. A sign-in alone proves no enforcement. | Microsoft Entra documentation unknown | REASONED |
+<!-- version-basis:end -->
+
 [authentication.md](authentication.md) says to prefer SSO or OIDC over local accounts and to enforce MFA at the identity provider. This guide names the providers, states what their free tiers include, and says who each fits. Wiring instructions live in [oidc-integration.md](oidc-integration.md); login placed in front of an app without code changes lives in [cloud-identity-proxies.md](cloud-identity-proxies.md) and [cloudflare.md](cloudflare.md).
 
 Every tier and price below was read from the vendor's pricing page in September 2026 and will change; verify against the linked source before relying on it. Prices are USD list prices.
@@ -2459,6 +2717,60 @@ Zscaler Private Access, HashiCorp Boundary, Ping Identity, OneLogin, and Okta as
 ======================================================================
 
 # Self-hosted identity providers: Keycloak and authentik
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| private-boundary: Bind the IdP privately behind a reverse proxy; keep the database inside the same protected boundary. | Keycloak documentation unknown; authentik operational documentation unknown | REASONED |
+| authentik-publications: Shipped Compose publishes 9000:9000 and 9443:9443 by default without host addresses, exposing all host interfaces under Docker publishing defaults; it does not publish 9300. | authentik source version/2026.8.3 | REASONED |
+| authentik-web-binds: listen.http and listen.https default to [::]:9000 and [::]:9443 inside the container, independently of host publication. | authentik source version/2026.8.3 | REASONED |
+| authentik-loopback: Replace the Compose ports list with 127.0.0.1:9000:9000 and 127.0.0.1:9443:9443; adding entries can retain old publications. | authentik source version/2026.8.3; authentik operational documentation unknown | REASONED |
+| production-tls: Keycloak production requires a secure channel; edge TLS termination needs a protected loopback or controlled private proxy hop. | Keycloak documentation unknown | REASONED |
+| hostname-defaults: Production start requires explicit hostname or hostname-strict false; start-dev defaults hostname-strict false. Keep strict hostname resolution in production unless the proxy overwrites Host. | Keycloak documentation unknown | REASONED |
+| http-listener: The example starts Keycloak with HTTPS frontend/admin hostnames, xforwarded parsing and http-enabled=true for backend 8080 on a protected proxy hop. | Keycloak documentation unknown | REASONED |
+| admin-hostname: hostname-admin selects the console/API hostname but does not restrict the Administration REST API through the frontend URL. | Keycloak documentation unknown | REASONED |
+| admin-deny: Deny /admin/ on the public hostname at the proxy; the sample returns 404. | Keycloak documentation unknown; nginx documentation unknown | REASONED |
+| master-realm: Restrict /realms/master/ by administrator source network while keeping application /realms/ exposed; a blanket denial locks out administrators. | Keycloak documentation unknown | REASONED |
+| admin-login-route: Console API calls use hostname-admin but console authentication uses the frontend master realm; the private admin proxy also needs /admin/, /resources/, /.well-known/ and version-dependent /js/. | Keycloak documentation unknown | REASONED |
+| forwarded-headers: Overwrite all five X-Forwarded-For/Proto/Host/Port/Prefix headers and Host; appending or passing client values permits spoofing. | Keycloak documentation unknown | REASONED |
+| proxy-trust: proxy-trusted-addresses limits accepted forwarded headers to proxy addresses but is weak protection, not a substitute for header overwriting. | Keycloak documentation unknown | REASONED |
+| proxy-origin: Without proxy-headers, non-passthrough proxied requests that perform origin checks return 403 by default. | Keycloak documentation unknown | REASONED |
+| setup-routing: Before setup, authentik root redirects via /setup to /if/flow/initial-setup/; a fresh direct flow visit lacks the public setup marker and is denied. | authentik source version/2026.8.3 | REASONED |
+| setup-claim: Initial setup plans only when akadmin is absent or lacks a usable password, then prompts email/base URL/password, writes akadmin and logs in the visitor. | authentik source version/2026.8.3 | REASONED |
+| setup-completion: Completion records setup done, disables OOBE blueprints and requires a superuser; planning-time checks do not promise revocation of already-started sessions. | authentik source version/2026.8.3 | REASONED |
+| setup-isolation: Keep both web ports and public proxy route closed to untrusted clients until setup is complete; use loopback or a private container network and confirm closure in a fresh session. | authentik source version/2026.8.3; authentik operational documentation unknown | REASONED |
+| bootstrap-inputs: Before first startup, protected .env can provide AUTHENTIK_BOOTSTRAP_PASSWORD, PASSWORD_HASH or TOKEN; any nonempty input triggers bootstrap and successful blueprint application completes setup. | authentik source version/2026.8.3 | REASONED |
+| bootstrap-lifecycle: Hash form is validated; password forms set akadmin password and token form supplies an API token, not a browser password. Already-setup tenants are skipped, so these inputs are not rotation. | authentik source version/2026.8.3 | REASONED |
+| bootstrap-cleanup: Verify bootstrap and setup closure before publication, then remove the bootstrap secret from the startup environment and protect file/container-inspection access. | authentik source version/2026.8.3 | REASONED |
+| keycloak-bootstrap: Keycloak bootstrap admin is temporary but needs manual removal after establishing permanent, MFA-protected admin access; it does not expire automatically. | Keycloak documentation unknown | REASONED |
+| keycloak-management: Enabled Keycloak health and metrics use management port 9000; keep it private and use /health/ready for the orchestrator. | Keycloak documentation unknown | REASONED |
+| management-mtls: https-management-client-auth accepts none/request/required and inherits HTTP settings; this plaintext topology needs management TLS credentials and trust before client certificates can authenticate it. | Keycloak documentation unknown | REASONED |
+| authentik-metrics: authentik server metrics use unauthenticated plain HTTP /metrics with default [::]:9300; absent host publication does not protect its container-network listener. | authentik source version/2026.8.3 | REASONED |
+| worker-outpost-metrics: Unauthenticated 9300 metrics for workers and outposts remain documentation-backed; their handlers were not traced in the recorded audit. Restrict to monitoring clients. | authentik operational documentation unknown | REASONED |
+| keycloak-mfa: Enroll administrator TOTP or WebAuthn and require the factor in the realm authentication flow; registered devices alone do not enforce MFA. | Keycloak documentation unknown | REASONED |
+| brute-force-default: Keycloak brute-force detection is disabled by default and must be enabled per realm. | Keycloak documentation unknown | REASONED |
+| redirect-wildcards: Keycloak permits trailing redirect-URI wildcards and bare *; deliberately register exact URIs instead. | Keycloak documentation unknown | REASONED |
+| docker-socket: authentik Compose mounts the worker Docker socket for outpost management; use a socket proxy or remove the mount and manage outposts manually. | authentik operational documentation unknown; authentik source version/2026.8.3 | REASONED |
+| cache-ports: Keycloak cache transport uses 7800 and failure detection 57800; TCP stacks enable TLS by default but still need private reachability. | Keycloak documentation unknown | REASONED |
+| redis-history: Redis 6379 is relevant to older authentik: tasks moved in 2025.8 and remaining uses in 2025.10, which removes Redis entirely. | authentik Redis removal 2025.10 | REASONED |
+| verify-setup: On a disposable instance, complete anonymous root-to-setup flow and confirm akadmin login; after setup or password bootstrap, fresh /setup visits must return to authentication. Source tests were read, not run. | authentik source version/2026.8.3 | REASONED |
+| verify-publication: Compare exposed and loopback publications: untrusted clients lose setup access while a local browser still reaches it. Neither configuration publishes 9300. | authentik source version/2026.8.3 | REASONED |
+| verify-inventory: Inspect all listeners plus Compose publications: host ss misses container namespaces, Compose ps sees one project, and proxy 443 publication is expected. | authentik source version/2026.8.3; Keycloak documentation unknown | REASONED |
+| verify-issuer: From outside allowed networks, application-realm discovery must print the expected issuer before negative route checks are interpreted; an arbitrary 200 is insufficient. | Keycloak documentation unknown | REASONED |
+| verify-console: Public /admin/master/console/ must return 404; 2xx, 3xx, 401 and 403 do not show that the console path is closed. | Keycloak documentation unknown; nginx documentation unknown | REASONED |
+| verify-admin-api: Public /admin/realms/master/users must return 404; 401 means the API still answers and requests a token. | Keycloak documentation unknown; nginx documentation unknown | REASONED |
+| verify-master: Outside allowed sources, master-realm discovery must return 403; 200 exposes it and 404 indicates blanket denial. Review effective locations beyond these sampled routes. | Keycloak documentation unknown; nginx documentation unknown | REASONED |
+| verify-admin-login: An allowed administrator must complete real login through the private console and frontend master realm; outside sources must fail. | Keycloak documentation unknown | REASONED |
+| verify-direct-ports: Probe 8080/8443/9000/9300/9443 directly: curl exit 0 answers, 7 refuses, and 28 needs full diagnostics to distinguish accepted-then-stalled from unreachable. | Keycloak documentation unknown; authentik source version/2026.8.3 | REASONED |
+| verify-bootstrap-removal: Look up the exact bootstrap username rather than a default 100-result user list, and separately check bootstrap service accounts. | Keycloak documentation unknown | REASONED |
+| verify-address-coverage: Repeat external checks for every public IPv4/IPv6 address and the origin; private admin, database and outposts need separate checks, and the listed ports are not a full inventory. | Keycloak documentation unknown; authentik operational documentation unknown | REASONED |
+<!-- version-basis:end -->
 
 A self-hosted identity provider is the one service whose compromise is every other service's compromise. [identity-providers.md](identity-providers.md) covers choosing one and says plainly that running your own gives you a server to patch, back up, and keep available. This guide covers what that server exposes once it is running: an administration surface that does not move when you tell it to, a first-boot window in which an unauthenticated visitor can claim the administrator account, and a management port that, once you turn it on, answers without asking who you are.
 
@@ -2595,6 +2907,8 @@ Live checks here are **REASONED**: the authoring host forbids opening listeners 
 For authentik's setup check, use a disposable instance in an isolated test network and a fresh browser session. Open `http://127.0.0.1:9000/` locally or through the SSH forward. In the exposed state, with no bootstrap credentials and no usable `akadmin` password, expect the redirects through `/setup` to `/if/flow/initial-setup/`, then the setup form without a login. Complete it with test credentials and confirm those credentials log in as `akadmin`. After setup, a new anonymous session visiting `/setup` must return through the root to authentication rather than offer setup. Repeat on a fresh instance bootstrapped with `AUTHENTIK_BOOTSTRAP_PASSWORD`: expect login with the supplied password and no setup form. A direct visit to the flow is not a sufficient negative check because it is denied even before setup. The pinned root redirect, setup view, OOBE policy and source tests distinguish these outcomes; the tests were read, not executed here.
 
 For the network boundary, compare section 1's shipped publications with the loopback replacement using step 1 below. In the isolated exposed fixture, an untrusted test client can reach the setup route; with the loopback mappings and public proxy route closed, that client must not reach it, while the local browser still can. Retain this positive control so a stopped service cannot pass as an effective restriction. Confirm that neither configuration publishes 9300; its wildcard listener inside the container remains a separate monitoring-network boundary.
+
+REASONED: listener, routing, login, port-isolation and bootstrap-removal checks follow the vendor documentation and pinned sources below; the authoring host has no isolated network namespace for listeners and ran neither identity provider. Expected outcomes and positive controls are recorded in the block.
 
 ```bash
 # Steps 2 to 5 and 7 must run from a host OUTSIDE every network you have allowed, against a
@@ -2744,6 +3058,58 @@ One name is not one address, and one address is not one origin. Repeat steps 2 t
 
 # OIDC login: wiring Google, Microsoft Entra, GitHub, and Okta into your app
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| code-flow: Use server-side authorization code flow with PKCE; RFC 9700 requires PKCE for public clients and recommends it for others, and discourages implicit grant. | OAuth security BCP and PKCE unknown | REASONED |
+| redirect-match: Register an exact callback URI including scheme, host, path and trailing slash; avoid prefix and wildcard matching. | OAuth security BCP and PKCE unknown | REASONED |
+| transaction-binding: Generate state bound to the browser session, nonce and S256 code_challenge for each authorization; request openid email profile. | OAuth security BCP and PKCE unknown; OpenID Connect Core 1.0 | REASONED |
+| code-exchange: Exchange the code server-side with client secret and the code_verifier that produced the challenge. | OAuth security BCP and PKCE unknown; OpenID Connect Core 1.0 | REASONED |
+| token-signature: Validate the ID-token signature against provider JWKS using a pinned algorithm; Core defaults to RS256 unless another was registered. | OpenID Connect Core 1.0; OpenID Connect Discovery 1.0 | REASONED |
+| token-issuer: Require iss to equal the configured issuer before trusting claims. | OpenID Connect Core 1.0 | REASONED |
+| token-audience: aud must include the client ID and no untrusted additional audience; confirm azp equals the client ID where present. | OpenID Connect Core 1.0 | REASONED |
+| token-expiry-nonce: Require unexpired exp and nonce equal to the value sent. | OpenID Connect Core 1.0 | REASONED |
+| token-leaks: Keep codes and tokens out of logs, traces and analytics; set callback Referrer-Policy: no-referrer and redirect to a clean URL. | OAuth security BCP and PKCE unknown | REASONED |
+| refresh-tokens: No offline access is requested, but provider-specific refresh tokens must remain server-side secrets, go only to the token endpoint and be revoked on offboarding. | OAuth security BCP and PKCE unknown | REASONED |
+| account-linking: Link by issuer and sub, not mutable or non-unique email, phone_number or preferred_username. | OpenID Connect Core 1.0; Google identity documentation unknown; Microsoft Entra documentation unknown | REASONED |
+| logout: Destroy the server session and cookie; where advertised, redirect to end_session_endpoint with id_token_hint and registered post_logout_redirect_uri; Entra uses /oauth2/v2.0/logout. | OpenID Connect RP-Initiated Logout 1.0; Microsoft Entra documentation unknown | REASONED |
+| discovery: Fetch issuer/.well-known/openid-configuration for endpoints and jwks_uri; tenant-specific issuer must match, with Entra common/organizations handled separately. | OpenID Connect Discovery 1.0; Microsoft Entra documentation unknown | REASONED |
+| google-allowlist: Require verified ID-token hd to equal the Workspace domain; absent hd is rejection and the request parameter is not access control. | Google identity documentation unknown | REASONED |
+| entra-allowlist: Require allowed tid and tenant-specific iss; prefer Single tenant only. organizations accepts any Entra tenant, common also personal accounts; key identity by oid or sub plus tid. | Microsoft Entra documentation unknown | REASONED |
+| github-identity: GitHub OAuth has no discovery or ID token; fetch GET https://api.github.com/user and key identity by numeric id, not login. | GitHub OAuth and REST documentation unknown | REASONED |
+| github-org: With read:org, GET /user/memberships/orgs/&lt;org&gt; must return 200 and state active; 404 is unaffiliated. | GitHub OAuth and REST documentation unknown | REASONED |
+| github-team: With read:org, GET /orgs/&lt;org&gt;/teams/&lt;team_slug&gt;/memberships/&lt;username&gt; must return 200 and state active; pending is an unaccepted invitation and 404 is no membership. | GitHub OAuth and REST documentation unknown | REASONED |
+| okta-groups: Add an ID-token groups claim on the org authorization server and request groups scope; require a named group. More than 100 groups fails, so narrow the filter. | Okta documentation unknown | REASONED |
+| default-deny: Reject and log identities outside the allowlist before creating a session; do not create pending accounts by default. | Google identity documentation unknown; Microsoft Entra documentation unknown; Okta documentation unknown | REASONED |
+| google-registration: Register a Google OAuth client and exact callback; discovery is https://accounts.google.com/.well-known/openid-configuration and iss is https://accounts.google.com or accounts.google.com. | Google identity documentation unknown | REASONED |
+| entra-registration: Register a Web application, callback and client secret; prefer tenant-specific /v2.0/.well-known/openid-configuration discovery for single-tenant apps. | Microsoft Entra documentation unknown | REASONED |
+| entra-template: For common/organizations, substitute GUID tid into the issuer template, match iss exactly, restrict signing keys by issuer scope and enforce the tenant allowlist. | Microsoft Entra documentation unknown | REASONED |
+| github-registration: Register an OAuth app callback; authorize at /login/oauth/authorize with read:user read:org, state and S256 PKCE; exchange at /login/oauth/access_token with secret, code, verifier and redirect_uri. | GitHub OAuth and REST documentation unknown | REASONED |
+| github-callback-default: Always send redirect_uri: omission selects the first callback. Apps with one callback before August 3, 2026 retain wildcard matching; disable it for exact matching. | GitHub OAuth and REST documentation unknown | REASONED |
+| okta-registration: Create an OIDC Web Application with sign-in/out URIs and narrowed assignment; use org discovery or /oauth2/&lt;authorizationServerId&gt; discovery, with iss matching the prefix. | Okta documentation unknown | REASONED |
+| openid-client-signature: Call enableNonRepudiationChecks: openid-client otherwise trusts token-endpoint TLS in code flow; retain verifier, state and nonce in the initiating browser's server session. | openid-client unknown | REASONED |
+| authjs-config: Auth.js uses AUTH_&lt;PROVIDER&gt;_ID/SECRET and Okta/Entra ISSUER, with /api/auth/callback/&lt;provider&gt;; add the allowlist in signIn and override Entra common with the tenant issuer. | Auth.js unknown | REASONED |
+| authjs-revocation: Auth.js JWT-cookie logout leaves a copied token valid until exp unless blocked; use database sessions or a blocklist for server-side revocation. | Auth.js unknown | REASONED |
+| authlib-config: Authlib registration uses Google discovery, openid profile email and S256; authorize_redirect and authorize_access_token implement the callback flow. | Authlib unknown | REASONED |
+| go-oidc-verifier: go-oidc verifies signature, issuer, audience and expiry; compare idToken.Nonce separately and leave SkipIssuerCheck off. | go-oidc unknown | REASONED |
+| entra-mfa: Require authentication strength through Entra Conditional Access; check ID-token and optional-claims documentation before relying on amr=mfa. | Microsoft Entra documentation unknown | REASONED |
+| google-mfa: Enforce Workspace 2-Step Verification in policy; no Google ID-token MFA claim was verified for this guide. | Google identity documentation unknown | REASONED |
+| okta-mfa: Use Okta authentication and global-session policies; its amr includes pwd, mfa, otp and hwk. | Okta documentation unknown | REASONED |
+| verify-discovery: The discovery probe reads Google issuer and jwks_uri; this does not demonstrate application authorization. | Google identity documentation unknown; OpenID Connect Discovery 1.0 | REASONED |
+| verify-anonymous: Unauthenticated /admin must return 401 or a 302 to provider/login, never 200 or protected content; an unrelated redirect is not success. | OpenID Connect Core 1.0 | REASONED |
+| verify-allowlist: A valid account outside the Google domain, Entra tenant, GitHub organization or Okta group authenticates at the provider but is rejected and logged by the app. | Google identity documentation unknown; Microsoft Entra documentation unknown; GitHub OAuth and REST documentation unknown; Okta documentation unknown | REASONED |
+| verify-redirect: Changing redirect_uri host or adding a path segment must cause a provider error without redirection. | OAuth security BCP and PKCE unknown | REASONED |
+| verify-state: A changed callback state must be rejected. | OAuth security BCP and PKCE unknown | REASONED |
+| verify-token: Accept a valid ID-token control and reject one-property fixtures for expiry beyond skew, wrong aud/azp and broken signature in the token-validation path, not the code callback. | OpenID Connect Core 1.0 | REASONED |
+| verify-logout: After logout a protected page returns to login and a copied old cookie stops authorizing; JWT sessions need database replacement or a revocation check. | Auth.js unknown; OpenID Connect RP-Initiated Logout 1.0 | REASONED |
+<!-- version-basis:end -->
+
 Adding "Sign in with Google" takes an afternoon; the recurring defects are in what happens after the redirect comes back: an unvalidated ID token, an account matched by email, or an app that admits every Google or Microsoft account in existence because nobody checked whose it was. This guide gives the one flow every recipe shares, the exact claim to check per provider, the registration steps, and library pointers. Choosing a provider is covered in [identity-providers.md](identity-providers.md); login placed in front of an app without code changes is covered in [cloud-identity-proxies.md](cloud-identity-proxies.md). Authorizing an MCP client to a remote server layers additional obligations on this flow and is covered in [mcp-clients.md](mcp-clients.md).
 
 ## 1. The flow every recipe uses
@@ -2821,6 +3187,8 @@ An app can additionally refuse a session whose ID token shows no second factor, 
 
 ## Verify
 
+REASONED: discovery and anonymous-admin probes follow the Google OIDC and OpenID Connect sources below; the protected-endpoint check needs an application deployment, which was not supplied for this metadata review. The guide records no live outcome; expected anonymous rejection is stated in the block.
+
 ```bash
 curl -q -s https://accounts.google.com/.well-known/openid-configuration | jq -r '.issuer, .jwks_uri'
 curl -q -sS -D - -o /dev/null https://app.example.com/admin   # unauthenticated GET: 401, or a 302 whose Location is the provider/login (not an unrelated app route), never 200 or app content
@@ -2859,6 +3227,68 @@ Negative tests matter more than the happy path:
 ======================================================================
 
 # Identity-aware proxies: login in front of the app with no code change
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| origin: Origins must accept only proxy traffic through loopback, security-group restriction or ingress controls; direct access bypasses login. | AWS ALB unknown; Google Cloud IAP unknown | REASONED |
+| assertions: Verify signed identity assertions before use; Azure's protected-header guarantee applies only to requests through its platform. | AWS ALB unknown; Google Cloud IAP unknown; Cloudflare Access unknown; Azure authentication unknown | REASONED |
+| mfa-idp: ALB, IAP, Azure, ngrok and Vercel inherit MFA from the identity provider; enforce it there. | AWS ALB unknown; Google Cloud IAP unknown; Azure authentication unknown; ngrok unknown; Vercel unknown | REASONED |
+| mfa-access: Cloudflare Access can enforce independent TOTP or WebAuthn MFA without IdP enforcement. | Cloudflare Access unknown | REASONED |
+| authorization: Authentication proves identity; application or proxy policy must still authorize access. | AWS ALB unknown; Google Cloud IAP unknown; ngrok unknown | REASONED |
+| fail-closed: Missing auth configuration, an unreachable auth service or unmatched route must never pass an unauthenticated request through. | AWS ALB unknown; Azure authentication unknown | REASONED |
+| alb-actions: authenticate-oidc or authenticate-cognito precedes forward and works only on HTTPS listeners. | AWS ALB unknown | REASONED |
+| alb-anonymous: OnUnauthenticatedRequest defaults authenticate; allow forwards without claims, and deny returns HTTP 401. | AWS ALB unknown | REASONED |
+| alb-session: SessionTimeout defaults seven days and permits a one-second minimum; the example selects 3600 seconds. | AWS ALB unknown | REASONED |
+| alb-callback: The IdP redirect URL is the load-balancer DNS/CNAME over HTTPS at /oauth2/idpresponse. | AWS ALB unknown | REASONED |
+| alb-jwt: Verify ES256 x-amzn-oidc-data using the regional public-key endpoint and key ID; bind signer ARN/client in the JWT header and check expiry. | AWS ALB unknown | REASONED |
+| alb-legacy: Unsigned x-amzn-oidc-accesstoken and x-amzn-oidc-identity must not supply trusted identity. | AWS ALB unknown | REASONED |
+| alb-target: Restrict target security groups to the ALB security group; use HTTPS targets when claims need last-hop encryption. | AWS ALB unknown | REASONED |
+| iap-backends: IAP protects supported App Engine, Cloud Run, Compute Engine, GKE and on-premises backends, not backend buckets. | Google Cloud IAP unknown | REASONED |
+| iap-iam: Google Accounts and Workforce Identity Federation require IAP-secured Web App User IAM access. | Google Cloud IAP unknown | REASONED |
+| iap-customer: Identity Platform customer identities bypass IAM authorization; the app must authorize verified assertion claims. | Google Cloud IAP unknown | REASONED |
+| iap-jwt: Verify ES256 x-goog-iap-jwt-assertion with Google's IAP JWKs, issuer https://cloud.google.com/iap and the resource audience. | Google Cloud IAP unknown | REASONED |
+| iap-audience: IAP audience paths differ for backendServices, regional Cloud Run services and App Engine apps. | Google Cloud IAP unknown | REASONED |
+| iap-unsigned: Unsigned authenticated-user-email/id headers are forgeable when IAP is bypassed; use the JWT. | Google Cloud IAP unknown | REASONED |
+| iap-run: Load-balancer IAP does not protect run.app; enable IAP on Cloud Run or disable the default URL/restrict ingress. | Google Cloud IAP unknown | REASONED |
+| iap-firewall: Compute Engine and GKE firewalls must block access that bypasses the load balancer. | Google Cloud IAP unknown | REASONED |
+| azure-providers: Easy Auth fronts the app without code changes; documented providers include Entra, Facebook, Google, X, GitHub, Apple preview and custom OIDC. | Azure authentication unknown | REASONED |
+| azure-require: Require authentication rejects anonymously with 302, 401, 403 or 404; Allow unauthenticated requests delegates the decision to the app. | Azure authentication unknown | REASONED |
+| azure-https: Enabling Easy Auth redirects to HTTPS regardless of the app setting; do not disable requireHttps in V2 configuration. | Azure authentication unknown | REASONED |
+| azure-paths: Authentication covers every path unless excluded paths are configured. | Azure authentication unknown | REASONED |
+| azure-headers: X-MS-CLIENT-PRINCIPAL carries Base64 claims with ID/NAME/IDP headers; external requests cannot set these platform headers. | Azure authentication unknown | REASONED |
+| azure-me: /.auth/me is available with the token store enabled. | Azure authentication unknown | REASONED |
+| azure-tenant: Entra defaults to allowing any tenant user to obtain a token; restrict the app registration to assigned users when needed. | Azure authentication unknown | REASONED |
+| container-auth: Container Apps uses per-replica auth sidecars, supported social/Entra/OIDC providers, Require/Allow choices and protected principal headers. | Azure authentication unknown | REASONED |
+| container-https: Container Apps authentication requires HTTPS-only ingress with allowInsecure disabled. | Azure authentication unknown | REASONED |
+| static-login: Static Web Apps preconfigures GitHub and Entra on all plans at /.auth/login/github and /.auth/login/aad; custom providers replace defaults. | Azure authentication unknown | REASONED |
+| static-roles: Signed-in Static Web Apps users have anonymous and authenticated roles; staticwebapp.config.json route rules restrict by role. | Azure authentication unknown | REASONED |
+| static-tenant: The preconfigured Static Web Apps Entra provider accepts any Microsoft account; a custom provider is needed for one tenant. | Azure authentication unknown | REASONED |
+| cf-jwt: Prefer Cf-Access-Jwt-Assertion over the non-guaranteed CF_Authorization cookie; validate team certs, application AUD and team-domain issuer. | Cloudflare Access unknown | REASONED |
+| cf-rotation: Access rotates signing keys every six weeks with seven-day previous-key validity; fetch endpoint keys instead of hard-coding. | Cloudflare Access unknown | REASONED |
+| ngrok-login: Traffic-policy oauth or openid-connect redirects to the provider; OIDC uses issuer_url, client_id, client_secret and scopes. | ngrok unknown | REASONED |
+| ngrok-deny: OAuth login alone admits unintended accounts; a deny expression must match identities outside the email/domain allowlist. | ngrok unknown | REASONED |
+| ngrok-managed: Empty client_id/client_secret selects ngrok's managed OAuth app for supported providers. | ngrok unknown | REASONED |
+| ngrok-cli: Use ngrok http 3000 --traffic-policy-file policy.yml; legacy OAuth allow-domain/email flags are deprecated. | ngrok unknown | REASONED |
+| ngrok-origin: Bind the app to 127.0.0.1 so a direct VM address cannot bypass ngrok login. | ngrok unknown | REASONED |
+| vercel-members: Deployment Protection is not end-user login; Vercel Authentication admits members/viewers, approved requesters, share links and automation bypass. | Vercel unknown | REASONED |
+| vercel-scope: Standard Protection excludes production domains; configure All Deployments. The guide records free availability on every plan from September 9, 2026. | Vercel unknown | REASONED |
+| vercel-exception: A domain Protection Exception disables protection for existing and future deployments; remove unintended exceptions. | Vercel unknown | REASONED |
+| vercel-password: At writing, Password Protection is Enterprise-included or USD 20/month/project on Pro; USD 150 legacy is existing-Pro only; Hobby lacks it. | Vercel unknown | REASONED |
+| vercel-enterprise: Trusted IPs and Passport are Enterprise-only at the time of writing. | Vercel unknown | REASONED |
+| verify-origin: An external direct-port-3000 probe must refuse/time out at the intended address; HTTP proves exposure and resolver/local errors are inconclusive. | AWS ALB unknown; Google Cloud IAP unknown; curl minimum write-out version 7.75.0 | REASONED |
+| verify-anonymous: Anonymous proxy requests must redirect to the IdP or return 401/403. | AWS ALB unknown; Azure authentication unknown | REASONED |
+| verify-headers: Forged unsigned identity headers through the proxy must still yield a login challenge or denial, never admin identity. | AWS ALB unknown; Google Cloud IAP unknown; Azure authentication unknown | REASONED |
+| verify-signature: At the origin, accept a valid assertion then reject a well-formed changed claim with the original signature; proxy overwrite or malformed JSON proves nothing. | AWS ALB unknown; Google Cloud IAP unknown; Cloudflare Access unknown | REASONED |
+| verify-platform: Probe a real route at run.app or the Vercel production domain: require the platform challenge; app content bypasses auth and 404/transport errors are inconclusive. | Google Cloud IAP unknown; Vercel unknown | REASONED |
+| verify-outage: Break authorization and require denial of a fresh unauthenticated request; established-session survival is a separate test. | AWS ALB unknown; Azure authentication unknown | REASONED |
+<!-- version-basis:end -->
 
 An identity-aware proxy puts a login page in front of an application without changing the application: the cloud's load balancer, platform edge, or tunnel authenticates the user against an identity provider and forwards the request with the user's identity in headers. [cloudflare.md](cloudflare.md) documents the pattern for Cloudflare Access; this guide covers the equivalents in AWS, Google Cloud, Azure, ngrok, and Vercel. The pattern fails in two ways: the origin stays reachable around the proxy, or the app trusts an identity header anyone can type. Both are addressed below.
 
@@ -2933,6 +3363,8 @@ Vercel's protection guards a deployment from the public; it is not your applicat
 
 ## Verify
 
+REASONED: following block; the cited ALB, IAP and Azure authentication/header documentation defines origin isolation, anonymous denial and forged-header rejection. This read-only review cannot provision the cloud origin, IdP and external probe host; no live result is recorded. Expected responses and inconclusive failures are stated below.
+
 ```bash
 # origin direct. Run this from a host OUTSIDE your cloud network (your laptop on a public connection,
 # not the instance or a VPC peer), so the probe actually crosses the cloud boundary you are testing. Read err,
@@ -2998,6 +3430,54 @@ After logging in, confirm that the app's own identity check reads the signed ass
 ======================================================================
 
 # Machine identity: API keys, client credentials, mutual TLS, and workload identity
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| key-scope: Issue a random least-privilege key per client and environment so one client can be revoked independently. | Bearer token guidance unknown | REASONED |
+| key-lifetime: Give keys expiries and scheduled rotation with a short overlap for continuity. | Bearer token guidance unknown | REASONED |
+| bearer-transport: Send bearer keys in Authorization headers over mandatory TLS; URLs leak through history and logs. | Bearer token guidance unknown | REASONED |
+| constant-time: Use hmac.compare_digest or crypto.timingSafeEqual rather than plain equality; the guide requires equal byte lengths. | Python hmac unknown; Node.js crypto unknown | REASONED |
+| key-hash: Where only verification is needed, store key hashes and show plaintext once; this is guide advice, without a hash-implementation source in Sources. | Bearer token guidance unknown | REASONED |
+| client-grant: Confidential clients authenticate with grant_type=client_credentials for access tokens; refresh tokens SHOULD NOT be issued, so re-authenticate. | OAuth client credentials unknown | REASONED |
+| token-scope: Request the narrowest scope or provider audience and bound access-token lifetime and reach. | OAuth client credentials unknown; Bearer token guidance unknown | REASONED |
+| jwt-validation: Validate access-token signature, reject alg none, check exact issuer, API audience and expiry, require at+jwt for JWT access tokens, and enforce scopes. | JWT access-token profile unknown | REASONED |
+| m2m-billing: As of September 2026, Entra External ID M2M is billed per transaction as an add-on; hourly renewal is roughly 720 monthly transactions. | Entra External ID unknown | REASONED |
+| client-secret: Client credentials still need long-lived-secret protection unless replaced by federation supported by the provider. | OAuth client credentials unknown; Azure federation and login unknown | REASONED |
+| mtls-identity: Use a separate short-lived certificate per client and keep CA keys off signed servers; mTLS is a possession factor, not human MFA. | Certificate revocation unknown | REASONED |
+| mtls-nginx: nginx uses ssl_verify_client on in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
+| mtls-apache: Apache uses SSLVerifyClient require in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
+| mtls-postgres: PostgreSQL uses clientcert=verify-full in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
+| mtls-mysql: MySQL uses REQUIRE X509 in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
+| mtls-redis: Redis uses tls-auth-clients yes in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
+| mtls-rabbitmq: RabbitMQ uses ssl_options.fail_if_no_peer_cert = true in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
+| mtls-mosquitto: Mosquitto uses require_certificate true in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
+| mtls-revocation: Replacing a key does not reject the old certificate; revoke with checked CRL/OCSP, remove it from an allowlist or wait for expiry, and test refusal. | Certificate revocation unknown | REASONED |
+| oidc-token: GitHub id-token: write permits short-lived OIDC tokens from token.actions.githubusercontent.com; restrict trust to the exact repository and branch or environment. | GitHub Actions OIDC unknown | REASONED |
+| aws-action: configure-aws-credentials uses role-to-assume and aws-region and defaults its audience to sts.amazonaws.com. | AWS IAM and credential action unknown | REASONED |
+| aws-trust: AWS trust uses AssumeRoleWithWebIdentity and exact aud/sub conditions; IAM rejects absent or wildcard-only sub, and broad subjects admit outside repositories. | AWS IAM and credential action unknown; GitHub Actions OIDC unknown | REASONED |
+| google-provider: Create an OIDC provider with the GitHub issuer, subject/repository mappings and an owner plus branch/environment condition. | Google Cloud federation and auth action unknown | REASONED |
+| google-binding: Grant workloadIdentityUser to the exact repository principalSet; prefer immutable numeric repository and owner IDs over reusable names. | Google Cloud federation and auth action unknown | REASONED |
+| google-action: google-github-actions/auth takes workload_identity_provider and service_account. | Google Cloud federation and auth action unknown; GitHub Actions OIDC unknown | REASONED |
+| azure-trust: Configure the exact GitHub issuer, repository branch/environment subject and api://AzureADTokenExchange audience; wildcards are unsupported and wrong subjects fail at exchange. | Azure federation and login unknown | REASONED |
+| azure-action: azure/login needs client-id, tenant-id and subscription-id for OIDC, without a stored client secret. | Azure federation and login unknown; GitHub Actions OIDC unknown | REASONED |
+| subject-format: The guide records an immutable default subject with owner/repository IDs for repositories created after July 15, 2026; inspect the actual claim before writing trust. | GitHub Actions OIDC unknown | REASONED |
+| action-pins: Pin actions to full commit SHAs; tags and branches can move to different code. | GitHub Actions OIDC unknown | REASONED |
+| workload-attestation: SPIFFE/SPIRE provides attested short-lived workload identities without a stored secret. | SPIFFE and SPIRE unknown | REASONED |
+| secret-store: Store unavoidable machine secrets in the listed secret managers and use platform identity to authenticate, avoiding another long-lived bootstrap key. | Azure federation and login unknown; Google Cloud federation and auth action unknown; AWS IAM and credential action unknown | REASONED |
+| verify-scope: A protected header-file staging key must receive 401/403 in production while succeeding in staging; otherwise denial does not establish environment scoping. | Bearer token guidance unknown | REASONED |
+| verify-expiry: Revoked or expired credentials must be rejected with a service-log record identifying the client. | Bearer token guidance unknown; JWT access-token profile unknown | REASONED |
+| verify-ci: Repository Actions secrets should hold no long-lived cloud credentials and the workflow must declare id-token: write. | GitHub Actions OIDC unknown | REASONED |
+| verify-trust: Inspect AWS sub, Google repository binding and Azure subject for exact repository plus branch/environment restriction without broad wildcard suffixes. | AWS IAM and credential action unknown; Google Cloud federation and auth action unknown; Azure federation and login unknown | REASONED |
+| verify-artifacts: History, working-tree and image-layer scans must show no keys; docker history alone misses copied files. Sources cites confidentiality guidance, not these scanner commands. | Bearer token guidance unknown | REASONED |
+| verify-mtls: Reject missing, untrusted, expired, revoked and, where identity authorization applies, unauthorized certificates while the authorized client succeeds. | Certificate revocation unknown | REASONED |
+<!-- version-basis:end -->
 
 Machines cannot do MFA, so their credentials are long-lived by default, and long-lived credentials leak through repositories, container images, and logs. The fix is scoped, short-lived, and where possible credential-free access: a CI job or workload that holds no key cannot leak one. [authentication.md](authentication.md) sets the baseline and [secrets.md](secrets.md) covers handling and leak response; this guide covers the credential types themselves, from the weakest to the one that removes the secret entirely.
 
@@ -3085,6 +3565,49 @@ API keys, client secrets, and client-certificate keys that cannot be federated a
 ======================================================================
 
 # Fronting auth: putting login and MFA in front of an app that has none (oauth2-proxy, Authelia, Pomerium)
+
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| isolate: Bind app and auth service to loopback or an unpublished private container network; only the fronting proxy may reach them. | oauth2-proxy v7.15.4; Authelia v4.39.28 | REASONED |
+| oauth-bind: oauth2-proxy --http-address defaults to 127.0.0.1:4180. | oauth2-proxy v7.15.4 | REASONED |
+| authelia-bind: Authelia server.address defaults tcp://:9091/; its empty host reaches Go net.Listen and binds every local address. | Authelia v4.39.28; Go net.Listen unknown | REASONED |
+| authenticate: oauth2-proxy, Authelia or Pomerium must check the session before forwarding to the app. | oauth2-proxy v7.15.4; Authelia v4.39.28; Pomerium unknown | REASONED |
+| header-trust: The app must trust only headers overwritten from verified proxy responses; other client headers pass through, so isolation alone is insufficient. | oauth2-proxy v7.15.4; Authelia v4.39.28; Traefik unknown | REASONED |
+| oauth-provider: OAUTH2_PROXY_ environment variables map core flags; configure provider and IdP client-id/client-secret. | oauth2-proxy v7.15.4 | REASONED |
+| oauth-domain: --email-domain restricts a domain; * admits any authenticated user. | oauth2-proxy v7.15.4 | REASONED |
+| oauth-upstream: --upstream targets the app, or static://202 when another proxy handles forwarding. | oauth2-proxy v7.15.4 | REASONED |
+| oauth-cookie: --cookie-secret must be 16, 24 or 32 bytes, optionally base64-encoded; generate randomly and do not reuse or commit it. | oauth2-proxy v7.15.4 | REASONED |
+| oauth-nginx: nginx auth_request at /oauth2/auth needs --reverse-proxy; --set-xauthrequest supplies User/Email response headers. | oauth2-proxy v7.15.4 | REASONED |
+| oauth-nginx-identity: nginx maps verified X-Auth-Request-User/Email to X-User/Email before forwarding to 127.0.0.1:3000. | oauth2-proxy v7.15.4 | REASONED |
+| oauth-signin: The nginx example forwards /oauth2/ to 127.0.0.1:4180 and redirects auth 401 to /oauth2/sign_in with the return URL. | oauth2-proxy v7.15.4 | REASONED |
+| oauth-traefik: Traefik forwardAuth calls oauth2-proxy:4180/oauth2/auth with static://202, reverse-proxy and set-xauthrequest enabled. | oauth2-proxy v7.15.4 | REASONED |
+| traefik-headers: authResponseHeaders must include every trusted identity header; only those replace client values, with other headers forwarded unchanged. | Traefik unknown; oauth2-proxy v7.15.4 | REASONED |
+| traefik-attach: Attach oauth-auth to every protected router; defining middleware without a router reference protects nothing. | oauth2-proxy v7.15.4; Traefik unknown | REASONED |
+| authelia-support: Authelia supports the listed nginx, Traefik, Caddy, HAProxy/Lua, Envoy, Skipper, NGINX Proxy Manager and SWAG integrations, not Apache/IIS. | Authelia v4.39.28 | REASONED |
+| caddy-min: Authelia's documented Caddy support requires 2.5.1+. | Authelia Caddy support minimum 2.5.1+ | REASONED |
+| authelia-nginx: nginx uses the dedicated /api/authz/auth-request endpoint through an internal location with original method/URL and no request body. | Authelia v4.39.28 | REASONED |
+| authelia-dns: Variable proxy_pass needs runtime DNS resolution or a matching upstream; the shown 127.0.0.11 resolver assumes Docker DNS. | Authelia v4.39.28 | REASONED |
+| authelia-identity: nginx copies verified Remote-User/Groups/Name/Email and uses the auth Location for 401 redirection; trusted client headers must be overwritten. | Authelia v4.39.28 | REASONED |
+| authelia-traefik: Traefik calls authelia:9091/api/authz/forward-auth and copies the four Remote-* identity headers. | Authelia v4.39.28 | REASONED |
+| authelia-caddy: Caddy forward_auth calls authelia:9091 with /api/authz/forward-auth and copies the four Remote-* identity headers. | Authelia v4.39.28 | REASONED |
+| authelia-session: Authelia needs a random session secret and path access rules selecting one_factor or two_factor. | Authelia v4.39.28 | REASONED |
+| authelia-mfa: Authelia enforces TOTP, WebAuthn/passkeys or Duo push itself. | Authelia v4.39.28 | REASONED |
+| pomerium-idp: Pomerium combines routing, TLS and access control; configure idp_provider, idp_provider_url, idp_client_id and idp_client_secret. | Pomerium unknown | REASONED |
+| pomerium-policy: Each Pomerium route carries policy restricting users, domains or claims. | Pomerium unknown | REASONED |
+| idp-mfa: oauth2-proxy and Pomerium rely on MFA enforced by their identity provider. | oauth2-proxy v7.15.4; Pomerium unknown | REASONED |
+| verify-listeners: Inspect every listener: app 3000, oauth2-proxy 4180 and Authelia 9091 must be reachable only by the proxy. | oauth2-proxy v7.15.4; Authelia v4.39.28 | REASONED |
+| verify-direct: From another host, all three ports must refuse/time out at the actual address; HTTP proves exposure and local/resolver failures are inconclusive. | oauth2-proxy v7.15.4; Authelia v4.39.28; curl minimum write-out version 7.75.0 | REASONED |
+| verify-forged-direct: A forged X-User sent directly to app port 3000 must be refused by network isolation. | oauth2-proxy v7.15.4; curl minimum write-out version 7.75.0 | REASONED |
+| verify-login: Without a session, expect 401 or a 302 to the sign-in page; other redirects do not pass. A real session must reach the app. | oauth2-proxy v7.15.4; Authelia v4.39.28 | REASONED |
+| verify-overwrite: With a valid session, replay a forged trusted identity header through each proxy; the app log must show the real identity, not admin. | oauth2-proxy v7.15.4; Authelia v4.39.28; Traefik unknown | REASONED |
+<!-- version-basis:end -->
 
 Many self-hosted apps (internal tools, dashboards, webhook receivers) ship with no login at all. The fix is the same shape every time: the app binds to loopback, a proxy in front does authentication and MFA, and it passes the app a verified identity, which the app must not accept from anywhere else. This guide is what [mfa.md](mfa.md), [nginx.md](nginx.md), [traefik.md](traefik.md), and [caddy.md](caddy.md) point at.
 
@@ -3209,6 +3732,8 @@ oauth2-proxy's MFA is whatever its OIDC/OAuth provider enforces; Pomerium's is w
 
 ## Verify
 
+REASONED: following block; the cited oauth2-proxy/Authelia integrations, pinned listener defaults and curl manual define isolation, direct-header refusal and anonymous challenges. This read-only review cannot provision the proxy, backend, IdP and external probe host; no live outcome is recorded. Expected responses and inconclusive failures are stated below.
+
 ```bash
 ss -tlnp   # read every listener; app 3000, oauth2-proxy 4180, Authelia 9091 reachable only by the proxy (loopback, or a private container network), never a public interface
 # each must be unreachable from another host. Read err, not the number: it must name a refusal or timeout reaching
@@ -3251,7 +3776,7 @@ After a real login through the proxy, confirm a session reaches the app and the 
 - oauth2-proxy Traefik integration: https://oauth2-proxy.github.io/oauth2-proxy/configuration/integrations/traefik/
 - Traefik forwardAuth middleware (authResponseHeaders replaces only the listed headers; others pass through): https://doc.traefik.io/traefik/reference/routing-configuration/http/middlewares/forwardauth/
 - Authelia proxy integration introduction: https://www.authelia.com/integration/proxies/introduction/
-- Authelia proxy support matrix (Apache and IIS unsupported): https://www.authelia.com/integration/proxies/support/
+- Authelia proxy support matrix (Apache and IIS unsupported) (Caddy 2.5.1+): https://www.authelia.com/integration/proxies/support/
 - Authelia nginx integration: https://www.authelia.com/integration/proxies/nginx/
 - Authelia Traefik integration: https://www.authelia.com/integration/proxies/traefik/
 - Authelia Caddy integration: https://www.authelia.com/integration/proxies/caddy/
@@ -9763,6 +10288,70 @@ WHERE error IS NOT NULL OR NOT applied;
 
 # Connection poolers: PgBouncer and pgpool-II
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| packet-fix: 1.25.2 fixes CVE-2026-6664: an unauthenticated malformed SCRAM packet can crash older releases. | PgBouncer source and fixes 1.25.2 | REASONED |
+| backend-fixes: 1.25.2 fixes CVE-2026-6665 from a malicious backend and CVE-2026-6666 from a backend error lacking SQLSTATE. | PgBouncer source and fixes 1.25.2 | REASONED |
+| console-fix: 1.25.2 fixes CVE-2026-6667, which allowed any authorized console user to run KILL_CLIENT. | PgBouncer source and fixes 1.25.2 | REASONED |
+| ini-comments: PgBouncer ini comments must start their own line; trailing # or ; becomes part of the value. | PgBouncer documentation unknown | REASONED |
+| pgb-listener: Use private listen_addr and port 6432; the 1.26.0 unset default is Unix sockets only except systemd socket activation, whose ListenStream settings override listen_addr. | PgBouncer documentation unknown; PgBouncer listener source pgbouncer_1_26_0 | REASONED |
+| pgpool-listener: Pgpool-II defaults to localhost:9999; listen_addresses is startup-only. | Pgpool-II documentation unknown | REASONED |
+| pcp-listener: PCP independently defaults to localhost:9898 through startup-only pcp_listen_addresses and pcp_port. | Pgpool-II documentation unknown | REASONED |
+| pcp-credentials: PCP uses separate username:MD5-digest entries in protected pcp.conf; pg_md5 -p prompts, and pool_passwd is not interchangeable. | Pgpool-II documentation unknown | REASONED |
+| client-tls: PgBouncer client TLS defaults disabled; require with a key and certificate rejects non-TLS TCP clients while Unix sockets are exempt. | PgBouncer documentation unknown | REASONED |
+| client-protocols: PgBouncer client_tls_protocols defaults to secure, meaning TLSv1.2 and TLSv1.3. | PgBouncer documentation unknown | REASONED |
+| client-cert: client_tls_sslmode=verify-full and client_tls_ca_file require client certificates; protect the private key at mode 600. | PgBouncer documentation unknown | REASONED |
+| pgpool-tls: Pgpool-II ssl defaults off; enabling it covers both hops but frontend TLS also needs ssl_key and ssl_cert. | Pgpool-II documentation unknown | REASONED |
+| pgpool-hostssl: Pgpool-II host matches TLS and plaintext; hostssl requires ssl=on or is ignored, and unmatched connections are denied. | Pgpool-II documentation unknown | REASONED |
+| backend-tls: PgBouncer server_tls_sslmode defaults prefer, permitting plaintext fallback without certificate checks; require omits certificate validation and verify-ca omits hostname checks. | PgBouncer documentation unknown | REASONED |
+| backend-verify-full: Set PgBouncer server_tls_sslmode=verify-full with server_tls_ca_file to require TLS, a trusted certificate and matching hostname. | PgBouncer documentation unknown | REASONED |
+| pgpool-ca: Pgpool-II ssl_ca_cert or ssl_ca_cert_dir enables backend CA verification; the documentation establishes no hostname check. | Pgpool-II documentation unknown | REASONED |
+| pgpool-downgrade: Pgpool-II 4.7.2 continues plaintext if the backend declines TLS even with ssl_ca_cert; use a separately authenticated enforcing transport or PgBouncer verify-full. | Pgpool-II documentation unknown; Pgpool-II backend handshake 4.7.2 | REASONED |
+| forced-user: A databases user= forces every client into one backend role; omitting it preserves client usernames and separate pools, with force_user visible in SHOW DATABASES. | PgBouncer documentation unknown | REASONED |
+| backend-source: PostgreSQL HBA sees the pooler backend source after NAT; inet_client_addr returns that source or NULL on Unix sockets. A narrow address rule is not a process identity. | PgBouncer documentation unknown; PostgreSQL documentation unknown | REASONED |
+| client-hba: PgBouncer auth_type=hba activates auth_hba_file for per-path peer/SCRAM/TLS rules; choosing a global method instead disables that policy. | PgBouncer documentation unknown | REASONED |
+| pgpool-hba: Pgpool-II enable_pool_hba defaults false, leaving authentication to PostgreSQL; enabling it adds client policy without changing per-user/database pooling. | Pgpool-II documentation unknown | REASONED |
+| pgpool-passwords: SCRAM needs matching plaintext or AES pool_passwd credentials, not MD5; pg_enc prompts, and AES requires OpenSSL plus service-owned mode-600 .pgpoolkey. | Pgpool-II documentation unknown | REASONED |
+| pgpool-local: Local trust accepts any claimed database identity; unix_socket_directories defaults /tmp and every listed socket directory needs protection. | Pgpool-II documentation unknown | REASONED |
+| hba-order: HBA first-match order governs access; explicit IPv4/IPv6 plaintext rejections stop later permissive rules, not earlier ones. | Pgpool-II documentation unknown; PostgreSQL documentation unknown | REASONED |
+| client-metadata: application_name_add_host defaults 0; enabling it adds client address only at connection start and clients can later overwrite application_name. | PgBouncer documentation unknown | REASONED |
+| log-prefix: PostgreSQL log_line_prefix defaults to %m [%p] without application name; include %a to log the diagnostic metadata. | PostgreSQL documentation unknown | REASONED |
+| console-lists: The reserved pgbouncer database uses admin_users for full commands and stats_users for read-only SHOW; both default empty. | PgBouncer documentation unknown | REASONED |
+| console-any: Configuration and usage docs disagree on any; 1.25.2 grants unlisted users console read access and lets clients claim an administrator name without authentication. | PgBouncer documentation unknown; PgBouncer source and fixes 1.25.2 | REASONED |
+| weak-auth: trust and any do not authenticate, plain transmits a cleartext password and is deprecated, and auth_type defaults md5. | PgBouncer documentation unknown | REASONED |
+| console-scram: Keep hba with SCRAM rules for pgbadmin and pgbmetrics; metrics credentials must satisfy both HBA and the console allowlist. | PgBouncer documentation unknown | REASONED |
+| socket-bypass: The pgbouncer username can access the console passwordlessly over a Unix socket when the client UID equals the pooler process UID. | PgBouncer documentation unknown | REASONED |
+| peer: Peer authentication uses the OS identity; a connection-string user name or password cannot supply that identity. | PgBouncer documentation unknown; PostgreSQL documentation unknown | REASONED |
+| auth-file: Protect auth_file at mode 600; it can contain plaintext, MD5 or SCRAM secrets, and MD5 cannot satisfy client SCRAM. | PgBouncer documentation unknown | REASONED |
+| scram-forward: Stored-SCRAM backend login needs client SCRAM, no forced user and identical secrets including salt and iteration count; peer does not provide the required exchange. | PgBouncer documentation unknown | REASONED |
+| auth-query: auth_user enables lookup for users absent from auth_file; use a restricted SECURITY DEFINER function with trusted search_path, limited EXECUTE and database placement or auth_dbname. | PgBouncer documentation unknown | REASONED |
+| password-expiry: CVE-2025-2291 was fixed in 1.24.1; custom auth_query must still check rolvaliduntil. | PgBouncer documentation unknown; PgBouncer password-expiry fix 1.24.1 | REASONED |
+| verify-listeners: Inventory 6432/9999 on private addresses and PCP 9898 on loopback including IPv6; unexpected listeners are findings. | PgBouncer documentation unknown; Pgpool-II documentation unknown | REASONED |
+| verify-client: Plaintext must fail for TLS, verified TLS with the correct password must succeed, and a wrong password must fail authentication; repeat for pgpool-II 9999. | PgBouncer documentation unknown; Pgpool-II documentation unknown; PostgreSQL documentation unknown | REASONED |
+| password-delivery: Use mode-600 .pgpass for real passwords; PGPASSWORD can expose credentials through process environments. | PostgreSQL documentation unknown | REASONED |
+| verify-pgpool: PGPOOL SHOW enable_pool_hba and ssl must both report on; inspect ordered HBA, reload errors and Unix-socket positive/negative credentials. | Pgpool-II documentation unknown | REASONED |
+| verify-pcp: PCP read with correct prompted credentials must succeed and a wrong password must fail authentication; remote 9898 must be unreachable. | Pgpool-II documentation unknown | REASONED |
+| verify-pgb-policy: RELOAD must succeed before SHOW CONFIG and disk-HBA inspection; confirm hba, TLS modes and pathname, then rerun connection tests. | PgBouncer documentation unknown; PostgreSQL documentation unknown | REASONED |
+| hba-parser: PgBouncer 1.25.2 logs and skips malformed HBA lines without failing RELOAD; parser or access warnings leave verification incomplete. | PgBouncer source and fixes 1.25.2 | REASONED |
+| verify-backend-observation: pg_stat_ssl reports negotiated encryption, not certificate enforcement; current_user and inet_client_addr identify backend role and source. | PostgreSQL documentation unknown | REASONED |
+| verify-direct: Direct application-to-database access must fail HBA while permitted pooler egress and application-through-pooler controls succeed; disable GSS precedence and guard host/hostaddr. | PostgreSQL documentation unknown | REASONED |
+| verify-backend-enforcement: Use fresh backend connections and restored positive controls: PgBouncer verify-full rejects untrusted CA, wrong hostname and TLS refusal; Pgpool-II only establishes CA rejection. | PgBouncer documentation unknown; Pgpool-II documentation unknown; Pgpool-II backend handshake 4.7.2 | REASONED |
+| verify-server-tls: SHOW SERVERS tls reports existing TLS or an empty plaintext connection, not whether plaintext would have been refused. | PgBouncer documentation unknown | REASONED |
+| verify-force-user: SHOW DATABASES force_user reveals forced identity; pool counts do not establish role preservation. | PgBouncer documentation unknown | REASONED |
+| verify-console-unlisted: An unlisted console user must fail at login with not allowed; SHOW VERSION success is exposure and transport/DNS/TLS failures are inconclusive. | PgBouncer documentation unknown; PgBouncer source and fixes 1.25.2 | REASONED |
+| verify-console-password: The pgbadmin SHOW VERSION pair must succeed with the correct password and fail at login with the wrong one, both against dbname=pgbouncer. | PgBouncer documentation unknown | REASONED |
+| mfa: Neither pooler provides native MFA or a PostgreSQL-wire TOTP dialogue; protect human host access separately. | PgBouncer documentation unknown; Pgpool-II documentation unknown | REASONED |
+| ldap-pam: LDAP arrived in 1.25.0 and can appear in HBA; PAM is global and disables HBA selection, forwarding the supplied password instead of conducting an OTP challenge. | PgBouncer documentation unknown; PgBouncer LDAP minimum 1.25.0; PgBouncer source and fixes 1.25.2 | REASONED |
+| mtls-hba: Client verify-full and verify-ca are equivalent for certificates and can retain HBA/SCRAM; auth_type=cert takes the certificate username and replaces HBA selection. | PgBouncer documentation unknown | REASONED |
+<!-- version-basis:end -->
+
 A connection pooler sits in front of PostgreSQL and becomes the thing clients actually connect to. The pooler opens its own connections to the database and reuses them, so every control you configured on the database server ([postgresql.md](postgresql.md)) now governs the pooler's connection rather than the client's, and the pooler's own defaults decide what happens on both hops. Two of those defaults fail open: PgBouncer disables client TLS entirely, and its server-side `prefer` mode drops to plain TCP without an error when TLS is refused.
 
 Default posture: bind the pooler to the interface the application uses and nothing wider, require TLS on the client hop, require a verified server certificate on the database hop, and leave the client's PostgreSQL role intact through the pooler.
@@ -9967,7 +10556,7 @@ The `local ... peer` line above has the same shape and the same requirement. `pe
 
 `auth_file` "may contain both MD5-encrypted and plain-text passwords", so it is a secret file regardless of what you put in it: mode `600`, owned by the pooler's user, and out of the repository ([secrets.md](secrets.md)). Choosing `scram-sha-256` in the HBA file constrains what has to be in there: the documented format is `"username" "password"` where the second field is "either a plain-text, a MD5-hashed password, or a SCRAM secret", and a SCRAM secret is `SCRAM-SHA-256$<iterations>:<salt>$<storedkey>:<serverkey>`. Copying a stored secret across means copying it exactly, salt and iteration count included, or the two sides do not agree. Stored-SCRAM backend login has further prerequisites: SCRAM on the client connection, no forced `[databases] user=`, and identical secrets on both sides; local `peer` authentication does not supply the SCRAM exchange this forwarding needs, and an MD5 entry cannot satisfy a client speaking SCRAM. `auth_query` avoids the file for user passwords by reading them from the database, and the documentation warns that "Direct access to `pg_authid` requires admin rights. It's preferable to use a non-superuser that calls a SECURITY DEFINER function instead." Set `auth_user` to activate the lookup for users absent from `auth_file` (existing `auth_file` entries take precedence). Give the definer function a trusted `search_path`, revoke its execution from `PUBLIC` and grant it only to the lookup role, and install it in each queried database or set `auth_dbname`. Keep the password-expiry check: CVE-2025-2291, fixed in 1.24.1, allowed expired passwords because PgBouncer's `auth_query` did not honour a role's `VALID UNTIL`. The default query was corrected; a custom query must also check `rolvaliduntil`.
 
-## 7. Verify
+## 7. Verify (REASONED: expected pooler outcomes follow the cited documentation and pinned sources; no running pooler/PostgreSQL deployment is available in the authoring environment)
 
 ```bash
 ss -tlnp   # read every listener; 6432/9999/9898
@@ -10118,7 +10707,7 @@ Put the human paths to the host behind MFA per [mfa.md](mfa.md).
 
 ## Sources (checked September 2026)
 
-- PgBouncer configuration, including the ini comment rule, `listen_addr`, `listen_port`, `client_tls_sslmode`, `server_tls_sslmode`, `auth_type`, `auth_file`, `auth_query`, `admin_users`, `stats_users`, `application_name_add_host`, and the `[databases]` `user` key: https://www.pgbouncer.org/config.html
+- PgBouncer configuration, including the ini comment rule, `listen_addr`, `listen_port`, `client_tls_sslmode`, `server_tls_sslmode`, `auth_type`, `auth_file`, `auth_query`, `admin_users`, `stats_users`, `application_name_add_host`, and the `[databases]` `user` key (LDAP since 1.25.0; auth_query fix 1.24.1): https://www.pgbouncer.org/config.html
 - PgBouncer `listen_addr` default `""`, and the socket-activation path that ignores it (pinned tag pgbouncer_1_26_0): https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/src/main.c#L292 and https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/src/pooler.c#L495-L498, with `sd_listen_fds()` defined as `(0)` in builds without systemd support: https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/include/bouncer.h#L54-L62
 - PgBouncer usage, the admin console and its `SHOW` commands, including who `auth_type=any` admits and the passwordless Unix-socket login: https://www.pgbouncer.org/usage.html
 - PgBouncer changelog, for CVE-2026-6664, CVE-2026-6665, CVE-2026-6666 and CVE-2026-6667, all fixed in 1.25.2: https://www.pgbouncer.org/changelog.html
@@ -17241,6 +17830,93 @@ Local validation completed during authoring: all 12 XML documents/fragments pass
 
 # Neo4j: listen address, initial password, and TLS on Bolt and HTTPS
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| packaged-bind: Packaged Neo4j 5 defaults to localhost; a widened shared bind exposes enabled connectors. | Packaged Neo4j 5 | REASONED |
+| auth-default: Authentication defaults on with neo4j/neo4j; rotate before remote access and reserve auth disabling for isolated recovery. | Neo4j documentation unknown | REASONED |
+| bolt-default: Bolt defaults to :7687 with TLS DISABLED; an omitted connector host inherits the shared listen address. | Neo4j documentation unknown | REASONED |
+| http-default: Plaintext HTTP defaults enabled on :7474; HTTPS is disabled by default on :7473. | Neo4j documentation unknown | REASONED |
+| docker-bind: The pinned Docker entrypoint defaults the shared listen host to 0.0.0.0; publication and firewall determine host exposure. | Neo4j Docker entrypoint 5359427c4f51d0d51cce5b048757a2c21e6f377e; Neo4j documentation unknown | REASONED |
+| docker-auth: NEO4J_AUTH initializes a new database, does not rotate an existing password, and none disables authentication; deliver secrets outside argv. | Neo4j documentation unknown | REASONED |
+| bootstrap: Use isolated loopback Cypher Shell --change-password prompts; set-initial-password is first-start-only and takes an exposed positional password. | Neo4j documentation unknown | REASONED |
+| credential-input: Unset ambient NEO4J_PASSWORD for prompts; automation may supply it through the environment, never expanded into -p, with local-inspection limits. | Neo4j documentation unknown | REASONED |
+| password-min: Default minimum password length is 8; auth_minimum_password_length was introduced in 5.3 and does not make eight characters a recommendation. | Neo4j documentation unknown; Neo4j password setting minimum 5.3 | REASONED |
+| backup: Enterprise online backup defaults explicitly to 127.0.0.1:6362 and does not inherit a widened shared host; Community has no online-backup listener. | Neo4j documentation unknown | REASONED |
+| discovery: Enterprise discovery v1 listens on hostless :5000 when active and is deprecated since 5.23; inventory standalone servers too. | Neo4j Enterprise 5.26 | REASONED |
+| shipping: Enterprise transaction shipping/catch-up uses :6000, also serving backups and discovery v2; default replication is unauthenticated. | Neo4j Enterprise 5.26 | REASONED |
+| raft: Enterprise Raft listens on hostless :7000, including on standalone Enterprise deployments. | Neo4j Enterprise 5.26 | REASONED |
+| routing: Server-side routing uses additional Bolt :7688 when enabled; dbms.routing.enabled defaults true. | Neo4j Enterprise 5.26 | REASONED |
+| advertising: Cluster listen hosts inherit the shared localhost default; advertised addresses separately inherit localhost and must be peer-reachable with matching ports. | Neo4j Enterprise 5.26 | REASONED |
+| discovery-version: In 5.26 discovery defaults V1_ONLY; V2_ONLY shares 6000, mixed modes run both. Deployment docs say v2 from 5.23, while selector/endpoints are labelled 5.22. | Neo4j Enterprise 5.26 | REASONED |
+| cluster-isolation: Restrict cluster listeners to members with firewall allowlists; single-server overrides retain explicit loopback on 5000/6000/7000/7688. | Neo4j Enterprise 5.26 | REASONED |
+| cluster-tls: The disabled-by-default cluster SSL policy covers discovery, shipping, Raft and routing; client_auth=REQUIRE acts only after enabling it. | Neo4j Enterprise 5.26 | REASONED |
+| cluster-certificates: Use distinct protected PKCS#8 PEM keys, leaf-first certificate chains, trusted/revoked directories and both server/client EKUs; retain trust_all=false. | Neo4j Enterprise 5.26 | REASONED |
+| backup-tls: Cluster TLS does not enable the separate backup SSL scope on 6362 or replace Bolt/HTTPS policies. | Neo4j Enterprise 5.26; Neo4j documentation unknown | REASONED |
+| prometheus: Enterprise Prometheus defaults disabled and explicitly localhost:2004; hostless :2004 inherits the shared host. Cluster SSL does not establish metrics protection. | Neo4j Enterprise 5.26 | REASONED |
+| graphite: Graphite :2003 is a disabled-by-default outbound destination, not a Neo4j listener. | Neo4j Enterprise 5.26 | REASONED |
+| jvm-listeners: JMX 3637 and debugging 5005 require explicit JVM options; leave remote management/debugging out of the baseline. | Neo4j Enterprise 5.26 | REASONED |
+| docker-cluster: Docker widens hostless cluster listeners but not explicit backup/Prometheus hosts; Enterprise defaults cluster advertisements to container hostname and maps legacy variables. | Neo4j Docker entrypoint 5359427c4f51d0d51cce5b048757a2c21e6f377e; Neo4j Enterprise 5.26 | REASONED |
+| docker-overrides: Explicit settings override Docker defaults, then environment overrides files; NEO4J_ maps underscores to __ and dots to _ for the four loopback overrides. | Neo4j Docker entrypoint 5359427c4f51d0d51cce5b048757a2c21e6f377e; Neo4j documentation unknown | REASONED |
+| docker-expose: All three pinned Dockerfiles EXPOSE only 7474/7473/7687; EXPOSE is neither the full listener inventory nor a firewall. | Neo4j Docker entrypoint 5359427c4f51d0d51cce5b048757a2c21e6f377e | REASONED |
+| client-certificates: Use policy-specific PKCS#8 PEM keys and certificates, service ownership and modes 0400/0644; legacy PKCS#1 is deprecated. | Neo4j documentation unknown | REASONED |
+| bolt-required: Enable the Bolt SSL policy and set tls_level=REQUIRED; OPTIONAL still accepts plaintext. | Neo4j documentation unknown | REASONED |
+| https-policy: Enable HTTPS with its own certificate policy and disable server.http.enabled to remove plaintext HTTP. | Neo4j documentation unknown | REASONED |
+| bolt-mtls: Client_auth=NONE uses server TLS plus database credentials; REQUIRE adds client certificates and needs trusted certificates and certificate-capable clients. | Neo4j documentation unknown | REASONED |
+| community-users: Separate Community users all have implied administrator privileges; application or fronting controls must enforce end-user authorization. | Neo4j documentation unknown | REASONED |
+| lockout: Native authentication defaults to three failed attempts and a 5s lock; these settings do not establish an external IdP lockout policy. | Neo4j documentation unknown | REASONED |
+| enterprise-role: Built-in reader is broad across databases; custom catalog_reader grants database ACCESS and MATCH only for Product sku/name to a fresh catalog_app. | Neo4j documentation unknown | REASONED |
+| effective-privileges: A narrow role does not remove broader roles; inspect effective grants including PUBLIC before switching the application. | Neo4j documentation unknown | REASONED |
+| mfa: Native passwords lack a second factor; Enterprise OIDC can enforce IdP MFA, LDAP simple alone cannot, and alternate paths must not bypass MFA. | Neo4j documentation unknown | REASONED |
+| public-execute: Default Enterprise PUBLIC grants procedure, UDF and data-loading access; read-only graph privileges alone do not restrict these capabilities. | Neo4j documentation unknown | REASONED |
+| execute-denials: DENY EXECUTE PROCEDURES/FUNCTIONS blocks those capabilities for catalog_reader; built-in functions remain available and narrower grants cannot override matching denials. | Neo4j documentation unknown | REASONED |
+| load-denial: DENY LOAD ON ALL DATA needs Enterprise 5.13 or later; CIDR-specific privileges arrived in 5.16. | Neo4j documentation unknown; Neo4j LOAD minimum 5.13; Neo4j CIDR LOAD minimum 5.16 | REASONED |
+| boosted: Do not grant applications boosted execution; APOC boosted procedures can bypass graph and loading restrictions. | APOC documentation unknown | REASONED |
+| plugin-loading: Keep procedures.unrestricted empty unless reviewed and narrow procedures.allowlist from its * default; loading controls do not create Community per-user privileges. | Neo4j documentation unknown | REASONED |
+| apoc-file: For Neo4j 5+, APOC settings belong in apoc.conf; defaults import.file.enabled=false and import.file.use_neo4j_config=true retain file/import-directory checks. | APOC documentation unknown | REASONED |
+| csv-file: allow_csv_import_from_file_urls defaults true; disable unnecessary local LOAD CSV. Configuration references take precedence over conflicting APOC overview wording. | Neo4j documentation unknown | REASONED |
+| outbound: LOAD CSV and APOC HTTP/JDBC can cause SSRF; JDBC needs APOC Extended and a compatible driver. Restrict egress and use compatible cypher_ip_blocklist support. | Neo4j documentation unknown; APOC documentation unknown; Neo4j SSRF guidance unknown | REASONED |
+| memory-transaction: db.memory.transaction.max=64m is an example per-transaction tracked-memory budget, not a default or exact process-memory limit. | Neo4j documentation unknown | REASONED |
+| memory-database: db.memory.transaction.total.max=256m is an example aggregate per-database transaction budget; size against heap and workload. | Neo4j documentation unknown | REASONED |
+| memory-server: dbms.memory.transaction.total.max=512m is an example server-wide transaction budget; tracked-limit violations terminate transactions. | Neo4j documentation unknown | REASONED |
+| timeout: db.transaction.timeout=30s is an example default, not a hard client ceiling; servers 4.2 through 5.2 ignore larger overrides per the driver reference. | Neo4j documentation unknown; Neo4j server timeout exception 4.2 through 5.2 | REASONED |
+| security-log: Enterprise security.log with authentication records logins, administration and authorization failures; retain successful logins with log_successful_authentication=true. | Neo4j documentation unknown | REASONED |
+| query-log: Enterprise query logging VERBOSE is the documented current default and records starts/finishes; protect logs and review server-logs.xml rotation. | Neo4j documentation unknown | REASONED |
+| query-secrets: Disable parameter and early raw logging and enable literal obfuscation; clearQueryCaches makes dynamic literal changes affect cached queries. | Neo4j documentation unknown | REASONED |
+| error-obfuscation: obfuscate_errors arrived in 5.26.21 and current-series 2026.01.3; do not add it on older versions, and treat obfuscated logs as sensitive. | Neo4j 5 error-obfuscation minimum 5.26.21; Neo4j current error-obfuscation minimum 2026.01.3 | REASONED |
+| http-log: Community optional HTTP request logging applies only with HTTP/HTTPS and does not supply equivalent Bolt, query or security auditing. | Neo4j documentation unknown | REASONED |
+| local-guards: Historical guard-only checks rejected placeholders and malformed marker/count inputs in six guarded blocks; no Neo4j service behavior was demonstrated. | Neo4j documentation unknown | DEMONSTRATED |
+| tls-schemes: neo4j+s and bolt+s verify certificates; +ssc skips verification. Cypher Shell trust configuration is independent of OpenSSL/curl CA options. | Neo4j documentation unknown | REASONED |
+| verify-listeners: Confirm working Bolt/HTTPS, absent HTTP, Enterprise loopback backup, conditional cluster/Prometheus ports and Docker namespace/publication controls; an empty inventory is insufficient. | Neo4j documentation unknown; Neo4j Enterprise 5.26; Neo4j Docker entrypoint 5359427c4f51d0d51cce5b048757a2c21e6f377e | REASONED |
+| verify-cluster-tls: Compare cluster TLS client_auth NONE with REQUIRE: no certificate and untrusted issuer must be rejected while a trusted member completes a verified handshake. | Neo4j Enterprise 5.26; OpenSSL 3; TLS 1.3; timeout unknown | REASONED |
+| cluster-probe-limits: Inspect fatal alerts and member logs; server Verification OK, timeout 124 or transport failure alone does not prove client acceptance or rejection. | OpenSSL 3; TLS 1.3; timeout unknown | REASONED |
+| verify-cluster-health: SHOW SERVERS must retain expected Enabled/Available members in both states; protocol-level discovery, replication and routing comparisons remain unobserved. | Neo4j Enterprise 5.26; Neo4j documentation unknown | REASONED |
+| verify-bolt: Verified handshake and authenticated TLS query must succeed; plaintext must fail at transport under REQUIRED, not merely at authentication. | Neo4j documentation unknown | REASONED |
+| verify-http-off: An exposed 7474 endpoint answers HTTP; fixed HTTP is absent, with target/path confirmation and working TLS controls needed to interpret connection failures. | Neo4j documentation unknown | REASONED |
+| verify-password: Default password acceptance before rotation must become authentication refusal while the replacement succeeds; account for lockout and inspect prompted-secret argv. | Neo4j documentation unknown | REASONED |
+| verify-session: The guarded session prompts for the application password; history disable needs Cypher Shell 2025.08+, while earlier documented shells use in-memory. | Neo4j documentation unknown; Cypher Shell history minimum 2025.08 | REASONED |
+| verify-query-control: RETURN 1 must succeed before interpreting later denials; administrative work uses system and fixture queries use neo4j. | Neo4j documentation unknown | REASONED |
+| verify-graph: Known fixtures distinguish broad access from sku/name-only reads: hidden property null, unrelated-node count zero and write refusal, with administrator fixture controls. | Neo4j documentation unknown | REASONED |
+| verify-procedure: An available db.labels call must succeed before the isolated EXECUTE PROCEDURES denial and fail authorization afterward while RETURN 1 succeeds. | Neo4j documentation unknown | REASONED |
+| verify-udf: A loaded permitted apoc.text.join must return SECURECONFIG_UDF before denial and fail authorization afterward; it is deprecated in Cypher 25. | Neo4j documentation unknown; APOC documentation unknown; Cypher UDF deprecation 25 | REASONED |
+| verify-load: Use a known readable CSV with file loading enabled to isolate LOAD denial; separately test the file-setting toggle with an account allowed to LOAD. | Neo4j documentation unknown | REASONED |
+| verify-memory: Calibrate a workload that completes at larger budgets; isolate each memory limit with concurrent transactions and retain a small-query control. OOM or timeout is inconclusive. | Neo4j documentation unknown | REASONED |
+| verify-timeout: Calibrated work must time out under the 30s default but complete with a 60s override on current servers; Cypher Shell transaction-timeout needs 2025.12+. | Neo4j documentation unknown; Cypher Shell timeout minimum 2025.12; Neo4j server timeout exception 4.2 through 5.2 | REASONED |
+| verify-security-log: Correlate failed/successful logins, privilege changes and denied writes; compare successful-login logging off/on while authentication succeeds in both states. | Neo4j documentation unknown | REASONED |
+| verify-query-log: Literal/parameter canaries disappear under the policy while query events and results remain; missing log events do not prove obfuscation. | Neo4j documentation unknown | REASONED |
+| verify-error-log: The invalid date must expose its error canary before obfuscation and retain the failure event without it afterward; a non-exposing baseline is inconclusive. | Neo4j documentation unknown | REASONED |
+| verify-http-log: Community HTTP logging off/on must preserve the successful authenticated HTTPS request and record it when enabled; this says nothing about Bolt auditing. | Neo4j documentation unknown | REASONED |
+| query-api-version: Query API arrived in 5.19 and became enabled by default in 5.25; the legacy transactional API was deprecated in 5.26, not universally removed. | Neo4j Query API minimum 5.19; Neo4j Query API default minimum 5.25; Neo4j HTTP API deprecation 5.26 | REASONED |
+| verify-query-api: On HTTPS 7473 /db/neo4j/query/v2, anonymous queries work with auth disabled and return 401 when enabled; valid credentials must return ok=1, not merely HTTP 202. | Neo4j documentation unknown | REASONED |
+| verify-legacy: When /db/neo4j/tx/commit is enabled, test its statements payload too: anonymous 401 with auth enabled and authenticated ok=1 plus empty errors; HTTP 200 alone is insufficient. | Neo4j documentation unknown | REASONED |
+<!-- version-basis:end -->
+
 A packaged Neo4j 5 listens on `localhost` only by default and ships with authentication on, but with the well-known `neo4j`/`neo4j` credential, Bolt TLS at `DISABLED`, and plaintext HTTP enabled instead of HTTPS. Setting `server.default_listen_address=0.0.0.0` on such an install to "make it reachable" therefore exposes a database with a guessable password over plaintext. These defaults remain documented at the time of writing. The official Docker image is the exception: its entrypoint sets `server.default_listen_address=0.0.0.0` by default, so publishing a container port exposes the listener immediately, subject to the host's port binding and firewall. Do not assume the packaged loopback boundary protects a published container port. Docker's `NEO4J_AUTH=neo4j/REPLACE_WITH_LONG_RANDOM_VALUE` initializes authentication for a NEW database; it does not rotate an existing database's password. Supply credentials through the execution environment or secret-management mechanism, never as literal command-line arguments, and never use `NEO4J_AUTH=none`, which disables authentication. See [network connectors](https://neo4j.com/docs/operations-manual/current/configuration/connectors/), [Docker authentication](https://neo4j.com/docs/operations-manual/current/docker/introduction/), [Docker configuration](https://neo4j.com/docs/operations-manual/current/docker/configuration/), and the [official Neo4j 5 entrypoint](https://raw.githubusercontent.com/neo4j/docker-neo4j/5359427c4f51d0d51cce5b048757a2c21e6f377e/docker-image-src/5/coredb/docker-entrypoint.sh).
 
 Examples use current configuration names, also used in Neo4j 5 except where a newer option is explicitly marked. Neo4j 4.x names differ. Configuration belongs in `neo4j.conf` unless another file is named.
@@ -17497,7 +18173,7 @@ Compare an exposed disposable installation with the configured state. Expect Bol
 
 **REASONED, Enterprise listener comparisons:** also read every listener for 5000 (discovery v1 only), 6000, 7000, and 7688 (server-side routing), including configured replacement ports and IPv6 bindings. In the exposed disposable state, a widened shared host can expose these even on a standalone server; in the fixed single-server state, expect loopback binds. In a cluster, expect the intended private binds and peer-reachable advertised addresses, with firewall access confined to members. Under `V2_ONLY`, do not require 5000; discovery shares 6000. Check 2004 only if Prometheus is enabled, on loopback or the explicitly restricted monitoring interface. There should be no inbound Graphite 2003 listener from enabling its exporter; investigate any JMX 3637 or debugger 5005 listener against the JVM configuration. Inspect the container's namespace as well as host publication rules for Docker. These expectations follow the [5.26 ports inventory](https://neo4j.com/docs/operations-manual/5/configuration/ports/#_cluster) and [setting defaults](https://neo4j.com/docs/operations-manual/5/configuration/configuration-settings/).
 
-### Cluster mutual TLS
+### Cluster mutual TLS (REASONED: cluster policy and probe expectations follow the cited Neo4j, OpenSSL and TLS sources; no disposable Enterprise cluster is available)
 
 **REASONED, not demonstrated: the authoring host forbids opening listeners without an isolated network namespace, and has none.** A disposable Enterprise cluster and its certificates are required. A listener inventory does not prove TLS or peer authentication. The vendor's [Nmap cipher enumeration](https://neo4j.com/docs/operations-manual/5/security/ssl-framework/#ssl-cluster-config) establishes that TLS is offered, not rejection of unauthenticated peers. The OpenSSL procedure below is reasoned from the [documented cluster mutual-authentication policy](https://neo4j.com/docs/operations-manual/5/security/ssl-framework/#ssl-cluster-config); it is not a vendor-documented cluster-port check.
 
@@ -17569,7 +18245,7 @@ For (a) and (b), look for a received fatal TLS alert, such as `certificate requi
 
 Run (d) in both states and after enabling the final policy on all members. The documented [`SHOW SERVERS` cluster check](https://neo4j.com/docs/operations-manual/5/clustering/setup/deploy/#cluster-example-configure-a-three-primary-cluster) must return the expected members with state `Enabled` and health `Available`. Missing or unavailable members invalidate the positive control. This checks cluster status, not every replication or routing operation; successful authorized discovery, replication, and routed-query comparisons remain REASONED from the cited cluster documentation, not observed. A closed port or failed cluster is not evidence that mutual TLS works.
 
-### Transport, default password, and prompted bootstrap
+### Transport, default password, and prompted bootstrap (REASONED: connector and authentication comparisons require the unavailable isolated Neo4j deployment and client tools)
 
 **REASONED: requires an isolated fresh installation, a reachable TLS deployment, client tools, and an external test vantage, unavailable here.** Supply the signing CA as `ca.pem`. For a publicly trusted certificate only, the explicit `-CAfile ca.pem` and `--cacert ca.pem` options and the corresponding file-readability checks may be omitted if the clients' default stores already trust its issuer. Keep them for a private or self-signed CA. Run against the actual deployment hostname, including each relevant public IPv4/IPv6 path from another host.
 
@@ -17622,7 +18298,7 @@ The OpenSSL command and Cypher Shell checks below assume `client_auth=NONE`. If 
 
 The expected distinctions follow [connector TLS behavior](https://neo4j.com/docs/operations-manual/current/configuration/connectors/), [initial-password behavior](https://neo4j.com/docs/operations-manual/current/configuration/set-initial-password/), and [native authentication](https://neo4j.com/docs/operations-manual/current/authentication-authorization/).
 
-### Interactive application and administrative checks
+### Interactive application and administrative checks (REASONED: Cypher Shell and the configured deployment are unavailable; session expectations follow the cited documentation)
 
 **REASONED: requires Cypher Shell and the configured deployment, unavailable here.** This session prompts for the application password. `--history disable` requires Cypher Shell 2025.08 or later; earlier shells documenting this option use `--history in-memory` to avoid persistent history.
 
@@ -17655,7 +18331,7 @@ RETURN 1 AS ok;
 
 Expect `ok=1` in both states. Failure to connect or run this query prevents interpreting later denials as successful controls.
 
-### Scoped graph access
+### Scoped graph access (REASONED: Enterprise privilege comparisons follow the cited documentation; no Enterprise runtime or seeded fixtures are available)
 
 **REASONED, Enterprise-only: requires an Enterprise runtime and seeded fixtures, unavailable here.** In an empty disposable `neo4j` database, seed as an administrator:
 
@@ -17689,7 +18365,7 @@ Compare a disposable exposed account with broad read/write privileges against th
 
 Review `SHOW USER catalog_app PRIVILEGES AS COMMANDS;` as an administrator in both states. Record inherited privileges as well as the custom role.
 
-### Procedure, function, and LOAD denials
+### Procedure, function, and LOAD denials (REASONED: documented privilege comparisons need the unavailable Enterprise runtime, compatible UDF and readable CSV fixture)
 
 **REASONED, Enterprise-only: requires an Enterprise runtime, a compatible installed UDF, and a known readable CSV fixture, unavailable here.** Test each denial independently against the same account before and after applying it:
 
@@ -17712,7 +18388,7 @@ After each denial, require an authorization failure for the corresponding operat
 
 Separately, to test the existing local-file setting, use an account whose LOAD privilege permits this fixture. The same CSV must load when `dbms.security.allow_csv_import_from_file_urls=true` and be rejected when it is `false`, while `RETURN 1 AS ok;` succeeds in both states. Do not attribute that rejection to the role denial.
 
-### Transaction budgets
+### Transaction budgets (REASONED: documented budget comparisons need the unavailable runtime, calibrated workloads and concurrent clients)
 
 **REASONED, Community and Enterprise: requires a disposable runtime, calibrated workloads, concurrent clients, and resource measurements, unavailable here.** Substitute positive integer workload sizes before submitting these queries interactively.
 
@@ -17740,7 +18416,7 @@ Calibrate a workload that completes in more than 30 seconds but less than 60 sec
 
 Finally, repeat with an explicit 60-second client timeout. Cypher Shell 2025.12 or later supports adding `--transaction-timeout 60s` to the guarded interactive-session command. On current servers, that override should allow the calibrated workload to exceed the 30-second server default and complete. Record actual timings and errors; do not infer a hard server ceiling. See [transaction timeout behavior](https://neo4j.com/docs/operations-manual/current/database-internals/transaction-management/), [Cypher Shell timeout support](https://neo4j.com/docs/operations-manual/current/cypher-shell/), and [older-server exceptions](https://neo4j.com/docs/api/python-driver/current/api.html).
 
-### Security events and query-log contents
+### Security events and query-log contents (REASONED: documented logging comparisons need unavailable Enterprise log access and a running deployment)
 
 **REASONED, Enterprise-only: requires Enterprise log access and a running deployment, unavailable here.** Generate one failed login, one successful login, the privilege changes above, and the denied write. Correlate the account and timestamps with `security.log`. For successful-login retention, compare the event with successful-login logging disabled and enabled while keeping the authentication operation successful in both states.
 
@@ -17764,7 +18440,7 @@ This deliberately invalid date should produce a query error. Establish whether t
 
 **REASONED, Community HTTP logging: requires a running HTTPS connector and log access, unavailable here.** Compare the authenticated request below with HTTP request logging disabled and enabled. The query must succeed in both states, with the corresponding request recorded when logging is enabled. This tests request logging only; it does not demonstrate Bolt or security auditing.
 
-### HTTPS authentication
+### HTTPS authentication (REASONED: documented Query API and legacy API comparisons need unavailable HTTPS deployment, trusted certificates and protected credentials)
 
 **REASONED: requires HTTPS, trusted certificates, a protected credential file, and the Query API, unavailable here.** The transactional HTTP API endpoint `/db/neo4j/tx/commit` was deprecated in 5.26; deprecation does not mean every deployment has removed it. Prefer the Query API when enabled. It arrived in 5.19 and became enabled by default on self-managed installations in 5.25. See the [HTTP API deprecation](https://neo4j.com/docs/http-api/current/) and [Query API availability](https://neo4j.com/docs/query-api/current/).
 
@@ -17857,12 +18533,12 @@ The comparisons below are REASONED from the cited Neo4j documentation and pinned
 
 ## Sources (checked September 2026)
 
-- Configure network connectors: https://neo4j.com/docs/operations-manual/current/configuration/connectors/
+- Configure network connectors (Neo4j 5): https://neo4j.com/docs/operations-manual/current/configuration/connectors/
 - Ports: https://neo4j.com/docs/operations-manual/current/configuration/ports/
 - Set an initial password: https://neo4j.com/docs/operations-manual/current/configuration/set-initial-password/
-- Exact configuration settings, defaults, editions, and error-obfuscation version: https://neo4j.com/docs/operations-manual/current/configuration/configuration-settings/
+- Exact configuration settings, defaults, editions, and error-obfuscation version (current-series error obfuscation since 2026.01.3): https://neo4j.com/docs/operations-manual/current/configuration/configuration-settings/
 - Neo4j 5.26 (LTS), fetched 2026-09-26, Enterprise cluster and monitoring ports: https://neo4j.com/docs/operations-manual/5/configuration/ports/#_cluster
-- Neo4j 5.26 (LTS) cluster deployment and discovery-version conditions: https://neo4j.com/docs/operations-manual/5/clustering/setup/deploy/#cluster-example-configure-a-three-primary-cluster
+- Neo4j 5.26 (LTS) cluster deployment and discovery-version conditions (discovery v2 deployment from 5.23): https://neo4j.com/docs/operations-manual/5/clustering/setup/deploy/#cluster-example-configure-a-three-primary-cluster
 - Neo4j 5.26 (LTS) cluster settings and advertised addresses: https://neo4j.com/docs/operations-manual/5/clustering/settings/
 - OpenSSL 3 TLS probe options: https://docs.openssl.org/3.0/man1/openssl-s_client/
 - TLS 1.3 client-certificate validation and alerts: https://www.rfc-editor.org/rfc/rfc8446.html
@@ -17871,8 +18547,8 @@ The comparisons below are REASONED from the cited Neo4j documentation and pinned
 - Pinned Dockerfile EXPOSE declarations, Debian: https://github.com/neo4j/docker-neo4j/blob/5359427c4f51d0d51cce5b048757a2c21e6f377e/docker-image-src/5/coredb/Dockerfile-debian#L53
 - Pinned Dockerfile EXPOSE declarations, UBI 8: https://github.com/neo4j/docker-neo4j/blob/5359427c4f51d0d51cce5b048757a2c21e6f377e/docker-image-src/5/coredb/Dockerfile-ubi8#L90
 - Pinned Dockerfile EXPOSE declarations, UBI 9: https://github.com/neo4j/docker-neo4j/blob/5359427c4f51d0d51cce5b048757a2c21e6f377e/docker-image-src/5/coredb/Dockerfile-ubi9#L89
-- Neo4j 5.26 (LTS) configuration reference, listener defaults, and error obfuscation since 5.26.21: https://neo4j.com/docs/operations-manual/5/configuration/configuration-settings/
-- Configuration changes in Neo4j 5: https://neo4j.com/docs/upgrade-migration-guide/current/version-5/changelogs/configuration-settings/
+- Neo4j 5.26 (LTS) configuration reference, listener defaults, and error obfuscation since 5.26.21 (discovery selector/endpoints labelled 5.22): https://neo4j.com/docs/operations-manual/5/configuration/configuration-settings/
+- Configuration changes in Neo4j 5 (minimum password length setting since 5.3): https://neo4j.com/docs/upgrade-migration-guide/current/version-5/changelogs/configuration-settings/
 - SSL framework and certificate-verified connection schemes: https://neo4j.com/docs/operations-manual/current/security/ssl-framework/
 - Authentication and native lockout configuration: https://neo4j.com/docs/operations-manual/current/authentication-authorization/
 - Manage users and Community's implied administrator privileges: https://neo4j.com/docs/operations-manual/current/authentication-authorization/manage-users/
@@ -17883,9 +18559,9 @@ The comparisons below are REASONED from the cited Neo4j documentation and pinned
 - GRANT, DENY, and showing user privileges: https://neo4j.com/docs/operations-manual/current/authentication-authorization/manage-privileges/
 - Access-control limitations and hidden properties: https://neo4j.com/docs/operations-manual/current/authentication-authorization/limitations/
 - Procedure and user-defined function execution privileges: https://neo4j.com/docs/operations-manual/current/authentication-authorization/dbms-administration/dbms-execute-privileges/
-- LOAD privileges: https://neo4j.com/docs/operations-manual/current/authentication-authorization/load-privileges/
+- LOAD privileges (LOAD ON ALL DATA since 5.13; CIDR privileges since 5.16): https://neo4j.com/docs/operations-manual/current/authentication-authorization/load-privileges/
 - LOAD privilege introduction versions: https://neo4j.com/docs/cypher-manual/5/deprecations-additions-removals-compatibility/
-- Cypher Shell prompts, environment credentials, history, parameters, and timeouts: https://neo4j.com/docs/operations-manual/current/cypher-shell/
+- Cypher Shell prompts, environment credentials, history, parameters, and timeouts (history disable since 2025.08; transaction-timeout since 2025.12): https://neo4j.com/docs/operations-manual/current/cypher-shell/
 - Docker introduction and initial authentication: https://neo4j.com/docs/operations-manual/current/docker/introduction/
 - Docker configuration and container listen addresses: https://neo4j.com/docs/operations-manual/current/docker/configuration/
 - Official Neo4j 5 Docker entrypoint and default listen address: https://raw.githubusercontent.com/neo4j/docker-neo4j/5359427c4f51d0d51cce5b048757a2c21e6f377e/docker-image-src/5/coredb/docker-entrypoint.sh
@@ -17898,13 +18574,13 @@ The comparisons below are REASONED from the cited Neo4j documentation and pinned
 - APOC security, boosted execution, and SSRF: https://neo4j.com/docs/apoc/current/security-guidelines/
 - Transaction memory limits and accounting: https://neo4j.com/docs/operations-manual/current/performance/memory-configuration/
 - Transaction timeout behavior: https://neo4j.com/docs/operations-manual/current/database-internals/transaction-management/
-- Driver transaction timeout overrides and older-server exceptions: https://neo4j.com/docs/api/python-driver/current/api.html
+- Driver transaction timeout overrides and older-server exceptions (server exception: 4.2 through 5.2 inclusive): https://neo4j.com/docs/api/python-driver/current/api.html
 - Logging, edition availability, security events, and rotation: https://neo4j.com/docs/operations-manual/current/monitoring/logging/
 - Enterprise online backup: https://neo4j.com/docs/operations-manual/current/backup-restore/online-backup/
-- Transactional HTTP API deprecation: https://neo4j.com/docs/http-api/current/
+- Transactional HTTP API deprecation (deprecated in 5.26): https://neo4j.com/docs/http-api/current/
 - Legacy transactional HTTP API query payload and results: https://neo4j.com/docs/http-api/current/query/
 - Legacy transactional HTTP API authentication: https://neo4j.com/docs/http-api/current/authentication-authorization/
-- Query API availability: https://neo4j.com/docs/query-api/current/
+- Query API availability (introduced in 5.19; enabled by default in 5.25): https://neo4j.com/docs/query-api/current/
 - Query API authentication and authorization: https://neo4j.com/docs/query-api/current/authentication-authorization/
 - Query API endpoint and response semantics: https://neo4j.com/docs/query-api/current/query/
 - Built-in procedures, including db.labels and db.clearQueryCaches: https://neo4j.com/docs/operations-manual/current/procedures/built-in-procedures/
@@ -21092,6 +21768,44 @@ Every URL listed below was fetched during authoring. This list also records the 
 
 # SurrealDB: authentication and TLS
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| auth-default: Since 2.0.0 authentication defaults on, --auth was removed and --unauthenticated added; older releases do not share this default. | SurrealDB default transition 2.0.0 | REASONED |
+| bind-default: Since 2.0.0 the CLI defaults to 127.0.0.1:8000; v3.2.4 --bind/-b and SURREAL_BIND retain that loopback default. | SurrealDB default transition 2.0.0; SurrealDB CLI and image v3.2.4 | REASONED |
+| root-bootstrap: User/password flags or SURREAL_USER/PASS initialize a root only when none exists; they neither disable authentication nor rotate an existing password. | SurrealDB documentation unknown; SurrealDB CLI and image v3.2.4 | REASONED |
+| root-input: v3.2.4 start has no stdin password form; prompt and supply a command-local environment assignment, avoiding argv but exposing the server environment to same-user/root inspection. | SurrealDB CLI and image v3.2.4 | REASONED |
+| environment: The clean-Bash block clears user/password variables and rejects other inherited SURREAL_* options, including auth and bind overrides. | SurrealDB documentation unknown; SurrealDB CLI and image v3.2.4 | REASONED |
+| unauthenticated: --unauthenticated/SURREAL_UNAUTHENTICATED gives guests OWNER-equivalent access; never carry it onto a remotely reachable deployment. | SurrealDB documentation unknown; SurrealDB CLI and image v3.2.4 | REASONED |
+| docker-bind: Pinned image stages set SURREAL_BIND=0.0.0.0:8000 without CMD; start without an override listens on all container IPv4 interfaces, requiring private network or loopback publication. | SurrealDB CLI and image v3.2.4 | REASONED |
+| private-network: Widen host binds only deliberately to private addresses; internal-service databases should have no public interface. | SurrealDB documentation unknown | REASONED |
+| system-users: Root, namespace and database system users use OWNER/EDITOR/VIEWER RBAC; all bypass table/field PERMISSIONS, so scoped system users do not supply record isolation. | SurrealDB documentation unknown | REASONED |
+| record-users: Record users authenticate through DEFINE ACCESS TYPE RECORD SIGNUP/SIGNIN logic and receive only explicit table/field permissions; absent permissions grant nothing. | SurrealDB documentation unknown | REASONED |
+| signup: Unauthenticated /signup and /signin are intentional; omit SIGNUP to prevent public registration and test refusal alongside a provisioned-account sign-in control. | SurrealDB documentation unknown | REASONED |
+| scope-history: Use DEFINE ACCESS TYPE RECORD; legacy DEFINE SCOPE was deprecated in 2.x and removed in 3.0. | SurrealDB SCOPE deprecation 2.x; SurrealDB SCOPE removal 3.0 | REASONED |
+| access-types: DEFINE ACCESS also supports JWT and per-client BEARER keys; standalone JWT creates system-level sessions, while RECORD WITH JWT retains record permissions. | SurrealDB documentation unknown | REASONED |
+| jwt-checks: Verify token algorithm/key or JWKS, issuer and audience; native AUDIENCE is a 3.3 feature and 3.2.x uses AUTHENTICATE. Compare invalid tokens against a valid control. | SurrealDB documentation unknown; SurrealDB native AUDIENCE minimum 3.3; SurrealDB AUTHENTICATE qualification 3.2.x | REASONED |
+| capability-all: allow-all and deny-all default off; prefer deny-all with narrow route, RPC-method and function allowances. | SurrealDB documentation unknown | REASONED |
+| capability-net: Network access is denied by default; restrict http::* and JWKS destinations and retain external egress protections against SSRF. | SurrealDB documentation unknown | REASONED |
+| capability-functions: Functions are allowed by default; a bare allow-funcs broadens access beyond narrow named allowances. | SurrealDB documentation unknown | REASONED |
+| capability-scripting: Embedded scripting defaults off; enable it only when required. | SurrealDB documentation unknown | REASONED |
+| capability-guests: Guest access defaults off; capabilities govern what an authorized query may do independently of authentication. | SurrealDB documentation unknown | REASONED |
+| capability-precedence: More-specific capability rules override broader ones; deny wins at equal specificity. | SurrealDB documentation unknown | REASONED |
+| tls: web-crt and web-key provide native HTTPS; a TLS proxy or private tailnet is another documented access pattern. | SurrealDB documentation unknown | REASONED |
+| mfa: No native second factor is provided; require IdP or administrative-gateway MFA and prevent direct-origin bypass. | SurrealDB documentation unknown | REASONED |
+| verify-inventory: Inventory 8000 on loopback/private addresses; /health establishes process availability, not authentication. | SurrealDB documentation unknown | REASONED |
+| verify-auth: Compare INFO FOR DB without credentials and with a system-user JWT on the same NS/DB: exposed auth-off returns info; fixed denies anonymous access and returns authenticated OK data. | SurrealDB documentation unknown | REASONED |
+| verify-auth-limits: Test direct origin and HTTPS; HTTP 200, missing database, disabled route, proxy rejection or transport failure alone proves no authorization control or record permissions. | SurrealDB documentation unknown | REASONED |
+| verify-origin: Any HTTP answer from an untrusted-network origin probe proves reachability; a gateway result alone does not establish origin isolation. | SurrealDB documentation unknown | REASONED |
+| verify-tls: Validate the certificate chain at every TLS termination using normal trust checks, never -k. | SurrealDB documentation unknown | REASONED |
+<!-- version-basis:end -->
+
 Since SurrealDB 2.0.0, authentication is enabled by default and the CLI binds `127.0.0.1:8000` rather than
 `0.0.0.0` (2.0.0 removed the old `--auth` flag, added `--unauthenticated`, and changed the bind default);
 on older releases neither held, so pin your version. Even on a current version, a laptop demo becomes a real
@@ -21268,7 +21982,7 @@ TLS terminates with normal validation (a trusted CA for private PKI); never use 
 - SurrealDB 2.0.0 release (auth on by default, `--unauthenticated`, bind default 127.0.0.1): https://surrealdb.com/releases/2.0
 - SurrealDB HTTP protocol (`/signup`, `/signin`, `POST /sql`, `/health`): https://surrealdb.com/docs/reference/rest-api/http-protocol
 - SurrealDB INFO statement (database information requires a system user): https://surrealdb.com/docs/reference/query-language/statements/info
-- SurrealDB DEFINE ACCESS TYPE JWT (native `AUDIENCE` since 3.3, issuer/audience checks via `AUTHENTICATE`): https://surrealdb.com/docs/reference/query-language/statements/define/access/jwt
+- SurrealDB DEFINE ACCESS TYPE JWT (native `AUDIENCE` since 3.3, issuer/audience checks via `AUTHENTICATE`) (AUTHENTICATE on 3.2.x): https://surrealdb.com/docs/reference/query-language/statements/define/access/jwt
 - SurrealDB DEFINE SCOPE (deprecated in 2.x, removed in 3.0): https://surrealdb.com/docs/reference/query-language/statements/define/scope
 
 ======================================================================
