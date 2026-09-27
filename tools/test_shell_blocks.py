@@ -29,10 +29,13 @@ import sys
 import tempfile
 from pathlib import Path
 
+from _walk import isolated_git_environment
+
 TOOLS = Path(__file__).resolve().parent
 HAVE_SHELLCHECK = shutil.which("shellcheck") is not None
 
 
+@isolated_git_environment()
 def run_against(block, fence="```bash", env=None, path_prefix=None, raw=None, home=None,
                 raw_bytes=None, unreadable_dir=False):
     """Build a throwaway repository holding one guide and run the real gate. (exit, output)."""
@@ -53,11 +56,13 @@ def run_against(block, fence="```bash", env=None, path_prefix=None, raw=None, ho
         else:
             (d / "guide.md").write_text(body, encoding="utf-8")
         if unreadable_dir:
-            # A subtree the walk cannot list. The fail-closed walk refuses; a bare glob would
-            # not notice, and no case covered the difference.
+            # A tracked file beneath an inaccessible directory must still fail closed.
             blocked = d / "blocked"
             blocked.mkdir()
             (blocked / "x.md").write_text("# x\n", encoding="utf-8")
+        subprocess.run(["git", "init", "-q"], cwd=d, check=True, capture_output=True)
+        subprocess.run(["git", "add", "."], cwd=d, check=True, capture_output=True)
+        if unreadable_dir:
             blocked.chmod(0o000)
         run_env = dict(os.environ)
         if env:
@@ -75,6 +80,7 @@ def run_against(block, fence="```bash", env=None, path_prefix=None, raw=None, ho
         shutil.rmtree(d, ignore_errors=True)
 
 
+@isolated_git_environment()
 def run_multi(guides, path_prefix=None):
     """Run the gate over several guides at once. (exit, output).
 
@@ -89,6 +95,8 @@ def run_multi(guides, path_prefix=None):
             shutil.copy(TOOLS / f, d / "tools" / f)
         for name, body in guides.items():
             (d / name).write_text(body, encoding="utf-8")
+        subprocess.run(["git", "init", "-q"], cwd=d, check=True, capture_output=True)
+        subprocess.run(["git", "add", "."], cwd=d, check=True, capture_output=True)
         env = dict(os.environ)
         if path_prefix:
             env["PATH"] = f"{path_prefix}{os.pathsep}{env.get('PATH', '')}"

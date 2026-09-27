@@ -828,6 +828,17 @@ else
   bad "exposure-index self-test failed: $(printf '%s' "$ei_st" | tail -1)"
 fi
 
+echo "== shared walker scans tracked files only =="
+if walker=$(python3 -B tools/test_walk.py 2>&1); then
+  printf '%s\n' "$walker"
+  if grep -q '^  FAIL  ' <<< "$walker" || ! grep -q '^  ok    ' <<< "$walker"; then
+    bad "test_walk.py exited 0 without a clean ok result"
+  fi
+else
+  printf '%s\n' "$walker"
+  bad "test_walk.py failed"
+fi
+
 echo "== no leftover authoring placeholders =="
 # The self-test exercises failing fixtures and clean inputs through the real gate.
 # The corpus run then checks tracked Markdown and VERSION, including TODO and DONE.

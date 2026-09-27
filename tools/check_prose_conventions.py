@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Fail on British -ise spellings in prose, and on placeholders outside the house set.
 
+File enumeration uses the shared tracked-file walker. Untracked and ignored-only inputs
+are excluded; Git and a checkout are required, with no traversal fallback. Existing
+suffix, directory and per-gate filters still apply.
+
 WHAT THIS PROVES: two conventions this repository states and did not enforce.
 
 Spelling. CONTRIBUTING rule 2 and the project's writing standard settle on Oxford English

@@ -1,18 +1,25 @@
 #!/usr/bin/env python3
 """Fail on en dashes and em dashes in Markdown prose and the standards id-manifests.
 
+File enumeration uses the shared tracked-file walker. Untracked and ignored-only inputs
+are excluded; Git and a checkout are required, with no traversal fallback. Existing
+suffix, directory and per-gate filters still apply. The explicitly named NOTICE and
+.aiqt/attribution.toml inputs retain their existing present-file checks independently of Git.
+
 The project's writing style forbids both; hyphens, commas, colons, semicolons,
 and parentheses are the sanctioned substitutes. Markdown and the crosswalk
 manifests under .aiqt/standards/ are scanned (the manifest titles are public
 crosswalk text); this Python file is not, so it may name the characters in its
 own source without flagging itself.
 """
+# LOCAL PATCH (secureconfig, 2026-09-26): document tracked-file coverage.
+# Modified from AIQT Guardrails ad60d25 under Apache-2.0; see .aiqt/PIN.
 import os
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _walk import walk_files  # noqa: E402  fail-closed tree walk (os.walk, not rglob)
+from _walk import walk_files  # noqa: E402  fail-closed tracked-file enumeration
 from _standards import dir_present  # noqa: E402  fail-closed absence probe (raises on an unreadable parent)
 
 EN_DASH = "–"
@@ -32,7 +39,7 @@ def main() -> int:
         # source (its .py dispatcher, manifest .toml, and any .json). These are product/enforcement
         # text, so the no-dash rule applies to them too. Present-guarded (absent -> skip), and
         # fail-closed on an unreadable dir: dir_present raises on an unreadable parent and walk_files
-        # raises on an unlistable subtree, both caught below as exit 2.
+        # raises on an inaccessible selected tracked path, both caught below as exit 2.
         for hook_dir in (root / "plugin", root / ".aiqt" / "core" / "hooks"):
             if dir_present(hook_dir):
                 paths += sorted(walk_files(hook_dir, SKIP_DIRS, suffixes={".py", ".json", ".toml"}))
