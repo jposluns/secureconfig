@@ -75,7 +75,6 @@ marked, and those are the ones worth taking first.
 | ID | Item | Tags |
 | --- | --- | --- |
 | 3.38 | F-VBASIS-SOURCES-VERSION: `tools/version_basis.py --check` accepts a component's literal basis version when it appears in ANY Sources entry, not in the entry carrying each URL (found in #416's review). Require, per URL, that the Sources line containing it states its component's literal basis (components with basis `unknown` exempt), baseline current violations, and ratchet. (M, S) | `[gap]` |
-| 3.36 | Extend `tools/check_guard_conventions.py` credential scanning, including C3-TOOL-ARGV, from fenced shell to inline code spans in Verify sections, with the same waivers. A credential in a prose Verify bullet is currently unscanned; `cloudflare.md:87` was an example, fixed in #403. Related to row 3.30's broader Verify-marking coverage, but this row checks credential arguments. (M, M) | `[gap]` |
 | 3.30 | Extend the fenced-block Verify-marking gate planned in #389 to list items, table rows and prose units, with the same baseline-and-ratchet mechanism (maintainer ruling, 2026-09-26). (M, L) | `[gap]` |
 
 ## Decisions

@@ -101,6 +101,34 @@ SCOPE
   not checked; `name() { ...; }` function-definition headers are not
   invocations of `name`.
 
+  In enrolled guides (tools/version_basis_guides.txt), Verify-section inline
+  code spans also run through the SAME command walk, retaining only C3
+  credential findings. Section selection and metadata masking come from
+  check_verify_marking.guide_context, which scan_guide itself uses. Matched
+  equal-length backticks, including double backticks and multiline spans,
+  are recognized in prose, lists, tables, headings and quoted prose. Newlines
+  normalize to spaces. Fences, indented code and HTML are not inline prose.
+  One leading `$ ` or `# ` console prompt, optionally after spaces or tabs,
+  is stripped first. inline_kind
+  selects a span with a known command word (INLINE_COMMANDS) in command
+  position anywhere (after leading assignments, keywords such as if/then/do/!,
+  `(`, a lifted $(...), or ; && || |), or with shell pipe or redirection
+  tokens, excluding option fragments and whole <placeholders>. Unknown
+  command words without those operators remain outside this check.
+  Shell-parser blind spots below also apply. No C1 or C2 check applies to
+  inline spans; diagnostics use the span opener's guide:line.
+
+  An inline exception uses this visible standalone code span on the physical
+  line immediately before the command span's line:
+      `guard-conventions: allow <C3-code> <non-empty reason>`
+  Only C3-TOOL-ARGV, C3-USER-ARGV, C3-HEADER-ARGV, C3-BODY-ARGV,
+  C3-URL-ARGV and C3-NO-VALUE are accepted. One code is waived, for all
+  command spans on that next line only. A blank line, list marker, prose,
+  trailing waiver, unknown code or missing reason grants no waiver. The
+  waiver itself must be a standalone single-backtick prose span in Verify.
+  This deliberately avoids HTML comments, rejected by Verify marking.
+  Waivers are counted and remain review obligations, as fenced waivers do.
+
   Deliberate exceptions carry, on their OWN comment line inside the fence,
   immediately before the command:
       # guard-conventions: allow <non-empty reason>
@@ -244,6 +272,7 @@ INTEGRATION ASSUMPTIONS (the only two things to check when landing this)
 
 import argparse
 import os
+from pathlib import Path
 import re
 import shlex
 import sys
@@ -253,6 +282,7 @@ import sys
 # above this line on purpose: they must never resolve from tools/.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _markdown import Fences, FENCE_RE  # noqa: E402
+from check_verify_marking import code_spans, guide_context
 
 # Top-level guides only, matching check_verify_safety.py: a fenced block in the
 # plugin mirror or in .aiqt docs is not something a reader copies from, and the
@@ -412,6 +442,7 @@ MESSAGES = {
     "C3-TOOL-ARGV": "a non-curl credential is in argv; use the tool's stdin, "
                     "protected file or prompt input, or document and waive "
                     "the CONTRIBUTING rule 7 argv-only exception",
+    "C3-INLINE-MARKDOWN": "cannot select Verify inline spans: invalid front matter",
     "C3-NO-VALUE": "a curl credential option lacks a statically readable "
                    "value; move the credential onto stdin (--config - / "
                    "--header @-) so this gate can see it is not in argv",
@@ -427,6 +458,7 @@ class Stats(object):
         self.guard_fences = 0
         self.waivers = 0
         self.unparseable = 0
+        self.inline_commands = 0
 
 
 def _lang_of(info):
@@ -2092,10 +2124,137 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
         _strict_if_guards(path, records, probes, guarded_probes, findings)
 
 
-def scan_text(path, text, findings, stats, opts):
+# This bounded command roster includes the credential tools, probe tools and
+# common shell commands. Unknown command words without operators remain a
+# disclosed blind spot, as do aliases and other shared shell-parser limits.
+INLINE_COMMANDS = (frozenset(_TOOL_SKIP_OPTS) | PROBE_CMDS | WRAPPERS
+                   | SHELL_SINKS | frozenset((
+                       "psql", "printf", "echo", "cat", "grep", "ss", "test",
+                       "systemctl", "journalctl", "git", "python", "python3",
+                       "node", "npm", "docker", "podman", "ls", "ip",
+                       "tailscale", "cloudflared", "nomad", "consul",
+                       "ash", "set", "trap", "declare", "enable", "hash",
+                       "shopt", "source", "stat", "chmod", "getfacl", "setfacl",
+                       "ps", "sha256sum", "mktemp", "aws", "gcloud", "gh",
+                       "caddy", "nginx", "datasette", "epmd", "gitlab-runner",
+                       "gitleaks", "jupyter", "nats", "pve-firewall",
+                       "streamlit", "temporal",
+                   )))
+INLINE_WAIVER_RE = re.compile(
+    r"guard-conventions: allow (C3-(?:TOOL|USER|HEADER|BODY|URL)-ARGV|"
+    r"C3-NO-VALUE) ([^`\n]*\S)"
+)
+
+
+def verify_inline_spans(text, in_verify=False, in_quote=False):
+    """Yield (1-based line, body) using exactly scan_guide's section selection.
+
+    Supported prose includes list paragraphs, table rows and headings. Fences,
+    indented code and HTML are opaque. Unsupported containers remain the
+    Verify-marking gate's responsibility. Matching spans may cross prose lines.
+    """
+    _lines, _heads, tokens, selected = guide_context(
+        text, in_verify, in_quote, enrolled=not in_quote)
+    for token in tokens:
+        if token.kind == "quote":
+            for line, body in verify_inline_spans(
+                    token.text, token.start in selected, True):
+                yield token.start + line, body
+        elif token.start in selected and token.kind in {"paragraph", "heading", "break"}:
+            for begin, _end, body in code_spans(token.text):
+                line = token.start + token.text[:begin].count("\n") + 1
+                # CommonMark code-span normalization, not shell continuation.
+                body = body.replace("\n", " ")
+                if body.startswith(" ") and body.endswith(" ") and body.strip(" "):
+                    body = body[1:-1]
+                yield line, body
+
+
+# One leading console prompt, optionally after spaces or tabs. Unlike the
+# console fence's `$` prompt, the space after it is required, so `$(cmd)` and
+# `$VAR` spans keep their first character.
+INLINE_PROMPT_RE = re.compile(r"[ \t]*[$#] (.*)", re.S)
+
+
+def inline_prompt(span):
+    """Strip a single leading `$ ` or `# ` console prompt, with any leading
+    spaces or tabs before it."""
+    m = INLINE_PROMPT_RE.fullmatch(span)
+    return m.group(1) if m else span
+
+
+def _inline_command_words(span):
+    """Yield each word in command position, using the fenced walk's lexer:
+    $(...) bodies are lifted by _expand, SEPARATORS split commands, and
+    leading KEYWORDS and assignments are skipped as _strip_wrappers does.
+    Backticks are treated as boundaries here only; analysis does not lift
+    them (a disclosed bypass)."""
+    for text in _expand(span):
+        text = text.replace("`", " ; ")
+        try:
+            toks = _tokenize(text)
+        except ValueError:
+            toks = text.split()
+        at_start = True
+        for t in toks:
+            if t in SEPARATORS:
+                at_start = True
+            elif at_start and (t in KEYWORDS or ASSIGNMENT_RE.match(t)):
+                continue
+            elif at_start:
+                at_start = False
+                yield t.rsplit("/", 1)[-1]
+
+
+def inline_kind(span):
+    """Classify command / option / other without executing any shell text."""
+    if span.startswith("-"):
+        return "option"
+    if re.fullmatch(r"<[^<>]+>", span):
+        return "other"
+    try:
+        words = _tokenize(span)
+    except ValueError:
+        words = span.split()
+    if (any(w in INLINE_COMMANDS for w in _inline_command_words(span))
+            or any(w in REDIRECTS or w in {"|", "|&"} for w in words)):
+        return "command"
+    return "other"
+
+
+def _scan_inline(path, text, findings, stats, opts):
+    lines = text.splitlines()
+    waivers = {}
+    for line, span in verify_inline_spans(text):
+        waiver = INLINE_WAIVER_RE.fullmatch(span)
+        # A visible, standalone code span avoids HTML comments, which the
+        # Verify-marking gate intentionally rejects. No list marker or prose.
+        if waiver and lines[line - 1].strip() == "`" + span + "`":
+            waivers[line + 1] = waiver[1]
+            stats.waivers += 1
+            continue
+        span = inline_prompt(span)
+        if inline_kind(span) != "command":
+            continue
+        stats.inline_commands += 1
+        found, local = [], Stats()
+        # Reuse the entire fenced command walk, including wrappers, command
+        # substitutions and argument ownership. Only C3 findings apply here.
+        _analyze_fence(path, "sh", line, [span], found, local, opts)
+        stats.unparseable += local.unparseable
+        findings.extend(f for f in found
+                        if f[2].startswith("C3-") and f[2] != waivers.get(line))
+
+
+def scan_text(path, text, findings, stats, opts, *, inline=True):
     for lang, start, body in _blocks(text):
         if lang in SHELL_INFOS or lang in CONSOLE_INFOS:
             _analyze_fence(path, lang, start, body, findings, stats, opts)
+    if inline:
+        try:
+            _scan_inline(path, text, findings, stats, opts)
+        except ValueError:
+            findings.append((path, 1, "C3-INLINE-MARKDOWN", ""))
 
 
 def iter_md_files(roots):
@@ -2120,18 +2279,22 @@ def iter_md_files(roots):
 
 def run_scan(opts):
     findings, stats = [], Stats()
+    enrolled = set(Path(__file__).with_name("version_basis_guides.txt").read_text(
+        encoding="utf-8").splitlines())
     for path in iter_md_files(opts.roots):
         stats.files += 1
         with open(path, "r", encoding="utf-8", errors="replace") as fh:
-            scan_text(path, fh.read(), findings, stats, opts)
+            scan_text(path, fh.read(), findings, stats, opts,
+                      inline=Path(path).name in enrolled)
     findings.sort(key=lambda f: (f[0], f[1], f[2]))
     for path, lineno, code, extra in findings:
         print("%s:%d: [%s] %s%s" % (path, lineno, code, MESSAGES[code], extra))
     print("checked %d file(s), %d shell fence(s), %d curl invocation(s), "
           "%d probe(s), %d guard fence(s); %d waiver(s); "
-          "%d unparseable line(s) skipped"
+          "%d Verify inline command(s); %d unparseable line(s) skipped"
           % (stats.files, stats.fences, stats.curls, stats.probes,
-             stats.guard_fences, stats.waivers, stats.unparseable))
+             stats.guard_fences, stats.waivers, stats.inline_commands,
+             stats.unparseable))
     failed = bool(findings)
     if stats.curls < opts.min_curls:
         print("scope regression: scanned %d curl invocation(s), expected at "
@@ -3771,6 +3934,100 @@ SELF_TEST_CASES.append((
     ["C1-MISSING-Q"], ()))
 
 
+_INLINE_CASES = [
+    ("tool", "## Verify\n- Run `mysql --password=SECRET`.\n",
+     ["C3-TOOL-ARGV"], [2]),
+    ("waived", "## Verify\n`guard-conventions: allow C3-TOOL-ARGV dummy refusal`\n"
+     "- Run `mysql --password=SECRET`.\n", [], []),
+    ("outside", "## Setup\n`mysql --password=SECRET`\n## Verify\n`--password`\n",
+     [], []),
+    ("non-command", "## Verify\n`--password=SECRET` `/tmp/key` `Authorization: Bearer X`\n",
+     [], []),
+    ("curl-user", "## Verify\n`curl -u user:SECRET https://h`\n",
+     ["C3-USER-ARGV"], [2]),
+    ("curl-header", "## Verify\n`curl -H 'CF-Access-Client-Secret: SECRET' https://h`\n",
+     ["C3-HEADER-ARGV"], [2]),
+    ("curl-body", "## Verify\n`curl --data 'password=SECRET' https://h`\n",
+     ["C3-BODY-ARGV"], [2]),
+    ("curl-url", "## Verify\n`curl https://user:SECRET@h/`\n",
+     ["C3-URL-ARGV"], [2]),
+    ("curl-missing-value", "## Verify\n`curl --user`\n", ["C3-NO-VALUE"], [2]),
+    ("stdin", "## Verify\n`curl --header @-` `curl --config -` `mysql -p`\n", [], []),
+    ("double", "## Verify\n``mysql --password=SECRET``\n", ["C3-TOOL-ARGV"], [2]),
+    ("multiline", "## Verify\n- Run ``mysql\n  --password=SECRET``.\n",
+     ["C3-TOOL-ARGV"], [2]),
+    ("table", "## Verify\n| Check | Command |\n| --- | --- |\n"
+     "| Auth | `mysql --password=SECRET` |\n", ["C3-TOOL-ARGV"], [4]),
+    ("quote", "## Verify\n> Run `mysql --password=SECRET`.\n", ["C3-TOOL-ARGV"], [2]),
+    ("pipe", "## Verify\n`unknown | mysql --password=SECRET`\n",
+     ["C3-TOOL-ARGV"], [2]),
+    ("redirect", "## Verify\n`unknown >out; mysql --password=SECRET`\n",
+     ["C3-TOOL-ARGV"], [2]),
+    ("wrapper", "## Verify\n`env MYSQL_PWD=SECRET mysql`\n", ["C3-TOOL-ARGV"], [2]),
+    ("substitution", "## Verify\n`echo $(mysql --password=SECRET)`\n",
+     ["C3-TOOL-ARGV"], [2]),
+    ("descendant", "## 2. Verification checklist (REASONED: source)\n"
+     "### Detail\n`mysql --password=SECRET`\n## Setup\n`mysql --password=SECRET`\n",
+     ["C3-TOOL-ARGV"], [3]),
+    ("quick-checks", "## Quick checks\n`mysql --password=SECRET`\n",
+     ["C3-TOOL-ARGV"], [2]),
+    ("false-title", "## Verify setup later\n`mysql --password=SECRET`\n", [], []),
+    ("fence-data", "## Verify\n~~~text\n`mysql --password=SECRET`\n~~~\n", [], []),
+    ("indented-data", "## Verify\n\n    `mysql --password=SECRET`\n", [], []),
+    ("escaped", "## Verify\n\\`mysql --password=SECRET`\n", [], []),
+    ("unmatched", "## Verify\n``mysql --password=SECRET`\n", [], []),
+    ("waiver-code-scope", "## Verify\n"
+     "`guard-conventions: allow C3-TOOL-ARGV dummy refusal`\n"
+     "`mysql --password=SECRET` and `curl -u user:SECRET https://h`\n"
+     "`mysql --password=SECRET`\n", ["C3-USER-ARGV", "C3-TOOL-ARGV"], [3, 4]),
+    # Round 1: a roster word in command position anywhere, after a prompt.
+    ("assign-tool", "## Verify\n`FOO=x mysql -pSECRET`\n", ["C3-TOOL-ARGV"], [2]),
+    ("assign-curl", "## Verify\n`FOO=x curl -u user:pass https://x`\n",
+     ["C3-USER-ARGV"], [2]),
+    ("if-then", "## Verify\n`if true; then mysql -pSECRET; fi`\n",
+     ["C3-TOOL-ARGV"], [2]),
+    ("subshell", "## Verify\n`(mysql -pSECRET)`\n", ["C3-TOOL-ARGV"], [2]),
+    ("assign-cmdsub", "## Verify\n`result=$(mysql -pSECRET)`\n",
+     ["C3-TOOL-ARGV"], [2]),
+    ("and-list", "## Verify\n`true && mysql -pSECRET`\n", ["C3-TOOL-ARGV"], [2]),
+    ("negated", "## Verify\n`! mysql -pSECRET`\n", ["C3-TOOL-ARGV"], [2]),
+    ("while-do", "## Verify\n`while true; do mysql -pSECRET; done`\n",
+     ["C3-TOOL-ARGV"], [2]),
+    ("prompt-dollar", "## Verify\n`$ curl -u user:pass https://x`\n",
+     ["C3-USER-ARGV"], [2]),
+    ("prompt-dollar-pipe", "## Verify\n`$ curl -u user:pass https://x | cat`\n",
+     ["C3-USER-ARGV"], [2]),
+    ("prompt-hash", "## Verify\n`# mysql -pSECRET`\n", ["C3-TOOL-ARGV"], [2]),
+    # Round 2: optional leading whitespace before the prompt; `$(` and `$VAR`
+    # are never prompts.
+    ("prompt-dollar-lead-space", "## Verify\n` $ curl -u user:pass https://x`\n",
+     ["C3-USER-ARGV"], [2]),
+    ("prompt-hash-lead-tab", "## Verify\n`\t# mysql -pSECRET`\n",
+     ["C3-TOOL-ARGV"], [2]),
+    ("lead-space-cmdsub", "## Verify\n` $(mysql -pSECRET)`\n",
+     ["C3-TOOL-ARGV"], [2]),
+    ("lead-space-var", "## Verify\n` $VAR`\n", [], []),
+    ("option-fragment", "## Verify\n`--password` `$ --password`\n", [], []),
+]
+for _waiver in (
+    "`guard-conventions: allow C3-TOOL-ARGV`\n",
+    "`guard-conventions: allow C3-TOOL-ARGV   `\n",
+    "`guard-conventions: allow C3-UNKNOWN reason`\n",
+    "`guard-conventions: allow C3-TOOL-ARGV reason`\n\n",
+    "- `guard-conventions: allow C3-TOOL-ARGV reason`\n",
+    "Prose `guard-conventions: allow C3-TOOL-ARGV reason`\n",
+):
+    _INLINE_CASES.append((
+        "invalid-waiver-" + repr(_waiver), "## Verify\n" + _waiver
+        + "`mysql --password=SECRET`\n", ["C3-TOOL-ARGV"],
+        [2 + _waiver.count("\n")]))
+_INLINE_EXPECT_LINES = {}
+for _name, _markdown, _codes, _lines in _INLINE_CASES:
+    _name = "inline-" + _name
+    SELF_TEST_CASES.append((_name, _markdown, _codes, ()))
+    _INLINE_EXPECT_LINES[_name] = _lines
+
+
 def run_self_test():
     failures = 0
     for name, mdtext, expect, flags in SELF_TEST_CASES:
@@ -3780,6 +4037,12 @@ def run_self_test():
         got = sorted(code for _p, _l, code, _x in findings)
         exp = sorted(expect)
         ok = got == exp
+        if name in _INLINE_EXPECT_LINES:
+            got_lines = sorted(line for _p, line, _code, _x in findings)
+            if got_lines != _INLINE_EXPECT_LINES[name]:
+                ok = False
+                print("  inline lines expect=%s got=%s"
+                      % (_INLINE_EXPECT_LINES[name], got_lines))
         if name in _C2_EXPECT_LINES:
             got_lines = sorted(
                 line for _p, line, code, _x in findings
