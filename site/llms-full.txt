@@ -1205,6 +1205,52 @@ On every push, gitleaks must exit 0 with no findings (the `&& echo clean` then p
 
 # HashiCorp Vault
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| dev: Dev modes, token-helper storage and production config-file startup. | Vault documentation unknown | REASONED |
+| listeners: API/UI 8200, cluster 8201, private bind, advertised addresses and cluster TLS; optional KMIP, Agent and Proxy listeners. | Vault documentation unknown | REASONED |
+| mfa: Login MFA belongs on human auth methods; token auth cannot use it. | Vault documentation unknown | REASONED |
+| raft-tls: Raft node fields, UI disabled, TLS certificate/key/minimum, anonymous monitoring disabled; address/path substitutions only in the recorded run. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
+| defaults: Listener loopback, TLS enabled, UI disabled and anonymous metrics/profiling disabled are documentation defaults. | Vault documentation unknown | REASONED |
+| seal: Shamir init/unseal prompts, auto-unseal/recovery, Community Transit and Enterprise seal wrapping/HA; key loss and rekey custody. | Vault documentation unknown | REASONED |
+| audit: Enable file and independent syslog auditing, fail-closed availability, HMAC defaults, log_raw, exemptions and SIGHUP rotation. | Vault documentation unknown | REASONED |
+| root: Bootstrap root has unlimited access and no expiry; retire after testing another auth method, remove helper copy, regenerate only by quorum. | Vault documentation unknown | REASONED |
+| cli: Credential prompts, token environment/helper selection and protected stdin/files avoid credential arguments. | Vault documentation unknown | REASONED |
+| policy: Deny-by-default non-root policies, additive grants, KV v2 data path, no writes/listing/sudo, bounded TTL and service-token tradeoffs. | Vault documentation unknown | REASONED |
+| role: Every displayed AppRole role parameter is returned by role inspection; example budgets are not defaults. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
+| delivery: Delivery policy requires wrapping TTL 1s to 60s; protect transfer and lookup JSON, check path/time/original TTL before unwrap. | Vault documentation unknown | REASONED |
+| identity: Existing workload identity is preferred; Kubernetes names/namespaces and JWT identity/audience binding apply, including the stated 1.17 qualification. | Vault documentation unknown; Vault JWT audience minimum 1.17 | REASONED |
+| bootstrap: Unauthenticated health, seal-status, init and leader paths need network isolation; policies cannot close bootstrap paths. | Vault documentation unknown | REASONED |
+| storage: Unprivileged process, protected snapshots/storage, no swap/core dumps; disable_mlock is Raft-specific. | Vault documentation unknown | REASONED |
+| bind-test: Loopback socket inventory and TLS/plaintext discrimination; extra unintended loopback listener detected. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
+| bind-limits: Wildcard binds, ss as root and actual firewall isolation remain unobserved. | Vault documentation unknown | REASONED |
+| health-test: Single-node health 501/503/200 and status sealed/unsealed exits; stopped-server failure is inconclusive. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
+| health-ha: Standby, removed-node and Enterprise health/status codes and query overrides are documentation reasoning. | Vault documentation unknown | REASONED |
+| audit-test: Empty/one/two file-device inspection and request-ID correlation demonstrate local delivery. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
+| audit-remote: Independent failure-domain audit delivery remains unobserved. | Vault documentation unknown | REASONED |
+| root-test: Root self-revocation rejects lookups and revokes non-orphan children; independent logins continue. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
+| acl-test: Own-secret, cross-application denial and collector isolation distinguish narrow from broad policies with fixture controls. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
+| monitor-test: Active-node anonymous metrics/pprof reject while authorized identities succeed; enabling anonymous access exposes both. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
+| monitor-ha: Root namespace, active-node targeting, separate profiling policy, HA redirects/local-only forwarding and every-node checks. | Vault documentation unknown; Vault handler source v1.21.0; Vault forwarding source v1.20.0 | REASONED |
+| secretid: SecretID one-use and TTL/tidy discrimination use fresh positive controls; expired IDs can work until tidy. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
+| cidr: SecretID and token source restrictions discriminate on two loopback addresses; curl --interface replaces CLI source selection. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
+| token: Service/batch prefixes, TTL, 100-use limit and shortened renewal-ceiling experiment have exposed/fixed controls. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
+| wrap-test: No-wrap/61s issuance refused, 60s succeeds; unrestricted delivery policy supplies exposed control. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
+| lookup-test: Lookup returns path/time/original TTL; consumed and expired tokens fail. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
+| recipient: Receiving application must reject an unexpected creation path; its implementation is not demonstrated. | Vault documentation unknown | REASONED |
+| unwrap-test: First unwrap succeeds, reuse fails, fresh control succeeds. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
+| connection-test: Loopback reachable/refused shapes distinguish TCP connection from TLS/HTTP success, not real external isolation. | Vault documentation unknown; curl minimum write-out version 7.75.0; Vault loopback run 2.1.1 | DEMONSTRATED |
+| external: Test actual 8200/8201 destinations from permitted and forbidden sources; routing, local errors and unavailable controls are inconclusive. | Vault documentation unknown; curl minimum write-out version 7.75.0 | REASONED |
+| wrapping-history: Some wrapping-token features date from 0.8; do not generalize current behavior to earlier versions. | Vault historical wrapping qualification 0.8 | REASONED |
+<!-- version-basis:end -->
+
 Vault's own defaults are careful: the listener binds loopback, TLS is assumed (`tls_disable` is
 `false`), and the web UI is off. The exposures are the deployment decisions you make on top of that,
 and the corpus points you here from [machine-auth.md](machine-auth.md)
@@ -2098,7 +2144,7 @@ See [production firewall guidance](https://developer.hashicorp.com/vault/docs/co
 - Vault auth enable command: https://developer.hashicorp.com/vault/docs/commands/auth/enable
 - Vault Kubernetes API (service-account and namespace bindings): https://developer.hashicorp.com/vault/api-docs/auth/kubernetes
 - Vault JWT authentication (identity constraints and Vault 1.17 audience requirement): https://developer.hashicorp.com/vault/docs/auth/jwt
-- Vault response wrapping (single use, delivery, validation, and historical version note): https://developer.hashicorp.com/vault/docs/concepts/response-wrapping
+- Vault response wrapping (single use, delivery, validation, and historical 0.8 version note): https://developer.hashicorp.com/vault/docs/concepts/response-wrapping
 - Vault wrapping lookup API (creation path, time, and original TTL): https://developer.hashicorp.com/vault/api-docs/system/wrapping-lookup
 - Vault write command (JSON stdin, format, and force flags): https://developer.hashicorp.com/vault/docs/commands/write
 - Vault unwrap command (use the selected token without a token argument): https://developer.hashicorp.com/vault/docs/commands/unwrap
@@ -2111,7 +2157,9 @@ See [production firewall guidance](https://developer.hashicorp.com/vault/docs/co
 - Vault status command (JSON output and exit codes): https://developer.hashicorp.com/vault/docs/commands/status
 - Vault 2.1.1 AppRole expired-SecretID tidy (once a minute; a SecretID may live up to a minute past expiry): https://github.com/hashicorp/vault/blob/v2.1.1/builtin/credential/approle/backend.go
 - Vault token lookup command (selected-token lookup and JSON output): https://developer.hashicorp.com/vault/docs/commands/token/lookup
-- curl options (header files, TLS verification, direct connections, and write-out fields): https://curl.se/docs/manpage.html
+- curl options (write-out fields require 7.75.0; header files, TLS verification, direct connections, and write-out fields): https://curl.se/docs/manpage.html
+- Vault HA redirect implementation (pinned v1.21.0): https://raw.githubusercontent.com/hashicorp/vault/v1.21.0/http/handler.go
+- Vault local-only forwarding implementation (pinned v1.20.0): https://raw.githubusercontent.com/hashicorp/vault/v1.20.0/http/logical.go
 
 ======================================================================
 ==> identity-providers.md
@@ -19443,6 +19491,53 @@ TLS terminates with normal validation (a trusted CA for private PKI); never use 
 
 # Time-series and metrics stores: InfluxDB, VictoriaMetrics, and QuestDB
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| influx2-setup: 8086 shares API/UI/write; private onboarding creates operator user/org/token, setup allowed changes true to false, scoped app tokens. | InfluxDB OSS 2.x | REASONED |
+| influx2-tls: INFLUXD_CONFIG_PATH selects config; http-bind-address, tls-cert and tls-key set private HTTPS. | InfluxDB OSS 2.x | REASONED |
+| influx1-auth: 8086 auth defaults off; create admin then set bind-address, auth-enabled and HTTPS certificate/key fields. | InfluxDB OSS 1.x | REASONED |
+| influx1-other: prom-read-auth-enabled needs auth-enabled; 8088 backup RPC defaults loopback; optional unauthenticated ingest stays disabled. | InfluxDB OSS 1.x | REASONED |
+| vm-bind: Single-node HTTP fallback :8428, tcp4 default, enableTCP6 false; explicit private bind and TLS flags. | VictoriaMetrics single-node v1.152.0; VictoriaMetrics single-node source commit 540b91da031aa8b7d53d3784693bb451e2be980a | REASONED |
+| vm-image: Source tag ships Compose using image v1.151.0, wildcard 8428 publication and additional ingest listeners. | VictoriaMetrics single-node v1.152.0; VictoriaMetrics shipped Compose image v1.151.0 | REASONED |
+| vm-basic: Empty username disables Basic auth even with password; ordinary query/UI/HTTP ingest and aliases share the credential. | VictoriaMetrics single-node v1.152.0 | REASONED |
+| vm-exempt: Health/ping/readiness/robots/favicon, OPTIONS and prefix handling exemptions differ from authenticated ready and influx/health. | VictoriaMetrics single-node v1.152.0 | REASONED |
+| vm-keys: Registered endpoint keys default empty and fall back to Basic; nonempty authKey replaces Basic, wrong/missing gives 401; other aliases may require both. | VictoriaMetrics single-node v1.152.0 | REASONED |
+| vm-optional: Graphite/Influx/OpenTSDB/native-query listeners default disabled; no TLS, and only OpenTSDB HTTP put checks Basic. | VictoriaMetrics single-node v1.152.0 | REASONED |
+| cluster-http: vminsert/vmselect/vmstorage fall back to 8480/8481/8482 on IPv4 wildcard; optional IPv6, empty Basic credentials and HTTP-only TLS. | VictoriaMetrics cluster v1.152.0-cluster; VictoriaMetrics cluster source e4b1d55683f0da20410dc765787bd4e9b5afa0da | REASONED |
+| cluster-rpc: 8400/8401 wildcard RPC has no credentials/TLS; handshake/compression permits writes, reads, deletion and metadata mutations, outside HTTP auth. | VictoriaMetrics cluster v1.152.0-cluster; VictoriaMetrics cluster source e4b1d55683f0da20410dc765787bd4e9b5afa0da | REASONED |
+| cluster-native: Optional clusternativeListenAddr is disabled by default; restrict enabled native listeners to trusted cluster peers. | VictoriaMetrics cluster v1.152.0-cluster; VictoriaMetrics security/vmauth documentation unknown | REASONED |
+| cluster-keys: Storage snapshot/merge/flush/logging, select deletion/cache/stat resets and common metrics/flags/pprof keys are per-handler. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
+| cluster-precedence: Empty keys fall back to Basic; nonempty keys replace it, not add a factor or protect other routes; allowlist proxy routes. | VictoriaMetrics cluster v1.152.0-cluster; VictoriaMetrics cluster source e4b1d55683f0da20410dc765787bd4e9b5afa0da; VictoriaMetrics security/vmauth documentation unknown | REASONED |
+| quest-http: 9000 HTTP/console/SQL defaults unauthenticated; set http.user/password in server.conf; 9003 health follows HTTP policy. | QuestDB documentation unknown | REASONED |
+| quest-pg: 8812 PostgreSQL wire defaults admin/quest; replace pg.user/password and protect its separate listener. | QuestDB documentation unknown | REASONED |
+| quest-ilp: 9009 TCP writes default unauthenticated; line.tcp.auth.db.path selects P-256 public-key file. | QuestDB documentation unknown | REASONED |
+| quest-tls: OSS requires proxy TLS; Enterprise uses RBAC/tls.enabled and rejects HTTP credential keys since stated Enterprise 4.0.0. | QuestDB documentation unknown; QuestDB Enterprise qualification 4.0.0 | REASONED |
+| verify-inventory: Inventory TCP/UDP and every enabled listener; local binds do not prove external isolation. | InfluxDB OSS 1.x; VictoriaMetrics single-node v1.152.0; VictoriaMetrics cluster v1.152.0-cluster; QuestDB documentation unknown | REASONED |
+| verify-rpc: Actual storage IPs must refuse outside TCP while permitted hosts connect; protocol is not HTTP and failure alone proves no isolation. | VictoriaMetrics cluster v1.152.0-cluster; VictoriaMetrics cluster source e4b1d55683f0da20410dc765787bd4e9b5afa0da; VictoriaMetrics security/vmauth documentation unknown | REASONED |
+| verify-http: Setup body, Influx1 database list/401, VM query/401 and Quest SQL/401 discriminate per target; redirects/errors are inconclusive. | InfluxDB OSS 2.x; InfluxDB OSS 1.x; VictoriaMetrics single-node v1.152.0; QuestDB documentation unknown | REASONED |
+| verify-extra: Reject default PG credential separately; repeat HTTPS auth and plaintext isolation; console MFA does not protect native protocols. | QuestDB documentation unknown; VictoriaMetrics security/vmauth documentation unknown | REASONED |
+| verify-keys: Read-only snapshot/list and metrics probes test empty/Basic/endpoint-key cases; health exemptions and optional listeners need separate checks. | VictoriaMetrics single-node v1.152.0 | REASONED |
+| key-snapshot: snapshotAuthKey gates snapshot create/list/delete/delete_all and admin TSDB snapshot. | VictoriaMetrics single-node v1.152.0 | REASONED |
+| key-delete: deleteAuthKey gates Prometheus delete_series and Graphite delSeries aliases. | VictoriaMetrics single-node v1.152.0 | REASONED |
+| key-merge: forceMergeAuthKey gates internal/force_merge. | VictoriaMetrics single-node v1.152.0 | REASONED |
+| key-flush: forceFlushAuthKey gates internal/force_flush. | VictoriaMetrics single-node v1.152.0 | REASONED |
+| key-cache: search.resetCacheAuthKey gates internal/resetRollupResultCache. | VictoriaMetrics single-node v1.152.0 | REASONED |
+| key-logging: logNewSeriesAuthKey gates internal/log_new_series. | VictoriaMetrics single-node v1.152.0 | REASONED |
+| key-stats: metricNamesStatsResetAuthKey gates admin/status/metric_names_stats/reset. | VictoriaMetrics single-node v1.152.0 | REASONED |
+| key-config: configAuthKey gates config and API status/config with Prometheus aliases. | VictoriaMetrics single-node v1.152.0 | REASONED |
+| key-reload: reloadAuthKey gates -/reload and Prometheus alias. | VictoriaMetrics single-node v1.152.0 | REASONED |
+| key-metrics: metricsAuthKey gates metrics. | VictoriaMetrics single-node v1.152.0 | REASONED |
+| key-flags: flagsAuthKey gates flags. | VictoriaMetrics single-node v1.152.0 | REASONED |
+| key-pprof: pprofAuthKey gates debug/pprof/* including trailing slash. | VictoriaMetrics single-node v1.152.0 | REASONED |
+<!-- version-basis:end -->
+
 A metrics store ingests over HTTP and answers queries over an HTTP API, and most ship a web console beside it. Several of them either authenticate nothing by default or ship a known default credential, so an instance that is reachable from off-host lets a stranger read your operational and business series, write false points that poison dashboards and alerts, or delete history. This guide covers three that AI-assisted projects commonly stand up. The controls are the same shape in each: bind the listeners privately, put authentication and TLS in front where the engine has none of its own, and change every default credential. [fronting-auth.md](fronting-auth.md) is the reverse-proxy pattern these lean on, [secrets.md](secrets.md) covers the tokens and passwords, and [mfa.md](mfa.md) is the account layer. All ports below bind all interfaces (`0.0.0.0`) unless noted, and native TLS is off unless you configure it. Replace every illustrative address and name.
 
 ## InfluxDB
@@ -19621,12 +19716,12 @@ Run that block once per target, over `http://` against the default plaintext lis
 - InfluxDB 2.x configuration options (`http-bind-address`, `tls-cert`, `tls-key`, `INFLUXD_CONFIG_PATH`): https://docs.influxdata.com/influxdb/v2/reference/config-options/
 - InfluxDB 1.x configuration (`[http] auth-enabled` default `false`, `bind-address` `:8086`, backup RPC `127.0.0.1:8088`): https://docs.influxdata.com/influxdb/v1/administration/config/
 - InfluxDB 1.x authentication and authorization: https://docs.influxdata.com/influxdb/v1/administration/authentication_and_authorization/
-- VictoriaMetrics v1.152.0 single-node [HTTP fallback and startup](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/victoria-metrics/main.go#L91-L114), [registered key routes and dispatch](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/victoria-metrics/main.go#L137-L201), [TCP listener](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/netutil/tcplistener.go#L16-L43) and [IPv4/IPv6 selection](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/netutil/tcplistener.go#L79-L85).
+- VictoriaMetrics v1.152.0 single-node (commit 540b91da031aa8b7d53d3784693bb451e2be980a) [HTTP fallback and startup](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/victoria-metrics/main.go#L91-L114), [registered key routes and dispatch](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/victoria-metrics/main.go#L137-L201), [TCP listener](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/netutil/tcplistener.go#L16-L43) and [IPv4/IPv6 selection](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/netutil/tcplistener.go#L79-L85).
 - VictoriaMetrics v1.152.0 [HTTP auth and TLS flags](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/httpserver/httpserver.go#L38-L57), [prefix and OPTIONS handling](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/httpserver/httpserver.go#L385-L419), [built-in exemptions and key routes](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/httpserver/httpserver.go#L425-L510), [key precedence and Basic fallback](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/httpserver/httpserver.go#L534-L573), and [empty password/key defaults](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/flagutil/password.go#L16-L30).
 - VictoriaMetrics v1.152.0 [storage key flags and optional RPC address](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/vmstorage/main.go#L38-L46), [logging key](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/vmstorage/main.go#L111), [conditional RPC startup](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/vmstorage/main.go#L184-L197), and [maintenance and snapshot handlers](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/vmstorage/main.go#L250-L375).
 - VictoriaMetrics v1.152.0 [query-side key flags](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/vmselect/main.go#L33-L37), [alias normalization](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/vmselect/main.go#L99-L111), [rollup-cache reset](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/vmselect/main.go#L174-L179), and [deletion and metric-name reset](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/vmselect/main.go#L377-L435).
 - VictoriaMetrics v1.152.0 [optional ingest listeners and config/reload keys](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/vminsert/main.go#L49-L70), [conditional listener startup](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/vminsert/main.go#L90-L107), [HTTP ingest routes](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/vminsert/main.go#L138-L303), and [configuration, reload and authenticated readiness handlers](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/vminsert/main.go#L351-L387).
-- VictoriaMetrics v1.152.0 [shipped Compose image, publications and listener flags](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/deployment/docker/compose-vm-single.yml#L18-L37).
+- VictoriaMetrics v1.152.0 (shipped image v1.151.0) [shipped Compose image, publications and listener flags](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/deployment/docker/compose-vm-single.yml#L18-L37).
 - VictoriaMetrics v1.152.0 raw ingest listeners (no TLS configuration; Basic auth only on OpenTSDB HTTP): [Graphite](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/ingestserver/graphite/server.go#L46-L53), [InfluxDB](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/ingestserver/influx/server.go#L46-L52), [OpenTSDB mixed listener](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/ingestserver/opentsdb/server.go#L49-L60), [OpenTSDB HTTP listener](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/ingestserver/opentsdbhttp/server.go#L36-L36) and [its Basic-auth check](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/lib/ingestserver/opentsdbhttp/server.go#L88-L92).
 - VictoriaMetrics v1.152.0-cluster HTTP fallback binds: [vminsert](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vminsert/main.go#L161-L167), [vmselect](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmselect/main.go#L150-L158), [vmstorage and RPC startup](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmstorage/main.go#L221-L244); [RPC address defaults and storage auth-key flags](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmstorage/main.go#L46-L68).
 - VictoriaMetrics v1.152.0-cluster TCP bind implementation and IPv4 default: [listener](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/lib/netutil/tcplistener.go#L16-L43), [network selection](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/lib/netutil/tcplistener.go#L79-L85); optional cluster-native listeners: [vminsert](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vminsert/main.go#L53-L54), [vmselect](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmselect/main.go#L77-L78).
@@ -19638,7 +19733,7 @@ Run that block once per target, over `http://` against the default plaintext lis
 - VictoriaMetrics v1.152.0-cluster maintenance: [storage handler auth routing](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmstorage/main.go#L279-L288), [merge, flush, logging and snapshots](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmstorage/main.go#L307-L420), [select cache resets](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmselect/main.go#L269-L296), [rollup-cache key](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmselect/prometheus/prometheus.go#L57-L60), [Graphite deletion](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmselect/main.go#L580-L594), [Prometheus deletion](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmselect/main.go#L867-L884).
 - VictoriaMetrics cluster security recommendations (private network, HTTPS auth proxy and endpoint allowlists): https://docs.victoriametrics.com/victoriametrics/cluster-victoriametrics/#security
 - vmauth authorization proxy: https://docs.victoriametrics.com/victoriametrics/vmauth/
-- QuestDB HTTP server (`9000`, `http.user` / `http.password` unset by default): https://questdb.com/docs/configuration/http-server/
+- QuestDB HTTP server (Enterprise 4.0.0 qualification recorded above; `9000`, `http.user` / `http.password` unset by default): https://questdb.com/docs/configuration/http-server/
 - QuestDB PostgreSQL wire protocol (`8812`, default `admin` / `quest`): https://questdb.com/docs/configuration/postgres-wire-protocol/
 - QuestDB ingestion / line protocol (`9009`, `line.tcp.auth.db.path` default none): https://questdb.com/docs/configuration/ingestion/
 
@@ -25238,6 +25333,44 @@ That proves the certificate and handshake only, not TURN authentication, peer po
 
 # Image-generation UIs: ComfyUI, Stable Diffusion WebUI, InvokeAI, Fooocus
 
+<!-- version-basis:start -->
+**Version basis**
+
+AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+| Claim | Basis | Status |
+| --- | --- | --- |
+| comfy-bind: Default loopback:8188, bare --listen binds IPv4/IPv6 wildcards; explicit bind/port and proxy login. | ComfyUI v0.37.0 | REASONED |
+| nodes: No built-in login; Python nodes/extensions execute with server privileges; trust nodes and apply container containment. | ComfyUI v0.37.0; Fooocus v2.5.5 | REASONED |
+| manager: Manager RCE advisory requires ComfyUI at least v0.3.76 and Manager at least v3.38 together. | ComfyUI advisory minimum v0.3.76; ComfyUI-Manager advisory minimum v3.38 | REASONED |
+| node-flags: --disable-all-custom-nodes and --whitelist-custom-nodes limit loaded nodes, not network exposure. | ComfyUI v0.37.0 | REASONED |
+| webui-auth: UI auth file/list syntax, API-only auth, colon/comma parsing differences and plaintext HTTP require a TLS proxy. | AUTOMATIC1111 v1.10.1 | REASONED |
+| webui-flags: --listen, port 7860, --share relay and insecure extension access affect exposure. | AUTOMATIC1111 v1.10.1 | REASONED |
+| api-input: API credentials have no shipped stdin/file/environment/prompt input; settings and UI config do not populate api_auth. | AUTOMATIC1111 v1.10.1 | REASONED |
+| api-leak: cmd-flags reveals all options; API auth users can read API passwords, unauthenticated API can expose UI argv credentials. | AUTOMATIC1111 v1.10.1 | REASONED |
+| argv: COMMANDLINE_ARGS becomes argv; launcher prints credentials and local argv/environment readers may read them. | AUTOMATIC1111 v1.10.1 | REASONED |
+| file-create: Create-once owner-only credential file uses hex password and clean-shell guards; ACLs, directory races, backups and plaintext storage limit protection. Shell/filesystem versions are unrecorded. | AUTOMATIC1111 v1.10.1 | REASONED |
+| file-launch: Clear inherited launch/bind variables, validate regular non-symlink credential file, reject empty/malformed/duplicate entries and read failures. Shell/grep/awk versions are unrecorded. | AUTOMATIC1111 v1.10.1; Gradio 3.41.2 | REASONED |
+| webui-bind: Explicit --server-name overrides Gradio environment-based bind; without it GRADIO_SERVER_NAME can replace loopback. | AUTOMATIC1111 v1.10.1; Gradio 3.41.2 | REASONED |
+| sysinfo: Unredacted environment and incomplete argv redaction in unauthenticated sysinfo routes are source-reasoned; proxy must deny the prefix. | AUTOMATIC1111 v1.10.1; Gradio 3.41.2 | REASONED |
+| invoke-config: Flat schema 4.0.2, host 127.0.0.1, port 9090 and INVOKEAI_HOST/PORT overrides; default single-user mode has no login. | InvokeAI 6.14.1 | REASONED |
+| invoke-login: Experimental multiuser login/JWT, strict password checks and restart logout; keep loopback and TLS. | InvokeAI 6.14.1 | REASONED |
+| fooocus-flags: Loopback by default, bare --listen wildcard, --share public relay; auth.json supplies optional login. | Fooocus v2.5.5 | REASONED |
+| fooocus-loader: Isolated loader returns credentials only for valid data; unreadable raises PermissionError, malformed/empty returns none. | Fooocus v2.5.5 | DEMONSTRATED |
+| fooocus-auth: Relative auth.json location, pass/hash SHA-256 handling, permissions and expected fail-open for malformed/empty data; no live server test. | Fooocus v2.5.5 | REASONED |
+| fooocus-port: Inherited port or occupied 7865 can move the UI; explicit --port makes Gradio try only that port. | Fooocus v2.5.5; Gradio 3.41.2 | REASONED |
+| fooocus-pin: entry_with_update updates the checkout; use launch.py from exact v2.5.5, with working-tree caveat. | Fooocus v2.5.5 | REASONED |
+| container: CMDARGS bare --listen plus wildcard publication exposes image; bridge uses internal wildcard and loopback publish, host networking needs loopback bind. | Fooocus v2.5.5; Docker Engine minimum loopback boundary 28.0 | REASONED |
+| image-build: Build pinned source, not unchecked GHCR default; Compose build/image pull policy and --build determine selected/tagged image. | Fooocus v2.5.5; Compose Specification 914ec15d1fa4; Docker Compose source v2.32.4 | REASONED |
+| auth-mount: Image excludes auth.json; mount read-only, use built image user UID and mode 0400; remapped/rootless ownership is unchecked. | Fooocus v2.5.5 | REASONED |
+| argparse: Isolated argparse definition yields loopback with no flag and wildcard for bare --listen; this is not a server demonstration. | Fooocus v2.5.5 | DEMONSTRATED |
+| verify-network: Inventory every service and port, confirm loopback service is up, probe actual IPv4/IPv6; container PORTS or host-network ss have different scope. | ComfyUI v0.37.0; AUTOMATIC1111 v1.10.1; InvokeAI 6.14.1; Fooocus v2.5.5; Docker Engine minimum loopback boundary 28.0; curl minimum write-out version 7.75.0 | REASONED |
+| verify-invoke: Unauthenticated boards should answer in single-user mode and reject with 401 in multi-user mode; exposed status is unrecorded. | InvokeAI 6.14.1 | REASONED |
+| verify-proxy: TLS/header and browser checks should require login before UI; no service/proxy listeners were run. | ComfyUI v0.37.0; Fooocus v2.5.5 | REASONED |
+<!-- version-basis:end -->
+
 None of these tools ships real authentication by default, and each accepts arbitrary Python through custom nodes or extensions. **Binding one to a public interface is host compromise, not just data exposure.** Keep every instance on loopback and reach it only through a tunnel or an authenticated TLS proxy: [fronting-auth.md](fronting-auth.md), [cloudflare.md](cloudflare.md), [tailscale.md](tailscale.md), or a reverse proxy per [nginx.md](nginx.md)/[caddy.md](caddy.md).
 
 If you run any of these in a container, do not stop at the network boundary: a compromised custom node or extension can still reach whatever the container can reach, so apply [container-hardening.md](container-hardening.md) (a non-root user, a read-only filesystem where the tool allows it, no unnecessary mounts) as a second layer, not a substitute for keeping the port off the network.
@@ -25428,7 +25561,7 @@ curl -q -g -sI https://imagegen.example.com/                # via the proxy: TLS
 - ComfyUI Startup Flags (`--listen`, `--port` defaults): https://docs.comfy.org/development/comfyui-server/startup-flags
 - ComfyUI custom node security standards (eval/exec prohibited): https://docs.comfy.org/registry/standards
 - ComfyUI 2025 Jan Security Update (custom node code-execution risk): https://blog.comfy.org/p/comfyui-2025-jan-security-update
-- ComfyUI-Manager security advisory, CVE-2025-67303, GHSA-95pq-hr8p-f5g7 (both minimum versions): https://github.com/Comfy-Org/ComfyUI-Manager/security/advisories/GHSA-95pq-hr8p-f5g7
+- ComfyUI-Manager security advisory, CVE-2025-67303, GHSA-95pq-hr8p-f5g7 (minimums ComfyUI v0.3.76 and Manager v3.38): https://github.com/Comfy-Org/ComfyUI-Manager/security/advisories/GHSA-95pq-hr8p-f5g7
 - AUTOMATIC1111 Command Line Arguments and Settings wiki: https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Command-Line-Arguments-and-Settings
 - AUTOMATIC1111 `--gradio-auth-path` ("set gradio authentication file path"), `--gradio-auth`, `--api-auth` and `--server-name` definitions (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L87-L113
 - AUTOMATIC1111 credential reader: opens `cmd_opts.gradio_auth_path`, splits each line on `,` and each entry once on `:` (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/initialize_util.py#L114-L139
@@ -25448,7 +25581,7 @@ curl -q -g -sI https://imagegen.example.com/                # via the proxy: TLS
 - Gradio 3.41.2 default bind, `LOCALHOST_NAME = os.getenv("GRADIO_SERVER_NAME", "127.0.0.1")` and `server_name = server_name or LOCALHOST_NAME` (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/networking.py#L28 and https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/networking.py#L120
 - Gradio 3.41.2 checks the login per route, with `dependencies=[Depends(login_check)]` (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/routes.py#L193-L305
 - Gradio 3.41.2 turns a list `auth` into a dictionary keyed by user name, so a later password for the same user name replaces an earlier one (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/routes.py#L128-L133
-- InvokeAI YAML Config (host/port defaults): https://invoke.ai/configuration/invokeai-yaml/
+- InvokeAI YAML Config (6.14.1, schema 4.0.2, as recorded above; host/port defaults): https://invoke.ai/configuration/invokeai-yaml/
 - InvokeAI Multi-User Administrator Guide: https://invoke.ai/features/multi-user-mode/admin-guide/
 - Fooocus README, UI access and authentication (`--listen`, `--port`, `--share`, `auth.json`; pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/readme.md#L296-L301
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
@@ -25467,7 +25600,7 @@ curl -q -g -sI https://imagegen.example.com/                # via the proxy: TLS
 - Fooocus Docker instructions (`-p 7865:7865`, `-e CMDARGS=--listen`, a `docker run` of `ghcr.io/lllyasviel/fooocus`, building locally; pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/docker.md#L19-L78
 - Fooocus image build excludes `auth.json` (pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/.dockerignore#L53
 - Fooocus reads `auth.json` by a relative name from the checkout root that `launch.py` changes into; `auth_list_to_dict` stores a `hash` entry as given and turns a `pass` entry into its SHA-256 hex digest; the loader opens the file outside its `try` and returns no credentials for a malformed file or an empty list; and `check_auth` compares the SHA-256 hex digest of the password typed at login with the stored value (pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/constants.py#L5, https://github.com/lllyasviel/Fooocus/blob/v2.5.5/launch.py#L7-L9, https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L8-L16, https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L19-L34 and https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L37-L41
-- Docker port publishing (with no host address, "the Docker daemon publishes ports to all host addresses (0.0.0.0 and [::])"): https://docs.docker.com/engine/network/port-publishing/
+- Docker port publishing (Engine 28.0 boundary qualification recorded above; with no host address, "the Docker daemon publishes ports to all host addresses (0.0.0.0 and [::])"): https://docs.docker.com/engine/network/port-publishing/
 - Compose Specification, `pull_policy` (`build`: "Compose builds the image"; and "The `latest` tag is always pulled even when the `missing` pull policy is used"; pinned commit 914ec15d1fa4): https://github.com/compose-spec/compose-spec/blob/914ec15d1fa498969c0df5c1d672306db3256089/05-services.md#L1816-L1832
 - Compose Specification, a service with both `build` and `image` (Compose "follows the rules defined by the `pull_policy` attribute"; if it is missing, "Compose attempts to pull the image first and then builds from source if the image isn't found", and a built image takes the `image` name, as the example shows; pinned commit 914ec15d1fa4): https://github.com/compose-spec/compose-spec/blob/914ec15d1fa498969c0df5c1d672306db3256089/build.md#L21-L23 and https://github.com/compose-spec/compose-spec/blob/914ec15d1fa498969c0df5c1d672306db3256089/build.md#L50-L62
 - `docker compose up --build` ("Build images before starting containers"; pinned tag v2.32.4): https://github.com/docker/compose/blob/v2.32.4/cmd/compose/up.go#L147

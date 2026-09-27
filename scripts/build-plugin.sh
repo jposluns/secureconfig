@@ -7,15 +7,15 @@
 # the reader to check a default against the vendor page when it matters to the decision.
 #
 # The file list is NOT maintained here. It is whatever scripts/build-llms-full.sh reports under
-# --list-inputs, so "what counts as a guide" has one definition and the two bundles cannot drift.
+# --list-guides, so "what counts as a guide" has one definition and the two bundles cannot drift.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 dest="plugin/skills/secure-deployment-config/references"
 
-mapfile -t files < <(bash scripts/build-llms-full.sh --list-inputs)
+mapfile -t files < <(bash scripts/build-llms-full.sh --list-guides)
 if [ "${#files[@]}" -eq 0 ]; then
-  echo "build-llms-full.sh --list-inputs reported nothing" >&2
+  echo "build-llms-full.sh --list-guides reported nothing" >&2
   exit 1
 fi
 
@@ -23,9 +23,13 @@ if [ "${1:-}" = "--list-inputs" ]; then
   # The guide list, the script it came from, and VERSION: changing build-llms-full.sh changes what
   # this bundle contains, and VERSION sets plugin.json's version below, so all three are inputs to
   # this build and the generated-file record has to say so.
-  printf '%s\n' "${files[@]}" scripts/build-llms-full.sh VERSION
+  printf '%s\n' "${files[@]}" scripts/build-llms-full.sh VERSION \
+    tools/version_basis.py tools/version_basis_guides.txt tools/_markdown.py tools/check_guide_shape.py
   exit 0
 fi
+
+# Each reference is a separate Markdown document: retain validated front matter.
+python3 tools/version_basis.py --check
 
 rm -rf "$dest"
 mkdir -p "$dest"

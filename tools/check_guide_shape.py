@@ -30,6 +30,7 @@ enforced by review. This gate catches only the structural floor: a guide shipped
 with no Verify section, an empty one, undated sources, or no citation at all.
 """
 import datetime
+from _markdown import body_lines
 import pathlib
 import re
 import sys
@@ -176,7 +177,7 @@ def scan(text):
                    these can be headings, so a '## heading' printed inside a code
                    block can never open or close a section.
     """
-    lines = text.splitlines()
+    lines = body_lines(text)
     content = [""] * len(lines)
     visible = {}
 
