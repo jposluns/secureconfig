@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "32f9ebf39c23f73748283eca4a5c958f05661d03c0c4222249eae570c1dc715e",
+  "body_sha256": "a2fa592f917bee036f43abdc01ad3abed188d4fee7951ec5ad133084c5546f1d",
   "components": {
     "docs": {
       "name": "Vault documentation",
@@ -122,24 +122,24 @@ version_basis: {
     "storage": {"text": "Unprivileged process, protected snapshots/storage, no swap/core dumps; disable_mlock is Raft-specific.", "components": ["docs"], "sources": ["docs:s60d6655e9803", "docs:s0f36ae51e56b", "docs:sf1aad6c3d00d", "docs:sd032f083ae99"], "status": "REASONED"},
     "bind-test": {"text": "Loopback socket inventory and TLS/plaintext discrimination; extra unintended loopback listener detected.", "components": ["docs", "run"], "sources": ["docs:sbfb9c60f21c1", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "a plaintext request got `400` \"Client sent an HTTP request to an HTTPS server\"", "verify": [1]},
     "cluster-address": {"text": "cluster_address defaults to the address port + 1; the follow-up loopback run observed 127.0.0.2:8200 and :8201 for a second listener.", "components": ["docs", "run"], "sources": ["docs:sbfb9c60f21c1", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "verify": [1], "evidence": "socket table also showed `127.0.0.2:8200` and `127.0.0.2:8201`, an unintended listener with its own cluster port, because `cluster_address` defaults to one port above `address`."},
-    "bind-limits": {"text": "Wildcard binds, ss as root and actual firewall isolation remain unobserved.", "components": ["docs"], "sources": ["docs:sbfb9c60f21c1", "docs:s0f36ae51e56b"], "status": "REASONED", "verify": [1, 7]},
+    "bind-limits": {"text": "Wildcard binds, ss as root and actual firewall isolation remain unobserved.", "components": ["docs"], "sources": ["docs:sbfb9c60f21c1", "docs:s0f36ae51e56b"], "status": "REASONED", "verify": [2, 11]},
     "health-test": {"text": "Single-node health 501/503/200 and status sealed/unsealed exits; stopped-server failure is inconclusive.", "components": ["docs", "run"], "sources": ["docs:sa1a925943f6a", "docs:s70ec02f4b4d7", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "Health returned `501` before initialization, `503` while sealed (status exit code `2`) and `200` once unsealed (exit code `0`)", "verify": [1]},
-    "health-ha": {"text": "Standby, removed-node and Enterprise health/status codes and query overrides are documentation reasoning.", "components": ["docs"], "sources": ["docs:sa1a925943f6a", "docs:s70ec02f4b4d7"], "status": "REASONED", "verify": [1]},
+    "health-ha": {"text": "Standby, removed-node and Enterprise health/status codes and query overrides are documentation reasoning.", "components": ["docs"], "sources": ["docs:sa1a925943f6a", "docs:s70ec02f4b4d7"], "status": "REASONED", "verify": [2]},
     "audit-test": {"text": "Empty/one/two file-device inspection and request-ID correlation demonstrate local delivery.", "components": ["docs", "run"], "sources": ["docs:sd66fc0bcfb15", "docs:s4bc92d253ba6", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "with two file audit devices, one request's `request_id` appeared twice in each file", "verify": [1]},
-    "audit-remote": {"text": "Independent failure-domain audit delivery remains unobserved.", "components": ["docs"], "sources": ["docs:s6a139716500f", "docs:s32194cc039b1"], "status": "REASONED", "verify": [1]},
+    "audit-remote": {"text": "Independent failure-domain audit delivery remains unobserved.", "components": ["docs"], "sources": ["docs:s6a139716500f", "docs:s32194cc039b1"], "status": "REASONED", "verify": [2]},
     "root-test": {"text": "Root self-revocation rejects lookups and revokes non-orphan children; independent logins continue.", "components": ["docs", "run"], "sources": ["docs:s449e83b31426", "docs:s923f5369652b", "docs:sdb9905c2f649", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "A scoped admin created as a child of the root token lost access with it, while an orphan token and a userpass login kept working.", "verify": [1]},
-    "acl-test": {"text": "Own-secret, cross-application denial and collector isolation distinguish narrow from broad policies with fixture controls.", "components": ["docs", "run"], "sources": ["docs:sfbfbd7179dca", "docs:sf7640abb07c2", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "the payments token `200` on its own secret and `403` on the inventory secret, where the fixture reader got `200`", "verify": [2]},
-    "monitor-test": {"text": "Active-node anonymous metrics/pprof reject while authorized identities succeed; enabling anonymous access exposes both.", "components": ["docs", "run"], "sources": ["docs:sbfb9c60f21c1", "docs:s1437757f255b", "docs:s84bf68313c5d", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "anonymous requests got `200` on `sys/metrics` and `sys/pprof/`", "verify": [2]},
-    "monitor-ha": {"text": "Root namespace, active-node targeting, separate profiling policy, HA redirects/local-only forwarding and every-node checks.", "components": ["docs", "ha", "forward"], "sources": ["docs:s1437757f255b", "docs:s84bf68313c5d", "ha:s8c81f240066a", "forward:sfdb628929b01"], "status": "REASONED", "verify": [2]},
-    "secretid": {"text": "SecretID one-use and TTL/tidy discrimination use fresh positive controls; expired IDs can work until tidy.", "components": ["docs", "run"], "sources": ["docs:s553adec7c375", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "SecretIDs 10 seconds past their TTL logged in, while one 70 seconds past it was refused", "verify": [3]},
-    "cidr": {"text": "SecretID and token source restrictions discriminate on two loopback addresses; curl --interface replaces CLI source selection.", "components": ["docs", "run"], "sources": ["docs:s553adec7c375", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "a login from 127.0.0.1 succeeded, and its token read the payments secret with `200` from 127.0.0.1 and `403` from 127.0.0.2", "verify": [3]},
-    "token": {"text": "Service/batch prefixes, TTL, 100-use limit and shortened renewal-ceiling experiment have exposed/fixed controls.", "components": ["docs", "run"], "sources": ["docs:s449e83b31426", "docs:s553adec7c375", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "100 reads returned `200` before read 101 got `403`; with `token_num_uses=0`, all 101 reads returned `200`.", "verify": [3]},
-    "wrap-test": {"text": "No-wrap/61s issuance refused, 60s succeeds; unrestricted delivery policy supplies exposed control.", "components": ["docs", "run"], "sources": ["docs:sfbfbd7179dca", "docs:sa79f2fd07092", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "the same kind of identity's unwrapped request returned the SecretID fields and a sixty-one-second request succeeded", "verify": [4]},
-    "lookup-test": {"text": "Lookup returns path/time/original TTL; consumed and expired tokens fail.", "components": ["docs", "run"], "sources": ["docs:sca6c552728d7", "docs:s17fb33326e35", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "A wrapping token looked up three seconds after its two-second TTL failed the same way.", "verify": [5]},
-    "recipient": {"text": "Receiving application must reject an unexpected creation path; its implementation is not demonstrated.", "components": ["docs"], "sources": ["docs:sa79f2fd07092", "docs:sca6c552728d7"], "status": "REASONED", "verify": [5]},
-    "unwrap-test": {"text": "First unwrap succeeds, reuse fails, fresh control succeeds.", "components": ["docs", "run"], "sources": ["docs:sa79f2fd07092", "docs:sd1209454cb98", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "the first unwrap returned the SecretID fields, the second failed with `wrapping token is not valid or does not exist`, and a fresh wrapping token unwrapped.", "verify": [6]},
-    "connection-test": {"text": "Loopback reachable/refused shapes distinguish TCP connection from TLS/HTTP success, not real external isolation.", "components": ["docs", "curl", "run"], "sources": ["docs:s1e239e51209c", "curl:s2b2686afaf41", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "against 127.0.0.2, where nothing listens, `time_connect=0.000000` and `Could not connect to server` (exit `7`)", "verify": [7]},
-    "external": {"text": "Test actual 8200/8201 destinations from permitted and forbidden sources; routing, local errors and unavailable controls are inconclusive.", "components": ["docs", "curl"], "sources": ["docs:s0f36ae51e56b", "docs:sb271b7950e37", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [7]},
+    "acl-test": {"text": "Own-secret, cross-application denial and collector isolation distinguish narrow from broad policies with fixture controls.", "components": ["docs", "run"], "sources": ["docs:sfbfbd7179dca", "docs:sf7640abb07c2", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "the payments token `200` on its own secret and `403` on the inventory secret, where the fixture reader got `200`", "verify": [3]},
+    "monitor-test": {"text": "Active-node anonymous metrics/pprof reject while authorized identities succeed; enabling anonymous access exposes both.", "components": ["docs", "run"], "sources": ["docs:sbfb9c60f21c1", "docs:s1437757f255b", "docs:s84bf68313c5d", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "anonymous requests got `200` on `sys/metrics` and `sys/pprof/`", "verify": [3]},
+    "monitor-ha": {"text": "Root namespace, active-node targeting, separate profiling policy, HA redirects/local-only forwarding and every-node checks.", "components": ["docs", "ha", "forward"], "sources": ["docs:s1437757f255b", "docs:s84bf68313c5d", "ha:s8c81f240066a", "forward:sfdb628929b01"], "status": "REASONED", "verify": [4]},
+    "secretid": {"text": "SecretID one-use and TTL/tidy discrimination use fresh positive controls; expired IDs can work until tidy.", "components": ["docs", "run"], "sources": ["docs:s553adec7c375", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "SecretIDs 10 seconds past their TTL logged in, while one 70 seconds past it was refused", "verify": [5]},
+    "cidr": {"text": "SecretID and token source restrictions discriminate on two loopback addresses; curl --interface replaces CLI source selection.", "components": ["docs", "run"], "sources": ["docs:s553adec7c375", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "a login from 127.0.0.1 succeeded, and its token read the payments secret with `200` from 127.0.0.1 and `403` from 127.0.0.2", "verify": [5]},
+    "token": {"text": "Service/batch prefixes, TTL, 100-use limit and shortened renewal-ceiling experiment have exposed/fixed controls.", "components": ["docs", "run"], "sources": ["docs:s449e83b31426", "docs:s553adec7c375", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "100 reads returned `200` before read 101 got `403`; with `token_num_uses=0`, all 101 reads returned `200`.", "verify": [5]},
+    "wrap-test": {"text": "No-wrap/61s issuance refused, 60s succeeds; unrestricted delivery policy supplies exposed control.", "components": ["docs", "run"], "sources": ["docs:sfbfbd7179dca", "docs:sa79f2fd07092", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "the same kind of identity's unwrapped request returned the SecretID fields and a sixty-one-second request succeeded", "verify": [6]},
+    "lookup-test": {"text": "Lookup returns path/time/original TTL; consumed and expired tokens fail.", "components": ["docs", "run"], "sources": ["docs:sca6c552728d7", "docs:s17fb33326e35", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "A wrapping token looked up three seconds after its two-second TTL failed the same way.", "verify": [7]},
+    "recipient": {"text": "Receiving application must reject an unexpected creation path; its implementation is not demonstrated.", "components": ["docs"], "sources": ["docs:sa79f2fd07092", "docs:sca6c552728d7"], "status": "REASONED", "verify": [8]},
+    "unwrap-test": {"text": "First unwrap succeeds, reuse fails, fresh control succeeds.", "components": ["docs", "run"], "sources": ["docs:sa79f2fd07092", "docs:sd1209454cb98", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "the first unwrap returned the SecretID fields, the second failed with `wrapping token is not valid or does not exist`, and a fresh wrapping token unwrapped.", "verify": [9]},
+    "connection-test": {"text": "Loopback reachable/refused shapes distinguish TCP connection from TLS/HTTP success, not real external isolation.", "components": ["docs", "curl", "run"], "sources": ["docs:s1e239e51209c", "curl:s2b2686afaf41", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "against 127.0.0.2, where nothing listens, `time_connect=0.000000` and `Could not connect to server` (exit `7`)", "verify": [10]},
+    "external": {"text": "Test actual 8200/8201 destinations from permitted and forbidden sources; routing, local errors and unavailable controls are inconclusive.", "components": ["docs", "curl"], "sources": ["docs:s0f36ae51e56b", "docs:sb271b7950e37", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [11]},
     "wrapping-history": {"text": "Some wrapping-token features date from 0.8; do not generalize current behavior to earlier versions.", "components": ["wrap-history"], "sources": ["wrap-history:sa79f2fd07092"], "status": "REASONED"}
   }
 }
@@ -582,6 +582,40 @@ this on the Vault host as a non-root admin authorized to inspect audit devices, 
 and read the example AppRole:
 
 ```bash
+# DEMONSTRATED: loopback listener, health, file audit, root revocation and role runs recorded below; ss used the documented non-root stand-in.
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
+    'REPLACE_WITH_CA_FILE'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 1; }
+  case "$1" in
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 1 ;;
+    *)
+      case "$2" in
+        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 1 ;;
+        *)
+          case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 1 ;; esac
+          [ -r "$2" ] || { echo "CA file is not readable"; exit 1; }
+          unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 1
+          export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 1
+          sudo ss -tlnp
+          vault status -format=json
+          curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+            --cacert "$2" -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/v1/sys/health"
+          vault audit list -detailed
+          vault token lookup
+          vault token lookup -format=json
+          vault read -format=json auth/approle/role/payments
+          ;;
+      esac
+      ;;
+  esac
+)
+```
+
+```bash
+# REASONED: wildcard binds, ss as root, HA health and independent audit delivery; the host lacks the capabilities listed below (row 1.114). Repeat these commands for those scenarios using the cited listener, health and audit sources.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
     'REPLACE_WITH_CA_FILE'
@@ -691,6 +725,42 @@ request followed by the same request with the selected credential; response bodi
 to avoid printing secrets or profiles.
 
 ```bash
+# DEMONSTRATED: loopback ACL and active-node monitoring pairs recorded below.
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_FULL_HTTPS_API_URL' \
+    'REPLACE_WITH_CA_FILE' \
+    'REPLACE_WITH_TOKEN_HEADER_FILE'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 1; }
+  case "$1" in
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 1 ;;
+    *)
+      case "$2" in
+        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 1 ;;
+        *)
+          case "$3" in
+            *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 3; not probing"; exit 1 ;;
+            *)
+              case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 1 ;; esac
+              [ -r "$2" ] || { echo "CA file is not readable"; exit 1; }
+              [ -r "$3" ] || { echo "header file is not readable"; exit 1; }
+              curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+                --cacert "$2" -w 'anonymous http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
+              curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+                --cacert "$2" --header "@$3" \
+                -w 'authenticated http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
+              ;;
+          esac
+          ;;
+      esac
+      ;;
+  esac
+)
+```
+
+```bash
+# REASONED: HA standby monitoring; no multi-node cluster was set up (row 1.114). Repeat these requests against the node roles described below; the cited handler sources distinguish the outcomes.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_FULL_HTTPS_API_URL' \
     'REPLACE_WITH_CA_FILE' \
@@ -775,6 +845,7 @@ login request reads the credentials from stdin, not argv. Its successful output 
 handle it only in a protected session.
 
 ```bash
+# DEMONSTRATED: loopback AppRole SecretID, CIDR and token-limit runs recorded below.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
     'REPLACE_WITH_CA_FILE' \
@@ -866,6 +937,7 @@ positive control and must return wrapping information. Unexpectedly successful n
 are findings; their credential-bearing output is discarded.
 
 ```bash
+# DEMONSTRATED: loopback mandatory-wrapping negative requests and matched positive control recorded below.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
     'REPLACE_WITH_CA_FILE'
@@ -919,6 +991,40 @@ protected JSON lookup request described in section 7, and select the received
 wrapping token through securely injected `VAULT_TOKEN`. Lookup must succeed before unwrapping:
 
 ```bash
+# DEMONSTRATED: loopback wrapping lookup before expiry and after consumption or expiry, recorded below.
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
+    'REPLACE_WITH_CA_FILE' \
+    'REPLACE_WITH_WRAPPING_LOOKUP_JSON_FILE'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 1; }
+  case "$1" in
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 1 ;;
+    *)
+      case "$2" in
+        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 1 ;;
+        *)
+          case "$3" in
+            *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 3; not probing"; exit 1 ;;
+            *)
+              case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 1 ;; esac
+              [ -r "$2" ] || { echo "CA file is not readable"; exit 1; }
+              unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 1
+              export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 1
+              [ -r "$3" ] || { echo "lookup request file is not readable"; exit 1; }
+              vault write -format=json sys/wrapping/lookup - < "$3"
+              ;;
+          esac
+          ;;
+      esac
+      ;;
+  esac
+)
+```
+
+```bash
+# REASONED: recipient validation belongs to the receiving application (row 1.114). Use this lookup with the unexpected-path scenario below; the cited recipient-validation source defines the required rejection.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
     'REPLACE_WITH_CA_FILE' \
@@ -968,6 +1074,7 @@ already-unwrapped error. A separate fresh, validated token must still unwrap suc
 Protect the successful output, which contains the SecretID.
 
 ```bash
+# DEMONSTRATED: loopback first unwrap, consumed-token refusal and fresh-token control recorded below.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
     'REPLACE_WITH_CA_FILE'
@@ -1005,6 +1112,25 @@ run it from a machine outside your trusted network, where the fixed state is tha
 Guard the address so the probe cannot run unsubstituted and time out as if the port were closed:
 
 ```bash
+# DEMONSTRATED: local connection-failure discriminator recorded below; this does not demonstrate an external firewall.
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 1; }
+  case "$1" in
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 1 ;;
+    *)
+      curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+        -w 'http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' \
+        "https://$1:8200/v1/sys/seal-status"
+      ;;
+  esac
+)
+```
+
+```bash
+# REASONED: external isolation and permitted-source control; the host has no second network (row 1.114 and VAULT-LIVE-1). Repeat this probe from the sources described below; the cited listener and firewall guidance defines the expected outcomes.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }

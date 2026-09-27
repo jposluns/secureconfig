@@ -1641,6 +1641,40 @@ this on the Vault host as a non-root admin authorized to inspect audit devices, 
 and read the example AppRole:
 
 ```bash
+# DEMONSTRATED: loopback listener, health, file audit, root revocation and role runs recorded below; ss used the documented non-root stand-in.
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
+    'REPLACE_WITH_CA_FILE'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 1; }
+  case "$1" in
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 1 ;;
+    *)
+      case "$2" in
+        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 1 ;;
+        *)
+          case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 1 ;; esac
+          [ -r "$2" ] || { echo "CA file is not readable"; exit 1; }
+          unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 1
+          export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 1
+          sudo ss -tlnp
+          vault status -format=json
+          curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+            --cacert "$2" -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/v1/sys/health"
+          vault audit list -detailed
+          vault token lookup
+          vault token lookup -format=json
+          vault read -format=json auth/approle/role/payments
+          ;;
+      esac
+      ;;
+  esac
+)
+```
+
+```bash
+# REASONED: wildcard binds, ss as root, HA health and independent audit delivery; the host lacks the capabilities listed below (row 1.114). Repeat these commands for those scenarios using the cited listener, health and audit sources.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
     'REPLACE_WITH_CA_FILE'
@@ -1750,6 +1784,42 @@ request followed by the same request with the selected credential; response bodi
 to avoid printing secrets or profiles.
 
 ```bash
+# DEMONSTRATED: loopback ACL and active-node monitoring pairs recorded below.
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_FULL_HTTPS_API_URL' \
+    'REPLACE_WITH_CA_FILE' \
+    'REPLACE_WITH_TOKEN_HEADER_FILE'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 1; }
+  case "$1" in
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 1 ;;
+    *)
+      case "$2" in
+        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 1 ;;
+        *)
+          case "$3" in
+            *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 3; not probing"; exit 1 ;;
+            *)
+              case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 1 ;; esac
+              [ -r "$2" ] || { echo "CA file is not readable"; exit 1; }
+              [ -r "$3" ] || { echo "header file is not readable"; exit 1; }
+              curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+                --cacert "$2" -w 'anonymous http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
+              curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+                --cacert "$2" --header "@$3" \
+                -w 'authenticated http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
+              ;;
+          esac
+          ;;
+      esac
+      ;;
+  esac
+)
+```
+
+```bash
+# REASONED: HA standby monitoring; no multi-node cluster was set up (row 1.114). Repeat these requests against the node roles described below; the cited handler sources distinguish the outcomes.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_FULL_HTTPS_API_URL' \
     'REPLACE_WITH_CA_FILE' \
@@ -1834,6 +1904,7 @@ login request reads the credentials from stdin, not argv. Its successful output 
 handle it only in a protected session.
 
 ```bash
+# DEMONSTRATED: loopback AppRole SecretID, CIDR and token-limit runs recorded below.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
     'REPLACE_WITH_CA_FILE' \
@@ -1925,6 +1996,7 @@ positive control and must return wrapping information. Unexpectedly successful n
 are findings; their credential-bearing output is discarded.
 
 ```bash
+# DEMONSTRATED: loopback mandatory-wrapping negative requests and matched positive control recorded below.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
     'REPLACE_WITH_CA_FILE'
@@ -1978,6 +2050,40 @@ protected JSON lookup request described in section 7, and select the received
 wrapping token through securely injected `VAULT_TOKEN`. Lookup must succeed before unwrapping:
 
 ```bash
+# DEMONSTRATED: loopback wrapping lookup before expiry and after consumption or expiry, recorded below.
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
+    'REPLACE_WITH_CA_FILE' \
+    'REPLACE_WITH_WRAPPING_LOOKUP_JSON_FILE'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 1; }
+  case "$1" in
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 1 ;;
+    *)
+      case "$2" in
+        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 1 ;;
+        *)
+          case "$3" in
+            *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 3; not probing"; exit 1 ;;
+            *)
+              case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 1 ;; esac
+              [ -r "$2" ] || { echo "CA file is not readable"; exit 1; }
+              unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 1
+              export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 1
+              [ -r "$3" ] || { echo "lookup request file is not readable"; exit 1; }
+              vault write -format=json sys/wrapping/lookup - < "$3"
+              ;;
+          esac
+          ;;
+      esac
+      ;;
+  esac
+)
+```
+
+```bash
+# REASONED: recipient validation belongs to the receiving application (row 1.114). Use this lookup with the unexpected-path scenario below; the cited recipient-validation source defines the required rejection.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
     'REPLACE_WITH_CA_FILE' \
@@ -2027,6 +2133,7 @@ already-unwrapped error. A separate fresh, validated token must still unwrap suc
 Protect the successful output, which contains the SecretID.
 
 ```bash
+# DEMONSTRATED: loopback first unwrap, consumed-token refusal and fresh-token control recorded below.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
     'REPLACE_WITH_CA_FILE'
@@ -2064,6 +2171,25 @@ run it from a machine outside your trusted network, where the fixed state is tha
 Guard the address so the probe cannot run unsubstituted and time out as if the port were closed:
 
 ```bash
+# DEMONSTRATED: local connection-failure discriminator recorded below; this does not demonstrate an external firewall.
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 1; }
+  case "$1" in
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 1 ;;
+    *)
+      curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+        -w 'http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' \
+        "https://$1:8200/v1/sys/seal-status"
+      ;;
+  esac
+)
+```
+
+```bash
+# REASONED: external isolation and permitted-source control; the host has no second network (row 1.114 and VAULT-LIVE-1). Repeat this probe from the sources described below; the cited listener and firewall guidance defines the expected outcomes.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
@@ -19675,6 +19801,7 @@ Bind every listener to loopback or a private interface, and put authentication a
 Every probe below is **REASONED, not demonstrated**: the authoring host forbids opening listeners without an isolated network namespace, and has none. Outcomes are derived from the cited vendor sources rather than observed; backlog row 2.32 tracks live exposed and fixed demonstrations. A transport failure, a redirect, a 404, a 405 or a TLS error is inconclusive, never the fixed state.
 
 ```bash
+# REASONED: listener inventory; no isolated network namespace for listeners on the authoring host (row 2.32). Expected outcomes and vendor sources are recorded below.
 sudo ss -tlnp    # read the whole table: 8086 and loopback 8088; 8428, 8480, 8481, 8482 and native
 sudo ss -ulnp    # RPC 8400, 8401; 9000, 9003, 8812, 9009, each only on its intended private
                  # address, and no metrics or ingest port bound to a public interface
@@ -19683,6 +19810,7 @@ sudo ss -ulnp    # RPC 8400, 8401; 9000, 9003, 8812, 9009, each only on its inte
 **REASONED, not demonstrated:** the VictoriaMetrics cluster RPC check needs a running cluster and probe hosts inside and outside its protected network, unavailable because the authoring host forbids opening listeners without an isolated network namespace, and has none. Row 2.32 tracks this demonstration. The `ss` inventory above identifies local binds; it does not prove that `8400` and `8401` are unreachable from outside the cluster network. From an outside host, substitute each storage node's actual IP below and run the whole block. Repeat from a trusted cluster host as the positive control. Use any configured replacement ports too, including enabled `-clusternativeListenAddr` listeners. The pinned RPC listener and handshake sources below explain why reachability matters.
 
 ```bash
+# REASONED: cluster RPC isolation and trusted-host control; no isolated network namespace for listeners on the authoring host (row 2.32). Expected outcomes and vendor sources are recorded below.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_STORAGE_NODE_IP'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -19711,6 +19839,7 @@ PY
 An exposed listener is expected to report `TCP REACHABLE` from outside; this is an exposure failure even if an HTTP request to that port fails, since RPC is not HTTP. In the fixed state, outside connections must be blocked while the trusted-host control still connects to both running listeners. A timeout or refusal alone is inconclusive: confirm the target, running listener and firewall or network-policy rule responsible. A `401` from `vmauth` says nothing about RPC isolation.
 
 ```bash
+# REASONED: HTTP setup, authentication and endpoint-key probes; no isolated network namespace for listeners on the authoring host (row 2.32). Expected outcomes and vendor sources are recorded below.
 # Per-target discriminator: InfluxDB 2.x setup returns 200 in both states; read allowed
 # (true before setup, false after). The other named data endpoints should return 401 with auth.
 # Substitute a full URL on the set -- line
@@ -25573,7 +25702,7 @@ The proxy check is REASONED: the authoring host forbids opening a listener until
 The Fooocus entries below (port 7865 in the `ss` comment and in the probe loop) are REASONED, not demonstrated: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none, so no Fooocus instance was run; row 1.146 tracks the demonstration. From the v2.5.5 sources cited below (the `--listen` default and its bare-flag constant in the argument parser, and the launch call that passes the bind and port to gradio), a Fooocus process started on the host with a bare `--listen` should show a wildcard listener on 7865 in `ss` and answer the probe from another host with an HTTP code; started as above, it should show `127.0.0.1:7865` in `ss`, and the probe should report a refusal or timeout reaching your address. The argument parse alone is demonstrated: `argparse` given that `--listen` definition (`type=str`, `default="127.0.0.1"`, `nargs="?"`, `const="0.0.0.0"`) returns `127.0.0.1` with no flag and `0.0.0.0` for a bare `--listen`. Confirm Fooocus is up and answers on the host itself before reading an external refusal as the fixed state. The `ss` expectations cover host processes only. For a container, the check is the PORTS column of `docker ps` plus the probe from another host, not `ss`, because socket visibility varies by Docker version and config (see [docker.md](docker.md#4-verify)): a container published as `7865:7865` should list the publication on every host address in the PORTS column and answer the probe with an HTTP code, and one published as `127.0.0.1:7865:7865` should list `127.0.0.1` as its only host address, with the probe reporting a refusal or timeout reaching your address. A publication with no host address binds `[::]` as well as `0.0.0.0`, so run the probe block twice, once with your public IPv4 address and once with your public IPv6 address in square brackets, each inside the quotes on the `set --` line. The block probes every port even when an earlier probe fails, so its exit status is not the verification result: read each `port=` line. Under rootful Docker's host networking nothing is published and the PORTS column is empty; the listener is in the host's network namespace, so read `ss` for it as for a host process: `127.0.0.1:7865` when fixed, or `0.0.0.0:7865` when `CMDARGS` still binds the wildcard, whether the image's default `--listen` was left in or a bridge-network `--listen 0.0.0.0` was copied over.
 
 ```bash
-# REASONED inventory and external probes: ComfyUI 8188, AUTOMATIC1111 7860, InvokeAI 9090 (row 1.158);
+# REASONED: inventory and external probes: ComfyUI 8188, AUTOMATIC1111 7860, InvokeAI 9090 (row 1.158);
 # Fooocus 7865 (row 1.146). The authoring host forbids listeners without an isolated network namespace, and has none; expected outcomes and sources above.
 ss -tlnp   # host processes: read every listener; 8188/7860/9090/7865: each service on 127.0.0.1 only
 # each must be unreachable from another host. Read err, not the number: it must name a refusal or

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "9cc7be319ef697fe33979310e2e75763e536a36da7b5acc86dc234ecadd52a05",
+  "body_sha256": "079b18352bc9e8890b92c941a96a046c064e647aa3a48cc4174670f8daf5ba22",
   "components": {
     "comfy": {
       "name": "ComfyUI",
@@ -342,7 +342,7 @@ The proxy check is REASONED: the authoring host forbids opening a listener until
 The Fooocus entries below (port 7865 in the `ss` comment and in the probe loop) are REASONED, not demonstrated: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none, so no Fooocus instance was run; row 1.146 tracks the demonstration. From the v2.5.5 sources cited below (the `--listen` default and its bare-flag constant in the argument parser, and the launch call that passes the bind and port to gradio), a Fooocus process started on the host with a bare `--listen` should show a wildcard listener on 7865 in `ss` and answer the probe from another host with an HTTP code; started as above, it should show `127.0.0.1:7865` in `ss`, and the probe should report a refusal or timeout reaching your address. The argument parse alone is demonstrated: `argparse` given that `--listen` definition (`type=str`, `default="127.0.0.1"`, `nargs="?"`, `const="0.0.0.0"`) returns `127.0.0.1` with no flag and `0.0.0.0` for a bare `--listen`. Confirm Fooocus is up and answers on the host itself before reading an external refusal as the fixed state. The `ss` expectations cover host processes only. For a container, the check is the PORTS column of `docker ps` plus the probe from another host, not `ss`, because socket visibility varies by Docker version and config (see [docker.md](docker.md#4-verify)): a container published as `7865:7865` should list the publication on every host address in the PORTS column and answer the probe with an HTTP code, and one published as `127.0.0.1:7865:7865` should list `127.0.0.1` as its only host address, with the probe reporting a refusal or timeout reaching your address. A publication with no host address binds `[::]` as well as `0.0.0.0`, so run the probe block twice, once with your public IPv4 address and once with your public IPv6 address in square brackets, each inside the quotes on the `set --` line. The block probes every port even when an earlier probe fails, so its exit status is not the verification result: read each `port=` line. Under rootful Docker's host networking nothing is published and the PORTS column is empty; the listener is in the host's network namespace, so read `ss` for it as for a host process: `127.0.0.1:7865` when fixed, or `0.0.0.0:7865` when `CMDARGS` still binds the wildcard, whether the image's default `--listen` was left in or a bridge-network `--listen 0.0.0.0` was copied over.
 
 ```bash
-# REASONED inventory and external probes: ComfyUI 8188, AUTOMATIC1111 7860, InvokeAI 9090 (row 1.158);
+# REASONED: inventory and external probes: ComfyUI 8188, AUTOMATIC1111 7860, InvokeAI 9090 (row 1.158);
 # Fooocus 7865 (row 1.146). The authoring host forbids listeners without an isolated network namespace, and has none; expected outcomes and sources above.
 ss -tlnp   # host processes: read every listener; 8188/7860/9090/7865: each service on 127.0.0.1 only
 # each must be unreachable from another host. Read err, not the number: it must name a refusal or

@@ -113,6 +113,9 @@
         "tools/version_basis_guides.txt",
         "tools/_markdown.py",
         "tools/check_guide_shape.py",
+        "tools/check_verify_marking.py",
+        "tools/_verify_sections.py",
+        "tools/check_reasoned_rows.py",
         "CHANGELOG.md"
       ],
       "target": "site/llms-full.txt"
@@ -233,6 +236,9 @@
         "tools/version_basis_guides.txt",
         "tools/_markdown.py",
         "tools/check_guide_shape.py",
+        "tools/check_verify_marking.py",
+        "tools/_verify_sections.py",
+        "tools/check_reasoned_rows.py",
         "CHANGELOG.md"
       ]
     }

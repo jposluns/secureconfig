@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "c049027bb9c72ff9d501769ced2ace107bbd965f4a58c337b7b2f06230efaab1",
+  "body_sha256": "fc6d9b11f3c0464ea416b8c52c97ebf7bff9342962307ba1264880dd3472243a",
   "components": {
     "influx2": {
       "name": "InfluxDB OSS",
@@ -331,6 +331,7 @@ Bind every listener to loopback or a private interface, and put authentication a
 Every probe below is **REASONED, not demonstrated**: the authoring host forbids opening listeners without an isolated network namespace, and has none. Outcomes are derived from the cited vendor sources rather than observed; backlog row 2.32 tracks live exposed and fixed demonstrations. A transport failure, a redirect, a 404, a 405 or a TLS error is inconclusive, never the fixed state.
 
 ```bash
+# REASONED: listener inventory; no isolated network namespace for listeners on the authoring host (row 2.32). Expected outcomes and vendor sources are recorded below.
 sudo ss -tlnp    # read the whole table: 8086 and loopback 8088; 8428, 8480, 8481, 8482 and native
 sudo ss -ulnp    # RPC 8400, 8401; 9000, 9003, 8812, 9009, each only on its intended private
                  # address, and no metrics or ingest port bound to a public interface
@@ -339,6 +340,7 @@ sudo ss -ulnp    # RPC 8400, 8401; 9000, 9003, 8812, 9009, each only on its inte
 **REASONED, not demonstrated:** the VictoriaMetrics cluster RPC check needs a running cluster and probe hosts inside and outside its protected network, unavailable because the authoring host forbids opening listeners without an isolated network namespace, and has none. Row 2.32 tracks this demonstration. The `ss` inventory above identifies local binds; it does not prove that `8400` and `8401` are unreachable from outside the cluster network. From an outside host, substitute each storage node's actual IP below and run the whole block. Repeat from a trusted cluster host as the positive control. Use any configured replacement ports too, including enabled `-clusternativeListenAddr` listeners. The pinned RPC listener and handshake sources below explain why reachability matters.
 
 ```bash
+# REASONED: cluster RPC isolation and trusted-host control; no isolated network namespace for listeners on the authoring host (row 2.32). Expected outcomes and vendor sources are recorded below.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_STORAGE_NODE_IP'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -367,6 +369,7 @@ PY
 An exposed listener is expected to report `TCP REACHABLE` from outside; this is an exposure failure even if an HTTP request to that port fails, since RPC is not HTTP. In the fixed state, outside connections must be blocked while the trusted-host control still connects to both running listeners. A timeout or refusal alone is inconclusive: confirm the target, running listener and firewall or network-policy rule responsible. A `401` from `vmauth` says nothing about RPC isolation.
 
 ```bash
+# REASONED: HTTP setup, authentication and endpoint-key probes; no isolated network namespace for listeners on the authoring host (row 2.32). Expected outcomes and vendor sources are recorded below.
 # Per-target discriminator: InfluxDB 2.x setup returns 200 in both states; read allowed
 # (true before setup, false after). The other named data endpoints should return 401 with auth.
 # Substitute a full URL on the set -- line

@@ -85,25 +85,21 @@ def source_id(url):
     return 's' + digest(url)[:12]
 
 
-def verify_blocks(body):
-    from check_guide_shape import headings, section_body, VERIFY_RE
-    from _markdown import Fences
+def verify_blocks(body, with_status=False):
+    """Use the ratchet's section selection, attachment and declaration grammar."""
+    from check_verify_marking import scan_guide, tokenize
+    units, errors = scan_guide(body, with_status=True)
+    require(not errors, 'invalid Verify markup: ' + '; '.join(errors))
+    lines, _, tokens = tokenize(body)
+    selected = {line: status for line, _, status in units}
     blocks = []
-    heads = headings(body)
-    for _, level, title, start in heads:
-        if not VERIFY_RE.match(title):
+    for token in tokens:
+        if token.kind != 'fence' or token.start + 1 not in selected:
             continue
-        fences, current, language = Fences(), [], ''
-        for line in section_body(body, heads, start, level).splitlines():
-            was_inside = fences.inside
-            if fences.feed(line):
-                if not was_inside:
-                    language = re.sub(r'^ {0,3}[`~]+', '', line).strip().split(' ')[0]
-                    current = []
-                elif language == 'bash':
-                    blocks.append('\n'.join(current))
-            elif fences.inside:
-                current.append(line)
+        opening = re.search(r'(?:`{3,}|~{3,})([^\n]*)', lines[token.start])
+        if opening and opening[1].strip().lower() == 'bash':
+            block = '\n'.join(lines[token.start + 1:token.end - 1])
+            blocks.append((block, selected[token.start + 1]) if with_status else block)
     return blocks
 
 
@@ -170,7 +166,7 @@ def validate(data, body, guide='GUIDE.md'):
                           r'(?![A-Za-z0-9.])', cited_lines),
                 'basis absent from its Sources entries: ' + component['basis'])
     identifiers(data['claims'])
-    blocks = verify_blocks(body)
+    blocks = verify_blocks(body, with_status=True)
     covered, used = set(), set()
     for name, claim in data['claims'].items():
         keys(claim, ('text', 'components', 'sources', 'status'), ('evidence', 'verify'))
@@ -204,9 +200,10 @@ def validate(data, body, guide='GUIDE.md'):
         for number in refs:
             require(1 <= number <= len(blocks), 'invalid Verify fence ordinal')
             covered.add(number)
-            markers = re.findall(r'^# (DEMONSTRATED|REASONED)\b', blocks[number - 1], re.M)
-            if markers:
-                require(claim['status'] in markers, 'claim disagrees with explicit Verify fence marker')
+            status = blocks[number - 1][1]
+            require(status is not None, 'Verify fence needs an explicit marker')
+            require(claim['status'] == status,
+                    'claim disagrees with explicit Verify fence marker')
     require(used == set(data['components']), 'unused component')
     require(covered == set(range(1, len(blocks) + 1)), 'every Verify bash fence needs a claim mapping')
 

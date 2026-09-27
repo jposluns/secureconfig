@@ -88,8 +88,9 @@ continues to refuse an unbound body edit.
 Then run `python3 tools/version_basis.py --write`, `python3 tools/version_basis.py --check`,
 `bash scripts/build-llms-full.sh`, `bash scripts/build-plugin.sh` and `bash tools/run_all_checks.sh`.
 Use `python3 tools/version_basis.py --check vault.md` for a single enrolled guide. Review the source
-and generated diffs together. PR #389's marker grammar remains pending: preserve existing fence
-markers until alignment, then review mixed-status mappings and every ordinal affected by a split.
+and generated diffs together. Verify mappings use the same fence-level declaration and attachment grammar as the Verify-marking
+gate. Every mapped claim must agree with its fence's declaration; later per-command comments do not
+change that status. Review every ordinal affected by a split.
 
 ## Shipping a change
 

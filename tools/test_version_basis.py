@@ -119,7 +119,7 @@ class VersionBasisTests(unittest.TestCase):
         claim.update(status='DEMONSTRATED', evidence='Observed refusal, then successful authorized request.')
         with self.assertRaisesRegex(ValueError, 'marker'):
             vb.updated(document(data))
-        body = BODY.replace('# REASONED: no isolated listener available.', '# DEMONSTRATED')
+        body = BODY.replace('# REASONED: no isolated listener available.', '# DEMONSTRATED: observed refusal and authorized request.')
         data['body_sha256'] = vb.digest(body)
         vb.updated(document(data, body))
         claim['evidence'] = 'Invented observation.'
@@ -291,6 +291,92 @@ class RoundTwoTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 1)
                 self.assertIn('FAIL  fixture.md: invalid front matter:', result.stdout)
                 self.assertNotIn('Traceback', result.stdout + result.stderr)
+
+
+class VerifyGrammarTests(unittest.TestCase):
+    def check_body(self, body, data=None):
+        data = fixture() if data is None else data
+        data['body_sha256'] = vb.digest(body)
+        return vb.updated(document(data, body))
+
+    def test_shared_declaration_locations(self):
+        old = '# REASONED: no isolated listener available.\n'
+        for body in (
+            BODY.replace(old, '# **reasoned:** recorded scope.\n'),
+            BODY.replace(old, '').replace('## Verify', '## Verify (REASONED: recorded scope)'),
+            BODY.replace(old, '').replace('Observed refusal, then successful authorized request.',
+                                         'REASONED: following block; recorded scope.'),
+            BODY.replace(old, '').replace('\n## Sources', '\nREASONED: preceding block; recorded scope.\n\n## Sources'),
+        ):
+            with self.subTest(body=body):
+                self.check_body(body)
+
+    def test_non_declarations_cannot_mark(self):
+        old = '# REASONED: no isolated listener available.'
+        for replacement in ('# REASONED', '# REASONED:', '# reasonedness: text',
+                            '# ordinary comment\n# REASONED: later comment.',
+                            'echo first\n# REASONED: per-command comment.',
+                            'printf "REASONED: string, not provenance"'):
+            with self.subTest(replacement=replacement), self.assertRaisesRegex(ValueError, 'marker|provenance'):
+                self.check_body(BODY.replace(old, replacement))
+
+    def test_attached_marker_disagreement(self):
+        old = '# REASONED: no isolated listener available.\n'
+        for body in (
+            BODY.replace(old, '# demonstrated: recorded pair.\n'),
+            BODY.replace(old, '').replace('## Verify', '## Verify (DEMONSTRATED: recorded pair)'),
+            BODY.replace(old, '').replace('Observed refusal, then successful authorized request.',
+                                         'DEMONSTRATED: following block; recorded pair.'),
+            BODY.replace(old, '').replace('\n## Sources', '\nDEMONSTRATED: preceding block; recorded pair.\n\n## Sources'),
+        ):
+            with self.subTest(body=body), self.assertRaisesRegex(ValueError, 'disagrees'):
+                self.check_body(body)
+
+    def test_conflicting_markers_fail(self):
+        body = BODY.replace('## Verify', '## Verify (DEMONSTRATED: recorded pair)')
+        with self.assertRaisesRegex(ValueError, 'conflicting declarations'):
+            self.check_body(body)
+
+    def test_later_comment_does_not_create_mixed_status(self):
+        body = BODY.replace("printf 'probe", "# DEMONSTRATED: later command.\nprintf 'probe")
+        self.check_body(body)
+        data = fixture()
+        data['claims']['control'].update(
+            status='DEMONSTRATED', evidence='Observed refusal, then successful authorized request.')
+        with self.assertRaisesRegex(ValueError, 'disagrees'):
+            self.check_body(body, data)
+
+    def test_mixed_claims_need_separate_fences(self):
+        data = fixture()
+        data['claims']['observed'] = dict(data['claims']['control'],
+            status='DEMONSTRATED', evidence='Observed refusal, then successful authorized request.')
+        with self.assertRaisesRegex(ValueError, 'disagrees'):
+            self.check_body(BODY, data)
+        second = "\n\x60\x60\x60bash\n# DEMONSTRATED: recorded pair.\nprintf 'other probe\\n'\n\x60\x60\x60\n"
+        body = BODY.replace('\n## Sources', second + '\n## Sources')
+        data['claims']['observed']['verify'] = [2]
+        self.check_body(body, data)
+        data['claims']['observed']['verify'] = [1]
+        with self.assertRaisesRegex(ValueError, 'disagrees'):
+            self.check_body(body, data)
+
+    def test_nested_roots_and_noncanonical_titles(self):
+        body = BODY.replace('## Verify', '## Verify\n\n### Verify')
+        self.check_body(body)
+        self.assertEqual(len(vb.verify_blocks(body)), 1)
+        body = BODY.replace('## Verify', '## Verify from outside')
+        self.assertEqual(vb.verify_blocks(body), [])
+        with self.assertRaisesRegex(ValueError, 'ordinal'):
+            self.check_body(body)
+
+    def test_unsupported_containers_fail(self):
+        for body in (
+            BODY.replace('## Verify', '> ## Verify'),
+            BODY.replace('## Verify', 'Verify\n------'),
+            BODY.replace('## Verify', '<div>\n## Verify\n</div>'),
+        ):
+            with self.subTest(body=body), self.assertRaisesRegex(ValueError, 'unsupported-container'):
+                self.check_body(body)
 
 
 if __name__ == '__main__':
