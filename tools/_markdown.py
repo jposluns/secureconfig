@@ -79,3 +79,13 @@ class Fences:
         # A shorter run, a different character, or a trailing info string is CONTENT of
         # the open block, not a close.
         return False
+
+
+def body_lines(text):
+    """Mask validated front matter, preserving diagnostic line numbers."""
+    from version_basis import split
+    data, body = split(text)
+    if data is None:
+        return text.splitlines()
+    prefix = text[:len(text) - len(body)]
+    return [''] * prefix.count('\n') + body.splitlines()

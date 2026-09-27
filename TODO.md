@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.177**, **2.48**, **3.31**, **4.12**.
+Next ids: **1.177**, **2.48**, **3.33**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -140,6 +140,7 @@ marked, and those are the ones worth taking first.
 | 3.28 | Restrict the shared file walker used by prose conventions, no-dashes and other gates to tracked files, so an unreadable untracked directory cannot make them error; #372 already does this for its own gate. (L, S) | `[gap]` |
 | 3.29 | Follow up #387's C3-TOOL-ARGV gate to close its disclosed bounded misses: clustered short options (`mysql -Bp"$PW"`, `turnutils_uclient -vw"$PW"`), `vault login -method=... password=`, `env VAR=secret tool`, `openssl dgst -macopt key:`/`hexkey:`, and secrets in URIs. (L, M) | `[gap]` |
 | 3.30 | Extend the fenced-block Verify-marking gate planned in #389 to list items, table rows and prose units, with the same baseline-and-ratchet mechanism (maintainer ruling, 2026-09-26). (M, L) | `[gap]` |
+| 3.32 | Roll version-basis metadata out to every remaining guide in one generated PR (maintainer ruling 2026-09-26): generate candidate claims from pinned Sources, explicit versions, controls, endpoint mappings, Verify markers and recorded observations; review by guide family with a coverage matrix (claim, body passage, source, version qualification, evidence); never infer DEMONSTRATED from an unmarked fence; enrol each guide in tools/version_basis_guides.txt. Depends on #395. (M, L) | `[gap]` |
 
 ## Decisions
 

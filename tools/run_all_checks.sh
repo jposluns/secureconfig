@@ -32,6 +32,10 @@ not_a_guide() {
   esac
 }
 
+echo "== pilot version basis =="
+python3 tools/test_version_basis.py || bad "version-basis self-test"
+python3 tools/version_basis.py --check || bad "version-basis metadata or summary"
+
 echo "== llms-full.txt is current =="
 orig=$(mktemp)
 cp site/llms-full.txt "$orig"
