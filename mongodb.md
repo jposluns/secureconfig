@@ -576,14 +576,14 @@ auditLog:
 
 A failed audit write can terminate the process, so confirm the destination is writable during deployment validation. Omitting a filter records every auditable event; a filter such as `auditLog.filter: '{"atype": "authenticate"}'` records only that event type and deliberately excludes the rest. See [configure auditing](https://www.mongodb.com/docs/v8.0/tutorial/configure-auditing/) and [audit filters](https://www.mongodb.com/docs/v8.0/tutorial/configure-audit-filters/).
 
-Recording successful authorization checks is a separate decision. `auditAuthorizationSuccess` defaults to `false`, so the audit system logs only authorization failures until it is enabled, and enabling it carries a performance cost:
+Recording successful authorization checks is a separate decision. In MongoDB 8.0, `auditAuthorizationSuccess` defaults to `false`, so `authCheck` events are logged only for authorization failures. Other auditable events, such as authentication, schema (DDL), and replica-set changes, do not depend on this setting and are recorded when auditing is enabled and the filter permits them. Enabling successful `authCheck` events carries a performance cost:
 
 ```yaml
 setParameter:
   auditAuthorizationSuccess: true
 ```
 
-Set it only where the accountability requirement justifies the overhead. See the [auditAuthorizationSuccess parameter](https://www.mongodb.com/docs/v8.0/reference/parameters/).
+Set it only where the accountability requirement justifies the overhead. See the [auditAuthorizationSuccess parameter](https://www.mongodb.com/docs/v8.0/reference/parameters/#mongodb-parameter-param.auditAuthorizationSuccess).
 
 ## 6. Redact document values from the diagnostic log
 

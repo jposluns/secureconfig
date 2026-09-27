@@ -11,6 +11,7 @@ in step with the merged pull request is therefore an authoring obligation, not a
 
 ## 2026-09-27
 
+- Correct MongoDB 8.0 auditing scope: the failures-only default applies to `authCheck` events, while other auditable events do not depend on `auditAuthorizationSuccess`. Row 1.177. (#NNN)
 - Reject leading or trailing whitespace in version-basis strings and test each component-name, basis, claim-text and evidence field. Replace CONTRIBUTING rule 8's drifting corpus counts with a reference to gate output. Row 3.35. (#400)
 - Qualify Docker 28.0 publishing hardening with the firewalld-reload regression, recommend Engine 28.3.3 or later with firewalld, and re-check container-address reachability after reload. Row 1.180. (#401)
 
