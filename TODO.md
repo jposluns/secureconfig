@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.189**, **2.48**, **3.38**, **4.12**.
+Next ids: **1.190**, **2.48**, **3.39**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -42,7 +42,7 @@ many.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 1.187 | F-LINE-ANCHORS: audit every line-anchored GitHub citation (1029 distinct at 440c6f3, 45 guides) against its pinned raw file. A 60-anchor sample found mlflow.md:299 wrong (fixed in #413) plus a second wrong anchor on the same line; this session's fresh drafts had eight wrong anchors, all caught before merge. Fetch spans mechanically, judge in batches, fix OFFSET and WRONG entries. (M, M) | `[gap]` |
+| 1.189 | Residuals of row 1.187's anchor audit: (a) `caddy.md`'s paragraph on bridge versus host network namespaces (near line 252) states Docker networking semantics with no source; cite pinned Docker documentation or narrow it. (b) `model-servers.md` claim `triton-secrets` "argv-only" is a negative resting on the trace described in its Sources line, not on a span. (c) `workflow-orchestrators.md` claim `verify-inventory` cites unpinned man7.org pages under a component with basis unknown. (L, S) | `[gap]` |
 
 ## Priority 2: Deepen existing guides
 
@@ -69,6 +69,7 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
+| 3.38 | F-VBASIS-SOURCES-VERSION: `tools/version_basis.py --check` accepts a component's literal basis version when it appears in ANY Sources entry, not in the entry carrying each URL (found in #416's review). Require, per URL, that the Sources line containing it states its component's literal basis (components with basis `unknown` exempt), baseline current violations, and ratchet. (M, S) | `[gap]` |
 
 ## Priority 4: Tooling and process
 
