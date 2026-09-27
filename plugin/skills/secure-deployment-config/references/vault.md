@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "a2fa592f917bee036f43abdc01ad3abed188d4fee7951ec5ad133084c5546f1d",
+  "body_sha256": "e000470f2a50f6f45b5a7d7e5c559a5a6ecd52d696237272aedaa821ee0f7000",
   "components": {
     "docs": {
       "name": "Vault documentation",
@@ -560,8 +560,8 @@ not show is marked **REASONED** where it occurs, with the reason: HA behavior (n
 was set up for these runs), a second audit device in a separate failure domain (the host has no second network), the recipient's
 own validation (it belongs to the receiving application), a wildcard bind (the host forbids binding
 every interface), `ss` run as root (the host has no `sudo`), and real network paths and firewalls (the
-host has no second network); backlog row 1.114 and VAULT-LIVE-1 below track
-them. The authoring host has no `sudo`, so the first block's `sudo ss -tlnp` ran through a stand-in
+host has no second network). These expectations follow the cited Vault documentation. The authoring
+host has no `sudo`, so the first block's `sudo ss -tlnp` ran through a stand-in
 that runs `ss` without it; as the same account, `ss` still showed the Vault process.
 
 The curl `exitcode` and `errormsg` write-out fields require curl 7.75.0 or newer.
@@ -615,7 +615,7 @@ and read the example AppRole:
 ```
 
 ```bash
-# REASONED: wildcard binds, ss as root, HA health and independent audit delivery; the host lacks the capabilities listed below (row 1.114). Repeat these commands for those scenarios using the cited listener, health and audit sources.
+# REASONED: wildcard binds, ss as root, HA health and independent audit delivery; the host lacks the capabilities listed below. Repeat these commands for those scenarios using the cited listener, health and audit sources.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
     'REPLACE_WITH_CA_FILE'
@@ -760,7 +760,7 @@ to avoid printing secrets or profiles.
 ```
 
 ```bash
-# REASONED: HA standby monitoring; no multi-node cluster was set up (row 1.114). Repeat these requests against the node roles described below; the cited handler sources distinguish the outcomes.
+# REASONED: HA standby monitoring; no multi-node cluster was set up. Repeat these requests against the node roles described below; the cited handler sources distinguish the outcomes.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_FULL_HTTPS_API_URL' \
     'REPLACE_WITH_CA_FILE' \
@@ -1024,7 +1024,7 @@ wrapping token through securely injected `VAULT_TOKEN`. Lookup must succeed befo
 ```
 
 ```bash
-# REASONED: recipient validation belongs to the receiving application (row 1.114). Use this lookup with the unexpected-path scenario below; the cited recipient-validation source defines the required rejection.
+# REASONED: recipient validation belongs to the receiving application. Use this lookup with the unexpected-path scenario below; the cited recipient-validation source defines the required rejection.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
     'REPLACE_WITH_CA_FILE' \
@@ -1130,7 +1130,7 @@ Guard the address so the probe cannot run unsubstituted and time out as if the p
 ```
 
 ```bash
-# REASONED: external isolation and permitted-source control; the host has no second network (row 1.114 and VAULT-LIVE-1). Repeat this probe from the sources described below; the cited listener and firewall guidance defines the expected outcomes.
+# REASONED: external isolation and permitted-source control; the host has no second network. Repeat this probe from the sources described below; the cited listener and firewall guidance defines the expected outcomes.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
@@ -1168,9 +1168,9 @@ See [production firewall guidance](https://developer.hashicorp.com/vault/docs/co
 [cluster communication](https://developer.hashicorp.com/vault/docs/concepts/ha), and
 [seal-status API behavior](https://developer.hashicorp.com/vault/api-docs/system/seal-status).
 
-| Backlog ID | Status | Required demonstration |
+| Check scope | Status | Deployment comparison and prerequisites |
 | --- | --- | --- |
-| VAULT-LIVE-1 | OPEN - REASONED parts only; backlog row 1.114 | In an authorized isolated Vault deployment, demonstrate what a single loopback node cannot: HA standby behavior (the `429`, `474` and `530` health and status codes, and the monitoring checks' redirects and local-only handlers), a second audit device in a separate failure domain with delivery to both destinations, a wildcard bind and `ss` run as root, recipient-side rejection of an unexpected creation path, and the external isolation probe from real permitted and forbidden sources against 8200 and 8201. Record the Vault version and edition, effective settings, requests, errors, and matched positive controls without credentials. |
+| Checks beyond the recorded loopback runs | REASONED from the cited Vault documentation; not demonstrated | In an authorized isolated Vault deployment, demonstrate what a single loopback node cannot: HA standby behavior (the `429`, `474` and `530` health and status codes, and the monitoring checks' redirects and local-only handlers), a second audit device in a separate failure domain with delivery to both destinations, a wildcard bind and `ss` run as root, recipient-side rejection of an unexpected creation path, and the external isolation probe from real permitted and forbidden sources against 8200 and 8201. Record the Vault version and edition, effective settings, requests, errors, and matched positive controls without credentials. |
 
 ## Sources (checked September 2026)
 

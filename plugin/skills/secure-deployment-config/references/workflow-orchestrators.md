@@ -196,14 +196,16 @@ live orchestrator was stood up in its exposed or fixed state. For Argo, the auth
 no Kubernetes cluster is available. Its listener, TLS and authentication checks remain REASONED.
 The exception is the Flower unix-socket stat mode
 and named-ACL checks, demonstrated without a container and recorded after the block. Each names its expected
-exposed and fixed result so it discriminates against a live instance; backlog row 2.34 tracks demonstrating them
-across all six tools. The `*.internal` hostnames are examples for a reachable vantage (you have not isolated the
+exposed and fixed result so it discriminates against a live instance, based on the cited vendor documentation
+and pinned sources across all six tools. The `*.internal` hostnames are examples for a reachable vantage (you have not isolated the
 port yet, or you are on an allowed network); substitute your own. For every negative check run the matched
 authorized call against the SAME origin, and separately probe the origin directly from an untrusted vantage with
 the guarded block at the end, because a rejection seen only through a proxy does not prove the origin enforces
 anything. The write-out fields need curl 7.75.0 or newer; never use `-k`.
 
 ```bash
+# REASONED: orchestrator checks follow the cited vendor documentation and pinned sources; no container runtime
+# or Kubernetes cluster is available. Flower stat mode and named-ACL observations are recorded after this block.
 ss -tlnp   # TCP listeners in THIS network namespace only (4200/3000/8080/7233/8233/5555/2746): not a firewall,
            # publication, routing, or auth check. Inspect container publications and probe external
            # reachability separately; a wildcard bind is a prompt to investigate, not proof of exposure
@@ -265,7 +267,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
 
 # Flower on a unix socket. The stat mode and named-ACL checks were demonstrated (recorded after this block); the
 # socket line is reasoned, not demonstrated: this authoring environment has no Flower install, and the authoring
-# host forbids opening listeners, unix sockets included (row 2.34 tracks the demonstration). Expect the directory
+# host forbids opening listeners, unix sockets included (the expectation follows the cited Flower source). Expect the directory
 # to grant nothing to "other" (750, or 2750 with setgid), owned by Flower's user and the proxy-only group,
 # compared by number (%u:%g) from inside each container that uses it; the socket shows 777 by design. The mode
 # bits do not show named ACL entries, so getfacl (from the acl package) should list only the user::, group:: and

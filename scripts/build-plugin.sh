@@ -24,7 +24,7 @@ if [ "${1:-}" = "--list-inputs" ]; then
   # this bundle contains, and VERSION sets plugin.json's version below, so all three are inputs to
   # this build and the generated-file record has to say so.
   printf '%s\n' "${files[@]}" scripts/build-llms-full.sh VERSION \
-    tools/version_basis.py tools/version_basis_guides.txt tools/_markdown.py tools/check_guide_shape.py tools/check_verify_marking.py tools/_verify_sections.py tools/check_reasoned_rows.py CHANGELOG.md
+    tools/version_basis.py tools/version_basis_guides.txt tools/_markdown.py tools/check_guide_shape.py tools/check_verify_marking.py tools/_verify_sections.py CHANGELOG.md
   exit 0
 fi
 

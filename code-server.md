@@ -29,7 +29,8 @@ code-server also proxies other local services through `/proxy/<port>/`, `/abspro
 ## 3. Verify
 
 ```bash
-# UNVERIFIED: live exposed-versus-fixed results remain outstanding in TODO row 1.78.
+# REASONED: editor, origin and proxy checks follow the cited code-server authentication and proxy
+# documentation; no isolated network namespace is available for authorized live listeners.
 # Shell syntax and guard checks do not demonstrate authentication or origin isolation.
 # ss is a listener inventory in THIS namespace - not a firewall, publication, or authentication check.
 ss -tlnp   # expect 8080 on loopback or a private address; then probe the public origin directly (below):

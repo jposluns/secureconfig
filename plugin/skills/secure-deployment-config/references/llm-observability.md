@@ -147,7 +147,7 @@ to is not separately reachable.
 ## Verify
 
 Collector live checks remain **REASONED**: the authoring host forbids opening listeners without an
-isolated network namespace, and has none. Backlog row 1.45 tracks live demonstration. Inspect the
+isolated network namespace, and has none. Expected outcomes follow the cited pinned Collector configuration. Inspect the
 effective config and inventory TCP and UDP sockets in the Collector's network namespace, together
 with container publications and firewall rules. With the shipped config, expect the nine wildcard
 endpoints listed above, including unauthenticated pprof and zPages. With your replacement config,
@@ -156,10 +156,10 @@ from an untrusted network and use an authorized client as a positive control; a 
 alone does not prove authentication. No exposed-versus-fixed Collector run was performed here.
 
 ```bash
-# These checks are REASONED, not demonstrated here: the authoring environment has no running Langfuse,
+# REASONED: these checks follow the cited vendor documentation and source readings, not live results.
+# The authoring environment has no running Langfuse,
 # Phoenix, Helicone, or OpenTelemetry Collector deployment to probe, so the shell syntax and the guard
-# branches were tested locally but the exposed-vs-fixed service responses were not. Backlog row 1.45 tracks
-# running them live against each service in both states.
+# branches were tested locally but the exposed-vs-fixed service responses were not.
 # ss is a listener inventory in THIS namespace - not a firewall, NAT, or authentication check.
 ss -tlnp   # inventory 3000/6006/4317/4318 and identify each listener's namespace, host publication, and
            # permitted network paths. A wildcard bind is not itself exposure (Phoenix's gRPC 4317 always
@@ -208,8 +208,8 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -o /dev/null \
 ```
 
 For Phoenix specifically, prove the default admin credential is dead and that the read API does not answer an
-anonymous request. **These checks are reasoned, not demonstrated** (no Phoenix instance in the authoring
-environment; backlog row 1.45 tracks running them against a live instance in both states). The credential
+anonymous request. **These checks are REASONED from the cited Phoenix documentation and source, not demonstrated** (no Phoenix instance in the authoring
+environment). The credential
 check is manual, because the vendor documents only the UI login flow and a scripted guess against the wrong
 endpoint can read a `404` as a rejection: in a fresh browser session with no saved Phoenix cookies, try once
 to log in as `admin@localhost` with the password `admin`. **Exposed:** it logs in. **Fixed:** it is rejected,
@@ -220,6 +220,7 @@ legitimately reaches Phoenix (a connection failure proves nothing about authenti
 anonymously (the probe prints the `exitcode` and `errormsg` write-out variables, which need curl 7.75.0 or newer):
 
 ```bash
+# REASONED: Phoenix read-API authentication follows the cited documentation and source; no Phoenix instance is available.
 (                              # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PHOENIX_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 1; }
@@ -251,7 +252,7 @@ write-authorized user key. The gRPC OTLP receiver on 4317 is a SEPARATE server w
 protected: test 4317 separately by invoking `opentelemetry.proto.collector.trace.v1.TraceService/Export`
 with an empty `ExportTraceServiceRequest`, first with no metadata (expect `UNAUTHENTICATED`) then with
 `authorization: Bearer <write-authorized key>` (expect `OK`). That needs an OTLP gRPC client carrying the
-protobuf descriptor (and the CA if TLS is on), so it ships REASONED (backlog row 1.45): with authentication
+protobuf descriptor (and the CA if TLS is on), so it ships REASONED: with authentication
 disabled the same anonymous empty Export returns `OK` (the exposed outcome), and the authenticated,
 viewer-rejected, and empty-request behaviours follow Phoenix's gRPC Export handler and `ApiKeyInterceptor`
 (see Sources). Because Phoenix's gRPC listener always binds `[::]` regardless of `PHOENIX_HOST`, you cannot

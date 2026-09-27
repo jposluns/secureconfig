@@ -67,9 +67,10 @@ Unverified until checked: the exact host bind in your Compose sample, whether MF
 
 ## Verify
 
-Every probe below is reasoned, not demonstrated: the authoring environment has no container runtime, so the outcomes are derived from the cited vendor sources rather than observed, and backlog row 2.33 tracks demonstrating them against live instances in the exposed and fixed states. A redirect to a login page, a 404, or a TLS error is inconclusive, never the fixed state.
+Every probe below is reasoned, not demonstrated: the authoring environment has no container runtime, so the outcomes are derived from the cited vendor sources rather than observed. A redirect to a login page, a 404, or a TLS error is inconclusive, never the fixed state.
 
 ```bash
+# REASONED: listener expectations follow the cited vendor sources; no container runtime is available.
 sudo ss -tlnp    # the tracker's own port only, on a private address: 9000 for Sentry, 8000 for
                  # GlitchTip; and no PostgreSQL, Redis, Kafka, or ClickHouse port published beside it
 ```

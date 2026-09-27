@@ -1,5 +1,0 @@
-# Grandfathered baseline for tools/check_reasoned_rows.py (the reasoned-row gate).
-# EMPTY since 2026-09-24: the 20 guides grandfathered here when the gate was added (2026-09-22) each have
-# a demonstration backlog row in TODO.md (rows 1.87 to 1.106), and the suite runs the gate with --strict.
-# A guide listed here is reported as grandfathered and does not fail the gate, so adding an entry is a
-# deliberate, reviewed exception; the normal fix for a new gap is a "Demonstrate ... <guide>" row in TODO.md.

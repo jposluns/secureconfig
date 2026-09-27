@@ -169,9 +169,9 @@ a second factor; give machine credentials their own scope, expiry and revocation
 
 ## Verify
 
-Each probe below is reasoned, not demonstrated: the authoring environment has no container runtime, so none was
+Each probe below is REASONED, not demonstrated: the authoring environment has no container runtime, so none was
 stood up in its exposed and fixed states. Each names its expected exposed and fixed result so it discriminates
-when run against a live instance; backlog row 2.25 tracks demonstrating them. Give each tool a harmless canary
+when run against a live instance, based on the cited vendor documentation. Give each tool a harmless canary
 record whose one field reads `secureconfig-canary`, use curl 7.75.0 or later, and run the paired block once per
 applicable endpoint: it sends the same URL and body twice, first with a valid credential and then anonymously,
 so the authorized control proves the origin is the service and the canary exists before an application denial

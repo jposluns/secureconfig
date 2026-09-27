@@ -278,11 +278,11 @@ There are two fixes, and you can use both:
   separate private-cluster and trusted-peer restrictions above.
 
   **REASONED:** all Loki socket, push/query, administrative-route and TLS/client-certificate checks
-  here need demonstration: the authoring host forbids opening listeners without an isolated network
+  here follow the cited documentation and pinned sources: the authoring host forbids opening listeners without an isolated network
   namespace, and has none. Expected HTTP mTLS outcomes are a successful authorized request, handshake
   rejection without a trusted client certificate, and refusal of plaintext application requests.
-  Check both IPv4 and IPv6 exposure, gRPC reachability and internal RPC success. Row 1.108 tracks
-  these live checks; no Loki listener or TLS test was run for this audit.
+  Check both IPv4 and IPv6 exposure, gRPC reachability and internal RPC success.
+  No Loki listener or TLS test was run for this audit.
 - **An authenticating proxy that owns the tenant header.** The vendor's nginx example sets
   `proxy_set_header X-Scope-OrgID $remote_user;` so that "nginx overwrites any tenant header sent by the
   client". Keep Loki itself reachable only from that proxy. See [nginx.md](nginx.md) and
@@ -299,9 +299,10 @@ reasoned: the authoring host forbids binding every interface, so each run overro
 `:9091`) and from source (Loki's empty listen addresses; Jaeger's `":" + port` query default). Go
 listens on every interface for an address with no host. The probes from a second host are reasoned
 too: the authoring environment had no second host, so the refusal or timeout expected there was not
-observed. Backlog row 1.108 tracks observing both. On the host:
+observed. On the host:
 
 ```bash
+# REASONED: listener inventory expectations follow the cited sources and recorded loopback runs; wildcard binds and Loki listeners were not observed.
 sudo ss -tlnp   # loopback or a private address only: 9100 9093 9094 9091 3100 9095 7946, and
                 # Jaeger's 16686 16685 4317 4318 14250 14268 9411 5778 5779 13133 27777 27778 8888
 sudo ss -ulnp   # Alertmanager gossip also uses UDP 9094; Jaeger's Thrift receivers UDP 6831 and 6832

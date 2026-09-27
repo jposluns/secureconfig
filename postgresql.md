@@ -578,11 +578,11 @@ WHERE error IS NOT NULL OR NOT applied;
 
 `pg_hba_file_rules` describes current file contents, not necessarily the last successfully loaded rules. `pg_file_settings` also describes current files; an unapplied entry can be superseded by a later entry without being an error. Neither view proves which HBA rule authenticated a session or that replacement TLS files were accepted. See [connection statistics](https://www.postgresql.org/docs/current/monitoring-stats.html), [pg_authid](https://www.postgresql.org/docs/current/catalog-pg-authid.html), [pg_hba_file_rules](https://www.postgresql.org/docs/current/view-pg-hba-file-rules.html) and [pg_file_settings](https://www.postgresql.org/docs/current/view-pg-file-settings.html).
 
-### Verification backlog
+### Verification scope
 
-| ID | Status and missing prerequisite | Required completion evidence |
+| Check scope | Status and missing prerequisite | Deployment comparison |
 | --- | --- | --- |
-| POSTGRESQL-LIVE-1 | TODO; service checks 8.1-8.8 remain REASONED. An authorized writable disposable PostgreSQL deployment, TLS/client-certificate fixtures, nonmember credentials, collected logs, and pgAudit for the optional check are unavailable. | Run each applicable exposed/fixed comparison and matched positive control above through real authenticated logins. Record versions, configurations, commands, results, and correlated server logs. Include the earlier `trust` rule, plaintext-permitting `host` rule, and non-SCRAM password exchange fixtures. Record diagnostic output without treating it as enforcement proof. |
+| Service checks 8.1-8.8 | REASONED from the cited PostgreSQL and pgAudit documentation; not demonstrated. An authorized writable disposable PostgreSQL deployment, TLS/client-certificate fixtures, nonmember credentials, collected logs, and pgAudit for the optional check are unavailable. | Run each applicable exposed/fixed comparison and matched positive control above through real authenticated logins. Record versions, configurations, commands, results, and correlated server logs. Include the earlier `trust` rule, plaintext-permitting `host` rule, and non-SCRAM password exchange fixtures. Record diagnostic output without treating it as enforcement proof. |
 
 ## Common mistakes
 

@@ -1,10 +1,13 @@
-"""Verification roots shared by the marking and demonstration-row gates.
+"""Guide selection and verification roots shared by the offline gates.
 
 Only whole canonical titles (optionally numbered) open a root. Descendants
 belong to that root, including headings that happen to contain "verify".
 Legacy parenthesized status suffixes remain section titles, not declarations.
 """
 import re
+from pathlib import Path
+
+from _markdown import Fences
 
 TITLE = re.compile(
     r"(?i)^(?:[0-9]+[.)][ \t]+)?"
@@ -63,3 +66,62 @@ def verify_ranges(heads):
             end += 1
         yield i, end
         i = end
+
+
+# Keep the guide exclude set aligned with not_a_guide() in run_all_checks.sh.
+META_EXCLUDE = frozenset({
+    "CONTRIBUTING.md", "SECURITY.md", "CLAUDE.md", "AGENTS.md", "CHANGELOG.md",
+    "README.sources.md", "TODO.md", "DONE.md", "DECISIONS.md",
+    "PENDING-DECISIONS.md", "controls-reference.md",
+})
+
+
+HEADING = re.compile(r"^ {0,3}(#{1,6})(?:[ \t]+(.*?))?[ \t]*$")
+
+
+def guides(root: Path):
+    """Yield each root-level guide path, sorted, meta files excluded."""
+    for path in sorted(p for p in root.iterdir() if p.is_file() and p.suffix == ".md"):
+        if path.name not in META_EXCLUDE:
+            yield path
+
+
+def atx_headings(lines):
+    """Return a list parallel to `lines`: (level, title) for each line that is an ATX
+    heading OUTSIDE a fenced code block, else None.
+
+    Code fences are tracked with _markdown.Fences (this repository's one CommonMark fence
+    definition) so a `# comment` or a `## Verify` EXAMPLE inside a ``` or ~~~ block is not
+    mistaken for a heading, and neither an opening nor a closing fence marker line is a
+    heading. Fences reuses the shared rules -- an opening fence is indented no more than
+    three spaces and a backtick fence carries no backtick in its info string -- so indented
+    code and inline code spans are not misread as fences. An absent ATX title (an empty
+    heading such as a bare `##`) normalizes to the empty string.
+    """
+    fences = Fences()
+    out = []
+    for line in lines:
+        if fences.feed(line):
+            out.append(None)  # a fence marker line is neither heading nor content
+            continue
+        if fences.inside:
+            out.append(None)
+            continue
+        m = HEADING.match(line)
+        out.append((len(m.group(1)), m.group(2) or "") if m else None)
+    return out
+
+
+def verify_sections_text(text: str) -> str:
+    """Concatenate disjoint canonical Verify roots, including their descendants.
+
+    The shared selector includes Verification checklist and Quick checks, optional
+    numbering and status suffixes. Setup headings merely mentioning verify do not
+    start roots. Including the title retains detection of heading markers.
+    """
+    lines = text.split("\n")
+    heads = atx_headings(lines)
+    return "\n".join(
+        "\n".join([heads[start][1], *lines[start + 1:end]])
+        for start, end in verify_ranges(heads)
+    )

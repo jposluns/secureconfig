@@ -4,7 +4,7 @@ AI projects put user uploads, datasets, and model files in buckets, and one publ
 
 Documentation was checked in September 2026. Defaults below refer to the documented behavior at the time of writing; inspect existing resources and inherited policies rather than assuming they match new-resource defaults. These controls address separate questions: who can read an object, which network routes reach it, whether transport is encrypted, and whether an object can be deleted.
 
-Live behavior has not been demonstrated in this authoring environment: no authorized cloud accounts, buckets, application identities, or network fixtures were supplied. The Verify section marks the outstanding comparisons **REASONED** and records the demonstration debt.
+Live behavior has not been demonstrated in this authoring environment: no authorized cloud accounts, buckets, application identities, or network fixtures were supplied. The Verify section marks the live comparisons **REASONED** from the cited vendor documentation.
 
 Paste shell blocks whole, including the parentheses, marker, and argument-count checks. Substitute inside the single quotes on each `set --` line. These examples assume genuine shell builtins; a value containing a literal apostrophe needs correct shell quoting rather than direct substitution. Load cloud credentials through the provider's credential mechanism, never as literal keys in command arguments.
 
@@ -600,15 +600,15 @@ A pasted signed URL can enter shell history even though it is absent from curl's
 
 **REASONED:** No actual application credential inventory, repository deployment secrets, or client bundle was supplied. Application credentials must be scoped to one bucket or prefix, and no root, account-key, or service-role credential may appear in client code or the repository. Inspect the deployed bundle and its source maps, and compare with a disposable positive-control build containing a known dummy credential so the inspection can detect the condition it claims to exclude. See [machine-auth.md](machine-auth.md), [secrets.md](secrets.md), and [Supabase credential privileges](https://supabase.com/docs/guides/api/api-keys).
 
-### Demonstration backlog
+### Verification scope and local observations
 
 All five bash blocks passed ShellCheck 0.11.0 and `bash -n` during authoring. Local guard tests refused embedded `REPLACE_WITH_` placeholders, `example.com`, angle brackets, empty arguments, and omitted or shortened `set --` lines in 50 cases. The repository's guard-convention scanner reported no findings on these blocks. All seven JSON examples parsed, and the two JavaScript examples passed syntax checking.
 
 These are local syntax and guard results only. SQL policies were source-traced but not executed against Supabase. No live cloud behavior, deployed-bundle inspection, or whole-corpus gate result is claimed.
 
-| ID | Required exposed/fixed demonstration | Status |
+| Check scope | Deployment comparison and prerequisites | Status |
 | --- | --- | --- |
-| OBJECT-STORAGE-LIVE | Demonstrate every REASONED comparison above with controlled S3, R2, GCS, Azure, and Supabase accounts; harmless objects; narrowly scoped application and signing identities; organization-policy access; TLS and private-network fixtures; KMS keys; retention and logging fixtures; Azure diagnostics; two Supabase users and buckets; and the deployed client build. Record effective settings, CLI/SDK versions, operations, identities, response/error codes and request versions, object-byte controls, expiry/revocation timing, logs, and disposable-data cleanup. Include S3 account and bucket readbacks, ACL migration, transport and endpoint denials, signature-age policy, versioning/Object Lock/MFA Delete behavior, Azure SAS-policy exceptions and delegation revocation, GCS conditional IAM and signing modes, every R2 route and CORS flow, and Supabase cross-bucket and per-operation denials. Never retain usable signed URLs or credentials in the record. | Open; live behavior is reasoned, not demonstrated. |
+| Cloud and application checks | Demonstrate every REASONED comparison above with controlled S3, R2, GCS, Azure, and Supabase accounts; harmless objects; narrowly scoped application and signing identities; organization-policy access; TLS and private-network fixtures; KMS keys; retention and logging fixtures; Azure diagnostics; two Supabase users and buckets; and the deployed client build. Record effective settings, CLI/SDK versions, operations, identities, response/error codes and request versions, object-byte controls, expiry/revocation timing, logs, and disposable-data cleanup. Include S3 account and bucket readbacks, ACL migration, transport and endpoint denials, signature-age policy, versioning/Object Lock/MFA Delete behavior, Azure SAS-policy exceptions and delegation revocation, GCS conditional IAM and signing modes, every R2 route and CORS flow, and Supabase cross-bucket and per-operation denials. Never retain usable signed URLs or credentials in the record. | REASONED from the cited vendor documentation; live behavior is not demonstrated. |
 
 ## Common mistakes
 
