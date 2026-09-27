@@ -17,6 +17,9 @@ Quoted fences (including quoted Verify roots) are detected but rejected as an
 unsupported declaration container. Unclosed fences are convention errors only
 inside Verify. Non-fence code and quoted prose are attachment boundaries, not
 findings. Space-indented list containers and ATX headings are supported.
+Verify fences or headings in unsupported containers fail with
+'[unsupported-container]', including compact nested lists, lists inside quotes,
+empty list items, and headings inside lists or quotes; those containers are not parsed.
 https://spec.commonmark.org/0.31.2/
 
 This is not a full CommonMark parser: Setext headings, general HTML blocks,
@@ -45,7 +48,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _markdown import Fences
-from _verify_sections import heading_parts, title_text, verify_ranges
+from _verify_sections import TITLE, heading_parts, title_text, verify_ranges
 from check_reasoned_rows import HEADING, guides
 
 BASELINE = Path("tools/verify_marking_baseline.txt")
@@ -54,6 +57,7 @@ DECL = re.compile(
     r":(?:\*\*|__)?[ \t]*(.*)$"
 )
 LIST = re.compile(r"^( {0,3})(?:[-+*]|[0-9]{1,9}[.)])([ ]+)(.*)$")
+EMPTY_LIST = re.compile(r"^ {0,3}(?:[-+*]|[0-9]{1,9}[.)]) *$")
 QUOTE = re.compile(r"^ {0,3}> ?")
 THEMATIC = re.compile(r" {0,3}(?:(?:\* *){3,}|(?:_ *){3,}|(?:- *){3,})$")
 
@@ -85,7 +89,43 @@ def interrupts_paragraph(line):
             or re.match(r"^ {0,3}(?:[-+*] +|1[.)] +|<!--)", line))
 
 
-def tokenize(text):
+def unsupported_block(lines, start, first, offset, owner):
+    """Quarantine an unsupported item through its indented continuation.
+
+    Keep it opaque: its headings cannot end Verify and its prose cannot mark
+    another fence. Prefix stripping below is only a rejection scan, not parsing.
+    """
+    end, body = start + 1, [first]
+    while end < len(lines):
+        line = lines[end].expandtabs(4)
+        if line.strip() and not line.startswith(" " * offset):
+            break
+        body.append(line[offset:])
+        end += 1
+    return Token("unsupported", start, end, "\n".join(body), owner)
+
+
+def unsupported_features(text):
+    """Locate fence/heading candidates without interpreting container syntax."""
+    features = []
+    for number, line in enumerate(text.split("\n")):
+        line = line.lstrip(" ")
+        while True:
+            quote, item = QUOTE.match(line), LIST.match(line)
+            if quote:
+                line = line[quote.end():].lstrip(" ")
+            elif item:
+                line = item[3].lstrip(" ")
+            else:
+                break
+        head = HEADING.match(line)
+        if head or Fences().feed(line):
+            root = bool(head and TITLE.fullmatch(heading_parts(head[2] or "")[0]))
+            features.append((number, "heading" if head else "fence", root))
+    return features
+
+
+def tokenize(text, in_quote=False):
     """Return lines, headings and block tokens; keep source for fingerprints."""
     lines = text.replace("\r\n", "\n").replace("\r", "\n").split("\n")
     heads, tokens, stack = [None] * len(lines), [], []
@@ -118,7 +158,21 @@ def tokenize(text):
                 tokens.append(Token("code", i, i + 1, raw, owner))
                 i += 1
                 continue
+            if (not comment and EMPTY_LIST.fullmatch(line)
+                    and (in_quote or not continuing)):
+                # Empty items are not modeled either. Include the conventional
+                # content indentation only to quarantine their continuation.
+                width = len(line.rstrip(" ")) + 1
+                token = unsupported_block(lines, i, "", offset + width, owner)
+                tokens.append(token)
+                i = token.end
+                continue
             match = LIST.match(line) if not comment else None
+            # Ordered lists starting above 1 cannot interrupt a paragraph.
+            # In a quote, quarantine any list-looking container first, even
+            # when its interruption rules would otherwise make it prose.
+            if match and continuing and not in_quote and not interrupts_paragraph(line):
+                match = None
             if match:
                 # More than four padding spaces: one belongs to the marker;
                 # the remainder starts indented code (CommonMark list rule 2).
@@ -130,6 +184,12 @@ def tokenize(text):
                 if line.startswith("    "):
                     tokens.append(Token("code", i, i + 1, raw, owner))
                     i += 1
+                    continue
+                if (in_quote or LIST.match(line) or EMPTY_LIST.fullmatch(line)
+                        or HEADING.match(line)):
+                    token = unsupported_block(lines, i, line, offset + width, owner)
+                    tokens.append(token)
+                    i = token.end
                     continue
             match = QUOTE.match(line) if not comment else None
             if match:
@@ -166,6 +226,11 @@ def tokenize(text):
                 line = line[end + (3 if comment else 4):]
                 comment = not comment
             line = visible
+            if owner and HEADING.match(line):
+                token = unsupported_block(lines, i, line, stack[-1][0], owner)
+                tokens.append(token)
+                i = token.end
+                continue
         was_inside = fences.inside
         if fences.feed(line):
             if was_inside:
@@ -216,8 +281,8 @@ def declaration(text):
     return match[1].upper(), direction
 
 
-def scan_guide(text, in_verify=False):
-    lines, heads, tokens = tokenize(text)
+def scan_guide(text, in_verify=False, in_quote=False):
+    lines, heads, tokens = tokenize(text, in_quote)
     selected = (set(range(len(lines))) if in_verify else
                 {i for a, b in verify_ranges(heads) for i in range(a, b)})
     ancestry, paths = [], {}
@@ -232,12 +297,22 @@ def scan_guide(text, in_verify=False):
     units, errors = [], []
     for k, token in enumerate(blocks):
         if token.kind == "quote":
-            quoted_units, quoted_errors = scan_guide(token.text, token.start in selected)
+            quoted_units, quoted_errors = scan_guide(token.text, token.start in selected, True)
             if quoted_units or quoted_errors:
-                errors.append(f"line {token.start + 1}: unsupported fenced blockquote in Verify")
+                errors.append(f"line {token.start + 1}: [unsupported-container] "
+                              "unsupported fenced blockquote or heading in Verify")
+            continue
+        if token.kind == "unsupported":
+            features = unsupported_features(token.text)
+            if token.start in selected or any(root for _, _, root in features):
+                for number, kind, _ in features:
+                    errors.append(f"line {token.start + number + 1}: "
+                                  f"[unsupported-container] {kind} in unsupported container")
             continue
         if token.start not in selected:
             continue
+        if in_quote and token.kind == "heading":
+            errors.append(f"line {token.start + 1}: [unsupported-container] heading in quote")
         if token.kind == "unclosed":
             errors.append(f"line {token.start + 1}: {token.text}")
         if token.kind != "fence":

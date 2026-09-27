@@ -179,6 +179,73 @@ def main():
         run("# Guide\n\n## Verify\n\n- prose check\n\n| Check | Result |\n"
             "| --- | --- |\n| A | B |\n", 0, "lists tables prose not gated")
 
+        # Round-2: unsupported containers must fail closed even when their
+        # contents look marked, or a nested heading would hide the Verify root.
+        unsupported = "[unsupported-container]"
+        for prefix in ("- - ", "- 2. ", "1. - ", "+ * ", "- - - "):
+            indent = " " * len(prefix)
+            for comment in ("ordinary comment", MARK):
+                body = (prefix + "```sh\n" + indent + "# " + comment + "\n"
+                        + indent + "echo ok\n" + indent + "```\n")
+                run("## Verify\n\n" + body, 1,
+                    f"compact fence {prefix!r} {comment}", unsupported)
+            for title in ("## Verify", "### Quick checks", "## Verify (" + MARK + ")"):
+                run(prefix + title + "\n", 1,
+                    f"compact Verify root {prefix!r} {title}", unsupported)
+            run("## Verify\n\n" + prefix + "## Details\n", 1,
+                f"compact heading cannot end Verify {prefix!r}", unsupported)
+        run("## Verify\n\n- - explanation\n\n    ```sh\n"
+            "    # ordinary comment\n    echo ok\n    ```\n", 1,
+            "compact state survives to later fence", unsupported)
+        run("- - explanation\n\n    ## Verify\n\n    ```sh\n"
+            "    # ordinary comment\n    echo ok\n    ```\n", 1,
+            "compact state contains later Verify root", unsupported)
+        for prefix in ("-", "+", "2.", "- -"):
+            indent = " " * (len(prefix) + 1)
+            run("## Verify\n\n" + prefix + "\n\n" + indent + "```sh\n"
+                + indent + "# " + MARK + "\n" + indent + "```\n", 1,
+                "empty item contains marked fence " + prefix, unsupported)
+            run(prefix + "\n\n" + indent + "## Verify\n", 1,
+                "empty item contains Verify root " + prefix, unsupported)
+        run("## Setup\n\n- <!-- comment --> ## Details\n\n## Verify\n\n"
+            + MARK + "\n\n```sh\necho ok\n```\n", 0,
+            "comment before list heading preserves container boundary")
+        for item in ("- ## Details", "- item\n\n  ## Details",
+                     "- outer\n  - ## Details"):
+            run("## Verify\n\n" + item + "\n", 1,
+                "heading in list " + item, unsupported)
+            run(item.replace("## Details", "## Verify") + "\n", 1,
+                "Verify root in list " + item, unsupported)
+        for quote in ("> ", "> > ", "  > "):
+            for item in ("2. ## Details", "1. ## Details", "- ## Details"):
+                run("## Verify\n\n" + quote + "explanation\n" + quote + item
+                    + "\n" + MARK + "\n\n```sh\necho ok\n```\n", 1,
+                    f"quoted list provenance {quote!r} {item}", unsupported)
+            run(quote + "- - ## Verify\n", 1,
+                "quoted compact Verify root " + quote, unsupported)
+            run("## Verify\n\n" + quote + "## Details\n", 1,
+                "quoted heading without fence " + quote, unsupported)
+        run("## Verify\n\n> - item\n>\n>   ```sh\n"
+            ">   # ordinary comment\n>   echo ok\n>   ```\n", 1,
+            "quoted list state contains later fence", unsupported)
+        rc, out = invoke(root, "--write-baseline")
+        check("unsupported containers cannot be seeded", rc == 1 and unsupported in out
+              and baseline.read_text(encoding="utf-8") == "")
+        run("## Verify\n\n" + MARK + "\n2. additional provenance\n\n"
+            "```sh\necho ok\n```\n", 0, "ordered prose retains adjacent declaration")
+        for marker in ("+", "2."):
+            run("## Verify\n\n" + MARK + "\n" + marker + "\n\n"
+                "```sh\necho ok\n```\n", 0,
+                "empty marker cannot interrupt declaration " + marker)
+        run("## Setup\n\n- - ```sh\n    # ordinary comment\n    ```\n", 0,
+            "unsupported fence outside Verify")
+        run("## Verify\n\n- - prose only\n\n> - quoted prose only\n", 0,
+            "unsupported prose without headings or fences")
+        run("## Verify\n\n- - prose only\n\n" + MARK + "\n\n"
+            "```sh\necho ok\n```\n", 0, "dedent ends unsupported item")
+        run("## Verify\n\n- - " + MARK + "\n\n```sh\necho ok\n```\n", 1,
+            "unsupported prose cannot declare outside fence", "new/changed/excess")
+
         # Round-1 reproductions: strict CLI checks include the diagnostic, so a
         # different failure cannot accidentally satisfy a regression.
         fence = "```sh\necho ok\n```\n"
