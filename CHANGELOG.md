@@ -11,6 +11,7 @@ in step with the merged pull request is therefore an authoring obligation, not a
 
 ## 2026-09-27
 
+- Pin the Browserless TOKEN default to open-source 2.56.7, distinguish Enterprise documentation from source evidence, and align the authentication probe and version-basis claims. Row 1.178. (#NNN)
 - Deny dotfiles and common backup and dump suffixes in the Caddy web-exposure example, align nginx and Apache suffix rules, and add planted-file probes for the added classes. Row 1.184. (#406)
 - Version basis for every guide: 100 guides carry version-basis front matter and a generated per-claim summary (versions, documentation date, DEMONSTRATED or REASONED), drafted in 20 batches under a body-identity check and reviewed in five two-family stages; every Verify fence is now marked. Rows 3.32 and 3.27. (#407)
 - Use a fixed canonical host for the Go port-80 redirect so a client-controlled Host cannot choose the redirect destination. Row 1.183. (#405)
