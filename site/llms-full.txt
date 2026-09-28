@@ -7015,7 +7015,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | vite-bind: Vite 8.3.1 server.host defaults localhost; true/0.0.0.0 exposes all addresses and should not remain beyond trusted-network tests. | Vite bind source v8.3.1; Vite documentation unknown | REASONED |
 | vite-hosts: server.allowedHosts defaults empty with localhost, .localhost and IPs allowed; true disables protection and permits DNS rebinding. Prefer explicit names. | Vite documentation unknown | REASONED |
 | verify-private: Guide expects anonymous /api/private 401; enforcement needs app/server handlers, not client redirects. | Nuxt documentation 4.x; SvelteKit documentation unknown | REASONED |
-| verify-secret: Scan browser-served output: adapter-node build/client and build/prerendered, Nuxt .output/public, Vite dist, scanned whole following symlinks; only a result with every match under dist/server/ is reported as server output, else FINDING with dist/server/ matches labelled. Adjust paths for custom layouts/SSR; reject absence. Prompt full literal secret; grep stdin: 0 finding, 1 no match, others errors. Clean cannot rule out transformed secrets or runtime responses; input protects argv only. | GNU grep unknown; SvelteKit adapter-node @sveltejs/adapter-node@5.5.7; Nuxt output source v4.0.0; Nitro output defaults 2.12.0; Vite bind source v8.3.1; Vite documentation unknown | REASONED |
+| verify-secret: Scan browser-served output: adapter-node build/client and build/prerendered, Nuxt .output/public, Vite dist, scanned whole following symlinks; only a result with every match under dist/server/ is reported as server output, else FINDING with dist/server/ matches labelled. Adjust paths for custom layouts/SSR; reject absence. Prompt full literal secret; grep stdin: 0 finding, 1 no match, others errors. Clean cannot rule out transformed secrets or runtime responses; input protects argv only. | GNU grep unknown; SvelteKit adapter-node @sveltejs/adapter-node@5.5.7; Nuxt output source v4.0.0; Nitro output defaults 2.12.0; Vite bind source v8.3.1; Vite documentation unknown; Nitro documentation (rolling) unknown | REASONED |
 | verify-host: Spoofed Host must not be trusted; supplied allowlist reference is Vite-specific. | Vite documentation unknown | REASONED |
 | verify-proxy: Check Secure cookies and HTTPS redirects with SvelteKit ORIGIN; verify Nuxt for its preset/platform, not NUXT_PUBLIC_. | SvelteKit documentation unknown; Nuxt documentation 4.x | REASONED |
 <!-- version-basis:end -->
@@ -7135,8 +7135,8 @@ Behind a reverse proxy, confirm cookies still carry `Secure` and redirects use a
 - Nuxt 4.x public build assets passed to Nitro (additional source pin v4.0.0): https://github.com/nuxt/nuxt/blob/v4.0.0/packages/nuxt/src/core/nitro.ts#L163-L170
 - Nuxt static dist alias targets Nitro public output (additional source pin v4.0.0): https://github.com/nuxt/nuxt/blob/v4.0.0/packages/nuxt/src/core/nitro.ts#L653-L659
 - Nitro 2.12.0, the nitropack version Nuxt v4.0.0 pins, output defaults .output, .output/server and .output/public (published build, lines 67 to 69): https://cdn.jsdelivr.net/npm/nitropack@2.12.0/dist/core/index.mjs
-- Nitro output defaults and prerender destination (supplementary, unversioned documentation): https://nitro.build/config
-- Nitro public assets copied to production public output (supplementary, unversioned documentation): https://nitro.build/docs/assets
+- Nitro output defaults and prerender destination (rolling documentation, checked September 2026): https://nitro.build/config
+- Nitro public assets copied to production public output (rolling documentation, checked September 2026): https://nitro.build/docs/assets
 - Vite default build.outDir 'dist' (pinned tag v8.3.1): https://github.com/vitejs/vite/blob/v8.3.1/packages/vite/src/node/build.ts#L395
 - Vite public assets copied to build output (pinned tag v8.3.1): https://github.com/vitejs/vite/blob/v8.3.1/packages/vite/src/node/config.ts#L388-L396
 - Vite build output directory and public-copy defaults: https://vite.dev/config/build-options
@@ -20547,70 +20547,70 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | Claim | Basis | Status |
 | --- | --- | --- |
 | baseline: v2.14.7 and its recorded commit are the review baseline, not a latest-release claim. | NATS Server v2.14.7; NATS baseline commit 8d8b69a8c46a46a150eabb7f312607c4d9c58faf | REASONED |
-| client-default: Client port 4222 defaults to no authentication and wildcard host; select loopback or a private interface. | NATS Server v2.14.7 | REASONED |
+| client-default: Client port 4222 defaults to no authentication and wildcard host; select loopback or a private interface. | NATS Server documentation (rolling) unknown | REASONED |
 | image-config: Published 2.14/2.15 variants load bundled configuration only with the recorded default command, working directory and mounts. | NATS image catalogue dcd3db677d8919c3a42d369bd48a6f1c234b3ae8; NATS image source 0e72748d3cb553ccdb8c2da7c75ec3b767be51a5 | REASONED |
 | image-client: Bundled images enable unauthenticated client 4222; mount and explicitly select protected configuration. | NATS image source 0e72748d3cb553ccdb8c2da7c75ec3b767be51a5 | REASONED |
 | image-monitor: Bundled images enable unauthenticated monitoring 8222; remove or bind privately. | NATS image source 0e72748d3cb553ccdb8c2da7c75ec3b767be51a5 | REASONED |
 | image-route: Bundled route 6222 uses published ruser/T0pS3cr3t and my_cluster; remove or replace with private credentials. | NATS image source 0e72748d3cb553ccdb8c2da7c75ec3b767be51a5 | REASONED |
 | image-bind: Bundled listeners without hosts use 0.0.0.0, dual-stack where IPv4-mapped IPv6 is supported; restrict publication. | NATS image listener source v2.15.0; Go socket source go1.26.8 | REASONED |
-| static-auth: Separate password/NKey users may coexist; a user's NKey replaces its password pair, without requiring JWT mode. | NATS Server v2.14.7 | REASONED |
-| passwords: Generate bcrypt interactively; protect seeds and password inputs; hashes do not replace TLS. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
-| anonymous: no_auth_user admits anonymous clients as a named identity; omit unless deliberate. | NATS Server v2.14.7 | REASONED |
-| operator: Operator signs account JWTs, accounts sign users; preload resolver accounts and protect signing seeds off the broker. | NATS Server v2.14.7 | REASONED |
-| jwt-proof: Non-bearer users prove seed possession by nonce signature; bearer JWT possession is sufficient. | NATS Server v2.14.7 | REASONED |
-| permissions-default: Absent user/default permissions means unrestricted account access; explicit permissions replace defaults. | NATS Server v2.14.7 | REASONED |
-| allow-lists: Publish/subscribe lists are independent; nonempty allows restrict, empty allows do not; matching static deny wins. | NATS Server v2.14.7 | REASONED |
-| inboxes: Use identity-specific reply inboxes; broad _INBOX.&gt; exposes other clients' replies. | NATS Server v2.14.7 | REASONED |
-| queues: Require the assigned queue in subscription permissions; a bare subject grant defeats queue-only restriction. | NATS Server v2.14.7 | REASONED |
-| responses: allow_responses can override static publish denial for tracked replies; bound count/expiry, not an absolute subject allow-list. | NATS Server v2.14.7 | REASONED |
-| tls: Client TLS validates endpoint identity; verify requires client certificates but password requirements come from authentication. | NATS Server v2.14.7 | REASONED |
-| tls-map: verify_and_map derives configured identity from certificate attributes and enables verification itself. | NATS Server v2.14.7 | REASONED |
-| monitor-default: Native monitoring is off unless enabled, conventionally 8222; HTTPS adds transport security, not NATS login or client mTLS. | NATS Server v2.14.7 | REASONED |
-| monitor-data: /varz, /connz, /routez and JetStream /jsz disclose metadata; subs/auth query options add details, not authentication. | NATS Server v2.14.7 | REASONED |
-| monitor-boundary: Bind monitoring privately; an authenticating proxy needs direct-backend bypass prevention. | NATS Server v2.14.7 | REASONED |
-| jetstream-port: JetStream shares the server and monitoring endpoint; it adds no listener of its own. | NATS Server v2.14.7 | REASONED |
-| cluster: Conditional private 6222 routes have separate credentials/TLS; explicit URLs need credentials; cluster TLS verifies peers. | NATS Server v2.14.7 | REASONED |
-| gateway: Conditional private 7222 gateways verify peers; reject_unknown_cluster supplements credentials, not replaces them. | NATS Server v2.14.7 | REASONED |
-| peer-urls: Match SANs, advertisements and URLs; keep insecure disabled; known-URL certificate checks constrain dynamic growth. | NATS Server v2.14.7 | REASONED |
-| leaf: Conditional 7422 leaf auth/TLS is independent; static password and operator credentials recipes are alternatives. | NATS Server v2.14.7 | REASONED |
-| leaf-accounts: Outbound account is local; remote credentials select hub account; remotes-only creates no inbound listener. | NATS Server v2.14.7 | REASONED |
-| connection-default: Documented client-connection default is 65,536; configured limits are capacities, not attempt-rate limits. | NATS Server v2.14.7 | REASONED |
-| payload-default: Documented payload default is 1 MiB; max_payload must not exceed max_pending. | NATS Server v2.14.7 | REASONED |
-| runtime-budgets: Set per-server/account connections, per-client subscriptions, control-line/pending limits and TLS/auth/write deadlines for workload. | NATS Server v2.14.7 | REASONED |
-| accounts: Top-level users share $G; separate account spaces and restrict exports to intended importing accounts. | NATS Server v2.14.7 | REASONED |
-| system-account: Default system name is $SYS; selected SYS contains administrative identities, not application users. | NATS Server v2.14.7 | REASONED |
-| jetstream-server: Conditional store_dir and memory/file budgets bound storage, not all process memory or filesystem use. | NATS Server v2.14.7 | REASONED |
-| jetstream-queue: request_queue_limit bounds pending JetStream API work, not connection attempts. | NATS Server v2.14.7 | REASONED |
-| jetstream-account: Set account memory/file, stream count, required max_bytes, per-stream byte and acknowledgement ceilings; inspect effective reload results. | NATS Server v2.14.7 | REASONED |
-| consumer-limit: v2.14.7 account max_consumers is enforced per stream, not as a total account consumer count. | NATS Server v2.14.7 | REASONED |
-| jetstream-auth: Core-only users deny API subjects; legitimate JetStream apps need reviewed resource, reply and acknowledgement permissions. | NATS Server v2.14.7 | REASONED |
-| domains: EDGE/HUB domains select independent JetStream systems, not tenant authorization boundaries. | NATS Server v2.14.7 | REASONED |
-| encryption: Conditional server-wide file-store encryption uses protected key material, recommended at least 32 bytes; aes selects AES-GCM. | NATS Server v2.14.7 | REASONED |
-| rotation: Previous-key transition needs restart and recovery tests; protect keys and backups separately. | NATS Server v2.14.7 | REASONED |
-| mqtt: Optional private MQTT TLS needs JetStream, scoped translated subjects, protocol-restricted users and reviewed anonymous overrides. | NATS Server v2.14.7 | REASONED |
-| mqtt-jwt: Operator-mode MQTT uses explicitly permitted bearer JWT passwords, not normal NKey nonce proof. | NATS Server v2.14.7 | REASONED |
-| websocket: Optional 8443 WSS needs scoped users/inboxes and origin policy; non-browser Origin is not authentication. | NATS Server v2.14.7 | REASONED |
-| websocket-tls: WebSocket TLS is required unless no_tls disables it; protect proxy backends and review listener auth overrides. | NATS Server v2.14.7 | REASONED |
-| callout: Conditional auth callout needs dedicated AUTH account, narrow bypass users, signed responses and encrypted XKey exchanges. | NATS Server v2.14.7 | REASONED |
-| callout-mode: Static and operator workflows differ; allowed_accounts is mode-dependent; unavailable authenticator must reject admission. | NATS Server v2.14.7 | REASONED |
-| files: Dedicated non-root broker reads necessary secrets and writes state; application/signing seeds stay with their owners. | NATS Server v2.14.7 | REASONED |
+| static-auth: Separate password/NKey users may coexist; a user's NKey replaces its password pair, without requiring JWT mode. | NATS Server documentation (rolling) unknown | REASONED |
+| passwords: Generate bcrypt interactively; protect seeds and password inputs; hashes do not replace TLS. | natscli v0.4.0; NATS Server documentation (rolling) unknown | REASONED |
+| anonymous: no_auth_user admits anonymous clients as a named identity; omit unless deliberate. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
+| operator: Operator signs account JWTs, accounts sign users; preload resolver accounts and protect signing seeds off the broker. | NATS Server documentation (rolling) unknown | REASONED |
+| jwt-proof: Non-bearer users prove seed possession by nonce signature; bearer JWT possession is sufficient. | NATS Server documentation (rolling) unknown | REASONED |
+| permissions-default: Absent user/default permissions means unrestricted account access; explicit permissions replace defaults. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
+| allow-lists: Publish/subscribe lists are independent; nonempty allows restrict, empty allows do not; matching static deny wins. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
+| inboxes: Use identity-specific reply inboxes; broad _INBOX.&gt; exposes other clients' replies. | NATS Server documentation (rolling) unknown | REASONED |
+| queues: Require the assigned queue in subscription permissions; a bare subject grant defeats queue-only restriction. | NATS Server documentation (rolling) unknown | REASONED |
+| responses: allow_responses can override static publish denial for tracked replies; bound count/expiry, not an absolute subject allow-list. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
+| tls: Client TLS validates endpoint identity; verify requires client certificates but password requirements come from authentication. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
+| tls-map: verify_and_map derives configured identity from certificate attributes and enables verification itself. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
+| monitor-default: Native monitoring is off unless enabled, conventionally 8222; HTTPS adds transport security, not NATS login or client mTLS. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
+| monitor-data: /varz, /connz, /routez and JetStream /jsz disclose metadata; subs/auth query options add details, not authentication. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
+| monitor-boundary: Bind monitoring privately; an authenticating proxy needs direct-backend bypass prevention. | NATS Server documentation (rolling) unknown | REASONED |
+| jetstream-port: JetStream shares the server and monitoring endpoint; it adds no listener of its own. | NATS Server documentation (rolling) unknown | REASONED |
+| cluster: Conditional private 6222 routes have separate credentials/TLS; explicit URLs need credentials; cluster TLS verifies peers. | NATS Server documentation (rolling) unknown | REASONED |
+| gateway: Conditional private 7222 gateways verify peers; reject_unknown_cluster supplements credentials, not replaces them. | NATS Server documentation (rolling) unknown | REASONED |
+| peer-urls: Match SANs, advertisements and URLs; keep insecure disabled; known-URL certificate checks constrain dynamic growth. | NATS Server documentation (rolling) unknown | REASONED |
+| leaf: Conditional 7422 leaf auth/TLS is independent; static password and operator credentials recipes are alternatives. | NATS Server documentation (rolling) unknown | REASONED |
+| leaf-accounts: Outbound account is local; remote credentials select hub account; remotes-only creates no inbound listener. | NATS Server documentation (rolling) unknown | REASONED |
+| connection-default: Documented client-connection default is 65,536; configured limits are capacities, not attempt-rate limits. | NATS Server documentation (rolling) unknown | REASONED |
+| payload-default: Documented payload default is 1 MiB; max_payload must not exceed max_pending. | NATS Server documentation (rolling) unknown | REASONED |
+| runtime-budgets: Set per-server/account connections, per-client subscriptions, control-line/pending limits and TLS/auth/write deadlines for workload. | NATS Server documentation (rolling) unknown | REASONED |
+| accounts: Top-level users share $G; separate account spaces and restrict exports to intended importing accounts. | NATS Server documentation (rolling) unknown | REASONED |
+| system-account: Default system name is $SYS; selected SYS contains administrative identities, not application users. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
+| jetstream-server: Conditional store_dir and memory/file budgets bound storage, not all process memory or filesystem use. | NATS Server documentation (rolling) unknown | REASONED |
+| jetstream-queue: request_queue_limit bounds pending JetStream API work, not connection attempts. | NATS Server documentation (rolling) unknown | REASONED |
+| jetstream-account: Set account memory/file, stream count, required max_bytes, per-stream byte and acknowledgement ceilings; inspect effective reload results. | NATS Server documentation (rolling) unknown | REASONED |
+| consumer-limit: v2.14.7 account max_consumers is enforced per stream, not as a total account consumer count. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
+| jetstream-auth: Core-only users deny API subjects; legitimate JetStream apps need reviewed resource, reply and acknowledgement permissions. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
+| domains: EDGE/HUB domains select independent JetStream systems, not tenant authorization boundaries. | NATS Server documentation (rolling) unknown | REASONED |
+| encryption: Conditional server-wide file-store encryption uses protected key material, recommended at least 32 bytes; aes selects AES-GCM. | NATS Server documentation (rolling) unknown | REASONED |
+| rotation: Previous-key transition needs restart and recovery tests; protect keys and backups separately. | NATS Server documentation (rolling) unknown | REASONED |
+| mqtt: Optional private MQTT TLS needs JetStream, scoped translated subjects, protocol-restricted users and reviewed anonymous overrides. | NATS Server documentation (rolling) unknown | REASONED |
+| mqtt-jwt: Operator-mode MQTT uses explicitly permitted bearer JWT passwords, not normal NKey nonce proof. | NATS Server documentation (rolling) unknown | REASONED |
+| websocket: Optional 8443 WSS needs scoped users/inboxes and origin policy; non-browser Origin is not authentication. | NATS Server documentation (rolling) unknown | REASONED |
+| websocket-tls: WebSocket TLS is required unless no_tls disables it; protect proxy backends and review listener auth overrides. | NATS Server documentation (rolling) unknown | REASONED |
+| callout: Conditional auth callout needs dedicated AUTH account, narrow bypass users, signed responses and encrypted XKey exchanges. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
+| callout-mode: Static and operator workflows differ; allowed_accounts is mode-dependent; unavailable authenticator must reject admission. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
+| files: Dedicated non-root broker reads necessary secrets and writes state; application/signing seeds stay with their owners. | NATS Server documentation (rolling) unknown | REASONED |
 | verify-offline: Native parsing/key generation remain unobserved; pair valid parsing fixtures with malformed controls and separately scan placeholders. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
-| verify-identity: Inspect running identity, effective config/limits, every listener namespace and host publication; file inspection alone is insufficient. | NATS Server v2.14.7 | REASONED |
+| verify-identity: Inspect running identity, effective config/limits, every listener namespace and host publication; file inspection alone is insufficient. | NATS Server documentation (rolling) unknown | REASONED |
 | cli-input: Clear inherited NATS_* and saved contexts; password uses guarded one-command environment input, still locally readable. | natscli v0.4.0 | REASONED |
-| verify-auth: Require allowed publish, missing/wrong-password rejection, certificate/hostname discrimination and forbidden subject errors. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
-| verify-delivery: Require exact live markers; quiet subscribers and publish success alone prove no delivery. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
-| verify-queue: Assigned queue receives marker; wrong/no queue rejects with matched positive delivery. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
-| verify-response: Same worker connection sends one timely reply; extra, expired and unrelated replies must fail. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
-| verify-accounts: Created marker stays in ORDERS; shipped marker reaches ANALYTICS; keep count controls live and reject third-account imports. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
-| verify-system: sys-admin gets system response; tenant gets corresponding publish-permission rejection. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
-| verify-js-auth: Provisioner creates, inspects, retrieves and deletes fixtures; Core-only identity must receive API-subject denials. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
-| verify-js-limits: Test byte reservations, stored bytes, stream/consumer counts and ack ceiling independently with below-limit controls. | NATS Server v2.14.7 | REASONED |
-| verify-recovery: Copied encrypted store must recover with correct key and fail with missing/wrong key; test rotation, not just marker absence. | NATS Server v2.14.7 | REASONED |
-| verify-peers: Actual links need cross-server delivery plus credential/certificate/network denials; client-port/TCP/TLS checks do not substitute. | NATS Server v2.14.7 | REASONED |
-| verify-monitor: Collector retrieves expected JSON; unauthorized direct backend cannot answer; pair refusal with identity/inventory and live control. | NATS Server v2.14.7 | REASONED |
-| verify-proxy: Conditional proxy needs anonymous refusal, authenticated JSON success and direct-backend bypass denial. | NATS Server v2.14.7 | REASONED |
-| verify-optional: Test MQTT translated subjects/bearer identity, WSS origins versus auth, and callout outage, grants and XKey failures separately. | NATS Server v2.14.7 | REASONED |
-| verify-pressure: Bounded workloads distinguish connection/subscription/payload/control-line/timeouts/slow-consumer/API limits with healthy controls. | NATS Server v2.14.7 | REASONED |
+| verify-auth: Require allowed publish, missing/wrong-password rejection, certificate/hostname discrimination and forbidden subject errors. | NATS Server v2.14.7; natscli v0.4.0; NATS Server documentation (rolling) unknown | REASONED |
+| verify-delivery: Require exact live markers; quiet subscribers and publish success alone prove no delivery. | natscli v0.4.0; NATS Server documentation (rolling) unknown | REASONED |
+| verify-queue: Assigned queue receives marker; wrong/no queue rejects with matched positive delivery. | NATS Server v2.14.7; natscli v0.4.0; NATS Server documentation (rolling) unknown | REASONED |
+| verify-response: Same worker connection sends one timely reply; extra, expired and unrelated replies must fail. | NATS Server v2.14.7; natscli v0.4.0; NATS Server documentation (rolling) unknown | REASONED |
+| verify-accounts: Created marker stays in ORDERS; shipped marker reaches ANALYTICS; keep count controls live and reject third-account imports. | natscli v0.4.0; NATS Server documentation (rolling) unknown | REASONED |
+| verify-system: sys-admin gets system response; tenant gets corresponding publish-permission rejection. | natscli v0.4.0; NATS Server documentation (rolling) unknown | REASONED |
+| verify-js-auth: Provisioner creates, inspects, retrieves and deletes fixtures; Core-only identity must receive API-subject denials. | NATS Server v2.14.7; natscli v0.4.0; NATS Server documentation (rolling) unknown | REASONED |
+| verify-js-limits: Test byte reservations, stored bytes, stream/consumer counts and ack ceiling independently with below-limit controls. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
+| verify-recovery: Copied encrypted store must recover with correct key and fail with missing/wrong key; test rotation, not just marker absence. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
+| verify-peers: Actual links need cross-server delivery plus credential/certificate/network denials; client-port/TCP/TLS checks do not substitute. | NATS Server documentation (rolling) unknown | REASONED |
+| verify-monitor: Collector retrieves expected JSON; unauthorized direct backend cannot answer; pair refusal with identity/inventory and live control. | NATS Server documentation (rolling) unknown | REASONED |
+| verify-proxy: Conditional proxy needs anonymous refusal, authenticated JSON success and direct-backend bypass denial. | NATS Server documentation (rolling) unknown | REASONED |
+| verify-optional: Test MQTT translated subjects/bearer identity, WSS origins versus auth, and callout outage, grants and XKey failures separately. | NATS Server documentation (rolling) unknown | REASONED |
+| verify-pressure: Bounded workloads distinguish connection/subscription/payload/control-line/timeouts/slow-consumer/API limits with healthy controls. | NATS Server documentation (rolling) unknown | REASONED |
 <!-- version-basis:end -->
 
 NATS accepts client connections on 4222 with no authentication configured by default. A separately enabled HTTP monitoring endpoint, conventionally 8222, reveals connection metadata, subscription subjects, and message/byte counters without a login of its own. Both need explicit configuration. JetStream, the persistence layer for streams and consumers, runs in the same server process: it adds no listening port of its own, and its state surfaces through the same monitoring endpoint at `/jsz`.
@@ -21740,41 +21740,41 @@ The whole-corpus gate suite was not run for this drop-in generation. Shell check
 - NATS Server v2.14.7 release: https://github.com/nats-io/nats-server/releases/tag/v2.14.7
 - Exact server tag commit: https://github.com/nats-io/nats-server/commit/8d8b69a8c46a46a150eabb7f312607c4d9c58faf
 - Securing NATS overview: https://docs.nats.io/learn/security/
-- Authentication basics, password hashes, NKeys, tokens, and anonymous admission: https://docs.nats.io/learn/security/authentication-basics
-- Authorization and subject permissions: https://docs.nats.io/learn/security/authorization
-- Operator mode, resolver setup, credentials, and signing-store handling: https://docs.nats.io/learn/security/operator-mode
-- Decentralized authentication and signing hierarchy: https://docs.nats.io/learn/security/decentralized-auth
-- Accounts and multitenancy: https://docs.nats.io/learn/security/accounts-and-multitenancy
-- Cross-account exports and imports: https://docs.nats.io/learn/security/cross-account
-- Subscription and queue permissions: https://docs.nats.io/reference/config/authorization/users/permissions/subscribe/
-- Bounded response permissions: https://docs.nats.io/reference/config/authorization/users/permissions/allow_responses/
-- Connection-type restrictions: https://docs.nats.io/reference/config/authorization/users/allowed_connection_types
-- Authorization timeout: https://docs.nats.io/reference/config/authorization/timeout
-- Encryption, TLS authentication, and JetStream key rotation: https://docs.nats.io/learn/security/encryption
-- TLS reference and listener applicability: https://docs.nats.io/reference/config/tls/
-- Monitoring endpoints and query parameters: https://docs.nats.io/learn/monitoring/monitoring-endpoints
-- JetStream concepts: https://docs.nats.io/concepts/jetstream
-- Runtime configuration, defaults, bindings, and system account: https://docs.nats.io/reference/config
-- Account connection limits: https://docs.nats.io/reference/config/accounts/limits/
-- Server JetStream configuration: https://docs.nats.io/reference/config/jetstream/
-- Account JetStream limits and reload caveats: https://docs.nats.io/reference/config/accounts/jetstream/
-- JetStream request queue limit: https://docs.nats.io/reference/config/jetstream/request_queue_limit
-- JetStream domain: https://docs.nats.io/reference/config/jetstream/domain
-- JetStream encryption key: https://docs.nats.io/reference/config/jetstream/encryption_key
-- JetStream cipher selection: https://docs.nats.io/reference/config/jetstream/cipher
-- JetStream previous encryption key: https://docs.nats.io/reference/config/jetstream/prev_encryption_key
-- Cluster configuration: https://docs.nats.io/reference/config/cluster/
-- Gateway configuration: https://docs.nats.io/reference/config/gateway/
-- Leafnode configuration: https://docs.nats.io/reference/config/leafnodes/
-- Leafnode authorization and account binding: https://docs.nats.io/reference/config/leafnodes/authorization/
-- Leafnode remotes and local account selection: https://docs.nats.io/reference/config/leafnodes/remotes/
-- JetStream across leaf nodes: https://docs.nats.io/learn/topologies/leaf-nodes
-- MQTT configuration: https://docs.nats.io/reference/config/mqtt/
-- MQTT authentication and clustering: https://docs.nats.io/learn/mqtt/auth-and-clustering
-- WebSocket configuration: https://docs.nats.io/reference/config/websocket/
-- Auth callout workflows: https://docs.nats.io/learn/security/auth-callout
-- Auth callout configuration: https://docs.nats.io/reference/config/authorization/auth_callout
-- Deployment hardening, non-root service identity, and sandboxing: https://docs.nats.io/learn/deployment/hardening
+- Authentication basics, password hashes, NKeys, tokens, and anonymous admission (rolling documentation, checked September 2026): https://docs.nats.io/learn/security/authentication-basics
+- Authorization and subject permissions (rolling documentation, checked September 2026): https://docs.nats.io/learn/security/authorization
+- Operator mode, resolver setup, credentials, and signing-store handling (rolling documentation, checked September 2026): https://docs.nats.io/learn/security/operator-mode
+- Decentralized authentication and signing hierarchy (rolling documentation, checked September 2026): https://docs.nats.io/learn/security/decentralized-auth
+- Accounts and multitenancy (rolling documentation, checked September 2026): https://docs.nats.io/learn/security/accounts-and-multitenancy
+- Cross-account exports and imports (rolling documentation, checked September 2026): https://docs.nats.io/learn/security/cross-account
+- Subscription and queue permissions (rolling documentation, checked September 2026): https://docs.nats.io/reference/config/authorization/users/permissions/subscribe/
+- Bounded response permissions (rolling documentation, checked September 2026): https://docs.nats.io/reference/config/authorization/users/permissions/allow_responses/
+- Connection-type restrictions (rolling documentation, checked September 2026): https://docs.nats.io/reference/config/authorization/users/allowed_connection_types
+- Authorization timeout (rolling documentation, checked September 2026): https://docs.nats.io/reference/config/authorization/timeout
+- Encryption, TLS authentication, and JetStream key rotation (rolling documentation, checked September 2026): https://docs.nats.io/learn/security/encryption
+- TLS reference and listener applicability (rolling documentation, checked September 2026): https://docs.nats.io/reference/config/tls/
+- Monitoring endpoints and query parameters (rolling documentation, checked September 2026): https://docs.nats.io/learn/monitoring/monitoring-endpoints
+- JetStream concepts (rolling documentation, checked September 2026): https://docs.nats.io/concepts/jetstream
+- Runtime configuration, defaults, bindings, and system account (rolling documentation, checked September 2026): https://docs.nats.io/reference/config
+- Account connection limits (rolling documentation, checked September 2026): https://docs.nats.io/reference/config/accounts/limits/
+- Server JetStream configuration (rolling documentation, checked September 2026): https://docs.nats.io/reference/config/jetstream/
+- Account JetStream limits and reload caveats (rolling documentation, checked September 2026): https://docs.nats.io/reference/config/accounts/jetstream/
+- JetStream request queue limit (rolling documentation, checked September 2026): https://docs.nats.io/reference/config/jetstream/request_queue_limit
+- JetStream domain (rolling documentation, checked September 2026): https://docs.nats.io/reference/config/jetstream/domain
+- JetStream encryption key (rolling documentation, checked September 2026): https://docs.nats.io/reference/config/jetstream/encryption_key
+- JetStream cipher selection (rolling documentation, checked September 2026): https://docs.nats.io/reference/config/jetstream/cipher
+- JetStream previous encryption key (rolling documentation, checked September 2026): https://docs.nats.io/reference/config/jetstream/prev_encryption_key
+- Cluster configuration (rolling documentation, checked September 2026): https://docs.nats.io/reference/config/cluster/
+- Gateway configuration (rolling documentation, checked September 2026): https://docs.nats.io/reference/config/gateway/
+- Leafnode configuration (rolling documentation, checked September 2026): https://docs.nats.io/reference/config/leafnodes/
+- Leafnode authorization and account binding (rolling documentation, checked September 2026): https://docs.nats.io/reference/config/leafnodes/authorization/
+- Leafnode remotes and local account selection (rolling documentation, checked September 2026): https://docs.nats.io/reference/config/leafnodes/remotes/
+- JetStream across leaf nodes (rolling documentation, checked September 2026): https://docs.nats.io/learn/topologies/leaf-nodes
+- MQTT configuration (rolling documentation, checked September 2026): https://docs.nats.io/reference/config/mqtt/
+- MQTT authentication and clustering (rolling documentation, checked September 2026): https://docs.nats.io/learn/mqtt/auth-and-clustering
+- WebSocket configuration (rolling documentation, checked September 2026): https://docs.nats.io/reference/config/websocket/
+- Auth callout workflows (rolling documentation, checked September 2026): https://docs.nats.io/learn/security/auth-callout
+- Auth callout configuration (rolling documentation, checked September 2026): https://docs.nats.io/reference/config/authorization/auth_callout
+- Deployment hardening, non-root service identity, and sandboxing (rolling documentation, checked September 2026): https://docs.nats.io/learn/deployment/hardening
 - Server v2.14.7 configuration parser and configuration-test handling: https://raw.githubusercontent.com/nats-io/nats-server/v2.14.7/server/opts.go
 - Server v2.14.7 client and response-permission enforcement: https://raw.githubusercontent.com/nats-io/nats-server/v2.14.7/server/client.go
 - Server v2.14.7 consumer-limit enforcement: https://raw.githubusercontent.com/nats-io/nats-server/v2.14.7/server/consumer.go
@@ -23186,28 +23186,28 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| native-auth: Generated tokens enable authentication by default; a password replaces the generated token by default, and configured token/password alternatives are not MFA. | Jupyter Server 2.18.0 | REASONED |
-| password: Standalone Server password prompt stores a hash in jupyter_server_config.json; generate-config writes jupyter_server_config.py under the operating account. | Jupyter Server 2.18.0 | REASONED |
-| endpoint-auth: Set allow_unauthenticated_access=False for unclassified Jupyter handlers; explicitly public handlers and third-party authentication need separate review. | Jupyter Server 2.18.0; Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca | REASONED |
-| endpoint-default: Reference lists allow_unauthenticated_access=True; feature appears under 2.13.0 and 2.18.0, with 2.18+ the guide baseline, not introduction date. | Jupyter Server 2.18.0 | REASONED |
-| metrics-auth: authenticate_prometheus=True independently requires authentication for metrics. | Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca; Jupyter Server 2.18.0 | REASONED |
-| migration: Notebook 7 uses Server; migrate NotebookApp to ServerApp and Server 2 password/token traits to PasswordIdentityProvider and IdentityProvider; avoid credential argv. | Jupyter Server 2.18.0 | REASONED |
+| native-auth: Generated tokens enable authentication by default; a password replaces the generated token by default, and configured token/password alternatives are not MFA. | Jupyter Server documentation (rolling) unknown | REASONED |
+| password: Standalone Server password prompt stores a hash in jupyter_server_config.json; generate-config writes jupyter_server_config.py under the operating account. | Jupyter Server documentation (rolling) unknown | REASONED |
+| endpoint-auth: Set allow_unauthenticated_access=False for unclassified Jupyter handlers; explicitly public handlers and third-party authentication need separate review. | Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca; Jupyter Server documentation (rolling) unknown | REASONED |
+| endpoint-default: Reference lists allow_unauthenticated_access=True; feature appears under 2.13.0 and 2.18.0, with 2.18+ the guide baseline, not introduction date. | Jupyter Server documentation (rolling) unknown | REASONED |
+| metrics-auth: authenticate_prometheus=True independently requires authentication for metrics. | Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca; Jupyter Server documentation (rolling) unknown | REASONED |
+| migration: Notebook 7 uses Server; migrate NotebookApp to ServerApp and Server 2 password/token traits to PasswordIdentityProvider and IdentityProvider; avoid credential argv. | Jupyter Server documentation (rolling) unknown; Notebook documentation (rolling) unknown | REASONED |
 | root: allow_root=False refuses Unix root startup; use a dedicated unprivileged account for server and kernels; it neither changes UID nor sandboxes execution. | Jupyter Server startup source 9a4d6eea2b16815a493b11fffe0b51b1fe55a81b | REASONED |
-| terminals: terminals_enabled=False removes terminals but not kernel shell execution; reference False differs from the implementation's dynamic True subject to availability. | Jupyter Server 2.18.0; Jupyter Server startup source 9a4d6eea2b16815a493b11fffe0b51b1fe55a81b | REASONED |
-| native-tls: certfile/keyfile or --certfile/--keyfile enable native HTTPS; that listener no longer serves ordinary plaintext HTTP. | Jupyter Server 2.18.0 | REASONED |
-| private-bind: Retain loopback; do not expose 0.0.0.0 without authentication and HTTPS; disabling both password and token removes native authentication. | Jupyter Server 2.18.0 | REASONED |
+| terminals: terminals_enabled=False removes terminals but not kernel shell execution; reference False differs from the implementation's dynamic True subject to availability. | Jupyter Server startup source 9a4d6eea2b16815a493b11fffe0b51b1fe55a81b; Jupyter Server documentation (rolling) unknown | REASONED |
+| native-tls: certfile/keyfile or --certfile/--keyfile enable native HTTPS; that listener no longer serves ordinary plaintext HTTP. | Jupyter Server 2.18.0; Jupyter Server documentation (rolling) unknown | REASONED |
+| private-bind: Retain loopback; do not expose 0.0.0.0 without authentication and HTTPS; disabling both password and token removes native authentication. | Jupyter Server documentation (rolling) unknown | REASONED |
 | proxy-tls: An authenticated HTTPS proxy before a loopback server can replace native TLS; authentication alone does not encrypt transport. | JupyterHub 5.5.2 | REASONED |
-| mfa: Standalone password is single-factor; fronting authentication or a Hub provider adds MFA only when explicitly enforced. | Jupyter Server 2.18.0; JupyterHub 5.5.2 | REASONED |
-| origins: Same-origin settings keep allow_origin and allow_origin_pat empty and allow_credentials=False; cross-origin clients require reviewed exceptions. | Jupyter Server 2.18.0 | REASONED |
-| xsrf: Keep disable_check_xsrf=False; disabling it removes browser-session request-forgery protection. | Jupyter Server 2.18.0; Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca | REASONED |
-| host: allow_remote_access=False retains Host checks; local_hostnames permits actual standalone hostnames; Hub servers need their generated hostnames. | Jupyter Server 2.18.0; Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca | REASONED |
+| mfa: Standalone password is single-factor; fronting authentication or a Hub provider adds MFA only when explicitly enforced. | Jupyter Server documentation (rolling) unknown; JupyterHub documentation (rolling) unknown | REASONED |
+| origins: Same-origin settings keep allow_origin and allow_origin_pat empty and allow_credentials=False; cross-origin clients require reviewed exceptions. | Jupyter Server documentation (rolling) unknown | REASONED |
+| xsrf: Keep disable_check_xsrf=False; disabling it removes browser-session request-forgery protection. | Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca; Jupyter Server documentation (rolling) unknown | REASONED |
+| host: allow_remote_access=False retains Host checks; local_hostnames permits actual standalone hostnames; Hub servers need their generated hostnames. | Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca; Jupyter Server documentation (rolling) unknown | REASONED |
 | token-exception: Token-authenticated requests bypass origin and XSRF checks; test browser protections with a cookie session and no token. | Jupyter Server identity source 3df9a70b8aea53557ad04510a63c95ce9d4c3abc; Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca | REASONED |
-| hub-admission: Hub 5+ PAM example disables allow_all and allow_existing_users, lists allowed_users and empties allowed_groups; other authenticators need separate review. | JupyterHub 5.5.2 | REASONED |
-| hub-accounts: LocalProcessSpawner needs matching Unix accounts; use separate users/servers, and avoid SimpleLocalProcessSpawner, which provides no user isolation. | Jupyter Server 2.18.0; JupyterHub 5.5.2 | REASONED |
-| hub-limits: Local processes are not containers; LocalProcessSpawner does not enforce generic CPU/memory limits, and PAM does not automatically provide MFA. | JupyterHub 5.5.2 | REASONED |
-| hub-domains: For mutually untrusted Hub users, subdomain_host separates browser origins; provide HTTPS/DNS for every user domain on a separate application domain. | JupyterHub 5.5.2 | REASONED |
-| hub-cookies: cookie_host_prefix_enabled requires Hub 4.1+, HTTPS and per-user domains; combined example targets Hub 5+. | JupyterHub 5.5.2 | REASONED |
-| hub-user-config: disable_user_config ignores home configuration; administrator-controlled server executables, environments and launch paths prevent replacement; kernel environments may remain writable. | JupyterHub 5.5.2 | REASONED |
+| hub-admission: Hub 5+ PAM example disables allow_all and allow_existing_users, lists allowed_users and empties allowed_groups; other authenticators need separate review. | JupyterHub 5.5.2; JupyterHub documentation (rolling) unknown | REASONED |
+| hub-accounts: LocalProcessSpawner needs matching Unix accounts; use separate users/servers, and avoid SimpleLocalProcessSpawner, which provides no user isolation. | Jupyter Server documentation (rolling) unknown; JupyterHub documentation (rolling) unknown | REASONED |
+| hub-limits: Local processes are not containers; LocalProcessSpawner does not enforce generic CPU/memory limits, and PAM does not automatically provide MFA. | JupyterHub 5.5.2; JupyterHub documentation (rolling) unknown | REASONED |
+| hub-domains: For mutually untrusted Hub users, subdomain_host separates browser origins; provide HTTPS/DNS for every user domain on a separate application domain. | JupyterHub 5.5.2; JupyterHub documentation (rolling) unknown | REASONED |
+| hub-cookies: cookie_host_prefix_enabled requires Hub 4.1+, HTTPS and per-user domains; combined example targets Hub 5+. | JupyterHub 5.5.2; JupyterHub documentation (rolling) unknown | REASONED |
+| hub-user-config: disable_user_config ignores home configuration; administrator-controlled server executables, environments and launch paths prevent replacement; kernel environments may remain writable. | JupyterHub documentation (rolling) unknown | REASONED |
 | server-prefix: Server base_url defaults to /; configure /jupyter/ consistently with the proxy so registered routes remain within the intended boundary. | Jupyter Server 2.18.0 | REASONED |
 | hub-prefix: Hub prefix defaults to /; bind_url=http://127.0.0.1:8000/jupyter/ sets both listener and base_url; conflicting URL settings or proxy prefix flags are not an auth boundary. | JupyterHub 5.5.2; configurable-http-proxy 5.3.0 | REASONED |
 | server-headers: Server trust_xheaders defaults False; enable only behind a private, sanitizing ingress owning forwarded address and scheme headers. | Jupyter Server 2.18.0 | REASONED |
@@ -23215,10 +23215,10 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | forwarded-scheme: Ingress must normalize Forwarded and both X- address/scheme forms and reject unintended Host values; Hub reads Forwarded first; public_url and host-prefixed cookies guard specified scheme paths. | JupyterHub 5.5.2 | REASONED |
 | forwarded-host: Forwarded-header handling rewrites address/scheme, not Host; Hub 5 ignores X-Forwarded-Host and its forwarded_host_header trait is inert. | JupyterHub 5.5.2 | REASONED |
 | internal-tls: internal_ssl defaults False; enable it with protected persistent internal_certs_location for mutual TLS on Hub/proxy/single-user and spawn-readiness connections. | JupyterHub 5.5.2 | REASONED |
-| internal-certs: Spawners must deliver certificates and trust bundles; LocalProcessSpawner relocates them, remote spawners need move_certs, and ssl_alt_names must match connection names. | JupyterHub 5.5.2 | REASONED |
+| internal-certs: Spawners must deliver certificates and trust bundles; LocalProcessSpawner relocates them, remote spawners need move_certs, and ssl_alt_names must match connection names. | JupyterHub 5.5.2; JupyterHub documentation (rolling) unknown | REASONED |
 | internal-hostnames: Internal hostname verification defaults on from Hub 5.4, checked against 5.5.2; earlier 5.x left it disabled. | JupyterHub 5.5.2 | REASONED |
 | kernel-transport: Hub internal_ssl excludes server-to-kernel ZeroMQ; HMAC authenticates without encryption, local kernels bind loopback, and remote kernels need separate encrypted transport. | jupyter_client 8.6.3 | REASONED |
-| native-store: NativeAuthenticator replaces PAM credentials with bcrypt hashes in the Hub database, not the spawner's Unix account requirement; protect database/backups. | JupyterHub 5.5.2; NativeAuthenticator 1.3.0 | REASONED |
+| native-store: NativeAuthenticator replaces PAM credentials with bcrypt hashes in the Hub database, not the spawner's Unix account requirement; protect database/backups. | NativeAuthenticator 1.3.0; JupyterHub documentation (rolling) unknown | REASONED |
 | native-length: minimum_password_length effectively defaults 0 despite tag(default=1); set 12; zero admits empty passwords. | NativeAuthenticator 1.3.0 | REASONED |
 | native-common: check_common_password defaults False; True checks the bundled 10,000-entry list, not a breach corpus. | NativeAuthenticator 1.3.0 | REASONED |
 | native-lockout: allowed_failed_logins defaults 0, disabling lockout; set 5 consecutive failures per account. | NativeAuthenticator 1.3.0 | REASONED |
@@ -23230,19 +23230,19 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | native-preauthorization: allowed_users/admin_users names are pre-authorized at first signup even with open_signup=False; deliberate registration is required; later allowlisting does not approve an existing pending record. | NativeAuthenticator 1.3.0 | REASONED |
 | native-signup: enable_signup defaults True; False refuses signup GET/POST with 404; restrict signup to trusted users. | NativeAuthenticator 1.3.0 | REASONED |
 | verify-tls: Validated HTTPS must complete with exit=0; transport failures alone prove nothing; use real hostname and CA, retaining certificate validation. | curl documentation unknown | REASONED |
-| verify-api: Anonymous /api/kernels returns native 403 with auth, authenticated kernel JSON returns 200; fronting login may redirect, and password-only deployments need a browser positive control. | Jupyter Server 2.18.0; Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca | REASONED |
+| verify-api: Anonymous /api/kernels returns native 403 with auth, authenticated kernel JSON returns 200; fronting login may redirect, and password-only deployments need a browser positive control. | Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca; Jupyter Server documentation (rolling) unknown | REASONED |
 | verify-host: Wrong-Host token request is refused with native 403 while normal Host succeeds; a fronting rejection alone does not demonstrate Server Host checks. | Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca | REASONED |
 | verify-metrics: Compare anonymous metrics with authenticate_prometheus off/on and authenticated metrics content; absent routes or generic errors are inconclusive. | Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca | REASONED |
-| verify-extension: Compare an actual unclassified extension route with allow_unauthenticated_access True/False and its authenticated content; protected kernel routes do not substitute. | Jupyter Server 2.18.0; Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca | REASONED |
+| verify-extension: Compare an actual unclassified extension route with allow_unauthenticated_access True/False and its authenticated content; protected kernel routes do not substitute. | Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca; Jupyter Server documentation (rolling) unknown | REASONED |
 | verify-xsrf: Cookie-session same-origin POST without XSRF creates a kernel when checks are disabled; fixed missing header gives 403, matching header gives 201 with successful cookie GET. | Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca; Jupyter Server kernel source c8bbb1a77a1d482816bac0dfe5c14c08d37b59ac; Tornado documentation unknown | REASONED |
-| verify-origin: Wrong-Origin cookie GET returns kernel JSON with allow_origin=*; fixed APIHandler rejects with 404 while same-origin returns 200; also inspect browser CORS headers. | Jupyter Server 2.18.0; Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca | REASONED |
+| verify-origin: Wrong-Origin cookie GET returns kernel JSON with allow_origin=*; fixed APIHandler rejects with 404 while same-origin returns 200; also inspect browser CORS headers. | Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca; Jupyter Server documentation (rolling) unknown | REASONED |
 | verify-cleanup: Record and shut down every disposable kernel created in either state through the authenticated UI. | JupyterLab documentation unknown | REASONED |
 | verify-root: Compare allowed versus refused root startup and inspect server/kernel ownership; fixed unprivileged execution must retain its intended nonzero UID. | Jupyter Server startup source 9a4d6eea2b16815a493b11fffe0b51b1fe55a81b | REASONED |
-| verify-terminals: Compare authenticated /api/terminals enabled/disabled, retaining a working /api/kernels positive control and kernel shell execution. | Jupyter Server 2.18.0; Jupyter Server startup source 9a4d6eea2b16815a493b11fffe0b51b1fe55a81b | REASONED |
-| verify-hub-admission: Compare valid extra and historical users against the allowlist, with allowed-user login and spawn as positive controls. | JupyterHub 5.5.2 | REASONED |
-| verify-hub-accounts: Two users' server/kernel UIDs must differ as intended, compared with a shared-account fixture. | JupyterHub 5.5.2 | REASONED |
-| verify-hub-origins: Compare shared versus distinct user origins and inspect __Host- cookies for Secure, path / and no Domain attribute. | JupyterHub 5.5.2 | REASONED |
-| verify-hub-config: Compare a user terminal override loading versus being ignored, deny server-environment writes, and retain a working notebook. | JupyterHub 5.5.2 | REASONED |
+| verify-terminals: Compare authenticated /api/terminals enabled/disabled, retaining a working /api/kernels positive control and kernel shell execution. | Jupyter Server startup source 9a4d6eea2b16815a493b11fffe0b51b1fe55a81b; Jupyter Server documentation (rolling) unknown | REASONED |
+| verify-hub-admission: Compare valid extra and historical users against the allowlist, with allowed-user login and spawn as positive controls. | JupyterHub 5.5.2; JupyterHub documentation (rolling) unknown | REASONED |
+| verify-hub-accounts: Two users' server/kernel UIDs must differ as intended, compared with a shared-account fixture. | JupyterHub documentation (rolling) unknown | REASONED |
+| verify-hub-origins: Compare shared versus distinct user origins and inspect __Host- cookies for Secure, path / and no Domain attribute. | JupyterHub 5.5.2; JupyterHub documentation (rolling) unknown | REASONED |
+| verify-hub-config: Compare a user terminal override loading versus being ignored, deny server-environment writes, and retain a working notebook. | JupyterHub documentation (rolling) unknown | REASONED |
 | verify-listeners: ss inventories local binds, not firewall/NAT; confirm actual private listener and external entry point with a working positive control; failed netlink inventory proves no absence. | Jupyter Server startup source 9a4d6eea2b16815a493b11fffe0b51b1fe55a81b; Jupyter Server port source c5c452c3d5f3060557e57caaadce8f2fffc1c417 | REASONED |
 | port-default: Standalone port starts at 8888 but configuration and retries can change it; inventory the actual listener. | Jupyter Server startup source 9a4d6eea2b16815a493b11fffe0b51b1fe55a81b; Jupyter Server port source c5c452c3d5f3060557e57caaadce8f2fffc1c417 | REASONED |
 | verify-prefix: Probe prefixed and unprefixed Server/Hub routes; require no application alias outside the boundary and working authenticated prefixed access and kernel WebSocket. | JupyterHub 5.5.2; Jupyter Server 2.18.0 | REASONED |
@@ -23753,29 +23753,29 @@ Keep `open_signup` at its default `False`: with it off, a pending account waits 
 
 ## Sources (checked September 2026)
 
-- Jupyter Server public server guide and password/TLS setup: https://jupyter-server.readthedocs.io/en/latest/operators/public-server.html
-- Jupyter Server security and token/password authentication: https://jupyter-server.readthedocs.io/en/latest/operators/security.html
+- Jupyter Server public server guide and password/TLS setup (rolling documentation, checked September 2026): https://jupyter-server.readthedocs.io/en/latest/operators/public-server.html
+- Jupyter Server security and token/password authentication (rolling documentation, checked September 2026): https://jupyter-server.readthedocs.io/en/latest/operators/security.html
 - Jupyter Server API base handler, protected API responses, and metrics enforcement: https://github.com/jupyter-server/jupyter_server/blob/00d45c80eeb0f50f191b236ee47cc1d82a7db9ca/jupyter_server/base/handlers.py
-- Jupyter Server configuration reference and authentication migrations: https://jupyter-server.readthedocs.io/en/latest/other/full-config.html
-- Migrating from the classic Notebook server: https://jupyter-server.readthedocs.io/en/latest/operators/migrate-from-nbserver.html
-- Jupyter Server API reference for authentication, origin, Host, root, and terminal controls: https://jupyter-server.readthedocs.io/en/stable/api/jupyter_server.html
-- Jupyter Server authentication API: https://jupyter-server.readthedocs.io/en/stable/api/jupyter_server.auth.html
-- Jupyter Server release history, including endpoint authentication under 2.13.0 and 2.18.0: https://jupyter-server.readthedocs.io/en/stable/other/changelog.html
+- Jupyter Server configuration reference and authentication migrations (rolling documentation, checked September 2026): https://jupyter-server.readthedocs.io/en/latest/other/full-config.html
+- Migrating from the classic Notebook server (rolling documentation, checked September 2026): https://jupyter-server.readthedocs.io/en/latest/operators/migrate-from-nbserver.html
+- Jupyter Server API reference for authentication, origin, Host, root, and terminal controls (rolling documentation, checked September 2026): https://jupyter-server.readthedocs.io/en/stable/api/jupyter_server.html
+- Jupyter Server authentication API (rolling documentation, checked September 2026): https://jupyter-server.readthedocs.io/en/stable/api/jupyter_server.auth.html
+- Jupyter Server release history, including endpoint authentication under 2.13.0 and 2.18.0 (rolling documentation, checked September 2026): https://jupyter-server.readthedocs.io/en/stable/other/changelog.html
 - Jupyter Server startup, dynamic defaults, and root refusal implementation: https://raw.githubusercontent.com/jupyter-server/jupyter_server/9a4d6eea2b16815a493b11fffe0b51b1fe55a81b/jupyter_server/serverapp.py
 - Jupyter Server default port constant: https://raw.githubusercontent.com/jupyter-server/jupyter_server/c5c452c3d5f3060557e57caaadce8f2fffc1c417/jupyter_server/__init__.py
 - Jupyter Server identity provider and token-authenticated origin exception: https://raw.githubusercontent.com/jupyter-server/jupyter_server/3df9a70b8aea53557ad04510a63c95ce9d4c3abc/jupyter_server/auth/identity.py
 - Jupyter Server Host, origin, XSRF, and default authentication implementation: https://raw.githubusercontent.com/jupyter-server/jupyter_server/00d45c80eeb0f50f191b236ee47cc1d82a7db9ca/jupyter_server/base/handlers.py
 - Jupyter Server kernel API implementation: https://raw.githubusercontent.com/jupyter-server/jupyter_server/c8bbb1a77a1d482816bac0dfe5c14c08d37b59ac/jupyter_server/services/kernels/handlers.py
-- Jupyter Server REST API: https://jupyter-server.readthedocs.io/en/stable/developers/rest-api.html
-- Notebook 7 configuration and Jupyter Server backend: https://jupyter-notebook.readthedocs.io/en/stable/configuring/config_overview.html
+- Jupyter Server REST API (rolling documentation, checked September 2026): https://jupyter-server.readthedocs.io/en/stable/developers/rest-api.html
+- Notebook 7 configuration and Jupyter Server backend (rolling documentation, checked September 2026): https://jupyter-notebook.readthedocs.io/en/stable/configuring/config_overview.html
 - JupyterLab kernel and terminal management: https://jupyterlab.readthedocs.io/en/stable/user/running.html
-- JupyterHub authenticator API and PAM admission settings: https://jupyterhub.readthedocs.io/en/stable/reference/api/auth.html
-- JupyterHub authenticators and Hub 5 admission changes: https://jupyterhub.readthedocs.io/en/stable/reference/authenticators.html
-- JupyterHub configuration reference: https://jupyterhub.readthedocs.io/en/stable/reference/config-reference.html
-- JupyterHub spawner API and user-configuration limitations: https://jupyterhub.readthedocs.io/en/stable/reference/api/spawner.html
-- JupyterHub spawner resource-limit support: https://jupyterhub.readthedocs.io/en/stable/reference/spawners.html
-- JupyterHub browser security, per-user domains, cookies, and server environments: https://jupyterhub.readthedocs.io/en/stable/explanation/websecurity.html
-- JupyterHub HTTPS reverse-proxy example: https://jupyterhub.readthedocs.io/en/stable/howto/configuration/config-proxy.html
+- JupyterHub 5.5.2 authenticator API and PAM admission settings: https://jupyterhub.readthedocs.io/en/5.5.2/reference/api/auth.html
+- JupyterHub authenticators and Hub 5 admission changes (rolling documentation, checked September 2026): https://jupyterhub.readthedocs.io/en/stable/reference/authenticators.html
+- JupyterHub 5.5.2 configuration reference: https://jupyterhub.readthedocs.io/en/5.5.2/reference/config-reference.html
+- JupyterHub spawner API and user-configuration limitations (rolling documentation, checked September 2026): https://jupyterhub.readthedocs.io/en/stable/reference/api/spawner.html
+- JupyterHub 5.5.2 spawner resource-limit support: https://jupyterhub.readthedocs.io/en/5.5.2/reference/spawners.html
+- JupyterHub browser security, per-user domains, cookies, and server environments (rolling documentation, checked September 2026): https://jupyterhub.readthedocs.io/en/stable/explanation/websecurity.html
+- JupyterHub 5.5.2 HTTPS reverse-proxy example: https://jupyterhub.readthedocs.io/en/5.5.2/howto/configuration/config-proxy.html
 - Tornado XSRF cookies and request headers: https://www.tornadoweb.org/en/stable/guide/security.html
 - curl TLS certificate and hostname verification: https://curl.se/docs/sslcerts.html
 - curl options, stdin headers, cookie files, and diagnostic variables: https://curl.se/docs/manpage.html
@@ -30186,10 +30186,10 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | anything-mode: Enabling multi-user mode cannot be reverted to single-user; choose deliberately. | AnythingLLM documentation unknown | REASONED |
 | anything-bind: Publish AnythingLLM only on loopback 3001 and put proxy TLS/login in front. | AnythingLLM documentation unknown; Docker CLI v27.5.1 | REASONED |
 | lobe-vault: KEY_VAULTS_SECRET encrypts stored provider credentials; generate with openssl rand -base64 32 and preserve it for the data lifetime, not as a login password. | LobeHub v2.2.16 | REASONED |
-| lobe-session: Better Auth requires AUTH_SECRET, generated the same way, to sign sessions. | LobeHub v2.2.16 | REASONED |
-| lobe-sso: AUTH_SSO_PROVIDERS selects providers and matching credentials; AUTH_DISABLE_EMAIL_PASSWORD=1 forces SSO-only login. | LobeHub v2.2.16 | REASONED |
-| lobe-admission: AUTH_ALLOWED_EMAILS defaults empty, permitting all emails; set explicit addresses/domains for registration. | LobeHub v2.2.16 | REASONED |
-| lobe-mfa: Enforce MFA at the configured SSO provider; LobeChat login has no second factor of its own. | LobeHub v2.2.16 | REASONED |
+| lobe-session: Better Auth requires AUTH_SECRET, generated the same way, to sign sessions. | LobeHub v2.2.16; LobeHub documentation (rolling) unknown | REASONED |
+| lobe-sso: AUTH_SSO_PROVIDERS selects providers and matching credentials; AUTH_DISABLE_EMAIL_PASSWORD=1 forces SSO-only login. | LobeHub v2.2.16; LobeHub documentation (rolling) unknown | REASONED |
+| lobe-admission: AUTH_ALLOWED_EMAILS defaults empty, permitting all emails; set explicit addresses/domains for registration. | LobeHub v2.2.16; LobeHub documentation (rolling) unknown | REASONED |
+| lobe-mfa: Enforce MFA at the configured SSO provider; LobeChat login has no second factor of its own. | LobeHub documentation (rolling) unknown | REASONED |
 | docker-input: Docker --env-file reads a named file, not stdin; -e NAME uses CLI environment, while -e NAME=value exposes argv. | Docker CLI v27.5.1 | REASONED |
 | docker-envfile: Bare names in env files import CLI environment; validate exactly the intended secret assignments and reject extra/missing/duplicate lines. | Docker CLI v27.5.1 | REASONED |
 | compose-envfile: Compose env_file resolves environment via compose-go v2.4.7, pinned by Compose v2.32.4. | Docker Compose v2.32.4; compose-go v2.4.7 | REASONED |
@@ -30208,8 +30208,8 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | openhands-boundary: OpenHands is single-user; shared-key API access is not per-user identity, and execution isolation depends on backend/mount/socket choices. | OpenHands documentation unknown | REASONED |
 | openhands-bind: Quickstart publishes 3000 on every interface; use 127.0.0.1:3000:3000 and an authenticated tunnel. | OpenHands documentation unknown | REASONED |
 | verify-listeners: Inventory loopback UI listeners 3001/3210/3000; external refusal must name the real remote path, with DNS/local failures inconclusive. | Docker CLI v27.5.1; OpenHands documentation unknown; curl minimum write-out version 7.75.0 | REASONED |
-| verify-login: Verify proxy HTTPS and login requirement; generic API refusal is a deployment-specific check requiring an actual protected route. | AnythingLLM documentation unknown; LobeHub v2.2.16; Chainlit documentation unknown; OpenHands documentation unknown | REASONED |
-| verify-registration: A new Google identity absent from AUTH_ALLOWED_EMAILS should fail registration; this does not revoke an existing user's session. | LobeHub v2.2.16 | REASONED |
+| verify-login: Verify proxy HTTPS and login requirement; generic API refusal is a deployment-specific check requiring an actual protected route. | AnythingLLM documentation unknown; Chainlit documentation unknown; OpenHands documentation unknown; LobeHub documentation (rolling) unknown | REASONED |
+| verify-registration: A new Google identity absent from AUTH_ALLOWED_EMAILS should fail registration; this does not revoke an existing user's session. | LobeHub v2.2.16; LobeHub documentation (rolling) unknown | REASONED |
 | verify-isolation: User A's retrieval must succeed before user B is checked for denial; independently test documents, history, memory and caches, not login alone. | AnythingLLM documentation unknown | REASONED |
 <!-- version-basis:end -->
 
@@ -30398,8 +30398,8 @@ For a multi-user chat or RAG deployment (AnythingLLM workspaces, or a shared ass
 ## Sources (checked September 2026)
 
 - AnythingLLM security and access documentation: https://docs.anythingllm.com/features/security-and-access
-- LobeHub environment variables (KEY_VAULTS_SECRET): https://lobehub.com/only-ai/markdown/docs/en/self-hosting/environment-variables/basic
-- LobeHub authentication service environment variables (Better Auth): https://lobehub.com/only-ai/markdown/docs/en/self-hosting/environment-variables/auth
+- LobeHub environment variables (KEY_VAULTS_SECRET; pinned tag v2.2.16): https://github.com/lobehub/lobehub/blob/v2.2.16/docs/self-hosting/environment-variables/basic.mdx#L22-L32
+- LobeHub authentication service environment variables (Better Auth; rolling documentation, checked September 2026): https://lobehub.com/only-ai/markdown/docs/en/self-hosting/environment-variables/auth
 - LobeHub `KEY_VAULTS_SECRET` callout, "This key is used to encrypt sensitive data." (pinned tag v2.2.16): https://github.com/lobehub/lobehub/blob/v2.2.16/docs/self-hosting/environment-variables/basic.mdx#L22-L32
 - LobeHub `AUTH_SECRET` generated with `openssl rand -base64 32`, and `AUTH_GOOGLE_SECRET` as the "Client Secret of the Google OAuth application." (pinned tag v2.2.16): https://github.com/lobehub/lobehub/blob/v2.2.16/docs/self-hosting/environment-variables/auth.mdx
 - Docker `container run` reference, `--env-file` ("Read in a file of environment variables"; pinned tag v27.5.1): https://github.com/docker/cli/blob/v27.5.1/docs/reference/commandline/container_run.md
@@ -35702,78 +35702,78 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| pb-bootstrap: Privately bootstrap through the logged installer URL; superuser create EMAIL PASS exposes passwords in argv. Ordinary registration does not grant superuser rights. | PocketBase v0.40.4 | REASONED |
+| pb-bootstrap: Privately bootstrap through the logged installer URL; superuser create EMAIL PASS exposes passwords in argv. Ordinary registration does not grant superuser rights. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
 | pb-installer: Installer system-superuser token lasts about 30 minutes; protect its URL and startup logs as credentials. | PocketBase v0.40.4 | REASONED |
-| pb-ips: Superuser IP allowlists are available from v0.38.0; superuserIPs defaults empty and restricts authenticated requests, not /_/ static assets. | PocketBase v0.40.4 | REASONED |
+| pb-ips: Superuser IP allowlists are available from v0.38.0; superuserIPs defaults empty and restricts authenticated requests, not /_/ static assets. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
 | pb-tls: serve with a domain provides native HTTPS/ACME; alternatively terminate TLS at a reverse proxy. | PocketBase v0.40.4 | REASONED |
 | pb-bind: Without a domain serve defaults to 127.0.0.1:8090; with a domain it uses 0.0.0.0:80/443. Behind a local proxy omit the domain and set --http loopback. | PocketBase v0.40.4 | REASONED |
 | pb-origins: --origins defaults * and accepts comma-separated allowed origins; CORS does not authorize records. | PocketBase v0.40.4 | REASONED |
 | pb-proxy: Trust only headers the proxy overwrites, review useLeftmostIP ordering and block direct backend access to protect IP/rate controls. | PocketBase v0.40.4 | REASONED |
 | pb-dev: --dev adds diagnostics including SQL on stderr, not an auth bypass; its flag default remains unverified. | PocketBase v0.40.4 | REASONED |
-| pb-rules: Each list/view/create/update/delete rule defaults null (superuser-only); empty opens to guests and nonempty filters. Superusers bypass rules. | PocketBase v0.40.4 | REASONED |
+| pb-rules: Each list/view/create/update/delete rule defaults null (superuser-only); empty opens to guests and nonempty filters. Superusers bypass rules. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
 | pb-manage: Top-level manageRule defaults null and permits privileged auth-record changes alongside create/update rules; its validator rejects empty-string rules. | PocketBase v0.40.4 | REASONED |
-| pb-files: File fields default unprotected despite locked record rules; Protected plus an authorized viewRule gates downloads, while a public viewRule still permits public access. | PocketBase v0.40.4 | REASONED |
-| pb-file-token: Short-lived file tokens provide identity context, not file authorization; viewRule decides. Protect token-bearing file URLs. | PocketBase v0.40.4 | REASONED |
-| pb-realtime: Collection subscriptions use listRule and individual-record subscriptions viewRule; SSE/subscription success does not prove event authorization. | PocketBase v0.40.4 | REASONED |
+| pb-files: File fields default unprotected despite locked record rules; Protected plus an authorized viewRule gates downloads, while a public viewRule still permits public access. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
+| pb-file-token: Short-lived file tokens provide identity context, not file authorization; viewRule decides. Protect token-bearing file URLs. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
+| pb-realtime: Collection subscriptions use listRule and individual-record subscriptions viewRule; SSE/subscription success does not prove event authorization. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
 | pb-password: Auth initialization enables password authentication with email as the identity field. | PocketBase v0.40.4 | REASONED |
-| pb-oauth: OAuth2 defaults disabled and is unsupported for _superusers. | PocketBase v0.40.4 | REASONED |
+| pb-oauth: OAuth2 defaults disabled and is unsupported for _superusers. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
 | pb-mfa-default: MFA defaults disabled with duration 600 seconds. | PocketBase v0.40.4 | REASONED |
 | pb-otp-default: OTP defaults disabled with duration 180 seconds and length 8. | PocketBase v0.40.4 | REASONED |
 | pb-alerts: Authentication alerts default enabled; retain alerts and provide working email. | PocketBase v0.40.4 | REASONED |
 | pb-auth-token: Auth token duration defaults to 432000 seconds. | PocketBase v0.40.4 | REASONED |
 | pb-file-duration: File token duration defaults to 180 seconds. | PocketBase v0.40.4 | REASONED |
-| pb-auth-rule: authRule defaults empty; verified-only collections can require verified = true after email verification works. | PocketBase v0.40.4 | REASONED |
-| pb-mfa: For superusers retain password auth and enable both OTP and MFA; empty mfa.rule applies to everyone. OTP alone is not a second factor. | PocketBase v0.40.4 | REASONED |
-| pb-logout: Stateless authentication means clearing pb.authStore removes only the local copy, not a stolen token. | PocketBase v0.40.4 | REASONED |
-| pb-encryption: Settings default to plaintext JSON; select a 32-character environment secret with --encryptionEnv. This encrypts settings, not the whole database or files. | PocketBase v0.40.4 | REASONED |
-| pb-backups: Backups default local with empty cron (automatic backups off); schedule/retain deliberately, protect archives and back up S3 objects separately. | PocketBase v0.40.4 | REASONED |
+| pb-auth-rule: authRule defaults empty; verified-only collections can require verified = true after email verification works. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
+| pb-mfa: For superusers retain password auth and enable both OTP and MFA; empty mfa.rule applies to everyone. OTP alone is not a second factor. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
+| pb-logout: Stateless authentication means clearing pb.authStore removes only the local copy, not a stolen token. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
+| pb-encryption: Settings default to plaintext JSON; select a 32-character environment secret with --encryptionEnv. This encrypts settings, not the whole database or files. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
+| pb-backups: Backups default local with empty cron (automatic backups off); schedule/retain deliberately, protect archives and back up S3 objects separately. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
 | pb-backup-auth: Backup downloads require a superuser file token and obey superuser IP restrictions; ordinary auth/file tokens do not suffice. | PocketBase v0.40.4 | REASONED |
-| pb-limiter: Native limits exist from v0.23.0 but default disabled at v0.40.4; enable rateLimits.enabled. | PocketBase v0.40.4 | REASONED |
+| pb-limiter: Native limits exist from v0.23.0 but default disabled at v0.40.4; enable rateLimits.enabled. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
 | pb-limit-rules: Seeded limits are *:auth 2/3s, *:create 20/5s, /api/batch 3/1s and /api/ 300/10s. | PocketBase v0.40.4 | REASONED |
 | pb-limit-bypass: Superusers and rateLimits.excludedIPs bypass limits; test ordinary non-excluded clients. | PocketBase v0.40.4 | REASONED |
 | pb-smtp: smtp.enabled and smtp.tls default false; disabled SMTP falls back to sendmail. Configure protected transport and test actual delivery. | PocketBase v0.40.4 | REASONED |
-| appwrite-https: API FORCE_HTTPS and function/site ROUTER_FORCE_HTTPS default disabled at 2.2.0; explicitly enable both despite conflicting rolling deprecation/default documentation. | Appwrite 2.2.0 | REASONED |
+| appwrite-https: API FORCE_HTTPS and function/site ROUTER_FORCE_HTTPS default disabled at 2.2.0; explicitly enable both despite conflicting rolling deprecation/default documentation. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
 | appwrite-hosts: ROUTER_PROTECTION defaults disabled; configure actual domains and enable rejection of unknown hostnames. | Appwrite 2.2.0 | REASONED |
 | appwrite-registration: Console root-only registration defaults enabled with empty email/IP allowlists; these restrict account creation, not dashboard reachability or login. | Appwrite 2.2.0 | REASONED |
-| appwrite-console: Claim the first operator privately and use a separate network/access boundary for a private dashboard. | Appwrite 2.2.0 | REASONED |
-| appwrite-mfa: Enroll and verify operator TOTP, protect recovery codes; at 2.2.0 enabled MFA with a verified factor requires a second session factor. | Appwrite 2.2.0 | REASONED |
+| appwrite-console: Claim the first operator privately and use a separate network/access boundary for a private dashboard. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
+| appwrite-mfa: Enroll and verify operator TOTP, protect recovery codes; at 2.2.0 enabled MFA with a verified factor requires a second session factor. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
 | appwrite-dev-env: Development env disables root-only registration, abuse and router protection and carries placeholders; do not inherit it for production. | Appwrite 2.2.0 | REASONED |
-| appwrite-recreate: Apply env/Compose changes with docker compose up -d from the install directory, then check effective behavior. | Appwrite 2.2.0 | REASONED |
-| appwrite-permissions: Collection and document grants are additive; explicitly enable documentSecurity for document grants, whose default remains unverified. | Appwrite 2.2.0 | REASONED |
-| appwrite-creation: Omitted Client SDK permissions can grant creator read/update/delete; Server SDK/Console omission grants no ordinary access. Use specific users/teams for private data. | Appwrite 2.2.0 | REASONED |
-| appwrite-keys: Properly scoped server API keys bypass resource permissions but still obey operation scopes; keys.write is admin-equivalent and keys never belong in clients. | Appwrite 2.2.0 | REASONED |
-| appwrite-encryption: Replace _APP_OPENSSL_KEY_V1=your-secret-key before production data; preserve the exact key separately, since replacement/loss strands encrypted secrets. | Appwrite 2.2.0 | REASONED |
-| appwrite-backups: Back up database, persistent storage and deployment configuration; restrict access and test restoration in a separate installation. | Appwrite 2.2.0 | REASONED |
-| appwrite-abuse: _APP_OPTIONS_ABUSE defaults enabled but dev env disables it; server API-key requests are exempt, so test with ordinary clients. | Appwrite 2.2.0 | REASONED |
-| appwrite-smtp: SMTP host/port/secure/username/password default empty and empty host disables sending; configure the provider and confirm message receipt/use. | Appwrite 2.2.0 | REASONED |
+| appwrite-recreate: Apply env/Compose changes with docker compose up -d from the install directory, then check effective behavior. | Appwrite documentation (rolling) unknown | REASONED |
+| appwrite-permissions: Collection and document grants are additive; explicitly enable documentSecurity for document grants, whose default remains unverified. | Appwrite documentation (rolling) unknown | REASONED |
+| appwrite-creation: Omitted Client SDK permissions can grant creator read/update/delete; Server SDK/Console omission grants no ordinary access. Use specific users/teams for private data. | Appwrite documentation (rolling) unknown | REASONED |
+| appwrite-keys: Properly scoped server API keys bypass resource permissions but still obey operation scopes; keys.write is admin-equivalent and keys never belong in clients. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
+| appwrite-encryption: Replace _APP_OPENSSL_KEY_V1=your-secret-key before production data; preserve the exact key separately, since replacement/loss strands encrypted secrets. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
+| appwrite-backups: Back up database, persistent storage and deployment configuration; restrict access and test restoration in a separate installation. | Appwrite documentation (rolling) unknown | REASONED |
+| appwrite-abuse: _APP_OPTIONS_ABUSE defaults enabled but dev env disables it; server API-key requests are exempt, so test with ordinary clients. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
+| appwrite-smtp: SMTP host/port/secure/username/password default empty and empty host disables sending; configure the provider and confirm message receipt/use. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
 | appwrite-storage: Storage defaults local, upload limit 30000000 and server antivirus disabled; enabling scanning requires configured reachable ClamAV. | Appwrite 2.2.0 | REASONED |
 | appwrite-bucket: New bucket permissions are empty and fileSecurity=false; enable per-file security deliberately, since bucket grants also permit access. | Appwrite 2.2.0 | REASONED |
 | appwrite-bucket-options: Bucket encryption and antivirus default true; bucket antivirus does not enable the server scanner. | Appwrite 2.2.0 | REASONED |
 | appwrite-size: Encryption/scanning skip files above 20000000 bytes; cap maximumFileSize at that threshold when either is mandatory and test the boundary. | Appwrite 2.2.0 | REASONED |
 | appwrite-functions: Function execute roles and execution-key scopes default empty; grant narrowly. Disabled functions still admit authorized Server SDK API keys. | Appwrite 2.2.0 | REASONED |
-| appwrite-executor: Keep executor/orchestrator private, protect Docker-socket authority and replace _APP_EXECUTOR_SECRET; container execution is not demonstrated hostile-tenant isolation. | Appwrite 2.2.0 | REASONED |
-| verify-pb-records: Public rules allow guest reads; locked rules deny with 403, unsatisfied list filters can return empty 200 and view rules 404. Retain owner and separate superuser controls. | PocketBase v0.40.4 | REASONED |
-| verify-appwrite-records: Broad collection grants defeat document restrictions; removing them must deny unrelated users while document grantees succeed. Compare client/server creation defaults. | Appwrite 2.2.0 | REASONED |
+| appwrite-executor: Keep executor/orchestrator private, protect Docker-socket authority and replace _APP_EXECUTOR_SECRET; container execution is not demonstrated hostile-tenant isolation. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
+| verify-pb-records: Public rules allow guest reads; locked rules deny with 403, unsatisfied list filters can return empty 200 and view rules 404. Retain owner and separate superuser controls. | PocketBase documentation (rolling) unknown | REASONED |
+| verify-appwrite-records: Broad collection grants defeat document restrictions; removing them must deny unrelated users while document grantees succeed. Compare client/server creation defaults. | Appwrite documentation (rolling) unknown | REASONED |
 | verify-appwrite-keys: A correctly scoped server key reads despite empty permissions, while a key without scope fails; neither substitutes for an ordinary-user control. | Appwrite 2.2.0 | REASONED |
 | verify-registration: On disposable Appwrite fixtures compare open signup 201 with root-only account-limit failure and independent email/IP restrictions; retain login/invitation controls. | Appwrite 2.2.0 | REASONED |
 | verify-pb-bootstrap: Guest and ordinary-user _superusers record creation must fail while a valid installer token creates the private operator; static dashboard assets prove no admin access. | PocketBase v0.40.4 | REASONED |
-| verify-appwrite-mfa: Console account GET succeeds without MFA, fails with user_more_factors_required for a fresh password-only MFA session, and succeeds after TOTP completion. | Appwrite 2.2.0 | REASONED |
+| verify-appwrite-mfa: Console account GET succeeds without MFA, fails with user_more_factors_required for a fresh password-only MFA session, and succeeds after TOTP completion. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
 | verify-pb-writes: Compare intended/unauthorized POST/PATCH/DELETE and privileged auth-record management; locked manageRule grants no management and empty-string configuration must fail. | PocketBase v0.40.4 | REASONED |
 | verify-pb-files: Before protection unsigned file GET works; Protected plus private viewRule rejects guests/unrelated-user file tokens with 404 while permitted-user bytes still arrive. | PocketBase v0.40.4 | REASONED |
-| verify-pb-realtime: Mutate a fixture while comparing collection and record subscriptions; deny unauthorized event delivery, retaining authorized delivery. PB_CONNECT/acknowledgment alone is insufficient. | PocketBase v0.40.4 | REASONED |
-| verify-pb-mfa: Compare password-only completion with password-plus-OTP MFA and verified/unverified authRule logins; clearing authStore must not revoke a retained valid token. | PocketBase v0.40.4 | REASONED |
+| verify-pb-realtime: Mutate a fixture while comparing collection and record subscriptions; deny unauthorized event delivery, retaining authorized delivery. PB_CONNECT/acknowledgment alone is insufficient. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
+| verify-pb-mfa: Compare password-only completion with password-plus-OTP MFA and verified/unverified authRule logins; clearing authStore must not revoke a retained valid token. | PocketBase documentation (rolling) unknown | REASONED |
 | verify-pb-ips: Compare allowed/excluded superuser sources and forged forwarded headers; excluded sources must get 403 and direct backend access must fail with a working proxy control. | PocketBase v0.40.4 | REASONED |
 | verify-transport: Compare HTTP/HTTPS and certificates, Appwrite API/function/site domains and configured/unknown Host; compare browser origins separately from record authorization. | PocketBase v0.40.4; Appwrite 2.2.0 | REASONED |
-| verify-abuse: Cross each configured threshold with ordinary non-excluded clients and compare disabled/enabled controls; PocketBase limiting yields 429 with later successful recovery. | PocketBase v0.40.4; Appwrite 2.2.0 | REASONED |
-| verify-email: Request OTP, verification and recovery messages and confirm receipt and use; request success alone is not delivery evidence. | PocketBase v0.40.4; Appwrite 2.2.0 | REASONED |
-| verify-pb-recovery: Compare plaintext/encrypted persisted settings, restart with retained key and restore local/S3 data; only permitted superuser file tokens may download backups. | PocketBase v0.40.4 | REASONED |
-| verify-appwrite-recovery: Restore encrypted fixtures with the original key; a separate wrong-key fixture must not recover encrypted values. | Appwrite 2.2.0 | REASONED |
+| verify-abuse: Cross each configured threshold with ordinary non-excluded clients and compare disabled/enabled controls; PocketBase limiting yields 429 with later successful recovery. | PocketBase v0.40.4; Appwrite documentation (rolling) unknown | REASONED |
+| verify-email: Request OTP, verification and recovery messages and confirm receipt and use; request success alone is not delivery evidence. | PocketBase v0.40.4; Appwrite documentation (rolling) unknown | REASONED |
+| verify-pb-recovery: Compare plaintext/encrypted persisted settings, restart with retained key and restore local/S3 data; only permitted superuser file tokens may download backups. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
+| verify-appwrite-recovery: Restore encrypted fixtures with the original key; a separate wrong-key fixture must not recover encrypted values. | Appwrite documentation (rolling) unknown | REASONED |
 | verify-uploads: Compare permitted/unrelated uploads and size-boundary fixtures; mandatory processing requires rejecting over-limit files and confirming accepted-file encryption/scanning. | Appwrite 2.2.0 | REASONED |
 | verify-functions: Compare intended execute roles, unrelated users and privileged server keys, including disabled functions; confirm executor/orchestrator privacy from a second host. | Appwrite 2.2.0 | REASONED |
-| verify-bundle: Search filenames using protected exact-secret patterns with a disposable marker control; client bundles must contain neither superuser tokens nor Appwrite API keys, and encoded/split forms can evade scanning. | PocketBase v0.40.4; Appwrite 2.2.0 | REASONED |
-| local-guards: Recorded guard tests rejected placeholders and omitted/shortened arguments; this demonstrates shell behavior only, not service access or deployed-bundle scanning. | PocketBase v0.40.4; Appwrite 2.2.0 | DEMONSTRATED |
-| local-syntax: All three bash fences have recorded local lint/syntax success, not live service evidence; ShellCheck version is recorded only in the body. | PocketBase v0.40.4; Appwrite 2.2.0 | DEMONSTRATED |
-| source-limits: Pin-specific Appwrite legacy permissions/creator defaults and PocketBase CLI/backup archive tracing remain incomplete; documentSecurity and --dev defaults are not established. | Appwrite 2.2.0; PocketBase v0.40.4 | REASONED |
+| verify-bundle: Search filenames using protected exact-secret patterns with a disposable marker control; client bundles must contain neither superuser tokens nor Appwrite API keys, and encoded/split forms can evade scanning. | PocketBase documentation (rolling) unknown; Appwrite documentation (rolling) unknown | REASONED |
+| local-guards: Recorded guard tests rejected placeholders and omitted/shortened arguments; this demonstrates shell behavior only, not service access or deployed-bundle scanning. | PocketBase documentation (rolling) unknown; Appwrite documentation (rolling) unknown | DEMONSTRATED |
+| local-syntax: All three bash fences have recorded local lint/syntax success, not live service evidence; ShellCheck version is recorded only in the body. | Appwrite 2.2.0; PocketBase documentation (rolling) unknown; Appwrite documentation (rolling) unknown | DEMONSTRATED |
+| source-limits: Pin-specific Appwrite legacy permissions/creator defaults and PocketBase CLI/backup archive tracing remain incomplete; documentSecurity and --dev defaults are not established. | Appwrite documentation (rolling) unknown; PocketBase documentation (rolling) unknown | REASONED |
 <!-- version-basis:end -->
 
 Like Firebase and Supabase ([firebase-supabase.md](firebase-supabase.md)), these backends hand a
@@ -36355,13 +36355,13 @@ service result or deployed-bundle scan is claimed.
 
 ## Sources (checked September 2026)
 
-- PocketBase going to production: https://pocketbase.io/docs/going-to-production/
-- PocketBase API rules and filters: https://pocketbase.io/docs/api-rules-and-filters/
-- Appwrite self-hosting production security: https://appwrite.io/docs/advanced/self-hosting/production/security
-- Appwrite project API keys: https://appwrite.io/docs/partners/project/api-keys
-- [PocketBase authentication](https://pocketbase.io/docs/authentication/).
-- [PocketBase files and protected downloads](https://pocketbase.io/docs/files-handling/).
-- [PocketBase Realtime API](https://pocketbase.io/docs/api-realtime/).
+- PocketBase going to production (rolling documentation, checked September 2026): https://pocketbase.io/docs/going-to-production/
+- PocketBase API rules and filters (rolling documentation, checked September 2026): https://pocketbase.io/docs/api-rules-and-filters/
+- Appwrite self-hosting production security (rolling documentation, checked September 2026): https://appwrite.io/docs/advanced/self-hosting/production/security
+- Appwrite project API keys (rolling documentation, checked September 2026): https://appwrite.io/docs/partners/project/api-keys
+- [PocketBase authentication (rolling documentation, checked September 2026)](https://pocketbase.io/docs/authentication/).
+- [PocketBase files and protected downloads (rolling documentation, checked September 2026)](https://pocketbase.io/docs/files-handling/).
+- [PocketBase Realtime API (rolling documentation, checked September 2026)](https://pocketbase.io/docs/api-realtime/).
 - [PocketBase v0.40.4 installer and bootstrap-token lifetime](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/installer.go).
 - [PocketBase v0.40.4 listener and origin flags](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/cmd/serve.go).
 - [PocketBase v0.40.4 native TLS and ACME listener](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/serve.go).
@@ -36375,17 +36375,17 @@ service result or deployed-bundle scan is claimed.
 - [PocketBase v0.40.4 realtime authorization](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/realtime.go).
 - [PocketBase v0.40.4 backup download authorization](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/backup.go).
 - [PocketBase v0.40.4 rate limiter and exemptions](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/middlewares_rate_limit.go).
-- [Appwrite permissions, creation defaults, and server integrations](https://appwrite.io/docs/advanced/security/permissions).
-- [Appwrite additive database permissions](https://appwrite.io/docs/products/databases/permissions/).
-- [Appwrite legacy Databases API](https://appwrite.io/docs/references/cloud/server-nodejs/databases).
-- [Appwrite environment reference and HTTPS deprecation wording](https://appwrite.io/docs/advanced/self-hosting/configuration/environment-variables).
-- [Appwrite rate limits](https://appwrite.io/docs/advanced/security/rate-limits).
-- [Appwrite email delivery](https://appwrite.io/docs/advanced/self-hosting/configuration/email).
-- [Appwrite self-hosted backups and encryption-key preservation](https://appwrite.io/docs/advanced/self-hosting/production/backups).
+- [Appwrite permissions, creation defaults, and server integrations (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/security/permissions).
+- [Appwrite additive database permissions (rolling documentation, checked September 2026)](https://appwrite.io/docs/products/databases/permissions/).
+- [Appwrite legacy Databases API (rolling documentation, checked September 2026)](https://appwrite.io/docs/references/cloud/server-nodejs/databases).
+- [Appwrite environment reference and HTTPS deprecation wording (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/self-hosting/configuration/environment-variables).
+- [Appwrite rate limits (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/security/rate-limits).
+- [Appwrite email delivery (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/self-hosting/configuration/email).
+- [Appwrite self-hosted backups and encryption-key preservation (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/self-hosting/production/backups).
 - [Appwrite 2.2.0 configuration defaults](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/config/variables.php).
 - [Appwrite 2.2.0 development environment and placeholder secrets](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/.env).
 - [Appwrite 2.2.0 console registration handler](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/controllers/api/account.php).
-- [Appwrite console MFA enrollment and recovery codes](https://appwrite.io/docs/advanced/security/mfa).
+- [Appwrite console MFA enrollment and recovery codes (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/security/mfa).
 - [Appwrite 2.2.0 API-key authorization, scopes, MFA enforcement, and abuse exemptions](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/controllers/shared/api.php).
 - [Appwrite 2.2.0 hostname routing and HTTPS enforcement](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/controllers/general.php).
 - [Appwrite 2.2.0 bucket defaults and upload controls](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/src/Appwrite/Platform/Modules/Storage/Http/Buckets/Create.php).

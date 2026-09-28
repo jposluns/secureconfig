@@ -13,6 +13,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 ## 2026-09-27
 
 - Clarify Sources version bases across 13 guides by pinning verified documentation, splitting rolling documentation and historical advisories into separate components, and removing unsupported version labels; preserve the removal of 75 baseline entries (row 1.190, batch c of 3) (#424).
+- Pin verified Sources documentation to the reviewed version and split rolling documentation into separate basis-unknown components in 5 guides, clearing 69 baseline entries (row 1.190, batch a of 3) (#422).
 - Require each Sources URL item to carry its component's literal version basis, failing closed on citations outside parsed list items and on Sources spellings outside bare URLs, autolinks and inline links, and guide-wide on raw HTML blocks, link elements, indented headings and angle-bracket link destinations; ratchet 207 existing component/URL/item violations in 202 list items across 26 guides with counted fingerprints and regression tests. Row 3.38; row 3.39 tracks a parser-based check. (#420)
 - Resolve row 1.189: source Caddy's Docker namespace guidance, narrow Triton secret handling to pinned parser spans, and pin the workflow listener-inventory manuals and version bases (#421).
 - Check Verify inline commands for credential arguments with the shared fenced-shell checks, explicit code-specific waivers and regression fixtures. Row 3.36 (#419).
