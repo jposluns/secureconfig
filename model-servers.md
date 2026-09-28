@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "f71bd95ff9ce613505400874532744b7e9f59c002e0eda9d09beddc5f8f6b2ad",
+  "body_sha256": "56e4353f307e7f43ee68b432882ed07c913a0f26d4099eaa89977143347cbf4d",
   "components": {
     "llama": {
       "name": "llama.cpp",
@@ -128,8 +128,7 @@ version_basis: {
         "se29cdc6dade1": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/server_args.py#L311-L325",
         "sc1a3bbee2b6e": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/server_args.py#L704-L711",
         "sedc94f049a2d": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/server_args.py#L732-L736",
-        "sd5cd1ab725c3": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/entrypoints/http_server.py#L818-L850",
-        "sd4ed6d838a92": "https://docs.sglang.io/docs/advanced_features/server_arguments"
+        "sd5cd1ab725c3": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/entrypoints/http_server.py#L818-L850"
       }
     },
     "triton": {
@@ -138,7 +137,6 @@ version_basis: {
       "sources": {
         "s33bf29bf71da": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.h#L191-L219",
         "s67ab19969241": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/grpc/grpc_server.h#L51-L67",
-        "sf92f4669ae27": "https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/customization_guide/deploy.html",
         "sa915d43059a2": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L708-L725",
         "sc8b533580b3b": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L558-L576",
         "s5f927b497e5d": "https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L508-L516",
@@ -191,7 +189,6 @@ version_basis: {
       "basis": "c022565b1257a9c7d9a5128c8b4c03587559cf08",
       "sources": {
         "sf47dbc117b02": "https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py",
-        "sfafd8b6e5106": "https://github.com/oobabooga/text-generation-webui#command-line-flags",
         "sfbacbf383d45": "https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/server.py#L90-L95",
         "s304dbbc211b7": "https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/api/script.py#L594-L597",
         "s578896c6eca6": "https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py#L50",
@@ -226,6 +223,20 @@ version_basis: {
       "basis": "7.75.0",
       "sources": {
         "s2b2686afaf41": "https://curl.se/docs/manpage.html"
+      }
+    },
+    "sglang-rolling": {
+      "name": "SGLang documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "sd4ed6d838a92": "https://docs.sglang.io/docs/advanced_features/server_arguments"
+      }
+    },
+    "triton-rolling": {
+      "name": "Triton documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "sf92f4669ae27": "https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/customization_guide/deploy.html"
       }
     }
   },
@@ -266,9 +277,9 @@ version_basis: {
     "sglang-file": {"text": "Protected YAML --config keeps both keys out of kernel argv; no documented stdin/environment input exists at the pin.", "components": ["sglang"], "sources": ["sglang:scce1a63feba8", "sglang:s0a4966847154", "sglang:s8ca6d030efbc", "sglang:scc4de2d1f4bc"], "status": "REASONED"},
     "sglang-log": {"text": "INFO startup logs all resolved server_args including both keys; protect the log.", "components": ["sglang"], "sources": ["sglang:s50e55d90147c", "sglang:se29cdc6dade1"], "status": "REASONED"},
     "sglang-info": {"text": "server_info/get_server_info expose resolved keys and launch_command to ordinary API-key holders; exclude them or trust those holders with admin authority.", "components": ["sglang"], "sources": ["sglang:sd5cd1ab725c3", "sglang:se29cdc6dade1", "sglang:sc1a3bbee2b6e", "sglang:sedc94f049a2d", "sglang:sa5df753aef88"], "status": "REASONED"},
-    "sglang-tls": {"text": "ssl-keyfile/ssl-certfile/ssl-ca-certs provide native TLS; enable-ssl-refresh reloads renewed certificates.", "components": ["sglang"], "sources": ["sglang:sd4ed6d838a92"], "status": "REASONED"},
+    "sglang-tls": {"text": "ssl-keyfile/ssl-certfile/ssl-ca-certs provide native TLS; enable-ssl-refresh reloads renewed certificates.", "components": ["sglang-rolling"], "sources": ["sglang-rolling:sd4ed6d838a92"], "status": "REASONED"},
     "triton-listeners": {"text": "Triton defaults to wildcard HTTP 8000, gRPC 8001 and metrics 8002; bind each privately.", "components": ["triton"], "sources": ["triton:s33bf29bf71da", "triton:s67ab19969241"], "status": "REASONED"},
-    "triton-protocols": {"text": "HTTP/gRPC default enabled; disable unused protocols and metrics, while keeping gateway authorization.", "components": ["triton"], "sources": ["triton:sf92f4669ae27", "triton:s33bf29bf71da", "triton:sa915d43059a2"], "status": "REASONED"},
+    "triton-protocols": {"text": "HTTP/gRPC default enabled; disable unused protocols and metrics, while keeping gateway authorization.", "components": ["triton", "triton-rolling"], "sources": ["triton-rolling:sf92f4669ae27", "triton:s33bf29bf71da", "triton:sa915d43059a2"], "status": "REASONED"},
     "triton-tls": {"text": "gRPC supports TLS and mutual TLS with certificate/key flags; HTTP requires fronting TLS.", "components": ["triton"], "sources": ["triton:sc8b533580b3b", "triton:s67ab19969241"], "status": "REASONED"},
     "triton-secrets": {"text": "The restricted-API handlers pass getopt_long optarg to ParseRestrictedFeatureOption, which extracts the literal key/value from the argument; these flags put the secret in argv.", "components": ["triton"], "sources": ["triton:s5f927b497e5d", "triton:s705af5df3dd8", "triton:s9b9781d2f4b7", "triton:s187aa891771b", "triton:sa56acd1228f1", "triton:sae12ee4472dc"], "status": "REASONED"},
     "triton-categories": {"text": "All nine compiled categories default unrestricted; restrictions are per category/protocol, and groups must not overlap.", "components": ["triton"], "sources": ["triton:s1b9ce89125bd", "triton:sa9c069223fba"], "status": "REASONED"},
@@ -286,7 +297,7 @@ version_basis: {
     "lmstudio-tls": {"text": "Server settings list no TLS; use a tailnet or authenticated TLS proxy for remote access.", "components": ["lmstudio"], "sources": ["lmstudio:sb7e0fa7490b2"], "status": "REASONED"},
     "webui-listeners": {"text": "Gradio defaults 127.0.0.1:7860; optional --api defaults 127.0.0.1:5000; both start unauthenticated.", "components": ["webui", "webui-api"], "sources": ["webui:sf47dbc117b02", "webui-api:s6c159a552ded"], "status": "REASONED"},
     "webui-bind": {"text": "--listen widens both enabled surfaces; listen-port/api-port move them and listen-host only works with listen.", "components": ["webui", "webui-api"], "sources": ["webui:sf47dbc117b02", "webui-api:s6c159a552ded"], "status": "REASONED"},
-    "webui-publication": {"text": "--share publishes Gradio UI and --public-api publishes API through a Cloudflare tunnel; treat both as publication.", "components": ["webui", "webui-api"], "sources": ["webui:sfafd8b6e5106", "webui-api:s6c159a552ded"], "status": "REASONED"},
+    "webui-publication": {"text": "--share publishes Gradio UI and --public-api publishes API through a Cloudflare tunnel; treat both as publication.", "components": ["webui-api", "webui"], "sources": ["webui:sf47dbc117b02", "webui-api:s6c159a552ded"], "status": "REASONED"},
     "webui-ui-auth": {"text": "gradio-auth-path protects UI only; file entries split on commas/newlines and every colon, so use permitted username and generated hex password.", "components": ["webui"], "sources": ["webui:sfbacbf383d45"], "status": "REASONED"},
     "webui-api-auth": {"text": "api-key protects OpenAI routes via bearer and Anthropic messages via x-api-key; admin-key protects administration and defaults to api-key, not vice versa.", "components": ["webui-api", "webui-docs"], "sources": ["webui-api:s6c159a552ded", "webui-docs:sfc908ade10d1"], "status": "REASONED"},
     "webui-key-logs": {"text": "API startup logs api-key and distinct admin-key in plaintext at INFO; protect output and rotate after disclosure.", "components": ["webui-api", "webui"], "sources": ["webui-api:sbafd006b7156", "webui:s304dbbc211b7"], "status": "REASONED"},
@@ -355,9 +366,9 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | sglang-file: Protected YAML --config keeps both keys out of kernel argv; no documented stdin/environment input exists at the pin. | SGLang v0.5.20 | REASONED |
 | sglang-log: INFO startup logs all resolved server_args including both keys; protect the log. | SGLang v0.5.20 | REASONED |
 | sglang-info: server_info/get_server_info expose resolved keys and launch_command to ordinary API-key holders; exclude them or trust those holders with admin authority. | SGLang v0.5.20 | REASONED |
-| sglang-tls: ssl-keyfile/ssl-certfile/ssl-ca-certs provide native TLS; enable-ssl-refresh reloads renewed certificates. | SGLang v0.5.20 | REASONED |
+| sglang-tls: ssl-keyfile/ssl-certfile/ssl-ca-certs provide native TLS; enable-ssl-refresh reloads renewed certificates. | SGLang documentation (rolling) unknown | REASONED |
 | triton-listeners: Triton defaults to wildcard HTTP 8000, gRPC 8001 and metrics 8002; bind each privately. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
-| triton-protocols: HTTP/gRPC default enabled; disable unused protocols and metrics, while keeping gateway authorization. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
+| triton-protocols: HTTP/gRPC default enabled; disable unused protocols and metrics, while keeping gateway authorization. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df; Triton documentation (rolling) unknown | REASONED |
 | triton-tls: gRPC supports TLS and mutual TLS with certificate/key flags; HTTP requires fronting TLS. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
 | triton-secrets: The restricted-API handlers pass getopt_long optarg to ParseRestrictedFeatureOption, which extracts the literal key/value from the argument; these flags put the secret in argv. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
 | triton-categories: All nine compiled categories default unrestricted; restrictions are per category/protocol, and groups must not overlap. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
@@ -375,7 +386,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | lmstudio-tls: Server settings list no TLS; use a tailnet or authenticated TLS proxy for remote access. | LM Studio documentation unknown | REASONED |
 | webui-listeners: Gradio defaults 127.0.0.1:7860; optional --api defaults 127.0.0.1:5000; both start unauthenticated. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08; text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f | REASONED |
 | webui-bind: --listen widens both enabled surfaces; listen-port/api-port move them and listen-host only works with listen. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08; text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f | REASONED |
-| webui-publication: --share publishes Gradio UI and --public-api publishes API through a Cloudflare tunnel; treat both as publication. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08; text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f | REASONED |
+| webui-publication: --share publishes Gradio UI and --public-api publishes API through a Cloudflare tunnel; treat both as publication. | text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f; text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08 | REASONED |
 | webui-ui-auth: gradio-auth-path protects UI only; file entries split on commas/newlines and every colon, so use permitted username and generated hex password. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08 | REASONED |
 | webui-api-auth: api-key protects OpenAI routes via bearer and Anthropic messages via x-api-key; admin-key protects administration and defaults to api-key, not vice versa. | text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f; text-generation-webui API documentation ceade2eb1ba3f84518076270df2240b6bbb01da0 | REASONED |
 | webui-key-logs: API startup logs api-key and distinct admin-key in plaintext at INFO; protect output and rotate after disclosure. | text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f; text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08 | REASONED |
@@ -821,8 +832,8 @@ For cross-node endpoints in an intentionally exposed test deployment, the outsid
 - TGI router: a `--hostname` that does not parse as an IP address logs "Invalid hostname, defaulting to 0.0.0.0" and binds `0.0.0.0` (pinned tag v3.3.7): https://github.com/huggingface/text-generation-inference/blob/v3.3.7/router/src/server.rs#L1906-L1910
 - TGI router source (what --api-key enforces): https://github.com/huggingface/text-generation-inference/blob/24ee40d143d8d046039f12f76940a85886cbe152/router/src/server.rs
 - TGI repository (maintenance-mode notice, archived 2026-03-21): https://github.com/huggingface/text-generation-inference
-- SGLang server arguments (--host, --port, --api-key, --admin-api-key, SSL flags; docs.sglang.ai redirects here): https://docs.sglang.io/docs/advanced_features/server_arguments
-- Triton secure deployment considerations: https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/customization_guide/deploy.html
+- SGLang server arguments, --host, --port, --api-key, --admin-api-key and SSL flags; docs.sglang.ai redirects here (rolling documentation, checked September 2026): https://docs.sglang.io/docs/advanced_features/server_arguments
+- Triton secure deployment considerations (rolling documentation, checked September 2026): https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/customization_guide/deploy.html
 - Triton listener defaults: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.h#L191-L219 and https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/grpc/grpc_server.h#L51-L67
 - Triton gRPC TLS flags and restricted protocols: https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L558-L576 and https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L632-L640
 - Triton command line parser (HTTP address and port, restricted APIs): https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/command_line_parser.cc#L477-L516
@@ -843,7 +854,6 @@ For cross-node endpoints in an intentionally exposed test deployment, the outsid
 - LM Studio server settings: https://lmstudio.ai/docs/developer/core/server/settings
 - LM Studio authentication: https://lmstudio.ai/docs/developer/core/authentication
 - LM Studio OpenAI compatibility (localhost:1234 examples): https://lmstudio.ai/docs/developer/openai-compat
-- text-generation-webui README, command-line flags: https://github.com/oobabooga/text-generation-webui#command-line-flags
 - text-generation-webui, OpenAI-compatible API documentation: https://github.com/oobabooga/text-generation-webui/blob/ceade2eb1ba3f84518076270df2240b6bbb01da0/docs/12%20-%20OpenAI%20API.md
 - text-generation-webui, flag definitions and defaults (modules/shared.py): https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py
 - text-generation-webui, `--user-data-dir` and the in-process `CMD_FLAGS.txt` loader (lines whose first non-space character is `#` skipped, the rest split as shell words and spliced into Python's `sys.argv` before parsing): https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py#L50 and https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py#L221-L236, with the directory resolved at https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/paths.py#L5-L21

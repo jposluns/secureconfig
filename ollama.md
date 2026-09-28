@@ -1,15 +1,14 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "ec8586c5e5a4366db53dbb0e76bd9a9261ba4771938712cd2633ce82c91570b0",
+  "body_sha256": "b288a888fa27b5512793086b4a0e52fc2634a93ec63774febcb4f85d70c73f23",
   "components": {
     "ollama": {
       "name": "Ollama",
       "basis": "v0.34.2",
       "sources": {
-        "sf49fae5df9fd": "https://docs.ollama.com/api/authentication",
         "s96f77aee8bdd": "https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go",
         "sd146dc5d917d": "https://github.com/ollama/ollama/blob/v0.34.2/api/client.go",
         "s7478dad099ab": "https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go",
@@ -26,9 +25,7 @@ version_basis: {
         "sfb778cd7de39": "https://github.com/ollama/ollama/blob/v0.34.2/api/types.go",
         "s4112a1bdf03c": "https://github.com/ollama/ollama/blob/v0.34.2/docs/context-length.mdx",
         "sa8c4675db386": "https://github.com/ollama/ollama/blob/v0.34.2/types/model/name.go",
-        "s6c2961786919": "https://docs.ollama.com/api/tags",
         "s14266d6e90ae": "https://github.com/ollama/ollama/blob/v0.34.2/docs/modelfile.mdx",
-        "s528f69db04e0": "https://docs.ollama.com/api-reference/show-model-details",
         "sa89bd5d8e1f7": "https://github.com/ollama/ollama/blob/v0.34.2/server/inference_request_log.go"
       }
     },
@@ -107,10 +104,19 @@ version_basis: {
       "sources": {
         "s2b2686afaf41": "https://curl.se/docs/manpage.html"
       }
+    },
+    "ollama-rolling": {
+      "name": "Ollama documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "sf49fae5df9fd": "https://docs.ollama.com/api/authentication",
+        "s6c2961786919": "https://docs.ollama.com/api/tags",
+        "s528f69db04e0": "https://docs.ollama.com/api-reference/show-model-details"
+      }
     }
   },
   "claims": {
-    "local-auth": {"text": "Local API has no inbound authentication; cloud keys and OLLAMA_AUTH concern upstream signing.", "components": ["ollama"], "sources": ["ollama:sf49fae5df9fd", "ollama:s96f77aee8bdd", "ollama:sd146dc5d917d"], "status": "REASONED"},
+    "local-auth": {"text": "Local API has no inbound authentication; cloud keys and OLLAMA_AUTH concern upstream signing.", "components": ["ollama", "ollama-rolling"], "sources": ["ollama-rolling:sf49fae5df9fd", "ollama:s96f77aee8bdd", "ollama:sd146dc5d917d"], "status": "REASONED"},
     "local-tls": {"text": "Ollama serves plaintext; an https prefix in OLLAMA_HOST does not enable TLS.", "components": ["ollama"], "sources": ["ollama:s96f77aee8bdd", "ollama:s7478dad099ab"], "status": "REASONED"},
     "host-bind": {"text": "Standalone default is 127.0.0.1:11434; set OLLAMA_HOST in the service and reload/restart systemd.", "components": ["ollama", "systemd"], "sources": ["ollama:sbca403d10498", "ollama:s2abe15b73bce", "systemd:sd4c1aeb45417"], "status": "REASONED"},
     "container-bind": {"text": "Official image sets 0.0.0.0:11434 internally; bridge publication and container binding are separate.", "components": ["ollama", "docker"], "sources": ["ollama:s8dc81acdfb10", "docker:s1e53417c513d"], "status": "REASONED"},
@@ -153,12 +159,12 @@ version_basis: {
     "body-limit": {"text": "Example body cap is 1 MiB; a larger valid fixture should get 413 without upstream work.", "components": ["nginx"], "sources": ["nginx:s40bdf1af1596"], "status": "REASONED", "verify": [3]},
     "parameters": {"text": "Gateway must validate model, num_ctx, num_predict and keep_alive; defaults/path allowlists do not enforce JSON ceilings.", "components": ["ollama"], "sources": ["ollama:sbca403d10498", "ollama:sfb778cd7de39"], "status": "REASONED", "verify": [3]},
     "registry-names": {"text": "Fully qualified registry names are supported; unqualified names select Ollama's registry and omitted tags select latest.", "components": ["ollama"], "sources": ["ollama:sa8c4675db386"], "status": "REASONED"},
-    "provenance": {"text": "Compare deployed tags digests with independent approval; mutable tags/digest equality do not establish publisher trust.", "components": ["ollama"], "sources": ["ollama:s6c2961786919", "ollama:sa8c4675db386"], "status": "REASONED", "verify": [3]},
+    "provenance": {"text": "Compare deployed tags digests with independent approval; mutable tags/digest equality do not establish publisher trust.", "components": ["ollama", "ollama-rolling"], "sources": ["ollama-rolling:s6c2961786919", "ollama:sa8c4675db386"], "status": "REASONED", "verify": [3]},
     "local-import": {"text": "CLI imports reviewed local GGUF through a Modelfile; artifact SHA-256 and manifest digest are different identifiers.", "components": ["ollama"], "sources": ["ollama:s14266d6e90ae", "ollama:s7478dad099ab"], "status": "REASONED", "verify": [3]},
     "registry-egress": {"text": "Restrict acquisition/export to administrators and constrain egress; compare approved and controlled disallowed transfers.", "components": ["ollama"], "sources": ["ollama:s8b9d4257c3df"], "status": "REASONED", "verify": [3]},
     "cloud": {"text": "OLLAMA_NO_CLOUD=1 disables cloud models and web search after restart; it is not a no-network switch.", "components": ["ollama"], "sources": ["ollama:sbca403d10498"], "status": "REASONED", "verify": [3]},
     "remotes": {"text": "OLLAMA_REMOTES selects remote-model hosts, not a registry allowlist.", "components": ["ollama"], "sources": ["ollama:s2abe15b73bce"], "status": "REASONED"},
-    "diagnostics": {"text": "Keep root, version, status, tags, ps and show private; model details can disclose templates/system prompts.", "components": ["ollama"], "sources": ["ollama:s96f77aee8bdd", "ollama:s528f69db04e0"], "status": "REASONED", "verify": [3]},
+    "diagnostics": {"text": "Keep root, version, status, tags, ps and show private; model details can disclose templates/system prompts.", "components": ["ollama", "ollama-rolling"], "sources": ["ollama:s96f77aee8bdd", "ollama-rolling:s528f69db04e0"], "status": "REASONED", "verify": [3]},
     "request-logs": {"text": "Disable OLLAMA_DEBUG and OLLAMA_DEBUG_LOG_REQUESTS; existing request captures/replay scripts need separate cleanup.", "components": ["ollama"], "sources": ["ollama:s2abe15b73bce", "ollama:sa89bd5d8e1f7"], "status": "REASONED", "verify": [3]},
     "profiling": {"text": "No metrics route was found in the main router; shipped pprof availability remains unestablished and cannot be inferred from debug settings.", "components": ["ollama"], "sources": ["ollama:s96f77aee8bdd"], "status": "REASONED", "verify": [3]},
     "verify-inventory": {"text": "Inspect namespaces, publication, identity, store and ACLs; local ss output alone does not establish isolation.", "components": ["ollama", "docker", "systemd"], "sources": ["ollama:s453c95c884da", "docker:s1e53417c513d", "systemd:sd4c1aeb45417"], "status": "REASONED", "verify": [1]},
@@ -166,7 +172,7 @@ version_basis: {
     "verify-auth": {"text": "Absent/wrong credentials must refuse while correct credentials complete chat; streamed 200 alone is insufficient.", "components": ["nginx", "ollama", "curl"], "sources": ["nginx:sf32ce2956917", "ollama:s96f77aee8bdd", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [3]},
     "verify-tls": {"text": "Correct trust/hostname succeeds; wrong trust/hostname and missing/untrusted mTLS certificates must fail before inference.", "components": ["nginx", "curl"], "sources": ["nginx:sda4ba3fcedbe", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [3]},
     "verify-management": {"text": "Public management must be denied without upstream mutation; private admin operations and public chat supply positive controls.", "components": ["ollama"], "sources": ["ollama:s8379cd00dbf9", "ollama:s96f77aee8bdd", "ollama:s01c0c71afa78"], "status": "REASONED", "verify": [3]},
-    "verify-tags": {"text": "Public tags may return 404 with valid credentials; private tags should return model JSON; public 404 is not an authentication test.", "components": ["ollama", "nginx"], "sources": ["ollama:s6c2961786919", "nginx:s40bdf1af1596"], "status": "REASONED", "verify": [3]},
+    "verify-tags": {"text": "Public tags may return 404 with valid credentials; private tags should return model JSON; public 404 is not an authentication test.", "components": ["nginx", "ollama-rolling"], "sources": ["ollama-rolling:s6c2961786919", "nginx:s40bdf1af1596"], "status": "REASONED", "verify": [3]},
     "verify-origins": {"text": "Compare unwanted, required and built-in origins with actual browser calls; POST-only proxy preflight refusals differ by variant.", "components": ["ollama", "nginx", "caddy"], "sources": ["ollama:s2abe15b73bce", "nginx:s40bdf1af1596", "nginx:sf0bc2adae8cb", "caddy:s38b1b78ce980"], "status": "REASONED", "verify": [3]},
     "verify-rate": {"text": "Eight bounded requests test admission with limiter/upstream evidence and recovery; the burst alone does not demonstrate both limiters.", "components": ["nginx"], "sources": ["nginx:sb3bee9429629", "nginx:sddc43aac8779"], "status": "REASONED", "verify": [4]},
     "verify-concurrency": {"text": "Hold four accepted requests active within the rate budget, reject another, then confirm a freed slot accepts work.", "components": ["nginx"], "sources": ["nginx:sddc43aac8779"], "status": "REASONED", "verify": [3]},
@@ -185,11 +191,11 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| local-auth: Local API has no inbound authentication; cloud keys and OLLAMA_AUTH concern upstream signing. | Ollama v0.34.2 | REASONED |
+| local-auth: Local API has no inbound authentication; cloud keys and OLLAMA_AUTH concern upstream signing. | Ollama v0.34.2; Ollama documentation (rolling) unknown | REASONED |
 | local-tls: Ollama serves plaintext; an https prefix in OLLAMA_HOST does not enable TLS. | Ollama v0.34.2 | REASONED |
 | host-bind: Standalone default is 127.0.0.1:11434; set OLLAMA_HOST in the service and reload/restart systemd. | Ollama v0.34.2; systemd v257 | REASONED |
 | container-bind: Official image sets 0.0.0.0:11434 internally; bridge publication and container binding are separate. | Ollama v0.34.2; Docker Engine localhost boundary 28.0 | REASONED |
@@ -232,12 +238,12 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | body-limit: Example body cap is 1 MiB; a larger valid fixture should get 413 without upstream work. | nginx unknown | REASONED |
 | parameters: Gateway must validate model, num_ctx, num_predict and keep_alive; defaults/path allowlists do not enforce JSON ceilings. | Ollama v0.34.2 | REASONED |
 | registry-names: Fully qualified registry names are supported; unqualified names select Ollama's registry and omitted tags select latest. | Ollama v0.34.2 | REASONED |
-| provenance: Compare deployed tags digests with independent approval; mutable tags/digest equality do not establish publisher trust. | Ollama v0.34.2 | REASONED |
+| provenance: Compare deployed tags digests with independent approval; mutable tags/digest equality do not establish publisher trust. | Ollama v0.34.2; Ollama documentation (rolling) unknown | REASONED |
 | local-import: CLI imports reviewed local GGUF through a Modelfile; artifact SHA-256 and manifest digest are different identifiers. | Ollama v0.34.2 | REASONED |
 | registry-egress: Restrict acquisition/export to administrators and constrain egress; compare approved and controlled disallowed transfers. | Ollama v0.34.2 | REASONED |
 | cloud: OLLAMA_NO_CLOUD=1 disables cloud models and web search after restart; it is not a no-network switch. | Ollama v0.34.2 | REASONED |
 | remotes: OLLAMA_REMOTES selects remote-model hosts, not a registry allowlist. | Ollama v0.34.2 | REASONED |
-| diagnostics: Keep root, version, status, tags, ps and show private; model details can disclose templates/system prompts. | Ollama v0.34.2 | REASONED |
+| diagnostics: Keep root, version, status, tags, ps and show private; model details can disclose templates/system prompts. | Ollama v0.34.2; Ollama documentation (rolling) unknown | REASONED |
 | request-logs: Disable OLLAMA_DEBUG and OLLAMA_DEBUG_LOG_REQUESTS; existing request captures/replay scripts need separate cleanup. | Ollama v0.34.2 | REASONED |
 | profiling: No metrics route was found in the main router; shipped pprof availability remains unestablished and cannot be inferred from debug settings. | Ollama v0.34.2 | REASONED |
 | verify-inventory: Inspect namespaces, publication, identity, store and ACLs; local ss output alone does not establish isolation. | Ollama v0.34.2; Docker Engine localhost boundary 28.0; systemd v257 | REASONED |
@@ -245,7 +251,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-auth: Absent/wrong credentials must refuse while correct credentials complete chat; streamed 200 alone is insufficient. | nginx unknown; Ollama v0.34.2; curl unknown | REASONED |
 | verify-tls: Correct trust/hostname succeeds; wrong trust/hostname and missing/untrusted mTLS certificates must fail before inference. | nginx unknown; curl unknown | REASONED |
 | verify-management: Public management must be denied without upstream mutation; private admin operations and public chat supply positive controls. | Ollama v0.34.2 | REASONED |
-| verify-tags: Public tags may return 404 with valid credentials; private tags should return model JSON; public 404 is not an authentication test. | Ollama v0.34.2; nginx unknown | REASONED |
+| verify-tags: Public tags may return 404 with valid credentials; private tags should return model JSON; public 404 is not an authentication test. | nginx unknown; Ollama documentation (rolling) unknown | REASONED |
 | verify-origins: Compare unwanted, required and built-in origins with actual browser calls; POST-only proxy preflight refusals differ by variant. | Ollama v0.34.2; nginx unknown; Caddy unknown | REASONED |
 | verify-rate: Eight bounded requests test admission with limiter/upstream evidence and recovery; the burst alone does not demonstrate both limiters. | nginx unknown | REASONED |
 | verify-concurrency: Hold four accepted requests active within the rate budget, reject another, then confirm a freed slot accepts work. | nginx unknown | REASONED |
@@ -1045,7 +1051,7 @@ These commands validate configuration acceptance; they do not prove authenticati
 - Ollama repository at the reviewed tag: https://github.com/ollama/ollama/tree/v0.34.2
 - Ollama FAQ: https://docs.ollama.com/faq
 - Pinned FAQ, service environment, proxy examples, overrides, and cloud disablement: https://github.com/ollama/ollama/blob/v0.34.2/docs/faq.mdx
-- Local API authentication: https://docs.ollama.com/api/authentication
+- Ollama local API authentication (rolling documentation, checked September 2026): https://docs.ollama.com/api/authentication
 - Official Docker image wildcard listener: https://github.com/ollama/ollama/blob/v0.34.2/Dockerfile
 - Linux service instructions: https://github.com/ollama/ollama/blob/v0.34.2/docs/linux.mdx
 - Linux installer and service account: https://github.com/ollama/ollama/blob/v0.34.2/scripts/install.sh
@@ -1059,8 +1065,8 @@ These commands validate configuration acceptance; they do not prove authenticati
 - Registry transfers and redirect restrictions: https://github.com/ollama/ollama/blob/v0.34.2/server/images.go
 - Registry and model-name parsing: https://github.com/ollama/ollama/blob/v0.34.2/types/model/name.go
 - Modelfile reference: https://github.com/ollama/ollama/blob/v0.34.2/docs/modelfile.mdx
-- Model inventory and digests: https://docs.ollama.com/api/tags
-- Model details: https://docs.ollama.com/api-reference/show-model-details
+- Ollama model inventory and digests (rolling documentation, checked September 2026): https://docs.ollama.com/api/tags
+- Ollama model details (rolling documentation, checked September 2026): https://docs.ollama.com/api-reference/show-model-details
 - Scheduler: https://github.com/ollama/ollama/blob/v0.34.2/server/sched.go
 - VRAM-dependent context defaults: https://github.com/ollama/ollama/blob/v0.34.2/docs/context-length.mdx
 - Request options and overrides: https://github.com/ollama/ollama/blob/v0.34.2/api/types.go

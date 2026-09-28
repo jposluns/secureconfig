@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "f9e22b5f0a46d21dad56de3a9f5f34cdb679afedf706253a488a810305c3f833",
+  "body_sha256": "05fbb7b4bdc689ca33f87e8abb9c7cf3095c9d28ed455b67ea27d0399df84839",
   "components": {
     "docs": {
       "name": "ASP.NET Core documentation",
@@ -98,8 +98,14 @@ version_basis: {
       "name": "IIS documentation",
       "basis": "IIS 10",
       "sources": {
-        "s267eddd43502": "https://learn.microsoft.com/en-us/iis/configuration/system.webserver/httpprotocol/customheaders/",
         "sb2eac755b583": "https://learn.microsoft.com/en-us/iis/configuration/system.webserver/security/requestfiltering/"
+      }
+    },
+    "iis-rolling": {
+      "name": "IIS documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "s267eddd43502": "https://learn.microsoft.com/en-us/iis/configuration/system.webserver/httpprotocol/customheaders/"
       }
     }
   },
@@ -158,7 +164,7 @@ version_basis: {
     "key-isolation": {"text": "Separate repositories, permissions and certificate private keys for untrusted apps; SetApplicationName is not isolation from another holder of master keys.", "components": ["net10"], "sources": ["net10:s6682926c8da7"], "status": "REASONED"},
     "cookie-sharing": {"text": "Cookie continuity also needs compatible cookie names, schemes, stores and identity-validation configuration.", "components": ["net10"], "sources": ["net10:s9463626a3d0e"], "status": "REASONED"},
     "server-header": {"text": "NET 10 AddServerHeader defaults true; set false and check all hosting layers since header removal does not control access.", "components": ["source"], "sources": ["source:s18c44d6c2fb7"], "status": "REASONED"},
-    "iis-headers": {"text": "Remove IIS X-Powered-By and set removeServerHeader; the latter requires IIS 10 with Windows Server/Windows 10 version 1709 or later.", "components": ["iis"], "sources": ["iis:s267eddd43502", "iis:sb2eac755b583"], "status": "REASONED"},
+    "iis-headers": {"text": "Remove IIS X-Powered-By and set removeServerHeader; the latter requires IIS 10 with Windows Server/Windows 10 version 1709 or later.", "components": ["iis", "iis-rolling"], "sources": ["iis-rolling:s267eddd43502", "iis:sb2eac755b583"], "status": "REASONED"},
     "openapi": {"text": "NET 10 built-in OpenAPI requires AddOpenApi before Build; map only in Development or RequireAuthorization with an appropriate policy.", "components": ["net10"], "sources": ["net10:s1d58219cedec"], "status": "REASONED"},
     "swagger": {"text": "Built-in OpenAPI has no Swagger UI; keep separately added UseSwaggerUI in Development or protect it separately from the document.", "components": ["net10"], "sources": ["net10:s1f9d4c5e975c"], "status": "REASONED"},
     "health": {"text": "Register health checks and authorize /healthz; monitoring must authenticate or use a deliberately controlled minimal liveness route.", "components": ["net10"], "sources": ["net10:sc41b77cc06c8"], "status": "REASONED"},
@@ -172,7 +178,7 @@ version_basis: {
     "verify-body": {"text": "Body-consuming test route returns 204 at 1048576 bytes, 413 at 1048577; raised limit permits both. Isolate other limits and distinguish upstream rejection.", "components": ["net10"], "sources": ["net10:s1ce47370d948"], "status": "REASONED", "verify": [3]},
     "verify-aux": {"text": "Probe actual diagnostic/OpenAPI/UI/health routes anonymously, then authorized; Development-only routes should be absent and retained routes protected. Status alone does not prove authorization.", "components": ["net10"], "sources": ["net10:s1d58219cedec", "net10:s1f9d4c5e975c", "net10:sc41b77cc06c8"], "status": "REASONED", "verify": [4]},
     "verify-migrations": {"text": "GET cannot prove migrations middleware absent; inspect registration and test actual behavior only in isolated database infrastructure.", "components": ["net10"], "sources": ["net10:s9d290374f4e8"], "status": "REASONED"},
-    "verify-headers": {"text": "Inspect public success, redirect and error responses for absent Server/X-Powered-By after hosting-layer removal where supported.", "components": ["source", "iis"], "sources": ["source:s18c44d6c2fb7", "iis:s267eddd43502", "iis:sb2eac755b583"], "status": "REASONED", "verify": [5]},
+    "verify-headers": {"text": "Inspect public success, redirect and error responses for absent Server/X-Powered-By after hosting-layer removal where supported.", "components": ["source", "iis", "iis-rolling"], "sources": ["source:s18c44d6c2fb7", "iis-rolling:s267eddd43502", "iis:sb2eac755b583"], "status": "REASONED", "verify": [5]},
     "verify-cookie": {"text": "Anonymous cookie API control returns 401; original cookie keeps the same identity with 200 before/after restart and across confirmed replicas, before expiry and without identity changes.", "components": ["net10"], "sources": ["net10:s837df4b1657f", "net10:s66f1ab4555d6", "net10:s9463626a3d0e"], "status": "REASONED", "verify": [6]},
     "verify-antiforgery": {"text": "Retain an antiforgery token and cookie across restart and submit without replacement; key loss can invalidate it independently of login recovery.", "components": ["net10"], "sources": ["net10:s6682926c8da7", "net10:s66f1ab4555d6"], "status": "REASONED"}
   }
@@ -185,7 +191,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -243,7 +249,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | key-isolation: Separate repositories, permissions and certificate private keys for untrusted apps; SetApplicationName is not isolation from another holder of master keys. | ASP.NET Core .NET 10 | REASONED |
 | cookie-sharing: Cookie continuity also needs compatible cookie names, schemes, stores and identity-validation configuration. | ASP.NET Core .NET 10 | REASONED |
 | server-header: NET 10 AddServerHeader defaults true; set false and check all hosting layers since header removal does not control access. | ASP.NET Core source v10.0.0 | REASONED |
-| iis-headers: Remove IIS X-Powered-By and set removeServerHeader; the latter requires IIS 10 with Windows Server/Windows 10 version 1709 or later. | IIS documentation IIS 10 | REASONED |
+| iis-headers: Remove IIS X-Powered-By and set removeServerHeader; the latter requires IIS 10 with Windows Server/Windows 10 version 1709 or later. | IIS documentation IIS 10; IIS documentation (rolling) unknown | REASONED |
 | openapi: NET 10 built-in OpenAPI requires AddOpenApi before Build; map only in Development or RequireAuthorization with an appropriate policy. | ASP.NET Core .NET 10 | REASONED |
 | swagger: Built-in OpenAPI has no Swagger UI; keep separately added UseSwaggerUI in Development or protect it separately from the document. | ASP.NET Core .NET 10 | REASONED |
 | health: Register health checks and authorize /healthz; monitoring must authenticate or use a deliberately controlled minimal liveness route. | ASP.NET Core .NET 10 | REASONED |
@@ -257,7 +263,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-body: Body-consuming test route returns 204 at 1048576 bytes, 413 at 1048577; raised limit permits both. Isolate other limits and distinguish upstream rejection. | ASP.NET Core .NET 10 | REASONED |
 | verify-aux: Probe actual diagnostic/OpenAPI/UI/health routes anonymously, then authorized; Development-only routes should be absent and retained routes protected. Status alone does not prove authorization. | ASP.NET Core .NET 10 | REASONED |
 | verify-migrations: GET cannot prove migrations middleware absent; inspect registration and test actual behavior only in isolated database infrastructure. | ASP.NET Core .NET 10 | REASONED |
-| verify-headers: Inspect public success, redirect and error responses for absent Server/X-Powered-By after hosting-layer removal where supported. | ASP.NET Core source v10.0.0; IIS documentation IIS 10 | REASONED |
+| verify-headers: Inspect public success, redirect and error responses for absent Server/X-Powered-By after hosting-layer removal where supported. | ASP.NET Core source v10.0.0; IIS documentation IIS 10; IIS documentation (rolling) unknown | REASONED |
 | verify-cookie: Anonymous cookie API control returns 401; original cookie keeps the same identity with 200 before/after restart and across confirmed replicas, before expiry and without identity changes. | ASP.NET Core .NET 10 | REASONED |
 | verify-antiforgery: Retain an antiforgery token and cookie across restart and submit without replacement; key loss can invalidate it independently of login recovery. | ASP.NET Core .NET 10 | REASONED |
 <!-- version-basis:end -->
@@ -687,19 +693,19 @@ Also retain an antiforgery token and its accompanying cookie across a restart, t
 - .NET 10 environment selection and Production default: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/environments?view=aspnetcore-10.0
 - WebApplicationBuilder environment-variable precedence change in .NET 7: https://learn.microsoft.com/en-us/aspnet/core/breaking-changes/7/environment-variable-precedence?view=aspnetcore-10.0
 - .NET 10 UseMigrationsEndPoint API: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.builder.migrationsendpointextensions.usemigrationsendpoint?view=aspnetcore-10.0
-- Kestrel request-size enforcement, per-request overrides, IIS exception, and debugger behavior: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/options?view=aspnetcore-10.0
+- .NET 10 Kestrel request-size enforcement, per-request overrides, IIS exception, and debugger behavior: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/options?view=aspnetcore-10.0
 - .NET 10 KestrelServerLimits defaults: https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Servers/Kestrel/Core/src/KestrelServerLimits.cs
 - .NET 10 Http2Limits defaults: https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Servers/Kestrel/Core/src/Http2Limits.cs
 - .NET 10 FormOptions multipart limits: https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Http/Http/src/Features/FormOptions.cs
 - .NET 10 DisableRequestSizeLimitAttribute: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.mvc.disablerequestsizelimitattribute?view=aspnetcore-10.0
 - .NET 10 upload limits and IIS request filtering: https://learn.microsoft.com/en-us/aspnet/core/mvc/models/file-uploads?view=aspnetcore-10.0
-- IIS in-process hosting and IISServerOptions.MaxRequestBodySize: https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/iis/in-process-hosting?view=aspnetcore-10.0
+- .NET 10 IIS in-process hosting and IISServerOptions.MaxRequestBodySize: https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/iis/in-process-hosting?view=aspnetcore-10.0
 - .NET 10 Data Protection persistence, application names, encryption, and isolation: https://learn.microsoft.com/en-us/aspnet/core/security/data-protection/configuration/overview?view=aspnetcore-10.0
 - .NET 10 environment-dependent key storage and key lifetime: https://learn.microsoft.com/en-us/aspnet/core/security/data-protection/configuration/default-settings?view=aspnetcore-10.0
 - .NET 10 ProtectKeysWithCertificate overloads: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.dataprotection.dataprotectionbuilderextensions.protectkeyswithcertificate?view=aspnetcore-10.0
-- Cookie sharing requirements for key rings, application names, and authentication schemes: https://learn.microsoft.com/en-us/aspnet/core/security/cookie-sharing?view=aspnetcore-10.0
+- .NET 10 Cookie sharing requirements for key rings, application names, and authentication schemes: https://learn.microsoft.com/en-us/aspnet/core/security/cookie-sharing?view=aspnetcore-10.0
 - .NET 10 KestrelServerOptions.AddServerHeader default: https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Servers/Kestrel/Core/src/KestrelServerOptions.cs
-- IIS custom response headers and X-Powered-By: https://learn.microsoft.com/en-us/iis/configuration/system.webserver/httpprotocol/customheaders/
+- IIS custom response headers and X-Powered-By (rolling documentation, checked September 2026): https://learn.microsoft.com/en-us/iis/configuration/system.webserver/httpprotocol/customheaders/
 - IIS removeServerHeader requirements and request filtering (IIS 10; Windows Server version 1709 or Windows 10 version 1709): https://learn.microsoft.com/en-us/iis/configuration/system.webserver/security/requestfiltering/
 - .NET 10 OpenAPI document generation and endpoint authorization: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/aspnetcore-openapi?view=aspnetcore-10.0
 - .NET 10 OpenAPI documents with Development-only Swagger UI: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/using-openapi-documents?view=aspnetcore-10.0

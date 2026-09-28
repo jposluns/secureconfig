@@ -42,7 +42,6 @@ many.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 1.190 | F-VBASIS-SOURCES-VERSION debt: state each component's literal basis version on every Sources list item that cites its URLs, clearing the baseline added by #420 (75 component/URL/item violations remaining in 70 list items across 13 guides; batch c remains). The ratchet fails on new violations and on stale baseline entries, so burn-down is safe to do guide by guide. (L, M) | `[gap]` |
 
 ## Priority 2: Deepen existing guides
 
