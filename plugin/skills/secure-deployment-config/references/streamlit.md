@@ -14,7 +14,6 @@ version_basis: {
         "s41a3660b1c7b": "https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L139-L160",
         "s50b333f0759f": "https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L363-L400",
         "sa98504c29424": "https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server_config.py#L55-L57",
-        "s6f6f9b0b14c2": "https://docs.streamlit.io/develop/quick-reference/release-notes",
         "s9d96cdf36131": "https://pypi.org/project/streamlit/1.64.0/"
       }
     },
@@ -60,6 +59,13 @@ version_basis: {
         "s720555b11b6e": "https://docs.streamlit.io/develop/concepts/connections/security-reminders",
         "s66e514173b37": "https://docs.streamlit.io/deploy/tutorials/docker"
       }
+    },
+    "release-notes": {
+      "name": "Streamlit release notes",
+      "basis": "unknown",
+      "sources": {
+        "s6f6f9b0b14c2": "https://docs.streamlit.io/develop/quick-reference/release-notes"
+      }
     }
   },
   "claims": {
@@ -72,7 +78,7 @@ version_basis: {
     "cors": {"text": "enableCORS defaults true; disabling it permits cross-origin WebSockets even with XSRF; use corsAllowedOrigins and allowedHosts, and native auth separately enables both protections.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s560ba59f10f9"], "status": "REASONED"},
     "config": {"text": "Effective precedence is CLI, environment, project config relative to working directory, then global; restart for server changes and restrict deployment writes.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s91c471ec9924"], "status": "REASONED"},
     "toolbar": {"text": "client.toolbarMode affects menu visibility, not authorization.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s560ba59f10f9"], "status": "REASONED"},
-    "oidc-versions": {"text": "st.login/st.logout date from 1.42.0; st.user from 1.45.0 replaces experimental_user; 1.64.0 auth extra needs Authlib>=1.3.2 and httpx>=0.24.1.", "components": ["streamlit", "authlib", "httpx", "streamlit-rolling"], "sources": ["streamlit:s6f6f9b0b14c2", "streamlit-rolling:s1322a5f1d6a0", "streamlit:s9d96cdf36131", "authlib:s9d96cdf36131", "httpx:s9d96cdf36131"], "status": "REASONED"},
+    "oidc-versions": {"text": "st.login/st.logout date from 1.42.0; st.user from 1.45.0 replaces experimental_user; 1.64.0 auth extra needs Authlib>=1.3.2 and httpx>=0.24.1.", "components": ["streamlit", "authlib", "httpx", "streamlit-rolling", "release-notes"], "sources": ["release-notes:s6f6f9b0b14c2", "streamlit-rolling:s1322a5f1d6a0", "streamlit:s9d96cdf36131", "authlib:s9d96cdf36131", "httpx:s9d96cdf36131"], "status": "REASONED"},
     "oidc-dependencies": {"text": "Recorded loopback login with Authlib but without httpx failed; install the complete auth extra.", "components": ["streamlit"], "sources": ["streamlit:s9d96cdf36131"], "status": "DEMONSTRATED", "evidence": "every browser login attempt got `Internal Server Error`, with `ModuleNotFoundError: No module named 'httpx'` in Streamlit's log."},
     "oidc-config": {"text": "secrets.toml auth config supplies redirect_uri, cookie_secret, client_id/client_secret and metadata URL; st.login authenticates identity, not resource authorization.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a", "streamlit-rolling:s1322a5f1d6a0"], "status": "REASONED"},
     "page-gates": {"text": "Gate protected pages before rendering/side effects, before st.navigation page execution, and recheck authorization inside privileged callbacks.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a"], "status": "REASONED"},
@@ -121,7 +127,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | cors: enableCORS defaults true; disabling it permits cross-origin WebSockets even with XSRF; use corsAllowedOrigins and allowedHosts, and native auth separately enables both protections. | Streamlit documentation (rolling) unknown | REASONED |
 | config: Effective precedence is CLI, environment, project config relative to working directory, then global; restart for server changes and restrict deployment writes. | Streamlit documentation (rolling) unknown | REASONED |
 | toolbar: client.toolbarMode affects menu visibility, not authorization. | Streamlit documentation (rolling) unknown | REASONED |
-| oidc-versions: st.login/st.logout date from 1.42.0; st.user from 1.45.0 replaces experimental_user; 1.64.0 auth extra needs Authlib&gt;=1.3.2 and httpx&gt;=0.24.1. | Streamlit 1.64.0; Authlib minimum 1.3.2; httpx minimum 0.24.1; Streamlit documentation (rolling) unknown | REASONED |
+| oidc-versions: st.login/st.logout date from 1.42.0; st.user from 1.45.0 replaces experimental_user; 1.64.0 auth extra needs Authlib&gt;=1.3.2 and httpx&gt;=0.24.1. | Streamlit 1.64.0; Authlib minimum 1.3.2; httpx minimum 0.24.1; Streamlit documentation (rolling) unknown; Streamlit release notes unknown | REASONED |
 | oidc-dependencies: Recorded loopback login with Authlib but without httpx failed; install the complete auth extra. | Streamlit 1.64.0 | DEMONSTRATED |
 | oidc-config: secrets.toml auth config supplies redirect_uri, cookie_secret, client_id/client_secret and metadata URL; st.login authenticates identity, not resource authorization. | Streamlit documentation (rolling) unknown | REASONED |
 | page-gates: Gate protected pages before rendering/side effects, before st.navigation page execution, and recheck authorization inside privileged callbacks. | Streamlit documentation (rolling) unknown | REASONED |

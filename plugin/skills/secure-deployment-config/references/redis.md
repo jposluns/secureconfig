@@ -24,7 +24,6 @@ version_basis: {
         "sfe89bc1db7ec": "https://redis.io/docs/latest/commands/function-load/",
         "s2d7c63097f6b": "https://redis.io/docs/latest/commands/function-restore/",
         "s810656b5a50e": "https://redis.io/docs/latest/commands/acl-setuser/",
-        "sadcc4b0a2908": "https://redis.io/docs/latest/operate/oss_and_stack/stack-with-enterprise/release-notes/redisce/redisos-8.6-release-notes/",
         "seaec1ae0ac17": "https://redis.io/docs/latest/commands/config-rewrite/",
         "s96598ec29ba4": "https://redis.io/docs/latest/commands/acl-save/",
         "s3e1c0de156e5": "https://redis.io/docs/latest/commands/acl-load/",
@@ -51,7 +50,6 @@ version_basis: {
         "s426dcab02f8b": "https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/#configuring-sentinel-instances-with-authentication",
         "s6c549585a510": "https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/#redis-access-control-list-authentication",
         "s075c67b3e9d7": "https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/#redis-cluster-tcp-ports",
-        "sead103199248": "https://redis.io/docs/latest/operate/oss_and_stack/stack-with-enterprise/release-notes/redisce/redisos-8.10-release-notes/",
         "sce02504d451b": "https://redis.io/docs/latest/commands/info/",
         "sfe348474049a": "https://redis.io/docs/latest/commands/cluster-nodes/",
         "s04d70801d688": "https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/#sentinel",
@@ -156,6 +154,14 @@ version_basis: {
         "s0eebdf8ee73e": "https://valkey.io/topics/security/",
         "sdc8d63632a85": "https://valkey.io/topics/tls/"
       }
+    },
+    "release-notes": {
+      "name": "Redis release notes",
+      "basis": "unknown",
+      "sources": {
+        "sadcc4b0a2908": "https://redis.io/docs/latest/operate/oss_and_stack/stack-with-enterprise/release-notes/redisce/redisos-8.6-release-notes/",
+        "sead103199248": "https://redis.io/docs/latest/operate/oss_and_stack/stack-with-enterprise/release-notes/redisce/redisos-8.10-release-notes/"
+      }
     }
   },
   "claims": {
@@ -170,7 +176,7 @@ version_basis: {
     "allowlist": {"text": "Removing flushall/flushdb/swapdb removes only those commands; replace broad grants with reset and explicit required commands such as GET/SET.", "components": ["docs"], "sources": ["docs:s810656b5a50e"], "status": "REASONED"},
     "default-user": {"text": "Default starts on nopass ~* +@all, adding &* from 6.2; secure or disable it only after named clients/admin work; existing sessions survive.", "components": ["docs"], "sources": ["docs:s72fa2dffefe0"], "status": "REASONED"},
     "mfa": {"text": "Redis has no second-factor dialogue; mutual TLS adds machine possession alongside passwords, not human MFA.", "components": ["docs"], "sources": ["docs:s676f92c46896", "docs:s5f24cdfad62f"], "status": "REASONED"},
-    "cert-user": {"text": "Redis 8.6+ tls-auth-clients-user defaults off; enabling it can authenticate without passwords. Keep off for these NOAUTH checks and omit the unknown directive on older releases.", "components": ["r86", "docs"], "sources": ["r86:s4afad097a602", "docs:sadcc4b0a2908"], "status": "REASONED"},
+    "cert-user": {"text": "Redis 8.6+ tls-auth-clients-user defaults off; enabling it can authenticate without passwords. Keep off for these NOAUTH checks and omit the unknown directive on older releases.", "components": ["r86", "release-notes"], "sources": ["r86:s4afad097a602", "release-notes:sadcc4b0a2908"], "status": "REASONED"},
     "reset": {"text": "ACL SETUSER changes users incrementally and applies rules left-to-right; reset removes old grants/passwords and, on 7+, selectors.", "components": ["docs"], "sources": ["docs:s810656b5a50e"], "status": "REASONED"},
     "channel-default": {"text": "resetchannels needs 6.2+; 6.0 lacks channel ACLs. Redis 6.2 default allchannels became resetchannels in 7.0.", "components": ["r82", "docs"], "sources": ["r82:s4c78c91e3995", "docs:s810656b5a50e"], "status": "REASONED"},
     "inline-persistence": {"text": "CONFIG REWRITE persists inline users only with a writable startup configuration and OK; it also rewrites other runtime settings.", "components": ["docs"], "sources": ["docs:seaec1ae0ac17"], "status": "REASONED"},
@@ -203,7 +209,7 @@ version_basis: {
     "outgoing-cert": {"text": "Outgoing TLS normally reuses the server certificate; separate tls-client-cert/key need 6.2+. Older builds require one dual-purpose certificate and reject unknown directives.", "components": ["r60", "r620"], "sources": ["r60:s2e8e20a079ac", "r620:sbf13a91d0de5"], "status": "REASONED"},
     "bus-cert": {"text": "The TLS cluster bus always requires a trusted peer certificate, independently of data-port tls-auth-clients.", "components": ["ha"], "sources": ["ha:s81bf82ed258f"], "status": "REASONED"},
     "sentinel-tls": {"text": "Sentinel tls-port independently creates incoming TLS; tls-replication selects outgoing data/peer TLS and default TLS-port advertisement; explicit announce-port overrides it.", "components": ["ha"], "sources": ["ha:saf8be6411363", "ha:s4de235c7343e"], "status": "REASONED"},
-    "peer-name": {"text": "Redis 8.10+ tls-expected-peer-name defaults unset; it adds shared trust-group identity to outgoing replication/bus/MIGRATE and incoming bus, not node-ID binding.", "components": ["ha", "docs"], "sources": ["ha:sf86ee0b4abaa", "ha:s28f3f121848c", "docs:sead103199248"], "status": "REASONED"},
+    "peer-name": {"text": "Redis 8.10+ tls-expected-peer-name defaults unset; it adds shared trust-group identity to outgoing replication/bus/MIGRATE and incoming bus, not node-ID binding.", "components": ["ha", "release-notes"], "sources": ["ha:sf86ee0b4abaa", "ha:s28f3f121848c", "release-notes:sead103199248"], "status": "REASONED"},
     "peer-limits": {"text": "TLS_NO_PEER_NAME_VERIFICATION builds warn and skip name enforcement; 8.10.1 Sentinel's outgoing hiredis path does not apply this check; use a dedicated trust boundary.", "components": ["ha"], "sources": ["ha:s28f3f121848c", "ha:s4de235c7343e"], "status": "REASONED"},
     "verify-replication": {"text": "Wrong/missing replica credentials must fail; correct auth restores link and fresh canary transfer. Test replica incoming auth and repeat through promotion.", "components": ["ha", "docs"], "sources": ["ha:s0c0876f8a079", "docs:sce02504d451b", "docs:s34e2264081b7"], "status": "REASONED"},
     "verify-replication-acl": {"text": "Redis 7+ DRYRUN PSYNC permits replication and denies app; synchronization and promotion require separate runtime tests.", "components": ["docs"], "sources": ["docs:s8d6577576295", "docs:s43b199002e27"], "status": "REASONED"},
@@ -243,7 +249,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | allowlist: Removing flushall/flushdb/swapdb removes only those commands; replace broad grants with reset and explicit required commands such as GET/SET. | Redis documentation unknown | REASONED |
 | default-user: Default starts on nopass ~* +@all, adding &amp;* from 6.2; secure or disable it only after named clients/admin work; existing sessions survive. | Redis documentation unknown | REASONED |
 | mfa: Redis has no second-factor dialogue; mutual TLS adds machine possession alongside passwords, not human MFA. | Redis documentation unknown | REASONED |
-| cert-user: Redis 8.6+ tls-auth-clients-user defaults off; enabling it can authenticate without passwords. Keep off for these NOAUTH checks and omit the unknown directive on older releases. | Redis configuration 8.6.0; Redis documentation unknown | REASONED |
+| cert-user: Redis 8.6+ tls-auth-clients-user defaults off; enabling it can authenticate without passwords. Keep off for these NOAUTH checks and omit the unknown directive on older releases. | Redis configuration 8.6.0; Redis release notes unknown | REASONED |
 | reset: ACL SETUSER changes users incrementally and applies rules left-to-right; reset removes old grants/passwords and, on 7+, selectors. | Redis documentation unknown | REASONED |
 | channel-default: resetchannels needs 6.2+; 6.0 lacks channel ACLs. Redis 6.2 default allchannels became resetchannels in 7.0. | Redis configuration 8.2.1; Redis documentation unknown | REASONED |
 | inline-persistence: CONFIG REWRITE persists inline users only with a writable startup configuration and OK; it also rewrites other runtime settings. | Redis documentation unknown | REASONED |
@@ -276,7 +282,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | outgoing-cert: Outgoing TLS normally reuses the server certificate; separate tls-client-cert/key need 6.2+. Older builds require one dual-purpose certificate and reject unknown directives. | Redis configuration 6.0.20; Redis configuration 6.2.0 | REASONED |
 | bus-cert: The TLS cluster bus always requires a trusted peer certificate, independently of data-port tls-auth-clients. | Redis HA source 8.10.1 | REASONED |
 | sentinel-tls: Sentinel tls-port independently creates incoming TLS; tls-replication selects outgoing data/peer TLS and default TLS-port advertisement; explicit announce-port overrides it. | Redis HA source 8.10.1 | REASONED |
-| peer-name: Redis 8.10+ tls-expected-peer-name defaults unset; it adds shared trust-group identity to outgoing replication/bus/MIGRATE and incoming bus, not node-ID binding. | Redis HA source 8.10.1; Redis documentation unknown | REASONED |
+| peer-name: Redis 8.10+ tls-expected-peer-name defaults unset; it adds shared trust-group identity to outgoing replication/bus/MIGRATE and incoming bus, not node-ID binding. | Redis HA source 8.10.1; Redis release notes unknown | REASONED |
 | peer-limits: TLS_NO_PEER_NAME_VERIFICATION builds warn and skip name enforcement; 8.10.1 Sentinel's outgoing hiredis path does not apply this check; use a dedicated trust boundary. | Redis HA source 8.10.1 | REASONED |
 | verify-replication: Wrong/missing replica credentials must fail; correct auth restores link and fresh canary transfer. Test replica incoming auth and repeat through promotion. | Redis HA source 8.10.1; Redis documentation unknown | REASONED |
 | verify-replication-acl: Redis 7+ DRYRUN PSYNC permits replication and denies app; synchronization and promotion require separate runtime tests. | Redis documentation unknown | REASONED |

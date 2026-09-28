@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "9ceab50fdf6b4b8947bf911eb8588dfef40ca3b7888ebca5232745e0efa4809e",
+  "body_sha256": "56058e76196c77b44810b7e0b795f579bc313a82934dd05834ce7fbf12641a1d",
   "components": {
     "docs": {
       "name": "memcached documentation",
@@ -25,7 +25,6 @@ version_basis: {
       "basis": "1.6.45",
       "sources": {
         "s05c72b35637d": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/doc/memcached.1",
-        "s0de7d6291bf6": "https://github.com/memcached/memcached/wiki/ReleaseNotes1645",
         "s1310cfc0315d": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/memcached.c",
         "sceaaea90ec60": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_bin.c",
         "sd40dab94f516": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_text.c"
@@ -46,30 +45,37 @@ version_basis: {
       }
     },
     "ascii": {
-      "name": "memcached ASCII auth minimum",
-      "basis": "1.5.15",
+      "name": "memcached ASCII authentication release notes",
+      "basis": "unknown",
       "sources": {
-        "s4841bb5ce8b6": "https://github.com/memcached/memcached/wiki/ReleaseNotes1515"
+        "sdcc562ed68f7": "https://docs.memcached.org/releasenotes/releasenotes1515/"
       }
     },
     "watch": {
-      "name": "memcached watch-control minimum",
-      "basis": "1.5.21",
+      "name": "memcached watch-control release notes",
+      "basis": "unknown",
       "sources": {
         "sa3593ecebdce": "https://github.com/memcached/memcached/wiki/ReleaseNotes1521"
       }
     },
     "security": {
-      "name": "memcached security release",
-      "basis": "1.6.42",
+      "name": "memcached security release notes",
+      "basis": "unknown",
       "sources": {
         "se456e52d21c6": "https://github.com/memcached/memcached/wiki/ReleaseNotes1642"
+      }
+    },
+    "release-notes": {
+      "name": "memcached release notes",
+      "basis": "unknown",
+      "sources": {
+        "s0a46fce08585": "https://github.com/memcached/memcached/wiki/ReleaseNotes1645/780e280d1a7f98f2981ffeb357ef0c9b182a9844"
       }
     }
   },
   "claims": {
     "default": {"text": "Stock memcached has no authentication and binds INADDR_ANY on TCP11211; isolate it from the internet and untrusted users.", "components": ["docs", "stable"], "sources": ["docs:sb2bb8731440a", "stable:s05c72b35637d"], "status": "REASONED"},
-    "releases": {"text": "Recorded current stable is 1.6.45 with further fixes after security-focused 1.6.42; check backports and canary upgrades, not feature-minimum releases.", "components": ["stable", "security", "docs"], "sources": ["stable:s0de7d6291bf6", "security:se456e52d21c6", "docs:s75df2663dea3"], "status": "REASONED"},
+    "releases": {"text": "Recorded current stable is 1.6.45 with further fixes after security-focused 1.6.42; check backports and canary upgrades, not feature-minimum releases.", "components": ["security", "docs", "release-notes"], "sources": ["release-notes:s0a46fce08585", "security:se456e52d21c6", "docs:s75df2663dea3"], "status": "REASONED"},
     "bind": {"text": "Use loopback or an intended private address with firewall restrictions; repeated -l/address-specific ports can add listeners that require inspection.", "components": ["stable", "docs"], "sources": ["stable:s05c72b35637d", "docs:sf2153ed1541e"], "status": "REASONED"},
     "ports": {"text": "Set -p 11211 -U 0 explicitly; zero disables the corresponding transport and changing TCP port provides no access control.", "components": ["stable"], "sources": ["stable:s05c72b35637d"], "status": "REASONED"},
     "udp-default": {"text": "UDP defaults disabled since 1.5.6; keep -U 0 against inherited settings and reflection/amplification exposure.", "components": ["docs"], "sources": ["docs:s9b5a9f424414"], "status": "REASONED"},
@@ -77,12 +83,12 @@ version_basis: {
     "syscalls": {"text": "Optional drop_privileges adds build/platform-dependent syscall restrictions, defaults disabled and needs deployment testing.", "components": ["stable"], "sources": ["stable:s1310cfc0315d"], "status": "REASONED"},
     "connections": {"text": "-c bounds connections, not request rate; upstream default 1024, example 256 with operational headroom.", "components": ["stable", "docs"], "sources": ["stable:s05c72b35637d", "docs:sf2153ed1541e"], "status": "REASONED"},
     "memory": {"text": "-m budgets item memory, not total process memory; upstream default 64 MB, example 256 with extra process overhead.", "components": ["stable", "docs"], "sources": ["stable:s05c72b35637d", "docs:sf2153ed1541e"], "status": "REASONED"},
-    "idle": {"text": "Optional idle_timeout defaults zero/no timeout in 1.6.45; choose pool-compatible values; binary handling was fixed in 1.5.15.", "components": ["stable", "ascii"], "sources": ["stable:s1310cfc0315d", "ascii:s4841bb5ce8b6"], "status": "REASONED"},
+    "idle": {"text": "Optional idle_timeout defaults zero/no timeout in 1.6.45; choose pool-compatible values; binary handling was fixed in 1.5.15.", "components": ["stable", "ascii"], "sources": ["stable:s1310cfc0315d", "ascii:sdcc562ed68f7"], "status": "REASONED"},
     "sasl-build": {"text": "SASL support dates from 1.4.3 and requires --enable-sasl, advertised -S and compatible Cyrus mechanism/client; SASL PLAIN needs TLS.", "components": ["docs"], "sources": ["docs:sed14f4319d19", "docs:s3b05fd21e910"], "status": "REASONED"},
     "sasl-secrets": {"text": "saslpasswd2 prompts; protect the Cyrus password database for the service account. SASL authenticates without encryption and does not justify public exposure.", "components": ["docs"], "sources": ["docs:s3b05fd21e910"], "status": "REASONED"},
     "sasl-protocol": {"text": "-S gates binary protected operations but permits VERSION/negotiation; ASCII per-listener overrides or negotiation bypass SASL, so test every listener.", "components": ["stable"], "sources": ["stable:sceaaea90ec60"], "status": "REASONED"},
-    "ascii-auth": {"text": "Deprecated binary protocol has an alternative: -Y service-only username:password file and a client fake-SET token exchange over TLS, without per-user authorization.", "components": ["docs", "protocol", "ascii"], "sources": ["docs:s31b3834d23a2", "protocol:s625682583be8", "ascii:s4841bb5ce8b6"], "status": "REASONED"},
-    "ascii-limits": {"text": "-Y remains experimental in 1.6.45, needs no SASL dependency, excludes binary operation and rejects nonzero UDP at startup.", "components": ["ascii", "stable"], "sources": ["ascii:s4841bb5ce8b6", "stable:s1310cfc0315d"], "status": "REASONED"},
+    "ascii-auth": {"text": "Deprecated binary protocol has an alternative: -Y service-only username:password file and a client fake-SET token exchange over TLS, without per-user authorization.", "components": ["docs", "protocol", "ascii"], "sources": ["docs:s31b3834d23a2", "protocol:s625682583be8", "ascii:sdcc562ed68f7"], "status": "REASONED"},
+    "ascii-limits": {"text": "-Y remains experimental in 1.6.45, needs no SASL dependency, excludes binary operation and rejects nonzero UDP at startup.", "components": ["ascii", "stable"], "sources": ["ascii:sdcc562ed68f7", "stable:s1310cfc0315d"], "status": "REASONED"},
     "tls": {"text": "TLS dates from 1.5.13, needs --enable-tls/OpenSSL1.1.1+ and compatible clients; default off, runtime -Z uses PEM chain/key extended options.", "components": ["docs"], "sources": ["docs:s57f57201fc31"], "status": "REASONED"},
     "mtls": {"text": "ssl_verify_mode defaults 0/no required client cert; mode 2 with ssl_ca_cert requires certificates, adding machine possession, not human MFA.", "components": ["docs"], "sources": ["docs:s57f57201fc31"], "status": "REASONED"},
     "notls": {"text": "A notls loopback listener bypasses TLS but does not remove -S binary requirements; do not add plaintext merely for text administration.", "components": ["docs", "stable"], "sources": ["docs:s57f57201fc31", "stable:sceaaea90ec60"], "status": "REASONED"},
@@ -120,7 +126,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | Claim | Basis | Status |
 | --- | --- | --- |
 | default: Stock memcached has no authentication and binds INADDR_ANY on TCP11211; isolate it from the internet and untrusted users. | memcached documentation unknown; memcached source 1.6.45 | REASONED |
-| releases: Recorded current stable is 1.6.45 with further fixes after security-focused 1.6.42; check backports and canary upgrades, not feature-minimum releases. | memcached source 1.6.45; memcached security release 1.6.42; memcached documentation unknown | REASONED |
+| releases: Recorded current stable is 1.6.45 with further fixes after security-focused 1.6.42; check backports and canary upgrades, not feature-minimum releases. | memcached security release notes unknown; memcached documentation unknown; memcached release notes unknown | REASONED |
 | bind: Use loopback or an intended private address with firewall restrictions; repeated -l/address-specific ports can add listeners that require inspection. | memcached source 1.6.45; memcached documentation unknown | REASONED |
 | ports: Set -p 11211 -U 0 explicitly; zero disables the corresponding transport and changing TCP port provides no access control. | memcached source 1.6.45 | REASONED |
 | udp-default: UDP defaults disabled since 1.5.6; keep -U 0 against inherited settings and reflection/amplification exposure. | memcached documentation unknown | REASONED |
@@ -128,12 +134,12 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | syscalls: Optional drop_privileges adds build/platform-dependent syscall restrictions, defaults disabled and needs deployment testing. | memcached source 1.6.45 | REASONED |
 | connections: -c bounds connections, not request rate; upstream default 1024, example 256 with operational headroom. | memcached source 1.6.45; memcached documentation unknown | REASONED |
 | memory: -m budgets item memory, not total process memory; upstream default 64 MB, example 256 with extra process overhead. | memcached source 1.6.45; memcached documentation unknown | REASONED |
-| idle: Optional idle_timeout defaults zero/no timeout in 1.6.45; choose pool-compatible values; binary handling was fixed in 1.5.15. | memcached source 1.6.45; memcached ASCII auth minimum 1.5.15 | REASONED |
+| idle: Optional idle_timeout defaults zero/no timeout in 1.6.45; choose pool-compatible values; binary handling was fixed in 1.5.15. | memcached source 1.6.45; memcached ASCII authentication release notes unknown | REASONED |
 | sasl-build: SASL support dates from 1.4.3 and requires --enable-sasl, advertised -S and compatible Cyrus mechanism/client; SASL PLAIN needs TLS. | memcached documentation unknown | REASONED |
 | sasl-secrets: saslpasswd2 prompts; protect the Cyrus password database for the service account. SASL authenticates without encryption and does not justify public exposure. | memcached documentation unknown | REASONED |
 | sasl-protocol: -S gates binary protected operations but permits VERSION/negotiation; ASCII per-listener overrides or negotiation bypass SASL, so test every listener. | memcached source 1.6.45 | REASONED |
-| ascii-auth: Deprecated binary protocol has an alternative: -Y service-only username:password file and a client fake-SET token exchange over TLS, without per-user authorization. | memcached documentation unknown; memcached protocol source 7278bdee96329915bbc87731ba005095453f5c2f; memcached ASCII auth minimum 1.5.15 | REASONED |
-| ascii-limits: -Y remains experimental in 1.6.45, needs no SASL dependency, excludes binary operation and rejects nonzero UDP at startup. | memcached ASCII auth minimum 1.5.15; memcached source 1.6.45 | REASONED |
+| ascii-auth: Deprecated binary protocol has an alternative: -Y service-only username:password file and a client fake-SET token exchange over TLS, without per-user authorization. | memcached documentation unknown; memcached protocol source 7278bdee96329915bbc87731ba005095453f5c2f; memcached ASCII authentication release notes unknown | REASONED |
+| ascii-limits: -Y remains experimental in 1.6.45, needs no SASL dependency, excludes binary operation and rejects nonzero UDP at startup. | memcached ASCII authentication release notes unknown; memcached source 1.6.45 | REASONED |
 | tls: TLS dates from 1.5.13, needs --enable-tls/OpenSSL1.1.1+ and compatible clients; default off, runtime -Z uses PEM chain/key extended options. | memcached documentation unknown | REASONED |
 | mtls: ssl_verify_mode defaults 0/no required client cert; mode 2 with ssl_ca_cert requires certificates, adding machine possession, not human MFA. | memcached documentation unknown | REASONED |
 | notls: A notls loopback listener bypasses TLS but does not remove -S binary requirements; do not add plaintext merely for text administration. | memcached documentation unknown; memcached source 1.6.45 | REASONED |
@@ -141,7 +147,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | flush: -F blocks cache-wide invalidation but preserves ordinary writes/deletes; rejected flush increments cmd_flush, so inspect response and retained item. | memcached source 1.6.45; memcached protocol source 7278bdee96329915bbc87731ba005095453f5c2f | REASONED |
 | shutdown: Leave -A absent to keep ASCII shutdown disabled; inspect inherited arguments. | memcached source 1.6.45; memcached protocol source 7278bdee96329915bbc87731ba005095453f5c2f | REASONED |
 | dump: 1.6.45 -X blocks cachedump, stats detail and crawler meta/mgdump; ordinary statistics and known-key reads remain available. | memcached source 1.6.45 | REASONED |
-| watch: -W blocks watch and dates from 1.5.21; preserve network/authentication protection for other remaining capabilities. | memcached watch-control minimum 1.5.21; memcached source 1.6.45 | REASONED |
+| watch: -W blocks watch and dates from 1.5.21; preserve network/authentication protection for other remaining capabilities. | memcached watch-control release notes unknown; memcached source 1.6.45 | REASONED |
 | crawler: no_lru_crawler is not an authorization boundary; protocol commands can re-enable the background crawler. | memcached protocol source 7278bdee96329915bbc87731ba005095453f5c2f | REASONED |
 | verify-inventory: Check executable/build capabilities, process account and every TCP/UDP/publication listener; pair intended listeners with allowed-client protected operations. | memcached source 1.6.45; memcached documentation unknown | REASONED |
 | verify-budgets: Effective example maxconns/maxbytes are 256/268435456 versus upstream 1024/67108864; verify disabled UDP/shutdown/flush/dump and matched SET/GET, not workload capacity. | memcached source 1.6.45 | REASONED |
@@ -494,13 +500,13 @@ Binary VERSION and SASL negotiation success are not substitutes for GET. A missi
 - memcached protocol reference (`-Y` text protocol authentication): https://raw.githubusercontent.com/memcached/memcached/7278bdee96329915bbc87731ba005095453f5c2f/doc/protocol.txt
 - memcached current stable release: https://memcached.org/
 - memcached 1.6.42 security release notes: https://github.com/memcached/memcached/wiki/ReleaseNotes1642
-- memcached 1.6.45 security and crash fixes: https://github.com/memcached/memcached/wiki/ReleaseNotes1645
+- memcached 1.6.45 security and crash fixes: https://github.com/memcached/memcached/wiki/ReleaseNotes1645/780e280d1a7f98f2981ffeb357ef0c9b182a9844
 - memcached 1.6.45 man page, network, account, resource, flush, and shutdown options: https://raw.githubusercontent.com/memcached/memcached/1.6.45/doc/memcached.1
 - memcached configuration wiki, networking and resource budgets: https://github.com/memcached/memcached/wiki/ConfiguringServer
 - memcached UDP reflection and amplification advisory: https://docs.memcached.org/advisories/ddos/
 - memcached SASL build and setup how-to: https://github.com/memcached/memcached/wiki/SASLHowto
 - memcached protocol status and binary deprecation: https://docs.memcached.org/protocols/
-- memcached 1.5.15 release notes, ASCII authentication and binary idle timeout fix: https://github.com/memcached/memcached/wiki/ReleaseNotes1515
+- memcached 1.5.15 release notes, ASCII authentication and binary idle timeout fix: https://docs.memcached.org/releasenotes/releasenotes1515/
 - memcached 1.5.21 release notes, watch disabling: https://github.com/memcached/memcached/wiki/ReleaseNotes1521
 - memcached 1.6.45 CLI help, defaults, effective settings, and signal handling: https://raw.githubusercontent.com/memcached/memcached/1.6.45/memcached.c
 - memcached 1.6.45 text command enforcement: https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_text.c

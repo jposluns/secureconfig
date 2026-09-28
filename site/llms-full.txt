@@ -7925,7 +7925,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | oidc: Configure OpenIdConnect code flow with cookie DefaultScheme and OIDC DefaultChallengeScheme; keep client secrets outside appsettings.json. | ASP.NET Core documentation .NET 10 | REASONED |
 | mfa: Enforce MFA at the provider or fronting identity layer per linked guides; provider MFA configuration lacks a direct listed source. | ASP.NET Core documentation .NET 10 | REASONED |
 | client-validation: Never accept every certificate through DangerousAcceptAnyServerCertificateValidator or an always-true callback. | ASP.NET Core documentation .NET 10 | REASONED |
-| client-ca: On Linux NET 10 install internal roots or use SSL_CERT_FILE for a PEM file and SSL_CERT_DIR for a certificate directory; preserve needed public roots. | ASP.NET Core documentation .NET 10; NET runtime source v10.0.0; OpenSSL documentation 3.0 | REASONED |
+| client-ca: On Linux NET 10 install internal roots or use SSL_CERT_FILE for a PEM file and SSL_CERT_DIR for a certificate directory; preserve needed public roots. | NET runtime source v10.0.0; OpenSSL documentation 3.0; .NET documentation (rolling) unknown | REASONED |
 | developer-errors: Development automatically enables the Developer Exception Page; production must exclude it and check the effective environment. | ASP.NET Core .NET 10 | REASONED |
 | error-handler: Install UseExceptionHandler early after forwarding; provide a generic /Error route supporting failed methods/anonymous requests and preserve intentional 413 responses. | ASP.NET Core .NET 10 | REASONED |
 | environment: Production is default absent overrides; NET 7+ WebApplicationBuilder prioritizes command-line/DOTNET_ over ASPNETCORE_, while older WebHost differs. | ASP.NET Core .NET 10; WebApplicationBuilder precedence .NET 7 | REASONED |
@@ -8383,11 +8383,11 @@ Also retain an antiforgery token and its accompanying cookie across a restart, t
 
 ## Sources (checked September 2026)
 
-- Enforce HTTPS (UseHttpsRedirection, UseHsts, HttpsPort) (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/enforcing-ssl ; Kestrel endpoints (certificate config, ListenLocalhost, SslProtocols): https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints ; proxy servers (ForwardedHeadersOptions, KnownProxies): https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer
-- Introduction to Identity (lockout, ConfigureApplicationCookie) (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity ; PasswordHasherOptions: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.identity.passwordhasheroptions
-- Cookie authentication without Identity (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie ; CookieSecurePolicy: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.cookiesecurepolicy
-- Rate limiting middleware (rate-limiting middleware in .NET 7 and later; guide targets .NET 10 LTS): https://learn.microsoft.com/en-us/aspnet/core/performance/rate-limit ; OpenID Connect web authentication: https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-oidc-web-authentication
-- DangerousAcceptAnyServerCertificateValidator (.NET 10): https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclienthandler.dangerousacceptanyservercertificatevalidator ; trusted roots on Linux: https://learn.microsoft.com/en-us/dotnet/standard/security/cross-platform-cryptography
+- Enforce HTTPS (UseHttpsRedirection, UseHsts, HttpsPort) (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/enforcing-ssl?view=aspnetcore-10.0 ; Kestrel endpoints (certificate config, ListenLocalhost, SslProtocols): https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-10.0 ; proxy servers (ForwardedHeadersOptions, KnownProxies): https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-10.0
+- Introduction to Identity (lockout, ConfigureApplicationCookie) (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity?view=aspnetcore-10.0 ; PasswordHasherOptions: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.identity.passwordhasheroptions?view=aspnetcore-10.0
+- Cookie authentication without Identity (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-10.0 ; CookieSecurePolicy: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.cookiesecurepolicy?view=aspnetcore-10.0
+- Rate limiting middleware (rate-limiting middleware in .NET 7 and later; guide targets .NET 10 LTS): https://learn.microsoft.com/en-us/aspnet/core/performance/rate-limit ; OpenID Connect web authentication: https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-oidc-web-authentication?view=aspnetcore-10.0
+- DangerousAcceptAnyServerCertificateValidator (.NET 10): https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclienthandler.dangerousacceptanyservercertificatevalidator?view=net-10.0 ; trusted roots on Linux (rolling documentation, checked September 2026): https://learn.microsoft.com/en-us/dotnet/standard/security/cross-platform-cryptography
 - .NET 10 Kestrel TLS protocol selection: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-10.0
 - .NET 10 HstsOptions defaults: https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Middleware/HttpsPolicy/src/HstsOptions.cs
 - .NET 10 proxy trust configuration and loopback defaults: https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-10.0
@@ -8438,24 +8438,24 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | --- | --- | --- |
 | tls: Direct HTTPS on 8443 uses PEM certificate/key or PKCS12 and TLSv1.2/TLSv1.3; older releases must confirm PEM property support. | Spring Boot documentation unknown; Spring Boot 3.5.16 | REASONED |
 | connector: Properties configure one HTTP or HTTPS connector; add the port-80 redirect connector in code, or let the proxy redirect. | Spring Boot documentation unknown | REASONED |
-| https-redirect: Spring Security 6.5+ redirectToHttps redirects insecure requests; trusted forwarded headers determine secure status behind TLS termination. | Spring Security documentation unknown; Spring Security HSTS 6.5 | REASONED |
-| hsts: Default HSTS writer runs only for secure requests; defaults are one year, includeSubDomains=true and preload=false. | Spring Security HSTS 6.5; Spring Security HSTS 7.1 | REASONED |
+| https-redirect: Spring Security 6.5+ redirectToHttps redirects insecure requests; trusted forwarded headers determine secure status behind TLS termination. | Spring Security documentation (rolling) unknown; Spring Security HSTS 6.5 | REASONED |
+| hsts: Default HSTS writer runs only for secure requests; defaults are one year, includeSubDomains=true and preload=false. | Spring Security HSTS 6.5; Spring Security documentation (rolling) unknown | REASONED |
 | proxy-bind: Bind 127.0.0.1:8080 behind the TLS proxy. | Spring Boot documentation unknown; Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
 | forwarding: NATIVE delegates forwarded headers to the server, FRAMEWORK uses ForwardedHeaderFilter; outside supported cloud platforms the default is NONE. | Spring Boot documentation unknown | REASONED |
 | proxy-trust: Restrict Tomcat internal-proxies, strip inbound Forwarded/X-Forwarded-* at the edge and prevent direct listener bypass. | Spring Boot documentation unknown; Spring Framework documentation unknown | REASONED |
 | proxy-redirect: Tomcat redirect-context-root=false preserves HTTPS redirects behind TLS termination. | Spring Boot documentation unknown | REASONED |
 | server-import: ServerProperties moves from boot.autoconfigure.web in Boot 3.5 to boot.web.server.autoconfigure in Boot 4. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
-| default-web-auth: With starter-security and default web configuration, require authentication except Actuator health; form login, Basic, CSRF and security headers are enabled. | Spring Boot documentation unknown; Spring Security documentation unknown; Spring Boot 3.5.16 | REASONED |
-| custom-chain: Any custom SecurityFilterChain replaces Boot default web and Actuator rules; unmatched requests need a fallback chain or remain unprotected. | Spring Boot 3.5.16; Spring Security documentation unknown | REASONED |
+| default-web-auth: With starter-security and default web configuration, require authentication except Actuator health; form login, Basic, CSRF and security headers are enabled. | Spring Boot documentation unknown; Spring Security documentation (rolling) unknown; Spring Boot 3.5.16 | REASONED |
+| custom-chain: Any custom SecurityFilterChain replaces Boot default web and Actuator rules; unmatched requests need a fallback chain or remain unprotected. | Spring Boot 3.5.16; Spring Security documentation (rolling) unknown | REASONED |
 | default-user: Separate default-user auto-configuration creates user with a normally logged generated password; a custom chain alone does not remove it. Production needs deliberate authentication. | Spring Boot 3.5.16 | REASONED |
-| password: Use DelegatingPasswordEncoder, bcrypt by default with {bcrypt}; BCrypt strength defaults to 10 and is tuned to about one second; Argon2 v5_8 defaults are an alternative. | Spring Security documentation unknown | REASONED |
+| password: Use DelegatingPasswordEncoder, bcrypt by default with {bcrypt}; BCrypt strength defaults to 10 and is tuned to about one second; Argon2 v5_8 defaults are an alternative. | Spring Security documentation (rolling) unknown | REASONED |
 | cookies: Set secure/http-only cookies, SameSite=lax and a 30m servlet session timeout. | Spring Boot documentation unknown; Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
-| login-limit: Checked references document no built-in login limiter; limit at the proxy or count failures and lock local accounts. | Spring Security documentation unknown | REASONED |
+| login-limit: Checked references document no built-in login limiter; limit at the proxy or count failures and lock local accounts. | Spring Security documentation (rolling) unknown | REASONED |
 | oidc-starter: Boot 3.5 uses starter-oauth2-client; Boot 4 uses starter-security-oauth2-client and deprecates the old name. | Spring Boot starter migration 4.0 | REASONED |
-| oidc: Configure client ID, environment-supplied secret, issuer discovery and openid/profile/email scopes with oauth2Login; without openid the login is OAuth2, not OIDC. | Spring Boot documentation unknown; Spring Security documentation unknown | REASONED |
-| mfa: Enforce MFA at the identity provider or a fronting layer per linked guides; these MFA controls lack a direct listed source. | Spring Security documentation unknown | REASONED |
-| csrf: Statelessness does not remove CSRF risk for automatically attached browser cookies or Basic credentials; retain appropriate protection. | Spring Security documentation unknown | REASONED |
-| session-fixation: Default fixation protection uses changeSessionId on Servlet 3.1+ containers; keep it enabled. | Spring Security documentation unknown | REASONED |
+| oidc: Configure client ID, environment-supplied secret, issuer discovery and openid/profile/email scopes with oauth2Login; without openid the login is OAuth2, not OIDC. | Spring Boot documentation unknown; Spring Security documentation (rolling) unknown | REASONED |
+| mfa: Enforce MFA at the identity provider or a fronting layer per linked guides; these MFA controls lack a direct listed source. | Spring Security documentation (rolling) unknown | REASONED |
+| csrf: Statelessness does not remove CSRF risk for automatically attached browser cookies or Basic credentials; retain appropriate protection. | Spring Security documentation (rolling) unknown | REASONED |
+| session-fixation: Default fixation protection uses changeSessionId on Servlet 3.1+ containers; keep it enabled. | Spring Security documentation (rolling) unknown | REASONED |
 | client-validation: Do not install trust-all TrustManager or hostname verifiers; this client-validation warning has no direct listed API source. | Spring Boot documentation unknown; JDK keytool documentation 21 | REASONED |
 | client-ca: Import an internal CA with keytool into cacerts and change its default changeit password, or configure and apply a named SSL bundle to the client. | Spring Boot documentation unknown; JDK keytool documentation 21 | REASONED |
 | client-import: RestClientSsl and WebClientSsl imports differ between Boot 3.5.16 and 4.1.1; apply ssl.fromBundle to the selected client. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
@@ -8467,7 +8467,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | heapdump: heapdump may expose secrets and consume resources; access defaults to none in specifically checked 3.5.16/4.1.1, and is explicitly disabled. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
 | loggers: loggers can read/change logging levels, increasing volume and possible information disclosure. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
 | shutdown: shutdown stops the application; access defaults to none and is explicitly disabled. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
-| management-auth: The first servlet chain requires ROLE_ENDPOINT_ADMIN for all exposed Actuator endpoints including health; the second authenticates application requests. Provision identities separately. | Spring Boot 3.5.16; Spring Boot 4.1.1; Spring Security documentation unknown | REASONED |
+| management-auth: The first servlet chain requires ROLE_ENDPOINT_ADMIN for all exposed Actuator endpoints including health; the second authenticates application requests. Provision identities separately. | Spring Boot 3.5.16; Spring Boot 4.1.1; Spring Security documentation (rolling) unknown | REASONED |
 | endpoint-import: EndpointRequest moves from boot.actuate.autoconfigure.security.servlet in Boot 3.5 to boot.security.autoconfigure.actuate.web.servlet in Boot 4. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
 | error-message: Error message inclusion defaults to never in checked releases; use server.error in Boot 3.5 and spring.web.error in Boot 4. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
 | error-stack: Stacktrace inclusion defaults to never in checked releases, using the version-appropriate error prefix. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
@@ -8481,7 +8481,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | form-limit: Tomcat max-http-form-post-size defaults to 2MB for form-to-parameter processing, not arbitrary request bodies. | Spring Boot 3.5.16; Spring Boot 4.1.1; Tomcat HTTP connector 10.1 | REASONED |
 | header-limit: max-http-request-header-size defaults to 8KB; Tomcat counts request line and all header names/values together. | Spring Boot 3.5.16; Spring Boot 4.1.1; Tomcat HTTP connector 10.1 | REASONED |
 | json-limit: These properties do not establish a universal JSON body limit; bound other bodies at the proxy/application and test the actual route and content type. | Spring Boot 3.5.16; Spring Boot 4.1.1; Tomcat HTTP connector 10.1 | REASONED |
-| verify-tls: HTTPS must succeed without -k and show HSTS. | Spring Boot documentation unknown; Spring Security HSTS 6.5; Spring Security HSTS 7.1 | REASONED |
+| verify-tls: HTTPS must succeed without -k and show HSTS. | Spring Boot documentation unknown; Spring Security HSTS 6.5; Spring Security documentation (rolling) unknown | REASONED |
 | verify-auth: Unauthenticated /api should return 401 or a 302 login redirect. | Spring Boot 3.5.16 | REASONED |
 | verify-bind: Inspect every listener for loopback-only Java binding behind the proxy. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
 | verify-user: Positive generated-password log count records generation; zero is inconclusive because logging or a configured password can hide the default account. | Spring Boot 3.5.16 | REASONED |
@@ -8875,7 +8875,7 @@ The small upload must reach and succeed at the intended handler. With a delibera
 - Spring Boot javadoc, session Cookie: https://docs.spring.io/spring-boot/3.5/api/java/org/springframework/boot/web/server/Cookie.html ; Spring Boot and Spring Security defaults: https://docs.spring.io/spring-boot/reference/web/spring-security.html
 - Spring Boot OAuth2 client properties: https://docs.spring.io/spring-boot/reference/security/oauth2.html ; Spring Security OAuth2 login: https://docs.spring.io/spring-security/reference/servlet/oauth2/login/core.html
 - Spring Boot 4.0 starters and deprecated OAuth2 client starter name: https://docs.spring.io/spring-boot/4.0/reference/using/build-systems.html
-- Spring Boot 4.0 migration guide, deprecated starters: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide
+- Spring Boot 4.0 migration guide, deprecated starters: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide/e11f389f3671d1eb7fa346065410b5b1eab99c3c
 - Spring Security getting started (Boot defaults): https://docs.spring.io/spring-security/reference/servlet/getting-started.html ; password storage: https://docs.spring.io/spring-security/reference/features/authentication/password-storage.html ; redirect to HTTPS and HSTS: https://docs.spring.io/spring-security/reference/servlet/exploits/http.html
 - keytool (importcert, cacerts): https://docs.oracle.com/en/java/javase/21/docs/specs/man/keytool.html
 - Spring Boot 3.5.16 application properties, Actuator access, error inclusion, H2, multipart, forms, and headers: https://docs.spring.io/spring-boot/3.5/appendix/application-properties/index.html
@@ -8890,12 +8890,12 @@ The small upload must reach and succeed at the intended handler. With a delibera
 - Spring Boot 3.5.16 error-inclusion options, including ON_PARAM: https://docs.spring.io/spring-boot/3.5/api/java/org/springframework/boot/autoconfigure/web/ErrorProperties.IncludeAttribute.html
 - Spring Boot 3.5.16 servlet error handling: https://docs.spring.io/spring-boot/3.5/reference/web/servlet.html
 - Spring Boot 3.5.16 RestClientSsl API: https://docs.spring.io/spring-boot/3.5/api/java/org/springframework/boot/autoconfigure/web/client/RestClientSsl.html
-- Spring Boot 4.1.1 RestClientSsl API, moved package: https://docs.spring.io/spring-boot/api/java/org/springframework/boot/restclient/autoconfigure/RestClientSsl.html
+- Spring Boot 4.1.1 RestClientSsl API, moved package: https://raw.githubusercontent.com/spring-projects/spring-boot/v4.1.1/module/spring-boot-restclient/src/main/java/org/springframework/boot/restclient/autoconfigure/RestClientSsl.java
 - Spring Boot 3.5.16 REST clients and SSL helper imports: https://docs.spring.io/spring-boot/3.5/reference/io/rest-client.html
 - Spring Boot 4.1.1 REST clients and moved SSL helper imports: https://docs.spring.io/spring-boot/4.1/reference/io/rest-client.html
 - Spring Framework ForwardedHeaderFilter, proxy trust boundary: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/filter/ForwardedHeaderFilter.html
 - Spring Security 6.5 HstsHeaderWriter, secure-request condition and defaults: https://docs.spring.io/spring-security/reference/6.5/api/java/org/springframework/security/web/header/writers/HstsHeaderWriter.html
-- Spring Security 7.1 HstsHeaderWriter, secure-request condition and defaults: https://docs.spring.io/spring-security/reference/api/java/org/springframework/security/web/header/writers/HstsHeaderWriter.html
+- Spring Security HstsHeaderWriter, secure-request condition and defaults (rolling documentation, checked September 2026): https://docs.spring.io/spring-security/reference/api/java/org/springframework/security/web/header/writers/HstsHeaderWriter.html
 - Spring Security multiple filter chains and unmatched requests: https://docs.spring.io/spring-security/reference/servlet/configuration/java.html
 - Spring Security CSRF and stateless browser applications: https://docs.spring.io/spring-security/reference/features/exploits/csrf.html
 - Spring Security session fixation protection and changeSessionId: https://docs.spring.io/spring-security/reference/servlet/authentication/session-management.html
@@ -13180,7 +13180,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | allowlist: Removing flushall/flushdb/swapdb removes only those commands; replace broad grants with reset and explicit required commands such as GET/SET. | Redis documentation unknown | REASONED |
 | default-user: Default starts on nopass ~* +@all, adding &amp;* from 6.2; secure or disable it only after named clients/admin work; existing sessions survive. | Redis documentation unknown | REASONED |
 | mfa: Redis has no second-factor dialogue; mutual TLS adds machine possession alongside passwords, not human MFA. | Redis documentation unknown | REASONED |
-| cert-user: Redis 8.6+ tls-auth-clients-user defaults off; enabling it can authenticate without passwords. Keep off for these NOAUTH checks and omit the unknown directive on older releases. | Redis configuration 8.6.0; Redis documentation unknown | REASONED |
+| cert-user: Redis 8.6+ tls-auth-clients-user defaults off; enabling it can authenticate without passwords. Keep off for these NOAUTH checks and omit the unknown directive on older releases. | Redis configuration 8.6.0; Redis release notes unknown | REASONED |
 | reset: ACL SETUSER changes users incrementally and applies rules left-to-right; reset removes old grants/passwords and, on 7+, selectors. | Redis documentation unknown | REASONED |
 | channel-default: resetchannels needs 6.2+; 6.0 lacks channel ACLs. Redis 6.2 default allchannels became resetchannels in 7.0. | Redis configuration 8.2.1; Redis documentation unknown | REASONED |
 | inline-persistence: CONFIG REWRITE persists inline users only with a writable startup configuration and OK; it also rewrites other runtime settings. | Redis documentation unknown | REASONED |
@@ -13213,7 +13213,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | outgoing-cert: Outgoing TLS normally reuses the server certificate; separate tls-client-cert/key need 6.2+. Older builds require one dual-purpose certificate and reject unknown directives. | Redis configuration 6.0.20; Redis configuration 6.2.0 | REASONED |
 | bus-cert: The TLS cluster bus always requires a trusted peer certificate, independently of data-port tls-auth-clients. | Redis HA source 8.10.1 | REASONED |
 | sentinel-tls: Sentinel tls-port independently creates incoming TLS; tls-replication selects outgoing data/peer TLS and default TLS-port advertisement; explicit announce-port overrides it. | Redis HA source 8.10.1 | REASONED |
-| peer-name: Redis 8.10+ tls-expected-peer-name defaults unset; it adds shared trust-group identity to outgoing replication/bus/MIGRATE and incoming bus, not node-ID binding. | Redis HA source 8.10.1; Redis documentation unknown | REASONED |
+| peer-name: Redis 8.10+ tls-expected-peer-name defaults unset; it adds shared trust-group identity to outgoing replication/bus/MIGRATE and incoming bus, not node-ID binding. | Redis HA source 8.10.1; Redis release notes unknown | REASONED |
 | peer-limits: TLS_NO_PEER_NAME_VERIFICATION builds warn and skip name enforcement; 8.10.1 Sentinel's outgoing hiredis path does not apply this check; use a dedicated trust boundary. | Redis HA source 8.10.1 | REASONED |
 | verify-replication: Wrong/missing replica credentials must fail; correct auth restores link and fresh canary transfer. Test replica incoming auth and repeat through promotion. | Redis HA source 8.10.1; Redis documentation unknown | REASONED |
 | verify-replication-acl: Redis 7+ DRYRUN PSYNC permits replication and denies app; synchronization and promotion require separate runtime tests. | Redis documentation unknown | REASONED |
@@ -16432,7 +16432,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | image-api: 2.1.2 HTTP API uses a dual-stack socket and exposes systree/listeners JSON and version text without shipped credentials/ACLs. | Mosquitto v2.1.2 | REASONED |
 | image16: Recorded 1.6.15 image tags ship commented upstream config: wildcard 1883 and anonymous access. | Mosquitto image source 5b74cce8a4fe2a73b57df6c703bfde2cfd535d60; Mosquitto legacy v1.6.15 | REASONED |
 | image20: Recorded 2.0.22 image tags ship commented upstream config and retain loopback-only defaults. | Mosquitto image source 5b74cce8a4fe2a73b57df6c703bfde2cfd535d60; Mosquitto v2.0.22 | REASONED |
-| deprecation: File-based examples target 2.0.22; password_file, acl_file and per_listener_settings are deprecated in 2.1, removal announced for 3.0. | Mosquitto documentation unknown | REASONED |
+| deprecation: File-based examples target 2.0.22; password_file, acl_file and per_listener_settings are deprecated in 2.1, removal announced for 3.0. | Mosquitto documentation unknown; Mosquitto release announcements unknown | REASONED |
 | password-file: Prompt for distinct device credentials; -c overwrites, and -D edits the file without terminating connections by itself. | Mosquitto documentation unknown | REASONED |
 | reload: Reload changed credentials/ACLs; manual says connections unaffected, but 2.0.22 rechecks credentials; confirm deployed termination. | Mosquitto documentation unknown; Mosquitto v2.0.22 | REASONED |
 | shared-policy: per_listener_settings false shares authentication/ACL policy; flipping it is neither separation nor 2.1 migration. | Mosquitto v2.0.22 | REASONED |
@@ -16441,17 +16441,17 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | acl-default: Password authentication alone leaves application topics unrestricted without an authorization mechanism. | Mosquitto documentation unknown; Mosquitto v2.0.22 | REASONED |
 | acl-users: Unlisted access is denied; user means username; pre-user topic rules apply only to anonymous clients. | Mosquitto documentation unknown; Mosquitto v2.0.22 | REASONED |
 | acl-patterns: Patterns apply to all users; %u/%c must occupy a whole topic level; prefer authenticated usernames over chosen client IDs. | Mosquitto documentation unknown | REASONED |
-| sys: deny was added in 2.0; repeat $SYS denial per user and probe $SYS/# explicitly because # excludes it. | Mosquitto documentation unknown | REASONED |
+| sys: deny was added in 2.0; repeat $SYS denial per user and probe $SYS/# explicitly because # excludes it. | Mosquitto documentation unknown; Mosquitto release announcements unknown | REASONED |
 | subscription: File ACLs filter message access, not SUBSCRIBE acceptance; accepted # alone is no bypass. | Mosquitto v2.0.22; Mosquitto v2.1.2 | REASONED |
 | connection-default: Per-listener max_connections defaults to -1, unlimited by this setting. | Mosquitto v2.0.22 | REASONED |
-| packet-default: max_packet_size is unset in 2.0.22 and 2,000,000 bytes in 2.1; explicit 2.0.22 values must be at least 20. | Mosquitto v2.0.22; Mosquitto v2.1.2; Mosquitto documentation unknown | REASONED |
+| packet-default: max_packet_size is unset in 2.0.22 and 2,000,000 bytes in 2.1; explicit 2.0.22 values must be at least 20. | Mosquitto v2.0.22; Mosquitto v2.1.2; Mosquitto release announcements unknown | REASONED |
 | payload-default: message_size_limit defaults to 0; payload rejection follows reception and completes QoS acknowledgements. | Mosquitto v2.0.22 | REASONED |
 | inflight-default: max_inflight_messages defaults to 20 per client for outgoing QoS 1/2; it is not a message-rate limit. | Mosquitto v2.0.22 | REASONED |
-| queue-default: max_queued_messages defaults to 1000 in 2.x, 100 earlier; queue overflow can lose messages. | Mosquitto v2.0.22; Mosquitto documentation unknown | REASONED |
+| queue-default: max_queued_messages defaults to 1000 in 2.x, 100 earlier; queue overflow can lose messages. | Mosquitto v2.0.22; Mosquitto release announcements unknown | REASONED |
 | queue-bytes: max_queued_bytes defaults to 0; when both queue limits are set the first reached stops further queuing. | Mosquitto v2.0.22 | REASONED |
 | keepalive: max_keepalive defaults to 0 in 2.0.22/2.1.2; positive limits override MQTT 5 and reject incompatible MQTT 3.1.1. | Mosquitto v2.0.22; Mosquitto v2.1.2 | REASONED |
 | packet-boundary: 2.0.22 TCP checks size before body allocation; 2.0.22/2.1.2 libwebsockets allocate without that check; require an independent boundary. | Mosquitto v2.0.22 | REASONED |
-| global-limits: 2.1 global_max_connections/global_max_clients default to -1; the latter also counts disconnected persistent sessions. | Mosquitto documentation unknown; Mosquitto v2.1.2 | REASONED |
+| global-limits: 2.1 global_max_connections/global_max_clients default to -1; the latter also counts disconnected persistent sessions. | Mosquitto documentation unknown; Mosquitto v2.1.2; Mosquitto release announcements unknown | REASONED |
 | session-expiry: 2.0 persistent-session growth needs identity/client-ID limits; persistent_client_expiration is not a hard population cap. | Mosquitto v2.0.22 | REASONED |
 | listener-policy: 2.0 per-listener settings must precede listeners/security options; place each listener's auth, ACL and TLS in its scope. | Mosquitto v2.0.22 | REASONED |
 | websockets: Local 9001 needs separate auth/ACL/TLS; 2.0.22 WebSockets connection cap is ineffective; 2.1.1 fix needs deployed-build testing. | Mosquitto v2.0.22 | REASONED |
@@ -18677,8 +18677,8 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | local-guards: Historical guard-only checks rejected placeholders and malformed marker/count inputs in six guarded blocks; no Neo4j service behavior was demonstrated. | Neo4j documentation unknown | DEMONSTRATED |
 | tls-schemes: neo4j+s and bolt+s verify certificates; +ssc skips verification. Cypher Shell trust configuration is independent of OpenSSL/curl CA options. | Neo4j documentation unknown | REASONED |
 | verify-listeners: Confirm working Bolt/HTTPS, absent HTTP, Enterprise loopback backup, conditional cluster/Prometheus ports and Docker namespace/publication controls; an empty inventory is insufficient. | Neo4j documentation unknown; Neo4j Enterprise 5.26; Neo4j Docker entrypoint 5359427c4f51d0d51cce5b048757a2c21e6f377e | REASONED |
-| verify-cluster-tls: Compare cluster TLS client_auth NONE with REQUIRE: no certificate and untrusted issuer must be rejected while a trusted member completes a verified handshake. | Neo4j Enterprise 5.26; OpenSSL 3; TLS 1.3; timeout unknown | REASONED |
-| cluster-probe-limits: Inspect fatal alerts and member logs; server Verification OK, timeout 124 or transport failure alone does not prove client acceptance or rejection. | OpenSSL 3; TLS 1.3; timeout unknown | REASONED |
+| verify-cluster-tls: Compare cluster TLS client_auth NONE with REQUIRE: no certificate and untrusted issuer must be rejected while a trusted member completes a verified handshake. | Neo4j Enterprise 5.26; OpenSSL 3; TLS RFC 8446 unknown; timeout unknown | REASONED |
+| cluster-probe-limits: Inspect fatal alerts and member logs; server Verification OK, timeout 124 or transport failure alone does not prove client acceptance or rejection. | OpenSSL 3; TLS RFC 8446 unknown; timeout unknown | REASONED |
 | verify-cluster-health: SHOW SERVERS must retain expected Enabled/Available members in both states; protocol-level discovery, replication and routing comparisons remain unobserved. | Neo4j Enterprise 5.26; Neo4j documentation unknown | REASONED |
 | verify-bolt: Verified handshake and authenticated TLS query must succeed; plaintext must fail at transport under REQUIRED, not merely at authentication. | Neo4j documentation unknown | REASONED |
 | verify-http-off: An exposed 7474 endpoint answers HTTP; fixed HTTP is absent, with target/path confirmation and working TLS controls needed to interpret connection failures. | Neo4j documentation unknown | REASONED |
@@ -19342,8 +19342,8 @@ The comparisons below are REASONED from the cited Neo4j documentation and pinned
 - GRANT, DENY, and showing user privileges: https://neo4j.com/docs/operations-manual/current/authentication-authorization/manage-privileges/
 - Access-control limitations and hidden properties: https://neo4j.com/docs/operations-manual/current/authentication-authorization/limitations/
 - Procedure and user-defined function execution privileges: https://neo4j.com/docs/operations-manual/current/authentication-authorization/dbms-administration/dbms-execute-privileges/
-- LOAD privileges (LOAD ON ALL DATA since 5.13; CIDR privileges since 5.16): https://neo4j.com/docs/operations-manual/current/authentication-authorization/load-privileges/
-- LOAD privilege introduction versions: https://neo4j.com/docs/cypher-manual/5/deprecations-additions-removals-compatibility/
+- LOAD privileges (rolling documentation, checked September 2026): https://neo4j.com/docs/operations-manual/current/authentication-authorization/load-privileges/
+- LOAD privilege introduction versions (LOAD ON ALL DATA since 5.13; CIDR privileges since 5.16): https://neo4j.com/docs/cypher-manual/5/deprecations-additions-removals-compatibility/
 - Cypher Shell prompts, environment credentials, history, parameters, and timeouts (history disable since 2025.08; transaction-timeout since 2025.12): https://neo4j.com/docs/operations-manual/current/cypher-shell/
 - Docker introduction and initial authentication: https://neo4j.com/docs/operations-manual/current/docker/introduction/
 - Docker configuration and container listen addresses: https://neo4j.com/docs/operations-manual/current/docker/configuration/
@@ -19392,7 +19392,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | Claim | Basis | Status |
 | --- | --- | --- |
 | default: Stock memcached has no authentication and binds INADDR_ANY on TCP11211; isolate it from the internet and untrusted users. | memcached documentation unknown; memcached source 1.6.45 | REASONED |
-| releases: Recorded current stable is 1.6.45 with further fixes after security-focused 1.6.42; check backports and canary upgrades, not feature-minimum releases. | memcached source 1.6.45; memcached security release 1.6.42; memcached documentation unknown | REASONED |
+| releases: Recorded current stable is 1.6.45 with further fixes after security-focused 1.6.42; check backports and canary upgrades, not feature-minimum releases. | memcached security release notes unknown; memcached documentation unknown; memcached release notes unknown | REASONED |
 | bind: Use loopback or an intended private address with firewall restrictions; repeated -l/address-specific ports can add listeners that require inspection. | memcached source 1.6.45; memcached documentation unknown | REASONED |
 | ports: Set -p 11211 -U 0 explicitly; zero disables the corresponding transport and changing TCP port provides no access control. | memcached source 1.6.45 | REASONED |
 | udp-default: UDP defaults disabled since 1.5.6; keep -U 0 against inherited settings and reflection/amplification exposure. | memcached documentation unknown | REASONED |
@@ -19400,12 +19400,12 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | syscalls: Optional drop_privileges adds build/platform-dependent syscall restrictions, defaults disabled and needs deployment testing. | memcached source 1.6.45 | REASONED |
 | connections: -c bounds connections, not request rate; upstream default 1024, example 256 with operational headroom. | memcached source 1.6.45; memcached documentation unknown | REASONED |
 | memory: -m budgets item memory, not total process memory; upstream default 64 MB, example 256 with extra process overhead. | memcached source 1.6.45; memcached documentation unknown | REASONED |
-| idle: Optional idle_timeout defaults zero/no timeout in 1.6.45; choose pool-compatible values; binary handling was fixed in 1.5.15. | memcached source 1.6.45; memcached ASCII auth minimum 1.5.15 | REASONED |
+| idle: Optional idle_timeout defaults zero/no timeout in 1.6.45; choose pool-compatible values; binary handling was fixed in 1.5.15. | memcached source 1.6.45; memcached ASCII authentication release notes unknown | REASONED |
 | sasl-build: SASL support dates from 1.4.3 and requires --enable-sasl, advertised -S and compatible Cyrus mechanism/client; SASL PLAIN needs TLS. | memcached documentation unknown | REASONED |
 | sasl-secrets: saslpasswd2 prompts; protect the Cyrus password database for the service account. SASL authenticates without encryption and does not justify public exposure. | memcached documentation unknown | REASONED |
 | sasl-protocol: -S gates binary protected operations but permits VERSION/negotiation; ASCII per-listener overrides or negotiation bypass SASL, so test every listener. | memcached source 1.6.45 | REASONED |
-| ascii-auth: Deprecated binary protocol has an alternative: -Y service-only username:password file and a client fake-SET token exchange over TLS, without per-user authorization. | memcached documentation unknown; memcached protocol source 7278bdee96329915bbc87731ba005095453f5c2f; memcached ASCII auth minimum 1.5.15 | REASONED |
-| ascii-limits: -Y remains experimental in 1.6.45, needs no SASL dependency, excludes binary operation and rejects nonzero UDP at startup. | memcached ASCII auth minimum 1.5.15; memcached source 1.6.45 | REASONED |
+| ascii-auth: Deprecated binary protocol has an alternative: -Y service-only username:password file and a client fake-SET token exchange over TLS, without per-user authorization. | memcached documentation unknown; memcached protocol source 7278bdee96329915bbc87731ba005095453f5c2f; memcached ASCII authentication release notes unknown | REASONED |
+| ascii-limits: -Y remains experimental in 1.6.45, needs no SASL dependency, excludes binary operation and rejects nonzero UDP at startup. | memcached ASCII authentication release notes unknown; memcached source 1.6.45 | REASONED |
 | tls: TLS dates from 1.5.13, needs --enable-tls/OpenSSL1.1.1+ and compatible clients; default off, runtime -Z uses PEM chain/key extended options. | memcached documentation unknown | REASONED |
 | mtls: ssl_verify_mode defaults 0/no required client cert; mode 2 with ssl_ca_cert requires certificates, adding machine possession, not human MFA. | memcached documentation unknown | REASONED |
 | notls: A notls loopback listener bypasses TLS but does not remove -S binary requirements; do not add plaintext merely for text administration. | memcached documentation unknown; memcached source 1.6.45 | REASONED |
@@ -19413,7 +19413,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | flush: -F blocks cache-wide invalidation but preserves ordinary writes/deletes; rejected flush increments cmd_flush, so inspect response and retained item. | memcached source 1.6.45; memcached protocol source 7278bdee96329915bbc87731ba005095453f5c2f | REASONED |
 | shutdown: Leave -A absent to keep ASCII shutdown disabled; inspect inherited arguments. | memcached source 1.6.45; memcached protocol source 7278bdee96329915bbc87731ba005095453f5c2f | REASONED |
 | dump: 1.6.45 -X blocks cachedump, stats detail and crawler meta/mgdump; ordinary statistics and known-key reads remain available. | memcached source 1.6.45 | REASONED |
-| watch: -W blocks watch and dates from 1.5.21; preserve network/authentication protection for other remaining capabilities. | memcached watch-control minimum 1.5.21; memcached source 1.6.45 | REASONED |
+| watch: -W blocks watch and dates from 1.5.21; preserve network/authentication protection for other remaining capabilities. | memcached watch-control release notes unknown; memcached source 1.6.45 | REASONED |
 | crawler: no_lru_crawler is not an authorization boundary; protocol commands can re-enable the background crawler. | memcached protocol source 7278bdee96329915bbc87731ba005095453f5c2f | REASONED |
 | verify-inventory: Check executable/build capabilities, process account and every TCP/UDP/publication listener; pair intended listeners with allowed-client protected operations. | memcached source 1.6.45; memcached documentation unknown | REASONED |
 | verify-budgets: Effective example maxconns/maxbytes are 256/268435456 versus upstream 1024/67108864; verify disabled UDP/shutdown/flush/dump and matched SET/GET, not workload capacity. | memcached source 1.6.45 | REASONED |
@@ -19766,13 +19766,13 @@ Binary VERSION and SASL negotiation success are not substitutes for GET. A missi
 - memcached protocol reference (`-Y` text protocol authentication): https://raw.githubusercontent.com/memcached/memcached/7278bdee96329915bbc87731ba005095453f5c2f/doc/protocol.txt
 - memcached current stable release: https://memcached.org/
 - memcached 1.6.42 security release notes: https://github.com/memcached/memcached/wiki/ReleaseNotes1642
-- memcached 1.6.45 security and crash fixes: https://github.com/memcached/memcached/wiki/ReleaseNotes1645
+- memcached 1.6.45 security and crash fixes: https://github.com/memcached/memcached/wiki/ReleaseNotes1645/780e280d1a7f98f2981ffeb357ef0c9b182a9844
 - memcached 1.6.45 man page, network, account, resource, flush, and shutdown options: https://raw.githubusercontent.com/memcached/memcached/1.6.45/doc/memcached.1
 - memcached configuration wiki, networking and resource budgets: https://github.com/memcached/memcached/wiki/ConfiguringServer
 - memcached UDP reflection and amplification advisory: https://docs.memcached.org/advisories/ddos/
 - memcached SASL build and setup how-to: https://github.com/memcached/memcached/wiki/SASLHowto
 - memcached protocol status and binary deprecation: https://docs.memcached.org/protocols/
-- memcached 1.5.15 release notes, ASCII authentication and binary idle timeout fix: https://github.com/memcached/memcached/wiki/ReleaseNotes1515
+- memcached 1.5.15 release notes, ASCII authentication and binary idle timeout fix: https://docs.memcached.org/releasenotes/releasenotes1515/
 - memcached 1.5.21 release notes, watch disabling: https://github.com/memcached/memcached/wiki/ReleaseNotes1521
 - memcached 1.6.45 CLI help, defaults, effective settings, and signal handling: https://raw.githubusercontent.com/memcached/memcached/1.6.45/memcached.c
 - memcached 1.6.45 text command enforcement: https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_text.c
@@ -26626,7 +26626,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | cors: enableCORS defaults true; disabling it permits cross-origin WebSockets even with XSRF; use corsAllowedOrigins and allowedHosts, and native auth separately enables both protections. | Streamlit documentation (rolling) unknown | REASONED |
 | config: Effective precedence is CLI, environment, project config relative to working directory, then global; restart for server changes and restrict deployment writes. | Streamlit documentation (rolling) unknown | REASONED |
 | toolbar: client.toolbarMode affects menu visibility, not authorization. | Streamlit documentation (rolling) unknown | REASONED |
-| oidc-versions: st.login/st.logout date from 1.42.0; st.user from 1.45.0 replaces experimental_user; 1.64.0 auth extra needs Authlib&gt;=1.3.2 and httpx&gt;=0.24.1. | Streamlit 1.64.0; Authlib minimum 1.3.2; httpx minimum 0.24.1; Streamlit documentation (rolling) unknown | REASONED |
+| oidc-versions: st.login/st.logout date from 1.42.0; st.user from 1.45.0 replaces experimental_user; 1.64.0 auth extra needs Authlib&gt;=1.3.2 and httpx&gt;=0.24.1. | Streamlit 1.64.0; Authlib minimum 1.3.2; httpx minimum 0.24.1; Streamlit documentation (rolling) unknown; Streamlit release notes unknown | REASONED |
 | oidc-dependencies: Recorded loopback login with Authlib but without httpx failed; install the complete auth extra. | Streamlit 1.64.0 | DEMONSTRATED |
 | oidc-config: secrets.toml auth config supplies redirect_uri, cookie_secret, client_id/client_secret and metadata URL; st.login authenticates identity, not resource authorization. | Streamlit documentation (rolling) unknown | REASONED |
 | page-gates: Gate protected pages before rendering/side effects, before st.navigation page execution, and recheck authorization inside privileged callbacks. | Streamlit documentation (rolling) unknown | REASONED |
@@ -27173,7 +27173,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | glitchtip-port: GlitchTip Compose publishes 8000; bind privately behind TLS and verify the actual sample host bind. | GlitchTip documentation unknown | REASONED |
 | glitchtip-registration: ENABLE_USER_REGISTRATION defaults True; False disables self-signup after the first user exists. | GlitchTip documentation unknown | REASONED |
 | glitchtip-secret: Use a unique SECRET_KEY for Django signing and keep it out of version control. | GlitchTip documentation unknown | REASONED |
-| glitchtip-mfa: Two-factor authentication is available since v1.8; confirm enforcement and SSO registration paths in the deployed version. | GlitchTip two-factor introduction v1.8 | REASONED |
+| glitchtip-mfa: Two-factor authentication is available since v1.8; confirm enforcement and SSO registration paths in the deployed version. | GlitchTip MFA announcement unknown | REASONED |
 | glitchtip-stores: Keep PostgreSQL and optional Valkey or Redis internal. | GlitchTip documentation unknown | REASONED |
 | membership: Sentry single-organization signups join the default organization; GlitchTip accounts and membership differ. Membership implementations are not cited. | Sentry and self-hosted distribution 26.8.0; GlitchTip documentation unknown | REASONED |
 | verify-listeners: Inventory private 9000/8000 and backing ports; Docker forwarding can expose ports without host sockets. | Sentry and self-hosted distribution 26.8.0; GlitchTip documentation unknown | REASONED |
@@ -29900,7 +29900,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | comfy-bind: Default loopback:8188, bare --listen binds IPv4/IPv6 wildcards; explicit bind/port and proxy login. | ComfyUI v0.37.0; ComfyUI documentation (rolling) unknown | REASONED |
 | comfy-nodes: ComfyUI has no built-in login; Python custom nodes run with server privileges. Trust nodes and apply container containment. | ComfyUI January 2025 security advisory unknown; ComfyUI Registry documentation (rolling) unknown; ComfyUI documentation (rolling) unknown | REASONED |
 | fooocus-login: Fooocus is unauthenticated by default and offers optional auth.json login; keep it off public interfaces. | Fooocus v2.5.5 | REASONED |
-| manager: Manager RCE advisory requires ComfyUI at least v0.3.76 and Manager at least v3.38 together. | ComfyUI advisory minimum v0.3.76; ComfyUI-Manager advisory minimum v3.38 | REASONED |
+| manager: Manager RCE advisory requires ComfyUI at least v0.3.76 and Manager at least v3.38 together. | ComfyUI-Manager security advisory unknown | REASONED |
 | node-flags: --disable-all-custom-nodes and --whitelist-custom-nodes limit loaded nodes, not network exposure. | ComfyUI documentation (rolling) unknown | REASONED |
 | webui-auth: UI auth file/list syntax, API-only auth, colon/comma parsing differences and plaintext HTTP require a TLS proxy. | AUTOMATIC1111 v1.10.1 | REASONED |
 | webui-flags: --listen, --share relay and insecure extension access affect exposure. Without --port, Gradio searches from GRADIO_SERVER_PORT (7860 when unset) for up to GRADIO_NUM_PORTS ports (default 100); explicit --port 7860 pins the UI port. | AUTOMATIC1111 v1.10.1; Gradio 3.41.2 | REASONED |
@@ -29911,7 +29911,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | file-launch: Clear inherited launch/bind variables, validate regular non-symlink credential file, reject empty/malformed/duplicate entries and read failures. Shell/grep/awk versions are unrecorded. | AUTOMATIC1111 v1.10.1; Gradio 3.41.2 | REASONED |
 | webui-bind: Explicit --server-name overrides Gradio environment-based bind; without it GRADIO_SERVER_NAME can replace loopback. | AUTOMATIC1111 v1.10.1; Gradio 3.41.2 | REASONED |
 | sysinfo: Unredacted environment and incomplete argv redaction in unauthenticated sysinfo routes are source-reasoned; proxy must deny the prefix. | AUTOMATIC1111 v1.10.1; Gradio 3.41.2 | REASONED |
-| invoke-config: Flat schema 4.0.2, host 127.0.0.1, port 9090 and INVOKEAI_HOST/PORT overrides; default single-user mode has no login. | InvokeAI 6.14.1 | REASONED |
+| invoke-config: Flat schema 4.0.2, host 127.0.0.1, port 9090 and INVOKEAI_HOST/PORT overrides; default single-user mode has no login. | InvokeAI documentation (rolling) unknown | REASONED |
 | invoke-login: Experimental multiuser login/JWT and strict password checks; changing the stored JWT secret then restarting logs users out. Ordinary restart logout is not established; keep loopback and TLS. | InvokeAI documentation (rolling) unknown | REASONED |
 | fooocus-flags: Loopback by default, bare --listen wildcard, --share public relay; auth.json supplies optional login. | Fooocus v2.5.5 | REASONED |
 | fooocus-loader: Isolated loader returns credentials only for valid data; unreadable raises PermissionError, malformed/empty returns none. | Fooocus v2.5.5 | DEMONSTRATED |
@@ -29922,7 +29922,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | image-build: Build pinned source, not unchecked GHCR default; Compose build/image pull policy and --build determine selected/tagged image. | Fooocus v2.5.5; Compose Specification 914ec15d1fa4; Docker Compose source v2.32.4 | REASONED |
 | auth-mount: Image excludes auth.json; mount read-only, use built image user UID and mode 0400; remapped/rootless ownership is unchecked. | Fooocus v2.5.5 | REASONED |
 | argparse: Isolated argparse definition yields loopback with no flag and wildcard for bare --listen; this is not a server demonstration. | Fooocus v2.5.5 | DEMONSTRATED |
-| verify-network: Inventory every service and port, confirm loopback service is up, probe actual IPv4/IPv6; container PORTS or host-network ss have different scope. | ComfyUI v0.37.0; AUTOMATIC1111 v1.10.1; InvokeAI 6.14.1; Fooocus v2.5.5; Docker Engine minimum loopback boundary 28.0; curl minimum write-out version 7.75.0 | REASONED |
+| verify-network: Inventory every service and port, confirm loopback service is up, probe actual IPv4/IPv6; container PORTS or host-network ss have different scope. | ComfyUI v0.37.0; AUTOMATIC1111 v1.10.1; Fooocus v2.5.5; Docker Engine minimum loopback boundary 28.0; curl minimum write-out version 7.75.0; InvokeAI documentation (rolling) unknown | REASONED |
 | verify-invoke: Unauthenticated /api/v1/boards/ should answer in single-user mode and reject with 401 in multi-user mode; exposed status is unrecorded and no listener demonstration was available. | InvokeAI documentation (rolling) unknown | REASONED |
 | verify-proxy: TLS/header and browser checks should require login before UI; no service/proxy listeners were run. | Fooocus v2.5.5; ComfyUI documentation (rolling) unknown | REASONED |
 <!-- version-basis:end -->
@@ -30141,7 +30141,7 @@ curl -q -g -sI https://imagegen.example.com/                # via the proxy: TLS
 - Gradio 3.41.2 default bind, `LOCALHOST_NAME = os.getenv("GRADIO_SERVER_NAME", "127.0.0.1")` and `server_name = server_name or LOCALHOST_NAME` (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/networking.py#L28 and https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/networking.py#L120
 - Gradio 3.41.2 checks the login per route, with `dependencies=[Depends(login_check)]` (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/routes.py#L193-L305
 - Gradio 3.41.2 turns a list `auth` into a dictionary keyed by user name, so a later password for the same user name replaces an earlier one (pinned tag gradio@3.41.2): https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/routes.py#L128-L133
-- InvokeAI YAML Config (6.14.1, schema 4.0.2, as recorded above; host/port defaults): https://invoke.ai/configuration/invokeai-yaml/
+- InvokeAI YAML Config, host/port defaults (rolling documentation, checked September 2026): https://invoke.ai/configuration/invokeai-yaml/
 - InvokeAI Multi-User Administrator Guide (rolling documentation, checked September 2026): https://invoke.ai/features/multi-user-mode/admin-guide/
 - InvokeAI Multi-User API Guide, boards endpoint and missing-token `401` (rolling documentation, checked September 2026): https://invoke.ai/features/multi-user-mode/api-guide/
 - Fooocus README, UI access and authentication (`--listen`, `--port`, `--share`, `auth.json`; pinned tag v2.5.5): https://github.com/lllyasviel/Fooocus/blob/v2.5.5/readme.md#L296-L301
@@ -30815,7 +30815,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| fronting: Keep UI/API origins private behind HTTPS and authentication; use IdP MFA for browsers and separate machine authentication, and constrain worker egress. | Apache Airflow 3.3.2; Temporal Server 1.28.x; Argo Workflows documentation release-3.7 | REASONED |
+| fronting: Keep UI/API origins private behind HTTPS and authentication; use IdP MFA for browsers and separate machine authentication, and constrain worker egress. | Apache Airflow 3.3.2; Argo Workflows documentation release-3.7; Temporal documentation (rolling) unknown | REASONED |
 | prefect-auth: Self-hosted Prefect defaults unauthenticated; Basic Auth from 3.1.8 uses matching server/client auth strings and prompts the UI. | Prefect Basic Auth minimum 3.1.8 | REASONED |
 | prefect-key: Cloud-only PREFECT_API_KEY takes precedence over PREFECT_API_AUTH_STRING and produces 401 against a self-hosted server. | Prefect Basic Auth minimum 3.1.8 | REASONED |
 | prefect-secrets: Protect the auth string and credential-bearing Blocks; block-document reads can request secrets, so masking is not authorization and workers need scoped credentials. | Prefect Basic Auth minimum 3.1.8 | REASONED |
@@ -30826,22 +30826,22 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | airflow-boundary: Airflow assumes authenticated known users and is not designed for untrusted public exposure; deployment managers must keep it private. | Apache Airflow 3.3.2 | REASONED |
 | airflow-two-api: Airflow 2.11.0 uses [api] auth_backends with session default; before 2.3 the name was auth_backend and 2.2.5 defaulted to deny_all. | Apache Airflow historical configuration unknown; Apache Airflow historical default unknown | REASONED |
 | airflow-simple: Airflow 3 defaults to development-only Simple Auth Manager, with configured users/roles and generated passwords printed to logs unless supplied. | Apache Airflow 3.3.2 | REASONED |
-| airflow-fab: For production install FAB and select FabAuthManager through [core] auth_manager; verify the effective manager and use an identity backend with MFA. | Apache Airflow 3.3.2; Airflow FAB provider 3.9.0 | REASONED |
-| airflow-api: Airflow 3 public API uses JWT independently of [fab] auth_backends, which selects FAB API backends rather than the auth manager. | Apache Airflow 3.3.2; Airflow FAB provider 3.9.0 | REASONED |
+| airflow-fab: For production install FAB and select FabAuthManager through [core] auth_manager; verify the effective manager and use an identity backend with MFA. | Apache Airflow 3.3.2; Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
+| airflow-api: Airflow 3 public API uses JWT independently of [fab] auth_backends, which selects FAB API backends rather than the auth manager. | Apache Airflow 3.3.2; Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
 | airflow-all-admins: Keep simple_auth_manager_all_admins unset or False; enabling it disables login and grants every visitor admin. | Apache Airflow 3.3.2 | REASONED |
-| fab-public-role: Leave FAB AUTH_ROLE_PUBLIC unset; a configured role grants that access to anonymous visitors. | Airflow FAB provider 3.9.0 | REASONED |
-| airflow-compose-account: Development Compose selects FAB but defaults to airflow/airflow; set credentials before account creation and update/delete an existing account separately. | Airflow FAB provider 3.9.0; Apache Airflow documentation (rolling) unknown | REASONED |
+| fab-public-role: Leave FAB AUTH_ROLE_PUBLIC unset; a configured role grants that access to anonymous visitors. | Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
+| airflow-compose-account: Development Compose selects FAB but defaults to airflow/airflow; set credentials before account creation and update/delete an existing account separately. | Apache Airflow documentation (rolling) unknown; Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
 | airflow-jwt: Replace Compose fallback AIRFLOW__API_AUTH__JWT_SECRET=airflow_jwt_secret and share the strong value with all signers/validators; the public fallback permits token forgery. | Apache Airflow documentation (rolling) unknown | REASONED |
 | airflow-secret-key: Provision the independent secret_key too: [webserver] on 2.11.0 and [api] on 3.3.2. | Apache Airflow historical configuration unknown; Apache Airflow documentation (rolling) unknown | REASONED |
 | airflow-config: Keep configuration exposure off with WEBSERVER__EXPOSE_CONFIG on 2.11.0 or API__EXPOSE_CONFIG on 3.3.2. | Apache Airflow historical configuration unknown; Apache Airflow documentation (rolling) unknown | REASONED |
 | airflow-fernet: Protect Connections, Variables, database and Fernet key; an empty key disables new-value encryption, while removing an existing key prevents decryption. Authorized workloads still use secrets. | Apache Airflow documentation (rolling) unknown | REASONED |
 | airflow-port: Compose publishes 8080 on all interfaces; use 127.0.0.1:8080:8080 behind the fronting layer. | Apache Airflow documentation (rolling) unknown | REASONED |
-| temporal-authorizer: Empty authorizer selects noopAuthorizer allowing every API request, including administration; configure default authorization with trusted JWT keys and audience. | Temporal Server 1.28.x | REASONED |
-| temporal-claims: Empty claimMapper selects a no-op granting system-admin claims; configure both Authorizer and ClaimMapper, with frontend TLS. | Temporal Server 1.28.x | REASONED |
-| temporal-health: The built-in default authorizer permits health checks without claims; health is not an authorization discriminator. | Temporal Server 1.28.x | REASONED |
-| temporal-ui: UI OIDC auth.enabled is a sibling of providers; TEMPORAL_AUTH_ENABLED plus provider settings gates the UI only, with MFA at the IdP. | Temporal UI Server 2.34.x | REASONED |
-| temporal-tls: Internode and frontend mTLS are separate from UI login and API authorization. | Temporal Server 1.28.x | REASONED |
-| temporal-payloads: Keep plaintext credentials out of persisted inputs/results/history; payload encryption and an independently authenticated Codec Server form separate controls. | Temporal Server 1.28.x | REASONED |
+| temporal-authorizer: Empty authorizer selects noopAuthorizer allowing every API request, including administration; configure default authorization with trusted JWT keys and audience. | Temporal documentation (rolling) unknown | REASONED |
+| temporal-claims: Empty claimMapper selects a no-op granting system-admin claims; configure both Authorizer and ClaimMapper, with frontend TLS. | Temporal documentation (rolling) unknown | REASONED |
+| temporal-health: The built-in default authorizer permits health checks without claims; health is not an authorization discriminator. | Temporal documentation (rolling) unknown | REASONED |
+| temporal-ui: UI OIDC auth.enabled is a sibling of providers; TEMPORAL_AUTH_ENABLED plus provider settings gates the UI only, with MFA at the IdP. | Temporal documentation (rolling) unknown | REASONED |
+| temporal-tls: Internode and frontend mTLS are separate from UI login and API authorization. | Temporal documentation (rolling) unknown | REASONED |
+| temporal-payloads: Keep plaintext credentials out of persisted inputs/results/history; payload encryption and an independently authenticated Codec Server form separate controls. | Temporal documentation (rolling) unknown | REASONED |
 | temporal-ports: Frontend gRPC uses 7233 and the Web UI 8233 in the cited CLI server reference. | Temporal documentation (rolling) unknown | REASONED |
 | flower-bind: Flower defaults to wildcard address and 5555 unless Unix socket, FLOWER_ variables or implicit working-directory flowerconfig.py override; bind loopback explicitly. | Flower v2.2.0; Tornado v6.5.10 | REASONED |
 | flower-api: Authentication defaults off; unauthenticated HTTP API is disabled unless FLOWER_UNAUTHENTICATED_API=true, which must not be mistaken for dashboard protection. | Flower documentation (rolling) unknown | REASONED |
@@ -30868,8 +30868,8 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | verify-inventory: ss inventories only the current namespace, not publication, routing or authentication; inspect publications and external reachability separately. | Flower v2.2.0; Argo Workflows v3.7.18; iproute2 ss manual v6.15.0; Linux network namespaces manual man-pages-5.13; Prefect documentation (rolling) unknown | REASONED |
 | verify-prefect: Anonymous POST /api/flows/filter returning a JSON list is exposed; fixed is 401 with an authorized list on the same origin. Health/ready GET exemptions are version-dependent. | Prefect Basic Auth minimum 3.1.8; Prefect server source 9e560c9b6df4e19a5109a66e66d461f9facb538d | REASONED |
 | verify-dagster: A RepositoryConnection from /graphql is a read, including empty nodes; GraphQL/transport errors are inconclusive. Test proxy authentication and origin isolation separately. | Dagster documentation (rolling) unknown | REASONED |
-| verify-airflow: FAB 3.9.0 returning 201 with access_token for airflow/airflow is exposed; pair a valid account and anonymous/authenticated API reads at proxy and origin. Airflow 2 uses its own API/auth. | Airflow FAB provider 3.9.0; Apache Airflow historical configuration unknown; Apache Airflow documentation (rolling) unknown | REASONED |
-| verify-temporal: Credential-free workflow listing on 7233 is exposed; require rejection and a matched authorized call, not health, TLS errors or missing namespaces as proof of auth. | Temporal Server 1.28.x; Temporal documentation (rolling) unknown | REASONED |
+| verify-airflow: FAB 3.9.0 returning 201 with access_token for airflow/airflow is exposed; pair a valid account and anonymous/authenticated API reads at proxy and origin. Airflow 2 uses its own API/auth. | Apache Airflow historical configuration unknown; Apache Airflow documentation (rolling) unknown; Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
+| verify-temporal: Credential-free workflow listing on 7233 is exposed; require rejection and a matched authorized call, not health, TLS errors or missing namespaces as proof of auth. | Temporal documentation (rolling) unknown | REASONED |
 | verify-flower: Anonymous UI/API should yield Basic 401 or OAuth login redirect, with a valid-session control; API-disabled is not proof the dashboard is protected. | Flower documentation (rolling) unknown | REASONED |
 | verify-socket: Directory/socket permissions, outsider denial, reboot persistence and container numeric IDs remain reasoned; no socket or Flower process ran. | Flower v2.2.0; Linux permissions and tools unknown | REASONED |
 | flower-stat-run: Tmpfs directory-only stat distinguished 0755 and 0750; the 0750 directory initially had only base ACL entries. | Linux permissions and tools unknown | DEMONSTRATED |
@@ -31241,16 +31241,16 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
 - Dagster webserver and UI, default local port and no documented built-in auth (rolling documentation, checked September 2026): https://docs.dagster.io/guides/operate/webserver
 - Dagster webserver `DEFAULT_WEBSERVER_HOST` "127.0.0.1" and port 3000 with the free-port fallback, `dagster dev` forwarding `--host` only when one is given, its environment-variable routes (`DAGSTER_WEBSERVER_*` through `auto_envvar_prefix`, legacy `DAGIT_*` copied onto them, and the `dagster` CLI's `DAGSTER_CLI` prefix, which Click extends per subcommand, so `dagster dev` reads `DAGSTER_CLI_DEV_*`), and the Helm chart's webserver command, which hardcodes `-h 0.0.0.0` and takes the port from `dagsterWebserver.service.port` (80 by default, Service type `ClusterIP` by default) (pinned tag 1.13.24): https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L41-L42, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L81-L96, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L306-L311, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster/dagster/_cli/dev.py#L251-L252, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L339-L351, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster/dagster/_cli/__init__.py#L45-L50, Click's subcommand prefix rule (pinned tag 8.5.0) https://github.com/pallets/click/blob/8.5.0/src/click/core.py#L476-L484, https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_deployment-webserver.tpl#L86-L90, https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_helpers.tpl#L55 and https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/values.yaml#L54-L58
 - Apache Airflow security overview (rolling documentation, checked September 2026): https://airflow.apache.org/docs/apache-airflow/stable/security/
-- Apache Airflow, auth manager selection (`[core] auth_manager`, `airflow config get-value core auth_manager`) (Airflow 3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/auth-manager/index.html
-- Apache Airflow FAB provider, API authentication (`[fab] auth_backends`, independent of the auth manager) (FAB provider 3.9.0 documentation): https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/api-authentication.html
+- Apache Airflow, auth manager selection (`[core] auth_manager`, `airflow config get-value core auth_manager`) (Airflow 3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/3.3.2/core-concepts/auth-manager/index.html
+- Apache Airflow FAB provider, API authentication (`[fab] auth_backends`, independent of the auth manager) (rolling documentation, checked September 2026): https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/api-authentication.html
 - Prefect server source (health and ready paths exempted from the auth string on GET): https://github.com/PrefectHQ/prefect/blob/9e560c9b6df4e19a5109a66e66d461f9facb538d/src/prefect/server/api/server.py
 - Apache Airflow, quickstart (default port 8080): https://airflow.apache.org/docs/apache-airflow/stable/start.html
 - Apache Airflow running in Docker, development Compose defaults for credentials, JWT signing and port publication (rolling documentation, checked September 2026): https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html
 - Apache Airflow security model, authenticated users and private deployment (Airflow 3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/3.3.2/security/security_model.html
 - Apache Airflow Simple auth manager, default for development/testing, configured users and generated passwords (Airflow 3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/3.3.2/core-concepts/auth-manager/simple/index.html
-- Temporal, self-hosted security (`noopAuthorizer` default, `Authorizer`, `ClaimMapper`) (Temporal Server 1.28.x documentation): https://docs.temporal.io/self-hosted-guide/security
+- Temporal, self-hosted security (`noopAuthorizer` default, `Authorizer`, `ClaimMapper`) (rolling documentation, checked September 2026): https://docs.temporal.io/self-hosted-guide/security
 - Temporal, Web UI configuration reference (`auth.providers`, `enabled`, `type: oidc`, `providerUrl`,
-  `clientId`, `clientSecret`, `callbackUrl`, `scopes`) (Temporal UI Server 2.34.x documentation): https://docs.temporal.io/references/web-ui-configuration
+  `clientId`, `clientSecret`, `callbackUrl`, `scopes`) (rolling documentation, checked September 2026): https://docs.temporal.io/references/web-ui-configuration
 - Temporal CLI server reference, default frontend gRPC port 7233 and Web UI port 8233 (rolling documentation, checked September 2026): https://docs.temporal.io/cli/command-reference/server
 - Flower configuration, `--address`, `--port` 5555 default, `--basic-auth`, `--auth_provider`, `--oauth2_key`, `--oauth2_secret`, `--oauth2_redirect_uri` and `--auth` (rolling documentation, checked September 2026): https://flower.readthedocs.io/en/latest/config.html
 - Flower `port` default 5555, `address` default `''` and the `unix_socket` branch, the `FLOWER_` environment variables, and the implicit `flowerconfig.py` load from the working directory (pinned tag v2.2.0), with Tornado's `bind_sockets` treating an empty address as all interfaces (pinned tag v6.5.10): https://github.com/mher/flower/blob/v2.2.0/flower/options.py#L7-L15, https://github.com/mher/flower/blob/v2.2.0/flower/options.py#L56-L57, https://github.com/mher/flower/blob/v2.2.0/flower/command.py#L39-L91, https://github.com/mher/flower/blob/v2.2.0/flower/app.py#L71-L76 and https://github.com/tornadoweb/tornado/blob/v6.5.10/tornado/netutil.py#L72-L73
