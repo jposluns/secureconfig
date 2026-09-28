@@ -1,32 +1,32 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "4b7909609575ae28f5a11bc5fe3984e12f1f003ae3b474f77359b3d0bd667a50",
+  "body_sha256": "80560753d0f8d1b1550244a8f42d8764eaee0786ee60eb04cf71926b2e29b301",
   "components": {
     "server": {
       "name": "code-server",
       "basis": "v4.137.0",
       "sources": {
         "sc5e7573dedcf": "https://raw.githubusercontent.com/coder/code-server/v4.137.0/docs/guide.md",
-        "s411972e92499": "https://coder.com/docs/code-server/FAQ",
         "sbe2b1714f8d5": "https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/cli.ts",
         "s5c5105b71096": "https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/http.ts",
         "s1ccbd73ebb52": "https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/routes/pathProxy.ts",
-        "s60678f2e26e9": "https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/routes/domainProxy.ts"
+        "s60678f2e26e9": "https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/routes/domainProxy.ts",
+        "s99eaa753a770": "https://raw.githubusercontent.com/coder/code-server/v4.137.0/docs/FAQ.md"
       }
     }
   },
   "claims": {
     "ssh": {"text": "Vendor prefers SSH forwarding; bind the local 8080 forwarding listener to loopback and open the local browser URL.", "components": ["server"], "sources": ["server:sc5e7573dedcf"], "status": "REASONED"},
-    "config": {"text": "Edit generated config.yaml and retain a supported credential; precreating it suppresses random-password generation and password auth without either credential fails startup.", "components": ["server"], "sources": ["server:s411972e92499", "server:sbe2b1714f8d5"], "status": "REASONED"},
+    "config": {"text": "Edit generated config.yaml and retain a supported credential; precreating it suppresses random-password generation and password auth without either credential fails startup.", "components": ["server"], "sources": ["server:s99eaa753a770", "server:sbe2b1714f8d5"], "status": "REASONED"},
     "bind": {"text": "bind-addr 127.0.0.1:8080 keeps the editor private behind a proxy or tunnel.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:sbe2b1714f8d5"], "status": "REASONED"},
     "auth-default": {"text": "auth defaults password; replace the generated value with a long random secret and protect config.yaml.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:sbe2b1714f8d5"], "status": "REASONED"},
     "rate-limit": {"text": "Password attempts are limited to two per minute plus twelve per hour.", "components": ["server"], "sources": ["server:sc5e7573dedcf"], "status": "REASONED"},
-    "credential-precedence": {"text": "PASSWORD/HASHED_PASSWORD override file credentials and hashed form wins; --password is not a supported CLI flag.", "components": ["server"], "sources": ["server:s411972e92499", "server:sbe2b1714f8d5"], "status": "REASONED"},
-    "config-precedence": {"text": "CLI flags override config; inspect --bind-addr, --config, CODE_SERVER_CONFIG and XDG_CONFIG_HOME for the effective launcher and file.", "components": ["server"], "sources": ["server:s411972e92499", "server:sbe2b1714f8d5"], "status": "REASONED"},
-    "tls-default": {"text": "cert defaults false; public access needs authenticated encryption, normally a reverse proxy with a trusted certificate.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:s411972e92499", "server:sbe2b1714f8d5"], "status": "REASONED"},
+    "credential-precedence": {"text": "PASSWORD/HASHED_PASSWORD override file credentials and hashed form wins; --password is not a supported CLI flag.", "components": ["server"], "sources": ["server:s99eaa753a770", "server:sbe2b1714f8d5"], "status": "REASONED"},
+    "config-precedence": {"text": "CLI flags override config; inspect --bind-addr, --config, CODE_SERVER_CONFIG and XDG_CONFIG_HOME for the effective launcher and file.", "components": ["server"], "sources": ["server:s99eaa753a770", "server:sbe2b1714f8d5"], "status": "REASONED"},
+    "tls-default": {"text": "cert defaults false; public access needs authenticated encryption, normally a reverse proxy with a trusted certificate.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:s99eaa753a770", "server:sbe2b1714f8d5"], "status": "REASONED"},
     "tls-native": {"text": "Bare --cert or cert:true generates ~/.local/share/code-server/self-signed.crt; --cert with --cert-key selects supplied material; retain certificate validation.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:sbe2b1714f8d5"], "status": "REASONED"},
     "mfa": {"text": "Built-in login is single-factor; fronting MFA must cover every enabled path, subdomain and WebSocket.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:s5c5105b71096"], "status": "REASONED"},
     "path-proxy": {"text": "/proxy/<port>/ strips its prefix; /absproxy/<port>/ retains it; both use code-server authentication and auth:none exposes them.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:s5c5105b71096", "server:s1ccbd73ebb52"], "status": "REASONED"},
@@ -47,7 +47,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -173,7 +173,7 @@ An unauthenticated editor in a private browser window means whoever finds the UR
 ## Sources (checked September 2026)
 
 - code-server v4.137.0 deployment guide (exposure, TLS and self-signed certificates, reverse proxy, `/proxy`+`/absproxy`+`--proxy-domain` routes, `--skip-auth-preflight`): https://raw.githubusercontent.com/coder/code-server/v4.137.0/docs/guide.md
-- code-server FAQ (config.yaml keys map to flags, `cert: false` default, `hashed-password` precedence, config path from `--config`/`CODE_SERVER_CONFIG`/`XDG_CONFIG_HOME`, flags override the file): https://coder.com/docs/code-server/FAQ
+- code-server v4.137.0 FAQ (config.yaml keys map to flags, `cert: false` default, `hashed-password` precedence, config path from `--config`/`CODE_SERVER_CONFIG`/`XDG_CONFIG_HOME`, flags override the file): https://raw.githubusercontent.com/coder/code-server/v4.137.0/docs/FAQ.md
 - code-server v4.137.0 CLI (credentials, defaults, config generation, proxy flags, `--password` rejected on the CLI): https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/cli.ts
 - code-server v4.137.0 HTTP controls (authentication, proxy auth, `--disable-proxy`): https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/http.ts
 - code-server v4.137.0 path proxy (`/proxy`, `/absproxy` routing): https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/routes/pathProxy.ts
