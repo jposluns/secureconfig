@@ -3,22 +3,21 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "05fbb7b4bdc689ca33f87e8abb9c7cf3095c9d28ed455b67ea27d0399df84839",
+  "body_sha256": "438cb43ddb3c481a7ae6d4c106e4f0a777c4c7fe798c6f45246583aa454535d8",
   "components": {
     "docs": {
       "name": "ASP.NET Core documentation",
       "basis": ".NET 10",
       "sources": {
-        "s5d34b2b12c02": "https://learn.microsoft.com/en-us/aspnet/core/security/enforcing-ssl",
-        "sf96410ac8000": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints",
-        "s29f8dd89b78a": "https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer",
-        "s5a41f6843bd6": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity",
-        "sdff9f6d5d4bf": "https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.identity.passwordhasheroptions",
-        "s44fcc2675fd1": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie",
-        "sa0d3ad10d4bf": "https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.cookiesecurepolicy",
-        "s2965c3e07add": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-oidc-web-authentication",
-        "sca1785c7952d": "https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclienthandler.dangerousacceptanyservercertificatevalidator",
-        "s640872a17a8a": "https://learn.microsoft.com/en-us/dotnet/standard/security/cross-platform-cryptography"
+        "s8c762260991c": "https://learn.microsoft.com/en-us/aspnet/core/security/enforcing-ssl?view=aspnetcore-10.0",
+        "s74dcd6a72d63": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-10.0",
+        "s5701d26de241": "https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-10.0",
+        "s3790c49f70b9": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity?view=aspnetcore-10.0",
+        "s9d10c561bb48": "https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.identity.passwordhasheroptions?view=aspnetcore-10.0",
+        "sa3c22a38f4cb": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-10.0",
+        "sb6780977fa3f": "https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.cookiesecurepolicy?view=aspnetcore-10.0",
+        "s592dc85bb71f": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-oidc-web-authentication?view=aspnetcore-10.0",
+        "s6afc0255098f": "https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclienthandler.dangerousacceptanyservercertificatevalidator?view=net-10.0"
       }
     },
     "rate-min": {
@@ -107,31 +106,38 @@ version_basis: {
       "sources": {
         "s267eddd43502": "https://learn.microsoft.com/en-us/iis/configuration/system.webserver/httpprotocol/customheaders/"
       }
+    },
+    "dotnet-rolling": {
+      "name": ".NET documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "s640872a17a8a": "https://learn.microsoft.com/en-us/dotnet/standard/security/cross-platform-cryptography"
+      }
     }
   },
   "claims": {
-    "tls": {"text": "Kestrel serves wildcard HTTP 80 and HTTPS 443 with PKCS12 or PEM Path/KeyPath; supply certificate passwords from environment or a secret store.", "components": ["docs", "net10"], "sources": ["docs:sf96410ac8000", "net10:s74dcd6a72d63"], "status": "REASONED"},
+    "tls": {"text": "Kestrel serves wildcard HTTP 80 and HTTPS 443 with PKCS12 or PEM Path/KeyPath; supply certificate passwords from environment or a secret store.", "components": ["docs", "net10"], "sources": ["docs:s74dcd6a72d63", "net10:s74dcd6a72d63"], "status": "REASONED"},
     "tls-protocols": {"text": "Default SslProtocols.None delegates to the OS; example explicitly permits only TLS 1.2 and 1.3.", "components": ["net10"], "sources": ["net10:s74dcd6a72d63"], "status": "REASONED"},
     "hsts-age": {"text": "NET 10 HSTS defaults to 30 days; example selects 365 days outside Development.", "components": ["source"], "sources": ["source:sb62cff70e3b8"], "status": "REASONED"},
     "hsts-subdomains": {"text": "HSTS IncludeSubDomains defaults false; example enables it only when all affected subdomains support HTTPS.", "components": ["source"], "sources": ["source:sb62cff70e3b8"], "status": "REASONED"},
     "hsts-preload": {"text": "HSTS Preload defaults false.", "components": ["source"], "sources": ["source:sb62cff70e3b8"], "status": "REASONED"},
-    "redirect": {"text": "UseHttpsRedirection needs an HTTPS port via ASPNETCORE_HTTPS_PORT=443 or HttpsPort.", "components": ["docs"], "sources": ["docs:s5d34b2b12c02"], "status": "REASONED"},
-    "proxy-bind": {"text": "ListenLocalhost(5000), or localhost:5000 URLs, binds behind a same-host proxy; process forwarded headers first.", "components": ["docs", "net10"], "sources": ["docs:sf96410ac8000", "net10:s5701d26de241"], "status": "REASONED"},
+    "redirect": {"text": "UseHttpsRedirection needs an HTTPS port via ASPNETCORE_HTTPS_PORT=443 or HttpsPort.", "components": ["docs"], "sources": ["docs:s8c762260991c"], "status": "REASONED"},
+    "proxy-bind": {"text": "ListenLocalhost(5000), or localhost:5000 URLs, binds behind a same-host proxy; process forwarded headers first.", "components": ["docs", "net10"], "sources": ["docs:s74dcd6a72d63", "net10:s5701d26de241"], "status": "REASONED"},
     "proxy-default": {"text": "NET 10 trusts ::1 and 127.0.0.0/8 by default; adding 127.0.0.1 does not narrow that list.", "components": ["net10", "source"], "sources": ["net10:s5701d26de241", "source:sfc86e3f62243"], "status": "REASONED"},
     "proxy-networks": {"text": "NET 10 replaces obsolete KnownNetworks with KnownIPNetworks/System.Net.IPNetwork; narrow both lists together and never leave both empty.", "components": ["net10", "source"], "sources": ["net10:s5701d26de241", "source:sfc86e3f62243"], "status": "REASONED"},
     "proxy-hardening": {"text": "Unknown-proxy headers are ignored in 8.0.17 and 9.0.6 and NET 10, even without X-Forwarded-For processing; register the real proxy.", "components": ["net10", "proxy-fix"], "sources": ["net10:s5701d26de241", "proxy-fix:s2864662bcd21"], "status": "REASONED"},
-    "proxy-https": {"text": "When the proxy handles redirects/HSTS, omit the app middleware; missing forwarded-header handling can cause redirect loops.", "components": ["docs"], "sources": ["docs:s5d34b2b12c02", "docs:s29f8dd89b78a"], "status": "REASONED"},
-    "password": {"text": "Identity uses PBKDF2 with default 100000 iterations; keep its password hasher.", "components": ["docs"], "sources": ["docs:s5a41f6843bd6", "docs:sdff9f6d5d4bf"], "status": "REASONED"},
+    "proxy-https": {"text": "When the proxy handles redirects/HSTS, omit the app middleware; missing forwarded-header handling can cause redirect loops.", "components": ["docs"], "sources": ["docs:s8c762260991c", "docs:s5701d26de241"], "status": "REASONED"},
+    "password": {"text": "Identity uses PBKDF2 with default 100000 iterations; keep its password hasher.", "components": ["docs"], "sources": ["docs:s3790c49f70b9", "docs:s9d10c561bb48"], "status": "REASONED"},
     "lockout": {"text": "Configure five failures, five-minute lockout and allowance for new users; PasswordSignInAsync must use lockoutOnFailure=true, while the template uses false.", "components": ["net10"], "sources": ["net10:s0d7c367ac06f"], "status": "REASONED"},
-    "cookies": {"text": "Configure HttpOnly, SecurePolicy.Always, SameSite=Lax and eight-hour expiry; cookie-only auth uses the same options.", "components": ["docs", "net10"], "sources": ["docs:s44fcc2675fd1", "docs:sa0d3ad10d4bf", "net10:s0d7c367ac06f"], "status": "REASONED"},
+    "cookies": {"text": "Configure HttpOnly, SecurePolicy.Always, SameSite=Lax and eight-hour expiry; cookie-only auth uses the same options.", "components": ["docs", "net10"], "sources": ["docs:sa3c22a38f4cb", "docs:sb6780977fa3f", "net10:s0d7c367ac06f"], "status": "REASONED"},
     "samesite": {"text": "NET 10 auth cookie defaults Lax; Strict can suppress cross-site app cookies without universally breaking OAuth/OIDC callbacks.", "components": ["net10"], "sources": ["net10:sc0654e58fc4c"], "status": "REASONED"},
     "remote-cookies": {"text": "Correlation and OIDC nonce cookies separately default None; preserve secure cross-site settings and avoid global rewriting.", "components": ["net10"], "sources": ["net10:sc0654e58fc4c"], "status": "REASONED"},
-    "authorization": {"text": "Run authentication before authorization and Map calls; use an authenticated fallback policy and explicitly AllowAnonymous on public pages.", "components": ["docs"], "sources": ["docs:s44fcc2675fd1"], "status": "REASONED"},
+    "authorization": {"text": "Run authentication before authorization and Map calls; use an authenticated fallback policy and explicitly AllowAnonymous on public pages.", "components": ["docs"], "sources": ["docs:sa3c22a38f4cb"], "status": "REASONED"},
     "login-limit": {"text": "NET 7+ built-in rate limiting: login policy permits 20 per 15 minutes, no queue, 429 rejection; endpoint policies need UseRateLimiter after routing.", "components": ["rate-min"], "sources": ["rate-min:sd3fef8f45066"], "status": "REASONED"},
-    "oidc": {"text": "Configure OpenIdConnect code flow with cookie DefaultScheme and OIDC DefaultChallengeScheme; keep client secrets outside appsettings.json.", "components": ["docs"], "sources": ["docs:s2965c3e07add"], "status": "REASONED"},
-    "mfa": {"text": "Enforce MFA at the provider or fronting identity layer per linked guides; provider MFA configuration lacks a direct listed source.", "components": ["docs"], "sources": ["docs:s2965c3e07add"], "status": "REASONED"},
-    "client-validation": {"text": "Never accept every certificate through DangerousAcceptAnyServerCertificateValidator or an always-true callback.", "components": ["docs"], "sources": ["docs:sca1785c7952d"], "status": "REASONED"},
-    "client-ca": {"text": "On Linux NET 10 install internal roots or use SSL_CERT_FILE for a PEM file and SSL_CERT_DIR for a certificate directory; preserve needed public roots.", "components": ["docs", "runtime", "openssl"], "sources": ["docs:s640872a17a8a", "runtime:s29ee940c94b9", "openssl:scac6dada5f6a"], "status": "REASONED"},
+    "oidc": {"text": "Configure OpenIdConnect code flow with cookie DefaultScheme and OIDC DefaultChallengeScheme; keep client secrets outside appsettings.json.", "components": ["docs"], "sources": ["docs:s592dc85bb71f"], "status": "REASONED"},
+    "mfa": {"text": "Enforce MFA at the provider or fronting identity layer per linked guides; provider MFA configuration lacks a direct listed source.", "components": ["docs"], "sources": ["docs:s592dc85bb71f"], "status": "REASONED"},
+    "client-validation": {"text": "Never accept every certificate through DangerousAcceptAnyServerCertificateValidator or an always-true callback.", "components": ["docs"], "sources": ["docs:s6afc0255098f"], "status": "REASONED"},
+    "client-ca": {"text": "On Linux NET 10 install internal roots or use SSL_CERT_FILE for a PEM file and SSL_CERT_DIR for a certificate directory; preserve needed public roots.", "components": ["runtime", "openssl", "dotnet-rolling"], "sources": ["dotnet-rolling:s640872a17a8a", "runtime:s29ee940c94b9", "openssl:scac6dada5f6a"], "status": "REASONED"},
     "developer-errors": {"text": "Development automatically enables the Developer Exception Page; production must exclude it and check the effective environment.", "components": ["net10"], "sources": ["net10:s2f7e6a8213f1", "net10:s61afb89034f8"], "status": "REASONED"},
     "error-handler": {"text": "Install UseExceptionHandler early after forwarding; provide a generic /Error route supporting failed methods/anonymous requests and preserve intentional 413 responses.", "components": ["net10"], "sources": ["net10:s2f7e6a8213f1"], "status": "REASONED"},
     "environment": {"text": "Production is default absent overrides; NET 7+ WebApplicationBuilder prioritizes command-line/DOTNET_ over ASPNETCORE_, while older WebHost differs.", "components": ["net10", "precedence"], "sources": ["net10:s61afb89034f8", "precedence:s10d46bc97fef"], "status": "REASONED"},
@@ -170,10 +176,10 @@ version_basis: {
     "health": {"text": "Register health checks and authorize /healthz; monitoring must authenticate or use a deliberately controlled minimal liveness route.", "components": ["net10"], "sources": ["net10:sc41b77cc06c8"], "status": "REASONED"},
     "health-host": {"text": "RequireHost checks a spoofable Host header and is not a network or authentication boundary.", "components": ["net10"], "sources": ["net10:sc41b77cc06c8"], "status": "REASONED"},
     "host-filter": {"text": "AllowedHosts uses semicolon-separated names without ports; wildcard permits all. It neither authenticates nor binds interfaces; forwarded-host allowlisting is separate.", "components": ["net10"], "sources": ["net10:s5701d26de241", "net10:se101626c29d6"], "status": "REASONED"},
-    "verify-redirect": {"text": "HTTP should return 307/308 with HTTPS Location.", "components": ["docs"], "sources": ["docs:s5d34b2b12c02"], "status": "REASONED", "verify": [1]},
-    "verify-tls": {"text": "HTTPS must validate without -k and show HSTS.", "components": ["docs", "net10"], "sources": ["docs:s5d34b2b12c02", "net10:s74dcd6a72d63"], "status": "REASONED", "verify": [1]},
+    "verify-redirect": {"text": "HTTP should return 307/308 with HTTPS Location.", "components": ["docs"], "sources": ["docs:s8c762260991c"], "status": "REASONED", "verify": [1]},
+    "verify-tls": {"text": "HTTPS must validate without -k and show HSTS.", "components": ["docs", "net10"], "sources": ["docs:s8c762260991c", "net10:s74dcd6a72d63"], "status": "REASONED", "verify": [1]},
     "verify-api": {"text": "Known protected NET 10 cookie API endpoints return 401 anonymous and 403 forbidden; pages/OIDC/custom handlers may redirect. Confirm authorized success first.", "components": ["net10"], "sources": ["net10:s837df4b1657f"], "status": "REASONED", "verify": [1]},
-    "verify-bind": {"text": "Inspect every listener for 127.0.0.1 and ::1 behind the proxy.", "components": ["docs", "net10"], "sources": ["docs:sf96410ac8000", "net10:s74dcd6a72d63"], "status": "REASONED", "verify": [1]},
+    "verify-bind": {"text": "Inspect every listener for 127.0.0.1 and ::1 behind the proxy.", "components": ["docs", "net10"], "sources": ["docs:s74dcd6a72d63", "net10:s74dcd6a72d63"], "status": "REASONED", "verify": [1]},
     "verify-errors": {"text": "Controlled exception should expose marker/detail under development and generic 500 under production; inspect plain/HTML bodies and correlate handler execution.", "components": ["net10"], "sources": ["net10:s2f7e6a8213f1"], "status": "REASONED", "verify": [2]},
     "verify-body": {"text": "Body-consuming test route returns 204 at 1048576 bytes, 413 at 1048577; raised limit permits both. Isolate other limits and distinguish upstream rejection.", "components": ["net10"], "sources": ["net10:s1ce47370d948"], "status": "REASONED", "verify": [3]},
     "verify-aux": {"text": "Probe actual diagnostic/OpenAPI/UI/health routes anonymously, then authorized; Development-only routes should be absent and retained routes protected. Status alone does not prove authorization.", "components": ["net10"], "sources": ["net10:s1d58219cedec", "net10:s1f9d4c5e975c", "net10:sc41b77cc06c8"], "status": "REASONED", "verify": [4]},
@@ -216,7 +222,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | oidc: Configure OpenIdConnect code flow with cookie DefaultScheme and OIDC DefaultChallengeScheme; keep client secrets outside appsettings.json. | ASP.NET Core documentation .NET 10 | REASONED |
 | mfa: Enforce MFA at the provider or fronting identity layer per linked guides; provider MFA configuration lacks a direct listed source. | ASP.NET Core documentation .NET 10 | REASONED |
 | client-validation: Never accept every certificate through DangerousAcceptAnyServerCertificateValidator or an always-true callback. | ASP.NET Core documentation .NET 10 | REASONED |
-| client-ca: On Linux NET 10 install internal roots or use SSL_CERT_FILE for a PEM file and SSL_CERT_DIR for a certificate directory; preserve needed public roots. | ASP.NET Core documentation .NET 10; NET runtime source v10.0.0; OpenSSL documentation 3.0 | REASONED |
+| client-ca: On Linux NET 10 install internal roots or use SSL_CERT_FILE for a PEM file and SSL_CERT_DIR for a certificate directory; preserve needed public roots. | NET runtime source v10.0.0; OpenSSL documentation 3.0; .NET documentation (rolling) unknown | REASONED |
 | developer-errors: Development automatically enables the Developer Exception Page; production must exclude it and check the effective environment. | ASP.NET Core .NET 10 | REASONED |
 | error-handler: Install UseExceptionHandler early after forwarding; provide a generic /Error route supporting failed methods/anonymous requests and preserve intentional 413 responses. | ASP.NET Core .NET 10 | REASONED |
 | environment: Production is default absent overrides; NET 7+ WebApplicationBuilder prioritizes command-line/DOTNET_ over ASPNETCORE_, while older WebHost differs. | ASP.NET Core .NET 10; WebApplicationBuilder precedence .NET 7 | REASONED |
@@ -674,11 +680,11 @@ Also retain an antiforgery token and its accompanying cookie across a restart, t
 
 ## Sources (checked September 2026)
 
-- Enforce HTTPS (UseHttpsRedirection, UseHsts, HttpsPort) (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/enforcing-ssl ; Kestrel endpoints (certificate config, ListenLocalhost, SslProtocols): https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints ; proxy servers (ForwardedHeadersOptions, KnownProxies): https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer
-- Introduction to Identity (lockout, ConfigureApplicationCookie) (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity ; PasswordHasherOptions: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.identity.passwordhasheroptions
-- Cookie authentication without Identity (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie ; CookieSecurePolicy: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.cookiesecurepolicy
-- Rate limiting middleware (rate-limiting middleware in .NET 7 and later; guide targets .NET 10 LTS): https://learn.microsoft.com/en-us/aspnet/core/performance/rate-limit ; OpenID Connect web authentication: https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-oidc-web-authentication
-- DangerousAcceptAnyServerCertificateValidator (.NET 10): https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclienthandler.dangerousacceptanyservercertificatevalidator ; trusted roots on Linux: https://learn.microsoft.com/en-us/dotnet/standard/security/cross-platform-cryptography
+- Enforce HTTPS (UseHttpsRedirection, UseHsts, HttpsPort) (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/enforcing-ssl?view=aspnetcore-10.0 ; Kestrel endpoints (certificate config, ListenLocalhost, SslProtocols): https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-10.0 ; proxy servers (ForwardedHeadersOptions, KnownProxies): https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-10.0
+- Introduction to Identity (lockout, ConfigureApplicationCookie) (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity?view=aspnetcore-10.0 ; PasswordHasherOptions: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.identity.passwordhasheroptions?view=aspnetcore-10.0
+- Cookie authentication without Identity (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-10.0 ; CookieSecurePolicy: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.cookiesecurepolicy?view=aspnetcore-10.0
+- Rate limiting middleware (rate-limiting middleware in .NET 7 and later; guide targets .NET 10 LTS): https://learn.microsoft.com/en-us/aspnet/core/performance/rate-limit ; OpenID Connect web authentication: https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-oidc-web-authentication?view=aspnetcore-10.0
+- DangerousAcceptAnyServerCertificateValidator (.NET 10): https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclienthandler.dangerousacceptanyservercertificatevalidator?view=net-10.0 ; trusted roots on Linux (rolling documentation, checked September 2026): https://learn.microsoft.com/en-us/dotnet/standard/security/cross-platform-cryptography
 - .NET 10 Kestrel TLS protocol selection: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-10.0
 - .NET 10 HstsOptions defaults: https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Middleware/HttpsPolicy/src/HstsOptions.cs
 - .NET 10 proxy trust configuration and loopback defaults: https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-10.0

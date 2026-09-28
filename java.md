@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "6186722b8daf4256bc2f34e5e673388335c1a151fe06f0984e9fb53ed04702ec",
+  "body_sha256": "fe5784bbae64a584f6d8151a79d13df0f33214133e35f865218fda019f3f3b11",
   "components": {
     "boot": {
       "name": "Spring Boot documentation",
@@ -44,7 +44,7 @@ version_basis: {
         "s033f98a55ba1": "https://docs.spring.io/spring-boot/4.1/reference/actuator/endpoints.html#actuator.endpoints.sanitization",
         "s1246672710d1": "https://docs.spring.io/spring-boot/4.1/reference/actuator/monitoring.html",
         "s88d377c93f63": "https://docs.spring.io/spring-boot/4.1/reference/using/devtools.html",
-        "s01196a8de797": "https://docs.spring.io/spring-boot/api/java/org/springframework/boot/restclient/autoconfigure/RestClientSsl.html",
+        "s8e261bdcd27a": "https://raw.githubusercontent.com/spring-projects/spring-boot/v4.1.1/module/spring-boot-restclient/src/main/java/org/springframework/boot/restclient/autoconfigure/RestClientSsl.java",
         "s03b9d97c1a28": "https://docs.spring.io/spring-boot/4.1/reference/io/rest-client.html"
       }
     },
@@ -53,11 +53,11 @@ version_basis: {
       "basis": "4.0",
       "sources": {
         "s08143a9162b2": "https://docs.spring.io/spring-boot/4.0/reference/using/build-systems.html",
-        "s09239aa6a09f": "https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide"
+        "s0486713aa731": "https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide/e11f389f3671d1eb7fa346065410b5b1eab99c3c"
       }
     },
     "security": {
-      "name": "Spring Security documentation",
+      "name": "Spring Security documentation (rolling)",
       "basis": "unknown",
       "sources": {
         "s55e8fcd2ff11": "https://docs.spring.io/spring-security/reference/servlet/oauth2/login/core.html",
@@ -66,7 +66,8 @@ version_basis: {
         "s23cf30cad42c": "https://docs.spring.io/spring-security/reference/servlet/exploits/http.html",
         "s9471b4cfe0f6": "https://docs.spring.io/spring-security/reference/servlet/configuration/java.html",
         "s8859c309d60a": "https://docs.spring.io/spring-security/reference/features/exploits/csrf.html",
-        "sf301a3d0645a": "https://docs.spring.io/spring-security/reference/servlet/authentication/session-management.html"
+        "sf301a3d0645a": "https://docs.spring.io/spring-security/reference/servlet/authentication/session-management.html",
+        "s6fb344722a7c": "https://docs.spring.io/spring-security/reference/api/java/org/springframework/security/web/header/writers/HstsHeaderWriter.html"
       }
     },
     "jdk": {
@@ -90,13 +91,6 @@ version_basis: {
         "s527bf5b95139": "https://docs.spring.io/spring-security/reference/6.5/api/java/org/springframework/security/web/header/writers/HstsHeaderWriter.html"
       }
     },
-    "security71": {
-      "name": "Spring Security HSTS",
-      "basis": "7.1",
-      "sources": {
-        "s6fb344722a7c": "https://docs.spring.io/spring-security/reference/api/java/org/springframework/security/web/header/writers/HstsHeaderWriter.html"
-      }
-    },
     "tomcat": {
       "name": "Tomcat HTTP connector",
       "basis": "10.1",
@@ -116,7 +110,7 @@ version_basis: {
     "tls": {"text": "Direct HTTPS on 8443 uses PEM certificate/key or PKCS12 and TLSv1.2/TLSv1.3; older releases must confirm PEM property support.", "components": ["boot", "boot35"], "sources": ["boot:s4f6aa9df744a", "boot35:se7aed3f6650b"], "status": "REASONED"},
     "connector": {"text": "Properties configure one HTTP or HTTPS connector; add the port-80 redirect connector in code, or let the proxy redirect.", "components": ["boot"], "sources": ["boot:s4f6aa9df744a"], "status": "REASONED"},
     "https-redirect": {"text": "Spring Security 6.5+ redirectToHttps redirects insecure requests; trusted forwarded headers determine secure status behind TLS termination.", "components": ["security", "security65"], "sources": ["security:s23cf30cad42c", "security65:s527bf5b95139"], "status": "REASONED"},
-    "hsts": {"text": "Default HSTS writer runs only for secure requests; defaults are one year, includeSubDomains=true and preload=false.", "components": ["security65", "security71"], "sources": ["security65:s527bf5b95139", "security71:s6fb344722a7c"], "status": "REASONED"},
+    "hsts": {"text": "Default HSTS writer runs only for secure requests; defaults are one year, includeSubDomains=true and preload=false.", "components": ["security65", "security"], "sources": ["security65:s527bf5b95139", "security:s6fb344722a7c"], "status": "REASONED"},
     "proxy-bind": {"text": "Bind 127.0.0.1:8080 behind the TLS proxy.", "components": ["boot", "boot35", "boot41"], "sources": ["boot:s4f6aa9df744a", "boot35:s34f52429c110", "boot41:s61bf6b20e945"], "status": "REASONED"},
     "forwarding": {"text": "NATIVE delegates forwarded headers to the server, FRAMEWORK uses ForwardedHeaderFilter; outside supported cloud platforms the default is NONE.", "components": ["boot"], "sources": ["boot:s4f6aa9df744a"], "status": "REASONED"},
     "proxy-trust": {"text": "Restrict Tomcat internal-proxies, strip inbound Forwarded/X-Forwarded-* at the edge and prevent direct listener bypass.", "components": ["boot", "framework"], "sources": ["boot:s4f6aa9df744a", "framework:sc25b4ff29bc9"], "status": "REASONED"},
@@ -128,14 +122,14 @@ version_basis: {
     "password": {"text": "Use DelegatingPasswordEncoder, bcrypt by default with {bcrypt}; BCrypt strength defaults to 10 and is tuned to about one second; Argon2 v5_8 defaults are an alternative.", "components": ["security"], "sources": ["security:sd5aebfb9d1ed"], "status": "REASONED"},
     "cookies": {"text": "Set secure/http-only cookies, SameSite=lax and a 30m servlet session timeout.", "components": ["boot", "boot35", "boot41"], "sources": ["boot:s81ce68041084", "boot35:s6198bce672f6", "boot41:sc24ee7294b38"], "status": "REASONED"},
     "login-limit": {"text": "Checked references document no built-in login limiter; limit at the proxy or count failures and lock local accounts.", "components": ["security"], "sources": ["security:sae4824b03001", "security:sd5aebfb9d1ed"], "status": "REASONED"},
-    "oidc-starter": {"text": "Boot 3.5 uses starter-oauth2-client; Boot 4 uses starter-security-oauth2-client and deprecates the old name.", "components": ["boot40"], "sources": ["boot40:s08143a9162b2", "boot40:s09239aa6a09f"], "status": "REASONED"},
+    "oidc-starter": {"text": "Boot 3.5 uses starter-oauth2-client; Boot 4 uses starter-security-oauth2-client and deprecates the old name.", "components": ["boot40"], "sources": ["boot40:s08143a9162b2", "boot40:s0486713aa731"], "status": "REASONED"},
     "oidc": {"text": "Configure client ID, environment-supplied secret, issuer discovery and openid/profile/email scopes with oauth2Login; without openid the login is OAuth2, not OIDC.", "components": ["boot", "security"], "sources": ["boot:sc88333e257f0", "security:s55e8fcd2ff11"], "status": "REASONED"},
     "mfa": {"text": "Enforce MFA at the identity provider or a fronting layer per linked guides; these MFA controls lack a direct listed source.", "components": ["security"], "sources": ["security:s55e8fcd2ff11"], "status": "REASONED"},
     "csrf": {"text": "Statelessness does not remove CSRF risk for automatically attached browser cookies or Basic credentials; retain appropriate protection.", "components": ["security"], "sources": ["security:s8859c309d60a"], "status": "REASONED"},
     "session-fixation": {"text": "Default fixation protection uses changeSessionId on Servlet 3.1+ containers; keep it enabled.", "components": ["security"], "sources": ["security:sf301a3d0645a"], "status": "REASONED"},
     "client-validation": {"text": "Do not install trust-all TrustManager or hostname verifiers; this client-validation warning has no direct listed API source.", "components": ["boot", "jdk"], "sources": ["boot:s6d0dd8e90590", "jdk:s8a504e61bc07"], "status": "REASONED"},
     "client-ca": {"text": "Import an internal CA with keytool into cacerts and change its default changeit password, or configure and apply a named SSL bundle to the client.", "components": ["boot", "jdk"], "sources": ["boot:s6d0dd8e90590", "boot:s1b86cf7d45f1", "jdk:s8a504e61bc07"], "status": "REASONED"},
-    "client-import": {"text": "RestClientSsl and WebClientSsl imports differ between Boot 3.5.16 and 4.1.1; apply ssl.fromBundle to the selected client.", "components": ["boot35", "boot41"], "sources": ["boot35:s3a681db376ce", "boot41:s01196a8de797", "boot35:s2845cade9c1d", "boot41:s03b9d97c1a28"], "status": "REASONED"},
+    "client-import": {"text": "RestClientSsl and WebClientSsl imports differ between Boot 3.5.16 and 4.1.1; apply ssl.fromBundle to the selected client.", "components": ["boot35", "boot41"], "sources": ["boot35:s3a681db376ce", "boot41:s8e261bdcd27a", "boot35:s2845cade9c1d", "boot41:s03b9d97c1a28"], "status": "REASONED"},
     "actuator-exposure": {"text": "Boot 3.5.16/4.1.1 default web exposure is health; use an explicit allowlist. Exposure, access and authorization are separate.", "components": ["boot35", "boot41"], "sources": ["boot35:s973cb5a333ac", "boot41:s0511290ee7a9"], "status": "REASONED"},
     "management-bind": {"text": "Management binds 127.0.0.1:8081 separately; a distinct management address requires a distinct port and no public proxy forwarding.", "components": ["boot35", "boot41"], "sources": ["boot35:s73890facf07c", "boot41:s1246672710d1"], "status": "REASONED"},
     "management-disable": {"text": "management.server.port=-1 disables management HTTP, not JMX exposure.", "components": ["boot35", "boot41"], "sources": ["boot35:s73890facf07c", "boot41:s1246672710d1"], "status": "REASONED"},
@@ -158,7 +152,7 @@ version_basis: {
     "form-limit": {"text": "Tomcat max-http-form-post-size defaults to 2MB for form-to-parameter processing, not arbitrary request bodies.", "components": ["boot35", "boot41", "tomcat"], "sources": ["boot35:s6198bce672f6", "boot41:sc24ee7294b38", "tomcat:s20a557a45f7a"], "status": "REASONED"},
     "header-limit": {"text": "max-http-request-header-size defaults to 8KB; Tomcat counts request line and all header names/values together.", "components": ["boot35", "boot41", "tomcat"], "sources": ["boot35:s6198bce672f6", "boot41:sc24ee7294b38", "tomcat:s20a557a45f7a"], "status": "REASONED"},
     "json-limit": {"text": "These properties do not establish a universal JSON body limit; bound other bodies at the proxy/application and test the actual route and content type.", "components": ["boot35", "boot41", "tomcat"], "sources": ["boot35:s6198bce672f6", "boot41:sc24ee7294b38", "tomcat:s20a557a45f7a"], "status": "REASONED"},
-    "verify-tls": {"text": "HTTPS must succeed without -k and show HSTS.", "components": ["boot", "security65", "security71"], "sources": ["boot:s4f6aa9df744a", "security65:s527bf5b95139", "security71:s6fb344722a7c"], "status": "REASONED", "verify": [1]},
+    "verify-tls": {"text": "HTTPS must succeed without -k and show HSTS.", "components": ["boot", "security65", "security"], "sources": ["boot:s4f6aa9df744a", "security65:s527bf5b95139", "security:s6fb344722a7c"], "status": "REASONED", "verify": [1]},
     "verify-auth": {"text": "Unauthenticated /api should return 401 or a 302 login redirect.", "components": ["boot35"], "sources": ["boot35:s8cf61ca65ae4"], "status": "REASONED", "verify": [1]},
     "verify-bind": {"text": "Inspect every listener for loopback-only Java binding behind the proxy.", "components": ["boot35", "boot41"], "sources": ["boot35:s34f52429c110", "boot41:s61bf6b20e945"], "status": "REASONED", "verify": [1]},
     "verify-user": {"text": "Positive generated-password log count records generation; zero is inconclusive because logging or a configured password can hide the default account.", "components": ["boot35"], "sources": ["boot35:s8cf61ca65ae4"], "status": "REASONED", "verify": [1]},
@@ -186,24 +180,24 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | --- | --- | --- |
 | tls: Direct HTTPS on 8443 uses PEM certificate/key or PKCS12 and TLSv1.2/TLSv1.3; older releases must confirm PEM property support. | Spring Boot documentation unknown; Spring Boot 3.5.16 | REASONED |
 | connector: Properties configure one HTTP or HTTPS connector; add the port-80 redirect connector in code, or let the proxy redirect. | Spring Boot documentation unknown | REASONED |
-| https-redirect: Spring Security 6.5+ redirectToHttps redirects insecure requests; trusted forwarded headers determine secure status behind TLS termination. | Spring Security documentation unknown; Spring Security HSTS 6.5 | REASONED |
-| hsts: Default HSTS writer runs only for secure requests; defaults are one year, includeSubDomains=true and preload=false. | Spring Security HSTS 6.5; Spring Security HSTS 7.1 | REASONED |
+| https-redirect: Spring Security 6.5+ redirectToHttps redirects insecure requests; trusted forwarded headers determine secure status behind TLS termination. | Spring Security documentation (rolling) unknown; Spring Security HSTS 6.5 | REASONED |
+| hsts: Default HSTS writer runs only for secure requests; defaults are one year, includeSubDomains=true and preload=false. | Spring Security HSTS 6.5; Spring Security documentation (rolling) unknown | REASONED |
 | proxy-bind: Bind 127.0.0.1:8080 behind the TLS proxy. | Spring Boot documentation unknown; Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
 | forwarding: NATIVE delegates forwarded headers to the server, FRAMEWORK uses ForwardedHeaderFilter; outside supported cloud platforms the default is NONE. | Spring Boot documentation unknown | REASONED |
 | proxy-trust: Restrict Tomcat internal-proxies, strip inbound Forwarded/X-Forwarded-* at the edge and prevent direct listener bypass. | Spring Boot documentation unknown; Spring Framework documentation unknown | REASONED |
 | proxy-redirect: Tomcat redirect-context-root=false preserves HTTPS redirects behind TLS termination. | Spring Boot documentation unknown | REASONED |
 | server-import: ServerProperties moves from boot.autoconfigure.web in Boot 3.5 to boot.web.server.autoconfigure in Boot 4. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
-| default-web-auth: With starter-security and default web configuration, require authentication except Actuator health; form login, Basic, CSRF and security headers are enabled. | Spring Boot documentation unknown; Spring Security documentation unknown; Spring Boot 3.5.16 | REASONED |
-| custom-chain: Any custom SecurityFilterChain replaces Boot default web and Actuator rules; unmatched requests need a fallback chain or remain unprotected. | Spring Boot 3.5.16; Spring Security documentation unknown | REASONED |
+| default-web-auth: With starter-security and default web configuration, require authentication except Actuator health; form login, Basic, CSRF and security headers are enabled. | Spring Boot documentation unknown; Spring Security documentation (rolling) unknown; Spring Boot 3.5.16 | REASONED |
+| custom-chain: Any custom SecurityFilterChain replaces Boot default web and Actuator rules; unmatched requests need a fallback chain or remain unprotected. | Spring Boot 3.5.16; Spring Security documentation (rolling) unknown | REASONED |
 | default-user: Separate default-user auto-configuration creates user with a normally logged generated password; a custom chain alone does not remove it. Production needs deliberate authentication. | Spring Boot 3.5.16 | REASONED |
-| password: Use DelegatingPasswordEncoder, bcrypt by default with {bcrypt}; BCrypt strength defaults to 10 and is tuned to about one second; Argon2 v5_8 defaults are an alternative. | Spring Security documentation unknown | REASONED |
+| password: Use DelegatingPasswordEncoder, bcrypt by default with {bcrypt}; BCrypt strength defaults to 10 and is tuned to about one second; Argon2 v5_8 defaults are an alternative. | Spring Security documentation (rolling) unknown | REASONED |
 | cookies: Set secure/http-only cookies, SameSite=lax and a 30m servlet session timeout. | Spring Boot documentation unknown; Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
-| login-limit: Checked references document no built-in login limiter; limit at the proxy or count failures and lock local accounts. | Spring Security documentation unknown | REASONED |
+| login-limit: Checked references document no built-in login limiter; limit at the proxy or count failures and lock local accounts. | Spring Security documentation (rolling) unknown | REASONED |
 | oidc-starter: Boot 3.5 uses starter-oauth2-client; Boot 4 uses starter-security-oauth2-client and deprecates the old name. | Spring Boot starter migration 4.0 | REASONED |
-| oidc: Configure client ID, environment-supplied secret, issuer discovery and openid/profile/email scopes with oauth2Login; without openid the login is OAuth2, not OIDC. | Spring Boot documentation unknown; Spring Security documentation unknown | REASONED |
-| mfa: Enforce MFA at the identity provider or a fronting layer per linked guides; these MFA controls lack a direct listed source. | Spring Security documentation unknown | REASONED |
-| csrf: Statelessness does not remove CSRF risk for automatically attached browser cookies or Basic credentials; retain appropriate protection. | Spring Security documentation unknown | REASONED |
-| session-fixation: Default fixation protection uses changeSessionId on Servlet 3.1+ containers; keep it enabled. | Spring Security documentation unknown | REASONED |
+| oidc: Configure client ID, environment-supplied secret, issuer discovery and openid/profile/email scopes with oauth2Login; without openid the login is OAuth2, not OIDC. | Spring Boot documentation unknown; Spring Security documentation (rolling) unknown | REASONED |
+| mfa: Enforce MFA at the identity provider or a fronting layer per linked guides; these MFA controls lack a direct listed source. | Spring Security documentation (rolling) unknown | REASONED |
+| csrf: Statelessness does not remove CSRF risk for automatically attached browser cookies or Basic credentials; retain appropriate protection. | Spring Security documentation (rolling) unknown | REASONED |
+| session-fixation: Default fixation protection uses changeSessionId on Servlet 3.1+ containers; keep it enabled. | Spring Security documentation (rolling) unknown | REASONED |
 | client-validation: Do not install trust-all TrustManager or hostname verifiers; this client-validation warning has no direct listed API source. | Spring Boot documentation unknown; JDK keytool documentation 21 | REASONED |
 | client-ca: Import an internal CA with keytool into cacerts and change its default changeit password, or configure and apply a named SSL bundle to the client. | Spring Boot documentation unknown; JDK keytool documentation 21 | REASONED |
 | client-import: RestClientSsl and WebClientSsl imports differ between Boot 3.5.16 and 4.1.1; apply ssl.fromBundle to the selected client. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
@@ -215,7 +209,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | heapdump: heapdump may expose secrets and consume resources; access defaults to none in specifically checked 3.5.16/4.1.1, and is explicitly disabled. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
 | loggers: loggers can read/change logging levels, increasing volume and possible information disclosure. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
 | shutdown: shutdown stops the application; access defaults to none and is explicitly disabled. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
-| management-auth: The first servlet chain requires ROLE_ENDPOINT_ADMIN for all exposed Actuator endpoints including health; the second authenticates application requests. Provision identities separately. | Spring Boot 3.5.16; Spring Boot 4.1.1; Spring Security documentation unknown | REASONED |
+| management-auth: The first servlet chain requires ROLE_ENDPOINT_ADMIN for all exposed Actuator endpoints including health; the second authenticates application requests. Provision identities separately. | Spring Boot 3.5.16; Spring Boot 4.1.1; Spring Security documentation (rolling) unknown | REASONED |
 | endpoint-import: EndpointRequest moves from boot.actuate.autoconfigure.security.servlet in Boot 3.5 to boot.security.autoconfigure.actuate.web.servlet in Boot 4. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
 | error-message: Error message inclusion defaults to never in checked releases; use server.error in Boot 3.5 and spring.web.error in Boot 4. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
 | error-stack: Stacktrace inclusion defaults to never in checked releases, using the version-appropriate error prefix. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
@@ -229,7 +223,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | form-limit: Tomcat max-http-form-post-size defaults to 2MB for form-to-parameter processing, not arbitrary request bodies. | Spring Boot 3.5.16; Spring Boot 4.1.1; Tomcat HTTP connector 10.1 | REASONED |
 | header-limit: max-http-request-header-size defaults to 8KB; Tomcat counts request line and all header names/values together. | Spring Boot 3.5.16; Spring Boot 4.1.1; Tomcat HTTP connector 10.1 | REASONED |
 | json-limit: These properties do not establish a universal JSON body limit; bound other bodies at the proxy/application and test the actual route and content type. | Spring Boot 3.5.16; Spring Boot 4.1.1; Tomcat HTTP connector 10.1 | REASONED |
-| verify-tls: HTTPS must succeed without -k and show HSTS. | Spring Boot documentation unknown; Spring Security HSTS 6.5; Spring Security HSTS 7.1 | REASONED |
+| verify-tls: HTTPS must succeed without -k and show HSTS. | Spring Boot documentation unknown; Spring Security HSTS 6.5; Spring Security documentation (rolling) unknown | REASONED |
 | verify-auth: Unauthenticated /api should return 401 or a 302 login redirect. | Spring Boot 3.5.16 | REASONED |
 | verify-bind: Inspect every listener for loopback-only Java binding behind the proxy. | Spring Boot 3.5.16; Spring Boot 4.1.1 | REASONED |
 | verify-user: Positive generated-password log count records generation; zero is inconclusive because logging or a configured password can hide the default account. | Spring Boot 3.5.16 | REASONED |
@@ -623,7 +617,7 @@ The small upload must reach and succeed at the intended handler. With a delibera
 - Spring Boot javadoc, session Cookie: https://docs.spring.io/spring-boot/3.5/api/java/org/springframework/boot/web/server/Cookie.html ; Spring Boot and Spring Security defaults: https://docs.spring.io/spring-boot/reference/web/spring-security.html
 - Spring Boot OAuth2 client properties: https://docs.spring.io/spring-boot/reference/security/oauth2.html ; Spring Security OAuth2 login: https://docs.spring.io/spring-security/reference/servlet/oauth2/login/core.html
 - Spring Boot 4.0 starters and deprecated OAuth2 client starter name: https://docs.spring.io/spring-boot/4.0/reference/using/build-systems.html
-- Spring Boot 4.0 migration guide, deprecated starters: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide
+- Spring Boot 4.0 migration guide, deprecated starters: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide/e11f389f3671d1eb7fa346065410b5b1eab99c3c
 - Spring Security getting started (Boot defaults): https://docs.spring.io/spring-security/reference/servlet/getting-started.html ; password storage: https://docs.spring.io/spring-security/reference/features/authentication/password-storage.html ; redirect to HTTPS and HSTS: https://docs.spring.io/spring-security/reference/servlet/exploits/http.html
 - keytool (importcert, cacerts): https://docs.oracle.com/en/java/javase/21/docs/specs/man/keytool.html
 - Spring Boot 3.5.16 application properties, Actuator access, error inclusion, H2, multipart, forms, and headers: https://docs.spring.io/spring-boot/3.5/appendix/application-properties/index.html
@@ -638,12 +632,12 @@ The small upload must reach and succeed at the intended handler. With a delibera
 - Spring Boot 3.5.16 error-inclusion options, including ON_PARAM: https://docs.spring.io/spring-boot/3.5/api/java/org/springframework/boot/autoconfigure/web/ErrorProperties.IncludeAttribute.html
 - Spring Boot 3.5.16 servlet error handling: https://docs.spring.io/spring-boot/3.5/reference/web/servlet.html
 - Spring Boot 3.5.16 RestClientSsl API: https://docs.spring.io/spring-boot/3.5/api/java/org/springframework/boot/autoconfigure/web/client/RestClientSsl.html
-- Spring Boot 4.1.1 RestClientSsl API, moved package: https://docs.spring.io/spring-boot/api/java/org/springframework/boot/restclient/autoconfigure/RestClientSsl.html
+- Spring Boot 4.1.1 RestClientSsl API, moved package: https://raw.githubusercontent.com/spring-projects/spring-boot/v4.1.1/module/spring-boot-restclient/src/main/java/org/springframework/boot/restclient/autoconfigure/RestClientSsl.java
 - Spring Boot 3.5.16 REST clients and SSL helper imports: https://docs.spring.io/spring-boot/3.5/reference/io/rest-client.html
 - Spring Boot 4.1.1 REST clients and moved SSL helper imports: https://docs.spring.io/spring-boot/4.1/reference/io/rest-client.html
 - Spring Framework ForwardedHeaderFilter, proxy trust boundary: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/filter/ForwardedHeaderFilter.html
 - Spring Security 6.5 HstsHeaderWriter, secure-request condition and defaults: https://docs.spring.io/spring-security/reference/6.5/api/java/org/springframework/security/web/header/writers/HstsHeaderWriter.html
-- Spring Security 7.1 HstsHeaderWriter, secure-request condition and defaults: https://docs.spring.io/spring-security/reference/api/java/org/springframework/security/web/header/writers/HstsHeaderWriter.html
+- Spring Security HstsHeaderWriter, secure-request condition and defaults (rolling documentation, checked September 2026): https://docs.spring.io/spring-security/reference/api/java/org/springframework/security/web/header/writers/HstsHeaderWriter.html
 - Spring Security multiple filter chains and unmatched requests: https://docs.spring.io/spring-security/reference/servlet/configuration/java.html
 - Spring Security CSRF and stateless browser applications: https://docs.spring.io/spring-security/reference/features/exploits/csrf.html
 - Spring Security session fixation protection and changeSessionId: https://docs.spring.io/spring-security/reference/servlet/authentication/session-management.html

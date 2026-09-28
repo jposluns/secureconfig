@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "cecd8d82fc462fcc940d50f3e2aa0673244f8ef186209b46509a6a1a0af91c82",
+  "body_sha256": "d248215cf1ebd031984b2db91fbc91a67be1aecea2dfc2f1be23b224d7f3acc9",
   "components": {
     "docs": {
       "name": "Neo4j documentation",
@@ -77,8 +77,8 @@ version_basis: {
       }
     },
     "tls": {
-      "name": "TLS",
-      "basis": "1.3",
+      "name": "TLS RFC 8446",
+      "basis": "unknown",
       "sources": {
         "se28608fb71a7": "https://www.rfc-editor.org/rfc/rfc8446.html"
       }
@@ -125,14 +125,14 @@ version_basis: {
       "name": "Neo4j LOAD minimum",
       "basis": "5.13",
       "sources": {
-        "sd1cbea2cf003": "https://neo4j.com/docs/operations-manual/current/authentication-authorization/load-privileges/"
+        "se48a10ba1e9a": "https://neo4j.com/docs/cypher-manual/5/deprecations-additions-removals-compatibility/"
       }
     },
     "cidr-min": {
       "name": "Neo4j CIDR LOAD minimum",
       "basis": "5.16",
       "sources": {
-        "sd1cbea2cf003": "https://neo4j.com/docs/operations-manual/current/authentication-authorization/load-privileges/"
+        "se48a10ba1e9a": "https://neo4j.com/docs/cypher-manual/5/deprecations-additions-removals-compatibility/"
       }
     },
     "shell-history": {
@@ -237,7 +237,7 @@ version_basis: {
     "mfa": {"text": "Native passwords lack a second factor; Enterprise OIDC can enforce IdP MFA, LDAP simple alone cannot, and alternate paths must not bypass MFA.", "components": ["docs"], "sources": ["docs:s87f690765c5e", "docs:s9868bfc264b4"], "status": "REASONED"},
     "public-execute": {"text": "Default Enterprise PUBLIC grants procedure, UDF and data-loading access; read-only graph privileges alone do not restrict these capabilities.", "components": ["docs"], "sources": ["docs:sdf6a150be16d", "docs:s216b761855ea", "docs:sd1cbea2cf003"], "status": "REASONED"},
     "execute-denials": {"text": "DENY EXECUTE PROCEDURES/FUNCTIONS blocks those capabilities for catalog_reader; built-in functions remain available and narrower grants cannot override matching denials.", "components": ["docs"], "sources": ["docs:s49e57b8da0e8", "docs:s216b761855ea"], "status": "REASONED"},
-    "load-denial": {"text": "DENY LOAD ON ALL DATA needs Enterprise 5.13 or later; CIDR-specific privileges arrived in 5.16.", "components": ["docs", "load-min", "cidr-min"], "sources": ["docs:sd1cbea2cf003", "load-min:sd1cbea2cf003", "cidr-min:sd1cbea2cf003"], "status": "REASONED"},
+    "load-denial": {"text": "DENY LOAD ON ALL DATA needs Enterprise 5.13 or later; CIDR-specific privileges arrived in 5.16.", "components": ["docs", "load-min", "cidr-min"], "sources": ["docs:sd1cbea2cf003", "load-min:se48a10ba1e9a", "cidr-min:se48a10ba1e9a"], "status": "REASONED"},
     "boosted": {"text": "Do not grant applications boosted execution; APOC boosted procedures can bypass graph and loading restrictions.", "components": ["apoc"], "sources": ["apoc:s3d201e2d8cd7"], "status": "REASONED"},
     "plugin-loading": {"text": "Keep procedures.unrestricted empty unless reviewed and narrow procedures.allowlist from its * default; loading controls do not create Community per-user privileges.", "components": ["docs"], "sources": ["docs:sf356a53bcdde", "docs:sa3a72e7400b3"], "status": "REASONED"},
     "apoc-file": {"text": "For Neo4j 5+, APOC settings belong in apoc.conf; defaults import.file.enabled=false and import.file.use_neo4j_config=true retain file/import-directory checks.", "components": ["apoc"], "sources": ["apoc:s41842145484e"], "status": "REASONED"},
@@ -345,8 +345,8 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | local-guards: Historical guard-only checks rejected placeholders and malformed marker/count inputs in six guarded blocks; no Neo4j service behavior was demonstrated. | Neo4j documentation unknown | DEMONSTRATED |
 | tls-schemes: neo4j+s and bolt+s verify certificates; +ssc skips verification. Cypher Shell trust configuration is independent of OpenSSL/curl CA options. | Neo4j documentation unknown | REASONED |
 | verify-listeners: Confirm working Bolt/HTTPS, absent HTTP, Enterprise loopback backup, conditional cluster/Prometheus ports and Docker namespace/publication controls; an empty inventory is insufficient. | Neo4j documentation unknown; Neo4j Enterprise 5.26; Neo4j Docker entrypoint 5359427c4f51d0d51cce5b048757a2c21e6f377e | REASONED |
-| verify-cluster-tls: Compare cluster TLS client_auth NONE with REQUIRE: no certificate and untrusted issuer must be rejected while a trusted member completes a verified handshake. | Neo4j Enterprise 5.26; OpenSSL 3; TLS 1.3; timeout unknown | REASONED |
-| cluster-probe-limits: Inspect fatal alerts and member logs; server Verification OK, timeout 124 or transport failure alone does not prove client acceptance or rejection. | OpenSSL 3; TLS 1.3; timeout unknown | REASONED |
+| verify-cluster-tls: Compare cluster TLS client_auth NONE with REQUIRE: no certificate and untrusted issuer must be rejected while a trusted member completes a verified handshake. | Neo4j Enterprise 5.26; OpenSSL 3; TLS RFC 8446 unknown; timeout unknown | REASONED |
+| cluster-probe-limits: Inspect fatal alerts and member logs; server Verification OK, timeout 124 or transport failure alone does not prove client acceptance or rejection. | OpenSSL 3; TLS RFC 8446 unknown; timeout unknown | REASONED |
 | verify-cluster-health: SHOW SERVERS must retain expected Enabled/Available members in both states; protocol-level discovery, replication and routing comparisons remain unobserved. | Neo4j Enterprise 5.26; Neo4j documentation unknown | REASONED |
 | verify-bolt: Verified handshake and authenticated TLS query must succeed; plaintext must fail at transport under REQUIRED, not merely at authentication. | Neo4j documentation unknown | REASONED |
 | verify-http-off: An exposed 7474 endpoint answers HTTP; fixed HTTP is absent, with target/path confirmation and working TLS controls needed to interpret connection failures. | Neo4j documentation unknown | REASONED |
@@ -1010,8 +1010,8 @@ The comparisons below are REASONED from the cited Neo4j documentation and pinned
 - GRANT, DENY, and showing user privileges: https://neo4j.com/docs/operations-manual/current/authentication-authorization/manage-privileges/
 - Access-control limitations and hidden properties: https://neo4j.com/docs/operations-manual/current/authentication-authorization/limitations/
 - Procedure and user-defined function execution privileges: https://neo4j.com/docs/operations-manual/current/authentication-authorization/dbms-administration/dbms-execute-privileges/
-- LOAD privileges (LOAD ON ALL DATA since 5.13; CIDR privileges since 5.16): https://neo4j.com/docs/operations-manual/current/authentication-authorization/load-privileges/
-- LOAD privilege introduction versions: https://neo4j.com/docs/cypher-manual/5/deprecations-additions-removals-compatibility/
+- LOAD privileges (rolling documentation, checked September 2026): https://neo4j.com/docs/operations-manual/current/authentication-authorization/load-privileges/
+- LOAD privilege introduction versions (LOAD ON ALL DATA since 5.13; CIDR privileges since 5.16): https://neo4j.com/docs/cypher-manual/5/deprecations-additions-removals-compatibility/
 - Cypher Shell prompts, environment credentials, history, parameters, and timeouts (history disable since 2025.08; transaction-timeout since 2025.12): https://neo4j.com/docs/operations-manual/current/cypher-shell/
 - Docker introduction and initial authentication: https://neo4j.com/docs/operations-manual/current/docker/introduction/
 - Docker configuration and container listen addresses: https://neo4j.com/docs/operations-manual/current/docker/configuration/

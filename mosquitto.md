@@ -10,13 +10,11 @@ version_basis: {
       "basis": "unknown",
       "sources": {
         "s4d96861c4f39": "https://mosquitto.org/documentation/migrating-to-2-0/",
-        "s0c9ec2d6b65b": "https://mosquitto.org/blog/2026/01/version-2-1-0-released/",
         "s66b826cab3e9": "https://mosquitto.org/documentation/listeners/per-listener-settings/",
         "sddca3657b9c1": "https://mosquitto.org/man/mosquitto_passwd-1.html",
         "s9aa3260c5b79": "https://mosquitto.org/documentation/authentication-methods/",
         "s1791866ca31b": "https://mosquitto.org/man/mosquitto-conf-5.html",
         "s280527f289d0": "https://mosquitto.org/documentation/plugins/acl-file/",
-        "s5529605a6416": "https://mosquitto.org/blog/2020/12/version-2-0-0-released/",
         "sd34bd50f5f0f": "https://mosquitto.org/man/mosquitto-8.html",
         "s6711164e3e5f": "https://mosquitto.org/man/mosquitto_sub-1.html",
         "s1476cea737a4": "https://mosquitto.org/man/mosquitto_pub-1.html"
@@ -85,6 +83,14 @@ version_basis: {
         "sbfaf2572ea61": "https://github.com/eclipse-mosquitto/mosquitto/blob/v1.6.15/man/mosquitto.conf.5.xml#L167-L185",
         "s0d1a10094e93": "https://github.com/eclipse-mosquitto/mosquitto/blob/v1.6.15/mosquitto.conf"
       }
+    },
+    "release-notes": {
+      "name": "Mosquitto release announcements",
+      "basis": "unknown",
+      "sources": {
+        "s0c9ec2d6b65b": "https://mosquitto.org/blog/2026/01/version-2-1-0-released/",
+        "s5529605a6416": "https://mosquitto.org/blog/2020/12/version-2-0-0-released/"
+      }
     }
   },
   "claims": {
@@ -94,7 +100,7 @@ version_basis: {
     "image-api": {"text": "2.1.2 HTTP API uses a dual-stack socket and exposes systree/listeners JSON and version text without shipped credentials/ACLs.", "components": ["v21"], "sources": ["v21:s539d2574fc70", "v21:s7f6c7c2e6cff", "v21:sca7b250a1900", "v21:s9c9708acb8f8", "v21:sedb9b3beddce", "v21:s5fbac0184a26", "v21:sd54804631b53", "v21:sb292974b4326", "v21:s7d30df48bf91", "v21:sfe5a6152e92f", "v21:s12077f64a53c"], "status": "REASONED"},
     "image16": {"text": "Recorded 1.6.15 image tags ship commented upstream config: wildcard 1883 and anonymous access.", "components": ["image", "v16"], "sources": ["image:s270129425e74", "v16:scddf9e86ad6b", "v16:seb5311de9f93", "v16:sbfaf2572ea61", "v16:s0d1a10094e93"], "status": "REASONED"},
     "image20": {"text": "Recorded 2.0.22 image tags ship commented upstream config and retain loopback-only defaults.", "components": ["image", "v20"], "sources": ["image:sd127367f6308", "v20:s10aff5e66af1"], "status": "REASONED"},
-    "deprecation": {"text": "File-based examples target 2.0.22; password_file, acl_file and per_listener_settings are deprecated in 2.1, removal announced for 3.0.", "components": ["docs"], "sources": ["docs:s0c9ec2d6b65b", "docs:s66b826cab3e9"], "status": "REASONED"},
+    "deprecation": {"text": "File-based examples target 2.0.22; password_file, acl_file and per_listener_settings are deprecated in 2.1, removal announced for 3.0.", "components": ["docs", "release-notes"], "sources": ["release-notes:s0c9ec2d6b65b", "docs:s66b826cab3e9"], "status": "REASONED"},
     "password-file": {"text": "Prompt for distinct device credentials; -c overwrites, and -D edits the file without terminating connections by itself.", "components": ["docs"], "sources": ["docs:sddca3657b9c1", "docs:s9aa3260c5b79"], "status": "REASONED"},
     "reload": {"text": "Reload changed credentials/ACLs; manual says connections unaffected, but 2.0.22 rechecks credentials; confirm deployed termination.", "components": ["docs", "v20"], "sources": ["docs:s9aa3260c5b79", "v20:s06316e74cf90"], "status": "REASONED"},
     "shared-policy": {"text": "per_listener_settings false shares authentication/ACL policy; flipping it is neither separation nor 2.1 migration.", "components": ["v20"], "sources": ["v20:s0705841d4141", "v20:se7823193963b"], "status": "REASONED"},
@@ -103,17 +109,17 @@ version_basis: {
     "acl-default": {"text": "Password authentication alone leaves application topics unrestricted without an authorization mechanism.", "components": ["docs", "v20"], "sources": ["docs:s9aa3260c5b79", "v20:s06316e74cf90"], "status": "REASONED"},
     "acl-users": {"text": "Unlisted access is denied; user means username; pre-user topic rules apply only to anonymous clients.", "components": ["docs", "v20"], "sources": ["docs:s280527f289d0", "v20:s06316e74cf90"], "status": "REASONED"},
     "acl-patterns": {"text": "Patterns apply to all users; %u/%c must occupy a whole topic level; prefer authenticated usernames over chosen client IDs.", "components": ["docs"], "sources": ["docs:s280527f289d0"], "status": "REASONED"},
-    "sys": {"text": "deny was added in 2.0; repeat $SYS denial per user and probe $SYS/# explicitly because # excludes it.", "components": ["docs"], "sources": ["docs:s5529605a6416", "docs:sd34bd50f5f0f"], "status": "REASONED"},
+    "sys": {"text": "deny was added in 2.0; repeat $SYS denial per user and probe $SYS/# explicitly because # excludes it.", "components": ["docs", "release-notes"], "sources": ["release-notes:s5529605a6416", "docs:sd34bd50f5f0f"], "status": "REASONED"},
     "subscription": {"text": "File ACLs filter message access, not SUBSCRIBE acceptance; accepted # alone is no bypass.", "components": ["v20", "v21"], "sources": ["v20:s06316e74cf90", "v21:sfe6c64ab8f91"], "status": "REASONED"},
     "connection-default": {"text": "Per-listener max_connections defaults to -1, unlimited by this setting.", "components": ["v20"], "sources": ["v20:s0705841d4141"], "status": "REASONED"},
-    "packet-default": {"text": "max_packet_size is unset in 2.0.22 and 2,000,000 bytes in 2.1; explicit 2.0.22 values must be at least 20.", "components": ["v20", "v21", "docs"], "sources": ["v20:s1f256b35dde7", "v21:sd5c8a4af302f", "docs:s0c9ec2d6b65b"], "status": "REASONED"},
+    "packet-default": {"text": "max_packet_size is unset in 2.0.22 and 2,000,000 bytes in 2.1; explicit 2.0.22 values must be at least 20.", "components": ["v20", "v21", "release-notes"], "sources": ["v20:s1f256b35dde7", "v21:sd5c8a4af302f", "release-notes:s0c9ec2d6b65b"], "status": "REASONED"},
     "payload-default": {"text": "message_size_limit defaults to 0; payload rejection follows reception and completes QoS acknowledgements.", "components": ["v20"], "sources": ["v20:s0705841d4141", "v20:sa4ab07ef74c3"], "status": "REASONED"},
     "inflight-default": {"text": "max_inflight_messages defaults to 20 per client for outgoing QoS 1/2; it is not a message-rate limit.", "components": ["v20"], "sources": ["v20:s0705841d4141"], "status": "REASONED"},
-    "queue-default": {"text": "max_queued_messages defaults to 1000 in 2.x, 100 earlier; queue overflow can lose messages.", "components": ["v20", "docs"], "sources": ["v20:s0705841d4141", "docs:s5529605a6416"], "status": "REASONED"},
+    "queue-default": {"text": "max_queued_messages defaults to 1000 in 2.x, 100 earlier; queue overflow can lose messages.", "components": ["v20", "release-notes"], "sources": ["v20:s0705841d4141", "release-notes:s5529605a6416"], "status": "REASONED"},
     "queue-bytes": {"text": "max_queued_bytes defaults to 0; when both queue limits are set the first reached stops further queuing.", "components": ["v20"], "sources": ["v20:s0705841d4141"], "status": "REASONED"},
     "keepalive": {"text": "max_keepalive defaults to 0 in 2.0.22/2.1.2; positive limits override MQTT 5 and reject incompatible MQTT 3.1.1.", "components": ["v20", "v21"], "sources": ["v20:s1f256b35dde7", "v21:sd5c8a4af302f", "v20:se7823193963b"], "status": "REASONED"},
     "packet-boundary": {"text": "2.0.22 TCP checks size before body allocation; 2.0.22/2.1.2 libwebsockets allocate without that check; require an independent boundary.", "components": ["v20"], "sources": ["v20:se4dab27858b2", "v20:se7823193963b"], "status": "REASONED"},
-    "global-limits": {"text": "2.1 global_max_connections/global_max_clients default to -1; the latter also counts disconnected persistent sessions.", "components": ["docs", "v21"], "sources": ["docs:s1791866ca31b", "docs:s0c9ec2d6b65b", "v21:sd5c8a4af302f"], "status": "REASONED"},
+    "global-limits": {"text": "2.1 global_max_connections/global_max_clients default to -1; the latter also counts disconnected persistent sessions.", "components": ["docs", "v21", "release-notes"], "sources": ["docs:s1791866ca31b", "release-notes:s0c9ec2d6b65b", "v21:sd5c8a4af302f"], "status": "REASONED"},
     "session-expiry": {"text": "2.0 persistent-session growth needs identity/client-ID limits; persistent_client_expiration is not a hard population cap.", "components": ["v20"], "sources": ["v20:se7823193963b"], "status": "REASONED"},
     "listener-policy": {"text": "2.0 per-listener settings must precede listeners/security options; place each listener's auth, ACL and TLS in its scope.", "components": ["v20"], "sources": ["v20:s1f256b35dde7", "v20:se7823193963b"], "status": "REASONED"},
     "websockets": {"text": "Local 9001 needs separate auth/ACL/TLS; 2.0.22 WebSockets connection cap is ineffective; 2.1.1 fix needs deployed-build testing.", "components": ["v20"], "sources": ["v20:se7823193963b"], "status": "REASONED"},
@@ -153,7 +159,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | image-api: 2.1.2 HTTP API uses a dual-stack socket and exposes systree/listeners JSON and version text without shipped credentials/ACLs. | Mosquitto v2.1.2 | REASONED |
 | image16: Recorded 1.6.15 image tags ship commented upstream config: wildcard 1883 and anonymous access. | Mosquitto image source 5b74cce8a4fe2a73b57df6c703bfde2cfd535d60; Mosquitto legacy v1.6.15 | REASONED |
 | image20: Recorded 2.0.22 image tags ship commented upstream config and retain loopback-only defaults. | Mosquitto image source 5b74cce8a4fe2a73b57df6c703bfde2cfd535d60; Mosquitto v2.0.22 | REASONED |
-| deprecation: File-based examples target 2.0.22; password_file, acl_file and per_listener_settings are deprecated in 2.1, removal announced for 3.0. | Mosquitto documentation unknown | REASONED |
+| deprecation: File-based examples target 2.0.22; password_file, acl_file and per_listener_settings are deprecated in 2.1, removal announced for 3.0. | Mosquitto documentation unknown; Mosquitto release announcements unknown | REASONED |
 | password-file: Prompt for distinct device credentials; -c overwrites, and -D edits the file without terminating connections by itself. | Mosquitto documentation unknown | REASONED |
 | reload: Reload changed credentials/ACLs; manual says connections unaffected, but 2.0.22 rechecks credentials; confirm deployed termination. | Mosquitto documentation unknown; Mosquitto v2.0.22 | REASONED |
 | shared-policy: per_listener_settings false shares authentication/ACL policy; flipping it is neither separation nor 2.1 migration. | Mosquitto v2.0.22 | REASONED |
@@ -162,17 +168,17 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | acl-default: Password authentication alone leaves application topics unrestricted without an authorization mechanism. | Mosquitto documentation unknown; Mosquitto v2.0.22 | REASONED |
 | acl-users: Unlisted access is denied; user means username; pre-user topic rules apply only to anonymous clients. | Mosquitto documentation unknown; Mosquitto v2.0.22 | REASONED |
 | acl-patterns: Patterns apply to all users; %u/%c must occupy a whole topic level; prefer authenticated usernames over chosen client IDs. | Mosquitto documentation unknown | REASONED |
-| sys: deny was added in 2.0; repeat $SYS denial per user and probe $SYS/# explicitly because # excludes it. | Mosquitto documentation unknown | REASONED |
+| sys: deny was added in 2.0; repeat $SYS denial per user and probe $SYS/# explicitly because # excludes it. | Mosquitto documentation unknown; Mosquitto release announcements unknown | REASONED |
 | subscription: File ACLs filter message access, not SUBSCRIBE acceptance; accepted # alone is no bypass. | Mosquitto v2.0.22; Mosquitto v2.1.2 | REASONED |
 | connection-default: Per-listener max_connections defaults to -1, unlimited by this setting. | Mosquitto v2.0.22 | REASONED |
-| packet-default: max_packet_size is unset in 2.0.22 and 2,000,000 bytes in 2.1; explicit 2.0.22 values must be at least 20. | Mosquitto v2.0.22; Mosquitto v2.1.2; Mosquitto documentation unknown | REASONED |
+| packet-default: max_packet_size is unset in 2.0.22 and 2,000,000 bytes in 2.1; explicit 2.0.22 values must be at least 20. | Mosquitto v2.0.22; Mosquitto v2.1.2; Mosquitto release announcements unknown | REASONED |
 | payload-default: message_size_limit defaults to 0; payload rejection follows reception and completes QoS acknowledgements. | Mosquitto v2.0.22 | REASONED |
 | inflight-default: max_inflight_messages defaults to 20 per client for outgoing QoS 1/2; it is not a message-rate limit. | Mosquitto v2.0.22 | REASONED |
-| queue-default: max_queued_messages defaults to 1000 in 2.x, 100 earlier; queue overflow can lose messages. | Mosquitto v2.0.22; Mosquitto documentation unknown | REASONED |
+| queue-default: max_queued_messages defaults to 1000 in 2.x, 100 earlier; queue overflow can lose messages. | Mosquitto v2.0.22; Mosquitto release announcements unknown | REASONED |
 | queue-bytes: max_queued_bytes defaults to 0; when both queue limits are set the first reached stops further queuing. | Mosquitto v2.0.22 | REASONED |
 | keepalive: max_keepalive defaults to 0 in 2.0.22/2.1.2; positive limits override MQTT 5 and reject incompatible MQTT 3.1.1. | Mosquitto v2.0.22; Mosquitto v2.1.2 | REASONED |
 | packet-boundary: 2.0.22 TCP checks size before body allocation; 2.0.22/2.1.2 libwebsockets allocate without that check; require an independent boundary. | Mosquitto v2.0.22 | REASONED |
-| global-limits: 2.1 global_max_connections/global_max_clients default to -1; the latter also counts disconnected persistent sessions. | Mosquitto documentation unknown; Mosquitto v2.1.2 | REASONED |
+| global-limits: 2.1 global_max_connections/global_max_clients default to -1; the latter also counts disconnected persistent sessions. | Mosquitto documentation unknown; Mosquitto v2.1.2; Mosquitto release announcements unknown | REASONED |
 | session-expiry: 2.0 persistent-session growth needs identity/client-ID limits; persistent_client_expiration is not a hard population cap. | Mosquitto v2.0.22 | REASONED |
 | listener-policy: 2.0 per-listener settings must precede listeners/security options; place each listener's auth, ACL and TLS in its scope. | Mosquitto v2.0.22 | REASONED |
 | websockets: Local 9001 needs separate auth/ACL/TLS; 2.0.22 WebSockets connection cap is ineffective; 2.1.1 fix needs deployed-build testing. | Mosquitto v2.0.22 | REASONED |

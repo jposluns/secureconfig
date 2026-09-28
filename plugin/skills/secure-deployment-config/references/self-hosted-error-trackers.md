@@ -32,8 +32,8 @@ version_basis: {
       }
     },
     "glitchtip-mfa": {
-      "name": "GlitchTip two-factor introduction",
-      "basis": "v1.8",
+      "name": "GlitchTip MFA announcement",
+      "basis": "unknown",
       "sources": {
         "sb4f6be6e6b48": "https://glitchtip.com/blog/2021-09-17-glitchtip-1-8/"
       }
@@ -92,7 +92,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | glitchtip-port: GlitchTip Compose publishes 8000; bind privately behind TLS and verify the actual sample host bind. | GlitchTip documentation unknown | REASONED |
 | glitchtip-registration: ENABLE_USER_REGISTRATION defaults True; False disables self-signup after the first user exists. | GlitchTip documentation unknown | REASONED |
 | glitchtip-secret: Use a unique SECRET_KEY for Django signing and keep it out of version control. | GlitchTip documentation unknown | REASONED |
-| glitchtip-mfa: Two-factor authentication is available since v1.8; confirm enforcement and SSO registration paths in the deployed version. | GlitchTip two-factor introduction v1.8 | REASONED |
+| glitchtip-mfa: Two-factor authentication is available since v1.8; confirm enforcement and SSO registration paths in the deployed version. | GlitchTip MFA announcement unknown | REASONED |
 | glitchtip-stores: Keep PostgreSQL and optional Valkey or Redis internal. | GlitchTip documentation unknown | REASONED |
 | membership: Sentry single-organization signups join the default organization; GlitchTip accounts and membership differ. Membership implementations are not cited. | Sentry and self-hosted distribution 26.8.0; GlitchTip documentation unknown | REASONED |
 | verify-listeners: Inventory private 9000/8000 and backing ports; Docker forwarding can expose ports without host sockets. | Sentry and self-hosted distribution 26.8.0; GlitchTip documentation unknown | REASONED |
