@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "f62b10d91b81e5f83e04d1a3a28e6645160e82920626bcaa866a6dc105707b90",
+  "body_sha256": "be29c431c84bfb98d4babd99c6d8478ef87897a8f8e954a2fa474a375a81e541",
   "components": {
     "pgb": {
       "name": "PgBouncer documentation",
@@ -73,14 +73,14 @@ version_basis: {
       "name": "PgBouncer LDAP minimum",
       "basis": "1.25.0",
       "sources": {
-        "sa5cdd62a9242": "https://www.pgbouncer.org/config.html"
+        "s2a1788c4296b": "https://www.pgbouncer.org/changelog.html"
       }
     },
     "expiry-fix": {
       "name": "PgBouncer password-expiry fix",
       "basis": "1.24.1",
       "sources": {
-        "sa5cdd62a9242": "https://www.pgbouncer.org/config.html"
+        "s2a1788c4296b": "https://www.pgbouncer.org/changelog.html"
       }
     }
   },
@@ -120,7 +120,7 @@ version_basis: {
     "auth-file": {"text": "Protect auth_file at mode 600; it can contain plaintext, MD5 or SCRAM secrets, and MD5 cannot satisfy client SCRAM.", "components": ["pgb"], "sources": ["pgb:sa5cdd62a9242"], "status": "REASONED"},
     "scram-forward": {"text": "Stored-SCRAM backend login needs client SCRAM, no forced user and identical secrets including salt and iteration count; peer does not provide the required exchange.", "components": ["pgb"], "sources": ["pgb:sa5cdd62a9242"], "status": "REASONED"},
     "auth-query": {"text": "auth_user enables lookup for users absent from auth_file; use a restricted SECURITY DEFINER function with trusted search_path, limited EXECUTE and database placement or auth_dbname.", "components": ["pgb"], "sources": ["pgb:sa5cdd62a9242"], "status": "REASONED"},
-    "password-expiry": {"text": "CVE-2025-2291 was fixed in 1.24.1; custom auth_query must still check rolvaliduntil.", "components": ["pgb", "expiry-fix"], "sources": ["pgb:sa5cdd62a9242", "expiry-fix:sa5cdd62a9242"], "status": "REASONED"},
+    "password-expiry": {"text": "CVE-2025-2291 was fixed in 1.24.1; custom auth_query must still check rolvaliduntil.", "components": ["pgb", "expiry-fix"], "sources": ["pgb:sa5cdd62a9242", "expiry-fix:s2a1788c4296b"], "status": "REASONED"},
     "verify-listeners": {"text": "Inventory 6432/9999 on private addresses and PCP 9898 on loopback including IPv6; unexpected listeners are findings.", "components": ["pgb", "pgpool"], "sources": ["pgb:sa5cdd62a9242", "pgpool:s7b1cbfaacbb8"], "status": "REASONED", "verify": [1]},
     "verify-client": {"text": "Plaintext must fail for TLS, verified TLS with the correct password must succeed, and a wrong password must fail authentication; repeat for pgpool-II 9999.", "components": ["pgb", "pgpool", "postgres"], "sources": ["pgb:sa5cdd62a9242", "pgpool:s76141317a1b5", "pgpool:sa7204f187c7e", "postgres:s198d4780d9a4", "postgres:sd389a3478bc7"], "status": "REASONED", "verify": [2]},
     "password-delivery": {"text": "Use mode-600 .pgpass for real passwords; PGPASSWORD can expose credentials through process environments.", "components": ["postgres"], "sources": ["postgres:s97264da004c0", "postgres:s198d4780d9a4"], "status": "REASONED"},
@@ -136,7 +136,7 @@ version_basis: {
     "verify-console-unlisted": {"text": "An unlisted console user must fail at login with not allowed; SHOW VERSION success is exposure and transport/DNS/TLS failures are inconclusive.", "components": ["pgb", "pgb-source"], "sources": ["pgb:s91d48cfb22ae", "pgb-source:sd8ac14670f91"], "status": "REASONED", "verify": [8]},
     "verify-console-password": {"text": "The pgbadmin SHOW VERSION pair must succeed with the correct password and fail at login with the wrong one, both against dbname=pgbouncer.", "components": ["pgb"], "sources": ["pgb:sa5cdd62a9242", "pgb:s91d48cfb22ae"], "status": "REASONED", "verify": [9]},
     "mfa": {"text": "Neither pooler provides native MFA or a PostgreSQL-wire TOTP dialogue; protect human host access separately.", "components": ["pgb", "pgpool"], "sources": ["pgb:sa5cdd62a9242", "pgpool:s7847f7feb03b"], "status": "REASONED"},
-    "ldap-pam": {"text": "LDAP arrived in 1.25.0 and can appear in HBA; PAM is global and disables HBA selection, forwarding the supplied password instead of conducting an OTP challenge.", "components": ["pgb", "ldap-min", "pgb-source"], "sources": ["pgb:sa5cdd62a9242", "ldap-min:sa5cdd62a9242", "pgb-source:sb9455e4f6c90"], "status": "REASONED"},
+    "ldap-pam": {"text": "LDAP arrived in 1.25.0 and can appear in HBA; PAM is global and disables HBA selection, forwarding the supplied password instead of conducting an OTP challenge.", "components": ["pgb", "ldap-min", "pgb-source"], "sources": ["pgb:sa5cdd62a9242", "ldap-min:s2a1788c4296b", "pgb-source:sb9455e4f6c90"], "status": "REASONED"},
     "mtls-hba": {"text": "Client verify-full and verify-ca are equivalent for certificates and can retain HBA/SCRAM; auth_type=cert takes the certificate username and replaces HBA selection.", "components": ["pgb"], "sources": ["pgb:sa5cdd62a9242"], "status": "REASONED"}
   }
 }
@@ -562,10 +562,10 @@ Put the human paths to the host behind MFA per [mfa.md](mfa.md).
 
 ## Sources (checked September 2026)
 
-- PgBouncer configuration, including the ini comment rule, `listen_addr`, `listen_port`, `client_tls_sslmode`, `server_tls_sslmode`, `auth_type`, `auth_file`, `auth_query`, `admin_users`, `stats_users`, `application_name_add_host`, and the `[databases]` `user` key (LDAP since 1.25.0; auth_query fix 1.24.1): https://www.pgbouncer.org/config.html
+- PgBouncer configuration, including the ini comment rule, `listen_addr`, `listen_port`, `client_tls_sslmode`, `server_tls_sslmode`, `auth_type`, `auth_file`, `auth_query`, `admin_users`, `stats_users`, `application_name_add_host`, and the `[databases]` `user` key (rolling documentation, checked September 2026): https://www.pgbouncer.org/config.html
 - PgBouncer `listen_addr` default `""`, and the socket-activation path that ignores it (pinned tag pgbouncer_1_26_0): https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/src/main.c#L292-L294 and https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/src/pooler.c#L495-L498, with `sd_listen_fds()` defined as `(0)` in builds without systemd support: https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/include/bouncer.h#L54-L62
 - PgBouncer usage, the admin console and its `SHOW` commands, including who `auth_type=any` admits and the passwordless Unix-socket login: https://www.pgbouncer.org/usage.html
-- PgBouncer changelog, for CVE-2026-6664, CVE-2026-6665, CVE-2026-6666 and CVE-2026-6667, all fixed in 1.25.2: https://www.pgbouncer.org/changelog.html
+- PgBouncer changelog, for CVE-2026-6664, CVE-2026-6665, CVE-2026-6666 and CVE-2026-6667, all fixed in 1.25.2; LDAP since 1.25.0; auth_query fix 1.24.1: https://www.pgbouncer.org/changelog.html
 - PgBouncer features and pooling modes: https://www.pgbouncer.org/features.html
 - Pgpool-II connection settings (`listen_addresses`, `port`, `pcp_listen_addresses`, `pcp_port`, `enable_pool_hba`): https://www.pgpool.net/docs/latest/en/html/runtime-config-connection.html
 - Pgpool-II SSL settings (`ssl`, `ssl_cert`, `ssl_key`, `ssl_ca_cert`, `ssl_ca_cert_dir`): https://www.pgpool.net/docs/latest/en/html/runtime-ssl.html

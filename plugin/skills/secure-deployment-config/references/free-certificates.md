@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "5c77b84f1d13d54a27f2ecf7757e434b8412687ab56188f44949ffa163ca7174",
+  "body_sha256": "8718fd4ef875925dbbdbd61c2ff4627c06a70b40016cedfa399811299ae53809",
   "components": {
     "le": {
       "name": "Let's Encrypt documentation",
@@ -29,7 +29,7 @@ version_basis: {
       "name": "Certbot reconfigure minimum",
       "basis": "2.3.0",
       "sources": {
-        "s44faaf4eb7d7": "https://certbot.eff.org/"
+        "s0dee7d6d65ba": "https://raw.githubusercontent.com/certbot/certbot/v2.3.0/certbot/docs/using.rst"
       }
     },
     "zerossl": {
@@ -60,7 +60,7 @@ version_basis: {
     "certificate-paths": {"text": "Configure servers against stable /etc/letsencrypt/live/example.com/fullchain.pem and privkey.pem paths for the chain and private key.", "components": ["certbot"], "sources": ["certbot:s44faaf4eb7d7"], "status": "REASONED"},
     "renewal-schedule": {"text": "Package and snap installs register a timer or cron job running certbot renew; confirm the timer and test renewal plus reload with --dry-run --run-deploy-hooks.", "components": ["certbot"], "sources": ["certbot:s44faaf4eb7d7"], "status": "REASONED"},
     "deploy-hook": {"text": "Persist a reload hook during successful initial issuance or renewal, or install an executable in renewal-hooks/deploy; renew --deploy-hook does not persist it when no renewal is due.", "components": ["certbot"], "sources": ["certbot:s44faaf4eb7d7"], "status": "REASONED"},
-    "reconfigure": {"text": "certbot reconfigure can add the reload hook later on Certbot 2.3.0 and later.", "components": ["reconfigure"], "sources": ["reconfigure:s44faaf4eb7d7"], "status": "REASONED"},
+    "reconfigure": {"text": "certbot reconfigure can add the reload hook later on Certbot 2.3.0 and later.", "components": ["reconfigure"], "sources": ["reconfigure:s0dee7d6d65ba"], "status": "REASONED"},
     "expiry-monitoring": {"text": "Monitor the served certificate's expiry and renewal failures instead of relying on CA reminder emails; include a dry run in the deployment checklist.", "components": ["le", "certbot"], "sources": ["le:s4406ef210fff", "certbot:s44faaf4eb7d7"], "status": "REASONED"},
     "default-lifetime": {"text": "At the guide's September 2026 documentation check, Let's Encrypt's default certificate lifetime is 90 days.", "components": ["le"], "sources": ["le:s01388c85c5d6"], "status": "REASONED"},
     "short-lifetime": {"text": "Optional 6-day short-lived certificates are available to every subscriber as of the guide's September 2026 check.", "components": ["le"], "sources": ["le:s01388c85c5d6"], "status": "REASONED"},
@@ -228,7 +228,8 @@ A certificate alone does not protect anything: continue with the server guide fo
 ## Sources (checked September 2026)
 
 - Let's Encrypt documentation: https://letsencrypt.org/docs/
-- Certbot instructions (reconfigure: 2.3.0 and later): https://certbot.eff.org/
+- Certbot instructions (rolling documentation, checked September 2026): https://certbot.eff.org/
+- Certbot reconfigure (2.3.0 and later; v2.3.0 user guide): https://raw.githubusercontent.com/certbot/certbot/v2.3.0/certbot/docs/using.rst
 - Certbot manual DNS-01 and renewal hooks: https://eff-certbot.readthedocs.io/en/stable/using.html#manual
 - Certbot DNS plugins: https://eff-certbot.readthedocs.io/en/stable/using.html#dns-plugins
 - ZeroSSL: https://zerossl.com/
