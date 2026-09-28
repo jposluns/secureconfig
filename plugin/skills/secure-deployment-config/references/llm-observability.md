@@ -37,8 +37,8 @@ version_basis: {
       }
     },
     "phoenix-tls-min": {
-      "name": "Phoenix TLS minimum",
-      "basis": "8.29",
+      "name": "Phoenix TLS announcement",
+      "basis": "unknown",
       "sources": {
         "s8af9d57a7636": "https://arize.com/docs/phoenix/release-notes/04-2025/04-28-2025-tls-support-for-phoenix-server"
       }
@@ -235,7 +235,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | phoenix-mfa: No native MFA; federate OAuth2/OIDC or use identity-aware ingress and enforce MFA there. | Phoenix documentation unknown | REASONED |
 | phoenix-signup: PHOENIX_OAUTH2_&lt;IDP&gt;_ALLOW_SIGN_UP defaults True; set False and restrict provider membership. | Phoenix documentation unknown | REASONED |
 | phoenix-basic: Local password login remains beside SSO; PHOENIX_DISABLE_BASIC_AUTH=True closes it after an approved IdP administrator is tested. | Phoenix documentation unknown | REASONED |
-| phoenix-tls: Native HTTP/gRPC TLS exists from 8.29, defaults off, uses certificate/key files; later per-protocol switches override PHOENIX_TLS_ENABLED. | Phoenix TLS minimum 8.29; Phoenix TLS source 080959576563900038688ddf01f3bee110005df5 | REASONED |
+| phoenix-tls: Native HTTP/gRPC TLS exists from 8.29, defaults off, uses certificate/key files; later per-protocol switches override PHOENIX_TLS_ENABLED. | Phoenix TLS announcement unknown; Phoenix TLS source 080959576563900038688ddf01f3bee110005df5 | REASONED |
 | helicone-login: Better Auth uses signup and organizations; test@helicone.ai/password is a local manual trial, not the deployment security model. | Helicone documentation unknown | REASONED |
 | helicone-secret: Replace BETTER_AUTH_SECRET examples change-me-in-production and Compose your-secret-key before first start. | Helicone documentation unknown; Helicone Compose b12ebaccb824ab9778757ca197ff302d97fda421 | REASONED |
 | helicone-ports: Backing Postgres/ClickHouse/MinIO/Redis/MailHog publications bypass UI login, including 54388:5432 and 18123:8123; remove or loopback-scope them. | Helicone Compose b12ebaccb824ab9778757ca197ff302d97fda421 | REASONED |

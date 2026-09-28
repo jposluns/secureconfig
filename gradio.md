@@ -14,13 +14,6 @@ version_basis: {
         "s1a5c4d2d8688": "https://raw.githubusercontent.com/gradio-app/gradio/gradio%406.28.0/gradio/routes.py"
       }
     },
-    "historical": {
-      "name": "Gradio historical fix",
-      "basis": "4.11.0",
-      "sources": {
-        "s72ab0d90c666": "https://github.com/gradio-app/gradio/security/advisories/GHSA-6qm2-wpxq-7qh2"
-      }
-    },
     "fixes": {
       "name": "Gradio historical fixes",
       "basis": "6.16.0",
@@ -36,10 +29,11 @@ version_basis: {
       }
     },
     "advisory": {
-      "name": "Gradio case-handling advisory",
+      "name": "Gradio security advisories",
       "basis": "unknown",
       "sources": {
-        "sdab1cc199434": "https://github.com/gradio-app/gradio/security/advisories/GHSA-j2jg-fq62-7c3h"
+        "sdab1cc199434": "https://github.com/gradio-app/gradio/security/advisories/GHSA-j2jg-fq62-7c3h",
+        "s72ab0d90c666": "https://github.com/gradio-app/gradio/security/advisories/GHSA-6qm2-wpxq-7qh2"
       }
     },
     "gradio-rolling": {
@@ -78,7 +72,7 @@ version_basis: {
     "cache": {"text": "GRADIO_TEMP_DIR relocates cache; restrict permissions, quota and cleanup, but relocation and local permissions do not provide per-user download authorization.", "components": ["gradio-rolling"], "sources": ["gradio-rolling:sa2089e6de8ef"], "status": "REASONED"},
     "upload-limit": {"text": "max_file_size defaults None; set bytes or 5mb for a per-file limit, adding separate storage/rate controls.", "components": ["gradio", "gradio-rolling"], "sources": ["gradio-rolling:s2e352ec80647", "gradio:s9b44d875a7d7"], "status": "REASONED"},
     "multipart-fix": {"text": "6.20.0 fixed missing max_file_size enforcement on multipart /component_server uploads; retain the 6.28.0 deployment baseline.", "components": ["gradio", "multipart"], "sources": ["gradio:s839744899b9d", "multipart:sdcc6d6d01633"], "status": "REASONED"},
-    "historical-traversal": {"text": "4.11.0 fixed the historical /file traversal and associated SSRF; this is a historical floor, not the deployment baseline.", "components": ["historical"], "sources": ["historical:s72ab0d90c666"], "status": "REASONED"},
+    "historical-traversal": {"text": "4.11.0 fixed the historical /file traversal and associated SSRF; this is a historical floor, not the deployment baseline.", "components": ["advisory"], "sources": ["advisory:s72ab0d90c666"], "status": "REASONED"},
     "historical-files": {"text": "6.16.0 includes FileExplorer traversal fixes; the case-handling advisory has conflicting patched-version records and no precise fix version here.", "components": ["advisory", "fixes"], "sources": ["advisory:sdab1cc199434", "fixes:s4c2d0b42c65a"], "status": "REASONED"},
     "vibe": {"text": "GRADIO_VIBE_MODE defaults empty; any nonempty value including False or 0 enables unauthenticated source read/write handlers and arbitrary execution; leave unset and avoid --vibe.", "components": ["gradio", "gradio-rolling"], "sources": ["gradio:s9b44d875a7d7", "gradio:s1a5c4d2d8688", "gradio-rolling:sa70cd6adbc85"], "status": "REASONED"},
     "mcp": {"text": "mcp_server defaults None, consulting GRADIO_MCP_SERVER (False); explicitly disable unless tools beneath /gradio_api/mcp/ are deliberately protected and tested.", "components": ["gradio", "gradio-rolling"], "sources": ["gradio:s9b44d875a7d7", "gradio:s1a5c4d2d8688", "gradio-rolling:sb9d13823991d"], "status": "REASONED"},
@@ -140,13 +134,13 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | file-route: /gradio_api/file= serves registered static paths, allowed_paths and cache; returned file outputs can expose eligible working/temp paths to every app user. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
 | allowed-paths: allowed_paths adds exposure, not a sandbox; empty lists do not disable cache or eligible outputs, and granted directories expose descendants. | Gradio documentation (rolling) unknown | REASONED |
 | dotfiles: Working-directory dotfiles are excluded from automatic caching unless explicitly permitted; this does not protect other eligible files or justify colocated secrets. | Gradio documentation (rolling) unknown | REASONED |
-| blocked-paths: blocked_paths overrides default/static/allowed grants but is a backstop; minimize the process filesystem and never return untrusted file paths. | Gradio case-handling advisory unknown; Gradio documentation (rolling) unknown | REASONED |
+| blocked-paths: blocked_paths overrides default/static/allowed grants but is a backstop; minimize the process filesystem and never return untrusted file paths. | Gradio security advisories unknown; Gradio documentation (rolling) unknown | REASONED |
 | path-environment: allowed_paths and blocked_paths default None; even [] falls back to comma-separated GRADIO_ALLOWED_PATHS and GRADIO_BLOCKED_PATHS. | Gradio 6.28.0 | REASONED |
 | cache: GRADIO_TEMP_DIR relocates cache; restrict permissions, quota and cleanup, but relocation and local permissions do not provide per-user download authorization. | Gradio documentation (rolling) unknown | REASONED |
 | upload-limit: max_file_size defaults None; set bytes or 5mb for a per-file limit, adding separate storage/rate controls. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
 | multipart-fix: 6.20.0 fixed missing max_file_size enforcement on multipart /component_server uploads; retain the 6.28.0 deployment baseline. | Gradio 6.28.0; Gradio historical fixes 6.20.0 | REASONED |
-| historical-traversal: 4.11.0 fixed the historical /file traversal and associated SSRF; this is a historical floor, not the deployment baseline. | Gradio historical fix 4.11.0 | REASONED |
-| historical-files: 6.16.0 includes FileExplorer traversal fixes; the case-handling advisory has conflicting patched-version records and no precise fix version here. | Gradio case-handling advisory unknown; Gradio historical fixes 6.16.0 | REASONED |
+| historical-traversal: 4.11.0 fixed the historical /file traversal and associated SSRF; this is a historical floor, not the deployment baseline. | Gradio security advisories unknown | REASONED |
+| historical-files: 6.16.0 includes FileExplorer traversal fixes; the case-handling advisory has conflicting patched-version records and no precise fix version here. | Gradio security advisories unknown; Gradio historical fixes 6.16.0 | REASONED |
 | vibe: GRADIO_VIBE_MODE defaults empty; any nonempty value including False or 0 enables unauthenticated source read/write handlers and arbitrary execution; leave unset and avoid --vibe. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
 | mcp: mcp_server defaults None, consulting GRADIO_MCP_SERVER (False); explicitly disable unless tools beneath /gradio_api/mcp/ are deliberately protected and tested. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
 | footer: footer_links can hide API documentation; it replaces show_api=False and does not disable the API. | Gradio documentation (rolling) unknown | REASONED |
