@@ -2,10 +2,6 @@
 # guide<TAB>sha256<TAB>count. Hash binds component, basis, URL and exact item text.
 # Inventory comments: component | literal basis | URL | shortened Sources item.
 # No automatic refresh. Duplicate occurrences are counted.
-# lobe | v2.2.16 | https://lobehub.com/only-ai/markdown/docs/en/self-hosting/environment-variables/basic | - LobeHub environment variables (KEY_VAULTS_SECRET):
-chat-uis.md	da895c65748970106acfc245992f69f611058cbc1512a4114195d11b4b47a9f7	1
-# lobe | v2.2.16 | https://lobehub.com/only-ai/markdown/docs/en/self-hosting/environment-variables/auth | - LobeHub authentication service environment variables (Better Auth):
-chat-uis.md	8537cd1d798e3cac70053000e5dc6eb4390163fc20f4673be695aedad85eaf5b	1
 # net10 | .NET 10 | https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/options?view=aspnetcore-10.0 | - Kestrel request-size enforcement, per-request overrides, IIS exception, and d...
 dotnet.md	b3cf75b4a2ab2aed2d37d931dcace3db4cdd57d6671b53dabfd49a39c36df925	1
 # net10 | .NET 10 | https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/iis/in-process-hosting?view=aspnetcore-10.0 | - IIS in-process hosting and IISServerOptions.MaxRequestBodySize:
@@ -14,10 +10,6 @@ dotnet.md	83b94169a820ba108a94acb832caadffe6fe76851eaf64c08f3e6d083f912ec9	1
 dotnet.md	97da134c8722680441494f34c0a27a3f20cc721ae3ac6eff3e7c4a7f6a9fc96b	1
 # iis | IIS 10 | https://learn.microsoft.com/en-us/iis/configuration/system.webserver/httpprotocol/customheaders/ | - IIS custom response headers and X-Powered-By:
 dotnet.md	10eee27bb7519c204005490f9b9bf91d2229f940469dd2ad3e07b7c9a720cc92	1
-# nitro-output | 2.12.0 | https://nitro.build/config | - Nitro output defaults and prerender destination (supplementary, unversioned d...
-frontend-frameworks.md	b4a758430df9c449bc1fb868fd17c81b10bafeda9323ce48e4eea17f49a06846	1
-# nitro-output | 2.12.0 | https://nitro.build/docs/assets | - Nitro public assets copied to production public output (supplementary, unvers...
-frontend-frameworks.md	b7bd0fcdc574608cc8f82daee3f18a55d200a7b288b54a8a22b5657c1cc50b88	1
 # oauth | v7.15.4 | https://oauth2-proxy.github.io/oauth2-proxy/configuration/overview | - oauth2-proxy configuration overview (flags, cookie-secret length):
 fronting-auth.md	8fbf1e4e441ac65a07e0aa59ade86755430f1f83207a9dd677cd7f45c9da6086	1
 # oauth | v7.15.4 | https://oauth2-proxy.github.io/oauth2-proxy/configuration/integrations/nginx/ | - oauth2-proxy nginx integration:
@@ -84,36 +76,6 @@ image-gen-uis.md	e55f698bf6c351eeec96e0f4db83d0a8197789649ba17d6ecf9ccbcbfbfb04b
 image-gen-uis.md	c3e21569fb994ba9aa0c3ec4f8bb4dab9a3d03f17c19339f51f29156c57342f6	1
 # invoke | 6.14.1 | https://invoke.ai/features/multi-user-mode/api-guide/ | - InvokeAI Multi-User API Guide (boards endpoint and missing-token `401`):
 image-gen-uis.md	9398e55a434d533cd7b261c2910fed2c67eda3e7a6c3fc9f789b49ebb05946c6	1
-# server | 2.18.0 | https://jupyter-server.readthedocs.io/en/latest/operators/public-server.html | - Jupyter Server public server guide and password/TLS setup:
-jupyter.md	bfe41ca4754cbcafd21bbe07ed9e37afebbf8e8b1d285519e2f1ba4f5bb0c59f	1
-# server | 2.18.0 | https://jupyter-server.readthedocs.io/en/latest/operators/security.html | - Jupyter Server security and token/password authentication:
-jupyter.md	90daeafcb1976c12d9c01cd798ef1a3edb9abc7844e2589372b4d7b52436aa1a	1
-# server | 2.18.0 | https://jupyter-server.readthedocs.io/en/latest/other/full-config.html | - Jupyter Server configuration reference and authentication migrations:
-jupyter.md	89e784d4f67406dbba790a520e23c29fa7b534e08d296e1df0a6a8dad81aa2c0	1
-# server | 2.18.0 | https://jupyter-server.readthedocs.io/en/latest/operators/migrate-from-nbserver.html | - Migrating from the classic Notebook server:
-jupyter.md	671fa25a810abb0fd9528d113210c864eb0ef25c503dbae338062c12195f9f93	1
-# server | 2.18.0 | https://jupyter-server.readthedocs.io/en/stable/api/jupyter_server.html | - Jupyter Server API reference for authentication, origin, Host, root, and term...
-jupyter.md	5480a6d26fd670cd528b8ffbeb9b8cb95bde87e0490bf158f8c404dfd8bdd53d	1
-# server | 2.18.0 | https://jupyter-server.readthedocs.io/en/stable/api/jupyter_server.auth.html | - Jupyter Server authentication API:
-jupyter.md	a9ca621bfb2bf4358f6ccebf7e89586aab82f609f96d2e2fb7f1bcf84fb27fc5	1
-# server | 2.18.0 | https://jupyter-server.readthedocs.io/en/stable/developers/rest-api.html | - Jupyter Server REST API:
-jupyter.md	a63df2c1a464cb871412ba45ea2d667cddba62210e1d4ef8778b61fcda04914f	1
-# server | 2.18.0 | https://jupyter-notebook.readthedocs.io/en/stable/configuring/config_overview.html | - Notebook 7 configuration and Jupyter Server backend:
-jupyter.md	3d7eddb605e55787f012dfab22f5b197a8fcf7cc52c15752eb0a7a50641341d4	1
-# hub | 5.5.2 | https://jupyterhub.readthedocs.io/en/stable/reference/api/auth.html | - JupyterHub authenticator API and PAM admission settings:
-jupyter.md	8ef3ebff039011bb69bb900eeedded9eda11436ab87f92343d549bd8483fea82	1
-# hub | 5.5.2 | https://jupyterhub.readthedocs.io/en/stable/reference/authenticators.html | - JupyterHub authenticators and Hub 5 admission changes:
-jupyter.md	78fc52a7a19ff6de8e8f92ba6c46bc45ac4637239639d6f3b4a742cbb1f7f95e	1
-# hub | 5.5.2 | https://jupyterhub.readthedocs.io/en/stable/reference/config-reference.html | - JupyterHub configuration reference:
-jupyter.md	c0894a1e5c2aeaaf9ee3cfb179c8e73fb3ddc6af0f8254e630876e39e1e0df97	1
-# hub | 5.5.2 | https://jupyterhub.readthedocs.io/en/stable/reference/api/spawner.html | - JupyterHub spawner API and user-configuration limitations:
-jupyter.md	4116e5303a98d819d35b6e2d0fa92b24446e76627d697d30e5028f0f524242d7	1
-# hub | 5.5.2 | https://jupyterhub.readthedocs.io/en/stable/reference/spawners.html | - JupyterHub spawner resource-limit support:
-jupyter.md	3b153b80cf97ea73888257d2e59090110c8e6d4d80450f087b0dd9487a411b41	1
-# hub | 5.5.2 | https://jupyterhub.readthedocs.io/en/stable/explanation/websecurity.html | - JupyterHub browser security, per-user domains, cookies, and server environments:
-jupyter.md	6aa0b593a4e1f4053d1ef0c6c7b9444bdd77dab3f0746eb5ff14521c391579e4	1
-# hub | 5.5.2 | https://jupyterhub.readthedocs.io/en/stable/howto/configuration/config-proxy.html | - JupyterHub HTTPS reverse-proxy example:
-jupyter.md	171f324b5c526d9a478a6e7705548a68a9c9b0fecc81ced96ac936017c45a4ea	1
 # envoy | v1.9.1 | https://gateway.envoyproxy.io/docs/tasks/security/secure-gateways/ | - Envoy Gateway tasks, secure gateways (TLS listener):
 kubernetes.md	92fec5de1951d6425a34c2f768ec455d98ebd27b4ad7d76a74f7873e00eac15b	1
 # envoy | v1.9.1 | https://gateway.envoyproxy.io/docs/tasks/traffic/http-redirect/ | - Envoy Gateway tasks, secure gateways (TLS listener):
@@ -130,112 +92,12 @@ model-servers.md	7742a3618668306e4d5d30daf055c225555f29b731f123ec67d826190b96b0d
 model-servers.md	60e300d82e9225f6c50fb067bed6ae0a98873655eaece8312be6d7467da4e8ec	1
 # webui | c022565b1257a9c7d9a5128c8b4c03587559cf08 | https://github.com/oobabooga/text-generation-webui#command-line-flags | - text-generation-webui README, command-line flags:
 model-servers.md	e7a67d0903f6da3ed387bd4e2f426c105312d5cc96e63a1322d83b2dac3f5d6d	1
-# server | v2.14.7 | https://docs.nats.io/learn/security/authentication-basics | - Authentication basics, password hashes, NKeys, tokens, and anonymous admission:
-nats.md	df50ec2ead91c3e4cb19321c827998bcf46ed57486958ef90cc885c18bdc5e33	1
-# server | v2.14.7 | https://docs.nats.io/reference/config | - Runtime configuration, defaults, bindings, and system account:
-nats.md	d1539c8f8e3fe369ed3da87e2df7293344b79ccd16d10114b9dc6bb38101566e	1
-# server | v2.14.7 | https://docs.nats.io/learn/security/operator-mode | - Operator mode, resolver setup, credentials, and signing-store handling:
-nats.md	cee290aa231ec69dd6cfe524e787016e3bce7bcb4da78251e2b34a19506e4c1b	1
-# server | v2.14.7 | https://docs.nats.io/learn/security/decentralized-auth | - Decentralized authentication and signing hierarchy:
-nats.md	3b329bbff1639dd7a4bdbffcf91ac1c93969eea9190a7e31768387ce79168ed3	1
-# server | v2.14.7 | https://docs.nats.io/learn/security/authorization | - Authorization and subject permissions:
-nats.md	ab0fb1dc548b6152576dea7ea8c1506e69a4fd078403421615b3c3cdac004a7c	1
-# server | v2.14.7 | https://docs.nats.io/reference/config/authorization/users/permissions/subscribe/ | - Subscription and queue permissions:
-nats.md	cac6d56ec0a5a729e05cd6f8e7db3c85610ce96b5170dde3ad182e0281667cb6	1
-# server | v2.14.7 | https://docs.nats.io/reference/config/authorization/users/permissions/allow_responses/ | - Bounded response permissions:
-nats.md	5aaf5d2f1e595b97269a52d21f18c37f97be2c917943f2c131d02646195a7e04	1
-# server | v2.14.7 | https://docs.nats.io/learn/security/encryption | - Encryption, TLS authentication, and JetStream key rotation:
-nats.md	fc0c40837c5d52a2be6fd9577dbf83e47f09a0cfb588d9ab5636f967ec58eca5	1
-# server | v2.14.7 | https://docs.nats.io/reference/config/tls/ | - TLS reference and listener applicability:
-nats.md	2f528b6a157a09bf4ce3e908043e0025aceff90d089093e6f731ad95cc1adf8e	1
-# server | v2.14.7 | https://docs.nats.io/learn/monitoring/monitoring-endpoints | - Monitoring endpoints and query parameters:
-nats.md	a29f1c00b8640b9c56408a2e96f29b338a96d00cd1118a45a72f65d31bbdb3c2	1
-# server | v2.14.7 | https://docs.nats.io/learn/deployment/hardening | - Deployment hardening, non-root service identity, and sandboxing:
-nats.md	96000291e98e66fa4d28802fdf2173f629d6ecbe83a39f432637cd25d4748607	1
-# server | v2.14.7 | https://docs.nats.io/concepts/jetstream | - JetStream concepts:
-nats.md	1f3caad19da8f4c67e8f29d41eb49a2ef4bae34fc0bb6a2f5e5c77cc1f691476	1
-# server | v2.14.7 | https://docs.nats.io/reference/config/cluster/ | - Cluster configuration:
-nats.md	3f21c059c7a4a1b21363521820d24b110f9c23f3f6a0fbf689e378862097e81c	1
-# server | v2.14.7 | https://docs.nats.io/reference/config/gateway/ | - Gateway configuration:
-nats.md	adb9611d3265d9c892d89f41a51dd0c5bd3fb09b3f0a0d04887df3a4bba2f524	1
-# server | v2.14.7 | https://docs.nats.io/reference/config/leafnodes/ | - Leafnode configuration:
-nats.md	7842c9859225e2ca6272281dc4312526b2d21d15adfa165f6dd62c8918d54340	1
-# server | v2.14.7 | https://docs.nats.io/reference/config/leafnodes/authorization/ | - Leafnode authorization and account binding:
-nats.md	b901c97b7cbcca4a8bf6aa367ca6eee9840eaf9ebec97925658410dfc6541af4	1
-# server | v2.14.7 | https://docs.nats.io/reference/config/leafnodes/remotes/ | - Leafnode remotes and local account selection:
-nats.md	17eed47720adadf4e4fac570b1372bd832feb0b1b85bb0b3f993ddfdd02eb8dc	1
-# server | v2.14.7 | https://docs.nats.io/reference/config/authorization/timeout | - Authorization timeout:
-nats.md	7cfa00bc90c0ed24e5498422ae4fcd216880189b3d4167aeff66965d3a5a8924	1
-# server | v2.14.7 | https://docs.nats.io/reference/config/accounts/limits/ | - Account connection limits:
-nats.md	856fbb5edb0922e078b9382ab636d147a4e25a15aa8aab8fdb1e55c37737ecdd	1
-# server | v2.14.7 | https://docs.nats.io/learn/security/accounts-and-multitenancy | - Accounts and multitenancy:
-nats.md	747e1007917ffdd7d059d59c28bdf18eb8e36a8c4f051b272fd3eb0c0eebcb7a	1
-# server | v2.14.7 | https://docs.nats.io/learn/security/cross-account | - Cross-account exports and imports:
-nats.md	5d5d7d91da2e170bb93900585b43138d0a251a95c15a9bafc3d41e5082cdff05	1
-# server | v2.14.7 | https://docs.nats.io/reference/config/jetstream/ | - Server JetStream configuration:
-nats.md	b41362bc2c4531b727f6cc150070511e9066e098e61286967f123d0cb9239557	1
-# server | v2.14.7 | https://docs.nats.io/reference/config/jetstream/request_queue_limit | - JetStream request queue limit:
-nats.md	c846d26f0441cf56f6b8d0415d8d8f128930dd46101546b57fa130f748957df9	1
-# server | v2.14.7 | https://docs.nats.io/reference/config/accounts/jetstream/ | - Account JetStream limits and reload caveats:
-nats.md	a87b2e8556ee676838d63c311959d766a0444b020098de1f93706f92f5bf561c	1
-# server | v2.14.7 | https://docs.nats.io/reference/config/jetstream/domain | - JetStream domain:
-nats.md	fd8e4ef8a73707d20fb19c016e07a6383e7ec98c4d47636d8b1cd778de16cb4e	1
-# server | v2.14.7 | https://docs.nats.io/learn/topologies/leaf-nodes | - JetStream across leaf nodes:
-nats.md	64e79a3f1c883ee3046c0084f95d0b3441bf273cc5552ca4b5d4ee78ee676b01	1
-# server | v2.14.7 | https://docs.nats.io/reference/config/jetstream/encryption_key | - JetStream encryption key:
-nats.md	3c3457a8e041780695a6cbdd17004eb86531a1863f28bd7a04f9befe46b4116c	1
-# server | v2.14.7 | https://docs.nats.io/reference/config/jetstream/cipher | - JetStream cipher selection:
-nats.md	6670e431c5e1181a0bd0d1b60a9196860df4f3dc96759a0d7882456c01877bd1	1
-# server | v2.14.7 | https://docs.nats.io/reference/config/jetstream/prev_encryption_key | - JetStream previous encryption key:
-nats.md	cae489ad976a1c11462dbd6556757e405dcd8126ded3495574bf41a58bf56c14	1
-# server | v2.14.7 | https://docs.nats.io/reference/config/authorization/users/allowed_connection_types | - Connection-type restrictions:
-nats.md	ab6355bed50b2dd1cc2ada1a58c8b685c7ccde6c6d2df40652f7abd8908a164b	1
-# server | v2.14.7 | https://docs.nats.io/reference/config/mqtt/ | - MQTT configuration:
-nats.md	cfb8050d4ca2a4d425bde2bc2f42c165db9c1b96d94867b044f38592d2a9b6a2	1
-# server | v2.14.7 | https://docs.nats.io/learn/mqtt/auth-and-clustering | - MQTT authentication and clustering:
-nats.md	7ab6c610764f3b862edba77e534ff3ad58a4e9643beabd8be82d16d7dfa485f3	1
-# server | v2.14.7 | https://docs.nats.io/reference/config/websocket/ | - WebSocket configuration:
-nats.md	cefc7a8b91444cb66d91b365b5986b42aa065626fe3df2d4ac8007cad9c99d3f	1
-# server | v2.14.7 | https://docs.nats.io/learn/security/auth-callout | - Auth callout workflows:
-nats.md	51ef0ff93da7d3ce9893a8b7c359c99c4b064d7d32d006da73617ea121265177	1
-# server | v2.14.7 | https://docs.nats.io/reference/config/authorization/auth_callout | - Auth callout configuration:
-nats.md	2182e310d6293b9912392010355e88ebb41ad1e4243c0950484c29bd7f2ee619	1
 # ollama | v0.34.2 | https://docs.ollama.com/api/authentication | - Local API authentication:
 ollama.md	ded207b896f49bd85b7e7db6b551d6e2ad28806fba14ddf83823d12c4b4f0fca	1
 # ollama | v0.34.2 | https://docs.ollama.com/api/tags | - Model inventory and digests:
 ollama.md	ecb2c56014c8c7d3a5ef6c907a945c4266ce1e5e46d7df2db3db53e524dc44b2	1
 # ollama | v0.34.2 | https://docs.ollama.com/api-reference/show-model-details | - Model details:
 ollama.md	fd3acd7b4671f52750b00647a7df41586daaca9ac62c1552a98e24b58cac7909	1
-# pb | v0.40.4 | https://pocketbase.io/docs/going-to-production/ | - PocketBase going to production:
-pocketbase.md	9ca64d2e0456b382c9846fa7acc273b7ce1f988f5b28aaaa80180a99bc4736b6	1
-# pb | v0.40.4 | https://pocketbase.io/docs/api-rules-and-filters/ | - PocketBase API rules and filters:
-pocketbase.md	2c6ce07bc7fd400c6fd4bbf745ceae2fe90243a9c417dbb0d7d75605f3c888c8	1
-# pb | v0.40.4 | https://pocketbase.io/docs/authentication/ | - [PocketBase authentication](
-pocketbase.md	a3487276eaa20bfcef9d04e50002ed6925efe792d8e7e1506e80f584d64c7d2d	1
-# pb | v0.40.4 | https://pocketbase.io/docs/files-handling/ | - [PocketBase files and protected downloads](
-pocketbase.md	de60812a86ffb82f90d0eff1c37c88d68cdfe48ca13f6f0011865b2dbb28f80f	1
-# pb | v0.40.4 | https://pocketbase.io/docs/api-realtime/ | - [PocketBase Realtime API](
-pocketbase.md	94263512f81b9320a37e66fecae4b2cac4c152180383b8167686d6251e442f87	1
-# appwrite | 2.2.0 | https://appwrite.io/docs/advanced/self-hosting/production/security | - Appwrite self-hosting production security:
-pocketbase.md	787663ca3953d35adaf3b2e0dce4259f4735164e88d2712b4bc2fa8c9f644fc8	1
-# appwrite | 2.2.0 | https://appwrite.io/docs/partners/project/api-keys | - Appwrite project API keys:
-pocketbase.md	9a10853194400df2121a43e166ae7d1cebed441abab351a147c7f6077baa0f51	1
-# appwrite | 2.2.0 | https://appwrite.io/docs/advanced/security/permissions | - [Appwrite permissions, creation defaults, and server integrations](
-pocketbase.md	84a4892630aa8ed32b41c659b4c50391ecea8a9f41528db3ad59312d075765d0	1
-# appwrite | 2.2.0 | https://appwrite.io/docs/products/databases/permissions/ | - [Appwrite additive database permissions](
-pocketbase.md	51f3cb0bf26a4ad07ed02b9bb8fc4bf03e42c368f9a360a1b8e32dbc89ad077d	1
-# appwrite | 2.2.0 | https://appwrite.io/docs/references/cloud/server-nodejs/databases | - [Appwrite legacy Databases API](
-pocketbase.md	de7b38529f9688134a31922708709fa65f2c27cdfb95b3fbbfb262e71494fee5	1
-# appwrite | 2.2.0 | https://appwrite.io/docs/advanced/self-hosting/configuration/environment-variables | - [Appwrite environment reference and HTTPS deprecation wording](
-pocketbase.md	aa6668a553c8a561ac8321ee4fa33e3a336508098fbf7db14f0195cdbd53a0ff	1
-# appwrite | 2.2.0 | https://appwrite.io/docs/advanced/security/rate-limits | - [Appwrite rate limits](
-pocketbase.md	21fc691e013759a36db86fb1f6f676f8318add78ad476738be8df51e1559b10a	1
-# appwrite | 2.2.0 | https://appwrite.io/docs/advanced/self-hosting/configuration/email | - [Appwrite email delivery](
-pocketbase.md	7f44916287382e6a05298c8b137e2d2fda71ac22840ac9d9c568dc3b6bc4c6ee	1
-# appwrite | 2.2.0 | https://appwrite.io/docs/advanced/self-hosting/production/backups | - [Appwrite self-hosted backups and encryption-key preservation](
-pocketbase.md	44f31e4dc43dce03a5da49e0c749499fc4aa21f3c7ad43e90ab70f2bdaebf27b	1
-# appwrite | 2.2.0 | https://appwrite.io/docs/advanced/security/mfa | - [Appwrite console MFA enrollment and recovery codes](
-pocketbase.md	97311301fd064bb44dfeea997b08612e8f45f5665aa82642b9404c68fce09f4a	1
 # pve-docs | 9.2.12 | https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pveum.adoc | - Proxmox VE user management (root@pam, two-factor, lockout, API tokens):
 server-admin-panels.md	022cac653791031dcac071e7f2d4912e1e9802264b7adae37fba9acd94362f72	1
 # pve-docs | 9.2.12 | https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pve-firewall.adoc | - Proxmox VE firewall:
