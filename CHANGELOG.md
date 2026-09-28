@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-09-27
 
+- Pin or split version-labelled rolling-documentation Sources items in 9 guides (row 1.191, batch c of 3) (#NNN).
 - Clarify Sources version bases across 13 guides by pinning verified documentation, splitting rolling documentation and historical advisories into separate components, and removing unsupported version labels; preserve the removal of 75 baseline entries (row 1.190, batch c of 3) (#424).
 - Clarify Sources provenance in 8 guides by pinning versioned documentation, splitting rolling documentation and independent notices into their own components, and correcting version labels, clearing 63 baseline entries (row 1.190, batch b of 3) (#423).
 - Pin verified Sources documentation to the reviewed version and split rolling documentation into separate basis-unknown components in 5 guides, clearing 69 baseline entries (row 1.190, batch a of 3) (#422).
