@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "c806272af965a3df1bb721029a5f06f690a19f566228215d413c8cfab5f4787a",
+  "body_sha256": "a3b8ddcc45a2b6d85e7caa771cab768d8f2876914010a488f2e52e551d55cc6b",
   "components": {
     "comfy": {
       "name": "ComfyUI",
@@ -417,7 +417,7 @@ curl -q -g -sI https://imagegen.example.com/                # via the proxy: TLS
 
 - ComfyUI Startup Flags, `--listen` and `--port` defaults (rolling documentation, checked September 2026): https://docs.comfy.org/development/comfyui-server/startup-flags
 - ComfyUI Registry custom node security standards, eval/exec prohibited (rolling documentation, checked September 2026): https://docs.comfy.org/registry/standards
-- ComfyUI 2025 Jan Security Update, custom node code-execution risk: https://blog.comfy.org/p/comfyui-2025-jan-security-update
+- ComfyUI 2025 Jan Security Update, custom node code-execution risk (rolling documentation, checked September 2026): https://blog.comfy.org/p/comfyui-2025-jan-security-update
 - ComfyUI-Manager security advisory, CVE-2025-67303, GHSA-95pq-hr8p-f5g7 (minimums ComfyUI v0.3.76 and Manager v3.38): https://github.com/Comfy-Org/ComfyUI-Manager/security/advisories/GHSA-95pq-hr8p-f5g7
 - AUTOMATIC1111 Command Line Arguments and Settings wiki: https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Command-Line-Arguments-and-Settings
 - AUTOMATIC1111 `--gradio-auth-path` ("set gradio authentication file path"), `--gradio-auth`, `--api-auth` and `--server-name` definitions (pinned tag v1.10.1): https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L87-L113
