@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "5be85c88fe20d36d397ca2ac0f7fa7b739f2529627f21caa5f6db89497421497",
+  "body_sha256": "a76b9f18469b8277f3832a03d038c405bf34164e766365e26afc108fc6d1ea35",
   "components": {
     "http": {
       "name": "Go net/http documentation",
@@ -24,7 +24,7 @@ version_basis: {
       "name": "Go certificate-store qualification",
       "basis": "1.27",
       "sources": {
-        "scbe5f68840c1": "https://pkg.go.dev/crypto/x509"
+        "se65b937f9e1e": "https://pkg.go.dev/crypto/x509@go1.27.0"
       }
     },
     "bcrypt": {
@@ -66,7 +66,7 @@ version_basis: {
       "name": "Go header-count qualification",
       "basis": "1.27",
       "sources": {
-        "s66a370c419d9": "https://pkg.go.dev/net/http#MaxBytesReader"
+        "sa4a9473fc6f8": "https://pkg.go.dev/net/http@go1.27.0#MaxBytesReader"
       }
     },
     "deadlines": {
@@ -113,14 +113,14 @@ version_basis: {
     "oidc": {"text": "NewProvider discovers the issuer; Verifier with ClientID checks ID-token signature, issuer, audience and expiry; apply separate allowlists.", "components": ["oidc"], "sources": ["oidc:s60cc1d7a8fe6"], "status": "REASONED"},
     "mfa": {"text": "Use pquerna/otp or a fronting identity layer; TOTP and MFA lack a listed source.", "components": ["oidc"], "sources": ["oidc:s60cc1d7a8fe6"], "status": "REASONED"},
     "client-validation": {"text": "InsecureSkipVerify accepts any certificate and hostname unless custom VerifyConnection/VerifyPeerCertificate checks replace validation.", "components": ["tls"], "sources": ["tls:se2152a9c28fc"], "status": "REASONED"},
-    "client-ca": {"text": "Use SystemCertPool plus a checked AppendCertsFromPEM result and RootCAs, or override CA locations with SSL_CERT_FILE/SSL_CERT_DIR.", "components": ["tls", "x509"], "sources": ["tls:se2152a9c28fc", "x509:scbe5f68840c1"], "status": "REASONED"},
-    "platform-ca": {"text": "Go 1.27 certificate-file/directory overrides bypass macOS/Windows platform verification unless GODEBUG=x509sslcertoverrideplatform=0 is also set.", "components": ["x509"], "sources": ["x509:scbe5f68840c1"], "status": "REASONED"},
+    "client-ca": {"text": "Use SystemCertPool plus a checked AppendCertsFromPEM result and RootCAs, or override CA locations with SSL_CERT_FILE/SSL_CERT_DIR.", "components": ["tls", "x509"], "sources": ["tls:se2152a9c28fc", "x509:se65b937f9e1e"], "status": "REASONED"},
+    "platform-ca": {"text": "Go 1.27 certificate-file/directory overrides bypass macOS/Windows platform verification unless GODEBUG=x509sslcertoverrideplatform=0 is also set.", "components": ["x509"], "sources": ["x509:se65b937f9e1e"], "status": "REASONED"},
     "pprof": {"text": "Importing pprof registers /debug/pprof/ on DefaultServeMux; profiles, traces, cmdline and forced GC can disclose data or exhaust resources.", "components": ["pprof"], "sources": ["pprof:s0246034dddd1"], "status": "REASONED"},
     "expvar": {"text": "Importing expvar registers /debug/vars with cmdline and memstats on DefaultServeMux.", "components": ["expvar"], "sources": ["expvar:se49529035a0c"], "status": "REASONED"},
     "diag-bind": {"text": "Imports do not start listeners; nil handlers serve DefaultServeMux. Give the app its own mux and diagnostics a separate 127.0.0.1:6060 mux, never public proxy routing.", "components": ["http", "pprof", "expvar"], "sources": ["http:s75405f80decc", "pprof:s0246034dddd1", "expvar:se49529035a0c"], "status": "REASONED"},
-    "body-limit": {"text": "Wrap the body with MaxBytesReader before decoding; the example 1 MiB policy requires explicit MaxBytesError handling to return 413.", "components": ["headers"], "sources": ["headers:s66a370c419d9"], "status": "REASONED"},
+    "body-limit": {"text": "Wrap the body with MaxBytesReader before decoding; the example 1 MiB policy requires explicit MaxBytesError handling to return 413.", "components": ["headers"], "sources": ["headers:sa4a9473fc6f8"], "status": "REASONED"},
     "header-size": {"text": "MaxHeaderBytes defaults to 1 MiB for request line and headers, independently of body limits.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED"},
-    "header-count": {"text": "Go 1.27 adds MaxHeaderValueCount with default 500; this is separate from body limits.", "components": ["headers"], "sources": ["headers:s66a370c419d9"], "status": "REASONED"},
+    "header-count": {"text": "Go 1.27 adds MaxHeaderValueCount with default 500; this is separate from body limits.", "components": ["headers"], "sources": ["headers:sa4a9473fc6f8"], "status": "REASONED"},
     "read-timeout": {"text": "ReadTimeout bounds the whole request including body; example 30 seconds, zero or negative disables it.", "components": ["http"], "sources": ["http:s6ab9e32b7795"], "status": "REASONED"},
     "write-timeout": {"text": "WriteTimeout bounds writing; example 60 seconds, zero or negative disables it.", "components": ["http"], "sources": ["http:s6ab9e32b7795"], "status": "REASONED"},
     "header-timeout": {"text": "ReadHeaderTimeout bounds headers; example 10 seconds, zero falls back to ReadTimeout and negative disables it.", "components": ["http"], "sources": ["http:s6ab9e32b7795"], "status": "REASONED"},
@@ -372,13 +372,13 @@ curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/debug/pprof/   
 - net/http (Server, ListenAndServeTLS, Cookie, SameSite, Redirect, Transport.TLSClientConfig): https://pkg.go.dev/net/http
 - net/http Request.Host (Go 1.27.0, supplied by the client): https://pkg.go.dev/net/http@go1.27.0#Request
 - crypto/tls (Config.MinVersion, InsecureSkipVerify, RootCAs): https://pkg.go.dev/crypto/tls
-- crypto/x509 (SystemCertPool, SSL_CERT_FILE, AppendCertsFromPEM) (Go 1.27): https://pkg.go.dev/crypto/x509
+- crypto/x509 (SystemCertPool, SSL_CERT_FILE, AppendCertsFromPEM) (Go 1.27): https://pkg.go.dev/crypto/x509@go1.27.0
 - golang.org/x/crypto/bcrypt: https://pkg.go.dev/golang.org/x/crypto/bcrypt
 - golang.org/x/crypto/argon2: https://pkg.go.dev/golang.org/x/crypto/argon2
 - golang.org/x/time/rate: https://pkg.go.dev/golang.org/x/time/rate
 - go-oidc: https://pkg.go.dev/github.com/coreos/go-oidc/v3/oidc
 - net/http/pprof and expvar register on DefaultServeMux: https://pkg.go.dev/net/http/pprof
-- net/http MaxBytesReader, MaxBytesError, Server.MaxHeaderBytes / MaxHeaderValueCount (Go 1.27): https://pkg.go.dev/net/http#MaxBytesReader
+- net/http MaxBytesReader, MaxBytesError, Server.MaxHeaderBytes / MaxHeaderValueCount (Go 1.27): https://pkg.go.dev/net/http@go1.27.0#MaxBytesReader
 - net/http Server timeouts (ReadTimeout, WriteTimeout, IdleTimeout, ReadHeaderTimeout): https://pkg.go.dev/net/http#Server
 - net/http ResponseController (per-request deadlines) (Go 1.20+): https://pkg.go.dev/net/http#ResponseController
 - expvar (registers /debug/vars on the default mux): https://pkg.go.dev/expvar

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "70310bdcb37384be5f810eeae5a7bcb1b3b2641452fd5519b91096d47c7dd148",
+  "body_sha256": "7d647297dab9e9fef3508f7f6df980f890f3909ee349755d77f0aa1429302791",
   "components": {
     "portainer": {
       "name": "Portainer",
@@ -120,13 +120,6 @@ version_basis: {
         "s45b3eab2515b": "https://dozzle.dev/guide/authentication"
       }
     },
-    "registry": {
-      "name": "Docker Registry",
-      "basis": "registry:2",
-      "sources": {
-        "sa315b3f8bfa6": "https://distribution.github.io/distribution/about/deploying/"
-      }
-    },
     "filebrowser": {
       "name": "Filebrowser",
       "basis": "unknown",
@@ -153,6 +146,13 @@ version_basis: {
       "basis": "1.24",
       "sources": {
         "s57933519c308": "https://docs.gitea.com/administration/config-cheat-sheet"
+      }
+    },
+    "registry-docs": {
+      "name": "Docker Registry documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "sa315b3f8bfa6": "https://distribution.github.io/distribution/about/deploying/"
       }
     }
   },
@@ -205,9 +205,9 @@ version_basis: {
     "dozzle-socket": {"text": "Docker-socket access has host-level power; keep Dozzle private with fronting MFA.", "components": ["dozzle", "docker"], "sources": ["dozzle:s45b3eab2515b", "docker:sfe15a8156c18"], "status": "REASONED"},
     "dozzle-auth": {"text": "Auth defaults off; generate users.yml with stdin password prompt and set simple auth, or delegate with forward-proxy.", "components": ["dozzle"], "sources": ["dozzle:s45b3eab2515b"], "status": "REASONED"},
     "dozzle-actions": {"text": "Leave optional container actions/shell off unless needed; either enables remote command execution.", "components": ["dozzle"], "sources": ["dozzle:s45b3eab2515b"], "status": "REASONED"},
-    "registry-auth": {"text": "registry:2 defaults to unauthenticated push/pull; configure TLS before htpasswd/token auth or use an authenticated distribution.", "components": ["registry"], "sources": ["registry:sa315b3f8bfa6"], "status": "REASONED"},
-    "registry-bcrypt": {"text": "Native htpasswd accepts bcrypt only; use -B -C 12. Proxy hashing rules differ; OWASP cost minimum lacks a direct source here.", "components": ["registry"], "sources": ["registry:sa315b3f8bfa6"], "status": "REASONED"},
-    "registry-private": {"text": "Use private networking and tunnels/Access with fronting MFA.", "components": ["registry"], "sources": ["registry:sa315b3f8bfa6"], "status": "REASONED"},
+    "registry-auth": {"text": "registry:2 defaults to unauthenticated push/pull; configure TLS before htpasswd/token auth or use an authenticated distribution.", "components": ["registry-docs"], "sources": ["registry-docs:sa315b3f8bfa6"], "status": "REASONED"},
+    "registry-bcrypt": {"text": "Native htpasswd accepts bcrypt only; use -B -C 12. Proxy hashing rules differ; OWASP cost minimum lacks a direct source here.", "components": ["registry-docs"], "sources": ["registry-docs:sa315b3f8bfa6"], "status": "REASONED"},
+    "registry-private": {"text": "Use private networking and tunnels/Access with fronting MFA.", "components": ["registry-docs"], "sources": ["registry-docs:sa315b3f8bfa6"], "status": "REASONED"},
     "filebrowser-admin": {"text": "Change first-run admin credentials, historically admin/admin. Guide records September 1, 2026 archival and the warning against internet exposure.", "components": ["filebrowser"], "sources": ["filebrowser:s6386c9e2356b"], "status": "REASONED"},
     "filebrowser-private": {"text": "Keep Filebrowser private through tunnel/tailnet/Access with fronting MFA.", "components": ["filebrowser"], "sources": ["filebrowser:s6386c9e2356b"], "status": "REASONED"},
     "nodered-default": {"text": "Editor/admin API on 1880 defaults unauthenticated, permitting flow viewing/deployment/modification.", "components": ["nodered"], "sources": ["nodered:sa94f329023fe"], "status": "REASONED"},
@@ -281,9 +281,9 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | dozzle-socket: Docker-socket access has host-level power; keep Dozzle private with fronting MFA. | Dozzle unknown; Docker Engine unknown | REASONED |
 | dozzle-auth: Auth defaults off; generate users.yml with stdin password prompt and set simple auth, or delegate with forward-proxy. | Dozzle unknown | REASONED |
 | dozzle-actions: Leave optional container actions/shell off unless needed; either enables remote command execution. | Dozzle unknown | REASONED |
-| registry-auth: registry:2 defaults to unauthenticated push/pull; configure TLS before htpasswd/token auth or use an authenticated distribution. | Docker Registry registry:2 | REASONED |
-| registry-bcrypt: Native htpasswd accepts bcrypt only; use -B -C 12. Proxy hashing rules differ; OWASP cost minimum lacks a direct source here. | Docker Registry registry:2 | REASONED |
-| registry-private: Use private networking and tunnels/Access with fronting MFA. | Docker Registry registry:2 | REASONED |
+| registry-auth: registry:2 defaults to unauthenticated push/pull; configure TLS before htpasswd/token auth or use an authenticated distribution. | Docker Registry documentation (rolling) unknown | REASONED |
+| registry-bcrypt: Native htpasswd accepts bcrypt only; use -B -C 12. Proxy hashing rules differ; OWASP cost minimum lacks a direct source here. | Docker Registry documentation (rolling) unknown | REASONED |
+| registry-private: Use private networking and tunnels/Access with fronting MFA. | Docker Registry documentation (rolling) unknown | REASONED |
 | filebrowser-admin: Change first-run admin credentials, historically admin/admin. Guide records September 1, 2026 archival and the warning against internet exposure. | Filebrowser unknown | REASONED |
 | filebrowser-private: Keep Filebrowser private through tunnel/tailnet/Access with fronting MFA. | Filebrowser unknown | REASONED |
 | nodered-default: Editor/admin API on 1880 defaults unauthenticated, permitting flow viewing/deployment/modification. | Node-RED unknown | REASONED |
@@ -465,7 +465,7 @@ From outside the network, every panel URL is unreachable or shows a login; a pag
 - Uptime Kuma README and reverse proxy wiki: https://github.com/louislam/uptime-kuma and https://github.com/louislam/uptime-kuma/wiki/Reverse-Proxy
 - Docker: protect the daemon socket https://docs.docker.com/engine/security/protect-access/ and remote access https://docs.docker.com/engine/daemon/remote-access/
 - Dozzle authentication (DOZZLE_AUTH_PROVIDER, users.yml, actions and shell): https://dozzle.dev/guide/authentication
-- Docker Registry deployment (default authentication, TLS requirement) (registry:2): https://distribution.github.io/distribution/about/deploying/
+- Docker Registry deployment (default authentication, TLS requirement; rolling documentation, checked September 2026): https://distribution.github.io/distribution/about/deploying/
 - Filebrowser: https://github.com/filebrowser/filebrowser
 - Node-RED securing the runtime (adminAuth, credentialSecret): https://nodered.org/docs/user-guide/runtime/securing-node-red
 - Gitea `HTTP_ADDR` default `0.0.0.0` and `HTTP_PORT` default `3000` (pinned tag v1.27.3): https://github.com/go-gitea/gitea/blob/v1.27.3/modules/setting/server.go#L121-L122
