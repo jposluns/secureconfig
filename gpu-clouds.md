@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "154f92e013afc74a7aacee2575d1f0bf23b860edea5e709d36040d3def594d70",
+  "body_sha256": "5f6dcb301790ff264886c75cc4d263b056fc85a9b49d771abf06a6f7f657d9ec",
   "components": {
     "runpod": {
       "name": "RunPod documentation",
@@ -50,6 +50,16 @@ version_basis: {
       "sources": {
         "sc703a8030c8f": "https://jupyter-server.readthedocs.io/en/latest/operators/security.html"
       }
+    },
+    "iproute2": {
+      "name": "iproute2 ss manual",
+      "basis": "v6.12.0",
+      "sources": {
+        "s2afc4764d5bb": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L33-L34",
+        "sfaa932c2ca13": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L43-L44",
+        "sd295f82d643f": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L162-L163",
+        "s65278ee45850": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L374-L375"
+      }
     }
   },
   "claims": {
@@ -76,7 +86,7 @@ version_basis: {
     "lambda-ssh": {"text": "Lambda requires an SSH key at launch; keep the private key off the instance.", "components": ["lambda"], "sources": ["lambda:sb12b4a953833"], "status": "REASONED"},
     "vast-ssh": {"text": "Vast.ai disables SSH password authentication and uses the registered public key; keep the private key off the instance.", "components": ["vast"], "sources": ["vast:s6e0303ef19fe"], "status": "REASONED"},
     "runpod-ssh": {"text": "RunPod recommends SSH keys and offers an optional password; use the key and skip the password.", "components": ["runpod"], "sources": ["runpod:s13c43b856d4f"], "status": "REASONED"},
-    "verify-inventory": {"text": "ss inventories TCP listeners in the current network namespace only, not UDP, firewall state or platform publication; cross-check mappings and probe each from outside. No ss source is recorded.", "components": ["runpod", "vast"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e"], "status": "REASONED", "verify": [1]},
+    "verify-inventory": {"text": "ss inventories TCP listeners in the current network namespace only, not UDP, firewall state or platform publication; cross-check mappings and probe each from outside. No ss source is recorded.", "components": ["runpod", "vast", "iproute2"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "iproute2:s2afc4764d5bb", "iproute2:sfaa932c2ca13", "iproute2:sd295f82d643f", "iproute2:s65278ee45850"], "status": "REASONED", "verify": [1]},
     "verify-jupyter": {"text": "Probe loopback :8888/api/contents directly: the guide expects 403 without the Jupyter token and 200 with it; any anonymous data response is a finding. The cited security page documents token auth but not this exact endpoint/status pair.", "components": ["jupyter"], "sources": ["jupyter:sc703a8030c8f"], "status": "REASONED", "verify": [1]},
     "verify-mapping": {"text": "Repeat credential-free and authenticated requests per exposed mapping; anonymous app data fails, while a proxy 401 alone does not prove native listener auth and needs the direct positive control.", "components": ["runpod", "vast", "modal", "jupyter"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "vast:s0bdbda534723", "modal:s7d083f819a21", "jupyter:sc703a8030c8f"], "status": "REASONED", "verify": [1]},
     "remote-desktop": {"text": "Inventory template noVNC ports such as 6080 and VNC ports such as 5900/5901; check weak or empty passwords, require a strong password plus encrypted tunnel for direct VNC, or remove its public mapping. Test with a VNC client; no noVNC/VNC source is recorded here.", "components": ["runpod", "vast"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e"], "status": "REASONED"}
@@ -90,7 +100,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -117,7 +127,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | lambda-ssh: Lambda requires an SSH key at launch; keep the private key off the instance. | Lambda Public Cloud documentation unknown | REASONED |
 | vast-ssh: Vast.ai disables SSH password authentication and uses the registered public key; keep the private key off the instance. | Vast.ai documentation unknown | REASONED |
 | runpod-ssh: RunPod recommends SSH keys and offers an optional password; use the key and skip the password. | RunPod documentation unknown | REASONED |
-| verify-inventory: ss inventories TCP listeners in the current network namespace only, not UDP, firewall state or platform publication; cross-check mappings and probe each from outside. No ss source is recorded. | RunPod documentation unknown; Vast.ai documentation unknown | REASONED |
+| verify-inventory: ss inventories TCP listeners in the current network namespace only, not UDP, firewall state or platform publication; cross-check mappings and probe each from outside. No ss source is recorded. | RunPod documentation unknown; Vast.ai documentation unknown; iproute2 ss manual v6.12.0 | REASONED |
 | verify-jupyter: Probe loopback :8888/api/contents directly: the guide expects 403 without the Jupyter token and 200 with it; any anonymous data response is a finding. The cited security page documents token auth but not this exact endpoint/status pair. | Jupyter Server security unknown | REASONED |
 | verify-mapping: Repeat credential-free and authenticated requests per exposed mapping; anonymous app data fails, while a proxy 401 alone does not prove native listener auth and needs the direct positive control. | RunPod documentation unknown; Vast.ai documentation unknown; Modal proxy authentication unknown; Jupyter Server security unknown | REASONED |
 | remote-desktop: Inventory template noVNC ports such as 6080 and VNC ports such as 5900/5901; check weak or empty passwords, require a strong password plus encrypted tunnel for direct VNC, or remove its public mapping. Test with a VNC client; no noVNC/VNC source is recorded here. | RunPod documentation unknown; Vast.ai documentation unknown | REASONED |
@@ -229,3 +239,4 @@ Every port `ss` shows listening should be either closed (not exposed at the plat
 - Lambda SSH (an SSH key is required at launch): https://docs.lambda.ai/public-cloud/on-demand/connecting-instance/
 - Vast.ai SSH (password authentication is disabled; register a key): https://docs.vast.ai/guides/instances/connect/ssh
 - RunPod SSH (key authentication recommended, optional password): https://docs.runpod.io/pods/configuration/use-ssh
+- iproute2 v6.12.0 `ss` manual (checked October 2026): [numeric output](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L33-L34), [listening sockets](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L43-L44), [process display](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L162-L163), and [TCP sockets](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L374-L375).
