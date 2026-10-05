@@ -3,29 +3,15 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "56f17d6a0036c46b456ebd52e057815d5bbd16dfffab6a79f94e4b95168f6d17",
+  "body_sha256": "aa6b38efdd29ed9068589a69a5d5414b3a1177607840ad5fcb900e5b7de85407",
   "components": {
     "openssl": {
-      "name": "OpenSSL documentation",
+      "name": "OpenSSL documentation (rolling)",
       "basis": "unknown",
       "sources": {
         "s211b1e6e4aa4": "https://docs.openssl.org/",
         "s581d7ad32359": "https://docs.openssl.org/master/man1/openssl-s_client/",
         "se5d70578564e": "https://docs.openssl.org/master/man1/openssl-verification-options/"
-      }
-    },
-    "minimum": {
-      "name": "OpenSSL generation minimum",
-      "basis": "3.0",
-      "sources": {
-        "s211b1e6e4aa4": "https://docs.openssl.org/"
-      }
-    },
-    "legacy": {
-      "name": "OpenSSL historical extension behaviour",
-      "basis": "1.1.1",
-      "sources": {
-        "s211b1e6e4aa4": "https://docs.openssl.org/"
       }
     },
     "mkcert": {
@@ -38,12 +24,12 @@ version_basis: {
   },
   "claims": {
     "trust-scope": {"text": "Self-signed TLS encrypts transit but needs explicit client trust and triggers browser warnings; the guide prefers publicly trusted certificates for browser users and external parties.", "components": ["openssl", "mkcert"], "sources": ["openssl:s211b1e6e4aa4", "mkcert:s41ae17dba4ce"], "status": "REASONED"},
-    "rsa-certificate": {"text": "OpenSSL 3.0 or later generates an RSA 4096-bit self-signed certificate with SHA-256, 365-day validity, an unencrypted key and the shown subject and extensions.", "components": ["minimum"], "sources": ["minimum:s211b1e6e4aa4"], "status": "REASONED"},
-    "ec-certificate": {"text": "Generate a prime256v1 EC key first, then a SHA-256 self-signed certificate with 365-day validity and the shown subject and extensions; the guide describes ECDSA as smaller and faster.", "components": ["minimum"], "sources": ["minimum:s211b1e6e4aa4"], "status": "REASONED"},
+    "rsa-certificate": {"text": "OpenSSL 3.0 or later generates an RSA 4096-bit self-signed certificate with SHA-256, 365-day validity, an unencrypted key and the shown subject and extensions.", "components": ["openssl"], "sources": ["openssl:s211b1e6e4aa4"], "status": "REASONED"},
+    "ec-certificate": {"text": "Generate a prime256v1 EC key first, then a SHA-256 self-signed certificate with 365-day validity and the shown subject and extensions; the guide describes ECDSA as smaller and faster.", "components": ["openssl"], "sources": ["openssl:s211b1e6e4aa4"], "status": "REASONED"},
     "san": {"text": "SAN must cover every client DNS name and IP; replace the documentation IP or omit IP entries for name-only access. RFC 9525 clients reject a missing matching SAN; that RFC is named but not linked in Sources.", "components": ["openssl"], "sources": ["openssl:se5d70578564e"], "status": "REASONED"},
-    "leaf-constraint": {"text": "Set basicConstraints=critical,CA:FALSE because the stated stock req -x509 configuration otherwise marks a trusted certificate CA:TRUE, allowing its unencrypted server key to sign for any name.", "components": ["minimum"], "sources": ["minimum:s211b1e6e4aa4"], "status": "REASONED"},
-    "extension-history": {"text": "The command-line extension override relies on OpenSSL 3.0 or later; the guide says end-of-life 1.1.1 instead emits a duplicate invalid extension.", "components": ["minimum", "legacy"], "sources": ["minimum:s211b1e6e4aa4", "legacy:s211b1e6e4aa4"], "status": "REASONED"},
-    "unencrypted-key": {"text": "-noenc leaves the key unencrypted for unattended startup; -nodes is the pre-3.0 spelling, still accepted but deprecated. Protect the key with permissions.", "components": ["minimum"], "sources": ["minimum:s211b1e6e4aa4"], "status": "REASONED"},
+    "leaf-constraint": {"text": "Set basicConstraints=critical,CA:FALSE because the stated stock req -x509 configuration otherwise marks a trusted certificate CA:TRUE, allowing its unencrypted server key to sign for any name.", "components": ["openssl"], "sources": ["openssl:s211b1e6e4aa4"], "status": "REASONED"},
+    "extension-history": {"text": "The command-line extension override relies on OpenSSL 3.0 or later; the guide says end-of-life 1.1.1 instead emits a duplicate invalid extension.", "components": ["openssl"], "sources": ["openssl:s211b1e6e4aa4"], "status": "REASONED"},
+    "unencrypted-key": {"text": "-noenc leaves the key unencrypted for unattended startup; -nodes is the pre-3.0 spelling, still accepted but deprecated. Protect the key with permissions.", "components": ["openssl"], "sources": ["openssl:s211b1e6e4aa4"], "status": "REASONED"},
     "expiry": {"text": "Track the -days expiry with a calendar or monitoring; self-signed certificates do not renew themselves.", "components": ["openssl"], "sources": ["openssl:s211b1e6e4aa4"], "status": "REASONED"},
     "key-permissions": {"text": "chmod 600 and service-user ownership protect server.key; filesystem command sources and versions are not recorded.", "components": ["openssl"], "sources": ["openssl:s211b1e6e4aa4"], "status": "REASONED"},
     "key-compromise": {"text": "Never commit private keys; ignore *.key and *.pem before generation in a repository and regenerate keys committed or pasted into chat. Git-specific sources are not recorded.", "components": ["openssl"], "sources": ["openssl:s211b1e6e4aa4"], "status": "REASONED"},
@@ -75,30 +61,30 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| trust-scope: Self-signed TLS encrypts transit but needs explicit client trust and triggers browser warnings; the guide prefers publicly trusted certificates for browser users and external parties. | OpenSSL documentation unknown; mkcert unknown | REASONED |
-| rsa-certificate: OpenSSL 3.0 or later generates an RSA 4096-bit self-signed certificate with SHA-256, 365-day validity, an unencrypted key and the shown subject and extensions. | OpenSSL generation minimum 3.0 | REASONED |
-| ec-certificate: Generate a prime256v1 EC key first, then a SHA-256 self-signed certificate with 365-day validity and the shown subject and extensions; the guide describes ECDSA as smaller and faster. | OpenSSL generation minimum 3.0 | REASONED |
-| san: SAN must cover every client DNS name and IP; replace the documentation IP or omit IP entries for name-only access. RFC 9525 clients reject a missing matching SAN; that RFC is named but not linked in Sources. | OpenSSL documentation unknown | REASONED |
-| leaf-constraint: Set basicConstraints=critical,CA:FALSE because the stated stock req -x509 configuration otherwise marks a trusted certificate CA:TRUE, allowing its unencrypted server key to sign for any name. | OpenSSL generation minimum 3.0 | REASONED |
-| extension-history: The command-line extension override relies on OpenSSL 3.0 or later; the guide says end-of-life 1.1.1 instead emits a duplicate invalid extension. | OpenSSL generation minimum 3.0; OpenSSL historical extension behaviour 1.1.1 | REASONED |
-| unencrypted-key: -noenc leaves the key unencrypted for unattended startup; -nodes is the pre-3.0 spelling, still accepted but deprecated. Protect the key with permissions. | OpenSSL generation minimum 3.0 | REASONED |
-| expiry: Track the -days expiry with a calendar or monitoring; self-signed certificates do not renew themselves. | OpenSSL documentation unknown | REASONED |
-| key-permissions: chmod 600 and service-user ownership protect server.key; filesystem command sources and versions are not recorded. | OpenSSL documentation unknown | REASONED |
-| key-compromise: Never commit private keys; ignore *.key and *.pem before generation in a repository and regenerate keys committed or pasted into chat. Git-specific sources are not recorded. | OpenSSL documentation unknown | REASONED |
+| trust-scope: Self-signed TLS encrypts transit but needs explicit client trust and triggers browser warnings; the guide prefers publicly trusted certificates for browser users and external parties. | OpenSSL documentation (rolling) unknown; mkcert unknown | REASONED |
+| rsa-certificate: OpenSSL 3.0 or later generates an RSA 4096-bit self-signed certificate with SHA-256, 365-day validity, an unencrypted key and the shown subject and extensions. | OpenSSL documentation (rolling) unknown | REASONED |
+| ec-certificate: Generate a prime256v1 EC key first, then a SHA-256 self-signed certificate with 365-day validity and the shown subject and extensions; the guide describes ECDSA as smaller and faster. | OpenSSL documentation (rolling) unknown | REASONED |
+| san: SAN must cover every client DNS name and IP; replace the documentation IP or omit IP entries for name-only access. RFC 9525 clients reject a missing matching SAN; that RFC is named but not linked in Sources. | OpenSSL documentation (rolling) unknown | REASONED |
+| leaf-constraint: Set basicConstraints=critical,CA:FALSE because the stated stock req -x509 configuration otherwise marks a trusted certificate CA:TRUE, allowing its unencrypted server key to sign for any name. | OpenSSL documentation (rolling) unknown | REASONED |
+| extension-history: The command-line extension override relies on OpenSSL 3.0 or later; the guide says end-of-life 1.1.1 instead emits a duplicate invalid extension. | OpenSSL documentation (rolling) unknown | REASONED |
+| unencrypted-key: -noenc leaves the key unencrypted for unattended startup; -nodes is the pre-3.0 spelling, still accepted but deprecated. Protect the key with permissions. | OpenSSL documentation (rolling) unknown | REASONED |
+| expiry: Track the -days expiry with a calendar or monitoring; self-signed certificates do not renew themselves. | OpenSSL documentation (rolling) unknown | REASONED |
+| key-permissions: chmod 600 and service-user ownership protect server.key; filesystem command sources and versions are not recorded. | OpenSSL documentation (rolling) unknown | REASONED |
+| key-compromise: Never commit private keys; ignore *.key and *.pem before generation in a repository and regenerate keys committed or pasted into chat. Git-specific sources are not recorded. | OpenSSL documentation (rolling) unknown | REASONED |
 | mkcert: mkcert -install creates and trusts a local CA; mkcert issues certificates for the listed development DNS names and IPs. | mkcert unknown | REASONED |
 | mkcert-custody: Use mkcert only for development; its CA key can sign for any name, must not leave the developer's machine and must not serve real users. | mkcert unknown | REASONED |
 | debian-trust: Install app-internal.crt under /usr/local/share/ca-certificates and run update-ca-certificates on Debian/Ubuntu; a platform-specific Sources entry is absent. | mkcert unknown | REASONED |
 | rhel-trust: Install app-internal.crt under /etc/pki/ca-trust/source/anchors and run update-ca-trust on RHEL/Fedora; a platform-specific Sources entry is absent. | mkcert unknown | REASONED |
-| curl-trust: curl --cacert server.crt supplies explicit trust for app.internal; a curl source and version are not recorded. | OpenSSL documentation unknown | REASONED |
-| requests-trust: REQUESTS_CA_BUNDLE supplies the certificate path to Python requests; a requests Sources entry and version are absent. | OpenSSL documentation unknown | REASONED |
+| curl-trust: curl --cacert server.crt supplies explicit trust for app.internal; a curl source and version are not recorded. | OpenSSL documentation (rolling) unknown | REASONED |
+| requests-trust: REQUESTS_CA_BUNDLE supplies the certificate path to Python requests; a requests Sources entry and version are absent. | OpenSSL documentation (rolling) unknown | REASONED |
 | node-trust: NODE_EXTRA_CA_CERTS supplies additional client trust to Node.js; its version is unrecorded. | mkcert unknown | REASONED |
-| verification-bypasses: Do not commit curl -k, verify=False, rejectUnauthorized: false or NODE_TLS_REJECT_UNAUTHORIZED=0; the guide says they disable TLS validation, but tool-specific Sources entries are absent. | OpenSSL documentation unknown | REASONED |
-| verify-extensions: Inspect x509 output for SAN coverage and CA:FALSE, not its exit status: it can exit 0 with no SAN. | OpenSSL documentation unknown | REASONED |
-| verify-tls: The app.internal:443 s_client check supplies SNI, hostname checking, verification errors and CAfile; a pass prints Verification: OK, Verified peername: app.internal and return code 0, and exits 0. | OpenSSL documentation unknown | REASONED |
-| verify-failures: Without -verify_hostname the name is ignored; without -verify_return_error a verification failure can still complete the handshake and exit 0. Both flags make name or trust failures exit nonzero; wrong name reports code 62. | OpenSSL documentation unknown | REASONED |
-| verify-identity: Use -verify_ip for IP identities; -verify_hostname can fall back to CN without a DNS SAN, even with an IP SAN, so CN-only or IP-only certificates can pass hostname checks. | OpenSSL documentation unknown | REASONED |
-| verify-store: Explicit -CAfile proves certificate and name, not the system-store installation; test each normally configured client separately, expecting plain curl without --cacert to fail before trust installation and succeed after. | OpenSSL documentation unknown; mkcert unknown | REASONED |
-| trust-limits: Self-signed certificates have no revocation or third-party accountability and need manual trust distribution; move beyond them as the audience grows and retain authentication. | OpenSSL documentation unknown; mkcert unknown | REASONED |
+| verification-bypasses: Do not commit curl -k, verify=False, rejectUnauthorized: false or NODE_TLS_REJECT_UNAUTHORIZED=0; the guide says they disable TLS validation, but tool-specific Sources entries are absent. | OpenSSL documentation (rolling) unknown | REASONED |
+| verify-extensions: Inspect x509 output for SAN coverage and CA:FALSE, not its exit status: it can exit 0 with no SAN. | OpenSSL documentation (rolling) unknown | REASONED |
+| verify-tls: The app.internal:443 s_client check supplies SNI, hostname checking, verification errors and CAfile; a pass prints Verification: OK, Verified peername: app.internal and return code 0, and exits 0. | OpenSSL documentation (rolling) unknown | REASONED |
+| verify-failures: Without -verify_hostname the name is ignored; without -verify_return_error a verification failure can still complete the handshake and exit 0. Both flags make name or trust failures exit nonzero; wrong name reports code 62. | OpenSSL documentation (rolling) unknown | REASONED |
+| verify-identity: Use -verify_ip for IP identities; -verify_hostname can fall back to CN without a DNS SAN, even with an IP SAN, so CN-only or IP-only certificates can pass hostname checks. | OpenSSL documentation (rolling) unknown | REASONED |
+| verify-store: Explicit -CAfile proves certificate and name, not the system-store installation; test each normally configured client separately, expecting plain curl without --cacert to fail before trust installation and succeed after. | OpenSSL documentation (rolling) unknown; mkcert unknown | REASONED |
+| trust-limits: Self-signed certificates have no revocation or third-party accountability and need manual trust distribution; move beyond them as the audience grows and retain authentication. | OpenSSL documentation (rolling) unknown; mkcert unknown | REASONED |
 <!-- version-basis:end -->
 
 Use a self-signed certificate when the service has no public DNS name, when an ACME CA cannot reach it, and when [cloudflare.md](cloudflare.md) is not an option: internal tools, lab and development environments, and machine-to-machine links on private networks. For anything a browser user or external party reaches, prefer [free-certificates.md](free-certificates.md); self-signed certificates trigger browser warnings and every client must be configured to trust them.
@@ -192,5 +178,5 @@ Self-signed certificates have no revocation and no third-party accountability, a
 
 ## Sources (checked September 2026)
 
-- OpenSSL documentation (3.0 or later; historical 1.1.1): https://docs.openssl.org/ ; `openssl s_client` (`-servername`, `-verify_return_error`): https://docs.openssl.org/master/man1/openssl-s_client/ ; verification options (`-verify_hostname`): https://docs.openssl.org/master/man1/openssl-verification-options/
+- OpenSSL documentation (rolling documentation, checked September 2026): https://docs.openssl.org/ ; `openssl s_client` (`-servername`, `-verify_return_error`): https://docs.openssl.org/master/man1/openssl-s_client/ ; verification options (`-verify_hostname`): https://docs.openssl.org/master/man1/openssl-verification-options/
 - mkcert: https://github.com/FiloSottile/mkcert

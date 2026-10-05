@@ -607,30 +607,30 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| trust-scope: Self-signed TLS encrypts transit but needs explicit client trust and triggers browser warnings; the guide prefers publicly trusted certificates for browser users and external parties. | OpenSSL documentation unknown; mkcert unknown | REASONED |
-| rsa-certificate: OpenSSL 3.0 or later generates an RSA 4096-bit self-signed certificate with SHA-256, 365-day validity, an unencrypted key and the shown subject and extensions. | OpenSSL generation minimum 3.0 | REASONED |
-| ec-certificate: Generate a prime256v1 EC key first, then a SHA-256 self-signed certificate with 365-day validity and the shown subject and extensions; the guide describes ECDSA as smaller and faster. | OpenSSL generation minimum 3.0 | REASONED |
-| san: SAN must cover every client DNS name and IP; replace the documentation IP or omit IP entries for name-only access. RFC 9525 clients reject a missing matching SAN; that RFC is named but not linked in Sources. | OpenSSL documentation unknown | REASONED |
-| leaf-constraint: Set basicConstraints=critical,CA:FALSE because the stated stock req -x509 configuration otherwise marks a trusted certificate CA:TRUE, allowing its unencrypted server key to sign for any name. | OpenSSL generation minimum 3.0 | REASONED |
-| extension-history: The command-line extension override relies on OpenSSL 3.0 or later; the guide says end-of-life 1.1.1 instead emits a duplicate invalid extension. | OpenSSL generation minimum 3.0; OpenSSL historical extension behaviour 1.1.1 | REASONED |
-| unencrypted-key: -noenc leaves the key unencrypted for unattended startup; -nodes is the pre-3.0 spelling, still accepted but deprecated. Protect the key with permissions. | OpenSSL generation minimum 3.0 | REASONED |
-| expiry: Track the -days expiry with a calendar or monitoring; self-signed certificates do not renew themselves. | OpenSSL documentation unknown | REASONED |
-| key-permissions: chmod 600 and service-user ownership protect server.key; filesystem command sources and versions are not recorded. | OpenSSL documentation unknown | REASONED |
-| key-compromise: Never commit private keys; ignore *.key and *.pem before generation in a repository and regenerate keys committed or pasted into chat. Git-specific sources are not recorded. | OpenSSL documentation unknown | REASONED |
+| trust-scope: Self-signed TLS encrypts transit but needs explicit client trust and triggers browser warnings; the guide prefers publicly trusted certificates for browser users and external parties. | OpenSSL documentation (rolling) unknown; mkcert unknown | REASONED |
+| rsa-certificate: OpenSSL 3.0 or later generates an RSA 4096-bit self-signed certificate with SHA-256, 365-day validity, an unencrypted key and the shown subject and extensions. | OpenSSL documentation (rolling) unknown | REASONED |
+| ec-certificate: Generate a prime256v1 EC key first, then a SHA-256 self-signed certificate with 365-day validity and the shown subject and extensions; the guide describes ECDSA as smaller and faster. | OpenSSL documentation (rolling) unknown | REASONED |
+| san: SAN must cover every client DNS name and IP; replace the documentation IP or omit IP entries for name-only access. RFC 9525 clients reject a missing matching SAN; that RFC is named but not linked in Sources. | OpenSSL documentation (rolling) unknown | REASONED |
+| leaf-constraint: Set basicConstraints=critical,CA:FALSE because the stated stock req -x509 configuration otherwise marks a trusted certificate CA:TRUE, allowing its unencrypted server key to sign for any name. | OpenSSL documentation (rolling) unknown | REASONED |
+| extension-history: The command-line extension override relies on OpenSSL 3.0 or later; the guide says end-of-life 1.1.1 instead emits a duplicate invalid extension. | OpenSSL documentation (rolling) unknown | REASONED |
+| unencrypted-key: -noenc leaves the key unencrypted for unattended startup; -nodes is the pre-3.0 spelling, still accepted but deprecated. Protect the key with permissions. | OpenSSL documentation (rolling) unknown | REASONED |
+| expiry: Track the -days expiry with a calendar or monitoring; self-signed certificates do not renew themselves. | OpenSSL documentation (rolling) unknown | REASONED |
+| key-permissions: chmod 600 and service-user ownership protect server.key; filesystem command sources and versions are not recorded. | OpenSSL documentation (rolling) unknown | REASONED |
+| key-compromise: Never commit private keys; ignore *.key and *.pem before generation in a repository and regenerate keys committed or pasted into chat. Git-specific sources are not recorded. | OpenSSL documentation (rolling) unknown | REASONED |
 | mkcert: mkcert -install creates and trusts a local CA; mkcert issues certificates for the listed development DNS names and IPs. | mkcert unknown | REASONED |
 | mkcert-custody: Use mkcert only for development; its CA key can sign for any name, must not leave the developer's machine and must not serve real users. | mkcert unknown | REASONED |
 | debian-trust: Install app-internal.crt under /usr/local/share/ca-certificates and run update-ca-certificates on Debian/Ubuntu; a platform-specific Sources entry is absent. | mkcert unknown | REASONED |
 | rhel-trust: Install app-internal.crt under /etc/pki/ca-trust/source/anchors and run update-ca-trust on RHEL/Fedora; a platform-specific Sources entry is absent. | mkcert unknown | REASONED |
-| curl-trust: curl --cacert server.crt supplies explicit trust for app.internal; a curl source and version are not recorded. | OpenSSL documentation unknown | REASONED |
-| requests-trust: REQUESTS_CA_BUNDLE supplies the certificate path to Python requests; a requests Sources entry and version are absent. | OpenSSL documentation unknown | REASONED |
+| curl-trust: curl --cacert server.crt supplies explicit trust for app.internal; a curl source and version are not recorded. | OpenSSL documentation (rolling) unknown | REASONED |
+| requests-trust: REQUESTS_CA_BUNDLE supplies the certificate path to Python requests; a requests Sources entry and version are absent. | OpenSSL documentation (rolling) unknown | REASONED |
 | node-trust: NODE_EXTRA_CA_CERTS supplies additional client trust to Node.js; its version is unrecorded. | mkcert unknown | REASONED |
-| verification-bypasses: Do not commit curl -k, verify=False, rejectUnauthorized: false or NODE_TLS_REJECT_UNAUTHORIZED=0; the guide says they disable TLS validation, but tool-specific Sources entries are absent. | OpenSSL documentation unknown | REASONED |
-| verify-extensions: Inspect x509 output for SAN coverage and CA:FALSE, not its exit status: it can exit 0 with no SAN. | OpenSSL documentation unknown | REASONED |
-| verify-tls: The app.internal:443 s_client check supplies SNI, hostname checking, verification errors and CAfile; a pass prints Verification: OK, Verified peername: app.internal and return code 0, and exits 0. | OpenSSL documentation unknown | REASONED |
-| verify-failures: Without -verify_hostname the name is ignored; without -verify_return_error a verification failure can still complete the handshake and exit 0. Both flags make name or trust failures exit nonzero; wrong name reports code 62. | OpenSSL documentation unknown | REASONED |
-| verify-identity: Use -verify_ip for IP identities; -verify_hostname can fall back to CN without a DNS SAN, even with an IP SAN, so CN-only or IP-only certificates can pass hostname checks. | OpenSSL documentation unknown | REASONED |
-| verify-store: Explicit -CAfile proves certificate and name, not the system-store installation; test each normally configured client separately, expecting plain curl without --cacert to fail before trust installation and succeed after. | OpenSSL documentation unknown; mkcert unknown | REASONED |
-| trust-limits: Self-signed certificates have no revocation or third-party accountability and need manual trust distribution; move beyond them as the audience grows and retain authentication. | OpenSSL documentation unknown; mkcert unknown | REASONED |
+| verification-bypasses: Do not commit curl -k, verify=False, rejectUnauthorized: false or NODE_TLS_REJECT_UNAUTHORIZED=0; the guide says they disable TLS validation, but tool-specific Sources entries are absent. | OpenSSL documentation (rolling) unknown | REASONED |
+| verify-extensions: Inspect x509 output for SAN coverage and CA:FALSE, not its exit status: it can exit 0 with no SAN. | OpenSSL documentation (rolling) unknown | REASONED |
+| verify-tls: The app.internal:443 s_client check supplies SNI, hostname checking, verification errors and CAfile; a pass prints Verification: OK, Verified peername: app.internal and return code 0, and exits 0. | OpenSSL documentation (rolling) unknown | REASONED |
+| verify-failures: Without -verify_hostname the name is ignored; without -verify_return_error a verification failure can still complete the handshake and exit 0. Both flags make name or trust failures exit nonzero; wrong name reports code 62. | OpenSSL documentation (rolling) unknown | REASONED |
+| verify-identity: Use -verify_ip for IP identities; -verify_hostname can fall back to CN without a DNS SAN, even with an IP SAN, so CN-only or IP-only certificates can pass hostname checks. | OpenSSL documentation (rolling) unknown | REASONED |
+| verify-store: Explicit -CAfile proves certificate and name, not the system-store installation; test each normally configured client separately, expecting plain curl without --cacert to fail before trust installation and succeed after. | OpenSSL documentation (rolling) unknown; mkcert unknown | REASONED |
+| trust-limits: Self-signed certificates have no revocation or third-party accountability and need manual trust distribution; move beyond them as the audience grows and retain authentication. | OpenSSL documentation (rolling) unknown; mkcert unknown | REASONED |
 <!-- version-basis:end -->
 
 Use a self-signed certificate when the service has no public DNS name, when an ACME CA cannot reach it, and when [cloudflare.md](cloudflare.md) is not an option: internal tools, lab and development environments, and machine-to-machine links on private networks. For anything a browser user or external party reaches, prefer [free-certificates.md](free-certificates.md); self-signed certificates trigger browser warnings and every client must be configured to trust them.
@@ -724,7 +724,7 @@ Self-signed certificates have no revocation and no third-party accountability, a
 
 ## Sources (checked September 2026)
 
-- OpenSSL documentation (3.0 or later; historical 1.1.1): https://docs.openssl.org/ ; `openssl s_client` (`-servername`, `-verify_return_error`): https://docs.openssl.org/master/man1/openssl-s_client/ ; verification options (`-verify_hostname`): https://docs.openssl.org/master/man1/openssl-verification-options/
+- OpenSSL documentation (rolling documentation, checked September 2026): https://docs.openssl.org/ ; `openssl s_client` (`-servername`, `-verify_return_error`): https://docs.openssl.org/master/man1/openssl-s_client/ ; verification options (`-verify_hostname`): https://docs.openssl.org/master/man1/openssl-verification-options/
 - mkcert: https://github.com/FiloSottile/mkcert
 
 ======================================================================
@@ -5769,7 +5769,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | Claim | Basis | Status |
 | --- | --- | --- |
 | ingress-migration: ingress-nginx retired in March 2026 with no subsequent updates; detect its labeled pods and migrate. Gateway API is recommended and Ingress API is frozen. | Kubernetes documentation unknown | REASONED |
-| gateway-install: Install Envoy Gateway chart v1.9.1 and its default Gateway CRDs; separately create GatewayClass eg with the documented controllerName and confirm Accepted=True. | Envoy Gateway v1.9.1; Gateway API documentation unknown | REASONED |
+| gateway-install: Install Envoy Gateway chart v1.9.1 and its default Gateway CRDs; separately create GatewayClass eg with the documented controllerName and confirm Accepted=True. | Envoy Gateway v1.9.1; Gateway API documentation unknown; Envoy Gateway documentation (rolling) unknown | REASONED |
 | gateway-alternatives: Traefik uses providers.kubernetesGateway; Cilium uses gatewayAPI.enabled=true and requires kube-proxy replacement. | Traefik documentation unknown; Cilium documentation unknown | REASONED |
 | gateway-tls: Gateway HTTPS listener 443 terminates TLS using app-tls for app.example.com; HTTP 80 is for redirect and ACME challenges. | Gateway API documentation unknown; Envoy Gateway documentation (rolling) unknown | REASONED |
 | gateway-route: HTTPRoute app attaches only to the HTTPS listener via sectionName and forwards to the ClusterIP app Service on port 80. | Gateway API documentation unknown | REASONED |
@@ -5781,7 +5781,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | basic-auth-input: htpasswd -i reads stdin, unlike argv-exposing -b; confirm twice, create with -cis, verify with -vi and only then create the Kubernetes Secret. | Apache htpasswd documentation unknown; Envoy Gateway documentation (rolling) unknown | REASONED |
 | oidc: Envoy SecurityPolicy oidc uses issuer, clientID, clientSecret and redirectURL; enforce MFA at the identity provider. | Envoy Gateway documentation (rolling) unknown | REASONED |
 | external-auth: Authelia is an authorization endpoint, not a traffic proxy; Envoy extAuth.http targets its Service and /api/authz/ext-authz/. | Authelia documentation unknown; Envoy Gateway documentation (rolling) unknown | REASONED |
-| workload-exposure: Expose workloads only through the Gateway LoadBalancer; keep databases on ClusterIP without routes and enforce pod access with NetworkPolicies plus database TLS/auth. | Envoy Gateway v1.9.1; Kubernetes documentation unknown | REASONED |
+| workload-exposure: Expose workloads only through the Gateway LoadBalancer; keep databases on ClusterIP without routes and enforce pod access with NetworkPolicies plus database TLS/auth. | Envoy Gateway documentation (rolling) unknown; Kubernetes documentation unknown | REASONED |
 | secrets: Store credentials in Secrets or an external operator, not committed ConfigMaps or environment literals; kubeconfigs containing credentials also need secret handling. | Kubernetes documentation unknown | REASONED |
 | eks-endpoint: EKS API defaults public; restrict public CIDRs or use private access. Private-only endpoints can resolve publicly to private VPC addresses. | Amazon EKS documentation unknown | REASONED |
 | gke-endpoints: GKE authorized networks constrain IP-based access, not its separately IAM-gated DNS endpoint; inspect both and disable unused DNS access. | GKE documentation unknown | REASONED |
@@ -5809,7 +5809,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | readonly-auth: Read-only server uses plain HTTP with no authentication or authorization filter; its caller-supplied bind wiring was outside the inspected source subset. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
 | readonly-paths: Read-only handlers expose /pods, /stats/summary, metrics variants and health; v1.37.1 has no /spec handler. Securing 10250 does not secure 10255. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
 | gke-readonly: GKE disables the read-only port by default only for new clusters running 1.32+; inspect effective configuration on older or upgraded clusters. | GKE new-cluster read-only-port boundary 1.32 | REASONED |
-| verify-services: Only the Gateway should have NodePort/LoadBalancer exposure; verify its public address/DNS and Certificate Ready=True. | Kubernetes documentation unknown; Envoy Gateway v1.9.1; cert-manager Gateway support minimum 1.15 | REASONED |
+| verify-services: Only the Gateway should have NodePort/LoadBalancer exposure; verify its public address/DNS and Certificate Ready=True. | Kubernetes documentation unknown; Envoy Gateway documentation (rolling) unknown; cert-manager Gateway support minimum 1.15 | REASONED |
 | verify-redirect: HTTP should return 301 to the HTTPS application URL. | Gateway API documentation unknown | REASONED |
 | verify-basic: Anonymous Basic-protected access should return 401; require SecurityPolicy Accepted=True and a valid credential reaching the app without the gateway Basic challenge. | curl documentation unknown; Envoy Gateway documentation (rolling) unknown | REASONED |
 | verify-api-target: Use the whole kubeconfig endpoint, preserving IPv6 and inferring a schemeless endpoint from both cluster and user TLS settings, not a hardcoded 6443. | Kubernetes documentation unknown | REASONED |
@@ -6191,7 +6191,8 @@ allowed ranges out of the provider's own configuration rather than inferring the
 
 - Ingress NGINX: Statement from the Kubernetes Steering and Security Response Committees (retirement, detection command): https://kubernetes.io/blog/2026/01/29/ingress-nginx-statement/ ; Kubernetes docs, Gateway API (migration guide from Ingress): https://kubernetes.io/docs/concepts/services-networking/gateway/ ; Kubernetes docs, Ingress (the project recommends Gateway; the Ingress API is frozen): https://kubernetes.io/docs/concepts/services-networking/ingress/
 - Gateway API getting started (CRD install): https://gateway-api.sigs.k8s.io/guides/getting-started/introduction/ ; TLS: https://gateway-api.sigs.k8s.io/guides/user-guides/tls/ ; HTTP routing: https://gateway-api.sigs.k8s.io/guides/user-guides/http-routing/ ; redirects: https://gateway-api.sigs.k8s.io/guides/user-guides/http-redirect-rewrite/
-- Envoy Gateway: https://gateway.envoyproxy.io/ ; Helm install: https://gateway.envoyproxy.io/docs/install/install-helm/ ; quickstart and its manifest (GatewayClass `controllerName`): https://gateway.envoyproxy.io/docs/tasks/quickstart/ , https://github.com/envoyproxy/gateway/releases/download/v1.9.1/quickstart.yaml
+- Envoy Gateway (rolling documentation, checked September 2026): https://gateway.envoyproxy.io/ ; Helm install: https://gateway.envoyproxy.io/v1.9/install/install-helm/ ; quickstart: https://gateway.envoyproxy.io/v1.9/tasks/quickstart/
+- Envoy Gateway v1.9.1 quickstart manifest (GatewayClass `controllerName`): https://github.com/envoyproxy/gateway/releases/download/v1.9.1/quickstart.yaml
 - Envoy Gateway tasks, secure gateways and TLS listener (rolling documentation, checked September 2026): https://gateway.envoyproxy.io/docs/tasks/security/secure-gateways/ ; basic auth: https://gateway.envoyproxy.io/docs/tasks/security/basic-auth/ ; OIDC: https://gateway.envoyproxy.io/docs/tasks/security/oidc/ ; external authorization (`extAuth`): https://gateway.envoyproxy.io/docs/tasks/security/ext-auth/ ; HTTP redirect: https://gateway.envoyproxy.io/docs/tasks/traffic/http-redirect/
 - htpasswd, for `-i` rather than `-b` and what SHA-1 costs: https://httpd.apache.org/docs/2.4/programs/htpasswd.html
 - Authelia: proxy integration (the proxy calls the authorization endpoint): https://www.authelia.com/integration/proxies/introduction/ ; Envoy Gateway `SecurityPolicy` example: https://www.authelia.com/integration/kubernetes/envoy/gateway/
@@ -6214,7 +6215,7 @@ allowed ranges out of the provider's own configuration rather than inferring the
 - Amazon EKS cluster endpoint access ("[b]y default, this API server endpoint is public to the internet"; private endpoint DNS, "resolved by public DNS servers to a private IP address from the VPC"): https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html
 - GKE control plane network isolation, including how authorized networks work: https://docs.cloud.google.com/kubernetes-engine/docs/concepts/network-isolation#how_authorized_networks_work
 - AKS API server authorized IP ranges: https://learn.microsoft.com/en-us/azure/aks/api-server-authorized-ip-ranges
-- cert-manager Gateway API usage (enabling support, annotations) (cert-manager 1.15 and later): https://cert-manager.io/docs/usage/gateway/ ; ACME HTTP-01 `gatewayHTTPRoute` solver: https://cert-manager.io/docs/configuration/acme/http01/
+- cert-manager Gateway API usage (enabling support, annotations; since cert-manager 1.15, Gateway API support no longer requires a feature gate but still requires explicit enablement): https://cert-manager.io/docs/usage/gateway/ ; ACME HTTP-01 `gatewayHTTPRoute` solver: https://cert-manager.io/docs/configuration/acme/http01/
 - Traefik Kubernetes Gateway API provider: https://doc.traefik.io/traefik/reference/install-configuration/providers/kubernetes/kubernetes-gateway/ ; Cilium Gateway API support: https://docs.cilium.io/en/stable/network/servicemesh/gateway-api/gateway-api/
 
 ======================================================================
@@ -7878,13 +7879,13 @@ curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/debug/pprof/   
 - net/http (Server, ListenAndServeTLS, Cookie, SameSite, Redirect, Transport.TLSClientConfig): https://pkg.go.dev/net/http
 - net/http Request.Host (Go 1.27.0, supplied by the client): https://pkg.go.dev/net/http@go1.27.0#Request
 - crypto/tls (Config.MinVersion, InsecureSkipVerify, RootCAs): https://pkg.go.dev/crypto/tls
-- crypto/x509 (SystemCertPool, SSL_CERT_FILE, AppendCertsFromPEM) (Go 1.27): https://pkg.go.dev/crypto/x509
+- crypto/x509 (SystemCertPool, SSL_CERT_FILE, AppendCertsFromPEM) (Go 1.27): https://pkg.go.dev/crypto/x509@go1.27.0
 - golang.org/x/crypto/bcrypt: https://pkg.go.dev/golang.org/x/crypto/bcrypt
 - golang.org/x/crypto/argon2: https://pkg.go.dev/golang.org/x/crypto/argon2
 - golang.org/x/time/rate: https://pkg.go.dev/golang.org/x/time/rate
 - go-oidc: https://pkg.go.dev/github.com/coreos/go-oidc/v3/oidc
 - net/http/pprof and expvar register on DefaultServeMux: https://pkg.go.dev/net/http/pprof
-- net/http MaxBytesReader, MaxBytesError, Server.MaxHeaderBytes / MaxHeaderValueCount (Go 1.27): https://pkg.go.dev/net/http#MaxBytesReader
+- net/http MaxBytesReader, MaxBytesError, Server.MaxHeaderBytes / MaxHeaderValueCount (Go 1.27): https://pkg.go.dev/net/http@go1.27.0#MaxBytesReader
 - net/http Server timeouts (ReadTimeout, WriteTimeout, IdleTimeout, ReadHeaderTimeout): https://pkg.go.dev/net/http#Server
 - net/http ResponseController (per-request deadlines) (Go 1.20+): https://pkg.go.dev/net/http#ResponseController
 - expvar (registers /debug/vars on the default mux): https://pkg.go.dev/expvar
@@ -22395,7 +22396,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | web-tls: sqlite-web documents native --ssl-cert and --ssl-key; this deployment baseline uses the shared TLS proxy. | sqlite-web package 0.8.1 | REASONED |
 | web-csrf: sqlite-web 0.8.1 loopback insert accepted an authenticated POST without a token and with foreign Origin; the form has no CSRF field. Prefer read-only behind the proxy. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2 | DEMONSTRATED |
 | web-cookie: sqlite-web 0.8.1 set HttpOnly; Path=/ without SameSite or Secure even over TLS; cross-site cookie sending therefore depends on browser defaults. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2 | DEMONSTRATED |
-| fronting: Keep same-host origins on loopback and apply TLS and authentication to every UI, SQL, JSON, export, download and auxiliary route. | nginx documentation unknown; Caddy loopback proxy v2.11.4; Datasette documentation (rolling) unknown | REASONED |
+| fronting: Keep same-host origins on loopback and apply TLS and authentication to every UI, SQL, JSON, export, download and auxiliary route. | nginx documentation unknown; Caddy documentation (rolling) unknown; Datasette documentation (rolling) unknown | REASONED |
 | identity-proxy: IAP and Cloudflare Access evaluate access before forwarding; no tenancy was available to demonstrate these routes. | Google IAP documentation unknown; Cloudflare Access documentation unknown | REASONED |
 | mfa: Neither reviewed core authentication interface supplies native MFA; enforce it at the identity provider or through Cloudflare Access independent MFA. | sqlite-web package 0.8.1; Cloudflare Access documentation unknown; Datasette documentation (rolling) unknown | REASONED |
 | tailnet: Tailscale Serve shares inside the tailnet; Funnel publishes publicly. Verify which path is configured. | Tailscale documentation unknown | REASONED |
@@ -22410,7 +22411,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | actor-results: Local password-plugin analyst cookie returned table rows with 200, anonymous and guest requests got 403, and analyst SQL got 403 under allow_sql:false. | datasette-auth-passwords 1.1.1; Datasette documentation (rolling) unknown | DEMONSTRATED |
 | web-auth-results: Local sqlite-web -P session cookie returned the row with 200 and the anonymous request redirected to /login/. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2 | DEMONSTRATED |
 | introspection-results: Under the local metadata policy, all five auxiliary JSON routes returned 403 anonymously and 200 to a freshly logged-in analyst. | datasette-auth-passwords 1.1.1; Datasette documentation (rolling) unknown | DEMONSTRATED |
-| caddy-results: Caddy v2.11.4 loopback TLS/Basic proxy denied anonymous UI, SQL, database download, versions and CSV with 401 and allowed credentials with 200; direct backend remained anonymous. Protection depends on backend isolation. | Caddy loopback proxy v2.11.4; Datasette documentation (rolling) unknown | DEMONSTRATED |
+| caddy-results: Caddy v2.11.4 loopback TLS/Basic proxy denied anonymous UI, SQL, database download, versions and CSV with 401 and allowed credentials with 200; direct backend remained anonymous. Protection depends on backend isolation. | Caddy documentation (rolling) unknown; Datasette documentation (rolling) unknown | DEMONSTRATED |
 | local-checks: Recorded bash parsing, metadata JSON parsing and 120 guard executions passed; curl argument recording tested guards separately from service outcomes. | curl minimum write-out version 7.75.0 | DEMONSTRATED |
 | guard-limits: Use Bash with real unshadowed builtins and curl 7.75.0 or newer; paste whole blocks, escape apostrophes, avoid credential URLs, and retain TLS verification. Partial pastes and inherited matching marker/arguments remain outside guard coverage. | curl minimum write-out version 7.75.0 | REASONED |
 | datasette-cli: Bare datasette invokes serve; -h/--host and -p/--port override its bind and port. | Datasette documentation (rolling) unknown | REASONED |
@@ -22659,10 +22660,10 @@ Every URL listed below was fetched during authoring. This list also records the 
 - Datasette CSRF protection (rolling documentation, checked September 2026): https://docs.datasette.io/en/stable/internals.html#csrf-protection
 - Datasette plugin secret configuration (rolling documentation, checked September 2026): https://docs.datasette.io/en/stable/plugins.html#secret-configuration-values
 - Datasette changelog and security fixes (Datasette core hash_urls removed in 0.61; rolling documentation, checked September 2026): https://docs.datasette.io/en/stable/changelog.html
-- Datasette password authentication plugin (datasette-auth-passwords 1.1.1 used in the loopback demonstrations): https://github.com/simonw/datasette-auth-passwords
+- Datasette password authentication plugin (datasette-auth-passwords 1.1.1 used in the loopback demonstrations): https://github.com/simonw/datasette-auth-passwords/blob/1.1.1/README.md
 - Datasette GitHub authentication plugin: https://github.com/simonw/datasette-auth-github
-- Datasette write plugin (datasette-write 0.4 used in the loopback demonstrations): https://github.com/simonw/datasette-write
-- sqlite-web README, features, options, and Docker usage (sqlite-web 0.8.1 from PyPI, tested on loopback): https://github.com/coleifer/sqlite-web
+- Datasette write plugin (datasette-write 0.4 used in the loopback demonstrations): https://github.com/simonw/datasette-write/blob/0.4/README.md
+- sqlite-web README, features, options, and Docker usage (sqlite-web 0.8.1 from PyPI, tested on loopback): https://github.com/coleifer/sqlite-web/blob/0.8.1/README.md
 - sqlite-web implementation: https://raw.githubusercontent.com/coleifer/sqlite-web/825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2/sqlite_web/sqlite_web.py
 - sqlite-web Dockerfile: https://raw.githubusercontent.com/coleifer/sqlite-web/7f6658b012a789f0b9418cad543e7798ce850130/docker/Dockerfile
 - SQLite security: https://www.sqlite.org/security.html
@@ -22672,12 +22673,12 @@ Every URL listed below was fetched during authoring. This list also records the 
 - Cloud Run container contract: https://docs.cloud.google.com/run/docs/container-contract
 - nginx HTTPS configuration: https://nginx.org/en/docs/http/configuring_https_servers.html
 - nginx Basic authentication: https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html
-- Caddy Basic authentication (loopback run behind Caddy v2.11.4): https://caddyserver.com/docs/caddyfile/directives/basic_auth
+- Caddy Basic authentication (rolling documentation, checked September 2026): https://caddyserver.com/docs/caddyfile/directives/basic_auth
 - Google IAP overview and origin protection: https://docs.cloud.google.com/iap/docs/concepts-overview
 - Cloudflare Access HTTP applications: https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/
 - Cloudflare independent MFA: https://developers.cloudflare.com/cloudflare-one/access-controls/access-settings/independent-mfa/
 - Tailscale Serve and Funnel distinction: https://tailscale.com/docs/reference/tailscale-cli/serve
-- curl manual (curl 7.75.0 or newer): https://curl.se/docs/manpage.html
+- curl manual (write-out variables `exitcode` and `errormsg` added in curl 7.75.0): https://curl.se/docs/manpage.html
 - ss manual: https://man7.org/linux/man-pages/man8/ss.8.html
 - OWASP SQL injection prevention: https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
 
@@ -22696,33 +22697,33 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| auth-default: Since 2.0.0 authentication defaults on, --auth was removed and --unauthenticated added; older releases do not share this default. | SurrealDB default transition 2.0.0 | REASONED |
-| bind-default: Since 2.0.0 the CLI defaults to 127.0.0.1:8000; v3.2.4 --bind/-b and SURREAL_BIND retain that loopback default. | SurrealDB default transition 2.0.0; SurrealDB CLI and image v3.2.4 | REASONED |
-| root-bootstrap: User/password flags or SURREAL_USER/PASS initialize a root only when none exists; they neither disable authentication nor rotate an existing password. | SurrealDB documentation unknown; SurrealDB CLI and image v3.2.4 | REASONED |
+| auth-default: Since 2.0.0 authentication defaults on, --auth was removed and --unauthenticated added; older releases do not share this default. | SurrealDB 2.0 release announcement unknown | REASONED |
+| bind-default: Since 2.0.0 the CLI defaults to 127.0.0.1:8000; v3.2.4 --bind/-b and SURREAL_BIND retain that loopback default. | SurrealDB 2.0 release announcement unknown; SurrealDB CLI and image v3.2.4 | REASONED |
+| root-bootstrap: User/password flags or SURREAL_USER/PASS initialize a root only when none exists; they neither disable authentication nor rotate an existing password. | SurrealDB documentation (rolling) unknown; SurrealDB CLI and image v3.2.4 | REASONED |
 | root-input: v3.2.4 start has no stdin password form; prompt and supply a command-local environment assignment, avoiding argv but exposing the server environment to same-user/root inspection. | SurrealDB CLI and image v3.2.4 | REASONED |
-| environment: The clean-Bash block clears user/password variables and rejects other inherited SURREAL_* options, including auth and bind overrides. | SurrealDB documentation unknown; SurrealDB CLI and image v3.2.4 | REASONED |
-| unauthenticated: --unauthenticated/SURREAL_UNAUTHENTICATED gives guests OWNER-equivalent access; never carry it onto a remotely reachable deployment. | SurrealDB documentation unknown; SurrealDB CLI and image v3.2.4 | REASONED |
+| environment: The clean-Bash block clears user/password variables and rejects other inherited SURREAL_* options, including auth and bind overrides. | SurrealDB documentation (rolling) unknown; SurrealDB CLI and image v3.2.4 | REASONED |
+| unauthenticated: --unauthenticated/SURREAL_UNAUTHENTICATED gives guests OWNER-equivalent access; never carry it onto a remotely reachable deployment. | SurrealDB documentation (rolling) unknown; SurrealDB CLI and image v3.2.4 | REASONED |
 | docker-bind: Pinned image stages set SURREAL_BIND=0.0.0.0:8000 without CMD; start without an override listens on all container IPv4 interfaces, requiring private network or loopback publication. | SurrealDB CLI and image v3.2.4 | REASONED |
-| private-network: Widen host binds only deliberately to private addresses; internal-service databases should have no public interface. | SurrealDB documentation unknown | REASONED |
-| system-users: Root, namespace and database system users use OWNER/EDITOR/VIEWER RBAC; all bypass table/field PERMISSIONS, so scoped system users do not supply record isolation. | SurrealDB documentation unknown | REASONED |
-| record-users: Record users authenticate through DEFINE ACCESS TYPE RECORD SIGNUP/SIGNIN logic and receive only explicit table/field permissions; absent permissions grant nothing. | SurrealDB documentation unknown | REASONED |
-| signup: Unauthenticated /signup and /signin are intentional; omit SIGNUP to prevent public registration and test refusal alongside a provisioned-account sign-in control. | SurrealDB documentation unknown | REASONED |
+| private-network: Widen host binds only deliberately to private addresses; internal-service databases should have no public interface. | SurrealDB documentation (rolling) unknown | REASONED |
+| system-users: Root, namespace and database system users use OWNER/EDITOR/VIEWER RBAC; all bypass table/field PERMISSIONS, so scoped system users do not supply record isolation. | SurrealDB documentation (rolling) unknown | REASONED |
+| record-users: Record users authenticate through DEFINE ACCESS TYPE RECORD SIGNUP/SIGNIN logic and receive only explicit table/field permissions; absent permissions grant nothing. | SurrealDB documentation (rolling) unknown | REASONED |
+| signup: Unauthenticated /signup and /signin are intentional; omit SIGNUP to prevent public registration and test refusal alongside a provisioned-account sign-in control. | SurrealDB documentation (rolling) unknown | REASONED |
 | scope-history: Use DEFINE ACCESS TYPE RECORD; legacy DEFINE SCOPE was deprecated in 2.x and removed in 3.0. | SurrealDB SCOPE deprecation 2.x; SurrealDB SCOPE removal 3.0 | REASONED |
-| access-types: DEFINE ACCESS also supports JWT and per-client BEARER keys; standalone JWT creates system-level sessions, while RECORD WITH JWT retains record permissions. | SurrealDB documentation unknown | REASONED |
-| jwt-checks: Verify token algorithm/key or JWKS, issuer and audience; native AUDIENCE is a 3.3 feature and 3.2.x uses AUTHENTICATE. Compare invalid tokens against a valid control. | SurrealDB documentation unknown; SurrealDB native AUDIENCE minimum 3.3; SurrealDB AUTHENTICATE qualification 3.2.x | REASONED |
-| capability-all: allow-all and deny-all default off; prefer deny-all with narrow route, RPC-method and function allowances. | SurrealDB documentation unknown | REASONED |
-| capability-net: Network access is denied by default; restrict http::* and JWKS destinations and retain external egress protections against SSRF. | SurrealDB documentation unknown | REASONED |
-| capability-functions: Functions are allowed by default; a bare allow-funcs broadens access beyond narrow named allowances. | SurrealDB documentation unknown | REASONED |
-| capability-scripting: Embedded scripting defaults off; enable it only when required. | SurrealDB documentation unknown | REASONED |
-| capability-guests: Guest access defaults off; capabilities govern what an authorized query may do independently of authentication. | SurrealDB documentation unknown | REASONED |
-| capability-precedence: More-specific capability rules override broader ones; deny wins at equal specificity. | SurrealDB documentation unknown | REASONED |
-| tls: web-crt and web-key provide native HTTPS; a TLS proxy or private tailnet is another documented access pattern. | SurrealDB documentation unknown | REASONED |
-| mfa: No native second factor is provided; require IdP or administrative-gateway MFA and prevent direct-origin bypass. | SurrealDB documentation unknown | REASONED |
-| verify-inventory: Inventory 8000 on loopback/private addresses; /health establishes process availability, not authentication. | SurrealDB documentation unknown | REASONED |
-| verify-auth: Compare INFO FOR DB without credentials and with a system-user JWT on the same NS/DB: exposed auth-off returns info; fixed denies anonymous access and returns authenticated OK data. | SurrealDB documentation unknown | REASONED |
-| verify-auth-limits: Test direct origin and HTTPS; HTTP 200, missing database, disabled route, proxy rejection or transport failure alone proves no authorization control or record permissions. | SurrealDB documentation unknown | REASONED |
-| verify-origin: Any HTTP answer from an untrusted-network origin probe proves reachability; a gateway result alone does not establish origin isolation. | SurrealDB documentation unknown | REASONED |
-| verify-tls: Validate the certificate chain at every TLS termination using normal trust checks, never -k. | SurrealDB documentation unknown | REASONED |
+| access-types: DEFINE ACCESS also supports JWT and per-client BEARER keys; standalone JWT creates system-level sessions, while RECORD WITH JWT retains record permissions. | SurrealDB documentation (rolling) unknown | REASONED |
+| jwt-checks: Verify token algorithm/key or JWKS, issuer and audience; native AUDIENCE is a 3.3 feature and 3.2.x uses AUTHENTICATE. Compare invalid tokens against a valid control. | SurrealDB documentation (rolling) unknown; SurrealDB native AUDIENCE minimum 3.3 | REASONED |
+| capability-all: allow-all and deny-all default off; prefer deny-all with narrow route, RPC-method and function allowances. | SurrealDB documentation (rolling) unknown | REASONED |
+| capability-net: Network access is denied by default; restrict http::* and JWKS destinations and retain external egress protections against SSRF. | SurrealDB documentation (rolling) unknown | REASONED |
+| capability-functions: Functions are allowed by default; a bare allow-funcs broadens access beyond narrow named allowances. | SurrealDB documentation (rolling) unknown | REASONED |
+| capability-scripting: Embedded scripting defaults off; enable it only when required. | SurrealDB documentation (rolling) unknown | REASONED |
+| capability-guests: Guest access defaults off; capabilities govern what an authorized query may do independently of authentication. | SurrealDB documentation (rolling) unknown | REASONED |
+| capability-precedence: More-specific capability rules override broader ones; deny wins at equal specificity. | SurrealDB documentation (rolling) unknown | REASONED |
+| tls: web-crt and web-key provide native HTTPS; a TLS proxy or private tailnet is another documented access pattern. | SurrealDB documentation (rolling) unknown | REASONED |
+| mfa: No native second factor is provided; require IdP or administrative-gateway MFA and prevent direct-origin bypass. | SurrealDB documentation (rolling) unknown | REASONED |
+| verify-inventory: Inventory 8000 on loopback/private addresses; /health establishes process availability, not authentication. | SurrealDB documentation (rolling) unknown | REASONED |
+| verify-auth: Compare INFO FOR DB without credentials and with a system-user JWT on the same NS/DB: exposed auth-off returns info; fixed denies anonymous access and returns authenticated OK data. | SurrealDB documentation (rolling) unknown | REASONED |
+| verify-auth-limits: Test direct origin and HTTPS; HTTP 200, missing database, disabled route, proxy rejection or transport failure alone proves no authorization control or record permissions. | SurrealDB documentation (rolling) unknown | REASONED |
+| verify-origin: Any HTTP answer from an untrusted-network origin probe proves reachability; a gateway result alone does not establish origin isolation. | SurrealDB documentation (rolling) unknown | REASONED |
+| verify-tls: Validate the certificate chain at every TLS termination using normal trust checks, never -k. | SurrealDB documentation (rolling) unknown | REASONED |
 <!-- version-basis:end -->
 
 Since SurrealDB 2.0.0, authentication is enabled by default and the CLI binds `127.0.0.1:8000` rather than
@@ -22901,7 +22902,7 @@ TLS terminates with normal validation (a trusted CA for private PKI); never use 
 - SurrealDB 2.0.0 release (auth on by default, `--unauthenticated`, bind default 127.0.0.1): https://surrealdb.com/releases/2.0
 - SurrealDB HTTP protocol (`/signup`, `/signin`, `POST /sql`, `/health`): https://surrealdb.com/docs/reference/rest-api/http-protocol
 - SurrealDB INFO statement (database information requires a system user): https://surrealdb.com/docs/reference/query-language/statements/info
-- SurrealDB DEFINE ACCESS TYPE JWT (native `AUDIENCE` since 3.3, issuer/audience checks via `AUTHENTICATE`) (AUTHENTICATE on 3.2.x): https://surrealdb.com/docs/reference/query-language/statements/define/access/jwt
+- SurrealDB DEFINE ACCESS TYPE JWT (native `AUDIENCE` since 3.3, issuer/audience checks via `AUTHENTICATE`) (rolling documentation, checked September 2026): https://surrealdb.com/docs/reference/query-language/statements/define/access/jwt
 - SurrealDB DEFINE SCOPE (deprecated in 2.x, removed in 3.0): https://surrealdb.com/docs/reference/query-language/statements/define/scope
 
 ======================================================================
@@ -26242,13 +26243,13 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | file-route: /gradio_api/file= serves registered static paths, allowed_paths and cache; returned file outputs can expose eligible working/temp paths to every app user. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
 | allowed-paths: allowed_paths adds exposure, not a sandbox; empty lists do not disable cache or eligible outputs, and granted directories expose descendants. | Gradio documentation (rolling) unknown | REASONED |
 | dotfiles: Working-directory dotfiles are excluded from automatic caching unless explicitly permitted; this does not protect other eligible files or justify colocated secrets. | Gradio documentation (rolling) unknown | REASONED |
-| blocked-paths: blocked_paths overrides default/static/allowed grants but is a backstop; minimize the process filesystem and never return untrusted file paths. | Gradio case-handling advisory unknown; Gradio documentation (rolling) unknown | REASONED |
+| blocked-paths: blocked_paths overrides default/static/allowed grants but is a backstop; minimize the process filesystem and never return untrusted file paths. | Gradio security advisories unknown; Gradio documentation (rolling) unknown | REASONED |
 | path-environment: allowed_paths and blocked_paths default None; even [] falls back to comma-separated GRADIO_ALLOWED_PATHS and GRADIO_BLOCKED_PATHS. | Gradio 6.28.0 | REASONED |
 | cache: GRADIO_TEMP_DIR relocates cache; restrict permissions, quota and cleanup, but relocation and local permissions do not provide per-user download authorization. | Gradio documentation (rolling) unknown | REASONED |
 | upload-limit: max_file_size defaults None; set bytes or 5mb for a per-file limit, adding separate storage/rate controls. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
 | multipart-fix: 6.20.0 fixed missing max_file_size enforcement on multipart /component_server uploads; retain the 6.28.0 deployment baseline. | Gradio 6.28.0; Gradio historical fixes 6.20.0 | REASONED |
-| historical-traversal: 4.11.0 fixed the historical /file traversal and associated SSRF; this is a historical floor, not the deployment baseline. | Gradio historical fix 4.11.0 | REASONED |
-| historical-files: 6.16.0 includes FileExplorer traversal fixes; the case-handling advisory has conflicting patched-version records and no precise fix version here. | Gradio case-handling advisory unknown; Gradio historical fixes 6.16.0 | REASONED |
+| historical-traversal: 4.11.0 fixed the historical /file traversal and associated SSRF; this is a historical floor, not the deployment baseline. | Gradio security advisories unknown | REASONED |
+| historical-files: 6.16.0 includes FileExplorer traversal fixes; the case-handling advisory has conflicting patched-version records and no precise fix version here. | Gradio security advisories unknown; Gradio historical fixes 6.16.0 | REASONED |
 | vibe: GRADIO_VIBE_MODE defaults empty; any nonempty value including False or 0 enables unauthenticated source read/write handlers and arbitrary execution; leave unset and avoid --vibe. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
 | mcp: mcp_server defaults None, consulting GRADIO_MCP_SERVER (False); explicitly disable unless tools beneath /gradio_api/mcp/ are deliberately protected and tested. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
 | footer: footer_links can hide API documentation; it replaces show_api=False and does not disable the API. | Gradio documentation (rolling) unknown | REASONED |
@@ -30458,7 +30459,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | phoenix-mfa: No native MFA; federate OAuth2/OIDC or use identity-aware ingress and enforce MFA there. | Phoenix documentation unknown | REASONED |
 | phoenix-signup: PHOENIX_OAUTH2_&lt;IDP&gt;_ALLOW_SIGN_UP defaults True; set False and restrict provider membership. | Phoenix documentation unknown | REASONED |
 | phoenix-basic: Local password login remains beside SSO; PHOENIX_DISABLE_BASIC_AUTH=True closes it after an approved IdP administrator is tested. | Phoenix documentation unknown | REASONED |
-| phoenix-tls: Native HTTP/gRPC TLS exists from 8.29, defaults off, uses certificate/key files; later per-protocol switches override PHOENIX_TLS_ENABLED. | Phoenix TLS minimum 8.29; Phoenix TLS source 080959576563900038688ddf01f3bee110005df5 | REASONED |
+| phoenix-tls: Native HTTP/gRPC TLS exists from 8.29, defaults off, uses certificate/key files; later per-protocol switches override PHOENIX_TLS_ENABLED. | Phoenix TLS announcement unknown; Phoenix TLS source 080959576563900038688ddf01f3bee110005df5 | REASONED |
 | helicone-login: Better Auth uses signup and organizations; test@helicone.ai/password is a local manual trial, not the deployment security model. | Helicone documentation unknown | REASONED |
 | helicone-secret: Replace BETTER_AUTH_SECRET examples change-me-in-production and Compose your-secret-key before first start. | Helicone documentation unknown; Helicone Compose b12ebaccb824ab9778757ca197ff302d97fda421 | REASONED |
 | helicone-ports: Backing Postgres/ClickHouse/MinIO/Redis/MailHog publications bypass UI login, including 54388:5432 and 18123:8123; remove or loopback-scope them. | Helicone Compose b12ebaccb824ab9778757ca197ff302d97fda421 | REASONED |
@@ -31992,9 +31993,9 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | dozzle-socket: Docker-socket access has host-level power; keep Dozzle private with fronting MFA. | Dozzle unknown; Docker Engine unknown | REASONED |
 | dozzle-auth: Auth defaults off; generate users.yml with stdin password prompt and set simple auth, or delegate with forward-proxy. | Dozzle unknown | REASONED |
 | dozzle-actions: Leave optional container actions/shell off unless needed; either enables remote command execution. | Dozzle unknown | REASONED |
-| registry-auth: registry:2 defaults to unauthenticated push/pull; configure TLS before htpasswd/token auth or use an authenticated distribution. | Docker Registry registry:2 | REASONED |
-| registry-bcrypt: Native htpasswd accepts bcrypt only; use -B -C 12. Proxy hashing rules differ; OWASP cost minimum lacks a direct source here. | Docker Registry registry:2 | REASONED |
-| registry-private: Use private networking and tunnels/Access with fronting MFA. | Docker Registry registry:2 | REASONED |
+| registry-auth: registry:2 defaults to unauthenticated push/pull; configure TLS before htpasswd/token auth or use an authenticated distribution. | Docker Registry documentation (rolling) unknown | REASONED |
+| registry-bcrypt: Native htpasswd accepts bcrypt only; use -B -C 12. Proxy hashing rules differ; OWASP cost minimum lacks a direct source here. | Docker Registry documentation (rolling) unknown | REASONED |
+| registry-private: Use private networking and tunnels/Access with fronting MFA. | Docker Registry documentation (rolling) unknown | REASONED |
 | filebrowser-admin: Change first-run admin credentials, historically admin/admin. Guide records September 1, 2026 archival and the warning against internet exposure. | Filebrowser unknown | REASONED |
 | filebrowser-private: Keep Filebrowser private through tunnel/tailnet/Access with fronting MFA. | Filebrowser unknown | REASONED |
 | nodered-default: Editor/admin API on 1880 defaults unauthenticated, permitting flow viewing/deployment/modification. | Node-RED unknown | REASONED |
@@ -32168,7 +32169,7 @@ From outside the network, every panel URL is unreachable or shows a login; a pag
 - Vaultwarden wiki: admin page and ADMIN_TOKEN https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page , registration https://github.com/dani-garcia/vaultwarden/wiki/Disable-registration-of-new-users , HTTPS https://github.com/dani-garcia/vaultwarden/wiki/Enabling-HTTPS , and the `.env.template` https://github.com/dani-garcia/vaultwarden/blob/3347698712d3e99e652ad4394ef2fc0ce2800fdd/.env.template
 - Kubernetes Dashboard (deprecation, port-forward, token login): https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/ ; 2.x arguments: https://github.com/kubernetes-retired/dashboard/blob/v2.7.0/docs/common/dashboard-arguments.md
 - Jenkins security: https://www.jenkins.io/doc/book/security/managing-security/ , https://www.jenkins.io/doc/book/security/access-control/ , https://www.jenkins.io/doc/book/security/csrf-protection/
-- Gitea config cheat sheet and MFA (Gitea 1.24 and later): https://docs.gitea.com/administration/config-cheat-sheet and https://docs.gitea.com/usage/user-setting/multi-factor-authentication/
+- Gitea config cheat sheet and MFA (`TWO_FACTOR_AUTH=enforced` requires Gitea 1.24 or later): https://docs.gitea.com/administration/config-cheat-sheet and https://docs.gitea.com/usage/user-setting/multi-factor-authentication/
 - GitLab CE initial root password (Docker install): https://docs.gitlab.com/install/docker/installation/
 - GitLab CE sign-up restrictions: https://docs.gitlab.com/administration/settings/sign_up_restrictions/
 - GitLab CE default visibility and access controls: https://docs.gitlab.com/administration/settings/visibility_and_access_controls/
@@ -32176,7 +32177,7 @@ From outside the network, every panel URL is unreachable or shows a login; a pag
 - Uptime Kuma README and reverse proxy wiki: https://github.com/louislam/uptime-kuma and https://github.com/louislam/uptime-kuma/wiki/Reverse-Proxy
 - Docker: protect the daemon socket https://docs.docker.com/engine/security/protect-access/ and remote access https://docs.docker.com/engine/daemon/remote-access/
 - Dozzle authentication (DOZZLE_AUTH_PROVIDER, users.yml, actions and shell): https://dozzle.dev/guide/authentication
-- Docker Registry deployment (default authentication, TLS requirement) (registry:2): https://distribution.github.io/distribution/about/deploying/
+- Docker Registry deployment (default authentication, TLS requirement; rolling documentation, checked September 2026): https://distribution.github.io/distribution/about/deploying/
 - Filebrowser: https://github.com/filebrowser/filebrowser
 - Node-RED securing the runtime (adminAuth, credentialSecret): https://nodered.org/docs/user-guide/runtime/securing-node-red
 - Gitea `HTTP_ADDR` default `0.0.0.0` and `HTTP_PORT` default `3000` (pinned tag v1.27.3): https://github.com/go-gitea/gitea/blob/v1.27.3/modules/setting/server.go#L121-L122
@@ -36418,7 +36419,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | cdp-auth: Command-line CDP has no client authentication or password flag; Host and Origin checks do not authenticate clients. | Chromium 154.0.8037.57 | REASONED |
 | cdp-capabilities: CDP grants page JavaScript, cookie/credential and tab control; restrict ingress, browser egress and local-file reach. | Chrome DevTools Protocol unknown | REASONED |
 | cdp-private: Keep DevTools loopback/private behind authenticated access; inspect forwarders and container namespaces, since publishing cannot reach container loopback. | Chromium 154.0.8037.57 | REASONED |
-| cdp-profile: Chrome 136 requires non-default user data; pinned desktop branding check excludes normal Chromium, and Chrome for Testing exemption rests on the announcement. | Chrome profile restriction 136; Chromium 154.0.8037.57 | REASONED |
+| cdp-profile: Chrome 136 requires non-default user data; pinned desktop branding check excludes normal Chromium, and Chrome for Testing exemption rests on the announcement. | Chrome remote-debugging announcement unknown; Chromium 154.0.8037.57 | REASONED |
 | cdp-policy: RemoteDebuggingAllowed gates browser command-line and approval modes; headless-shell startup lacks the corresponding profile/policy check. | Chromium 154.0.8037.57 | REASONED |
 | cdp-pipe: Pipe mode alone opens no TCP port; supplying a port too can start an independent listener, and pipe access still grants browser control. | Chromium 154.0.8037.57 | REASONED |
 | grid-auth: Router username/password are unset by default, including Docker SE_ROUTER_USERNAME and SE_ROUTER_PASSWORD. | Selenium Grid unknown; Selenium Docker images aafe4d6136f3bb5afcd9b7cb691c624516d06e1b | REASONED |
@@ -36680,7 +36681,7 @@ missing files, authentication failures, connection failures, and timeouts are in
 - Target WebSocket URL serialization (Chromium 154.0.8037.57): https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L1032-L1055
 - Chrome DevTools Protocol remote debugging: https://developer.chrome.com/docs/devtools/remote-debugging/
 - Chrome DevTools Protocol domains (Runtime, Network, Page): https://chromedevtools.github.io/devtools-protocol/
-- Chrome 136 user-data-dir change and Chrome for Testing exemption (existing vendor citation, not re-fetched offline): https://developer.chrome.com/blog/remote-debugging-port
+- Chrome 136 user-data-dir change and Chrome for Testing exemption: https://developer.chrome.com/blog/remote-debugging-port
 - Selenium Grid CLI options (host, bind-host, username, password, https-certificate): https://www.selenium.dev/documentation/grid/configuration/cli_options/
 - Selenium Grid getting started (components, ports, distributed topology): https://www.selenium.dev/documentation/grid/getting_started/
 - Selenium Docker images env vars (SE_START_VNC, SE_VNC_PASSWORD, SE_BIND_HOST, SE_ROUTER_USERNAME): https://github.com/SeleniumHQ/docker-selenium/blob/aafe4d6136f3bb5afcd9b7cb691c624516d06e1b/ENV_VARIABLES.md
