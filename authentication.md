@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "47310db5a48cde7e7562570296664009086e3b384571707292cb4f20dcba5ba7",
+  "body_sha256": "f34ec1f8e7ea687429cd974c9654094c47fdd5fd4d2fc648aace2fe992d8fe3a",
   "components": {
     "owasp": {
       "name": "OWASP authentication and password storage",
@@ -54,6 +54,67 @@ version_basis: {
       "sources": {
         "saef7bba61b3a": "https://github.com/pyca/bcrypt/blob/2b4ba9ac84df972e8e81311d09559af8dc82ef33/CHANGELOG.rst"
       }
+    },
+    "openssl": {
+      "name": "OpenSSL rand",
+      "basis": "3.5",
+      "sources": {
+        "s86919b215ba1": "https://docs.openssl.org/3.5/man1/openssl-rand/"
+      }
+    },
+    "python": {
+      "name": "Python secrets",
+      "basis": "3.13",
+      "sources": {
+        "sd2e8196eaa96": "https://docs.python.org/3.13/library/secrets.html#secrets.token_urlsafe"
+      }
+    },
+    "gitleaks-source": {
+      "name": "Gitleaks scanning modes",
+      "basis": "b58d3f102cf3a2c84cb7f923d05c25c9b1aed84b",
+      "sources": {
+        "s44a3edaa543d": "https://github.com/gitleaks/gitleaks/blob/b58d3f102cf3a2c84cb7f923d05c25c9b1aed84b/README.md#L172-L189"
+      }
+    },
+    "git": {
+      "name": "Git ignore rules",
+      "basis": "v2.49.0",
+      "sources": {
+        "s5f377f0fdbd8": "https://github.com/git/git/blob/v2.49.0/Documentation/gitignore.adoc#L15-L18"
+      }
+    },
+    "owasp-docs": {
+      "name": "OWASP security guidance",
+      "basis": "668ba7db3d0da5868b8a0305c259f7f6914a6ecd",
+      "sources": {
+        "seb866a1f94e9": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Secrets_Management_Cheat_Sheet.md#L214-L218",
+        "s0562e4dc23f2": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L163",
+        "s0b82bc050cf3": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L265-L267",
+        "sf069993cc3d7": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L275",
+        "sa5f6e96a876c": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L317",
+        "s4779e856ef9d": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L323-L331",
+        "s4f0aa80b1ef6": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/HTML5_Security_Cheat_Sheet.md#L53",
+        "s232e483ac72b": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L149",
+        "sc088939103f0": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.md#L17-L26",
+        "sa7544ec9e1d7": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.md#L197",
+        "seb3129173dbb": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.md#L226",
+        "s3369d9106dce": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Denial_of_Service_Cheat_Sheet.md#L80",
+        "sd6d35bd1b67d": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Denial_of_Service_Cheat_Sheet.md#L110-L113"
+      }
+    },
+    "api-security": {
+      "name": "OWASP API Security",
+      "basis": "2023",
+      "sources": {
+        "s213afc24aadb": "https://api-security.owasp.org/editions/2023/en/0xa4-unrestricted-resource-consumption/"
+      }
+    },
+    "entra-docs": {
+      "name": "Microsoft Entra revocation model",
+      "basis": "231747abc59ae3d50c74e215c1cdd592eb980723",
+      "sources": {
+        "s983f45259faa": "https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/users/users-revoke-access.md#L62"
+      }
     }
   },
   "claims": {
@@ -64,8 +125,8 @@ version_basis: {
     "htpasswd-cost": {"text": "htpasswd -B -C 12 selects bcrypt cost 12; bare -B defaults to 5, below the OWASP minimum of 10.", "components": ["htpasswd", "owasp"], "sources": ["htpasswd:scde9004bb967", "owasp:s49e8d76431d9"], "status": "REASONED"},
     "federation": {"text": "Prefer supported SSO/OIDC and enable MFA wherever available.", "components": ["owasp", "oidc"], "sources": ["owasp:sc5f1b11d42f4", "oidc:scfd2790a544c"], "status": "REASONED"},
     "machine-tokens": {"text": "Use separate least-privilege API tokens, exercise rotation and set expiry where supported.", "components": ["oauth"], "sources": ["oauth:s4e6d674bf887"], "status": "REASONED"},
-    "session-identity": {"text": "Use unpredictable session identifiers and regenerate on login or privilege change, invalidating the old identifier.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
-    "session-revocation": {"text": "Invalidate sessions server-side on logout and password change.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
+    "session-identity": {"text": "Use unpredictable session identifiers and regenerate on login or privilege change, invalidating the old identifier.", "components": ["owasp", "owasp-docs"], "sources": ["owasp:sc5f1b11d42f4", "owasp-docs:s0b82bc050cf3", "owasp-docs:sf069993cc3d7"], "status": "REASONED"},
+    "session-revocation": {"text": "Invalidate sessions server-side on logout and password change.", "components": ["owasp", "owasp-docs"], "sources": ["owasp:sc5f1b11d42f4", "owasp-docs:sf069993cc3d7", "owasp-docs:sa5f6e96a876c"], "status": "REASONED"},
     "login-throttling": {"text": "Rate-limit authentication with account-aware and aggregate controls alongside source limits; lock or delay failures without enabling denial of access.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
     "enumeration": {"text": "Keep login, registration and reset responses uniform in message and timing.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
     "auth-logging": {"text": "Log authentication successes and failures with account and source address; retain logs for investigation.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
@@ -87,20 +148,20 @@ version_basis: {
     "verify-token-rejection": {"text": "Negative tests reject missing, expired, wrong-issuer and wrong-audience tokens.", "components": ["oidc", "oauth"], "sources": ["oidc:scfd2790a544c", "oauth:s4e6d674bf887"], "status": "REASONED"},
     "default-deny": {"text": "Require authentication on every endpoint not deliberately public, including APIs, health dashboards, admin panels, metrics and message queues; publish an explicit public-path list. General authentication source; no dedicated endpoint-inventory reference in Sources.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
     "individual-credentials": {"text": "Change or disable vendor default accounts before exposure; give each human an individual account and each service its own credential, and never ship credentials in code, containers or documentation. General authentication source; no product-specific default-account references.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
-    "secret-generation": {"text": "Generate random secrets with openssl rand -base64 32 or Python secrets.token_urlsafe(32). General authentication source; Sources has no OpenSSL or Python reference for these commands.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
-    "secret-storage": {"text": "Load secrets from environment variables or a secret manager; ignore .env before the first commit and scan for leaks before pushing. Rotate secrets exposed in a public repository, chat or log; deletion does not unpublish them. General authentication source; no pinned storage or scanner reference.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
-    "session-cookies": {"text": "Mark session cookies Secure, HttpOnly and SameSite Lax or Strict, and sign them with a strong random secret. General authentication source; no dedicated session-cookie reference in Sources.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
-    "session-timeouts": {"text": "Enforce both idle and absolute session timeouts server-side; cookie expiry alone does not prevent replay. General authentication source; no dedicated session-timeout reference in Sources.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
-    "session-unissued": {"text": "Reject session identifiers the server never issued to prevent session fixation. General authentication source; no dedicated session-management reference in Sources.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
-    "csrf": {"text": "SameSite alone is not a complete CSRF defense: Lax permits a top-level state-changing GET and sibling subdomains can be same-site. Cookie-authenticated state changes need an anti-CSRF token or strict Origin/Sec-Fetch-Site check, and must not use safe methods such as GET. General authentication source; no dedicated CSRF reference in Sources.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
-    "expensive-endpoint-limits": {"text": "Bound inference, uploads and job submission with request-size, concurrency and timeout limits in addition to per-client rate limits; apply these limits to streaming and webhook transports too. General authentication source; no dedicated resource-limit reference in Sources.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
+    "secret-generation": {"text": "Generate random secrets with openssl rand -base64 32 or Python secrets.token_urlsafe(32). General authentication source; Sources has no OpenSSL or Python reference for these commands.", "components": ["owasp", "openssl", "python"], "sources": ["owasp:sc5f1b11d42f4", "openssl:s86919b215ba1", "python:sd2e8196eaa96"], "status": "REASONED"},
+    "secret-storage": {"text": "Load secrets from environment variables or a secret manager; ignore .env before the first commit and scan for leaks before pushing. Rotate secrets exposed in a public repository, chat or log; deletion does not unpublish them. General authentication source; no pinned storage or scanner reference.", "components": ["owasp", "gitleaks-source", "git", "owasp-docs"], "sources": ["owasp:sc5f1b11d42f4", "gitleaks-source:s44a3edaa543d", "git:s5f377f0fdbd8", "owasp-docs:seb866a1f94e9"], "status": "REASONED"},
+    "session-cookies": {"text": "Mark session cookies Secure, HttpOnly and SameSite Lax or Strict, and sign them with a strong random secret. General authentication source; no dedicated session-cookie reference in Sources.", "components": ["owasp", "owasp-docs"], "sources": ["owasp:sc5f1b11d42f4", "owasp-docs:s0562e4dc23f2"], "status": "REASONED"},
+    "session-timeouts": {"text": "Enforce both idle and absolute session timeouts server-side; cookie expiry alone does not prevent replay. General authentication source; no dedicated session-timeout reference in Sources.", "components": ["owasp", "owasp-docs"], "sources": ["owasp:sc5f1b11d42f4", "owasp-docs:s4779e856ef9d"], "status": "REASONED"},
+    "session-unissued": {"text": "Reject session identifiers the server never issued to prevent session fixation. General authentication source; no dedicated session-management reference in Sources.", "components": ["owasp", "owasp-docs"], "sources": ["owasp:sc5f1b11d42f4", "owasp-docs:s0b82bc050cf3"], "status": "REASONED"},
+    "csrf": {"text": "SameSite alone is not a complete CSRF defense: Lax permits a top-level state-changing GET and sibling subdomains can be same-site. Cookie-authenticated state changes need an anti-CSRF token or strict Origin/Sec-Fetch-Site check, and must not use safe methods such as GET. General authentication source; no dedicated CSRF reference in Sources.", "components": ["owasp", "owasp-docs"], "sources": ["owasp:sc5f1b11d42f4", "owasp-docs:s232e483ac72b", "owasp-docs:sc088939103f0", "owasp-docs:sa7544ec9e1d7", "owasp-docs:seb3129173dbb"], "status": "REASONED"},
+    "expensive-endpoint-limits": {"text": "Bound inference, uploads and job submission with request-size, concurrency and timeout limits in addition to per-client rate limits; apply these limits to streaming and webhook transports too. General authentication source; no dedicated resource-limit reference in Sources.", "components": ["owasp", "api-security", "owasp-docs"], "sources": ["owasp:sc5f1b11d42f4", "api-security:s213afc24aadb", "owasp-docs:s3369d9106dce", "owasp-docs:sd6d35bd1b67d"], "status": "REASONED"},
     "fail2ban": {"text": "The body identifies fail2ban as a low-effort control for SSH and login panels on Linux hosts. General authentication source; no fail2ban vendor reference in Sources.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
     "federated-allowlist": {"text": "Allowlist tenants, verified hosted-domain claims, organization or group membership, or explicit users after federated login; any Google account is not staff, and Microsoft common requires issuer and tenant validation. General OIDC source; no Google or Microsoft vendor reference in Sources.", "components": ["oidc"], "sources": ["oidc:scfd2790a544c"], "status": "REASONED"},
-    "browser-session": {"text": "Prefer a server-side session in an HttpOnly cookie to tokens in browser storage. General authentication source; no dedicated browser-storage reference in Sources.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
+    "browser-session": {"text": "Prefer a server-side session in an HttpOnly cookie to tokens in browser storage. General authentication source; no dedicated browser-storage reference in Sources.", "components": ["owasp", "owasp-docs"], "sources": ["owasp:sc5f1b11d42f4", "owasp-docs:s4f0aa80b1ef6"], "status": "REASONED"},
     "transport-authentication": {"text": "Authenticate WebSockets, SSE, GraphQL, gRPC, webhooks, inference and management APIs separately; HTML login does not protect them. Verify webhook sender signatures and reject replays. General authentication source; no transport-specific vendor references in Sources.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
-    "offboarding": {"text": "Promptly revoke provider membership, proxy sessions, application sessions and personal tokens when a person leaves; measure and shrink each system's maximum time-to-revoke where immediate revocation is unavailable. General authentication and OAuth sources; no product-specific revocation reference.", "components": ["owasp", "oauth"], "sources": ["owasp:sc5f1b11d42f4", "oauth:s4e6d674bf887"], "status": "REASONED"},
+    "offboarding": {"text": "Promptly revoke provider membership, proxy sessions, application sessions and personal tokens when a person leaves; measure and shrink each system's maximum time-to-revoke where immediate revocation is unavailable. General authentication and OAuth sources; no product-specific revocation reference.", "components": ["owasp", "oauth", "owasp-docs", "entra-docs"], "sources": ["owasp:sc5f1b11d42f4", "oauth:s4e6d674bf887", "owasp-docs:seb866a1f94e9", "entra-docs:s983f45259faa"], "status": "REASONED"},
     "verify-transports": {"text": "Use real protocol clients against every non-public path and transport: HTTP returns 401, 403 or a login redirect; gRPC returns UNAUTHENTICATED; SSE is refused; WebSockets reject the upgrade or reject protected operations, disclose no protected data and close on first-message authentication failure. A bare curl GET does not test non-HTTP transports. General authentication source; no protocol-specific reference in Sources.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
-    "verify-secret-scan": {"text": "A secret scanner must find no leaks in the working tree, staged changes and full history; git log -p with a password/secret/API-key grep is supplementary and misses uncommitted files, some refs and secrets without those words. General authentication source; no scanner reference in Sources.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
+    "verify-secret-scan": {"text": "A secret scanner must find no leaks in the working tree, staged changes and full history; git log -p with a password/secret/API-key grep is supplementary and misses uncommitted files, some refs and secrets without those words. General authentication source; no scanner reference in Sources.", "components": ["owasp", "gitleaks-source"], "sources": ["owasp:sc5f1b11d42f4", "gitleaks-source:s44a3edaa543d"], "status": "REASONED"},
     "verify-default-accounts": {"text": "Check that the user store has no admin, test or demo account with a known or empty password. General authentication source; no product-specific default-account reference.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
     "verify-wrong-tenant": {"text": "Reject a wrong-tenant token in negative tests. General OIDC source; no tenant-specific vendor reference in Sources.", "components": ["oidc"], "sources": ["oidc:scfd2790a544c"], "status": "REASONED"},
     "verify-cross-user": {"text": "Verify that user A cannot read user B's resources. General authentication source; no dedicated authorization reference in Sources.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
@@ -115,7 +176,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -126,8 +187,8 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | htpasswd-cost: htpasswd -B -C 12 selects bcrypt cost 12; bare -B defaults to 5, below the OWASP minimum of 10. | Apache htpasswd unknown; OWASP authentication and password storage unknown | REASONED |
 | federation: Prefer supported SSO/OIDC and enable MFA wherever available. | OWASP authentication and password storage unknown; OpenID Connect Core 1.0 | REASONED |
 | machine-tokens: Use separate least-privilege API tokens, exercise rotation and set expiry where supported. | OAuth security BCP RFC 9700 | REASONED |
-| session-identity: Use unpredictable session identifiers and regenerate on login or privilege change, invalidating the old identifier. | OWASP authentication and password storage unknown | REASONED |
-| session-revocation: Invalidate sessions server-side on logout and password change. | OWASP authentication and password storage unknown | REASONED |
+| session-identity: Use unpredictable session identifiers and regenerate on login or privilege change, invalidating the old identifier. | OWASP authentication and password storage unknown; OWASP security guidance 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
+| session-revocation: Invalidate sessions server-side on logout and password change. | OWASP authentication and password storage unknown; OWASP security guidance 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
 | login-throttling: Rate-limit authentication with account-aware and aggregate controls alongside source limits; lock or delay failures without enabling denial of access. | OWASP authentication and password storage unknown | REASONED |
 | enumeration: Keep login, registration and reset responses uniform in message and timing. | OWASP authentication and password storage unknown | REASONED |
 | auth-logging: Log authentication successes and failures with account and source address; retain logs for investigation. | OWASP authentication and password storage unknown | REASONED |
@@ -149,20 +210,20 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-token-rejection: Negative tests reject missing, expired, wrong-issuer and wrong-audience tokens. | OpenID Connect Core 1.0; OAuth security BCP RFC 9700 | REASONED |
 | default-deny: Require authentication on every endpoint not deliberately public, including APIs, health dashboards, admin panels, metrics and message queues; publish an explicit public-path list. General authentication source; no dedicated endpoint-inventory reference in Sources. | OWASP authentication and password storage unknown | REASONED |
 | individual-credentials: Change or disable vendor default accounts before exposure; give each human an individual account and each service its own credential, and never ship credentials in code, containers or documentation. General authentication source; no product-specific default-account references. | OWASP authentication and password storage unknown | REASONED |
-| secret-generation: Generate random secrets with openssl rand -base64 32 or Python secrets.token_urlsafe(32). General authentication source; Sources has no OpenSSL or Python reference for these commands. | OWASP authentication and password storage unknown | REASONED |
-| secret-storage: Load secrets from environment variables or a secret manager; ignore .env before the first commit and scan for leaks before pushing. Rotate secrets exposed in a public repository, chat or log; deletion does not unpublish them. General authentication source; no pinned storage or scanner reference. | OWASP authentication and password storage unknown | REASONED |
-| session-cookies: Mark session cookies Secure, HttpOnly and SameSite Lax or Strict, and sign them with a strong random secret. General authentication source; no dedicated session-cookie reference in Sources. | OWASP authentication and password storage unknown | REASONED |
-| session-timeouts: Enforce both idle and absolute session timeouts server-side; cookie expiry alone does not prevent replay. General authentication source; no dedicated session-timeout reference in Sources. | OWASP authentication and password storage unknown | REASONED |
-| session-unissued: Reject session identifiers the server never issued to prevent session fixation. General authentication source; no dedicated session-management reference in Sources. | OWASP authentication and password storage unknown | REASONED |
-| csrf: SameSite alone is not a complete CSRF defense: Lax permits a top-level state-changing GET and sibling subdomains can be same-site. Cookie-authenticated state changes need an anti-CSRF token or strict Origin/Sec-Fetch-Site check, and must not use safe methods such as GET. General authentication source; no dedicated CSRF reference in Sources. | OWASP authentication and password storage unknown | REASONED |
-| expensive-endpoint-limits: Bound inference, uploads and job submission with request-size, concurrency and timeout limits in addition to per-client rate limits; apply these limits to streaming and webhook transports too. General authentication source; no dedicated resource-limit reference in Sources. | OWASP authentication and password storage unknown | REASONED |
+| secret-generation: Generate random secrets with openssl rand -base64 32 or Python secrets.token_urlsafe(32). General authentication source; Sources has no OpenSSL or Python reference for these commands. | OWASP authentication and password storage unknown; OpenSSL rand 3.5; Python secrets 3.13 | REASONED |
+| secret-storage: Load secrets from environment variables or a secret manager; ignore .env before the first commit and scan for leaks before pushing. Rotate secrets exposed in a public repository, chat or log; deletion does not unpublish them. General authentication source; no pinned storage or scanner reference. | OWASP authentication and password storage unknown; Gitleaks scanning modes b58d3f102cf3a2c84cb7f923d05c25c9b1aed84b; Git ignore rules v2.49.0; OWASP security guidance 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
+| session-cookies: Mark session cookies Secure, HttpOnly and SameSite Lax or Strict, and sign them with a strong random secret. General authentication source; no dedicated session-cookie reference in Sources. | OWASP authentication and password storage unknown; OWASP security guidance 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
+| session-timeouts: Enforce both idle and absolute session timeouts server-side; cookie expiry alone does not prevent replay. General authentication source; no dedicated session-timeout reference in Sources. | OWASP authentication and password storage unknown; OWASP security guidance 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
+| session-unissued: Reject session identifiers the server never issued to prevent session fixation. General authentication source; no dedicated session-management reference in Sources. | OWASP authentication and password storage unknown; OWASP security guidance 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
+| csrf: SameSite alone is not a complete CSRF defense: Lax permits a top-level state-changing GET and sibling subdomains can be same-site. Cookie-authenticated state changes need an anti-CSRF token or strict Origin/Sec-Fetch-Site check, and must not use safe methods such as GET. General authentication source; no dedicated CSRF reference in Sources. | OWASP authentication and password storage unknown; OWASP security guidance 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
+| expensive-endpoint-limits: Bound inference, uploads and job submission with request-size, concurrency and timeout limits in addition to per-client rate limits; apply these limits to streaming and webhook transports too. General authentication source; no dedicated resource-limit reference in Sources. | OWASP authentication and password storage unknown; OWASP API Security 2023; OWASP security guidance 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
 | fail2ban: The body identifies fail2ban as a low-effort control for SSH and login panels on Linux hosts. General authentication source; no fail2ban vendor reference in Sources. | OWASP authentication and password storage unknown | REASONED |
 | federated-allowlist: Allowlist tenants, verified hosted-domain claims, organization or group membership, or explicit users after federated login; any Google account is not staff, and Microsoft common requires issuer and tenant validation. General OIDC source; no Google or Microsoft vendor reference in Sources. | OpenID Connect Core 1.0 | REASONED |
-| browser-session: Prefer a server-side session in an HttpOnly cookie to tokens in browser storage. General authentication source; no dedicated browser-storage reference in Sources. | OWASP authentication and password storage unknown | REASONED |
+| browser-session: Prefer a server-side session in an HttpOnly cookie to tokens in browser storage. General authentication source; no dedicated browser-storage reference in Sources. | OWASP authentication and password storage unknown; OWASP security guidance 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
 | transport-authentication: Authenticate WebSockets, SSE, GraphQL, gRPC, webhooks, inference and management APIs separately; HTML login does not protect them. Verify webhook sender signatures and reject replays. General authentication source; no transport-specific vendor references in Sources. | OWASP authentication and password storage unknown | REASONED |
-| offboarding: Promptly revoke provider membership, proxy sessions, application sessions and personal tokens when a person leaves; measure and shrink each system's maximum time-to-revoke where immediate revocation is unavailable. General authentication and OAuth sources; no product-specific revocation reference. | OWASP authentication and password storage unknown; OAuth security BCP RFC 9700 | REASONED |
+| offboarding: Promptly revoke provider membership, proxy sessions, application sessions and personal tokens when a person leaves; measure and shrink each system's maximum time-to-revoke where immediate revocation is unavailable. General authentication and OAuth sources; no product-specific revocation reference. | OWASP authentication and password storage unknown; OAuth security BCP RFC 9700; OWASP security guidance 668ba7db3d0da5868b8a0305c259f7f6914a6ecd; Microsoft Entra revocation model 231747abc59ae3d50c74e215c1cdd592eb980723 | REASONED |
 | verify-transports: Use real protocol clients against every non-public path and transport: HTTP returns 401, 403 or a login redirect; gRPC returns UNAUTHENTICATED; SSE is refused; WebSockets reject the upgrade or reject protected operations, disclose no protected data and close on first-message authentication failure. A bare curl GET does not test non-HTTP transports. General authentication source; no protocol-specific reference in Sources. | OWASP authentication and password storage unknown | REASONED |
-| verify-secret-scan: A secret scanner must find no leaks in the working tree, staged changes and full history; git log -p with a password/secret/API-key grep is supplementary and misses uncommitted files, some refs and secrets without those words. General authentication source; no scanner reference in Sources. | OWASP authentication and password storage unknown | REASONED |
+| verify-secret-scan: A secret scanner must find no leaks in the working tree, staged changes and full history; git log -p with a password/secret/API-key grep is supplementary and misses uncommitted files, some refs and secrets without those words. General authentication source; no scanner reference in Sources. | OWASP authentication and password storage unknown; Gitleaks scanning modes b58d3f102cf3a2c84cb7f923d05c25c9b1aed84b | REASONED |
 | verify-default-accounts: Check that the user store has no admin, test or demo account with a known or empty password. General authentication source; no product-specific default-account reference. | OWASP authentication and password storage unknown | REASONED |
 | verify-wrong-tenant: Reject a wrong-tenant token in negative tests. General OIDC source; no tenant-specific vendor reference in Sources. | OpenID Connect Core 1.0 | REASONED |
 | verify-cross-user: Verify that user A cannot read user B's resources. General authentication source; no dedicated authorization reference in Sources. | OWASP authentication and password storage unknown | REASONED |
@@ -216,3 +277,22 @@ TLS without authentication leaves a service open to the whole internet over an e
 - NIST SP 800-63B-4 (password length, section 3.1.1.2): https://pages.nist.gov/800-63-4/sp800-63b.html
 - Apache htpasswd (bcrypt `-B`; cost `-C`, default 5): https://httpd.apache.org/docs/2.4/programs/htpasswd.html
 - pyca/bcrypt changelog (5.0.0 rejects input over 72 bytes): https://github.com/pyca/bcrypt/blob/2b4ba9ac84df972e8e81311d09559af8dc82ef33/CHANGELOG.rst
+- OpenSSL 3.5 rand and base64 output (checked October 2026): https://docs.openssl.org/3.5/man1/openssl-rand/
+- Python 3.13 secrets.token_urlsafe (checked October 2026): https://docs.python.org/3.13/library/secrets.html#secrets.token_urlsafe
+- Gitleaks git, directory and stdin scanning (pinned commit b58d3f102cf3a2c84cb7f923d05c25c9b1aed84b, checked October 2026): https://github.com/gitleaks/gitleaks/blob/b58d3f102cf3a2c84cb7f923d05c25c9b1aed84b/README.md#L172-L189
+- Git v2.49.0 ignore rules exclude untracked files (checked October 2026): https://github.com/git/git/blob/v2.49.0/Documentation/gitignore.adoc#L15-L18
+- OWASP compromised credentials and secret revocation (pinned commit 668ba7db3d0da5868b8a0305c259f7f6914a6ecd, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Secrets_Management_Cheat_Sheet.md#L214-L218
+- OWASP session-cookie attributes (pinned commit 668ba7db3d0da5868b8a0305c259f7f6914a6ecd, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L163
+- OWASP random session IDs and strict verification (pinned commit 668ba7db3d0da5868b8a0305c259f7f6914a6ecd, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L265-L267
+- OWASP session-ID renewal and invalidation after privilege changes (pinned commit 668ba7db3d0da5868b8a0305c259f7f6914a6ecd, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L275
+- OWASP server-side session invalidation on logout (pinned commit 668ba7db3d0da5868b8a0305c259f7f6914a6ecd, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L317
+- OWASP server-side idle and absolute session timeouts (pinned commit 668ba7db3d0da5868b8a0305c259f7f6914a6ecd, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L323-L331
+- OWASP browser storage and session identifiers (pinned commit 668ba7db3d0da5868b8a0305c259f7f6914a6ecd, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/HTML5_Security_Cheat_Sheet.md#L53
+- OWASP SameSite limitations (pinned commit 668ba7db3d0da5868b8a0305c259f7f6914a6ecd, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L149
+- OWASP CSRF tokens, origin checks and safe methods (pinned commit 668ba7db3d0da5868b8a0305c259f7f6914a6ecd, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.md#L17-L26
+- OWASP Fetch Metadata cross-site policy (pinned commit 668ba7db3d0da5868b8a0305c259f7f6914a6ecd, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.md#L197
+- OWASP Fetch Metadata sibling-domain trust (pinned commit 668ba7db3d0da5868b8a0305c259f7f6914a6ecd, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.md#L226
+- OWASP API4:2023 resource and spending limits (checked October 2026): https://api-security.owasp.org/editions/2023/en/0xa4-unrestricted-resource-consumption/
+- OWASP request-size limits (pinned commit 668ba7db3d0da5868b8a0305c259f7f6914a6ecd, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Denial_of_Service_Cheat_Sheet.md#L80
+- OWASP connection timeouts and concurrent resource limits (pinned commit 668ba7db3d0da5868b8a0305c259f7f6914a6ecd, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Denial_of_Service_Cheat_Sheet.md#L110-L113
+- Microsoft Entra application-session revocation (pinned commit 231747abc59ae3d50c74e215c1cdd592eb980723, checked October 2026): https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/users/users-revoke-access.md#L62
