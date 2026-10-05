@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-05
 
+- Add verified pinned Sources and claim mappings for the READY MFA, self-hosted IdP and OIDC integration facts (OIDC session cookies, server-side logout and browser token storage); preserve claim text and residuals (row 1.179, batch 3a) (#NNN).
 - Add verified pinned sources and claim mappings for nginx, Apache, Traefik, HAProxy and the certificate guides (row 1.179, batch 2a); preserve claim wording and residuals (#432).
 - Add pinned Sources and claim mappings for ten READY facts in PocketBase, observability components, self-hosted Supabase, Firebase/Supabase, self-hosted error trackers, and Ray; regenerate version summaries and bundles (row 1.179, batch 1b) (#430).
 - Replace the dead Appwrite database permissions link in `pocketbase.md` with the legacy collection/document permissions page, refresh its rolling-source check and generated bundles (row 1.192), and record weekly link-check false positives for follow-up (row 3.40) (#428).
