@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """End-to-end fixtures for the Verify fence ratchet; no corpus files are changed."""
 from pathlib import Path
+import os
 import re
 import shutil
 import subprocess
@@ -9,7 +10,9 @@ import tempfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _verify_sections import META_EXCLUDE, verify_sections_text
-from check_verify_marking import scan_guide
+from check_verify_marking import gate_parser, scan_guide
+
+HAS_PARSER = gate_parser() is not None
 
 TOOLS = Path(__file__).resolve().parent
 PLAIN = "# Guide\n\n## Verify\n\n```sh\necho ok\n```\n"
@@ -28,6 +31,8 @@ def invoke(root, *flags):
     result = subprocess.run(
         [sys.executable, "-I", "-B", str(root / "tools/check_verify_marking.py"), *flags],
         capture_output=True, text=True, encoding="utf-8",
+        # These fixtures exercise local behavior; CI refusal has dedicated cases.
+        env=dict(os.environ, CI=""),
     )
     return result.returncode, result.stdout + result.stderr
 
@@ -37,13 +42,15 @@ def main():
         root = Path(directory)
         (root / "tools").mkdir()
         for name in ("check_verify_marking.py", "_markdown.py",
-                     "_verify_sections.py", "version_basis.py"):
+                     "_verify_sections.py", "version_basis.py", "requirements-gates.txt"):
             shutil.copyfile(TOOLS / name, root / "tools" / name)
         (root / "tools/version_basis_guides.txt").write_text("guide.md\n", encoding="utf-8")
         guide = root / "guide.md"
         baseline = root / "tools/verify_marking_baseline.txt"
 
-        def run(body, expected, name, message=""):
+        def run(body, expected, name, message="", *, unit_expected=None):
+            if HAS_PARSER and unit_expected is not None:
+                expected = unit_expected
             guide.write_text(body, encoding="utf-8")
             baseline.write_text("", encoding="utf-8")
             rc, out = invoke(root, "--strict")
@@ -90,7 +97,14 @@ def main():
 
         run(PLAIN, 1, "new unmarked fence")
         rc, out = invoke(root, "--write-baseline")
-        check("seed", rc == 0 and "1 grandfathered" in out)
+        if HAS_PARSER:
+            check("seed", rc == 0 and "1 grandfathered" in out)
+        else:
+            check("seed needs parser", rc == 1 and "seeding requires the pinned parser" in out)
+            # Supply the old fence fixture explicitly so its ratchet still runs
+            # when the new unit checks are unavailable. No seed is simulated.
+            digest = scan_guide(PLAIN)[0][0][1]
+            baseline.write_text(f"guide.md\tfence\t{digest}\t1\n", encoding="utf-8")
         saved = baseline.read_text(encoding="utf-8")
         rc, out = invoke(root, "--strict")
         check("retained exemption visible", rc == 0 and "BASELINE" in out)
@@ -154,10 +168,10 @@ def main():
         body = PLAIN + "\n## Setup\n\n```sh\necho outside\n```\n"
         check("sibling boundary", len(scan_guide(body)[0]) == 1)
         run("# Guide\n\n## Verify\n\n- item\n\n  ```sh\n  # " + MARK
-            + "\n  echo ok\n  ```\n", 0, "list continuation")
+            + "\n  echo ok\n  ```\n", 0, "list continuation", unit_expected=1)
         run("# Guide\n\n## Verify\n\n- outer\n  - inner\n\n"
             "    ```sh\n    # " + MARK + "\n    echo ok\n    ```\n",
-            0, "nested list")
+            0, "nested list", unit_expected=1)
         run("# Guide\n\n## Verify\n\n- ```sh\n  echo ok\n  ```\n",
             1, "same-line list fence")
         run("# Guide\n\n## Verify\n\n- ```sh\n  echo ok\n  ```\n- "
@@ -172,13 +186,13 @@ def main():
         run(PLAIN.replace("echo ok", "# " + MARK).replace("\n", "\r\n"),
             0, "CRLF")
         run(PLAIN.replace("echo ok", "# " + MARK) + "\ntext\u2028## Setup\n",
-            0, "Unicode separator is not a heading")
+            0, "Unicode separator is not a heading", unit_expected=1)
         run(PLAIN.rsplit("```", 1)[0], 1, "unclosed fence")
         run("# Guide\n\n## Verify\n\n- ```sh\n  # " + MARK
             + "\n  echo ok\n```\n", 1, "dedented list close fails")
         run(PLAIN + "\n> unsupported quote\n", 1, "quoted prose does not mark fence", "new/changed/excess")
         run("# Guide\n\n## Verify\n\n- prose check\n\n| Check | Result |\n"
-            "| --- | --- |\n| A | B |\n", 0, "lists tables prose not gated")
+            "| --- | --- |\n| A | B |\n", 0, "lists tables prose need declarations when parser is present", unit_expected=1)
 
         # Version-basis integration: parser and summary exceptions stay narrow.
         from version_basis import START, END
@@ -262,7 +276,7 @@ def main():
         run(marked_pilot + "\n## Samples\n\n```text\n" + START + "\n" + END
             + "\n```\n", 0, "markers inside a literal fence")
         run(marked_pilot + "\n`" + START + " " + END + "`\n", 0,
-            "markers inside a matched code span")
+            "markers inside a matched code span", unit_expected=1)
         run("> ---\n> version_basis: {}\n> ---\n", 1,
             "quoted metadata is not a document header", "[unsupported-container]")
         for body in (
@@ -321,7 +335,8 @@ def main():
             ">   # ordinary comment\n>   echo ok\n>   ```\n", 1,
             "quoted list state contains later fence", unsupported)
         rc, out = invoke(root, "--write-baseline")
-        check("unsupported containers cannot be seeded", rc == 1 and unsupported in out
+        check("unsupported containers cannot be seeded", rc == 1
+              and (unsupported if HAS_PARSER else "seeding requires the pinned parser") in out
               and baseline.read_text(encoding="utf-8") == "")
         run("## Verify\n\n" + MARK + "\n2. additional provenance\n\n"
             "```sh\necho ok\n```\n", 0, "ordered prose retains adjacent declaration")
@@ -332,9 +347,9 @@ def main():
         run("## Setup\n\n- - ```sh\n    # ordinary comment\n    ```\n", 0,
             "unsupported fence outside Verify")
         run("## Verify\n\n- - prose only\n\n> - quoted prose only\n", 0,
-            "unsupported prose without headings or fences")
+            "unsupported prose without headings or fences", unit_expected=1)
         run("## Verify\n\n- - prose only\n\n" + MARK + "\n\n"
-            "```sh\necho ok\n```\n", 0, "dedent ends unsupported item")
+            "```sh\necho ok\n```\n", 0, "dedent ends unsupported item", unit_expected=1)
         run("## Verify\n\n- - " + MARK + "\n\n```sh\necho ok\n```\n", 1,
             "unsupported prose cannot declare outside fence", "new/changed/excess")
 
@@ -388,19 +403,19 @@ def main():
             if opening == "<!--":
                 continue
             run("## Verify\n\n" + opening + "\nplain text\n" + ending + "\n" + marked,
-                0, "HTML terminator restores Markdown " + opening)
+                0, "HTML terminator restores Markdown " + opening, unit_expected=1)
         run("## Verify\n\n<pre>sample</style>\n" + marked, 0,
-            "raw HTML can close on opener with different raw tag")
+            "raw HTML can close on opener with different raw tag", unit_expected=1)
         run("## Verify\n\n<div>\n<pre>\n\n" + marked, 0,
-            "nested HTML does not replace blank terminator")
+            "nested HTML does not replace blank terminator", unit_expected=1)
         run("## Verify\n\n" + MARK + "\n<custom>\n\n" + fence, 0,
-            "type 7 cannot interrupt a paragraph")
+            "type 7 cannot interrupt a paragraph", unit_expected=1)
         run("## Verify\n\n- item\n<div>\n## Details\n</div>\n\n" + fence,
             1, "HTML interrupts list paragraph before quarantine", "heading in HTML block")
         run("Introductory prose\n- <custom>\n  ```sh\n  # " + MARK + "\n  ```\n",
             1, "type 7 starts in a new list item after prose", "fence in HTML block")
         run("<pre/>\n## Verify\n\n" + marked, 0,
-            "self-closing raw tag is not type 1 or type 7")
+            "self-closing raw tag is not type 1 or type 7", unit_expected=1)
         run("- <pre>\n  sample\n\n## Verify\n\n" + marked, 0,
             "container dedent ends HTML quarantine")
 
@@ -426,11 +441,11 @@ def main():
         for text in ("`<!--`", "`` ` <!-- ``", "`multiline\nliteral <!-- span`",
                      "``backslash \\` <!--``"):
             run("## Verify\n\n" + text + "\n\n" + marked, 0,
-                "matched code span contains literal opener " + text)
+                "matched code span contains literal opener " + text, unit_expected=1)
         run("## Setup\n\n`unfinished span\n<!-- block comment`\n", 1,
             "HTML block interrupts paragraph before span matching", unsupported)
         run("## Verify\n\n" + r"\``<!--`" + "\n\n" + marked, 0,
-            "escape consumes only first backtick in opening run")
+            "escape consumes only first backtick in opening run", unit_expected=1)
         run("## Verify\n\n`<!--` then <!-- real -->\n\n" + marked, 1,
             "code span does not hide subsequent comment", unsupported)
         run("## Verify\n\n```sh\n# " + MARK + "\nprintf '<!--'\n```\n", 0,
@@ -438,7 +453,8 @@ def main():
         run("## Verify\n\n<!-- harmless -->\n\n" + marked, 1,
             "even closed block comment is unsupported", unsupported)
         rc, out = invoke(root, "--write-baseline")
-        check("comment cannot be grandfathered", rc == 1 and unsupported in out
+        check("comment cannot be grandfathered", rc == 1
+              and (unsupported if HAS_PARSER else "seeding requires the pinned parser") in out
               and baseline.read_text(encoding="utf-8") == "")
 
         # Round-1 reproductions: strict CLI checks include the diagnostic, so a
@@ -455,7 +471,7 @@ def main():
                 run(prefix + "## Verify\n" + prefix + "\n" + quoted, 1,
                     f"quoted Verify root {indent} {label}", "unsupported fenced blockquote")
             run("## Verify\n\n" + prefix + "See Sources.\n", 0,
-                f"quoted prose {indent}")
+                f"quoted prose {indent}", unit_expected=1)
             run("## Verify\n\n" + " " * indent + fence.replace("\n", "\n" + " " * indent),
                 1, f"fence indent {indent}", "new/changed/excess")
             run("## Verify\n\n" + " " * indent + marked.replace("\n", "\n" + " " * indent),
@@ -467,11 +483,11 @@ def main():
                 code = "\n".join(prefix + line for line in content.splitlines()) + "\n"
                 expected = int(content == "<!--")
                 run("## Verify\n\n" + code, expected,
-                    f"indented code alone {prefix!r} {content}")
+                    f"indented code alone {prefix!r} {content}", unit_expected=1)
                 run("## Verify\n\n" + code + "\n" + fence, 1,
                     f"code cannot mark or hide {prefix!r} {content}", "new/changed/excess")
                 run("## Verify\n\n" + code + "\n" + marked, expected,
-                    f"code before marked fence {prefix!r} {content}")
+                    f"code before marked fence {prefix!r} {content}", unit_expected=1)
             run("## Verify\n\n" + MARK + "\n\n" + prefix + "sample\n\n" + fence,
                 1, f"indented code blocks attachment {prefix!r}", "new/changed/excess")
             run("## Verify\n\n" + fence + "\n" + prefix + MARK, 1,
@@ -486,7 +502,7 @@ def main():
         run("## Verify\n\n>     <!--\n>\n> ```\n> text\n> ```\n", 1,
             "quoted indented HTML cannot hide fence", "unsupported fenced blockquote")
         run("## Verify\n\n>     ```\n>     sample\n>     ```\n", 0,
-            "quoted indented fence sample is code")
+            "quoted indented fence sample is code", unit_expected=1)
 
         for suffix in ("(**DEMONSTRATED:** observed pair)",
                        "(__DEMONSTRATED:__ observed pair)",
@@ -511,7 +527,7 @@ def main():
                            else "complete suffix")
                 run(body, 1, "bad suffix still selected " + heading + suffix, message)
                 run((heading + suffix + "\n\nprose only\n"), 0,
-                    "bad suffix without fence is outside gate " + heading + suffix)
+                    "bad suffix applies to prose when parser is present " + heading + suffix, unit_expected=1)
                 check("malformed suffix retains section " + heading + suffix,
                       "echo ok" in verify_sections_text(body) and len(scan_guide(body)[0]) == 1)
         run("## Verify (REASONED)\n\n" + fence, 1,
@@ -531,9 +547,9 @@ def main():
         run("## Verify\n\n> See Sources.\n" + MARK + "\n\n" + fence, 1,
             "lazy quoted paragraph cannot mark outside fence", "new/changed/excess")
         run("## Verify\n\n> See Sources.\n\n" + MARK + "\n\n" + fence, 0,
-            "blank ends lazy quote")
+            "blank ends lazy quote", unit_expected=1)
         run("## Verify\n\n> See Sources.\n" + marked, 0,
-            "fence interrupts quote laziness")
+            "fence interrupts quote laziness", unit_expected=1)
         run("> See Sources.\n## Verify\n\n" + fence, 1,
             "heading interrupts quote laziness", "new/changed/excess")
         run("## Verify\n\n> ```sh\noutside\n", 1,
@@ -543,9 +559,12 @@ def main():
         run("## Verify\n\n> > Sources.\n" + MARK + "\n\n" + fence, 1,
             "nested quote laziness stays quoted", "new/changed/excess")
         run("## Verify\n\n> > Sources.\n\n" + MARK + "\n\n" + fence, 0,
-            "blank ends nested lazy quote")
+            "blank ends nested lazy quote", unit_expected=1)
         run("## Verify\n\n  > ```sh\n  > echo ok\n  > ```\n", 1,
             "exact indented quote reproduction", "unsupported fenced blockquote")
+
+    from test_verify_units import run_cases
+    run_cases(check)
 
     suite = (TOOLS / "run_all_checks.sh").read_text(encoding="utf-8")
     excluded = re.search(r"    (CONTRIBUTING\.md\|.*?)\) return 0", suite)[1]

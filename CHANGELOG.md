@@ -13,9 +13,9 @@ service can change a gate's answer, and a pull request number is only knowable f
 ## 2026-10-05
 
 - Add verified pinned Sources and claim mappings for fourteen READY facts across fifteen claims in deployment lifecycle, GPU clouds, MLflow, PaaS, SQLite, and transactional email posture; regenerate version summaries and bundles (row 1.179, batch 5a) (#438).
+- Expand Verify-marking coverage from fences to every list item, table body row and prose paragraph, retaining an initial 1,021 fingerprinted exemptions (163 list items, 149 table rows, 709 prose units) under the baseline ratchet. Require plain-text declaration markers and provenance across all attachment sites and accept valid tables on list items' first lines while still rejecting ragged rows. Normalize heading whitespace, reject differences between legacy and parser Verify spans, and validate closure for every parser-selected fence. Row 3.30 remains open for the burn-down (#429).
 - Add verified pinned Sources and claim mappings for the READY MFA, self-hosted IdP and OIDC integration facts (OIDC session cookies, server-side logout and browser token storage); preserve claim text and residuals (row 1.179, batch 3a) (#434).
 - Add verified pinned Sources and claim mappings for fifteen READY facts across nineteen claims in authentication, identity providers, and fronting authentication; regenerate version summaries and bundles (row 1.179, batch 3b) (#435).
-
 - Add pinned Sources and claim mappings for twelve READY facts across thirteen claims in headers, Docker, container hardening, realtime webhooks, and realtime voice infrastructure; regenerate version summaries and bundles (row 1.179, batch 2b) (#433).
 - Add verified pinned sources and claim mappings for Mosquitto, search engines, Streamlit, n8n, headless browser services and workflow orchestrators (row 1.179, batch 1a); retain rolling provenance for the n8n 2.0 change notice (#431).
 - Add verified pinned sources and claim mappings for nginx, Apache, Traefik, HAProxy and the certificate guides (row 1.179, batch 2a); preserve claim wording and residuals (#432).
