@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "6173627e5970556f1150885b9f204488eb762c801296bb8bdcd326fecc39af38",
+  "body_sha256": "b4229dbd00c95e52e2daf9e9e298fe82193f7ca81d4814f63cae05d968c42a25",
   "components": {
     "browser": {
       "name": "Browser API and living standards",
@@ -75,7 +75,10 @@ version_basis: {
       "name": "Traefik timeout reference",
       "basis": "v3.5",
       "sources": {
-        "sd6ad276040b7": "https://doc.traefik.io/traefik/v3.5/reference/install-configuration/entrypoints/"
+        "sd6ad276040b7": "https://doc.traefik.io/traefik/v3.5/reference/install-configuration/entrypoints/",
+        "scad09024d298": "https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/middlewares/buffering/",
+        "s5888553b0970": "https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/middlewares/inflightreq/",
+        "s437d7eb2ec16": "https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/middlewares/ratelimit/"
       }
     },
     "proxy": {
@@ -98,6 +101,22 @@ version_basis: {
       "basis": "unknown",
       "sources": {
         "s767fa9623dba": "https://docs.python.org/3/library/os.html#os.fdopen"
+      }
+    },
+    "nginx-source": {
+      "name": "nginx source",
+      "basis": "release-1.26.3",
+      "sources": {
+        "s80c7f2e4622c": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_core_module.c#L348-L353",
+        "s0ac063f54b7d": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_limit_conn_module.c#L100-L105",
+        "s86004e697595": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_limit_req_module.c#L113-L118"
+      }
+    },
+    "haproxy": {
+      "name": "HAProxy",
+      "basis": "3.0",
+      "sources": {
+        "se90dfdfcf910": "https://docs.haproxy.org/3.0/configuration.html#7.3.6-req.body_size"
       }
     }
   },
@@ -127,7 +146,7 @@ version_basis: {
     "webhook-secret": {"text": "Require a configured strong GitHub secret, reject unsigned delivery, and use distinct protected, rotated endpoint secrets kept out of URLs and logs.", "components": ["github", "owasp"], "sources": ["github:seccc4a52ea14", "owasp:s26a987a1053b"], "status": "REASONED"},
     "stripe-secrets": {"text": "Stripe test/live and Dashboard/CLI-forwarding endpoint secrets differ.", "components": ["stripe"], "sources": ["stripe:s197f8ab6b63f"], "status": "REASONED"},
     "sender-ip": {"text": "Provider IP allowlists supplement signatures; trust forwarded client addresses only through a configured proxy chain.", "components": ["github"], "sources": ["github:seccc4a52ea14"], "status": "REASONED"},
-    "proxy-limits": {"text": "Bound HTTP body size, concurrency and timeouts separately; proxy capability summaries refer to local guides and need current vendor confirmation.", "components": ["traefik", "proxy"], "sources": ["traefik:sd6ad276040b7", "proxy:sf22449866dac", "proxy:s7cc695452ecc"], "status": "REASONED"},
+    "proxy-limits": {"text": "Bound HTTP body size, concurrency and timeouts separately; proxy capability summaries refer to local guides and need current vendor confirmation.", "components": ["traefik", "proxy", "nginx-source", "haproxy"], "sources": ["traefik:sd6ad276040b7", "proxy:sf22449866dac", "proxy:s7cc695452ecc", "nginx-source:s80c7f2e4622c", "nginx-source:s0ac063f54b7d", "nginx-source:s86004e697595", "traefik:scad09024d298", "traefik:s5888553b0970", "traefik:s437d7eb2ec16", "haproxy:se90dfdfcf910"], "status": "REASONED"},
     "message-limits": {"text": "After WebSocket upgrade, enforce per-message authorization and rate limits; connection limits do not bound messages or jobs.", "components": ["owasp"], "sources": ["owasp:sfbb0cddfdc41"], "status": "REASONED"},
     "ssrf": {"text": "Allowlist relay destinations and enforce worker egress for schemes, ports and resolved addresses; revalidate redirects and never forward inbound credentials.", "components": ["owasp"], "sources": ["owasp:s7eb820e1e53b"], "status": "REASONED"},
     "verify-handshake": {"text": "Cookie handshake positive is 101; missing cookie and disallowed/missing Origin must reject, never 101. Failed controls and unrelated errors are inconclusive.", "components": ["owasp", "websocket"], "sources": ["owasp:sfbb0cddfdc41", "websocket:sbdde15b3166d"], "status": "REASONED", "verify": [1]},
@@ -148,7 +167,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -177,7 +196,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | webhook-secret: Require a configured strong GitHub secret, reject unsigned delivery, and use distinct protected, rotated endpoint secrets kept out of URLs and logs. | GitHub webhooks documentation unknown; OWASP guidance unknown | REASONED |
 | stripe-secrets: Stripe test/live and Dashboard/CLI-forwarding endpoint secrets differ. | Stripe webhooks documentation unknown | REASONED |
 | sender-ip: Provider IP allowlists supplement signatures; trust forwarded client addresses only through a configured proxy chain. | GitHub webhooks documentation unknown | REASONED |
-| proxy-limits: Bound HTTP body size, concurrency and timeouts separately; proxy capability summaries refer to local guides and need current vendor confirmation. | Traefik timeout reference v3.5; Caddy and nginx timeout documentation unknown | REASONED |
+| proxy-limits: Bound HTTP body size, concurrency and timeouts separately; proxy capability summaries refer to local guides and need current vendor confirmation. | Traefik timeout reference v3.5; Caddy and nginx timeout documentation unknown; nginx source release-1.26.3; HAProxy 3.0 | REASONED |
 | message-limits: After WebSocket upgrade, enforce per-message authorization and rate limits; connection limits do not bound messages or jobs. | OWASP guidance unknown | REASONED |
 | ssrf: Allowlist relay destinations and enforce worker egress for schemes, ports and resolved addresses; revalidate redirects and never forward inbound credentials. | OWASP guidance unknown | REASONED |
 | verify-handshake: Cookie handshake positive is 101; missing cookie and disallowed/missing Origin must reject, never 101. Failed controls and unrelated errors are inconclusive. | OWASP guidance unknown; WebSocket protocol RFC 6455 | REASONED |
@@ -421,3 +440,6 @@ Scope and revisions: browser behavior follows RFC 6455 and the HTML and Fetch li
 - nginx `proxy_read_timeout`: https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout
 - curl manual (`--connect-to`, `--noproxy`, write-out variables require 7.75.0+): https://curl.se/docs/manpage.html
 - Python `os.fdopen`, for reading and closing the secret pipe: https://docs.python.org/3/library/os.html#os.fdopen
+- nginx release-1.26.3 body-size, connection-limit and request-rate directives (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_core_module.c#L348-L353, https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_limit_conn_module.c#L100-L105, https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_limit_req_module.c#L113-L118
+- Traefik v3.5 buffering, in-flight request limits and rate limits (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/middlewares/buffering/, https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/middlewares/inflightreq/, https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/middlewares/ratelimit/
+- HAProxy 3.0 configuration: timeouts, aggregate maxconn and req.body_size advertised-length semantics (checked October 2026): https://docs.haproxy.org/3.0/configuration.html#7.3.6-req.body_size

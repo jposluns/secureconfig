@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-27",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "5a2232e2a92f1d985cd7aba4ba413c686e13dd2dc80987a46ce09f46c3993706",
+  "body_sha256": "930f100fa471929891621811265528183a69f23d42778d1babef4489e2176295",
   "components": {
     "engine": {
       "name": "Docker Engine networking",
@@ -42,12 +42,36 @@ version_basis: {
       "sources": {
         "s424f3c4f8285": "https://osv.dev/vulnerability/GHSA-x4rx-4gw3-53p4"
       }
+    },
+    "postgresql": {
+      "name": "PostgreSQL",
+      "basis": "17",
+      "sources": {
+        "s44c2e898e585": "https://www.postgresql.org/docs/17/runtime-config-connection.html"
+      }
+    },
+    "caddy-image": {
+      "name": "Caddy image",
+      "basis": "fba2853501d36e8a72f946ac8cb7ff64d07e48f2",
+      "sources": {
+        "sbbb7746f7545": "https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L44-L45",
+        "sb126b380b9cf": "https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L56-L59",
+        "seea3a2adc92a": "https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L63"
+      }
+    },
+    "caddy": {
+      "name": "Caddy",
+      "basis": "v2.11.4",
+      "sources": {
+        "s5520ee906a7f": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/autohttps.go#L62-L67",
+        "sfa5c7dc047dc": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go#L60"
+      }
     }
   },
   "claims": {
     "publish": {"text": "Omitting the host address publishes 3000:3000 on 0.0.0.0 and [::].", "components": ["engine"], "sources": ["engine:s1e53417c513d"], "status": "REASONED"},
     "host-firewall": {"text": "Docker programs firewall rules directly; UFW or firewalld blocking a host port does not establish published-port isolation.", "components": ["engine"], "sources": ["engine:s351180c6678f"], "status": "REASONED"},
-    "private-network": {"text": "Omit app/database ports; Compose peers use service names. The example uses postgres:17 at db:5432; no PostgreSQL source is listed.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
+    "private-network": {"text": "Omit app/database ports; Compose peers use service names. The example uses postgres:17 at db:5432; no PostgreSQL source is listed.", "components": ["compose", "postgresql"], "sources": ["compose:sae565a19136c", "postgresql:s44c2e898e585"], "status": "REASONED"},
     "loopback": {"text": "Publish local access as 127.0.0.1:3000:3000; check the running server version. Engine 28.0 is the minimum boundary, with 28.3.3 or later required where firewalld is used.", "components": ["engine", "boundary", "reload", "reload-advisory"], "sources": ["engine:s1e53417c513d", "boundary:s50eb099eac95", "reload:s567a65842b29", "reload-advisory:s424f3c4f8285"], "status": "REASONED"},
     "old-loopback": {"text": "Before 28.0, same-L2 neighbours could reach loopback publications under the default bridge configuration.", "components": ["boundary"], "sources": ["boundary:s50eb099eac95"], "status": "REASONED"},
     "old-host-bind": {"text": "Before 28.0, remote hosts could reach published container ports despite the host-IP binding.", "components": ["boundary"], "sources": ["boundary:s50eb099eac95"], "status": "REASONED"},
@@ -58,7 +82,7 @@ version_basis: {
     "ipv6": {"text": "Native IPv6 forwarding needs ip6tables; the IPv6-to-IPv4 userland-proxy path terminates on host INPUT and bypasses DOCKER-USER.", "components": ["engine"], "sources": ["engine:s2fecb6db5480", "engine:s1e53417c513d"], "status": "REASONED"},
     "proxy-path": {"text": "Close the userland-proxy path with an explicit publish address, disabled userland proxy or IPv6 INPUT restrictions; test both address families and sources.", "components": ["engine"], "sources": ["engine:s1e53417c513d", "engine:s2fecb6db5480"], "status": "REASONED"},
     "persistence": {"text": "Guide recommends persisting only DOCKER-USER rules after Docker startup, avoiding blanket dynamic-chain saves; startup-unit details lack a direct source.", "components": ["engine"], "sources": ["engine:s351180c6678f", "engine:s2fecb6db5480"], "status": "REASONED"},
-    "tls": {"text": "Example caddy:2 publishes 80:80 and 443:443, mounts Caddyfile read-only and persists data/config, proxying app:3000 with automatic certificates; no Caddy source is listed.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
+    "tls": {"text": "Example caddy:2 publishes 80:80 and 443:443, mounts Caddyfile read-only and persists data/config, proxying app:3000 with automatic certificates; no Caddy source is listed.", "components": ["compose", "caddy-image", "caddy"], "sources": ["compose:sae565a19136c", "caddy-image:sbbb7746f7545", "caddy-image:sb126b380b9cf", "caddy-image:seea3a2adc92a", "caddy:s5520ee906a7f", "caddy:sfa5c7dc047dc"], "status": "REASONED"},
     "alternate-entry": {"text": "Cloudflared to http://app:3000, Tailscale or internal self-signed TLS are linked alternatives; no direct vendor sources for these alternatives are listed.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
     "auth": {"text": "Proxy authentication and human MFA supplement application login; no authentication-provider source is listed.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
     "secrets": {"text": "Use runtime environment files or Compose secrets, exclude .env from Git, and avoid image ENV/build-argument secrets; no direct secret-handling source is listed.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
@@ -81,13 +105,13 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
 | publish: Omitting the host address publishes 3000:3000 on 0.0.0.0 and [::]. | Docker Engine networking unknown | REASONED |
 | host-firewall: Docker programs firewall rules directly; UFW or firewalld blocking a host port does not establish published-port isolation. | Docker Engine networking unknown | REASONED |
-| private-network: Omit app/database ports; Compose peers use service names. The example uses postgres:17 at db:5432; no PostgreSQL source is listed. | Compose networking unknown | REASONED |
+| private-network: Omit app/database ports; Compose peers use service names. The example uses postgres:17 at db:5432; no PostgreSQL source is listed. | Compose networking unknown; PostgreSQL 17 | REASONED |
 | loopback: Publish local access as 127.0.0.1:3000:3000; check the running server version. Engine 28.0 is the minimum boundary, with 28.3.3 or later required where firewalld is used. | Docker Engine networking unknown; Docker Engine minimum boundary 28.0; Docker firewalld reload fix 28.3.3; Docker firewalld reload advisory unknown | REASONED |
 | old-loopback: Before 28.0, same-L2 neighbours could reach loopback publications under the default bridge configuration. | Docker Engine minimum boundary 28.0 | REASONED |
 | old-host-bind: Before 28.0, remote hosts could reach published container ports despite the host-IP binding. | Docker Engine minimum boundary 28.0 | REASONED |
@@ -98,7 +122,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | ipv6: Native IPv6 forwarding needs ip6tables; the IPv6-to-IPv4 userland-proxy path terminates on host INPUT and bypasses DOCKER-USER. | Docker Engine networking unknown | REASONED |
 | proxy-path: Close the userland-proxy path with an explicit publish address, disabled userland proxy or IPv6 INPUT restrictions; test both address families and sources. | Docker Engine networking unknown | REASONED |
 | persistence: Guide recommends persisting only DOCKER-USER rules after Docker startup, avoiding blanket dynamic-chain saves; startup-unit details lack a direct source. | Docker Engine networking unknown | REASONED |
-| tls: Example caddy:2 publishes 80:80 and 443:443, mounts Caddyfile read-only and persists data/config, proxying app:3000 with automatic certificates; no Caddy source is listed. | Compose networking unknown | REASONED |
+| tls: Example caddy:2 publishes 80:80 and 443:443, mounts Caddyfile read-only and persists data/config, proxying app:3000 with automatic certificates; no Caddy source is listed. | Compose networking unknown; Caddy image fba2853501d36e8a72f946ac8cb7ff64d07e48f2; Caddy v2.11.4 | REASONED |
 | alternate-entry: Cloudflared to http://app:3000, Tailscale or internal self-signed TLS are linked alternatives; no direct vendor sources for these alternatives are listed. | Compose networking unknown | REASONED |
 | auth: Proxy authentication and human MFA supplement application login; no authentication-provider source is listed. | Compose networking unknown | REASONED |
 | secrets: Use runtime environment files or Compose secrets, exclude .env from Git, and avoid image ENV/build-argument secrets; no direct secret-handling source is listed. | Compose networking unknown | REASONED |
@@ -217,3 +241,6 @@ REASONED: this firewalld reload check follows the Impact section of GHSA-x4rx-4g
 - Moby 28.3.3 (pinned tag v28.3.3), `reapplyPerPortIptables` restores endpoint rules after firewalld reload: https://raw.githubusercontent.com/moby/moby/v28.3.3/libnetwork/drivers/bridge/port_mapping_linux.go
 - Compose networking: https://docs.docker.com/compose/how-tos/networking/
 - Docker port publishing (with no host address, "the Docker daemon publishes ports to all host addresses (0.0.0.0 and [::])"): https://docs.docker.com/engine/network/port-publishing/
+- PostgreSQL 17 connection settings and default TCP port (checked October 2026): https://www.postgresql.org/docs/17/runtime-config-connection.html
+- Caddy image fba2853501d36e8a72f946ac8cb7ff64d07e48f2 data/config paths, exposed ports and Caddyfile command (checked October 2026): https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L44-L45, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L56-L59, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L63
+- Caddy v2.11.4 automatic certificate management and reverse_proxy syntax (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/autohttps.go#L62-L67, https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go#L60

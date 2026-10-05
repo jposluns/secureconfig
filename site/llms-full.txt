@@ -5616,13 +5616,13 @@ ss -tlnp   # every listener: loopback for a same-host reverse proxy, or the plat
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
 | publish: Omitting the host address publishes 3000:3000 on 0.0.0.0 and [::]. | Docker Engine networking unknown | REASONED |
 | host-firewall: Docker programs firewall rules directly; UFW or firewalld blocking a host port does not establish published-port isolation. | Docker Engine networking unknown | REASONED |
-| private-network: Omit app/database ports; Compose peers use service names. The example uses postgres:17 at db:5432; no PostgreSQL source is listed. | Compose networking unknown | REASONED |
+| private-network: Omit app/database ports; Compose peers use service names. The example uses postgres:17 at db:5432; no PostgreSQL source is listed. | Compose networking unknown; PostgreSQL 17 | REASONED |
 | loopback: Publish local access as 127.0.0.1:3000:3000; check the running server version. Engine 28.0 is the minimum boundary, with 28.3.3 or later required where firewalld is used. | Docker Engine networking unknown; Docker Engine minimum boundary 28.0; Docker firewalld reload fix 28.3.3; Docker firewalld reload advisory unknown | REASONED |
 | old-loopback: Before 28.0, same-L2 neighbours could reach loopback publications under the default bridge configuration. | Docker Engine minimum boundary 28.0 | REASONED |
 | old-host-bind: Before 28.0, remote hosts could reach published container ports despite the host-IP binding. | Docker Engine minimum boundary 28.0 | REASONED |
@@ -5633,7 +5633,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | ipv6: Native IPv6 forwarding needs ip6tables; the IPv6-to-IPv4 userland-proxy path terminates on host INPUT and bypasses DOCKER-USER. | Docker Engine networking unknown | REASONED |
 | proxy-path: Close the userland-proxy path with an explicit publish address, disabled userland proxy or IPv6 INPUT restrictions; test both address families and sources. | Docker Engine networking unknown | REASONED |
 | persistence: Guide recommends persisting only DOCKER-USER rules after Docker startup, avoiding blanket dynamic-chain saves; startup-unit details lack a direct source. | Docker Engine networking unknown | REASONED |
-| tls: Example caddy:2 publishes 80:80 and 443:443, mounts Caddyfile read-only and persists data/config, proxying app:3000 with automatic certificates; no Caddy source is listed. | Compose networking unknown | REASONED |
+| tls: Example caddy:2 publishes 80:80 and 443:443, mounts Caddyfile read-only and persists data/config, proxying app:3000 with automatic certificates; no Caddy source is listed. | Compose networking unknown; Caddy image fba2853501d36e8a72f946ac8cb7ff64d07e48f2; Caddy v2.11.4 | REASONED |
 | alternate-entry: Cloudflared to http://app:3000, Tailscale or internal self-signed TLS are linked alternatives; no direct vendor sources for these alternatives are listed. | Compose networking unknown | REASONED |
 | auth: Proxy authentication and human MFA supplement application login; no authentication-provider source is listed. | Compose networking unknown | REASONED |
 | secrets: Use runtime environment files or Compose secrets, exclude .env from Git, and avoid image ENV/build-argument secrets; no direct secret-handling source is listed. | Compose networking unknown | REASONED |
@@ -5752,6 +5752,9 @@ REASONED: this firewalld reload check follows the Impact section of GHSA-x4rx-4g
 - Moby 28.3.3 (pinned tag v28.3.3), `reapplyPerPortIptables` restores endpoint rules after firewalld reload: https://raw.githubusercontent.com/moby/moby/v28.3.3/libnetwork/drivers/bridge/port_mapping_linux.go
 - Compose networking: https://docs.docker.com/compose/how-tos/networking/
 - Docker port publishing (with no host address, "the Docker daemon publishes ports to all host addresses (0.0.0.0 and [::])"): https://docs.docker.com/engine/network/port-publishing/
+- PostgreSQL 17 connection settings and default TCP port (checked October 2026): https://www.postgresql.org/docs/17/runtime-config-connection.html
+- Caddy image fba2853501d36e8a72f946ac8cb7ff64d07e48f2 data/config paths, exposed ports and Caddyfile command (checked October 2026): https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L44-L45, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L56-L59, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L63
+- Caddy v2.11.4 automatic certificate management and reverse_proxy syntax (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/autohttps.go#L62-L67, https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go#L60
 
 ======================================================================
 ==> kubernetes.md
@@ -7166,7 +7169,7 @@ Behind a reverse proxy, confirm cookies still carry `Secure` and redirects use a
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -7180,8 +7183,8 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | kube-escalation: Set allowPrivilegeEscalation: false in the container securityContext. | Kubernetes documentation unknown | REASONED |
 | kube-capabilities: Drop ALL capabilities in the container securityContext. | Kubernetes documentation unknown | REASONED |
 | kube-seccomp: RuntimeDefault selects the runtime syscall filter instead of Unconfined. | Kubernetes documentation unknown | REASONED |
-| admission: Namespace enforce: restricted rejects new violating Pods: privileged mode, host namespaces/ports, root, missing capability drops or Unconfined seccomp. | Kubernetes documentation unknown | REASONED |
-| existing-pods: Adding the namespace label warns about existing violating Pods without evicting them; recreate workloads. Admission transition details lack a direct Sources entry. | Kubernetes documentation unknown | REASONED |
+| admission: Namespace enforce: restricted rejects new violating Pods: privileged mode, host namespaces/ports, root, missing capability drops or Unconfined seccomp. | Kubernetes documentation unknown; Kubernetes Pod Security Admission 1.34 | REASONED |
+| existing-pods: Adding the namespace label warns about existing violating Pods without evicting them; recreate workloads. Admission transition details lack a direct Sources entry. | Kubernetes documentation unknown; Kubernetes Pod Security Admission 1.34 | REASONED |
 | policy-semantics: NetworkPolicies are additive and require an enforcing CNI; both source egress and destination ingress must allow a connection. | Kubernetes documentation unknown | REASONED |
 | default-deny: The empty podSelector with Ingress and Egress isolates all pods selected in the namespace before narrow allowances. | Kubernetes documentation unknown | REASONED |
 | dns: The app egress rule permits UDP/TCP 53 to all kube-system pods, not just CoreDNS; narrow it to the actual resolver. | Kubernetes documentation unknown | REASONED |
@@ -7354,6 +7357,8 @@ kubectl run probe-forbidden --rm -it --restart=Never --image=busybox:1.36 --labe
 - Kubernetes: Configure a security context for a Pod or Container: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
 - Kubernetes: Pod Security Standards (`restricted` level, Pod Security Admission labels): https://kubernetes.io/docs/concepts/security/pod-security-standards/
 - Kubernetes: Network Policies: https://kubernetes.io/docs/concepts/services-networking/network-policies/
+- Kubernetes 1.34 Pod Security Admission enforcement (checked October 2026): https://v1-34.docs.kubernetes.io/docs/concepts/security/pod-security-admission/
+- Kubernetes 1.34 namespace labels and warnings for existing Pods (checked October 2026): https://v1-34.docs.kubernetes.io/docs/tasks/configure-pod-container/enforce-standards-namespace-labels/
 
 ======================================================================
 ==> nextjs.md
@@ -29594,7 +29599,7 @@ The service facts come from the maintainer's vendor-source verification record d
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -29607,7 +29612,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | livekit-length: Outside development, secrets shorter than 32 characters only log an error; generate long random secrets. | LiveKit v1.13.7 | REASONED |
 | livekit-grants: canPublish and canSubscribe default true; signing secrets mint any grant, so deliberately scope issued tokens. | LiveKit documentation unknown | REASONED |
 | livekit-keyfile: Use key_file with service-owned mode 0600; world permissions reject startup, but group-readable 0640 passes the server check. | LiveKit v1.13.7 | REASONED |
-| livekit-tls: Front signaling with TLS/WSS; the guide describes no native signaling TLS and calls Serve, but the server implementation is not cited. | LiveKit documentation unknown | REASONED |
+| livekit-tls: Front signaling with TLS/WSS; the guide describes no native signaling TLS and calls Serve, but the server implementation is not cited. | LiveKit documentation unknown; LiveKit v1.13.7 | REASONED |
 | livekit-metrics: Enabled metrics are unauthenticated unless prometheus.username/password are set. | LiveKit v1.13.7 | REASONED |
 | livekit-debug: Debug/pprof, goroutine and room routes lack grant checks and can use debug_handler.port; route implementations are not cited. | LiveKit v1.13.7 | REASONED |
 | livekit-turn-secret: Embedded TURN derives credentials from the API secret; the derivation implementation is not cited. | LiveKit v1.13.7 | REASONED |
@@ -29634,7 +29639,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | coturn-permissions: Do not enable server-relay, which removes relay permission checks. | coturn 4.18.0 | REASONED |
 | turn-plaintext: Plain TURN hides the long-term password itself but exposes usernames/metadata and enables offline guesses against weak passwords. | coturn 4.18.0 | REASONED |
 | verify-listeners: Inventory TCP/UDP and actual allocations: media/TURN may be public, signaling/admin/metrics must be restricted; separately test off-host reachability. | LiveKit documentation unknown; LiveKit v1.13.7; coturn 4.18.0 | REASONED |
-| verify-livekit: Unauthenticated rtc/validate 401 only tests token requirement, not removal of a known signing key; its handler is not cited. | LiveKit documentation unknown; curl minimum write-out version 7.75.0 | REASONED |
+| verify-livekit: Unauthenticated rtc/validate 401 only tests token requirement, not removal of a known signing key; its handler is not cited. | LiveKit documentation unknown; curl minimum write-out version 7.75.0; LiveKit v1.13.7 | REASONED |
 | verify-rotation: Accept an old-key token on an isolated fixture, reject that same unexpired correctly scoped token after rotation, and accept a new-key token. | LiveKit documentation unknown; livekit-cli v2.18.2 | REASONED |
 | verify-extra: Separately probe metrics, debug routes/port and embedded TURN from untrusted networks; a healthy root path proves no protection. | LiveKit v1.13.7; LiveKit documentation unknown | REASONED |
 | verify-allocation: Anonymous Allocate must challenge with no relay address; valid throwaway credentials on a private plaintext fixture must allocate. Read output, not exit status. | coturn 4.18.0 | REASONED |
@@ -29644,7 +29649,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | lk-inputs: lk reads argv or environment credentials, not stdin; explicit project/subdomain outrank environment, which outranks local/default projects. | livekit-cli v2.18.2 | REASONED |
 | lk-storage: Saved projects retain plaintext api_secret in ~/.livekit/cli-config.yaml, written 0600. | livekit-cli v2.18.2 | REASONED |
 | lk-mint: Prompt and prefix environment assignments keep secrets out of argv/history but expose them to same-account/root environment readers; printed short-lived tokens are secrets. | livekit-cli v2.18.2 | REASONED |
-| verify-tls: Fatal hostname/CA verification tests only TURN certificate/handshake; separately test plaintext rejection on 3478 and 5349. OpenSSL syntax is not cited. | coturn 4.18.0 | REASONED |
+| verify-tls: Fatal hostname/CA verification tests only TURN certificate/handshake; separately test plaintext rejection on 3478 and 5349. OpenSSL syntax is not cited. | coturn 4.18.0; OpenSSL CLI 3.0 | REASONED |
 <!-- version-basis:end -->
 
 AI voice agents run on self-hosted realtime backends that carry live media, and two of them sit at the network edge: LiveKit, a WebRTC SFU that routes participants' audio, video, and data, and coturn, a TURN/STUN server that relays media when a direct peer path cannot be found. The relay is the sharp edge. A TURN server proxies traffic on a client's behalf, so an unauthenticated or misconfigured one is an *open relay*: an attacker uses it to launder traffic, to reach services on the host's own loopback and private network, and to reflect and amplify UDP toward a victim. LiveKit's edge is different: it will not start without API keys, so the danger is not an anonymous join but a *known or weak* signing secret, which lets anyone mint a token and enter any room to eavesdrop or inject media. LiveKit terminates no TLS on its signaling, so [fronting-auth.md](fronting-auth.md) is the reverse-proxy pattern it needs for `wss://`; coturn terminates TLS and DTLS natively from its own certificate. [secrets.md](secrets.md) covers generating and holding the signing material. Values below are illustrative; replace them.
@@ -29888,6 +29893,13 @@ That proves the certificate and handshake only, not TURN authentication, peer po
 - coturn 4.18.0 `turnutils_uclient` option parser (`-w` and `-W` copy `optarg`, lines 380-381 and 456-458; no stdin, file or environment input for the password): https://raw.githubusercontent.com/coturn/coturn/4.18.0/src/apps/uclient/mainuclient.c
 - coturn 4.18.0 `turnutils_uclient` password-buffer trace (`g_upwd` is declared in `uclient.h` line 132, written only in `mainuclient.c` lines 381 and 553-554, and read only in `uclient.c` lines 3109 and 3132; `startuclient.c`, `startuclient.h` and `session.h` do not reference it; the build target's files are listed in `CMakeLists.txt`): https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/uclient.h#L132 , https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/mainuclient.c#L553-L554 , https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/uclient.c#L3109 , https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/uclient.c#L3132 , https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/mainuclient.c#L381 , https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/startuclient.c , https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/startuclient.h , https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/session.h and https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/CMakeLists.txt
 - coturn 4.18.0 `turnutils_uclient` options (`-h` hangs on indefinitely after the last sent packet, line 95): https://raw.githubusercontent.com/coturn/coturn/4.18.0/README.turnutils
+- LiveKit v1.13.7 signaling HTTP Serve call (checked October 2026): https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/server.go#L319
+- LiveKit v1.13.7 metrics credential gate (checked October 2026): https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/server.go#L165-L170
+- LiveKit v1.13.7 debug routes, separate server and listener (checked October 2026): https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/server.go#L181-L193, https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/server.go#L261-L266
+- LiveKit v1.13.7 embedded TURN password derivation from the API secret (checked October 2026): https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/turn.go#L315-L325
+- LiveKit v1.13.7 missing-grants HTTP 401 branch (checked October 2026): https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/rtcservice.go#L147-L149
+- coturn 4.18.0 Docker configuration enables lt-cred-mech (checked October 2026): https://github.com/coturn/coturn/blob/4.18.0/docker/coturn/turnserver.conf#L184
+- OpenSSL 3.0 s_client hostname, CA and fatal verification options (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-s_client/
 
 ======================================================================
 ==> image-gen-uis.md
@@ -32285,11 +32297,11 @@ curl -q -s -o /dev/null -D - https://api.example.com/data -H "Origin: https://ap
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| placement: Set response headers at a proxy, in application middleware or in a static host's _headers file; stack-specific Sources entries and versions are not recorded. | MDN HTTP documentation unknown | REASONED |
+| placement: Set response headers at a proxy, in application middleware or in a static host's _headers file; stack-specific Sources entries and versions are not recorded. | MDN HTTP documentation unknown; Helmet v8.1.0; Django 5.2 | REASONED |
 | hsts: Use HSTS max-age=31536000 with includeSubDomains only after HTTPS works across the domain; every subdomain is committed to HTTPS and max-age=0 disables HSTS. | MDN HTTP documentation unknown | REASONED |
 | hsts-preload: Omit preload unless its commitment is understood; removal is slow, takes weeks and depends on browser list updates. | MDN HTTP documentation unknown | REASONED |
 | csp: Start CSP at default-src 'self', tailor sources to the app and prefer script nonces or hashes over unsafe-inline; Verify requires an enforcing policy. | MDN HTTP documentation unknown | REASONED |
@@ -32380,6 +32392,8 @@ In a real browser, log in, open an authenticated page, then log out and press th
 - MDN Clear-Site-Data (the `cache` directive clears the browser cache and, depending on the browser, the back/forward cache; the logout example): https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Clear-Site-Data
 - MDN back/forward cache (a history navigation restores a snapshot without revalidating): https://developer.mozilla.org/en-US/docs/Glossary/bfcache
 - Security header scanner: https://securityheaders.com/
+- Helmet v8.1.0 response-header middleware (checked October 2026): https://github.com/helmetjs/helmet/blob/v8.1.0/README.md#L3
+- Django 5.2 SecurityMiddleware (checked October 2026): https://docs.djangoproject.com/en/5.2/ref/middleware/#module-django.middleware.security
 
 ======================================================================
 ==> firebase-supabase.md
@@ -33905,7 +33919,7 @@ done
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -33934,7 +33948,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | webhook-secret: Require a configured strong GitHub secret, reject unsigned delivery, and use distinct protected, rotated endpoint secrets kept out of URLs and logs. | GitHub webhooks documentation unknown; OWASP guidance unknown | REASONED |
 | stripe-secrets: Stripe test/live and Dashboard/CLI-forwarding endpoint secrets differ. | Stripe webhooks documentation unknown | REASONED |
 | sender-ip: Provider IP allowlists supplement signatures; trust forwarded client addresses only through a configured proxy chain. | GitHub webhooks documentation unknown | REASONED |
-| proxy-limits: Bound HTTP body size, concurrency and timeouts separately; proxy capability summaries refer to local guides and need current vendor confirmation. | Traefik timeout reference v3.5; Caddy and nginx timeout documentation unknown | REASONED |
+| proxy-limits: Bound HTTP body size, concurrency and timeouts separately; proxy capability summaries refer to local guides and need current vendor confirmation. | Traefik timeout reference v3.5; Caddy and nginx timeout documentation unknown; nginx source release-1.26.3; HAProxy 3.0 | REASONED |
 | message-limits: After WebSocket upgrade, enforce per-message authorization and rate limits; connection limits do not bound messages or jobs. | OWASP guidance unknown | REASONED |
 | ssrf: Allowlist relay destinations and enforce worker egress for schemes, ports and resolved addresses; revalidate redirects and never forward inbound credentials. | OWASP guidance unknown | REASONED |
 | verify-handshake: Cookie handshake positive is 101; missing cookie and disallowed/missing Origin must reject, never 101. Failed controls and unrelated errors are inconclusive. | OWASP guidance unknown; WebSocket protocol RFC 6455 | REASONED |
@@ -34178,6 +34192,9 @@ Scope and revisions: browser behavior follows RFC 6455 and the HTML and Fetch li
 - nginx `proxy_read_timeout`: https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout
 - curl manual (`--connect-to`, `--noproxy`, write-out variables require 7.75.0+): https://curl.se/docs/manpage.html
 - Python `os.fdopen`, for reading and closing the secret pipe: https://docs.python.org/3/library/os.html#os.fdopen
+- nginx release-1.26.3 body-size, connection-limit and request-rate directives (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_core_module.c#L348-L353, https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_limit_conn_module.c#L100-L105, https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_limit_req_module.c#L113-L118
+- Traefik v3.5 buffering, in-flight request limits and rate limits (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/middlewares/buffering/, https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/middlewares/inflightreq/, https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/middlewares/ratelimit/
+- HAProxy 3.0 configuration: timeouts, aggregate maxconn and req.body_size advertised-length semantics (checked October 2026): https://docs.haproxy.org/3.0/configuration.html#7.3.6-req.body_size
 
 ======================================================================
 ==> transactional-email-posture.md
