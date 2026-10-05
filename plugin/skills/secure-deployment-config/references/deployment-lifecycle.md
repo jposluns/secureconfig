@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "7f657d93a2ca394df96639c25716f2a0e62decbd10eea393ba0a5c06f51f55f7",
+  "body_sha256": "9942fbf9955b7a6abaa506a8718183acc936c0e9f7ca540f46f06b6a0252fafc",
   "components": {
     "nmap": {
       "name": "Nmap documentation",
@@ -48,11 +48,26 @@ version_basis: {
       "sources": {
         "se6d352e0a4fa": "https://bind9.readthedocs.io/en/latest/manpages.html"
       }
+    },
+    "openssl": {
+      "name": "OpenSSL command documentation",
+      "basis": "3.0",
+      "sources": {
+        "s00aaf106164f": "https://docs.openssl.org/3.0/man1/openssl-s_client/",
+        "s0856f4a58574": "https://docs.openssl.org/3.0/man1/openssl-x509/"
+      }
+    },
+    "openbsd-nc": {
+      "name": "OpenBSD nc manual",
+      "basis": "7.6",
+      "sources": {
+        "s0c8b1a738e7b": "https://man.openbsd.org/OpenBSD-7.6/nc.1"
+      }
     }
   },
   "claims": {
     "outside": {"text": "Run exposure checks from a second network; host-local curl and ss do not establish outside reachability or platform firewall behaviour.", "components": ["nmap"], "sources": ["nmap:sf8404f695ccd", "nmap:sb7d0e7eb5141"], "status": "REASONED"},
-    "tcp-scan": {"text": "Sweep authorized hosts with nmap -Pn -p-; the guide also gives an nc port loop. No nc reference is recorded in Sources.", "components": ["nmap"], "sources": ["nmap:sf8404f695ccd", "nmap:sb7d0e7eb5141"], "status": "REASONED"},
+    "tcp-scan": {"text": "Sweep authorized hosts with nmap -Pn -p-; the guide also gives an nc port loop. No nc reference is recorded in Sources.", "components": ["nmap", "openbsd-nc"], "sources": ["nmap:sf8404f695ccd", "nmap:sb7d0e7eb5141", "openbsd-nc:s0c8b1a738e7b"], "status": "REASONED"},
     "udp-scan": {"text": "The full port sweep is TCP only; inventory UDP services and probe their ports separately with nmap -sU.", "components": ["nmap"], "sources": ["nmap:sf8404f695ccd"], "status": "REASONED"},
     "all-addresses": {"text": "Check public IPv4, public IPv6 and platform URLs as well as the custom domain; one address cannot establish coverage of the others.", "components": ["nmap", "vercel"], "sources": ["nmap:sf8404f695ccd", "vercel:se6089d5c4e96"], "status": "REASONED"},
     "passive-index": {"text": "Cross-reference Shodan and Censys indexes for previously indexed exposure; indexed observations are not a fresh direct scan.", "components": ["shodan", "censys"], "sources": ["shodan:scf863db67f1e", "censys:s1e64a007a91f"], "status": "REASONED"},
@@ -67,12 +82,12 @@ version_basis: {
     "dns-retirement": {"text": "Remove CNAME or A/AAAA records before releasing the resource; retain it through the old TTL and authoritative removal checks. dig supports DNS inspection; takeover and resource-retention guidance has no dedicated source.", "components": ["dns"], "sources": ["dns:se6d352e0a4fa"], "status": "REASONED"},
     "retire-credentials": {"text": "After DNS retirement revoke deployment access policies, API/service credentials and dedicated database users. Access-policy citation covers only the fronting context.", "components": ["access"], "sources": ["access:sc007294b64a0"], "status": "REASONED"},
     "reverify": {"text": "Repeat outside scans and negative auth tests after upgrades, restores or network/auth changes; restored defaults can reopen exposure. Nmap supports the scan, not application restore behaviour.", "components": ["nmap"], "sources": ["nmap:sf8404f695ccd", "nmap:sb7d0e7eb5141"], "status": "REASONED"},
-    "certificate-monitor": {"text": "Monitor certificate expiry externally; a local certbot renewal dry run does not prove the last production renewal succeeded. Nmap is outside-check context only; OpenSSL and Certbot sources are not recorded.", "components": ["nmap"], "sources": ["nmap:sf8404f695ccd"], "status": "REASONED"},
+    "certificate-monitor": {"text": "Monitor certificate expiry externally; a local certbot renewal dry run does not prove the last production renewal succeeded. Nmap is outside-check context only; OpenSSL and Certbot sources are not recorded.", "components": ["nmap", "openssl"], "sources": ["nmap:sf8404f695ccd", "openssl:s00aaf106164f", "openssl:s0856f4a58574"], "status": "REASONED"},
     "offboarding": {"text": "Revoke identity membership, proxy/app sessions, personal tokens, API keys and second factors; account for cached-session expiry. Access-policy citation does not establish each layer or its revocation delay.", "components": ["access"], "sources": ["access:sc007294b64a0"], "status": "REASONED"},
     "verify-ipv4": {"text": "From another network, nmap -Pn -p- should find only intended TCP ports; unintended open ports fail, and errors or an unexecuted scan are inconclusive.", "components": ["nmap"], "sources": ["nmap:sf8404f695ccd", "nmap:sb7d0e7eb5141"], "status": "REASONED", "verify": [1]},
     "verify-ipv6": {"text": "Repeat the full TCP sweep over the public IPv6 address with -6; a scan that did not run is inconclusive.", "components": ["nmap"], "sources": ["nmap:sf8404f695ccd", "nmap:sb7d0e7eb5141"], "status": "REASONED", "verify": [1]},
     "verify-dns": {"text": "curl failure does not prove DNS removal; resolver A/AAAA/CNAME answers need investigation and empty output is inconclusive. Check every authoritative server with +norecurse for NXDOMAIN or NOERROR/NODATA without CNAME; SERVFAIL, referral and timeout are inconclusive.", "components": ["dns"], "sources": ["dns:se6d352e0a4fa"], "status": "REASONED", "verify": [1]},
-    "verify-certificate": {"text": "The scheduled external s_client probe checks hostname and verification errors and pipes the certificate to x509 -enddate. No OpenSSL source or observed outcome is recorded; Nmap is outside-check context only.", "components": ["nmap"], "sources": ["nmap:sf8404f695ccd"], "status": "REASONED", "verify": [1]}
+    "verify-certificate": {"text": "The scheduled external s_client probe checks hostname and verification errors and pipes the certificate to x509 -enddate. No OpenSSL source or observed outcome is recorded; Nmap is outside-check context only.", "components": ["nmap", "openssl"], "sources": ["nmap:sf8404f695ccd", "openssl:s00aaf106164f", "openssl:s0856f4a58574"], "status": "REASONED", "verify": [1]}
   }
 }
 ---
@@ -83,12 +98,12 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
 | outside: Run exposure checks from a second network; host-local curl and ss do not establish outside reachability or platform firewall behaviour. | Nmap documentation unknown | REASONED |
-| tcp-scan: Sweep authorized hosts with nmap -Pn -p-; the guide also gives an nc port loop. No nc reference is recorded in Sources. | Nmap documentation unknown | REASONED |
+| tcp-scan: Sweep authorized hosts with nmap -Pn -p-; the guide also gives an nc port loop. No nc reference is recorded in Sources. | Nmap documentation unknown; OpenBSD nc manual 7.6 | REASONED |
 | udp-scan: The full port sweep is TCP only; inventory UDP services and probe their ports separately with nmap -sU. | Nmap documentation unknown | REASONED |
 | all-addresses: Check public IPv4, public IPv6 and platform URLs as well as the custom domain; one address cannot establish coverage of the others. | Nmap documentation unknown; Vercel Deployment Protection unknown | REASONED |
 | passive-index: Cross-reference Shodan and Censys indexes for previously indexed exposure; indexed observations are not a fresh direct scan. | Shodan unknown; Censys unknown | REASONED |
@@ -103,12 +118,12 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | dns-retirement: Remove CNAME or A/AAAA records before releasing the resource; retain it through the old TTL and authoritative removal checks. dig supports DNS inspection; takeover and resource-retention guidance has no dedicated source. | BIND dig documentation unknown | REASONED |
 | retire-credentials: After DNS retirement revoke deployment access policies, API/service credentials and dedicated database users. Access-policy citation covers only the fronting context. | Cloudflare Access policies unknown | REASONED |
 | reverify: Repeat outside scans and negative auth tests after upgrades, restores or network/auth changes; restored defaults can reopen exposure. Nmap supports the scan, not application restore behaviour. | Nmap documentation unknown | REASONED |
-| certificate-monitor: Monitor certificate expiry externally; a local certbot renewal dry run does not prove the last production renewal succeeded. Nmap is outside-check context only; OpenSSL and Certbot sources are not recorded. | Nmap documentation unknown | REASONED |
+| certificate-monitor: Monitor certificate expiry externally; a local certbot renewal dry run does not prove the last production renewal succeeded. Nmap is outside-check context only; OpenSSL and Certbot sources are not recorded. | Nmap documentation unknown; OpenSSL command documentation 3.0 | REASONED |
 | offboarding: Revoke identity membership, proxy/app sessions, personal tokens, API keys and second factors; account for cached-session expiry. Access-policy citation does not establish each layer or its revocation delay. | Cloudflare Access policies unknown | REASONED |
 | verify-ipv4: From another network, nmap -Pn -p- should find only intended TCP ports; unintended open ports fail, and errors or an unexecuted scan are inconclusive. | Nmap documentation unknown | REASONED |
 | verify-ipv6: Repeat the full TCP sweep over the public IPv6 address with -6; a scan that did not run is inconclusive. | Nmap documentation unknown | REASONED |
 | verify-dns: curl failure does not prove DNS removal; resolver A/AAAA/CNAME answers need investigation and empty output is inconclusive. Check every authoritative server with +norecurse for NXDOMAIN or NOERROR/NODATA without CNAME; SERVFAIL, referral and timeout are inconclusive. | BIND dig documentation unknown | REASONED |
-| verify-certificate: The scheduled external s_client probe checks hostname and verification errors and pipes the certificate to x509 -enddate. No OpenSSL source or observed outcome is recorded; Nmap is outside-check context only. | Nmap documentation unknown | REASONED |
+| verify-certificate: The scheduled external s_client probe checks hostname and verification errors and pipes the certificate to x509 -enddate. No OpenSSL source or observed outcome is recorded; Nmap is outside-check context only. | Nmap documentation unknown; OpenSSL command documentation 3.0 | REASONED |
 <!-- version-basis:end -->
 
 This repository's per-service guides check TLS, binding, and authentication from inside the host and at the moment you set them up. Real exposure is judged from outside the host, and it drifts: a preview URL, a restored backup, or an upgrade can reopen something already closed. This guide is the lifecycle layer around the per-service checks.
@@ -203,3 +218,6 @@ openssl s_client -connect app.example.com:443 -servername app.example.com \
 - Cloudflare Access policies: https://developers.cloudflare.com/cloudflare-one/access-controls/policies/
 - nmap host discovery (`-Pn` "skips the host discovery stage altogether"): https://nmap.org/book/man-host-discovery.html
 - dig DNS lookup utility (querying a specific authoritative nameserver with `@server` and `+norecurse`; NXDOMAIN vs NODATA): https://bind9.readthedocs.io/en/latest/manpages.html
+- OpenSSL 3.0 `s_client` (checked October 2026; connection, hostname verification, and verification errors): https://docs.openssl.org/3.0/man1/openssl-s_client/
+- OpenSSL 3.0 `x509` (checked October 2026; `-noout -enddate` certificate expiry inspection): https://docs.openssl.org/3.0/man1/openssl-x509/
+- OpenBSD 7.6 `nc` (checked October 2026; OpenBSD netcat implementation of `-v`, `-z`, and `-w`): https://man.openbsd.org/OpenBSD-7.6/nc.1

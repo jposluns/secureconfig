@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-27",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "07727df02e63c1a90b7e94bb3262540eaead5d1084668b7db6bcdb8382519619",
+  "body_sha256": "550e63e0c44d607de4629aa8fb60b3c8b4752b29e6ccb9396f87a1c1c07e0019",
   "components": {
     "see": {
       "name": "SQLite Encryption Extension",
@@ -127,6 +127,16 @@ version_basis: {
         "s742deb3338bb": "https://sqlite.org/loadext.html",
         "sadf0431c1271": "https://www.sqlite.org/security.html"
       }
+    },
+    "coreutils": {
+      "name": "GNU Coreutils stat manual",
+      "basis": "v9.7",
+      "sources": {
+        "s247df4545dc0": "https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L12989-L12995",
+        "sfd49553ab6e5": "https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L13046",
+        "sbd6f7cad7bf4": "https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L13062",
+        "s3e55a7242c33": "https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L13073"
+      }
     }
   },
   "claims": {
@@ -166,7 +176,7 @@ version_basis: {
     "verify-download": {"text": "Probe actual database/sidecar paths only after a successful application control; timeouts, DNS and proxy failures do not establish non-publication. No served application was available.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:s2721da91f8d2", "sqlite-rolling:sf3d7f8391994"], "status": "REASONED", "verify": [1]},
     "verify-bundle": {"text": "Local placeholder-token scan distinguished exposed and clean bundles and refused absent directories; readonly, nameref, lowercase and IFS cases are recorded. A clean scan covers only the searched forms and paths.", "components": ["turso"], "sources": ["turso:sb32fd9c679e1"], "status": "DEMONSTRATED", "evidence": "A bundle carrying the placeholder printed `token-literal exit: 0` and `jwt-shape exit: 0`. - A clean bundle printed `1` for both.", "verify": [2]},
     "verify-git": {"text": "Local throwaway repositories showed tracked/history copies survive ignore rules and index removal; a never-committed ignored file produced only rule matches. Git version is unrecorded.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:sf3d7f8391994"], "status": "DEMONSTRATED", "evidence": "With `app.db` committed before an `app.db*` ignore rule was added, `git check-ignore -v` listed the sidecars but not the tracked `app.db`. `git ls-files` printed `app.db`, and `git log` printed its commit.", "verify": [3]},
-    "verify-modes": {"text": "SQLite 3.46.1 local WAL and rollback-journal runs showed umask 022 versus 077 modes; every file belonged to the test account, and separate application-account ownership was not exercised.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:sf3d7f8391994"], "status": "DEMONSTRATED", "evidence": "Under umask `022` the directory was `755`, and `app.db`, `app.db-wal` and `app.db-shm` were `644`. - Under umask `077` they were `700` and `600`.", "verify": [4]},
+    "verify-modes": {"text": "SQLite 3.46.1 local WAL and rollback-journal runs showed umask 022 versus 077 modes; every file belonged to the test account, and separate application-account ownership was not exercised.", "components": ["sqlite-rolling", "coreutils"], "sources": ["sqlite-rolling:sf3d7f8391994", "coreutils:s247df4545dc0", "coreutils:sfd49553ab6e5", "coreutils:sbd6f7cad7bf4", "coreutils:s3e55a7242c33"], "status": "DEMONSTRATED", "evidence": "Under umask `022` the directory was `755`, and `app.db`, `app.db-wal` and `app.db-shm` were `644`. - Under umask `077` they were `700` and `600`.", "verify": [4]},
     "verify-listeners": {"text": "Compare authorized private control with untrusted reachability for LiteFS or enabled Litestream metrics/MCP; any HTTP response shows a listener, not every backend route. Transport errors and failed controls are inconclusive; no isolated listener environment was available.", "components": ["litefs", "litestream", "mcp"], "sources": ["litefs:s694a6ba8eafa", "litestream:sa5dddf04652c", "mcp:sa5dddf04652c"], "status": "REASONED", "verify": [5]},
     "verify-turso": {"text": "Turso /v2/pipeline must return SELECT 1 with a valid bearer token and no successful result anonymously; HTTP 200 alone is insufficient and transport failure inconclusive. No database/token was available.", "components": ["turso"], "sources": ["turso:se409838a474a"], "status": "REASONED", "verify": [6]},
     "halt-expiration": {"text": "LiteFS checks halt-lock expiration every 5 seconds.", "components": ["litefs"], "sources": ["litefs:se2add54cf935", "litefs:s59a2dfccd853"], "status": "REASONED"}
@@ -180,7 +190,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -220,7 +230,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | verify-download: Probe actual database/sidecar paths only after a successful application control; timeouts, DNS and proxy failures do not establish non-publication. No served application was available. | SQLite documentation (rolling) unknown | REASONED |
 | verify-bundle: Local placeholder-token scan distinguished exposed and clean bundles and refused absent directories; readonly, nameref, lowercase and IFS cases are recorded. A clean scan covers only the searched forms and paths. | Turso documentation unknown | DEMONSTRATED |
 | verify-git: Local throwaway repositories showed tracked/history copies survive ignore rules and index removal; a never-committed ignored file produced only rule matches. Git version is unrecorded. | SQLite documentation (rolling) unknown | DEMONSTRATED |
-| verify-modes: SQLite 3.46.1 local WAL and rollback-journal runs showed umask 022 versus 077 modes; every file belonged to the test account, and separate application-account ownership was not exercised. | SQLite documentation (rolling) unknown | DEMONSTRATED |
+| verify-modes: SQLite 3.46.1 local WAL and rollback-journal runs showed umask 022 versus 077 modes; every file belonged to the test account, and separate application-account ownership was not exercised. | SQLite documentation (rolling) unknown; GNU Coreutils stat manual v9.7 | DEMONSTRATED |
 | verify-listeners: Compare authorized private control with untrusted reachability for LiteFS or enabled Litestream metrics/MCP; any HTTP response shows a listener, not every backend route. Transport errors and failed controls are inconclusive; no isolated listener environment was available. | LiteFS source v0.5.14; Litestream documentation unknown; Litestream MCP minimum v0.5.0 | REASONED |
 | verify-turso: Turso /v2/pipeline must return SELECT 1 with a valid bearer token and no successful result anonymously; HTTP 200 alone is insufficient and transport failure inconclusive. No database/token was available. | Turso documentation unknown | REASONED |
 | halt-expiration: LiteFS checks halt-lock expiration every 5 seconds. | LiteFS source v0.5.14 | REASONED |
@@ -465,3 +475,4 @@ Applicability checked on 2026-09-18: SQLite 3.x documentation (local file tests 
 - Docker container reachability: [bridge peers and publication](https://docs.docker.com/engine/network/drivers/bridge/), [host networking](https://docs.docker.com/engine/network/drivers/host/), and [shared container networking stacks](https://docs.docker.com/engine/network/#container-networks).
 - Litestream configuration (metrics addr, MCP mcp-addr) (Litestream MCP listener in v0.5.0 and later): https://litestream.io/reference/config/
 - Turso SQL over HTTP (`/v2/pipeline`, bearer authentication): https://docs.turso.tech/sdk/http/reference
+- GNU Coreutils v9.7 `stat` manual (checked October 2026; GNU syntax): [`-c` format](https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L12989-L12995), [`%a` octal permissions](https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L13046), [`%n` file name](https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L13062), and [`%U` owner name](https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L13073).

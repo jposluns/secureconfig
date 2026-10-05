@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "fbebdd8953f52aa8153b00af30738c2e3fd6df65ebcf20faf0b5854ca7321a9b",
+  "body_sha256": "e8ed589badae861c5523d3f00b9988f385be3eab8cde37fe6c02c2a1387c1aae",
   "components": {
     "spf": {
       "name": "SPF",
@@ -95,6 +95,28 @@ version_basis: {
       "sources": {
         "sd18b1e0134bd": "https://bimigroup.org/how-and-why-to-implement-bimi-selectors/"
       }
+    },
+    "submission-update": {
+      "name": "Submission TLS update",
+      "basis": "RFC 8997",
+      "sources": {
+        "sb5ca35fe0d1b": "https://www.rfc-editor.org/rfc/rfc8997.html#section-3"
+      }
+    },
+    "bind": {
+      "name": "BIND dig manual",
+      "basis": "9.18.39",
+      "sources": {
+        "s54cff06bb882": "https://bind9.readthedocs.io/en/v9.18.39/manpages.html"
+      }
+    },
+    "openssl": {
+      "name": "OpenSSL command documentation",
+      "basis": "3.0",
+      "sources": {
+        "s00aaf106164f": "https://docs.openssl.org/3.0/man1/openssl-s_client/",
+        "s2a2127a2c79b": "https://docs.openssl.org/3.0/man3/SSL_CONF_cmd/"
+      }
     }
   },
   "claims": {
@@ -116,7 +138,7 @@ version_basis: {
     "failure-reports": {"text": "ruf forensic reports can expose content, recipients and reset tokens; omit initially, settle redaction/retention/access before enabling, and authorize external destinations.", "components": ["failure"], "sources": ["failure:s136bbcd8e31a"], "status": "REASONED"},
     "starttls": {"text": "587 submission upgrades with STARTTLS before authentication; an opportunistic fallback can expose credentials to stripping, so require successful validated TLS.", "components": ["submission"], "sources": ["submission:sd78efc15555c"], "status": "REASONED"},
     "implicit-tls": {"text": "465 submission starts with TLS and avoids STARTTLS stripping; RFC 8314 prefers implicit TLS going forward.", "components": ["submission"], "sources": ["submission:sd78efc15555c"], "status": "REASONED"},
-    "tls-validation": {"text": "Validate certificate chain and hostname before credentials on either submission port; the guide states TLS 1.2 as the floor and attributes that update to RFC 8997, absent from its Sources list.", "components": ["submission"], "sources": ["submission:sd78efc15555c"], "status": "REASONED"},
+    "tls-validation": {"text": "Validate certificate chain and hostname before credentials on either submission port; the guide states TLS 1.2 as the floor and attributes that update to RFC 8997, absent from its Sources list.", "components": ["submission", "submission-update"], "sources": ["submission:sd78efc15555c", "submission-update:sb5ca35fe0d1b"], "status": "REASONED"},
     "port-25": {"text": "25 is inter-server relay or provider submission; identify the endpoint role instead of assuming that port 25 implies no authentication.", "components": ["roles"], "sources": ["roles:s3f9972faf8ff"], "status": "REASONED"},
     "relay-policy": {"text": "Reject unauthenticated untrusted forwarding to non-local recipients while allowing ordinary inbound local delivery and explicitly authorized relay paths.", "components": ["relay"], "sources": ["relay:s1b9349dd99bc"], "status": "REASONED"},
     "submission-auth": {"text": "After TLS, unauthenticated or invalidly authenticated submission must fail while authorized submission succeeds.", "components": ["roles", "submission"], "sources": ["roles:s3f9972faf8ff", "submission:sd78efc15555c"], "status": "REASONED"},
@@ -125,8 +147,8 @@ version_basis: {
     "sts-refresh": {"text": "Update the MTA-STS TXT id whenever the policy changes.", "components": ["sts"], "sources": ["sts:s39819f3ea93a"], "status": "REASONED"},
     "tls-reports": {"text": "TLS-RPT _smtp._tls TXT with TLSRPTv1 and rua supplies reports, never enforcement.", "components": ["rpt"], "sources": ["rpt:se80da0f5e0c8"], "status": "REASONED"},
     "bimi": {"text": "BIMI is optional logo display metadata requiring DMARC enforcement, not authentication or guaranteed rendering; deploy it last.", "components": ["bimi"], "sources": ["bimi:sd18b1e0134bd"], "status": "REASONED"},
-    "verify-dns": {"text": "Inspect SPF, DKIM TXT/CNAME, DMARC, MTA-STS, TLS-RPT and BIMI records using actual inventory; DNS inspection alone does not evaluate SPF/DMARC or prove a listener. No DNS control was available.", "components": ["spf", "dkim", "dmarc", "sts", "rpt", "bimi"], "sources": ["spf:sea6ac206b034", "dkim:s13ee1bc66dfc", "dmarc:s5da292ff1b92", "sts:s39819f3ea93a", "rpt:se80da0f5e0c8", "bimi:sd18b1e0134bd"], "status": "REASONED", "verify": [1]},
-    "verify-tls": {"text": "587 STARTTLS and 465 implicit-TLS probes require validated TLS 1.2 or newer; TLS availability does not establish AUTH gating. Plaintext or stripped-STARTTLS AUTH must be refused; transport/TLS failures are inconclusive. No SMTP endpoint or container runtime was available.", "components": ["submission"], "sources": ["submission:sd78efc15555c"], "status": "REASONED", "verify": [1]},
+    "verify-dns": {"text": "Inspect SPF, DKIM TXT/CNAME, DMARC, MTA-STS, TLS-RPT and BIMI records using actual inventory; DNS inspection alone does not evaluate SPF/DMARC or prove a listener. No DNS control was available.", "components": ["spf", "dkim", "dmarc", "sts", "rpt", "bimi", "bind"], "sources": ["spf:sea6ac206b034", "dkim:s13ee1bc66dfc", "dmarc:s5da292ff1b92", "sts:s39819f3ea93a", "rpt:se80da0f5e0c8", "bimi:sd18b1e0134bd", "bind:s54cff06bb882"], "status": "REASONED", "verify": [1]},
+    "verify-tls": {"text": "587 STARTTLS and 465 implicit-TLS probes require validated TLS 1.2 or newer; TLS availability does not establish AUTH gating. Plaintext or stripped-STARTTLS AUTH must be refused; transport/TLS failures are inconclusive. No SMTP endpoint or container runtime was available.", "components": ["submission", "submission-update", "openssl"], "sources": ["submission:sd78efc15555c", "submission-update:sb5ca35fe0d1b", "openssl:s00aaf106164f", "openssl:s2a2127a2c79b"], "status": "REASONED", "verify": [1]},
     "verify-alignment": {"text": "Send a benign message to a controlled recipient and inspect receiver-trusted Authentication-Results, not a supplied header; require passing aligned SPF or DKIM and p=reject with subdomain coverage and no testing or legacy sampling.", "components": ["results", "dmarc"], "sources": ["results:s46f8392d93fd", "dmarc:s5da292ff1b92"], "status": "REASONED"},
     "verify-relay": {"text": "In an operator-controlled environment, external MAIL FROM and non-local RCPT TO should receive 5xx; compare with authorized submission and ordinary local delivery. These expected outcomes remain unobserved.", "components": ["relay", "roles"], "sources": ["relay:s1b9349dd99bc", "roles:s3f9972faf8ff"], "status": "REASONED"}
   }
@@ -139,7 +161,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -161,7 +183,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | failure-reports: ruf forensic reports can expose content, recipients and reset tokens; omit initially, settle redaction/retention/access before enabling, and authorize external destinations. | DMARC failure reporting RFC 9991 | REASONED |
 | starttls: 587 submission upgrades with STARTTLS before authentication; an opportunistic fallback can expose credentials to stripping, so require successful validated TLS. | Submission TLS RFC 8314 | REASONED |
 | implicit-tls: 465 submission starts with TLS and avoids STARTTLS stripping; RFC 8314 prefers implicit TLS going forward. | Submission TLS RFC 8314 | REASONED |
-| tls-validation: Validate certificate chain and hostname before credentials on either submission port; the guide states TLS 1.2 as the floor and attributes that update to RFC 8997, absent from its Sources list. | Submission TLS RFC 8314 | REASONED |
+| tls-validation: Validate certificate chain and hostname before credentials on either submission port; the guide states TLS 1.2 as the floor and attributes that update to RFC 8997, absent from its Sources list. | Submission TLS RFC 8314; Submission TLS update RFC 8997 | REASONED |
 | port-25: 25 is inter-server relay or provider submission; identify the endpoint role instead of assuming that port 25 implies no authentication. | SMTP submission roles RFC 6409 | REASONED |
 | relay-policy: Reject unauthenticated untrusted forwarding to non-local recipients while allowing ordinary inbound local delivery and explicitly authorized relay paths. | SMTP relay controls RFC 2505 | REASONED |
 | submission-auth: After TLS, unauthenticated or invalidly authenticated submission must fail while authorized submission succeeds. | SMTP submission roles RFC 6409; Submission TLS RFC 8314 | REASONED |
@@ -170,8 +192,8 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | sts-refresh: Update the MTA-STS TXT id whenever the policy changes. | MTA-STS RFC 8461 | REASONED |
 | tls-reports: TLS-RPT _smtp._tls TXT with TLSRPTv1 and rua supplies reports, never enforcement. | TLS-RPT RFC 8460 | REASONED |
 | bimi: BIMI is optional logo display metadata requiring DMARC enforcement, not authentication or guaranteed rendering; deploy it last. | BIMI documentation unknown | REASONED |
-| verify-dns: Inspect SPF, DKIM TXT/CNAME, DMARC, MTA-STS, TLS-RPT and BIMI records using actual inventory; DNS inspection alone does not evaluate SPF/DMARC or prove a listener. No DNS control was available. | SPF RFC 7208; DKIM RFC 6376; DMARC RFC 9989; MTA-STS RFC 8461; TLS-RPT RFC 8460; BIMI documentation unknown | REASONED |
-| verify-tls: 587 STARTTLS and 465 implicit-TLS probes require validated TLS 1.2 or newer; TLS availability does not establish AUTH gating. Plaintext or stripped-STARTTLS AUTH must be refused; transport/TLS failures are inconclusive. No SMTP endpoint or container runtime was available. | Submission TLS RFC 8314 | REASONED |
+| verify-dns: Inspect SPF, DKIM TXT/CNAME, DMARC, MTA-STS, TLS-RPT and BIMI records using actual inventory; DNS inspection alone does not evaluate SPF/DMARC or prove a listener. No DNS control was available. | SPF RFC 7208; DKIM RFC 6376; DMARC RFC 9989; MTA-STS RFC 8461; TLS-RPT RFC 8460; BIMI documentation unknown; BIND dig manual 9.18.39 | REASONED |
+| verify-tls: 587 STARTTLS and 465 implicit-TLS probes require validated TLS 1.2 or newer; TLS availability does not establish AUTH gating. Plaintext or stripped-STARTTLS AUTH must be refused; transport/TLS failures are inconclusive. No SMTP endpoint or container runtime was available. | Submission TLS RFC 8314; Submission TLS update RFC 8997; OpenSSL command documentation 3.0 | REASONED |
 | verify-alignment: Send a benign message to a controlled recipient and inspect receiver-trusted Authentication-Results, not a supplied header; require passing aligned SPF or DKIM and p=reject with subdomain coverage and no testing or legacy sampling. | Authentication-Results RFC 8601; DMARC RFC 9989 | REASONED |
 | verify-relay: In an operator-controlled environment, external MAIL FROM and non-local RCPT TO should receive 5xx; compare with authorized submission and ordinary local delivery. These expected outcomes remain unobserved. | SMTP relay controls RFC 2505; SMTP submission roles RFC 6409 | REASONED |
 <!-- version-basis:end -->
@@ -317,3 +339,7 @@ Prove alignment by sending one benign message to a controlled recipient and read
 - RFC 8460: SMTP TLS Reporting (TLS-RPT): https://www.rfc-editor.org/rfc/rfc8460.html
 - RFC 8601: Message Header Field for Indicating Message Authentication Status (`Authentication-Results`): https://www.rfc-editor.org/rfc/rfc8601.html
 - BIMI Group: implementation and sender requirements: https://bimigroup.org/how-and-why-to-implement-bimi-selectors/
+- RFC 8997 section 3 (checked October 2026; TLS 1.2 floor for email submission and access): https://www.rfc-editor.org/rfc/rfc8997.html#section-3
+- BIND 9.18.39 `dig` manual (checked October 2026; TXT/CNAME queries and `+noall +answer` display controls): https://bind9.readthedocs.io/en/v9.18.39/manpages.html
+- OpenSSL 3.0 `s_client` (checked October 2026; SMTP STARTTLS, TLS connections, hostname verification, and verification errors): https://docs.openssl.org/3.0/man1/openssl-s_client/
+- OpenSSL 3.0 protocol configuration (checked October 2026; `-min_protocol TLSv1.2`): https://docs.openssl.org/3.0/man3/SSL_CONF_cmd/

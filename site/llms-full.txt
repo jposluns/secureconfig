@@ -9821,7 +9821,7 @@ az network nsg rule list \
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -9830,11 +9830,11 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | vercel-login: Vercel login can gate preview/deployment URLs on every plan and production domains with All Deployments; the 9 September 2026 change made that scope free including Hobby. | Vercel documentation unknown | REASONED |
 | vercel-password: At the recorded documentation date, Password Protection is unavailable on Hobby, a paid per-project add-on on Pro and included on Enterprise. | Vercel documentation unknown | REASONED |
 | secret-store: Use platform environment/secret configuration, not committed .env files; rotate credentials exposed in repositories, build logs or client bundles. | Render documentation unknown; Fly.io documentation unknown; Vercel documentation unknown | REASONED |
-| public-env: Only public values belong in browser-compiled environment variables such as NEXT_PUBLIC_; the guide records no specific frontend compiler source here. | Vercel documentation unknown | REASONED |
+| public-env: Only public values belong in browser-compiled environment variables such as NEXT_PUBLIC_; the guide records no specific frontend compiler source here. | Vercel documentation unknown; Next.js environment variables 15 | REASONED |
 | https-redirect: Redirect HTTP to HTTPS with the platform toggle or application logic using the forwarded-protocol header; exact platform toggles are not supplied. | Render documentation unknown; Fly.io documentation unknown; Vercel documentation unknown | REASONED |
-| proxy-awareness: Configure Express trust proxy or Django SECURE_PROXY_SSL_HEADER so secure cookies and redirects work behind the platform; framework vendor sources are not recorded here. | Render documentation unknown; Fly.io documentation unknown; Vercel documentation unknown | REASONED |
+| proxy-awareness: Configure Express trust proxy or Django SECURE_PROXY_SSL_HEADER so secure cookies and redirects work behind the platform; framework vendor sources are not recorded here. | Render documentation unknown; Fly.io documentation unknown; Vercel documentation unknown; Express request protocol 5.x; Django proxy security setting 6.1 | REASONED |
 | listener-port: Bind only the platform-injected port, commonly PORT, and avoid extra listeners; exact platform binding requirements are not cited beyond documentation roots. | Render documentation unknown; Fly.io documentation unknown; Vercel documentation unknown | REASONED |
-| database-identity: Where supported, require TLS certificate/hostname verification with PostgreSQL sslmode=verify-full or MySQL --ssl-mode=VERIFY_IDENTITY; MySQL client syntax lacks a source here. | Render documentation unknown | REASONED |
+| database-identity: Where supported, require TLS certificate/hostname verification with PostgreSQL sslmode=verify-full or MySQL --ssl-mode=VERIFY_IDENTITY; MySQL client syntax lacks a source here. | Render documentation unknown; MySQL client connection options 8.4 | REASONED |
 | render-internal-tls: Render internal PostgreSQL TLS is optional and supports neither verify-ca nor verify-full; sslmode=require prevents plaintext fallback but is not identity verification. | Render documentation unknown | REASONED |
 | database-network: Render Postgres external access is open to any IP by default; prefer private connectivity and disable or source-restrict external access. Keep database credentials in the secret store. | Render documentation unknown | REASONED |
 | spaces-creation: Explicitly select and verify Space visibility: creation path and organization policy affect defaults and duplication defaults private. The organization private-by-default policy lacks a direct citation here. | Hugging Face Spaces documentation unknown | REASONED |
@@ -9899,6 +9899,10 @@ curl -q -g -s --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' https://app.ex
 - Vercel changelog, protect production deployments for free on every plan (9 September 2026): https://vercel.com/changelog/protect-production-deployments-for-free-on-every-plan
 - Hugging Face Spaces: https://huggingface.co/docs/hub/spaces-overview and https://huggingface.co/docs/hub/spaces-config-reference
 - Render managed PostgreSQL (external access is open by default and can be restricted; internal connections do not support `sslmode=verify-ca`/`verify-full`): https://render.com/docs/postgresql-creating-connecting
+- Next.js 15 environment variables (checked October 2026; `NEXT_PUBLIC_` values in browser JavaScript): https://nextjs.org/docs/15/app/guides/environment-variables
+- Express 5.x request protocol (checked October 2026; `trust proxy` and `X-Forwarded-Proto`): https://expressjs.com/en/5x/api/request/#req.protocol
+- Django 6.1 settings (checked October 2026; `SECURE_PROXY_SSL_HEADER` and trusted proxy requirements): https://docs.djangoproject.com/en/6.1/ref/settings/#secure-proxy-ssl-header
+- MySQL 8.4 client connection options (checked October 2026; `--ssl-mode=VERIFY_IDENTITY` certificate and hostname verification): https://dev.mysql.com/doc/refman/8.4/en/connection-options.html#option_general_ssl-mode
 
 ======================================================================
 ==> egress-metadata.md
@@ -10150,7 +10154,7 @@ aws ec2 describe-instances --instance-ids i-0123456789abcdef0 \
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -10177,7 +10181,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | lambda-ssh: Lambda requires an SSH key at launch; keep the private key off the instance. | Lambda Public Cloud documentation unknown | REASONED |
 | vast-ssh: Vast.ai disables SSH password authentication and uses the registered public key; keep the private key off the instance. | Vast.ai documentation unknown | REASONED |
 | runpod-ssh: RunPod recommends SSH keys and offers an optional password; use the key and skip the password. | RunPod documentation unknown | REASONED |
-| verify-inventory: ss inventories TCP listeners in the current network namespace only, not UDP, firewall state or platform publication; cross-check mappings and probe each from outside. No ss source is recorded. | RunPod documentation unknown; Vast.ai documentation unknown | REASONED |
+| verify-inventory: ss inventories TCP listeners in the current network namespace only, not UDP, firewall state or platform publication; cross-check mappings and probe each from outside. No ss source is recorded. | RunPod documentation unknown; Vast.ai documentation unknown; iproute2 ss manual v6.12.0 | REASONED |
 | verify-jupyter: Probe loopback :8888/api/contents directly: the guide expects 403 without the Jupyter token and 200 with it; any anonymous data response is a finding. The cited security page documents token auth but not this exact endpoint/status pair. | Jupyter Server security unknown | REASONED |
 | verify-mapping: Repeat credential-free and authenticated requests per exposed mapping; anonymous app data fails, while a proxy 401 alone does not prove native listener auth and needs the direct positive control. | RunPod documentation unknown; Vast.ai documentation unknown; Modal proxy authentication unknown; Jupyter Server security unknown | REASONED |
 | remote-desktop: Inventory template noVNC ports such as 6080 and VNC ports such as 5900/5901; check weak or empty passwords, require a strong password plus encrypted tunnel for direct VNC, or remove its public mapping. Test with a VNC client; no noVNC/VNC source is recorded here. | RunPod documentation unknown; Vast.ai documentation unknown | REASONED |
@@ -10289,6 +10293,7 @@ Every port `ss` shows listening should be either closed (not exposed at the plat
 - Lambda SSH (an SSH key is required at launch): https://docs.lambda.ai/public-cloud/on-demand/connecting-instance/
 - Vast.ai SSH (password authentication is disabled; register a key): https://docs.vast.ai/guides/instances/connect/ssh
 - RunPod SSH (key authentication recommended, optional password): https://docs.runpod.io/pods/configuration/use-ssh
+- iproute2 v6.12.0 `ss` manual (checked October 2026): [numeric output](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L33-L34), [listening sockets](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L43-L44), [process display](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L162-L163), and [TCP sockets](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L374-L375).
 
 ======================================================================
 ==> deployment-lifecycle.md
@@ -10301,12 +10306,12 @@ Every port `ss` shows listening should be either closed (not exposed at the plat
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
 | outside: Run exposure checks from a second network; host-local curl and ss do not establish outside reachability or platform firewall behaviour. | Nmap documentation unknown | REASONED |
-| tcp-scan: Sweep authorized hosts with nmap -Pn -p-; the guide also gives an nc port loop. No nc reference is recorded in Sources. | Nmap documentation unknown | REASONED |
+| tcp-scan: Sweep authorized hosts with nmap -Pn -p-; the guide also gives an nc port loop. No nc reference is recorded in Sources. | Nmap documentation unknown; OpenBSD nc manual 7.6 | REASONED |
 | udp-scan: The full port sweep is TCP only; inventory UDP services and probe their ports separately with nmap -sU. | Nmap documentation unknown | REASONED |
 | all-addresses: Check public IPv4, public IPv6 and platform URLs as well as the custom domain; one address cannot establish coverage of the others. | Nmap documentation unknown; Vercel Deployment Protection unknown | REASONED |
 | passive-index: Cross-reference Shodan and Censys indexes for previously indexed exposure; indexed observations are not a fresh direct scan. | Shodan unknown; Censys unknown | REASONED |
@@ -10321,12 +10326,12 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | dns-retirement: Remove CNAME or A/AAAA records before releasing the resource; retain it through the old TTL and authoritative removal checks. dig supports DNS inspection; takeover and resource-retention guidance has no dedicated source. | BIND dig documentation unknown | REASONED |
 | retire-credentials: After DNS retirement revoke deployment access policies, API/service credentials and dedicated database users. Access-policy citation covers only the fronting context. | Cloudflare Access policies unknown | REASONED |
 | reverify: Repeat outside scans and negative auth tests after upgrades, restores or network/auth changes; restored defaults can reopen exposure. Nmap supports the scan, not application restore behaviour. | Nmap documentation unknown | REASONED |
-| certificate-monitor: Monitor certificate expiry externally; a local certbot renewal dry run does not prove the last production renewal succeeded. Nmap is outside-check context only; OpenSSL and Certbot sources are not recorded. | Nmap documentation unknown | REASONED |
+| certificate-monitor: Monitor certificate expiry externally; a local certbot renewal dry run does not prove the last production renewal succeeded. Nmap is outside-check context only; OpenSSL and Certbot sources are not recorded. | Nmap documentation unknown; OpenSSL command documentation 3.0 | REASONED |
 | offboarding: Revoke identity membership, proxy/app sessions, personal tokens, API keys and second factors; account for cached-session expiry. Access-policy citation does not establish each layer or its revocation delay. | Cloudflare Access policies unknown | REASONED |
 | verify-ipv4: From another network, nmap -Pn -p- should find only intended TCP ports; unintended open ports fail, and errors or an unexecuted scan are inconclusive. | Nmap documentation unknown | REASONED |
 | verify-ipv6: Repeat the full TCP sweep over the public IPv6 address with -6; a scan that did not run is inconclusive. | Nmap documentation unknown | REASONED |
 | verify-dns: curl failure does not prove DNS removal; resolver A/AAAA/CNAME answers need investigation and empty output is inconclusive. Check every authoritative server with +norecurse for NXDOMAIN or NOERROR/NODATA without CNAME; SERVFAIL, referral and timeout are inconclusive. | BIND dig documentation unknown | REASONED |
-| verify-certificate: The scheduled external s_client probe checks hostname and verification errors and pipes the certificate to x509 -enddate. No OpenSSL source or observed outcome is recorded; Nmap is outside-check context only. | Nmap documentation unknown | REASONED |
+| verify-certificate: The scheduled external s_client probe checks hostname and verification errors and pipes the certificate to x509 -enddate. No OpenSSL source or observed outcome is recorded; Nmap is outside-check context only. | Nmap documentation unknown; OpenSSL command documentation 3.0 | REASONED |
 <!-- version-basis:end -->
 
 This repository's per-service guides check TLS, binding, and authentication from inside the host and at the moment you set them up. Real exposure is judged from outside the host, and it drifts: a preview URL, a restored backup, or an upgrade can reopen something already closed. This guide is the lifecycle layer around the per-service checks.
@@ -10421,6 +10426,9 @@ openssl s_client -connect app.example.com:443 -servername app.example.com \
 - Cloudflare Access policies: https://developers.cloudflare.com/cloudflare-one/access-controls/policies/
 - nmap host discovery (`-Pn` "skips the host discovery stage altogether"): https://nmap.org/book/man-host-discovery.html
 - dig DNS lookup utility (querying a specific authoritative nameserver with `@server` and `+norecurse`; NXDOMAIN vs NODATA): https://bind9.readthedocs.io/en/latest/manpages.html
+- OpenSSL 3.0 `s_client` (checked October 2026; connection, hostname verification, and verification errors): https://docs.openssl.org/3.0/man1/openssl-s_client/
+- OpenSSL 3.0 `x509` (checked October 2026; `-noout -enddate` certificate expiry inspection): https://docs.openssl.org/3.0/man1/openssl-x509/
+- OpenBSD 7.6 `nc` (checked October 2026; OpenBSD netcat implementation of `-v`, `-z`, and `-w`): https://man.openbsd.org/OpenBSD-7.6/nc.1
 
 ======================================================================
 ==> postgresql.md
@@ -22139,7 +22147,7 @@ Version scope: Typesense 30.2; Meilisearch current unversioned documentation che
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -22179,7 +22187,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | verify-download: Probe actual database/sidecar paths only after a successful application control; timeouts, DNS and proxy failures do not establish non-publication. No served application was available. | SQLite documentation (rolling) unknown | REASONED |
 | verify-bundle: Local placeholder-token scan distinguished exposed and clean bundles and refused absent directories; readonly, nameref, lowercase and IFS cases are recorded. A clean scan covers only the searched forms and paths. | Turso documentation unknown | DEMONSTRATED |
 | verify-git: Local throwaway repositories showed tracked/history copies survive ignore rules and index removal; a never-committed ignored file produced only rule matches. Git version is unrecorded. | SQLite documentation (rolling) unknown | DEMONSTRATED |
-| verify-modes: SQLite 3.46.1 local WAL and rollback-journal runs showed umask 022 versus 077 modes; every file belonged to the test account, and separate application-account ownership was not exercised. | SQLite documentation (rolling) unknown | DEMONSTRATED |
+| verify-modes: SQLite 3.46.1 local WAL and rollback-journal runs showed umask 022 versus 077 modes; every file belonged to the test account, and separate application-account ownership was not exercised. | SQLite documentation (rolling) unknown; GNU Coreutils stat manual v9.7 | DEMONSTRATED |
 | verify-listeners: Compare authorized private control with untrusted reachability for LiteFS or enabled Litestream metrics/MCP; any HTTP response shows a listener, not every backend route. Transport errors and failed controls are inconclusive; no isolated listener environment was available. | LiteFS source v0.5.14; Litestream documentation unknown; Litestream MCP minimum v0.5.0 | REASONED |
 | verify-turso: Turso /v2/pipeline must return SELECT 1 with a valid bearer token and no successful result anonymously; HTTP 200 alone is insufficient and transport failure inconclusive. No database/token was available. | Turso documentation unknown | REASONED |
 | halt-expiration: LiteFS checks halt-lock expiration every 5 seconds. | LiteFS source v0.5.14 | REASONED |
@@ -22424,6 +22432,7 @@ Applicability checked on 2026-09-18: SQLite 3.x documentation (local file tests 
 - Docker container reachability: [bridge peers and publication](https://docs.docker.com/engine/network/drivers/bridge/), [host networking](https://docs.docker.com/engine/network/drivers/host/), and [shared container networking stacks](https://docs.docker.com/engine/network/#container-networks).
 - Litestream configuration (metrics addr, MCP mcp-addr) (Litestream MCP listener in v0.5.0 and later): https://litestream.io/reference/config/
 - Turso SQL over HTTP (`/v2/pipeline`, bearer authentication): https://docs.turso.tech/sdk/http/reference
+- GNU Coreutils v9.7 `stat` manual (checked October 2026; GNU syntax): [`-c` format](https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L12989-L12995), [`%a` octal permissions](https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L13046), [`%n` file name](https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L13062), and [`%U` owner name](https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L13073).
 
 ======================================================================
 ==> sqlite-http-frontends.md
@@ -28601,7 +28610,7 @@ Service behaviour is not demonstrated here. A watcher stopped each of four loopb
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -28613,11 +28622,11 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | host-allowlist: Set --allowed-hosts mlflow.example.com for access beyond loopback; defaults admit localhost, 127.0.0.1, [::1], 0.0.0.0 and private ranges as Host headers, not client-source firewall rules. | MLflow documentation unknown | REASONED |
 | cors: Set --cors-allowed-origins https://mlflow.example.com for the intended browser origin. | MLflow documentation unknown | REASONED |
 | middleware-disable: Do not use --disable-security-middleware outside a test. | MLflow documentation unknown | REASONED |
-| tls: There are no dedicated server TLS flags; --uvicorn-opts can forward --ssl-keyfile/--ssl-certfile. Use a TLS proxy to 127.0.0.1:5000 or a tunnel/tailnet and set the allowed public hostname. | MLflow documentation unknown | REASONED |
+| tls: There are no dedicated server TLS flags; --uvicorn-opts can forward --ssl-keyfile/--ssl-certfile. Use a TLS proxy to 127.0.0.1:5000 or a tunnel/tailnet and set the allowed public hostname. | MLflow documentation unknown; nginx proxy implementation release-1.28.0; Caddy reverse proxy parser v2.11.4 | REASONED |
 | client-tls: Use MLFLOW_TRACKING_URI=https://mlflow.example.com and never enable MLFLOW_TRACKING_INSECURE_TLS in production. | MLflow documentation unknown | REASONED |
 | auth-app: Install mlflow[auth] and run --app-name basic-auth; client username/password variables alone enable no server authentication. The September 2026 documentation has no experimental label. | MLflow documentation unknown | REASONED |
 | csrf-key: Provision a long random MLFLOW_FLASK_SERVER_SECRET_KEY identical on every replica through a protected server.env file, mode 0600, with protected directories and no other-account ACL access; keep file and backups out of source control. | MLflow documentation unknown | REASONED |
-| env-file: Global --env-file loads dotenv before the server command without overriding existing environment; clear inherited key/config-path variables and require a readable regular non-symlink file before launching. | MLflow documentation unknown | REASONED |
+| env-file: Global --env-file loads dotenv before the server command without overriding existing environment; clear inherited key/config-path variables and require a readable regular non-symlink file before launching. | MLflow documentation unknown; MLflow pinned source v3.16.1 | REASONED |
 | key-exposure: Only the file path reaches the launch command; MLflow v3.16.1 loads the key into its environment and forwards it to workers, retaining same-account/root memory and inheriting-process environment exposure. | MLflow pinned source v3.16.1; MLflow documentation unknown | REASONED |
 | admin-bootstrap: No default admin password: first start requires at least 12 characters from MLFLOW_AUTH_ADMIN_PASSWORD or admin_password, rejects password1234 and fails without a password; an already-bootstrapped admin needs no resupply. | MLflow documentation unknown | REASONED |
 | default-permission: default_permission is READ on every resource; set NO_PERMISSIONS in the auth configuration to remove that default grant. | MLflow documentation unknown | REASONED |
@@ -28632,7 +28641,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | artifact-proxy: --serve-artifacts defaults on; --artifacts-destination s3://bucket lets the server proxy reads/writes for proxied experiments, holding storage credentials so clients need none. | MLflow documentation unknown | REASONED |
 | artifact-existing: Pre-existing experiments and explicit direct artifact locations retain their locations outside tracking-server permission enforcement; inspect locations and apply storage IAM directly. | MLflow documentation unknown | REASONED |
 | artifact-direct: With --no-serve-artifacts every client needs storage credentials and tracking-server permissions no longer gate artifacts; use environment or instance-role credentials, not repository/Compose secrets. | MLflow documentation unknown | REASONED |
-| verify-bind: Read every listener and require 5000 on 127.0.0.1; ss itself has no vendor citation here. | MLflow pinned source v3.16.1 | REASONED |
+| verify-bind: Read every listener and require 5000 on 127.0.0.1; ss itself has no vendor citation here. | MLflow pinned source v3.16.1; iproute2 ss manual v6.12.0 | REASONED |
 | verify-network: Outside :5000 must form no TCP connection: time_connect stays 0.000000 with a connection-level failure. A handshake or HTTP response means exposure; DNS/local socket errors are inconclusive. | curl minimum write-out version 7.75.0; MLflow documentation unknown | REASONED |
 | verify-public-auth: POST experiments/search with a minimal body: anonymous and wrong-password requests should return 401, valid admin 200; an open backend returns anonymous 200. Proxy credentials may also be needed; shell success is not a pass. | MLflow documentation unknown; curl minimum write-out version 7.75.0 | REASONED |
 | verify-backend-auth: Repeat anonymous 401/admin 200 directly on loopback with Host: mlflow.example.com; an allowlist Host rejection is 403 before auth, and a proxy-only denial proves no backend enforcement. | MLflow documentation unknown | REASONED |
@@ -28817,6 +28826,10 @@ An authenticated user without permission on a resource gets `403`; a missing or 
 - curl manual (`--connect-timeout` bounds the connection phase only; the `time_connect`, `exitcode`, and `errormsg` write-out variables, the last two added in curl 7.75.0): https://curl.se/docs/manpage.html
 - MLflow `--host` option, default `127.0.0.1`, and `--port`, default `5000`, which the `MLFLOW_HOST` and `MLFLOW_PORT` environment variables override (pinned tag v3.16.1): https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/utils/cli_args.py#L162-L180
 - MLflow's tracking-server command, `def server`, takes those `--host` and `--port` options (pinned tag v3.16.1): https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L369-L541
+- nginx release-1.28.0 proxy directive registration (checked October 2026; `proxy_pass` takes one upstream argument): https://github.com/nginx/nginx/blob/release-1.28.0/src/http/modules/ngx_http_proxy_module.c#L305-L310
+- Caddy v2.11.4 `reverse_proxy` parser (checked October 2026): [directive registration](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go#L40) and [upstream syntax](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go#L58-L62).
+- iproute2 v6.12.0 `ss` manual (checked October 2026): [numeric output](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L33-L34), [listening sockets](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L43-L44), [process display](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L162-L163), and [TCP sockets](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L374-L375).
+- MLflow v3.16.1 dotenv loader (checked October 2026): [existing-environment precedence](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L85-L86) and [global eager `--env-file` option](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L94-L105).
 
 ======================================================================
 ==> agent-builders.md
@@ -34288,7 +34301,7 @@ Scope and revisions: browser behavior follows RFC 6455 and the HTML and Fetch li
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -34310,7 +34323,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | failure-reports: ruf forensic reports can expose content, recipients and reset tokens; omit initially, settle redaction/retention/access before enabling, and authorize external destinations. | DMARC failure reporting RFC 9991 | REASONED |
 | starttls: 587 submission upgrades with STARTTLS before authentication; an opportunistic fallback can expose credentials to stripping, so require successful validated TLS. | Submission TLS RFC 8314 | REASONED |
 | implicit-tls: 465 submission starts with TLS and avoids STARTTLS stripping; RFC 8314 prefers implicit TLS going forward. | Submission TLS RFC 8314 | REASONED |
-| tls-validation: Validate certificate chain and hostname before credentials on either submission port; the guide states TLS 1.2 as the floor and attributes that update to RFC 8997, absent from its Sources list. | Submission TLS RFC 8314 | REASONED |
+| tls-validation: Validate certificate chain and hostname before credentials on either submission port; the guide states TLS 1.2 as the floor and attributes that update to RFC 8997, absent from its Sources list. | Submission TLS RFC 8314; Submission TLS update RFC 8997 | REASONED |
 | port-25: 25 is inter-server relay or provider submission; identify the endpoint role instead of assuming that port 25 implies no authentication. | SMTP submission roles RFC 6409 | REASONED |
 | relay-policy: Reject unauthenticated untrusted forwarding to non-local recipients while allowing ordinary inbound local delivery and explicitly authorized relay paths. | SMTP relay controls RFC 2505 | REASONED |
 | submission-auth: After TLS, unauthenticated or invalidly authenticated submission must fail while authorized submission succeeds. | SMTP submission roles RFC 6409; Submission TLS RFC 8314 | REASONED |
@@ -34319,8 +34332,8 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | sts-refresh: Update the MTA-STS TXT id whenever the policy changes. | MTA-STS RFC 8461 | REASONED |
 | tls-reports: TLS-RPT _smtp._tls TXT with TLSRPTv1 and rua supplies reports, never enforcement. | TLS-RPT RFC 8460 | REASONED |
 | bimi: BIMI is optional logo display metadata requiring DMARC enforcement, not authentication or guaranteed rendering; deploy it last. | BIMI documentation unknown | REASONED |
-| verify-dns: Inspect SPF, DKIM TXT/CNAME, DMARC, MTA-STS, TLS-RPT and BIMI records using actual inventory; DNS inspection alone does not evaluate SPF/DMARC or prove a listener. No DNS control was available. | SPF RFC 7208; DKIM RFC 6376; DMARC RFC 9989; MTA-STS RFC 8461; TLS-RPT RFC 8460; BIMI documentation unknown | REASONED |
-| verify-tls: 587 STARTTLS and 465 implicit-TLS probes require validated TLS 1.2 or newer; TLS availability does not establish AUTH gating. Plaintext or stripped-STARTTLS AUTH must be refused; transport/TLS failures are inconclusive. No SMTP endpoint or container runtime was available. | Submission TLS RFC 8314 | REASONED |
+| verify-dns: Inspect SPF, DKIM TXT/CNAME, DMARC, MTA-STS, TLS-RPT and BIMI records using actual inventory; DNS inspection alone does not evaluate SPF/DMARC or prove a listener. No DNS control was available. | SPF RFC 7208; DKIM RFC 6376; DMARC RFC 9989; MTA-STS RFC 8461; TLS-RPT RFC 8460; BIMI documentation unknown; BIND dig manual 9.18.39 | REASONED |
+| verify-tls: 587 STARTTLS and 465 implicit-TLS probes require validated TLS 1.2 or newer; TLS availability does not establish AUTH gating. Plaintext or stripped-STARTTLS AUTH must be refused; transport/TLS failures are inconclusive. No SMTP endpoint or container runtime was available. | Submission TLS RFC 8314; Submission TLS update RFC 8997; OpenSSL command documentation 3.0 | REASONED |
 | verify-alignment: Send a benign message to a controlled recipient and inspect receiver-trusted Authentication-Results, not a supplied header; require passing aligned SPF or DKIM and p=reject with subdomain coverage and no testing or legacy sampling. | Authentication-Results RFC 8601; DMARC RFC 9989 | REASONED |
 | verify-relay: In an operator-controlled environment, external MAIL FROM and non-local RCPT TO should receive 5xx; compare with authorized submission and ordinary local delivery. These expected outcomes remain unobserved. | SMTP relay controls RFC 2505; SMTP submission roles RFC 6409 | REASONED |
 <!-- version-basis:end -->
@@ -34466,6 +34479,10 @@ Prove alignment by sending one benign message to a controlled recipient and read
 - RFC 8460: SMTP TLS Reporting (TLS-RPT): https://www.rfc-editor.org/rfc/rfc8460.html
 - RFC 8601: Message Header Field for Indicating Message Authentication Status (`Authentication-Results`): https://www.rfc-editor.org/rfc/rfc8601.html
 - BIMI Group: implementation and sender requirements: https://bimigroup.org/how-and-why-to-implement-bimi-selectors/
+- RFC 8997 section 3 (checked October 2026; TLS 1.2 floor for email submission and access): https://www.rfc-editor.org/rfc/rfc8997.html#section-3
+- BIND 9.18.39 `dig` manual (checked October 2026; TXT/CNAME queries and `+noall +answer` display controls): https://bind9.readthedocs.io/en/v9.18.39/manpages.html
+- OpenSSL 3.0 `s_client` (checked October 2026; SMTP STARTTLS, TLS connections, hostname verification, and verification errors): https://docs.openssl.org/3.0/man1/openssl-s_client/
+- OpenSSL 3.0 protocol configuration (checked October 2026; `-min_protocol TLSv1.2`): https://docs.openssl.org/3.0/man3/SSL_CONF_cmd/
 
 ======================================================================
 ==> bi-dashboards.md

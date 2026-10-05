@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "9d72131b8b1c350614ec53a9742182d0692fb8e195d1e43a21495df2a690b23f",
+  "body_sha256": "e0625f2e0df494bbc4516d4d2aca22047f97d6dbe4e230c7bbe89b106aa3a2cd",
   "components": {
     "docs": {
       "name": "MLflow documentation",
@@ -24,7 +24,9 @@ version_basis: {
         "sf7285d252e29": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/utils/cli_args.py#L162-L180",
         "sa3993a9b625f": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L369-L541",
         "sd775f10c4d07": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/auth/__init__.py#L6008-L6021",
-        "s349a81b9478e": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/__init__.py#L401-L402"
+        "s349a81b9478e": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/__init__.py#L401-L402",
+        "s99d30948902f": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L85-L86",
+        "s687f1c9977cd": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L94-L105"
       }
     },
     "middleware-min": {
@@ -47,6 +49,31 @@ version_basis: {
       "sources": {
         "s2b2686afaf41": "https://curl.se/docs/manpage.html"
       }
+    },
+    "nginx": {
+      "name": "nginx proxy implementation",
+      "basis": "release-1.28.0",
+      "sources": {
+        "s6dfa81e36717": "https://github.com/nginx/nginx/blob/release-1.28.0/src/http/modules/ngx_http_proxy_module.c#L305-L310"
+      }
+    },
+    "caddy": {
+      "name": "Caddy reverse proxy parser",
+      "basis": "v2.11.4",
+      "sources": {
+        "s52039756d4f4": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go#L40",
+        "s9dde4a2bda4c": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go#L58-L62"
+      }
+    },
+    "iproute2": {
+      "name": "iproute2 ss manual",
+      "basis": "v6.12.0",
+      "sources": {
+        "s2afc4764d5bb": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L33-L34",
+        "sfaa932c2ca13": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L43-L44",
+        "sd295f82d643f": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L162-L163",
+        "s65278ee45850": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L374-L375"
+      }
     }
   },
   "claims": {
@@ -58,12 +85,12 @@ version_basis: {
     "host-allowlist": {"text": "Set --allowed-hosts mlflow.example.com for access beyond loopback; defaults admit localhost, 127.0.0.1, [::1], 0.0.0.0 and private ranges as Host headers, not client-source firewall rules.", "components": ["docs"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609"], "status": "REASONED"},
     "cors": {"text": "Set --cors-allowed-origins https://mlflow.example.com for the intended browser origin.", "components": ["docs"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609"], "status": "REASONED"},
     "middleware-disable": {"text": "Do not use --disable-security-middleware outside a test.", "components": ["docs"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609"], "status": "REASONED"},
-    "tls": {"text": "There are no dedicated server TLS flags; --uvicorn-opts can forward --ssl-keyfile/--ssl-certfile. Use a TLS proxy to 127.0.0.1:5000 or a tunnel/tailnet and set the allowed public hostname.", "components": ["docs"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609"], "status": "REASONED"},
+    "tls": {"text": "There are no dedicated server TLS flags; --uvicorn-opts can forward --ssl-keyfile/--ssl-certfile. Use a TLS proxy to 127.0.0.1:5000 or a tunnel/tailnet and set the allowed public hostname.", "components": ["docs", "nginx", "caddy"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609", "nginx:s6dfa81e36717", "caddy:s52039756d4f4", "caddy:s9dde4a2bda4c"], "status": "REASONED"},
     "client-tls": {"text": "Use MLFLOW_TRACKING_URI=https://mlflow.example.com and never enable MLFLOW_TRACKING_INSECURE_TLS in production.", "components": ["docs"], "sources": ["docs:s2517159af609"], "status": "REASONED"},
     "auth-app": {"text": "Install mlflow[auth] and run --app-name basic-auth; client username/password variables alone enable no server authentication. The September 2026 documentation has no experimental label.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
     "csrf-key": {"text": "Provision a long random MLFLOW_FLASK_SERVER_SECRET_KEY identical on every replica through a protected server.env file, mode 0600, with protected directories and no other-account ACL access; keep file and backups out of source control.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
-    "env-file": {"text": "Global --env-file loads dotenv before the server command without overriding existing environment; clear inherited key/config-path variables and require a readable regular non-symlink file before launching.", "components": ["docs"], "sources": ["docs:s559e7a8271b9"], "status": "REASONED"},
-    "key-exposure": {"text": "Only the file path reaches the launch command; MLflow v3.16.1 loads the key into its environment and forwards it to workers, retaining same-account/root memory and inheriting-process environment exposure.", "components": ["source", "docs"], "sources": ["source:sd775f10c4d07", "source:s349a81b9478e", "docs:s559e7a8271b9"], "status": "REASONED"},
+    "env-file": {"text": "Global --env-file loads dotenv before the server command without overriding existing environment; clear inherited key/config-path variables and require a readable regular non-symlink file before launching.", "components": ["docs", "source"], "sources": ["docs:s559e7a8271b9", "source:s99d30948902f", "source:s687f1c9977cd"], "status": "REASONED"},
+    "key-exposure": {"text": "Only the file path reaches the launch command; MLflow v3.16.1 loads the key into its environment and forwards it to workers, retaining same-account/root memory and inheriting-process environment exposure.", "components": ["source", "docs"], "sources": ["source:sd775f10c4d07", "source:s349a81b9478e", "docs:s559e7a8271b9", "source:s99d30948902f", "source:s687f1c9977cd"], "status": "REASONED"},
     "admin-bootstrap": {"text": "No default admin password: first start requires at least 12 characters from MLFLOW_AUTH_ADMIN_PASSWORD or admin_password, rejects password1234 and fails without a password; an already-bootstrapped admin needs no resupply.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
     "default-permission": {"text": "default_permission is READ on every resource; set NO_PERMISSIONS in the auth configuration to remove that default grant.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
     "auth-database": {"text": "database_uri defaults to basic_auth.db in the working directory; use a central database for multiple nodes, as in the PostgreSQL auth-database example.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
@@ -77,7 +104,7 @@ version_basis: {
     "artifact-proxy": {"text": "--serve-artifacts defaults on; --artifacts-destination s3://bucket lets the server proxy reads/writes for proxied experiments, holding storage credentials so clients need none.", "components": ["docs"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609"], "status": "REASONED"},
     "artifact-existing": {"text": "Pre-existing experiments and explicit direct artifact locations retain their locations outside tracking-server permission enforcement; inspect locations and apply storage IAM directly.", "components": ["docs"], "sources": ["docs:s2517159af609"], "status": "REASONED"},
     "artifact-direct": {"text": "With --no-serve-artifacts every client needs storage credentials and tracking-server permissions no longer gate artifacts; use environment or instance-role credentials, not repository/Compose secrets.", "components": ["docs"], "sources": ["docs:s2517159af609"], "status": "REASONED"},
-    "verify-bind": {"text": "Read every listener and require 5000 on 127.0.0.1; ss itself has no vendor citation here.", "components": ["source"], "sources": ["source:sf7285d252e29", "source:sa3993a9b625f"], "status": "REASONED", "verify": [1]},
+    "verify-bind": {"text": "Read every listener and require 5000 on 127.0.0.1; ss itself has no vendor citation here.", "components": ["source", "iproute2"], "sources": ["source:sf7285d252e29", "source:sa3993a9b625f", "iproute2:s2afc4764d5bb", "iproute2:sfaa932c2ca13", "iproute2:sd295f82d643f", "iproute2:s65278ee45850"], "status": "REASONED", "verify": [1]},
     "verify-network": {"text": "Outside :5000 must form no TCP connection: time_connect stays 0.000000 with a connection-level failure. A handshake or HTTP response means exposure; DNS/local socket errors are inconclusive.", "components": ["curl", "docs"], "sources": ["curl:s2b2686afaf41", "docs:s5b79d1871e0b"], "status": "REASONED", "verify": [1]},
     "verify-public-auth": {"text": "POST experiments/search with a minimal body: anonymous and wrong-password requests should return 401, valid admin 200; an open backend returns anonymous 200. Proxy credentials may also be needed; shell success is not a pass.", "components": ["docs", "curl"], "sources": ["docs:scbbc07258943", "docs:s996e587e947a", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
     "verify-backend-auth": {"text": "Repeat anonymous 401/admin 200 directly on loopback with Host: mlflow.example.com; an allowlist Host rejection is 403 before auth, and a proxy-only denial proves no backend enforcement.", "components": ["docs"], "sources": ["docs:scbbc07258943", "docs:s5b79d1871e0b", "docs:s996e587e947a"], "status": "REASONED", "verify": [1]},
@@ -92,7 +119,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -104,11 +131,11 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | host-allowlist: Set --allowed-hosts mlflow.example.com for access beyond loopback; defaults admit localhost, 127.0.0.1, [::1], 0.0.0.0 and private ranges as Host headers, not client-source firewall rules. | MLflow documentation unknown | REASONED |
 | cors: Set --cors-allowed-origins https://mlflow.example.com for the intended browser origin. | MLflow documentation unknown | REASONED |
 | middleware-disable: Do not use --disable-security-middleware outside a test. | MLflow documentation unknown | REASONED |
-| tls: There are no dedicated server TLS flags; --uvicorn-opts can forward --ssl-keyfile/--ssl-certfile. Use a TLS proxy to 127.0.0.1:5000 or a tunnel/tailnet and set the allowed public hostname. | MLflow documentation unknown | REASONED |
+| tls: There are no dedicated server TLS flags; --uvicorn-opts can forward --ssl-keyfile/--ssl-certfile. Use a TLS proxy to 127.0.0.1:5000 or a tunnel/tailnet and set the allowed public hostname. | MLflow documentation unknown; nginx proxy implementation release-1.28.0; Caddy reverse proxy parser v2.11.4 | REASONED |
 | client-tls: Use MLFLOW_TRACKING_URI=https://mlflow.example.com and never enable MLFLOW_TRACKING_INSECURE_TLS in production. | MLflow documentation unknown | REASONED |
 | auth-app: Install mlflow[auth] and run --app-name basic-auth; client username/password variables alone enable no server authentication. The September 2026 documentation has no experimental label. | MLflow documentation unknown | REASONED |
 | csrf-key: Provision a long random MLFLOW_FLASK_SERVER_SECRET_KEY identical on every replica through a protected server.env file, mode 0600, with protected directories and no other-account ACL access; keep file and backups out of source control. | MLflow documentation unknown | REASONED |
-| env-file: Global --env-file loads dotenv before the server command without overriding existing environment; clear inherited key/config-path variables and require a readable regular non-symlink file before launching. | MLflow documentation unknown | REASONED |
+| env-file: Global --env-file loads dotenv before the server command without overriding existing environment; clear inherited key/config-path variables and require a readable regular non-symlink file before launching. | MLflow documentation unknown; MLflow pinned source v3.16.1 | REASONED |
 | key-exposure: Only the file path reaches the launch command; MLflow v3.16.1 loads the key into its environment and forwards it to workers, retaining same-account/root memory and inheriting-process environment exposure. | MLflow pinned source v3.16.1; MLflow documentation unknown | REASONED |
 | admin-bootstrap: No default admin password: first start requires at least 12 characters from MLFLOW_AUTH_ADMIN_PASSWORD or admin_password, rejects password1234 and fails without a password; an already-bootstrapped admin needs no resupply. | MLflow documentation unknown | REASONED |
 | default-permission: default_permission is READ on every resource; set NO_PERMISSIONS in the auth configuration to remove that default grant. | MLflow documentation unknown | REASONED |
@@ -123,7 +150,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | artifact-proxy: --serve-artifacts defaults on; --artifacts-destination s3://bucket lets the server proxy reads/writes for proxied experiments, holding storage credentials so clients need none. | MLflow documentation unknown | REASONED |
 | artifact-existing: Pre-existing experiments and explicit direct artifact locations retain their locations outside tracking-server permission enforcement; inspect locations and apply storage IAM directly. | MLflow documentation unknown | REASONED |
 | artifact-direct: With --no-serve-artifacts every client needs storage credentials and tracking-server permissions no longer gate artifacts; use environment or instance-role credentials, not repository/Compose secrets. | MLflow documentation unknown | REASONED |
-| verify-bind: Read every listener and require 5000 on 127.0.0.1; ss itself has no vendor citation here. | MLflow pinned source v3.16.1 | REASONED |
+| verify-bind: Read every listener and require 5000 on 127.0.0.1; ss itself has no vendor citation here. | MLflow pinned source v3.16.1; iproute2 ss manual v6.12.0 | REASONED |
 | verify-network: Outside :5000 must form no TCP connection: time_connect stays 0.000000 with a connection-level failure. A handshake or HTTP response means exposure; DNS/local socket errors are inconclusive. | curl minimum write-out version 7.75.0; MLflow documentation unknown | REASONED |
 | verify-public-auth: POST experiments/search with a minimal body: anonymous and wrong-password requests should return 401, valid admin 200; an open backend returns anonymous 200. Proxy credentials may also be needed; shell success is not a pass. | MLflow documentation unknown; curl minimum write-out version 7.75.0 | REASONED |
 | verify-backend-auth: Repeat anonymous 401/admin 200 directly on loopback with Host: mlflow.example.com; an allowlist Host rejection is 403 before auth, and a proxy-only denial proves no backend enforcement. | MLflow documentation unknown | REASONED |
@@ -308,3 +335,7 @@ An authenticated user without permission on a resource gets `403`; a missing or 
 - curl manual (`--connect-timeout` bounds the connection phase only; the `time_connect`, `exitcode`, and `errormsg` write-out variables, the last two added in curl 7.75.0): https://curl.se/docs/manpage.html
 - MLflow `--host` option, default `127.0.0.1`, and `--port`, default `5000`, which the `MLFLOW_HOST` and `MLFLOW_PORT` environment variables override (pinned tag v3.16.1): https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/utils/cli_args.py#L162-L180
 - MLflow's tracking-server command, `def server`, takes those `--host` and `--port` options (pinned tag v3.16.1): https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L369-L541
+- nginx release-1.28.0 proxy directive registration (checked October 2026; `proxy_pass` takes one upstream argument): https://github.com/nginx/nginx/blob/release-1.28.0/src/http/modules/ngx_http_proxy_module.c#L305-L310
+- Caddy v2.11.4 `reverse_proxy` parser (checked October 2026): [directive registration](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go#L40) and [upstream syntax](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go#L58-L62).
+- iproute2 v6.12.0 `ss` manual (checked October 2026): [numeric output](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L33-L34), [listening sockets](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L43-L44), [process display](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L162-L163), and [TCP sockets](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L374-L375).
+- MLflow v3.16.1 dotenv loader (checked October 2026): [existing-environment precedence](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L85-L86) and [global eager `--env-file` option](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L94-L105).
