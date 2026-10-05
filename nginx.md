@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "a32fc8d8d095a8076ce19751ba7278712de8ffc5f4ccce0e4c1c9161d38b10e8",
+  "body_sha256": "6b68123690219675d0214ff292235b6217822990cd2cbb31e307ac1171cfc5aa",
   "components": {
     "ng": {
       "name": "nginx documentation",
@@ -24,14 +24,35 @@ version_basis: {
       "sources": {
         "s529b0eabe2ed": "https://ssl-config.mozilla.org/"
       }
+    },
+    "certbot": {
+      "name": "Certbot nginx configurator",
+      "basis": "v2.3.0",
+      "sources": {
+        "s3a02bfe1d7ad": "https://github.com/certbot/certbot/blob/v2.3.0/certbot-nginx/certbot_nginx/_internal/configurator.py#L711"
+      }
+    },
+    "hsts": {
+      "name": "HSTS specification",
+      "basis": "RFC 6797",
+      "sources": {
+        "s3f5af5f440f9": "https://www.rfc-editor.org/rfc/rfc6797.html#section-6.1.2"
+      }
+    },
+    "nginx-source": {
+      "name": "nginx header-filter source",
+      "basis": "release-1.26.3",
+      "sources": {
+        "s0ae4e9bc8d07": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L216-L218"
+      }
     }
   },
   "claims": {
-    "certbot": {"text": "The guide says certbot --nginx edits the server block; certificate acquisition is delegated to the linked certificate guides. Sources omit certbot.", "components": ["ng"], "sources": ["ng:s6a0728ca7609"], "status": "REASONED"},
+    "certbot": {"text": "The guide says certbot --nginx edits the server block; certificate acquisition is delegated to the linked certificate guides. Sources omit certbot.", "components": ["ng", "certbot"], "sources": ["ng:s6a0728ca7609", "certbot:s3a02bfe1d7ad"], "status": "REASONED"},
     "tls": {"text": "443 IPv4/IPv6 TLS uses certificate chain and private key, TLSv1.2/TLSv1.3 and ssl_prefer_server_ciphers off.", "components": ["ng"], "sources": ["ng:s6a0728ca7609"], "status": "REASONED"},
     "http2": {"text": "http2 on requires nginx 1.25.1+; older versions use listen 443 ssl http2. No HTTP/2 module source is listed.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED"},
     "tokens": {"text": "server_tokens off suppresses nginx version in headers and error pages.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED"},
-    "hsts": {"text": "Send HSTS only after HTTPS works; includeSubDomains commits every subdomain for max-age. Sources omit the headers module.", "components": ["ng"], "sources": ["ng:s6a0728ca7609"], "status": "REASONED"},
+    "hsts": {"text": "Send HSTS only after HTTPS works; includeSubDomains commits every subdomain for max-age. Sources omit the headers module.", "components": ["ng", "hsts", "nginx-source"], "sources": ["ng:s6a0728ca7609", "hsts:s3f5af5f440f9", "nginx-source:s0ae4e9bc8d07"], "status": "REASONED"},
     "hsts-inheritance": {"text": "A location add_header drops inherited server headers; always changes response-code coverage, not inheritance. Sources omit the headers module.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED"},
     "proxy": {"text": "Proxy to loopback 127.0.0.1:3000 and set Host, X-Forwarded-For, X-Forwarded-Proto and X-Forwarded-Host.", "components": ["ng"], "sources": ["ng:sf3430c5a0b22"], "status": "REASONED"},
     "forwarded-host": {"text": "Overwrite X-Forwarded-Host: client-set values otherwise pass upstream.", "components": ["ng"], "sources": ["ng:sf3430c5a0b22"], "status": "REASONED"},
@@ -65,15 +86,15 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| certbot: The guide says certbot --nginx edits the server block; certificate acquisition is delegated to the linked certificate guides. Sources omit certbot. | nginx documentation unknown | REASONED |
+| certbot: The guide says certbot --nginx edits the server block; certificate acquisition is delegated to the linked certificate guides. Sources omit certbot. | nginx documentation unknown; Certbot nginx configurator v2.3.0 | REASONED |
 | tls: 443 IPv4/IPv6 TLS uses certificate chain and private key, TLSv1.2/TLSv1.3 and ssl_prefer_server_ciphers off. | nginx documentation unknown | REASONED |
 | http2: http2 on requires nginx 1.25.1+; older versions use listen 443 ssl http2. No HTTP/2 module source is listed. | nginx documentation unknown | REASONED |
 | tokens: server_tokens off suppresses nginx version in headers and error pages. | nginx documentation unknown | REASONED |
-| hsts: Send HSTS only after HTTPS works; includeSubDomains commits every subdomain for max-age. Sources omit the headers module. | nginx documentation unknown | REASONED |
+| hsts: Send HSTS only after HTTPS works; includeSubDomains commits every subdomain for max-age. Sources omit the headers module. | nginx documentation unknown; HSTS specification RFC 6797; nginx header-filter source release-1.26.3 | REASONED |
 | hsts-inheritance: A location add_header drops inherited server headers; always changes response-code coverage, not inheritance. Sources omit the headers module. | nginx documentation unknown | REASONED |
 | proxy: Proxy to loopback 127.0.0.1:3000 and set Host, X-Forwarded-For, X-Forwarded-Proto and X-Forwarded-Host. | nginx documentation unknown | REASONED |
 | forwarded-host: Overwrite X-Forwarded-Host: client-set values otherwise pass upstream. | nginx documentation unknown | REASONED |
@@ -293,3 +314,6 @@ ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.
 - ngx_http_auth_basic_module: https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html
 - Real IP module (`set_real_ip_from`, `real_ip_header`) for nginx behind a CDN or proxy: https://nginx.org/en/docs/http/ngx_http_realip_module.html
 - Mozilla SSL Configuration Generator: https://ssl-config.mozilla.org/
+- Certbot v2.3.0 nginx server-block installation (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot-nginx/certbot_nginx/_internal/configurator.py#L711
+- RFC 6797 HSTS policy lifetime and subdomains (checked October 2026): https://www.rfc-editor.org/rfc/rfc6797.html#section-6.1.2
+- nginx release-1.26.3 header-filter `always` handling (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L216-L218
