@@ -3,10 +3,10 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "a94fcf75a683cc45d1ede7e50cb814fe85ece4c3c6501d95aec233439c1945a9",
+  "body_sha256": "d3ad73291ee85310cf3b07fd80dffa268a9024c603f7259878edded551809eb3",
   "components": {
     "docs": {
-      "name": "SurrealDB documentation",
+      "name": "SurrealDB documentation (rolling)",
       "basis": "unknown",
       "sources": {
         "s36c00a9caa98": "https://surrealdb.com/docs/reference/cli/surrealdb-cli/commands/start",
@@ -33,17 +33,10 @@ version_basis: {
       }
     },
     "defaults": {
-      "name": "SurrealDB default transition",
-      "basis": "2.0.0",
+      "name": "SurrealDB 2.0 release announcement",
+      "basis": "unknown",
       "sources": {
         "se73fa9c93548": "https://surrealdb.com/releases/2.0"
-      }
-    },
-    "authenticate-compat": {
-      "name": "SurrealDB AUTHENTICATE qualification",
-      "basis": "3.2.x",
-      "sources": {
-        "s048fd6bd1f3e": "https://surrealdb.com/docs/reference/query-language/statements/define/access/jwt"
       }
     },
     "audience": {
@@ -82,7 +75,7 @@ version_basis: {
     "signup": {"text": "Unauthenticated /signup and /signin are intentional; omit SIGNUP to prevent public registration and test refusal alongside a provisioned-account sign-in control.", "components": ["docs"], "sources": ["docs:sfdfa4e63cdd5", "docs:scc00d3d3618d"], "status": "REASONED"},
     "scope-history": {"text": "Use DEFINE ACCESS TYPE RECORD; legacy DEFINE SCOPE was deprecated in 2.x and removed in 3.0.", "components": ["scope-old", "scope-removed"], "sources": ["scope-old:s5a6f3aad8f24", "scope-removed:s5a6f3aad8f24"], "status": "REASONED"},
     "access-types": {"text": "DEFINE ACCESS also supports JWT and per-client BEARER keys; standalone JWT creates system-level sessions, while RECORD WITH JWT retains record permissions.", "components": ["docs"], "sources": ["docs:sdaa9a636537a", "docs:sfdfa4e63cdd5", "docs:s048fd6bd1f3e"], "status": "REASONED"},
-    "jwt-checks": {"text": "Verify token algorithm/key or JWKS, issuer and audience; native AUDIENCE is a 3.3 feature and 3.2.x uses AUTHENTICATE. Compare invalid tokens against a valid control.", "components": ["docs", "audience", "authenticate-compat"], "sources": ["docs:s048fd6bd1f3e", "audience:s048fd6bd1f3e", "authenticate-compat:s048fd6bd1f3e"], "status": "REASONED"},
+    "jwt-checks": {"text": "Verify token algorithm/key or JWKS, issuer and audience; native AUDIENCE is a 3.3 feature and 3.2.x uses AUTHENTICATE. Compare invalid tokens against a valid control.", "components": ["docs", "audience"], "sources": ["docs:s048fd6bd1f3e", "audience:s048fd6bd1f3e"], "status": "REASONED"},
     "capability-all": {"text": "allow-all and deny-all default off; prefer deny-all with narrow route, RPC-method and function allowances.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
     "capability-net": {"text": "Network access is denied by default; restrict http::* and JWKS destinations and retain external egress protections against SSRF.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
     "capability-functions": {"text": "Functions are allowed by default; a bare allow-funcs broadens access beyond narrow named allowances.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
@@ -110,33 +103,33 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| auth-default: Since 2.0.0 authentication defaults on, --auth was removed and --unauthenticated added; older releases do not share this default. | SurrealDB default transition 2.0.0 | REASONED |
-| bind-default: Since 2.0.0 the CLI defaults to 127.0.0.1:8000; v3.2.4 --bind/-b and SURREAL_BIND retain that loopback default. | SurrealDB default transition 2.0.0; SurrealDB CLI and image v3.2.4 | REASONED |
-| root-bootstrap: User/password flags or SURREAL_USER/PASS initialize a root only when none exists; they neither disable authentication nor rotate an existing password. | SurrealDB documentation unknown; SurrealDB CLI and image v3.2.4 | REASONED |
+| auth-default: Since 2.0.0 authentication defaults on, --auth was removed and --unauthenticated added; older releases do not share this default. | SurrealDB 2.0 release announcement unknown | REASONED |
+| bind-default: Since 2.0.0 the CLI defaults to 127.0.0.1:8000; v3.2.4 --bind/-b and SURREAL_BIND retain that loopback default. | SurrealDB 2.0 release announcement unknown; SurrealDB CLI and image v3.2.4 | REASONED |
+| root-bootstrap: User/password flags or SURREAL_USER/PASS initialize a root only when none exists; they neither disable authentication nor rotate an existing password. | SurrealDB documentation (rolling) unknown; SurrealDB CLI and image v3.2.4 | REASONED |
 | root-input: v3.2.4 start has no stdin password form; prompt and supply a command-local environment assignment, avoiding argv but exposing the server environment to same-user/root inspection. | SurrealDB CLI and image v3.2.4 | REASONED |
-| environment: The clean-Bash block clears user/password variables and rejects other inherited SURREAL_* options, including auth and bind overrides. | SurrealDB documentation unknown; SurrealDB CLI and image v3.2.4 | REASONED |
-| unauthenticated: --unauthenticated/SURREAL_UNAUTHENTICATED gives guests OWNER-equivalent access; never carry it onto a remotely reachable deployment. | SurrealDB documentation unknown; SurrealDB CLI and image v3.2.4 | REASONED |
+| environment: The clean-Bash block clears user/password variables and rejects other inherited SURREAL_* options, including auth and bind overrides. | SurrealDB documentation (rolling) unknown; SurrealDB CLI and image v3.2.4 | REASONED |
+| unauthenticated: --unauthenticated/SURREAL_UNAUTHENTICATED gives guests OWNER-equivalent access; never carry it onto a remotely reachable deployment. | SurrealDB documentation (rolling) unknown; SurrealDB CLI and image v3.2.4 | REASONED |
 | docker-bind: Pinned image stages set SURREAL_BIND=0.0.0.0:8000 without CMD; start without an override listens on all container IPv4 interfaces, requiring private network or loopback publication. | SurrealDB CLI and image v3.2.4 | REASONED |
-| private-network: Widen host binds only deliberately to private addresses; internal-service databases should have no public interface. | SurrealDB documentation unknown | REASONED |
-| system-users: Root, namespace and database system users use OWNER/EDITOR/VIEWER RBAC; all bypass table/field PERMISSIONS, so scoped system users do not supply record isolation. | SurrealDB documentation unknown | REASONED |
-| record-users: Record users authenticate through DEFINE ACCESS TYPE RECORD SIGNUP/SIGNIN logic and receive only explicit table/field permissions; absent permissions grant nothing. | SurrealDB documentation unknown | REASONED |
-| signup: Unauthenticated /signup and /signin are intentional; omit SIGNUP to prevent public registration and test refusal alongside a provisioned-account sign-in control. | SurrealDB documentation unknown | REASONED |
+| private-network: Widen host binds only deliberately to private addresses; internal-service databases should have no public interface. | SurrealDB documentation (rolling) unknown | REASONED |
+| system-users: Root, namespace and database system users use OWNER/EDITOR/VIEWER RBAC; all bypass table/field PERMISSIONS, so scoped system users do not supply record isolation. | SurrealDB documentation (rolling) unknown | REASONED |
+| record-users: Record users authenticate through DEFINE ACCESS TYPE RECORD SIGNUP/SIGNIN logic and receive only explicit table/field permissions; absent permissions grant nothing. | SurrealDB documentation (rolling) unknown | REASONED |
+| signup: Unauthenticated /signup and /signin are intentional; omit SIGNUP to prevent public registration and test refusal alongside a provisioned-account sign-in control. | SurrealDB documentation (rolling) unknown | REASONED |
 | scope-history: Use DEFINE ACCESS TYPE RECORD; legacy DEFINE SCOPE was deprecated in 2.x and removed in 3.0. | SurrealDB SCOPE deprecation 2.x; SurrealDB SCOPE removal 3.0 | REASONED |
-| access-types: DEFINE ACCESS also supports JWT and per-client BEARER keys; standalone JWT creates system-level sessions, while RECORD WITH JWT retains record permissions. | SurrealDB documentation unknown | REASONED |
-| jwt-checks: Verify token algorithm/key or JWKS, issuer and audience; native AUDIENCE is a 3.3 feature and 3.2.x uses AUTHENTICATE. Compare invalid tokens against a valid control. | SurrealDB documentation unknown; SurrealDB native AUDIENCE minimum 3.3; SurrealDB AUTHENTICATE qualification 3.2.x | REASONED |
-| capability-all: allow-all and deny-all default off; prefer deny-all with narrow route, RPC-method and function allowances. | SurrealDB documentation unknown | REASONED |
-| capability-net: Network access is denied by default; restrict http::* and JWKS destinations and retain external egress protections against SSRF. | SurrealDB documentation unknown | REASONED |
-| capability-functions: Functions are allowed by default; a bare allow-funcs broadens access beyond narrow named allowances. | SurrealDB documentation unknown | REASONED |
-| capability-scripting: Embedded scripting defaults off; enable it only when required. | SurrealDB documentation unknown | REASONED |
-| capability-guests: Guest access defaults off; capabilities govern what an authorized query may do independently of authentication. | SurrealDB documentation unknown | REASONED |
-| capability-precedence: More-specific capability rules override broader ones; deny wins at equal specificity. | SurrealDB documentation unknown | REASONED |
-| tls: web-crt and web-key provide native HTTPS; a TLS proxy or private tailnet is another documented access pattern. | SurrealDB documentation unknown | REASONED |
-| mfa: No native second factor is provided; require IdP or administrative-gateway MFA and prevent direct-origin bypass. | SurrealDB documentation unknown | REASONED |
-| verify-inventory: Inventory 8000 on loopback/private addresses; /health establishes process availability, not authentication. | SurrealDB documentation unknown | REASONED |
-| verify-auth: Compare INFO FOR DB without credentials and with a system-user JWT on the same NS/DB: exposed auth-off returns info; fixed denies anonymous access and returns authenticated OK data. | SurrealDB documentation unknown | REASONED |
-| verify-auth-limits: Test direct origin and HTTPS; HTTP 200, missing database, disabled route, proxy rejection or transport failure alone proves no authorization control or record permissions. | SurrealDB documentation unknown | REASONED |
-| verify-origin: Any HTTP answer from an untrusted-network origin probe proves reachability; a gateway result alone does not establish origin isolation. | SurrealDB documentation unknown | REASONED |
-| verify-tls: Validate the certificate chain at every TLS termination using normal trust checks, never -k. | SurrealDB documentation unknown | REASONED |
+| access-types: DEFINE ACCESS also supports JWT and per-client BEARER keys; standalone JWT creates system-level sessions, while RECORD WITH JWT retains record permissions. | SurrealDB documentation (rolling) unknown | REASONED |
+| jwt-checks: Verify token algorithm/key or JWKS, issuer and audience; native AUDIENCE is a 3.3 feature and 3.2.x uses AUTHENTICATE. Compare invalid tokens against a valid control. | SurrealDB documentation (rolling) unknown; SurrealDB native AUDIENCE minimum 3.3 | REASONED |
+| capability-all: allow-all and deny-all default off; prefer deny-all with narrow route, RPC-method and function allowances. | SurrealDB documentation (rolling) unknown | REASONED |
+| capability-net: Network access is denied by default; restrict http::* and JWKS destinations and retain external egress protections against SSRF. | SurrealDB documentation (rolling) unknown | REASONED |
+| capability-functions: Functions are allowed by default; a bare allow-funcs broadens access beyond narrow named allowances. | SurrealDB documentation (rolling) unknown | REASONED |
+| capability-scripting: Embedded scripting defaults off; enable it only when required. | SurrealDB documentation (rolling) unknown | REASONED |
+| capability-guests: Guest access defaults off; capabilities govern what an authorized query may do independently of authentication. | SurrealDB documentation (rolling) unknown | REASONED |
+| capability-precedence: More-specific capability rules override broader ones; deny wins at equal specificity. | SurrealDB documentation (rolling) unknown | REASONED |
+| tls: web-crt and web-key provide native HTTPS; a TLS proxy or private tailnet is another documented access pattern. | SurrealDB documentation (rolling) unknown | REASONED |
+| mfa: No native second factor is provided; require IdP or administrative-gateway MFA and prevent direct-origin bypass. | SurrealDB documentation (rolling) unknown | REASONED |
+| verify-inventory: Inventory 8000 on loopback/private addresses; /health establishes process availability, not authentication. | SurrealDB documentation (rolling) unknown | REASONED |
+| verify-auth: Compare INFO FOR DB without credentials and with a system-user JWT on the same NS/DB: exposed auth-off returns info; fixed denies anonymous access and returns authenticated OK data. | SurrealDB documentation (rolling) unknown | REASONED |
+| verify-auth-limits: Test direct origin and HTTPS; HTTP 200, missing database, disabled route, proxy rejection or transport failure alone proves no authorization control or record permissions. | SurrealDB documentation (rolling) unknown | REASONED |
+| verify-origin: Any HTTP answer from an untrusted-network origin probe proves reachability; a gateway result alone does not establish origin isolation. | SurrealDB documentation (rolling) unknown | REASONED |
+| verify-tls: Validate the certificate chain at every TLS termination using normal trust checks, never -k. | SurrealDB documentation (rolling) unknown | REASONED |
 <!-- version-basis:end -->
 
 Since SurrealDB 2.0.0, authentication is enabled by default and the CLI binds `127.0.0.1:8000` rather than
@@ -315,5 +308,5 @@ TLS terminates with normal validation (a trusted CA for private PKI); never use 
 - SurrealDB 2.0.0 release (auth on by default, `--unauthenticated`, bind default 127.0.0.1): https://surrealdb.com/releases/2.0
 - SurrealDB HTTP protocol (`/signup`, `/signin`, `POST /sql`, `/health`): https://surrealdb.com/docs/reference/rest-api/http-protocol
 - SurrealDB INFO statement (database information requires a system user): https://surrealdb.com/docs/reference/query-language/statements/info
-- SurrealDB DEFINE ACCESS TYPE JWT (native `AUDIENCE` since 3.3, issuer/audience checks via `AUTHENTICATE`) (AUTHENTICATE on 3.2.x): https://surrealdb.com/docs/reference/query-language/statements/define/access/jwt
+- SurrealDB DEFINE ACCESS TYPE JWT (native `AUDIENCE` since 3.3, issuer/audience checks via `AUTHENTICATE`) (rolling documentation, checked September 2026): https://surrealdb.com/docs/reference/query-language/statements/define/access/jwt
 - SurrealDB DEFINE SCOPE (deprecated in 2.x, removed in 3.0): https://surrealdb.com/docs/reference/query-language/statements/define/scope

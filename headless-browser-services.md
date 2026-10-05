@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "797a4a5e9272ca38c8db6845d955c89c2ede3fbf6a4065e9f4c50a6c585ee11d",
+  "body_sha256": "6be7d8b96c82119f53878c6986aa97d5134eded2c815c4c095f456504a81736e",
   "components": {
     "chromium": {
       "name": "Chromium",
@@ -31,8 +31,8 @@ version_basis: {
       }
     },
     "chrome-change": {
-      "name": "Chrome profile restriction",
-      "basis": "136",
+      "name": "Chrome remote-debugging announcement",
+      "basis": "unknown",
       "sources": {
         "s643c9edab288": "https://developer.chrome.com/blog/remote-debugging-port"
       }
@@ -157,7 +157,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | cdp-auth: Command-line CDP has no client authentication or password flag; Host and Origin checks do not authenticate clients. | Chromium 154.0.8037.57 | REASONED |
 | cdp-capabilities: CDP grants page JavaScript, cookie/credential and tab control; restrict ingress, browser egress and local-file reach. | Chrome DevTools Protocol unknown | REASONED |
 | cdp-private: Keep DevTools loopback/private behind authenticated access; inspect forwarders and container namespaces, since publishing cannot reach container loopback. | Chromium 154.0.8037.57 | REASONED |
-| cdp-profile: Chrome 136 requires non-default user data; pinned desktop branding check excludes normal Chromium, and Chrome for Testing exemption rests on the announcement. | Chrome profile restriction 136; Chromium 154.0.8037.57 | REASONED |
+| cdp-profile: Chrome 136 requires non-default user data; pinned desktop branding check excludes normal Chromium, and Chrome for Testing exemption rests on the announcement. | Chrome remote-debugging announcement unknown; Chromium 154.0.8037.57 | REASONED |
 | cdp-policy: RemoteDebuggingAllowed gates browser command-line and approval modes; headless-shell startup lacks the corresponding profile/policy check. | Chromium 154.0.8037.57 | REASONED |
 | cdp-pipe: Pipe mode alone opens no TCP port; supplying a port too can start an independent listener, and pipe access still grants browser control. | Chromium 154.0.8037.57 | REASONED |
 | grid-auth: Router username/password are unset by default, including Docker SE_ROUTER_USERNAME and SE_ROUTER_PASSWORD. | Selenium Grid unknown; Selenium Docker images aafe4d6136f3bb5afcd9b7cb691c624516d06e1b | REASONED |
@@ -419,7 +419,7 @@ missing files, authentication failures, connection failures, and timeouts are in
 - Target WebSocket URL serialization (Chromium 154.0.8037.57): https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L1032-L1055
 - Chrome DevTools Protocol remote debugging: https://developer.chrome.com/docs/devtools/remote-debugging/
 - Chrome DevTools Protocol domains (Runtime, Network, Page): https://chromedevtools.github.io/devtools-protocol/
-- Chrome 136 user-data-dir change and Chrome for Testing exemption (existing vendor citation, not re-fetched offline): https://developer.chrome.com/blog/remote-debugging-port
+- Chrome 136 user-data-dir change and Chrome for Testing exemption: https://developer.chrome.com/blog/remote-debugging-port
 - Selenium Grid CLI options (host, bind-host, username, password, https-certificate): https://www.selenium.dev/documentation/grid/configuration/cli_options/
 - Selenium Grid getting started (components, ports, distributed topology): https://www.selenium.dev/documentation/grid/getting_started/
 - Selenium Docker images env vars (SE_START_VNC, SE_VNC_PASSWORD, SE_BIND_HOST, SE_ROUTER_USERNAME): https://github.com/SeleniumHQ/docker-selenium/blob/aafe4d6136f3bb5afcd9b7cb691c624516d06e1b/ENV_VARIABLES.md

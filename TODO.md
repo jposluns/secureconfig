@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.191**, **2.48**, **3.40**, **4.12**.
+Next ids: **1.192**, **2.48**, **3.40**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -42,6 +42,7 @@ many.
 
 | ID | Item | Tags |
 | --- | --- | --- |
+| 1.191 | F-VERSION-LABEL-ROLLING: Sources items that pair a version label with an unpinned rolling-documentation URL misattribute the page to that version. Audit every such item corpus-wide and apply the 2026-09-27 pin-or-split ruling, keeping labels that state a version fact the page itself documents. Row opened by maintainer ruling 2026-09-28; batches a to c. (M, M) | `[gap]` |
 
 ## Priority 2: Deepen existing guides
 
