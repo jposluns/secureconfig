@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "72e02420addaad9790d2d7d4666607d7bf159be62b9857946faa5b4c92160652",
+  "body_sha256": "4f8acce7adad3c21b7820a689e70d64afa1184a7460f4f014eb719e18ac8e534",
   "components": {
     "pb": {
       "name": "PocketBase",
@@ -57,7 +57,7 @@ version_basis: {
         "s4a965bdeeb98": "https://appwrite.io/docs/advanced/self-hosting/production/security",
         "saa37bb5d4d7e": "https://appwrite.io/docs/partners/project/api-keys",
         "sa0bd132f7968": "https://appwrite.io/docs/advanced/security/permissions",
-        "s4c460f71c553": "https://appwrite.io/docs/products/databases/permissions/",
+        "s58ad28816c5d": "https://appwrite.io/docs/products/databases/tablesdb/legacy/permissions",
         "se308ccf94aac": "https://appwrite.io/docs/references/cloud/server-nodejs/databases",
         "s2bf9a4746d28": "https://appwrite.io/docs/advanced/self-hosting/configuration/environment-variables",
         "s000d05106450": "https://appwrite.io/docs/advanced/security/rate-limits",
@@ -105,7 +105,7 @@ version_basis: {
     "appwrite-mfa": {"text": "Enroll and verify operator TOTP, protect recovery codes; at 2.2.0 enabled MFA with a verified factor requires a second session factor.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite-docs:s221c6aaef8df", "appwrite:s193bfa5c6e22"], "status": "REASONED"},
     "appwrite-dev-env": {"text": "Development env disables root-only registration, abuse and router protection and carries placeholders; do not inherit it for production.", "components": ["appwrite"], "sources": ["appwrite:sadb8c6e7b00a"], "status": "REASONED"},
     "appwrite-recreate": {"text": "Apply env/Compose changes with docker compose up -d from the install directory, then check effective behavior.", "components": ["appwrite-docs"], "sources": ["appwrite-docs:s4a965bdeeb98"], "status": "REASONED"},
-    "appwrite-permissions": {"text": "Collection and document grants are additive; explicitly enable documentSecurity for document grants, whose default remains unverified.", "components": ["appwrite-docs"], "sources": ["appwrite-docs:s4c460f71c553", "appwrite-docs:se308ccf94aac"], "status": "REASONED"},
+    "appwrite-permissions": {"text": "Collection and document grants are additive; explicitly enable documentSecurity for document grants, whose default remains unverified.", "components": ["appwrite-docs"], "sources": ["appwrite-docs:s58ad28816c5d", "appwrite-docs:se308ccf94aac"], "status": "REASONED"},
     "appwrite-creation": {"text": "Omitted Client SDK permissions can grant creator read/update/delete; Server SDK/Console omission grants no ordinary access. Use specific users/teams for private data.", "components": ["appwrite-docs"], "sources": ["appwrite-docs:sa0bd132f7968"], "status": "REASONED"},
     "appwrite-keys": {"text": "Properly scoped server API keys bypass resource permissions but still obey operation scopes; keys.write is admin-equivalent and keys never belong in clients.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:s193bfa5c6e22", "appwrite-docs:saa37bb5d4d7e"], "status": "REASONED"},
     "appwrite-encryption": {"text": "Replace _APP_OPENSSL_KEY_V1=your-secret-key before production data; preserve the exact key separately, since replacement/loss strands encrypted secrets.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:s9f5bd3b70f14", "appwrite-docs:s256ef73f7b85"], "status": "REASONED"},
@@ -119,7 +119,7 @@ version_basis: {
     "appwrite-functions": {"text": "Function execute roles and execution-key scopes default empty; grant narrowly. Disabled functions still admit authorized Server SDK API keys.", "components": ["appwrite"], "sources": ["appwrite:s655a0abb9ef0"], "status": "REASONED"},
     "appwrite-executor": {"text": "Keep executor/orchestrator private, protect Docker-socket authority and replace _APP_EXECUTOR_SECRET; container execution is not demonstrated hostile-tenant isolation.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:s8e5272615f2e", "appwrite-docs:s2bf9a4746d28"], "status": "REASONED"},
     "verify-pb-records": {"text": "Public rules allow guest reads; locked rules deny with 403, unsatisfied list filters can return empty 200 and view rules 404. Retain owner and separate superuser controls.", "components": ["pb-docs"], "sources": ["pb-docs:saedbdfbdfc48"], "status": "REASONED", "verify": [1]},
-    "verify-appwrite-records": {"text": "Broad collection grants defeat document restrictions; removing them must deny unrelated users while document grantees succeed. Compare client/server creation defaults.", "components": ["appwrite-docs"], "sources": ["appwrite-docs:s4c460f71c553", "appwrite-docs:sa0bd132f7968"], "status": "REASONED", "verify": [1]},
+    "verify-appwrite-records": {"text": "Broad collection grants defeat document restrictions; removing them must deny unrelated users while document grantees succeed. Compare client/server creation defaults.", "components": ["appwrite-docs"], "sources": ["appwrite-docs:s58ad28816c5d", "appwrite-docs:sa0bd132f7968"], "status": "REASONED", "verify": [1]},
     "verify-appwrite-keys": {"text": "A correctly scoped server key reads despite empty permissions, while a key without scope fails; neither substitutes for an ordinary-user control.", "components": ["appwrite"], "sources": ["appwrite:s193bfa5c6e22"], "status": "REASONED", "verify": [1]},
     "verify-registration": {"text": "On disposable Appwrite fixtures compare open signup 201 with root-only account-limit failure and independent email/IP restrictions; retain login/invitation controls.", "components": ["appwrite"], "sources": ["appwrite:s2bb21218c5ee"], "status": "REASONED", "verify": [2]},
     "verify-pb-bootstrap": {"text": "Guest and ordinary-user _superusers record creation must fail while a valid installer token creates the private operator; static dashboard assets prove no admin access.", "components": ["pb"], "sources": ["pb:saf684a26056b", "pb:s69aa223f52e4"], "status": "REASONED"},
@@ -139,7 +139,7 @@ version_basis: {
     "verify-bundle": {"text": "Search filenames using protected exact-secret patterns with a disposable marker control; client bundles must contain neither superuser tokens nor Appwrite API keys, and encoded/split forms can evade scanning.", "components": ["pb-docs", "appwrite-docs"], "sources": ["pb-docs:s773e441dd51c", "appwrite-docs:saa37bb5d4d7e"], "status": "REASONED", "verify": [3]},
     "local-guards": {"text": "Recorded guard tests rejected placeholders and omitted/shortened arguments; this demonstrates shell behavior only, not service access or deployed-bundle scanning.", "components": ["pb-docs", "appwrite-docs"], "sources": ["pb-docs:saedbdfbdfc48", "appwrite-docs:sa0bd132f7968", "appwrite-docs:saa37bb5d4d7e"], "status": "DEMONSTRATED", "evidence": "Local guard tests refused embedded `REPLACE_WITH_` placeholders, `example.com`, angle brackets, empty arguments, and omitted or shortened `set --` lines."},
     "local-syntax": {"text": "All three bash fences have recorded local lint/syntax success, not live service evidence; ShellCheck version is recorded only in the body.", "components": ["appwrite", "pb-docs", "appwrite-docs"], "sources": ["pb-docs:saedbdfbdfc48", "appwrite:s2bb21218c5ee", "appwrite-docs:saa37bb5d4d7e"], "status": "DEMONSTRATED", "evidence": "All three bash blocks passed ShellCheck 0.11.0 and `bash -n` during authoring."},
-    "source-limits": {"text": "Pin-specific Appwrite legacy permissions/creator defaults and PocketBase CLI/backup archive tracing remain incomplete; documentSecurity and --dev defaults are not established.", "components": ["appwrite-docs", "pb-docs"], "sources": ["appwrite-docs:sa0bd132f7968", "appwrite-docs:s4c460f71c553", "appwrite-docs:se308ccf94aac", "pb-docs:s9029ab974cf1"], "status": "REASONED"}
+    "source-limits": {"text": "Pin-specific Appwrite legacy permissions/creator defaults and PocketBase CLI/backup archive tracing remain incomplete; documentSecurity and --dev defaults are not established.", "components": ["appwrite-docs", "pb-docs"], "sources": ["appwrite-docs:sa0bd132f7968", "appwrite-docs:s58ad28816c5d", "appwrite-docs:se308ccf94aac", "pb-docs:s9029ab974cf1"], "status": "REASONED"}
   }
 }
 ---
@@ -150,7 +150,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -493,9 +493,7 @@ Check effective behavior after recreation. See
 Set collection and document `permissions` deliberately. Enable `documentSecurity` explicitly
 when using document-level grants; **its default was not verified here**. Access granted at
 **either collection or document level** is sufficient. A broad collection grant therefore
-defeats an intended document restriction. The current database documentation describes this
-additive model using table/row terminology; the legacy API uses collection/document names.
-See [database permissions](https://appwrite.io/docs/products/databases/permissions/) and the
+defeats an intended document restriction. See [legacy database permissions](https://appwrite.io/docs/products/databases/tablesdb/legacy/permissions) and the
 [legacy API reference](https://appwrite.io/docs/references/cloud/server-nodejs/databases).
 
 Omitted permissions do not have one universal result: resources created through a Client SDK
@@ -660,7 +658,7 @@ REASONED: following block; resource and scope comparisons follow the cited vendo
 | Check | Exposed and fixed comparison |
 | --- | --- |
 | PocketBase record rules | **REASONED:** On the private fixture, request `/api/collections/REPLACE_WITH_COLLECTION/records` and `/api/collections/REPLACE_WITH_COLLECTION/records/REPLACE_WITH_RECORD`. Public empty rules allow guest reads. Locked rules return 403 to non-superusers. Restrictive rules must return only authorized records: an unsatisfied list filter can return 200 with empty `items`, while an unsatisfied view rule returns 404. Confirm the authorized ordinary user receives the known fixture record; separately confirm a superuser bypasses record rules. See [rule outcomes](https://pocketbase.io/docs/api-rules-and-filters/). |
-| Appwrite document permissions | **REASONED:** Request `/v1/databases/REPLACE_WITH_DATABASE/collections/REPLACE_WITH_COLLECTION/documents/REPLACE_WITH_DOCUMENT`. With document security explicitly enabled, first demonstrate that a broad collection read grant allows an otherwise ungranted user. Remove that broad grant: the intended document grantee must still receive the fixture, while guests and an unrelated user receive no document data. Compare omitted permissions for client-created and server-created fixtures. See [additive permissions](https://appwrite.io/docs/products/databases/permissions/) and [creation defaults](https://appwrite.io/docs/advanced/security/permissions). |
+| Appwrite document permissions | **REASONED:** Request `/v1/databases/REPLACE_WITH_DATABASE/collections/REPLACE_WITH_COLLECTION/documents/REPLACE_WITH_DOCUMENT`. With document security explicitly enabled, first demonstrate that a broad collection read grant allows an otherwise ungranted user. Remove that broad grant: the intended document grantee must still receive the fixture, while guests and an unrelated user receive no document data. Compare omitted permissions for client-created and server-created fixtures. See [additive permissions](https://appwrite.io/docs/products/databases/tablesdb/legacy/permissions) and [creation defaults](https://appwrite.io/docs/advanced/security/permissions). |
 | Appwrite server-key scope | **REASONED:** Repeat the same document request from a trusted server using a protected API-key header file. A key with the required read scope can read despite empty resource permissions; a key lacking that scope must be refused. This is a separate test, never the positive control for an ordinary user's permissions. See [key authorization](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/controllers/shared/api.php). |
 
 ### 2. Test bootstrap and registration through the actual APIs
@@ -828,7 +826,7 @@ service result or deployed-bundle scan is claimed.
 - [PocketBase v0.40.4 backup download authorization](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/backup.go).
 - [PocketBase v0.40.4 rate limiter and exemptions](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/middlewares_rate_limit.go).
 - [Appwrite permissions, creation defaults, and server integrations (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/security/permissions).
-- [Appwrite additive database permissions (rolling documentation, checked September 2026)](https://appwrite.io/docs/products/databases/permissions/).
+- [Appwrite legacy collection/document permissions (rolling documentation, checked October 2026)](https://appwrite.io/docs/products/databases/tablesdb/legacy/permissions).
 - [Appwrite legacy Databases API (rolling documentation, checked September 2026)](https://appwrite.io/docs/references/cloud/server-nodejs/databases).
 - [Appwrite environment reference and HTTPS deprecation wording (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/self-hosting/configuration/environment-variables).
 - [Appwrite rate limits (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/security/rate-limits).
