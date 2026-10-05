@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "c2657a878fc25df437454b614171c382304ed2ad2b1873e472299d906377da5f",
+  "body_sha256": "df2b2a948f80cbe4d5912dacdb42fd5ee3eba63dbfcf56482f17a08b22e9c748",
   "components": {
     "streamlit": {
       "name": "Streamlit",
@@ -73,7 +73,8 @@ version_basis: {
       "basis": "v2.11.4",
       "sources": {
         "sb0b62262df7b": "https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/builtins.go#L58-L88",
-        "sa2f9251701a0": "https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/options.go#L347-L476",
+        "sb4be8e0cfe75": "https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/options.go#L347-L381",
+        "sd11645c28457": "https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/options.go#L459-L476",
         "s9702adeb8c11": "https://raw.githubusercontent.com/caddyserver/caddy/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go",
         "s6b8d900baeb9": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/caddyauth/caddyfile.go#L29-L36"
       }
@@ -121,7 +122,7 @@ version_basis: {
     "static-test": {"text": "Recorded static serving bypassed st.stop; enabled returned marker text and disabled returned app HTML, both 200, so inspect the body.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s6f8f2b27ef37"], "status": "DEMONSTRATED", "evidence": "with `server.enableStaticServing` on, the script called `st.stop()` at once, yet `/app/static/public.txt` returned the file with `200` and `text/plain`. With it off, the same path returned `200` with the app's HTML page, not the file."},
     "execution-egress": {"text": "TLS/login do not sandbox Python; use least privilege and minimal credentials, avoid executing inputs, and restrict URL-fetch egress including metadata/internal networks.", "components": ["ssrf", "streamlit-rolling"], "sources": ["streamlit-rolling:s720555b11b6e", "ssrf:s7eb820e1e53b"], "status": "REASONED"},
     "verify-tls": {"text": "Recorded native TLS returned 200 with the trusted test CA and failed trust with exit 60; never use -k.", "components": ["curl", "streamlit-rolling"], "sources": ["streamlit-rolling:s560ba59f10f9", "curl:s2b2686afaf41"], "status": "DEMONSTRATED", "evidence": "**Block 1 against native TLS:** `tls=200` with the test CA trusted. With curl not trusting the certificate it stopped at `tls=000 exit=60`."},
-    "verify-proxy": {"text": "Recorded Caddy loopback Basic-auth comparison returned exposed health 200/ok versus fixed 401; wrong credentials also failed and valid sessions received the canary.", "components": ["streamlit-rolling", "caddy"], "sources": ["streamlit-rolling:s5b7392df2d3a", "streamlit-rolling:s66e514173b37", "caddy:sb0b62262df7b", "caddy:sa2f9251701a0", "caddy:s9702adeb8c11", "caddy:s6b8d900baeb9"], "status": "DEMONSTRATED", "evidence": "Block 1 got `401` on both requests, and a wrong credential also got `401`."},
+    "verify-proxy": {"text": "Recorded Caddy loopback Basic-auth comparison returned exposed health 200/ok versus fixed 401; wrong credentials also failed and valid sessions received the canary.", "components": ["streamlit-rolling", "caddy"], "sources": ["streamlit-rolling:s5b7392df2d3a", "streamlit-rolling:s66e514173b37", "caddy:sb0b62262df7b", "caddy:sb4be8e0cfe75", "caddy:sd11645c28457", "caddy:s9702adeb8c11", "caddy:s6b8d900baeb9"], "status": "DEMONSTRATED", "evidence": "Block 1 got `401` on both requests, and a wrong credential also got `401`."},
     "verify-oidc-proxy": {"text": "Recorded oauth2-proxy/Keycloak fixture redirected anonymous health and WebSocket requests; an allowed user reached the canary after password/TOTP, with other-domain 403.", "components": ["streamlit-rolling", "oauth2-proxy", "keycloak"], "sources": ["streamlit-rolling:s5b7392df2d3a", "oauth2-proxy:s088c1baa445d", "keycloak:sf802dc9c4313"], "status": "DEMONSTRATED", "evidence": "The anonymous health request got a `302`, and an anonymous websocket upgrade was redirected to the provider's authorization endpoint instead of upgraded."},
     "verify-native-browser": {"text": "Native anonymous index is intentionally 200; browser comparisons must check protected content, valid users, domain/email denial and MFA rather than index status.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a"], "status": "DEMONSTRATED", "evidence": "The anonymous index returned `200` by design, and the anonymous browser was sent to the provider's sign-in page."},
     "verify-mfa": {"text": "Recorded allowed native user reached the canary after TOTP; wrong code retained the provider's code prompt, using a loopback Keycloak fixture rather than Google.", "components": ["streamlit-rolling", "keycloak"], "sources": ["streamlit-rolling:s5b7392df2d3a", "keycloak:sf802dc9c4313"], "status": "DEMONSTRATED", "evidence": "The allowed user rendered the canary after enrolling and then entering TOTP codes; a wrong code kept them at the one-time-code prompt."},
@@ -377,7 +378,7 @@ Source-checked on 2026-09-18 against Streamlit 1.64.0, the current release at th
 - Streamlit app health endpoint, /_stcore/health without authentication (rolling documentation, checked September 2026): https://docs.streamlit.io/deploy/tutorials/docker
 - OWASP SSRF Prevention Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
 - curl manual (write-out variables require 7.75.0+): https://curl.se/docs/manpage.html
-- Caddy bind, certificate files, automatic HTTPS and admin options, and reverse-proxy configuration (pinned tag v2.11.4): https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/builtins.go#L58-L88, https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/options.go#L347-L476, https://raw.githubusercontent.com/caddyserver/caddy/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go
+- Caddy bind, certificate files, automatic HTTPS and admin options, and reverse-proxy configuration (pinned tag v2.11.4): https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/builtins.go#L58-L88, https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/options.go#L347-L381, https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/options.go#L459-L476, https://raw.githubusercontent.com/caddyserver/caddy/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go
 - Caddy basic_auth configuration and default bcrypt hashing (pinned tag v2.11.4): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/caddyauth/caddyfile.go#L29-L36
 - oauth2-proxy email-domain restriction and wildcard configuration (pinned tag v7.15.4): https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/pkg/apis/options/options.go#L141
 - Keycloak TOTP policy and user-attribute-to-token-claim mapper used by the recorded fixture (pinned tag 26.7.4): https://raw.githubusercontent.com/keycloak/keycloak/26.7.4/docs/documentation/server_admin/topics/authentication/otp-policies.adoc, https://github.com/keycloak/keycloak/blob/26.7.4/services/src/main/java/org/keycloak/protocol/oidc/mappers/UserAttributeMapper.java#L96-L104

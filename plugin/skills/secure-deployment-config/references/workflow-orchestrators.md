@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "5ac6879ff2987bfda1591c8b8d11aaab1191803428439729d6c8c97edffbc9d6",
+  "body_sha256": "c8bb9f0296e7047b42682a3655c0086ac7909f3755ba70716da757cd552397ac",
   "components": {
     "prefect": {
       "name": "Prefect Basic Auth minimum",
@@ -43,7 +43,8 @@ version_basis: {
         "s78c661193a1a": "https://airflow.apache.org/docs/apache-airflow/3.3.2/configurations-ref.html#simple-auth-manager-all-admins",
         "s963b49f58a13": "https://airflow.apache.org/docs/apache-airflow/3.3.2/security/api.html",
         "s705f1eb5de00": "https://raw.githubusercontent.com/apache/airflow/3.3.2/airflow-core/docs/howto/docker-compose/docker-compose.yaml",
-        "sdfcfd543928c": "https://airflow.apache.org/docs/apache-airflow/3.3.2/configurations-ref.html#secret-key"
+        "sdfcfd543928c": "https://airflow.apache.org/docs/apache-airflow/3.3.2/configurations-ref.html#secret-key",
+        "s4ed64009ed8f": "https://airflow.apache.org/docs/apache-airflow/3.3.2/configurations-ref.html#expose-config"
       }
     },
     "airflow-two": {
@@ -51,7 +52,8 @@ version_basis: {
       "basis": "2.11.0",
       "sources": {
         "sb97f3044e215": "https://airflow.apache.org/docs/apache-airflow/2.11.0/configurations-ref.html#auth-backends",
-        "sabb71378ad74": "https://airflow.apache.org/docs/apache-airflow/2.11.0/configurations-ref.html#secret-key"
+        "sabb71378ad74": "https://airflow.apache.org/docs/apache-airflow/2.11.0/configurations-ref.html#secret-key",
+        "s6813801b7880": "https://airflow.apache.org/docs/apache-airflow/2.11.0/configurations-ref.html#expose-config"
       }
     },
     "airflow-old": {
@@ -261,7 +263,7 @@ version_basis: {
     "airflow-compose-account": {"text": "Development Compose selects FAB but defaults to airflow/airflow; set credentials before account creation and update/delete an existing account separately.", "components": ["airflow-rolling", "fab-rolling", "airflow"], "sources": ["airflow-rolling:s39bfd91c507b", "fab-rolling:s989f09d05161", "airflow:s705f1eb5de00"], "status": "REASONED"},
     "airflow-jwt": {"text": "Replace Compose fallback AIRFLOW__API_AUTH__JWT_SECRET=airflow_jwt_secret and share the strong value with all signers/validators; the public fallback permits token forgery.", "components": ["airflow-rolling", "airflow"], "sources": ["airflow-rolling:s39bfd91c507b", "airflow:s705f1eb5de00"], "status": "REASONED"},
     "airflow-secret-key": {"text": "Provision the independent secret_key too: [webserver] on 2.11.0 and [api] on 3.3.2.", "components": ["airflow-two", "airflow-rolling", "airflow"], "sources": ["airflow-rolling:s2d1891641c91", "airflow-two:sabb71378ad74", "airflow:sdfcfd543928c"], "status": "REASONED"},
-    "airflow-config": {"text": "Keep configuration exposure off with WEBSERVER__EXPOSE_CONFIG on 2.11.0 or API__EXPOSE_CONFIG on 3.3.2.", "components": ["airflow-two", "airflow-rolling", "airflow"], "sources": ["airflow-rolling:s2d1891641c91", "airflow-two:sabb71378ad74", "airflow:sdfcfd543928c"], "status": "REASONED"},
+    "airflow-config": {"text": "Keep configuration exposure off with WEBSERVER__EXPOSE_CONFIG on 2.11.0 or API__EXPOSE_CONFIG on 3.3.2.", "components": ["airflow-two", "airflow-rolling", "airflow"], "sources": ["airflow-rolling:s2d1891641c91", "airflow-two:s6813801b7880", "airflow:s4ed64009ed8f"], "status": "REASONED"},
     "airflow-fernet": {"text": "Protect Connections, Variables, database and Fernet key; an empty key disables new-value encryption, while removing an existing key prevents decryption. Authorized workloads still use secrets.", "components": ["airflow-rolling"], "sources": ["airflow-rolling:s2d1891641c91"], "status": "REASONED"},
     "airflow-port": {"text": "Compose publishes 8080 on all interfaces; use 127.0.0.1:8080:8080 behind the fronting layer.", "components": ["airflow-rolling"], "sources": ["airflow-rolling:s39bfd91c507b"], "status": "REASONED"},
     "temporal-authorizer": {"text": "Empty authorizer selects noopAuthorizer allowing every API request, including administration; configure default authorization with trusted JWT keys and audience.", "components": ["temporal-rolling"], "sources": ["temporal-rolling:s06d4f0dbd0c8"], "status": "REASONED"},
@@ -793,5 +795,5 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
 - Apache Airflow Simple Auth Manager all-admin authentication bypass (3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/3.3.2/configurations-ref.html#simple-auth-manager-all-admins
 - Apache Airflow public API JWT authentication (3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/3.3.2/security/api.html
 - Apache Airflow development Compose FAB selection, administrator credentials and JWT fallback secret (pinned tag 3.3.2): https://raw.githubusercontent.com/apache/airflow/3.3.2/airflow-core/docs/howto/docker-compose/docker-compose.yaml
-- Apache Airflow webserver secret_key and EXPOSE_CONFIG settings (2.11.0 documentation): https://airflow.apache.org/docs/apache-airflow/2.11.0/configurations-ref.html#secret-key
-- Apache Airflow API secret_key and EXPOSE_CONFIG settings (3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/3.3.2/configurations-ref.html#secret-key
+- Apache Airflow webserver secret_key and EXPOSE_CONFIG settings (2.11.0 documentation): https://airflow.apache.org/docs/apache-airflow/2.11.0/configurations-ref.html#secret-key, https://airflow.apache.org/docs/apache-airflow/2.11.0/configurations-ref.html#expose-config
+- Apache Airflow API secret_key and EXPOSE_CONFIG settings (3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/3.3.2/configurations-ref.html#secret-key, https://airflow.apache.org/docs/apache-airflow/3.3.2/configurations-ref.html#expose-config

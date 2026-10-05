@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "1993ce3564b62ab890e24bce35e4849d99c4b041be977d3581c1b20c839fc746",
+  "body_sha256": "8295e348dbc18710f8e9396c52d9b6c72bc66c30c4cf9dd34b10752b71fe3530",
   "components": {
     "chromium": {
       "name": "Chromium",
@@ -117,7 +117,6 @@ version_basis: {
       "basis": "curl-8_14_1",
       "sources": {
         "s5e1383feef7d": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79",
-        "s3db522258e44": "https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md",
         "s82a34ee18632": "https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md"
       }
     }
@@ -150,7 +149,7 @@ version_basis: {
     "debug-bypass": {"text": "A separately forwarded Chromium debug endpoint bypasses front-tool authentication; keep 9222 unpublished and restrict browser egress.", "components": ["cdp", "selenium", "browserless", "playwright"], "sources": ["cdp:s523649d3b233", "selenium:s0a0129b8dd37", "browserless:sc0a7a8f6c093", "playwright:sc13c2e85f08c"], "status": "REASONED"},
     "verify-listeners": {"text": "Inventory every listener, including distributed Grid and configured Playwright ports, and require intended loopback/private addresses.", "components": ["chromium", "selenium", "selenium-docker", "browserless", "playwright"], "sources": ["chromium:s087ba883abe3", "chromium:s6e1b34a120d1", "selenium:sb304923778ab", "selenium:s0a0129b8dd37", "selenium-docker:s992336986b07", "browserless:sc0a7a8f6c093", "playwright:sc13c2e85f08c"], "status": "REASONED", "verify": [1]},
     "verify-cdp": {"text": "External command-line CDP returns 200 with webSocketDebuggerUrl when forwarded; fixed isolation retains a working local control. Approval-mode 404 is inconclusive.", "components": ["chromium", "curl-docs"], "sources": ["chromium:s804c1266fb81", "chromium:s66b210123ff8", "curl-docs:s5e1383feef7d"], "status": "REASONED", "verify": [2]},
-    "verify-grid": {"text": "Grid /status returns ready/node JSON when exposed; Router 401 with Basic challenge shows auth but still proves reachability. Probe Nodes separately.", "components": ["selenium", "curl-docs"], "sources": ["selenium:sb304923778ab", "selenium:s0a0129b8dd37", "curl-docs:s5e1383feef7d", "curl-docs:s3db522258e44"], "status": "REASONED", "verify": [2]},
+    "verify-grid": {"text": "Grid /status returns ready/node JSON when exposed; Router 401 with Basic challenge shows auth but still proves reachability. Probe Nodes separately.", "components": ["selenium", "curl-docs"], "sources": ["selenium:sb304923778ab", "selenium:s0a0129b8dd37", "curl-docs:s5e1383feef7d"], "status": "REASONED", "verify": [2]},
     "verify-browserless": {"text": "For open-source 2.56.7, expect /pressure load JSON without a configured TOKEN; with a nonempty TOKEN, expect 401 for missing/wrong tokens and JSON for a correct-token control.", "components": ["browserless-token-default", "browserless-docs", "curl-docs"], "sources": ["browserless-token-default:s87c144d59098", "browserless-token-default:sdf3b808e8920", "browserless-token-default:se8b696d56eda", "browserless-token-default:sc7973e3e21df", "browserless-docs:sa189d41ee219", "browserless-docs:sf1ec52c41f54", "curl-docs:s5e1383feef7d", "curl-docs:s82a34ee18632"], "status": "REASONED", "verify": [2]},
     "verify-playwright": {"text": "Any HTTP answer proves Playwright reachability; launchServer uses an ephemeral port unless set, while run-server takes --port.", "components": ["playwright", "playwright-source"], "sources": ["playwright:sc13c2e85f08c", "playwright:s94dfef953286", "playwright-source:scb030dc29caf", "playwright-source:sbbcd84289455", "playwright-source:s5a6acbd08927"], "status": "REASONED", "verify": [2]},
     "browserless-file-cve": {"text": "CVE-2026-92811 describes authenticated Playwright file reads despite ALLOW_FILE_PROTOCOL=false; its affected range 1.44.0 through 2.56.7 conflicts with the vendor 2.51.0 fix.", "components": ["browserless-file-fix", "cve-record"], "sources": ["cve-record:sba82c9b5f230", "browserless-file-fix:s94f1d485c2b7", "browserless-file-fix:s90a20f6566c9"], "status": "REASONED"},
@@ -458,4 +457,4 @@ missing files, authentication failures, connection failures, and timeouts are in
 - Playwright Docker (run-server remote connection): https://playwright.dev/docs/docker
 - Browserless ALLOW_FILE_PROTOCOL configuration and false default (pinned tag v2.51.0; version basis 2.51.0): https://raw.githubusercontent.com/browserless/browserless/v2.51.0/src/config.ts
 - Playwright run-server default path, generated launchServer path and GET /json discovery (pinned tag v1.58.2): https://github.com/microsoft/playwright/blob/v1.58.2/packages/playwright-core/src/cli/program.ts#L292-L307, https://raw.githubusercontent.com/microsoft/playwright/v1.58.2/packages/playwright-core/src/browserServerImpl.ts, https://raw.githubusercontent.com/microsoft/playwright/v1.58.2/packages/playwright-core/src/remote/playwrightServer.ts
-- curl diagnostic variables added in 7.75.0 and header/configuration input from stdin (pinned tag curl-8_14_1): https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79, https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md, https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md
+- curl diagnostic variables added in 7.75.0 and configuration input from stdin (pinned tag curl-8_14_1): https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79, https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md
