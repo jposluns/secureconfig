@@ -12,7 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-05
 
-- Expand Verify-marking coverage from fences to every list item, table body row and prose paragraph, retaining an initial 1,021 fingerprinted exemptions (163 list items, 149 table rows, 709 prose units) under the baseline ratchet. Require plain-text declaration markers across all attachment sites and accept valid tables on list items' first lines while still rejecting ragged rows. Row 3.30 remains open for the burn-down (#429).
+- Expand Verify-marking coverage from fences to every list item, table body row and prose paragraph, retaining an initial 1,021 fingerprinted exemptions (163 list items, 149 table rows, 709 prose units) under the baseline ratchet. Require plain-text declaration markers and provenance across all attachment sites and accept valid tables on list items' first lines while still rejecting ragged rows. Normalize heading whitespace, reject differences between legacy and parser Verify spans, and validate closure for every parser-selected fence. Row 3.30 remains open for the burn-down (#429).
 - Replace the dead Appwrite database permissions link in `pocketbase.md` with the legacy collection/document permissions page, refresh its rolling-source check and generated bundles (row 1.192), and record weekly link-check false positives for follow-up (row 3.40) (#428).
 
 ## 2026-09-27

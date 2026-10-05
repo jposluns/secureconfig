@@ -208,6 +208,9 @@ python3() {
                 self.change(tokens)
                 return tokens
 
+            def parseInline(self, text, env):
+                return parser.parseInline(text, env)
+
         for attr, value, diagnostic in (("type", "future_open", "unrecognized block token future_open"),
                                         ("map", None, "missing or invalid source map for paragraph_open")):
             def change(tokens, attr=attr, value=value):
@@ -301,8 +304,8 @@ python3() {
                     rejected(status + " " + site + " " + context, PREFIX + body, (kind,),
                              "unsupported inline token html_inline"
                              if context.startswith("HTML") else None)
-            # Opaque provenance is allowed when the marker itself is plain text.
-            for evidence in ("`vendor evidence`", "[vendor evidence](https://example.com)"):
+            # Plain provenance remains valid alongside opaque supporting detail.
+            for evidence in ("source `vendor evidence`", "source [vendor evidence](https://example.com)"):
                 mark = status + ": " + evidence
                 scan("plain marker " + mark, mark + "\n\n- " + mark + "\n\n"
                      "| A | B |\n| --- | --- |\n| x | " + mark + " |\n\n"
@@ -360,8 +363,10 @@ python3() {
                               Counter({"prose": 1, "list-item": 1, "table-row": 1})
                               and all(u[3] is None for u in units))
                         check(name + " structural diagnostic",
-                              all("unsupported inline token html_inline" in e for e in errors)
-                              and bool(errors) == label.startswith("HTML"))
+                              any("[layer-disagreement] Verify roots" in e for e in errors)
+                              and all("[layer-disagreement] Verify roots" in e
+                                      or "unsupported inline token html_inline" in e for e in errors)
+                              and any("html_inline" in e for e in errors) == label.startswith("HTML"))
                         # Legacy misses this root's fence; the parser must add
                         # a finding without inserting or changing legacy units.
                         guide.write_text(body + "\n" + fence)
@@ -385,8 +390,11 @@ python3() {
             units, errors = gate.scan_units(body, parser=parser)
             check(label + " no inherited declaration", len(units) == 3
                   and all(u[3] is None for u in units))
-            check(label + " HTML diagnostic", bool(errors) == label.startswith("HTML")
-                  and all("unsupported inline token html_inline" in e for e in errors))
+            check(label + " structural diagnostic",
+                  any("[layer-disagreement] Verify roots" in e for e in errors)
+                  and all("[layer-disagreement] Verify roots" in e
+                          or "unsupported inline token html_inline" in e for e in errors)
+                  and any("html_inline" in e for e in errors) == label.startswith("HTML"))
 
         for prefix in ("- ", "> ", "- - ", "> - "):
             body = prefix + "## Verify (" + chr(96) + MARK + chr(96) + ")\n"
@@ -404,6 +412,104 @@ python3() {
             check("rendered Verify root " + title, rc == 1
                   and "new/changed/excess prose" in out)
 
+
+        # Round 3: aliases must use legacy whitespace normalization; negative
+        # titles must stay outside both selectors, including their section spans.
+        for title in ("Verify", "Verification  checklist", "Quick  checks",
+                      "Verification\tchecklist", "Quick\tchecks", "3.\tVerify",
+                      "3)  Verification\t checklist", "vErIfY ###"):
+            body = "## " + title + "\n\nCheck exposed access.\n\n- Check auth.\n\n"
+            body += "Check | Expected\n--- | ---\nAccess | Denied\n"
+            rejected("whitespace root " + title, body, gate.KINDS[1:])
+        for title in ("Verify later", "Quick checks extra", "Verification checklist extra",
+                      "Reverify", "0 Verify", "Verify#"):
+            scan("non-root " + title, "## " + title + "\n\nunmarked\n",
+                 (0, 0, 0, 0), full=True)
+
+        # Exercise every declaration site, both statuses and directional details.
+        for status in ("REASONED", "DEMONSTRATED"):
+            for evidence in ("[]()", "` `", "`vendor evidence`",
+                             "[vendor evidence](https://example.com)",
+                             "![evidence](https://example.com/i.png)",
+                             "<https://example.com>", "<span></span>"):
+                for site, template in (
+                    ("prose", "{mark}\n"),
+                    ("item", "- {mark}\n"),
+                    ("row", "| A | B |\n| --- | --- |\n| x | {mark} |\n"),
+                    ("heading", "### Check ({mark})\n\nCheck.\n"),
+                    ("root", "## Verify ({mark})\n\nCheck.\n"),
+                    ("before", "{mark}\n\n" + fence),
+                    ("after", fence + "\n{mark}\n"),
+                    ("direction", fence + "\n{mark}\n\n" + fence),
+                    ("shell comment", "```sh\n# {mark}\necho ok\n```\n"),
+                    ("SQL comment", "```sql\n-- {mark}\nSELECT 1;\n```\n"),
+                ):
+                    direction = "preceding block; " if site == "direction" else ""
+                    mark = status + ": " + direction + evidence
+                    body = PREFIX + template.format(mark=mark)
+                    diagnostic = ("unsupported inline token html_inline"
+                                  if evidence.startswith("<span") else "needs scope and provenance")
+                    rejected(status + " " + site + " opaque provenance " + evidence,
+                             body, ("prose",), diagnostic)
+                    # A real text token supplies provenance; the same opaque
+                    # code span can still be included as supporting detail.
+                    if evidence == "`vendor evidence`":
+                        body = PREFIX + template.format(mark=status + ": " + direction
+                                                        + "source " + evidence)
+                        if site == "direction":
+                            body = body.replace("echo ok", "# " + status + ": evidence\necho ok")
+                        guide.write_text(body)
+                        baseline.write_text("")
+                        rc, out = cli("--strict")
+                        check(status + " " + site + " mixed provenance", rc == 0
+                              and "0 findings" in out)
+
+        # Exact parser-only EOF reproduction, with closed and empty-body controls.
+        for tail in ("", "\n", "\n```\n"):
+            body = "## Verify (notes)\n\n```sh\n# " + MARK + "\necho probe" + tail
+            rejected("parser-only fence " + repr(tail), body, ("fence",),
+                     "[layer-disagreement] Verify fences")
+            _, errors = gate.scan_units(body, parser=parser)
+            check("parser-only root " + repr(tail),
+                  any("[layer-disagreement] Verify roots" in e for e in errors))
+            check("parser closure " + repr(tail),
+                  any("unclosed fence (parser)" in e for e in errors) == ("```" not in tail))
+        rejected("parser-only empty fence", "## Verify (notes)\n\n```sh",
+                 ("fence",), "unclosed fence (parser)")
+        for body in ("## Verify (notes)\n", "## **Verify**\n"):
+            rejected("root disagreement without units " + body, body, ("prose",),
+                     "[layer-disagreement] Verify roots")
+            guide.write_text(body)
+            baseline.write_text("")
+            rc, out = cli("--seed-baseline")
+            check("disagreement cannot be seeded", rc == 1
+                  and "[layer-disagreement] Verify roots" in out and baseline.read_text() == "")
+
+        # Mutate each direction and each span independently, even when all
+        # remaining units are marked. Agreement cannot depend on declaration use.
+        def hide_root(tokens):
+            next(t for t in tokens if t.type == "inline"
+                 and t.content == "Verify").children[0].content = "Setup"
+
+        def shorten_root(tokens):
+            next(t for t in tokens if t.type == "heading_open" and t.tag == "h3").tag = "h2"
+
+        def hide_fence(tokens):
+            tokens[:] = [t for t in tokens if t.type != "fence"]
+
+        def shorten_fence(tokens):
+            next(t for t in tokens if t.type == "fence").map[1] -= 1
+
+        for name, change, body, diagnostic in (
+            ("legacy-only root", hide_root, PREFIX, "Verify roots"),
+            ("root span", shorten_root, PREFIX + "### Child\n\n" + MARK + "\n", "Verify roots"),
+            ("legacy-only fence", hide_fence, PREFIX + fence, "Verify fences"),
+            ("fence span", shorten_fence, PREFIX + fence, "Verify fences"),
+        ):
+            _, errors = gate.scan_units(body, parser=AlteredParser(change))
+            check(name + " disagreement",
+                  any("[layer-disagreement] " + diagnostic in e for e in errors))
+
         class OnceParser:
             def __init__(self):
                 self.calls = 0
@@ -412,6 +518,9 @@ python3() {
                 self.calls += 1
                 check("one document parse", self.calls == 1)
                 return parser.parse(text, env)
+
+            def parseInline(self, text, env):
+                return parser.parseInline(text, env)
 
         once = OnceParser()
         body = PREFIX + MARK + "\n\n" + fence + "\n### Child\n\n- unmarked\n"

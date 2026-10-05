@@ -650,6 +650,10 @@ class UnitNode:
 def unit_declaration(text, *, directional=False):
     """Validate the existing declaration spellings without accepting broken emphasis."""
     mark = declaration(text)
+    if mark:
+        # Opaque spans project to NUL; only text tokens can supply provenance.
+        # Emphasis markup is discounted by the legacy declaration grammar.
+        declaration(text.replace("\0", ""))
     if not mark and re.match(r"(?i)^[*_]*(?:DEMONSTRATED|REASONED)[*_ \t]*:", text.strip()):
         raise ValueError("malformed declaration emphasis")
     if mark:
@@ -679,6 +683,11 @@ def scan_units(text, *, enrolled=False, parser=None):
     if parser is None:
         raise ValueError("scan_units requires the pinned parser")
     try:
+        # Preserve the legacy selector; any difference from rendered titles
+        # or opaque suffixes in the unit layer must be a structural finding.
+        _, legacy_heads, legacy_tokens, legacy_selected = guide_context(
+            text, enrolled=enrolled)
+        legacy_ranges = set(verify_ranges(legacy_heads))
         # Front matter is strict JSON metadata, not Markdown. Preserve maps
         # while masking it; no declaration or heading is selected from source.
         from version_basis import split, START, END
@@ -757,7 +766,7 @@ def scan_units(text, *, enrolled=False, parser=None):
                 t = node.token
                 if t.type == "heading_open":
                     inline = paragraph_inline(node)
-                    title = inline_text(inline.children or [], title=True)
+                    title = title_text(inline_text(inline.children or [], title=True))
                     base = re.split(r"[(:]", title, maxsplit=1)[0].strip()
                     if not re.fullmatch(r"h[1-6]", t.tag):
                         raise ValueError("invalid heading level")
@@ -772,15 +781,17 @@ def scan_units(text, *, enrolled=False, parser=None):
 
         collect_headings(roots)
         selected, paths, ancestry, heading_starts = set(), {}, [], {}
-        current_heading, root_level = None, None
+        current_heading, root_level, root_start = None, None, None
+        parsed_ranges = set()
         for i in range(len(lines)):
             head = heads.get(i)
             if head:
                 level, is_root = head
                 if root_level is not None and level <= root_level:
+                    parsed_ranges.add((root_start, i))
                     root_level = None
                 if root_level is None and is_root:
-                    root_level = level
+                    root_level, root_start = level, i
                 current_heading = i
                 while ancestry and ancestry[-1][0] >= level:
                     ancestry.pop()
@@ -791,7 +802,37 @@ def scan_units(text, *, enrolled=False, parser=None):
                 selected.add(i)
             paths[i] = list(ancestry)
             heading_starts[i] = current_heading
-        covered, parsed_fence_lines = set(), set()
+        if root_level is not None:
+            parsed_ranges.add((root_start, len(lines)))
+
+        def agreement(kind, legacy, parsed):
+            if legacy != parsed:
+                # One-based, half-open spans retain identity and boundaries.
+                display = lambda spans: [(a + 1, b + 1) for a, b in sorted(spans)]
+                errors.append(f"[layer-disagreement] {kind}: "
+                              f"legacy-only {display(legacy - parsed)}; "
+                              f"parser-only {display(parsed - legacy)}")
+
+        agreement("Verify roots", legacy_ranges, parsed_ranges)
+        # A final empty split line is not part of a parser fence's physical map.
+        eof = len(lines) - int(lines[-1] == "")
+        legacy_spans = {(t.start, min(t.end, eof)) for t in legacy_tokens
+                        if t.kind in {"fence", "unclosed"} and t.start in legacy_selected}
+        parsed_fences = [t for t in tokens if t.type == "fence" and t.map[0] in selected]
+        agreement("Verify fences", legacy_spans, {tuple(t.map) for t in parsed_fences})
+        # Validate every fence before declaration walking can fail. The parser
+        # accepts EOF/container ends as implicit closes; the gate does not.
+        for t in parsed_fences:
+            start, end = t.map
+            closing = lines[end - 1].expandtabs(4).lstrip(" ")
+            while QUOTE.match(closing):
+                closing = QUOTE.sub("", closing, count=1).lstrip(" ")
+            closure = Fences()
+            closure.feed(t.markup)
+            has_closer = end - start == t.content.count("\n") + 2
+            if not has_closer or not closure.feed(closing) or closure.inside:
+                errors.append(f"line {start + 1}: unclosed fence (parser)")
+        covered = set()
         legacy_fences = {line: status for line, _, status in fences}
         heading_marks = {}
         def source(span):
@@ -940,13 +981,14 @@ def scan_units(text, *, enrolled=False, parser=None):
                         "sh", "shell", "bash", "python", "py"} else None
                     first = next((line.strip() for line in t.content.split("\n") if line.strip()), "")
                     if prefix and first.startswith(prefix):
-                        marks.append(declaration(first[len(prefix):].strip()))
+                        comment = first[len(prefix):].strip()
+                        inlines = parser.parseInline(comment, env)[0].children or []
+                        marks.append(inline_declaration(inlines, directional=True))
                     statuses = {m[0] for m in marks if m}
                     if len(statuses) > 1:
                         raise ValueError("conflicting declarations")
                     status = next(iter(statuses), None)
                     line = start + 1
-                    parsed_fence_lines.add(line)
                     if line not in legacy_fences and status is None:
                         errors.append(f"line {line}: parser fence declaration missing "
                                       "in parser-selected Verify section")
@@ -958,9 +1000,6 @@ def scan_units(text, *, enrolled=False, parser=None):
                 else:
                     raise ValueError("unhandled block token " + kind)
         walk(roots)
-        if legacy_fences.keys() - parsed_fence_lines:
-            errors.append("parser fence coverage missing legacy lines: "
-                          + repr(sorted(legacy_fences.keys() - parsed_fence_lines)))
         missing = [i + 1 for i in sorted(selected - covered) if lines[i].strip()]
         if missing:
             raise ValueError(f"uncovered Verify source lines: {missing}")
