@@ -3,13 +3,13 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "3614306c2aba0fb4c703e7374f4b2c05e89bd7f0e67f4ea01ba371f3f17d3e56",
+  "body_sha256": "fbd86c9b86b6af48cea40239b9ed334ecabcf8a5429b68b3a2e139b62dcd7d52",
   "components": {
     "prefect": {
       "name": "Prefect Basic Auth minimum",
       "basis": "3.1.8",
       "sources": {
-        "s0ef73a227667": "https://docs.prefect.io/v3/advanced/security-settings"
+        "s12416d1a0d69": "https://github.com/PrefectHQ/prefect/releases/tag/3.1.8"
       }
     },
     "prefect-source": {
@@ -39,7 +39,7 @@ version_basis: {
       "sources": {
         "s1d0b86fe4334": "https://airflow.apache.org/docs/apache-airflow/3.3.2/security/security_model.html",
         "sad02a49561a0": "https://airflow.apache.org/docs/apache-airflow/3.3.2/core-concepts/auth-manager/simple/index.html",
-        "sf7cc755e7847": "https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/auth-manager/index.html"
+        "s3be3e4616150": "https://airflow.apache.org/docs/apache-airflow/3.3.2/core-concepts/auth-manager/index.html"
       }
     },
     "airflow-two": {
@@ -54,27 +54,6 @@ version_basis: {
       "basis": "unknown",
       "sources": {
         "s2d1891641c91": "https://airflow.apache.org/docs/apache-airflow/stable/security/"
-      }
-    },
-    "fab": {
-      "name": "Airflow FAB provider",
-      "basis": "3.9.0",
-      "sources": {
-        "s989f09d05161": "https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/api-authentication.html"
-      }
-    },
-    "temporal": {
-      "name": "Temporal Server",
-      "basis": "1.28.x",
-      "sources": {
-        "s06d4f0dbd0c8": "https://docs.temporal.io/self-hosted-guide/security"
-      }
-    },
-    "temporal-ui": {
-      "name": "Temporal UI Server",
-      "basis": "2.34.x",
-      "sources": {
-        "sa9d5614385ca": "https://docs.temporal.io/references/web-ui-configuration"
       }
     },
     "flower": {
@@ -215,7 +194,8 @@ version_basis: {
       "name": "Prefect documentation (rolling)",
       "basis": "unknown",
       "sources": {
-        "sbe64d51110a2": "https://docs.prefect.io/v3/how-to-guides/self-hosted/server-cli"
+        "sbe64d51110a2": "https://docs.prefect.io/v3/how-to-guides/self-hosted/server-cli",
+        "s0ef73a227667": "https://docs.prefect.io/v3/advanced/security-settings"
       }
     },
     "dagster-rolling": {
@@ -237,7 +217,9 @@ version_basis: {
       "name": "Temporal documentation (rolling)",
       "basis": "unknown",
       "sources": {
-        "s12f2c64ad396": "https://docs.temporal.io/cli/command-reference/server"
+        "s12f2c64ad396": "https://docs.temporal.io/cli/command-reference/server",
+        "s06d4f0dbd0c8": "https://docs.temporal.io/self-hosted-guide/security",
+        "sa9d5614385ca": "https://docs.temporal.io/references/web-ui-configuration"
       }
     },
     "flower-rolling": {
@@ -246,13 +228,20 @@ version_basis: {
       "sources": {
         "sb1ba69f79c9b": "https://flower.readthedocs.io/en/latest/config.html"
       }
+    },
+    "fab-rolling": {
+      "name": "Apache Airflow FAB provider documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "s989f09d05161": "https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/api-authentication.html"
+      }
     }
   },
   "claims": {
-    "fronting": {"text": "Keep UI/API origins private behind HTTPS and authentication; use IdP MFA for browsers and separate machine authentication, and constrain worker egress.", "components": ["airflow", "temporal", "argo-docs"], "sources": ["airflow:s1d0b86fe4334", "temporal:s06d4f0dbd0c8", "argo-docs:s6c8e78288632"], "status": "REASONED"},
-    "prefect-auth": {"text": "Self-hosted Prefect defaults unauthenticated; Basic Auth from 3.1.8 uses matching server/client auth strings and prompts the UI.", "components": ["prefect"], "sources": ["prefect:s0ef73a227667"], "status": "REASONED"},
-    "prefect-key": {"text": "Cloud-only PREFECT_API_KEY takes precedence over PREFECT_API_AUTH_STRING and produces 401 against a self-hosted server.", "components": ["prefect"], "sources": ["prefect:s0ef73a227667"], "status": "REASONED"},
-    "prefect-secrets": {"text": "Protect the auth string and credential-bearing Blocks; block-document reads can request secrets, so masking is not authorization and workers need scoped credentials.", "components": ["prefect"], "sources": ["prefect:s0ef73a227667"], "status": "REASONED"},
+    "fronting": {"text": "Keep UI/API origins private behind HTTPS and authentication; use IdP MFA for browsers and separate machine authentication, and constrain worker egress.", "components": ["airflow", "argo-docs", "temporal-rolling"], "sources": ["airflow:s1d0b86fe4334", "temporal-rolling:s06d4f0dbd0c8", "argo-docs:s6c8e78288632"], "status": "REASONED"},
+    "prefect-auth": {"text": "Self-hosted Prefect defaults unauthenticated; Basic Auth from 3.1.8 uses matching server/client auth strings and prompts the UI.", "components": ["prefect", "prefect-rolling"], "sources": ["prefect:s12416d1a0d69", "prefect-rolling:s0ef73a227667"], "status": "REASONED"},
+    "prefect-key": {"text": "Cloud-only PREFECT_API_KEY takes precedence over PREFECT_API_AUTH_STRING and produces 401 against a self-hosted server.", "components": ["prefect", "prefect-rolling"], "sources": ["prefect:s12416d1a0d69", "prefect-rolling:s0ef73a227667"], "status": "REASONED"},
+    "prefect-secrets": {"text": "Protect the auth string and credential-bearing Blocks; block-document reads can request secrets, so masking is not authorization and workers need scoped credentials.", "components": ["prefect", "prefect-rolling"], "sources": ["prefect:s12416d1a0d69", "prefect-rolling:s0ef73a227667"], "status": "REASONED"},
     "prefect-port": {"text": "The self-hosted Prefect server uses port 4200.", "components": ["prefect-rolling"], "sources": ["prefect-rolling:sbe64d51110a2"], "status": "REASONED"},
     "dagster-bind": {"text": "Direct dagster-webserver/dev defaults to 127.0.0.1:3000, with flag/environment overrides and free-port fallback when the port is unset or 0; explicitly bind the private origin.", "components": ["dagster"], "sources": ["dagster:sab1b42d92f27", "dagster:s6bc57f86dfe1", "dagster:s2455602a504b", "dagster:s3c7d8f17f245", "dagster:s469c458c4a71"], "status": "REASONED"},
     "dagster-helm": {"text": "The chart passes -h 0.0.0.0 on the Service port, default 80, with ClusterIP Service by default.", "components": ["dagster"], "sources": ["dagster:s695dfd19dcca", "dagster:sf6f027e96a0d", "dagster:seda3a1b24425"], "status": "REASONED"},
@@ -260,22 +249,22 @@ version_basis: {
     "airflow-boundary": {"text": "Airflow assumes authenticated known users and is not designed for untrusted public exposure; deployment managers must keep it private.", "components": ["airflow"], "sources": ["airflow:s1d0b86fe4334"], "status": "REASONED"},
     "airflow-two-api": {"text": "Airflow 2.11.0 uses [api] auth_backends with session default; before 2.3 the name was auth_backend and 2.2.5 defaulted to deny_all.", "components": ["airflow-two", "airflow-old"], "sources": ["airflow-two:s2d1891641c91", "airflow-old:s2d1891641c91"], "status": "REASONED"},
     "airflow-simple": {"text": "Airflow 3 defaults to development-only Simple Auth Manager, with configured users/roles and generated passwords printed to logs unless supplied.", "components": ["airflow"], "sources": ["airflow:sad02a49561a0"], "status": "REASONED"},
-    "airflow-fab": {"text": "For production install FAB and select FabAuthManager through [core] auth_manager; verify the effective manager and use an identity backend with MFA.", "components": ["airflow", "fab"], "sources": ["airflow:sf7cc755e7847", "fab:s989f09d05161"], "status": "REASONED"},
-    "airflow-api": {"text": "Airflow 3 public API uses JWT independently of [fab] auth_backends, which selects FAB API backends rather than the auth manager.", "components": ["airflow", "fab"], "sources": ["airflow:sf7cc755e7847", "fab:s989f09d05161"], "status": "REASONED"},
+    "airflow-fab": {"text": "For production install FAB and select FabAuthManager through [core] auth_manager; verify the effective manager and use an identity backend with MFA.", "components": ["airflow", "fab-rolling"], "sources": ["airflow:s3be3e4616150", "fab-rolling:s989f09d05161"], "status": "REASONED"},
+    "airflow-api": {"text": "Airflow 3 public API uses JWT independently of [fab] auth_backends, which selects FAB API backends rather than the auth manager.", "components": ["airflow", "fab-rolling"], "sources": ["airflow:s3be3e4616150", "fab-rolling:s989f09d05161"], "status": "REASONED"},
     "airflow-all-admins": {"text": "Keep simple_auth_manager_all_admins unset or False; enabling it disables login and grants every visitor admin.", "components": ["airflow"], "sources": ["airflow:sad02a49561a0"], "status": "REASONED"},
-    "fab-public-role": {"text": "Leave FAB AUTH_ROLE_PUBLIC unset; a configured role grants that access to anonymous visitors.", "components": ["fab"], "sources": ["fab:s989f09d05161"], "status": "REASONED"},
-    "airflow-compose-account": {"text": "Development Compose selects FAB but defaults to airflow/airflow; set credentials before account creation and update/delete an existing account separately.", "components": ["fab", "airflow-rolling"], "sources": ["airflow-rolling:s39bfd91c507b", "fab:s989f09d05161"], "status": "REASONED"},
+    "fab-public-role": {"text": "Leave FAB AUTH_ROLE_PUBLIC unset; a configured role grants that access to anonymous visitors.", "components": ["fab-rolling"], "sources": ["fab-rolling:s989f09d05161"], "status": "REASONED"},
+    "airflow-compose-account": {"text": "Development Compose selects FAB but defaults to airflow/airflow; set credentials before account creation and update/delete an existing account separately.", "components": ["airflow-rolling", "fab-rolling"], "sources": ["airflow-rolling:s39bfd91c507b", "fab-rolling:s989f09d05161"], "status": "REASONED"},
     "airflow-jwt": {"text": "Replace Compose fallback AIRFLOW__API_AUTH__JWT_SECRET=airflow_jwt_secret and share the strong value with all signers/validators; the public fallback permits token forgery.", "components": ["airflow-rolling"], "sources": ["airflow-rolling:s39bfd91c507b"], "status": "REASONED"},
     "airflow-secret-key": {"text": "Provision the independent secret_key too: [webserver] on 2.11.0 and [api] on 3.3.2.", "components": ["airflow-two", "airflow-rolling"], "sources": ["airflow-rolling:s2d1891641c91", "airflow-two:s2d1891641c91"], "status": "REASONED"},
     "airflow-config": {"text": "Keep configuration exposure off with WEBSERVER__EXPOSE_CONFIG on 2.11.0 or API__EXPOSE_CONFIG on 3.3.2.", "components": ["airflow-two", "airflow-rolling"], "sources": ["airflow-rolling:s2d1891641c91", "airflow-two:s2d1891641c91"], "status": "REASONED"},
     "airflow-fernet": {"text": "Protect Connections, Variables, database and Fernet key; an empty key disables new-value encryption, while removing an existing key prevents decryption. Authorized workloads still use secrets.", "components": ["airflow-rolling"], "sources": ["airflow-rolling:s2d1891641c91"], "status": "REASONED"},
     "airflow-port": {"text": "Compose publishes 8080 on all interfaces; use 127.0.0.1:8080:8080 behind the fronting layer.", "components": ["airflow-rolling"], "sources": ["airflow-rolling:s39bfd91c507b"], "status": "REASONED"},
-    "temporal-authorizer": {"text": "Empty authorizer selects noopAuthorizer allowing every API request, including administration; configure default authorization with trusted JWT keys and audience.", "components": ["temporal"], "sources": ["temporal:s06d4f0dbd0c8"], "status": "REASONED"},
-    "temporal-claims": {"text": "Empty claimMapper selects a no-op granting system-admin claims; configure both Authorizer and ClaimMapper, with frontend TLS.", "components": ["temporal"], "sources": ["temporal:s06d4f0dbd0c8"], "status": "REASONED"},
-    "temporal-health": {"text": "The built-in default authorizer permits health checks without claims; health is not an authorization discriminator.", "components": ["temporal"], "sources": ["temporal:s06d4f0dbd0c8"], "status": "REASONED"},
-    "temporal-ui": {"text": "UI OIDC auth.enabled is a sibling of providers; TEMPORAL_AUTH_ENABLED plus provider settings gates the UI only, with MFA at the IdP.", "components": ["temporal-ui"], "sources": ["temporal-ui:sa9d5614385ca"], "status": "REASONED"},
-    "temporal-tls": {"text": "Internode and frontend mTLS are separate from UI login and API authorization.", "components": ["temporal"], "sources": ["temporal:s06d4f0dbd0c8"], "status": "REASONED"},
-    "temporal-payloads": {"text": "Keep plaintext credentials out of persisted inputs/results/history; payload encryption and an independently authenticated Codec Server form separate controls.", "components": ["temporal"], "sources": ["temporal:s06d4f0dbd0c8"], "status": "REASONED"},
+    "temporal-authorizer": {"text": "Empty authorizer selects noopAuthorizer allowing every API request, including administration; configure default authorization with trusted JWT keys and audience.", "components": ["temporal-rolling"], "sources": ["temporal-rolling:s06d4f0dbd0c8"], "status": "REASONED"},
+    "temporal-claims": {"text": "Empty claimMapper selects a no-op granting system-admin claims; configure both Authorizer and ClaimMapper, with frontend TLS.", "components": ["temporal-rolling"], "sources": ["temporal-rolling:s06d4f0dbd0c8"], "status": "REASONED"},
+    "temporal-health": {"text": "The built-in default authorizer permits health checks without claims; health is not an authorization discriminator.", "components": ["temporal-rolling"], "sources": ["temporal-rolling:s06d4f0dbd0c8"], "status": "REASONED"},
+    "temporal-ui": {"text": "UI OIDC auth.enabled is a sibling of providers; TEMPORAL_AUTH_ENABLED plus provider settings gates the UI only, with MFA at the IdP.", "components": ["temporal-rolling"], "sources": ["temporal-rolling:sa9d5614385ca"], "status": "REASONED"},
+    "temporal-tls": {"text": "Internode and frontend mTLS are separate from UI login and API authorization.", "components": ["temporal-rolling"], "sources": ["temporal-rolling:s06d4f0dbd0c8"], "status": "REASONED"},
+    "temporal-payloads": {"text": "Keep plaintext credentials out of persisted inputs/results/history; payload encryption and an independently authenticated Codec Server form separate controls.", "components": ["temporal-rolling"], "sources": ["temporal-rolling:s06d4f0dbd0c8"], "status": "REASONED"},
     "temporal-ports": {"text": "Frontend gRPC uses 7233 and the Web UI 8233 in the cited CLI server reference.", "components": ["temporal-rolling"], "sources": ["temporal-rolling:s12f2c64ad396"], "status": "REASONED"},
     "flower-bind": {"text": "Flower defaults to wildcard address and 5555 unless Unix socket, FLOWER_ variables or implicit working-directory flowerconfig.py override; bind loopback explicitly.", "components": ["flower", "tornado"], "sources": ["flower:s25760fae7152", "flower:s1f72a8415337", "flower:s4dd518442b7f", "flower:s4e49ebc71dc1", "tornado:sc503b4425831"], "status": "REASONED"},
     "flower-api": {"text": "Authentication defaults off; unauthenticated HTTP API is disabled unless FLOWER_UNAUTHENTICATED_API=true, which must not be mistaken for dashboard protection.", "components": ["flower-rolling"], "sources": ["flower-rolling:sb1ba69f79c9b"], "status": "REASONED"},
@@ -300,10 +289,10 @@ version_basis: {
     "argo-metrics": {"text": "/metrics shares the server listener and auth gate unless ARGO_SERVER_METRICS_AUTH=false; server mode also admits anonymous metrics.", "components": ["argo-three", "argo-four"], "sources": ["argo-three:s36759aec55fa", "argo-four:sa120f74372eb", "argo-three:s49cdaf0691c0", "argo-three:s2ca4f14c3164", "argo-four:s4613c15c72af", "argo-four:sb284f93cde9c", "argo-three:s64e74b0dbe95", "argo-four:se758d83aaf1f"], "status": "REASONED"},
     "argo-network": {"text": "Keep 2746 private behind authenticated HTTPS; restrict direct Pod/Service access and scope server, SSO and execution-account permissions. Workflow submission permits arbitrary containers unless constrained.", "components": ["argo-docs"], "sources": ["argo-docs:s6c8e78288632"], "status": "REASONED"},
     "verify-inventory": {"text": "ss inventories only the current namespace, not publication, routing or authentication; inspect publications and external reachability separately.", "components": ["flower", "argo-three", "iproute2", "network-namespaces", "prefect-rolling"], "sources": ["prefect-rolling:sbe64d51110a2", "flower:s25760fae7152", "argo-three:sbddb9f07a301", "iproute2:s6cc7f285a0c7", "network-namespaces:s427c923e346f", "iproute2:s9fa9a260f1de"], "status": "REASONED", "verify": [1]},
-    "verify-prefect": {"text": "Anonymous POST /api/flows/filter returning a JSON list is exposed; fixed is 401 with an authorized list on the same origin. Health/ready GET exemptions are version-dependent.", "components": ["prefect", "prefect-source"], "sources": ["prefect:s0ef73a227667", "prefect-source:sa4574c7ed80f"], "status": "REASONED", "verify": [1]},
+    "verify-prefect": {"text": "Anonymous POST /api/flows/filter returning a JSON list is exposed; fixed is 401 with an authorized list on the same origin. Health/ready GET exemptions are version-dependent.", "components": ["prefect", "prefect-source", "prefect-rolling"], "sources": ["prefect:s12416d1a0d69", "prefect-source:sa4574c7ed80f", "prefect-rolling:s0ef73a227667"], "status": "REASONED", "verify": [1]},
     "verify-dagster": {"text": "A RepositoryConnection from /graphql is a read, including empty nodes; GraphQL/transport errors are inconclusive. Test proxy authentication and origin isolation separately.", "components": ["dagster-rolling"], "sources": ["dagster-rolling:s4c04d5da5257"], "status": "REASONED", "verify": [1]},
-    "verify-airflow": {"text": "FAB 3.9.0 returning 201 with access_token for airflow/airflow is exposed; pair a valid account and anonymous/authenticated API reads at proxy and origin. Airflow 2 uses its own API/auth.", "components": ["fab", "airflow-two", "airflow-rolling"], "sources": ["fab:s989f09d05161", "airflow-rolling:s39bfd91c507b", "airflow-two:s2d1891641c91"], "status": "REASONED", "verify": [1]},
-    "verify-temporal": {"text": "Credential-free workflow listing on 7233 is exposed; require rejection and a matched authorized call, not health, TLS errors or missing namespaces as proof of auth.", "components": ["temporal", "temporal-rolling"], "sources": ["temporal:s06d4f0dbd0c8", "temporal-rolling:s12f2c64ad396"], "status": "REASONED", "verify": [1]},
+    "verify-airflow": {"text": "FAB 3.9.0 returning 201 with access_token for airflow/airflow is exposed; pair a valid account and anonymous/authenticated API reads at proxy and origin. Airflow 2 uses its own API/auth.", "components": ["airflow-two", "airflow-rolling", "fab-rolling"], "sources": ["fab-rolling:s989f09d05161", "airflow-rolling:s39bfd91c507b", "airflow-two:s2d1891641c91"], "status": "REASONED", "verify": [1]},
+    "verify-temporal": {"text": "Credential-free workflow listing on 7233 is exposed; require rejection and a matched authorized call, not health, TLS errors or missing namespaces as proof of auth.", "components": ["temporal-rolling"], "sources": ["temporal-rolling:s06d4f0dbd0c8", "temporal-rolling:s12f2c64ad396"], "status": "REASONED", "verify": [1]},
     "verify-flower": {"text": "Anonymous UI/API should yield Basic 401 or OAuth login redirect, with a valid-session control; API-disabled is not proof the dashboard is protected.", "components": ["flower-rolling"], "sources": ["flower-rolling:sb1ba69f79c9b"], "status": "REASONED", "verify": [1]},
     "verify-socket": {"text": "Directory/socket permissions, outsider denial, reboot persistence and container numeric IDs remain reasoned; no socket or Flower process ran.", "components": ["flower", "linux"], "sources": ["flower:s0fe6c77e9c9d", "linux:s31f41c54750c", "linux:s08902025e5f9", "linux:sa0d3793fabb7"], "status": "REASONED", "verify": [1]},
     "flower-stat-run": {"text": "Tmpfs directory-only stat distinguished 0755 and 0750; the 0750 directory initially had only base ACL entries.", "components": ["linux"], "sources": ["linux:sa0d3793fabb7", "linux:s08902025e5f9"], "status": "DEMONSTRATED", "evidence": "`stat -c '%a %U:%G %u:%g %n'` printed `755` for a directory created with mode `0755` and `750` for one created with `0750`; `getfacl -p` on the `0750` directory listed only `user::rwx`, `group::r-x` and `other::---`."},
@@ -325,10 +314,10 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| fronting: Keep UI/API origins private behind HTTPS and authentication; use IdP MFA for browsers and separate machine authentication, and constrain worker egress. | Apache Airflow 3.3.2; Temporal Server 1.28.x; Argo Workflows documentation release-3.7 | REASONED |
-| prefect-auth: Self-hosted Prefect defaults unauthenticated; Basic Auth from 3.1.8 uses matching server/client auth strings and prompts the UI. | Prefect Basic Auth minimum 3.1.8 | REASONED |
-| prefect-key: Cloud-only PREFECT_API_KEY takes precedence over PREFECT_API_AUTH_STRING and produces 401 against a self-hosted server. | Prefect Basic Auth minimum 3.1.8 | REASONED |
-| prefect-secrets: Protect the auth string and credential-bearing Blocks; block-document reads can request secrets, so masking is not authorization and workers need scoped credentials. | Prefect Basic Auth minimum 3.1.8 | REASONED |
+| fronting: Keep UI/API origins private behind HTTPS and authentication; use IdP MFA for browsers and separate machine authentication, and constrain worker egress. | Apache Airflow 3.3.2; Argo Workflows documentation release-3.7; Temporal documentation (rolling) unknown | REASONED |
+| prefect-auth: Self-hosted Prefect defaults unauthenticated; Basic Auth from 3.1.8 uses matching server/client auth strings and prompts the UI. | Prefect Basic Auth minimum 3.1.8; Prefect documentation (rolling) unknown | REASONED |
+| prefect-key: Cloud-only PREFECT_API_KEY takes precedence over PREFECT_API_AUTH_STRING and produces 401 against a self-hosted server. | Prefect Basic Auth minimum 3.1.8; Prefect documentation (rolling) unknown | REASONED |
+| prefect-secrets: Protect the auth string and credential-bearing Blocks; block-document reads can request secrets, so masking is not authorization and workers need scoped credentials. | Prefect Basic Auth minimum 3.1.8; Prefect documentation (rolling) unknown | REASONED |
 | prefect-port: The self-hosted Prefect server uses port 4200. | Prefect documentation (rolling) unknown | REASONED |
 | dagster-bind: Direct dagster-webserver/dev defaults to 127.0.0.1:3000, with flag/environment overrides and free-port fallback when the port is unset or 0; explicitly bind the private origin. | Dagster OSS 1.13.24 | REASONED |
 | dagster-helm: The chart passes -h 0.0.0.0 on the Service port, default 80, with ClusterIP Service by default. | Dagster OSS 1.13.24 | REASONED |
@@ -336,22 +325,22 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | airflow-boundary: Airflow assumes authenticated known users and is not designed for untrusted public exposure; deployment managers must keep it private. | Apache Airflow 3.3.2 | REASONED |
 | airflow-two-api: Airflow 2.11.0 uses [api] auth_backends with session default; before 2.3 the name was auth_backend and 2.2.5 defaulted to deny_all. | Apache Airflow historical configuration unknown; Apache Airflow historical default unknown | REASONED |
 | airflow-simple: Airflow 3 defaults to development-only Simple Auth Manager, with configured users/roles and generated passwords printed to logs unless supplied. | Apache Airflow 3.3.2 | REASONED |
-| airflow-fab: For production install FAB and select FabAuthManager through [core] auth_manager; verify the effective manager and use an identity backend with MFA. | Apache Airflow 3.3.2; Airflow FAB provider 3.9.0 | REASONED |
-| airflow-api: Airflow 3 public API uses JWT independently of [fab] auth_backends, which selects FAB API backends rather than the auth manager. | Apache Airflow 3.3.2; Airflow FAB provider 3.9.0 | REASONED |
+| airflow-fab: For production install FAB and select FabAuthManager through [core] auth_manager; verify the effective manager and use an identity backend with MFA. | Apache Airflow 3.3.2; Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
+| airflow-api: Airflow 3 public API uses JWT independently of [fab] auth_backends, which selects FAB API backends rather than the auth manager. | Apache Airflow 3.3.2; Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
 | airflow-all-admins: Keep simple_auth_manager_all_admins unset or False; enabling it disables login and grants every visitor admin. | Apache Airflow 3.3.2 | REASONED |
-| fab-public-role: Leave FAB AUTH_ROLE_PUBLIC unset; a configured role grants that access to anonymous visitors. | Airflow FAB provider 3.9.0 | REASONED |
-| airflow-compose-account: Development Compose selects FAB but defaults to airflow/airflow; set credentials before account creation and update/delete an existing account separately. | Airflow FAB provider 3.9.0; Apache Airflow documentation (rolling) unknown | REASONED |
+| fab-public-role: Leave FAB AUTH_ROLE_PUBLIC unset; a configured role grants that access to anonymous visitors. | Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
+| airflow-compose-account: Development Compose selects FAB but defaults to airflow/airflow; set credentials before account creation and update/delete an existing account separately. | Apache Airflow documentation (rolling) unknown; Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
 | airflow-jwt: Replace Compose fallback AIRFLOW__API_AUTH__JWT_SECRET=airflow_jwt_secret and share the strong value with all signers/validators; the public fallback permits token forgery. | Apache Airflow documentation (rolling) unknown | REASONED |
 | airflow-secret-key: Provision the independent secret_key too: [webserver] on 2.11.0 and [api] on 3.3.2. | Apache Airflow historical configuration unknown; Apache Airflow documentation (rolling) unknown | REASONED |
 | airflow-config: Keep configuration exposure off with WEBSERVER__EXPOSE_CONFIG on 2.11.0 or API__EXPOSE_CONFIG on 3.3.2. | Apache Airflow historical configuration unknown; Apache Airflow documentation (rolling) unknown | REASONED |
 | airflow-fernet: Protect Connections, Variables, database and Fernet key; an empty key disables new-value encryption, while removing an existing key prevents decryption. Authorized workloads still use secrets. | Apache Airflow documentation (rolling) unknown | REASONED |
 | airflow-port: Compose publishes 8080 on all interfaces; use 127.0.0.1:8080:8080 behind the fronting layer. | Apache Airflow documentation (rolling) unknown | REASONED |
-| temporal-authorizer: Empty authorizer selects noopAuthorizer allowing every API request, including administration; configure default authorization with trusted JWT keys and audience. | Temporal Server 1.28.x | REASONED |
-| temporal-claims: Empty claimMapper selects a no-op granting system-admin claims; configure both Authorizer and ClaimMapper, with frontend TLS. | Temporal Server 1.28.x | REASONED |
-| temporal-health: The built-in default authorizer permits health checks without claims; health is not an authorization discriminator. | Temporal Server 1.28.x | REASONED |
-| temporal-ui: UI OIDC auth.enabled is a sibling of providers; TEMPORAL_AUTH_ENABLED plus provider settings gates the UI only, with MFA at the IdP. | Temporal UI Server 2.34.x | REASONED |
-| temporal-tls: Internode and frontend mTLS are separate from UI login and API authorization. | Temporal Server 1.28.x | REASONED |
-| temporal-payloads: Keep plaintext credentials out of persisted inputs/results/history; payload encryption and an independently authenticated Codec Server form separate controls. | Temporal Server 1.28.x | REASONED |
+| temporal-authorizer: Empty authorizer selects noopAuthorizer allowing every API request, including administration; configure default authorization with trusted JWT keys and audience. | Temporal documentation (rolling) unknown | REASONED |
+| temporal-claims: Empty claimMapper selects a no-op granting system-admin claims; configure both Authorizer and ClaimMapper, with frontend TLS. | Temporal documentation (rolling) unknown | REASONED |
+| temporal-health: The built-in default authorizer permits health checks without claims; health is not an authorization discriminator. | Temporal documentation (rolling) unknown | REASONED |
+| temporal-ui: UI OIDC auth.enabled is a sibling of providers; TEMPORAL_AUTH_ENABLED plus provider settings gates the UI only, with MFA at the IdP. | Temporal documentation (rolling) unknown | REASONED |
+| temporal-tls: Internode and frontend mTLS are separate from UI login and API authorization. | Temporal documentation (rolling) unknown | REASONED |
+| temporal-payloads: Keep plaintext credentials out of persisted inputs/results/history; payload encryption and an independently authenticated Codec Server form separate controls. | Temporal documentation (rolling) unknown | REASONED |
 | temporal-ports: Frontend gRPC uses 7233 and the Web UI 8233 in the cited CLI server reference. | Temporal documentation (rolling) unknown | REASONED |
 | flower-bind: Flower defaults to wildcard address and 5555 unless Unix socket, FLOWER_ variables or implicit working-directory flowerconfig.py override; bind loopback explicitly. | Flower v2.2.0; Tornado v6.5.10 | REASONED |
 | flower-api: Authentication defaults off; unauthenticated HTTP API is disabled unless FLOWER_UNAUTHENTICATED_API=true, which must not be mistaken for dashboard protection. | Flower documentation (rolling) unknown | REASONED |
@@ -376,10 +365,10 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | argo-metrics: /metrics shares the server listener and auth gate unless ARGO_SERVER_METRICS_AUTH=false; server mode also admits anonymous metrics. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
 | argo-network: Keep 2746 private behind authenticated HTTPS; restrict direct Pod/Service access and scope server, SSO and execution-account permissions. Workflow submission permits arbitrary containers unless constrained. | Argo Workflows documentation release-3.7 | REASONED |
 | verify-inventory: ss inventories only the current namespace, not publication, routing or authentication; inspect publications and external reachability separately. | Flower v2.2.0; Argo Workflows v3.7.18; iproute2 ss manual v6.15.0; Linux network namespaces manual man-pages-5.13; Prefect documentation (rolling) unknown | REASONED |
-| verify-prefect: Anonymous POST /api/flows/filter returning a JSON list is exposed; fixed is 401 with an authorized list on the same origin. Health/ready GET exemptions are version-dependent. | Prefect Basic Auth minimum 3.1.8; Prefect server source 9e560c9b6df4e19a5109a66e66d461f9facb538d | REASONED |
+| verify-prefect: Anonymous POST /api/flows/filter returning a JSON list is exposed; fixed is 401 with an authorized list on the same origin. Health/ready GET exemptions are version-dependent. | Prefect Basic Auth minimum 3.1.8; Prefect server source 9e560c9b6df4e19a5109a66e66d461f9facb538d; Prefect documentation (rolling) unknown | REASONED |
 | verify-dagster: A RepositoryConnection from /graphql is a read, including empty nodes; GraphQL/transport errors are inconclusive. Test proxy authentication and origin isolation separately. | Dagster documentation (rolling) unknown | REASONED |
-| verify-airflow: FAB 3.9.0 returning 201 with access_token for airflow/airflow is exposed; pair a valid account and anonymous/authenticated API reads at proxy and origin. Airflow 2 uses its own API/auth. | Airflow FAB provider 3.9.0; Apache Airflow historical configuration unknown; Apache Airflow documentation (rolling) unknown | REASONED |
-| verify-temporal: Credential-free workflow listing on 7233 is exposed; require rejection and a matched authorized call, not health, TLS errors or missing namespaces as proof of auth. | Temporal Server 1.28.x; Temporal documentation (rolling) unknown | REASONED |
+| verify-airflow: FAB 3.9.0 returning 201 with access_token for airflow/airflow is exposed; pair a valid account and anonymous/authenticated API reads at proxy and origin. Airflow 2 uses its own API/auth. | Apache Airflow historical configuration unknown; Apache Airflow documentation (rolling) unknown; Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
+| verify-temporal: Credential-free workflow listing on 7233 is exposed; require rejection and a matched authorized call, not health, TLS errors or missing namespaces as proof of auth. | Temporal documentation (rolling) unknown | REASONED |
 | verify-flower: Anonymous UI/API should yield Basic 401 or OAuth login redirect, with a valid-session control; API-disabled is not proof the dashboard is protected. | Flower documentation (rolling) unknown | REASONED |
 | verify-socket: Directory/socket permissions, outsider denial, reboot persistence and container numeric IDs remain reasoned; no socket or Flower process ran. | Flower v2.2.0; Linux permissions and tools unknown | REASONED |
 | flower-stat-run: Tmpfs directory-only stat distinguished 0755 and 0750; the 0750 directory initially had only base ACL entries. | Linux permissions and tools unknown | DEMONSTRATED |
@@ -746,21 +735,22 @@ shares the directory.
 These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x, Apache Airflow 3.3.2 with FAB provider 3.9.0 (Airflow 2.11.0 noted where the configuration paths differ), Temporal Server 1.28.x and UI Server 2.34.x, and Flower 2.2.0; confirm your own versions, since several of these settings moved between releases. Argo Workflows listener, authentication paths, TLS and manifest settings were checked against tags v3.7.18 (66e32e5cc367f223e2ecf4fbe852b95eaed83034) and v4.1.4 (b5b4d665e9be9b87c115f943584c3e0ae96fe073). The install manifests were traced through their build recipes and Kustomize inputs; their generated YAML files were not present in the supplied trees. SSO setup, API examples and security guidance retain the release-3.7 documentation links.
 
 - Prefect, security settings (`PREFECT_SERVER_API_AUTH_STRING`, `PREFECT_API_AUTH_STRING`, Cloud API keys
-  taking precedence and causing 401) (Prefect 3.1.8 Basic Auth minimum): https://docs.prefect.io/v3/advanced/security-settings
+  taking precedence and causing 401) (rolling documentation, checked September 2026): https://docs.prefect.io/v3/advanced/security-settings
+- Prefect 3.1.8 release announcement, Basic Auth support added to the API and UI: https://github.com/PrefectHQ/prefect/releases/tag/3.1.8
 - Prefect self-hosted server, default port 4200 (rolling documentation, checked September 2026): https://docs.prefect.io/v3/how-to-guides/self-hosted/server-cli
 - Dagster webserver and UI, default local port and no documented built-in auth (rolling documentation, checked September 2026): https://docs.dagster.io/guides/operate/webserver
 - Dagster webserver `DEFAULT_WEBSERVER_HOST` "127.0.0.1" and port 3000 with the free-port fallback, `dagster dev` forwarding `--host` only when one is given, its environment-variable routes (`DAGSTER_WEBSERVER_*` through `auto_envvar_prefix`, legacy `DAGIT_*` copied onto them, and the `dagster` CLI's `DAGSTER_CLI` prefix, which Click extends per subcommand, so `dagster dev` reads `DAGSTER_CLI_DEV_*`), and the Helm chart's webserver command, which hardcodes `-h 0.0.0.0` and takes the port from `dagsterWebserver.service.port` (80 by default, Service type `ClusterIP` by default) (pinned tag 1.13.24): https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L41-L42, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L81-L96, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L306-L311, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster/dagster/_cli/dev.py#L251-L252, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L339-L351, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster/dagster/_cli/__init__.py#L45-L50, Click's subcommand prefix rule (pinned tag 8.5.0) https://github.com/pallets/click/blob/8.5.0/src/click/core.py#L476-L484, https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_deployment-webserver.tpl#L86-L90, https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_helpers.tpl#L55 and https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/values.yaml#L54-L58
 - Apache Airflow security overview (rolling documentation, checked September 2026): https://airflow.apache.org/docs/apache-airflow/stable/security/
-- Apache Airflow, auth manager selection (`[core] auth_manager`, `airflow config get-value core auth_manager`) (Airflow 3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/auth-manager/index.html
-- Apache Airflow FAB provider, API authentication (`[fab] auth_backends`, independent of the auth manager) (FAB provider 3.9.0 documentation): https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/api-authentication.html
+- Apache Airflow, auth manager selection (`[core] auth_manager`, `airflow config get-value core auth_manager`) (Airflow 3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/3.3.2/core-concepts/auth-manager/index.html
+- Apache Airflow FAB provider, API authentication (`[fab] auth_backends`, independent of the auth manager) (rolling documentation, checked September 2026): https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/api-authentication.html
 - Prefect server source (health and ready paths exempted from the auth string on GET): https://github.com/PrefectHQ/prefect/blob/9e560c9b6df4e19a5109a66e66d461f9facb538d/src/prefect/server/api/server.py
 - Apache Airflow, quickstart (default port 8080): https://airflow.apache.org/docs/apache-airflow/stable/start.html
 - Apache Airflow running in Docker, development Compose defaults for credentials, JWT signing and port publication (rolling documentation, checked September 2026): https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html
 - Apache Airflow security model, authenticated users and private deployment (Airflow 3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/3.3.2/security/security_model.html
 - Apache Airflow Simple auth manager, default for development/testing, configured users and generated passwords (Airflow 3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/3.3.2/core-concepts/auth-manager/simple/index.html
-- Temporal, self-hosted security (`noopAuthorizer` default, `Authorizer`, `ClaimMapper`) (Temporal Server 1.28.x documentation): https://docs.temporal.io/self-hosted-guide/security
+- Temporal, self-hosted security (`noopAuthorizer` default, `Authorizer`, `ClaimMapper`) (rolling documentation, checked September 2026): https://docs.temporal.io/self-hosted-guide/security
 - Temporal, Web UI configuration reference (`auth.providers`, `enabled`, `type: oidc`, `providerUrl`,
-  `clientId`, `clientSecret`, `callbackUrl`, `scopes`) (Temporal UI Server 2.34.x documentation): https://docs.temporal.io/references/web-ui-configuration
+  `clientId`, `clientSecret`, `callbackUrl`, `scopes`) (rolling documentation, checked September 2026): https://docs.temporal.io/references/web-ui-configuration
 - Temporal CLI server reference, default frontend gRPC port 7233 and Web UI port 8233 (rolling documentation, checked September 2026): https://docs.temporal.io/cli/command-reference/server
 - Flower configuration, `--address`, `--port` 5555 default, `--basic-auth`, `--auth_provider`, `--oauth2_key`, `--oauth2_secret`, `--oauth2_redirect_uri` and `--auth` (rolling documentation, checked September 2026): https://flower.readthedocs.io/en/latest/config.html
 - Flower `port` default 5555, `address` default `''` and the `unix_socket` branch, the `FLOWER_` environment variables, and the implicit `flowerconfig.py` load from the working directory (pinned tag v2.2.0), with Tornado's `bind_sockets` treating an empty address as all interfaces (pinned tag v6.5.10): https://github.com/mher/flower/blob/v2.2.0/flower/options.py#L7-L15, https://github.com/mher/flower/blob/v2.2.0/flower/options.py#L56-L57, https://github.com/mher/flower/blob/v2.2.0/flower/command.py#L39-L91, https://github.com/mher/flower/blob/v2.2.0/flower/app.py#L71-L76 and https://github.com/tornadoweb/tornado/blob/v6.5.10/tornado/netutil.py#L72-L73

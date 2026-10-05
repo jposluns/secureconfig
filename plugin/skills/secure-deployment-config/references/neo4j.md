@@ -3,13 +3,13 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "cecd8d82fc462fcc940d50f3e2aa0673244f8ef186209b46509a6a1a0af91c82",
+  "body_sha256": "0c53584c51860c496d64d5d0b9db0185e7cd96e9cec2d64924ccb1915c4d3cc9",
   "components": {
     "docs": {
       "name": "Neo4j documentation",
       "basis": "unknown",
       "sources": {
-        "s71d601ee318d": "https://neo4j.com/docs/operations-manual/current/configuration/connectors/",
+        "s45afc735a153": "https://neo4j.com/docs/operations-manual/5/configuration/connectors/",
         "s6e25ca2b57e6": "https://neo4j.com/docs/operations-manual/current/configuration/ports/",
         "s08d51abe6a73": "https://neo4j.com/docs/operations-manual/current/configuration/set-initial-password/",
         "sf356a53bcdde": "https://neo4j.com/docs/operations-manual/current/configuration/configuration-settings/",
@@ -77,8 +77,8 @@ version_basis: {
       }
     },
     "tls": {
-      "name": "TLS",
-      "basis": "1.3",
+      "name": "TLS RFC 8446",
+      "basis": "unknown",
       "sources": {
         "se28608fb71a7": "https://www.rfc-editor.org/rfc/rfc8446.html"
       }
@@ -111,7 +111,7 @@ version_basis: {
       "name": "Packaged Neo4j",
       "basis": "5",
       "sources": {
-        "s71d601ee318d": "https://neo4j.com/docs/operations-manual/current/configuration/connectors/"
+        "s45afc735a153": "https://neo4j.com/docs/operations-manual/5/configuration/connectors/"
       }
     },
     "password-min": {
@@ -125,14 +125,14 @@ version_basis: {
       "name": "Neo4j LOAD minimum",
       "basis": "5.13",
       "sources": {
-        "sd1cbea2cf003": "https://neo4j.com/docs/operations-manual/current/authentication-authorization/load-privileges/"
+        "se48a10ba1e9a": "https://neo4j.com/docs/cypher-manual/5/deprecations-additions-removals-compatibility/"
       }
     },
     "cidr-min": {
       "name": "Neo4j CIDR LOAD minimum",
       "basis": "5.16",
       "sources": {
-        "sd1cbea2cf003": "https://neo4j.com/docs/operations-manual/current/authentication-authorization/load-privileges/"
+        "se48a10ba1e9a": "https://neo4j.com/docs/cypher-manual/5/deprecations-additions-removals-compatibility/"
       }
     },
     "shell-history": {
@@ -200,10 +200,10 @@ version_basis: {
     }
   },
   "claims": {
-    "packaged-bind": {"text": "Packaged Neo4j 5 defaults to localhost; a widened shared bind exposes enabled connectors.", "components": ["neo5"], "sources": ["neo5:s71d601ee318d"], "status": "REASONED"},
+    "packaged-bind": {"text": "Packaged Neo4j 5 defaults to localhost; a widened shared bind exposes enabled connectors.", "components": ["neo5"], "sources": ["neo5:s45afc735a153"], "status": "REASONED"},
     "auth-default": {"text": "Authentication defaults on with neo4j/neo4j; rotate before remote access and reserve auth disabling for isolated recovery.", "components": ["docs"], "sources": ["docs:s08d51abe6a73", "docs:sa684352a8ce2"], "status": "REASONED"},
-    "bolt-default": {"text": "Bolt defaults to :7687 with TLS DISABLED; an omitted connector host inherits the shared listen address.", "components": ["docs"], "sources": ["docs:s71d601ee318d"], "status": "REASONED"},
-    "http-default": {"text": "Plaintext HTTP defaults enabled on :7474; HTTPS is disabled by default on :7473.", "components": ["docs"], "sources": ["docs:s71d601ee318d"], "status": "REASONED"},
+    "bolt-default": {"text": "Bolt defaults to :7687 with TLS DISABLED; an omitted connector host inherits the shared listen address.", "components": ["docs"], "sources": ["docs:s45afc735a153"], "status": "REASONED"},
+    "http-default": {"text": "Plaintext HTTP defaults enabled on :7474; HTTPS is disabled by default on :7473.", "components": ["docs"], "sources": ["docs:s45afc735a153"], "status": "REASONED"},
     "docker-bind": {"text": "The pinned Docker entrypoint defaults the shared listen host to 0.0.0.0; publication and firewall determine host exposure.", "components": ["docker", "docs"], "sources": ["docker:s67d863435d75", "docs:s189dd64eedf0"], "status": "REASONED"},
     "docker-auth": {"text": "NEO4J_AUTH initializes a new database, does not rotate an existing password, and none disables authentication; deliver secrets outside argv.", "components": ["docs"], "sources": ["docs:sa88393321e84"], "status": "REASONED"},
     "bootstrap": {"text": "Use isolated loopback Cypher Shell --change-password prompts; set-initial-password is first-start-only and takes an exposed positional password.", "components": ["docs"], "sources": ["docs:s08d51abe6a73", "docs:s27aabf32542c"], "status": "REASONED"},
@@ -227,8 +227,8 @@ version_basis: {
     "docker-overrides": {"text": "Explicit settings override Docker defaults, then environment overrides files; NEO4J_ maps underscores to __ and dots to _ for the four loopback overrides.", "components": ["docker", "docs"], "sources": ["docker:s67d863435d75", "docs:s189dd64eedf0"], "status": "REASONED"},
     "docker-expose": {"text": "All three pinned Dockerfiles EXPOSE only 7474/7473/7687; EXPOSE is neither the full listener inventory nor a firewall.", "components": ["docker"], "sources": ["docker:sc85aeddf6446", "docker:sf120b320c41f", "docker:s313b08920171"], "status": "REASONED"},
     "client-certificates": {"text": "Use policy-specific PKCS#8 PEM keys and certificates, service ownership and modes 0400/0644; legacy PKCS#1 is deprecated.", "components": ["docs"], "sources": ["docs:s9114febb4116"], "status": "REASONED"},
-    "bolt-required": {"text": "Enable the Bolt SSL policy and set tls_level=REQUIRED; OPTIONAL still accepts plaintext.", "components": ["docs"], "sources": ["docs:s71d601ee318d", "docs:s9114febb4116"], "status": "REASONED"},
-    "https-policy": {"text": "Enable HTTPS with its own certificate policy and disable server.http.enabled to remove plaintext HTTP.", "components": ["docs"], "sources": ["docs:s71d601ee318d", "docs:s9114febb4116"], "status": "REASONED"},
+    "bolt-required": {"text": "Enable the Bolt SSL policy and set tls_level=REQUIRED; OPTIONAL still accepts plaintext.", "components": ["docs"], "sources": ["docs:s45afc735a153", "docs:s9114febb4116"], "status": "REASONED"},
+    "https-policy": {"text": "Enable HTTPS with its own certificate policy and disable server.http.enabled to remove plaintext HTTP.", "components": ["docs"], "sources": ["docs:s45afc735a153", "docs:s9114febb4116"], "status": "REASONED"},
     "bolt-mtls": {"text": "Client_auth=NONE uses server TLS plus database credentials; REQUIRE adds client certificates and needs trusted certificates and certificate-capable clients.", "components": ["docs"], "sources": ["docs:s9114febb4116"], "status": "REASONED"},
     "community-users": {"text": "Separate Community users all have implied administrator privileges; application or fronting controls must enforce end-user authorization.", "components": ["docs"], "sources": ["docs:s7dcb6ce12fb7"], "status": "REASONED"},
     "lockout": {"text": "Native authentication defaults to three failed attempts and a 5s lock; these settings do not establish an external IdP lockout policy.", "components": ["docs"], "sources": ["docs:sa684352a8ce2"], "status": "REASONED"},
@@ -237,7 +237,7 @@ version_basis: {
     "mfa": {"text": "Native passwords lack a second factor; Enterprise OIDC can enforce IdP MFA, LDAP simple alone cannot, and alternate paths must not bypass MFA.", "components": ["docs"], "sources": ["docs:s87f690765c5e", "docs:s9868bfc264b4"], "status": "REASONED"},
     "public-execute": {"text": "Default Enterprise PUBLIC grants procedure, UDF and data-loading access; read-only graph privileges alone do not restrict these capabilities.", "components": ["docs"], "sources": ["docs:sdf6a150be16d", "docs:s216b761855ea", "docs:sd1cbea2cf003"], "status": "REASONED"},
     "execute-denials": {"text": "DENY EXECUTE PROCEDURES/FUNCTIONS blocks those capabilities for catalog_reader; built-in functions remain available and narrower grants cannot override matching denials.", "components": ["docs"], "sources": ["docs:s49e57b8da0e8", "docs:s216b761855ea"], "status": "REASONED"},
-    "load-denial": {"text": "DENY LOAD ON ALL DATA needs Enterprise 5.13 or later; CIDR-specific privileges arrived in 5.16.", "components": ["docs", "load-min", "cidr-min"], "sources": ["docs:sd1cbea2cf003", "load-min:sd1cbea2cf003", "cidr-min:sd1cbea2cf003"], "status": "REASONED"},
+    "load-denial": {"text": "DENY LOAD ON ALL DATA needs Enterprise 5.13 or later; CIDR-specific privileges arrived in 5.16.", "components": ["docs", "load-min", "cidr-min"], "sources": ["docs:sd1cbea2cf003", "load-min:se48a10ba1e9a", "cidr-min:se48a10ba1e9a"], "status": "REASONED"},
     "boosted": {"text": "Do not grant applications boosted execution; APOC boosted procedures can bypass graph and loading restrictions.", "components": ["apoc"], "sources": ["apoc:s3d201e2d8cd7"], "status": "REASONED"},
     "plugin-loading": {"text": "Keep procedures.unrestricted empty unless reviewed and narrow procedures.allowlist from its * default; loading controls do not create Community per-user privileges.", "components": ["docs"], "sources": ["docs:sf356a53bcdde", "docs:sa3a72e7400b3"], "status": "REASONED"},
     "apoc-file": {"text": "For Neo4j 5+, APOC settings belong in apoc.conf; defaults import.file.enabled=false and import.file.use_neo4j_config=true retain file/import-directory checks.", "components": ["apoc"], "sources": ["apoc:s41842145484e"], "status": "REASONED"},
@@ -258,8 +258,8 @@ version_basis: {
     "verify-cluster-tls": {"text": "Compare cluster TLS client_auth NONE with REQUIRE: no certificate and untrusted issuer must be rejected while a trusted member completes a verified handshake.", "components": ["cluster", "openssl", "tls", "timeout"], "sources": ["cluster:s3b91bd83988a", "cluster:s213150a93a9b", "openssl:s00aaf106164f", "tls:se28608fb71a7", "timeout:s8844a42d0596"], "status": "REASONED", "verify": [2]},
     "cluster-probe-limits": {"text": "Inspect fatal alerts and member logs; server Verification OK, timeout 124 or transport failure alone does not prove client acceptance or rejection.", "components": ["openssl", "tls", "timeout"], "sources": ["openssl:s00aaf106164f", "tls:se28608fb71a7", "timeout:s8844a42d0596"], "status": "REASONED", "verify": [2]},
     "verify-cluster-health": {"text": "SHOW SERVERS must retain expected Enabled/Available members in both states; protocol-level discovery, replication and routing comparisons remain unobserved.", "components": ["cluster", "docs"], "sources": ["cluster:scb82a1e6034e", "docs:s27aabf32542c"], "status": "REASONED", "verify": [2]},
-    "verify-bolt": {"text": "Verified handshake and authenticated TLS query must succeed; plaintext must fail at transport under REQUIRED, not merely at authentication.", "components": ["docs"], "sources": ["docs:s71d601ee318d", "docs:s9114febb4116"], "status": "REASONED", "verify": [3]},
-    "verify-http-off": {"text": "An exposed 7474 endpoint answers HTTP; fixed HTTP is absent, with target/path confirmation and working TLS controls needed to interpret connection failures.", "components": ["docs"], "sources": ["docs:s71d601ee318d", "docs:s6e25ca2b57e6"], "status": "REASONED", "verify": [3]},
+    "verify-bolt": {"text": "Verified handshake and authenticated TLS query must succeed; plaintext must fail at transport under REQUIRED, not merely at authentication.", "components": ["docs"], "sources": ["docs:s45afc735a153", "docs:s9114febb4116"], "status": "REASONED", "verify": [3]},
+    "verify-http-off": {"text": "An exposed 7474 endpoint answers HTTP; fixed HTTP is absent, with target/path confirmation and working TLS controls needed to interpret connection failures.", "components": ["docs"], "sources": ["docs:s45afc735a153", "docs:s6e25ca2b57e6"], "status": "REASONED", "verify": [3]},
     "verify-password": {"text": "Default password acceptance before rotation must become authentication refusal while the replacement succeeds; account for lockout and inspect prompted-secret argv.", "components": ["docs"], "sources": ["docs:s08d51abe6a73", "docs:sa684352a8ce2", "docs:s27aabf32542c"], "status": "REASONED", "verify": [3]},
     "verify-session": {"text": "The guarded session prompts for the application password; history disable needs Cypher Shell 2025.08+, while earlier documented shells use in-memory.", "components": ["docs", "shell-history"], "sources": ["docs:s27aabf32542c", "shell-history:s27aabf32542c"], "status": "REASONED", "verify": [4]},
     "verify-query-control": {"text": "RETURN 1 must succeed before interpreting later denials; administrative work uses system and fixture queries use neo4j.", "components": ["docs"], "sources": ["docs:s27aabf32542c"], "status": "REASONED"},
@@ -345,8 +345,8 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | local-guards: Historical guard-only checks rejected placeholders and malformed marker/count inputs in six guarded blocks; no Neo4j service behavior was demonstrated. | Neo4j documentation unknown | DEMONSTRATED |
 | tls-schemes: neo4j+s and bolt+s verify certificates; +ssc skips verification. Cypher Shell trust configuration is independent of OpenSSL/curl CA options. | Neo4j documentation unknown | REASONED |
 | verify-listeners: Confirm working Bolt/HTTPS, absent HTTP, Enterprise loopback backup, conditional cluster/Prometheus ports and Docker namespace/publication controls; an empty inventory is insufficient. | Neo4j documentation unknown; Neo4j Enterprise 5.26; Neo4j Docker entrypoint 5359427c4f51d0d51cce5b048757a2c21e6f377e | REASONED |
-| verify-cluster-tls: Compare cluster TLS client_auth NONE with REQUIRE: no certificate and untrusted issuer must be rejected while a trusted member completes a verified handshake. | Neo4j Enterprise 5.26; OpenSSL 3; TLS 1.3; timeout unknown | REASONED |
-| cluster-probe-limits: Inspect fatal alerts and member logs; server Verification OK, timeout 124 or transport failure alone does not prove client acceptance or rejection. | OpenSSL 3; TLS 1.3; timeout unknown | REASONED |
+| verify-cluster-tls: Compare cluster TLS client_auth NONE with REQUIRE: no certificate and untrusted issuer must be rejected while a trusted member completes a verified handshake. | Neo4j Enterprise 5.26; OpenSSL 3; TLS RFC 8446 unknown; timeout unknown | REASONED |
+| cluster-probe-limits: Inspect fatal alerts and member logs; server Verification OK, timeout 124 or transport failure alone does not prove client acceptance or rejection. | OpenSSL 3; TLS RFC 8446 unknown; timeout unknown | REASONED |
 | verify-cluster-health: SHOW SERVERS must retain expected Enabled/Available members in both states; protocol-level discovery, replication and routing comparisons remain unobserved. | Neo4j Enterprise 5.26; Neo4j documentation unknown | REASONED |
 | verify-bolt: Verified handshake and authenticated TLS query must succeed; plaintext must fail at transport under REQUIRED, not merely at authentication. | Neo4j documentation unknown | REASONED |
 | verify-http-off: An exposed 7474 endpoint answers HTTP; fixed HTTP is absent, with target/path confirmation and working TLS controls needed to interpret connection failures. | Neo4j documentation unknown | REASONED |
@@ -368,7 +368,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-legacy: When /db/neo4j/tx/commit is enabled, test its statements payload too: anonymous 401 with auth enabled and authenticated ok=1 plus empty errors; HTTP 200 alone is insufficient. | Neo4j documentation unknown | REASONED |
 <!-- version-basis:end -->
 
-A packaged Neo4j 5 listens on `localhost` only by default and ships with authentication on, but with the well-known `neo4j`/`neo4j` credential, Bolt TLS at `DISABLED`, and plaintext HTTP enabled instead of HTTPS. Setting `server.default_listen_address=0.0.0.0` on such an install to "make it reachable" therefore exposes a database with a guessable password over plaintext. These defaults remain documented at the time of writing. The official Docker image is the exception: its entrypoint sets `server.default_listen_address=0.0.0.0` by default, so publishing a container port exposes the listener immediately, subject to the host's port binding and firewall. Do not assume the packaged loopback boundary protects a published container port. Docker's `NEO4J_AUTH=neo4j/REPLACE_WITH_LONG_RANDOM_VALUE` initializes authentication for a NEW database; it does not rotate an existing database's password. Supply credentials through the execution environment or secret-management mechanism, never as literal command-line arguments, and never use `NEO4J_AUTH=none`, which disables authentication. See [network connectors](https://neo4j.com/docs/operations-manual/current/configuration/connectors/), [Docker authentication](https://neo4j.com/docs/operations-manual/current/docker/introduction/), [Docker configuration](https://neo4j.com/docs/operations-manual/current/docker/configuration/), and the [official Neo4j 5 entrypoint](https://raw.githubusercontent.com/neo4j/docker-neo4j/5359427c4f51d0d51cce5b048757a2c21e6f377e/docker-image-src/5/coredb/docker-entrypoint.sh).
+A packaged Neo4j 5 listens on `localhost` only by default and ships with authentication on, but with the well-known `neo4j`/`neo4j` credential, Bolt TLS at `DISABLED`, and plaintext HTTP enabled instead of HTTPS. Setting `server.default_listen_address=0.0.0.0` on such an install to "make it reachable" therefore exposes a database with a guessable password over plaintext. These defaults remain documented at the time of writing. The official Docker image is the exception: its entrypoint sets `server.default_listen_address=0.0.0.0` by default, so publishing a container port exposes the listener immediately, subject to the host's port binding and firewall. Do not assume the packaged loopback boundary protects a published container port. Docker's `NEO4J_AUTH=neo4j/REPLACE_WITH_LONG_RANDOM_VALUE` initializes authentication for a NEW database; it does not rotate an existing database's password. Supply credentials through the execution environment or secret-management mechanism, never as literal command-line arguments, and never use `NEO4J_AUTH=none`, which disables authentication. See [network connectors](https://neo4j.com/docs/operations-manual/5/configuration/connectors/), [Docker authentication](https://neo4j.com/docs/operations-manual/current/docker/introduction/), [Docker configuration](https://neo4j.com/docs/operations-manual/current/docker/configuration/), and the [official Neo4j 5 entrypoint](https://raw.githubusercontent.com/neo4j/docker-neo4j/5359427c4f51d0d51cce5b048757a2c21e6f377e/docker-image-src/5/coredb/docker-entrypoint.sh).
 
 Examples use current configuration names, also used in Neo4j 5 except where a newer option is explicitly marked. Neo4j 4.x names differ. Configuration belongs in `neo4j.conf` unless another file is named.
 
@@ -391,7 +391,7 @@ At the time of writing, the default minimum password length is 8 characters. `db
 
 ## 2. Bind deliberately
 
-`server.default_listen_address` supplies the host when a connector's listen address omits it. At the time of writing, `server.bolt.listen_address` defaults to `:7687`, `server.http.listen_address` to `:7474`, and `server.https.listen_address` to `:7473`. Keep the default `localhost` unless remote clients are deliberate, then prefer a specific private address over `0.0.0.0`. See [network connector configuration](https://neo4j.com/docs/operations-manual/current/configuration/connectors/).
+`server.default_listen_address` supplies the host when a connector's listen address omits it. At the time of writing, `server.bolt.listen_address` defaults to `:7687`, `server.http.listen_address` to `:7474`, and `server.https.listen_address` to `:7473`. Keep the default `localhost` unless remote clients are deliberate, then prefer a specific private address over `0.0.0.0`. See [network connector configuration](https://neo4j.com/docs/operations-manual/5/configuration/connectors/).
 
 Online backup is Enterprise-only. Its `server.backup.listen_address` defaults to the explicit `127.0.0.1:6362` at the time of writing, so changing the shared listen address does not widen this default; keep it off external interfaces. Community readers should not expect an online-backup listener. See [online backup](https://neo4j.com/docs/operations-manual/current/backup-restore/online-backup/) and the [configuration reference](https://neo4j.com/docs/operations-manual/current/configuration/configuration-settings/).
 
@@ -747,7 +747,7 @@ The OpenSSL command and Cypher Shell checks below assume `client_auth=NONE`. If 
 - With the original HTTP endpoint exposed, the 7474 request returns an HTTP status. With the fixed policy, that endpoint must not answer. Curl exit `7` means a connection could not be established; it can also indicate a local socket or routing problem. Exit `6` is DNS failure and `28` is a timeout. These are inconclusive without evidence that the intended host and path were reached. A connection refusal is useful only after confirming the intended host and path, alongside the working TLS service and listener inventory.
 - Before bootstrap rotation, the default password is accepted, including a response requiring a password change. After rotation, it must fail authentication while the replacement succeeds. Distinguish a temporary lockout from an invalid password; allow the configured lock period to expire before the positive control. During the isolated bootstrap reproduction, inspect process arguments to confirm the prompted secrets do not appear there.
 
-The expected distinctions follow [connector TLS behavior](https://neo4j.com/docs/operations-manual/current/configuration/connectors/), [initial-password behavior](https://neo4j.com/docs/operations-manual/current/configuration/set-initial-password/), and [native authentication](https://neo4j.com/docs/operations-manual/current/authentication-authorization/).
+The expected distinctions follow [connector TLS behavior](https://neo4j.com/docs/operations-manual/5/configuration/connectors/), [initial-password behavior](https://neo4j.com/docs/operations-manual/current/configuration/set-initial-password/), and [native authentication](https://neo4j.com/docs/operations-manual/current/authentication-authorization/).
 
 ### Interactive application and administrative checks (REASONED: Cypher Shell and the configured deployment are unavailable; session expectations follow the cited documentation)
 
@@ -984,7 +984,7 @@ The comparisons below are REASONED from the cited Neo4j documentation and pinned
 
 ## Sources (checked September 2026)
 
-- Configure network connectors (Neo4j 5): https://neo4j.com/docs/operations-manual/current/configuration/connectors/
+- Configure network connectors (Neo4j 5): https://neo4j.com/docs/operations-manual/5/configuration/connectors/
 - Ports: https://neo4j.com/docs/operations-manual/current/configuration/ports/
 - Set an initial password: https://neo4j.com/docs/operations-manual/current/configuration/set-initial-password/
 - Exact configuration settings, defaults, editions, and error-obfuscation version (current-series error obfuscation since 2026.01.3): https://neo4j.com/docs/operations-manual/current/configuration/configuration-settings/
@@ -1010,8 +1010,8 @@ The comparisons below are REASONED from the cited Neo4j documentation and pinned
 - GRANT, DENY, and showing user privileges: https://neo4j.com/docs/operations-manual/current/authentication-authorization/manage-privileges/
 - Access-control limitations and hidden properties: https://neo4j.com/docs/operations-manual/current/authentication-authorization/limitations/
 - Procedure and user-defined function execution privileges: https://neo4j.com/docs/operations-manual/current/authentication-authorization/dbms-administration/dbms-execute-privileges/
-- LOAD privileges (LOAD ON ALL DATA since 5.13; CIDR privileges since 5.16): https://neo4j.com/docs/operations-manual/current/authentication-authorization/load-privileges/
-- LOAD privilege introduction versions: https://neo4j.com/docs/cypher-manual/5/deprecations-additions-removals-compatibility/
+- LOAD privileges (rolling documentation, checked September 2026): https://neo4j.com/docs/operations-manual/current/authentication-authorization/load-privileges/
+- LOAD privilege introduction versions (LOAD ON ALL DATA since 5.13; CIDR privileges since 5.16): https://neo4j.com/docs/cypher-manual/5/deprecations-additions-removals-compatibility/
 - Cypher Shell prompts, environment credentials, history, parameters, and timeouts (history disable since 2025.08; transaction-timeout since 2025.12): https://neo4j.com/docs/operations-manual/current/cypher-shell/
 - Docker introduction and initial authentication: https://neo4j.com/docs/operations-manual/current/docker/introduction/
 - Docker configuration and container listen addresses: https://neo4j.com/docs/operations-manual/current/docker/configuration/
