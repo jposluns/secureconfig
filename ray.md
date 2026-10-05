@@ -97,8 +97,8 @@ version_basis: {
       }
     },
     "redis-history": {
-      "name": "Ray Redis default change",
-      "basis": "1.11",
+      "name": "Ray Redis history announcement",
+      "basis": "unknown",
       "sources": {
         "sb5afda59324d": "https://www.anyscale.com/blog/redis-in-ray-past-and-future"
       }
@@ -231,7 +231,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | metrics-ipv4: WSGI metrics uses AF_INET: empty address is IPv4 wildcard, localhost is used for local node addresses, and resolved ::1 cannot bind this socket. | Ray pinned source ray-2.58.0; CPython WSGI server v3.11.0 | REASONED |
 | node-normalization: Both CLI and ray.init normalize localhost node arguments to a discovered address; cluster-mode setting changes whole-node selection, not independent agent binds. | Ray pinned source ray-2.58.0 | REASONED |
 | agent-family: Agent gRPC wildcard selection is 0.0.0.0 or :: based on resolved localhost, independently of node address family. | Ray pinned source ray-2.58.0 | REASONED |
-| gcs-not-redis: 6379 is GCS, not Redis; Redis stopped being launched by default in 1.11. | Ray Redis default change 1.11; Ray documentation unknown | REASONED |
+| gcs-not-redis: 6379 is GCS, not Redis; Redis stopped being launched by default in 1.11. | Ray Redis history announcement unknown; Ray documentation unknown | REASONED |
 | redis-backend: External Redis is opt-in GCS fault-tolerance storage; Redis credentials do not authenticate GCS clients and RAY_REDIS_PASSWORD is not a head flag substitute. | Ray documentation unknown | REASONED |
 | token-default: Shared token authentication exists since 2.52.0 but is disabled by default as of 2.58.0; it supplements network isolation and does not protect Serve apps. | Ray token authentication introduction 2.52.0; Ray pinned source ray-2.58.0 | REASONED |
 | token-input: Enable RAY_AUTH_MODE=token; precedence is RAY_AUTH_TOKEN, RAY_AUTH_TOKEN_PATH then ~/.ray/auth_token, shared by every node/client. | Ray pinned source ray-2.58.0 | REASONED |

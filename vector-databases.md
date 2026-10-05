@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "3874f49ec350d1fcd46e802ec2264295fc5b308bfc320e85bfbf29aaeae61566",
+  "body_sha256": "9d605233d446c3555c782e644d0a2c47d35081f01cd820963a4ba3c298d93dad",
   "components": {
     "q": {
       "name": "Qdrant source",
@@ -210,7 +210,7 @@ version_basis: {
       "name": "pgvector and PostgreSQL documentation",
       "basis": "unknown",
       "sources": {
-        "sc5f2c6c39c63": "https://github.com/pgvector/pgvector",
+        "saab3b3092223": "https://github.com/pgvector/pgvector/blob/v0.8.2/README.md",
         "se9846041ce1f": "https://www.postgresql.org/docs/current/ddl-rowsecurity.html"
       }
     },
@@ -335,7 +335,7 @@ version_basis: {
     "milvus-health": {"text": "Delete wildcard 9091 publication; in-container healthcheck needs none. Optional 127.0.0.1:9091 mapping still needs isolation; changed METRICS_PORT must update healthcheck and mappings.", "components": ["m2", "m3"], "sources": ["m2:s978d2f09057a", "m3:sdb5a4b72da10"], "status": "REASONED"},
     "chroma-bind": {"text": "Without a file chroma run defaults localhost; a config file defaults listen_address to 0.0.0.0 after CHROMA_ merges; official config sets only persist_path, yielding wildcard 8000.", "components": ["chroma"], "sources": ["chroma:s7eb7610f68c1", "chroma:s6d6708278bef", "chroma:s59912a4c7e11", "chroma:sed8aad199780", "chroma:s3a1c76cdd7f8", "chroma:s09652c32f56a", "chroma:s784a0e779949"], "status": "REASONED"},
     "chroma-auth": {"text": "Built-in authentication was removed in v1.0.0; obsolete AUTHN variables do not protect the server. Use private binding and authenticated TLS fronting.", "components": ["cd"], "sources": ["cd:s60ad33c4b715"], "status": "REASONED"},
-    "pgvector": {"text": "pgvector is a PostgreSQL extension on 5432 for PostgreSQL 13+; use PostgreSQL TLS, hostssl/SCRAM, verify-full and least-privilege roles.", "components": ["pg"], "sources": ["pg:sc5f2c6c39c63"], "status": "REASONED"},
+    "pgvector": {"text": "pgvector is a PostgreSQL extension on 5432 for PostgreSQL 13+; use PostgreSQL TLS, hostssl/SCRAM, verify-full and least-privilege roles.", "components": ["pg"], "sources": ["pg:saab3b3092223"], "status": "REASONED"},
     "pgvector-rls": {"text": "Tenant RLS filters shared embeddings; prove tenant-B isolation with known rows and bypass controls, counting per tenant rather than trusting top-k.", "components": ["pg"], "sources": ["pg:se9846041ce1f"], "status": "REASONED"},
     "hosted-mfa": {"text": "Hosted keys stay secret and clients use vendor HTTPS; human MFA belongs on hosted consoles, Weaviate OIDC or the fronting layer, not a self-hosted API key.", "components": ["qd", "wd"], "sources": ["qd:s753402e46eed", "wd:s51c9c4c6b4c0"], "status": "REASONED"},
     "verify-inventory": {"text": "Read all listener rows, container namespaces and publications; expected-port grep and host ss alone can miss exposure.", "components": ["qd", "docker"], "sources": ["qd:s753402e46eed", "docker:s1e53417c513d"], "status": "REASONED", "verify": [1]},
@@ -670,6 +670,6 @@ None of the checks above tests isolation between tenants. Where one embeddings t
 - Docker port publication: default host binding, explicit loopback mapping, same-network and host access, direct-routing and older-engine caveats: https://docs.docker.com/engine/network/port-publishing/
 - Chroma migration notes (v1.0.0 removal of built-in authentication; 2024 auth overhaul variables): https://docs.trychroma.com/docs/overview/migration ; client-server mode (`chroma run --path`, port 8000): https://docs.trychroma.com/docs/run-chroma/client-server
 - Chroma `chroma run`: the `--host` default `localhost` applied only without a config file, the config-file branch, the `listen_address` and `port` defaults `0.0.0.0` and 8000, `CHROMA_` variables merged when a file is loaded, the server's bind of `listen_address:port`, and the release image (`rust/Dockerfile` target `cli`, `chroma run /config.yaml` from `docker_single_node.yaml`) (pinned tag 1.5.9): https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L39-L45, https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L60-L73, https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L114-L134, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L140-L146, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L176-L179, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L216-L229, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/server.rs#L415-L417, https://github.com/chroma-core/chroma/blob/1.5.9/rust/Dockerfile#L85-L93, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/sample_configs/docker_single_node.yaml and https://github.com/chroma-core/chroma/blob/1.5.9/.github/workflows/_build_release_container.yml#L101-L106
-- pgvector (`CREATE EXTENSION vector`, PostgreSQL 13 and later): https://github.com/pgvector/pgvector
+- pgvector (`CREATE EXTENSION vector`, PostgreSQL 13 and later; v0.8.2 README): https://github.com/pgvector/pgvector/blob/v0.8.2/README.md
 - PostgreSQL row security policies (a superuser and a `BYPASSRLS` role always bypass; the table owner bypasses unless the table has `FORCE ROW LEVEL SECURITY`): https://www.postgresql.org/docs/current/ddl-rowsecurity.html
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0; rolling documentation, checked September 2026): https://curl.se/docs/manpage.html
