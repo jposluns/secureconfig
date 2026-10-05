@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "b31d8cade3b22c723f81016366f9f3ba4699306ed790e51a7e3e56419107ce88",
+  "body_sha256": "3dee1b509ea8da8bfd36786a46d03ba4ac6f039c73f2cece679e29f136f958a7",
   "components": {
     "portainer": {
       "name": "Portainer",
@@ -154,6 +154,20 @@ version_basis: {
       "sources": {
         "sa315b3f8bfa6": "https://distribution.github.io/distribution/about/deploying/"
       }
+    },
+    "htpasswd": {
+      "name": "Apache htpasswd",
+      "basis": "2.4",
+      "sources": {
+        "scde9004bb967": "https://httpd.apache.org/docs/2.4/programs/htpasswd.html"
+      }
+    },
+    "owasp-passwords": {
+      "name": "OWASP password storage",
+      "basis": "1a3f58ed2714f258a1d713966457f1a0f426e841",
+      "sources": {
+        "s0f70ec4aa271": "https://github.com/OWASP/CheatSheetSeries/blob/1a3f58ed2714f258a1d713966457f1a0f426e841/cheatsheets/Password_Storage_Cheat_Sheet.md#L139"
+      }
     }
   },
   "claims": {
@@ -206,7 +220,7 @@ version_basis: {
     "dozzle-auth": {"text": "Auth defaults off; generate users.yml with stdin password prompt and set simple auth, or delegate with forward-proxy.", "components": ["dozzle"], "sources": ["dozzle:s45b3eab2515b"], "status": "REASONED"},
     "dozzle-actions": {"text": "Leave optional container actions/shell off unless needed; either enables remote command execution.", "components": ["dozzle"], "sources": ["dozzle:s45b3eab2515b"], "status": "REASONED"},
     "registry-auth": {"text": "registry:2 defaults to unauthenticated push/pull; configure TLS before htpasswd/token auth or use an authenticated distribution.", "components": ["registry-docs"], "sources": ["registry-docs:sa315b3f8bfa6"], "status": "REASONED"},
-    "registry-bcrypt": {"text": "Native htpasswd accepts bcrypt only; use -B -C 12. Proxy hashing rules differ; OWASP cost minimum lacks a direct source here.", "components": ["registry-docs"], "sources": ["registry-docs:sa315b3f8bfa6"], "status": "REASONED"},
+    "registry-bcrypt": {"text": "Native htpasswd accepts bcrypt only; use -B -C 12. Proxy hashing rules differ; OWASP cost minimum lacks a direct source here.", "components": ["registry-docs", "htpasswd", "owasp-passwords"], "sources": ["registry-docs:sa315b3f8bfa6", "htpasswd:scde9004bb967", "owasp-passwords:s0f70ec4aa271"], "status": "REASONED"},
     "registry-private": {"text": "Use private networking and tunnels/Access with fronting MFA.", "components": ["registry-docs"], "sources": ["registry-docs:sa315b3f8bfa6"], "status": "REASONED"},
     "filebrowser-admin": {"text": "Change first-run admin credentials, historically admin/admin. Guide records September 1, 2026 archival and the warning against internet exposure.", "components": ["filebrowser"], "sources": ["filebrowser:s6386c9e2356b"], "status": "REASONED"},
     "filebrowser-private": {"text": "Keep Filebrowser private through tunnel/tailnet/Access with fronting MFA.", "components": ["filebrowser"], "sources": ["filebrowser:s6386c9e2356b"], "status": "REASONED"},
@@ -229,7 +243,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -282,7 +296,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | dozzle-auth: Auth defaults off; generate users.yml with stdin password prompt and set simple auth, or delegate with forward-proxy. | Dozzle unknown | REASONED |
 | dozzle-actions: Leave optional container actions/shell off unless needed; either enables remote command execution. | Dozzle unknown | REASONED |
 | registry-auth: registry:2 defaults to unauthenticated push/pull; configure TLS before htpasswd/token auth or use an authenticated distribution. | Docker Registry documentation (rolling) unknown | REASONED |
-| registry-bcrypt: Native htpasswd accepts bcrypt only; use -B -C 12. Proxy hashing rules differ; OWASP cost minimum lacks a direct source here. | Docker Registry documentation (rolling) unknown | REASONED |
+| registry-bcrypt: Native htpasswd accepts bcrypt only; use -B -C 12. Proxy hashing rules differ; OWASP cost minimum lacks a direct source here. | Docker Registry documentation (rolling) unknown; Apache htpasswd 2.4; OWASP password storage 1a3f58ed2714f258a1d713966457f1a0f426e841 | REASONED |
 | registry-private: Use private networking and tunnels/Access with fronting MFA. | Docker Registry documentation (rolling) unknown | REASONED |
 | filebrowser-admin: Change first-run admin credentials, historically admin/admin. Guide records September 1, 2026 archival and the warning against internet exposure. | Filebrowser unknown | REASONED |
 | filebrowser-private: Keep Filebrowser private through tunnel/tailnet/Access with fronting MFA. | Filebrowser unknown | REASONED |
@@ -469,3 +483,5 @@ From outside the network, every panel URL is unreachable or shows a login; a pag
 - Filebrowser: https://github.com/filebrowser/filebrowser
 - Node-RED securing the runtime (adminAuth, credentialSecret): https://nodered.org/docs/user-guide/runtime/securing-node-red
 - Gitea `HTTP_ADDR` default `0.0.0.0` and `HTTP_PORT` default `3000` (pinned tag v1.27.3): https://github.com/go-gitea/gitea/blob/v1.27.3/modules/setting/server.go#L121-L122
+- Apache 2.4 `htpasswd` bcrypt default cost and `-C` override (checked October 2026): https://httpd.apache.org/docs/2.4/programs/htpasswd.html
+- OWASP password storage at commit 1a3f58ed2714f258a1d713966457f1a0f426e841 (bcrypt minimum work factor 10) (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/1a3f58ed2714f258a1d713966457f1a0f426e841/cheatsheets/Password_Storage_Cheat_Sheet.md#L139

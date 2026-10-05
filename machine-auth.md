@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "c68fdbadfd0e17511c4a80123ba99cccaae5a7f7b0abc38afc273abd2462e313",
+  "body_sha256": "49f8ddeb3a6d066c97a1352b5642e13c4ff28b5286e1e24181436fc8666ab5dd",
   "components": {
     "oauth": {
       "name": "OAuth client credentials",
@@ -97,6 +97,87 @@ version_basis: {
       "sources": {
         "s93ee2b4751f8": "https://www.rfc-editor.org/info/rfc5280/"
       }
+    },
+    "nginx-mtls": {
+      "name": "nginx mTLS",
+      "basis": "release-1.28.0",
+      "sources": {
+        "saba09cebd9dc": "https://github.com/nginx/nginx/blob/release-1.28.0/src/http/modules/ngx_http_ssl_module.c#L76-L78",
+        "se19e48aec677": "https://github.com/nginx/nginx/blob/release-1.28.0/src/http/modules/ngx_http_ssl_module.c#L162-L167"
+      }
+    },
+    "apache-mtls": {
+      "name": "Apache mTLS",
+      "basis": "2.4",
+      "sources": {
+        "s011c9b11bbf6": "https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslverifyclient"
+      }
+    },
+    "postgres-mtls": {
+      "name": "PostgreSQL client certificates",
+      "basis": "17",
+      "sources": {
+        "sece82dc43429": "https://www.postgresql.org/docs/17/auth-cert.html"
+      }
+    },
+    "mysql-mtls": {
+      "name": "MySQL client certificates",
+      "basis": "8.4",
+      "sources": {
+        "s4009a8e12cba": "https://dev.mysql.com/doc/refman/8.4/en/create-user.html"
+      }
+    },
+    "redis-mtls": {
+      "name": "Redis TLS client authentication",
+      "basis": "7.4.2",
+      "sources": {
+        "s37a9d8a0e34f": "https://github.com/redis/redis/blob/7.4.2/redis.conf#L240-L241",
+        "sc437a14c713a": "https://github.com/redis/redis/blob/7.4.2/src/config.c#L99-L103",
+        "se86d20ae4ca9": "https://github.com/redis/redis/blob/7.4.2/src/config.c#L3239"
+      }
+    },
+    "rabbitmq-mtls": {
+      "name": "RabbitMQ TLS client authentication",
+      "basis": "3.13",
+      "sources": {
+        "s617e896b6f53": "https://www.rabbitmq.com/docs/3.13/ssl"
+      }
+    },
+    "mosquitto-mtls": {
+      "name": "Mosquitto TLS client authentication",
+      "basis": "v2.0.21",
+      "sources": {
+        "sf7dad152fc94": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.0.21/man/mosquitto.conf.5.xml#L74-L76"
+      }
+    },
+    "gitleaks": {
+      "name": "Gitleaks scan commands",
+      "basis": "v8.19.0",
+      "sources": {
+        "s6310bf73dd3e": "https://github.com/gitleaks/gitleaks/blob/v8.19.0/README.md#L181",
+        "s3809c36cec88": "https://github.com/gitleaks/gitleaks/blob/v8.19.0/README.md#L188"
+      }
+    },
+    "vault": {
+      "name": "HashiCorp Vault",
+      "basis": "v1.20.0",
+      "sources": {
+        "sc7513679fe7e": "https://github.com/hashicorp/vault/blob/v1.20.0/README.md#L18"
+      }
+    },
+    "infisical": {
+      "name": "Infisical",
+      "basis": "v0.165.16",
+      "sources": {
+        "s725a4ac24a82": "https://github.com/Infisical/infisical/blob/v0.165.16/README.md#L48"
+      }
+    },
+    "doppler-cli": {
+      "name": "Doppler CLI",
+      "basis": "3.76.6",
+      "sources": {
+        "se354d6243027": "https://github.com/DopplerHQ/cli/blob/3.76.6/README.md#L3"
+      }
     }
   },
   "claims": {
@@ -111,13 +192,13 @@ version_basis: {
     "m2m-billing": {"text": "As of September 2026, Entra External ID M2M is billed per transaction as an add-on; hourly renewal is roughly 720 monthly transactions.", "components": ["entra"], "sources": ["entra:s0ee5939cfc03"], "status": "REASONED"},
     "client-secret": {"text": "Client credentials still need long-lived-secret protection unless replaced by federation supported by the provider.", "components": ["oauth", "azure"], "sources": ["oauth:s65b02b1812cc", "azure:sb7a38a36ac47"], "status": "REASONED"},
     "mtls-identity": {"text": "Use a separate short-lived certificate per client and keep CA keys off signed servers; mTLS is a possession factor, not human MFA.", "components": ["pki"], "sources": ["pki:s93ee2b4751f8"], "status": "REASONED"},
-    "mtls-nginx": {"text": "nginx uses ssl_verify_client on in the linked service guide; the cited RFC covers certificate revocation, not this product directive.", "components": ["pki"], "sources": ["pki:s93ee2b4751f8"], "status": "REASONED"},
-    "mtls-apache": {"text": "Apache uses SSLVerifyClient require in the linked service guide; the cited RFC covers certificate revocation, not this product directive.", "components": ["pki"], "sources": ["pki:s93ee2b4751f8"], "status": "REASONED"},
-    "mtls-postgres": {"text": "PostgreSQL uses clientcert=verify-full in the linked service guide; the cited RFC covers certificate revocation, not this product directive.", "components": ["pki"], "sources": ["pki:s93ee2b4751f8"], "status": "REASONED"},
-    "mtls-mysql": {"text": "MySQL uses REQUIRE X509 in the linked service guide; the cited RFC covers certificate revocation, not this product directive.", "components": ["pki"], "sources": ["pki:s93ee2b4751f8"], "status": "REASONED"},
-    "mtls-redis": {"text": "Redis uses tls-auth-clients yes in the linked service guide; the cited RFC covers certificate revocation, not this product directive.", "components": ["pki"], "sources": ["pki:s93ee2b4751f8"], "status": "REASONED"},
-    "mtls-rabbitmq": {"text": "RabbitMQ uses ssl_options.fail_if_no_peer_cert = true in the linked service guide; the cited RFC covers certificate revocation, not this product directive.", "components": ["pki"], "sources": ["pki:s93ee2b4751f8"], "status": "REASONED"},
-    "mtls-mosquitto": {"text": "Mosquitto uses require_certificate true in the linked service guide; the cited RFC covers certificate revocation, not this product directive.", "components": ["pki"], "sources": ["pki:s93ee2b4751f8"], "status": "REASONED"},
+    "mtls-nginx": {"text": "nginx uses ssl_verify_client on in the linked service guide; the cited RFC covers certificate revocation, not this product directive.", "components": ["pki", "nginx-mtls"], "sources": ["pki:s93ee2b4751f8", "nginx-mtls:saba09cebd9dc", "nginx-mtls:se19e48aec677"], "status": "REASONED"},
+    "mtls-apache": {"text": "Apache uses SSLVerifyClient require in the linked service guide; the cited RFC covers certificate revocation, not this product directive.", "components": ["pki", "apache-mtls"], "sources": ["pki:s93ee2b4751f8", "apache-mtls:s011c9b11bbf6"], "status": "REASONED"},
+    "mtls-postgres": {"text": "PostgreSQL uses clientcert=verify-full in the linked service guide; the cited RFC covers certificate revocation, not this product directive.", "components": ["pki", "postgres-mtls"], "sources": ["pki:s93ee2b4751f8", "postgres-mtls:sece82dc43429"], "status": "REASONED"},
+    "mtls-mysql": {"text": "MySQL uses REQUIRE X509 in the linked service guide; the cited RFC covers certificate revocation, not this product directive.", "components": ["pki", "mysql-mtls"], "sources": ["pki:s93ee2b4751f8", "mysql-mtls:s4009a8e12cba"], "status": "REASONED"},
+    "mtls-redis": {"text": "Redis uses tls-auth-clients yes in the linked service guide; the cited RFC covers certificate revocation, not this product directive.", "components": ["pki", "redis-mtls"], "sources": ["pki:s93ee2b4751f8", "redis-mtls:s37a9d8a0e34f", "redis-mtls:sc437a14c713a", "redis-mtls:se86d20ae4ca9"], "status": "REASONED"},
+    "mtls-rabbitmq": {"text": "RabbitMQ uses ssl_options.fail_if_no_peer_cert = true in the linked service guide; the cited RFC covers certificate revocation, not this product directive.", "components": ["pki", "rabbitmq-mtls"], "sources": ["pki:s93ee2b4751f8", "rabbitmq-mtls:s617e896b6f53"], "status": "REASONED"},
+    "mtls-mosquitto": {"text": "Mosquitto uses require_certificate true in the linked service guide; the cited RFC covers certificate revocation, not this product directive.", "components": ["pki", "mosquitto-mtls"], "sources": ["pki:s93ee2b4751f8", "mosquitto-mtls:sf7dad152fc94"], "status": "REASONED"},
     "mtls-revocation": {"text": "Replacing a key does not reject the old certificate; revoke with checked CRL/OCSP, remove it from an allowlist or wait for expiry, and test refusal.", "components": ["pki"], "sources": ["pki:s93ee2b4751f8"], "status": "REASONED"},
     "oidc-token": {"text": "GitHub id-token: write permits short-lived OIDC tokens from token.actions.githubusercontent.com; restrict trust to the exact repository and branch or environment.", "components": ["github"], "sources": ["github:s65bfc1e3ee0d"], "status": "REASONED"},
     "aws-action": {"text": "configure-aws-credentials uses role-to-assume and aws-region and defaults its audience to sts.amazonaws.com.", "components": ["aws"], "sources": ["aws:se185ac33f225"], "status": "REASONED"},
@@ -130,12 +211,12 @@ version_basis: {
     "subject-format": {"text": "The guide records an immutable default subject with owner/repository IDs for repositories created after July 15, 2026; inspect the actual claim before writing trust.", "components": ["github"], "sources": ["github:s65bfc1e3ee0d"], "status": "REASONED"},
     "action-pins": {"text": "Pin actions to full commit SHAs; tags and branches can move to different code.", "components": ["github"], "sources": ["github:s65bfc1e3ee0d", "github:s653a0d94dd2f", "github:sa8ed4c86a8ea", "github:s80d46a4f675c"], "status": "REASONED"},
     "workload-attestation": {"text": "SPIFFE/SPIRE provides attested short-lived workload identities without a stored secret.", "components": ["spiffe"], "sources": ["spiffe:s96e9b9e2739d", "spiffe:sfa39616d8260"], "status": "REASONED"},
-    "secret-store": {"text": "Store unavoidable machine secrets in the listed secret managers and use platform identity to authenticate, avoiding another long-lived bootstrap key.", "components": ["azure", "google", "aws"], "sources": ["azure:sb7a38a36ac47", "google:s03844cd0246a", "aws:s6fff7087bca4"], "status": "REASONED"},
+    "secret-store": {"text": "Store unavoidable machine secrets in the listed secret managers and use platform identity to authenticate, avoiding another long-lived bootstrap key.", "components": ["azure", "google", "aws", "vault", "infisical", "doppler-cli"], "sources": ["azure:sb7a38a36ac47", "google:s03844cd0246a", "aws:s6fff7087bca4", "vault:sc7513679fe7e", "infisical:s725a4ac24a82", "doppler-cli:se354d6243027"], "status": "REASONED"},
     "verify-scope": {"text": "A protected header-file staging key must receive 401/403 in production while succeeding in staging; otherwise denial does not establish environment scoping.", "components": ["bearer"], "sources": ["bearer:sefd3dd623da3"], "status": "REASONED"},
     "verify-expiry": {"text": "Revoked or expired credentials must be rejected with a service-log record identifying the client.", "components": ["bearer", "jwt"], "sources": ["bearer:sefd3dd623da3", "jwt:sc36d79fcad94"], "status": "REASONED"},
     "verify-ci": {"text": "Repository Actions secrets should hold no long-lived cloud credentials and the workflow must declare id-token: write.", "components": ["github"], "sources": ["github:s65bfc1e3ee0d", "github:s653a0d94dd2f", "github:sa8ed4c86a8ea", "github:s80d46a4f675c"], "status": "REASONED"},
     "verify-trust": {"text": "Inspect AWS sub, Google repository binding and Azure subject for exact repository plus branch/environment restriction without broad wildcard suffixes.", "components": ["aws", "google", "azure"], "sources": ["aws:s6fff7087bca4", "google:s03844cd0246a", "google:s0f874cc5b70e", "azure:sc70c3d4b8844"], "status": "REASONED"},
-    "verify-artifacts": {"text": "History, working-tree and image-layer scans must show no keys; docker history alone misses copied files. Sources cites confidentiality guidance, not these scanner commands.", "components": ["bearer"], "sources": ["bearer:sefd3dd623da3"], "status": "REASONED"},
+    "verify-artifacts": {"text": "History, working-tree and image-layer scans must show no keys; docker history alone misses copied files. Sources cites confidentiality guidance, not these scanner commands.", "components": ["bearer", "gitleaks"], "sources": ["bearer:sefd3dd623da3", "gitleaks:s6310bf73dd3e", "gitleaks:s3809c36cec88"], "status": "REASONED"},
     "verify-mtls": {"text": "Reject missing, untrusted, expired, revoked and, where identity authorization applies, unauthorized certificates while the authorized client succeeds.", "components": ["pki"], "sources": ["pki:s93ee2b4751f8"], "status": "REASONED"}
   }
 }
@@ -147,7 +228,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -162,13 +243,13 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | m2m-billing: As of September 2026, Entra External ID M2M is billed per transaction as an add-on; hourly renewal is roughly 720 monthly transactions. | Entra External ID unknown | REASONED |
 | client-secret: Client credentials still need long-lived-secret protection unless replaced by federation supported by the provider. | OAuth client credentials unknown; Azure federation and login unknown | REASONED |
 | mtls-identity: Use a separate short-lived certificate per client and keep CA keys off signed servers; mTLS is a possession factor, not human MFA. | Certificate revocation unknown | REASONED |
-| mtls-nginx: nginx uses ssl_verify_client on in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
-| mtls-apache: Apache uses SSLVerifyClient require in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
-| mtls-postgres: PostgreSQL uses clientcert=verify-full in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
-| mtls-mysql: MySQL uses REQUIRE X509 in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
-| mtls-redis: Redis uses tls-auth-clients yes in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
-| mtls-rabbitmq: RabbitMQ uses ssl_options.fail_if_no_peer_cert = true in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
-| mtls-mosquitto: Mosquitto uses require_certificate true in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
+| mtls-nginx: nginx uses ssl_verify_client on in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown; nginx mTLS release-1.28.0 | REASONED |
+| mtls-apache: Apache uses SSLVerifyClient require in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown; Apache mTLS 2.4 | REASONED |
+| mtls-postgres: PostgreSQL uses clientcert=verify-full in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown; PostgreSQL client certificates 17 | REASONED |
+| mtls-mysql: MySQL uses REQUIRE X509 in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown; MySQL client certificates 8.4 | REASONED |
+| mtls-redis: Redis uses tls-auth-clients yes in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown; Redis TLS client authentication 7.4.2 | REASONED |
+| mtls-rabbitmq: RabbitMQ uses ssl_options.fail_if_no_peer_cert = true in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown; RabbitMQ TLS client authentication 3.13 | REASONED |
+| mtls-mosquitto: Mosquitto uses require_certificate true in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown; Mosquitto TLS client authentication v2.0.21 | REASONED |
 | mtls-revocation: Replacing a key does not reject the old certificate; revoke with checked CRL/OCSP, remove it from an allowlist or wait for expiry, and test refusal. | Certificate revocation unknown | REASONED |
 | oidc-token: GitHub id-token: write permits short-lived OIDC tokens from token.actions.githubusercontent.com; restrict trust to the exact repository and branch or environment. | GitHub Actions OIDC unknown | REASONED |
 | aws-action: configure-aws-credentials uses role-to-assume and aws-region and defaults its audience to sts.amazonaws.com. | AWS IAM and credential action unknown | REASONED |
@@ -181,12 +262,12 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | subject-format: The guide records an immutable default subject with owner/repository IDs for repositories created after July 15, 2026; inspect the actual claim before writing trust. | GitHub Actions OIDC unknown | REASONED |
 | action-pins: Pin actions to full commit SHAs; tags and branches can move to different code. | GitHub Actions OIDC unknown | REASONED |
 | workload-attestation: SPIFFE/SPIRE provides attested short-lived workload identities without a stored secret. | SPIFFE and SPIRE unknown | REASONED |
-| secret-store: Store unavoidable machine secrets in the listed secret managers and use platform identity to authenticate, avoiding another long-lived bootstrap key. | Azure federation and login unknown; Google Cloud federation and auth action unknown; AWS IAM and credential action unknown | REASONED |
+| secret-store: Store unavoidable machine secrets in the listed secret managers and use platform identity to authenticate, avoiding another long-lived bootstrap key. | Azure federation and login unknown; Google Cloud federation and auth action unknown; AWS IAM and credential action unknown; HashiCorp Vault v1.20.0; Infisical v0.165.16; Doppler CLI 3.76.6 | REASONED |
 | verify-scope: A protected header-file staging key must receive 401/403 in production while succeeding in staging; otherwise denial does not establish environment scoping. | Bearer token guidance unknown | REASONED |
 | verify-expiry: Revoked or expired credentials must be rejected with a service-log record identifying the client. | Bearer token guidance unknown; JWT access-token profile unknown | REASONED |
 | verify-ci: Repository Actions secrets should hold no long-lived cloud credentials and the workflow must declare id-token: write. | GitHub Actions OIDC unknown | REASONED |
 | verify-trust: Inspect AWS sub, Google repository binding and Azure subject for exact repository plus branch/environment restriction without broad wildcard suffixes. | AWS IAM and credential action unknown; Google Cloud federation and auth action unknown; Azure federation and login unknown | REASONED |
-| verify-artifacts: History, working-tree and image-layer scans must show no keys; docker history alone misses copied files. Sources cites confidentiality guidance, not these scanner commands. | Bearer token guidance unknown | REASONED |
+| verify-artifacts: History, working-tree and image-layer scans must show no keys; docker history alone misses copied files. Sources cites confidentiality guidance, not these scanner commands. | Bearer token guidance unknown; Gitleaks scan commands v8.19.0 | REASONED |
 | verify-mtls: Reject missing, untrusted, expired, revoked and, where identity authorization applies, unauthorized certificates while the authorized client succeeds. | Certificate revocation unknown | REASONED |
 <!-- version-basis:end -->
 
@@ -270,3 +351,14 @@ API keys, client secrets, and client-certificate keys that cannot be federated a
 - SPIFFE and SPIRE: https://spiffe.io/ and https://spiffe.io/docs/latest/spire-about/
 - RFC 5280 (certificate revocation): https://www.rfc-editor.org/info/rfc5280/
 - Secret manager vendor pages: linked inline in section 5.
+- nginx release-1.28.0 `ssl_verify_client` directive and `on` value (checked October 2026): https://github.com/nginx/nginx/blob/release-1.28.0/src/http/modules/ngx_http_ssl_module.c#L76-L78 ; https://github.com/nginx/nginx/blob/release-1.28.0/src/http/modules/ngx_http_ssl_module.c#L162-L167
+- Apache 2.4 `SSLVerifyClient require` (checked October 2026): https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslverifyclient
+- PostgreSQL 17 certificate authentication and `clientcert=verify-full` (checked October 2026): https://www.postgresql.org/docs/17/auth-cert.html
+- MySQL 8.4 `CREATE USER` TLS options (`REQUIRE X509`) (checked October 2026): https://dev.mysql.com/doc/refman/8.4/en/create-user.html
+- Redis 7.4.2 TLS client-certificate requirement and `tls-auth-clients yes` configuration (checked October 2026): https://github.com/redis/redis/blob/7.4.2/redis.conf#L240-L241 ; https://github.com/redis/redis/blob/7.4.2/src/config.c#L99-L103 ; https://github.com/redis/redis/blob/7.4.2/src/config.c#L3239
+- RabbitMQ 3.13 TLS (`ssl_options.fail_if_no_peer_cert`, peer verification and CA configuration) (checked October 2026): https://www.rabbitmq.com/docs/3.13/ssl
+- Mosquitto v2.0.21 `require_certificate true` (checked October 2026): https://github.com/eclipse-mosquitto/mosquitto/blob/v2.0.21/man/mosquitto.conf.5.xml#L74-L76
+- Gitleaks v8.19.0 Git-history and directory scanning commands (checked October 2026): https://github.com/gitleaks/gitleaks/blob/v8.19.0/README.md#L181 ; https://github.com/gitleaks/gitleaks/blob/v8.19.0/README.md#L188
+- HashiCorp Vault v1.20.0 secret storage and access control (checked October 2026): https://github.com/hashicorp/vault/blob/v1.20.0/README.md#L18
+- Infisical v0.165.16 secrets and configuration management (checked October 2026): https://github.com/Infisical/infisical/blob/v0.165.16/README.md#L48
+- Doppler CLI 3.76.6 secrets and configuration access (checked October 2026): https://github.com/DopplerHQ/cli/blob/3.76.6/README.md#L3
