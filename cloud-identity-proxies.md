@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "3860db9ad2a94e2025012f42bd9c0b5b952eb4153c34a73aae9388b7a26fb071",
+  "body_sha256": "e973dfddb64ac911d0733967f4f6ec873f38131c6a1370386ab75909860e478b",
   "components": {
     "aws": {
       "name": "AWS ALB",
@@ -65,6 +65,13 @@ version_basis: {
       "sources": {
         "s2b2686afaf41": "https://curl.se/docs/manpage.html"
       }
+    },
+    "vercel-announcement": {
+      "name": "Vercel production-protection announcement",
+      "basis": "2026-09-09",
+      "sources": {
+        "s7836e043434a": "https://vercel.com/changelog/protect-production-deployments-for-free-on-every-plan"
+      }
     }
   },
   "claims": {
@@ -109,7 +116,7 @@ version_basis: {
     "ngrok-cli": {"text": "Use ngrok http 3000 --traffic-policy-file policy.yml; legacy OAuth allow-domain/email flags are deprecated.", "components": ["ngrok"], "sources": ["ngrok:s93e9bbd8127f"], "status": "REASONED"},
     "ngrok-origin": {"text": "Bind the app to 127.0.0.1 so a direct VM address cannot bypass ngrok login.", "components": ["ngrok"], "sources": ["ngrok:s93e9bbd8127f"], "status": "REASONED"},
     "vercel-members": {"text": "Deployment Protection is not end-user login; Vercel Authentication admits members/viewers, approved requesters, share links and automation bypass.", "components": ["vercel"], "sources": ["vercel:se6089d5c4e96", "vercel:se36c5ca2a8db"], "status": "REASONED"},
-    "vercel-scope": {"text": "Standard Protection excludes production domains; configure All Deployments. The guide records free availability on every plan from September 9, 2026.", "components": ["vercel"], "sources": ["vercel:se6089d5c4e96", "vercel:se36c5ca2a8db"], "status": "REASONED"},
+    "vercel-scope": {"text": "Standard Protection excludes production domains; configure All Deployments. The guide records free availability on every plan from September 9, 2026.", "components": ["vercel", "vercel-announcement"], "sources": ["vercel:se6089d5c4e96", "vercel:se36c5ca2a8db", "vercel-announcement:s7836e043434a"], "status": "REASONED"},
     "vercel-exception": {"text": "A domain Protection Exception disables protection for existing and future deployments; remove unintended exceptions.", "components": ["vercel"], "sources": ["vercel:se6089d5c4e96"], "status": "REASONED"},
     "vercel-password": {"text": "At writing, Password Protection is Enterprise-included or USD 20/month/project on Pro; USD 150 legacy is existing-Pro only; Hobby lacks it.", "components": ["vercel"], "sources": ["vercel:sf7c5fffb3f97"], "status": "REASONED"},
     "vercel-enterprise": {"text": "Trusted IPs and Passport are Enterprise-only at the time of writing.", "components": ["vercel"], "sources": ["vercel:se6089d5c4e96"], "status": "REASONED"},
@@ -129,7 +136,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -174,7 +181,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | ngrok-cli: Use ngrok http 3000 --traffic-policy-file policy.yml; legacy OAuth allow-domain/email flags are deprecated. | ngrok unknown | REASONED |
 | ngrok-origin: Bind the app to 127.0.0.1 so a direct VM address cannot bypass ngrok login. | ngrok unknown | REASONED |
 | vercel-members: Deployment Protection is not end-user login; Vercel Authentication admits members/viewers, approved requesters, share links and automation bypass. | Vercel unknown | REASONED |
-| vercel-scope: Standard Protection excludes production domains; configure All Deployments. The guide records free availability on every plan from September 9, 2026. | Vercel unknown | REASONED |
+| vercel-scope: Standard Protection excludes production domains; configure All Deployments. The guide records free availability on every plan from September 9, 2026. | Vercel unknown; Vercel production-protection announcement 2026-09-09 | REASONED |
 | vercel-exception: A domain Protection Exception disables protection for existing and future deployments; remove unintended exceptions. | Vercel unknown | REASONED |
 | vercel-password: At writing, Password Protection is Enterprise-included or USD 20/month/project on Pro; USD 150 legacy is existing-Pro only; Hobby lacks it. | Vercel unknown | REASONED |
 | vercel-enterprise: Trusted IPs and Passport are Enterprise-only at the time of writing. | Vercel unknown | REASONED |
@@ -320,3 +327,4 @@ After logging in, confirm that the app's own identity check reads the signed ass
 - Vercel Authentication: https://vercel.com/docs/deployment-protection/methods-to-protect-deployments/vercel-authentication
 - Vercel Password Protection (pricing): https://vercel.com/docs/deployment-protection/methods-to-protect-deployments/password-protection
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
+- Vercel production protection on every plan (announcement dated 2026-09-09, checked October 2026): https://vercel.com/changelog/protect-production-deployments-for-free-on-every-plan
