@@ -3,15 +3,8 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "384660fa9f174c119a41dbb2df6be06f7bd3148d34150d845f6ee14fc67086c5",
+  "body_sha256": "07727df02e63c1a90b7e94bb3262540eaead5d1084668b7db6bcdb8382519619",
   "components": {
-    "sqlite": {
-      "name": "SQLite documentation",
-      "basis": "3.x",
-      "sources": {
-        "sadf0431c1271": "https://www.sqlite.org/security.html"
-      }
-    },
     "see": {
       "name": "SQLite Encryption Extension",
       "basis": "unknown",
@@ -131,12 +124,13 @@ version_basis: {
       "sources": {
         "s2721da91f8d2": "https://www.sqlite.org/serverless.html",
         "sf3d7f8391994": "https://www.sqlite.org/tempfiles.html",
-        "s742deb3338bb": "https://sqlite.org/loadext.html"
+        "s742deb3338bb": "https://sqlite.org/loadext.html",
+        "sadf0431c1271": "https://www.sqlite.org/security.html"
       }
     }
   },
   "claims": {
-    "filesystem": {"text": "No server, network listener or database-side authentication; filesystem authority controls access, including ATTACH. Treat files writable across security domains as suspect.", "components": ["sqlite", "sqlite-rolling"], "sources": ["sqlite-rolling:s2721da91f8d2", "sqlite:sadf0431c1271"], "status": "REASONED"},
+    "filesystem": {"text": "No server, network listener or database-side authentication; filesystem authority controls access, including ATTACH. Treat files writable across security domains as suspect.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:s2721da91f8d2", "sqlite-rolling:sadf0431c1271"], "status": "REASONED"},
     "extensions": {"text": "Core extension loading defaults off, while the CLI enables it; enable only when required and load trusted libraries.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:s742deb3338bb"], "status": "REASONED"},
     "web-files": {"text": "Keep databases, sidecars, temporary files, exports and backups outside web-served paths; inspect aliases, symlinks, download routes and publishing, and do not rely on hidden names.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:s2721da91f8d2", "sqlite-rolling:sf3d7f8391994"], "status": "REASONED"},
     "git-files": {"text": "Ignore database extensions and each -wal, -shm and -journal suffix before committing; ignore rules do not remove tracked files or history.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:sf3d7f8391994"], "status": "REASONED"},
@@ -190,7 +184,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| filesystem: No server, network listener or database-side authentication; filesystem authority controls access, including ATTACH. Treat files writable across security domains as suspect. | SQLite documentation 3.x; SQLite documentation (rolling) unknown | REASONED |
+| filesystem: No server, network listener or database-side authentication; filesystem authority controls access, including ATTACH. Treat files writable across security domains as suspect. | SQLite documentation (rolling) unknown | REASONED |
 | extensions: Core extension loading defaults off, while the CLI enables it; enable only when required and load trusted libraries. | SQLite documentation (rolling) unknown | REASONED |
 | web-files: Keep databases, sidecars, temporary files, exports and backups outside web-served paths; inspect aliases, symlinks, download routes and publishing, and do not rely on hidden names. | SQLite documentation (rolling) unknown | REASONED |
 | git-files: Ignore database extensions and each -wal, -shm and -journal suffix before committing; ignore rules do not remove tracked files or history. | SQLite documentation (rolling) unknown | REASONED |
@@ -449,7 +443,7 @@ The authorized request must return a result containing `1`; the identical anonym
 
 Applicability checked on 2026-09-18: SQLite 3.x documentation (local file tests on SQLite 3.46.1); LiteFS HTTP behavior traced to v0.5.14; Litestream MCP documented for v0.5.0 and later; Turso rolling CLI documentation and the SQL-over-HTTP `/v2/pipeline` protocol. Installed Turso, Litestream, and LiteFS versions were not available for runtime confirmation. The Verify commands require Bash, curl 7.75.0 or later, GNU-compatible grep and stat, and Git.
 
-- SQLite security (SQLite 3.x documentation): https://www.sqlite.org/security.html
+- SQLite security (rolling documentation, checked September 2026): https://www.sqlite.org/security.html
 - Turso HTTP API quickstart (`TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`): https://docs.turso.tech/sdk/http/quickstart
 - Turso CLI `db tokens create` (`--read-only`, `--expiration`): https://docs.turso.tech/cli/db/tokens/create
 - Litestream guides (supported replica destinations): https://litestream.io/guides/
