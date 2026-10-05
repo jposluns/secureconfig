@@ -76,8 +76,8 @@ version_basis: {
       }
     },
     "totp": {
-      "name": "ClickHouse TOTP introduction",
-      "basis": "26.2",
+      "name": "ClickHouse TOTP release announcement",
+      "basis": "unknown",
       "sources": {
         "sf7b9d01ede30": "https://clickhouse.com/blog/clickhouse-release-26-02"
       }
@@ -196,7 +196,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | emulation: Remove unused 9004/9005 listeners; PostgreSQL emulation can support TLS. | ClickHouse documentation unknown | REASONED |
 | client-tls: Explicit client trust file and certificate hostname are required; extendedVerification defaults false, so enable it. | ClickHouse documentation unknown | REASONED |
 | certificate-auth: ssl_certificate CN authentication supplies a machine possession factor, separate from human MFA. | ClickHouse documentation unknown | REASONED |
-| totp: 26.2 introduced XML-user TOTP with password auth; SQL access control lacks it and each code is accepted at most once. | ClickHouse documentation unknown; ClickHouse TOTP introduction 26.2 | REASONED |
+| totp: 26.2 introduced XML-user TOTP with password auth; SQL access control lacks it and each code is accepted at most once. | ClickHouse documentation unknown; ClickHouse TOTP release announcement unknown | REASONED |
 | source-grants: Withhold all source privileges and inherited grants; separate READ/WRITE needs 25.7+, filtering 25.8+, and enable_read_write_grants. | ClickHouse documentation unknown; ClickHouse privilege registry 37c6c8c9bfc1de323e9a27711c5649352364bcba | REASONED |
 | source-interfaces: url/HTTP dictionaries fetch remote data, file reads under user_files_path, and remote reaches other servers. | ClickHouse documentation unknown | REASONED |
 | url-default: Omitted remote_url_allow_hosts allows covered URL hosts; hostname-only permits every port. | ClickHouse server config source 9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6; ClickHouse documentation unknown | REASONED |

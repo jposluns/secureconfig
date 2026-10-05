@@ -581,7 +581,8 @@ A certificate alone does not protect anything: continue with the server guide fo
 ## Sources (checked September 2026)
 
 - Let's Encrypt documentation: https://letsencrypt.org/docs/
-- Certbot instructions (reconfigure: 2.3.0 and later): https://certbot.eff.org/
+- Certbot instructions (rolling documentation, checked September 2026): https://certbot.eff.org/
+- Certbot reconfigure (2.3.0 and later; v2.3.0 user guide): https://raw.githubusercontent.com/certbot/certbot/v2.3.0/certbot/docs/using.rst
 - Certbot manual DNS-01 and renewal hooks: https://eff-certbot.readthedocs.io/en/stable/using.html#manual
 - Certbot DNS plugins: https://eff-certbot.readthedocs.io/en/stable/using.html#dns-plugins
 - ZeroSSL: https://zerossl.com/
@@ -1594,7 +1595,7 @@ On every push, gitleaks must exit 0 with no findings (the `&& echo clean` then p
 ## Sources (checked September 2026)
 
 - OWASP Secrets Management Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html
-- gitleaks (git/dir need 8.19+): https://github.com/gitleaks/gitleaks
+- gitleaks (git/dir need 8.19+; v8.19.0 README): https://github.com/gitleaks/gitleaks/blob/v8.19.0/README.md
 - trufflehog: https://github.com/trufflesecurity/trufflehog
 - sops: https://github.com/getsops/sops and age: https://github.com/FiloSottile/age
 - git-filter-repo: https://github.com/newren/git-filter-repo
@@ -5622,7 +5623,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | publish: Omitting the host address publishes 3000:3000 on 0.0.0.0 and [::]. | Docker Engine networking unknown | REASONED |
 | host-firewall: Docker programs firewall rules directly; UFW or firewalld blocking a host port does not establish published-port isolation. | Docker Engine networking unknown | REASONED |
 | private-network: Omit app/database ports; Compose peers use service names. The example uses postgres:17 at db:5432; no PostgreSQL source is listed. | Compose networking unknown | REASONED |
-| loopback: Publish local access as 127.0.0.1:3000:3000; check the running server version. Engine 28.0 is the minimum boundary, with 28.3.3 or later required where firewalld is used. | Docker Engine networking unknown; Docker Engine minimum boundary 28.0; Docker firewalld reload fix 28.3.3 | REASONED |
+| loopback: Publish local access as 127.0.0.1:3000:3000; check the running server version. Engine 28.0 is the minimum boundary, with 28.3.3 or later required where firewalld is used. | Docker Engine networking unknown; Docker Engine minimum boundary 28.0; Docker firewalld reload fix 28.3.3; Docker firewalld reload advisory unknown | REASONED |
 | old-loopback: Before 28.0, same-L2 neighbours could reach loopback publications under the default bridge configuration. | Docker Engine minimum boundary 28.0 | REASONED |
 | old-host-bind: Before 28.0, remote hosts could reach published container ports despite the host-IP binding. | Docker Engine minimum boundary 28.0 | REASONED |
 | old-unpublished: Before 28.0, direct routing could reach unpublished container ports; 28.0 fixed the stated default-bridge exposures. | Docker Engine minimum boundary 28.0 | REASONED |
@@ -5642,9 +5643,9 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | verify-redirect: HTTP should redirect to HTTPS; the guide records an expected result, with no direct proxy citation or run. | Compose networking unknown | REASONED |
 | verify-auth: Unauthenticated HTTPS /api should return 401 or 403, never 200; confirm authorized success separately. The proxy discriminator has no direct source here. | Compose networking unknown | REASONED |
 | verify-isolation: Probe each restricted host address and publication from allowed/disallowed sources in both families; backend isolation must coexist with proxy reachability. | Docker Engine networking unknown | REASONED |
-| firewalld-reload: Engine 28.2.x and 28.3.0 through 28.3.2 fail to restore container-address filtering after firewalld reload; 28.3.3 fixes CVE-2025-54388 (GHSA-x4rx-4gw3-53p4). | Docker firewalld reload fix 28.3.3 | REASONED |
-| firewalld-scope: The regression affects Linux Engine in the host network namespace with firewalld: routed remote hosts can reach published container ports, including loopback publications; unpublished ports stay filtered. Rootless Mode and Docker Desktop are unaffected. | Docker firewalld reload fix 28.3.3 | REASONED |
-| verify-firewalld-reload: Confirm local backend health, then curl the container address from a second host with a bridge-subnet route before and after sudo firewall-cmd --reload. Without masking controls, affected hosts change from blocked to connectable; fixed hosts stay blocked. Any TCP connection, including HTTP 401/403, shows reachability; failure alone does not prove patching. Check route, target, IPv6, restricted host publications and continued proxy reachability. | Docker firewalld reload fix 28.3.3 | REASONED |
+| firewalld-reload: Engine 28.2.x and 28.3.0 through 28.3.2 fail to restore container-address filtering after firewalld reload; 28.3.3 fixes CVE-2025-54388 (GHSA-x4rx-4gw3-53p4). | Docker firewalld reload fix 28.3.3; Docker firewalld reload advisory unknown | REASONED |
+| firewalld-scope: The regression affects Linux Engine in the host network namespace with firewalld: routed remote hosts can reach published container ports, including loopback publications; unpublished ports stay filtered. Rootless Mode and Docker Desktop are unaffected. | Docker firewalld reload fix 28.3.3; Docker firewalld reload advisory unknown | REASONED |
+| verify-firewalld-reload: Confirm local backend health, then curl the container address from a second host with a bridge-subnet route before and after sudo firewall-cmd --reload. Without masking controls, affected hosts change from blocked to connectable; fixed hosts stay blocked. Any TCP connection, including HTTP 401/403, shows reachability; failure alone does not prove patching. Check route, target, IPv6, restricted host publications and continued proxy reachability. | Docker firewalld reload fix 28.3.3; Docker firewalld reload advisory unknown | REASONED |
 <!-- version-basis:end -->
 
 Containers are where accidental exposure happens most. Two Docker behaviours cause it:
@@ -5747,7 +5748,7 @@ REASONED: this firewalld reload check follows the Impact section of GHSA-x4rx-4g
 - Docker packet filtering and firewalls: https://docs.docker.com/engine/network/packet-filtering-firewalls/
 - Docker with iptables, for the `DOCKER-USER` chain (processed before Docker's own rules; matches container addresses after DNAT): https://docs.docker.com/engine/network/firewall-iptables/
 - Docker Engine 28.0 release notes, for the published-port and loopback-mapping hardening: https://docs.docker.com/engine/release-notes/28/
-- Docker Engine 28.3.3 security fix: https://docs.docker.com/engine/release-notes/28/#2833 and affected-version advisory: https://github.com/moby/moby/security/advisories/GHSA-x4rx-4gw3-53p4
+- Docker Engine 28.3.3 security fix: https://docs.docker.com/engine/release-notes/28/#2833 and affected-version advisory (OSV copy of the July 2025 Moby advisory): https://osv.dev/vulnerability/GHSA-x4rx-4gw3-53p4
 - Moby 28.3.3 (pinned tag v28.3.3), `reapplyPerPortIptables` restores endpoint rules after firewalld reload: https://raw.githubusercontent.com/moby/moby/v28.3.3/libnetwork/drivers/bridge/port_mapping_linux.go
 - Compose networking: https://docs.docker.com/compose/how-tos/networking/
 - Docker port publishing (with no host address, "the Docker daemon publishes ports to all host addresses (0.0.0.0 and [::])"): https://docs.docker.com/engine/network/port-publishing/
@@ -11490,10 +11491,10 @@ Put the human paths to the host behind MFA per [mfa.md](mfa.md).
 
 ## Sources (checked September 2026)
 
-- PgBouncer configuration, including the ini comment rule, `listen_addr`, `listen_port`, `client_tls_sslmode`, `server_tls_sslmode`, `auth_type`, `auth_file`, `auth_query`, `admin_users`, `stats_users`, `application_name_add_host`, and the `[databases]` `user` key (LDAP since 1.25.0; auth_query fix 1.24.1): https://www.pgbouncer.org/config.html
+- PgBouncer configuration, including the ini comment rule, `listen_addr`, `listen_port`, `client_tls_sslmode`, `server_tls_sslmode`, `auth_type`, `auth_file`, `auth_query`, `admin_users`, `stats_users`, `application_name_add_host`, and the `[databases]` `user` key (rolling documentation, checked September 2026): https://www.pgbouncer.org/config.html
 - PgBouncer `listen_addr` default `""`, and the socket-activation path that ignores it (pinned tag pgbouncer_1_26_0): https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/src/main.c#L292-L294 and https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/src/pooler.c#L495-L498, with `sd_listen_fds()` defined as `(0)` in builds without systemd support: https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/include/bouncer.h#L54-L62
 - PgBouncer usage, the admin console and its `SHOW` commands, including who `auth_type=any` admits and the passwordless Unix-socket login: https://www.pgbouncer.org/usage.html
-- PgBouncer changelog, for CVE-2026-6664, CVE-2026-6665, CVE-2026-6666 and CVE-2026-6667, all fixed in 1.25.2: https://www.pgbouncer.org/changelog.html
+- PgBouncer changelog, for CVE-2026-6664, CVE-2026-6665, CVE-2026-6666 and CVE-2026-6667, all fixed in 1.25.2; LDAP since 1.25.0; auth_query fix 1.24.1: https://www.pgbouncer.org/changelog.html
 - PgBouncer features and pooling modes: https://www.pgbouncer.org/features.html
 - Pgpool-II connection settings (`listen_addresses`, `port`, `pcp_listen_addresses`, `pcp_port`, `enable_pool_hba`): https://www.pgpool.net/docs/latest/en/html/runtime-config-connection.html
 - Pgpool-II SSL settings (`ssl`, `ssl_cert`, `ssl_key`, `ssl_ca_cert`, `ssl_ca_cert_dir`): https://www.pgpool.net/docs/latest/en/html/runtime-ssl.html
@@ -17903,7 +17904,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | emulation: Remove unused 9004/9005 listeners; PostgreSQL emulation can support TLS. | ClickHouse documentation unknown | REASONED |
 | client-tls: Explicit client trust file and certificate hostname are required; extendedVerification defaults false, so enable it. | ClickHouse documentation unknown | REASONED |
 | certificate-auth: ssl_certificate CN authentication supplies a machine possession factor, separate from human MFA. | ClickHouse documentation unknown | REASONED |
-| totp: 26.2 introduced XML-user TOTP with password auth; SQL access control lacks it and each code is accepted at most once. | ClickHouse documentation unknown; ClickHouse TOTP introduction 26.2 | REASONED |
+| totp: 26.2 introduced XML-user TOTP with password auth; SQL access control lacks it and each code is accepted at most once. | ClickHouse documentation unknown; ClickHouse TOTP release announcement unknown | REASONED |
 | source-grants: Withhold all source privileges and inherited grants; separate READ/WRITE needs 25.7+, filtering 25.8+, and enable_read_write_grants. | ClickHouse documentation unknown; ClickHouse privilege registry 37c6c8c9bfc1de323e9a27711c5649352364bcba | REASONED |
 | source-interfaces: url/HTTP dictionaries fetch remote data, file reads under user_files_path, and remote reaches other servers. | ClickHouse documentation unknown | REASONED |
 | url-default: Omitted remote_url_allow_hosts allows covered URL hosts; hostname-only permits every port. | ClickHouse server config source 9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6; ClickHouse documentation unknown | REASONED |
@@ -22069,7 +22070,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| filesystem: No server, network listener or database-side authentication; filesystem authority controls access, including ATTACH. Treat files writable across security domains as suspect. | SQLite documentation 3.x; SQLite documentation (rolling) unknown | REASONED |
+| filesystem: No server, network listener or database-side authentication; filesystem authority controls access, including ATTACH. Treat files writable across security domains as suspect. | SQLite documentation (rolling) unknown | REASONED |
 | extensions: Core extension loading defaults off, while the CLI enables it; enable only when required and load trusted libraries. | SQLite documentation (rolling) unknown | REASONED |
 | web-files: Keep databases, sidecars, temporary files, exports and backups outside web-served paths; inspect aliases, symlinks, download routes and publishing, and do not rely on hidden names. | SQLite documentation (rolling) unknown | REASONED |
 | git-files: Ignore database extensions and each -wal, -shm and -journal suffix before committing; ignore rules do not remove tracked files or history. | SQLite documentation (rolling) unknown | REASONED |
@@ -22328,7 +22329,7 @@ The authorized request must return a result containing `1`; the identical anonym
 
 Applicability checked on 2026-09-18: SQLite 3.x documentation (local file tests on SQLite 3.46.1); LiteFS HTTP behavior traced to v0.5.14; Litestream MCP documented for v0.5.0 and later; Turso rolling CLI documentation and the SQL-over-HTTP `/v2/pipeline` protocol. Installed Turso, Litestream, and LiteFS versions were not available for runtime confirmation. The Verify commands require Bash, curl 7.75.0 or later, GNU-compatible grep and stat, and Git.
 
-- SQLite security (SQLite 3.x documentation): https://www.sqlite.org/security.html
+- SQLite security (rolling documentation, checked September 2026): https://www.sqlite.org/security.html
 - Turso HTTP API quickstart (`TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`): https://docs.turso.tech/sdk/http/quickstart
 - Turso CLI `db tokens create` (`--read-only`, `--expiration`): https://docs.turso.tech/cli/db/tokens/create
 - Litestream guides (supported replica destinations): https://litestream.io/guides/
@@ -27628,7 +27629,7 @@ None of the checks above tests isolation between tenants. Where one embeddings t
 - Docker port publication: default host binding, explicit loopback mapping, same-network and host access, direct-routing and older-engine caveats: https://docs.docker.com/engine/network/port-publishing/
 - Chroma migration notes (v1.0.0 removal of built-in authentication; 2024 auth overhaul variables): https://docs.trychroma.com/docs/overview/migration ; client-server mode (`chroma run --path`, port 8000): https://docs.trychroma.com/docs/run-chroma/client-server
 - Chroma `chroma run`: the `--host` default `localhost` applied only without a config file, the config-file branch, the `listen_address` and `port` defaults `0.0.0.0` and 8000, `CHROMA_` variables merged when a file is loaded, the server's bind of `listen_address:port`, and the release image (`rust/Dockerfile` target `cli`, `chroma run /config.yaml` from `docker_single_node.yaml`) (pinned tag 1.5.9): https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L39-L45, https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L60-L73, https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L114-L134, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L140-L146, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L176-L179, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L216-L229, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/server.rs#L415-L417, https://github.com/chroma-core/chroma/blob/1.5.9/rust/Dockerfile#L85-L93, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/sample_configs/docker_single_node.yaml and https://github.com/chroma-core/chroma/blob/1.5.9/.github/workflows/_build_release_container.yml#L101-L106
-- pgvector (`CREATE EXTENSION vector`, PostgreSQL 13 and later): https://github.com/pgvector/pgvector
+- pgvector (`CREATE EXTENSION vector`, PostgreSQL 13 and later; v0.8.2 README): https://github.com/pgvector/pgvector/blob/v0.8.2/README.md
 - PostgreSQL row security policies (a superuser and a `BYPASSRLS` role always bypass; the table owner bypasses unless the table has `FORCE ROW LEVEL SECURITY`): https://www.postgresql.org/docs/current/ddl-rowsecurity.html
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0; rolling documentation, checked September 2026): https://curl.se/docs/manpage.html
 
@@ -28189,7 +28190,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | metrics-ipv4: WSGI metrics uses AF_INET: empty address is IPv4 wildcard, localhost is used for local node addresses, and resolved ::1 cannot bind this socket. | Ray pinned source ray-2.58.0; CPython WSGI server v3.11.0 | REASONED |
 | node-normalization: Both CLI and ray.init normalize localhost node arguments to a discovered address; cluster-mode setting changes whole-node selection, not independent agent binds. | Ray pinned source ray-2.58.0 | REASONED |
 | agent-family: Agent gRPC wildcard selection is 0.0.0.0 or :: based on resolved localhost, independently of node address family. | Ray pinned source ray-2.58.0 | REASONED |
-| gcs-not-redis: 6379 is GCS, not Redis; Redis stopped being launched by default in 1.11. | Ray Redis default change 1.11; Ray documentation unknown | REASONED |
+| gcs-not-redis: 6379 is GCS, not Redis; Redis stopped being launched by default in 1.11. | Ray Redis history announcement unknown; Ray documentation unknown | REASONED |
 | redis-backend: External Redis is opt-in GCS fault-tolerance storage; Redis credentials do not authenticate GCS clients and RAY_REDIS_PASSWORD is not a head flag substitute. | Ray documentation unknown | REASONED |
 | token-default: Shared token authentication exists since 2.52.0 but is disabled by default as of 2.58.0; it supplements network isolation and does not protect Serve apps. | Ray token authentication introduction 2.52.0; Ray pinned source ray-2.58.0 | REASONED |
 | token-input: Enable RAY_AUTH_MODE=token; precedence is RAY_AUTH_TOKEN, RAY_AUTH_TOKEN_PATH then ~/.ray/auth_token, shared by every node/client. | Ray pinned source ray-2.58.0 | REASONED |
@@ -36714,14 +36715,14 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | --- | --- | --- |
 | strapi-bootstrap: No default admin password: privately register the first administrator before exposing /admin or management routes. | Strapi documentation (rolling) unknown | REASONED |
 | strapi-bind: Documented localhost differs from generated HOST=0.0.0.0; use host loopback or Docker 127.0.0.1:1337:1337 without binding container loopback. | Strapi documentation (rolling) unknown | REASONED |
-| strapi-mfa: Strapi admin has no native MFA; protect UI and backend management routes with MFA proxy or available SSO, closing local-login bypasses. | Strapi documentation 5; Strapi documentation (rolling) unknown | REASONED |
+| strapi-mfa: Strapi admin has no native MFA; protect UI and backend management routes with MFA proxy or available SSO, closing local-login bypasses. | Strapi MFA announcement unknown; Strapi documentation (rolling) unknown | REASONED |
 | strapi-public: Content types are private by default; Public-role grants determine anonymous access and denied requests normally return 403. | Strapi documentation (rolling) unknown | REASONED |
 | strapi-files: Local Media Library files use unauthenticated static serving despite private content types; use access-controlled storage for confidential files. | Strapi documentation (rolling) unknown | REASONED |
 | strapi-signup: Disable unneeded POST /api/auth/local/register signups; the initial sign-up setting remains unconfirmed, and new users receive the configured Default role. | Strapi documentation (rolling) unknown | REASONED |
 | strapi-tokens: Review pre-generated Full access/Read-only Content API tokens, delete unused tokens and bound lifetimes; use Custom scopes when find/findOne is too broad. | Strapi documentation (rolling) unknown | REASONED |
 | strapi-secrets: Protect and rotate APP_KEYS, ADMIN_JWT_SECRET, API_TOKEN_SALT, TRANSFER_TOKEN_SALT, JWT_SECRET and configured ENCRYPTION_KEY; salts are not bearer tokens. | Strapi documentation (rolling) unknown | REASONED |
-| strapi-graphql: Optional /graphql shadowCRUD generates operations; disable unnecessary apolloServer.introspection and landingPage without replacing resolver authorization. | Strapi documentation 5; Apollo Server 4-5 | REASONED |
-| apollo-default: Apollo introspection is enabled unless NODE_ENV=production. | Apollo Server 4-5 | REASONED |
+| strapi-graphql: Optional /graphql shadowCRUD generates operations; disable unnecessary apolloServer.introspection and landingPage without replacing resolver authorization. | Apollo Server documentation (rolling) unknown; Strapi documentation (rolling) unknown | REASONED |
+| apollo-default: Apollo introspection is enabled unless NODE_ENV=production. | Apollo Server documentation (rolling) unknown | REASONED |
 | strapi-tls: Front Strapi with TLS and authentication; the guide records no native TLS termination. | Strapi documentation (rolling) unknown | REASONED |
 | directus-bootstrap: ADMIN_EMAIL/PASSWORD and optional ADMIN_TOKEN bootstrap admin access; 12.0.2 quickstart also allows browser onboarding, so claim the instance privately. | Directus documentation unknown; Directus quickstart 12.0.2 | REASONED |
 | directus-secret: Set a unique protected SECRET; omission generates a random value that does not persist consistently across restarts or replicas. | Directus documentation unknown | REASONED |
@@ -36751,13 +36752,13 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | postgrest-bind: At v16.4 server-host defaults !4 on 3000; optional admin server inherits that host unless overridden. Isolate both and terminate TLS in front. | PostgREST documentation unknown; PostgREST listener source v16.4 | REASONED |
 | egress: Restrict webhook, Flow, trigger, remote-schema and database-function egress after DNS resolution and redirects; IMPORT_IP_DENY_LIST covers imports only. | Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown; Strapi documentation (rolling) unknown | REASONED |
 | database-boundary: Protect database credentials, use dedicated minimal database roles, private listeners and verified encrypted remote database transport. | Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown; Strapi documentation (rolling) unknown | REASONED |
-| human-machine-auth: Use MFA at human administrative boundaries, with separately scoped, expiring and revocable machine credentials. | Strapi documentation 5; Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown; Strapi documentation (rolling) unknown | REASONED |
+| human-machine-auth: Use MFA at human administrative boundaries, with separately scoped, expiring and revocable machine credentials. | Strapi MFA announcement unknown; Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown; Strapi documentation (rolling) unknown | REASONED |
 | verify-canary: Pair authorized canary retrieval with identical anonymous requests; empty/missing/unrelated responses and transport errors are inconclusive. | Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown; Strapi documentation (rolling) unknown | REASONED |
 | verify-hasura: Hasura defaults to HTTP 200 even for auth errors; inspect admin-secret-required JSON. PRESERVE_401_ERRORS requires Community 2.48.0, beyond quickstart 2.46.0. | Hasura GraphQL Engine documentation unknown; Hasura authentication-status minimum 2.48.0; Hasura quickstart image 2.46.0 | REASONED |
 | verify-retirement: Repeat the same successful canary with retired credentials; require authentication failure, not permission/proxy errors. Bootstrap ADMIN_TOKEN edits do not rotate existing users. | Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown; Strapi documentation (rolling) unknown | REASONED |
 | verify-password: Fresh admin login must accept operator-controlled credentials and reject actual old/copied passwords; missing OTP or lockout does not prove retirement. | Directus documentation unknown; Strapi documentation (rolling) unknown | REASONED |
 | verify-console: Enabled Hasura / and /console serve HTML; disabled engine returns JSON not-found. Proxy 404 or a failed positive control is inconclusive. | Hasura GraphQL Engine documentation unknown | REASONED |
-| verify-introspection: Require an introspection-specific rejection while an ordinary permitted GraphQL query still succeeds. | Strapi documentation 5; Apollo Server 4-5; Directus documentation unknown; Hasura GraphQL Engine documentation unknown | REASONED |
+| verify-introspection: Require an introspection-specific rejection while an ordinary permitted GraphQL query still succeeds. | Apollo Server documentation (rolling) unknown; Directus documentation unknown; Hasura GraphQL Engine documentation unknown; Strapi documentation (rolling) unknown | REASONED |
 | verify-other-controls: Test writes, registration, private files, MFA and outbound fetches separately with authorized/unauthorized fixtures and persisted effects. | Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown; Strapi documentation (rolling) unknown | REASONED |
 | verify-isolation: Inventory host/container listeners and mappings; probe every direct IPv4/IPv6 origin with an allowed control. Any HTTP response proves reachability; failures alone do not prove isolation. | Directus listener source v12.4.1; Hasura GraphQL Engine documentation unknown; PostgREST listener source v16.4; PostgREST documentation unknown; Strapi documentation (rolling) unknown | REASONED |
 <!-- version-basis:end -->
@@ -37115,8 +37116,8 @@ Version boundary at the time of writing: Strapi 5 documentation; current Directu
 - Directus file access (asset permissions and storage bypass): https://directus.com/docs/guides/files/access
 - Hasura disable GraphQL introspection (self-hosted Enterprise control): https://hasura.io/docs/2.0/security/disable-graphql-introspection/
 - Hasura Community Edition 2.48.0 release notes (`HASURA_GRAPHQL_PRESERVE_401_ERRORS`): https://hasura.io/changelog/community-edition/v2.48.0
-- Strapi 5 GraphQL plugin (endpoint, shadowCRUD, apolloServer, landingPage): https://docs.strapi.io/cms/plugins/graphql
-- Apollo Server 4-5 introspection default: https://www.apollographql.com/docs/apollo-server/api/apollo-server#introspection
+- Strapi GraphQL plugin (endpoint, shadowCRUD, apolloServer, landingPage) (rolling documentation, checked September 2026): https://docs.strapi.io/cms/plugins/graphql
+- Apollo Server introspection default (rolling documentation, checked September 2026): https://www.apollographql.com/docs/apollo-server/api/apollo-server#introspection
 - Strapi 5 administrator MFA options (vendor statement, September 2026): https://strapi.io/blog/strapi-admin-panel-mfa-2fa
 - Directus quickstart (12.0.2 Compose and browser onboarding): https://directus.com/docs/getting-started/create-a-project
 - Directus registration (disabled by default; empty 204 response): https://directus.com/docs/guides/auth/creating-users

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "db41d8c1be60caf6b3026e120e9c345ac0d3c4d4db91c0974cbe5bb046348e7a",
+  "body_sha256": "9e0117132811e99d3d70689f3d8c1e1350e24bccbabb95094dee0d370346f4f4",
   "components": {
     "owasp": {
       "name": "OWASP secret handling",
@@ -17,7 +17,7 @@ version_basis: {
       "name": "gitleaks command minimum",
       "basis": "8.19+",
       "sources": {
-        "s37f64e8717c0": "https://github.com/gitleaks/gitleaks"
+        "s18cdf0069eb9": "https://github.com/gitleaks/gitleaks/blob/v8.19.0/README.md"
       }
     },
     "trufflehog": {
@@ -116,7 +116,7 @@ version_basis: {
     "gitignore": {"text": "Ignore .env, .env.*, *.key and *.pem before committing; allow only a secret-free template. Already tracked files remain tracked.", "components": ["owasp", "next"], "sources": ["owasp:s26a987a1053b", "next:s964651d4eed4"], "status": "REASONED"},
     "runtime-storage": {"text": "Load secrets from environment or a secret manager; keep them out of Dockerfile ENV/ARG, images and build logs.", "components": ["owasp"], "sources": ["owasp:s26a987a1053b"], "status": "REASONED"},
     "random": {"text": "Generate a random secret per service and environment with the shown OpenSSL or Python command; never share staging and production credentials.", "components": ["owasp"], "sources": ["owasp:s26a987a1053b"], "status": "REASONED"},
-    "scanners": {"text": "Scan before every push and in CI; gitleaks git/dir require 8.19+, with detect and detect --no-git on older builds; TruffleHog is another scanner.", "components": ["gitleaks", "trufflehog"], "sources": ["gitleaks:s37f64e8717c0", "trufflehog:s5450689a9bb8"], "status": "REASONED"},
+    "scanners": {"text": "Scan before every push and in CI; gitleaks git/dir require 8.19+, with detect and detect --no-git on older builds; TruffleHog is another scanner.", "components": ["gitleaks", "trufflehog"], "sources": ["gitleaks:s18cdf0069eb9", "trufflehog:s5450689a9bb8"], "status": "REASONED"},
     "argv": {"text": "Arguments expose secrets through procfs, ps and shell history; hidepid or PID namespaces narrow process visibility without covering history.", "components": ["proc", "apache"], "sources": ["proc:s801d5f1ee88d", "apache:scde9004bb967"], "status": "REASONED"},
     "stdin": {"text": "Use htpasswd -i, docker login --password-stdin or gh auth login --with-token to avoid secret arguments.", "components": ["apache", "docker", "gh"], "sources": ["apache:scde9004bb967", "docker:sf8243a183d67", "gh:sf0b01ee9b3e1"], "status": "REASONED"},
     "credential-files": {"text": "Protect plaintext credential files with umask 077 and mode 0600; PostgreSQL ignores group/world-readable .pgpass.", "components": ["postgres", "curl"], "sources": ["postgres:s198d4780d9a4", "curl:s3a0a54039912"], "status": "REASONED"},
@@ -133,7 +133,7 @@ version_basis: {
     "history-cleanup": {"text": "History rewriting with git-filter-repo is hygiene after rotation, not containment or unpublishing.", "components": ["git-filter-repo", "owasp"], "sources": ["git-filter-repo:s95bf8a949d5e", "owasp:s26a987a1053b"], "status": "REASONED"},
     "leak-audit": {"text": "Review provider logs for use of the leaked credential during its exposure window.", "components": ["owasp"], "sources": ["owasp:s26a987a1053b"], "status": "REASONED"},
     "encrypted-git": {"text": "SOPS with age encrypts YAML/JSON/ENV values while preserving structure for secrets that must be versioned; keep decryption keys outside the repository.", "components": ["sops", "age"], "sources": ["sops:s78c5bb528dc4", "age:sca8b0d211739"], "status": "REASONED"},
-    "verify-scan": {"text": "gitleaks must exit 0 with no findings before clean is printed; this rule-based scan is the primary gate.", "components": ["gitleaks"], "sources": ["gitleaks:s37f64e8717c0"], "status": "REASONED", "verify": [1]},
+    "verify-scan": {"text": "gitleaks must exit 0 with no findings before clean is printed; this rule-based scan is the primary gate.", "components": ["gitleaks"], "sources": ["gitleaks:s18cdf0069eb9"], "status": "REASONED", "verify": [1]},
     "verify-patterns": {"text": "Supplementary grep prints filenames only, skips binaries/excluded trees and treats read errors as failure; empty output is not proof of no secret. No grep manual is cited.", "components": ["owasp"], "sources": ["owasp:s26a987a1053b"], "status": "REASONED", "verify": [1]}
   }
 }
@@ -239,7 +239,7 @@ On every push, gitleaks must exit 0 with no findings (the `&& echo clean` then p
 ## Sources (checked September 2026)
 
 - OWASP Secrets Management Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html
-- gitleaks (git/dir need 8.19+): https://github.com/gitleaks/gitleaks
+- gitleaks (git/dir need 8.19+; v8.19.0 README): https://github.com/gitleaks/gitleaks/blob/v8.19.0/README.md
 - trufflehog: https://github.com/trufflesecurity/trufflehog
 - sops: https://github.com/getsops/sops and age: https://github.com/FiloSottile/age
 - git-filter-repo: https://github.com/newren/git-filter-repo
