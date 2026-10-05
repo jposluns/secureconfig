@@ -394,6 +394,46 @@ def declaration(text):
     return match[1].upper(), direction
 
 
+def inline_text(tokens):
+    """Keep declaration text and emphasis; opaque spans cannot supply a marker."""
+    parts, links = [], 0
+    for token in tokens:
+        kind = token.type
+        if kind == "link_open":
+            links += 1
+            parts.append("\0")
+        elif kind == "link_close":
+            links -= 1
+            if links < 0:
+                raise ValueError("unbalanced inline link")
+        elif kind in {"code_inline", "image"}:
+            parts.append("\0")
+            if token.children:
+                inline_text(token.children)
+        elif kind in {"text", "softbreak", "hardbreak", "em_open", "em_close",
+                      "strong_open", "strong_close"}:
+            if not links:
+                parts.append(token.content if kind == "text" else
+                             "\n" if kind in {"softbreak", "hardbreak"} else token.markup)
+        else:
+            raise ValueError("unsupported inline token " + kind)
+    if links:
+        raise ValueError("unbalanced inline link")
+    return "".join(parts)
+
+
+def inline_declaration(tokens, *, heading=False, directional=False):
+    """Apply the declaration grammar only to text outside opaque inline tokens."""
+    text = inline_text(tokens)
+    if heading:
+        _, text, error = heading_parts(text)
+        if error:
+            raise ValueError(error)
+        if text is None:
+            return None
+    return unit_declaration(text, directional=directional)
+
+
 def guide_context(text, in_verify=False, in_quote=False, *, enrolled=False):
     """Share scan_guide's metadata masking, tokens and Verify selection."""
     # Only a document's leading, strictly parsed metadata is opaque. Recursive
@@ -442,6 +482,24 @@ def scan_guide(text, in_verify=False, in_quote=False, *, enrolled=False,
             text, in_verify, in_quote, enrolled=enrolled)
     except ValueError as exc:
         return [], [f"line 1: [unsupported-container] invalid front matter: {exc}"]
+    parser, env = gate_parser(), {}
+    if parser is not None:
+        parser.parse("\n".join(lines), env)
+
+    def prose_mark(text, *, heading=False):
+        # Without the optional parser, never certify a raw Markdown candidate.
+        if parser is None:
+            if heading:
+                _, suffix, error = heading_parts(text)
+                if suffix is None and error is None:
+                    return None
+            elif not DECL.fullmatch(" ".join(text.strip().split("\n"))):
+                return None
+            raise ParserUnavailable("inline declarations require the pinned parser; "
+                                    "install tools/requirements-gates.txt")
+        inline = parser.parseInline(text, env)[0]
+        return inline_declaration(inline.children or [], heading=heading, directional=True)
+
     ancestry, paths = [], {}
     for i, head in enumerate(heads):
         if head:
@@ -505,7 +563,7 @@ def scan_guide(text, in_verify=False, in_quote=False, *, enrolled=False,
                 context.append(neighbor.text if para else "")
                 if not para:
                     continue
-                mark = declaration(neighbor.text)
+                mark = prose_mark(neighbor.text)
                 if mark:
                     other = k + 2 * delta
                     shared = (0 <= other < len(blocks)
@@ -516,13 +574,9 @@ def scan_guide(text, in_verify=False, in_quote=False, *, enrolled=False,
                     if not mark[1] or mark[1] == direction:
                         statuses.append(mark[0])
             heading = paths[token.start][-1][1] if paths[token.start] else ""
-            _, suffix, error = heading_parts(heading)
-            if error:
-                raise ValueError(error)
-            if suffix is not None:
-                mark = declaration(suffix)
-                if mark:
-                    statuses.append(mark[0])
+            mark = prose_mark(heading, heading=True)
+            if mark:
+                statuses.append(mark[0])
             opening = re.search(r"(?:`{3,}|~{3,})([^\n]*)", lines[token.start])
             language = opening[1].strip().lower() if opening else ""
             prefix = "--" if language == "sql" else "#" if language in {
@@ -671,58 +725,51 @@ def scan_units(text, *, enrolled=False, parser=None):
         # Compare section selection independently. A parser disagreement must
         # never narrow the old scan, even if it happens to reduce baseline debt.
         parsed_heads = [None] * len(lines)
+        heading_inlines = {}
         def headings(nodes, nested=False):
             for node in nodes:
                 t = node.token
                 if t.type == "heading_open":
                     title = node.children[0].token.content if node.children else ""
                     if not nested:
+                        heading_inlines[t.map[0]] = node.children[0].token
                         parsed_heads[t.map[0]] = (int(t.tag[1:]), title_text(title))
                 headings(node.children, nested or t.type not in {"heading_open", "paragraph_open"})
         headings(roots)
         parsed_selected = {i for a, b in verify_ranges(parsed_heads) for i in range(a, b)}
         if parsed_selected != selected:
             raise ValueError("parser Verify section selection disagrees with fence scanner")
-        paths, ancestry = {}, []
+        paths, ancestry, heading_starts = {}, [], {}
+        current_heading = None
         for i, head in enumerate(heads):
             if head:
+                current_heading = i
                 while ancestry and ancestry[-1][0] >= head[0]:
                     ancestry.pop()
                 ancestry.append(head)
             paths[i] = list(ancestry)
+            heading_starts[i] = current_heading
         covered, parsed_fences = set(), []
-        inline_types = {"text", "code_inline", "softbreak", "hardbreak", "em_open",
-                        "em_close", "strong_open", "strong_close", "link_open",
-                        "link_close", "image"}
-
-        def inline_check(tokens):
-            for t in tokens:
-                if t.type not in inline_types:
-                    raise ValueError("unsupported inline token " + t.type)
-                if t.children:
-                    inline_check(t.children)
-
         def source(span):
             return "\n".join(lines[span[0]:span[1]])
 
         def first_paragraph(node):
             return next((c for c in node.children if c.token.type == "paragraph_open"), None)
 
-        def paragraph_text(node):
+        def paragraph_inline(node):
             if len(node.children) != 1 or node.children[0].token.type != "inline":
                 raise ValueError("paragraph missing inline content")
-            return node.children[0].token.content
+            return node.children[0].token
 
         def heading_status(start):
-            heading = paths[start][-1][1] if paths[start] else ""
-            _, suffix, error = heading_parts(heading)
-            if error:
-                raise ValueError(error)
-            return unit_declaration(suffix) if suffix is not None else None
+            position = heading_starts[start]
+            if position is None:
+                return None
+            return inline_declaration(heading_inlines[position].children or [], heading=True)
 
         def status_for(start, texts, directional=False):
             marks = [heading_status(start)]
-            marks += [unit_declaration(t, directional=directional) for t in texts]
+            marks += [inline_declaration(t.children or [], directional=directional) for t in texts]
             statuses = {m[0] for m in marks if m}
             if len(statuses) > 1:
                 raise ValueError("conflicting declarations")
@@ -740,10 +787,18 @@ def scan_units(text, *, enrolled=False, parser=None):
             status = status_for(start, texts, directional=kind == "prose")
             units.append((start + 1, kind, digest, status))
 
-        def cells(line):
+        item_starts = {t.map[0] for t in tokens if t.type == "list_item_open"}
+
+        def cells(line, start):
             # Match the pinned table rule's escaped-pipe convention, including
             # pipes in code spans. No silent padding or truncation is permitted.
             from markdown_it.rules_block.table import escapedSplit
+            line = line.expandtabs(4).lstrip()
+            if start in item_starts:
+                marker = LIST.match(line)
+                if marker is None:
+                    raise ValueError("unrecognized table container prefix")
+                line = marker[3]
             parts = escapedSplit(line.strip())
             if parts and not parts[0].strip():
                 parts.pop(0)
@@ -751,14 +806,14 @@ def scan_units(text, *, enrolled=False, parser=None):
                 parts.pop()
             return parts
 
-        def walk(nodes, owners=None, schema=None, in_item=False, in_cell=False):
+        def walk(nodes, owners=None, schema=None, in_item=False, in_cell=False, table_width=None):
             owners = [] if owners is None else owners
             schema = [] if schema is None else schema
             for index, node in enumerate(nodes):
                 t = node.token
                 span = t.map
                 if span is None:  # only table cells, validated above
-                    walk(node.children, owners, schema, in_item, True)
+                    walk(node.children, owners, schema, in_item, True, table_width)
                     continue
                 start, end = span
                 active = bool(selected.intersection(range(start, end)))
@@ -770,11 +825,11 @@ def scan_units(text, *, enrolled=False, parser=None):
                 if kind in {"blockquote_open", "code_block", "html_block"}:
                     raise ValueError(f"line {start + 1}: [unsupported-container] {kind}")
                 if kind == "inline":
-                    inline_check(t.children or [])
+                    inline_text(t.children or [])
                 elif kind == "heading_open":
                     heading_status(start)
                     covered.update(range(start, end))
-                    walk(node.children, owners, schema, in_item, in_cell)
+                    walk(node.children, owners, schema, in_item, in_cell, table_width)
                 elif kind == "hr":
                     covered.update(range(start, end))
                 elif kind == "list_item_open":
@@ -784,35 +839,36 @@ def scan_units(text, *, enrolled=False, parser=None):
                     if any(c.token.map[0] == start for c in node.children
                            if c.token.type in {"bullet_list_open", "ordered_list_open"}):
                         raise ValueError("[unsupported-container] compact list")
-                    texts = [paragraph_text(first)] if first else []
+                    texts = [paragraph_inline(first)] if first else []
                     emit(node, "list-item", owners, [], texts)
                     owner = source(first.token.map) if first else ""
-                    walk(node.children, owners + [owner], schema, True, in_cell)
+                    walk(node.children, owners + [owner], schema, True, in_cell, table_width)
                 elif kind == "paragraph_open":
                     if not in_item and not in_cell:
-                        emit(node, "prose", owners, [], [paragraph_text(node)])
+                        emit(node, "prose", owners, [], [paragraph_inline(node)])
                     covered.update(range(start, end))
-                    walk(node.children, owners, schema, in_item, in_cell)
+                    walk(node.children, owners, schema, in_item, in_cell, table_width)
                 elif kind == "table_open":
                     if end - start < 2:
                         raise ValueError("table missing schema")
                     table_schema = lines[start:start + 2]
-                    widths = [len(cells(line)) for line in table_schema]
+                    widths = [len(cells(line, start + offset))
+                              for offset, line in enumerate(table_schema)]
                     if not widths[0] or widths[0] != widths[1]:
                         raise ValueError("ragged table schema")
                     covered.update(range(start, start + 2))
-                    walk(node.children, owners, table_schema, in_item, in_cell)
+                    walk(node.children, owners, table_schema, in_item, in_cell, widths[0])
                 elif kind == "tr_open":
                     cell_nodes = [c for c in node.children if c.token.type in {"td_open", "th_open"}]
-                    if end != start + 1 or len(cells(lines[start])) != len(cell_nodes):
+                    if end != start + 1 or len(cells(lines[start], start)) != len(cell_nodes):
                         raise ValueError(f"line {start + 1}: ragged table row")
-                    if len(cell_nodes) != len(cells(schema[0])):
+                    if len(cell_nodes) != table_width:
                         raise ValueError(f"line {start + 1}: table row differs from schema")
                     if cell_nodes and cell_nodes[0].token.type == "td_open":
-                        texts = [paragraph_text(c) for c in cell_nodes]
+                        texts = [paragraph_inline(c) for c in cell_nodes]
                         emit(node, "table-row", owners, schema, texts)
                     covered.update(range(start, end))
-                    walk(node.children, owners, schema, in_item, in_cell)
+                    walk(node.children, owners, schema, in_item, in_cell, table_width)
                 elif kind == "fence":
                     covered.update(range(start, end))
                     marks = [heading_status(start)]
@@ -820,7 +876,8 @@ def scan_units(text, *, enrolled=False, parser=None):
                         k = index + delta
                         if not 0 <= k < len(nodes) or nodes[k].token.type != "paragraph_open":
                             continue
-                        mark = declaration(paragraph_text(nodes[k]))
+                        mark = inline_declaration(paragraph_inline(nodes[k]).children or [],
+                                                  directional=True)
                         other = index + 2 * delta
                         shared = 0 <= other < len(nodes) and nodes[other].token.type == "fence"
                         if mark and (mark[1] == direction or not mark[1] and not shared):
@@ -836,7 +893,7 @@ def scan_units(text, *, enrolled=False, parser=None):
                         raise ValueError("conflicting declarations")
                     parsed_fences.append((start + 1, next(iter(statuses), None)))
                 elif kind in {"bullet_list_open", "ordered_list_open", "thead_open", "tbody_open"}:
-                    walk(node.children, owners, schema, in_item, in_cell)
+                    walk(node.children, owners, schema, in_item, in_cell, table_width)
                 else:
                     raise ValueError("unhandled block token " + kind)
         walk(roots)

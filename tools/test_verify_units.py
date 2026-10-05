@@ -105,6 +105,14 @@ python3() {
                       and "new/changed/excess fence" in out
                       and "  COUNTS  fence: 0 marked, 0 retained\n" in out
                       and out.count("  COUNTS  ") == 1)
+                for context in ("REASONED: evidence\n\n",
+                                "### Example (REASONED: evidence)\n\n"):
+                    units, errors = gate.scan_guide(PREFIX + context
+                                                    + "```sh\necho ok\n```\n")
+                    check(label + " inline context needs parser " + context,
+                          units and not units[0][2] and any(
+                              "inline declarations require the pinned parser" in e
+                              for e in errors))
                 guide.write_text(PREFIX + "unmarked prose\n\n```sh\n# " + MARK + "\necho ok\n```\n")
 
         if parser is None:
@@ -199,6 +207,89 @@ python3() {
                 setattr(token, attr, value)
             scan("parser contract " + attr, "plain\n", (0, 0, 0, 0), diagnostic=diagnostic,
                  use_parser=AlteredParser(change))
+
+        def unknown_inline(tokens):
+            inline = next(t for t in tokens if t.type == "inline" and t.content == "plain")
+            inline.children[0].type = "future_inline"
+
+        scan("unknown inline fails closed", "plain\n", (0, 0, 0, 0),
+             diagnostic="unsupported inline token future_inline",
+             use_parser=AlteredParser(unknown_inline))
+
+        # Declarations must survive inline context checks at every attachment site.
+        def rejected(name, body, kinds, diagnostic=None):
+            guide.write_text(body)
+            baseline.write_text("")
+            rc, out = cli("--strict")
+            check(name + " exit", rc == 1)
+            for kind in kinds:
+                check(name + " " + kind + " diagnostic",
+                      (diagnostic or "new/changed/excess " + kind) in out)
+            if diagnostic is None:
+                units, errors = gate.scan_units(body, parser=parser)
+                check(name + " unmarked", not errors and units
+                      and all(u[3] is None for u in units))
+
+        fence = "```sh\necho ok\n```\n"
+        for heading in ("`Example: REASONED: vendor evidence`",
+                        "[Example: REASONED: vendor evidence](https://example.com)",
+                        "[Example](REASONED:vendor)"):
+            rejected("reported heading " + heading,
+                     PREFIX + "### " + heading + "\n\nUnmarked check.\n\n"
+                     + fence + "\n- Unmarked item.\n\n" + table, gate.KINDS)
+
+        for status in ("REASONED", "DEMONSTRATED"):
+            marker = status + ": vendor evidence"
+            for context, opaque in (
+                ("code", "`" + marker + "`"),
+                ("link text", "[" + marker + "](https://example.com)"),
+                ("destination", "[Example](" + status + ":vendor)"),
+                ("image", "![" + marker + "](https://example.com/image.png)"),
+                ("autolink", "<" + status + ":vendor>"),
+                ("HTML text", "<span>" + marker + "</span>"),
+                ("HTML attribute", '<span title="' + marker + '">value</span>'),
+            ):
+                for site, body, kind in (
+                    ("heading", "### Example: " + opaque + "\n\nCheck.\n", "prose"),
+                    ("paragraph", opaque + "\n", "prose"),
+                    ("item", "- " + opaque + "\n", "list-item"),
+                    ("cell", "| A | B |\n| --- | --- |\n| check | " + opaque + " |\n",
+                     "table-row"),
+                    ("before fence", opaque + "\n\n" + fence, "fence"),
+                    ("after fence", fence + "\n" + opaque + "\n", "fence"),
+                ):
+                    rejected(status + " " + site + " " + context, PREFIX + body, (kind,),
+                             "unsupported inline token html_inline"
+                             if context.startswith("HTML") else None)
+            # Opaque provenance is allowed when the marker itself is plain text.
+            for evidence in ("`vendor evidence`", "[vendor evidence](https://example.com)"):
+                mark = status + ": " + evidence
+                scan("plain marker " + mark, mark + "\n\n- " + mark + "\n\n"
+                     "| A | B |\n| --- | --- |\n| x | " + mark + " |\n\n"
+                     + fence, (1, 1, 1, 1), 3)
+
+        rejected("reference link heading",
+                 "[r]: https://example.com\n\n" + PREFIX
+                 + "### [Example: REASONED: vendor evidence][r]\n\n" + fence,
+                 ("fence",))
+        rejected("reference link paragraph",
+                 "[r]: https://example.com\n\n" + PREFIX
+                 + "[REASONED: vendor evidence][r]\n\n" + fence,
+                 ("prose", "fence"))
+
+        for prefix, indent in (("- ", "  "), ("1. ", "   "), ("  + ", "    ")):
+            body = "## Verify (" + MARK + ")\n\n" + prefix + "| A | B |\n"
+            body += indent + "| --- | --- |\n" + indent + "| Check endpoint | Expect refusal |\n"
+            guide.write_text(body)
+            baseline.write_text("")
+            rc, out = cli("--strict")
+            check("first-line table " + prefix, rc == 0
+                  and "list-item: 1 marked, 0 retained" in out
+                  and "table-row: 1 marked, 0 retained" in out and "0 findings" in out)
+            for row in ("| Check endpoint |", "| Check | Expect refusal | excess |"):
+                malformed = body.rsplit(indent, 1)[0] + indent + row + "\n"
+                rejected("first-line ragged " + prefix + row, malformed, ("table-row",),
+                         "ragged table row")
 
         # Fingerprint equality and baseline errors through the actual CLI.
         original = PREFIX + "plain\n"
