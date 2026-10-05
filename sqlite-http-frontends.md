@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "201f31bc74bb8311e16ec3386ab57f43ca1df2352b24dc4cf2daaf93a1f70be7",
+  "body_sha256": "dbceaded521127743160805024b564c305e59f8e94a4a0385ef059ca2c8b8c72",
   "components": {
     "ds-container": {
       "name": "Datasette container generator",
@@ -543,6 +543,6 @@ Every URL listed below was fetched during authoring. This list also records the 
 - Cloudflare Access HTTP applications: https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/
 - Cloudflare independent MFA: https://developers.cloudflare.com/cloudflare-one/access-controls/access-settings/independent-mfa/
 - Tailscale Serve and Funnel distinction: https://tailscale.com/docs/reference/tailscale-cli/serve
-- curl manual (curl 7.75.0 or newer): https://curl.se/docs/manpage.html
+- curl manual (write-out variables `exitcode` and `errormsg` added in curl 7.75.0): https://curl.se/docs/manpage.html
 - ss manual: https://man7.org/linux/man-pages/man8/ss.8.html
 - OWASP SQL injection prevention: https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "b9e2676b491b393ada8b3df687d3388be0b4ddef6379cef1f4e50a6b04b25a6d",
+  "body_sha256": "40326050371698490c137f5e726beab74a9ef7bbb04ddd41af00ed0ef0299ee3",
   "components": {
     "kubernetes": {
       "name": "Kubernetes documentation",
@@ -46,9 +46,7 @@ version_basis: {
       "name": "Envoy Gateway",
       "basis": "v1.9.1",
       "sources": {
-        "s881f08174c54": "https://gateway.envoyproxy.io/v1.9/install/install-helm/",
-        "s6412abbdfdbd": "https://github.com/envoyproxy/gateway/releases/download/v1.9.1/quickstart.yaml",
-        "s9ad0f418b20b": "https://gateway.envoyproxy.io/v1.9/tasks/quickstart/"
+        "s6412abbdfdbd": "https://github.com/envoyproxy/gateway/releases/download/v1.9.1/quickstart.yaml"
       }
     },
     "gateway": {
@@ -158,13 +156,15 @@ version_basis: {
         "sb5fa4f4ffa1a": "https://gateway.envoyproxy.io/docs/tasks/security/basic-auth/",
         "s7fdd76c5d549": "https://gateway.envoyproxy.io/docs/tasks/security/oidc/",
         "s100049c74adf": "https://gateway.envoyproxy.io/docs/tasks/security/ext-auth/",
-        "s9b1d646cb718": "https://gateway.envoyproxy.io/docs/tasks/traffic/http-redirect/"
+        "s9b1d646cb718": "https://gateway.envoyproxy.io/docs/tasks/traffic/http-redirect/",
+        "s881f08174c54": "https://gateway.envoyproxy.io/v1.9/install/install-helm/",
+        "s9ad0f418b20b": "https://gateway.envoyproxy.io/v1.9/tasks/quickstart/"
       }
     }
   },
   "claims": {
     "ingress-migration": {"text": "ingress-nginx retired in March 2026 with no subsequent updates; detect its labeled pods and migrate. Gateway API is recommended and Ingress API is frozen.", "components": ["kubernetes"], "sources": ["kubernetes:s0f11d6ed39b7", "kubernetes:sca23283c5a9b", "kubernetes:sd8c8df3b9ddc"], "status": "REASONED"},
-    "gateway-install": {"text": "Install Envoy Gateway chart v1.9.1 and its default Gateway CRDs; separately create GatewayClass eg with the documented controllerName and confirm Accepted=True.", "components": ["envoy", "gateway"], "sources": ["envoy:s881f08174c54", "envoy:s6412abbdfdbd", "gateway:se0e45c61dc65"], "status": "REASONED"},
+    "gateway-install": {"text": "Install Envoy Gateway chart v1.9.1 and its default Gateway CRDs; separately create GatewayClass eg with the documented controllerName and confirm Accepted=True.", "components": ["envoy", "gateway", "envoy-rolling"], "sources": ["envoy-rolling:s881f08174c54", "envoy:s6412abbdfdbd", "gateway:se0e45c61dc65"], "status": "REASONED"},
     "gateway-alternatives": {"text": "Traefik uses providers.kubernetesGateway; Cilium uses gatewayAPI.enabled=true and requires kube-proxy replacement.", "components": ["traefik", "cilium"], "sources": ["traefik:s06f2ee45331e", "cilium:sacaa7a78461d"], "status": "REASONED"},
     "gateway-tls": {"text": "Gateway HTTPS listener 443 terminates TLS using app-tls for app.example.com; HTTP 80 is for redirect and ACME challenges.", "components": ["gateway", "envoy-rolling"], "sources": ["gateway:se1f28d98d168", "envoy-rolling:se833317feea7"], "status": "REASONED"},
     "gateway-route": {"text": "HTTPRoute app attaches only to the HTTPS listener via sectionName and forwards to the ClusterIP app Service on port 80.", "components": ["gateway"], "sources": ["gateway:s4a971425e1d1"], "status": "REASONED"},
@@ -176,7 +176,7 @@ version_basis: {
     "basic-auth-input": {"text": "htpasswd -i reads stdin, unlike argv-exposing -b; confirm twice, create with -cis, verify with -vi and only then create the Kubernetes Secret.", "components": ["apache", "envoy-rolling"], "sources": ["apache:scde9004bb967", "envoy-rolling:sb5fa4f4ffa1a"], "status": "REASONED"},
     "oidc": {"text": "Envoy SecurityPolicy oidc uses issuer, clientID, clientSecret and redirectURL; enforce MFA at the identity provider.", "components": ["envoy-rolling"], "sources": ["envoy-rolling:s7fdd76c5d549"], "status": "REASONED"},
     "external-auth": {"text": "Authelia is an authorization endpoint, not a traffic proxy; Envoy extAuth.http targets its Service and /api/authz/ext-authz/.", "components": ["authelia", "envoy-rolling"], "sources": ["authelia:s0cb4f49871b5", "authelia:scfa9e2cc2ef5", "envoy-rolling:s100049c74adf"], "status": "REASONED"},
-    "workload-exposure": {"text": "Expose workloads only through the Gateway LoadBalancer; keep databases on ClusterIP without routes and enforce pod access with NetworkPolicies plus database TLS/auth.", "components": ["envoy", "kubernetes"], "sources": ["envoy:s9ad0f418b20b", "kubernetes:sca23283c5a9b"], "status": "REASONED"},
+    "workload-exposure": {"text": "Expose workloads only through the Gateway LoadBalancer; keep databases on ClusterIP without routes and enforce pod access with NetworkPolicies plus database TLS/auth.", "components": ["envoy-rolling", "kubernetes"], "sources": ["envoy-rolling:s9ad0f418b20b", "kubernetes:sca23283c5a9b"], "status": "REASONED"},
     "secrets": {"text": "Store credentials in Secrets or an external operator, not committed ConfigMaps or environment literals; kubeconfigs containing credentials also need secret handling.", "components": ["kubernetes"], "sources": ["kubernetes:se41a53ea6778", "kubernetes:sae633285120e"], "status": "REASONED"},
     "eks-endpoint": {"text": "EKS API defaults public; restrict public CIDRs or use private access. Private-only endpoints can resolve publicly to private VPC addresses.", "components": ["eks"], "sources": ["eks:s9724ce882930"], "status": "REASONED"},
     "gke-endpoints": {"text": "GKE authorized networks constrain IP-based access, not its separately IAM-gated DNS endpoint; inspect both and disable unused DNS access.", "components": ["gke"], "sources": ["gke:s0f44d89575ed"], "status": "REASONED"},
@@ -204,7 +204,7 @@ version_basis: {
     "readonly-auth": {"text": "Read-only server uses plain HTTP with no authentication or authorization filter; its caller-supplied bind wiring was outside the inspected source subset.", "components": ["kubelet"], "sources": ["kubelet:s98cf98130201", "kubelet:s8bea69523ed9"], "status": "REASONED"},
     "readonly-paths": {"text": "Read-only handlers expose /pods, /stats/summary, metrics variants and health; v1.37.1 has no /spec handler. Securing 10250 does not secure 10255.", "components": ["kubelet"], "sources": ["kubelet:s6b753b247f8a", "kubelet:sd00d4cdb9276"], "status": "REASONED"},
     "gke-readonly": {"text": "GKE disables the read-only port by default only for new clusters running 1.32+; inspect effective configuration on older or upgraded clusters.", "components": ["gke-min"], "sources": ["gke-min:s4c7be4adcab4"], "status": "REASONED"},
-    "verify-services": {"text": "Only the Gateway should have NodePort/LoadBalancer exposure; verify its public address/DNS and Certificate Ready=True.", "components": ["kubernetes", "envoy", "cert-manager"], "sources": ["kubernetes:s04f0c3099fd7", "envoy:s9ad0f418b20b", "cert-manager:s72bdb97928a8"], "status": "REASONED", "verify": [1]},
+    "verify-services": {"text": "Only the Gateway should have NodePort/LoadBalancer exposure; verify its public address/DNS and Certificate Ready=True.", "components": ["kubernetes", "envoy-rolling", "cert-manager"], "sources": ["kubernetes:s04f0c3099fd7", "envoy-rolling:s9ad0f418b20b", "cert-manager:s72bdb97928a8"], "status": "REASONED", "verify": [1]},
     "verify-redirect": {"text": "HTTP should return 301 to the HTTPS application URL.", "components": ["gateway"], "sources": ["gateway:s8d02fbc742ba"], "status": "REASONED", "verify": [1]},
     "verify-basic": {"text": "Anonymous Basic-protected access should return 401; require SecurityPolicy Accepted=True and a valid credential reaching the app without the gateway Basic challenge.", "components": ["curl", "envoy-rolling"], "sources": ["envoy-rolling:sb5fa4f4ffa1a", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
     "verify-api-target": {"text": "Use the whole kubeconfig endpoint, preserving IPv6 and inferring a schemeless endpoint from both cluster and user TLS settings, not a hardcoded 6443.", "components": ["kubernetes"], "sources": ["kubernetes:se41a53ea6778", "kubernetes:sd59fb2f35cd7"], "status": "REASONED", "verify": [1]},
@@ -228,7 +228,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | Claim | Basis | Status |
 | --- | --- | --- |
 | ingress-migration: ingress-nginx retired in March 2026 with no subsequent updates; detect its labeled pods and migrate. Gateway API is recommended and Ingress API is frozen. | Kubernetes documentation unknown | REASONED |
-| gateway-install: Install Envoy Gateway chart v1.9.1 and its default Gateway CRDs; separately create GatewayClass eg with the documented controllerName and confirm Accepted=True. | Envoy Gateway v1.9.1; Gateway API documentation unknown | REASONED |
+| gateway-install: Install Envoy Gateway chart v1.9.1 and its default Gateway CRDs; separately create GatewayClass eg with the documented controllerName and confirm Accepted=True. | Envoy Gateway v1.9.1; Gateway API documentation unknown; Envoy Gateway documentation (rolling) unknown | REASONED |
 | gateway-alternatives: Traefik uses providers.kubernetesGateway; Cilium uses gatewayAPI.enabled=true and requires kube-proxy replacement. | Traefik documentation unknown; Cilium documentation unknown | REASONED |
 | gateway-tls: Gateway HTTPS listener 443 terminates TLS using app-tls for app.example.com; HTTP 80 is for redirect and ACME challenges. | Gateway API documentation unknown; Envoy Gateway documentation (rolling) unknown | REASONED |
 | gateway-route: HTTPRoute app attaches only to the HTTPS listener via sectionName and forwards to the ClusterIP app Service on port 80. | Gateway API documentation unknown | REASONED |
@@ -240,7 +240,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | basic-auth-input: htpasswd -i reads stdin, unlike argv-exposing -b; confirm twice, create with -cis, verify with -vi and only then create the Kubernetes Secret. | Apache htpasswd documentation unknown; Envoy Gateway documentation (rolling) unknown | REASONED |
 | oidc: Envoy SecurityPolicy oidc uses issuer, clientID, clientSecret and redirectURL; enforce MFA at the identity provider. | Envoy Gateway documentation (rolling) unknown | REASONED |
 | external-auth: Authelia is an authorization endpoint, not a traffic proxy; Envoy extAuth.http targets its Service and /api/authz/ext-authz/. | Authelia documentation unknown; Envoy Gateway documentation (rolling) unknown | REASONED |
-| workload-exposure: Expose workloads only through the Gateway LoadBalancer; keep databases on ClusterIP without routes and enforce pod access with NetworkPolicies plus database TLS/auth. | Envoy Gateway v1.9.1; Kubernetes documentation unknown | REASONED |
+| workload-exposure: Expose workloads only through the Gateway LoadBalancer; keep databases on ClusterIP without routes and enforce pod access with NetworkPolicies plus database TLS/auth. | Envoy Gateway documentation (rolling) unknown; Kubernetes documentation unknown | REASONED |
 | secrets: Store credentials in Secrets or an external operator, not committed ConfigMaps or environment literals; kubeconfigs containing credentials also need secret handling. | Kubernetes documentation unknown | REASONED |
 | eks-endpoint: EKS API defaults public; restrict public CIDRs or use private access. Private-only endpoints can resolve publicly to private VPC addresses. | Amazon EKS documentation unknown | REASONED |
 | gke-endpoints: GKE authorized networks constrain IP-based access, not its separately IAM-gated DNS endpoint; inspect both and disable unused DNS access. | GKE documentation unknown | REASONED |
@@ -268,7 +268,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | readonly-auth: Read-only server uses plain HTTP with no authentication or authorization filter; its caller-supplied bind wiring was outside the inspected source subset. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
 | readonly-paths: Read-only handlers expose /pods, /stats/summary, metrics variants and health; v1.37.1 has no /spec handler. Securing 10250 does not secure 10255. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
 | gke-readonly: GKE disables the read-only port by default only for new clusters running 1.32+; inspect effective configuration on older or upgraded clusters. | GKE new-cluster read-only-port boundary 1.32 | REASONED |
-| verify-services: Only the Gateway should have NodePort/LoadBalancer exposure; verify its public address/DNS and Certificate Ready=True. | Kubernetes documentation unknown; Envoy Gateway v1.9.1; cert-manager Gateway support minimum 1.15 | REASONED |
+| verify-services: Only the Gateway should have NodePort/LoadBalancer exposure; verify its public address/DNS and Certificate Ready=True. | Kubernetes documentation unknown; Envoy Gateway documentation (rolling) unknown; cert-manager Gateway support minimum 1.15 | REASONED |
 | verify-redirect: HTTP should return 301 to the HTTPS application URL. | Gateway API documentation unknown | REASONED |
 | verify-basic: Anonymous Basic-protected access should return 401; require SecurityPolicy Accepted=True and a valid credential reaching the app without the gateway Basic challenge. | curl documentation unknown; Envoy Gateway documentation (rolling) unknown | REASONED |
 | verify-api-target: Use the whole kubeconfig endpoint, preserving IPv6 and inferring a schemeless endpoint from both cluster and user TLS settings, not a hardcoded 6443. | Kubernetes documentation unknown | REASONED |
@@ -650,7 +650,8 @@ allowed ranges out of the provider's own configuration rather than inferring the
 
 - Ingress NGINX: Statement from the Kubernetes Steering and Security Response Committees (retirement, detection command): https://kubernetes.io/blog/2026/01/29/ingress-nginx-statement/ ; Kubernetes docs, Gateway API (migration guide from Ingress): https://kubernetes.io/docs/concepts/services-networking/gateway/ ; Kubernetes docs, Ingress (the project recommends Gateway; the Ingress API is frozen): https://kubernetes.io/docs/concepts/services-networking/ingress/
 - Gateway API getting started (CRD install): https://gateway-api.sigs.k8s.io/guides/getting-started/introduction/ ; TLS: https://gateway-api.sigs.k8s.io/guides/user-guides/tls/ ; HTTP routing: https://gateway-api.sigs.k8s.io/guides/user-guides/http-routing/ ; redirects: https://gateway-api.sigs.k8s.io/guides/user-guides/http-redirect-rewrite/
-- Envoy Gateway: https://gateway.envoyproxy.io/ ; Helm install: https://gateway.envoyproxy.io/v1.9/install/install-helm/ ; quickstart and its manifest (GatewayClass `controllerName`): https://gateway.envoyproxy.io/v1.9/tasks/quickstart/ , https://github.com/envoyproxy/gateway/releases/download/v1.9.1/quickstart.yaml
+- Envoy Gateway (rolling documentation, checked September 2026): https://gateway.envoyproxy.io/ ; Helm install: https://gateway.envoyproxy.io/v1.9/install/install-helm/ ; quickstart: https://gateway.envoyproxy.io/v1.9/tasks/quickstart/
+- Envoy Gateway v1.9.1 quickstart manifest (GatewayClass `controllerName`): https://github.com/envoyproxy/gateway/releases/download/v1.9.1/quickstart.yaml
 - Envoy Gateway tasks, secure gateways and TLS listener (rolling documentation, checked September 2026): https://gateway.envoyproxy.io/docs/tasks/security/secure-gateways/ ; basic auth: https://gateway.envoyproxy.io/docs/tasks/security/basic-auth/ ; OIDC: https://gateway.envoyproxy.io/docs/tasks/security/oidc/ ; external authorization (`extAuth`): https://gateway.envoyproxy.io/docs/tasks/security/ext-auth/ ; HTTP redirect: https://gateway.envoyproxy.io/docs/tasks/traffic/http-redirect/
 - htpasswd, for `-i` rather than `-b` and what SHA-1 costs: https://httpd.apache.org/docs/2.4/programs/htpasswd.html
 - Authelia: proxy integration (the proxy calls the authorization endpoint): https://www.authelia.com/integration/proxies/introduction/ ; Envoy Gateway `SecurityPolicy` example: https://www.authelia.com/integration/kubernetes/envoy/gateway/
