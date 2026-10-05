@@ -13,7 +13,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 ## 2026-10-05
 
 - Add verified pinned Sources and claim mappings for fourteen READY facts across fifteen claims in deployment lifecycle, GPU clouds, MLflow, PaaS, SQLite, and transactional email posture; regenerate version summaries and bundles (row 1.179, batch 5a) (#NNN).
-
+- Add verified pinned Sources and claim mappings for the READY MFA, self-hosted IdP and OIDC integration facts (OIDC session cookies, server-side logout and browser token storage); preserve claim text and residuals (row 1.179, batch 3a) (#434).
 - Add verified pinned Sources and claim mappings for fifteen READY facts across nineteen claims in authentication, identity providers, and fronting authentication; regenerate version summaries and bundles (row 1.179, batch 3b) (#435).
 
 - Add pinned Sources and claim mappings for twelve READY facts across thirteen claims in headers, Docker, container hardening, realtime webhooks, and realtime voice infrastructure; regenerate version summaries and bundles (row 1.179, batch 2b) (#433).
