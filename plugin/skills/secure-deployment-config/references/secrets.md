@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "9e0117132811e99d3d70689f3d8c1e1350e24bccbabb95094dee0d370346f4f4",
+  "body_sha256": "776cb9211e72687862f66f7ffd9bbd16d584257c4ece092cc93080eb7880b4ad",
   "components": {
     "owasp": {
       "name": "OWASP secret handling",
@@ -110,12 +110,40 @@ version_basis: {
       "sources": {
         "s964651d4eed4": "https://nextjs.org/docs/app/guides/environment-variables"
       }
+    },
+    "git-ignore": {
+      "name": "Git ignore patterns",
+      "basis": "2.42.0",
+      "sources": {
+        "s90ce7c8605d9": "https://git-scm.com/docs/gitignore/2.42.0"
+      }
+    },
+    "openssl-rand": {
+      "name": "OpenSSL random bytes",
+      "basis": "3.0",
+      "sources": {
+        "s11d11381b080": "https://docs.openssl.org/3.0/man1/openssl-rand/"
+      }
+    },
+    "python-secrets": {
+      "name": "Python secrets",
+      "basis": "3.13",
+      "sources": {
+        "sd2e8196eaa96": "https://docs.python.org/3.13/library/secrets.html#secrets.token_urlsafe"
+      }
+    },
+    "vite-env": {
+      "name": "Vite environment variables",
+      "basis": "6",
+      "sources": {
+        "sba07c9b57bd9": "https://v6.vite.dev/guide/env-and-mode"
+      }
     }
   },
   "claims": {
-    "gitignore": {"text": "Ignore .env, .env.*, *.key and *.pem before committing; allow only a secret-free template. Already tracked files remain tracked.", "components": ["owasp", "next"], "sources": ["owasp:s26a987a1053b", "next:s964651d4eed4"], "status": "REASONED"},
+    "gitignore": {"text": "Ignore .env, .env.*, *.key and *.pem before committing; allow only a secret-free template. Already tracked files remain tracked.", "components": ["owasp", "next", "git-ignore"], "sources": ["owasp:s26a987a1053b", "next:s964651d4eed4", "git-ignore:s90ce7c8605d9"], "status": "REASONED"},
     "runtime-storage": {"text": "Load secrets from environment or a secret manager; keep them out of Dockerfile ENV/ARG, images and build logs.", "components": ["owasp"], "sources": ["owasp:s26a987a1053b"], "status": "REASONED"},
-    "random": {"text": "Generate a random secret per service and environment with the shown OpenSSL or Python command; never share staging and production credentials.", "components": ["owasp"], "sources": ["owasp:s26a987a1053b"], "status": "REASONED"},
+    "random": {"text": "Generate a random secret per service and environment with the shown OpenSSL or Python command; never share staging and production credentials.", "components": ["owasp", "openssl-rand", "python-secrets"], "sources": ["owasp:s26a987a1053b", "openssl-rand:s11d11381b080", "python-secrets:sd2e8196eaa96"], "status": "REASONED"},
     "scanners": {"text": "Scan before every push and in CI; gitleaks git/dir require 8.19+, with detect and detect --no-git on older builds; TruffleHog is another scanner.", "components": ["gitleaks", "trufflehog"], "sources": ["gitleaks:s18cdf0069eb9", "trufflehog:s5450689a9bb8"], "status": "REASONED"},
     "argv": {"text": "Arguments expose secrets through procfs, ps and shell history; hidepid or PID namespaces narrow process visibility without covering history.", "components": ["proc", "apache"], "sources": ["proc:s801d5f1ee88d", "apache:scde9004bb967"], "status": "REASONED"},
     "stdin": {"text": "Use htpasswd -i, docker login --password-stdin or gh auth login --with-token to avoid secret arguments.", "components": ["apache", "docker", "gh"], "sources": ["apache:scde9004bb967", "docker:sf8243a183d67", "gh:sf0b01ee9b3e1"], "status": "REASONED"},
@@ -125,7 +153,7 @@ version_basis: {
     "argv-review": {"text": "A ps/grep snapshot misses unlabelled secrets and short-lived processes; review secret-input paths instead of treating a clean snapshot as proof.", "components": ["proc"], "sources": ["proc:s801d5f1ee88d"], "status": "REASONED"},
     "ci-store": {"text": "Scope CI/CD platform secrets to the jobs needing them; never echo them into logs or artefacts.", "components": ["owasp"], "sources": ["owasp:s26a987a1053b"], "status": "REASONED"},
     "prompt-secrets": {"text": "Keep credentials out of all model prompts and customer data outside unapproved services; system prompts are disclosable and authorization belongs outside the model.", "components": ["owasp"], "sources": ["owasp:s26a987a1053b", "owasp:s4564d1912a87"], "status": "REASONED"},
-    "business-rules": {"text": "Keep confidential business logic out of public repositories, browser-shipped code and public LLM prompts; public environment prefixes and source maps can expose it.", "components": ["owasp", "next"], "sources": ["owasp:s26a987a1053b", "owasp:s4564d1912a87", "next:s964651d4eed4"], "status": "REASONED"},
+    "business-rules": {"text": "Keep confidential business logic out of public repositories, browser-shipped code and public LLM prompts; public environment prefixes and source maps can expose it.", "components": ["owasp", "next", "vite-env"], "sources": ["owasp:s26a987a1053b", "owasp:s4564d1912a87", "next:s964651d4eed4", "vite-env:sba07c9b57bd9"], "status": "REASONED"},
     "terraform-state": {"text": "Default local Terraform state is plaintext and may contain sensitive values; ignore *.tfstate and *.tfstate.* including backups and workspace copies.", "components": ["terraform"], "sources": ["terraform:s8efa1a4bb953"], "status": "REASONED"},
     "kubeconfig": {"text": "Kubeconfig can embed a base64 client-key-data private key or bearer token; exclude credential-bearing files and copies from version control.", "components": ["kubernetes"], "sources": ["kubernetes:se41a53ea6778"], "status": "REASONED"},
     "docker-store": {"text": "Docker stores logins in its credential store or base64-encoded config.json; encoding is not encryption and scanners can miss encoded or unpatterned secrets.", "components": ["docker", "owasp"], "sources": ["docker:sf8243a183d67", "owasp:s26a987a1053b"], "status": "REASONED"},
@@ -145,13 +173,13 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| gitignore: Ignore .env, .env.*, *.key and *.pem before committing; allow only a secret-free template. Already tracked files remain tracked. | OWASP secret handling unknown; Next.js unknown | REASONED |
+| gitignore: Ignore .env, .env.*, *.key and *.pem before committing; allow only a secret-free template. Already tracked files remain tracked. | OWASP secret handling unknown; Next.js unknown; Git ignore patterns 2.42.0 | REASONED |
 | runtime-storage: Load secrets from environment or a secret manager; keep them out of Dockerfile ENV/ARG, images and build logs. | OWASP secret handling unknown | REASONED |
-| random: Generate a random secret per service and environment with the shown OpenSSL or Python command; never share staging and production credentials. | OWASP secret handling unknown | REASONED |
+| random: Generate a random secret per service and environment with the shown OpenSSL or Python command; never share staging and production credentials. | OWASP secret handling unknown; OpenSSL random bytes 3.0; Python secrets 3.13 | REASONED |
 | scanners: Scan before every push and in CI; gitleaks git/dir require 8.19+, with detect and detect --no-git on older builds; TruffleHog is another scanner. | gitleaks command minimum 8.19+; TruffleHog unknown | REASONED |
 | argv: Arguments expose secrets through procfs, ps and shell history; hidepid or PID namespaces narrow process visibility without covering history. | Linux procfs unknown; htpasswd unknown | REASONED |
 | stdin: Use htpasswd -i, docker login --password-stdin or gh auth login --with-token to avoid secret arguments. | htpasswd unknown; Docker login unknown; GitHub CLI unknown | REASONED |
@@ -161,7 +189,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | argv-review: A ps/grep snapshot misses unlabelled secrets and short-lived processes; review secret-input paths instead of treating a clean snapshot as proof. | Linux procfs unknown | REASONED |
 | ci-store: Scope CI/CD platform secrets to the jobs needing them; never echo them into logs or artefacts. | OWASP secret handling unknown | REASONED |
 | prompt-secrets: Keep credentials out of all model prompts and customer data outside unapproved services; system prompts are disclosable and authorization belongs outside the model. | OWASP secret handling unknown | REASONED |
-| business-rules: Keep confidential business logic out of public repositories, browser-shipped code and public LLM prompts; public environment prefixes and source maps can expose it. | OWASP secret handling unknown; Next.js unknown | REASONED |
+| business-rules: Keep confidential business logic out of public repositories, browser-shipped code and public LLM prompts; public environment prefixes and source maps can expose it. | OWASP secret handling unknown; Next.js unknown; Vite environment variables 6 | REASONED |
 | terraform-state: Default local Terraform state is plaintext and may contain sensitive values; ignore *.tfstate and *.tfstate.* including backups and workspace copies. | Terraform unknown | REASONED |
 | kubeconfig: Kubeconfig can embed a base64 client-key-data private key or bearer token; exclude credential-bearing files and copies from version control. | Kubernetes kubeconfig unknown | REASONED |
 | docker-store: Docker stores logins in its credential store or base64-encoded config.json; encoding is not encryption and scanners can miss encoded or unpatterned secrets. | Docker login unknown; OWASP secret handling unknown | REASONED |
@@ -253,3 +281,7 @@ On every push, gitleaks must exit 0 with no findings (the `&& echo clean` then p
 - PostgreSQL password file, that `~/.pgpass` must disallow all group and world access (`0600` is the documented example) or PostgreSQL ignores it: https://www.postgresql.org/docs/current/libpq-pgpass.html
 - curl `.netrc`, that the file should not be readable by anyone besides the user: https://everything.curl.dev/usingcurl/netrc.html
 - Next.js environment variables, that `.env.local`, `.env.production`, and other `.env.*` files are loaded (so they hold secrets and belong in `.gitignore`): https://nextjs.org/docs/app/guides/environment-variables
+- Git 2.42.0 ignore patterns, negation and already-tracked files (checked October 2026): https://git-scm.com/docs/gitignore/2.42.0
+- OpenSSL 3.0 `rand` byte count and `-base64` encoding (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-rand/
+- Python 3.13 `secrets.token_urlsafe` (checked October 2026): https://docs.python.org/3.13/library/secrets.html#secrets.token_urlsafe
+- Vite 6 environment variables (`VITE_` values exposed to client code) (checked October 2026): https://v6.vite.dev/guide/env-and-mode
