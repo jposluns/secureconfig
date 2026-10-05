@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-27",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "a3743aba33be52eb77a53ca3af5ea951b73f7229e07bd47faec19fa236b8646f",
+  "body_sha256": "32bf26037f0218b612285c609d26477dbfbcf6eca30c6d9e4eab746cff7da0da",
   "components": {
     "nginx": {
       "name": "nginx documentation",
@@ -29,7 +29,10 @@ version_basis: {
       "name": "Caddy documentation",
       "basis": "v2.11.4",
       "sources": {
-        "s450aa9ed710b": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/matchers.go"
+        "s450aa9ed710b": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/matchers.go",
+        "se8dd8140d6b8": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/fileserver/staticfiles.go#L140-L142",
+        "s86912a2959e0": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/fileserver/staticfiles.go#L371-L374",
+        "s128797d9a40f": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/server.go#L384-L388"
       }
     },
     "next": {
@@ -67,6 +70,13 @@ version_basis: {
         "se9ab71afc4ba": "https://caddyserver.com/docs/caddyfile/directives/respond",
         "s38b1b78ce980": "https://caddyserver.com/docs/caddyfile/matchers"
       }
+    },
+    "acme-http01": {
+      "name": "ACME HTTP-01",
+      "basis": "RFC 8555",
+      "sources": {
+        "se60bdd68e41d": "https://www.rfc-editor.org/rfc/rfc8555.html#section-8.3"
+      }
     }
   },
   "claims": {
@@ -80,9 +90,9 @@ version_basis: {
     "apache-forbidden": {"text": "mod_autoindex hides entries whose subrequests return 403 unless ShowForbidden is enabled; unmatched exports such as archive.zip and customers.csv can still be listed.", "components": ["apache"], "sources": ["apache:sef5ff46eddf7"], "status": "REASONED"},
     "apache-options": {"text": "Options -Indexes removes listing, preserving inherited options; Apache 2.4 rejects mixing relative +/- and bare options.", "components": ["apache"], "sources": ["apache:s97468bf1f299"], "status": "REASONED"},
     "nginx-listing": {"text": "nginx autoindex defaults off.", "components": ["nginx"], "sources": ["nginx:sbd17bad53c9d"], "status": "REASONED"},
-    "caddy-listing": {"text": "Guide says Caddy lists only with file_server browse; Sources omit a file_server reference.", "components": ["caddy-rolling"], "sources": ["caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980"], "status": "REASONED"},
+    "caddy-listing": {"text": "Guide says Caddy lists only with file_server browse; Sources omit a file_server reference.", "components": ["caddy-rolling", "caddy"], "sources": ["caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:se8dd8140d6b8", "caddy:s86912a2959e0"], "status": "REASONED"},
     "caddy-deny": {"text": "Caddy v2.11.4 matchers return 404 for dot-prefixed segments at any depth outside root /.well-known/*, and case-insensitive .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz suffixes everywhere. Server execution was not run.", "components": ["caddy", "caddy-rolling"], "sources": ["caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED"},
-    "caddy-acme": {"text": "ANDed path_regexp and not path matchers exempt the root /.well-known/ subtree only from dotfile denial; suffix denial still applies and .well-known-backup is not exempt. Keep the subtree free of secrets; independent ACME handling lacks a direct Sources citation.", "components": ["caddy", "caddy-rolling"], "sources": ["caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED"},
+    "caddy-acme": {"text": "ANDed path_regexp and not path matchers exempt the root /.well-known/ subtree only from dotfile denial; suffix denial still applies and .well-known-backup is not exempt. Keep the subtree free of secrets; independent ACME handling lacks a direct Sources citation.", "components": ["caddy", "caddy-rolling"], "sources": ["caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b", "caddy:s128797d9a40f"], "status": "REASONED"},
     "backup-storage": {"text": "Keep dumps and backups outside the document root or in object storage; filename denies are a backstop and cannot recognize secrets or backups with unmatched names.", "components": ["nginx", "apache", "caddy", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED"},
     "suffix-policy": {"text": "Suffix denies also block intended public downloads, including release archives; narrow the policy for the site and verify intended downloads remain accessible.", "components": ["nginx", "apache", "caddy", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED"},
     "next-public": {"text": "NEXT_PUBLIC_ embeds values in browser JavaScript; keep provider keys server-side behind backend routes.", "components": ["next"], "sources": ["next:sb98bee5b61c8"], "status": "REASONED"},
@@ -91,7 +101,7 @@ version_basis: {
     "source-maps": {"text": "Guide warns against external/inline maps for private code; removing sourceMappingURL does not unpublish deployed maps. Sources omit a direct map reference.", "components": ["next", "vite"], "sources": ["next:sb98bee5b61c8", "vite:s3fc0892e0f58"], "status": "REASONED"},
     "verify-dotfiles": {"text": "Plant an exclusive, readable .env.probe file; expect 403 or 404 without PLANTED-SECRET. Also probe .git/config, config.php.bak and db.sql; absent files are inconclusive, so plant real files to test each rule and remove only created probes.", "components": ["nginx", "apache", "caddy", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:s24f06763d14a", "apache:s7313b1b624d5", "apache:se24e9bbc0443", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED", "verify": [1]},
     "verify-listing": {"text": "Plant a throwaway file in an existing index-less uploads directory; Options -Indexes should yield 403 or 404, never a 200 listing. An absent or unwritable directory is inconclusive; remove the probe afterward.", "components": ["apache"], "sources": ["apache:s97468bf1f299", "apache:sef5ff46eddf7"], "status": "REASONED", "verify": [1]},
-    "verify-acme": {"text": "Plant a readable challenge token; webroot requests over HTTPS and HTTP:80 should return probe, not 403. nginx exempts only the challenge prefix; Apache exempts .well-known segments. Failed preparation is inconclusive; Sources do not directly cite HTTP-01.", "components": ["nginx", "apache"], "sources": ["nginx:s40bdf1af1596", "nginx:s0e5162d1ce2b", "apache:s24f06763d14a"], "status": "REASONED", "verify": [1]},
+    "verify-acme": {"text": "Plant a readable challenge token; webroot requests over HTTPS and HTTP:80 should return probe, not 403. nginx exempts only the challenge prefix; Apache exempts .well-known segments. Failed preparation is inconclusive; Sources do not directly cite HTTP-01.", "components": ["nginx", "apache", "acme-http01"], "sources": ["nginx:s40bdf1af1596", "nginx:s0e5162d1ce2b", "apache:s24f06763d14a", "acme-http01:se60bdd68e41d"], "status": "REASONED", "verify": [1]},
     "verify-lookalike": {"text": "Probe .well-known-backup/config across nginx, Apache and Caddy; expect 403 or 404. Plant a real readable file to distinguish denial from absence, then remove it.", "components": ["nginx", "apache", "caddy", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:s24f06763d14a", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED", "verify": [1]},
     "verify-bundle": {"text": "Scan built client output for credential patterns/literal secrets; grep 0 match, 1 no match, 2 error. Clean does not exclude transformed secrets; no grep reference supplied.", "components": ["next", "vite", "cra"], "sources": ["next:sb98bee5b61c8", "vite:s3fc0892e0f58", "cra:scfb24624addd"], "status": "REASONED", "verify": [1]},
     "verify-backup": {"text": "Known previously deployed backup URLs should return 403 or 404 without the file contents.", "components": ["nginx", "apache", "caddy", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED"},
@@ -106,7 +116,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -120,7 +130,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | apache-forbidden: mod_autoindex hides entries whose subrequests return 403 unless ShowForbidden is enabled; unmatched exports such as archive.zip and customers.csv can still be listed. | Apache documentation 2.4 | REASONED |
 | apache-options: Options -Indexes removes listing, preserving inherited options; Apache 2.4 rejects mixing relative +/- and bare options. | Apache documentation 2.4 | REASONED |
 | nginx-listing: nginx autoindex defaults off. | nginx documentation unknown | REASONED |
-| caddy-listing: Guide says Caddy lists only with file_server browse; Sources omit a file_server reference. | Caddy documentation (rolling) unknown | REASONED |
+| caddy-listing: Guide says Caddy lists only with file_server browse; Sources omit a file_server reference. | Caddy documentation (rolling) unknown; Caddy documentation v2.11.4 | REASONED |
 | caddy-deny: Caddy v2.11.4 matchers return 404 for dot-prefixed segments at any depth outside root /.well-known/*, and case-insensitive .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz suffixes everywhere. Server execution was not run. | Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
 | caddy-acme: ANDed path_regexp and not path matchers exempt the root /.well-known/ subtree only from dotfile denial; suffix denial still applies and .well-known-backup is not exempt. Keep the subtree free of secrets; independent ACME handling lacks a direct Sources citation. | Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
 | backup-storage: Keep dumps and backups outside the document root or in object storage; filename denies are a backstop and cannot recognize secrets or backups with unmatched names. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
@@ -131,7 +141,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | source-maps: Guide warns against external/inline maps for private code; removing sourceMappingURL does not unpublish deployed maps. Sources omit a direct map reference. | Next.js documentation unknown; Vite documentation unknown | REASONED |
 | verify-dotfiles: Plant an exclusive, readable .env.probe file; expect 403 or 404 without PLANTED-SECRET. Also probe .git/config, config.php.bak and db.sql; absent files are inconclusive, so plant real files to test each rule and remove only created probes. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
 | verify-listing: Plant a throwaway file in an existing index-less uploads directory; Options -Indexes should yield 403 or 404, never a 200 listing. An absent or unwritable directory is inconclusive; remove the probe afterward. | Apache documentation 2.4 | REASONED |
-| verify-acme: Plant a readable challenge token; webroot requests over HTTPS and HTTP:80 should return probe, not 403. nginx exempts only the challenge prefix; Apache exempts .well-known segments. Failed preparation is inconclusive; Sources do not directly cite HTTP-01. | nginx documentation unknown; Apache documentation 2.4 | REASONED |
+| verify-acme: Plant a readable challenge token; webroot requests over HTTPS and HTTP:80 should return probe, not 403. nginx exempts only the challenge prefix; Apache exempts .well-known segments. Failed preparation is inconclusive; Sources do not directly cite HTTP-01. | nginx documentation unknown; Apache documentation 2.4; ACME HTTP-01 RFC 8555 | REASONED |
 | verify-lookalike: Probe .well-known-backup/config across nginx, Apache and Caddy; expect 403 or 404. Plant a real readable file to distinguish denial from absence, then remove it. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
 | verify-bundle: Scan built client output for credential patterns/literal secrets; grep 0 match, 1 no match, 2 error. Clean does not exclude transformed secrets; no grep reference supplied. | Next.js documentation unknown; Vite documentation unknown; Create React App documentation unknown | REASONED |
 | verify-backup: Known previously deployed backup URLs should return 403 or 404 without the file contents. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
@@ -359,3 +369,6 @@ done
 - Next.js environment variables (`NEXT_PUBLIC_`): https://nextjs.org/docs/pages/guides/environment-variables
 - Vite env variables (`VITE_`): https://vite.dev/guide/env-and-mode
 - Create React App environment variables (`REACT_APP_`, deprecation notice): https://create-react-app.dev/docs/adding-custom-environment-variables/
+- Caddy v2.11.4 file listings require the `browse` configuration (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/fileserver/staticfiles.go#L140-L142 ; https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/fileserver/staticfiles.go#L371-L374
+- Caddy v2.11.4 ACME HTTP challenges precede user-defined handlers (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/server.go#L384-L388
+- RFC 8555 section 8.3 HTTP-01 validation (checked October 2026): https://www.rfc-editor.org/rfc/rfc8555.html#section-8.3

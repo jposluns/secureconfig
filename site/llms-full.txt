@@ -1558,13 +1558,13 @@ Unattended machine connections (service-to-service database and model-server API
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| gitignore: Ignore .env, .env.*, *.key and *.pem before committing; allow only a secret-free template. Already tracked files remain tracked. | OWASP secret handling unknown; Next.js unknown | REASONED |
+| gitignore: Ignore .env, .env.*, *.key and *.pem before committing; allow only a secret-free template. Already tracked files remain tracked. | OWASP secret handling unknown; Next.js unknown; Git ignore patterns 2.42.0 | REASONED |
 | runtime-storage: Load secrets from environment or a secret manager; keep them out of Dockerfile ENV/ARG, images and build logs. | OWASP secret handling unknown | REASONED |
-| random: Generate a random secret per service and environment with the shown OpenSSL or Python command; never share staging and production credentials. | OWASP secret handling unknown | REASONED |
+| random: Generate a random secret per service and environment with the shown OpenSSL or Python command; never share staging and production credentials. | OWASP secret handling unknown; OpenSSL random bytes 3.0; Python secrets 3.13 | REASONED |
 | scanners: Scan before every push and in CI; gitleaks git/dir require 8.19+, with detect and detect --no-git on older builds; TruffleHog is another scanner. | gitleaks command minimum 8.19+; TruffleHog unknown | REASONED |
 | argv: Arguments expose secrets through procfs, ps and shell history; hidepid or PID namespaces narrow process visibility without covering history. | Linux procfs unknown; htpasswd unknown | REASONED |
 | stdin: Use htpasswd -i, docker login --password-stdin or gh auth login --with-token to avoid secret arguments. | htpasswd unknown; Docker login unknown; GitHub CLI unknown | REASONED |
@@ -1574,7 +1574,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | argv-review: A ps/grep snapshot misses unlabelled secrets and short-lived processes; review secret-input paths instead of treating a clean snapshot as proof. | Linux procfs unknown | REASONED |
 | ci-store: Scope CI/CD platform secrets to the jobs needing them; never echo them into logs or artefacts. | OWASP secret handling unknown | REASONED |
 | prompt-secrets: Keep credentials out of all model prompts and customer data outside unapproved services; system prompts are disclosable and authorization belongs outside the model. | OWASP secret handling unknown | REASONED |
-| business-rules: Keep confidential business logic out of public repositories, browser-shipped code and public LLM prompts; public environment prefixes and source maps can expose it. | OWASP secret handling unknown; Next.js unknown | REASONED |
+| business-rules: Keep confidential business logic out of public repositories, browser-shipped code and public LLM prompts; public environment prefixes and source maps can expose it. | OWASP secret handling unknown; Next.js unknown; Vite environment variables 6 | REASONED |
 | terraform-state: Default local Terraform state is plaintext and may contain sensitive values; ignore *.tfstate and *.tfstate.* including backups and workspace copies. | Terraform unknown | REASONED |
 | kubeconfig: Kubeconfig can embed a base64 client-key-data private key or bearer token; exclude credential-bearing files and copies from version control. | Kubernetes kubeconfig unknown | REASONED |
 | docker-store: Docker stores logins in its credential store or base64-encoded config.json; encoding is not encryption and scanners can miss encoded or unpatterned secrets. | Docker login unknown; OWASP secret handling unknown | REASONED |
@@ -1666,6 +1666,10 @@ On every push, gitleaks must exit 0 with no findings (the `&& echo clean` then p
 - PostgreSQL password file, that `~/.pgpass` must disallow all group and world access (`0600` is the documented example) or PostgreSQL ignores it: https://www.postgresql.org/docs/current/libpq-pgpass.html
 - curl `.netrc`, that the file should not be readable by anyone besides the user: https://everything.curl.dev/usingcurl/netrc.html
 - Next.js environment variables, that `.env.local`, `.env.production`, and other `.env.*` files are loaded (so they hold secrets and belong in `.gitignore`): https://nextjs.org/docs/app/guides/environment-variables
+- Git 2.42.0 ignore patterns, negation and already-tracked files (checked October 2026): https://git-scm.com/docs/gitignore/2.42.0
+- OpenSSL 3.0 `rand` byte count and `-base64` encoding (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-rand/
+- Python 3.13 `secrets.token_urlsafe` (checked October 2026): https://docs.python.org/3.13/library/secrets.html#secrets.token_urlsafe
+- Vite 6 environment variables (`VITE_` values exposed to client code) (checked October 2026): https://v6.vite.dev/guide/env-and-mode
 
 ======================================================================
 ==> vault.md
@@ -3650,7 +3654,7 @@ After logging in, confirm that the app's own identity check reads the signed ass
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -3665,13 +3669,13 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | m2m-billing: As of September 2026, Entra External ID M2M is billed per transaction as an add-on; hourly renewal is roughly 720 monthly transactions. | Entra External ID unknown | REASONED |
 | client-secret: Client credentials still need long-lived-secret protection unless replaced by federation supported by the provider. | OAuth client credentials unknown; Azure federation and login unknown | REASONED |
 | mtls-identity: Use a separate short-lived certificate per client and keep CA keys off signed servers; mTLS is a possession factor, not human MFA. | Certificate revocation unknown | REASONED |
-| mtls-nginx: nginx uses ssl_verify_client on in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
-| mtls-apache: Apache uses SSLVerifyClient require in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
-| mtls-postgres: PostgreSQL uses clientcert=verify-full in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
-| mtls-mysql: MySQL uses REQUIRE X509 in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
-| mtls-redis: Redis uses tls-auth-clients yes in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
-| mtls-rabbitmq: RabbitMQ uses ssl_options.fail_if_no_peer_cert = true in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
-| mtls-mosquitto: Mosquitto uses require_certificate true in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown | REASONED |
+| mtls-nginx: nginx uses ssl_verify_client on in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown; nginx mTLS release-1.28.0 | REASONED |
+| mtls-apache: Apache uses SSLVerifyClient require in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown; Apache mTLS 2.4 | REASONED |
+| mtls-postgres: PostgreSQL uses clientcert=verify-full in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown; PostgreSQL client certificates 17 | REASONED |
+| mtls-mysql: MySQL uses REQUIRE X509 in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown; MySQL client certificates 8.4 | REASONED |
+| mtls-redis: Redis uses tls-auth-clients yes in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown; Redis TLS client authentication 7.4.2 | REASONED |
+| mtls-rabbitmq: RabbitMQ uses ssl_options.fail_if_no_peer_cert = true in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown; RabbitMQ TLS client authentication 3.13 | REASONED |
+| mtls-mosquitto: Mosquitto uses require_certificate true in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown; Mosquitto TLS client authentication v2.0.21 | REASONED |
 | mtls-revocation: Replacing a key does not reject the old certificate; revoke with checked CRL/OCSP, remove it from an allowlist or wait for expiry, and test refusal. | Certificate revocation unknown | REASONED |
 | oidc-token: GitHub id-token: write permits short-lived OIDC tokens from token.actions.githubusercontent.com; restrict trust to the exact repository and branch or environment. | GitHub Actions OIDC unknown | REASONED |
 | aws-action: configure-aws-credentials uses role-to-assume and aws-region and defaults its audience to sts.amazonaws.com. | AWS IAM and credential action unknown | REASONED |
@@ -3684,12 +3688,12 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | subject-format: The guide records an immutable default subject with owner/repository IDs for repositories created after July 15, 2026; inspect the actual claim before writing trust. | GitHub Actions OIDC unknown | REASONED |
 | action-pins: Pin actions to full commit SHAs; tags and branches can move to different code. | GitHub Actions OIDC unknown | REASONED |
 | workload-attestation: SPIFFE/SPIRE provides attested short-lived workload identities without a stored secret. | SPIFFE and SPIRE unknown | REASONED |
-| secret-store: Store unavoidable machine secrets in the listed secret managers and use platform identity to authenticate, avoiding another long-lived bootstrap key. | Azure federation and login unknown; Google Cloud federation and auth action unknown; AWS IAM and credential action unknown | REASONED |
+| secret-store: Store unavoidable machine secrets in the listed secret managers and use platform identity to authenticate, avoiding another long-lived bootstrap key. | Azure federation and login unknown; Google Cloud federation and auth action unknown; AWS IAM and credential action unknown; HashiCorp Vault v1.20.0; Infisical v0.165.16; Doppler CLI 3.76.6 | REASONED |
 | verify-scope: A protected header-file staging key must receive 401/403 in production while succeeding in staging; otherwise denial does not establish environment scoping. | Bearer token guidance unknown | REASONED |
 | verify-expiry: Revoked or expired credentials must be rejected with a service-log record identifying the client. | Bearer token guidance unknown; JWT access-token profile unknown | REASONED |
 | verify-ci: Repository Actions secrets should hold no long-lived cloud credentials and the workflow must declare id-token: write. | GitHub Actions OIDC unknown | REASONED |
 | verify-trust: Inspect AWS sub, Google repository binding and Azure subject for exact repository plus branch/environment restriction without broad wildcard suffixes. | AWS IAM and credential action unknown; Google Cloud federation and auth action unknown; Azure federation and login unknown | REASONED |
-| verify-artifacts: History, working-tree and image-layer scans must show no keys; docker history alone misses copied files. Sources cites confidentiality guidance, not these scanner commands. | Bearer token guidance unknown | REASONED |
+| verify-artifacts: History, working-tree and image-layer scans must show no keys; docker history alone misses copied files. Sources cites confidentiality guidance, not these scanner commands. | Bearer token guidance unknown; Gitleaks scan commands v8.19.0 | REASONED |
 | verify-mtls: Reject missing, untrusted, expired, revoked and, where identity authorization applies, unauthorized certificates while the authorized client succeeds. | Certificate revocation unknown | REASONED |
 <!-- version-basis:end -->
 
@@ -3773,6 +3777,17 @@ API keys, client secrets, and client-certificate keys that cannot be federated a
 - SPIFFE and SPIRE: https://spiffe.io/ and https://spiffe.io/docs/latest/spire-about/
 - RFC 5280 (certificate revocation): https://www.rfc-editor.org/info/rfc5280/
 - Secret manager vendor pages: linked inline in section 5.
+- nginx release-1.28.0 `ssl_verify_client` directive and `on` value (checked October 2026): https://github.com/nginx/nginx/blob/release-1.28.0/src/http/modules/ngx_http_ssl_module.c#L76-L78 ; https://github.com/nginx/nginx/blob/release-1.28.0/src/http/modules/ngx_http_ssl_module.c#L162-L167
+- Apache 2.4 `SSLVerifyClient require` (checked October 2026): https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslverifyclient
+- PostgreSQL 17 certificate authentication and `clientcert=verify-full` (checked October 2026): https://www.postgresql.org/docs/17/auth-cert.html
+- MySQL 8.4 `CREATE USER` TLS options (`REQUIRE X509`) (checked October 2026): https://dev.mysql.com/doc/refman/8.4/en/create-user.html
+- Redis 7.4.2 TLS client-certificate requirement and `tls-auth-clients yes` configuration (checked October 2026): https://github.com/redis/redis/blob/7.4.2/redis.conf#L240-L241 ; https://github.com/redis/redis/blob/7.4.2/src/config.c#L99-L103 ; https://github.com/redis/redis/blob/7.4.2/src/config.c#L3239
+- RabbitMQ 3.13 TLS (`ssl_options.fail_if_no_peer_cert`, peer verification and CA configuration) (checked October 2026): https://www.rabbitmq.com/docs/3.13/ssl
+- Mosquitto v2.0.21 `require_certificate true` (checked October 2026): https://github.com/eclipse-mosquitto/mosquitto/blob/v2.0.21/man/mosquitto.conf.5.xml#L74-L76
+- Gitleaks v8.19.0 Git-history and directory scanning commands (checked October 2026): https://github.com/gitleaks/gitleaks/blob/v8.19.0/README.md#L181 ; https://github.com/gitleaks/gitleaks/blob/v8.19.0/README.md#L188
+- HashiCorp Vault v1.20.0 secret storage and access control (checked October 2026): https://github.com/hashicorp/vault/blob/v1.20.0/README.md#L18
+- Infisical v0.165.16 secrets and configuration management (checked October 2026): https://github.com/Infisical/infisical/blob/v0.165.16/README.md#L48
+- Doppler CLI 3.76.6 secrets and configuration access (checked October 2026): https://github.com/DopplerHQ/cli/blob/3.76.6/README.md#L3
 
 ======================================================================
 ==> fronting-auth.md
@@ -31440,7 +31455,7 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -31454,7 +31469,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | grafana-bind: Empty http_addr joins the port and binds all interfaces; set 127.0.0.1. | Grafana v13.2.2; Go net unknown | REASONED |
 | grafana-tls: Native HTTPS uses server protocol=https, cert_file and cert_key. | Grafana docs unknown | REASONED |
 | prometheus-auth: Authentication defaults off; web.config.file supplies basic_auth_users with bcrypt hashes. | Prometheus docs unknown | REASONED |
-| prometheus-bcrypt: Use htpasswd -nB -C 12; the guide's bare -B cost 5 versus OWASP minimum 10 lacks an OWASP citation here. | Prometheus docs unknown | REASONED |
+| prometheus-bcrypt: Use htpasswd -nB -C 12; the guide's bare -B cost 5 versus OWASP minimum 10 lacks an OWASP citation here. | Prometheus docs unknown; Apache htpasswd 2.4 | REASONED |
 | prometheus-bind: Default 0.0.0.0:9090; set --web.listen-address=127.0.0.1:9090. | Prometheus v3.14.0 | REASONED |
 | prometheus-tls: web.yml tls_server_config cert_file/key_file enable TLS; validate with promtool check web-config. | Prometheus docs unknown | REASONED |
 | database-panels: Keep phpMyAdmin/pgAdmin behind proxy TLS/auth, restrict source IPs where supported and keep updated. | phpMyAdmin unknown; pgAdmin unknown | REASONED |
@@ -31558,6 +31573,7 @@ Run these from a second network against each panel's real hostname; a 200 that r
 - Grafana joins `http_addr` with the port into the server address (pinned tag v13.2.2): https://github.com/grafana/grafana/blob/v13.2.2/pkg/api/http_server.go#L467-L469
 - Grafana listens on that address with `net.Listen("tcp", ...)` (pinned tag v13.2.2): https://github.com/grafana/grafana/blob/v13.2.2/pkg/api/http_server.go#L568
 - Go `net.Listen` with an empty host listens on all available unicast and anycast addresses of the local system: https://pkg.go.dev/net#Listen
+- Apache 2.4 `htpasswd` bcrypt default cost and `-C` override (checked October 2026): https://httpd.apache.org/docs/2.4/programs/htpasswd.html
 
 ======================================================================
 ==> observability-components.md
@@ -32086,7 +32102,7 @@ channel only. The password can still reach shell history or `set -x` output.
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -32139,7 +32155,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | dozzle-auth: Auth defaults off; generate users.yml with stdin password prompt and set simple auth, or delegate with forward-proxy. | Dozzle unknown | REASONED |
 | dozzle-actions: Leave optional container actions/shell off unless needed; either enables remote command execution. | Dozzle unknown | REASONED |
 | registry-auth: registry:2 defaults to unauthenticated push/pull; configure TLS before htpasswd/token auth or use an authenticated distribution. | Docker Registry documentation (rolling) unknown | REASONED |
-| registry-bcrypt: Native htpasswd accepts bcrypt only; use -B -C 12. Proxy hashing rules differ; OWASP cost minimum lacks a direct source here. | Docker Registry documentation (rolling) unknown | REASONED |
+| registry-bcrypt: Native htpasswd accepts bcrypt only; use -B -C 12. Proxy hashing rules differ; OWASP cost minimum lacks a direct source here. | Docker Registry documentation (rolling) unknown; Apache htpasswd 2.4; OWASP password storage 1a3f58ed2714f258a1d713966457f1a0f426e841 | REASONED |
 | registry-private: Use private networking and tunnels/Access with fronting MFA. | Docker Registry documentation (rolling) unknown | REASONED |
 | filebrowser-admin: Change first-run admin credentials, historically admin/admin. Guide records September 1, 2026 archival and the warning against internet exposure. | Filebrowser unknown | REASONED |
 | filebrowser-private: Keep Filebrowser private through tunnel/tailnet/Access with fronting MFA. | Filebrowser unknown | REASONED |
@@ -32326,6 +32342,8 @@ From outside the network, every panel URL is unreachable or shows a login; a pag
 - Filebrowser: https://github.com/filebrowser/filebrowser
 - Node-RED securing the runtime (adminAuth, credentialSecret): https://nodered.org/docs/user-guide/runtime/securing-node-red
 - Gitea `HTTP_ADDR` default `0.0.0.0` and `HTTP_PORT` default `3000` (pinned tag v1.27.3): https://github.com/go-gitea/gitea/blob/v1.27.3/modules/setting/server.go#L121-L122
+- Apache 2.4 `htpasswd` bcrypt default cost and `-C` override (checked October 2026): https://httpd.apache.org/docs/2.4/programs/htpasswd.html
+- OWASP password storage at commit 1a3f58ed2714f258a1d713966457f1a0f426e841 (bcrypt minimum work factor 10) (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/1a3f58ed2714f258a1d713966457f1a0f426e841/cheatsheets/Password_Storage_Cheat_Sheet.md#L139
 
 ======================================================================
 ==> cors.md
@@ -33779,7 +33797,7 @@ At the time of writing these deployment defaults are checked against `self-hoste
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -33793,7 +33811,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | apache-forbidden: mod_autoindex hides entries whose subrequests return 403 unless ShowForbidden is enabled; unmatched exports such as archive.zip and customers.csv can still be listed. | Apache documentation 2.4 | REASONED |
 | apache-options: Options -Indexes removes listing, preserving inherited options; Apache 2.4 rejects mixing relative +/- and bare options. | Apache documentation 2.4 | REASONED |
 | nginx-listing: nginx autoindex defaults off. | nginx documentation unknown | REASONED |
-| caddy-listing: Guide says Caddy lists only with file_server browse; Sources omit a file_server reference. | Caddy documentation (rolling) unknown | REASONED |
+| caddy-listing: Guide says Caddy lists only with file_server browse; Sources omit a file_server reference. | Caddy documentation (rolling) unknown; Caddy documentation v2.11.4 | REASONED |
 | caddy-deny: Caddy v2.11.4 matchers return 404 for dot-prefixed segments at any depth outside root /.well-known/*, and case-insensitive .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz suffixes everywhere. Server execution was not run. | Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
 | caddy-acme: ANDed path_regexp and not path matchers exempt the root /.well-known/ subtree only from dotfile denial; suffix denial still applies and .well-known-backup is not exempt. Keep the subtree free of secrets; independent ACME handling lacks a direct Sources citation. | Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
 | backup-storage: Keep dumps and backups outside the document root or in object storage; filename denies are a backstop and cannot recognize secrets or backups with unmatched names. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
@@ -33804,7 +33822,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | source-maps: Guide warns against external/inline maps for private code; removing sourceMappingURL does not unpublish deployed maps. Sources omit a direct map reference. | Next.js documentation unknown; Vite documentation unknown | REASONED |
 | verify-dotfiles: Plant an exclusive, readable .env.probe file; expect 403 or 404 without PLANTED-SECRET. Also probe .git/config, config.php.bak and db.sql; absent files are inconclusive, so plant real files to test each rule and remove only created probes. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
 | verify-listing: Plant a throwaway file in an existing index-less uploads directory; Options -Indexes should yield 403 or 404, never a 200 listing. An absent or unwritable directory is inconclusive; remove the probe afterward. | Apache documentation 2.4 | REASONED |
-| verify-acme: Plant a readable challenge token; webroot requests over HTTPS and HTTP:80 should return probe, not 403. nginx exempts only the challenge prefix; Apache exempts .well-known segments. Failed preparation is inconclusive; Sources do not directly cite HTTP-01. | nginx documentation unknown; Apache documentation 2.4 | REASONED |
+| verify-acme: Plant a readable challenge token; webroot requests over HTTPS and HTTP:80 should return probe, not 403. nginx exempts only the challenge prefix; Apache exempts .well-known segments. Failed preparation is inconclusive; Sources do not directly cite HTTP-01. | nginx documentation unknown; Apache documentation 2.4; ACME HTTP-01 RFC 8555 | REASONED |
 | verify-lookalike: Probe .well-known-backup/config across nginx, Apache and Caddy; expect 403 or 404. Plant a real readable file to distinguish denial from absence, then remove it. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
 | verify-bundle: Scan built client output for credential patterns/literal secrets; grep 0 match, 1 no match, 2 error. Clean does not exclude transformed secrets; no grep reference supplied. | Next.js documentation unknown; Vite documentation unknown; Create React App documentation unknown | REASONED |
 | verify-backup: Known previously deployed backup URLs should return 403 or 404 without the file contents. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
@@ -34032,6 +34050,9 @@ done
 - Next.js environment variables (`NEXT_PUBLIC_`): https://nextjs.org/docs/pages/guides/environment-variables
 - Vite env variables (`VITE_`): https://vite.dev/guide/env-and-mode
 - Create React App environment variables (`REACT_APP_`, deprecation notice): https://create-react-app.dev/docs/adding-custom-environment-variables/
+- Caddy v2.11.4 file listings require the `browse` configuration (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/fileserver/staticfiles.go#L140-L142 ; https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/fileserver/staticfiles.go#L371-L374
+- Caddy v2.11.4 ACME HTTP challenges precede user-defined handlers (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/server.go#L384-L388
+- RFC 8555 section 8.3 HTTP-01 validation (checked October 2026): https://www.rfc-editor.org/rfc/rfc8555.html#section-8.3
 
 ======================================================================
 ==> realtime-webhooks.md
