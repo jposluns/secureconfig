@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.192**, **2.48**, **3.40**, **4.12**.
+Next ids: **1.193**, **2.48**, **3.41**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -68,6 +68,7 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
+| 3.40 | Weekly link check false positives: lychee truncates URLs at a double underscore (`__init__.py` sources in jupyter.md, litellm.md and sqlite-http-frontends.md were reported as 404 at their parent directory) and fetches configuration-value API base URLs (api.openai.com/v1 in open-webui.md). Fix the extraction or configuration and exclude configuration-value URLs, with recorded cases so a real 404 still fails (F-LYCHEE-2026-09-28). (S, S) | `[gap]` |
 
 ## Priority 4: Tooling and process
 
