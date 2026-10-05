@@ -102,5 +102,11 @@ jobs:
             exit 1
           fi
           echo "$got at $(command -v python3)"
+      # Shared parser pin for Verify units and subsequent Sources checks.
+      - name: Install the hash-locked gate parser
+        run: |
+          python3 -m pip install --require-hashes --only-binary :all: -r tools/requirements-gates.txt
+      - name: Assert the pinned gate parser versions
+        run: python3 -I -B tools/check_verify_marking.py --assert-parser
       - name: Run the gate suite
         run: tools/run_all_checks.sh

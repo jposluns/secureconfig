@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Offline Verify fence marker ratchet; stdlib only.
+"""Offline Verify declaration ratchet; shared pinned parser for non-fence units.
 
 Declarations begin a prose paragraph, a leading shell/Python '#' or SQL '--'
 comment, or a heading suffix '(STATUS: provenance)' / ': STATUS: provenance'.
@@ -34,8 +34,8 @@ An enrolled guide may carry exactly one standalone generated summary pair
 before its first level-2 heading. The pair is opaque to section selection;
 headings, fences and other HTML comments inside still fail closed.
 
-This is not a full CommonMark parser: link-reference definitions, full list
-semantics and general inline parsing are not implemented. Status emphasis uses
+The legacy fence scanner is not a full CommonMark parser. The separate unit
+scanner below uses the shared pinned CommonMark parser with table support. Status emphasis uses
 the declaration grammar, not a general emphasis parser. Quoted declarations
 are never attached to outside fences.
 
@@ -46,7 +46,7 @@ Ambiguous paragraphs supply no declaration to either fence. Malformed or
 conflicting declarations cannot be grandfathered. --write-baseline is an explicit one-time seed operation.
 Normal runs never rewrite it. Strict mode rejects new, changed, duplicate and
 stale exemptions. OS/UTF-8 errors exit 2; convention errors exit 1 in strict
-mode (also in seed mode). Default mode reports convention findings, exits 0.
+mode (also in seed mode). Structural findings always fail, including report mode.
 """
 import argparse
 from collections import Counter
@@ -60,7 +60,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _markdown import Fences
 from _verify_sections import TITLE, heading_parts, title_text, verify_ranges
-from _verify_sections import HEADING, guides
+from _verify_sections import HEADING, META_EXCLUDE, guides
 
 BASELINE = Path("tools/verify_marking_baseline.txt")
 DECL = re.compile(
@@ -545,14 +545,321 @@ def scan_guide(text, in_verify=False, in_quote=False, *, enrolled=False,
     return units, errors
 
 
-def scan(root):
-    counts, locations, errors, marked = Counter(), {}, [], 0
+# The fence-only scan_guide API above is also used for version-basis ordinals.
+# New unit parsing must never insert units into that API or change its hashes.
+KINDS = ("fence", "list-item", "table-row", "prose")
+
+
+def gate_parser():
+    """Return the shared pinned parser, or None only when it is absent.
+
+    The lock is the sole version authority. Broken or mismatched installations
+    are errors, not an advisory skip. CI requires a parser before running gates.
+    """
+    from importlib.metadata import version
+    from importlib.util import find_spec
+    lock = Path(__file__).with_name("requirements-gates.txt").read_text(encoding="utf-8")
+    pins = {}
+    for line in lock.splitlines():
+        if not line or line.startswith("#"):
+            continue
+        match = re.fullmatch(r"([a-z][a-z0-9-]*)==([0-9.]+) --hash=sha256:[0-9a-f]{64}", line)
+        if not match or match[1] in pins:
+            raise ValueError("invalid shared parser lock entry")
+        pins[match[1]] = match[2]
+    if set(pins) != {"markdown-it-py", "mdurl"}:
+        raise ValueError("invalid shared parser lock")
+    if find_spec("markdown_it") is None:
+        return None
+    for package, wanted in pins.items():
+        if version(package) != wanted:
+            raise ValueError(f"{package} must be {wanted}; install tools/requirements-gates.txt")
+    from markdown_it import MarkdownIt
+    return MarkdownIt("commonmark").enable("table")
+
+
+@dataclass
+class UnitNode:
+    token: object
+    children: list
+
+
+def unit_declaration(text, *, directional=False):
+    """Validate the existing declaration spellings without accepting broken emphasis."""
+    mark = declaration(text)
+    if not mark and re.match(r"(?i)^[*_]*(?:DEMONSTRATED|REASONED)[*_ \t]*:", text.strip()):
+        raise ValueError("malformed declaration emphasis")
+    if mark:
+        prefix = re.match(
+            r"(?i)^(?:DEMONSTRATED:|REASONED:|"
+            r"(?P<em>\*\*|__)(?:DEMONSTRATED|REASONED)"
+            r"(?::(?P=em)|(?P=em):|:(?=.+(?P=em))))", text.strip(), re.S)
+        if not prefix:
+            raise ValueError("malformed declaration emphasis: " + repr(text))
+        if mark[1] and not directional:
+            raise ValueError("directional declaration only applies to prose and fences")
+    return mark
+
+
+def scan_units(text, *, enrolled=False, parser=None):
+    """Return (line, kind, fingerprint, status) units and fail-closed findings.
+
+    All Verify paragraphs, list items and body rows count. The legacy fence API
+    remains authoritative, with parser locations and attachment cross-checked.
+    Structural findings are never eligible for a baseline exemption.
+    """
+    fences, errors = scan_guide(text, enrolled=enrolled, with_status=True)
+    units = [(line, "fence", digest, status) for line, digest, status in fences]
+    if parser is None:
+        parser = gate_parser()
+    if parser is None:
+        raise ValueError("scan_units requires the pinned parser")
+    try:
+        lines, heads, old_tokens, selected = guide_context(text, enrolled=enrolled)
+        masked = list(lines)
+        for token in old_tokens:
+            if token.kind == "summary":
+                masked[token.start:token.end] = [""] * (token.end - token.start)
+        env = {}
+        tokens = parser.parse("\n".join(masked), env)
+        roots, stack = [], []
+        containers = {"heading", "paragraph", "bullet_list", "ordered_list",
+                      "list_item", "table", "thead", "tbody", "tr", "th", "td",
+                      "blockquote"}
+        leaves = {"inline", "fence", "hr", "code_block", "html_block"}
+        for token in tokens:
+            if token.nesting == -1:
+                if (not stack or token.type != stack[-1].token.type.replace("_open", "_close")):
+                    raise ValueError("unrecognized or unbalanced closing token " + token.type)
+                stack.pop()
+                continue
+            if not (token.type in leaves and token.nesting == 0 or
+                    token.type.endswith("_open") and token.type[:-5] in containers
+                    and token.nesting == 1):
+                raise ValueError("unrecognized block token " + token.type)
+            # Cells and closing tokens have no map in this parser. Cells inherit
+            # their explicitly validated row span; all other blocks need a map.
+            if token.type in {"th_open", "td_open"}:
+                if not stack or stack[-1].token.type != "tr_open":
+                    raise ValueError("table cell outside mapped row")
+            elif (not isinstance(token.map, list) or len(token.map) != 2
+                  or any(type(n) is not int for n in token.map)
+                  or not 0 <= token.map[0] < token.map[1] <= len(lines)):
+                raise ValueError("missing or invalid source map for " + token.type)
+            node = UnitNode(token, [])
+            (stack[-1].children if stack else roots).append(node)
+            if token.nesting == 1:
+                stack.append(node)
+        if stack:
+            raise ValueError("unclosed parser token")
+
+        # Compare section selection independently. A parser disagreement must
+        # never narrow the old scan, even if it happens to reduce baseline debt.
+        parsed_heads = [None] * len(lines)
+        def headings(nodes, nested=False):
+            for node in nodes:
+                t = node.token
+                if t.type == "heading_open":
+                    title = node.children[0].token.content if node.children else ""
+                    if not nested:
+                        parsed_heads[t.map[0]] = (int(t.tag[1:]), title_text(title))
+                headings(node.children, nested or t.type not in {"heading_open", "paragraph_open"})
+        headings(roots)
+        parsed_selected = {i for a, b in verify_ranges(parsed_heads) for i in range(a, b)}
+        if parsed_selected != selected:
+            raise ValueError("parser Verify section selection disagrees with fence scanner")
+        paths, ancestry = {}, []
+        for i, head in enumerate(heads):
+            if head:
+                while ancestry and ancestry[-1][0] >= head[0]:
+                    ancestry.pop()
+                ancestry.append(head)
+            paths[i] = list(ancestry)
+        covered, parsed_fences = set(), []
+        inline_types = {"text", "code_inline", "softbreak", "hardbreak", "em_open",
+                        "em_close", "strong_open", "strong_close", "link_open",
+                        "link_close", "image"}
+
+        def inline_check(tokens):
+            for t in tokens:
+                if t.type not in inline_types:
+                    raise ValueError("unsupported inline token " + t.type)
+                if t.children:
+                    inline_check(t.children)
+
+        def source(span):
+            return "\n".join(lines[span[0]:span[1]])
+
+        def first_paragraph(node):
+            return next((c for c in node.children if c.token.type == "paragraph_open"), None)
+
+        def paragraph_text(node):
+            if len(node.children) != 1 or node.children[0].token.type != "inline":
+                raise ValueError("paragraph missing inline content")
+            return node.children[0].token.content
+
+        def heading_status(start):
+            heading = paths[start][-1][1] if paths[start] else ""
+            _, suffix, error = heading_parts(heading)
+            if error:
+                raise ValueError(error)
+            return unit_declaration(suffix) if suffix is not None else None
+
+        def status_for(start, texts, directional=False):
+            marks = [heading_status(start)]
+            marks += [unit_declaration(t, directional=directional) for t in texts]
+            statuses = {m[0] for m in marks if m}
+            if len(statuses) > 1:
+                raise ValueError("conflicting declarations")
+            return next(iter(statuses), None)
+
+        def emit(node, kind, owners, schema, texts):
+            start, end = node.token.map
+            if kind == "list-item":
+                while end > start and not lines[end - 1].strip():
+                    end -= 1
+            payload = ["verify-unit-v1", kind, paths[start], owners, schema,
+                       source((start, end))]
+            digest = hashlib.sha256(json.dumps(payload, ensure_ascii=False,
+                                               separators=(",", ":")).encode("utf-8")).hexdigest()
+            status = status_for(start, texts, directional=kind == "prose")
+            units.append((start + 1, kind, digest, status))
+
+        def cells(line):
+            # Match the pinned table rule's escaped-pipe convention, including
+            # pipes in code spans. No silent padding or truncation is permitted.
+            from markdown_it.rules_block.table import escapedSplit
+            parts = escapedSplit(line.strip())
+            if parts and not parts[0].strip():
+                parts.pop(0)
+            if parts and not parts[-1].strip():
+                parts.pop()
+            return parts
+
+        def walk(nodes, owners=None, schema=None, in_item=False, in_cell=False):
+            owners = [] if owners is None else owners
+            schema = [] if schema is None else schema
+            for index, node in enumerate(nodes):
+                t = node.token
+                span = t.map
+                if span is None:  # only table cells, validated above
+                    walk(node.children, owners, schema, in_item, True)
+                    continue
+                start, end = span
+                active = bool(selected.intersection(range(start, end)))
+                if not active:
+                    continue
+                if not set(range(start, end)) <= selected:
+                    raise ValueError(f"line {start + 1}: block crosses Verify boundary")
+                kind = t.type
+                if kind in {"blockquote_open", "code_block", "html_block"}:
+                    raise ValueError(f"line {start + 1}: [unsupported-container] {kind}")
+                if kind == "inline":
+                    inline_check(t.children or [])
+                elif kind == "heading_open":
+                    heading_status(start)
+                    covered.update(range(start, end))
+                    walk(node.children, owners, schema, in_item, in_cell)
+                elif kind == "hr":
+                    covered.update(range(start, end))
+                elif kind == "list_item_open":
+                    first = first_paragraph(node)
+                    if not node.children or EMPTY_LIST.fullmatch(lines[start].strip()):
+                        raise ValueError(f"line {start + 1}: [unsupported-container] empty item")
+                    if any(c.token.map[0] == start for c in node.children
+                           if c.token.type in {"bullet_list_open", "ordered_list_open"}):
+                        raise ValueError("[unsupported-container] compact list")
+                    texts = [paragraph_text(first)] if first else []
+                    emit(node, "list-item", owners, [], texts)
+                    owner = source(first.token.map) if first else ""
+                    walk(node.children, owners + [owner], schema, True, in_cell)
+                elif kind == "paragraph_open":
+                    if not in_item and not in_cell:
+                        emit(node, "prose", owners, [], [paragraph_text(node)])
+                    covered.update(range(start, end))
+                    walk(node.children, owners, schema, in_item, in_cell)
+                elif kind == "table_open":
+                    if end - start < 2:
+                        raise ValueError("table missing schema")
+                    table_schema = lines[start:start + 2]
+                    widths = [len(cells(line)) for line in table_schema]
+                    if not widths[0] or widths[0] != widths[1]:
+                        raise ValueError("ragged table schema")
+                    covered.update(range(start, start + 2))
+                    walk(node.children, owners, table_schema, in_item, in_cell)
+                elif kind == "tr_open":
+                    cell_nodes = [c for c in node.children if c.token.type in {"td_open", "th_open"}]
+                    if end != start + 1 or len(cells(lines[start])) != len(cell_nodes):
+                        raise ValueError(f"line {start + 1}: ragged table row")
+                    if len(cell_nodes) != len(cells(schema[0])):
+                        raise ValueError(f"line {start + 1}: table row differs from schema")
+                    if cell_nodes and cell_nodes[0].token.type == "td_open":
+                        texts = [paragraph_text(c) for c in cell_nodes]
+                        emit(node, "table-row", owners, schema, texts)
+                    covered.update(range(start, end))
+                    walk(node.children, owners, schema, in_item, in_cell)
+                elif kind == "fence":
+                    covered.update(range(start, end))
+                    marks = [heading_status(start)]
+                    for delta, direction in ((-1, "following"), (1, "preceding")):
+                        k = index + delta
+                        if not 0 <= k < len(nodes) or nodes[k].token.type != "paragraph_open":
+                            continue
+                        mark = declaration(paragraph_text(nodes[k]))
+                        other = index + 2 * delta
+                        shared = 0 <= other < len(nodes) and nodes[other].token.type == "fence"
+                        if mark and (mark[1] == direction or not mark[1] and not shared):
+                            marks.append(mark)
+                    language = t.info.strip().lower()
+                    prefix = "--" if language == "sql" else "#" if language in {
+                        "sh", "shell", "bash", "python", "py"} else None
+                    first = next((line.strip() for line in t.content.split("\n") if line.strip()), "")
+                    if prefix and first.startswith(prefix):
+                        marks.append(declaration(first[len(prefix):].strip()))
+                    statuses = {m[0] for m in marks if m}
+                    if len(statuses) > 1:
+                        raise ValueError("conflicting declarations")
+                    parsed_fences.append((start + 1, next(iter(statuses), None)))
+                elif kind in {"bullet_list_open", "ordered_list_open", "thead_open", "tbody_open"}:
+                    walk(node.children, owners, schema, in_item, in_cell)
+                else:
+                    raise ValueError("unhandled block token " + kind)
+        walk(roots)
+        if parsed_fences != [(line, status) for line, _, status in fences]:
+            raise ValueError("parser fence locations/statuses disagree with fence scanner")
+        missing = [i + 1 for i in sorted(selected - covered) if masked[i].strip()]
+        if missing:
+            raise ValueError(f"uncovered Verify source lines: {missing}")
+        # References can disappear into env without producing a block token.
+        references = list(env.get("references", {}).values()) + env.get("duplicate_refs", [])
+        for reference in references:
+            span = reference.get("map")
+            if span is None or selected.intersection(range(*span)):
+                raise ValueError("unsupported reference definition in Verify")
+    except Exception as exc:
+        # Parser exceptions and unmodeled syntax are findings, never a skipped
+        # scan or a baseline-eligible unit. KeyboardInterrupt still propagates.
+        errors.append(f"unit extraction failed: {exc}")
+    return units, errors
+
+
+def scan(root, parser=None):
+    counts, locations, errors, marked = Counter(), {}, [], Counter()
     enrolled = set((root / "tools/version_basis_guides.txt").read_text(
         encoding="utf-8").splitlines())
-    for path in guides(root):
+    paths = sorted(p for p in root.iterdir() if p.suffix == ".md" and p.name not in META_EXCLUDE)
+    if not paths:
+        raise ValueError("guide corpus is empty")
+    for path in paths:
+        if not path.is_file():
+            raise OSError(f"guide is not a readable regular file: {path}")
         try:
-            units, findings = scan_guide(path.read_text(encoding="utf-8"),
-                                         enrolled=path.name in enrolled)
+            text = path.read_text(encoding="utf-8")
+            if parser is None:
+                fences, findings = scan_guide(text, enrolled=path.name in enrolled)
+                units = [(line, "fence", digest, status) for line, digest, status in fences]
+            else:
+                units, findings = scan_units(text, enrolled=path.name in enrolled, parser=parser)
         except ValueError as exc:
             # UnicodeError is handled by main as an input error, not a convention.
             if isinstance(exc, UnicodeError):
@@ -560,11 +867,11 @@ def scan(root):
             errors.append(f"{path.name}: {exc}")
             continue
         errors.extend(f"{path.name}: {finding}" for finding in findings)
-        for line, digest, has_mark in units:
+        for line, kind, digest, has_mark in units:
             if has_mark:
-                marked += 1
+                marked[kind] += 1
             else:
-                key = (path.name, "fence", digest)
+                key = (path.name, kind, digest)
                 counts[key] += 1
                 locations.setdefault(key, []).append(line)
     return counts, locations, errors, marked
@@ -577,7 +884,7 @@ def load_baseline(path):
             continue
         fields = line.split("\t")
         if (len(fields) != 4 or not re.fullmatch(r"[^/\\\s]+\.md", fields[0])
-                or fields[1] != "fence" or not re.fullmatch(r"[0-9a-f]{64}", fields[2])
+                or fields[1] not in KINDS or not re.fullmatch(r"[0-9a-f]{64}", fields[2])
                 or not re.fullmatch(r"[1-9][0-9]*", fields[3])):
             raise ValueError(f"baseline line {number}: malformed entry")
         key = tuple(fields[:3])
@@ -591,45 +898,70 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--strict", action="store_true")
-    mode.add_argument("--write-baseline", action="store_true")
+    mode.add_argument("--seed-baseline", "--write-baseline", dest="seed_baseline", action="store_true")
+    mode.add_argument("--assert-parser", action="store_true")
     args = parser.parse_args(argv)
     root = Path(__file__).resolve().parents[1]
     try:
-        current, locations, errors, marked = scan(root)
-        if args.write_baseline:
+        parser = gate_parser()
+        if args.assert_parser:
+            if parser is None:
+                raise ValueError("pinned parser missing; install tools/requirements-gates.txt")
+            print("  ok    shared gate parser versions match tools/requirements-gates.txt")
+            return 0
+        if args.seed_baseline:
+            if parser is None:
+                raise ValueError("seeding requires the pinned parser")
+            if (root / BASELINE).exists() and load_baseline(root / BASELINE):
+                raise ValueError("seed refused: baseline already has entries")
+        elif parser is None:
+            print("  SKIP  Verify list-item/table-row/prose checks: parser absent; "
+                  "install tools/requirements-gates.txt (fence checks still run)")
+        current, locations, errors, marked = scan(root, parser)
+        structural_errors = bool(errors)
+        if args.seed_baseline:
             if errors:
                 for error in errors:
                     print(f"  FAIL  VERIFY-MARK {error}")
                 return 1
-            body = "# Explicit one-time seed; remove exemptions as fences are marked.\n"
-            body += "# guide<TAB>fence<TAB>sha256<TAB>count; no automatic refresh.\n"
+            body = "# Explicit one-time seed; remove exemptions as units are marked.\n"
+            body += "# guide<TAB>kind<TAB>sha256<TAB>count; no automatic refresh.\n"
             body += "".join("\t".join(key) + f"\t{count}\n"
                             for key, count in sorted(current.items()))
             (root / BASELINE).write_text(body, encoding="utf-8")
-            print(f"  ok    wrote {sum(current.values())} grandfathered fences")
+            print(f"  ok    wrote {sum(current.values())} grandfathered units")
+            for kind in KINDS:
+                print(f"  ok    seeded {kind}: "
+                      f"{sum(n for key, n in current.items() if key[1] == kind)}")
             return 0
         baseline = load_baseline(root / BASELINE)
-        retained = 0
+        # Only an actually absent parser permits narrowing to the old fence
+        # checks. Validate the entire baseline first, including skipped kinds.
+        if parser is None:
+            baseline = Counter({k: n for k, n in baseline.items() if k[1] == "fence"})
+        retained = Counter()
         for key in sorted(current.keys() | baseline.keys()):
             actual, allowed = current[key], baseline[key]
             where = f"{key[0]}:{','.join(map(str, locations.get(key, [])))}"
             if actual > allowed:
-                errors.append(f"{where} new/changed/excess fence {key[2]} ({actual} > {allowed})")
+                errors.append(f"{where} new/changed/excess {key[1]} {key[2]} ({actual} > {allowed})")
             if actual < allowed:
-                errors.append(f"{key[0]} stale baseline {key[2]} ({actual} < {allowed}); remove it")
+                errors.append(f"{key[0]} stale baseline {key[1]} {key[2]} ({actual} < {allowed}); remove it")
             kept = min(actual, allowed)
             if kept:
-                retained += kept
-                print(f"  BASELINE  {where} {key[2]} retained {kept}")
+                retained[key[1]] += kept
+                print(f"  BASELINE  {where} {key[1]} {key[2]} retained {kept}")
         for error in errors:
             print(f"  FAIL  VERIFY-MARK {error}")
-        print(f"  {'FAIL' if errors else 'ok  '}  Verify marking: {marked} marked, "
-              f"{retained} grandfathered fences retained, {len(errors)} findings")
-        return 1 if errors and args.strict else 0
+        for kind in KINDS if parser is not None else ("fence",):
+            print(f"  COUNTS  {kind}: {marked[kind]} marked, {retained[kind]} retained")
+        print(f"  {'FAIL' if errors else 'ok  '}  Verify marking: {sum(marked.values())} marked, "
+              f"{sum(retained.values())} grandfathered units retained, {len(errors)} findings")
+        return 1 if structural_errors or errors and args.strict else 0
     except (OSError, UnicodeError) as exc:
         print(f"  FAIL  VERIFY-MARK input error: {exc}", file=sys.stderr)
         return 2
-    except ValueError as exc:
+    except (ValueError, ImportError) as exc:
         print(f"  FAIL  VERIFY-MARK {exc}", file=sys.stderr)
         return 1
 

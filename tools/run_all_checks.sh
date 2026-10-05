@@ -769,8 +769,10 @@ else
   bad "the pinned-citation gate could not complete (exit $pc_rc); failing closed:"
   printf '%s\n' "$pc" | sed 's/^/          /'
 fi
-echo "== Verify fences declare demonstration or reasoning =="
+echo "== Verify fences, list items, table rows and prose declare demonstration or reasoning =="
 # Keep retained exemptions visible; a baseline pass is not full corpus compliance.
+# The gate emits one advisory SKIP for new units only when the parser is absent.
+# The same invocation always runs fence checks; a broken or wrong parser fails.
 if vm_st=$(python3 -I -B tools/test_verify_marking.py 2>&1); then
   printf '%s\n' "$vm_st"
   if grep -q '^  FAIL  ' <<< "$vm_st" || ! grep -qE '^  ok    [0-9]+ Verify-marking fixture cases$' <<< "$vm_st"; then
