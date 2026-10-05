@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "96dac08673ef750ebc859a3fcefa4a3d17b12ee0173dbc3fdadcfa090a8cf584",
+  "body_sha256": "35dd19c3e2e22fbc34379bc762e98415d5c54ee97028c8ded02940445cda71ec",
   "components": {
     "docs": {
       "name": "Supabase documentation",
@@ -26,6 +26,15 @@ version_basis: {
       "basis": "e693f206f5050b0004a86e12e533bb75ba2a9c76",
       "sources": {
         "s3f1258414a91": "https://github.com/supabase/supabase/blob/e693f206f5050b0004a86e12e533bb75ba2a9c76/docker/docker-compose.yml"
+      }
+    },
+    "curl": {
+      "name": "curl",
+      "basis": "curl-8_14_1",
+      "sources": {
+        "s5e1383feef7d": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79",
+        "s3db522258e44": "https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md",
+        "s82a34ee18632": "https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md"
       }
     }
   },
@@ -53,10 +62,10 @@ version_basis: {
     "signup": {"text": "DISABLE_SIGNUP=false ships registration open; ENABLE_PHONE_SIGNUP and ENABLE_PHONE_AUTOCONFIRM=true permit self-confirmed phone signup.", "components": ["env", "compose"], "sources": ["env:sb8e42c6de990", "compose:s3f1258414a91"], "status": "REASONED"},
     "mfa": {"text": "Application-user TOTP needs assurance-level enforcement; it adds no factor to Studio Basic auth, which needs a private or MFA-enforcing administrative boundary.", "components": ["docs"], "sources": ["docs:s399d0fbba196", "docs:s46cff2590323"], "status": "REASONED"},
     "verify-isolation": {"text": "Any external HTTP/database response proves publication; refusal is vantage-specific and timeout inconclusive. Corroborate with mappings and a live allowed control.", "components": ["docs", "compose"], "sources": ["docs:s399d0fbba196", "compose:s3f1258414a91"], "status": "REASONED", "verify": [1]},
-    "verify-function": {"text": "Known unauthenticated canary responds to both requests with JWT checking off; with it on, missing Bearer gets 401 and current legacy anon JWT returns the known response.", "components": ["env", "compose"], "sources": ["env:sb8e42c6de990", "compose:s3f1258414a91"], "status": "REASONED", "verify": [2]},
-    "verify-api-keys": {"text": "Compare shipped and current API keys at /auth/v1/settings; current key must return settings JSON. This tests gateway acceptance, not signing-key retirement.", "components": ["docs"], "sources": ["docs:s399d0fbba196", "docs:s73d939b4644e"], "status": "REASONED"},
-    "verify-signing": {"text": "Compare equivalent unexpired service_role JWTs signed by current versus demo secret against one REST canary, retaining a valid apikey; require JWT signature rejection.", "components": ["docs"], "sources": ["docs:s399d0fbba196", "docs:s73d939b4644e", "docs:s46cff2590323"], "status": "REASONED"},
-    "verify-dashboard": {"text": "Default Basic credentials must fail with 401 after replacement, while a current credential retrieves a known Studio response.", "components": ["docs", "env"], "sources": ["docs:s399d0fbba196", "env:sb8e42c6de990"], "status": "REASONED"},
+    "verify-function": {"text": "Known unauthenticated canary responds to both requests with JWT checking off; with it on, missing Bearer gets 401 and current legacy anon JWT returns the known response.", "components": ["env", "compose", "curl"], "sources": ["env:sb8e42c6de990", "compose:s3f1258414a91", "curl:s5e1383feef7d", "curl:s3db522258e44"], "status": "REASONED", "verify": [2]},
+    "verify-api-keys": {"text": "Compare shipped and current API keys at /auth/v1/settings; current key must return settings JSON. This tests gateway acceptance, not signing-key retirement.", "components": ["docs", "curl"], "sources": ["docs:s399d0fbba196", "docs:s73d939b4644e", "curl:s3db522258e44"], "status": "REASONED"},
+    "verify-signing": {"text": "Compare equivalent unexpired service_role JWTs signed by current versus demo secret against one REST canary, retaining a valid apikey; require JWT signature rejection.", "components": ["docs", "curl"], "sources": ["docs:s399d0fbba196", "docs:s73d939b4644e", "docs:s46cff2590323", "curl:s3db522258e44"], "status": "REASONED"},
+    "verify-dashboard": {"text": "Default Basic credentials must fail with 401 after replacement, while a current credential retrieves a known Studio response.", "components": ["docs", "env", "curl"], "sources": ["docs:s399d0fbba196", "env:sb8e42c6de990", "curl:s82a34ee18632"], "status": "REASONED"},
     "verify-database": {"text": "Check pooler 5432/6543 as postgres.your-tenant-id against postgres using SELECT current_user, current_database(); require demo-password authentication failure and a working control.", "components": ["docs", "env", "compose"], "sources": ["docs:s399d0fbba196", "env:sb8e42c6de990", "compose:s3f1258414a91"], "status": "REASONED"}
   }
 }
@@ -95,10 +104,10 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | signup: DISABLE_SIGNUP=false ships registration open; ENABLE_PHONE_SIGNUP and ENABLE_PHONE_AUTOCONFIRM=true permit self-confirmed phone signup. | Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
 | mfa: Application-user TOTP needs assurance-level enforcement; it adds no factor to Studio Basic auth, which needs a private or MFA-enforcing administrative boundary. | Supabase documentation unknown | REASONED |
 | verify-isolation: Any external HTTP/database response proves publication; refusal is vantage-specific and timeout inconclusive. Corroborate with mappings and a live allowed control. | Supabase documentation unknown; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
-| verify-function: Known unauthenticated canary responds to both requests with JWT checking off; with it on, missing Bearer gets 401 and current legacy anon JWT returns the known response. | Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
-| verify-api-keys: Compare shipped and current API keys at /auth/v1/settings; current key must return settings JSON. This tests gateway acceptance, not signing-key retirement. | Supabase documentation unknown | REASONED |
-| verify-signing: Compare equivalent unexpired service_role JWTs signed by current versus demo secret against one REST canary, retaining a valid apikey; require JWT signature rejection. | Supabase documentation unknown | REASONED |
-| verify-dashboard: Default Basic credentials must fail with 401 after replacement, while a current credential retrieves a known Studio response. | Supabase documentation unknown; Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801 | REASONED |
+| verify-function: Known unauthenticated canary responds to both requests with JWT checking off; with it on, missing Bearer gets 401 and current legacy anon JWT returns the known response. | Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76; curl curl-8_14_1 | REASONED |
+| verify-api-keys: Compare shipped and current API keys at /auth/v1/settings; current key must return settings JSON. This tests gateway acceptance, not signing-key retirement. | Supabase documentation unknown; curl curl-8_14_1 | REASONED |
+| verify-signing: Compare equivalent unexpired service_role JWTs signed by current versus demo secret against one REST canary, retaining a valid apikey; require JWT signature rejection. | Supabase documentation unknown; curl curl-8_14_1 | REASONED |
+| verify-dashboard: Default Basic credentials must fail with 401 after replacement, while a current credential retrieves a known Studio response. | Supabase documentation unknown; Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801; curl curl-8_14_1 | REASONED |
 | verify-database: Check pooler 5432/6543 as postgres.your-tenant-id against postgres using SELECT current_user, current_database(); require demo-password authentication failure and a working control. | Supabase documentation unknown; Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
 <!-- version-basis:end -->
 
@@ -269,3 +278,6 @@ At the time of writing these deployment defaults are checked against `self-hoste
 - Supabase Row Level Security (a table without RLS is unprotected): https://supabase.com/docs/guides/database/postgres/row-level-security
 - Supabase docker .env.example (default secrets, keys, FUNCTIONS_VERIFY_JWT, signup and S3 defaults): https://github.com/supabase/supabase/blob/eabe06be5b36cf57f2b158bd5093b396606bf801/docker/.env.example
 - Supabase docker-compose.yml (published ports for the gateway and pooler): https://github.com/supabase/supabase/blob/e693f206f5050b0004a86e12e533bb75ba2a9c76/docker/docker-compose.yml
+- [curl curl-8_14_1 write-out fields and version requirements (checked October 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79).
+- [curl curl-8_14_1 headers from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
+- [curl curl-8_14_1 configuration from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md).

@@ -27330,6 +27330,9 @@ Point that block at Sentry's `http://tracker.example.com:9000/`: because the bun
 - Sentry DSN explainer (a DSN is public and allows only event submission, not read access): https://docs.sentry.io/concepts/key-terms/dsn-explainer/
 - GlitchTip installation (port `8000`, `ENABLE_USER_REGISTRATION` default and behavior): https://glitchtip.com/documentation/install
 - GlitchTip two-factor authentication (available since v1.8): https://glitchtip.com/blog/2021-09-17-glitchtip-1-8/
+- [Sentry 26.8.0 secret-key generator command (checked October 2026)](https://raw.githubusercontent.com/getsentry/sentry/26.8.0/src/sentry/runner/commands/config.py).
+- [Sentry self-hosted 26.8.0 bundled nginx forwarded scheme (checked October 2026)](https://github.com/getsentry/self-hosted/blob/26.8.0/nginx.conf#L63).
+- [Sentry 26.8.0 registration and single-organization membership (checked October 2026)](https://raw.githubusercontent.com/getsentry/sentry/26.8.0/src/sentry/web/frontend/auth_login.py).
 
 ======================================================================
 ==> vector-databases.md
@@ -28233,7 +28236,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | serve-bind: Serve HTTP defaults port 8000, Python host 127.0.0.1 but config-file host 0.0.0.0; EveryNode puts proxies on nodes with replicas. | Ray documentation unknown | REASONED |
 | serve-auth: Serve apps have no built-in application auth and are outside cluster token mode; restrict origins and add proxy or FastAPI authentication. | Ray documentation unknown | REASONED |
 | serve-tls: Serve ssl_keyfile/ssl_certfile/ssl_ca_certs default None; supplying a CA does not itself require client certificates. | Ray documentation unknown | REASONED |
-| serve-grpc: Optional Serve gRPC uses 9000 only with configured servicer functions; its dedicated gRPC option reference is not cited. | Ray documentation unknown | REASONED |
+| serve-grpc: Optional Serve gRPC uses 9000 only with configured servicer functions; its dedicated gRPC option reference is not cited. | Ray documentation unknown; Ray pinned source ray-2.58.0 | REASONED |
 | image-privilege: Official image ray UID 1000/GID 100 has passwordless sudo; non-root startup alone does not prevent root escalation. | Ray pinned source ray-2.58.0 | REASONED |
 | pod-security: KubeRay v1.7.0 head/worker pod/container contexts default empty; enforce non-root UID/GID, no privilege escalation, dropped capabilities and RuntimeDefault seccomp. | KubeRay chart v1.7.0; Kubernetes security contexts unknown | REASONED |
 | verify-inventory: Inventory every head/worker and actual randomized agent ports after restarts; expected missing listeners need explanation. No isolated multi-node cluster was available. | Ray pinned source ray-2.58.0 | REASONED |
@@ -28533,6 +28536,7 @@ Service behaviour is not demonstrated here. A watcher stopped each of four loopb
 - Ray direct `/logs/` Verify discriminator: static directory index inside the agent middleware, disabled token bypass, 401 for missing credentials, valid-token access and exact health exemptions (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/log/log_agent.py#L245-L249, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/http_server_agent.py#L20-L23, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/http_server_agent.py#L102-L114 and https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/authentication/http_token_authentication.py#L28-L80
 - Kubernetes security contexts (runAsNonRoot, drop capabilities, seccomp): https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
 - KubeRay ray-cluster Helm chart values (head/worker podSecurityContext and securityContext, default {}): https://github.com/ray-project/kuberay/blob/v1.7.0/helm-chart/ray-cluster/values.yaml
+- [Ray ray-2.58.0 Serve gRPC default port and servicer-function requirement (checked October 2026)](https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/serve/config.py#L955-L963).
 
 ======================================================================
 ==> mlflow.md
@@ -31515,10 +31519,10 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | loki-proxy: An authenticating proxy must overwrite X-Scope-OrgID with its identity and be the only caller that can reach Loki. | Loki v3.7.8 | REASONED |
 | verify-inventory: Inventory every TCP/UDP listener; wildcard defaults, all Loki listeners and off-host isolation were not observed. | node_exporter v1.12.1; Alertmanager v0.34.1; Pushgateway v1.11.3; Jaeger v2.21.0; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
 | verify-external: External 200 exposes unauthenticated HTTP; HTTPS 401 shows auth, not isolation. Confirm connection failures and a permitted positive control. | Prometheus security model a0d29881382ad1ea20597d34fc4229984b326576; Exporter toolkit v0.17.1; Jaeger documentation 4d150659ee4ed3ccc69253ec77c368392f59e625 | REASONED |
-| verify-loki: A tenant-header rejection is not authentication; repeat with an arbitrary X-Scope-OrgID and test both families, gRPC and internal RPCs. | Loki v3.7.8 | REASONED |
+| verify-loki: A tenant-header rejection is not authentication; repeat with an arbitrary X-Scope-OrgID and test both families, gRPC and internal RPCs. | Loki v3.7.8; curl curl-8_14_1 | REASONED |
 | verify-basic: Loopback HTTPS GETs on node/Pushgateway metrics, Alertmanager status and Jaeger v3 services gave no-credential 401 and credentialed 200. | node_exporter v1.12.1; Pushgateway v1.11.3; Alertmanager v0.34.1; Jaeger v2.21.0; Exporter toolkit v0.17.1 | DEMONSTRATED |
 | verify-loki-mtls: Authorized HTTP mTLS should succeed, untrusted/missing client certs fail handshake and plaintext fail; no Loki listener/TLS run occurred. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
-| verify-secret: Basic-auth stdin closes argv exposure only; shell history and tracing can still leak the password. curl diagnostics lack a Sources citation. | Exporter toolkit v0.17.1 | REASONED |
+| verify-secret: Basic-auth stdin closes argv exposure only; shell history and tracing can still leak the password. curl diagnostics lack a Sources citation. | Exporter toolkit v0.17.1; curl curl-8_14_1 | REASONED |
 <!-- version-basis:end -->
 
 The Prometheus server has its own section in [admin-uis.md](admin-uis.md). This guide covers the pieces
@@ -31956,6 +31960,10 @@ channel only. The password can still reach shell history or `set -x` output.
 - dskit pinned incoming KV updates and propagation: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/memberlist_client.go#L1383-L1470
 - dskit pinned remote-state merging and codec validation: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/memberlist_client.go#L1577-L1672
 - Go `net.Listen` (an empty host listens on all addresses): https://pkg.go.dev/net#Listen
+- [Loki v3.7.8 tenant middleware, fake tenant, and gRPC exemptions (checked October 2026)](https://raw.githubusercontent.com/grafana/loki/v3.7.8/pkg/util/fakeauth/fake_auth.go).
+- [curl curl-8_14_1 write-out fields and version requirements (checked October 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79).
+- [curl curl-8_14_1 custom headers (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
+- [curl curl-8_14_1 configuration from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md).
 
 ======================================================================
 ==> devops-uis.md
@@ -32464,7 +32472,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-rtdb: Compare unsigned/A/B reads/writes to seeded RTDB owner paths; ancestor grants expose them while ownership rules deny unauthorized callers. | Firebase documentation unknown | REASONED |
 | verify-firebase-storage: Compare unsigned/A/B object reads and uploads; ownership rules must deny unrelated callers while owner operations succeed. | Firebase documentation unknown | REASONED |
 | verify-download-token: Same sessionless download URL works after Rules tightening but must lose bytes after token revocation; owner getBytes remains successful and network/CORS failures are inconclusive. | Firebase documentation unknown | REASONED |
-| verify-tables: Pair unsigned/A/B profiles GETs against seeded rows, using ordinary credentials and required MFA; test intended writes and persisted effects separately. | Supabase documentation unknown; PostgreSQL documentation unknown | REASONED |
+| verify-tables: Pair unsigned/A/B profiles GETs against seeded rows, using ordinary credentials and required MFA; test intended writes and persisted effects separately. | Supabase documentation unknown; PostgreSQL documentation unknown; curl curl-8_14_1 | REASONED |
 | verify-views: Compare view reads with table boundaries; owner-privileged exposure must close under invoker/revoked access while intended reads or deliberate removal are confirmed. | PostgreSQL documentation unknown | REASONED |
 | verify-rpc: Test every API function overload with valid harmless arguments as unsigned/A/B; unauthorized data or operations must be denied while the intended caller succeeds. | Supabase documentation unknown | REASONED |
 | verify-http: Probe HTTP wrappers with a controlled collector and marker; unauthorized fixed calls must emit no request. Commit pg_net fixture transactions before expecting delivery. | Supabase documentation unknown | REASONED |
@@ -33429,6 +33437,8 @@ was not installed in the repository, and no whole-corpus gate result is claimed.
 - [Firebase Storage Admin shareable download URLs](https://firebase.google.com/docs/storage/admin/start).
 - [Firebase StorageReference download-token revocation](https://firebase.google.com/docs/reference/kotlin/com/google/firebase/storage/StorageReference).
 - [Firebase Storage SDK direct downloads and browser CORS](https://firebase.google.com/docs/storage/web/download-files).
+- [curl curl-8_14_1 write-out fields and version requirements (checked October 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79).
+- [curl curl-8_14_1 headers from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
 
 ======================================================================
 ==> supabase-self-hosted.md
@@ -33468,10 +33478,10 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | signup: DISABLE_SIGNUP=false ships registration open; ENABLE_PHONE_SIGNUP and ENABLE_PHONE_AUTOCONFIRM=true permit self-confirmed phone signup. | Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
 | mfa: Application-user TOTP needs assurance-level enforcement; it adds no factor to Studio Basic auth, which needs a private or MFA-enforcing administrative boundary. | Supabase documentation unknown | REASONED |
 | verify-isolation: Any external HTTP/database response proves publication; refusal is vantage-specific and timeout inconclusive. Corroborate with mappings and a live allowed control. | Supabase documentation unknown; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
-| verify-function: Known unauthenticated canary responds to both requests with JWT checking off; with it on, missing Bearer gets 401 and current legacy anon JWT returns the known response. | Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
-| verify-api-keys: Compare shipped and current API keys at /auth/v1/settings; current key must return settings JSON. This tests gateway acceptance, not signing-key retirement. | Supabase documentation unknown | REASONED |
-| verify-signing: Compare equivalent unexpired service_role JWTs signed by current versus demo secret against one REST canary, retaining a valid apikey; require JWT signature rejection. | Supabase documentation unknown | REASONED |
-| verify-dashboard: Default Basic credentials must fail with 401 after replacement, while a current credential retrieves a known Studio response. | Supabase documentation unknown; Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801 | REASONED |
+| verify-function: Known unauthenticated canary responds to both requests with JWT checking off; with it on, missing Bearer gets 401 and current legacy anon JWT returns the known response. | Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76; curl curl-8_14_1 | REASONED |
+| verify-api-keys: Compare shipped and current API keys at /auth/v1/settings; current key must return settings JSON. This tests gateway acceptance, not signing-key retirement. | Supabase documentation unknown; curl curl-8_14_1 | REASONED |
+| verify-signing: Compare equivalent unexpired service_role JWTs signed by current versus demo secret against one REST canary, retaining a valid apikey; require JWT signature rejection. | Supabase documentation unknown; curl curl-8_14_1 | REASONED |
+| verify-dashboard: Default Basic credentials must fail with 401 after replacement, while a current credential retrieves a known Studio response. | Supabase documentation unknown; Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801; curl curl-8_14_1 | REASONED |
 | verify-database: Check pooler 5432/6543 as postgres.your-tenant-id against postgres using SELECT current_user, current_database(); require demo-password authentication failure and a working control. | Supabase documentation unknown; Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
 <!-- version-basis:end -->
 
@@ -33642,6 +33652,9 @@ At the time of writing these deployment defaults are checked against `self-hoste
 - Supabase Row Level Security (a table without RLS is unprotected): https://supabase.com/docs/guides/database/postgres/row-level-security
 - Supabase docker .env.example (default secrets, keys, FUNCTIONS_VERIFY_JWT, signup and S3 defaults): https://github.com/supabase/supabase/blob/eabe06be5b36cf57f2b158bd5093b396606bf801/docker/.env.example
 - Supabase docker-compose.yml (published ports for the gateway and pooler): https://github.com/supabase/supabase/blob/e693f206f5050b0004a86e12e533bb75ba2a9c76/docker/docker-compose.yml
+- [curl curl-8_14_1 write-out fields and version requirements (checked October 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79).
+- [curl curl-8_14_1 headers from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
+- [curl curl-8_14_1 configuration from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md).
 
 ======================================================================
 ==> web-exposure.md
@@ -35783,14 +35796,14 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | appwrite-size: Encryption/scanning skip files above 20000000 bytes; cap maximumFileSize at that threshold when either is mandatory and test the boundary. | Appwrite 2.2.0 | REASONED |
 | appwrite-functions: Function execute roles and execution-key scopes default empty; grant narrowly. Disabled functions still admit authorized Server SDK API keys. | Appwrite 2.2.0 | REASONED |
 | appwrite-executor: Keep executor/orchestrator private, protect Docker-socket authority and replace _APP_EXECUTOR_SECRET; container execution is not demonstrated hostile-tenant isolation. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
-| verify-pb-records: Public rules allow guest reads; locked rules deny with 403, unsatisfied list filters can return empty 200 and view rules 404. Retain owner and separate superuser controls. | PocketBase documentation (rolling) unknown | REASONED |
+| verify-pb-records: Public rules allow guest reads; locked rules deny with 403, unsatisfied list filters can return empty 200 and view rules 404. Retain owner and separate superuser controls. | PocketBase documentation (rolling) unknown; curl curl-8_14_1 | REASONED |
 | verify-appwrite-records: Broad collection grants defeat document restrictions; removing them must deny unrelated users while document grantees succeed. Compare client/server creation defaults. | Appwrite documentation (rolling) unknown | REASONED |
 | verify-appwrite-keys: A correctly scoped server key reads despite empty permissions, while a key without scope fails; neither substitutes for an ordinary-user control. | Appwrite 2.2.0 | REASONED |
 | verify-registration: On disposable Appwrite fixtures compare open signup 201 with root-only account-limit failure and independent email/IP restrictions; retain login/invitation controls. | Appwrite 2.2.0 | REASONED |
 | verify-pb-bootstrap: Guest and ordinary-user _superusers record creation must fail while a valid installer token creates the private operator; static dashboard assets prove no admin access. | PocketBase v0.40.4 | REASONED |
 | verify-appwrite-mfa: Console account GET succeeds without MFA, fails with user_more_factors_required for a fresh password-only MFA session, and succeeds after TOTP completion. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
 | verify-pb-writes: Compare intended/unauthorized POST/PATCH/DELETE and privileged auth-record management; locked manageRule grants no management and empty-string configuration must fail. | PocketBase v0.40.4 | REASONED |
-| verify-pb-files: Before protection unsigned file GET works; Protected plus private viewRule rejects guests/unrelated-user file tokens with 404 while permitted-user bytes still arrive. | PocketBase v0.40.4 | REASONED |
+| verify-pb-files: Before protection unsigned file GET works; Protected plus private viewRule rejects guests/unrelated-user file tokens with 404 while permitted-user bytes still arrive. | PocketBase v0.40.4; curl curl-8_14_1 | REASONED |
 | verify-pb-realtime: Mutate a fixture while comparing collection and record subscriptions; deny unauthorized event delivery, retaining authorized delivery. PB_CONNECT/acknowledgment alone is insufficient. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
 | verify-pb-mfa: Compare password-only completion with password-plus-OTP MFA and verified/unverified authRule logins; clearing authStore must not revoke a retained valid token. | PocketBase documentation (rolling) unknown | REASONED |
 | verify-pb-ips: Compare allowed/excluded superuser sources and forged forwarded headers; excluded sources must get 403 and direct backend access must fail with a working proxy control. | PocketBase v0.40.4 | REASONED |
@@ -36421,6 +36434,10 @@ service result or deployed-bundle scan is claimed.
 - [Appwrite 2.2.0 function execute roles, execution-key scopes, and enablement](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/src/Appwrite/Platform/Modules/Functions/Http/Functions/Create.php).
 - [Appwrite 2.2.0 storage thresholds and release constant](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/init/constants.php).
 - [Appwrite 2.2.0 Compose console path, persistent volumes, and Docker socket mounts](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/docker-compose.yml).
+- [PocketBase v0.40.4 CLI wrapper and development flag wiring (checked October 2026)](https://github.com/pocketbase/pocketbase/blob/v0.40.4/pocketbase.go#L234-L239).
+- [curl curl-8_14_1 write-out fields and version requirements (checked October 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79).
+- [curl curl-8_14_1 headers from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
+- [curl curl-8_14_1 configuration from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md).
 
 ======================================================================
 ==> headless-browser-services.md
