@@ -53,6 +53,7 @@ from collections import Counter
 from dataclasses import dataclass
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import sys
@@ -550,11 +551,15 @@ def scan_guide(text, in_verify=False, in_quote=False, *, enrolled=False,
 KINDS = ("fence", "list-item", "table-row", "prose")
 
 
-def gate_parser():
-    """Return the shared pinned parser, or None only when it is absent.
+class ParserUnavailable(ValueError):
+    """An absent or mismatched dependency; local checks may remain fence-only."""
 
-    The lock is the sole version authority. Broken or mismatched installations
-    are errors, not an advisory skip. CI requires a parser before running gates.
+
+def gate_parser(*, required=False):
+    """Return the pinned parser, or None for a local absent/mismatched dependency.
+
+    The lock is the sole version authority. Required callers get the precise
+    absence/mismatch reason. Broken installations and invalid locks always fail.
     """
     from importlib.metadata import version
     from importlib.util import find_spec
@@ -569,11 +574,21 @@ def gate_parser():
         pins[match[1]] = match[2]
     if set(pins) != {"markdown-it-py", "mdurl"}:
         raise ValueError("invalid shared parser lock")
+    problem = None
     if find_spec("markdown_it") is None:
+        problem = "parser absent"
+    else:
+        mismatches = []
+        for package, wanted in pins.items():
+            installed = version(package)
+            if installed != wanted:
+                mismatches.append(f"{package} installed {installed}, pinned {wanted}")
+        if mismatches:
+            problem = "; ".join(mismatches)
+    if problem:
+        if required:
+            raise ParserUnavailable(problem + "; install tools/requirements-gates.txt")
         return None
-    for package, wanted in pins.items():
-        if version(package) != wanted:
-            raise ValueError(f"{package} must be {wanted}; install tools/requirements-gates.txt")
     from markdown_it import MarkdownIt
     return MarkdownIt("commonmark").enable("table")
 
@@ -900,10 +915,21 @@ def main(argv=None):
     mode.add_argument("--strict", action="store_true")
     mode.add_argument("--seed-baseline", "--write-baseline", dest="seed_baseline", action="store_true")
     mode.add_argument("--assert-parser", action="store_true")
+    parser.add_argument("--require-parser", action="store_true",
+                        help="fail instead of skipping unavailable unit checks (CI)")
     args = parser.parse_args(argv)
     root = Path(__file__).resolve().parents[1]
     try:
-        parser = gate_parser()
+        try:
+            parser = gate_parser(required=True)
+        except ParserUnavailable as exc:
+            if args.seed_baseline:
+                raise ValueError(f"seeding requires the pinned parser: {exc}") from exc
+            if args.assert_parser or args.require_parser or os.environ.get("CI"):
+                raise
+            parser = None
+            print(f"  SKIP  Verify list-item/table-row/prose checks: {exc} "
+                  "(fence checks still run)")
         if args.assert_parser:
             if parser is None:
                 raise ValueError("pinned parser missing; install tools/requirements-gates.txt")
@@ -914,9 +940,6 @@ def main(argv=None):
                 raise ValueError("seeding requires the pinned parser")
             if (root / BASELINE).exists() and load_baseline(root / BASELINE):
                 raise ValueError("seed refused: baseline already has entries")
-        elif parser is None:
-            print("  SKIP  Verify list-item/table-row/prose checks: parser absent; "
-                  "install tools/requirements-gates.txt (fence checks still run)")
         current, locations, errors, marked = scan(root, parser)
         structural_errors = bool(errors)
         if args.seed_baseline:
@@ -935,8 +958,8 @@ def main(argv=None):
                       f"{sum(n for key, n in current.items() if key[1] == kind)}")
             return 0
         baseline = load_baseline(root / BASELINE)
-        # Only an actually absent parser permits narrowing to the old fence
-        # checks. Validate the entire baseline first, including skipped kinds.
+        # Local absent/mismatched parsers leave the fence ratchet active.
+        # Validate the entire baseline first, including skipped kinds.
         if parser is None:
             baseline = Counter({k: n for k, n in baseline.items() if k[1] == "fence"})
         retained = Counter()

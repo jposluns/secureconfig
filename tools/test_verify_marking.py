@@ -560,6 +560,9 @@ def main():
         run("## Verify\n\n  > ```sh\n  > echo ok\n  > ```\n", 1,
             "exact indented quote reproduction", "unsupported fenced blockquote")
 
+    from test_verify_units import run_cases
+    run_cases(check)
+
     suite = (TOOLS / "run_all_checks.sh").read_text(encoding="utf-8")
     excluded = re.search(r"    (CONTRIBUTING\.md\|.*?)\) return 0", suite)[1]
     check("guide set matches suite", set(excluded.split("|")) == META_EXCLUDE)
