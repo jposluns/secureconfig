@@ -36045,9 +36045,7 @@ Check effective behavior after recreation. See
 Set collection and document `permissions` deliberately. Enable `documentSecurity` explicitly
 when using document-level grants; **its default was not verified here**. Access granted at
 **either collection or document level** is sufficient. A broad collection grant therefore
-defeats an intended document restriction. The current database documentation describes this
-additive model using table/row terminology; the legacy API uses collection/document names.
-See [database permissions](https://appwrite.io/docs/products/databases/tablesdb/permissions) and the
+defeats an intended document restriction. See [legacy database permissions](https://appwrite.io/docs/products/databases/tablesdb/legacy/permissions) and the
 [legacy API reference](https://appwrite.io/docs/references/cloud/server-nodejs/databases).
 
 Omitted permissions do not have one universal result: resources created through a Client SDK
@@ -36212,7 +36210,7 @@ REASONED: following block; resource and scope comparisons follow the cited vendo
 | Check | Exposed and fixed comparison |
 | --- | --- |
 | PocketBase record rules | **REASONED:** On the private fixture, request `/api/collections/REPLACE_WITH_COLLECTION/records` and `/api/collections/REPLACE_WITH_COLLECTION/records/REPLACE_WITH_RECORD`. Public empty rules allow guest reads. Locked rules return 403 to non-superusers. Restrictive rules must return only authorized records: an unsatisfied list filter can return 200 with empty `items`, while an unsatisfied view rule returns 404. Confirm the authorized ordinary user receives the known fixture record; separately confirm a superuser bypasses record rules. See [rule outcomes](https://pocketbase.io/docs/api-rules-and-filters/). |
-| Appwrite document permissions | **REASONED:** Request `/v1/databases/REPLACE_WITH_DATABASE/collections/REPLACE_WITH_COLLECTION/documents/REPLACE_WITH_DOCUMENT`. With document security explicitly enabled, first demonstrate that a broad collection read grant allows an otherwise ungranted user. Remove that broad grant: the intended document grantee must still receive the fixture, while guests and an unrelated user receive no document data. Compare omitted permissions for client-created and server-created fixtures. See [additive permissions](https://appwrite.io/docs/products/databases/tablesdb/permissions) and [creation defaults](https://appwrite.io/docs/advanced/security/permissions). |
+| Appwrite document permissions | **REASONED:** Request `/v1/databases/REPLACE_WITH_DATABASE/collections/REPLACE_WITH_COLLECTION/documents/REPLACE_WITH_DOCUMENT`. With document security explicitly enabled, first demonstrate that a broad collection read grant allows an otherwise ungranted user. Remove that broad grant: the intended document grantee must still receive the fixture, while guests and an unrelated user receive no document data. Compare omitted permissions for client-created and server-created fixtures. See [additive permissions](https://appwrite.io/docs/products/databases/tablesdb/legacy/permissions) and [creation defaults](https://appwrite.io/docs/advanced/security/permissions). |
 | Appwrite server-key scope | **REASONED:** Repeat the same document request from a trusted server using a protected API-key header file. A key with the required read scope can read despite empty resource permissions; a key lacking that scope must be refused. This is a separate test, never the positive control for an ordinary user's permissions. See [key authorization](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/controllers/shared/api.php). |
 
 ### 2. Test bootstrap and registration through the actual APIs
@@ -36380,7 +36378,7 @@ service result or deployed-bundle scan is claimed.
 - [PocketBase v0.40.4 backup download authorization](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/backup.go).
 - [PocketBase v0.40.4 rate limiter and exemptions](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/middlewares_rate_limit.go).
 - [Appwrite permissions, creation defaults, and server integrations (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/security/permissions).
-- [Appwrite additive database permissions (rolling documentation, checked October 2026)](https://appwrite.io/docs/products/databases/tablesdb/permissions).
+- [Appwrite legacy collection/document permissions (rolling documentation, checked October 2026)](https://appwrite.io/docs/products/databases/tablesdb/legacy/permissions).
 - [Appwrite legacy Databases API (rolling documentation, checked September 2026)](https://appwrite.io/docs/references/cloud/server-nodejs/databases).
 - [Appwrite environment reference and HTTPS deprecation wording (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/self-hosting/configuration/environment-variables).
 - [Appwrite rate limits (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/security/rate-limits).
